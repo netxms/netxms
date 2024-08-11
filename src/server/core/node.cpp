@@ -9884,11 +9884,11 @@ RoutingTable *Node::getRoutingTable()
    }
    if ((routingTable == nullptr) && (m_capabilities & NC_IS_SNMP) && (!(m_flags & NF_DISABLE_SNMP)))
    {
-      SNMP_Transport *pTransport = createSnmpTransport();
-      if (pTransport != nullptr)
+      SNMP_Transport *snmp = createSnmpTransport();
+      if (snmp != nullptr)
       {
-         routingTable = SnmpGetRoutingTable(pTransport);
-         delete pTransport;
+         routingTable = SnmpGetRoutingTable(snmp, *this);
+         delete snmp;
       }
    }
 

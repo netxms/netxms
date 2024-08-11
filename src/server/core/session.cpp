@@ -14213,11 +14213,15 @@ void ClientSession::getRoutingTable(const NXCPMessage& request)
                {
                   response.setField(id++, iface->getName());
                }
-               else
+               else if (route->ifIndex != 0)
                {
                   TCHAR buffer[32];
                   _sntprintf(buffer, 32, _T("[%u]"), route->ifIndex);
                   response.setField(id++, buffer);
+               }
+               else
+               {
+                  response.setField(id++, _T(""));
                }
                id += 3;
             }

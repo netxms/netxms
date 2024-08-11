@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 #include "nxcore.h"
 
 #define DEBUG_TAG_SNMP_DISCOVERY _T("snmp.discovery")
+#define DEBUG_TAG_SNMP_ROUTES    _T("snmp.routes")
 
 /**
  * MIB compilation mutex
@@ -30,39 +31,42 @@
 Mutex m_mibCompilationMutex;
 
 /**
- * Handler for route enumeration
+ * Extract IPv4 address encoded as OID elements at given offset
  */
-static uint32_t HandlerRoute(SNMP_Variable *varbind, SNMP_Transport *snmpTransport, RoutingTable *routingTable)
+static inline uint32_t IPv4AddressFromOID(const SNMP_ObjectId& oid, uint32_t offset)
 {
-   size_t nameLen = varbind->getName().length();
-	if ((nameLen < 5) || (nameLen > MAX_OID_LEN))
-	{
-		nxlog_debug_tag(_T("topology.ipv4"), 4, _T("HandlerRoute(): unexpected nameLen %d (name=%s)"), nameLen, varbind->getName().toString().cstr());
-		return SNMP_ERR_SUCCESS;
-	}
+   if (offset > oid.length() - 4)
+      return 0;
+   const uint32_t *v = oid.value();
+   return (v[offset] << 24) | (v[offset + 1] << 16) | (v[offset + 2] << 8) | v[offset + 3];
+}
 
-   uint32_t oidName[MAX_OID_LEN];
-   memcpy(oidName, varbind->getName().value(), nameLen * sizeof(uint32_t));
+/**
+ * Handler for route enumeration via ipRouteTable
+ */
+static uint32_t HandlerIPRouteTable(SNMP_Variable *varbind, SNMP_Transport *snmpTransport, RoutingTable *routingTable)
+{
+   SNMP_ObjectId oid(varbind->getName());
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpTransport->getSnmpVersion());
 
-   oidName[nameLen - 5] = 2;  // Interface index
-   request.bindVariable(new SNMP_Variable(oidName, nameLen));
+   oid.changeElement(9, 2);  // Interface index
+   request.bindVariable(new SNMP_Variable(oid));
 
-   oidName[nameLen - 5] = 7;  // Next hop
-   request.bindVariable(new SNMP_Variable(oidName, nameLen));
+   oid.changeElement(9, 7);  // Next hop
+   request.bindVariable(new SNMP_Variable(oid));
 
-   oidName[nameLen - 5] = 8;  // Route type
-   request.bindVariable(new SNMP_Variable(oidName, nameLen));
+   oid.changeElement(9, 8);  // Route type
+   request.bindVariable(new SNMP_Variable(oid));
 
-   oidName[nameLen - 5] = 11;  // Destination mask
-   request.bindVariable(new SNMP_Variable(oidName, nameLen));
+   oid.changeElement(9, 3);  // Metric
+   request.bindVariable(new SNMP_Variable(oid));
 
-   oidName[nameLen - 5] = 3;  // Metric
-   request.bindVariable(new SNMP_Variable(oidName, nameLen));
+   oid.changeElement(9, 9);  // Protocol
+   request.bindVariable(new SNMP_Variable(oid));
 
-   oidName[nameLen - 5] = 9;  // Protocol
-   request.bindVariable(new SNMP_Variable(oidName, nameLen));
+   oid.changeElement(9, 1);  // ipRouteDest
+   request.bindVariable(new SNMP_Variable(oid));
 
    uint32_t dwResult;
    SNMP_PDU *response;
@@ -76,30 +80,167 @@ static uint32_t HandlerRoute(SNMP_Variable *varbind, SNMP_Transport *snmpTranspo
    }
 
    ROUTE route;
-   route.destination = InetAddress(ntohl(varbind->getValueAsUInt()), ntohl(response->getVariable(3)->getValueAsUInt()));
+   route.destination = InetAddress(ntohl(response->getVariable(5)->getValueAsUInt()), ntohl(varbind->getValueAsUInt()));
    route.ifIndex = response->getVariable(0)->getValueAsUInt();
    route.nextHop = InetAddress(ntohl(response->getVariable(1)->getValueAsUInt()));
    route.routeType = response->getVariable(2)->getValueAsUInt();
-   int metric = response->getVariable(4)->getValueAsInt();
+   int metric = response->getVariable(3)->getValueAsInt();
    route.metric = (metric >= 0) ? metric : 0;
-   route.protocol = static_cast<RoutingProtocol>(response->getVariable(5)->getValueAsInt());
+   route.protocol = static_cast<RoutingProtocol>(response->getVariable(4)->getValueAsInt());
    routingTable->add(route);
    delete response;
    return SNMP_ERR_SUCCESS;
 }
 
 /**
+ * Handler for route enumeration via ipForwardTable
+ */
+static uint32_t HandlerIPForwardTable(SNMP_Variable *varbind, SNMP_Transport *snmpTransport, RoutingTable *routingTable)
+{
+   SNMP_ObjectId oid(varbind->getName());
+
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpTransport->getSnmpVersion());
+
+   oid.changeElement(10, 5);  // ipForwardIfIndex
+   request.bindVariable(new SNMP_Variable(oid));
+
+   oid.changeElement(10, 6);  // ipForwardType
+   request.bindVariable(new SNMP_Variable(oid));
+
+   oid.changeElement(10, 11);  // ipForwardMetric1
+   request.bindVariable(new SNMP_Variable(oid));
+
+   uint32_t dwResult;
+   SNMP_PDU *response;
+   if ((dwResult = snmpTransport->doRequest(&request, &response)) != SNMP_ERR_SUCCESS)
+      return dwResult;
+
+   if (response->getNumVariables() != request.getNumVariables())
+   {
+      delete response;
+      return SNMP_ERR_NO_OBJECT;
+   }
+
+   ROUTE route;
+   route.destination = InetAddress(IPv4AddressFromOID(oid, 11), ntohl(varbind->getValueAsUInt()));
+   route.ifIndex = response->getVariable(0)->getValueAsUInt();
+   route.nextHop = InetAddress(IPv4AddressFromOID(oid, 17));
+   route.routeType = response->getVariable(1)->getValueAsUInt();
+   int metric = response->getVariable(2)->getValueAsInt();
+   route.metric = (metric >= 0) ? metric : 0;
+   route.protocol = static_cast<RoutingProtocol>(oid.getElement(15));
+   routingTable->add(route);
+   delete response;
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
+ * Handler for route enumeration via ipCidrRouteTable
+ */
+static EnumerationCallbackResult HandlerIPCidrRouteTable(const SNMP_Variable *varbind, const SNMP_Snapshot *snapshot, void *routingTable)
+{
+   SNMP_ObjectId oid(varbind->getName());
+
+   ROUTE route;
+   route.destination = InetAddress(IPv4AddressFromOID(oid, 11), IPv4AddressFromOID(oid, 15));
+   route.nextHop = InetAddress(IPv4AddressFromOID(oid, 20));
+   route.protocol = static_cast<RoutingProtocol>(varbind->getValueAsInt());
+
+   oid.changeElement(10, 5);  // ipCidrRouteIfIndex
+   route.ifIndex = snapshot->getAsUInt32(oid);
+
+   oid.changeElement(10, 11);  // ipCidrRouteMetric1
+   int metric = snapshot->getAsInt32(oid);
+   route.metric = (metric >= 0) ? metric : 0;
+
+   oid.changeElement(10, 6);  // ipCidrRouteType
+   route.routeType = snapshot->getAsUInt32(oid);
+
+   static_cast<RoutingTable*>(routingTable)->add(route);
+   return _CONTINUE;
+}
+
+/**
+ * Handler for route enumeration via ipCidrRouteTable
+ */
+static EnumerationCallbackResult HandlerInetCidrRouteTable(const SNMP_Variable *varbind, const SNMP_Snapshot *snapshot, void *routingTable)
+{
+   SNMP_ObjectId oid(varbind->getName());
+
+   ROUTE route;
+   int shift;
+   route.destination = InetAddressFromOID(oid.value() + 11, true, &shift);
+   route.nextHop = InetAddressFromOID(oid.value() + shift + oid.getElement(11 + shift) + 12, false, nullptr); // oid[11 + shift] contains length of policy element
+   route.protocol = static_cast<RoutingProtocol>(varbind->getValueAsInt());
+
+   oid.changeElement(10, 7);  // inetCidrRouteIfIndex
+   route.ifIndex = snapshot->getAsUInt32(oid);
+
+   oid.changeElement(10, 12);  // inetCidrRouteMetric1
+   int metric = snapshot->getAsInt32(oid);
+   route.metric = (metric >= 0) ? metric : 0;
+
+   oid.changeElement(10, 8);  // inetCidrRouteType
+   route.routeType = snapshot->getAsUInt32(oid);
+
+   static_cast<RoutingTable*>(routingTable)->add(route);
+   return _CONTINUE;
+}
+
+/**
  * Get routing table via SNMP
  */
-RoutingTable *SnmpGetRoutingTable(SNMP_Transport *pTransport)
+RoutingTable *SnmpGetRoutingTable(SNMP_Transport *snmp, const Node& node)
 {
    RoutingTable *routingTable = new RoutingTable(0, 64);
    if (routingTable == nullptr)
       return nullptr;
 
-   if (SnmpWalk(pTransport, _T(".1.3.6.1.2.1.4.21.1.1"), HandlerRoute, routingTable, false, true) != SNMP_ERR_SUCCESS)
+   // Use snapshots because some devices does not respond to GET requests to individual table entries
+   // Attempt to use inetCidrRouteTable first
+   bool success = false;
+   SNMP_Snapshot *snapshot = SNMP_Snapshot::create(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 7, 1 });
+   if (snapshot != nullptr)
+   {
+      success = (snapshot->walk({ 1, 3, 6, 1, 2, 1, 4, 24, 7, 1, 9 }, HandlerInetCidrRouteTable, routingTable) == _CONTINUE);
+      delete snapshot;
+      if (success)
+         nxlog_debug_tag(DEBUG_TAG_SNMP_ROUTES, 5, _T("SnmpGetRoutingTable(%s [%u]): %d routes retrieved from inetCidrRouteTable"), node.getName(), node.getId(), routingTable->size());
+   }
+
+   // If not successful, try ipCidrRouteTable
+   if (!success || routingTable->isEmpty())
+   {
+      SNMP_Snapshot *snapshot = SNMP_Snapshot::create(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 4, 1 });
+      if (snapshot != nullptr)
+      {
+         success = (snapshot->walk({ 1, 3, 6, 1, 2, 1, 4, 24, 4, 1, 7 }, HandlerIPCidrRouteTable, routingTable) == _CONTINUE);
+         delete snapshot;
+         if (success)
+            nxlog_debug_tag(DEBUG_TAG_SNMP_ROUTES, 5, _T("SnmpGetRoutingTable(%s [%u]): %d routes retrieved from ipCidrRouteTable"), node.getName(), node.getId(), routingTable->size());
+      }
+   }
+
+   // If not successful, try ipForwardTable
+   if (!success || routingTable->isEmpty())
+   {
+      success = (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 2, 1, 2 }, HandlerIPForwardTable, routingTable, false, true) == SNMP_ERR_SUCCESS);
+      if (success)
+         nxlog_debug_tag(DEBUG_TAG_SNMP_ROUTES, 5, _T("SnmpGetRoutingTable(%s [%u]): %d routes retrieved from ipForwardTable"), node.getName(), node.getId(), routingTable->size());
+   }
+
+   // If not successful, try ipRouteTable
+   if (!success || routingTable->isEmpty())
+   {
+      success = (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 21, 1, 11 }, HandlerIPRouteTable, routingTable, false, true) == SNMP_ERR_SUCCESS);
+      if (success)
+         nxlog_debug_tag(DEBUG_TAG_SNMP_ROUTES, 5, _T("SnmpGetRoutingTable(%s [%u]): %d routes retrieved from ipRouteTable"), node.getName(), node.getId(), routingTable->size());
+   }
+
+   if (!success)
    {
       delete_and_null(routingTable);
+      nxlog_debug_tag(DEBUG_TAG_SNMP_ROUTES, 5, _T("SnmpGetRoutingTable(%s [%u]): failed to get routing table via SNMP"), node.getName(), node.getId());
    }
    return routingTable;
 }
@@ -149,12 +290,12 @@ unique_ptr<StringList> SnmpGetKnownCommunities(int32_t zoneUIN)
    auto communities = new StringList();
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT community FROM snmp_communities WHERE zone=? OR zone=-1 ORDER BY zone DESC, id ASC"));
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
 
       DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
          for(int i = 0; i < count; i++)
