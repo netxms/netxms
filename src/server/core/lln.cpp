@@ -34,12 +34,22 @@ bool LinkLayerNeighbors::isDuplicate(const LL_NEIGHBOR_INFO& info)
 		{
 		   if ((n->ifRemote != info.ifRemote) || (n->objectId != info.objectId))
 		   {
-		      nxlog_debug(5, _T("LinkLayerNeighbors::isDuplicate: inconsistent data: %s(ifLocal=%d remote=%d/%d) %s(ifLocal=%d remote=%d/%d)"),
+		      nxlog_debug_tag(DEBUG_TAG_TOPO_LINK, 5, _T("LinkLayerNeighbors::isDuplicate: inconsistent data: %s(ifLocal=%d remote=%d/%d) %s(ifLocal=%d remote=%d/%d)"),
 		                  GetLinkLayerProtocolName(n->protocol), n->ifLocal, n->objectId, n->ifRemote,
                         GetLinkLayerProtocolName(info.protocol), info.ifLocal, info.objectId, info.ifRemote);
 		   }
          return true;
 		}
+      if (n->ifRemote == info.ifRemote)
+      {
+         if ((n->ifLocal != info.ifLocal) || (n->objectId != info.objectId))
+         {
+            nxlog_debug_tag(DEBUG_TAG_TOPO_LINK, 5, _T("LinkLayerNeighbors::isDuplicate: inconsistent data: %s(ifLocal=%d remote=%d/%d) %s(ifLocal=%d remote=%d/%d)"),
+                        GetLinkLayerProtocolName(n->protocol), n->ifLocal, n->objectId, n->ifRemote,
+                        GetLinkLayerProtocolName(info.protocol), info.ifLocal, info.objectId, info.ifRemote);
+         }
+         return true;
+      }
 	}
 	return false;
 }
@@ -135,9 +145,11 @@ static void AddDriverNeighbors(Node *node, LinkLayerNeighbors *nbs)
  */
 shared_ptr<LinkLayerNeighbors> BuildLinkLayerNeighborList(Node *node)
 {
+   nxlog_debug_tag(DEBUG_TAG_TOPO_LINK, 5, _T("BuildLinkLayerNeighborList(%s [%u]): building link level topology"), node->getName(), node->getId());
+
 	LinkLayerNeighbors *nbs = new LinkLayerNeighbors();
 
-	AddDriverNeighbors(node, nbs);
+   AddDriverNeighbors(node, nbs);
    AddLLDPNeighbors(node, nbs);
    AddCDPNeighbors(node, nbs);
    AddNDPNeighbors(node, nbs);
@@ -148,6 +160,8 @@ shared_ptr<LinkLayerNeighbors> BuildLinkLayerNeighborList(Node *node)
       AddSTPNeighbors(node, nbs);
 		node->addHostConnections(nbs);
 	}
+
+   nxlog_debug_tag(DEBUG_TAG_TOPO_LINK, 5, _T("BuildLinkLayerNeighborList(%s [%u]): %d connections found"), node->getName(), node->getId(), nbs->size());
 
    // Add existing connections from interfaces. Mostly useful
    // for end nodes, because interfaces of end nodes should be linked to switches already,
