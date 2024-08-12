@@ -58,38 +58,39 @@ static TCHAR s_helpText[] =
          _T("Copyright (c) 2003-2024 Raden Solutions\n\n")
          _T("Usage: netxmsd [<options>]\n\n")
          _T("Valid options are:\n")
-         _T("   -A entry    : Add configuration file entry\n")
-         _T("   -e          : Run database check on startup\n")
-         _T("   -c <file>   : Set non-default configuration file\n")
-         _T("   -C          : Check configuration and exit\n")
-         _T("   -d          : Run as daemon/service\n")
-         _T("   -D <level>  : Set debug level (valid levels are 0..9)\n")
-         _T("   -G          : Generate configuration file and exit\n")
-         _T("   -h          : Display help and exit\n")
+         _T("   -A <entry>       : Add configuration file entry\n")
+         _T("   -e               : Run database check on startup\n")
+         _T("   -c <file>        : Set non-default configuration file\n")
+         _T("   -C               : Check configuration and exit\n")
+         _T("   -d               : Run as daemon/service\n")
+         _T("   -D <level>       : Set debug level (valid levels are 0..9)\n")
+         _T("   -G               : Generate configuration file and exit\n")
+         _T("   -h               : Display help and exit\n")
 #ifdef _WIN32
-         _T("   -I          : Install Windows service\n")
-         _T("   -L <user>   : Login name for service account\n")
+         _T("   -I               : Install Windows service\n")
+         _T("   -L <user>        : Login name for service account\n")
 #endif
-         _T("   -l          : Show log file location\n")
+         _T("   -l               : Show log file location\n")
 #ifdef _WIN32
-         _T("   -m          : Ignore service start command if service is configured for manual start\n")
-         _T("   -M          : Create service with manual start\n")
-         _T("   -P <passwd> : Password for service account\n")
+         _T("   -m               : Ignore service start command if service is configured for manual start\n")
+         _T("   -M               : Create service with manual start\n")
+         _T("   -P <passwd>      : Password for service account\n")
 #else
-         _T("   -p <file>   : Path to pid file (default: /var/run/netxmsd.pid)\n")
+         _T("   -p <file>        : Path to pid file (default: /var/run/netxmsd.pid)\n")
 #endif
-         _T("   -q          : Disable interactive console\n")
+         _T("   -q               : Disable interactive console\n")
 #ifdef _WIN32
-         _T("   -R          : Remove Windows service\n")
-         _T("   -s          : Start Windows service\n")
-         _T("   -S          : Stop Windows service\n")
+         _T("   -R               : Remove Windows service\n")
+         _T("   -s               : Start Windows service\n")
+         _T("   -S               : Stop Windows service\n")
 #else
 #if WITH_SYSTEMD
-         _T("   -S          : Run as systemd daemon\n")
+         _T("   -S               : Run as systemd daemon\n")
 #endif
 #endif
-         _T("   -T          : Enable SQL query trace\n")
-         _T("   -v          : Display version and exit\n")
+         _T("   -t <tag>:<level> : Set debug level for specific tag\n")
+         _T("   -T               : Enable SQL query trace\n")
+         _T("   -v               : Display version and exit\n")
          _T("\n");
 
 #ifdef _WIN32
@@ -152,9 +153,9 @@ static void CreateMiniDump(DWORD pid)
 #endif
 
 #ifdef _WIN32
-#define VALID_OPTIONS   "A:c:CdD:eGhIlL:mMP:qRsSTv"
+#define VALID_OPTIONS   "A:c:CdD:eGhIlL:mMP:qRsSt:Tv"
 #else
-#define VALID_OPTIONS   "A:c:CdD:eGhlp:qSTv"
+#define VALID_OPTIONS   "A:c:CdD:eGhlp:qSt:Tv"
 #endif
 
 /**
@@ -183,6 +184,7 @@ static bool ParseCommandLine(int argc, char *argv[])
       { (char *)"check-config", 0, NULL, 'C' },
 		{ (char *)"daemon", 0, NULL, 'd' },
 		{ (char *)"debug", 1, NULL, 'D' },
+      { (char *)"debug-tag", 1, NULL, 't' },
       { (char *)"generate-config", 0, NULL, 'G' },
 		{ (char *)"help", 0, NULL, 'h' },
 		{ (char *)"quiet", 1, NULL, 'q' },
@@ -344,6 +346,9 @@ static bool ParseCommandLine(int argc, char *argv[])
 				g_flags |= AF_DAEMON | AF_SYSTEMD_DAEMON;
 				break;
 #endif   /* _WIN32 */
+			case 't':
+			   nxlog_set_debug_level_tag(optarg);
+			   break;
          case 'T':
             DBEnableQueryTrace(true);
             nxlog_set_debug_level_tag(_T("db.query"), 9);
