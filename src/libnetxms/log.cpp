@@ -190,6 +190,31 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tag, int level)
 }
 
 /**
+ * Set debug level for tag given as tag:value (helper for setting tags in command line)
+ */
+void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const char *definition)
+{
+   const char *p = strchr(definition, ':');
+   if (p == nullptr)
+      return;
+
+#ifdef UNICODE
+   WCHAR tag[64];
+   size_t chars = mb_to_wchar(definition, static_cast<ssize_t>(p - definition), tag, 64);
+   tag[chars] = 0;
+#else
+   char tag[64];
+   size_t len = static_cast<size_t>(p - definition);
+   if (len > 63)
+      len = 63;
+   memcpy(tag, definition, len);
+   tag[len] = 0;
+#endif
+
+   nxlog_set_debug_level_tag(tag, strtol(p + 1, nullptr, 10));
+}
+
+/**
  * Get current debug level
  */
 void LIBNETXMS_EXPORTABLE nxlog_reset_debug_level_tags()

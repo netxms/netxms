@@ -166,9 +166,9 @@ uint32_t H_SystemExecute(const shared_ptr<ActionExecutionContext>& context);
  * Valid options for getopt()
  */
 #if defined(_WIN32)
-#define VALID_OPTIONS   "B:c:CdD:e:EfFG:hHiIkKlM:n:N:P:Q:r:RsSTUvW:X:Z:z:"
+#define VALID_OPTIONS   "B:c:CdD:e:EfFG:hHiIkKlM:n:N:P:Q:r:RsSt:TUvW:X:Z:z:"
 #else
-#define VALID_OPTIONS   "B:c:CdD:fFg:G:hkKlM:p:P:Q:r:STu:vW:xX:Z:z:"
+#define VALID_OPTIONS   "B:c:CdD:fFg:G:hkKlM:p:P:Q:r:St:Tu:vW:xX:Z:z:"
 #endif
 
 /**
@@ -429,49 +429,51 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 static TCHAR m_szHelpText[] =
    _T("Usage: nxagentd [options]\n")
    _T("Where valid options are:\n")
-   _T("   -B <uin>   : Set zone UIN\n")
-   _T("   -c <file>  : Use configuration file <file> (default ") AGENT_DEFAULT_CONFIG _T(")\n")
-   _T("   -C         : Load configuration file, dump resulting configuration, and exit\n")
-   _T("   -d         : Run as daemon/service\n")
-	_T("   -D <level> : Set debug level (0..9)\n")
+   _T("   -B <uin>         : Set zone UIN\n")
+   _T("   -c <file>        : Use configuration file <file> (default ") AGENT_DEFAULT_CONFIG _T(")\n")
+   _T("   -C               : Load configuration file, dump resulting configuration, and exit\n")
+   _T("   -d               : Run as daemon/service\n")
+	_T("   -D <level>       : Set debug level (0..9)\n")
 #ifdef _WIN32
-   _T("   -e <name>  : Windows event source name\n")
+   _T("   -e <name>        : Windows event source name\n")
 #endif
-	_T("   -f         : Run in foreground\n")
+	_T("   -f               : Run in foreground\n")
 #if !defined(_WIN32)
-   _T("   -g <gid>   : Change group ID to <gid> after start\n")
+   _T("   -g <gid>         : Change group ID to <gid> after start\n")
 #endif
-   _T("   -G <name>  : Use alternate global section <name> in configuration file\n")
-   _T("   -h         : Display help and exit\n")
+   _T("   -G <name>        : Use alternate global section <name> in configuration file\n")
+   _T("   -h               : Display help and exit\n")
 #ifdef _WIN32
-   _T("   -H         : Hide agent's window when in standalone mode\n")
-	_T("   -i         : Installed Windows service must be interactive\n")
-   _T("   -I         : Install Windows service\n")
+   _T("   -H               : Hide agent's window when in standalone mode\n")
+	_T("   -i               : Installed Windows service must be interactive\n")
+   _T("   -I               : Install Windows service\n")
 #endif
-   _T("   -K         : Shutdown all connected external sub-agents\n")
-   _T("   -l         : Get log file location\n")
-   _T("   -M <addr>  : Download config from management server <addr>\n")
+   _T("   -K               : Shutdown all connected external sub-agents\n")
+   _T("   -l               : Get log file location\n")
+   _T("   -M <addr>        : Download config from management server <addr>\n")
 #ifdef _WIN32
-   _T("   -n <name>  : Service name\n")
-   _T("   -N <name>  : Service display name\n")
+   _T("   -n <name>        : Service name\n")
+   _T("   -N <name>        : Service display name\n")
 #else
-   _T("   -p         : Path to pid file (default: /var/run/nxagentd.pid)\n")
+   _T("   -p               : Path to pid file (default: /var/run/nxagentd.pid)\n")
 #endif
-   _T("   -P <text>  : Set platform suffix to <text>\n")
-   _T("   -Q <entry> : Load configuration file, query values for given entry, and exit\n")
-   _T("   -r <addr>  : Register agent on management server <addr>\n")
+   _T("   -P <text>        : Set platform suffix to <text>\n")
+   _T("   -Q <entry>       : Load configuration file, query values for given entry, and exit\n")
+   _T("   -r <addr>        : Register agent on management server <addr>\n")
 #ifdef _WIN32
-   _T("   -R         : Remove Windows service\n")
-   _T("   -s         : Start Windows servive\n")
-   _T("   -S         : Stop Windows service\n")
+   _T("   -R               : Remove Windows service\n")
+   _T("   -s               : Start Windows servive\n")
+   _T("   -S               : Stop Windows service\n")
+   _T("   -t <tag>:<level> : Set debug level for specific tag\n")
 #else
 #if WITH_SYSTEMD
-   _T("   -S         : Run as systemd daemon\n")
+   _T("   -S               : Run as systemd daemon\n")
 #endif
-   _T("   -T         : Reset agent identity\n")
-   _T("   -u <uid>   : Change user ID to <uid> after start\n")
+   _T("   -t <tag>:<level> : Set debug level for specific tag\n")
+   _T("   -T               : Reset agent identity\n")
+   _T("   -u <uid>         : Change user ID to <uid> after start\n")
 #endif
-   _T("   -v         : Display version and exit\n")
+   _T("   -v               : Display version and exit\n")
    _T("\n");
 
 /**
@@ -2063,6 +2065,7 @@ int main(int argc, char *argv[])
 #if defined(_WIN32) || HAVE_DECL_GETOPT_LONG
    static struct option longOptions[] =
    {
+      { (char *)"debug-tag", 1, nullptr, 't' },
       { (char *)"reset-identity", 0, nullptr, 'T' },
       { (char *)"zone-uin", 1, nullptr, 'B' },
       { nullptr, 0, 0, 0 }
@@ -2201,6 +2204,9 @@ int main(int argc, char *argv[])
 #else
             strlcpy(configEntry, optarg, MAX_DB_STRING);
 #endif
+            break;
+         case 't':
+            nxlog_set_debug_level_tag(optarg);
             break;
          case 'T':   // Reset identity
             command = Command::RESET_IDENTITY;
