@@ -121,6 +121,7 @@
 #define DEBUG_TAG_TOPO_CDP    _T("topology.cdp")
 #define DEBUG_TAG_TOPO_DRIVER _T("topology.driver")
 #define DEBUG_TAG_TOPO_FDB    _T("topology.fdb")
+#define DEBUG_TAG_TOPO_LINK   _T("topology.link")
 #define DEBUG_TAG_TOPO_LLDP   _T("topology.lldp")
 #define DEBUG_TAG_TOPO_NDP    _T("topology.ndp")
 
