@@ -372,7 +372,46 @@ enum SQLileAlterOp
  */
 static bool SQLiteAlterTable(DB_HANDLE hdb, SQLileAlterOp operation, const TCHAR *table, const TCHAR *column, const TCHAR *operationData)
 {
-   StringBuffer query = _T("PRAGMA TABLE_INFO('");
+   // Starting from 3.25.0 SQLite supports RENAME COLUMN
+   if (operation == RENAME_COLUMN)
+   {
+      bool useRenameColumn = false;
+      DB_RESULT hResult = DBSelect(hdb, _T("SELECT sqlite_version()"));
+      if (hResult != nullptr)
+      {
+         TCHAR version[64] = _T("");
+         DBGetField(hResult, 0, 0, version, 64);
+         TCHAR *vminor = _tcschr(version, _T('.'));
+         if (vminor != nullptr)
+         {
+            *vminor = 0;
+            vminor++;
+            TCHAR *vrelease = _tcschr(vminor, _T('.'));
+            if (vrelease != nullptr)
+            {
+               *vrelease = 0;
+               int vmajor = _tcstol(version, nullptr, 10);
+               if ((vmajor > 3) || ((vmajor == 3) && (_tcstol(vminor, nullptr, 10) >= 25)))
+               {
+                  useRenameColumn = true;
+               }
+            }
+         }
+         DBFreeResult(hResult);
+      }
+      if (useRenameColumn)
+      {
+         StringBuffer query(_T("ALTER TABLE "));
+         query.append(table);
+         query.append(_T(" RENAME COLUMN "));
+         query.append(column);
+         query.append(_T(" TO "));
+         query.append(operationData);
+         return ExecuteQuery(hdb, query);
+      }
+   }
+
+   StringBuffer query(_T("PRAGMA TABLE_INFO('"));
    query.append(table);
    query.append(_T("')"));
    DB_RESULT hResult = DBSelect(hdb, query);
