@@ -28,9 +28,67 @@
 /**
  * Upgrade from 50.44 to 51.0
  */
-static bool H_UpgradeFromV44()
+static bool H_UpgradeFromV45()
 {
    CHK_EXEC(SetMajorSchemaVersion(51, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 50.43 to 50.44
+ */
+static bool H_UpgradeFromV44()
+{
+   DB_RESULT hResult = SQLSelect(_T("SELECT map_id,link_id,element_data FROM network_map_links WHERE element_data LIKE '%</style>   <style>%'"));
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE network_map_links SET element_data=? WHERE map_id=? AND link_id=?"), count > 1);
+      if (hStmt != nullptr)
+      {
+         for (int i = 0; i < count; i++)
+         {
+            StringBuffer xml = DBGetFieldAsString(hResult, i, 2);
+            long start = xml.find(_T("<style>"));
+            long end = 0, tmp = start;
+            while(tmp != -1)
+            {
+               end = tmp;
+               tmp = xml.find(_T("</style>"), end + 8);
+            }
+
+            start += 7;
+            end -= 1;
+            xml.removeRange(start, end - start);
+
+            DBBind(hStmt, 1, DB_SQLTYPE_TEXT, xml, DB_BIND_STATIC);
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
+            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 1));
+            if (!SQLExecute(hStmt) && !g_ignoreErrors)
+            {
+               DBFreeResult(hResult);
+               DBFreeStatement(hStmt);
+               return false;
+            }
+
+         }
+         DBFreeStatement(hStmt);
+      }
+      else if (!g_ignoreErrors)
+      {
+         DBFreeResult(hResult);
+         return false;
+      }
+
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_ignoreErrors)
+         return false;
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(45));
    return true;
 }
 
@@ -2134,7 +2192,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 44, 51, 0,  H_UpgradeFromV44 },
+   { 45, 51, 0,  H_UpgradeFromV45 },
+   { 44, 50, 45, H_UpgradeFromV44 },
    { 43, 50, 44, H_UpgradeFromV43 },
    { 42, 50, 43, H_UpgradeFromV42 },
    { 41, 50, 42, H_UpgradeFromV41 },

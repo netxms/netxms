@@ -131,6 +131,20 @@ void NetworkMapLink::moveConfig(NetworkMapLink *other)
 }
 
 /**
+ * Write XML to string
+ */
+class xml_string_writer : public pugi::xml_writer
+{
+public:
+   StringBuffer result;
+
+   virtual void write(const void* data, size_t size) override
+   {
+      result.appendUtf8String(static_cast<const char*>(data), size);
+   }
+};
+
+/**
  * Update link from object link
  */
 bool NetworkMapLink::update(const ObjLink& src, bool updateNames)
@@ -167,60 +181,59 @@ bool NetworkMapLink::update(const ObjLink& src, bool updateNames)
       modified = true;
    }
 
-   StringBuffer config;
+   char *data = nullptr;
+   pugi::xml_document xml;
    if ((m_config == nullptr) || (*m_config == 0))
    {
-      config.append(_T("<config>\n"));
-      config.append(_T("   <routing>0</routing>\n"));
-      config.append(_T("   <dciList length=\"0\"/>"));
+      xml.append_child("config");
+      xml.child("config").append_child("routing").append_child(pugi::node_pcdata).set_value("0");
+      xml.child("config").append_child("dciList").append_attribute("lenght").set_value("0");
    }
    else
    {
-      config = m_config;
-      config.replace(_T("</config>"), _T(""));  // remove trailing tag
+      data = UTF8StringFromTString(m_config);
+      if (!xml.load_buffer(data, strlen(data)))
+      {
+         nxlog_debug_tag(_T("netmap"), 6, _T("NetworkMapLink::update(%u): Failed to load XML"), m_id);
 
-      ssize_t startIndex = config.find(_T("<objectStatusList class=\"java.util.ArrayList\"/>"));
-      if (startIndex != -1)
-      {
-         size_t endIndex = startIndex + 47;
-         while((startIndex > 0) && _istspace(config.charAt(startIndex - 1)))
-            startIndex--;
-         while((endIndex < config.length()) && _istspace(config.charAt(endIndex)))
-            endIndex++;
-         config.removeRange(startIndex, endIndex - startIndex);
-      }
-      else
-      {
-         startIndex = config.find(_T("<objectStatusList"));
-         if (startIndex != -1)
-         {
-            while((startIndex > 0) && _istspace(config.charAt(startIndex - 1)))
-               startIndex--;
-            ssize_t endIndex = config.find(_T("</objectStatusList>"));
-            if (endIndex != -1)
-            {
-               endIndex += 19;
-               while((endIndex < static_cast<ssize_t>(config.length())) && _istspace(config.charAt(endIndex)))
-                  endIndex++;
-               config.removeRange(startIndex, endIndex - startIndex);
-            }
-         }
+         xml.append_child("config");
+         xml.child("config").append_child("routing").append_child(pugi::node_pcdata).set_value("0");
+         xml.child("config").append_child("dciList").append_attribute("lenght").set_value("0");
       }
    }
 
    if (src.type == LINK_TYPE_VPN)
    {
-      config.append(_T("   <style>3</style>\n")); // Dot lines for VPN
+      if (xml.child("config").child("style"))
+      {
+         xml.child("config").child("style").last_child().set_value("3");
+      }
+      else
+      {
+         xml.child("config").append_child("style").append_child(pugi::node_pcdata).set_value("3");
+      }
    }
 
-   config.append(_T("\n   <objectStatusList class=\"java.util.ArrayList\"/>\n"));
-   config.append(_T("</config>"));
-
-   if (_tcscmp(CHECK_NULL_EX(m_config), config))
+   pugi::xml_node node = xml.child("config").child("objectStatusList");
+   if (node)
    {
-      setConfig(config);
+      xml.child("config").child("objectStatusList").remove_children();
+   }
+   else
+   {
+      xml.child("config").append_child("objectStatusList").append_attribute("class").set_value("java.util.ArrayList");
+
+   }
+
+   xml_string_writer writer;
+   xml.print(writer);
+
+   if (_tcscmp(CHECK_NULL_EX(m_config), writer.result))
+   {
+      setConfig(writer.result);
       modified = true;
    }
+   MemFree(data);
 
    return modified;
 }
@@ -418,6 +431,11 @@ void NetworkMapLinkNXSLContainer::updateDataSource(const shared_ptr<DCObjectInfo
    if (!found)
    {
       ConfigEntry *dciList = config->getEntry(_T("/dciList"));
+      if (dciList == nullptr)
+      {
+         dciList = config->getEntry(_T("/"))->createEntry(_T("dciList"));
+         dciList->setAttribute(_T("length"), 0);
+      }
       uint32_t currLen = dciList->getAttributeAsInt(_T("length"));
       dciList->setAttribute(_T("length"), ++currLen);
       ConfigEntry *newDciEntry = dciList->createEntry(_T("dci"));
@@ -447,10 +465,14 @@ void NetworkMapLinkNXSLContainer::clearDataSource()
    if (entries != nullptr || entries->size() != 0)
    {
       ConfigEntry *entry = config->getEntry(_T("/dciList"));
-      ConfigEntry *parent = entry->getParent();
-      parent->unlinkEntry(entry);
-      delete entry;
-      entry = parent->createEntry(_T("dciList"));
+      if (entry != nullptr)
+      {
+         ConfigEntry *parent = entry->getParent();
+         parent->unlinkEntry(entry);
+         delete entry;
+         entry = parent->createEntry(_T("dciList"));
+      }
+      entry = config->getEntry(_T("/"))->createEntry(_T("dciList"));
       entry->setAttribute(_T("length"), 0);
       setModified();
    }
@@ -468,10 +490,21 @@ void NetworkMapLinkNXSLContainer::removeDataSource(uint32_t index)
    if ((entries != nullptr) && (static_cast<uint32_t>(entries->size()) > index))
    {
       ConfigEntry *dciList = config->getEntry(_T("/dciList"));
-      uint32_t currLen = dciList->getAttributeAsInt(_T("length"));
-      dciList->setAttribute(_T("length"), --currLen);
-      config->getEntry(_T("/dciList"))->unlinkEntry(entries->get(index));
-      delete entries->get(index);
+      if (dciList == nullptr)
+      {
+         dciList = config->getEntry(_T("/"))->createEntry(_T("dciList"));
+         dciList->setAttribute(_T("length"), 0);
+      }
+      else
+      {
+         uint32_t currLen = dciList->getAttributeAsInt(_T("length"), 0);
+         if (currLen > 0)
+         {
+            dciList->setAttribute(_T("length"), --currLen);
+            config->getEntry(_T("/dciList"))->unlinkEntry(entries->get(index));
+         }
+         delete entries->get(index);
+      }
       setModified();
    }
 }
@@ -489,7 +522,7 @@ void NetworkMapLinkNXSLContainer::setRoutingAlgorithm(uint32_t algorithm)
    Config *config = getConfigInstance();
    if (config->getValueAsUInt(_T("/routing"), 0) != algorithm)
    {
-      ConfigEntry *routing = config->getEntry(_T("/routing"));
+      ConfigEntry *routing = config->getEntry(_T("/"))->createEntry(_T("routing"));
       TCHAR buffer[64];
       _sntprintf(buffer, 64, _T("%u"), (unsigned int)algorithm);
       routing->setValue(buffer);
@@ -507,10 +540,10 @@ void NetworkMapLinkNXSLContainer::setWidth(uint32_t width)
    Config *config = getConfigInstance();
    if (config->getValueAsUInt(_T("/width"), 0) != width)
    {
-      ConfigEntry *routing = config->getEntry(_T("/width"));
+      ConfigEntry *widthElement = config->getEntry(_T("/"))->createEntry(_T("width"));
       TCHAR buffer[64];
       _sntprintf(buffer, 64, _T("%u"), (unsigned int)width);
-      routing->setValue(buffer);
+      widthElement->setValue(buffer);
       setModified();
    }
 }
@@ -529,10 +562,10 @@ void NetworkMapLinkNXSLContainer::setStyle(uint32_t style)
    Config *config = getConfigInstance();
    if (config->getValueAsUInt(_T("/style"), 0) != style)
    {
-      ConfigEntry *routing = config->getEntry(_T("/style"));
+      ConfigEntry *styleEleemnt = config->getEntry(_T("/"))->createEntry(_T("style"));
       TCHAR buffer[64];
       _sntprintf(buffer, 64, _T("%u"), (unsigned int)style);
-      routing->setValue(buffer);
+      styleEleemnt->setValue(buffer);
       setModified();
    }
 }
@@ -607,7 +640,7 @@ void NetworkMapLinkNXSLContainer::setColorSourceToObjectStatus(const IntegerArra
       }
       if (!found)
       {
-         ConfigEntry *parent = config->getEntry(_T("/objectStatusList"));
+         ConfigEntry *parent = config->getEntry(_T("/"))->createEntry(_T("objectStatusList"));
          ConfigEntry *newConfigEntry = new ConfigEntry(_T("long"), parent, config, _T("<memory>"), 0, 0);
          TCHAR buffer[64];
          IntegerToString(objects.get(j), buffer);

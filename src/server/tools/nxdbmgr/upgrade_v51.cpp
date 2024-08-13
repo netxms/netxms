@@ -24,6 +24,67 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.9 to 51.10
+ */
+static bool H_UpgradeFromV9()
+{
+   if (GetSchemaLevelForMajorVersion(50) < 45)
+   {
+      DB_RESULT hResult = SQLSelect(_T("SELECT map_id,link_id,element_data FROM network_map_links WHERE element_data LIKE '%</style>   <style>%'"));
+      if (hResult != nullptr)
+      {
+         int count = DBGetNumRows(hResult);
+         DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE network_map_links SET element_data=? WHERE map_id=? AND link_id=?"), count > 1);
+         if (hStmt != nullptr)
+         {
+            for (int i = 0; i < count; i++)
+            {
+               StringBuffer xml = DBGetFieldAsString(hResult, i, 2);
+               long start = xml.find(_T("<style>"));
+               long end = 0, tmp = start;
+               while(tmp != -1)
+               {
+                  end = tmp;
+                  tmp = xml.find(_T("</style>"), end + 8);
+               }
+
+               start += 7;
+               end -= 1;
+               xml.removeRange(start, end - start);
+
+               DBBind(hStmt, 1, DB_SQLTYPE_TEXT, xml, DB_BIND_STATIC);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 1));
+               if (!SQLExecute(hStmt) && !g_ignoreErrors)
+               {
+                  DBFreeResult(hResult);
+                  DBFreeStatement(hStmt);
+                  return false;
+               }
+
+            }
+            DBFreeStatement(hStmt);
+         }
+         else if (!g_ignoreErrors)
+         {
+            DBFreeResult(hResult);
+            return false;
+         }
+
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         if (!g_ignoreErrors)
+            return false;
+      }
+      CHK_EXEC(SetSchemaLevelForMajorVersion(50, 45));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(10));
+   return true;
+}
+
+/**
  * Upgrade from 51.8 to 51.9
  */
 static bool H_UpgradeFromV8()
@@ -188,6 +249,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 9,  51, 10, H_UpgradeFromV9  },
    { 8,  51, 9,  H_UpgradeFromV8  },
    { 7,  51, 8,  H_UpgradeFromV7  },
    { 6,  51, 7,  H_UpgradeFromV6  },
