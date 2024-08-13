@@ -167,6 +167,17 @@ int H_Login(Context *context)
       return 400;
    }
 
+#if WITH_PRIVATE_EXTENSIONS
+   if (!IsComponentRegistered(_T("EMCL")) && !IsComponentRegistered(_T("WEBAPI")))
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Password missing in login request"));
+      MemFree(username);
+      MemFree(password);
+      context->setErrorResponse("Required license not installed");
+      return 403;
+   }
+#endif
+
    json_t *response = json_object();
 
    int responseCode;
