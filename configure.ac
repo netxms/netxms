@@ -368,6 +368,7 @@ AC_ARG_WITH(private-extensions,
 	        if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
 			CUSTOM_INCLUDE="$withval"
 		fi
+		AC_DEFINE(WITH_PRIVATE_EXTENSIONS, 1, Define to 1 if private extensions are enabled)
 	fi
 ])
 
