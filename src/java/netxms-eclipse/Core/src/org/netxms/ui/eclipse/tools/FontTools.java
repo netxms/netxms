@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -133,7 +133,24 @@ public class FontTools
 
    /**
     * Create first available font from given list with adjusted height
-    * 
+    *
+    * @param names possible font names
+    * @param baseFont base font to get height from
+    * @param heightAdjustment height adjustment
+    * @param style font style
+    * @return font object
+    */
+   public static Font createFont(String[] names, Font baseFont, int heightAdjustment, int style)
+   {
+      String name = findFirstAvailableFont(names);
+      if (name == null)
+         return null;
+      return new Font(Display.getCurrent(), name, baseFont.getFontData()[0].getHeight() + heightAdjustment, style);
+   }
+
+   /**
+    * Create first available font from given list with adjusted height
+    *
     * @param names possible font names
     * @param heightAdjustment height adjustment
     * @param style font style
@@ -141,10 +158,7 @@ public class FontTools
     */
    public static Font createFont(String[] names, int heightAdjustment, int style)
    {
-      String name = findFirstAvailableFont(names);
-      if (name == null)
-         return null;
-      return new Font(Display.getCurrent(), name, JFaceResources.getDefaultFont().getFontData()[0].getHeight() + heightAdjustment, style);
+      return createFont(names, JFaceResources.getDefaultFont(), 0, style);
    }
 
    /**

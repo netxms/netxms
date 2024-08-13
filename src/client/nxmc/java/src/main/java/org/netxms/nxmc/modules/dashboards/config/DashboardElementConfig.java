@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,6 +47,9 @@ public class DashboardElementConfig
 
    @Element(required = false)
    private int titleFontSize = 0; // Adjustment from standard size
+
+   @Element(required = false)
+   private String titleFontName = null;
 
 	/**
 	 * Create XML from configuration.
@@ -137,6 +140,22 @@ public class DashboardElementConfig
    public void setTitleFontSize(int titleFontSize)
    {
       this.titleFontSize = titleFontSize;
+   }
+
+   /**
+    * @return the titleFontName
+    */
+   public String getTitleFontName()
+   {
+      return titleFontName;
+   }
+
+   /**
+    * @param titleFontName the titleFontName to set
+    */
+   public void setTitleFontName(String titleFontName)
+   {
+      this.titleFontName = (titleFontName != null) && titleFontName.isBlank() ? null : titleFontName;
    }
 
    /**

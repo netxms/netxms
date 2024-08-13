@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.widgets.ExtendedColorSelector;
 import org.netxms.ui.eclipse.widgets.LabeledSpinner;
+import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Widget for configuring element title
@@ -40,6 +41,7 @@ public class TitleConfigurator extends Composite
    private ExtendedColorSelector backgroundColor;
    private ExtendedColorSelector foregroundColor;
    private LabeledSpinner fontHeight;
+   private LabeledText fontName;
 
    /**
     * Create new title configurator.
@@ -88,7 +90,7 @@ public class TitleConfigurator extends Composite
          GridData gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
-         gd.horizontalSpan = 3;
+         gd.horizontalSpan = layout.numColumns;
          label.setLayoutData(gd);
       }
 
@@ -97,20 +99,27 @@ public class TitleConfigurator extends Composite
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 3;
+      gd.horizontalSpan = layout.numColumns;
       text.setLayoutData(gd);
 
       backgroundColor = createColorSelector(group, "Background");
       backgroundColor.setColorValue(ColorConverter.parseColorDefinition(config.getTitleBackground()));
+      backgroundColor.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 1, 2));
 
       foregroundColor = createColorSelector(group, "Foreground");
       foregroundColor.setColorValue(ColorConverter.parseColorDefinition(config.getTitleForeground()));
+      foregroundColor.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 1, 2));
 
       fontHeight = new LabeledSpinner(group, SWT.NONE);
       fontHeight.setLabel("Font size adjustment");
       fontHeight.setRange(-20, 20);
       fontHeight.setSelection(config.getTitleFontSize());
       fontHeight.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+
+      fontName = new LabeledText(group, SWT.NONE);
+      fontName.setLabel("Font name");
+      fontName.setText((config.getTitleFontName() != null) ? config.getTitleFontName() : "");
+      fontName.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
    }
 
    /**
@@ -143,5 +152,6 @@ public class TitleConfigurator extends Composite
       config.setTitleBackground(ColorConverter.rgbToCss(backgroundColor.getColorValue()));
       config.setTitleForeground(ColorConverter.rgbToCss(foregroundColor.getColorValue()));
       config.setTitleFontSize(fontHeight.getSelection());
+      config.setTitleFontName(fontName.getText());
    }
 }

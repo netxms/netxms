@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets;
 
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlEvent;
@@ -151,18 +152,20 @@ public class ElementWidget extends DashboardComposite implements ControlListener
    /**
     * Set element's title.
     *
-    * @param text
-    * @param backgroundColor
-    * @param foregroundColor
-    * @param textSizeAdjustment
+    * @param text title text
+    * @param backgroundColor background color or null
+    * @param foregroundColor foreground color or null
+    * @param textSizeAdjustment text size adjustment
+    * @param fontName font name or null
     */
-   protected void setTitle(String text, RGB backgroundColor, RGB foregroundColor, int textSizeAdjustment)
+   protected void setTitle(String text, RGB backgroundColor, RGB foregroundColor, int textSizeAdjustment, String fontName)
    {
       if (title != null)
          title.dispose();
 
       title = new Label(this, SWT.CENTER);
       title.setText(text.replace("&", "&&"));
+
       if (backgroundColor != null)
       {
          title.setBackground(colors.create(backgroundColor));
@@ -172,12 +175,29 @@ public class ElementWidget extends DashboardComposite implements ControlListener
       {
          title.setBackground(getBackground());
       }
+
       if (foregroundColor != null)
          title.setForeground(colors.create(foregroundColor));
+
       if (titleFont != null)
          titleFont.dispose();
-      titleFont = FontTools.createAdjustedFont(FontTools.getTitleFont(), textSizeAdjustment);
-      title.setFont(titleFont);
+      if ((fontName != null) && !fontName.isEmpty())
+      {
+         Font systemFont = JFaceResources.getBannerFont();
+         titleFont = FontTools.createFont(new String[] { fontName }, JFaceResources.getBannerFont(), textSizeAdjustment, systemFont.getFontData()[0].getStyle());
+         title.setFont((titleFont != null) ? titleFont : systemFont);
+      }
+      else if (textSizeAdjustment != 0)
+      {
+         titleFont = FontTools.createAdjustedFont(JFaceResources.getBannerFont(), textSizeAdjustment);
+         title.setFont(titleFont);
+      }
+      else
+      {
+         titleFont = null;
+         title.setFont(JFaceResources.getBannerFont());
+      }
+
       GridData gd = new GridData(SWT.CENTER, SWT.CENTER, true, false);
       gd.verticalIndent = 4;
       title.setLayoutData(gd);
@@ -193,7 +213,7 @@ public class ElementWidget extends DashboardComposite implements ControlListener
    protected void processCommonSettings(DashboardElementConfig config)
    {
       if (!config.getTitle().isEmpty())
-         setTitle(config.getTitle(), ColorConverter.parseColorDefinition(config.getTitleBackground()), ColorConverter.parseColorDefinition(config.getTitleForeground()), config.getTitleFontSize());
+         setTitle(config.getTitle(), ColorConverter.parseColorDefinition(config.getTitleBackground()), ColorConverter.parseColorDefinition(config.getTitleForeground()), config.getTitleFontSize(), config.getTitleFontName());
    }
 
 	/**
