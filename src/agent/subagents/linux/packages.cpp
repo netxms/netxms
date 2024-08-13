@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2013-2023 Victor Kirhenshtein
+** Copyright (C) 2013-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,114 @@
 #include <sys/utsname.h>
 
 /**
+ * Parse pacman output
+ */
+static void PacmanParser(const StringList& input, Table *output, const TCHAR *arch)
+{
+   for(int i = 0; i < input.size(); i++)
+   {
+      TCHAR line[1024];
+      _tcslcpy(line, input.get(i), 1024);
+
+      TCHAR *p = _tcschr(line, _T(':'));
+      if (p == nullptr)
+         continue;
+
+      *p = 0;
+      p++;
+      Trim(line);
+      Trim(p);
+
+      if (!_tcsicmp(line, _T("Name")))
+      {
+         output->addRow();
+         output->set(0, p);
+         output->set(6, p);
+      }
+      else if (!_tcsicmp(line, _T("Description")))
+      {
+         output->set(5, p);
+      }
+      else if (!_tcsicmp(line, _T("Install Date")))
+      {
+         if (p[0] != 0)
+         {
+            struct tm localTime;
+#ifdef UNICODE
+            char text[256];
+            wchar_to_mb(p, -1, text, 256);
+            if (strptime(text, "%a %d %b %Y %H:%M:%S %Z", &localTime) != nullptr)
+#else
+            if (strptime(p, "%a %d %b %Y %H:%M:%S %Z", &localTime) != nullptr)
+#endif
+            {
+               output->set(3, static_cast<int64_t>(mktime(&localTime)));
+            }
+         }
+      }
+      else if (!_tcsicmp(line, _T("Packager")))
+      {
+         output->set(2, p);
+      }
+      else if (!_tcsicmp(line, _T("URL")))
+      {
+         output->set(4, p);
+      }
+      else if (!_tcsicmp(line, _T("Version")))
+      {
+         output->set(1, p);
+      }
+   }
+}
+
+/**
+ * Default parser (used for rpm, dpkg, and opkg)
+ */
+static void DefaultParser(const StringList& input, Table *output, const TCHAR *arch)
+{
+   for(int i = 0; i < input.size(); i++)
+   {
+      TCHAR line[1024];
+      _tcslcpy(line, input.get(i), 1024);
+
+      if (_tcsncmp(line, _T("@@@"), 3))
+         continue;
+
+      output->addRow();
+      TCHAR *curr = _tcschr(&line[3], _T('#'));
+      if (curr != nullptr)
+         curr++;
+      else
+         curr = &line[3];
+		for(int i = 0; i < 6; i++)
+		{
+			TCHAR *ptr = _tcschr(curr, _T('|'));
+			if (ptr != nullptr)
+				*ptr = 0;
+
+			// Remove architecture from package name if it is the same as
+			// OS architecture or package is architecture-independent
+			if (i == 0)
+			{
+	         output->set(6, curr); // set uninstall key to name:arch
+			   TCHAR *pa = _tcsrchr(curr, _T(':'));
+			   if (pa != nullptr)
+			   {
+			      if (!_tcscmp(pa, _T(":all")) || !_tcscmp(pa, _T(":noarch")) || !_tcscmp(pa, _T(":(none)")) || (_tcsstr(arch, pa) != nullptr))
+			         *pa = 0;
+			   }
+			}
+
+			output->set(i, curr);
+
+			if (ptr == nullptr)
+				break;
+         curr = ptr + 1;
+      }
+   }
+}
+
+/**
  * Handler for System.InstalledProducts table
  */
 LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
@@ -32,20 +140,27 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
 #else
    bool shellExec;
    const TCHAR *command;
+   void (*parser)(const StringList&, Table*, const TCHAR*) = DefaultParser;
    if (access("/bin/rpm", X_OK) == 0)
    {
-		command = _T("/bin/rpm -qa --queryformat '@@@ #%{NAME}:%{ARCH}|%{VERSION}%|RELEASE?{-%{RELEASE}}:{}||%{VENDOR}|%{INSTALLTIME}|%{URL}|%{SUMMARY}\\n'");
-		shellExec = false;
+      command = _T("/bin/rpm -qa --queryformat '@@@ #%{NAME}:%{ARCH}|%{VERSION}%|RELEASE?{-%{RELEASE}}:{}||%{VENDOR}|%{INSTALLTIME}|%{URL}|%{SUMMARY}\\n'");
+      shellExec = false;
    }
    else if (access("/usr/bin/dpkg-query", X_OK) == 0)
    {
-		command = _T("/usr/bin/dpkg-query -W -f '@@@${Status}#${package}:${Architecture}|${version}|||${homepage}|${description}\\n' | grep '@@@install.*installed.*#'");
+      command = _T("/usr/bin/dpkg-query -W -f '@@@${Status}#${package}:${Architecture}|${version}|||${homepage}|${description}\\n' | grep '@@@install.*installed.*#'");
       shellExec = true;
-	}
-	else
-	{
-		return SYSINFO_RC_UNSUPPORTED;
-	}
+   }
+   else if (access("/usr/bin/pacman", X_OK) == 0)
+   {
+      command = _T("/usr/bin/pacman -Qi");
+      shellExec = false;
+      parser = PacmanParser;
+   }
+   else
+   {
+      return SYSINFO_RC_UNSUPPORTED;
+   }
 #endif
 
    struct utsname un;
@@ -88,56 +203,17 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
    if (!executor.waitForCompletion(5000))
       return SYSINFO_RC_ERROR;
 
-	value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"), true);
-	value->addColumn(_T("VERSION"), DCI_DT_STRING, _T("Version"), true);
-	value->addColumn(_T("VENDOR"), DCI_DT_STRING, _T("Vendor"));
-	value->addColumn(_T("DATE"), DCI_DT_STRING, _T("Install Date"));
-	value->addColumn(_T("URL"), DCI_DT_STRING, _T("URL"));
-	value->addColumn(_T("DESCRIPTION"), DCI_DT_STRING, _T("Description"));
+   value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"), true);
+   value->addColumn(_T("VERSION"), DCI_DT_STRING, _T("Version"), true);
+   value->addColumn(_T("VENDOR"), DCI_DT_STRING, _T("Vendor"));
+   value->addColumn(_T("DATE"), DCI_DT_INT64, _T("Install Date"));
+   value->addColumn(_T("URL"), DCI_DT_STRING, _T("URL"));
+   value->addColumn(_T("DESCRIPTION"), DCI_DT_STRING, _T("Description"));
    value->addColumn(_T("UNINSTALL_KEY"), DCI_DT_STRING, _T("Uninstall key"));
 
-	for(int i = 0; i < executor.getData().size(); i++)
-	{
-		TCHAR line[1024];
-		_tcslcpy(line, executor.getData().get(i), 1024);
+   parser(executor.getData(), value, arch);
 
-		if (_tcsncmp(line, _T("@@@"), 3))
-			continue;
-
-		value->addRow();
-		TCHAR *curr = _tcschr(&line[3], _T('#'));
-		if (curr != nullptr)
-			curr++;
-		else
-			curr = &line[3];
-		for(int i = 0; i < 6; i++)
-		{
-			TCHAR *ptr = _tcschr(curr, _T('|'));
-			if (ptr != nullptr)
-				*ptr = 0;
-
-			// Remove architecture from package name if it is the same as
-			// OS architecture or package is architecture-independent
-			if (i == 0)
-			{
-	         value->set(6, curr); // set uninstall key to name:arch
-			   TCHAR *pa = _tcsrchr(curr, _T(':'));
-			   if (pa != nullptr)
-			   {
-			      if (!_tcscmp(pa, _T(":all")) || !_tcscmp(pa, _T(":noarch")) || !_tcscmp(pa, _T(":(none)")) || (_tcsstr(arch, pa) != nullptr))
-			         *pa = 0;
-			   }
-			}
-
-			value->set(i, curr);
-
-			if (ptr == nullptr)
-				break;
-			curr = ptr + 1;
-		}
-	}
-
-	return SYSINFO_RC_SUCCESS;
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -162,6 +238,12 @@ uint32_t H_UninstallProduct(const shared_ptr<ActionExecutionContext>& context)
    else if (access("/usr/bin/dpkg", X_OK) == 0)
    {
       command.append(_T("['/usr/bin/dpkg','-r','"));
+      command.append(uninstallKey);
+      command.append(_T("']"));
+   }
+   else if (access("/usr/bin/pacman", X_OK) == 0)
+   {
+      command.append(_T("['/usr/bin/pacman','-R','"));
       command.append(uninstallKey);
       command.append(_T("']"));
    }
