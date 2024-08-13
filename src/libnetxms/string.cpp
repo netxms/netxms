@@ -1140,7 +1140,7 @@ StringBuffer& StringBuffer::removeRange(size_t start, ssize_t len)
       return *this;
 
    len = (len == -1) ? m_length - start : std::min(m_length - start, static_cast<size_t>(len));
-   memmove(&m_buffer[start], &m_buffer[start + len], (m_length - start - len) * sizeof(TCHAR));
+   memmove(&m_buffer[start], &m_buffer[start + len], (m_length - start - len + 1) * sizeof(TCHAR));
    m_length -= len;
    return *this;
 }
