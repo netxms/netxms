@@ -2798,7 +2798,7 @@ AC_CHECK_SIZEOF(void*)
 
 AC_STRUCT_TIMEZONE
 
-AC_CHECK_TYPES([long long, unsigned long long, int64_t, uint64_t, u_int64_t, int32_t, uint32_t, int16_t, uint16_t, int8_t, uint8_t, intptr_t, uintptr_t, bool],,,[
+AC_CHECK_TYPES([long long, unsigned long long, int64_t, uint64_t, int32_t, uint32_t, int16_t, uint16_t, int8_t, uint8_t, intptr_t, uintptr_t, bool],,,[
 #ifdef HAVE_STDBOOL_H
 #include <stdbool.h>
 #endif
@@ -2852,26 +2852,6 @@ static inline int func(ssize_t v)
 ])
 AC_LANG_POP([C++])
 
-AC_MSG_CHECKING(for nullptr)
-AC_LANG_PUSH([C++])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#include <stdio.h>
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-]],[[
-	void *v = nullptr;
-	return v == nullptr;
-]])
-],[
-        AC_MSG_RESULT(yes)
-        AC_DEFINE(HAVE_NULLPTR,1,Define to 1 if compiler has nullptr)
-],[
-        AC_MSG_RESULT(no)
-        AC_DEFINE(HAVE_NULLPTR,0,Define to 1 if compiler has nullptr)
-])
-AC_LANG_POP([C++])
-
 AC_MSG_CHECKING(whether va_list is a pointer)
 AC_LANG_PUSH([C++])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
@@ -2910,8 +2890,7 @@ AC_FUNC_STRFTIME
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
 
-AC_CHECK_FUNCS([gettimeofday memmove memset memmem bcopy strchr strcspn strdup])
-AC_CHECK_FUNCS([strrchr strlwr strtok_r strtol strtoul strtoll strtoull])
+AC_CHECK_FUNCS([gettimeofday memmem strcspn strrchr strlwr strtok_r strtoll strtoull])
 AC_CHECK_FUNCS([strlcpy strlcat strcasestr setlocale strerror strerror_r toupper])
 AC_CHECK_FUNCS([tolower if_nametoindex daemon mmap scandir uname poll])
 AC_CHECK_FUNCS([usleep nanosleep gmtime_r localtime_r stat64 fstat64 lstat64])

@@ -271,7 +271,7 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
 		// agents prior to 1.2.10 will not send request id
 		// we should accept data in that case to maintain compatibility
 		bool acceptRequest;
-		QWORD requestId = msg->getFieldAsUInt64(VID_REQUEST_ID);
+		uint64_t requestId = msg->getFieldAsUInt64(VID_REQUEST_ID);
 		if (requestId != 0)
 		{
 			acceptRequest = sender->checkAgentPushRequestId(requestId);

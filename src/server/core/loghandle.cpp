@@ -259,7 +259,7 @@ StringBuffer LogHandle::buildObjectAccessConstraint(uint32_t userId)
  */
 bool LogHandle::queryInternal(int64_t *rowCount, uint32_t userId)
 {
-	QWORD qwTimeStart = GetCurrentTimeMs();
+	int64_t startTime = GetCurrentTimeMs();
 	StringBuffer query;
 	switch(g_dbSyntax)
 	{
@@ -335,7 +335,7 @@ bool LogHandle::queryInternal(int64_t *rowCount, uint32_t userId)
 	{
 		*rowCount = DBGetNumRows(m_resultSet);
 		ret = true;
-		nxlog_debug_tag(DEBUG_TAG_LOGS, 4, _T("Log query successful, %d rows fetched in %d ms"), (int)(*rowCount), (int)(GetCurrentTimeMs() - qwTimeStart));
+		nxlog_debug_tag(DEBUG_TAG_LOGS, 4, _T("Log query successful, %d rows fetched in %d ms"), (int)(*rowCount), (int)(GetCurrentTimeMs() - startTime));
 	}
 	DBConnectionPoolReleaseConnection(dbHandle);
 
