@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -31,7 +31,7 @@ static void (*s_fpPostEvent2)(uint32_t, const TCHAR*, time_t, int, const TCHAR**
 static void (*s_fpPostEvent3)(uint32_t, const TCHAR*, time_t, const StringMap&) = nullptr;
 static shared_ptr<AbstractCommSession> (*s_fpFindServerSession)(uint64_t) = nullptr;
 static bool (*s_fpEnumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void *) = nullptr;
-static bool (*s_fpPushData)(const TCHAR *, const TCHAR *, UINT32, time_t) = nullptr;
+static bool (*s_fpPushData)(const TCHAR *, const TCHAR *, uint32_t, time_t) = nullptr;
 static const TCHAR *s_dataDirectory = nullptr;
 static DB_HANDLE (*s_fpGetLocalDatabaseHandle)() = nullptr;
 static void (*s_fpExecuteAction)(const TCHAR*, const StringList&) = nullptr;
@@ -51,7 +51,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
       void (*postEvent3)(uint32_t, const TCHAR*, time_t, const StringMap&),
       bool (*enumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void*),
       shared_ptr<AbstractCommSession> (*findServerSession)(uint64_t),
-      bool (*pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
+      bool (*pushData)(const TCHAR *, const TCHAR *, uint32_t, time_t),
       DB_HANDLE (*getLocalDatabaseHandle)(),
       const TCHAR *dataDirectory,
       void (*executeAction)(const TCHAR*, const StringList&),
@@ -200,12 +200,10 @@ bool LIBNXAGENT_EXPORTABLE AgentPushParameterData(const TCHAR *parameter, const 
 /**
  * Push parameter's value
  */
-bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataInt32(const TCHAR *parameter, LONG value)
+bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataInt32(const TCHAR *parameter, int32_t value)
 {
 	TCHAR buffer[64];
-
-	_sntprintf(buffer, sizeof(buffer), _T("%d"), (int)value);
-	return AgentPushParameterData(parameter, buffer);
+	return AgentPushParameterData(parameter, IntegerToString(value, buffer));
 }
 
 /**
@@ -213,31 +211,26 @@ bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataInt32(const TCHAR *parameter, L
  */
 bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataUInt32(const TCHAR *parameter, uint32_t value)
 {
-	TCHAR buffer[64];
-	_sntprintf(buffer, sizeof(buffer), _T("%u"), (unsigned int)value);
-	return AgentPushParameterData(parameter, buffer);
+   TCHAR buffer[64];
+   return AgentPushParameterData(parameter, IntegerToString(value, buffer));
 }
 
 /**
  * Push parameter's value
  */
-bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataInt64(const TCHAR *parameter, INT64 value)
+bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataInt64(const TCHAR *parameter, int64_t value)
 {
-	TCHAR buffer[64];
-
-	_sntprintf(buffer, sizeof(buffer), INT64_FMT, value);
-	return AgentPushParameterData(parameter, buffer);
+   TCHAR buffer[64];
+   return AgentPushParameterData(parameter, IntegerToString(value, buffer));
 }
 
 /**
  * Push parameter's value
  */
-bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataUInt64(const TCHAR *parameter, QWORD value)
+bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataUInt64(const TCHAR *parameter, uint64_t value)
 {
-	TCHAR buffer[64];
-
-	_sntprintf(buffer, sizeof(buffer), UINT64_FMT, value);
-	return AgentPushParameterData(parameter, buffer);
+   TCHAR buffer[64];
+   return AgentPushParameterData(parameter, IntegerToString(value, buffer));
 }
 
 /**
@@ -246,8 +239,7 @@ bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataUInt64(const TCHAR *parameter, 
 bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataDouble(const TCHAR *parameter, double value)
 {
 	TCHAR buffer[64];
-
-	_sntprintf(buffer, sizeof(buffer), _T("%f"), value);
+	_sntprintf(buffer, 64, _T("%f"), value);
 	return AgentPushParameterData(parameter, buffer);
 }
 

@@ -613,8 +613,6 @@ typedef long int64_t;
 #if !HAVE_UINT64_T
 #if HAVE_UNSIGNED_LONG_LONG && (SIZEOF_LONG_LONG == 8)
 typedef unsigned long long uint64_t;
-#elif HAVE_U_INT64_T
-typedef u_int64_t uint64_t;
 #elif SIZEOF_LONG == 8
 typedef unsigned long uint64_t;
 #else
@@ -683,11 +681,7 @@ typedef uint32_t uintptr_t;
 #endif
 #endif
 
-#if !HAVE_NULLPTR
-#define nullptr NULL
-#endif
-
-/* Deprectaed compatibility types - to be removed */
+/* Deprecated compatibility types - to be removed */
 typedef uint8_t BYTE;
 typedef int16_t INT16;
 typedef uint16_t UINT16;

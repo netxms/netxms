@@ -868,7 +868,7 @@ static void FillAlarmEventsMessage(NXCPMessage *msg, uint32_t alarmId)
 			{
 				FillEventData(msg, varId, hResult, i, 0);
 				varId += 10;
-				QWORD eventId = DBGetFieldUInt64(hResult, i, 0);
+				uint64_t eventId = DBGetFieldUInt64(hResult, i, 0);
 				varId += GetCorrelatedEvents(eventId, msg, varId, hdb);
 			}
 			DBFreeResult(hResult);

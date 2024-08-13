@@ -1103,12 +1103,12 @@ static inline void ret_double(TCHAR *rbuf, double value, int digits = 6)
 #endif
 }
 
-static inline void ret_int64(TCHAR *rbuf, INT64 value)
+static inline void ret_int64(TCHAR *rbuf, int64_t value)
 {
    IntegerToString(value, rbuf);
 }
 
-static inline void ret_uint64(TCHAR *rbuf, QWORD value)
+static inline void ret_uint64(TCHAR *rbuf, uint64_t value)
 {
    IntegerToString(value, rbuf);
 }
@@ -1322,8 +1322,8 @@ shared_ptr<AbstractCommSession> LIBNXAGENT_EXPORTABLE AgentFindServerSession(uin
 bool LIBNXAGENT_EXPORTABLE AgentPushParameterData(const TCHAR *parameter, const TCHAR *value);
 bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataInt32(const TCHAR *parameter, LONG value);
 bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataUInt32(const TCHAR *parameter, uint32_t value);
-bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataInt64(const TCHAR *parameter, INT64 value);
-bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataUInt64(const TCHAR *parameter, QWORD value);
+bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataInt64(const TCHAR *parameter, int64_t value);
+bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataUInt64(const TCHAR *parameter, uint64_t value);
 bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataDouble(const TCHAR *parameter, double value);
 
 const TCHAR LIBNXAGENT_EXPORTABLE *AgentGetDataDirectory();

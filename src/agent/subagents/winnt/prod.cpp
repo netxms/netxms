@@ -122,7 +122,7 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
    value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"), true);
    value->addColumn(_T("VERSION"), DCI_DT_STRING, _T("Version"), true);
    value->addColumn(_T("VENDOR"), DCI_DT_STRING, _T("Vendor"));
-   value->addColumn(_T("DATE"), DCI_DT_STRING, _T("Install Date"));
+   value->addColumn(_T("DATE"), DCI_DT_INT64, _T("Install Date"));
    value->addColumn(_T("URL"), DCI_DT_STRING, _T("URL"));
    value->addColumn(_T("DESCRIPTION"), DCI_DT_STRING, _T("Description"));
    value->addColumn(_T("UNINSTALL_KEY"), DCI_DT_STRING, _T("Uninstall key"));

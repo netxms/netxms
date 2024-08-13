@@ -109,9 +109,9 @@ LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCom
  * File filter for GetDirInfo
  */
 #ifdef _WIN32
-static bool MatchFileFilter(const WCHAR *fileName, const NX_STAT_STRUCT &fileInfo, const WCHAR *pattern, int ageFilter, INT64 sizeFilter, bool searchInverse)
+static bool MatchFileFilter(const WCHAR *fileName, const NX_STAT_STRUCT &fileInfo, const WCHAR *pattern, int ageFilter, int64_t sizeFilter, bool searchInverse)
 #else
-static bool MatchFileFilter(const char *fileName, const NX_STAT_STRUCT &fileInfo, const char *pattern, int ageFilter, INT64 sizeFilter, bool searchInverse)
+static bool MatchFileFilter(const char *fileName, const NX_STAT_STRUCT &fileInfo, const char *pattern, int ageFilter, int64_t sizeFilter, bool searchInverse)
 #endif
 {
    if (searchInverse)
@@ -135,7 +135,7 @@ static bool MatchFileFilter(const char *fileName, const NX_STAT_STRUCT &fileInfo
 
    if (ageFilter != 0)
    {
-      time_t now = time(NULL);
+      time_t now = time(nullptr);
       if (ageFilter < 0)
       {
          if (fileInfo.st_mtime < now + ageFilter)
@@ -170,10 +170,10 @@ static bool MatchFileFilter(const char *fileName, const NX_STAT_STRUCT &fileInfo
  */
 #ifdef _WIN32
 static LONG GetDirInfo(const WCHAR *path, const WCHAR *pattern, bool bRecursive, unsigned int &uFileCount,
-                       UINT64 &llFileSize, int ageFilter, INT64 sizeFilter, bool countFiles, bool countFolders, bool searchInverse)
+                       uint64_t &llFileSize, int ageFilter, int64_t sizeFilter, bool countFiles, bool countFolders, bool searchInverse)
 #else
 static LONG GetDirInfo(const char *path, const char *pattern, bool bRecursive, unsigned int &uFileCount,
-                       UINT64 &llFileSize, int ageFilter, INT64 sizeFilter, bool countFiles, bool countFolders, bool searchInverse)
+                       uint64_t &llFileSize, int ageFilter, int64_t sizeFilter, bool countFiles, bool countFolders, bool searchInverse)
 #endif
 {
    NX_STAT_STRUCT fileInfo;
@@ -187,7 +187,7 @@ static LONG GetDirInfo(const char *path, const char *pattern, bool bRecursive, u
    // Filters ignored in this case
    if (!S_ISDIR(fileInfo.st_mode))
    {
-      llFileSize += (UINT64)fileInfo.st_size;
+      llFileSize += static_cast<uint64_t>(fileInfo.st_size);
       uFileCount++;
       return SYSINFO_RC_SUCCESS;
    }
@@ -292,7 +292,7 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
    bool searchInverse = false;
 
    unsigned int uFileCount = 0;
-   QWORD llFileSize = 0;
+   uint64_t llFileSize = 0;
    LONG nRet;
 
    if (!AgentGetMetricArg(cmd, 1, szPath, MAX_PATH) ||
