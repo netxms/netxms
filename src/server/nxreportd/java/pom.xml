@@ -13,7 +13,7 @@
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <build.finalName>${project.artifactId}-${project.version}</build.finalName>
       <lib.scope>compile</lib.scope>
-      <jasperreports.version>6.20.6</jasperreports.version>
+      <jasperreports.version>6.21.3</jasperreports.version>
    </properties>
    <profiles>
       <profile>
@@ -44,9 +44,9 @@
    </profiles>
    <dependencies>
       <dependency>
-         <groupId>junit</groupId>
-         <artifactId>junit</artifactId>
-         <version>4.13.2</version>
+         <groupId>org.junit.jupiter</groupId>
+         <artifactId>junit-jupiter</artifactId>
+         <version>5.10.3</version>
          <scope>test</scope>
       </dependency>
       <dependency>
