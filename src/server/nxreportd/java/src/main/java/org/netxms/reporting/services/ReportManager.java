@@ -18,12 +18,14 @@
  */
 package org.netxms.reporting.services;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -45,10 +47,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.reporting.ReportRenderFormat;
 import org.netxms.client.reporting.ReportResult;
@@ -87,12 +91,14 @@ public class ReportManager
    public static final String AUTH_TOKEN_KEY = "AUTH_TOKEN";
    public static final String IDATA_VIEW_KEY = "IDATA_VIEW";
    public static final String SUBREPORT_DIR_KEY = "SUBREPORT_DIR";
+   public static final String OUTPUT_FILE_KEY = "OUTPUT_FILE";
    public static final String USER_ID_KEY = "SYS_USER_ID";
 
    private static final String DEFINITIONS_DIRECTORY = "definitions";
    private static final String FILE_SUFFIX_DEFINITION = ".jrxml";
    private static final String FILE_SUFFIX_COMPILED = ".jasper";
    private static final String FILE_SUFFIX_FILLED = ".jrprint";
+   private static final String FILE_SUFFIX_CARBONE_DATA = ".json";
    private static final String FILE_SUFFIX_METADATA = ".meta";
    private static final String FILE_SUFFIX_SQL = ".sql";
    private static final String MAIN_REPORT_COMPILED = "main" + FILE_SUFFIX_COMPILED;
@@ -542,7 +548,7 @@ public class ReportManager
       if (reportDefinition.isDataViewRequired() && ((idataView == null) || idataView.isEmpty()))
       {
          logger.error("Error executing report " + jobConfiguration.reportId + " " + report.getName() + ": DCI data view not provided");
-         saveResult(new ReportResult(jobId, jobConfiguration.reportId, new Date(), userId, false));
+         saveResult(new ReportResult(jobId, jobConfiguration.reportId, reportDefinition.isCarboneReport(), new Date(), userId, false));
          return;
       }
 
@@ -563,7 +569,9 @@ public class ReportManager
       ThreadLocalReportInfo.setServer(server);
 
       Connection dbConnection = null;
-      final String outputFile = new File(getOutputDirectory(jobConfiguration.reportId), jobId.toString() + FILE_SUFFIX_FILLED).getPath();
+      final String outputFile = new File(getOutputDirectory(jobConfiguration.reportId), jobId.toString() + (reportDefinition.isCarboneReport() ? FILE_SUFFIX_CARBONE_DATA : FILE_SUFFIX_FILLED))
+            .getPath();
+      localParameters.put(OUTPUT_FILE_KEY, outputFile);
       try
       {
          dbConnection = server.createDatabaseConnection();
@@ -580,12 +588,15 @@ public class ReportManager
 
          executeHook("PreparationHook", subrepoDirectory, localParameters, dbConnection, authToken);
 
-         DefaultJasperReportsContext reportsContext = DefaultJasperReportsContext.getInstance();
-         reportsContext.setProperty(QueryExecuterFactory.QUERY_EXECUTER_FACTORY_PREFIX + "nxcl", "org.netxms.reporting.nxcl.NXCLQueryExecutorFactory");
-         final JasperFillManager manager = JasperFillManager.getInstance(reportsContext);
-         manager.fillToFile(report, outputFile, localParameters, dbConnection);
+         if (!reportDefinition.isCarboneReport())
+         {
+            DefaultJasperReportsContext reportsContext = DefaultJasperReportsContext.getInstance();
+            reportsContext.setProperty(QueryExecuterFactory.QUERY_EXECUTER_FACTORY_PREFIX + "nxcl", "org.netxms.reporting.nxcl.NXCLQueryExecutorFactory");
+            final JasperFillManager manager = JasperFillManager.getInstance(reportsContext);
+            manager.fillToFile(report, outputFile, localParameters, dbConnection);
+         }
 
-         saveResult(new ReportResult(jobId, jobConfiguration.reportId, new Date(), userId, true));
+         saveResult(new ReportResult(jobId, jobConfiguration.reportId, reportDefinition.isCarboneReport(), new Date(), userId, true));
          sendMailNotifications(jobConfiguration.reportId, report.getName(), jobId, userId, jobConfiguration.renderFormat, jobConfiguration.emailRecipients);
 
          executeHook("CleanupHook", subrepoDirectory, localParameters, dbConnection, authToken);
@@ -595,7 +606,7 @@ public class ReportManager
          logger.error("Error executing report " + jobConfiguration.reportId + " " + report.getName(), e);
          try
          {
-            saveResult(new ReportResult(jobId, jobConfiguration.reportId, new Date(), userId, false));
+            saveResult(new ReportResult(jobId, jobConfiguration.reportId, reportDefinition.isCarboneReport(), new Date(), userId, false));
          }
          catch(Throwable t)
          {
@@ -1091,7 +1102,7 @@ public class ReportManager
                try
                {
                   UUID jobId = UUID.fromString(f.getName().substring(0, f.getName().indexOf('.')));
-                  saveResult(new ReportResult(jobId, reportId, new Date(f.lastModified()), 0, true));
+                  saveResult(new ReportResult(jobId, reportId, false, new Date(f.lastModified()), 0, true)); // FIXME: check type?
                }
                catch(Throwable t)
                {
@@ -1119,40 +1130,50 @@ public class ReportManager
    {
       final File outputDirectory = getOutputDirectory(reportId);
 
-      if (userId != 0)
+      ReportResult result;
+      try
       {
-         try
+         result = ReportResult.loadFromFile(new File(outputDirectory, jobId.toString() + FILE_SUFFIX_METADATA));
+         if ((userId != 0) && (result.getUserId() != userId))
          {
-            ReportResult result = ReportResult.loadFromFile(new File(outputDirectory, jobId.toString() + FILE_SUFFIX_METADATA));
-            if (result.getUserId() != userId)
-            {
-               logger.warn("Forbidden rendering of report {} job {} by user {} (not an owner)", reportId, jobId, userId);
-               return null;
-            }
-         }
-         catch(Exception e)
-         {
-            logger.warn("Error loading metadata for report " + reportId + " job " + jobId, e);
+            logger.warn("Forbidden rendering of report {} job {} by user {} (not an owner)", reportId, jobId, userId);
             return null;
          }
       }
+      catch(Exception e)
+      {
+         logger.warn("Error loading metadata for report " + reportId + " job " + jobId, e);
+         return null;
+      }
 
-      final File dataFile = new File(outputDirectory, jobId.toString() + FILE_SUFFIX_FILLED);
+      final File dataFile = new File(outputDirectory, jobId.toString() + (result.isCarboneReport() ? FILE_SUFFIX_CARBONE_DATA : FILE_SUFFIX_FILLED));
       final File outputFile = new File(outputDirectory, jobId.toString() + "." + System.currentTimeMillis() + ".render");
 
       try
       {
-         switch(format)
+         if (result.isCarboneReport())
          {
-            case PDF:
-               renderPDF(dataFile, outputFile);
-               break;
-            case XLSX:
-               renderXLSX(dataFile, outputFile, loadReport(reportId));
-               break;
-            default:
-               logger.error("Unsupported rendering format " + format);
+            if (format != ReportRenderFormat.XLSX)
+            {
+               logger.error("Unsupported rendering format " + format + " for Carbone report");
                return null;
+            }
+            renderCarboneXLSX(dataFile, outputFile, reportId);
+         }
+         else
+         {
+            switch(format)
+            {
+               case PDF:
+                  renderPDF(dataFile, outputFile);
+                  break;
+               case XLSX:
+                  renderXLSX(dataFile, outputFile, loadReport(reportId));
+                  break;
+               default:
+                  logger.error("Unsupported rendering format " + format);
+                  return null;
+            }
          }
          return outputFile;
       }
@@ -1245,6 +1266,105 @@ public class ReportManager
          }
       }
       return stringBuilder.toString();
+   }
+
+   /**
+    * Render report with Carbone
+    *
+    * @param dataFile data file
+    * @param outputFile output file
+    * @param report report definition
+    * @throws Exception on error
+    */
+   void renderCarboneXLSX(File dataFile, File outputFile, UUID reportId) throws Exception
+   {
+      String launcher = server.getConfigurationProperty("nxreportd.carbone.launcher", "");
+      if (launcher.isEmpty())
+      {
+         String bindir = server.getConfigurationProperty("nxreportd.bindir", "");
+         if (bindir.isEmpty())
+         {
+            throw new ServerException("Cannot determine location of Carbone launcher");
+         }
+         StringBuilder sb = new StringBuilder(bindir);
+         if (!launcher.endsWith(File.separator))
+            sb.append(File.separatorChar);
+         sb.append("carbone-launcher-");
+         if (SystemUtils.IS_OS_LINUX)
+            sb.append("linux-");
+         else if (SystemUtils.IS_OS_WINDOWS)
+            sb.append("windows-");
+         else if (SystemUtils.IS_OS_MAC_OSX)
+            sb.append("macosx-");
+         sb.append(translateArch(SystemUtils.OS_ARCH));
+         if (SystemUtils.IS_OS_WINDOWS)
+            sb.append(".exe");
+         launcher = sb.toString();
+      }
+      logger.debug("Using Carbone launcher {}", launcher);
+      
+      String[] cmdline = new String[4];
+      cmdline[0] = launcher;
+      cmdline[1] = new File(getReportDirectory(reportId), "main.xlsx").getAbsolutePath();
+      cmdline[2] = outputFile.getAbsolutePath();
+      cmdline[3] = dataFile.getAbsolutePath();
+      
+      ProcessBuilder pb = new ProcessBuilder(cmdline);
+      pb.redirectErrorStream(true);
+      Process process = pb.start();
+      logger.debug("Carbone launcher started");
+
+      Thread outputReader = new Thread(() -> {
+         try (BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream())))
+         {
+            String line;
+            while((line = in.readLine()) != null)
+            {
+               logger.debug("Carbone: {}", line);
+            }
+         }
+         catch(Exception e)
+         {
+            logger.error("Carbone output reader error", e);
+         }
+      }, "CarboneOutputReader");
+      outputReader.setDaemon(true);
+      outputReader.start();
+
+      if (!process.waitFor(300, TimeUnit.SECONDS))
+      {
+         process.destroyForcibly();
+         throw new ServerException("Timeout waiting for Carbone renderer");
+      }
+
+      if (process.exitValue() != 0)
+      {
+         throw new ServerException("Carbone renderer error (exit code " + process.exitValue() + ")");
+      }
+
+      logger.debug("Carbone renderer execution completed");
+   }
+
+   /**
+    * Translate OS architecture identifier to common form
+    * 
+    * @param arch OS architecture identifier
+    * @return OS architecture identifier in common form
+    */
+   private static String translateArch(String arch)
+   {
+      switch(arch)
+      {
+         case "amd64":
+         case "x86_64":
+            return "x64";
+         case "i486":
+         case "i586":
+         case "i686":
+            return "i386";
+         default:
+            return arch;
+      }
    }
 
    /**

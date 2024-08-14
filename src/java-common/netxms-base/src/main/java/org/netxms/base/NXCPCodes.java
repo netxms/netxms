@@ -1338,6 +1338,10 @@ public class NXCPCodes
    public static final long VID_CONTEXT_OBJECT_ID = 846;
    public static final long VID_UI_ACCESS_RULES = 847;
    public static final long VID_DELEGATE_OBJECT_ID = 848;
+   public static final long VID_DASHBOARD_ID = 849;
+   public static final long VID_ELEMENT_INDEX = 850;
+   public static final long VID_USE_L1_TOPOLOGY = 851;
+   public static final long VID_USE_CARBONE_RENDERER = 852;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

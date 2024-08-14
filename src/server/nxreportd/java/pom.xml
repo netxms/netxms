@@ -86,6 +86,12 @@
          <scope>${lib.scope}</scope>
       </dependency>
       <dependency>
+         <groupId>org.apache.commons</groupId>
+         <artifactId>commons-lang3</artifactId>
+         <version>3.16.0</version>
+         <scope>${lib.scope}</scope>
+      </dependency>
+      <dependency>
          <groupId>javax.mail</groupId>
          <artifactId>mail</artifactId>
          <version>1.4.7</version>
@@ -125,6 +131,13 @@
          <groupId>xerces</groupId>
          <artifactId>xercesImpl</artifactId>
          <version>2.12.2</version>
+      </dependency>
+      <!-- Convenience libraries for report hooks -->
+      <dependency>
+          <groupId>org.sharegov</groupId>
+          <artifactId>mjson</artifactId>
+          <version>1.4.1</version>
+          <scope>runtime</scope>
       </dependency>
       <!-- DB Drivers -->
       <dependency>
@@ -187,7 +200,7 @@
          <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
-            <version>3.3.0</version>
+            <version>3.4.1</version>
             <configuration>
                <mainClass>org.netxms.reporting.Startup</mainClass>
             </configuration>

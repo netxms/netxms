@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,6 +44,9 @@ public class ReportResult
    private UUID reportId;
 
    @Element(required = false)
+   private boolean carboneReport;
+
+   @Element(required = false)
 	private Date executionTime;
 
    @Element(required = false)
@@ -72,6 +75,7 @@ public class ReportResult
    {
       jobId = NXCommon.EMPTY_GUID;
       reportId = NXCommon.EMPTY_GUID;
+      carboneReport = false;
       executionTime = new Date();
       userId = 0;
       success = false;
@@ -82,14 +86,16 @@ public class ReportResult
     *
     * @param jobId reporting job ID
     * @param reportId report ID
+    * @param carboneReport true if report should be rendered with Carbone
     * @param executionTime execution time
     * @param userId user (initiator) ID
     * @param success success indicator
     */
-   public ReportResult(UUID jobId, UUID reportId, Date executionTime, int userId, boolean success)
+   public ReportResult(UUID jobId, UUID reportId, boolean carboneReport, Date executionTime, int userId, boolean success)
    {
       this.jobId = jobId;
       this.reportId = reportId;
+      this.carboneReport = carboneReport;
       this.executionTime = executionTime;
       this.userId = userId;
       this.success = success;
@@ -108,6 +114,7 @@ public class ReportResult
       executionTime = msg.getFieldAsDate(baseId + 2);
       userId = msg.getFieldAsInt32(baseId + 3);
       success = msg.getFieldAsBoolean(baseId + 4);
+      carboneReport = msg.getFieldAsBoolean(baseId + 5);
 	}
 
    /**
@@ -123,6 +130,7 @@ public class ReportResult
       msg.setField(baseId + 2, executionTime);
       msg.setFieldInt32(baseId + 3, userId);
       msg.setField(baseId + 4, success);
+      msg.setField(baseId + 5, carboneReport);
    }
 
    /**
@@ -204,11 +212,21 @@ public class ReportResult
    }
 
    /**
+    * Returns true if this report definition is intended for Carbone renderer instead of standard Jasper renderer.
+    * 
+    * @return true if this report definition is intended for Carbone renderer
+    */
+   public boolean isCarboneReport()
+   {
+      return carboneReport;
+   }
+
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
    public String toString()
    {
-      return "ReportResult [jobId=" + jobId + ", executionTime=" + executionTime + ", userId=" + userId + ", success=" + success + "]";
+      return "ReportResult [jobId=" + jobId + ", reportId=" + reportId + ", carboneReport=" + carboneReport + ", executionTime=" + executionTime + ", userId=" + userId + ", success=" + success + "]";
    }
 }
