@@ -38,6 +38,7 @@ import org.netxms.websvc.handlers.DataCollectionConfigurationHandler;
 import org.netxms.websvc.handlers.DataCollectionObjectHandler;
 import org.netxms.websvc.handlers.DataCollectionQueryHandler;
 import org.netxms.websvc.handlers.Events;
+import org.netxms.websvc.handlers.FindMacAddress;
 import org.netxms.websvc.handlers.GrafanaAlarms;
 import org.netxms.websvc.handlers.GrafanaDataCollection;
 import org.netxms.websvc.handlers.HistoricalData;
@@ -108,6 +109,7 @@ public class WebSvcApplication extends Application
       router.attach("/alarms/{alarm-id}/comments/{id}", AlarmComments.class);
       router.attach("/authenticate", AccessIntegrationTools.class);
       router.attach("/events", Events.class);
+      router.attach("/find/mac-address", FindMacAddress.class);
       router.attach("/grafana/alarms", GrafanaAlarms.class);
       router.attach("/grafana/datacollection", GrafanaDataCollection.class);
       router.attach("/info", InfoHandler.class);
