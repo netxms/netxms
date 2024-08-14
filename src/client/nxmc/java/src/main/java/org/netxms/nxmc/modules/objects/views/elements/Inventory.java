@@ -117,7 +117,8 @@ public class Inventory extends TableElement
                addPair(i18n.tr("Bridge base address"), node.getBridgeBaseAddress().toString());
             if (node.isOSPF())
                addPair(i18n.tr("OSPF router ID"), node.getOSPFRouterId().getHostAddress());
-            addPair(i18n.tr("Driver"), node.getDriverName(), false);
+            if (node.hasSnmpAgent())
+               addPair(i18n.tr("Driver"), node.getDriverName(), false);
 				break;
 			case AbstractObject.OBJECT_MOBILEDEVICE:
 				MobileDevice md = (MobileDevice)object;
