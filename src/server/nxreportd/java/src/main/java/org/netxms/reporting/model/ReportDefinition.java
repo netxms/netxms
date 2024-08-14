@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@ public class ReportDefinition
    private boolean requiresDataView = false;
    private boolean requiresResponsibleUsersView = false;
    private String responsibleUsersTag = null;
+   private boolean carboneReport = false;
    private int numberOfColumns = 1;
    private Map<String, ReportParameter> parameters = new HashMap<String, ReportParameter>(0);
 
@@ -53,6 +54,7 @@ public class ReportDefinition
       requiresDataView = getPropertyFromMap(jasperReport.getPropertiesMap(), "org.netxms.reporting.requiresDataView", false);
       requiresResponsibleUsersView = getPropertyFromMap(jasperReport.getPropertiesMap(), "org.netxms.reporting.requiresResponsibleUsersView", false);
       responsibleUsersTag = getPropertyFromMap(jasperReport.getPropertiesMap(), "org.netxms.reporting.responsibleUsersTag", null);
+      carboneReport = getPropertyFromMap(jasperReport.getPropertiesMap(), "org.netxms.reporting.useCarbone", false);
 
       int index = 0;
       for(JRParameter jrParameter : jasperReport.getParameters())
@@ -130,6 +132,16 @@ public class ReportDefinition
    }
 
    /**
+    * Returns true if this report definition is intended for Carbone renderer instead of standard Jasper renderer.
+    * 
+    * @return true if this report definition is intended for Carbone renderer
+    */
+   public boolean isCarboneReport()
+   {
+      return carboneReport;
+   }
+
+   /**
     * Fill NXCP message.
     *
     * @param message NXCP message
@@ -141,6 +153,7 @@ public class ReportDefinition
       message.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, size);
       message.setFieldInt32(NXCPCodes.VID_NUM_COLUMNS, numberOfColumns);
       message.setField(NXCPCodes.VID_REQUIRES_DATA_VIEW, requiresDataView);
+      message.setField(NXCPCodes.VID_USE_CARBONE_RENDERER, carboneReport);
 
       final Set<Map.Entry<String, ReportParameter>> entries = parameters.entrySet();
       long fieldId = NXCPCodes.VID_ROW_DATA_BASE;
@@ -157,8 +170,8 @@ public class ReportDefinition
    @Override
    public String toString()
    {
-      return "ReportDefinition [name=" + name + ", requiresDataView=" + requiresDataView + ", requiresResponsibleUsersView=" + requiresResponsibleUsersView + ", numberOfColumns=" + numberOfColumns +
-            ", parameters=" + parameters + "]";
+      return "ReportDefinition [name=" + name + ", requiresDataView=" + requiresDataView + ", requiresResponsibleUsersView=" + requiresResponsibleUsersView + ", responsibleUsersTag=" +
+            responsibleUsersTag + ", usesCarboneRenderer=" + carboneReport + ", numberOfColumns=" + numberOfColumns + ", parameters=" + parameters + "]";
    }
 
    /**

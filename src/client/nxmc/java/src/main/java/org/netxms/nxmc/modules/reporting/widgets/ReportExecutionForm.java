@@ -378,9 +378,19 @@ public class ReportExecutionForm extends Composite
          {
             IStructuredSelection selection = resultList.getStructuredSelection();
             actionDeleteResult.setEnabled(selection.size() > 0);
-            actionRenderPDF.setEnabled(selection.size() == 1);
-            actionRenderXLSX.setEnabled(selection.size() == 1);
-            actionViewResult.setEnabled(selection.size() == 1);
+            if (selection.size() == 1)
+            {
+               ReportResult r = (ReportResult)selection.getFirstElement();
+               actionViewResult.setEnabled(!r.isCarboneReport());
+               actionRenderPDF.setEnabled(!r.isCarboneReport());
+               actionRenderXLSX.setEnabled(true);
+            }
+            else
+            {
+               actionViewResult.setEnabled(false);
+               actionRenderPDF.setEnabled(false);
+               actionRenderXLSX.setEnabled(false);
+            }
          }
       });
 
