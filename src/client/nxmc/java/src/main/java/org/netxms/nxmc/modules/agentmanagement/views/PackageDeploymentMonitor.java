@@ -50,6 +50,7 @@ import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.RefreshTimer;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -106,21 +107,12 @@ public class PackageDeploymentMonitor extends ObjectView
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new DeploymentStatusLabelProvider());
 		viewer.setComparator(new DeploymentStatusComparator());
-      
-      refreshTimer = new RefreshTimer(100, viewer.getControl(), new Runnable() {
-          @Override
-          public void run()
-          {
-             getWindow().getShell().getDisplay().asyncExec(new Runnable() {
-                @Override
-                public void run()
-                {
-                   viewer.setInput(listener.getDeployments().toArray());
-                }
-             });
-          }
-       });
-      
+
+      WidgetHelper.restoreTableViewerSettings(viewer, "PackageDeploymentMonitor");
+      viewer.getControl().addDisposeListener((e) -> WidgetHelper.saveTableViewerSettings(viewer, "PackageDeploymentMonitor"));
+
+      refreshTimer = new RefreshTimer(100, viewer.getControl(), () -> viewer.setInput(listener.getDeployments().toArray()));
+
       listener.addMonitor(this);
 		
 	   createActions();
