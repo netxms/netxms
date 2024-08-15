@@ -503,6 +503,8 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
          _tcslcpy(errorMessage, vm->getErrorText(), errorMessageLen);
          delete_and_null(resultSet);
          delete globals;
+         if (progressCallback != nullptr)
+            progressCallback(100);
          break;
       }
 
