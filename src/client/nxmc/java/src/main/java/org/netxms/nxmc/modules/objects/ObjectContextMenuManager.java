@@ -966,10 +966,9 @@ public class ObjectContextMenuManager extends MenuManager
       final PackageSelectionDialog dialog = new PackageSelectionDialog(view.getWindow().getShell());
       if (dialog.open() != Window.OK)
          return;
-      
-      final Object[] objectList = ((IStructuredSelection)selectionProvider.getSelection()).toArray();      
+
       final Set<Long> objects = new HashSet<Long>();
-      for(Object o : objectList)
+      for(Object o : ((IStructuredSelection)selectionProvider.getSelection()).toList())
       {
          if (o instanceof AbstractObject)
          {
