@@ -742,7 +742,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
       {
          List<ChartDciConfig> items = new ArrayList<ChartDciConfig>(1);
          items.add(getConfigFromObject(dcObject));
-         openView(new HistoricalGraphView(getObject(), items, 0));
+         openView(new HistoricalGraphView(getObject(), items, null, 0));
       }
    }
 

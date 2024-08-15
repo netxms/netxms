@@ -231,7 +231,7 @@ public class GraphTemplateCache
     */
    private static void showPredefinedGraph(GraphDefinition graphDefinition, AbstractNode node, long contextId, ViewPlacement viewPlacement)
    {      
-      HistoricalGraphView view = new HistoricalGraphView(node, Arrays.asList(graphDefinition.getDciList()), contextId);
+      HistoricalGraphView view = new HistoricalGraphView(node, Arrays.asList(graphDefinition.getDciList()), null, contextId);
       viewPlacement.openView(view);
       view.initPredefinedGraph(graphDefinition);
    }

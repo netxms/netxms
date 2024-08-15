@@ -212,7 +212,7 @@ public class TableValueViewer extends BaseTableValueViewer
       }
 
       AbstractObject object = view.getObject();
-      view.openView(new HistoricalGraphView(object, items, 0));
+      view.openView(new HistoricalGraphView(object, items, null, 0));
    }
 
    /**

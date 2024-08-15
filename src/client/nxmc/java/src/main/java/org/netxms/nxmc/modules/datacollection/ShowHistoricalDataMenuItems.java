@@ -225,7 +225,7 @@ public class ShowHistoricalDataMenuItems
       }
 
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
-      view.openView(new HistoricalGraphView(parent, items, contextId));
+      view.openView(new HistoricalGraphView(parent, items, null, contextId));
    }
 
    /**

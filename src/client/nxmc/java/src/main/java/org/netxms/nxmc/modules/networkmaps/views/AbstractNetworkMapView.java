@@ -1372,13 +1372,9 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
             for(DciValue dci : values)
                items.add(new ChartDciConfig(dci));
 
-            runInUIThread(new Runnable() {               
-               @Override
-               public void run()
-               {
-                  AbstractObject object = getObject();
-                  openView(new HistoricalGraphView(object, items, getObjectId()));
-               }
+            runInUIThread(() -> {
+               AbstractObject object = getObject();
+               openView(new HistoricalGraphView(object, items, null, getObjectId()));
             });
          }
 
