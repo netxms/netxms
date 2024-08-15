@@ -28,7 +28,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
@@ -127,11 +126,11 @@ public class ObjectFinder extends View
    public static final int COL_IP_ADDRESS = 3;
    public static final int COL_PARENT = 4;
    public static final int COL_ZONE = 5;
-   
+
    private static final int SEARCH_MODE_NORMAL = 0;
    private static final int SEARCH_MODE_PATTERN = 1;
    private static final int SEARCH_MODE_REGEXP = 2;
-   
+
    private static final String[] OBJECT_ATTRIBUTES = 
       {
          "adminState",
@@ -863,12 +862,7 @@ public class ObjectFinder extends View
       // Create menu manager for rows
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
-         {
-            fillContextMenu(mgr, objectMenuManager);
-         }
-      });
+      menuMgr.addMenuListener((m) -> fillContextMenu(m, objectMenuManager));
 
       // Create menu.
       Menu menu = menuMgr.createContextMenu(results.getControl());
@@ -963,7 +957,7 @@ public class ObjectFinder extends View
          @Override
          protected void jobFailureHandler(Exception e)
          {
-            queryStats.setText(i18n.tr("Query failed"));
+            runInUIThread(() -> queryStats.setText(i18n.tr("Query failed")));
          }
 
          @Override
@@ -1024,13 +1018,13 @@ public class ObjectFinder extends View
          for(Object o : zoneList.getCheckedElements())
             zoneFilter.add(((Zone)o).getUIN());
       }
-      
+
       if (radioRegularExpression.getSelection())
          doSearch(text.getText().trim(), SEARCH_MODE_REGEXP, classFilter, zoneFilter, addrStart, addrEnd);
       else
          doSearch(text.getText().trim().toLowerCase(), radioPattern.getSelection() ? SEARCH_MODE_PATTERN : SEARCH_MODE_NORMAL, classFilter, zoneFilter, addrStart, addrEnd);
    }
-   
+
    /**
     * Do object search
     * 
@@ -1139,14 +1133,10 @@ public class ObjectFinder extends View
                   return false;
                }
             });
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  resetResultTable();
-                  searchResult = new ArrayList<ObjectQueryResult>();
-                  results.setInput(objects);
-               }
+            runInUIThread(() -> {
+               resetResultTable();
+               searchResult = new ArrayList<ObjectQueryResult>();
+               results.setInput(objects);
             });
          }
          
@@ -1285,25 +1275,17 @@ public class ObjectFinder extends View
             if (found)
             {
                final boolean[] overwrite = new boolean[1];
-               getDisplay().syncExec(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     overwrite[0] = MessageDialogHelper.openQuestion(getWindow().getShell(), "Confirm Overwrite",
-                           String.format("Object query named \"%s\" already exists. Do you want to overwrite it?", query.getName()));
-                  }
+               getDisplay().syncExec(() -> {
+                  overwrite[0] = MessageDialogHelper.openQuestion(getWindow().getShell(), "Confirm Overwrite",
+                        String.format("Object query named \"%s\" already exists. Do you want to overwrite it?", query.getName()));
                });
                if (!overwrite[0])
                   return;
             }
             session.modifyObjectQuery(query);
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  loadQueries();
-                  queryModified = false;
-               }
+            runInUIThread(() -> {
+               loadQueries();
+               queryModified = false;
             });
          }
 
@@ -1325,13 +1307,7 @@ public class ObjectFinder extends View
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final List<ObjectQuery> queries = session.getObjectQueries();
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  queryList.setInput(queries);
-               }
-            });
+            runInUIThread(() -> queryList.setInput(queries));
          }
 
          @Override
