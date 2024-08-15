@@ -313,6 +313,32 @@ public class ChartDciConfig implements NodeItemPair
    }
 
    /**
+    * Create DCI info from GraphItem object
+    * 
+    * @param item source object
+    */
+   public ChartDciConfig(GraphItem item)
+   {
+      nodeId = item.getNodeId();
+      dciId = item.getDciId();
+      dciName = item.getName();
+      dciDescription = item.getDescription();
+      type = item.getType();
+      name = "";
+      color = (item.getColor() == -1) ? UNSET_COLOR : ("0x" + Integer.toHexString(item.getColor()));
+      lineWidth = item.getLineWidth();
+      lineChartType = item.getLineChartType();
+      displayType = UNSET;
+      showThresholds = item.isShowThresholds();
+      invertValues = item.isInverted();
+      multiMatch = false;
+      regexMatch = false;
+      instance = item.getInstance();
+      column = item.getDataColumn();
+      displayFormat = item.getDisplayFormat();
+   }
+
+   /**
 	 * @return the color
 	 */
 	public int getColorAsInt()

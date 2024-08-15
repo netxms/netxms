@@ -23,15 +23,10 @@ import java.util.Date;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
@@ -125,22 +120,12 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
       item.setMeasurementUnit(dci.getMeasurementUnit());
       chart.addParameter(item);
 
-		addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            if (refreshController != null)
-               refreshController.dispose();
-         }
+      addDisposeListener((e) -> {
+         if (refreshController != null)
+            refreshController.dispose();
       });
 
-      chart.addDoubleClickListener(new IDoubleClickListener() {
-         @Override
-         public void doubleClick(DoubleClickEvent event)
-         {
-            openHistoryGraph();
-         }
-      });
+      chart.addDoubleClickListener((e) -> openHistoryGraph());
 
       createActions();
       createChartContextMenu();
@@ -181,12 +166,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
    {
       final MenuManager manager = new MenuManager();
       manager.setRemoveAllWhenShown(true);
-      manager.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
-         {
-            fillContextMenu(manager);
-         }
-      });
+      manager.addMenuListener((m) -> fillContextMenu(m));
       chart.setMenuManager(manager);
    }
 
@@ -280,20 +260,16 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 						data[i] = session.getCollectedData(nodeId, currentDci.getId(), from, to, 0, HistoricalDataType.PROCESSED);
 						thresholds[i] = session.getThresholds(nodeId, currentDci.getId());
 					}
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
+               runInUIThread(() -> {
+                  if (!chart.isDisposed())
 						{
-                     if (!chart.isDisposed())
-							{
-								chart.setTimeRange(from, to);
-								for(int i = 0; i < data.length; i++)
-                           chart.updateParameter(i, data[i], false);
-                        chart.setThresholds(thresholds);
-                        chart.refresh();
-							}
-							updateInProgress = false;
+                     chart.setTimeRange(from, to);
+                     for(int i = 0; i < data.length; i++)
+                        chart.updateParameter(i, data[i], false);
+                     chart.setThresholds(thresholds);
+                     chart.refresh();
 						}
+                  updateInProgress = false;
 					});
 				}
 			}
@@ -320,19 +296,11 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 	private void openHistoryGraph()
 	{
       List<ChartDciConfig> graphItems = new ArrayList<ChartDciConfig>(items.size());
-      for(PerfTabDci dci : items)
-      {
-         ChartDciConfig cd = new ChartDciConfig();
-         cd.nodeId = nodeId;
-         cd.dciId = dci.getId();
-         cd.name = dci.getDescription();
-         cd.dciName = dci.getDescription();
-         cd.dciDescription = dci.getDescription();
-         graphItems.add(cd);
-      }
+      for(int i = 0; i < chart.getItemCount(); i++)
+         graphItems.add(new ChartDciConfig(chart.getItem(i)));
 
       AbstractObject object = (view instanceof ObjectView) ? ((ObjectView)view).getObject() : session.findObjectById(nodeId);
-      view.openView(new HistoricalGraphView(object, graphItems, 0));
+      view.openView(new HistoricalGraphView(object, graphItems, chart.getConfiguration(), 0));
 	}
 
    /**

@@ -167,15 +167,33 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
     * Create historical graph view with given context object and DCI list.
     *
     * @param contextObject context object
+    * @param items initial set of DCIs to show
+    * @param templateConfig template configuration (can be null)
     * @param items DCI list
     */
-   public HistoricalGraphView(AbstractObject contextObject, List<ChartDciConfig> items, long contextId)
+   public HistoricalGraphView(AbstractObject contextObject, List<ChartDciConfig> items, ChartConfiguration templateConfig, long contextId)
    {
       super(LocalizationHelper.getI18n(HistoricalGraphView.class).tr("Line Chart"),
             ResourceManager.getImageDescriptor("icons/object-views/chart-line.png"), buildId(contextObject, items), false);
       objectId = contextObject.getObjectId();
       this.contextId = contextId;
       fullName = "Line Chart";
+
+      if (templateConfig != null)
+      {
+         configuration.setArea(templateConfig.isArea());
+         configuration.setAutoScale(templateConfig.isAutoScale());
+         configuration.setExtendedLegend(templateConfig.isExtendedLegend());
+         configuration.setGridVisible(templateConfig.isGridVisible());
+         configuration.setLogScale(templateConfig.isLogScale());
+         configuration.setMaxYScaleValue(templateConfig.getMaxYScaleValue());
+         configuration.setMinYScaleValue(templateConfig.getMinYScaleValue());
+         configuration.setModifyYBase(templateConfig.isModifyYBase());
+         configuration.setStacked(templateConfig.isStacked());
+         configuration.setTitle(templateConfig.getTitle());
+         configuration.setTranslucent(templateConfig.isTranslucent());
+         configuration.setUseMultipliers(templateConfig.isUseMultipliers());
+      }
 
       // Set view title to "host name: dci description" if we have only one DCI
       if (items.size() == 1)

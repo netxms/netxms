@@ -145,15 +145,10 @@ public class PerformanceView extends ObjectView
             try
             {
                final List<PerfTabDci> items = session.getPerfTabItems(object.getObjectId());
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
+               runInUIThread(() -> {
+                  if (!getViewArea().isDisposed() && (PerformanceView.this.getObject() != null) && (PerformanceView.this.getObject().getObjectId() == object.getObjectId()))
                   {
-                     if (!getViewArea().isDisposed() && (PerformanceView.this.getObject() != null) &&
-                         (PerformanceView.this.getObject().getObjectId() == object.getObjectId()))
-                     {
-                        update(items);
-                     }
+                     update(items);
                   }
                });
             }
@@ -186,15 +181,10 @@ public class PerformanceView extends ObjectView
             try
             {
                final List<PerfTabDci> items = session.getPerfTabItems(getObjectId());
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
+               runInUIThread(() -> {
+                  if (!getViewArea().isDisposed() && (PerformanceView.this.getObject() != null) && (PerformanceView.this.getObject().getObjectId() == getObjectId()))
                   {
-                     if (!getViewArea().isDisposed() && (PerformanceView.this.getObject() != null) &&
-                         (PerformanceView.this.getObject().getObjectId() == getObjectId()))
-                     {
-                        update(items);
-                     }
+                     update(items);
                   }
                });
             }
