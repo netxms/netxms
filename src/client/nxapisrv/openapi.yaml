@@ -889,6 +889,74 @@ paths:
     servers:
       - url: http://127.0.0.1:8000   
 
+#Find
+
+  /find/mac-address:
+    get:
+      operationId: findMacAddress
+      summary: Find MAC address
+      description: Find MAC address uding full mac address or it's first part
+      parameters:
+        - name: macAddress
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Mac address or it's first part for search. 
+        - name: searchLimit
+          in: query
+          required: false
+          schema:
+            type: integer
+            description: Optional. Number of results to be returned, defualt is 100.
+        - name: includeObjects
+          in: query
+          required: false
+          schema:
+            type: boolean
+            description: Optional. If provided, object information is included in respone.
+      responses:
+        '200':
+          description: Successful search of MAC address.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    localMacAddress:
+                      type: string
+                      description: Local mac address
+                    localNodeId:
+                      type: integer
+                      description: Locla node id
+                    localInterfaceId:
+                      type: integer
+                      description: Local interface ID
+                    localIpAddress:
+                      type: string
+                      description: IP address
+                    type:
+                      type: string
+                      description: Connection type
+                    nodeId:
+                      type: integer
+                      description: Node or access point ID
+                    interfaceId:
+                      type: integer
+                      description: Interface ID
+                    interfaceIndex:
+                      type: integer
+                      description: Interface index
+        '401':
+          description: Unauthorized.
+      tags:
+        - Find
+      servers:
+        - url: http://127.0.0.1:8000
+    servers:
+      - url: http://127.0.0.1:8000   
 
 #Component definition
 components:
