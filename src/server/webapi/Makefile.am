@@ -1,7 +1,7 @@
 MODULE = webapi
 
 pkglib_LTLIBRARIES = webapi.la
-webapi_la_SOURCES = alarms.cpp auth.cpp context.cpp datacoll.cpp dcst.cpp info.cpp main.cpp objects.cpp objtools.cpp router.cpp
+webapi_la_SOURCES = alarms.cpp auth.cpp context.cpp datacoll.cpp dcst.cpp find.cpp info.cpp main.cpp objects.cpp objtools.cpp router.cpp
 webapi_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build @MICROHTTPD_CPPFLAGS@
 webapi_la_LDFLAGS = -module -avoid-version @MICROHTTPD_LDFLAGS@
 webapi_la_LIBADD = ../../libnetxms/libnetxms.la ../libnxsrv/libnxsrv.la ../core/libnxcore.la @MICROHTTPD_LIBS@
