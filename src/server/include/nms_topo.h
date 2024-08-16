@@ -475,7 +475,7 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, NetworkMap *fil
 shared_ptr<ForwardingDatabase> GetSwitchForwardingDatabase(Node *node);
 shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type);
 
-class MacAddressInfo
+class NXCORE_EXPORTABLE MacAddressInfo
 {
 private:
    MacAddress m_macAddr;
@@ -491,9 +491,10 @@ public:
    }
 
    void fillMessage(NXCPMessage* msg, uint32_t base) const;
+   void fillJson(json_t *json, uint32_t userId, bool includeObject, json_t* (*CreateObjectSummary)(const NetObj *object)) const;
 };
 
-void FindMacAddresses(const BYTE* macPattern, size_t macPatternSize, ObjectArray<MacAddressInfo>* out, int searchLimit);
+void NXCORE_EXPORTABLE FindMacAddresses(const BYTE* macPattern, size_t macPatternSize, ObjectArray<MacAddressInfo>* out, int searchLimit);
 
 ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(const Node& node, SNMP_Transport *snmp);
 

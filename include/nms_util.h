@@ -4288,8 +4288,8 @@ public:
       return *this;
    }
 
-   static MacAddress parse(const char *str);
-   static MacAddress parse(const WCHAR *str);
+   static MacAddress parse(const char *str, bool partialMac = false);
+   static MacAddress parse(const WCHAR *str, bool partialMac = false);
 
    bool isValid() const { return !isNull(); }
    bool isBroadcast() const;

@@ -58,8 +58,8 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, NetworkMap *fil
          shared_ptr<Interface> ifLocal = root->findInterfaceByIndex(info->ifLocal);
          shared_ptr<Interface> ifRemote = static_cast<Node&>(*peer).findInterfaceByIndex(info->ifRemote);
          nxlog_debug_tag(DEBUG_TAG, 5, _T("BuildL2Topology: root=%s [%u], node=%s [%u], ifLocal=%u %s, ifRemote=%u %s"),
-               root->getName(), root->getId(), peer->getName(), peer->getId(), info->ifLocal,
-               (ifLocal != nullptr) ? ifLocal->getName() : _T("(null)"), info->ifRemote,
+               root->getName(), root->getId(), peer->getName(), peer->getId(), ifLocal,
+               (ifLocal != nullptr) ? ifLocal->getName() : _T("(null)"), ifRemote,
                (ifRemote != nullptr) ? ifRemote->getName() : _T("(null)"));
          topology.linkObjects(root->getId(), ifLocal.get(), peer->getId(), ifRemote.get());
       }
@@ -320,7 +320,7 @@ static void FindMACsByPattern(const BYTE* macPattern, size_t macPatternSize, Has
 /**
  * Find all interface connection points whose MAC address contains given pattern
  */
-void FindMacAddresses(const BYTE* macPattern, size_t macPatternSize, ObjectArray<MacAddressInfo>* out, int searchLimit)
+void NXCORE_EXPORTABLE FindMacAddresses(const BYTE* macPattern, size_t macPatternSize, ObjectArray<MacAddressInfo>* out, int searchLimit)
 {
    if (macPatternSize >= MAC_ADDR_LENGTH)
    {
@@ -398,5 +398,95 @@ void MacAddressInfo::fillMessage(NXCPMessage* msg, uint32_t base) const
       msg->setField(base + 5, 0);
       msg->setField(base + 6, 0);
       msg->setField(base + 7, InetAddress::INVALID);
+   }
+}
+
+/**
+ * Fill JSON object with MAC address search results
+ */
+void MacAddressInfo::fillJson(json_t *json, uint32_t userId, bool includeObject, json_t* (*CreateObjectSummary)(const NetObj *object)) const
+{
+   // Always present
+   json_object_set_new(json, "localMacAddress", json_string_t(m_macAddr.toString(MacAddressNotation::COLON_SEPARATED)));
+   switch(m_type)
+   {
+      case 0:
+         json_object_set_new(json, "type", json_string_t(_T("INDIRECT")));
+         break;
+      case 1:
+         json_object_set_new(json, "type", json_string_t(_T("DIRECT")));
+         break;
+      case 2:
+         json_object_set_new(json, "type", json_string_t(_T("WIRELESS")));
+         break;
+      case 4:
+         json_object_set_new(json, "type", json_string_t(_T("NOT_FOUND")));
+         break;
+      case 3:
+      default:
+         json_object_set_new(json, "type", json_string_t(_T("UNKNOWN")));
+         break;
+   }
+
+   // Where MAC is connected
+   if (m_connectionPoint != nullptr)
+   {
+      const shared_ptr<NetObj>& cp = m_connectionPoint;
+      shared_ptr<Node> node;
+      if (cp->getObjectClass() == OBJECT_INTERFACE)
+         node = static_cast<Interface&>(*cp).getParentNode();
+      if (node != nullptr)
+      {
+         json_object_set_new(json, "nodeId", json_integer(node->getId()));
+         if (includeObject && node->checkAccessRights(userId, OBJECT_ACCESS_READ))
+            json_object_set_new(json, "node", CreateObjectSummary(node.get()));
+      }
+      else
+      {
+         json_object_set_new(json, "nodeId", json_integer(0));
+      }
+
+      json_object_set_new(json, "interfaceId", json_integer(cp->getId()));
+      if (includeObject && node->checkAccessRights(userId, OBJECT_ACCESS_READ))
+         json_object_set_new(json, "interface", CreateObjectSummary(cp.get()));
+      json_object_set_new(json, "interfaceIndex", json_integer(static_cast<Interface&>(*cp).getIfIndex()));
+   }
+   else
+   {
+      json_object_set_new(json, "nodeId", json_integer(0));
+      json_object_set_new(json, "interfaceId", json_integer(0));
+      json_object_set_new(json, "interfaceIndex", json_integer(0));
+   }
+
+   // MAC owner
+   if (m_owner != nullptr)
+   {
+      if (m_owner->getObjectClass() == OBJECT_INTERFACE)
+      {
+         Interface *iface = static_cast<Interface*>(m_owner.get());
+         json_object_set_new(json, "localNodeId", json_integer(iface->getParentNodeId()));
+         json_object_set_new(json, "localInterfaceId", json_integer(iface->getId()));
+         json_object_set_new(json, "localIpAddress", iface->getIpAddressList()->getFirstUnicastAddress().toJson());
+         if (includeObject && iface->checkAccessRights(userId, OBJECT_ACCESS_READ))
+            json_object_set_new(json, "localInterface", CreateObjectSummary(iface));
+         shared_ptr<NetObj> node = FindObjectById(iface->getParentNodeId());
+         if (includeObject && node->checkAccessRights(userId, OBJECT_ACCESS_READ))
+            json_object_set_new(json, "localNode", CreateObjectSummary(node.get()));
+      }
+      else if (m_owner->getObjectClass() == OBJECT_ACCESSPOINT)
+      {
+         AccessPoint *accessPoint = static_cast<AccessPoint*>(m_owner.get());
+         json_object_set_new(json, "localNodeId", json_integer(accessPoint->getId()));
+         json_object_set_new(json, "localInterfaceId", json_integer(0));
+         json_object_set_new(json, "localIpAddress", accessPoint->getPrimaryIpAddress().toJson());
+         if (includeObject && accessPoint->checkAccessRights(userId, OBJECT_ACCESS_READ))
+            json_object_set_new(json, "localNode", CreateObjectSummary(accessPoint));
+      }
+   }
+   else
+   {
+      json_object_set_new(json, "localNodeId", json_integer(0));
+      json_object_set_new(json, "localInterfaceId", json_integer(0));
+      json_object_set_new(json, "localIpAddress", InetAddress::INVALID.toJson());
    }
 }

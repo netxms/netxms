@@ -1077,6 +1077,28 @@ static void TestMacAddress()
    MacAddress z(0);
    AssertTrue(!memcmp(&z, zeroes, sizeof(MacAddress)));
    EndTest();
+
+   StartTest(_T("MacAddress - partial parse()"));
+
+   a = MacAddress::parse("0180", true);
+   AssertTrue(_tcscmp(_T("0180"), (const TCHAR*)a.toString(MacAddressNotation::FLAT_STRING)) == 0);
+
+   a = MacAddress::parse("09-80-C2", true);
+   AssertTrue(_tcscmp(_T("0980C2"), (const TCHAR*)a.toString(MacAddressNotation::FLAT_STRING)) == 0);
+
+   a = MacAddress::parse("48:2C:6A:1E", true);
+   AssertTrue(_tcscmp(_T("482C6A1E"), (const TCHAR*)a.toString(MacAddressNotation::FLAT_STRING)) == 0);
+
+   a = MacAddress::parse("48:2C:6A:1E:59", true);
+   AssertTrue(_tcscmp(_T("482C6A1E59"), (const TCHAR*)a.toString(MacAddressNotation::FLAT_STRING)) == 0);
+
+   a = MacAddress::parse("098.0C2", true);
+   AssertTrue(_tcscmp(_T("0980C2"), (const TCHAR*)a.toString(MacAddressNotation::FLAT_STRING)) == 0);
+
+   a = MacAddress::parse("0180");
+   AssertFalse(a.isValid());
+
+   EndTest();
 }
 
 /**

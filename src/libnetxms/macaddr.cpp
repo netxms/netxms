@@ -159,24 +159,26 @@ TCHAR *MacAddress::toStringInternalDecimal(TCHAR *buffer, const TCHAR separator)
 /**
  * Parse string as MAC address
  */
-MacAddress MacAddress::parse(const char *str)
+MacAddress MacAddress::parse(const char *str, bool partialMac)
 {
    if (str == NULL || strlen(str) > 23)
       return MacAddress(MacAddress::ZERO);
 
    char exp1[254] = { "^([0-9a-fA-F]{2})[ :-]?"
                       "([0-9a-fA-F]{2})[ .:-]?"
-                      "([0-9a-fA-F]{2})[ :-]?"
-                      "([0-9a-fA-F]{2})[ .:-]?"
+                      "([0-9a-fA-F]{2})?[ :-]?"
+                      "([0-9a-fA-F]{2})?[ .:-]?"
                       "([0-9a-fA-F]{2})?[ :-]?"
                       "([0-9a-fA-F]{2})?[ .:-]?"
                       "([0-9a-fA-F]{2})?[ :-]?"
                       "([0-9a-fA-F]{2})?$" };
 
-   char exp2[128] = { "^([0-9a-fA-F]{3})\\."
+   char exp2[256] = { "^([0-9a-fA-F]{3})\\."
                        "([0-9a-fA-F]{3})\\."
                        "([0-9a-fA-F]{3})\\."
-                       "([0-9a-fA-F]{3})$" };
+                       "([0-9a-fA-F]{3})$|"
+                      "^([0-9a-fA-F]{3})\\."
+                       "([0-9a-fA-F]{3})?$" };
 
    StringBuffer mac;
    const char *errptr;
@@ -186,7 +188,7 @@ MacAddress MacAddress::parse(const char *str)
    {
       int ovector[30];
       int cgcount = pcre_exec(compRegex, nullptr, str, static_cast<int>(strlen(str)), 0, 0, ovector, 30);
-      if (cgcount >= 7) // at least 6 elements
+      if (cgcount >= 7 || (partialMac && cgcount >= 3)) // at least 6 elements for full and 2 for partial
       {
          for(int i = 1; i < cgcount; i++)
             mac.appendMBString(str + ovector[i * 2], (ovector[i * 2 + 1] - ovector[i * 2]));
@@ -199,7 +201,7 @@ MacAddress MacAddress::parse(const char *str)
          if (compRegex != NULL)
          {
             cgcount = pcre_exec(compRegex, nullptr, str, static_cast<int>(strlen(str)), 0, 0, ovector, 30);
-            if (cgcount == 5)
+            if (cgcount == 5 || (partialMac && cgcount >= 3))
             {
                for(int i = 1; i < cgcount; i++)
                   mac.appendMBString(str + ovector[i * 2], (ovector[i * 2 + 1] - ovector[i * 2]));
@@ -222,9 +224,9 @@ MacAddress MacAddress::parse(const char *str)
 /**
  * Parse string as MAC address (WCHAR version)
  */
-MacAddress MacAddress::parse(const WCHAR *str)
+MacAddress MacAddress::parse(const WCHAR *str, bool partialMac)
 {
    char mb[256];
    wchar_to_mb(str, -1, mb, 256);
-   return parse(mb);
+   return parse(mb, partialMac);
 }
