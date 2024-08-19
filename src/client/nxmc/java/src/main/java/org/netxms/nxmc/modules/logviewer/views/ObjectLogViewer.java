@@ -38,6 +38,7 @@ public class ObjectLogViewer extends LogViewer
    private LogDescriptor logDescriptor;
    private AbstractObject object;
    private long contextId;
+   private boolean restored = false;
 
    /**
     * Internal constructor used for cloning
@@ -81,7 +82,8 @@ public class ObjectLogViewer extends LogViewer
    @Override
    protected void postContentCreate()
    {            
-      queryWithFilter(logDescriptor.createFilter(object));
+      if (!restored)
+         queryWithFilter(logDescriptor.createFilter(object));
       super.postContentCreate();
    }
 
@@ -147,5 +149,6 @@ public class ObjectLogViewer extends LogViewer
       object = session.findObjectById(objectId);
       if (object == null)
          throw(new ViewNotRestoredException(i18n.tr("Invalid object id")));
+      restored = true;
    } 
 }
