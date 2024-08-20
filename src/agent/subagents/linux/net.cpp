@@ -696,20 +696,16 @@ LONG H_WgIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCom
       return SYSINFO_RC_ERROR;
    }
 
-   value->addColumn(_T("INDEX"), DCI_DT_UINT, _T("Index"), true);
    value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"));
    value->addColumn(_T("PUBLIC_KEY"), DCI_DT_STRING, _T("Public key"));
    value->addColumn(_T("LISTEN_PORT"), DCI_DT_UINT, _T("Listen port"));
 
-   unsigned int index = 0;
    char *deviceName;
    size_t len;
    wg_for_each_device_name(deviceNames, deviceName, len)
    {
       value->addRow();
-      value->set(0, index);
-      index++;
-      value->set(1, deviceName);
+      value->set(0, deviceName);
 
       wg_device *device;
       if (wg_get_device(&device, deviceName) < 0)
@@ -722,13 +718,13 @@ LONG H_WgIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCom
       {
          wg_key_b64_string key;
          wg_key_to_base64(key, device->public_key);
-         value->set(2, key);
+         value->set(1, key);
       }
       else
       {
          nxlog_debug_tag(DEBUG_TAG, 6, _T("H_WgIfTable: device %hs has no public key"), deviceName);
       }
-      value->set(3, device->listen_port);
+      value->set(2, device->listen_port);
       wg_free_device(device);
    }
    free(deviceNames);
@@ -747,7 +743,6 @@ LONG H_WgPeersTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
       return SYSINFO_RC_ERROR;
    }
 
-   value->addColumn(_T("INDEX"), DCI_DT_UINT, _T("Index"), true);
    value->addColumn(_T("INTERFACE"), DCI_DT_STRING, _T("Interface"));
    value->addColumn(_T("PEER_PUBLIC_KEY"), DCI_DT_STRING, _T("Public key"));
    value->addColumn(_T("ENDPOINT"), DCI_DT_STRING, _T("Endpoint"));
@@ -756,7 +751,6 @@ LONG H_WgPeersTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
    value->addColumn(_T("RX_BYTES"), DCI_DT_UINT64, _T("Bytes received"));
    value->addColumn(_T("TX_BYTES"), DCI_DT_UINT64, _T("Bytes sent"));
 
-   unsigned int index = 0;
    char *device_name;
    size_t len;
    wg_for_each_device_name(device_names, device_name, len)
@@ -768,19 +762,15 @@ LONG H_WgPeersTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
          continue;
       }
 
-      value->set(3, device->listen_port);
-
       wg_peer *peer;
       wg_for_each_peer(device, peer)
       {
          value->addRow();
-         value->set(0, index);
-         index++;
-         value->set(1, device_name);
+         value->set(0, device_name);
 
          wg_key_b64_string key;
          wg_key_to_base64(key, peer->public_key);
-         value->set(2, key);
+         value->set(1, key);
 
          InetAddress endpoint = InetAddress::createFromSockaddr(&peer->endpoint.addr);
          StringBuffer sb;
@@ -805,7 +795,7 @@ LONG H_WgPeersTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
 #endif
             sb.append(ntohs(peer->endpoint.addr4.sin_port));
 
-         value->set(3, sb);
+         value->set(2, sb);
 
          if (peer->first_allowedip)
          {
@@ -829,11 +819,11 @@ LONG H_WgPeersTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
                   sb.append(addr.getMaskBits());
                }
             }
-            value->set(4, sb);
+            value->set(3, sb);
          }
-         value->set(5, peer->last_handshake_time.tv_sec);
-         value->set(6, peer->rx_bytes);
-         value->set(7, peer->tx_bytes);
+         value->set(4, peer->last_handshake_time.tv_sec);
+         value->set(5, peer->rx_bytes);
+         value->set(6, peer->tx_bytes);
       }
       wg_free_device(device);
    }
