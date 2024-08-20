@@ -966,6 +966,10 @@ public abstract class View implements MessageAreaHolder
       {
          viewContainer.getPerspective().addMainView(view, true);
       }
+      if (viewContainer instanceof ViewFolder)
+      {
+         ((ViewFolder)viewContainer).addView(view, true, true);
+      }
       else
       {
          PopOutViewWindow.open(view);
