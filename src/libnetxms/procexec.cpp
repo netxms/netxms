@@ -890,9 +890,24 @@ bool ProcessExecutor::execute(const TCHAR *cmdLine, bool shellExec)
    return true;
 #else
    auto executor = new ProcessExecutor(cmdLine, shellExec, true);
+   executor->m_sendOutput = true; // To avoid process failure because of missing output channel
    if (executor->execute())
       return true;   // Executor object will be destroyed by wait thread
    delete executor;
    return false;
 #endif
+}
+
+/**
+ * Execute command, wait for completion, and return exit code or (uint32_t)(-1) on failure
+ */
+uint32_t ProcessExecutor::executeAndWait(const TCHAR *cmdLine, uint32_t timeout, bool shellExec)
+{
+   ProcessExecutor executor(cmdLine, shellExec);
+   executor.m_sendOutput = true; // To avoid process failure because of missing output channel
+   if (!executor.execute())
+      return static_cast<uint32_t>(-1);
+   if (!executor.waitForCompletion(timeout))
+      return static_cast<uint32_t>(-1);
+   return executor.getExitCode();
 }
