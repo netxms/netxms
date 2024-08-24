@@ -130,6 +130,14 @@ static void DefaultParser(const StringList& input, Table *output, const TCHAR *a
 }
 
 /**
+ * Package manager type
+ */
+enum class PackageManager
+{
+   DPKG, RPM, PACMAN, UNKNOWN
+};
+
+/**
  * Handler for System.InstalledProducts table
  */
 LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
@@ -138,29 +146,55 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
    const TCHAR *command = _T("opkg list-installed | awk -e '{ print \"@@@ #\" $1 \"|\" $3 \"||||\" }'");
    bool shellExec = true;
 #else
-   bool shellExec;
-   const TCHAR *command;
-   void (*parser)(const StringList&, Table*, const TCHAR*) = DefaultParser;
-   if (access("/bin/rpm", X_OK) == 0)
+   PackageManager pm = PackageManager::UNKNOWN;
+
+   // If alien is installed, try to determine native package manager (issue NX-2566)
+   if (access("/bin/alien", X_OK) == 0)
    {
-      command = _T("/bin/rpm -qa --queryformat '@@@ #%{NAME}:%{ARCH}|%{VERSION}%|RELEASE?{-%{RELEASE}}:{}||%{VENDOR}|%{INSTALLTIME}|%{URL}|%{SUMMARY}\\n'");
-      shellExec = false;
+      if (ProcessExecutor::executeAndWait(_T("['/bin/rpm','-q','alien']"), 5000) == 0)
+      {
+         pm = PackageManager::RPM;
+      }
+      else if (ProcessExecutor::executeAndWait(_T("['/usr/bin/dpkg-query','-W','alien']"), 5000) == 0)
+      {
+         pm = PackageManager::DPKG;
+      }
+   }
+   else if (access("/bin/rpm", X_OK) == 0)
+   {
+      pm = PackageManager::RPM;
    }
    else if (access("/usr/bin/dpkg-query", X_OK) == 0)
    {
-      command = _T("/usr/bin/dpkg-query -W -f '@@@${Status}#${package}:${Architecture}|${version}|||${homepage}|${description}\\n' | grep '@@@install.*installed.*#'");
-      shellExec = true;
+      pm = PackageManager::DPKG;
    }
    else if (access("/usr/bin/pacman", X_OK) == 0)
    {
-      command = _T("/usr/bin/pacman -Qi");
-      shellExec = false;
-      parser = PacmanParser;
+      pm = PackageManager::PACMAN;
    }
-   else
+
+   bool shellExec;
+   const TCHAR *command;
+   void (*parser)(const StringList&, Table*, const TCHAR*) = DefaultParser;
+   switch(pm)
    {
-      return SYSINFO_RC_UNSUPPORTED;
+      case PackageManager::DPKG:
+         command = _T("/usr/bin/dpkg-query -W -f '@@@${Status}#${package}:${Architecture}|${version}|||${homepage}|${description}\\n' | grep '@@@install.*installed.*#'");
+         shellExec = true;
+         break;
+      case PackageManager::PACMAN:
+         command = _T("/usr/bin/pacman -Qi");
+         shellExec = false;
+         parser = PacmanParser;
+         break;
+      case PackageManager::RPM:
+         command = _T("/bin/rpm -qa --queryformat '@@@ #%{NAME}:%{ARCH}|%{VERSION}%|RELEASE?{-%{RELEASE}}:{}||%{VENDOR}|%{INSTALLTIME}|%{URL}|%{SUMMARY}\\n'");
+         shellExec = false;
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
    }
+
 #endif
 
    struct utsname un;
