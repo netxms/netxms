@@ -157,6 +157,7 @@ public:
 #endif
 
    static bool execute(const TCHAR *cmdLine, bool shellExec = true);
+   static uint32_t executeAndWait(const TCHAR *cmdLine, uint32_t timeout, bool shellExec = true);
 };
 
 /**
