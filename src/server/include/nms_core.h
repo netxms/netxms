@@ -134,7 +134,6 @@ void SaveCurrentFreeId();
 #include "nxcore_schedule.h"
 #include "nms_objects.h"
 #include "nms_locks.h"
-#include "nms_topo.h"
 #include "nms_script.h"
 
 /**

@@ -404,27 +404,27 @@ void MacAddressInfo::fillMessage(NXCPMessage* msg, uint32_t base) const
 /**
  * Fill JSON object with MAC address search results
  */
-void MacAddressInfo::fillJson(json_t *json, uint32_t userId, bool includeObject, json_t* (*CreateObjectSummary)(const NetObj *object)) const
+void MacAddressInfo::fillJson(json_t *json, uint32_t userId, bool includeObject, std::function<json_t* (const NetObj& object)> createObjectSummary) const
 {
    // Always present
    json_object_set_new(json, "localMacAddress", json_string_t(m_macAddr.toString(MacAddressNotation::COLON_SEPARATED)));
    switch(m_type)
    {
       case 0:
-         json_object_set_new(json, "type", json_string_t(_T("INDIRECT")));
+         json_object_set_new(json, "type", json_string("INDIRECT"));
          break;
       case 1:
-         json_object_set_new(json, "type", json_string_t(_T("DIRECT")));
+         json_object_set_new(json, "type", json_string("DIRECT"));
          break;
       case 2:
-         json_object_set_new(json, "type", json_string_t(_T("WIRELESS")));
+         json_object_set_new(json, "type", json_string("WIRELESS"));
          break;
       case 4:
-         json_object_set_new(json, "type", json_string_t(_T("NOT_FOUND")));
+         json_object_set_new(json, "type", json_string("NOT_FOUND"));
          break;
       case 3:
       default:
-         json_object_set_new(json, "type", json_string_t(_T("UNKNOWN")));
+         json_object_set_new(json, "type", json_string("UNKNOWN"));
          break;
    }
 
@@ -439,7 +439,7 @@ void MacAddressInfo::fillJson(json_t *json, uint32_t userId, bool includeObject,
       {
          json_object_set_new(json, "nodeId", json_integer(node->getId()));
          if (includeObject && node->checkAccessRights(userId, OBJECT_ACCESS_READ))
-            json_object_set_new(json, "node", CreateObjectSummary(node.get()));
+            json_object_set_new(json, "node", createObjectSummary(*node));
       }
       else
       {
@@ -448,7 +448,7 @@ void MacAddressInfo::fillJson(json_t *json, uint32_t userId, bool includeObject,
 
       json_object_set_new(json, "interfaceId", json_integer(cp->getId()));
       if (includeObject && node->checkAccessRights(userId, OBJECT_ACCESS_READ))
-         json_object_set_new(json, "interface", CreateObjectSummary(cp.get()));
+         json_object_set_new(json, "interface", createObjectSummary(*cp));
       json_object_set_new(json, "interfaceIndex", json_integer(static_cast<Interface&>(*cp).getIfIndex()));
    }
    else
@@ -468,10 +468,10 @@ void MacAddressInfo::fillJson(json_t *json, uint32_t userId, bool includeObject,
          json_object_set_new(json, "localInterfaceId", json_integer(iface->getId()));
          json_object_set_new(json, "localIpAddress", iface->getIpAddressList()->getFirstUnicastAddress().toJson());
          if (includeObject && iface->checkAccessRights(userId, OBJECT_ACCESS_READ))
-            json_object_set_new(json, "localInterface", CreateObjectSummary(iface));
+            json_object_set_new(json, "localInterface", createObjectSummary(*iface));
          shared_ptr<NetObj> node = FindObjectById(iface->getParentNodeId());
          if (includeObject && node->checkAccessRights(userId, OBJECT_ACCESS_READ))
-            json_object_set_new(json, "localNode", CreateObjectSummary(node.get()));
+            json_object_set_new(json, "localNode", createObjectSummary(*node));
       }
       else if (m_owner->getObjectClass() == OBJECT_ACCESSPOINT)
       {
@@ -480,13 +480,13 @@ void MacAddressInfo::fillJson(json_t *json, uint32_t userId, bool includeObject,
          json_object_set_new(json, "localInterfaceId", json_integer(0));
          json_object_set_new(json, "localIpAddress", accessPoint->getPrimaryIpAddress().toJson());
          if (includeObject && accessPoint->checkAccessRights(userId, OBJECT_ACCESS_READ))
-            json_object_set_new(json, "localNode", CreateObjectSummary(accessPoint));
+            json_object_set_new(json, "localNode", createObjectSummary(*accessPoint));
       }
    }
    else
    {
       json_object_set_new(json, "localNodeId", json_integer(0));
       json_object_set_new(json, "localInterfaceId", json_integer(0));
-      json_object_set_new(json, "localIpAddress", InetAddress::INVALID.toJson());
+      json_object_set_new(json, "localIpAddress", json_null());
    }
 }

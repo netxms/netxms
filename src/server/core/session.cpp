@@ -11966,7 +11966,8 @@ void ClientSession::findMacAddress(const NXCPMessage& request)
       for (int i = 0; i < icpl.size(); i++, base += 10)
          icpl.get(i)->fillMessage(&response, base);
    }
-   sendMessage(&response);
+
+   sendMessage(response);
 }
 
 /**

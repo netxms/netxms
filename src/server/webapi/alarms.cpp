@@ -51,7 +51,7 @@ int H_Alarms(Context *context)
          json_object_set_new(json, "lastChangeTime", json_time_string(alarm->getLastChangeTime()));
          if (includeObjectDetails)
          {
-            json_object_set_new(json, "sourceObject", CreateObjectSummary(object.get()));
+            json_object_set_new(json, "sourceObject", CreateObjectSummary(*object));
          }
          json_array_append_new(output, json);
       }

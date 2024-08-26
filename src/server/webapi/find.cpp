@@ -24,14 +24,14 @@
 #include <nms_topo.h>
 
 /**
- *
+ * Handler for /v1/find/mac-address
  */
 int H_FindMacAddress(Context *context)
 {
    json_t *output = json_array();
 
    const char *macAddress = context->getQueryParameter("macAddress");
-   uint32_t searchLimit = context->getQueryParameterAsUInt32("searchLimit", 100);
+   int searchLimit = context->getQueryParameterAsInt32("searchLimit", 100);
    bool includeObject = context->getQueryParameterAsBoolean("includeObjects", false);
    MacAddress mac = MacAddress::parse(macAddress, true);
 
