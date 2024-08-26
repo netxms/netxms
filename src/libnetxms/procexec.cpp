@@ -384,6 +384,8 @@ bool ProcessExecutor::execute()
       m_phandle = INVALID_HANDLE_VALUE;
    }
 
+   m_initLock.lock();
+
    success = m_sendOutput ? executeWithOutput() : executeWithoutOutput();
 
 #else /* UNIX implementation */
@@ -611,6 +613,7 @@ void ProcessExecutor::waitForProcess(ProcessExecutor *executor)
    else
       executor->m_exitCode = -1;
    executor->m_pid = 0;
+   executor->m_started = false;
    executor->m_running = false;
    executor->m_completed.set();
    if (executor->m_selfDestruct)
@@ -698,6 +701,9 @@ do_wait:
    CloseHandle(ov.hEvent);
    CloseHandle(pipe);
 
+   CloseHandle(executor->m_phandle);
+   executor->m_phandle = INVALID_HANDLE_VALUE;
+
 #else /* UNIX implementation */
 
    int pipe = executor->getOutputPipe();
@@ -762,6 +768,7 @@ do_wait:
    executor->m_pid = 0;
 #endif
 
+   executor->m_started = false;
    executor->m_running = false;
    executor->m_completed.set();
    if (executor->m_selfDestruct)
