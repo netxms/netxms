@@ -57,10 +57,10 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, NetworkMap *fil
          BuildL2Topology(topology, static_cast<Node*>(peer.get()), filterProvider, depth - 1, includeEndNodes, useL1Topology);
          shared_ptr<Interface> ifLocal = root->findInterfaceByIndex(info->ifLocal);
          shared_ptr<Interface> ifRemote = static_cast<Node&>(*peer).findInterfaceByIndex(info->ifRemote);
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("BuildL2Topology: root=%s [%u], node=%s [%u], ifLocal=%u %s, ifRemote=%u %s"),
-               root->getName(), root->getId(), peer->getName(), peer->getId(), ifLocal,
-               (ifLocal != nullptr) ? ifLocal->getName() : _T("(null)"), ifRemote,
-               (ifRemote != nullptr) ? ifRemote->getName() : _T("(null)"));
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("BuildL2Topology: root=%s [%u], node=%s [%u], ifLocal=[ifIndex=%u ifName=%s], ifRemote=[ifIndex=%u ifName=%s]"),
+               root->getName(), root->getId(), peer->getName(), peer->getId(),
+               info->ifLocal, (ifLocal != nullptr) ? ifLocal->getName() : _T("(null)"),
+               info->ifRemote, (ifRemote != nullptr) ? ifRemote->getName() : _T("(null)"));
          topology.linkObjects(root->getId(), ifLocal.get(), peer->getId(), ifRemote.get());
       }
       else if (peer->getObjectClass() == OBJECT_ACCESSPOINT)
