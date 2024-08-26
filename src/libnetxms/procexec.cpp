@@ -613,7 +613,6 @@ void ProcessExecutor::waitForProcess(ProcessExecutor *executor)
    else
       executor->m_exitCode = -1;
    executor->m_pid = 0;
-   executor->m_started = false;
    executor->m_running = false;
    executor->m_completed.set();
    if (executor->m_selfDestruct)
@@ -768,7 +767,6 @@ do_wait:
    executor->m_pid = 0;
 #endif
 
-   executor->m_started = false;
    executor->m_running = false;
    executor->m_completed.set();
    if (executor->m_selfDestruct)
