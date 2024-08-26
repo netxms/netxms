@@ -28,6 +28,10 @@ class Node;
 class Interface;
 class NetworkMap;
 
+#ifdef _WIN32
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<NetObj>;
+#endif
+
 /**
  * LLDP local port info
  */
@@ -409,18 +413,9 @@ struct OSPFInterface
    uint32_t bdr;
 };
 
-//////////////////////////////////
-// Topology functions
-
-class NetworkMapObjectList;
-class NetworkMapElement;
-class NetworkMapLink;
-
-shared_ptr<NetworkPath> TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest);
-const ROUTE *SelectBestRoute(const RoutingTable& routes, const InetAddress& destination);
-void BuildL2Topology(NetworkMapObjectList &topology, Node *root, NetworkMap *filterProvider, int depth, bool includeEndNodes, bool useL1Topology);
-shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type);
-
+/**
+ * MAC address information
+ */
 class NXCORE_EXPORTABLE MacAddressInfo
 {
 private:
@@ -437,8 +432,21 @@ public:
    }
 
    void fillMessage(NXCPMessage* msg, uint32_t base) const;
-   void fillJson(json_t *json, uint32_t userId, bool includeObject, json_t* (*CreateObjectSummary)(const NetObj *object)) const;
+   void fillJson(json_t *json, uint32_t userId, bool includeObject, std::function<json_t* (const NetObj& object)> createObjectSummary) const;
 };
+
+
+//////////////////////////////////
+// Topology functions
+
+class NetworkMapObjectList;
+class NetworkMapElement;
+class NetworkMapLink;
+
+shared_ptr<NetworkPath> TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest);
+const ROUTE *SelectBestRoute(const RoutingTable& routes, const InetAddress& destination);
+void BuildL2Topology(NetworkMapObjectList &topology, Node *root, NetworkMap *filterProvider, int depth, bool includeEndNodes, bool useL1Topology);
+shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type);
 
 void NXCORE_EXPORTABLE FindMacAddresses(const BYTE* macPattern, size_t macPatternSize, ObjectArray<MacAddressInfo>* out, int searchLimit);
 

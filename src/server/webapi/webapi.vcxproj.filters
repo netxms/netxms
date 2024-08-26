@@ -45,6 +45,9 @@
     <ClCompile Include="router.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="find.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="webapi.h">

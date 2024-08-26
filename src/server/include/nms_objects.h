@@ -24,10 +24,10 @@
 #define _nms_objects_h_
 
 #include <nms_agent.h>
+#include <nms_topo.h>
 #include <geolocation.h>
 #include <jansson.h>
 #include <math.h>
-#include <nms_topo.h>
 #include <gauge_helpers.h>
 #include "auth-token.h"
 
@@ -1508,10 +1508,6 @@ public:
    static int getObjectClassByName(const char *name) { return getObjectClassByNameA(name); }
 #endif
 };
-
-#ifdef _WIN32
-template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<NetObj>;
-#endif
 
 /**
  * Object find functions
