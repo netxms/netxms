@@ -60,6 +60,7 @@ import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.resources.ThemeEngine;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -185,8 +186,16 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       });
       
       createActions();
+   }
 
+   /**
+    * @see org.netxms.nxmc.base.views.View#postContentCreate()
+    */
+   @Override
+   protected void postContentCreate()
+   {
       openEventProcessingPolicy();
+      super.postContentCreate();
    }
 
    /**
@@ -1118,5 +1127,41 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    {
       // This method should be called only when save on close is selected, so do unlock after save
       savePolicy(true);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#refresh()
+    */
+   @Override
+   public void refresh()
+   {
+      if (!policyLocked)
+      {
+         openEventProcessingPolicy();
+         return;
+      }
+      
+      if (isModified())
+      {
+         if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Unsaved Changes"), 
+               i18n.tr("Are you sure you want to refresh and lose all not saved changes?")))
+         {
+            return;
+         }
+      }
+      new Job(i18n.tr("Closing event processing policy"), null) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.closeEventProcessingPolicy();
+            runInUIThread(() -> openEventProcessingPolicy());
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot close event processing policy");
+         }
+      }.start();
    }
 }
