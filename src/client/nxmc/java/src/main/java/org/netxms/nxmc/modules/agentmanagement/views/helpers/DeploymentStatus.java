@@ -40,7 +40,7 @@ public class DeploymentStatus
 	public DeploymentStatus(long nodeId, int status, String message)
 	{
 		this.nodeId = nodeId;
-		this.nodeObject = (AbstractNode)((NXCSession)Registry.getSession()).findObjectById(nodeId, AbstractNode.class);
+		this.nodeObject = null;
 		this.status = status;
 		this.message = message;
 	}
@@ -96,6 +96,10 @@ public class DeploymentStatus
 	 */
 	public AbstractNode getNodeObject()
 	{
+      if (nodeObject == null)
+      {
+         nodeObject = (AbstractNode)((NXCSession)Registry.getSession()).findObjectById(nodeId, AbstractNode.class);
+      }
 		return nodeObject;
 	}
 }
