@@ -1042,8 +1042,16 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
                value = value.getUInt32() - m_prevRawValue.getUInt32();
                break;
             case DCI_DT_COUNTER32:
-               // assume counter reset if new value is less then previous
-               value = (value.getUInt32() > m_prevRawValue.getUInt32()) ? value.getUInt32() - m_prevRawValue.getUInt32() : 0;
+	       if (value.getUInt32() >= m_prevRawValue.getUInt32())
+	       {
+		  value = value.getUInt32() - m_prevRawValue.getUInt32();
+	       }
+	       else
+	       {
+		  // discontinuity: counter reset or wraparound, return error per NX-2461
+		  success = false;
+		  m_prevRawValue = value;
+	       }
                break;
             case DCI_DT_INT64:
                value = value.getInt64() - m_prevRawValue.getInt64();
@@ -1053,7 +1061,16 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
                break;
             case DCI_DT_COUNTER64:
                // assume counter reset if new value is less then previous
-               value = (value.getUInt64() > m_prevRawValue.getUInt64()) ? value.getUInt64() - m_prevRawValue.getUInt64() : 0;
+	       if (value.getUInt64() >= m_prevRawValue.getUInt64())
+	       {
+		  value = value.getUInt64() - m_prevRawValue.getUInt64();
+	       }
+	       else
+	       {
+		  // discontinuity: counter reset or wraparound, return error per NX-2461
+		  success = false;
+		  m_prevRawValue = value;
+	       }
                break;
             case DCI_DT_FLOAT:
                value = value.getDouble() - m_prevRawValue.getDouble();
@@ -1084,6 +1101,16 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
                break;
             case DCI_DT_COUNTER32:
                value = (value.getUInt32() > m_prevRawValue.getUInt32()) ? (value.getUInt32() - m_prevRawValue.getUInt32()) / (UINT32)nElapsedTime : 0;
+	       if (value.getUInt32() >= m_prevRawValue.getUInt32())
+	       {
+		  value = (value.getUInt32() - m_prevRawValue.getUInt32()) / (UINT32)nElapsedTime;
+	       }
+	       else
+	       {
+		  // discontinuity: counter reset or wraparound, return error per NX-2461
+		  success = false;
+		  m_prevRawValue = value;
+	       }
                break;
             case DCI_DT_INT64:
                value = (value.getInt64() - m_prevRawValue.getInt64()) / (INT64)nElapsedTime;
@@ -1093,6 +1120,17 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
                break;
             case DCI_DT_COUNTER64:
                value = (value.getUInt64() > m_prevRawValue.getUInt64()) ? (value.getUInt64() - m_prevRawValue.getUInt64()) / (UINT64)nElapsedTime : 0;
+               // assume counter reset if new value is less then previous
+	       if (value.getUInt64() >= m_prevRawValue.getUInt64())
+	       {
+		  value = (value.getUInt64() - m_prevRawValue.getUInt64()) / (UINT64)nElapsedTime;
+	       }
+	       else
+	       {
+		  // discontinuity: counter reset or wraparound, return error per NX-2461
+		  success = false;
+		  m_prevRawValue = value;
+	       }
                break;
             case DCI_DT_FLOAT:
                value = (value.getDouble() - m_prevRawValue.getDouble()) / (double)nElapsedTime;
