@@ -211,7 +211,7 @@ void NXMBDispatcher::removeCallHandler(const TCHAR *callName)
  */
 bool NXMBDispatcher::call(const TCHAR *callName, const void *input, void *output)
 {
-   m_callHandlerAccess.unlock();
+   m_callHandlerAccess.lock();
    NXMBCallHandler handler = m_callHandlers->get(callName);
    m_callHandlerAccess.unlock();
    if (handler == nullptr)
