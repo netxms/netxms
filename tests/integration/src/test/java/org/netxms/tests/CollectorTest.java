@@ -143,11 +143,12 @@ public class CollectorTest extends AbstractSessionTest
 
       Threshold threshold = new Threshold();
       threshold.setValue("10");
-      threshold.setOperation(0);
+      threshold.setOperation(Threshold.OP_LE);
+      threshold.setFunction(Threshold.F_LAST);
       dci.getThresholds().add(threshold);
       dcc.modifyObject(dci);
 
-      Thread.sleep(1000);
+      Thread.sleep(2000);
 
       DciValue[] list = session.getLastValues(testCollector.getObjectId());
       testCollector = findOrCreateCollector(session, COLLECTOR_NAME);
