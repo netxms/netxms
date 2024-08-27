@@ -244,6 +244,7 @@ public class ArpCacheView extends ObjectView
    @Override
    protected void onObjectChange(AbstractObject object)
    {
+      viewer.setInput(new Object[0]);
       if (isActive())
          refresh();
       else
