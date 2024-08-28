@@ -484,8 +484,13 @@ public abstract class View implements MessageAreaHolder
       if (image != null)
          image.dispose();
       image = (imageDescriptor != null) ? imageDescriptor.createImage() : null;
-      if ((viewContainer != null) && (viewContainer.getPerspective() != null))
-         viewContainer.getPerspective().updateViewTrim(this);
+      if (viewContainer != null)
+      {
+         if (viewContainer.getPerspective() != null)
+            viewContainer.getPerspective().updateViewTrim(this);
+         else if (viewContainer instanceof ViewFolder)
+            ((ViewFolder)viewContainer).updateViewTrim(this);
+      }
    }
 
    /**
