@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
 
 #include "nxagentd.h"
 #include <stdarg.h>
+
+#define DEBUG_TAG _T("events")
 
 /**
  * Static data
@@ -47,7 +49,7 @@ void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, int
          argsText.append(CHECK_NULL(argv[i]));
          argsText.append(_T('"'));
       }
-      nxlog_debug(5, _T("PostEvent(): event_code=%d, event_name=%s, timestamp=") INT64_FMT _T(", num_args=%d%s"),
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("PostEvent(): event_code=%d, event_name=%s, timestamp=") INT64_FMT _T(", num_args=%d%s"),
                   eventCode, CHECK_NULL(eventName), static_cast<INT64>(timestamp), argc, (const TCHAR *)argsText);
    }
 
@@ -91,7 +93,7 @@ void PostEventWithNames(uint32_t eventCode, const TCHAR *eventName, time_t times
          argsText.append(CHECK_NULL(pair->value));
          argsText.append(_T('"'));
       }
-      nxlog_debug(5, _T("PostEvent(): event_code=%d, event_name=%s, timestamp=") INT64_FMT _T(", num_args=%d%s"),
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("PostEvent(): event_code=%d, event_name=%s, timestamp=") INT64_FMT _T(", num_args=%d%s"),
                   eventCode, CHECK_NULL(eventName), static_cast<INT64>(timestamp), parameters.size(), (const TCHAR *)argsText);
    }
 
@@ -225,7 +227,7 @@ static void ProcessEventSendRequest(NamedPipe *pipe, void *arg)
 {
    TCHAR buffer[256];
 
-   nxlog_debug(5, _T("ProcessEventSendRequest: connection established"));
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessEventSendRequest: connection established"));
    PipeMessageReceiver receiver(pipe->handle(), 8192, 1048576);  // 8K initial, 1M max
    while(true)
    {
@@ -233,13 +235,13 @@ static void ProcessEventSendRequest(NamedPipe *pipe, void *arg)
       NXCPMessage *msg = receiver.readMessage(5000, &result);
       if (msg == nullptr)
          break;
-      AgentWriteDebugLog(6, _T("ProcessEventSendRequest: received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("ProcessEventSendRequest: received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
       if (msg->getCode() == CMD_TRAP)
          ForwardEvent(msg);
       else
          delete msg;
    }
-   AgentWriteDebugLog(5, _T("ProcessEventSendRequest: connection by user %s closed"), pipe->user());
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessEventSendRequest: connection by user %s closed"), pipe->user());
 }
 
 /**
