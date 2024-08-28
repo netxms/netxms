@@ -1,6 +1,6 @@
 /*
 ** NetXMS platform subagent for Windows
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,23 +24,23 @@
 #include <winternl.h>
 
 static int s_cpuCount = 0;
-static SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION *s_cpuTimes = NULL;
-static UINT32 *s_usage = NULL;
-static UINT32 *s_idle = NULL;
-static UINT32 *s_kernel = NULL;
-static UINT32 *s_user = NULL;
-static UINT32 *s_interrupt = NULL;
-static UINT32 *s_interruptCount = NULL;
+static SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION *s_cpuTimes = nullptr;
+static uint32_t *s_usage = nullptr;
+static uint32_t *s_idle = nullptr;
+static uint32_t *s_kernel = nullptr;
+static uint32_t *s_user = nullptr;
+static uint32_t *s_interrupt = nullptr;
+static uint32_t *s_interruptCount = nullptr;
 static int s_bpos = 0;
 static win_mutex_t s_lock;
 
 /**
  * CPU collector thread
  */
-static THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
+static void CPUStatCollector()
 {
    ThreadSetName("CPUStatCollector");
-   nxlog_debug(3, _T("CPU stat collector started (%d CPUs)"), s_cpuCount);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("CPU stat collector started (%d CPUs)"), s_cpuCount);
 
    SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION *prev = s_cpuTimes;
    SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION *curr = &s_cpuTimes[s_cpuCount];
@@ -56,10 +56,10 @@ static THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
          memcpy(curr, prev, cpuTimesLen);
       }
 
-      UINT64 sysIdle = 0;
-      UINT64 sysKernel = 0;
-      UINT64 sysUser = 0;
-      UINT64 sysInterrupt = 0;
+      uint64_t sysIdle = 0;
+      uint64_t sysKernel = 0;
+      uint64_t sysUser = 0;
+      uint64_t sysInterrupt = 0;
 
       LockMutex(&s_lock, INFINITE);
 
@@ -68,11 +68,11 @@ static THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
       int idx = s_bpos;
       for(int i = 0; i < s_cpuCount; i++, idx++)
       {
-         UINT64 idle = curr[i].IdleTime.QuadPart - prev[i].IdleTime.QuadPart;
-         UINT64 kernel = curr[i].KernelTime.QuadPart - prev[i].KernelTime.QuadPart;
-         UINT64 user = curr[i].UserTime.QuadPart - prev[i].UserTime.QuadPart;
-         UINT64 interrupt = curr[i].Reserved1[1].QuadPart - prev[i].Reserved1[1].QuadPart;
-         UINT64 total = kernel + user;  // kernel time includes idle time
+         uint64_t idle = curr[i].IdleTime.QuadPart - prev[i].IdleTime.QuadPart;
+         uint64_t kernel = curr[i].KernelTime.QuadPart - prev[i].KernelTime.QuadPart;
+         uint64_t user = curr[i].UserTime.QuadPart - prev[i].UserTime.QuadPart;
+         uint64_t interrupt = curr[i].Reserved1[1].QuadPart - prev[i].Reserved1[1].QuadPart;
+         uint64_t total = kernel + user;  // kernel time includes idle time
 
          // There were reports of agent reporting extremely high CPU usage
          // That could happen when idle count is greater than total count
@@ -89,11 +89,11 @@ static THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
 
          if (total > 0)
          {
-            s_usage[idx] = (UINT32)((total - idle) * 10000 / total);
-            s_idle[idx] = (UINT32)(idle * 10000 / total);
-            s_kernel[idx] = (UINT32)((kernel - idle) * 10000 / total);
-            s_user[idx] = (UINT32)(user * 10000 / total);
-            s_interrupt[idx] = (UINT32)(interrupt * 10000 / total);
+            s_usage[idx] = (uint32_t)((total - idle) * 10000 / total);
+            s_idle[idx] = (uint32_t)(idle * 10000 / total);
+            s_kernel[idx] = (uint32_t)((kernel - idle) * 10000 / total);
+            s_user[idx] = (uint32_t)(user * 10000 / total);
+            s_interrupt[idx] = (uint32_t)(interrupt * 10000 / total);
          }
          else
          {
@@ -105,14 +105,14 @@ static THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
          }
       }
 
-      UINT64 sysTotal = sysKernel + sysUser;
+      uint64_t sysTotal = sysKernel + sysUser;
       if (sysTotal > 0)
       {
-         s_usage[idx] = (UINT32)((sysTotal - sysIdle) * 10000 / sysTotal);
-         s_idle[idx] = (UINT32)(sysIdle * 10000 / sysTotal);
-         s_kernel[idx] = (UINT32)((sysKernel - sysIdle) * 10000 / sysTotal);
-         s_user[idx] = (UINT32)(sysUser * 10000 / sysTotal);
-         s_interrupt[idx] = (UINT32)(sysInterrupt * 10000 / sysTotal);
+         s_usage[idx] = (uint32_t)((sysTotal - sysIdle) * 10000 / sysTotal);
+         s_idle[idx] = (uint32_t)(sysIdle * 10000 / sysTotal);
+         s_kernel[idx] = (uint32_t)((sysKernel - sysIdle) * 10000 / sysTotal);
+         s_user[idx] = (uint32_t)(sysUser * 10000 / sysTotal);
+         s_interrupt[idx] = (uint32_t)(sysInterrupt * 10000 / sysTotal);
       }
       else
       {
@@ -141,8 +141,7 @@ static THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
          curr = s_cpuTimes;
       }
    }
-   nxlog_debug(3, _T("CPU stat collector stopped"));
-   return THREAD_OK;
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("CPU stat collector stopped"));
 }
 
 /**
@@ -159,14 +158,14 @@ void StartCPUStatCollector()
    GetSystemInfo(&si);
    s_cpuCount = (int)si.dwNumberOfProcessors;
    s_cpuTimes = MemAllocArray<SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION>(s_cpuCount * 2);
-   s_usage = MemAllocArray<UINT32>(900 * (s_cpuCount + 1));
-   s_idle = MemAllocArray<UINT32>(900 * (s_cpuCount + 1));
-   s_kernel = MemAllocArray<UINT32>(900 * (s_cpuCount + 1));
-   s_user = MemAllocArray<UINT32>(900 * (s_cpuCount + 1));
-   s_interrupt = MemAllocArray<UINT32>(900 * (s_cpuCount + 1));
-   s_interruptCount = MemAllocArray<UINT32>(s_cpuCount + 1);
+   s_usage = MemAllocArray<uint32_t>(900 * (s_cpuCount + 1));
+   s_idle = MemAllocArray<uint32_t>(900 * (s_cpuCount + 1));
+   s_kernel = MemAllocArray<uint32_t>(900 * (s_cpuCount + 1));
+   s_user = MemAllocArray<uint32_t>(900 * (s_cpuCount + 1));
+   s_interrupt = MemAllocArray<uint32_t>(900 * (s_cpuCount + 1));
+   s_interruptCount = MemAllocArray<uint32_t>(s_cpuCount + 1);
    InitializeMutex(&s_lock, 1000);
-   s_collectorThread = ThreadCreateEx(CPUStatCollector, 0, NULL);
+   s_collectorThread = ThreadCreateEx(CPUStatCollector);
 }
 
 /**
@@ -203,7 +202,7 @@ LONG H_CpuUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractComm
          return SYSINFO_RC_UNSUPPORTED;
    }
 
-   UINT32 usage = 0;
+   uint32_t usage = 0;
    int step = s_cpuCount + 1;
    int count;
    switch(arg[1])
@@ -225,7 +224,7 @@ LONG H_CpuUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractComm
          break;
    }
 
-   UINT32 *data;
+   uint32_t *data;
    switch(arg[2])
    {
       case 'U':
@@ -274,7 +273,7 @@ LONG H_CpuContextSwitches(const TCHAR *param, const TCHAR *arg, TCHAR *value, Ab
 
    // First 4 bytes in SYSTEM_INTERRUPT_INFORMATION is context switch count
    // (according to http://www.geoffchappell.com/studies/windows/km/ntoskrnl/api/ex/sysinfo/interrupt.htm)
-   ret_uint(value, *((UINT32 *)interrupts.Reserved1));
+   ret_uint(value, *((uint32_t *)interrupts.Reserved1));
    return SYSINFO_RC_SUCCESS;
 }
 
