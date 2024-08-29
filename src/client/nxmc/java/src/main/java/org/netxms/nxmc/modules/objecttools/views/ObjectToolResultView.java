@@ -136,7 +136,7 @@ public abstract class ObjectToolResultView extends AdHocObjectView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            object = new ObjectContext(session.findObjectById(objectId), session.getAlarm(alarm), contextId);
+            object = new ObjectContext(session.findObjectById(objectId), alarm > 0 ? session.getAlarm(alarm) : null, contextId);
             runInUIThread(() -> setName(getViewName(object.object, tool)));
          }
          

@@ -24,12 +24,10 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
-import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -43,7 +41,6 @@ public class ServerCommandResults extends AbstractCommandResultView
    private final I18n i18n = LocalizationHelper.getI18n(ServerCommandResults.class);
 
    private String lastCommand = null;
-   private Action actionRestart;
    private Action actionStop;
    private boolean isRunning = false;
 
@@ -69,32 +66,11 @@ public class ServerCommandResults extends AbstractCommandResultView
    }   
 
    /**
-    * @see org.netxms.nxmc.modules.objecttools.views.AbstractCommandResultView#postClone(org.netxms.nxmc.base.views.View)
-    */
-   @Override
-   protected void postClone(View view)
-   {
-      super.postClone(view);
-      actionRestart.setEnabled(true);
-      actionStop.setEnabled(false);
-      isRunning = false;
-   }
-
-   /**
     * Create actions
     */
    protected void createActions()
    {
       super.createActions();
-      
-      actionRestart = new Action(i18n.tr("&Restart"), SharedIcons.RESTART) {
-         @Override
-         public void run()
-         {
-            execute();
-         }
-      };
-      actionRestart.setEnabled(false);
       
       actionStop = new Action("Stop", SharedIcons.TERMINATE) {
          @Override
@@ -112,9 +88,7 @@ public class ServerCommandResults extends AbstractCommandResultView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
-      manager.add(actionRestart);
       manager.add(actionStop);
-      manager.add(new Separator());
       super.fillLocalMenu(manager);
    }
 
@@ -124,9 +98,7 @@ public class ServerCommandResults extends AbstractCommandResultView
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
    {
-      manager.add(actionRestart);
       manager.add(actionStop);
-      manager.add(new Separator());
       super.fillLocalToolBar(manager);
    }
 
@@ -137,9 +109,7 @@ public class ServerCommandResults extends AbstractCommandResultView
     */
    protected void fillContextMenu(final IMenuManager manager)
    {
-      manager.add(actionRestart);
       manager.add(actionStop);
-      manager.add(new Separator());
       super.fillContextMenu(manager);
    }
    
@@ -149,6 +119,9 @@ public class ServerCommandResults extends AbstractCommandResultView
    @Override
    public void execute()
    {
+      if (!restoreValuse())
+         return;
+      
       if (isRunning)
       {
          MessageDialog.openError(Display.getCurrent().getActiveShell(), "Error", "Command already running!");
@@ -171,7 +144,7 @@ public class ServerCommandResults extends AbstractCommandResultView
          {
             try
             {
-               session.executeServerCommand(object.object.getObjectId(), object.getAlarmId(), executionString, inputValues, maskedFields, true, getOutputListener(), null);
+               session.executeServerCommand(object.object.getObjectId(), object.getAlarmId(), tool.getData(), inputValues, maskedFields, true, getOutputListener(), null);
                writeToOutputStream(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
             }
             finally

@@ -42,7 +42,7 @@ public class InputFieldEntryDialog extends Dialog
    private String title;
    private InputField[] fields;
    private LabeledControl[] controls;
-   private Map<String, String> values;
+   private Map<String, String> values = null;
 
    /**
     * Helper method for reading input fields.
@@ -70,6 +70,15 @@ public class InputFieldEntryDialog extends Dialog
       this.title = title;
       this.fields = fields;
       this.controls = new LabeledControl[fields.length];
+   }
+
+   public InputFieldEntryDialog(Shell parentShell, String title, InputField[] fields, Map<String, String> inputValues)
+   {
+      super(parentShell);
+      this.title = title;
+      this.fields = fields;
+      this.controls = new LabeledControl[inputValues.size()];
+      values = inputValues;
    }
 
    /**
@@ -117,6 +126,14 @@ public class InputFieldEntryDialog extends Dialog
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
          c.setLayoutData(gd);
+         
+         if (values != null)
+         {
+            if (values.containsKey(fields[i].getName()))
+            {
+               c.setText(values.get(fields[i].getName()));
+            }
+         }
 
          controls[i] = c;
       }

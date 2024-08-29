@@ -24,10 +24,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
-import org.eclipse.jface.action.Separator;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -41,7 +39,6 @@ public class ServerScriptResults extends AbstractCommandResultView
    private final I18n i18n = LocalizationHelper.getI18n(ServerScriptResults.class);
 
    private Action actionStop;
-   private Action actionRestart;
 
    /**
     * Constructor
@@ -63,16 +60,6 @@ public class ServerScriptResults extends AbstractCommandResultView
    {
       super();
    }
-   
-   /**
-    * @see org.netxms.nxmc.modules.objecttools.views.AbstractCommandResultView#postClone(org.netxms.nxmc.base.views.View)
-    */
-   @Override
-   protected void postClone(View view)
-   {
-      super.postClone(view);
-      actionRestart.setEnabled(true);
-   }
       
    /**
     * Create actions
@@ -89,15 +76,6 @@ public class ServerScriptResults extends AbstractCommandResultView
          }
       };
       addKeyBinding("M1+T", actionStop);
-
-      actionRestart = new Action(i18n.tr("&Restart"), SharedIcons.RESTART) {
-         @Override
-         public void run()
-         {
-            execute();
-         }
-      };
-      actionRestart.setEnabled(false);
    }
 
    /**
@@ -107,8 +85,6 @@ public class ServerScriptResults extends AbstractCommandResultView
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionStop);
-      manager.add(actionRestart);
-      manager.add(new Separator());
       super.fillLocalMenu(manager);
    }
 
@@ -119,8 +95,6 @@ public class ServerScriptResults extends AbstractCommandResultView
    protected void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(actionStop);
-      manager.add(actionRestart);
-      manager.add(new Separator());
       super.fillLocalToolBar(manager);
    }
 
@@ -132,8 +106,6 @@ public class ServerScriptResults extends AbstractCommandResultView
    protected void fillContextMenu(final IMenuManager manager)
    {
       manager.add(actionStop);
-      manager.add(actionRestart);
-      manager.add(new Separator());
       super.fillContextMenu(manager);
    }
 
@@ -143,6 +115,9 @@ public class ServerScriptResults extends AbstractCommandResultView
    @Override
    public void execute()
    {
+      if (!restoreValuse())
+         return;
+      
       actionRestart.setEnabled(false);
       actionStop.setEnabled(true);
       createOutputStream();
@@ -158,7 +133,7 @@ public class ServerScriptResults extends AbstractCommandResultView
          {
             try
             {
-               session.executeLibraryScript(object.object.getObjectId(), object.getAlarmId(), executionString, inputValues, maskedFields, getOutputListener());
+               session.executeLibraryScript(object.object.getObjectId(), object.getAlarmId(), tool.getData(), inputValues, maskedFields, getOutputListener());
             }
             finally
             {

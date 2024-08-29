@@ -21,16 +21,11 @@ package org.netxms.nxmc.modules.objects.views;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.action.IToolBarManager;
-import org.eclipse.jface.action.Separator;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.netxms.nxmc.modules.objecttools.views.AbstractCommandResultView;
-import org.netxms.nxmc.resources.SharedIcons;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -39,8 +34,6 @@ import org.xnap.commons.i18n.I18n;
 public class SSHCommandResults extends AbstractCommandResultView
 {
    private final I18n i18n = LocalizationHelper.getI18n(SSHCommandResults.class);
-
-   private Action actionRestart;
 
    /**
     * Constructor
@@ -56,54 +49,11 @@ public class SSHCommandResults extends AbstractCommandResultView
    }
 
    /**
-    * Create actions
+    * Clone constructor
     */
-   protected void createActions()
+   protected SSHCommandResults()
    {
-      super.createActions();
-
-      actionRestart = new Action(i18n.tr("&Restart"), SharedIcons.RESTART) {
-         @Override
-         public void run()
-         {
-            execute();
-         }
-      };
-      actionRestart.setEnabled(false);
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.MenuManager)
-    */
-   @Override
-   protected void fillLocalMenu(IMenuManager manager)
-   {
-      manager.add(actionRestart);
-      manager.add(new Separator());
-      super.fillLocalMenu(manager);
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
-    */
-   @Override
-   protected void fillLocalToolBar(IToolBarManager manager)
-   {
-      manager.add(actionRestart);
-      manager.add(new Separator());
-      super.fillLocalToolBar(manager);
-   }
-
-   /**
-    * Fill context menu
-    * 
-    * @param mgr Menu manager
-    */
-   protected void fillContextMenu(final IMenuManager manager)
-   {
-      manager.add(actionRestart);
-      manager.add(new Separator());
-      super.fillContextMenu(manager);
+      super();
    }
 
    /**
@@ -112,6 +62,9 @@ public class SSHCommandResults extends AbstractCommandResultView
    @Override
    public void execute()
    {
+      if (!restoreValuse())
+         return;
+      
       actionRestart.setEnabled(false);
       createOutputStream();
       Job job = new Job(String.format(i18n.tr("Execute action on node %s"), object.object.getObjectName()), this) {
@@ -126,7 +79,7 @@ public class SSHCommandResults extends AbstractCommandResultView
          {
             try
             {
-               session.executeSshCommand(object.object.getObjectId(), object.getAlarmId(), executionString, inputValues, maskedFields, true, getOutputListener(), null);
+               session.executeSshCommand(object.object.getObjectId(), object.getAlarmId(), tool.getData(), inputValues, maskedFields, true, getOutputListener(), null);
                writeToOutputStream(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
             }
             finally

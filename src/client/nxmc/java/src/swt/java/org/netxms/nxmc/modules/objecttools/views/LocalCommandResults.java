@@ -29,7 +29,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
-import org.eclipse.jface.action.Separator;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
@@ -55,7 +54,6 @@ public class LocalCommandResults extends AbstractCommandResultView
 	private boolean running = false;
 	private Object mutex = new Object();
 	private Action actionTerminate;
-	private Action actionRestart;
 
    /**
     * Constructor
@@ -86,7 +84,6 @@ public class LocalCommandResults extends AbstractCommandResultView
    {
       super.postClone(view);
       actionTerminate.setEnabled(false);
-      actionRestart.setEnabled(true);
    }
 
    /**
@@ -116,15 +113,6 @@ public class LocalCommandResults extends AbstractCommandResultView
 		};
 		actionTerminate.setEnabled(false);
       actionTerminate.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.terminate_process"); //$NON-NLS-1$
-
-		actionRestart = new Action(i18n.tr("&Restart"), SharedIcons.RESTART) {
-			@Override
-			public void run()
-			{
-				execute();
-			}
-		};
-		actionRestart.setEnabled(false);
 	}
 
    /**
@@ -134,8 +122,6 @@ public class LocalCommandResults extends AbstractCommandResultView
    protected void fillLocalMenu(IMenuManager manager)
 	{
 		manager.add(actionTerminate);
-		manager.add(actionRestart);
-		manager.add(new Separator());
 		super.fillLocalMenu(manager);
 	}
 
@@ -146,8 +132,6 @@ public class LocalCommandResults extends AbstractCommandResultView
    protected void fillLocalToolBar(IToolBarManager manager)
 	{
 		manager.add(actionTerminate);
-		manager.add(actionRestart);
-		manager.add(new Separator());
 		super.fillLocalToolBar(manager);
 	}
 
@@ -159,8 +143,6 @@ public class LocalCommandResults extends AbstractCommandResultView
 	protected void fillContextMenu(final IMenuManager manager)
 	{
 		manager.add(actionTerminate);
-		manager.add(actionRestart);
-		manager.add(new Separator());
 		super.fillContextMenu(manager);
 	}
 
@@ -170,6 +152,9 @@ public class LocalCommandResults extends AbstractCommandResultView
    @Override
 	public void execute()
 	{
+      if (!restoreValuse())
+         return;
+      
 		synchronized(mutex)
 		{
 			if (running)
@@ -205,7 +190,7 @@ public class LocalCommandResults extends AbstractCommandResultView
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
             List<String> textToExpand = new ArrayList<String>();
-            textToExpand.add(executionString);
+            textToExpand.add(tool.getData());
             String commandLine = session.substituteMacros(object, textToExpand, inputValues).get(0);
             if (((tool.getFlags() & ObjectTool.SETUP_TCP_TUNNEL) != 0) && object.isNode())
             {

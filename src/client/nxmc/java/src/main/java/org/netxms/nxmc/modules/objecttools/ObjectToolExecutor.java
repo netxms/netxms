@@ -196,17 +196,17 @@ public final class ObjectToolExecutor
                      // No confirmation required but execution is on big number of objects
                      message = i18n.tr("You attempt to execute tool on {0} objects. Are you sure?", Integer.toString(objects.size()));
                   }
+
+                  if ((tool.getToolType() == ObjectTool.TYPE_URL) || (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND && ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)))
+                  {
+                     expandedText = session.substituteMacros(objects.toArray(new ObjectContext[objects.size()]), tool.getData(), inputValues);
+                  }
                }
 
                ConfirmationRunnable runnable = new ConfirmationRunnable(message);
                getDisplay().syncExec(runnable);
                if (!runnable.isConfirmed())
                   return;
-
-               if ((tool.getToolType() == ObjectTool.TYPE_URL) || (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND && ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)))
-               {
-                  expandedText = session.substituteMacros(objects.toArray(new ObjectContext[objects.size()]), tool.getData(), inputValues);
-               }
             }
             else
             {

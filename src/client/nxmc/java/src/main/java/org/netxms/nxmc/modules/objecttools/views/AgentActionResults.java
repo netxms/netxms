@@ -21,16 +21,11 @@ package org.netxms.nxmc.modules.objecttools.views;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.action.IToolBarManager;
-import org.eclipse.jface.action.Separator;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
-import org.netxms.nxmc.resources.SharedIcons;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -39,8 +34,6 @@ import org.xnap.commons.i18n.I18n;
 public class AgentActionResults extends AbstractCommandResultView
 {
    private I18n i18n = LocalizationHelper.getI18n(AgentActionResults.class);
-
-   private Action actionRestart;
 
    /**
     * Constructor
@@ -64,23 +57,12 @@ public class AgentActionResults extends AbstractCommandResultView
    }
    
    /**
-    * @see org.netxms.nxmc.modules.objecttools.views.AbstractCommandResultView#postClone(org.netxms.nxmc.base.views.View)
-    */
-   @Override
-   protected void postClone(View view)
-   {
-      super.postClone(view);
-      actionRestart.setEnabled(true);
-   }
-
-   /**
     * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
     */
    @Override
    public View cloneView()
    {
       AgentActionResults view = (AgentActionResults)super.cloneView();
-      view.executionString = executionString;
       view.inputValues = inputValues;
       view.maskedFields = maskedFields;
       return view;
@@ -92,49 +74,6 @@ public class AgentActionResults extends AbstractCommandResultView
    protected void createActions()
    {
       super.createActions();
-
-      actionRestart = new Action(i18n.tr("&Restart"), SharedIcons.RESTART) {
-         @Override
-         public void run()
-         {
-            execute();
-         }
-      };
-      actionRestart.setEnabled(false);
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.MenuManager)
-    */
-   @Override
-   protected void fillLocalMenu(IMenuManager manager)
-   {
-      manager.add(actionRestart);
-      manager.add(new Separator());
-      super.fillLocalMenu(manager);
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
-    */
-   @Override
-   protected void fillLocalToolBar(IToolBarManager manager)
-   {
-      manager.add(actionRestart);
-      manager.add(new Separator());
-      super.fillLocalToolBar(manager);
-   }
-
-   /**
-    * Fill context menu
-    * 
-    * @param mgr Menu manager
-    */
-   protected void fillContextMenu(final IMenuManager manager)
-   {
-      manager.add(actionRestart);
-      manager.add(new Separator());
-      super.fillContextMenu(manager);
    }
 
    /**
@@ -143,6 +82,9 @@ public class AgentActionResults extends AbstractCommandResultView
    @Override
    public void execute()
    {
+      if (!restoreValuse())
+         return;
+      
       actionRestart.setEnabled(false);
       createOutputStream();
       Job job = new Job(String.format(i18n.tr("Execute action on node %s"), object.object.getObjectName()), this) {
@@ -157,7 +99,7 @@ public class AgentActionResults extends AbstractCommandResultView
          {
             try
             {
-               session.executeActionWithExpansion(object.object.getObjectId(), object.getAlarmId(), executionString, true, inputValues, maskedFields, getOutputListener(), null);
+               session.executeActionWithExpansion(object.object.getObjectId(), object.getAlarmId(), tool.getData(), true, inputValues, maskedFields, getOutputListener(), null);
                writeToOutputStream(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
             }
             finally

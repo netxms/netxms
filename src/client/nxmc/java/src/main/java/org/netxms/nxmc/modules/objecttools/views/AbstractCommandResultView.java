@@ -19,9 +19,14 @@
 package org.netxms.nxmc.modules.objecttools.views;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -30,21 +35,28 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.netxms.client.InputField;
 import org.netxms.client.TextOutputAdapter;
 import org.netxms.client.TextOutputListener;
+import org.netxms.client.constants.InputFieldType;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Memento;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.base.widgets.TextConsole;
 import org.netxms.nxmc.base.widgets.TextConsole.IOConsoleOutputStream;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
+import org.netxms.nxmc.modules.objects.dialogs.InputFieldEntryDialog;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -54,11 +66,12 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
 {
    private I18n i18n = LocalizationHelper.getI18n(AbstractCommandResultView.class);
 
-   protected String executionString;
    protected Map<String, String> inputValues;
    protected List<String> maskedFields;
    protected TextConsole console;
    protected long streamId = 0;
+   protected boolean askInputValues = false;
+   protected boolean viewRestored = false;
 
    private IOConsoleOutputStream out;
    private TextOutputListener outputListener;
@@ -67,6 +80,8 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
 	private Action actionScrollLock;
 	private Action actionCopy;
 	private Action actionSelectAll;
+   protected Action actionRestart;
+
 
 	/**
 	 * Constructor
@@ -82,7 +97,6 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
       super(node, tool, ResourceManager.getImageDescriptor("icons/object-tools/terminal.png"), false);
       this.inputValues = inputValues;
       this.maskedFields = maskedFields;
-      this.executionString = tool.getData();
 
       outputListener = new TextOutputAdapter() {
          @Override
@@ -123,7 +137,6 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
       AbstractCommandResultView view = (AbstractCommandResultView)super.cloneView();
       view.inputValues = inputValues;
       view.maskedFields = maskedFields;
-      view.executionString = executionString;
 
       view.outputListener = new TextOutputAdapter() {
          @Override
@@ -158,7 +171,9 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
       super.postClone(view);
       AbstractCommandResultView origin = (AbstractCommandResultView)view;
       console.setText(origin.console.getText());
+      actionRestart.setEnabled(true);
    }
+
 
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
@@ -186,7 +201,10 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
    protected void postContentCreate()
    {
       super.postContentCreate();
-      execute();
+      if (!viewRestored)
+         execute();
+      else
+         actionRestart.setEnabled(true);
    }
 
    /**
@@ -228,6 +246,53 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
 			   console.selectAll();
 			}
 		};
+
+      actionRestart = new Action(i18n.tr("&Restart"), SharedIcons.RESTART) {
+         @Override
+         public void run()
+         {
+            reExecute();
+         }
+      };
+      actionRestart.setEnabled(false);
+	}
+	
+	private void reExecute() 
+	{	   
+	   if ((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0)
+	   {
+	      new Job(String.format(i18n.tr("Expand confirmation message for node %s"), object.object.getObjectName()), this) {
+            
+            @Override
+            protected void run(IProgressMonitor monitor) throws Exception
+            {
+               List<String> textToExpand = new ArrayList<String>();
+               textToExpand.add(tool.getConfirmationText());
+               final List<String> expandedText = session.substituteMacros(object, textToExpand, inputValues);
+               runInUIThread(new Runnable() {                  
+                  @Override
+                  public void run()
+                  {
+                     if (MessageDialogHelper.openQuestion(Registry.getMainWindowShell(), i18n.tr("Confirm Tool Execution"), expandedText.get(0)))
+                     {
+                        AbstractCommandResultView.this.execute();
+                     }                     
+                  }
+               });
+            }
+            
+            @Override
+            protected String getErrorMessage()
+            {
+               return String.format(i18n.tr("Failed to expand confirmation message for node %s"), object.object.getObjectName());
+            }
+         }.start();
+      }
+	   else
+	   {
+	      execute();
+	   }
+      
 	}
 	
 	/**
@@ -241,6 +306,8 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
    {
+      manager.add(actionRestart);
+      manager.add(new Separator());
       manager.add(actionClear);
       manager.add(actionScrollLock);
    }
@@ -251,6 +318,8 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      manager.add(actionRestart);
+      manager.add(new Separator());
       manager.add(actionClear);
       manager.add(actionScrollLock);
       manager.add(new Separator());
@@ -285,6 +354,8 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
 	 */
 	protected void fillContextMenu(final IMenuManager manager)
 	{
+      manager.add(actionRestart);
+      manager.add(new Separator());
 		manager.add(actionClear);
 		manager.add(actionScrollLock);
 		manager.add(new Separator());
@@ -368,6 +439,44 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
    }
    
    /**
+    * Restore values if required. 
+    * Is used to restore masked fields after console restart
+    * 
+    * @return true if fields was successfully restored
+    */
+   protected boolean restoreValuse()
+   {
+      if (!askInputValues)
+         return true;      
+      
+      final InputField[] fields = tool.getInputFields();
+      if (fields.length > 0)
+      {
+         Arrays.sort(fields, new Comparator<InputField>() {
+            @Override
+            public int compare(InputField f1, InputField f2)
+            {
+               return f1.getSequence() - f2.getSequence();
+            }
+         });
+         InputFieldEntryDialog dlg = new InputFieldEntryDialog(getWindow().getShell(), tool.getDisplayName(), fields, inputValues);
+         if (dlg.open() != Window.OK)
+            return false; //canceled
+         inputValues = dlg.getValues();
+         maskedFields.clear();
+         for (int i = 0; i < fields.length; i++)
+         {
+            if (fields[i].getType() == InputFieldType.PASSWORD)
+            {
+               maskedFields.add(fields[i].getName());
+            }
+         }
+      }
+      askInputValues = false;
+      return true;
+   }
+   
+   /**
     * @see org.netxms.nxmc.base.views.Perspective#saveState(org.netxms.nxmc.Memento)
     */
    @Override
@@ -375,9 +484,21 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
    {      
       super.saveState(memento);
       memento.set("inputValues.keys", inputValues.keySet());
-      memento.set("inputValues.values", inputValues.values());
-      memento.set("maskedFields", maskedFields);
-      memento.set("executionString", executionString);
+      List<String> values = new ArrayList<String>();
+      for (Entry<String, String> v : inputValues.entrySet())
+      {
+         if (maskedFields.contains(v.getKey()))
+         {
+            values.add("");
+         }
+         else
+         {
+            values.add(v.getValue());
+         }
+      }
+      memento.set("inputValues.values", values);
+      if (maskedFields != null)
+         memento.set("maskedFields", maskedFields);
    }
    
    /**
@@ -397,6 +518,28 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
       }
       
       maskedFields = memento.getAsStringList("maskedFields");
-      executionString = memento.getAsString("executionString");
+      askInputValues = maskedFields.size() > 0;
+      viewRestored = true;
+
+      outputListener = new TextOutputAdapter() {
+         @Override
+         public void messageReceived(String text)
+         {
+            try
+            {
+               if (out != null)
+                  out.write(text.replace("\r", ""));
+            }
+            catch(IOException e)
+            {
+            }
+         }
+
+         @Override
+         public void setStreamId(long streamId)
+         {
+            AbstractCommandResultView.this.streamId = streamId;
+         }
+      };
    }
 }
