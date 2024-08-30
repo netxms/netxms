@@ -456,10 +456,10 @@ public abstract class View implements MessageAreaHolder
       {
          if (viewContainer.getPerspective() != null)
             viewContainer.getPerspective().updateViewTrim(this);
-         else if (viewContainer.getWindow() != null)
-            viewContainer.getWindow().getShell().setText(getFullName()); // Standalone view, update window title
          else if (viewContainer instanceof ViewFolder)
             ((ViewFolder)viewContainer).updateViewTrim(this);
+         else if (viewContainer.getWindow() != null)
+            viewContainer.getWindow().getShell().setText(getFullName()); // Standalone view, update window title
       }
    }
 
