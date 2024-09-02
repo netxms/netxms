@@ -737,18 +737,29 @@ stop_search:
 
          if (!strcmp(driver, "odbc") || !strcmp(driver, "pgsql"))
          {
-            if (!_isatty(_fileno(stdin)))
+            if (fallbackSyntax[0] == 0)
             {
-               _tprintf(_T("Cannot determine database type from driver name\n"));
-               return 7;
+               if (!_isatty(_fileno(stdin)))
+               {
+                  _tprintf(_T("Cannot determine database type from driver name\n"));
+                  return 7;
+               }
+               const char *dbType = SelectDatabaseType(driver);
+               if (dbType == nullptr)
+               {
+                  _tprintf(_T("Database initialization aborted\n"));
+                  return 8;
+               }
+               strcpy(driver, dbType);
             }
-            const char *dbType = SelectDatabaseType(driver);
-            if (dbType == nullptr)
+            else
             {
-               _tprintf(_T("Database initialization aborted\n"));
-               return 8;
+#ifdef UNICODE
+               wchar_to_ASCII(fallbackSyntax, -1, driver, sizeof(driver));
+#else
+               strcpy(driver, fallbackSyntax);
+#endif
             }
-            strcpy(driver, dbType);
          }
          else if (!strcmp(driver, "mariadb"))
          {
