@@ -72,6 +72,7 @@ int F_JsonArray(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_JsonObject(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_JsonParse(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_MacAddress(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_GetMonotonicClockTime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ReadPersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_SplitString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -200,6 +201,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "FormatNumber", F_FormatNumber, -1 },
    { "GetCurrentTime", F_GetCurrentTime, 0 },
    { "GetCurrentTimeMs", F_GetCurrentTimeMs, 0 },
+   { "GetMonotonicClockTime", F_GetMonotonicClockTime, 0 },
    { "GetThreadPoolNames", F_GetThreadPoolNames, 0 },
    { "JsonParse", F_JsonParse, 1 },
    { "ReadPersistentStorage", F_ReadPersistentStorage, 1 },

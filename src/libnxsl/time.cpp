@@ -313,7 +313,7 @@ int F_DateTime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    }
 
    *result = vm->createValue(vm->createObject(&g_nxslDateTimeClass, dt));
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -322,7 +322,7 @@ int F_DateTime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 int F_GetCurrentTime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    *result = vm->createValue(static_cast<int64_t>(time(nullptr)));
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -331,7 +331,16 @@ int F_GetCurrentTime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
 int F_GetCurrentTimeMs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    *result = vm->createValue(GetCurrentTimeMs());
-   return 0;
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * Get current time from monotonic clock in milliseconds
+ */
+int F_GetMonotonicClockTime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   *result = vm->createValue(GetMonotonicClockTime());
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
