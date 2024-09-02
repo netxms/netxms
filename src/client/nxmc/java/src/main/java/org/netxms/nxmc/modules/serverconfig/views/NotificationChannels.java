@@ -213,7 +213,7 @@ public class NotificationChannels extends ConfigurationView
       actionDeleteChannel.setEnabled(false);
       addKeyBinding("M1+D", actionDeleteChannel);
 
-      actionSendNotificationGlobal = new Action(i18n.tr("&Send Notification"), ResourceManager.getImageDescriptor("icons/send-notification.png")) {
+      actionSendNotificationGlobal = new Action(i18n.tr("&Send notification..."), ResourceManager.getImageDescriptor("icons/send-notification.png")) {
          @Override
          public void run()
          {
@@ -222,7 +222,7 @@ public class NotificationChannels extends ConfigurationView
       };
       addKeyBinding("M1+M2+S", actionSendNotificationGlobal);
 
-      actionSendNotificationContext = new Action(i18n.tr("&Send Notification"), ResourceManager.getImageDescriptor("icons/send-notification.png")) {
+      actionSendNotificationContext = new Action(i18n.tr("&Send notification..."), ResourceManager.getImageDescriptor("icons/send-notification.png")) {
          @Override
          public void run()
          {
@@ -238,17 +238,12 @@ public class NotificationChannels extends ConfigurationView
    private void createContextMenu()
    {
       // Create menu manager.
-      MenuManager menuMgr = new MenuManager();
-      menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
-         {
-            fillContextMenu(mgr);
-         }
-      });
+      MenuManager manager = new MenuManager();
+      manager.setRemoveAllWhenShown(true);
+      manager.addMenuListener((m) -> fillContextMenu(m));
 
       // Create menu.
-      Menu menu = menuMgr.createContextMenu(viewer.getControl());
+      Menu menu = manager.createContextMenu(viewer.getControl());
       viewer.getControl().setMenu(menu);
    }
 
@@ -297,13 +292,7 @@ public class NotificationChannels extends ConfigurationView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final List<NotificationChannel> channels = session.getNotificationChannels();
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  viewer.setInput(channels);
-               }
-            });
+            runInUIThread(() -> viewer.setInput(channels));
          }
 
          @Override
