@@ -604,14 +604,13 @@ static int mnl_socket_bind(struct mnl_socket *nl, unsigned int groups, pid_t pid
 	return 0;
 }
 
-static ssize_t mnl_socket_sendto(const struct mnl_socket *nl, const void *buf,
-				 size_t len)
+static ssize_t mnl_socket_sendto(const struct mnl_socket *nl, const void *buf, size_t len)
 {
-	static const struct sockaddr_nl snl = {
+	static const struct sockaddr_nl snl =
+	{
 		.nl_family = AF_NETLINK
 	};
-	return sendto(nl->fd, buf, len, 0,
-		      (struct sockaddr *) &snl, sizeof(snl));
+	return sendto(nl->fd, buf, len, 0, (struct sockaddr*)&snl, sizeof(snl));
 }
 
 static ssize_t mnl_socket_recvfrom(const struct mnl_socket *nl, void *buf,
@@ -636,11 +635,13 @@ static ssize_t mnl_socket_recvfrom(const struct mnl_socket *nl, void *buf,
 	if (ret == -1)
 		return ret;
 
-	if (msg.msg_flags & MSG_TRUNC) {
+	if (msg.msg_flags & MSG_TRUNC)
+	{
 		errno = ENOSPC;
 		return -1;
 	}
-	if (msg.msg_namelen != sizeof(struct sockaddr_nl)) {
+	if (msg.msg_namelen != sizeof(struct sockaddr_nl))
+	{
 		errno = EINVAL;
 		return -1;
 	}
@@ -655,8 +656,8 @@ static int mnl_socket_close(struct mnl_socket *nl)
 }
 
 /* mnlg mini library: */
-
-struct mnlg_socket {
+struct mnlg_socket
+{
 	struct mnl_socket *nl;
 	char *buf;
 	uint16_t id;
@@ -698,17 +699,15 @@ static int mnlg_socket_send(struct mnlg_socket *nlg, const struct nlmsghdr *nlh)
 
 static int mnlg_cb_noop(const struct nlmsghdr *nlh, void *data)
 {
-	(void)nlh;
-	(void)data;
 	return MNL_CB_OK;
 }
 
 static int mnlg_cb_error(const struct nlmsghdr *nlh, void *data)
 {
 	const struct nlmsgerr *err = mnl_nlmsg_get_payload(nlh);
-	(void)data;
 
-	if (nlh->nlmsg_len < mnl_nlmsg_size(sizeof(struct nlmsgerr))) {
+	if (nlh->nlmsg_len < mnl_nlmsg_size(sizeof(struct nlmsgerr)))
+	{
 		errno = EBADMSG;
 		return MNL_CB_ERROR;
 	}
@@ -723,8 +722,8 @@ static int mnlg_cb_error(const struct nlmsghdr *nlh, void *data)
 
 static int mnlg_cb_stop(const struct nlmsghdr *nlh, void *data)
 {
-	(void)data;
-	if (nlh->nlmsg_flags & NLM_F_MULTI && nlh->nlmsg_len == mnl_nlmsg_size(sizeof(int))) {
+	if ((nlh->nlmsg_flags & NLM_F_MULTI) && (nlh->nlmsg_len == mnl_nlmsg_size(sizeof(int))))
+	{
 		int error = *(int *)mnl_nlmsg_get_payload(nlh);
 		/* Netlink subsystems returns the errno value with different signess */
 		if (error < 0)
@@ -737,11 +736,12 @@ static int mnlg_cb_stop(const struct nlmsghdr *nlh, void *data)
 	return MNL_CB_STOP;
 }
 
-static const mnl_cb_t mnlg_cb_array[] = {
-	[NLMSG_NOOP]	= mnlg_cb_noop,
-	[NLMSG_ERROR]	= mnlg_cb_error,
-	[NLMSG_DONE]	= mnlg_cb_stop,
-	[NLMSG_OVERRUN]	= mnlg_cb_noop,
+static const mnl_cb_t mnlg_cb_array[] =
+{
+	[NLMSG_NOOP]    = mnlg_cb_noop,
+	[NLMSG_ERROR]   = mnlg_cb_error,
+	[NLMSG_DONE]    = mnlg_cb_stop,
+	[NLMSG_OVERRUN] = mnlg_cb_noop,
 };
 
 static int mnlg_socket_recv_run(struct mnlg_socket *nlg, mnl_cb_t data_cb, void *data)
