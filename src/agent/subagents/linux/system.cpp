@@ -128,29 +128,14 @@ LONG H_UserSessionTable(const TCHAR *param, const TCHAR *arg, Table *value, Abst
 /**
  * Handler for System.Uptime parameter
  */
-LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_Uptime(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	unsigned int uptime = 0;
-	FILE *hFile = fopen("/proc/uptime", "r");
-	if (hFile != nullptr)
-	{
-		char buffer[64];
-		if (fgets(buffer, sizeof(buffer), hFile) != nullptr)
-		{
-			double tmp;
-			if (sscanf(buffer, "%lf", &tmp) == 1)
-			{
-				uptime = (unsigned int)tmp;
-			}
-		}
-		fclose(hFile);
-	}
+   struct timespec ts;
+   if (clock_gettime(CLOCK_BOOTTIME, &ts) != 0)
+      return SYSINFO_RC_ERROR;
 
-	if (uptime > 0)
-	{
-		ret_uint(pValue, uptime);
-	}
-	return uptime > 0 ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+   ret_uint(value, static_cast<uint32_t>(ts.tv_sec));
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
