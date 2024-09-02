@@ -101,7 +101,7 @@ static void TestStringList()
 
 #if !WITH_ADDRESS_SANITIZER
    StartTest(_T("String list - performance"));
-   int64_t startTime = GetCurrentTimeMs();
+   int64_t startTime = GetMonotonicClockTime();
    StringList *s4 = new StringList();
    for(int i = 0; i < 100000; i++)
    {
@@ -114,7 +114,7 @@ static void TestStringList()
    }
    AssertEquals(s4->size(), 100000);
    delete s4;
-   EndTest(GetCurrentTimeMs() - startTime);
+   EndTest(GetMonotonicClockTime() - startTime);
 #endif
 }
 
@@ -136,7 +136,7 @@ static void TestStringMap()
    EndTest();
 
    StartTest(_T("String map - insert"));
-   int64_t start = GetCurrentTimeMs();
+   int64_t start = GetMonotonicClockTime();
    for(int i = 0; i < mapSize; i++)
    {
       TCHAR key[64];
@@ -147,10 +147,10 @@ static void TestStringMap()
    const TCHAR *v = m->get(_T("key-42"));
    AssertNotNull(v);
    AssertEquals(v, _T("Lorem ipsum dolor sit amet"));
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("String map - replace"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    for(int i = 0; i < mapSize; i++)
    {
       TCHAR key[64];
@@ -161,17 +161,17 @@ static void TestStringMap()
    v = m->get(_T("key-42"));
    AssertNotNull(v);
    AssertEquals(v, _T("consectetur adipiscing elit"));
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("String map - get"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    v = m->get(_T("key-888"));
    AssertNotNull(v);
    AssertEquals(v, _T("consectetur adipiscing elit"));
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("String map - iterator"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    {
       auto it = m->begin();
       int i = 0;
@@ -187,10 +187,10 @@ static void TestStringMap()
       }
       AssertEquals(i, m->size());
    }
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("String map - iterator for loop"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    {
       int i = 0;
       for(auto it = m->begin(); it != m->end(); it++)
@@ -203,10 +203,10 @@ static void TestStringMap()
          AssertEquals((TCHAR*)it.value()->value, _T("consectetur adipiscing elit"));
       }
    }
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("String map - range based for"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    {
       int i = 0;
       for(auto p : *m)
@@ -219,7 +219,7 @@ static void TestStringMap()
          AssertEquals(p->value, _T("consectetur adipiscing elit"));
       }
    }
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("String map - keys"));
    StringList *keys = m->keys();
@@ -247,7 +247,7 @@ static void TestStringMap()
    EndTest();
 
    StartTest(_T("String map - deleting every odd entry"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    {
       int i = 0;
       for(auto it = m->begin(); it != m->end(); it++, i++)
@@ -257,13 +257,13 @@ static void TestStringMap()
       }
    }
    AssertEquals(m->size(), mapSize / 2);
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("String map - clear"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    m->clear();
    AssertEquals(m->size(), 0);
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    delete m;
 }
@@ -278,7 +278,7 @@ static void TestStringSet()
    StringSet *s = new StringSet();
 
    StartTest(_T("String set - insert"));
-   int64_t start = GetCurrentTimeMs();
+   int64_t start = GetMonotonicClockTime();
    for(size_t i = 0; i < setSize; i++)
    {
       TCHAR key[64];
@@ -287,10 +287,10 @@ static void TestStringSet()
    }
    AssertEquals(s->size(), setSize);
    AssertTrue(s->contains(_T("key-42 lorem ipsum")));
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("String set - replace"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    for(size_t i = 0; i < setSize; i++)
    {
       TCHAR key[64];
@@ -299,15 +299,15 @@ static void TestStringSet()
    }
    AssertEquals(s->size(), setSize);
    AssertTrue(s->contains(_T("key-42 lorem ipsum")));
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("String set - contains"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    AssertTrue(s->contains(_T("key-888 lorem ipsum")));
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("String set - iterator for loop"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    {
       size_t i = 0;
       for(auto it = s->begin(); it != s->end(); it++)
@@ -318,10 +318,10 @@ static void TestStringSet()
       }
       AssertEquals(i, setSize);
    }
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("String set - range for"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    {
       size_t i = 0;
       for(const TCHAR *v : *s)
@@ -332,10 +332,10 @@ static void TestStringSet()
       }
       AssertEquals(i, setSize);
    }
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("String set - iterator"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    {
       size_t i = 0;
       auto it = s->begin();
@@ -347,7 +347,7 @@ static void TestStringSet()
       }
       AssertEquals(i, setSize);
    }
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("String set - remove"));
    s->remove(_T("key-17 lorem ipsum"));
@@ -379,10 +379,10 @@ static void TestStringSet()
    EndTest();
 
    StartTest(_T("String set - clear"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    s->clear();
    AssertEquals(s->size(), 0);
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    delete s;
 }
@@ -397,7 +397,7 @@ static void TestCountingStringSet()
    StringSet *cs = new StringSet(true);
 
    StartTest(_T("Counting string set - insert"));
-   int64_t start = GetCurrentTimeMs();
+   int64_t start = GetMonotonicClockTime();
    for(size_t i = 0; i < setSize; i++)
    {
       TCHAR key[64];
@@ -406,10 +406,10 @@ static void TestCountingStringSet()
    }
    AssertEquals(cs->size(), setSize);
    AssertTrue(cs->contains(_T("key-42 lorem ipsum")));
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("Counting string set - increment"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    for(size_t i = 0; i < setSize; i++)
    {
       TCHAR key[64];
@@ -418,18 +418,18 @@ static void TestCountingStringSet()
    }
    AssertEquals(cs->size(), setSize);
    AssertTrue(cs->contains(_T("key-42 lorem ipsum")));
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("Counting string set - contains"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    AssertTrue(cs->contains(_T("key-888 lorem ipsum")));
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("Counting string set - count"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    AssertEquals(cs->count(_T("key-888 lorem ipsum")), 2);
    AssertEquals(cs->count(_T("wrong key")), 0);
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("Counting string set - decrement"));
    AssertEquals(cs->remove(_T("key-17 lorem ipsum")), 1);
@@ -445,10 +445,10 @@ static void TestCountingStringSet()
    EndTest();
 
    StartTest(_T("Counting string set - clear"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    cs->clear();
    AssertEquals(cs->size(), 0);
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    delete cs;
 }
@@ -1308,7 +1308,7 @@ static void TestHashMap()
    EndTest();
 
    StartTest(_T("HashMap - iterator for loop"));
-   int64_t start = GetCurrentTimeMs();
+   int64_t start = GetMonotonicClockTime();
    {
       int i = 0;
       for(auto it = hashMap->begin(); it != hashMap->end(); it++, i++)
@@ -1328,10 +1328,10 @@ static void TestHashMap()
          }
       }
    }
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("HashMap - range based for"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    {
       int i = 0;
       for(String *str : *hashMap)
@@ -1351,7 +1351,7 @@ static void TestHashMap()
          i++;
       }
    }
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("HashMap - iterator remove"));
    it = hashMap->begin();
@@ -1701,7 +1701,7 @@ static void TestHashSet()
    EndTest();
 
    StartTest(_T("HashSet - iterator"));
-   int64_t start = GetCurrentTimeMs();
+   int64_t start = GetMonotonicClockTime();
    {
       int i = 0;
       auto it = s1->begin();
@@ -1713,10 +1713,10 @@ static void TestHashSet()
       }
       AssertEquals(i, s1->size());
    }
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("HashSet - iterator for loop"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    {
       int i = 0;
       for(auto it = s1->begin(); it != s1->end(); it++)
@@ -1726,10 +1726,10 @@ static void TestHashSet()
       }
       AssertEquals(i, s1->size());
    }
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("HashSet - range for"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    {
       int i = 0;
       for(auto it : *s1)
@@ -1739,7 +1739,7 @@ static void TestHashSet()
       }
       AssertEquals(i, s1->size());
    }
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("HashSet - remove"));
    std::vector<int32_t> removeVector1 = {200, 100, 300};
@@ -1976,7 +1976,7 @@ static void TestCountingHashSet()
    EndTest();
 
    StartTest(_T("CountingHashSet - iterator"));
-   int64_t start = GetCurrentTimeMs();
+   int64_t start = GetMonotonicClockTime();
    {
       int i = 0;
       auto it = s1->begin();
@@ -1988,10 +1988,10 @@ static void TestCountingHashSet()
       }
       AssertEquals(i, s1->size());
    }
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("CountingHashSet - iterator for loop"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    {
       int i = 0;
       for(auto it = s1->begin(); it != s1->end(); it++)
@@ -2001,10 +2001,10 @@ static void TestCountingHashSet()
       }
       AssertEquals(i, s1->size());
    }
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("CountingHashSet - range for"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    {
       int i = 0;
       for(auto it : *s1)
@@ -2014,7 +2014,7 @@ static void TestCountingHashSet()
       }
       AssertEquals(i, s1->size());
    }
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("CountingHashSet - remove"));
    std::vector<int32_t> removeVector1 = {200, 100, 300};
@@ -2245,7 +2245,7 @@ static void TestObjectArray()
    EndTest();
 
    StartTest(_T("ObjectArray: iterator for loop"));
-   int64_t start = GetCurrentTimeMs();
+   int64_t start = GetMonotonicClockTime();
    {
       int i = 2;
       for(auto it = array->begin(); it != array->end(); it++)
@@ -2257,10 +2257,10 @@ static void TestObjectArray()
       }
       AssertEquals(i, 5);
    }
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("ObjectArray: range for")); //C++ 11 only
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    {
       int i = 2;
       for(auto s : *array)
@@ -2271,7 +2271,7 @@ static void TestObjectArray()
       }
       AssertEquals(i, 5);
    }
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("ObjectArray: remove with iterator"));
    it = array->begin();
@@ -2433,13 +2433,13 @@ static void TestTable()
    }
 
    StartTest(_T("Table: pack"));
-   int64_t start = GetCurrentTimeMs();
+   int64_t start = GetMonotonicClockTime();
    char *packedTable = table->toPackedXML();
    AssertNotNull(packedTable);
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("Table: unpack"));
-   start = GetCurrentTimeMs();
+   start = GetMonotonicClockTime();
    Table *table2 = Table::createFromPackedXML(packedTable);
    MemFree(packedTable);
    AssertNotNull(table2);
@@ -2447,7 +2447,7 @@ static void TestTable()
    AssertEquals(table2->getNumRows(), table->getNumRows());
    AssertEquals(table2->getAsInt(10, 1), table->getAsInt(10, 1));
    AssertEquals(table2->getAsString(15, 0), table->getAsString(15, 0));
-   EndTest(GetCurrentTimeMs() - start);
+   EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("Table: merge"));
    Table *table3 = new Table();
@@ -2677,10 +2677,10 @@ static void TestDebugLevel()
 
 #if !WITH_ADDRESS_SANITIZER
    StartTest(_T("nxlog_get_debug_level() performance"));
-   UINT64 startTime = GetCurrentTimeMs();
+   int64_t startTime = GetMonotonicClockTime();
    for(int i = 0; i < 1000000; i++)
       nxlog_get_debug_level();
-   EndTest(GetCurrentTimeMs() - startTime);
+   EndTest(GetMonotonicClockTime() - startTime);
 #endif
 }
 
@@ -2846,10 +2846,10 @@ static void TestDebugTags()
       _sntprintf(tag, 64, _T("test.tag%d.subtag%d"), i % 10, i);
       nxlog_set_debug_level_tag(tag, 7);
    }
-   UINT64 startTime = GetCurrentTimeMs();
+   int64_t startTime = GetMonotonicClockTime();
    for(int i = 0; i < 1000000; i++)
       nxlog_get_debug_level();
-   EndTest(GetCurrentTimeMs() - startTime);
+   EndTest(GetMonotonicClockTime() - startTime);
 #endif
 
    StartTest(_T("Debug tags: reset"));

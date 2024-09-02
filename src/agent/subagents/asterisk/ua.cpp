@@ -165,7 +165,7 @@ static int32_t RegisterSIPClient(const char *login, const char *password, const 
       return -1;
    }
 
-   int64_t startTime = GetCurrentTimeMs();
+   int64_t startTime = GetMonotonicClockTime();
    int rc = eXosip_register_send_register(ctx, registrationId, regmsg);
    eXosip_unlock(ctx);
 
@@ -202,7 +202,7 @@ static int32_t RegisterSIPClient(const char *login, const char *password, const 
 
       if (evt->type == EXOSIP_REGISTRATION_SUCCESS)
       {
-         elapsedTime = static_cast<int32_t>(GetCurrentTimeMs() - startTime);
+         elapsedTime = static_cast<int32_t>(GetMonotonicClockTime() - startTime);
          nxlog_debug_tag(DEBUG_TAG, 8, _T("RegisterSIPClient(%hs via %hs): registration successful"), uri, proxy);
          success = true;
          eXosip_event_free(evt);

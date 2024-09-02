@@ -240,7 +240,7 @@ bool LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *query, TCHAR *er
 #endif
 
    hConn->m_mutexTransLock.lock();
-   int64_t ms = GetCurrentTimeMs();
+   int64_t ms = GetMonotonicClockTime();
 
    uint32_t rc = hConn->m_driver->m_callTable.Query(hConn->m_connection, wcQuery, wcErrorText);
    if ((rc == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
@@ -252,7 +252,7 @@ bool LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *query, TCHAR *er
    s_perfNonSelectQueries++;
    s_perfTotalQueries++;
 
-   ms = GetCurrentTimeMs() - ms;
+   ms = GetMonotonicClockTime() - ms;
    if (s_queryTrace)
    {
       nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("%s sync query: \"%s\" [%d ms]"), (rc == DBERR_SUCCESS) ? _T("Successful") : _T("Failed"), query, ms);
@@ -305,7 +305,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *query, TCH
 #endif
 
    hConn->m_mutexTransLock.lock();
-   int64_t ms = GetCurrentTimeMs();
+   int64_t ms = GetMonotonicClockTime();
 
    InterlockedIncrement64(&s_perfSelectQueries);
    InterlockedIncrement64(&s_perfTotalQueries);
@@ -318,7 +318,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *query, TCH
       hResult = hConn->m_driver->m_callTable.Select(hConn->m_connection, wcQuery, &errorCode, wcErrorText);
    }
 
-   ms = GetCurrentTimeMs() - ms;
+   ms = GetMonotonicClockTime() - ms;
    if (s_queryTrace)
    {
       nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("%s sync query: \"%s\" [%d ms]"), (hResult != nullptr) ? _T("Successful") : _T("Failed"), query, (int)ms);
@@ -869,7 +869,7 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectUnbufferedEx(DB_HANDLE hConn, co
 #endif
 
    hConn->m_mutexTransLock.lock();
-   int64_t ms = GetCurrentTimeMs();
+   int64_t ms = GetMonotonicClockTime();
 
    InterlockedIncrement64(&s_perfSelectQueries);
    InterlockedIncrement64(&s_perfTotalQueries);
@@ -882,7 +882,7 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectUnbufferedEx(DB_HANDLE hConn, co
       hResult = hConn->m_driver->m_callTable.SelectUnbuffered(hConn->m_connection, wcQuery, &errorCode, wcErrorText);
    }
 
-   ms = GetCurrentTimeMs() - ms;
+   ms = GetMonotonicClockTime() - ms;
    if (s_queryTrace)
    {
       nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("%s unbuffered query: \"%s\" [%d ms]"), (hResult != nullptr) ? _T("Successful") : _T("Failed"), query, (int)ms);
@@ -1216,7 +1216,7 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
 	hConn->m_mutexTransLock.lock();
 
 	if (s_queryTrace)
-      ms = GetCurrentTimeMs();
+      ms = GetMonotonicClockTime();
 
 	uint32_t errorCode;
 	DBDRV_STATEMENT stmt = hConn->m_driver->m_callTable.Prepare(hConn->m_connection, wcQuery, optimizeForReuse, &errorCode, wcErrorText);
@@ -1252,7 +1252,7 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
 
    if (s_queryTrace)
    {
-      ms = GetCurrentTimeMs() - ms;
+      ms = GetMonotonicClockTime() - ms;
 		nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("{%p} %s prepare: \"%s\" [%d ms]"), result, (result != NULL) ? _T("Successful") : _T("Failed"), query, ms);
 	}
 
@@ -1565,13 +1565,13 @@ bool LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
 
 	DB_HANDLE hConn = hStmt->m_connection;
 	hConn->m_mutexTransLock.lock();
-   uint64_t ms = GetCurrentTimeMs();
+   uint64_t ms = GetMonotonicClockTime();
 
    InterlockedIncrement64(&s_perfNonSelectQueries);
    InterlockedIncrement64(&s_perfTotalQueries);
 
 	uint32_t rc = hConn->m_driver->m_callTable.Execute(hConn->m_connection, hStmt->m_statement, wcErrorText);
-   ms = GetCurrentTimeMs() - ms;
+   ms = GetMonotonicClockTime() - ms;
    if (s_queryTrace)
    {
       nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("%s prepared sync query: \"%s\" [%d ms]"), (rc == DBERR_SUCCESS) ? _T("Successful") : _T("Failed"), hStmt->m_query, (int)ms);
@@ -1647,11 +1647,11 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
    InterlockedIncrement64(&s_perfSelectQueries);
    InterlockedIncrement64(&s_perfTotalQueries);
 
-   int64_t ms = GetCurrentTimeMs();
+   int64_t ms = GetMonotonicClockTime();
    uint32_t errorCode = DBERR_OTHER_ERROR;
 	DBDRV_RESULT hResult = hConn->m_driver->m_callTable.SelectPrepared(hConn->m_connection, hStmt->m_statement, &errorCode, wcErrorText);
 
-   ms = GetCurrentTimeMs() - ms;
+   ms = GetMonotonicClockTime() - ms;
    if (s_queryTrace)
    {
       nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("%s prepared sync query: \"%s\" [%d ms]"),
@@ -1733,11 +1733,11 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedUnbufferedEx(DB_STATEMEN
    InterlockedIncrement64(&s_perfSelectQueries);
    InterlockedIncrement64(&s_perfTotalQueries);
 
-   int64_t ms = GetCurrentTimeMs();
+   int64_t ms = GetMonotonicClockTime();
    uint32_t errorCode = DBERR_OTHER_ERROR;
    DBDRV_UNBUFFERED_RESULT hResult = hConn->m_driver->m_callTable.SelectPreparedUnbuffered(hConn->m_connection, hStmt->m_statement, &errorCode, wcErrorText);
 
-   ms = GetCurrentTimeMs() - ms;
+   ms = GetMonotonicClockTime() - ms;
    if (s_queryTrace)
    {
       nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("%s prepared sync query: \"%s\" [%d ms]"),

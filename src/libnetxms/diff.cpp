@@ -186,7 +186,7 @@ ObjectArray<Diff> *DiffEngine::diff_main(const String &text1, const String &text
    }
    else
    {
-      deadline = GetCurrentTimeMs() + Diff_Timeout;
+      deadline = GetMonotonicClockTime() + Diff_Timeout;
    }
    return diff_main(text1, text2, checklines, deadline);
 }
@@ -367,7 +367,7 @@ ObjectArray<Diff> *DiffEngine::diff_bisect(const String &text1, const String &te
    for(int d = 0; d < max_d; d++)
    {
       // Bail out if deadline is reached.
-      if (GetCurrentTimeMs() > deadline)
+      if (GetMonotonicClockTime() > deadline)
       {
          break;
       }

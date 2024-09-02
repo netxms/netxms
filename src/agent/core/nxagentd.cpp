@@ -229,7 +229,7 @@ uint32_t g_externalMetricTimeout = 0;  // External process execution timeout for
 uint32_t g_externalMetricProviderTimeout = 30000;  // External metric provider timeout in milliseconds
 uint32_t g_snmpTimeout = 0;
 uint16_t g_snmpTrapPort = 162;
-time_t g_agentStartTime;
+int64_t g_agentStartTime;
 uint32_t g_startupDelay = 0;
 uint32_t g_maxCommSessions = 0;
 uint32_t g_longRunningQueryThreshold = 250;
@@ -1524,7 +1524,7 @@ BOOL Initialize()
    StartBackgroundMetricCollection();
 
    // Agent start time
-   g_agentStartTime = time(nullptr);
+   g_agentStartTime = GetMonotonicClockTime();
 
    StartNotificationProcessor();
 

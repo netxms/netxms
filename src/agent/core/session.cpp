@@ -118,7 +118,7 @@ CommSession::CommSession(const shared_ptr<AbstractCommChannel>& channel, const I
    m_disconnected = false;
    m_allowCompression = false;
    m_acceptKeepalive = false;
-   m_ts = time(nullptr);
+   m_timestamp = GetMonotonicClockTime();
    m_responseQueue = new MsgWaitQueue();
    m_requestId = 0;
 }
@@ -220,9 +220,9 @@ void CommSession::readThread()
          // Check for timeout
          if (result == MSGRECV_TIMEOUT)
          {
-            if (m_ts < time(nullptr) - (time_t)g_dwIdleTimeout)
+            if (m_timestamp + g_dwIdleTimeout * 1000 > GetMonotonicClockTime())
             {
-               debugPrintf(5, _T("Session disconnected by timeout (last activity timestamp is %d)"), (int)m_ts);
+               debugPrintf(5, _T("Session disconnected by timeout (last activity timestamp is ") INT64_FMT _T(")"), m_timestamp);
                break;
             }
             continue;
@@ -239,7 +239,7 @@ void CommSession::readThread()
          }
 
          // Update activity timestamp
-         m_ts = time(nullptr);
+         updateTimeStamp();
 
          if (nxlog_get_debug_level() >= 8)
          {
@@ -418,7 +418,7 @@ void CommSession::readThread()
          if (rc > 0)
          {
             // Update activity timestamp
-            m_ts = time(nullptr);
+            updateTimeStamp();
 
             char buffer[32768];
             ssize_t bytes = m_channel->recv(buffer, 32768);

@@ -311,7 +311,7 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_writer(NxLogDebugWriter writer)
  */
 static TCHAR *FormatLogTimestamp(TCHAR *buffer)
 {
-	INT64 now = GetCurrentTimeMs();
+	int64_t now = GetCurrentTimeMs();
 	time_t t = now / 1000;
 #if HAVE_LOCALTIME_R
 	struct tm ltmBuffer;

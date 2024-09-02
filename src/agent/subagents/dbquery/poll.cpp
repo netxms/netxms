@@ -119,11 +119,11 @@ void Query::poll()
 
    nxlog_debug_tag(DBQUERY_DEBUG_TAG, 7, _T("DBQUERY: Query::poll(%s): Executing query \"%s\" in database \"%s\""), m_name, m_query, m_dbid);
 
-   int64_t startTime = GetCurrentTimeMs();
+   int64_t startTime = GetMonotonicClockTime();
 
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    DB_RESULT hResult = DBSelectEx(hdb, m_query, errorText);
-   uint32_t elapsedTime = static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
+   uint32_t elapsedTime = static_cast<uint32_t>(GetMonotonicClockTime() - startTime);
    if (hResult == nullptr)
    {
       nxlog_debug_tag(DBQUERY_DEBUG_TAG, 4, _T("DBQUERY: Query::poll(%s): query failed (%s)"), m_name, errorText);

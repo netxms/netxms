@@ -1764,11 +1764,11 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, uin
 			fds.revents = 0;
 			do
 			{
-				int64_t startTime = GetCurrentTimeMs();
+				int64_t startTime = GetMonotonicClockTime();
 				rc = poll(&fds, 1, timeout);
 				if ((rc != -1) || (errno != EINTR))
 					break;
-				uint32_t elapsed = static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
+				uint32_t elapsed = static_cast<uint32_t>(GetMonotonicClockTime() - startTime);
 				timeout -= std::min(timeout, elapsed);
 			} while(timeout > 0);
 
