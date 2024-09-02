@@ -151,13 +151,13 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int o
    if (s_verbose)
       _tprintf(_T("Downloading to %s\n"), localFile);
 
-   int64_t elapsedTime = GetCurrentTimeMs();
+   int64_t elapsedTime = GetMonotonicClockTime();
    if (s_verbose)
       _tprintf(_T("<Download>:                 "));
    uint32_t rcc = conn->downloadFile(argv[optind + 1], localFile, false, s_verbose ? ProgressCallback : nullptr, s_compression);
    if (s_verbose)
       _tprintf(_T("\r                        \r"));
-   elapsedTime = GetCurrentTimeMs() - elapsedTime;
+   elapsedTime = GetMonotonicClockTime() - elapsedTime;
    if (s_verbose)
    {
       if (rcc == ERR_SUCCESS)

@@ -69,11 +69,11 @@ int SocketPoller::poll(uint32_t timeout)
       int rc;
       do
       {
-         int64_t startTime = GetCurrentTimeMs();
+         int64_t startTime = GetMonotonicClockTime();
          rc = ::poll(m_sockets, m_count, timeout);
          if ((rc != -1) || (errno != EINTR))
             break;
-         uint32_t elapsed = static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
+         uint32_t elapsed = static_cast<uint32_t>(GetMonotonicClockTime() - startTime);
          timeout -= std::min(timeout, elapsed);
       } while(timeout > 0);
       return rc;
@@ -105,11 +105,11 @@ int SocketPoller::poll(uint32_t timeout)
       {
          tv.tv_sec = timeout / 1000;
          tv.tv_usec = (timeout % 1000) * 1000;
-         int64_t startTime = GetCurrentTimeMs();
+         int64_t startTime = GetMonotonicClockTime();
          rc = select(m_maxfd + 1, m_write ? nullptr : &m_rwDescriptors, m_write ? &m_rwDescriptors : nullptr, &m_exDescriptors, &tv);
          if ((rc != -1) || (errno != EINTR))
             break;
-         uint32_t elapsed = static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
+         uint32_t elapsed = static_cast<uint32_t>(GetMonotonicClockTime() - startTime);
          timeout -= std::min(timeout, elapsed);
       } while(timeout > 0);
       m_invalidDescriptor = ((rc == -1) && (errno == EBADF));
@@ -244,7 +244,7 @@ void BackgroundSocketPoller::poll(SOCKET socket, uint32_t timeout, void (*callba
    request->timeout = timeout;
    request->callback = callback;
    request->context = context;
-   request->queueTime = GetCurrentTimeMs();
+   request->queueTime = GetMonotonicClockTime();
    request->cancelled = false;
 
    m_mutex.lock();
@@ -324,7 +324,7 @@ void BackgroundSocketPoller::workerThread()
       sp.add(m_controlSockets[0]);
 
       uint32_t timeout = 30000;
-      int64_t now = GetCurrentTimeMs();
+      int64_t now = GetMonotonicClockTime();
       BackgroundSocketPollRequest *processedRequests = nullptr;
 
       m_mutex.lock();

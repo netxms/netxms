@@ -5029,6 +5029,23 @@ static inline int64_t GetCurrentTimeMs()
 #endif
 }
 
+/**
+ * Get number of milliseconds counted by monotonic clock since some
+ * unspecified point in the past (system boot time on most systems)
+ */
+static inline int64_t GetMonotonicClockTime()
+{
+#if defined(_WIN32)
+   return static_cast<int64_t>(GetTickCount64());
+#elif defined(__sun)
+   return static_cast<int64_t>(gethrtime() / _LL(1000000));
+#else
+   struct timespec ts;
+   clock_gettime(CLOCK_MONOTONIC, &ts);
+   return static_cast<int64_t>(ts.tv_sec) * _LL(1000) + static_cast<int64_t>(ts.tv_nsec) / _LL(1000000);
+#endif
+}
+
 uint64_t LIBNETXMS_EXPORTABLE FileSizeW(const WCHAR *pszFileName);
 uint64_t LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName);
 #ifdef UNICODE

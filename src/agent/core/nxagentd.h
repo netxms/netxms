@@ -332,7 +332,7 @@ private:
    VolatileCounter m_pendingRequests;
    HashMap<uint32_t, DownloadFileInfo> m_downloadFileMap;
 	shared_ptr<NXCPEncryptionContext> m_encryptionContext;
-   time_t m_ts;               // Last activity timestamp
+   int64_t m_timestamp;       // Last activity timestamp
    SOCKET m_hProxySocket;     // Socket for proxy connection
 	Mutex m_socketWriteMutex;
    VolatileCounter m_requestId;
@@ -411,8 +411,8 @@ public:
 
    virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) override;
 
-   time_t getTimeStamp() { return m_ts; }
-	void updateTimeStamp() { m_ts = time(nullptr); }
+   int64_t getTimeStamp() { return m_timestamp; }
+	void updateTimeStamp() { m_timestamp = GetMonotonicClockTime(); }
 
    bool sendMessage(const NXCPMessage& msg) { return sendMessage(&msg); }
    void postMessage(const NXCPMessage& msg) { postMessage(&msg); }
@@ -916,7 +916,7 @@ extern TCHAR g_snmpTrapListenAddress[];
 extern uint16_t g_wListenPort;
 extern TCHAR g_systemName[];
 extern ObjectArray<ServerInfo> g_serverList;
-extern time_t g_agentStartTime;
+extern int64_t g_agentStartTime;
 extern TCHAR g_szPlatformSuffix[];
 extern uint32_t g_startupDelay;
 extern uint32_t g_dwIdleTimeout;

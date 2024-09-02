@@ -311,7 +311,7 @@ static bool CollectMemoryUsageInfo()
          s_memAvailable = 0;
    }
 
-   s_memStatTimestamp = GetCurrentTimeMs();
+   s_memStatTimestamp = GetMonotonicClockTime();
    return true;
 }
 
@@ -335,7 +335,7 @@ uint64_t GetTotalMemorySize()
 LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    s_memStatLock.lock();
-   if (s_memStatTimestamp < GetCurrentTimeMs() - 1000)
+   if (s_memStatTimestamp < GetMonotonicClockTime() - 1000)
    {
       if (!CollectMemoryUsageInfo())
       {

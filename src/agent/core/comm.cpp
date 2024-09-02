@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -499,13 +499,14 @@ void SessionWatchdog()
    while(!AgentSleepAndCheckForShutdown(5000))
    {
       g_sessionLock.lock();
-      time_t now = time(nullptr);
+      int64_t now = GetMonotonicClockTime();
+      int64_t timeout = static_cast<int64_t>(g_dwIdleTimeout) * _LL(1000);
       for(int i = 0; i < g_sessions.size(); i++)
       {
          CommSession *session = g_sessions.get(i);
-         if (session->getTimeStamp() < (now - (time_t)g_dwIdleTimeout))
+         if (session->getTimeStamp() + timeout < now)
          {
-            session->debugPrintf(4, _T("Session disconnected by watchdog (last activity timestamp is ") UINT64_FMT _T(")"), static_cast<uint64_t>(session->getTimeStamp()));
+            session->debugPrintf(4, _T("Session disconnected by watchdog (timestamp = ") INT64_FMT _T(", now = ") INT64_FMT _T(")"), session->getTimeStamp(), now);
             session->disconnect();
             g_sessions.remove(i);
             i--;

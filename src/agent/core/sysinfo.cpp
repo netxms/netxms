@@ -101,7 +101,7 @@ LONG H_SystemTimeZone(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstract
  */
 LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   ret_uint(value, static_cast<uint32_t>(time(nullptr) - g_agentStartTime));
+   ret_uint(value, static_cast<uint32_t>((GetMonotonicClockTime() - g_agentStartTime) / 1000));
    return SYSINFO_RC_SUCCESS;
 }
 
