@@ -19,6 +19,7 @@
 package org.netxms.nxmc.modules.snmp.views;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -341,7 +342,7 @@ public class MibFileManager extends ConfigurationView implements SessionListener
       final List<File> files = new ArrayList<File>();
       for(String fname : fd.getFileNames())
       {
-         files.add((fname.charAt(0) == File.separatorChar) ? new File(fname) : new File(new File(selection).getParentFile(), fname));
+         files.add(Paths.get(fname).isAbsolute() ? new File(fname) : new File(new File(selection).getParentFile(), fname));
       }
       new Job(i18n.tr("Uploading file to server"), this) {
          @Override
