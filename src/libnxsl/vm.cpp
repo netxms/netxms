@@ -3217,6 +3217,20 @@ NXSL_Value *NXSL_VM::matchRegexp(NXSL_Value *value, NXSL_Value *regexp, bool ign
 }
 
 /**
+ * Formatted print
+ */
+void NXSL_VM::printf(const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   TCHAR buffer[8192];
+   _vsntprintf(buffer, 8192, format, args);
+   va_end(args);
+   buffer[8191] = 0;
+   m_env->print(buffer);
+}
+
+/**
  * Trace
  */
 void NXSL_VM::trace(int level, const TCHAR *text)

@@ -1154,18 +1154,18 @@ int Table::findRow(void *key, bool (*comparator)(const TableRow *, void *))
 void Table::writeToTerminal() const
 {
    // calculate column widths and print headers
-   int *widths = MemAllocArray<int>(m_columns.size());
+   Buffer<int, 128> widths(m_columns.size());
    WriteToTerminal(_T("\x1b[1m|"));
    for(int c = 0; c < m_columns.size(); c++)
    {
-      widths[c] = (int)_tcslen(getColumnName(c));
+      widths[c] = static_cast<int>(_tcslen(m_columns.get(c)->getName()));
       for(int i = 0; i < m_data.size(); i++)
       {
-         int len = (int)_tcslen(getAsString(i, c, _T("")));
+         int len = static_cast<int>(_tcslen(getAsString(i, c, _T(""))));
          if (len > widths[c])
             widths[c] = len;
       }
-      WriteToTerminalEx(_T(" %*s |"), -widths[c], getColumnName(c));
+      WriteToTerminalEx(_T(" %*s |"), -widths[c], m_columns.get(c)->getName());
    }
 
    WriteToTerminal(_T("\n"));
@@ -1181,7 +1181,6 @@ void Table::writeToTerminal() const
       }
       WriteToTerminal(_T("\n"));
    }
-   MemFree(widths);
 }
 
 /**

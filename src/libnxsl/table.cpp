@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -195,7 +195,7 @@ NXSL_METHOD_DEFINITION(Table, getColumnIndex)
       return NXSL_ERR_NOT_STRING;
 
    *result = vm->createValue((LONG)static_cast<shared_ptr<Table>*>(object->getData())->get()->getColumnIndex(argv[0]->getValueAsCString()));
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -208,7 +208,44 @@ NXSL_METHOD_DEFINITION(Table, getColumnName)
 
    const TCHAR *value = static_cast<shared_ptr<Table>*>(object->getData())->get()->getColumnName(argv[0]->getValueAsInt32());
    *result = (value != nullptr) ? vm->createValue(value) : vm->createValue();
-   return 0;
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * print() method
+ */
+NXSL_METHOD_DEFINITION(Table, print)
+{
+   Table *table = static_cast<shared_ptr<Table>*>(object->getData())->get();
+
+   // calculate column widths and print headers
+   const ObjectArray<TableColumnDefinition>& columns = table->getColumnDefinitions();
+   Buffer<int, 128> widths(columns.size());
+   vm->print(_T("|"));
+   for(int c = 0; c < columns.size(); c++)
+   {
+      widths[c] = static_cast<int>(_tcslen(columns.get(c)->getName()));
+      for(int i = 0; i < table->getNumRows(); i++)
+      {
+         int len = static_cast<int>(_tcslen(table->getAsString(i, c, _T(""))));
+         if (len > widths[c])
+            widths[c] = len;
+      }
+      vm->printf(_T(" %*s |"), -widths[c], columns.get(c)->getName());
+   }
+
+   vm->print(_T("\n"));
+   for(int i = 0; i < table->getNumRows(); i++)
+   {
+      vm->print(_T("|"));
+      for(int j = 0; j < columns.size(); j++)
+      {
+         vm->printf(_T(" %*s |"), -widths[j], table->getAsString(i, j, _T("")));
+      }
+      vm->print(_T("\n"));
+   }
+
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -226,7 +263,7 @@ NXSL_METHOD_DEFINITION(Table, set)
 
    table->setAt(argv[0]->getValueAsInt32(), columnIndex, argv[2]->getValueAsCString());
    *result = vm->createValue();
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -245,6 +282,7 @@ NXSL_TableClass::NXSL_TableClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(Table, get, 2);
    NXSL_REGISTER_METHOD(Table, getColumnIndex, 1);
    NXSL_REGISTER_METHOD(Table, getColumnName, 1);
+   NXSL_REGISTER_METHOD(Table, print, 0);
    NXSL_REGISTER_METHOD(Table, set, 3);
 }
 
