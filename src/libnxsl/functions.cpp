@@ -761,9 +761,6 @@ int F_trace(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 	if (!argv[0]->isInteger())
 		return NXSL_ERR_NOT_INTEGER;
 
-	if (!argv[1]->isString())
-		return NXSL_ERR_NOT_STRING;
-
 	vm->trace(argv[0]->getValueAsInt32(), argv[1]->getValueAsCString());
 	*result = vm->createValue();
 	return NXSL_ERR_SUCCESS;
