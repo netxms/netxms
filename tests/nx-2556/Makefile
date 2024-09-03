@@ -17,7 +17,9 @@ check: all _m2_settings.xml
 	incus exec nx-2556-gw -- mkdir -p /root/.m2
 	incus file push _m2_settings.xml nx-2556-gw/root/.m2/settings.xml
 
-	rsync -av -e "ssh -F ${VM_NAME_BASE}-gw.ssh_config" build-netxms-java netxms-build-tag.properties ${VM_NAME_BASE}-gw:
+	#rsync -av -e "ssh -F ${VM_NAME_BASE}-gw.ssh_config" build-netxms-java netxms-build-tag.properties ${VM_NAME_BASE}-gw:
+	incus file push build-netxms-java netxms-build-tag.properties ${VM_NAME_BASE}-gw/root/
+
 	incus exec ${VM_NAME_BASE}-gw -- apt install -V -y maven default-jdk
 	incus exec ${VM_NAME_BASE}-gw -- git clone --branch master https://github.com/netxms/netxms.git netxms-java || true
 	incus exec ${VM_NAME_BASE}-gw --cwd /root/netxms-java -- /root/build-netxms-java
@@ -80,15 +82,15 @@ all.ovpn: all.wg
 	touch $@
 
 all.netxms.installed: all.wg
-	for x in aa bb gw; do incus exec ${VM_NAME_BASE}-$$x -- apt install -y rsync; done
-	# caching the build for speedup
-	rsync -av -e "ssh -F ${VM_NAME_BASE}-aa.ssh_config" netxms_build_cache/ ${VM_NAME_BASE}-aa:netxms || true
+	#for x in aa bb gw; do incus exec ${VM_NAME_BASE}-$$x -- apt install -y rsync; done
+	## caching the build for speedup
+	#rsync -av -e "ssh -F ${VM_NAME_BASE}-aa.ssh_config" netxms_build_cache/ ${VM_NAME_BASE}-aa:netxms || true
 	export VM_NAME=${VM_NAME_BASE}-aa; make $$VM_NAME.netxms.installed
-	rsync -av -e "ssh -F ${VM_NAME_BASE}-aa.ssh_config" ${VM_NAME_BASE}-aa:netxms/ netxms_build_cache
+	#rsync -av -e "ssh -F ${VM_NAME_BASE}-aa.ssh_config" ${VM_NAME_BASE}-aa:netxms/ netxms_build_cache
 
-	rsync -av -e "ssh -F ${VM_NAME_BASE}-bb.ssh_config" netxms_build_cache/ ${VM_NAME_BASE}-bb:netxms || true
+	#rsync -av -e "ssh -F ${VM_NAME_BASE}-bb.ssh_config" netxms_build_cache/ ${VM_NAME_BASE}-bb:netxms || true
 	export VM_NAME=${VM_NAME_BASE}-bb; make $$VM_NAME.netxms.installed
-	rsync -av -e "ssh -F ${VM_NAME_BASE}-gw.ssh_config" netxms_build_cache/ ${VM_NAME_BASE}-gw:netxms || true
+	#rsync -av -e "ssh -F ${VM_NAME_BASE}-gw.ssh_config" netxms_build_cache/ ${VM_NAME_BASE}-gw:netxms || true
 	export VM_NAME=${VM_NAME_BASE}-gw; make $$VM_NAME.netxms.installed
 	touch $@
 
@@ -132,7 +134,8 @@ ${VM_NAME}.p.installed: ${VM_NAME}.access.configured
 	touch $@
 
 ${VM_NAME}.netxms.installed: ${VM_NAME}.access.configured
-	rsync -av -e "ssh -F ${VM_NAME}.ssh_config" build-netxms netxms-build-tag.h ${VM_NAME}:
+	#rsync -av -e "ssh -F ${VM_NAME}.ssh_config" build-netxms netxms-build-tag.h ${VM_NAME}:
+	incus file push build-netxms netxms-build-tag.h ${VM_NAME}/root/
 	incus exec ${VM_NAME} -- apt install -V -y git autoconf automake libtool bison flex libssl-dev libpcre3-dev rr gdb g++ gcc build-essential sqlite3
 	incus exec ${VM_NAME} -- git clone --branch master https://github.com/netxms/netxms.git || true
 	incus exec ${VM_NAME} -- bash -c "cd netxms && ~/build-netxms"
