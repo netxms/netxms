@@ -255,6 +255,7 @@ NXSL_METHOD_DEFINITION(Table, set)
 {
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
+
    if (!argv[1]->isString() || !argv[2]->isString())
       return NXSL_ERR_NOT_STRING;
 
@@ -263,6 +264,53 @@ NXSL_METHOD_DEFINITION(Table, set)
 
    table->setAt(argv[0]->getValueAsInt32(), columnIndex, argv[2]->getValueAsCString());
    *result = vm->createValue();
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * trace(tag, level, [prefix, [headers, [delimiter]]]) method
+ */
+NXSL_METHOD_DEFINITION(Table, trace)
+{
+   if ((argc < 2) || (argc > 5))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString() && !argv[0]->isNull())
+      return NXSL_ERR_NOT_STRING;
+
+   if (!argv[1]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   const TCHAR *prefix;
+   if (argc > 2)
+   {
+      if (!argv[2]->isString())
+         return NXSL_ERR_NOT_STRING;
+      prefix = argv[2]->getValueAsCString();
+   }
+   else
+   {
+      prefix = _T("");
+   }
+
+   bool withHeader = (argc > 3) ? argv[3]->getValueAsBoolean() : true;
+
+   TCHAR delimiter;
+   if (argc > 4)
+   {
+      if (!argv[4]->isString())
+         return NXSL_ERR_NOT_STRING;
+      const TCHAR *s = argv[4]->getValueAsCString();
+      delimiter = (s[0] != 0) ? s[0] : _T(',');
+   }
+   else
+   {
+      delimiter = _T(',');
+   }
+
+   Table *table = static_cast<shared_ptr<Table>*>(object->getData())->get();
+   const TCHAR *tag = argv[0]->isString() ? argv[0]->getValueAsCString() : _T("nxsl.trace");
+   table->dump(tag, argv[1]->getValueAsInt32(), prefix, withHeader, delimiter);
    return NXSL_ERR_SUCCESS;
 }
 
@@ -284,6 +332,7 @@ NXSL_TableClass::NXSL_TableClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(Table, getColumnName, 1);
    NXSL_REGISTER_METHOD(Table, print, 0);
    NXSL_REGISTER_METHOD(Table, set, 3);
+   NXSL_REGISTER_METHOD(Table, trace, -1);
 }
 
 /**
