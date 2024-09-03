@@ -263,6 +263,12 @@ static bool CreateDatabase_PostgreSQL(const TCHAR *dbName, const TCHAR *dbLogin,
       success = SQLQuery(query);
    }
 
+   if (success)
+   {
+      _sntprintf(query, 256, _T("GRANT ALL PRIVILEGES ON SCHEMA public TO \"%s\""), dbLogin);
+      success = SQLQuery(query);
+   }
+
    return success;
 }
 
