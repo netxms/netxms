@@ -994,6 +994,10 @@ void DCTable::updateResultColumns(const shared_ptr<Table>& t) const
             cd->setDisplayName(col->getDisplayName());
          }
       }
+      else
+      {
+         t->addColumn(col->getName(), col->getDataType(), col->getDisplayName(), col->isInstanceColumn());
+      }
    }
    unlock();
 }

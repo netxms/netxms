@@ -1510,6 +1510,7 @@ public:
    uint32_t getCodeSize() const { return m_instructionSet.size(); }
 
    void print(const TCHAR *text) { m_env->print(text); }
+   void printf(const TCHAR *format, ...);
 	void trace(int level, const TCHAR *text);
    void dump(FILE *fp) const;
    int getErrorCode() const { return m_errorCode; }
