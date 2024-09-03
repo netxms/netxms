@@ -108,8 +108,8 @@ ${VM_NAME}.access.configured: ${VM_NAME}.created ssh_key
 
 	incus exec ${VM_NAME} -- apt install -y openssh-server
 	# Ubuntu automatically enables the service, it is named `sshd` in systemd.
-	# There might be a delay until port 22 accepts connections, hence loop. See build 4, 5 failure.
-	while ! ssh-keyscan -H `cat $(VM_NAME).ipv4` > ${VM_NAME}.known_hosts; do echo -n .; sleep 1; done
+	# For some reason ssh-keyscan across Raden network fails.
+	incus exec ${VM_NAME} -- ssh-keyscan -H localhost > ${VM_NAME}.known_hosts
 
 	echo "Host ${VM_NAME} `cat $(VM_NAME).ipv4`"            > ${VM_NAME}.ssh_config
 	echo "  Hostname `cat $(VM_NAME).ipv4`"                >> ${VM_NAME}.ssh_config
