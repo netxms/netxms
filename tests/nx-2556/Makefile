@@ -10,7 +10,8 @@ all: all.created all.wg all.ovpn all.netxms.installed
 
 _m2_settings.xml:
 	echo Put your ~/.m2/settings.xml with Nexus credentials to $@
-	false
+	touch $@
+	#false
 
 check: all _m2_settings.xml
 	incus exec nx-2556-gw -- mkdir -p /root/.m2
