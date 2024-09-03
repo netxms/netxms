@@ -594,7 +594,9 @@ public:
 
    T *buffer() { return (m_allocatedBuffer != nullptr) ? m_allocatedBuffer : reinterpret_cast<T*>(m_internalBuffer); }
    operator T*() { return buffer(); }
+   operator const T*() const { return buffer(); }
    T& operator[](size_t index) { return buffer()[index]; }
+   T& operator[](int index) { return buffer()[index]; }
    size_t size() const { return m_size; }
    size_t numElements() const { return m_size / sizeof(T); }
    bool isInternal() const { return m_allocatedBuffer == nullptr; }
