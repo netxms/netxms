@@ -191,13 +191,13 @@ static bool CreateDatabase_MySQL(const TCHAR *dbName, const TCHAR *dbLogin, cons
 
    if (success)
    {
-      _sntprintf(query, 256, _T("CREATE USER %s IDENTIFIED BY '%s'"), dbLogin, dbPassword);
+      _sntprintf(query, 256, _T("CREATE USER %s IDENTIFIED BY %s"), dbLogin, DBPrepareString(g_dbHandle, dbPassword).cstr());
       success = SQLQuery(query);
    }
 
    if (success)
    {
-      _sntprintf(query, 256, _T("CREATE USER %s@localhost IDENTIFIED BY '%s'"), dbLogin, dbPassword);
+      _sntprintf(query, 256, _T("CREATE USER %s@localhost IDENTIFIED BY %s"), dbLogin, DBPrepareString(g_dbHandle, dbPassword).cstr());
       success = SQLQuery(query);
    }
 
@@ -248,24 +248,12 @@ static bool CreateDatabase_Oracle(const TCHAR *dbLogin, const TCHAR *dbPassword)
 static bool CreateDatabase_PostgreSQL(const TCHAR *dbName, const TCHAR *dbLogin, const TCHAR *dbPassword)
 {
    TCHAR query[256];
-   _sntprintf(query, 256, _T("CREATE DATABASE \"%s\""), dbName);
+   _sntprintf(query, 256, _T("CREATE USER \"%s\" WITH PASSWORD %s"), dbLogin, DBPrepareString(g_dbHandle, dbPassword).cstr());
    bool success = SQLQuery(query);
 
    if (success)
    {
-      _sntprintf(query, 256, _T("CREATE USER \"%s\" WITH PASSWORD '%s'"), dbLogin, dbPassword);
-      success = SQLQuery(query);
-   }
-
-   if (success)
-   {
-      _sntprintf(query, 256, _T("GRANT ALL PRIVILEGES ON DATABASE \"%s\" TO \"%s\""), dbName, dbLogin);
-      success = SQLQuery(query);
-   }
-
-   if (success)
-   {
-      _sntprintf(query, 256, _T("GRANT ALL PRIVILEGES ON SCHEMA public TO \"%s\""), dbLogin);
+      _sntprintf(query, 256, _T("CREATE DATABASE \"%s\" OWNER \"%s\""), dbName, dbLogin);
       success = SQLQuery(query);
    }
 
