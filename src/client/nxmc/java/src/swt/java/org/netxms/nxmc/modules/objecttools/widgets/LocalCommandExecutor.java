@@ -20,7 +20,9 @@ package org.netxms.nxmc.modules.objecttools.widgets;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -42,11 +44,9 @@ public class LocalCommandExecutor extends AbstractObjectToolExecutor
    private static final Logger logger = LoggerFactory.getLogger(LocalCommandExecutor.class);
    private final I18n i18n = LocalizationHelper.getI18n(LocalCommandExecutor.class);
 
-   private ObjectTool tool;
    private Process process;
    private TcpPortForwarder tcpPortForwarder = null;
    private boolean processRunning = false;
-   private String command;
    private Object mutex = new Object();
 
    /**
@@ -56,13 +56,11 @@ public class LocalCommandExecutor extends AbstractObjectToolExecutor
     * @param objectContext object context
     * @param actionSet action set
     * @param tool object tool definition
-    * @param command command to execute
+    * @param inputValues command to execute
     */
-   public LocalCommandExecutor(Composite resultArea, ObjectContext objectContext, ActionSet actionSet, ObjectTool tool, String command)
+   public LocalCommandExecutor(Composite resultArea, ObjectContext objectContext, ActionSet actionSet, CommonContext objectToolInfo)
    {
-      super(resultArea, objectContext, actionSet);
-      this.tool = tool;
-      this.command = command;
+      super(resultArea, objectContext, actionSet, objectToolInfo);
       addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
@@ -111,10 +109,13 @@ public class LocalCommandExecutor extends AbstractObjectToolExecutor
       }
 
       String commandLine;
-      if ((tool.getFlags() & ObjectTool.SETUP_TCP_TUNNEL) != 0)
+      List<String> textToExpand = new ArrayList<String>();
+      textToExpand.add(objectToolInfo.tool.getData());
+      String command = session.substituteMacros(objectContext, textToExpand, objectToolInfo.inputValues).get(0);
+      if ((objectToolInfo.tool.getFlags() & ObjectTool.SETUP_TCP_TUNNEL) != 0)
       {
-         tcpPortForwarder = new TcpPortForwarder(session, objectContext.object.getObjectId(), tool.getRemotePort(), 0);
-         tcpPortForwarder.setConsoleOutputStream(out);
+         tcpPortForwarder = new TcpPortForwarder(session, objectContext.object.getObjectId(), objectToolInfo.tool.getRemotePort(), 0);
+         tcpPortForwarder.setConsoleOutputListener(getOutputListener());
          tcpPortForwarder.run();
          commandLine = command.replace("${local-port}", Integer.toString(tcpPortForwarder.getLocalPort()));
       }
@@ -149,12 +150,12 @@ public class LocalCommandExecutor extends AbstractObjectToolExecutor
             // (like ping, tracert, etc.) generates output with lines
             // ending in 0x0D 0x0D 0x0A
             if (SystemUtils.IS_OS_WINDOWS)
-               out.write(s.replace("\r\n", " \n")); //$NON-NLS-1$ //$NON-NLS-2$
+               writeOutput(s.replace("\r\n", " \n")); //$NON-NLS-1$ //$NON-NLS-2$
             else
-               out.write(s);
+               writeOutput(s);
          }
 
-         out.write(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
+         writeOutput(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
       }
       catch(IOException e)
       {
@@ -199,5 +200,15 @@ public class LocalCommandExecutor extends AbstractObjectToolExecutor
    protected boolean isTerminateSupported()
    {
       return true;
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objecttools.widgets.AbstractObjectToolExecutor#onClone(org.netxms.nxmc.modules.objecttools.widgets.AbstractObjectToolExecutor)
+    */
+   @Override
+   public void onClone(AbstractObjectToolExecutor origin)
+   {
+      process = ((LocalCommandExecutor)origin).process;
+      super.onClone(origin);
    }
 }

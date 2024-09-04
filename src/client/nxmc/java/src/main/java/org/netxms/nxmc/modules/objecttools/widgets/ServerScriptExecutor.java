@@ -18,11 +18,8 @@
  */
 package org.netxms.nxmc.modules.objecttools.widgets;
 
-import java.util.List;
-import java.util.Map;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 
 /**
@@ -30,11 +27,6 @@ import org.netxms.nxmc.modules.objects.ObjectContext;
  */
 public class ServerScriptExecutor extends AbstractObjectToolExecutor
 {
-   private String script = null;
-   private Map<String, String> inputValues = null;
-   private List<String> maskedFields;
-   private long alarmId;
-   private long nodeId;
 
    /**
     * Constructor
@@ -46,14 +38,9 @@ public class ServerScriptExecutor extends AbstractObjectToolExecutor
     * @param tool object tool to execute
     * @param inputValues input values for execution
     */
-   public ServerScriptExecutor(Composite resultArea, ObjectContext ctx, ActionSet actionSet, ObjectTool tool, Map<String, String> inputValues, List<String> maskedFields)
+   public ServerScriptExecutor(Composite resultArea, final ObjectContext ctx, final ActionSet actionSet, final CommonContext objectToolInfo)
    {
-      super(resultArea, ctx, actionSet);
-      script = tool.getData();
-      alarmId = ctx.alarm != null ? ctx.alarm.getId() : 0;
-      nodeId = ctx.object.getObjectId();
-      this.inputValues = inputValues;
-      this.maskedFields = maskedFields;
+      super(resultArea, ctx, actionSet, objectToolInfo);
    }
 
    /**
@@ -62,6 +49,6 @@ public class ServerScriptExecutor extends AbstractObjectToolExecutor
    @Override
    protected void executeInternal(Display display) throws Exception
    {
-      session.executeLibraryScript(nodeId, alarmId, script, inputValues, maskedFields, getOutputListener());
+      session.executeLibraryScript(objectContext.getObjectId(), objectContext.getAlarmId(), objectToolInfo.tool.getData(), objectToolInfo.inputValues, objectToolInfo.maskedFields, getOutputListener());
    }
 }

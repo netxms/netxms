@@ -119,7 +119,7 @@ public class ServerCommandResults extends AbstractCommandResultView
    @Override
    public void execute()
    {
-      if (!restoreValuse())
+      if (!restoreUserInputFields())
          return;
       
       if (isRunning)

@@ -115,7 +115,7 @@ public class ServerScriptResults extends AbstractCommandResultView
    @Override
    public void execute()
    {
-      if (!restoreValuse())
+      if (!restoreUserInputFields())
          return;
       
       actionRestart.setEnabled(false);

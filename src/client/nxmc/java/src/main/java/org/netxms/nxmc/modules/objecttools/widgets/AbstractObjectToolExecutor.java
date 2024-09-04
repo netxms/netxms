@@ -19,7 +19,11 @@
 package org.netxms.nxmc.modules.objecttools.widgets;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -47,6 +51,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.TextOutputAdapter;
 import org.netxms.client.TextOutputListener;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.TextConsole;
@@ -54,6 +59,7 @@ import org.netxms.nxmc.base.widgets.TextConsole.IOConsoleOutputStream;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.netxms.nxmc.modules.objecttools.widgets.helpers.ExecutorStateChangeListener;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,23 +73,24 @@ public abstract class AbstractObjectToolExecutor extends Composite
    private I18n i18n = LocalizationHelper.getI18n(AbstractObjectToolExecutor.class);
    private static final Logger logger = LoggerFactory.getLogger(AbstractObjectToolExecutor.class);
    
-   protected ObjectContext objectContext;
+   protected final ObjectContext objectContext;
+   protected final CommonContext objectToolInfo;
    protected TextConsole console;
    protected ToolBarManager toolBarManager;
    protected ToolBar toolBar;
-   protected IOConsoleOutputStream out;
    protected long streamId = 0;
    protected NXCSession session;
 
    private TextOutputListener outputListener;
    private Font headerFont;
-   private ActionSet actions;
+   private final ActionSet actions;
    private Set<ExecutorStateChangeListener> stateChangeListeners = new HashSet<ExecutorStateChangeListener>();
    private String failureReason = null;
    private boolean running = false;
    private boolean restartEnabled = false;
    private boolean terminateEnabled = false;
    private boolean autoScroll = true;
+   private ExecutorJob job;
 
    /**
     * Constructor for object tool executor. Executor control will be created hidden.
@@ -92,12 +99,13 @@ public abstract class AbstractObjectToolExecutor extends Composite
     * @param style
     * @param options
     */
-   public AbstractObjectToolExecutor(Composite parent, ObjectContext objectContext, ActionSet actions)
+   public AbstractObjectToolExecutor(Composite parent, final ObjectContext objectContext, final ActionSet actions, final CommonContext objectToolInfo)
    {
       super(parent, SWT.NONE);
       this.objectContext = objectContext;
       this.actions = actions;
       this.session = Registry.getSession();
+      this.objectToolInfo = objectToolInfo;
 
       setVisible(false);
 
@@ -167,17 +175,7 @@ public abstract class AbstractObjectToolExecutor extends Composite
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            if (out != null)
-            {
-               try
-               {
-                  out.close();
-               }
-               catch(IOException ex)
-               {
-               }
-               out = null;
-            }
+            job.removeWidget(AbstractObjectToolExecutor.this);
          }
       });
 
@@ -185,14 +183,7 @@ public abstract class AbstractObjectToolExecutor extends Composite
          @Override
          public void messageReceived(String text)
          {
-            try
-            {
-               if (out != null)
-                  out.write(text);
-            }
-            catch(IOException e)
-            {
-            }
+            job.writeOutput(text);
          }
 
          @Override
@@ -201,6 +192,16 @@ public abstract class AbstractObjectToolExecutor extends Composite
             AbstractObjectToolExecutor.this.streamId = streamId;
          }
       };
+      setRunning(false);
+   }
+
+   /**
+    * Write text to outputs
+    * @param text
+    */
+   protected void writeOutput(String text)
+   {
+      job.writeOutput(text);
    }
 
    /**
@@ -301,50 +302,50 @@ public abstract class AbstractObjectToolExecutor extends Composite
 
       failureReason = null;
       setRunning(true);
-      out = console.newOutputStream();
-      Job job = new Job(String.format(i18n.tr("Execute action on node %s"), objectContext.object.getObjectName()), null) {
-         @Override
-         protected String getErrorMessage()
-         {
-            return String.format(i18n.tr("Cannot execute action on node %s"), objectContext.object.getObjectName());
-         }
-
-         @Override
-         protected void run(IProgressMonitor monitor) throws Exception
-         {
-            try
-            {
-               executeInternal(getDisplay());
-            }
-            catch(Exception e)
-            {
-               logger.error("Error executing object tool", e);
-               failureReason = e.getLocalizedMessage();
-               if (failureReason.isEmpty())
-                  failureReason = "Internal error - " + e.getClass().getName();
-            }
-            if (out != null)
-            {
-               out.close();
-               out = null;
-            }
-         }
-
-         @Override
-         protected void jobFinalize()
-         {
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  setRunning(false);
-               }
-            });
-         }
-      };
+      job = new ExecutorJob(String.format(i18n.tr("Execute action on node %s"), objectContext.object.getObjectName()), this, console.newOutputStream());
       job.setUser(false);
       job.setSystem(true);
       job.start();
+   }
+   
+   /**
+    * Re execute tool 
+    */
+   public final void reExecute() 
+   {     
+      if ((objectToolInfo.tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0)
+      {
+         new Job(String.format(i18n.tr("Expand confirmation message for node %s"), objectContext.object.getObjectName()), null) {
+            
+            @Override
+            protected void run(IProgressMonitor monitor) throws Exception
+            {
+               List<String> textToExpand = new ArrayList<String>();
+               textToExpand.add(objectToolInfo.tool.getConfirmationText());
+               final List<String> expandedText = session.substituteMacros(objectContext, textToExpand, objectToolInfo.inputValues);
+               runInUIThread(new Runnable() {                  
+                  @Override
+                  public void run()
+                  {
+                     if (MessageDialogHelper.openQuestion(Registry.getMainWindowShell(), i18n.tr("Confirm Tool Execution"), expandedText.get(0)))
+                     {
+                        AbstractObjectToolExecutor.this.execute();
+                     }                     
+                  }
+               });
+            }
+            
+            @Override
+            protected String getErrorMessage()
+            {
+               return String.format(i18n.tr("Failed to expand confirmation message for node %s"), objectContext.object.getObjectName());
+            }
+         }.start();
+      }
+      else
+      {
+         execute();
+      }      
    }
 
    /**
@@ -503,6 +504,169 @@ public abstract class AbstractObjectToolExecutor extends Composite
    }
 
    /**
+    * Context 
+    * 
+    * @return context
+    */
+   public ObjectContext getContext()
+   {
+      return objectContext;
+   }
+
+   /**
+    * Actions to be performed on view clone
+    * 
+    * @param origin
+    */
+   public void onClone(AbstractObjectToolExecutor origin)
+   {
+      console.setText(origin.console.getText());
+      setRunning(origin.isRunning());
+      if (origin.isRunning())
+      {
+         streamId = origin.streamId;
+         job = origin.job;
+         job.registerWidget(this, console.newOutputStream());
+      }
+   }
+
+   /**
+    * Object tool executor job
+    */
+   private final class ExecutorJob extends Job
+   {
+      private HashMap<AbstractObjectToolExecutor, IOConsoleOutputStream> executorWidgetList = new HashMap<>();
+      
+      /**
+       * Job constructor
+       * 
+       * @param name
+       * @param executorWidget
+       */
+      public ExecutorJob(String name, AbstractObjectToolExecutor executorWidget, IOConsoleOutputStream out)
+      {
+         super(name, null);
+         synchronized(executorWidgetList)
+         {
+            executorWidgetList.put(executorWidget, out);
+         }
+      }
+      
+      /**
+       * Write output to all views
+       * @param text
+       */
+      public void writeOutput(String text)
+      {
+         try
+         {
+            synchronized(executorWidgetList)
+            {
+               for (IOConsoleOutputStream o : executorWidgetList.values())
+               {
+                  o.write(text);
+               }
+            }
+         }
+         catch(IOException e)
+         {
+         }
+      }
+
+      /**
+       * @param executorWidget
+       */
+      public void registerWidget(AbstractObjectToolExecutor executorWidget, IOConsoleOutputStream out)
+      {
+         synchronized(executorWidgetList)
+         {
+            executorWidgetList.put(executorWidget, out);        
+         }
+      }
+      
+      /**
+       * @param executorWidget
+       */
+      public void removeWidget(AbstractObjectToolExecutor executorWidget)
+      {
+         synchronized(executorWidgetList)
+         {
+            IOConsoleOutputStream out = executorWidgetList.remove(executorWidget);     
+            try
+            {
+               out.close();
+            }
+            catch(IOException e)
+            {
+            }
+            if (executorWidgetList.isEmpty() && isRunning())
+               executorWidget.terminate();
+         }
+      }
+
+      /**
+       * @see org.netxms.nxmc.base.jobs.Job#getErrorMessage()
+       */
+      @Override
+      protected String getErrorMessage()
+      {
+         return String.format(i18n.tr("Cannot execute action on node %s"), objectContext.object.getObjectName());
+      }
+
+      /**
+       * @see org.netxms.nxmc.base.jobs.Job#run(org.eclipse.core.runtime.IProgressMonitor)
+       */
+      @Override
+      protected void run(IProgressMonitor monitor) throws Exception
+      {         
+         try
+         {
+            executeInternal(getDisplay());
+         }
+         catch(Exception e)
+         {
+            logger.error("Error executing object tool", e);
+            failureReason = e.getLocalizedMessage();
+            if (failureReason.isEmpty())
+               failureReason = "Internal error - " + e.getClass().getName();
+         }
+         
+         try
+         {
+            synchronized(executorWidgetList)
+            {
+               for (IOConsoleOutputStream o : executorWidgetList.values())
+               {
+                  o.close();
+               }
+            }
+         }
+         catch(IOException ex)
+         {
+         }
+      }
+
+      /**
+       * @see org.netxms.nxmc.base.jobs.Job#jobFinalize()
+       */
+      @Override
+      protected void jobFinalize()
+      {
+         runInUIThread(new Runnable() {
+            @Override
+            public void run()
+            {
+               synchronized(executorWidgetList)
+               {
+                  for (AbstractObjectToolExecutor e : executorWidgetList.keySet())
+                     e.setRunning(false);
+               }
+            }
+         });
+      }
+   }
+
+   /**
     * Action set for executor
     */
    public static class ActionSet
@@ -513,5 +677,29 @@ public abstract class AbstractObjectToolExecutor extends Composite
       public Action actionSelectAll;
       public Action actionRestart;
       public Action actionTerminate;
+   }
+   
+   /**
+    * Common context fields
+    */
+   public static class CommonContext
+   {
+      public final ObjectTool tool;
+      public Map<String, String> inputValues;
+      public final List<String> maskedFields;
+      
+      public CommonContext(final ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields)
+      {
+         this.tool = tool;
+         this.inputValues = inputValues;
+         this.maskedFields = maskedFields;
+      }
+
+      public CommonContext(CommonContext objectToolInfo)
+      {
+         this.tool = objectToolInfo.tool;
+         this.inputValues = objectToolInfo.inputValues;
+         this.maskedFields = objectToolInfo.maskedFields;
+      }
    }
 }

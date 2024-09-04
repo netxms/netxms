@@ -29,7 +29,25 @@ public class ObjectContextBase
       return object instanceof AbstractNode;
    }
 
+   /**
+    * Returns alarm id or 0 if alarm is not set
+    * 
+    * @return Context alarm id or 0 if alarm is not set
+    */
+   public long getAlarmId()
+   {
+      return alarm != null ? alarm.getId() : 0;
+   }
 
+   /**
+    * Returns object id
+    * 
+    * @return Context object id 
+    */
+   public long getObjectId()
+   {
+      return object.getObjectId();
+   }
 
    /**
     * @see java.lang.Object#hashCode()

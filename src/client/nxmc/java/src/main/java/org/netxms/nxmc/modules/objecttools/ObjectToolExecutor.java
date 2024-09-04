@@ -255,12 +255,11 @@ public final class ObjectToolExecutor
                   tool.getToolType() == ObjectTool.TYPE_ACTION || tool.getToolType() == ObjectTool.TYPE_SERVER_SCRIPT) && 
                   ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0 || tool.getToolType() == ObjectTool.TYPE_SSH_COMMAND))
             {
-               final List<String> finalExpandedText = expandedText;
                getDisplay().syncExec(new Runnable() {
                   @Override
                   public void run()
                   {
-                     executeOnMultipleNodes(allObjects, objects, tool, inputValues, maskedFields, finalExpandedText, viewPlacement);
+                     executeOnMultipleNodes(allObjects, objects, tool, inputValues, maskedFields, viewPlacement);
                   }
                });
             }
@@ -397,9 +396,9 @@ public final class ObjectToolExecutor
     * @param viewPlacement view placement information
     */
    private static void executeOnMultipleNodes(Set<ObjectContext> sourceObjects, Set<ObjectContext> nodes, ObjectTool tool, Map<String, String> inputValues,
-         List<String> maskedFields, List<String> expandedToolData, ViewPlacement viewPlacement)
+         List<String> maskedFields, ViewPlacement viewPlacement)
    {
-      viewPlacement.openView(new MultiNodeCommandExecutor(tool, sourceObjects, nodes, inputValues, maskedFields, expandedToolData));
+      viewPlacement.openView(new MultiNodeCommandExecutor(tool, sourceObjects, nodes, inputValues, maskedFields));
    }
 
    /**

@@ -18,13 +18,10 @@
  */
 package org.netxms.nxmc.modules.objecttools.widgets;
 
-import java.util.List;
-import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -38,10 +35,7 @@ public class ServerCommandExecutor extends AbstractObjectToolExecutor
 {
    private I18n i18n = LocalizationHelper.getI18n(ServerCommandExecutor.class);
    
-   private String lastCommand = null;
-   private Map<String, String> lastInputValues = null;
    private NXCSession session;
-   private List<String> maskedFields;
 
    /**
     * Constructor
@@ -53,12 +47,9 @@ public class ServerCommandExecutor extends AbstractObjectToolExecutor
     * @param inputValues input values provided by user
     * @param maskedFields list of input values that should be mased
     */
-   public ServerCommandExecutor(Composite resultArea, ObjectContext context, ActionSet actionSet, ObjectTool tool, Map<String, String> inputValues, List<String> maskedFields)
+   public ServerCommandExecutor(Composite resultArea, ObjectContext context, ActionSet actionSet, CommonContext objectToolInfo)
    { 
-      super(resultArea, context, actionSet);
-      this.lastInputValues = inputValues;
-      this.maskedFields = maskedFields;
-      lastCommand = tool.getData();
+      super(resultArea, context, actionSet, objectToolInfo);
       session = Registry.getSession();
    }
 
@@ -68,8 +59,8 @@ public class ServerCommandExecutor extends AbstractObjectToolExecutor
    @Override
    protected void executeInternal(Display display) throws Exception
    {
-      session.executeServerCommand(objectContext.object.getObjectId(), objectContext.getAlarmId(), lastCommand, lastInputValues, maskedFields, true, getOutputListener(), null);
-      out.write(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
+      session.executeServerCommand(objectContext.object.getObjectId(), objectContext.getAlarmId(), objectToolInfo.tool.getData(), objectToolInfo.inputValues, objectToolInfo.maskedFields, true, getOutputListener(), null);
+      writeOutput(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
    }
 
    /**

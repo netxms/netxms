@@ -30,9 +30,9 @@ import java.util.UUID;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.TcpProxy;
+import org.netxms.client.TextOutputListener;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
-import org.netxms.nxmc.base.widgets.TextConsole.IOConsoleOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +54,7 @@ public class TcpPortForwarder
    private int sessionId = 0;
    private int messageId = 0;
    private Map<Integer, Session> sessions = new HashMap<>();
-   private IOConsoleOutputStream consoleOutputStream = null;
+   private TextOutputListener outputListener = null;
 
    /**
     * Create new port forwarder instance.
@@ -138,9 +138,9 @@ public class TcpPortForwarder
                      String msg = String.format("TCP port forwarder for node %s remote port %d session setup error (%s)",
                            nodeName, remotePort, (emsg != null) && !emsg.isEmpty() ? emsg : e.getClass().getCanonicalName());
 
-                     if (consoleOutputStream != null)
+                     if (outputListener != null)
                      {
-                        consoleOutputStream.write("\n*** " + msg + " ***\n");
+                        outputListener.messageReceived("\n*** " + msg + " ***\n");
                      }
                      else if ((display != null) && (messageArea != null))
                      {
@@ -216,17 +216,17 @@ public class TcpPortForwarder
    /**
     * @return the consoleOutputStream
     */
-   public IOConsoleOutputStream getConsoleOutputStream()
+   public TextOutputListener getConsoleOutputStream()
    {
-      return consoleOutputStream;
+      return outputListener;
    }
 
    /**
     * @param consoleOutputStream the consoleOutputStream to set
     */
-   public void setConsoleOutputStream(IOConsoleOutputStream consoleOutputStream)
+   public void setConsoleOutputListener(TextOutputListener consoleOutputStream)
    {
-      this.consoleOutputStream = consoleOutputStream;
+      this.outputListener = consoleOutputStream;
    }
 
    /**
