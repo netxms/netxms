@@ -18,11 +18,8 @@
  */
 package org.netxms.nxmc.modules.objecttools.widgets;
 
-import java.util.List;
-import java.util.Map;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.xnap.commons.i18n.I18n;
@@ -34,11 +31,6 @@ public class SSHExecutor extends AbstractObjectToolExecutor
 {
    private I18n i18n = LocalizationHelper.getI18n(SSHExecutor.class);
 
-   private String executionString;
-   protected long nodeId;
-   private Map<String, String> lastInputValues = null;
-   private List<String> maskedFields;
-
    /**
     * Constructor for action execution
     * 
@@ -48,13 +40,9 @@ public class SSHExecutor extends AbstractObjectToolExecutor
     * @param actionSet action set
     * @param tool object tool to execute
     */
-   public SSHExecutor(Composite parent,  ObjectContext ctx, ActionSet actionSet, ObjectTool tool, Map<String, String> inputValues, List<String> maskedFields)
+   public SSHExecutor(Composite parent,  ObjectContext ctx, ActionSet actionSet, final CommonContext objectToolInfo)
    {
-      super(parent, ctx, actionSet);
-      nodeId = ctx.object.getObjectId();
-      this.executionString = tool.getData();
-      this.lastInputValues = inputValues;
-      this.maskedFields = maskedFields;
+      super(parent, ctx, actionSet, objectToolInfo);
    }
 
    /**
@@ -63,8 +51,8 @@ public class SSHExecutor extends AbstractObjectToolExecutor
    @Override
    protected void executeInternal(Display display) throws Exception
    {
-      session.executeSshCommand(nodeId, objectContext.getAlarmId(), executionString, lastInputValues, maskedFields, true, getOutputListener(), null);
-      out.write(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
+      session.executeSshCommand(objectContext.getObjectId(), objectContext.getAlarmId(), objectToolInfo.tool.getData(), objectToolInfo.inputValues, objectToolInfo.maskedFields, true, getOutputListener(), null);
+      writeOutput(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
    }
 }
 

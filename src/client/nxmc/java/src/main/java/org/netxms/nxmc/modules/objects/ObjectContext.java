@@ -32,6 +32,7 @@ import org.xnap.commons.i18n.I18n;
 public class ObjectContext extends ObjectContextBase
 {
    private final I18n i18n = LocalizationHelper.getI18n(ObjectContext.class);
+
    public long contextId;
 
    /**
@@ -43,7 +44,7 @@ public class ObjectContext extends ObjectContextBase
       super(object, alarm);
       this.contextId = contextId;
    }
-
+   
    /**
     * @param source source string
     * @param inputValues input values provided by user
@@ -134,5 +135,24 @@ public class ObjectContext extends ObjectContextBase
    public long getAlarmId()
    {
       return alarm != null ? alarm.getId() : 0;
+   }
+
+   /**
+    * Returns object id
+    * 
+    * @return Context object id 
+    */
+   public long getObjectId()
+   {
+      return object.getObjectId();
+   }
+
+   /**
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "ObjectContext:" + getObjectId() + ":" + getAlarmId() + ":" + contextId;
    }
 }

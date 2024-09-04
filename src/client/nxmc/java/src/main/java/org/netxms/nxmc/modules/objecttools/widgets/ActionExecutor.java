@@ -18,11 +18,8 @@
  */
 package org.netxms.nxmc.modules.objecttools.widgets;
 
-import java.util.List;
-import java.util.Map;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.xnap.commons.i18n.I18n;
@@ -33,12 +30,6 @@ import org.xnap.commons.i18n.I18n;
 public class ActionExecutor extends AbstractObjectToolExecutor
 {
    private I18n i18n = LocalizationHelper.getI18n(ActionExecutor.class);
-
-   private String executionString;
-   private long alarmId;
-   private Map<String, String> inputValues;
-   private List<String> maskedFields;
-   protected long nodeId;
 
    /**
     * Constructor for action execution
@@ -51,15 +42,9 @@ public class ActionExecutor extends AbstractObjectToolExecutor
     * @param inputValues input values provided by user
     * @param maskedFields list of the fields that should be masked
     */
-   public ActionExecutor(Composite parent, ObjectContext ctx, ActionSet actionSet, ObjectTool tool,
-         Map<String, String> inputValues, List<String> maskedFields)
+   public ActionExecutor(Composite parent, ObjectContext ctx, ActionSet actionSet, CommonContext objectToolInfo)
    {
-      super(parent, ctx, actionSet);
-      alarmId = ctx.getAlarmId();
-      nodeId = ctx.object.getObjectId();
-      this.executionString = tool.getData();
-      this.inputValues = inputValues;
-      this.maskedFields = maskedFields;
+      super(parent, ctx, actionSet, objectToolInfo);
    }
 
    /**
@@ -68,7 +53,7 @@ public class ActionExecutor extends AbstractObjectToolExecutor
    @Override
    protected void executeInternal(Display display) throws Exception
    {
-      session.executeActionWithExpansion(nodeId, alarmId, executionString, true, inputValues, maskedFields, getOutputListener(), null);
-      out.write(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
+      session.executeActionWithExpansion(objectContext.getObjectId(), objectContext.getAlarmId(), objectToolInfo.tool.getData(), true, objectToolInfo.inputValues, objectToolInfo.maskedFields, getOutputListener(), null);
+      writeOutput(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
    }
 }

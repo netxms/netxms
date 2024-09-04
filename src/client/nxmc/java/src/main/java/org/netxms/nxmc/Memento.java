@@ -429,12 +429,12 @@ public class Memento
     * @param name property name
     * @param value new property value
     */
-   public void set(String name, Collection<String> value)
+   public <T> void set(String name, Collection<T> value)
    {
       properties.setProperty(name + ".Count", Integer.toString(value.size()));
       int index = 0;
-      for(String s : value)
-         properties.setProperty(name + "." + Integer.toString(index++), s);
+      for(T s : value)
+         properties.setProperty(name + "." + Integer.toString(index++), s.toString());
       onPropertyChange(name, null, null);
    }
 

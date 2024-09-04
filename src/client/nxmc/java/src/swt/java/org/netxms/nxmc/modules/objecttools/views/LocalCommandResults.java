@@ -29,10 +29,10 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.netxms.client.TextOutputListener;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
-import org.netxms.nxmc.base.widgets.TextConsole.IOConsoleOutputStream;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.netxms.nxmc.modules.objecttools.TcpPortForwarder;
@@ -178,7 +178,8 @@ public class LocalCommandResults extends AbstractCommandResultView
 			actionRestart.setEnabled(false);
 		}
 
-		final IOConsoleOutputStream out = console.newOutputStream();
+		createOutputStream();
+		TextOutputListener listener = getOutputListener();
 		Job job = new Job(i18n.tr("Execute external command"), this) {
 			@Override
 			protected String getErrorMessage()
@@ -195,7 +196,7 @@ public class LocalCommandResults extends AbstractCommandResultView
             if (((tool.getFlags() & ObjectTool.SETUP_TCP_TUNNEL) != 0) && object.isNode())
             {
                tcpPortForwarder = new TcpPortForwarder(session, object.object.getObjectId(), tool.getRemotePort(), 0);
-               tcpPortForwarder.setConsoleOutputStream(out);
+               tcpPortForwarder.setConsoleOutputListener(listener);
                tcpPortForwarder.run();
                commandLine = commandLine.replace("${local-port}", Integer.toString(tcpPortForwarder.getLocalPort()));
             }
@@ -227,12 +228,12 @@ public class LocalCommandResults extends AbstractCommandResultView
 						// (like ping, tracert, etc.) generates output with lines
 						// ending in 0x0D 0x0D 0x0A
                   if (SystemUtils.IS_OS_WINDOWS)
-							out.write(s.replace("\r\n", " \n")); //$NON-NLS-1$ //$NON-NLS-2$
+                     listener.messageReceived(s.replace("\r\n", " \n")); //$NON-NLS-1$ //$NON-NLS-2$
 						else
-							out.write(s);
+						   listener.messageReceived(s);
 					}
 
-					out.write(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
+					listener.messageReceived(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
 				}
 				catch(IOException e)
 				{
@@ -241,7 +242,7 @@ public class LocalCommandResults extends AbstractCommandResultView
 				finally
 				{
 					in.close();
-					out.close();
+					closeOutputStream();
 				}
 			}
 

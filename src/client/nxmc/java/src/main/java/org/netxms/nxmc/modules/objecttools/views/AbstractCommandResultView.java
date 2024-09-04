@@ -257,6 +257,9 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
       actionRestart.setEnabled(false);
 	}
 	
+	/**
+	 * Re execute tool 
+	 */
 	private void reExecute() 
 	{	   
 	   if ((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0)
@@ -291,8 +294,7 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
 	   else
 	   {
 	      execute();
-	   }
-      
+	   }      
 	}
 	
 	/**
