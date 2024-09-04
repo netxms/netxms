@@ -14,8 +14,8 @@ _m2_settings.xml:
 	#false
 
 check: all _m2_settings.xml
-	incus exec nx-2556-gw -- mkdir -p /root/.m2
-	incus file push _m2_settings.xml nx-2556-gw/root/.m2/settings.xml
+	incus exec ${VM_NAME_BASE}-gw -- mkdir -p /root/.m2
+	incus file push _m2_settings.xml ${VM_NAME_BASE}-gw/root/.m2/settings.xml
 
 	#rsync -av -e "ssh -F ${VM_NAME_BASE}-gw.ssh_config" build-netxms-java netxms-build-tag.properties ${VM_NAME_BASE}-gw:
 	incus file push build-netxms-java netxms-build-tag.properties ${VM_NAME_BASE}-gw/root/
