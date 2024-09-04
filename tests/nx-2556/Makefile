@@ -82,7 +82,7 @@ all.ovpn: all.wg
 	touch $@
 
 all.netxms.installed: all.wg
-	#for x in aa bb gw; do incus exec ${VM_NAME_BASE}-$$x -- apt install -y rsync; done
+	for x in aa bb gw; do incus exec ${VM_NAME_BASE}-$$x -- apt install -y rsync; done
 	## caching the build for speedup
 	#rsync -av -e "ssh -F ${VM_NAME_BASE}-aa.ssh_config" netxms_build_cache/ ${VM_NAME_BASE}-aa:netxms || true
 	export VM_NAME=${VM_NAME_BASE}-aa; make $$VM_NAME.netxms.installed
