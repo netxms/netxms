@@ -9,9 +9,7 @@ INCUS_DISTRO ?= ubuntu/24.04
 all: all.created all.wg all.ovpn all.netxms.installed
 
 _m2_settings.xml:
-	echo Put your ~/.m2/settings.xml with Nexus credentials to $@
-	touch $@
-	#false
+	cp -a /home/autkin/.m2/settings.xml $@ || echo Put your ~/.m2/settings.xml with Nexus credentials to $@
 
 check: all _m2_settings.xml
 	incus exec ${VM_NAME_BASE}-gw -- mkdir -p /root/.m2
