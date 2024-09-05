@@ -585,16 +585,16 @@ JNIEXPORT jstring JNICALL Java_org_netxms_agent_ConfigEntry_getFile(JNIEnv *jenv
  */
 JNIEXPORT jobject JNICALL Java_org_netxms_agent_ConfigEntry_createEntry(JNIEnv *jenv, jobject jobj, jstring jname)
 {
-   jobject jresult = NULL;
+   jobject jresult = nullptr;
    ConfigEntry *configEntry = RetrieveConfigEntryNativePointer(jenv, jobj);
-   if (configEntry == NULL)
+   if (configEntry == nullptr)
    {
       return jresult;
    }
-   if (jname != NULL)
+   if (jname != nullptr)
    {
       TCHAR *name = CStringFromJavaString(jenv, jname);
-      jresult = CreateConfigEntryInstance(jenv, configEntry->createEntry(name));
+      jresult = CreateConfigEntryInstance(jenv, configEntry->findOrCreateEntry(name));
       free(name);
    }
    return jresult;
