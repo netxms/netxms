@@ -282,7 +282,20 @@ static shared_ptr<Interface> FindRemoteInterface(Node *node, uint32_t idSubType,
 	switch(idSubType)
 	{
 		case 3:	// MAC address
-			return node->findInterfaceByMAC(MacAddress(id, idLen));
+		   if ((idLen == 6) || (idLen == 8))
+		      return node->findInterfaceByMAC(MacAddress(id, idLen));
+
+		   // Some devices returns MAC address as string
+		   if ((idLen >= 12) && (idLen <= 23))
+		   {
+		      char s[24];
+		      memcpy(s, id, idLen);
+		      s[idLen] = 0;
+		      MacAddress a = MacAddress::parse(s);
+		      if (a.isValid())
+	            return node->findInterfaceByMAC(a);
+		   }
+		   return shared_ptr<Interface>();
 		case 4:	// Network address
 			if (id[0] == 1)	// IPv4
 			{
@@ -580,9 +593,20 @@ static uint32_t FindLocalInterfaceOnRemoteNode(Node *thisNode, Node *remoteNode,
 /**
  * Find local interface index from given OID within lldpRemTable
  */
-static uint32_t FindLocalInterfaceIndex(Node *node, const SNMP_ObjectId& oid, bool lldpMibVersion2, Node *remoteNode, Interface *ifRemote)
+static uint32_t FindLocalInterfaceIndex(Node *node, const SNMP_ObjectId& oid, bool lldpMibVersion2, Node *remoteNode, Interface *ifRemote, const SNMP_Variable *lldpRemLocalPortNum)
 {
    uint32_t ifIndexLocal = 0;
+
+   // Some devices may use incorrect indexing (without time mark and/or misplaced remote index).
+   // Noticed on Alpha Bridge switches. To remedy this issue first try to use
+   // value of lldpRemLocalPortNum from cached lldpRemTable, if available
+   uint32_t localPort = 0;
+   if (lldpRemLocalPortNum != nullptr)
+   {
+      localPort = lldpRemLocalPortNum->getValueAsUInt();
+      nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("FindLocalInterfaceIndex(%s [%u], %s): lldpRemLocalPortNum is available, value=%u"),
+            node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2), localPort);
+   }
 
    // Index to lldpRemTable is lldpRemTimeMark, lldpRemLocalPortNum, lldpRemIndex
    // Normally lldpRemLocalPortNum should not be zero, but many (if not all)
@@ -590,7 +614,8 @@ static uint32_t FindLocalInterfaceIndex(Node *node, const SNMP_ObjectId& oid, bo
    // correct port number in that case is to try and find matching information on remote node.
    // Some devices are known to be returning invalid values for lldpRemLocalPortNum (some TP-Link models for example).
    // In that case do not attempt local port search by interface index or bridge port number.
-   uint32_t localPort = oid.getElement(oid.length() - 2);
+   if (localPort == 0)
+      localPort = lldpMibVersion2 ? oid.getElement(14) : oid.getElement(oid.length() - 2);
    bool doRemoteLookup = (localPort == 0) || !node->getDriver()->isValidLldpRemLocalPortNum(node, node->getDriverData());
 
    nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("FindLocalInterfaceIndex(%s [%u], %s): localPort=%u doRemoteLookup=%s"),
@@ -598,6 +623,10 @@ static uint32_t FindLocalInterfaceIndex(Node *node, const SNMP_ObjectId& oid, bo
 
    if (localPort != 0)
    {
+      if (lldpMibVersion2)
+      {
+         ifIndexLocal = localPort;
+      }
       LLDP_LOCAL_PORT_INFO portInfo;
       if (node->getLldpLocalPortInfo(localPort, &portInfo))
       {
@@ -708,6 +737,17 @@ static void ProcessLLDPConnectionEntry(Node *node, const StringObjectMap<SNMP_Va
       newOid[10] = 9;   // lldpRemSysName
    const SNMP_Variable *lldpRemSysName = GetVariableFromCache(newOid, oid.length(), connections);
 
+   const SNMP_Variable *lldpRemLocalPortNum;
+   if (!lldpMibVersion2)
+   {
+      newOid[10] = 2;   // lldpRemLocalPortNum
+      lldpRemLocalPortNum = GetVariableFromCache(newOid, oid.length(), connections);
+   }
+   else
+   {
+      lldpRemLocalPortNum = nullptr;
+   }
+
 	if ((lldpRemChassisIdSubtype != nullptr) && (lldpRemPortId != nullptr) && (lldpRemPortIdSubtype != nullptr) && (lldpRemSysName != nullptr))
    {
 	   shared_ptr<Node> remoteNode = FindRemoteNode(node, lldpRemChassisId, lldpRemChassisIdSubtype, lldpRemSysName);
@@ -743,7 +783,7 @@ static void ProcessLLDPConnectionEntry(Node *node, const StringObjectMap<SNMP_Va
 
 			LL_NEIGHBOR_INFO info;
 			info.objectId = remoteNode->getId();
-         info.ifLocal = FindLocalInterfaceIndex(node, oid, lldpMibVersion2, remoteNode.get(), ifRemote.get());
+         info.ifLocal = FindLocalInterfaceIndex(node, oid, lldpMibVersion2, remoteNode.get(), ifRemote.get(), lldpRemLocalPortNum);
 			info.ifRemote = (ifRemote != nullptr) ? ifRemote->getIfIndex() : 0;
 			info.isPtToPt = true;
 			info.protocol = LL_PROTO_LLDP;
@@ -759,7 +799,7 @@ static void ProcessLLDPConnectionEntry(Node *node, const StringObjectMap<SNMP_Va
 		   {
 	         LL_NEIGHBOR_INFO info;
 	         info.objectId = remoteAP->getId();
-	         info.ifLocal = FindLocalInterfaceIndex(node, oid, lldpMibVersion2, nullptr, nullptr);
+	         info.ifLocal = FindLocalInterfaceIndex(node, oid, lldpMibVersion2, nullptr, nullptr, lldpRemLocalPortNum);
 	         info.ifRemote = 1;
 	         info.isPtToPt = true;
 	         info.protocol = LL_PROTO_LLDP;
