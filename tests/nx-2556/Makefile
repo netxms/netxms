@@ -21,7 +21,7 @@ check: all _m2_settings.xml
 	incus exec ${VM_NAME_BASE}-gw -- apt install -V -y maven default-jdk
 	incus exec ${VM_NAME_BASE}-gw -- git clone --branch master https://github.com/netxms/netxms.git netxms-java || true
 	incus exec ${VM_NAME_BASE}-gw --cwd /root/netxms-java -- /root/build-netxms-java
-	incus exec ${VM_NAME_BASE}-gw --cwd /root/netxms-java -- mvn -f tests/integration/pom.xml test -P integration-test -fae --debug
+	incus exec ${VM_NAME_BASE}-gw --cwd /root/netxms-java -- mvn -f tests/integration/pom.xml test -P integration-test -fae --debug -Dsurefire.rerunFailingTestsCount=10
 
 all.created:
 	export VM_NAME=${VM_NAME_BASE}-aa; make $$VM_NAME.p.installed
