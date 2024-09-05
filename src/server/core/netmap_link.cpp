@@ -425,6 +425,7 @@ void NetworkMapLinkNXSLContainer::updateDataSource(const shared_ptr<DCObjectInfo
             entries->get(i)->getSubEntries(_T("formatString"))->get(0)->setValue(format);
             setModified();
          }
+         break;
       }
    }
 
