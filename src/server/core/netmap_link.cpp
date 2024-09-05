@@ -413,47 +413,43 @@ void NetworkMapLinkNXSLContainer::updateDataSource(const shared_ptr<DCObjectInfo
 {
    Config *config = getConfigInstance();
    unique_ptr<ObjectArray<ConfigEntry>> entries = config->getSubEntries(_T("/dciList"), _T("*"));
-   bool found = false;
-   for(int i = 0; entries != nullptr && i < entries->size(); i++)
+   if (entries != nullptr)
    {
-      LinkDataSouce dataSolurce(entries->get(i));
-      if(dataSolurce.getDciId() == dci->getId())
+      for(int i = 0; i < entries->size(); i++)
       {
-         found = true;
-         if (!dataSolurce.getFormat().equals(format))
+         ConfigEntry *e = entries->get(i);
+         LinkDataSouce dataSource(e);
+         if (dataSource.getDciId() == dci->getId())
          {
-            entries->get(i)->getSubEntries(_T("formatString"))->get(0)->setValue(format);
-            setModified();
+            if (!dataSource.getFormat().equals(format))
+            {
+               ConfigEntry *fe = e->findOrCreateEntry(_T("formatString"));
+               fe->setValue(format);
+               setModified();
+            }
+            return;
          }
-         break;
       }
    }
 
-   if (!found)
-   {
-      ConfigEntry *dciList = config->getEntry(_T("/dciList"));
-      if (dciList == nullptr)
-      {
-         dciList = config->getEntry(_T("/"))->createEntry(_T("dciList"));
-         dciList->setAttribute(_T("length"), 0);
-      }
-      uint32_t currLen = dciList->getAttributeAsInt(_T("length"));
-      dciList->setAttribute(_T("length"), ++currLen);
-      ConfigEntry *newDciEntry = dciList->createEntry(_T("dci"));
-      newDciEntry->setAttribute(_T("nodeId"), dci->getOwnerId());
-      newDciEntry->setAttribute(_T("dciId"), dci->getId());
-      ConfigEntry *newEntry = newDciEntry->createEntry(_T("type"));
-      newEntry->setValue(_T("1"));
-      newEntry = newDciEntry->createEntry(_T("name"));
-      newEntry->setValue(_T(""));
-      newEntry = newDciEntry->createEntry(_T("instance"));
-      newEntry->setValue(_T(""));
-      newEntry = newDciEntry->createEntry(_T("column"));
-      newEntry->setValue(_T(""));
-      newEntry = newDciEntry->createEntry(_T("formatString"));
-      newEntry->setValue(format);
-      setModified();
-   }
+   // DCI not found, add new entry
+   ConfigEntry *dciList = config->getOrCreateEntry(_T("/dciList"));
+   uint32_t currLen = dciList->getAttributeAsInt(_T("length"), 0);
+   dciList->setAttribute(_T("length"), ++currLen);
+   auto newDciEntry = new ConfigEntry(_T("dci"), dciList, config, _T("<memory>"), 0, 0);  // will add to parent
+   newDciEntry->setAttribute(_T("nodeId"), dci->getOwnerId());
+   newDciEntry->setAttribute(_T("dciId"), dci->getId());
+   ConfigEntry *newEntry = newDciEntry->findOrCreateEntry(_T("type"));
+   newEntry->setValue(_T("1"));
+   newEntry = newDciEntry->findOrCreateEntry(_T("name"));
+   newEntry->setValue(_T(""));
+   newEntry = newDciEntry->findOrCreateEntry(_T("instance"));
+   newEntry->setValue(_T(""));
+   newEntry = newDciEntry->findOrCreateEntry(_T("column"));
+   newEntry->setValue(_T(""));
+   newEntry = newDciEntry->findOrCreateEntry(_T("formatString"));
+   newEntry->setValue(format);
+   setModified();
 }
 
 /**
@@ -463,7 +459,7 @@ void NetworkMapLinkNXSLContainer::clearDataSource()
 {
    Config *config = getConfigInstance();
    unique_ptr<ObjectArray<ConfigEntry>> entries = config->getSubEntries(_T("/dciList"), _T("*"));
-   if (entries != nullptr || entries->size() != 0)
+   if ((entries != nullptr) && !entries->isEmpty())
    {
       ConfigEntry *entry = config->getEntry(_T("/dciList"));
       if (entry != nullptr)
@@ -471,9 +467,8 @@ void NetworkMapLinkNXSLContainer::clearDataSource()
          ConfigEntry *parent = entry->getParent();
          parent->unlinkEntry(entry);
          delete entry;
-         entry = parent->createEntry(_T("dciList"));
       }
-      entry = config->getEntry(_T("/"))->createEntry(_T("dciList"));
+      entry = config->getOrCreateEntry(_T("/dciList"));
       entry->setAttribute(_T("length"), 0);
       setModified();
    }
@@ -493,7 +488,7 @@ void NetworkMapLinkNXSLContainer::removeDataSource(uint32_t index)
       ConfigEntry *dciList = config->getEntry(_T("/dciList"));
       if (dciList == nullptr)
       {
-         dciList = config->getEntry(_T("/"))->createEntry(_T("dciList"));
+         dciList = config->getOrCreateEntry(_T("/dciList"));
          dciList->setAttribute(_T("length"), 0);
       }
       else
@@ -523,10 +518,7 @@ void NetworkMapLinkNXSLContainer::setRoutingAlgorithm(uint32_t algorithm)
    Config *config = getConfigInstance();
    if (config->getValueAsUInt(_T("/routing"), 0) != algorithm)
    {
-      ConfigEntry *routing = config->getEntry(_T("/"))->createEntry(_T("routing"));
-      TCHAR buffer[64];
-      _sntprintf(buffer, 64, _T("%u"), (unsigned int)algorithm);
-      routing->setValue(buffer);
+      config->setValue(_T("/routing"), algorithm);
       setModified();
    }
 }
@@ -541,14 +533,10 @@ void NetworkMapLinkNXSLContainer::setWidth(uint32_t width)
    Config *config = getConfigInstance();
    if (config->getValueAsUInt(_T("/width"), 0) != width)
    {
-      ConfigEntry *widthElement = config->getEntry(_T("/"))->createEntry(_T("width"));
-      TCHAR buffer[64];
-      _sntprintf(buffer, 64, _T("%u"), (unsigned int)width);
-      widthElement->setValue(buffer);
+      config->setValue(_T("/width"), width);
       setModified();
    }
 }
-
 
 /**
  * Set routing algorithm
@@ -563,10 +551,7 @@ void NetworkMapLinkNXSLContainer::setStyle(uint32_t style)
    Config *config = getConfigInstance();
    if (config->getValueAsUInt(_T("/style"), 0) != style)
    {
-      ConfigEntry *styleEleemnt = config->getEntry(_T("/"))->createEntry(_T("style"));
-      TCHAR buffer[64];
-      _sntprintf(buffer, 64, _T("%u"), (unsigned int)style);
-      styleEleemnt->setValue(buffer);
+      config->setValue(_T("/style"), style);
       setModified();
    }
 }
@@ -641,7 +626,7 @@ void NetworkMapLinkNXSLContainer::setColorSourceToObjectStatus(const IntegerArra
       }
       if (!found)
       {
-         ConfigEntry *parent = config->getEntry(_T("/"))->createEntry(_T("objectStatusList"));
+         ConfigEntry *parent = config->getOrCreateEntry(_T("/objectStatusList"));
          ConfigEntry *newConfigEntry = new ConfigEntry(_T("long"), parent, config, _T("<memory>"), 0, 0);
          TCHAR buffer[64];
          IntegerToString(objects.get(j), buffer);

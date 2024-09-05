@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** NetXMS Foundation Library
- ** Copyright (C) 2003-2022 Raden Solutions
+ ** Copyright (C) 2003-2024 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -210,7 +210,7 @@ ConfigEntry* ConfigEntry::findEntry(const TCHAR *name) const
 /**
  * Create (or find existing) subentry
  */
-ConfigEntry* ConfigEntry::createEntry(const TCHAR *name)
+ConfigEntry* ConfigEntry::findOrCreateEntry(const TCHAR *name)
 {
    const TCHAR *realName;
    if (name[0] == _T('%'))
@@ -287,20 +287,12 @@ unique_ptr<ObjectArray<ConfigEntry>> ConfigEntry::getSubEntries(const TCHAR *mas
 }
 
 /**
- * Comparator for ConfigEntryList::sortById()
- */
-static int CompareById(const ConfigEntry **e1, const ConfigEntry **e2)
-{
-   return (*e1)->getId() - (*e2)->getId();
-}
-
-/**
  * Get all subentries with names matched to mask ordered by id
  */
 unique_ptr<ObjectArray<ConfigEntry>> ConfigEntry::getOrderedSubEntries(const TCHAR *mask) const
 {
    unique_ptr<ObjectArray<ConfigEntry>> list = getSubEntries(mask);
-   list->sort(CompareById);
+   list->sort([] (const ConfigEntry **e1, const ConfigEntry **e2) -> int { return (*e1)->getId() - (*e2)->getId(); });
    return list;
 }
 
@@ -1147,7 +1139,7 @@ ConfigEntry *Config::getEntry(const TCHAR *path) const
  * Create entry if does not exist, or return existing
  * Will return nullptr on error
  */
-ConfigEntry *Config::createEntry(const TCHAR *path)
+ConfigEntry *Config::getOrCreateEntry(const TCHAR *path)
 {
    const TCHAR *curr, *end;
    TCHAR name[256];
@@ -1209,7 +1201,7 @@ void Config::deleteEntry(const TCHAR *path)
  */
 bool Config::setValue(const TCHAR *path, const TCHAR *value)
 {
-   ConfigEntry *entry = createEntry(path);
+   ConfigEntry *entry = getOrCreateEntry(path);
    if (entry == nullptr)
       return false;
    entry->setValue(value);
