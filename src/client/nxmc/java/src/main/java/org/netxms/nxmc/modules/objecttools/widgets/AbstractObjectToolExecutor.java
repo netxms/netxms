@@ -175,7 +175,8 @@ public abstract class AbstractObjectToolExecutor extends Composite
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            job.removeWidget(AbstractObjectToolExecutor.this);
+            if (job != null)
+               job.removeWidget(AbstractObjectToolExecutor.this);
          }
       });
 
