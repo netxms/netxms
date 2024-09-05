@@ -107,7 +107,7 @@ public:
 
 	void setName(const TCHAR *name);
 
-	ConfigEntry *createEntry(const TCHAR *name);
+	ConfigEntry *findOrCreateEntry(const TCHAR *name);
 	ConfigEntry *findEntry(const TCHAR *name) const;
    unique_ptr<ObjectArray<ConfigEntry>> getSubEntries(const TCHAR *mask = nullptr) const;
    unique_ptr<ObjectArray<ConfigEntry>> getOrderedSubEntries(const TCHAR *mask = nullptr) const;
@@ -142,8 +142,6 @@ protected:
 	virtual void onError(const TCHAR *errorMessage);
 
 	void error(const TCHAR *format, ...);
-	ConfigEntry *createEntry(const TCHAR *path);
-
 
 public:
 	Config(bool allowMacroExpansion = true);
@@ -169,6 +167,7 @@ public:
 
    void addSubTree(const TCHAR *path, const ConfigEntry *root, bool merge = true);
 
+   ConfigEntry *getOrCreateEntry(const TCHAR *path);
 	void deleteEntry(const TCHAR *path);
 
 	ConfigEntry *getEntry(const TCHAR *path) const;

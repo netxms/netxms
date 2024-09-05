@@ -1512,6 +1512,8 @@ void NetworkMap::updateLinks()
          {
             if (linkUpdate->isModified())
             {
+               nxlog_debug_tag(DEBUG_TAG_NETMAP, 7, _T("NetworkMap::updateLinks(%s [%u]): link %u [%u -- %u] is modified by styling script"), m_name, m_id, link->getId(), link->getElement1(), link->getElement2());
+
                linkUpdate->updateConfig();
                linkUpdate->get()->setConnectedElements(link->getElement1(), link->getElement2());
 
