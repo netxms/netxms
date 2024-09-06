@@ -125,9 +125,8 @@ public class TableValueElement extends ElementWidget
                if ((!config.getDciName().isEmpty() && namePattern.matcher(dciInfo.getName()).find()) ||
                    (!config.getDciDescription().isEmpty() && descriptionPattern.matcher(dciInfo.getDescription()).find()))
                {
-                  runInUIThread(new Runnable() {
-                     @Override
-                     public void run()
+                  runInUIThread(() -> {
+                     if (!viewer.isDisposed())
                      {
                         viewer.setObject(dciInfo.getNodeId(), dciInfo.getId());
                         viewer.refresh(null);
