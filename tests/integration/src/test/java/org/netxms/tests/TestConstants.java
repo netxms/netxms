@@ -24,7 +24,7 @@ import org.netxms.client.NXCSession;
 public class TestConstants
 {   
    // Server connection constants
-   public static String SERVER_ADDRESS = "127.0.0.1";
+   public static String SERVER_ADDRESS = "jworker";
    public static int SERVER_PORT_CLIENT = NXCSession.DEFAULT_CONN_PORT;
    public static int SERVER_PORT_MOBILE_AGENT = 4747;
    public static String SERVER_LOGIN = "admin";
@@ -37,7 +37,7 @@ public class TestConstants
    public static String TEST_NODE_2 = "10.5.4.3";
    public static String TEST_NODE_3 = "10.5.4.4";
    public static long SUBNET_ID = 4796;
-   public static String FILE_NAME = "/opt/netxms/var/lib/netxms/nxagentd.log";
+   public static String FILE_NAME = "/opt/jenkins/netxms/log/nxagentd";
    public static int FILE_OFFSET = 0;
    public static String ACTION = "netstat";
    public static int EVENT_CODE = 100000;
@@ -71,14 +71,14 @@ public class TestConstants
       TEST_NODE_1 = properties.getProperty("test.node.1.ip", "10.5.4.2");
       TEST_NODE_2 = properties.getProperty("test.node.2.ip", "10.5.4.3");
       TEST_NODE_3 = properties.getProperty("test.node.3.ip", "10.5.4.4");
-      SERVER_ADDRESS = properties.getProperty("server.address", "127.0.0.1");
+      SERVER_ADDRESS = properties.getProperty("server.address", "jworker");
       SERVER_PORT_CLIENT = Integer.parseInt(properties.getProperty("server.port.client", Integer.toString(NXCSession.DEFAULT_CONN_PORT)));
       SERVER_PORT_MOBILE_AGENT = Integer.parseInt(properties.getProperty("server.port.mobile-agent", Integer.toString(4747)));
       SERVER_LOGIN = properties.getProperty("server.login", "admin");
       SERVER_PASSWORD = properties.getProperty("server.password", "netxms");
       SUBNET_ID = Integer.parseInt(properties.getProperty("objects.subnet.id", "497"));
       MOBILE_DEVICE_IMEI = properties.getProperty("objects.mobile-device.imei", "0000000000");
-      FILE_NAME = properties.getProperty("file.name", "/opt/netxms/var/lib/netxms/nxagentd.log");
+      FILE_NAME = properties.getProperty("file.name", "/opt/jenkins/netxms/log/nxagentd");
       FILE_OFFSET = Integer.parseInt(properties.getProperty("file.offset", "1000"));
       ACTION = properties.getProperty("action", "netstat");
       EVENT_CODE = Integer.parseInt(properties.getProperty("event.code", "29"));
