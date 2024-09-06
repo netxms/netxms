@@ -24,7 +24,7 @@ import org.netxms.client.NXCSession;
 public class TestConstants
 {   
    // Server connection constants
-   public static String SERVER_ADDRESS = "jworker";
+   public static String SERVER_ADDRESS = "127.0.0.1";
    public static int SERVER_PORT_CLIENT = NXCSession.DEFAULT_CONN_PORT;
    public static int SERVER_PORT_MOBILE_AGENT = 4747;
    public static String SERVER_LOGIN = "admin";
@@ -71,7 +71,7 @@ public class TestConstants
       TEST_NODE_1 = properties.getProperty("test.node.1.ip", "10.5.4.2");
       TEST_NODE_2 = properties.getProperty("test.node.2.ip", "10.5.4.3");
       TEST_NODE_3 = properties.getProperty("test.node.3.ip", "10.5.4.4");
-      SERVER_ADDRESS = properties.getProperty("server.address", "jworker");
+      SERVER_ADDRESS = properties.getProperty("server.address", "127.0.0.1");
       SERVER_PORT_CLIENT = Integer.parseInt(properties.getProperty("server.port.client", Integer.toString(NXCSession.DEFAULT_CONN_PORT)));
       SERVER_PORT_MOBILE_AGENT = Integer.parseInt(properties.getProperty("server.port.mobile-agent", Integer.toString(4747)));
       SERVER_LOGIN = properties.getProperty("server.login", "admin");
