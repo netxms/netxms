@@ -70,7 +70,6 @@ import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.alarms.AlarmNotifier;
 import org.netxms.nxmc.modules.dashboards.views.AdHocDashboardView;
 import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
 import org.netxms.nxmc.modules.datacollection.api.GraphTemplateCache;
@@ -187,6 +186,7 @@ public class Startup implements EntryPoint, StartupParameters
             NXCSession session = Registry.getSession(display);
             if (session != null)
                session.disconnect();
+            Registry.dispose();
          });
 
          kioskMode = Boolean.parseBoolean(getParameter("kiosk-mode"));
@@ -301,7 +301,6 @@ public class Startup implements EntryPoint, StartupParameters
       pushSession.stop();
 
       logger.info("Application instance exit");
-      AlarmNotifier.stop();
       display.dispose();
 
       return 0;

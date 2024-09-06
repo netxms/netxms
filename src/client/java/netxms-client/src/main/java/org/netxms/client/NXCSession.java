@@ -1408,6 +1408,7 @@ public class NXCSession
             }
          }
          cachedListenerList = null;
+         logger.debug("Client session notification processor stopped");
       }
    }
    
@@ -1429,7 +1430,7 @@ public class NXCSession
       @Override
       public void run()
       {
-         while(true)
+         while(!disconnected)
          {
             synchronized(userSyncList)
             {
@@ -1442,8 +1443,9 @@ public class NXCSession
                   catch(InterruptedException e)
                   {
                   }
+                  if (disconnected)
+                     return;
                }
-
             }
 
             // Delay actual sync in case more synchronization requests will come
@@ -2727,6 +2729,12 @@ public class NXCSession
          notificationQueue.offer(new SessionNotification(reason));
       notificationQueue.offer(new SessionNotification(SessionNotification.STOP_PROCESSING_THREAD));
 
+      // cause user sync thrad to stop
+      synchronized(userSyncList)
+      {
+         userSyncList.notifyAll();
+      }
+
       if (recvThread != null)
       {
          logger.debug("Waiting for receiver thread shutdown");
@@ -2925,7 +2933,7 @@ public class NXCSession
     */
    public boolean isConnected()
    {
-      return connected;
+      return connected && !disconnected;
    }
 
    /**
@@ -10623,7 +10631,7 @@ public class NXCSession
     */
    public boolean checkConnection()
    {
-      if (!connected)
+      if (!connected || disconnected)
          return false;
 
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_KEEPALIVE);

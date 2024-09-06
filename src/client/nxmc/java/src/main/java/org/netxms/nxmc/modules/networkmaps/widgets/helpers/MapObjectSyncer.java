@@ -25,15 +25,16 @@ import java.util.Map.Entry;
 import java.util.Set;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.DisposableSingleton;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.tools.FontTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * DCI last value provider for map links
+ * Object synchronization helper for network maps
  */
-public class MapObjectSyncer
+public class MapObjectSyncer implements DisposableSingleton
 {
    private static Logger logger = LoggerFactory.getLogger(FontTools.class);
 
@@ -65,9 +66,9 @@ public class MapObjectSyncer
     * Constructor
     * @param session 
     */
-   public MapObjectSyncer()
+   private MapObjectSyncer()
    {
-      syncThread = new Thread(() -> syncObjects());
+      syncThread = new Thread(() -> syncObjects(), "MapObjectSyncer");
       syncThread.setDaemon(true);
       syncThread.start();
    }
@@ -111,18 +112,28 @@ public class MapObjectSyncer
 			{
 			}
 		}
+      session = null;
+      logger.debug("MapObjectSyncer thread stopped");
 	}
 
    /**
-	 * 
-	 */
+    * @see org.netxms.nxmc.DisposableSingleton#dispose()
+    */
+   @Override
 	public void dispose()
 	{
 		syncRunning = false;
 		syncThread.interrupt();
 	}
 
-	public void addObjects(long mapId, final Set<Long> mapObjectIds, Set<Long> utilizationInterface)
+   /**
+    * Add objects for synchronization.
+    *
+    * @param mapId map object ID
+    * @param mapObjectIds objects on map to synchronize
+    * @param utilizationInterfaces interface objects used for displaying utilization information
+    */
+	public void addObjects(long mapId, final Set<Long> mapObjectIds, Set<Long> utilizationInterfaces)
 	{	   
 	   Set<Long> uniqueObjects = new HashSet<Long>(); // Objects not referenced already by any other map
 	   synchronized(requestData)
@@ -138,7 +149,7 @@ public class MapObjectSyncer
          for(Long objectId : mapObjectIds)
          {
             AbstractObject object = session.findObjectById(objectId, true);
-            if ((object == null) || (!object.isPartialObject() && !utilizationInterface.contains(objectId)))
+            if ((object == null) || (!object.isPartialObject() && !utilizationInterfaces.contains(objectId)))
             {
                continue;
             }
@@ -160,6 +171,12 @@ public class MapObjectSyncer
       }
 	}
 
+   /**
+    * Remove objects from synchronization.
+    *
+    * @param mapId map object ID
+    * @param mapObjectIds set of objects to remove
+    */
    public void removeObjects(long mapId, final Set<Long> mapObjectIds)
    {
       synchronized(requestData)
@@ -173,7 +190,7 @@ public class MapObjectSyncer
             return;  // Map still referenced 
          }
          mapReferenceCount.remove(mapId);    
-         
+
          if (mapReferenceCount.isEmpty())
          {
             objectIdToMap.clear();

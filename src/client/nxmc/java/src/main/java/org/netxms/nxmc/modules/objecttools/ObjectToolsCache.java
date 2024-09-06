@@ -56,7 +56,7 @@ public class ObjectToolsCache
 	{
 		registerHandlers();
 	}
-	
+
 	/**
 	 * Register object tool handlers
 	 */
