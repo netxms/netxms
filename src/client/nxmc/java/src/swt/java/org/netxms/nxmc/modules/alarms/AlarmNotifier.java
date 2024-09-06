@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -61,8 +62,9 @@ import org.xnap.commons.i18n.I18n;
 public class AlarmNotifier
 {
    public static final String[] SEVERITY_TEXT = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL", "REMINDER" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+   private static final String LOCAL_SOUND_ID = "AlarmNotifier.LocalSound";
+   private static final int MAX_PLAY_QUEUE_LINE = 5;
 
-   private static I18n i18n = LocalizationHelper.getI18n(AlarmNotifier.class);
    private static Logger logger = LoggerFactory.getLogger(AlarmNotifier.class);
    private static SessionListener listener = null;
    private static Map<Long, Integer> alarmStates = new HashMap<Long, Integer>();
@@ -74,6 +76,8 @@ public class AlarmNotifier
    private static LinkedBlockingQueue<String> soundQueue = new LinkedBlockingQueue<String>(4);
    private static AtomicInteger trayPopupCount = new AtomicInteger(0);
    private static AtomicInteger trayPopupError = new AtomicInteger(0);
+   private static Map<Long, Long> alarmNotificationTimestamp = new HashMap<Long, Long>();
+   private static long lastNotificationTimestamp;
 
    /**
     * Initialize alarm notifier
@@ -238,6 +242,7 @@ public class AlarmNotifier
     */
    private static String getSoundAndDownloadIfRequired(String severity)
    {
+      I18n i18n = LocalizationHelper.getI18n(AlarmNotifier.class);
       String soundName = ps.getAsString("AlarmNotifier.Sound." + severity);
       if ((soundName == null) || soundName.isEmpty())
          return null;
@@ -322,24 +327,47 @@ public class AlarmNotifier
    }
 
    /**
-    * Check if global sound is enabled
-    * @param display 
-    * 
-    * @return true if enabled
-    */
-   public static boolean isGlobalSoundEnabled(Display display)
-   {
-      return !ps.getAsBoolean("AlarmNotifier.LocalSound", false);
-   }
-
-   /**
-    * PLay sound for new alarm
+    * Play sound for new view alarm
     * 
     * @param alarm new alarm
     */
-   public static void playSounOnAlarm(final Alarm alarm)
-   {
-      soundQueue.offer(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
+   public static void playSounOnAlarm(final Alarm alarm, Display display)
+   {  
+      if(ps.getAsBoolean(LOCAL_SOUND_ID, false))
+      {         
+         long now = new Date().getTime();
+         synchronized(alarmNotificationTimestamp)
+         {
+            boolean playSound = false;
+            if ((now - lastNotificationTimestamp) > 2000)
+            {
+               playSound = true; 
+               alarmNotificationTimestamp.clear();
+            }
+            else
+            {
+               Long time = alarmNotificationTimestamp.get(alarm.getId());
+               if (time == null || ((now - time) > 500))
+               {
+                  playSound = true;                  
+               }
+            }
+            
+            if (playSound)
+            {
+               if (soundQueue.size() <= MAX_PLAY_QUEUE_LINE)
+               {
+                  lastNotificationTimestamp = now;
+                  alarmNotificationTimestamp.put(alarm.getId(), now);
+                  soundQueue.offer(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
+               }
+               else
+               {
+                  logger.warn("Too many sound to play in queue");
+               }
+            }
+         }
+      }
    }
 
    /**
@@ -347,6 +375,7 @@ public class AlarmNotifier
     */
    private static void processNewAlarm(final Alarm alarm)
    {
+      I18n i18n = LocalizationHelper.getI18n(AlarmNotifier.class);
       Integer state = alarmStates.get(alarm.getId());
       if (state != null)
       {
@@ -360,9 +389,16 @@ public class AlarmNotifier
       if (alarm.getState() != Alarm.STATE_OUTSTANDING)
          return;
 
-      if (!ps.getAsBoolean("AlarmNotifier.LocalSound", false))
+      if (!ps.getAsBoolean(LOCAL_SOUND_ID, false))
       {
-         playSounOnAlarm(alarm);
+         if (soundQueue.size() <= MAX_PLAY_QUEUE_LINE)
+         {
+            soundQueue.offer(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
+         }
+         else
+         {
+            logger.warn("Too many sound to play in queue");
+         }
       }
 
       if (outstandingAlarms == 0)

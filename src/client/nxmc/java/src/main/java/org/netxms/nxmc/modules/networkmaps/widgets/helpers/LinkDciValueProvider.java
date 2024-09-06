@@ -33,6 +33,7 @@ import org.netxms.client.maps.MapDCIInstance;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.nxmc.DisposableSingleton;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.slf4j.Logger;
@@ -41,7 +42,7 @@ import org.slf4j.LoggerFactory;
 /**
  * DCI last value provider for map links
  */
-public class LinkDciValueProvider
+public class LinkDciValueProvider implements DisposableSingleton
 {
    private static Logger logger = LoggerFactory.getLogger(LinkDciValueProvider.class);
    private static LinkDciValueProvider instance;
@@ -69,13 +70,7 @@ public class LinkDciValueProvider
     */
    public LinkDciValueProvider()
    {
-      syncThread = new Thread(new Runnable() {
-         @Override
-         public void run()
-         {
-            syncLastValues();
-         }
-      });
+      syncThread = new Thread(() -> syncLastValues(), "LinkDciValueProvider");
       syncThread.setDaemon(true);
       syncThread.start();
    }
@@ -121,6 +116,8 @@ public class LinkDciValueProvider
 			{
 			}
 		}
+      session = null;
+      logger.debug("LinkDciValueProvider thread stopped");
 	}
 
 	/**
@@ -140,8 +137,9 @@ public class LinkDciValueProvider
 	}
 
    /**
-	 * 
-	 */
+    * @see org.netxms.nxmc.DisposableSingleton#dispose()
+    */
+   @Override
 	public void dispose()
 	{
 		syncRunning = false;

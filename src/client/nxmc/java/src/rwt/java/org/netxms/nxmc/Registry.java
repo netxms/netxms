@@ -21,8 +21,10 @@ package org.netxms.nxmc;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.TimeZone;
@@ -86,6 +88,32 @@ public final class Registry
    }
 
    /**
+    * Dispose acquired resources
+    */
+   public static void dispose()
+   {
+      Registry r = getInstance();
+      synchronized(r.singletonStorage)
+      {
+         for(Object s : r.singletonStorage.values())
+         {
+            if (s instanceof DisposableSingleton)
+               ((DisposableSingleton)s).dispose();
+         }
+         r.singletonStorage.clear();
+      }
+
+      // give a chance to stop gracefully fo threads initiated by registered singletons
+      try
+      {
+         Thread.sleep(100);
+      }
+      catch(InterruptedException e)
+      {
+      }
+   }
+
+   /**
     * Get current NetXMS client library session
     * 
     * @return Current session
@@ -139,13 +167,17 @@ public final class Registry
 
    /**
     * Get application's main window.
-    * 
+    *
     * @return application's main window
     */
    public static MainWindow getMainWindow()
    {
       return getInstance().mainWindow;
    }
+
+   @SuppressWarnings("rawtypes")
+   private Map<Class, Object> singletonStorage = new HashMap<Class, Object>();
+   private Map<String, Object> storage = new HashMap<String, Object>();
 
    /**
     * Get singleton object of given class.
@@ -156,7 +188,11 @@ public final class Registry
    @SuppressWarnings("unchecked")
    public static <T> T getSingleton(Class<T> singletonClass)
    {
-      return (T)RWT.getUISession().getAttribute("netxms.singleton." + singletonClass.getName());
+      Registry r = getInstance();      
+      synchronized(r.singletonStorage)
+      {
+         return (T)r.singletonStorage.get(singletonClass);
+      }
    }
 
    /**
@@ -169,7 +205,11 @@ public final class Registry
    @SuppressWarnings("unchecked")
    public static <T> T getSingleton(Class<T> singletonClass, Display display)
    {
-      return (T)RWT.getUISession(display).getAttribute("netxms.singleton." + singletonClass.getName());
+      Registry r = getInstance(display);      
+      synchronized(r.singletonStorage)
+      {
+         return (T)r.singletonStorage.get(singletonClass);
+      }
    }
 
    /**
@@ -180,7 +220,11 @@ public final class Registry
     */
    public static void setSingleton(Class<?> singletonClass, Object singleton)
    {
-      RWT.getUISession().setAttribute("netxms.singleton." + singletonClass.getName(), singleton);
+      Registry r = getInstance();      
+      synchronized(r.singletonStorage)
+      {
+         r.singletonStorage.put(singletonClass, singleton);
+      }
    }
 
    /**
@@ -192,7 +236,11 @@ public final class Registry
     */
    public static void setSingleton(Display display, Class<?> singletonClass, Object singleton)
    {
-      RWT.getUISession(display).setAttribute("netxms.singleton." + singletonClass.getName(), singleton);
+      Registry r = getInstance(display);      
+      synchronized(r.singletonStorage)
+      {
+         r.singletonStorage.put(singletonClass, singleton);
+      }
    }
 
    /**
@@ -203,7 +251,11 @@ public final class Registry
     */
    public static Object getProperty(String name)
    {
-      return RWT.getUISession().getAttribute("netxms." + name);
+      Registry r = getInstance();  
+      synchronized(r.storage)
+      {
+         return r.storage.get("netxms." + name);
+      }
    }
 
    /**
@@ -215,7 +267,11 @@ public final class Registry
     */
    public static Object getProperty(String name, Display display)
    {
-      return RWT.getUISession(display).getAttribute("netxms." + name);
+      Registry r = getInstance(display);  
+      synchronized(r.storage)
+      {
+         return r.storage.get("netxms." + name);
+      }
    }
 
    /**
@@ -252,7 +308,11 @@ public final class Registry
     */
    public static void setProperty(String name, Object value)
    {
-      RWT.getUISession().setAttribute("netxms." + name, value);
+      Registry r = getInstance();  
+      synchronized(r.storage)
+      {
+         r.storage.put("netxms." + name, value);
+      }
    }
 
    /**
@@ -263,7 +323,11 @@ public final class Registry
     */
    public static void setProperty(Display display, String name, Object value)
    {
-      RWT.getUISession(display).setAttribute("netxms." + name, value);
+      Registry r = getInstance(display);  
+      synchronized(r.storage)
+      {
+         r.storage.put("netxms." + name, value);
+      }
    }
 
    /**

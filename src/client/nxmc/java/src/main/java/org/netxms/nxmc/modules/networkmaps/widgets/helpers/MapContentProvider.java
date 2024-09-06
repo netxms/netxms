@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 	private Thread syncThread = null;
 	private volatile boolean syncRunning = true;
 	private MapLabelProvider labelProvider;
-	
+
 	/**
 	 * Constructor
 	 * @param labelProvider 
@@ -69,13 +69,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 	   this.labelProvider = labelProvider;
 		this.viewer = viewer;
 		final Display display = viewer.getControl().getDisplay();
-		syncThread = new Thread(new Runnable() {
-			@Override
-			public void run()
-			{
-				syncData(display);
-			}
-		});
+      syncThread = new Thread(() -> syncData(display), "MapContentProvider");
 		syncThread.setDaemon(true);
 		syncThread.start();
 	}

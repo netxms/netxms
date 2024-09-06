@@ -23,19 +23,21 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
-import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
-import javax.sound.sampled.Line;
 import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.BulkAlarmStateChangeData;
+import org.netxms.nxmc.DisposableSingleton;
+import org.netxms.nxmc.DownloadServiceHandler;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -48,10 +50,13 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Alarm notifier
  */
-public class AlarmNotifier
+public class AlarmNotifier implements DisposableSingleton
 {
    private static final Logger logger = LoggerFactory.getLogger(AlarmNotifier.class);
    public static final String[] SEVERITY_TEXT = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL", "REMINDER" };
+   private static final String LOCAL_SOUND_ID = "AlarmNotifier.LocalSound";
+   private static final int MAX_PLAY_QUEUE_LINE = 5;
+   private static final String STOP_INDICATOR = "--STOP--";
 
    /**
     * Get instance for current session
@@ -60,7 +65,7 @@ public class AlarmNotifier
     */
    private static AlarmNotifier getInstance()
    {
-      return (AlarmNotifier)RWT.getUISession().getAttribute("netxms.alarmNotifier");
+      return Registry.getSingleton(AlarmNotifier.class);
    }
 
    /**
@@ -70,8 +75,8 @@ public class AlarmNotifier
     * @return instance
     */
    private static AlarmNotifier getInstance(Display display)
-   {
-      return (AlarmNotifier)RWT.getUISession(display).getAttribute("netxms.alarmNotifier");
+   {  
+      return Registry.getSingleton(AlarmNotifier.class, display);
    }
 
    private I18n i18n = LocalizationHelper.getI18n(AlarmNotifier.class);
@@ -84,6 +89,11 @@ public class AlarmNotifier
    private PreferenceStore ps;
    private LinkedBlockingQueue<String> soundQueue = new LinkedBlockingQueue<String>(4);
    private File soundFilesDirectory;
+   private Map<Long, Long> alarmNotificationTimestamp = new HashMap<Long, Long>();
+   private long lastNotificationTimestamp;
+   private Thread reminderThread;
+   private Thread playerThread;
+   private boolean disposed = false;
 
    /**
     * Initialize alarm notifier
@@ -93,7 +103,7 @@ public class AlarmNotifier
     */
    public static void init(NXCSession session, Display display)
    {
-      RWT.getUISession(display).setAttribute("netxms.alarmNotifier", new AlarmNotifier(session, display));
+      Registry.setSingleton(display, AlarmNotifier.class, new AlarmNotifier(session, display));
    }
 
    /**
@@ -172,17 +182,9 @@ public class AlarmNotifier
       };
       session.addListener(listener);
 
-      Thread reminderThread = new Thread(() -> {
-         while(true)
+      reminderThread = new Thread(() -> {
+         while(!disposed)
          {
-            try
-            {
-               Thread.sleep(10000);
-            }
-            catch(InterruptedException e)
-            {
-            }
-
             long currTime = System.currentTimeMillis();
             if (ps.getAsBoolean("AlarmNotifier.OutstandingAlarmsReminder", false) && (outstandingAlarms > 0) && (lastReminderTime + 300000 <= currTime))
             {
@@ -193,16 +195,25 @@ public class AlarmNotifier
                });
                lastReminderTime = currTime;
             }
+
+            try
+            {
+               Thread.sleep(10000);
+            }
+            catch(InterruptedException e)
+            {
+            }
          }
+         logger.debug("Alarm reminder thread stopped");
       }, "AlarmReminderThread");
       reminderThread.setDaemon(true);
       reminderThread.start();
 
-      Thread playerThread = new Thread(new Runnable() {
+      playerThread = new Thread(new Runnable() {
          @Override
          public void run()
          {
-            while(true)
+            while(!disposed)
             {
                String soundId;
                try
@@ -213,22 +224,32 @@ public class AlarmNotifier
                {
                   continue;
                }
-               
+
+               if (soundId.equals(STOP_INDICATOR))
+                  break;
+
                Clip sound = null;
                try
                {
                   String fileName = getSoundAndDownloadIfRequired(soundId);
-                  if (fileName != null)
+                  if (fileName != null && !fileName.isEmpty())
                   {
-                     sound = (Clip)AudioSystem.getLine(new Line.Info(Clip.class));
-                     sound.open(AudioSystem.getAudioInputStream(new File(soundFilesDirectory, fileName).getAbsoluteFile()));
-                     sound.start();
-                     while(!sound.isRunning())
-                        Thread.sleep(10);
-                     while(sound.isRunning())
-                     {
-                        Thread.sleep(10);
-                     }
+                     display.asyncExec(() -> {
+                        JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+                        File localFile = new File(soundFilesDirectory.getPath(), fileName);
+                        String id = "audio-" + fileName;
+                        DownloadServiceHandler.addDownload(id, fileName, localFile, "audio/wav");
+                        StringBuilder js = new StringBuilder();
+                        js.append("var testAudio = document.createElement('audio');");
+                        js.append("if (testAudio.canPlayType !== undefined)");
+                        js.append("{");
+                        js.append("var audio = new Audio('");
+                        js.append(DownloadServiceHandler.createDownloadUrl(id));
+                        js.append("');");
+                        js.append("audio.play();");
+                        js.append("}");
+                        executor.execute(js.toString());
+                     });
                   }
                }
                catch(Exception e)
@@ -241,6 +262,7 @@ public class AlarmNotifier
                      sound.close();
                }
             }
+            logger.debug("Alarm sound player thread stopped");
          }
       }, "AlarmSoundPlayer");
       playerThread.setDaemon(true);
@@ -338,35 +360,57 @@ public class AlarmNotifier
    }
 
    /**
-    * Stop alarm notifier
-    */
-   public static void stop()
-   {
-      NXCSession session = Registry.getSession();
-      AlarmNotifier instance = getInstance();
-      if ((session != null) && (instance != null) && (instance.listener != null))
-         session.removeListener(instance.listener);
-   }
-
-   /**
-    * Check if global sound is enabled
-    * @param display 
-    * 
-    * @return true if enabled
-    */
-   public static boolean isGlobalSoundEnabled(Display display)
-   {
-      return !getInstance(display).ps.getAsBoolean("AlarmNotifier.LocalSound", false);
-   }
-
-   /**
-    * PLay sound for new alarm
+    * Play sound for new view alarm
     * 
     * @param alarm new alarm
     */
-   public static void playSounOnAlarm(final Alarm alarm)
+   public void playSounOnAlarm(final Alarm alarm)
+   {  
+      if(ps.getAsBoolean(LOCAL_SOUND_ID, false))
+      {         
+         long now = new Date().getTime();
+         synchronized(alarmNotificationTimestamp)
+         {
+            boolean playSound = false;
+            if ((now - lastNotificationTimestamp) > 2000)
+            {
+               playSound = true; 
+               alarmNotificationTimestamp.clear();
+            }
+            else
+            {
+               Long time = alarmNotificationTimestamp.get(alarm.getId());
+               if (time == null || ((now - time) > 500))
+               {
+                  playSound = true;                  
+               }
+            }
+            
+            if (playSound)
+            {
+               if (soundQueue.size() <= MAX_PLAY_QUEUE_LINE)
+               {
+                  lastNotificationTimestamp = now;
+                  alarmNotificationTimestamp.put(alarm.getId(), now);
+                  soundQueue.offer(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
+               }
+               else
+               {
+                  logger.warn("Too many sound to play in queue");
+               }
+            }
+         }
+      }
+   }
+
+   /**
+    * Play sound for new view alarm
+    * 
+    * @param alarm new alarm
+    */
+   public static void playSounOnAlarm(final Alarm alarm, Display display)
    {
-      getInstance().soundQueue.offer(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
+      getInstance(display).playSounOnAlarm(alarm);
    }
 
    /**
@@ -387,13 +431,38 @@ public class AlarmNotifier
       if (alarm.getState() != Alarm.STATE_OUTSTANDING)
          return;
 
-      if (!ps.getAsBoolean("AlarmNotifier.LocalSound", false))
+      if (!ps.getAsBoolean(LOCAL_SOUND_ID, false))
       {
-         soundQueue.offer(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
+         if (soundQueue.size() <= MAX_PLAY_QUEUE_LINE)
+         {
+            soundQueue.offer(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
+         }
+         else
+         {
+            logger.warn("Too many sound to play in queue");
+         }
       }
 
       if (outstandingAlarms == 0)
          lastReminderTime = System.currentTimeMillis();
       outstandingAlarms++;
+   }
+
+   /**
+    * @see org.netxms.nxmc.DisposableSingleton#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      NXCSession session = Registry.getSession();
+      AlarmNotifier instance = getInstance();
+      if ((session != null) && (instance != null) && (instance.listener != null))
+         session.removeListener(instance.listener);
+
+      disposed = true;
+      reminderThread.interrupt();
+
+      soundQueue.clear();
+      soundQueue.offer(STOP_INDICATOR);
    }
 }

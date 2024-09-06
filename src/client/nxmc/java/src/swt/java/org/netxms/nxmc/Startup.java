@@ -177,6 +177,8 @@ public class Startup
       display.dispose();
       logger.info("Application exit");
 
+      Registry.dispose();
+
       logger.debug("Running threads on shutdown:");
       for(Thread t : Thread.getAllStackTraces().keySet())
          logger.debug("   " + t.getName() + " state=" + t.getState() + " daemon=" + t.isDaemon());
