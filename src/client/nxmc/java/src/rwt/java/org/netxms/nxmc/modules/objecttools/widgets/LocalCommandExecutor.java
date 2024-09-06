@@ -20,7 +20,6 @@ package org.netxms.nxmc.modules.objecttools.widgets;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 
 /**
