@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2022 Raden Soultions
+ * Copyright (C) 2020-2024 Raden Soultions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,13 +28,13 @@ import org.netxms.nxmc.modules.objects.ObjectContext;
  */
 public class LocalCommandExecutor extends AbstractObjectToolExecutor
 {
-   public LocalCommandExecutor(Composite resultArea, ObjectContext objectContext, ActionSet actionSet, ObjectTool tool, String command)
+   public LocalCommandExecutor(Composite resultArea, ObjectContext objectContext, ActionSet actionSet, CommonContext objectToolInfo)
    {
-      super(resultArea, objectContext, actionSet);
+      super(resultArea, objectContext, actionSet, objectToolInfo);
    }
 
    /**
-    * @see org.netxms.nxmc.modules.objects.widgets.AbstractObjectToolExecutor#executeInternal(org.eclipse.swt.widgets.Display)
+    * @see org.netxms.nxmc.modules.objecttools.widgets.AbstractObjectToolExecutor#executeInternal(org.eclipse.swt.widgets.Display)
     */
    @Override
    protected void executeInternal(Display display) throws Exception
