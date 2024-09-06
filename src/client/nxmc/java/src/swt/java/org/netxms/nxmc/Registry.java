@@ -102,6 +102,30 @@ public final class Registry
    }
 
    /**
+    * Dispose acquired resources
+    */
+   public static void dispose()
+   {
+      synchronized(singletons)
+      {
+         for(Object s : singletons.values())
+         {
+            if (s instanceof DisposableSingleton)
+               ((DisposableSingleton)s).dispose();
+         }
+      }
+
+      // give a chance to stop gracefully fo threads initiated by registered singletons
+      try
+      {
+         Thread.sleep(100);
+      }
+      catch(InterruptedException e)
+      {
+      }
+   }
+
+   /**
     * Get current NetXMS client library session
     * 
     * @return Current session
@@ -182,7 +206,10 @@ public final class Registry
    @SuppressWarnings("unchecked")
    public static <T> T getSingleton(Class<T> singletonClass)
    {
-      return (T)singletons.get(singletonClass);
+      synchronized(singletons)
+      {
+         return (T)singletons.get(singletonClass);
+      }
    }
 
    /**
@@ -195,7 +222,10 @@ public final class Registry
    @SuppressWarnings("unchecked")
    public static <T> T getSingleton(Class<T> singletonClass, Display display)
    {
-      return (T)singletons.get(singletonClass);
+      synchronized(singletons)
+      {
+         return (T)singletons.get(singletonClass);
+      }
    }
 
    /**
@@ -206,7 +236,10 @@ public final class Registry
     */
    public static void setSingleton(Class<?> singletonClass, Object singleton)
    {
-      singletons.put(singletonClass, singleton);
+      synchronized(singletons)
+      {
+         singletons.put(singletonClass, singleton);
+      }
    }
 
    /**
@@ -218,7 +251,10 @@ public final class Registry
     */
    public static void setSingleton(Display display, Class<?> singletonClass, Object singleton)
    {
-      singletons.put(singletonClass, singleton);
+      synchronized(singletons)
+      {
+         singletons.put(singletonClass, singleton);
+      }
    }
 
    /**

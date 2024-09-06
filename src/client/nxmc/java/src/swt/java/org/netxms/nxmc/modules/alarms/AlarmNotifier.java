@@ -64,7 +64,7 @@ public class AlarmNotifier
    public static final String[] SEVERITY_TEXT = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL", "REMINDER" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
    private static final String LOCAL_SOUND_ID = "AlarmNotifier.LocalSound";
    private static final int MAX_PLAY_QUEUE_LINE = 5;
-   
+
    private static Logger logger = LoggerFactory.getLogger(AlarmNotifier.class);
    private static SessionListener listener = null;
    private static Map<Long, Integer> alarmStates = new HashMap<Long, Integer>();

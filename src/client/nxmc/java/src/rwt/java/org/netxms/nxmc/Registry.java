@@ -100,6 +100,32 @@ public final class Registry
    }
 
    /**
+    * Dispose acquired resources
+    */
+   public static void dispose()
+   {
+      Registry r = getInstance();
+      synchronized(r.singletonStorage)
+      {
+         for(Object s : r.singletonStorage.values())
+         {
+            if (s instanceof DisposableSingleton)
+               ((DisposableSingleton)s).dispose();
+         }
+         r.singletonStorage.clear();
+      }
+
+      // give a chance to stop gracefully fo threads initiated by registered singletons
+      try
+      {
+         Thread.sleep(100);
+      }
+      catch(InterruptedException e)
+      {
+      }
+   }
+
+   /**
     * Get current NetXMS client library session
     * 
     * @return Current session
