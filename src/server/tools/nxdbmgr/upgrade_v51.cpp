@@ -40,8 +40,8 @@ static bool H_UpgradeFromV9()
             for (int i = 0; i < count; i++)
             {
                StringBuffer xml = DBGetFieldAsString(hResult, i, 2);
-               long start = xml.find(_T("<style>"));
-               long end = 0, tmp = start;
+               ssize_t start = xml.find(_T("<style>"));
+               ssize_t end = 0, tmp = start;
                while(tmp != -1)
                {
                   end = tmp;

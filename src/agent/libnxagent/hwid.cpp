@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -452,7 +452,7 @@ bool LIBNXAGENT_EXPORTABLE GetSystemHardwareId(BYTE *hwid)
    {
       SHA1Update(&ctx, &data[1], 12);
    }
-#elif defined(_WIN32)
+#elif defined(_WIN32) && !_M_ARM64
    int data[4];
    __cpuid(data, 0);
    SHA1Update(&ctx, &data[1], 12);
