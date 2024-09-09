@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -72,17 +72,17 @@ static char s_syslogCodepage[16] = "";
 /**
  * Parse timestamp field
  */
-static bool ParseTimeStamp(char **ppStart, size_t nMsgSize, size_t *pnPos, time_t *ptmTime)
+static bool ParseTimeStamp(char **start, size_t msgSize, size_t *currPos, time_t *output)
 {
    static char psMonth[12][5] = { "Jan ", "Feb ", "Mar ", "Apr ",
                                   "May ", "Jun ", "Jul ", "Aug ",
                                   "Sep ", "Oct ", "Nov ", "Dec " };
    struct tm timestamp;
    time_t t;
-   char szBuffer[16], *pCurr = *ppStart;
+   char szBuffer[16], *curr = *start;
    int i;
 
-   if (nMsgSize - *pnPos < 16)
+   if (msgSize - *currPos < 16)
       return false;  // Timestamp cannot be shorter than 16 bytes
 
    // Prepare local time structure
@@ -95,72 +95,72 @@ static bool ParseTimeStamp(char **ppStart, size_t nMsgSize, size_t *pnPos, time_
 
    // Month
    for(i = 0; i < 12; i++)
-      if (!memcmp(pCurr, psMonth[i], 4))
+      if (!memcmp(curr, psMonth[i], 4))
       {
          timestamp.tm_mon = i;
          break;
       }
    if (i == 12)
       return false;
-   pCurr += 4;
+   curr += 4;
 
    // Day of week
-   if (isdigit(*pCurr))
+   if (isdigit(*curr))
    {
-      timestamp.tm_mday = *pCurr - '0';
+      timestamp.tm_mday = *curr - '0';
    }
    else
    {
-      if (*pCurr != ' ')
+      if (*curr != ' ')
          return false;  // Invalid day of month
       timestamp.tm_mday = 0;
    }
-   pCurr++;
-   if (isdigit(*pCurr))
+   curr++;
+   if (isdigit(*curr))
    {
-      timestamp.tm_mday = timestamp.tm_mday * 10 + (*pCurr - '0');
+      timestamp.tm_mday = timestamp.tm_mday * 10 + (*curr - '0');
    }
    else
    {
       return false;  // Invalid day of month
    }
-   pCurr++;
-   if (*pCurr != ' ')
+   curr++;
+   if (*curr != ' ')
       return false;
-   pCurr++;
+   curr++;
 
    // HH:MM:SS
-   memcpy(szBuffer, pCurr, 8);
+   memcpy(szBuffer, curr, 8);
    szBuffer[8] = 0;
    if (sscanf(szBuffer, "%02d:%02d:%02d", &timestamp.tm_hour,
               &timestamp.tm_min, &timestamp.tm_sec) != 3)
       return false;  // Invalid time format
-   pCurr += 8;
+   curr += 8;
 
 	// Check for Cisco variant - HH:MM:SS.nnn
-	if (*pCurr == '.')
+	if (*curr == '.')
 	{
-		pCurr++;
-		if (isdigit(*pCurr))
-			pCurr++;
-		if (isdigit(*pCurr))
-			pCurr++;
-		if (isdigit(*pCurr))
-			pCurr++;
+		curr++;
+		if (isdigit(*curr))
+			curr++;
+		if (isdigit(*curr))
+			curr++;
+		if (isdigit(*curr))
+			curr++;
 	}
 
-   if (*pCurr != ' ')
+   if (*curr != ' ')
       return false;  // Space should follow timestamp
-   pCurr++;
+   curr++;
 
    // Convert to system time
-   *ptmTime = mktime(&timestamp);
-   if (*ptmTime == ((time_t)-1))
+   *output = mktime(&timestamp);
+   if (*output == ((time_t)-1))
       return false;
 
    // Adjust current position
-   *pnPos += (int)(pCurr - *ppStart);
-   *ppStart = pCurr;
+   *currPos += static_cast<size_t>(curr - *start);
+   *start = curr;
    return true;
 }
 
@@ -545,6 +545,10 @@ static void SyslogParserCallback(const LogParserCallbackData& data)
          .params(pmap)
          .param(_T("repeatCount"), data.repeatCount)
          .param(_T("sourceAddress"), data.logName)
+         .param(_T("severity"), data.severity)
+         .param(_T("facility"), data.facility)
+         .param(_T("tag"), data.source)
+         .param(_T("message"), data.originalText)
          .post();
    }
 }
@@ -554,7 +558,7 @@ static void SyslogParserCallback(const LogParserCallbackData& data)
  */
 static void CreateParserFromConfig()
 {
-	s_parserLock.lock();
+	LockGuard lockGuard(s_parserLock);
 	LogParser *prev = s_parser;
 	s_parser = nullptr;
 #ifdef UNICODE
@@ -591,7 +595,6 @@ static void CreateParserFromConfig()
 		MemFree(xml);
 		delete parsers;
 	}
-	s_parserLock.unlock();
 	delete prev;
 }
 
