@@ -49,15 +49,5 @@ public class ManagementPerspective implements IPerspectiveFactory
       mainFolder.addView("org.netxms.ui.eclipse.objectview.view.tabbed_object_view"); //$NON-NLS-1$
       mainFolder.addView("org.netxms.ui.eclipse.alarmviewer.view.alarm_browser"); //$NON-NLS-1$
       mainFolder.addPlaceholder("*"); //$NON-NLS-1$
-
-      // This layout no longer working in Eclipse 4.x
-      /*
-      final IPlaceholderFolderLayout statusFolder = layout.createPlaceholderFolder("org.netxms.ui.eclipse.folders.status", IPageLayout.BOTTOM, 0.75f, "org.netxms.ui.eclipse.folders.main"); //$NON-NLS-1$ //$NON-NLS-2$
-      statusFolder.addPlaceholder("org.eclipse.ui.views.ProgressView"); //$NON-NLS-1$
-      statusFolder.addPlaceholder("org.netxms.ui.eclipse.serverjobmanager.views.ServerJobManager"); //$NON-NLS-1$
-
-      final IPlaceholderFolderLayout propertiesFolder = layout.createPlaceholderFolder("org.netxms.ui.eclipse.folders.properties", IPageLayout.RIGHT, 0.75f, "org.netxms.ui.eclipse.folders.main"); //$NON-NLS-1$ //$NON-NLS-2$
-      propertiesFolder.addPlaceholder("org.netxms.ui.eclipse.alarmviewer.views.AlarmComments:*"); //$NON-NLS-1$
-      */
-	}
+   }
 }
