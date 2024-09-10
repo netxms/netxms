@@ -34,7 +34,7 @@ public class MapDCIInstance
    private int type;
    private String column;
    private String instance;
-   private Map<Long, Long> mapObjectIdList = new HashMap<Long, Long>();
+   private Map<Long, Integer> mapObjectIdList = new HashMap<Long, Integer>();
 
    /**
     * Constructor for MapDCIInstance for table DCI
@@ -53,7 +53,7 @@ public class MapDCIInstance
       this.setColumn(column);
       this.setInstance(instance);
       this.type = type;
-      mapObjectIdList.put(mapObjectId, 1L);
+      mapObjectIdList.put(mapObjectId, 1);
    }
 
    /**
@@ -71,42 +71,41 @@ public class MapDCIInstance
       this.setColumn("");
       this.setInstance("");
       this.type = type;
-      mapObjectIdList.put(mapObjectId, 1L);
+      mapObjectIdList.put(mapObjectId, 1);
    }
-   
+
    /**
-    * Add object map id to the list
-    * 
-    * @param mapId object map id
+    * Add map object ID to the list of map objects that should be processed. If same ID was already added, increase reference count.
+    *
+    * @param mapId map object ID
     */
    public void addMap(long mapId)
    {
-      if(mapObjectIdList.containsKey(mapId))
-         mapObjectIdList.put(mapId, mapObjectIdList.get(mapId) + 1);
+      Integer count = mapObjectIdList.get(mapId);
+      if (count != null)
+         mapObjectIdList.put(mapId, count + 1);
       else
-         mapObjectIdList.put(mapId, 1L);         
+         mapObjectIdList.put(mapId, 1);
    }
-   
+
    /**
-    * Add object map id to the list
+    * Remove map object ID from the list of map objects that should be processed. Object will be removed from the list only if it's
+    * reference count reaches 0.
     * 
-    * @param mapId object map id
-    * @return 
+    * @param mapId map object ID
+    * @return true if map object ID list is empty (last element was removed)
     */
    public boolean removeMap(long mapId)
    {
-      if(mapObjectIdList.containsKey(mapId))
+      Integer count = mapObjectIdList.get(mapId);
+      if (count != null)
       {
-         mapObjectIdList.put(mapId, mapObjectIdList.get(mapId) - 1);
-         if (mapObjectIdList.get(mapId) == 0)
-         {
+         if (count > 1)
+            mapObjectIdList.put(mapId, count - 1);
+         else
             mapObjectIdList.remove(mapId);
-         }
-      }      
-
-      if (mapObjectIdList.size() == 0)
-         return true;
-      return false;
+      }
+      return mapObjectIdList.isEmpty();
    }
 
    /**

@@ -30,8 +30,10 @@ import org.netxms.client.objects.interfaces.PollingTarget;
 public class WirelessDomain extends GenericObject implements PollingTarget
 {
    /**
-    * @param msg
-    * @param session
+    * Create from NXCP message
+    *
+    * @param msg NXCP message
+    * @param session owning client session
     */
    public WirelessDomain(NXCPMessage msg, NXCSession session)
    {

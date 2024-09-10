@@ -2431,10 +2431,10 @@ public class NXCObjectModificationData
    }
 
    /**
-    * Set map size
+    * Set map size.
     * 
-    * @param width
-    * @param height
+    * @param width map width in logical pixels
+    * @param height map height in logical pixels
     */
    public void setMapSize(int width, int height)
    {
