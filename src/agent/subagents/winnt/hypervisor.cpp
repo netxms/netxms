@@ -33,6 +33,9 @@ static char s_cpuVendorId[16] = "UNKNOWN";
  */
 void ReadCPUVendorId()
 {
+#if _M_ARM64
+   // FIXME: read vendor ID from "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0" in registry
+#else
    int cpuInfo[4];
    __cpuid(cpuInfo, 0);
 
@@ -40,6 +43,7 @@ void ReadCPUVendorId()
    memcpy(&s_cpuVendorId[4], &cpuInfo[3], 4);
    memcpy(&s_cpuVendorId[8], &cpuInfo[2], 4);
    s_cpuVendorId[12] = 0;
+#endif
 }
 
 /**

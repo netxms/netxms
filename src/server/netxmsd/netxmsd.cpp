@@ -28,7 +28,9 @@
 #ifdef _WIN32
 #include <dbghelp.h>
 #include <client/windows/handler/exception_handler.h>
+#if !_M_ARM64
 #include <openssl/applink.c>
+#endif
 #endif
 
 NETXMS_EXECUTABLE_HEADER(netxmsd)
