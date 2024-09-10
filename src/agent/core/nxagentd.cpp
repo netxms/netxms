@@ -158,7 +158,7 @@ uint32_t H_SystemExecute(const shared_ptr<ActionExecutionContext>& context);
 /**
  * OpenSSL APPLINK
  */
-#ifdef _WIN32
+#if defined(_WIN32) && !_M_ARM64
 #include <openssl/applink.c>
 #endif
 

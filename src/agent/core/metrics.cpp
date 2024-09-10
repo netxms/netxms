@@ -269,7 +269,7 @@ static LONG H_SystemIsVirtual(const TCHAR *param, const TCHAR *arg, TCHAR *value
    return SYSINFO_RC_SUCCESS;
 }
 
-#elif defined(_WIN32)
+#elif defined(_WIN32) && !_M_ARM64
 
 /**
  * Handler for System.IsVirtual parameter
@@ -434,11 +434,7 @@ static LONG H_TableList(const TCHAR *cmd, const TCHAR *arg, StringList *value, A
  */
 static NETXMS_SUBAGENT_PARAM s_standardParams[] =
 {
-#ifdef _WIN32
-   { _T("System.IsVirtual"), H_SystemIsVirtual, nullptr, DCI_DT_INT, DCIDESC_SYSTEM_IS_VIRTUAL },
-#endif
-
-#if HAVE_GET_CPUID
+#if HAVE_GET_CPUID || (defined(_WIN32) && !_M_ARM64)
    { _T("System.IsVirtual"), H_SystemIsVirtual, nullptr, DCI_DT_INT, DCIDESC_SYSTEM_IS_VIRTUAL },
 #endif
 
