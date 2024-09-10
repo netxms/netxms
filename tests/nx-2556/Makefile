@@ -14,9 +14,7 @@ _m2_settings.xml:
 check: all _m2_settings.xml
 	incus exec ${VM_NAME_BASE}-gw -- mkdir -p /root/.m2
 	incus file push _m2_settings.xml ${VM_NAME_BASE}-gw/root/.m2/settings.xml
-
-	#rsync -av -e "ssh -F ${VM_NAME_BASE}-gw.ssh_config" build-netxms-java netxms-build-tag.properties ${VM_NAME_BASE}-gw:
-	incus file push build-netxms-java netxms-build-tag.properties ${VM_NAME_BASE}-gw/root/
+	incus file push build-netxms-java ${VM_NAME_BASE}-gw/root/
 
 	incus exec ${VM_NAME_BASE}-gw -- apt install -V -y maven default-jdk
 	incus exec ${VM_NAME_BASE}-gw -- git clone --branch master https://github.com/netxms/netxms.git netxms-java || true
@@ -108,6 +106,7 @@ ${VM_NAME}.created:
 	touch $@
 
 ${VM_NAME}.access.configured: ${VM_NAME}.created ssh_key
+	incus file push build-netxms ${VM_NAME}/root/
 	# Wait for ipv4 IP
 	while incus list --format json ${VM_NAME} | jq --raw-output .[0].state.network.eth0.addresses[0].address | grep -q ':'; do echo -n .; sleep 1; done
 
@@ -139,8 +138,6 @@ ${VM_NAME}.p.installed: ${VM_NAME}.access.configured
 	touch $@
 
 ${VM_NAME}.netxms.installed: ${VM_NAME}.access.configured
-	#rsync -av -e "ssh -F ${VM_NAME}.ssh_config" build-netxms netxms-build-tag.h ${VM_NAME}:
-	incus file push build-netxms netxms-build-tag.h ${VM_NAME}/root/
 	incus exec ${VM_NAME} -- apt install -V -y git autoconf automake libtool bison flex libssl-dev libpcre3-dev rr gdb g++ gcc build-essential sqlite3
 	incus exec ${VM_NAME} -- git clone --branch master https://github.com/netxms/netxms.git || true
 	incus exec ${VM_NAME} -- bash -c "cd netxms && ~/build-netxms"

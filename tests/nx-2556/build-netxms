@@ -4,8 +4,7 @@ set -euo pipefail
 MY_DIR=$(dirname "$(readlink -f "$0")" )
 
 if ! [[ -f config.log ]]; then
-   ./reconf
-   rsync -t "$MY_DIR"/netxms-build-tag.h build/netxms-build-tag.h
+   ./init-source-tree
    CFLAGS='-ggdb3 -O0' \
       CXXFLAGS='-ggdb3 -O0' \
       STRIP=true \
