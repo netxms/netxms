@@ -540,14 +540,16 @@ struct ActionExecutionConfiguration
    TCHAR *snoozeTime;
    TCHAR *timerKey;
    TCHAR *blockingTimerKey;
+   bool active;
 
-   ActionExecutionConfiguration(uint32_t i, TCHAR *d, TCHAR *st, TCHAR *k, TCHAR *bk)
+   ActionExecutionConfiguration(uint32_t i, TCHAR *d, TCHAR *st, TCHAR *k, TCHAR *bk, bool a)
    {
       actionId = i;
       timerDelay = d;
       snoozeTime = st;
       timerKey = k;
       blockingTimerKey = bk;
+      active = a;
    }
 
    ~ActionExecutionConfiguration()
@@ -556,6 +558,11 @@ struct ActionExecutionConfiguration
       MemFree(snoozeTime);
       MemFree(timerKey);
       MemFree(blockingTimerKey);
+   }
+
+   bool isActive() const
+   {
+      return active;
    }
 };
 

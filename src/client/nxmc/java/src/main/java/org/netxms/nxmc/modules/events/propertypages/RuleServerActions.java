@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,6 +63,8 @@ public class RuleServerActions extends RuleBasePropertyPage
    private Button addButton;
 	private Button editButton;
 	private Button deleteButton;
+   private Button activateButton;
+   private Button deactivateButton;
 	
    /**
     * Create property page.
@@ -87,8 +89,8 @@ public class RuleServerActions extends RuleBasePropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
 
-      final String[] columnNames = { i18n.tr("Action"), i18n.tr("Delay"), i18n.tr("Delay timer key"), i18n.tr("Snooze time"), i18n.tr("Snooze/blocking timer key") };
-      final int[] columnWidths = { 300, 90, 200, 90, 200 };
+      final String[] columnNames = { i18n.tr("Action"), i18n.tr("State"), i18n.tr("Delay"), i18n.tr("Delay timer key"), i18n.tr("Snooze time"), i18n.tr("Snooze/blocking timer key") };
+      final int[] columnWidths = { 300, 90, 90, 200, 90, 200 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ActionListLabelProvider(editor.getEditorView()));
@@ -171,12 +173,38 @@ public class RuleServerActions extends RuleBasePropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
       deleteButton.setEnabled(false);
+      
+      activateButton = new Button(buttons, SWT.PUSH);
+      activateButton.setText(i18n.tr("Activate"));
+      activateButton.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            setActive(true);
+         }
+      });
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      activateButton.setLayoutData(rd);
+      
+      deactivateButton = new Button(buttons, SWT.PUSH);
+      deactivateButton.setText(i18n.tr("Deactivate"));
+      deactivateButton.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            setActive(false);
+         }
+      });
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      deactivateButton.setLayoutData(rd);
 		
 		return dialogArea;
 	}
 
-	/**
-	 * Add new event
+   /**
+	 * Add new action
 	 */
 	private void addAction()
 	{
@@ -206,7 +234,7 @@ public class RuleServerActions extends RuleBasePropertyPage
 	}
 
 	/**
-	 * Delete event from list
+	 * Delete action from list
 	 */
 	private void deleteAction()
 	{
@@ -222,6 +250,27 @@ public class RuleServerActions extends RuleBasePropertyPage
          viewer.refresh();
 		}
 	}
+
+   /**
+    * Activate/deactivate action
+    * 
+    * @param deactivate if action should be deactivated
+    */
+   protected void setActive(boolean active)
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      Iterator<?> it = selection.iterator();
+      if (it.hasNext())
+      {
+         while(it.hasNext())
+         {
+            ActionExecutionConfiguration a = (ActionExecutionConfiguration)it.next();
+            a.setActive(active);
+         }
+         viewer.refresh();
+      }
+   }
+
 
    /**
     * @see org.netxms.nxmc.base.propertypages.PropertyPage#applyChanges(boolean)

@@ -871,12 +871,12 @@ public class RuleEditor extends Composite
             ServerAction action = editor.findActionById(c.getActionId());
             if (action != null)
             {
-               clabel.setText(action.getName());
+               clabel.setText(action.getName() + (c.isActive() ? "" : i18n.tr(" (Inactive)")));
                clabel.setImage(editor.getActionLabelProvider().getImage(action));
             }
             else
             {
-               clabel.setText("[" + Long.toString(c.getActionId()) + "]");
+               clabel.setText("[" + Long.toString(c.getActionId()) + "]"+ (c.isActive() ? "" : i18n.tr(" (Inactive)")));
             }
             if (!c.getTimerDelay().isEmpty())
             {

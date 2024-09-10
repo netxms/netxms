@@ -24,12 +24,13 @@ import org.netxms.base.NXCPMessage;
  * Action execution data
  */
 public class ActionExecutionConfiguration
-{
+{   
    private long actionId;
    private String timerDelay;
    private String snoozeTime;
    private String timerKey;
    private String blockingTimerKey;
+   private boolean active;
    
    /**
     * Create new action execution configuration without timer delay and key.
@@ -43,6 +44,7 @@ public class ActionExecutionConfiguration
       this.snoozeTime = null;
       this.timerKey = null;
       this.blockingTimerKey = null;
+      active = true;
    }
    
    /**
@@ -61,6 +63,7 @@ public class ActionExecutionConfiguration
       this.snoozeTime = snoozeTime;
       this.timerKey = timerKey;
       this.blockingTimerKey = blockingTimerKey;
+      active = true;
    }
 
    /**
@@ -76,6 +79,7 @@ public class ActionExecutionConfiguration
       timerKey = msg.getFieldAsString(baseId + 2);
       blockingTimerKey = msg.getFieldAsString(baseId + 3);
       snoozeTime = msg.getFieldAsString(baseId + 4);
+      active = msg.getFieldAsBoolean(baseId + 5);
    }
 
    /**
@@ -90,6 +94,7 @@ public class ActionExecutionConfiguration
       this.snoozeTime = src.snoozeTime;
       this.timerKey = src.timerKey;
       this.blockingTimerKey = src.blockingTimerKey;
+      this.active = src.active;
    }
 
    /**
@@ -105,6 +110,7 @@ public class ActionExecutionConfiguration
       msg.setField(baseId + 2, timerKey);
       msg.setField(baseId + 3, blockingTimerKey);
       msg.setField(baseId + 4, snoozeTime);
+      msg.setField(baseId + 5, active);
    }
    
    /**
@@ -192,4 +198,22 @@ public class ActionExecutionConfiguration
    {
       this.snoozeTime = snoozeTime;
    }
+   
+   /**
+    * If action should be executed
+    * 
+    * @return true if is active
+    */
+   public boolean isActive()
+   {
+      return active;
+   }
+
+   /**
+    * Set if action should be active
+    */
+   public void setActive(boolean active)
+   {
+      this.active = active;
+   }   
 }

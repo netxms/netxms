@@ -23,14 +23,17 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.ServerAction;
 import org.netxms.client.events.ActionExecutionConfiguration;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.actions.views.helpers.DecoratingActionLabelProvider;
 import org.netxms.nxmc.modules.events.views.EventProcessingPolicyEditor;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Label provider for action list on action configuration page
  */
 public class ActionListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
+   private final I18n i18n = LocalizationHelper.getI18n(ActionListLabelProvider.class);
    EventProcessingPolicyEditor policyEditor;
    DecoratingActionLabelProvider actionLabelProvider;
 
@@ -69,12 +72,14 @@ public class ActionListLabelProvider extends LabelProvider implements ITableLabe
             ServerAction action = policyEditor.findActionById(c.getActionId());
             return (action != null) ? actionLabelProvider.getText(action) : null;
          case 1:
-            return c.getTimerDelay();
+            return c.isActive() ? i18n.tr("Active") : i18n.tr("Inactive");
          case 2:
-            return c.getTimerKey();
+            return c.getTimerDelay();
          case 3:
-            return c.getSnoozeTime();
+            return c.getTimerKey();
          case 4:
+            return c.getSnoozeTime();
+         case 5:
             return c.getBlockingTimerKey();
       }
       return null;

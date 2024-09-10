@@ -53,7 +53,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.actions.views.helpers.BaseActionLabelProvider;
+import org.netxms.nxmc.modules.actions.views.helpers.DecoratingActionLabelProvider;
 import org.netxms.nxmc.modules.events.views.helpers.RuleClipboard;
 import org.netxms.nxmc.modules.events.widgets.RuleEditor;
 import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
@@ -87,7 +87,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    private RuleClipboard clipboard = new RuleClipboard();
 
    private BaseObjectLabelProvider objectLabelProvider;
-   private BaseActionLabelProvider actionLabelProvider;
+   private DecoratingActionLabelProvider actionLabelProvider;
 
    private Font normalFont;
    private Font boldFont;
@@ -141,7 +141,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       imageEndDowntime = ResourceManager.getImage("icons/epp/end-downtime.png");
 
       objectLabelProvider = new BaseObjectLabelProvider();
-      actionLabelProvider = new BaseActionLabelProvider();
+      actionLabelProvider = new DecoratingActionLabelProvider();
 
       scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
 
@@ -717,7 +717,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    /**
     * @return the actionLabelProvider
     */
-   public BaseActionLabelProvider getActionLabelProvider()
+   public DecoratingActionLabelProvider getActionLabelProvider()
    {
       return actionLabelProvider;
    }

@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.10 to 51.11
+ */
+static bool H_UpgradeFromV10()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE policy_action_list ADD active char(1)\n")
+      _T("UPDATE policy_action_list SET active='1'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("policy_action_list"), _T("active")));
+
+   CHK_EXEC(SetMinorSchemaVersion(11));
+   return true;
+}
+
+/**
  * Upgrade from 51.9 to 51.10
  */
 static bool H_UpgradeFromV9()
@@ -249,6 +265,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 10,  51, 11, H_UpgradeFromV10  },
    { 9,  51, 10, H_UpgradeFromV9  },
    { 8,  51, 9,  H_UpgradeFromV8  },
    { 7,  51, 8,  H_UpgradeFromV7  },

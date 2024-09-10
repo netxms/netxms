@@ -1475,7 +1475,8 @@ CREATE TABLE policy_action_list
   timer_delay varchar(127) null,
   timer_key varchar(127) null,
   blocking_timer_key varchar(127) null,
-  snooze_time varchar(127) null
+  snooze_time varchar(127) null, 
+  active char(1) not null
 ) TABLE_TYPE;
 
 /**
