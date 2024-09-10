@@ -20,7 +20,14 @@ check: all _m2_settings.xml
 
 	incus exec ${VM_NAME_BASE}-gw -- apt install -V -y maven default-jdk
 	incus exec ${VM_NAME_BASE}-gw -- git clone --branch master https://github.com/netxms/netxms.git netxms-java || true
+	incus exec ${VM_NAME_BASE}-gw -- pkill nxagentd
+	incus exec ${VM_NAME_BASE}-gw -- pkill netxmsd
+	incus exec ${VM_NAME_BASE}-gw --cwd /root/netxms -- make uninstall
 	incus exec ${VM_NAME_BASE}-gw --cwd /root/netxms-java -- /root/build-netxms-java
+	incus exec ${VM_NAME_BASE}-gw -- nxagentd -d
+	#incus exec ${VM_NAME_BASE}-gw -- nxdbmgr init
+	#echo "UPDATE users SET flags = 0 WHERE name = 'admin';" | incus exec ${VM_NAME} -- sqlite3 /usr/local/var/lib/netxms/netxms.db
+	incus exec ${VM_NAME_BASE}-gw -- netxmsd -d
 	incus exec ${VM_NAME_BASE}-gw --cwd /root/netxms-java -- mvn -f tests/integration/pom.xml test -P integration-test -fae --debug -Dsurefire.rerunFailingTestsCount=10
 
 all.created:
