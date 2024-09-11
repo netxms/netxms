@@ -194,4 +194,24 @@ public abstract class TableRowAction extends Action
          addSubItems(item, data, numColumns);
       }
    }
+
+   /**
+    * Get column viewer associated with this action.
+    *
+    * @return column viewer associated with this action
+    */
+   public ColumnViewer getViewer()
+   {
+      return viewer;
+   }
+
+   /**
+    * Change viewer association for this action.
+    *
+    * @param viewer new viewer
+    */
+   public void setViewer(ColumnViewer viewer)
+   {
+      this.viewer = viewer;
+   }
 }
