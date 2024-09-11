@@ -40,9 +40,9 @@ bool LinkLayerNeighbors::isDuplicate(const LL_NEIGHBOR_INFO& info)
 		   }
          return true;
 		}
-      if (n->ifRemote == info.ifRemote)
+      if ((n->ifRemote == info.ifRemote) && (n->objectId == info.objectId))
       {
-         if ((n->ifLocal != info.ifLocal) || (n->objectId != info.objectId))
+         if (n->ifLocal != info.ifLocal)
          {
             nxlog_debug_tag(DEBUG_TAG_TOPO_LINK, 5, _T("LinkLayerNeighbors::isDuplicate: inconsistent data: %s(ifLocal=%d remote=%d/%d) %s(ifLocal=%d remote=%d/%d)"),
                         GetLinkLayerProtocolName(n->protocol), n->ifLocal, n->objectId, n->ifRemote,
