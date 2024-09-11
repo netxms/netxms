@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -123,8 +123,8 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
    protected Action actionShowDisabled;
    protected Action actionShowUnsupported;
    protected Action actionShowHidden;
-   protected Action actionExportToCsv;
-   protected Action actionExportAllToCsv;
+   protected ExportToCsvAction actionExportToCsv;
+   protected ExportToCsvAction actionExportAllToCsv;
    protected Action actionCopyToClipboard;
    protected Action actionCopyValueToClipboard;
    protected Action actionCopyDciName;

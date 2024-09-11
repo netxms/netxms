@@ -269,6 +269,10 @@ public class DataCollectionView extends BaseDataCollectionView
          }
       });
 
+      // Update viewer in export to CSV actions
+      actionExportToCsv.setViewer(viewer);
+      actionExportAllToCsv.setViewer(viewer);
+
       createContextMenu();
 
       hideModificationWarnings = ds.getAsBoolean(configPrefix + ".hideModificationWarnings", false); 
