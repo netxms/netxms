@@ -839,10 +839,6 @@ void NXSL_VM::execute()
                   cp->m_operand.m_variable = pVar;
                }
             }
-            else if (strstr(cp->m_operand.m_identifier->value, "::"))
-            {
-
-            }
             else
             {
                error(NXSL_ERR_NO_SUCH_CONSTANT);
