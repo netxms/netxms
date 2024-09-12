@@ -142,7 +142,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	protected int routingAlgorithm = NetworkMapLink.ROUTING_DIRECT;
 	protected boolean allowManualLayout = false; // True if manual layout can be switched on
 	protected boolean automaticLayoutEnabled = true; // Current layout mode - automatic or manual
-	protected boolean editModeEnabled = false; //default true for adhock maps and false for predefined
+	protected boolean objectMoveLocked = true; //default false for adhock maps and true for predefined
 	protected boolean readOnly = true;
 	protected boolean saveSchedulted = false;
 
@@ -276,7 +276,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 						if (selectionType == SELECTION_LINKS)
 						{
 							NetworkMapLink link = (NetworkMapLink)currentSelection.getFirstElement();
-							if (link.getRouting() == NetworkMapLink.ROUTING_BENDPOINTS && editModeEnabled)
+							if (link.getRouting() == NetworkMapLink.ROUTING_BENDPOINTS && !objectMoveLocked)
 							{
 								bendpointEditor = new BendpointEditor(link,
 										(GraphConnection)viewer.getGraphControl().getSelection().get(0), viewer);
@@ -313,7 +313,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 				{
 					doubleClickHandlers.handleDoubleClick((AbstractObject)currentSelection.getFirstElement());
 				}
-				else if (selectionType == SELECTION_LINKS && !editModeEnabled)
+				else if (selectionType == SELECTION_LINKS && objectMoveLocked)
 				{
 				   openLinkDci();
 				}
@@ -683,11 +683,11 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		};
 		actionEnableAutomaticLayout.setChecked(automaticLayoutEnabled);
 		
-		actionEditMode = new Action(i18n.tr("&Edit mode"), Action.AS_CHECK_BOX) {
+		actionEditMode = new Action(i18n.tr("&Unlock object move"), Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
-            setEditMode(actionEditMode.isChecked());
+            lockObjectMove(!actionEditMode.isChecked());
          }
       };
       actionEditMode.setImageDescriptor(SharedIcons.EDIT);
@@ -876,11 +876,10 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	 * 
 	 * @param checked true to enable
 	 */
-   protected void setEditMode(boolean checked)
+   protected void lockObjectMove(boolean checked)
    {
-      editModeEnabled = checked;
-      viewer.setDraggingEnabled(editModeEnabled);
-      updateControlBars();
+      objectMoveLocked = checked;
+      viewer.setDraggingEnabled(!objectMoveLocked);
    }
 
    /**
@@ -921,65 +920,56 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    protected void fillLocalMenu(IMenuManager manager)
 	{
       MenuManager zoom = new MenuManager(i18n.tr("&Zoom"));
-		for(int i = 0; i < actionZoomTo.length; i++)
-			zoom.add(actionZoomTo[i]);
+      for(int i = 0; i < actionZoomTo.length; i++)
+         zoom.add(actionZoomTo[i]);
 
       if (!readOnly)
       {
          manager.add(actionEditMode);
          manager.add(new Separator());
       }
-      
-		if (editModeEnabled)
-		{
-         MenuManager figureType = new MenuManager(i18n.tr("&Display objects as"));
-   		figureType.add(actionFiguresIcons);
-   		figureType.add(actionFiguresSmallLabels);
-   		figureType.add(actionFiguresLargeLabels);
-   		figureType.add(actionFiguresStatusIcons);
-   		figureType.add(actionFiguresFloorPlan);
-   
-   		manager.add(actionShowStatusBackground);
-   		manager.add(actionShowStatusIcon);
-   		manager.add(actionShowStatusFrame);
-   		manager.add(actionShowLinkDirection);
-         manager.add(actionTranslucentLabelBkgnd);
-   		manager.add(new Separator());
-   		manager.add(createLayoutSubmenu());
-   		manager.add(createRoutingSubmenu());
-         manager.add(figureType);
-         manager.add(new Separator());
-		}
-		
+
+      MenuManager figureType = new MenuManager(i18n.tr("&Display objects as"));
+      figureType.add(actionFiguresIcons);
+      figureType.add(actionFiguresSmallLabels);
+      figureType.add(actionFiguresLargeLabels);
+      figureType.add(actionFiguresStatusIcons);
+      figureType.add(actionFiguresFloorPlan);
+
+      manager.add(actionShowStatusBackground);
+      manager.add(actionShowStatusIcon);
+      manager.add(actionShowStatusFrame);
+      manager.add(actionShowLinkDirection);
+      manager.add(actionTranslucentLabelBkgnd);
+      manager.add(new Separator());
+      manager.add(createLayoutSubmenu());
+      manager.add(createRoutingSubmenu());
+      manager.add(figureType);
+      manager.add(new Separator());
+
       manager.add(actionZoomIn);
       manager.add(actionZoomOut);
       manager.add(actionZoomFit);
-		manager.add(zoom);
-		
-      if (editModeEnabled)
-      {
-         manager.add(new Separator()); 
-         manager.add(actionHSpanIncrease);
-         manager.add(actionHSpanDecrease);
-         manager.add(actionHSpanFull);
-         manager.add(actionVSpanIncrease);
-         manager.add(actionVSpanDecrease);         
-   		manager.add(new Separator());
-   		manager.add(actionAlignToGrid);
-   		manager.add(actionSnapToGrid);
-   		manager.add(actionShowGrid);
-         manager.add(new Separator()); 
-         manager.add(actionHideLinkLabels); 
-         manager.add(actionHideLinks);
-      }
-      manager.add(new Separator());      
+      manager.add(zoom);
+
+      manager.add(new Separator());
+      manager.add(actionHSpanIncrease);
+      manager.add(actionHSpanDecrease);
+      manager.add(actionHSpanFull);
+      manager.add(actionVSpanIncrease);
+      manager.add(actionVSpanDecrease);
+      manager.add(new Separator());
+      manager.add(actionAlignToGrid);
+      manager.add(actionSnapToGrid);
+      manager.add(actionShowGrid);
+      manager.add(new Separator());
+      manager.add(actionHideLinkLabels);
+      manager.add(actionHideLinks);
+      manager.add(new Separator());
       manager.add(actionCopyImage);
       manager.add(actionSaveImage);
-      if (editModeEnabled)
-      {
-   		manager.add(new Separator());
-         manager.add(actionSelectAllObjects);
-		}
+      manager.add(new Separator());
+      manager.add(actionSelectAllObjects);
 	}
 
    /**
@@ -988,26 +978,23 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
 	{
-		manager.add(actionZoomIn);
-		manager.add(actionZoomOut);
+      manager.add(actionZoomIn);
+      manager.add(actionZoomOut);
       manager.add(actionZoomFit);
       manager.add(new Separator());
-      if (editModeEnabled)
-      {
-         manager.add(actionHSpanIncrease);
-         manager.add(actionHSpanDecrease);
-         manager.add(actionHSpanFull);
-         manager.add(actionVSpanIncrease);
-         manager.add(actionVSpanDecrease);         
-         manager.add(new Separator());
-   		manager.add(actionAlignToGrid);
-   		manager.add(actionSnapToGrid);
-   		manager.add(actionShowGrid);
-         manager.add(new Separator()); 
-         manager.add(actionHideLinkLabels);  
-         manager.add(actionHideLinks);
-   		manager.add(new Separator());
-      }
+      manager.add(actionHSpanIncrease);
+      manager.add(actionHSpanDecrease);
+      manager.add(actionHSpanFull);
+      manager.add(actionVSpanIncrease);
+      manager.add(actionVSpanDecrease);
+      manager.add(new Separator());
+      manager.add(actionAlignToGrid);
+      manager.add(actionSnapToGrid);
+      manager.add(actionShowGrid);
+      manager.add(new Separator());
+      manager.add(actionHideLinkLabels);
+      manager.add(actionHideLinks);
+      manager.add(new Separator());
       if (!readOnly)
          manager.add(actionEditMode);
       manager.add(actionCopyImage);
@@ -1091,47 +1078,41 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	protected void fillMapContextMenu(IMenuManager manager)
 	{
       MenuManager zoom = new MenuManager(i18n.tr("&Zoom"));
-		for(int i = 0; i < actionZoomTo.length; i++)
-			zoom.add(actionZoomTo[i]);
-      
-      if (editModeEnabled)
-      {
-         MenuManager figureType = new MenuManager(i18n.tr("&Display objects as"));
-   		figureType.add(actionFiguresIcons);
-   		figureType.add(actionFiguresSmallLabels);
-   		figureType.add(actionFiguresLargeLabels);
-         figureType.add(actionFiguresStatusIcons);
-         figureType.add(actionFiguresFloorPlan);
-   
-   		manager.add(actionShowStatusBackground);
-   		manager.add(actionShowStatusIcon);
-   		manager.add(actionShowStatusFrame);
-   		manager.add(actionShowLinkDirection);
-         manager.add(actionTranslucentLabelBkgnd);
-   		manager.add(new Separator());
-   		manager.add(createLayoutSubmenu());
-   		manager.add(createRoutingSubmenu());
-         manager.add(figureType);
-         manager.add(new Separator());
-      }
-      
-		manager.add(actionZoomIn);
+      for(int i = 0; i < actionZoomTo.length; i++)
+         zoom.add(actionZoomTo[i]);
+
+      MenuManager figureType = new MenuManager(i18n.tr("&Display objects as"));
+      figureType.add(actionFiguresIcons);
+      figureType.add(actionFiguresSmallLabels);
+      figureType.add(actionFiguresLargeLabels);
+      figureType.add(actionFiguresStatusIcons);
+      figureType.add(actionFiguresFloorPlan);
+
+      manager.add(actionShowStatusBackground);
+      manager.add(actionShowStatusIcon);
+      manager.add(actionShowStatusFrame);
+      manager.add(actionShowLinkDirection);
+      manager.add(actionTranslucentLabelBkgnd);
+      manager.add(new Separator());
+      manager.add(createLayoutSubmenu());
+      manager.add(createRoutingSubmenu());
+      manager.add(figureType);
+      manager.add(new Separator());
+
+      manager.add(actionZoomIn);
       manager.add(actionZoomOut);
       manager.add(actionZoomFit);
-		manager.add(zoom);
-      
-      if (editModeEnabled)
-      {
-   		manager.add(new Separator());
-   		manager.add(actionAlignToGrid);
-   		manager.add(actionSnapToGrid);
-   		manager.add(actionShowGrid);
-         manager.add(new Separator()); 
-         manager.add(actionHideLinkLabels);
-         manager.add(actionHideLinks);
-   		manager.add(new Separator());
-         manager.add(actionSelectAllObjects);
-      }
+      manager.add(zoom);
+
+      manager.add(new Separator());
+      manager.add(actionAlignToGrid);
+      manager.add(actionSnapToGrid);
+      manager.add(actionShowGrid);
+      manager.add(new Separator());
+      manager.add(actionHideLinkLabels);
+      manager.add(actionHideLinks);
+      manager.add(new Separator());
+      manager.add(actionSelectAllObjects);
 	}
 
 	/**

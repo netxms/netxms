@@ -192,7 +192,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    {
       Boolean cachedFlag = readOnlyFlagsCache.get(object.getObjectId());
       actionEditMode.setChecked(false);
-      setEditMode(false);
+      lockObjectMove(true);
       if (cachedFlag != null)
       {
          readOnly = cachedFlag;
@@ -359,7 +359,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    private void reconfigureViewer()
    {
       allowManualLayout = !readOnly;
-      viewer.setDraggingEnabled(!readOnly && editModeEnabled);
+      viewer.setDraggingEnabled(!readOnly && !objectMoveLocked);
 
       NetworkMap mapObject = getMapObject();
       if (mapObject == null)
@@ -379,7 +379,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
-            actionLinkObjects.setEnabled(!readOnly && editModeEnabled && (((IStructuredSelection)event.getSelection()).size() == 2));
+            actionLinkObjects.setEnabled(!readOnly && (((IStructuredSelection)event.getSelection()).size() == 2));
          }
       });
 
@@ -402,7 +402,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 			@Override
 			public boolean validateDrop(Object target, int operation, TransferData transferType)
 			{
-            if (readOnly || !editModeEnabled || !LocalSelectionTransfer.getTransfer().isSupportedType(transferType))
+            if (readOnly || !LocalSelectionTransfer.getTransfer().isSupportedType(transferType))
 					return false;
 
 				IStructuredSelection selection = (IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection();
@@ -671,7 +671,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	@Override
 	protected void fillMapContextMenu(IMenuManager manager)
 	{
-	   if (!readOnly && editModeEnabled)
+	   if (!readOnly)
 	   {
    		manager.add(actionAddObjectMenu);
    		manager.add(actionAddDCIContainer);		
@@ -690,7 +690,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	@Override
 	protected void fillObjectContextMenu(IMenuManager manager, boolean isPartial)
 	{
-	   if (!readOnly && editModeEnabled)
+	   if (!readOnly)
 	   {
    		int size = ((IStructuredSelection)viewer.getSelection()).size();
    		if (size == 2)
@@ -707,7 +707,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	@Override
 	protected void fillLinkContextMenu(IMenuManager manager)
 	{
-	   if (readOnly || !editModeEnabled)
+	   if (readOnly)
 	   {
 	      super.fillLinkContextMenu(manager);
 	      return;
@@ -729,7 +729,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
     */
 	protected void fillElementContextMenu(IMenuManager manager)
 	{
-	   if (!readOnly && editModeEnabled)
+	   if (!readOnly)
 	   {
    		manager.add(actionRemove);
    		Object o = ((IStructuredSelection)viewer.getSelection()).getFirstElement();
@@ -760,7 +760,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	@Override
    protected void fillLocalMenu(IMenuManager manager)
 	{
-	   if (!readOnly && editModeEnabled)
+	   if (!readOnly)
 	   {
    		manager.add(actionAddObject);
    		manager.add(actionLinkObjects);
@@ -778,7 +778,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	@Override
    protected void fillLocalToolBar(IToolBarManager manager)
 	{
-	   if (!readOnly && editModeEnabled)
+	   if (!readOnly)
 	   {
          manager.add(actionAddObject);
    		manager.add(actionLinkObjects);

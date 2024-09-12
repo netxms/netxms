@@ -743,7 +743,10 @@ public class ExtendedGraphViewer extends GraphViewer
 			{
 				gridFigure = new GridFigure();
 				backgroundLayer.add(gridFigure, null, 1);
-				gridFigure.setSize(backgroundFigure.getSize());
+				if (backgroundFigure.getSize().equals(new Dimension(10, 10)))//check if it is adhock map
+				   gridFigure.setSize(backgroundLayer.getSize());
+				else
+               gridFigure.setSize(backgroundFigure.getSize());	
 			}
 		}
 		else

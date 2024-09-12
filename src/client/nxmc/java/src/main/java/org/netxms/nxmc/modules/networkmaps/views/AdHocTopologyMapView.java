@@ -41,7 +41,7 @@ public abstract class AdHocTopologyMapView extends AbstractNetworkMapView
    {
       super(name, image, id);
       this.rootObjectId = rootObjectId;
-      editModeEnabled = true;
+      objectMoveLocked = false;
       readOnly = true;
    }
 

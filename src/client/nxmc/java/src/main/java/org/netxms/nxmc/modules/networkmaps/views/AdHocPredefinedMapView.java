@@ -56,7 +56,7 @@ public class AdHocPredefinedMapView extends PredefinedMapView
    protected AdHocPredefinedMapView()
    {
       super();
-      editModeEnabled = true;
+      objectMoveLocked = false;
       readOnly = true;
    }
 
