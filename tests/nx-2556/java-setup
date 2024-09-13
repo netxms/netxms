@@ -1,0 +1,23 @@
+#!/bin/bash
+set -euo pipefail
+set -x
+
+incus file push _m2_settings.xml nx-2556-gw/root/.m2/settings.xml
+
+apt install -y maven default-jdk
+
+cd ~/netxms
+
+./reconf
+cp ~/netxms-build-tag.{h,properties} build/
+CFLAGS='-ggdb3 -O0' \
+   CXXFLAGS='-ggdb3 -O0' \
+   STRIP=true \
+   ./configure --with-clang --with-server --with-sqlite --with-tests --with-agent --with-client --enable-debug --with-sdk --with-client --with-jdk=/usr/lib/jvm/default-java --enable-sanitizer
+make -j4 install
+
+for x in src/{java-common/netxms-base,client/java/netxms-client,mobile-agent/java}/pom.xml; do
+  mvn -f "$x" clean install -DskipTests -Dmaven.javadoc.skip=true || break;
+done
+
+mvn -f tests/integration/pom.xml test -P integration-test -fae --debug
