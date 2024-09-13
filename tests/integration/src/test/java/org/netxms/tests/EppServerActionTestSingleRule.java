@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ScheduledTask;
@@ -240,6 +241,44 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       sleep2000();
       
       assertNotNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));//make sure that the script has executed, and the entry has appeared in the PS 
+      
+      //to run next tests
+      session.deletePersistentStorageValue("Key to set A");
+      assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
+      
+      session.closeEventProcessingPolicy();
+   }
+   
+   // +------------------------------+
+   //|   DELAY TIME  |   DELAY KEY   |
+   //|               |               |
+   //|_______________|_______________|
+   //| SNOOZE TIME   |BLOCKING KEY   |
+   //|               |               |
+   //|_______________|_______________|
+   //|        CANCELATION KEY        |
+   //|                               |
+   //+-------------------------------+
+   // Action inactive
+   @Test
+   public void testCreateServerActionInactive() throws Exception
+   {
+      final NXCSession session = connectAndLogin();
+      session.syncObjects();
+      AbstractObject node = TestHelper.findManagementServer(session);
+      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+
+      EventProcessingPolicyRule testRuleA = createTestRule(session, node, policy, TEMPLATE_NAME_A, COMMENT_FOR_SEARCHING_RULE_A);
+      ActionExecutionConfiguration action = createActionExecution(session, testRuleA, SCRIPT_NAME_FOR_SEARCHING_A, SOURCE_FOR_RULE_A, ACTION_NAME_A);
+      action.setActive(false);
+      session.saveEventProcessingPolicy(policy);
+
+      assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));// make sure that PS doesn't contain an entry with the given key
+
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
+      sleep2000();
+      
+      assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));//make sure that the script has not been executed, and the entry in not in PS 
       
       //to run next tests
       session.deletePersistentStorageValue("Key to set A");
@@ -810,5 +849,17 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       assertEquals(countScheduledTasks(session, TIMER_KEY), 0);
 
       session.closeEventProcessingPolicy();
+   }
+   
+   /**
+    * Cleanup before tests
+    * @throws Exception
+    */
+   @BeforeEach
+   void cleanupBeforeTest() throws Exception
+   {
+      final NXCSession session = connectAndLogin();
+      session.deletePersistentStorageValue("Key to set A");
+      session.deletePersistentStorageValue("Key to set A2");      
    }
 }
