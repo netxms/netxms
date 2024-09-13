@@ -173,7 +173,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    protected Action actionHideLinkLabels;
    protected Action actionHideLinks;
    protected Action actionSelectAllObjects;
-   protected Action actionEditMode;
+   protected Action actionLock;
    protected Action actionHSpanIncrease;
    protected Action actionHSpanDecrease;
    protected Action actionHSpanFull;
@@ -683,14 +683,15 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		};
 		actionEnableAutomaticLayout.setChecked(automaticLayoutEnabled);
 		
-		actionEditMode = new Action(i18n.tr("&Unlock object move"), Action.AS_CHECK_BOX) {
+		actionLock = new Action(i18n.tr("Lock"), Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
-            lockObjectMove(!actionEditMode.isChecked());
+            lockObjectMove(actionLock.isChecked());
          }
       };
-      actionEditMode.setImageDescriptor(SharedIcons.EDIT);
+      actionLock.setImageDescriptor(ResourceManager.getImageDescriptor("icons/netmap/lock.png"));
+      actionLock.setEnabled(true);
 
 		actionOpenDrillDownObject = new Action("Open drill-down object") {
 			@Override
@@ -925,7 +926,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 
       if (!readOnly)
       {
-         manager.add(actionEditMode);
+         manager.add(actionLock);
          manager.add(new Separator());
       }
 
@@ -996,7 +997,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       manager.add(actionHideLinks);
       manager.add(new Separator());
       if (!readOnly)
-         manager.add(actionEditMode);
+         manager.add(actionLock);
       manager.add(actionCopyImage);
 	}
 
