@@ -1,5 +1,5 @@
 /**
- * NetXMS - open source network management system
+о * NetXMS - open source network management system
  * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
@@ -87,6 +87,7 @@ public class RuleServerActions extends RuleBasePropertyPage
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
+		layout.numColumns = 2;
       dialogArea.setLayout(layout);
 
       final String[] columnNames = { i18n.tr("Action"), i18n.tr("State"), i18n.tr("Delay"), i18n.tr("Delay timer key"), i18n.tr("Snooze time"), i18n.tr("Snooze/blocking timer key") };
@@ -121,20 +122,58 @@ public class RuleServerActions extends RuleBasePropertyPage
       gridData.horizontalAlignment = GridData.FILL;
       gridData.grabExcessHorizontalSpace = true;
       gridData.heightHint = 0;
+      gridData.horizontalSpan = 2;
       viewer.getControl().setLayoutData(gridData);
-
-      Composite buttons = new Composite(dialogArea, SWT.NONE);
+      
+      Composite leftButtons = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
+      buttonLayout.type = SWT.HORIZONTAL;
+      buttonLayout.pack = false;
+      buttonLayout.marginWidth = 0;
+      buttonLayout.marginLeft = 0;
+      leftButtons.setLayout(buttonLayout);
+      gridData = new GridData();
+      gridData.horizontalAlignment = SWT.LEFT;
+      leftButtons.setLayoutData(gridData);
+      
+      activateButton = new Button(leftButtons, SWT.PUSH);
+      activateButton.setText(i18n.tr("&Activate"));
+      activateButton.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            setActive(true);
+         }
+      });
+      RowData rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      activateButton.setLayoutData(rd);
+      
+      deactivateButton = new Button(leftButtons, SWT.PUSH);
+      deactivateButton.setText(i18n.tr("&Deactivate"));
+      deactivateButton.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            setActive(false);
+         }
+      });
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      deactivateButton.setLayoutData(rd);
+
+      Composite rightButtons = new Composite(dialogArea, SWT.NONE);
+      buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
       buttonLayout.pack = false;
       buttonLayout.marginLeft = 0;
       buttonLayout.marginRight = 0;
-      buttons.setLayout(buttonLayout);
+      rightButtons.setLayout(buttonLayout);
       gridData = new GridData();
       gridData.horizontalAlignment = SWT.RIGHT;
-      buttons.setLayoutData(gridData);
+      rightButtons.setLayoutData(gridData);
 
-      addButton = new Button(buttons, SWT.PUSH);
+      addButton = new Button(rightButtons, SWT.PUSH);
       addButton.setText(i18n.tr("&Add..."));
       addButton.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -143,11 +182,11 @@ public class RuleServerActions extends RuleBasePropertyPage
 				addAction();
 			}
       });
-      RowData rd = new RowData();
+      rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
 
-      editButton = new Button(buttons, SWT.PUSH);
+      editButton = new Button(rightButtons, SWT.PUSH);
       editButton.setText(i18n.tr("&Edit..."));
       editButton.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -160,7 +199,7 @@ public class RuleServerActions extends RuleBasePropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       editButton.setLayoutData(rd);
       
-      deleteButton = new Button(buttons, SWT.PUSH);
+      deleteButton = new Button(rightButtons, SWT.PUSH);
       deleteButton.setText(i18n.tr("Delete"));
       deleteButton.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -173,32 +212,6 @@ public class RuleServerActions extends RuleBasePropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
       deleteButton.setEnabled(false);
-      
-      activateButton = new Button(buttons, SWT.PUSH);
-      activateButton.setText(i18n.tr("Activate"));
-      activateButton.addSelectionListener(new SelectionAdapter() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            setActive(true);
-         }
-      });
-      rd = new RowData();
-      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      activateButton.setLayoutData(rd);
-      
-      deactivateButton = new Button(buttons, SWT.PUSH);
-      deactivateButton.setText(i18n.tr("Deactivate"));
-      deactivateButton.addSelectionListener(new SelectionAdapter() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            setActive(false);
-         }
-      });
-      rd = new RowData();
-      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      deactivateButton.setLayoutData(rd);
 		
 		return dialogArea;
 	}

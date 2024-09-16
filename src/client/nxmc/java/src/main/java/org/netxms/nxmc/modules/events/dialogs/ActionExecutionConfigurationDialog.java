@@ -22,8 +22,11 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.events.ActionExecutionConfiguration;
 import org.netxms.nxmc.base.widgets.LabeledText;
@@ -43,6 +46,7 @@ public class ActionExecutionConfigurationDialog extends Dialog
    private LabeledText timerKey;
    private LabeledText snoozeTime;
    private LabeledText blockingTimerKey;
+   private Button checkActive;
 
    /**
     * @param parentShell
@@ -77,11 +81,24 @@ public class ActionExecutionConfigurationDialog extends Dialog
       layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
       layout.numColumns = 2;
       dialogArea.setLayout(layout);
+
+
+      Group activeGroup = new Group(dialogArea, SWT.NONE);
+      activeGroup.setLayout(new RowLayout(SWT.VERTICAL));
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      activeGroup.setLayoutData(gd);
+      
+      checkActive = new Button(activeGroup, SWT.CHECK);
+      checkActive.setText("Active");
+      checkActive.setSelection(configuration.isActive());
       
       timerDelay = new LabeledText(dialogArea, SWT.NONE);
       timerDelay.setLabel(i18n.tr("Delay"));
       timerDelay.setText(configuration.getTimerDelay());
-      GridData gd = new GridData();
+      gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.widthHint = 200;
       timerDelay.setLayoutData(gd);
@@ -124,6 +141,7 @@ public class ActionExecutionConfigurationDialog extends Dialog
       configuration.setTimerKey(timerKey.getText().trim());
       configuration.setSnoozeTime(snoozeTime.getText().trim());
       configuration.setBlockingTimerKey(blockingTimerKey.getText().trim());
+      configuration.setActive(checkActive.getSelection());
       super.okPressed();
    }
 }
