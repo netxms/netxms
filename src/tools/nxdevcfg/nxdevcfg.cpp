@@ -27,7 +27,7 @@
 
 NETXMS_EXECUTABLE_HEADER(nxdevcfg)
 
-#define VALID_OPTIONS "bcCdDeEilLoOpPStTuUX"
+#define VALID_OPTIONS "bcCdDeEijlLoOpPStTuUX"
 
 /**
  * Externals
@@ -65,6 +65,7 @@ static void ShowHelp()
 	       "   -d, --datadir         Data directory\n"
 	       "   -e, --exec-ldflags    Linker flags (all except -l) for executables\n"
 	       "   -E, --exec-libs       Linker flags (only -l) for executables\n"
+	       "   -j, --ijansson-libs   Linker flags for using libjansson\n"
 	       "   -D, --ld              Linker\n"
 	       "   -l, --ldflags         Linker flags (all except -l)\n"
 	       "   -L, --libdir          Library directory\n"
@@ -85,6 +86,7 @@ static void ShowHelp()
 	       "   -e  Linker flags (all except -l) for executables\n"
 	       "   -E  Linker flags (only -l) for executables\n"
 	       "   -i  Linker flags (only -l)\n"
+	       "   -j  Linker flags for using libjansson\n"
 	       "   -l  Linker flags (all except -l)\n"
 	       "   -L  Library directory\n"
 	       "   -o  C compiler\n"
@@ -135,6 +137,7 @@ int main(int argc, char *argv[])
 		{ (char *)"datadir", 0, NULL, 'd' },
 		{ (char *)"exec-ldflags", 0, NULL, 'e' },
 		{ (char *)"exec-libs", 0, NULL, 'E' },
+		{ (char *)"jansson-libs", 0, NULL, 'j' },
 		{ (char *)"ld", 0, NULL, 'D' },
 		{ (char *)"ldflags", 0, NULL, 'l' },
 		{ (char *)"libdir", 0, NULL, 'L' },
@@ -189,6 +192,13 @@ int main(int argc, char *argv[])
 				return 0;
          case 'i':
             PrintFlags(g_libs);
+            return 0;
+         case 'j':
+#if BUNDLED_LIBJANSSON
+				_tprintf(_T("-lnxjansson\n"));
+#else
+				_tprintf(_T("-ljansson\n"));
+#endif
             return 0;
          case 'l':
             PrintFlags(g_ldFlags);
