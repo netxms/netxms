@@ -288,6 +288,24 @@ static inline ssize_t RSAPrivateDecrypt(const BYTE *in, size_t inlen, void *out,
 }
 
 /**
+ * Decrypt data block with RSA public key
+ */
+static inline ssize_t RSAPublicDecrypt(const BYTE *in, size_t inlen, void *out, size_t outlen, RSA_KEY rsa, int padding)
+{
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+   EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(rsa, nullptr);
+   EVP_PKEY_verify_recover_init(ctx);
+   EVP_PKEY_CTX_set_rsa_padding(ctx, padding);
+   size_t bytes = outlen;
+   int rc = EVP_PKEY_verify_recover(ctx, static_cast<BYTE*>(out), &bytes, in, inlen);
+   EVP_PKEY_CTX_free(ctx);
+   return (rc > 0) ? bytes : -1;
+#else
+   return RSA_public_decrypt(static_cast<int>(inlen), in, static_cast<BYTE*>(out), rsa, padding);
+#endif
+}
+
+/**
  * Get maximum buffer size required for encryption/decryption operations with given buffer
  */
 static inline size_t RSASize(RSA_KEY rsa)
