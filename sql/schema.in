@@ -2250,7 +2250,7 @@ CREATE TABLE persons
 CREATE TABLE licenses
 (
   id integer not null,
-  content SQL_TEXT null,
+  content varchar(2000) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

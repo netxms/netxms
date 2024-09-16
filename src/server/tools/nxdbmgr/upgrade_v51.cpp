@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.11 to 51.12
+ */
+static bool H_UpgradeFromV11()
+{
+   CHK_EXEC(SQLQuery(_T("DROP TABLE licenses")));
+
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE licenses (")
+         _T("   id integer not null,")
+         _T("   content varchar(2000) null,")
+         _T("   PRIMARY KEY(id))")));
+
+   CHK_EXEC(SetMinorSchemaVersion(12));
+   return true;
+}
+
+/**
  * Upgrade from 51.10 to 51.11
  */
 static bool H_UpgradeFromV10()
@@ -265,7 +282,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 10,  51, 11, H_UpgradeFromV10  },
+   { 11, 51, 12, H_UpgradeFromV11 },
+   { 10, 51, 11, H_UpgradeFromV10 },
    { 9,  51, 10, H_UpgradeFromV9  },
    { 8,  51, 9,  H_UpgradeFromV8  },
    { 7,  51, 8,  H_UpgradeFromV7  },
