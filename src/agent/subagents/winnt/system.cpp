@@ -895,6 +895,12 @@ LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCom
       case PROCESSOR_ARCHITECTURE_AMD64:
          cpuType = _T("AMD-64");
          break;
+      case PROCESSOR_ARCHITECTURE_IA32_ON_ARM64:
+         cpuType = _T("IA-32 on ARM-64");
+         break;
+      case PROCESSOR_ARCHITECTURE_ARM64:
+         cpuType = _T("ARM-64");
+         break;
       default:
          cpuType = _T("unknown");
          break;
@@ -932,6 +938,10 @@ LONG H_SystemArchitecture(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
       case PROCESSOR_ARCHITECTURE_IA32_ON_WIN64:
       case PROCESSOR_ARCHITECTURE_AMD64:
          ret_string(value, _T("amd64"));
+         break;
+      case PROCESSOR_ARCHITECTURE_IA32_ON_ARM64:
+      case PROCESSOR_ARCHITECTURE_ARM64:
+         ret_string(value, _T("aarch64"));
          break;
       default:
          ret_string(value, _T("unknown"));

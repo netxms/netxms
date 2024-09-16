@@ -446,7 +446,6 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
 #if defined(_WIN32)
 
    SYSTEM_INFO sysInfo;
-
    GetSystemInfo(&sysInfo);
    switch(sysInfo.wProcessorArchitecture)
    {
@@ -466,10 +465,14 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
          _tcscpy(value, _T("windows-ia64"));
          break;
       case PROCESSOR_ARCHITECTURE_IA32_ON_WIN64:
+      case PROCESSOR_ARCHITECTURE_IA32_ON_ARM64:
          _tcscpy(value, _T("windows-i386"));
          break;
       case PROCESSOR_ARCHITECTURE_AMD64:
          _tcscpy(value, _T("windows-x64"));
+         break;
+      case PROCESSOR_ARCHITECTURE_ARM64:
+         _tcscpy(value, _T("windows-aarch64"));
          break;
       default:
          _tcscpy(value, _T("windows-unknown"));
@@ -479,7 +482,6 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
 #elif HAVE_UNAME
 
    struct utsname info;
-
    if (uname(&info) != -1)
    {
 #ifdef _AIX
