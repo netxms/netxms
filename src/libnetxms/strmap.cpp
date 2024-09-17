@@ -132,19 +132,6 @@ StringMap& StringMap::set(const TCHAR *key, uint64_t value)
 }
 
 /**
- * Add UTF8 string to map
- */
-StringMap& StringMap::setUTF8String(const TCHAR *key, const char *value)
-{
-#ifdef UNICODE
-   setObject(const_cast<TCHAR *>(key), WideStringFromUTF8String(value), false);
-#else
-   setObject(const_cast<TCHAR *>(key), MBStringFromUTF8String(value), false);
-#endif
-   return *this;
-}
-
-/**
  * Get value by key as INT32
  */
 int32_t StringMap::getInt32(const TCHAR *key, int32_t defaultValue) const
