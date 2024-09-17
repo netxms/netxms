@@ -266,6 +266,31 @@ static void TestStringMap()
    EndTest(GetCurrentTimeMs() - start);
 
    delete m;
+
+   StartTest(_T("String map - copy"));
+   StringMap src;
+   AssertEquals(src.size(), 0);
+   src.set(_T("K1"), 1);
+   src.set(_T("K2"), -1);
+   src.set(_T("K3"), _T("Text"));
+   AssertEquals(src.size(), 3);
+   StringMap dst(src);
+   AssertEquals(src.size(), 3);
+   AssertTrue(src.contains(_T("K3")));
+   AssertTrue(!_tcscmp(src.get(_T("K3")), _T("Text")));
+   AssertEquals(dst.size(), 3);
+   AssertTrue(dst.contains(_T("K3")));
+   AssertTrue(!_tcscmp(dst.get(_T("K3")), _T("Text")));
+   EndTest();
+
+   StartTest(_T("String map - move"));
+   StringMap mdst(std::move(src));
+   AssertEquals(src.size(), 0);
+   AssertFalse(src.contains(_T("K3")));
+   AssertEquals(mdst.size(), 3);
+   AssertTrue(mdst.contains(_T("K3")));
+   AssertTrue(!_tcscmp(mdst.get(_T("K3")), _T("Text")));
+   EndTest();
 }
 
 /**

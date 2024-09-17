@@ -94,37 +94,41 @@ void StringMap::addAll(const StringMap *src, bool (*filter)(const TCHAR *, const
 /**
  * Set value from INT32
  */
-void StringMap::set(const TCHAR *key, int32_t value)
+StringMap& StringMap::set(const TCHAR *key, int32_t value)
 {
    TCHAR buffer[32];
    set(key, IntegerToString(value, buffer));
+   return *this;
 }
 
 /**
  * Set value from UINT32
  */
-void StringMap::set(const TCHAR *key, uint32_t value)
+StringMap& StringMap::set(const TCHAR *key, uint32_t value)
 {
 	TCHAR buffer[32];
    set(key, IntegerToString(value, buffer));
+   return *this;
 }
 
 /**
  * Set value from INT64
  */
-void StringMap::set(const TCHAR *key, int64_t value)
+StringMap& StringMap::set(const TCHAR *key, int64_t value)
 {
    TCHAR buffer[64];
    set(key, IntegerToString(value, buffer));
+   return *this;
 }
 
 /**
  * Set value from UINT64
  */
-void StringMap::set(const TCHAR *key, uint64_t value)
+StringMap& StringMap::set(const TCHAR *key, uint64_t value)
 {
    TCHAR buffer[64];
    set(key, IntegerToString(value, buffer));
+   return *this;
 }
 
 /**
