@@ -2026,6 +2026,8 @@ protected:
 
 public:
    StringMapBase(Ownership objectOwner, void (*destructor)(void *, StringMapBase *) = nullptr);
+   StringMapBase(const StringMapBase& src) = delete;
+   StringMapBase(StringMapBase&& src);
 
    void setOwner(Ownership owner) { m_objectOwner = (owner == Ownership::True); }
    void setIgnoreCase(bool ignore);
@@ -2069,16 +2071,39 @@ public:
    StringMap(const NXCPMessage& msg, uint32_t baseFieldId, uint32_t sizeFieldId);
    StringMap(json_t *json);
 	StringMap(const StringMap& src);
+   StringMap(StringMap&& src) : StringMapBase(std::move(src)) { }
 
 	StringMap& operator =(const StringMap &src);
 
-	void set(const TCHAR *key, const TCHAR *value) { if (key != nullptr) setObject((TCHAR *)key, MemCopyString(value), false); }
-	void setPreallocated(TCHAR *key, TCHAR *value) { setObject(key, value, true); }
-   void set(const TCHAR *key, int32_t value);
-	void set(const TCHAR *key, uint32_t value);
-   void set(const TCHAR *key, int64_t value);
-   void set(const TCHAR *key, uint64_t value);
-   TCHAR *unlink(const TCHAR *key) { return (TCHAR *)StringMapBase::unlink(key); }
+	StringMap& set(const TCHAR *key, const TCHAR *value)
+	{
+	   if (key != nullptr)
+	      setObject(const_cast<TCHAR*>(key), MemCopyString(value), false);
+	   return *this;
+	}
+	StringMap& setPreallocated(TCHAR *key, TCHAR *value)
+	{
+	   setObject(key, value, true);
+	   return *this;
+	}
+	StringMap& set(const TCHAR *key, int32_t value);
+	StringMap& set(const TCHAR *key, uint32_t value);
+	StringMap& set(const TCHAR *key, int64_t value);
+	StringMap& set(const TCHAR *key, uint64_t value);
+	StringMap& setUTF8String(const TCHAR *key, const char *value)
+	{
+	   setObject(const_cast<TCHAR *>(key), TStringFromUTF8String(value), false);
+	   return *this;
+	}
+	StringMap& setMBString(const TCHAR *key, const char *value)
+	{
+#ifdef UNICODE
+	   setObject(const_cast<TCHAR*>(key), WideStringFromMBString(value), false);
+#else
+	   set(key, value);
+#endif
+	   return *this;
+	}
 
    void addAll(const StringMap *src, bool (*filter)(const TCHAR *, const TCHAR *, void *) = nullptr, void *context = nullptr);
    template<typename C>
@@ -2098,6 +2123,11 @@ public:
 
    void addAllFromMessage(const NXCPMessage& msg, uint32_t baseFieldId, uint32_t sizeFieldId);
    void addAllFromJson(json_t *json);
+
+   TCHAR *unlink(const TCHAR *key)
+   {
+      return static_cast<TCHAR*>(StringMapBase::unlink(key));
+   }
 
 	const TCHAR *get(const TCHAR *key) const { return (const TCHAR *)getObject(key); }
    const TCHAR *get(const TCHAR *key, size_t len) const { return (const TCHAR *)getObject(key, len); }
@@ -2162,6 +2192,7 @@ private:
 public:
 	StringObjectMap(Ownership objectOwner, void (*_destructor)(void *, StringMapBase *) = destructor) : StringMapBase(objectOwner, _destructor) { }
 	StringObjectMap(const StringObjectMap& src) = delete;
+   StringObjectMap(StringObjectMap&& src) : StringMapBase(std::move(src)) { }
 
 	void set(const TCHAR *key, T *object) { setObject((TCHAR *)key, (void *)object, false); }
 	void setPreallocated(TCHAR *key, T *object) { setObject((TCHAR *)key, (void *)object, true); }
