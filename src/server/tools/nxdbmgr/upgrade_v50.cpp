@@ -26,6 +26,19 @@
 #include <nxsl.h>
 
 /**
+ * Upgrade from 50.45 to 50.46
+ */
+static bool H_UpgradeFromV45()
+{
+   CHK_EXEC(CreateConfigParam(_T("Client.InactivityTimeout"),
+                              _T("0"),
+                              _T("User inactivity timeout in seconds. Client will disconnect if no user activity detected within given time interval. Value of 0 disables inactivity timeout."),
+                              _T("seconds"), 'I', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(46));
+   return true;
+}
+
+/**
  * Upgrade from 50.44 to 50.45
  */
 static bool H_UpgradeFromV44()
@@ -2183,6 +2196,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 45, 50, 46, H_UpgradeFromV45 },
    { 44, 50, 45, H_UpgradeFromV44 },
    { 43, 50, 44, H_UpgradeFromV43 },
    { 42, 50, 43, H_UpgradeFromV42 },

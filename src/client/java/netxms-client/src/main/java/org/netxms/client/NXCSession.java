@@ -2804,6 +2804,15 @@ public class NXCSession
    }
 
    /**
+    * Disconnect from server because of user inactivity. This method differs from <code>disconnect</code> in that it will send
+    * appropriate notification to session listeners.
+    */
+   public void disconnectInactiveSession()
+   {
+      disconnect(SessionNotification.INACTIVITY_TIMEOUT);
+   }
+
+   /**
     * Reconnect session in background
     */
    private synchronized void backgroundReconnect()

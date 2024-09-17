@@ -50,6 +50,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.base.VersionInfo;
 import org.netxms.certificate.manager.CertificateManagerProvider;
@@ -96,6 +97,7 @@ public class Startup implements EntryPoint, StartupParameters
 
    private I18n i18n = LocalizationHelper.getI18n(Startup.class);
    private Display display;
+   private long activityTimestamp = System.currentTimeMillis();
 
    static
    {
@@ -294,6 +296,9 @@ public class Startup implements EntryPoint, StartupParameters
       ServerPushSession pushSession = new ServerPushSession();
       pushSession.start();
 
+      if (popoutId == null)
+         setInactivityHandler(session.getClientConfigurationHintAsInt("InactivityTimeout", 0));
+
       logger.debug("About to open {} window", (window instanceof MainWindow) ? "main" : "pop-out");
       window.open();
 
@@ -303,6 +308,51 @@ public class Startup implements EntryPoint, StartupParameters
       display.dispose();
 
       return 0;
+   }
+
+   /**
+    * Set session inactivity handler.
+    *
+    * @param display current display
+    * @param inactivityTimeout inactivity timeout in seconds
+    */
+   private void setInactivityHandler(int inactivityTimeout)
+   {
+      if (inactivityTimeout <= 0)
+      {
+         logger.debug("User inactivity timer not set");
+         return;
+      }
+
+      Listener activityListener = (e) -> {
+         activityTimestamp = System.currentTimeMillis();
+      };
+      display.addFilter(SWT.MouseDown, activityListener);
+      display.addFilter(SWT.MouseDoubleClick, activityListener);
+      display.addFilter(SWT.KeyDown, activityListener);
+
+      final long inactivityTimeoutMs = inactivityTimeout * 1000L;
+      Thread thread = new Thread(() -> {
+         logger.debug("User inactivity timer started");
+         while(true)
+         {
+            try
+            {
+               Thread.sleep(10000);
+            }
+            catch(InterruptedException e)
+            {
+            }
+            if (activityTimestamp < System.currentTimeMillis() - inactivityTimeoutMs)
+            {
+               logger.debug("User inactivity timer fired");
+               Registry.getSession(display).disconnectInactiveSession();
+               break;
+            }
+         }
+      }, "InactivityTimer");
+      thread.setDaemon(true);
+      thread.start();
    }
 
    /**
@@ -557,6 +607,9 @@ public class Startup implements EntryPoint, StartupParameters
       {
          case SessionNotification.CONNECTION_BROKEN:
             processDisconnect(i18n.tr("communication error"));
+            break;
+         case SessionNotification.INACTIVITY_TIMEOUT:
+            processDisconnect(i18n.tr("session terminated due to inactivity"));
             break;
          case SessionNotification.SERVER_SHUTDOWN:
             processDisconnect(i18n.tr("server shutdown"));
