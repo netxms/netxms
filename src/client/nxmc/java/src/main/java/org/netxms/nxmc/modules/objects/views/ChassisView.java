@@ -45,7 +45,7 @@ import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
- * Rack view
+ * Chassis view
  */
 public class ChassisView extends ObjectView implements ISelectionProvider
 {
