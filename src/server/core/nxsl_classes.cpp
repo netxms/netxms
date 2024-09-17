@@ -4116,7 +4116,7 @@ NXSL_Value *NXSL_TunnelClass::getAttr(NXSL_Object *object, const NXSL_Identifier
 
    if (NXSL_COMPARE_ATTRIBUTE_NAME("address"))
    {
-      value = vm->createValue(NXSL_InetAddressClass::createObject(vm, tunnel->getAddress()));
+      value = NXSL_InetAddressClass::createObject(vm, tunnel->getAddress());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("agentBuildTag"))
    {
