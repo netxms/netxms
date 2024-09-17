@@ -275,7 +275,7 @@ static void LogParserMatch(const LogParserCallbackData& data)
    }
    parameters.set(_T("fileName"), data.logName);
 
-   AgentPostEventWithNames(data.eventCode, data.eventName, data.logRecordTimestamp, parameters);
+   AgentPostEvent(data.eventCode, data.eventName, data.logRecordTimestamp, parameters);
 }
 
 /**

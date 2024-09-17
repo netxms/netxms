@@ -33,15 +33,15 @@ public class SendEventTest extends AbstractSessionTest
 	{
 		final NXCSession session = connectAndLogin();
 
-		session.sendEvent(1, new String[0]);
-		session.sendEvent("SYS_NODE_ADDED", new String[0]);
+		session.sendEvent(1, new String[0], new String[0]);
+		session.sendEvent("SYS_NODE_ADDED", new String[0], new String[0]);
 		
 		session.syncObjects();
 		for(AbstractObject o : session.getAllObjects())
 		{
 			if (o instanceof Node)
 			{
-            session.sendEvent(0, "SYS_SCRIPT_ERROR", o.getObjectId(), new String[] { "test1", "test2", "0" }, "TAG", null);
+            session.sendEvent(0, "SYS_SCRIPT_ERROR", o.getObjectId(), new String[] { "test1", "test2", "0" }, new String[] { "name1", "name2" }, "TAG", null);
 				break;
 			}
 		}

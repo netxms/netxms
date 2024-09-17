@@ -118,7 +118,7 @@ TCHAR *EventController::getEventName(uint32_t code, TCHAR *buffer, size_t buffer
 /**
  * Send event to server
  */
-uint32_t EventController::sendEvent(uint32_t code, const TCHAR *name, uint32_t objectId, int argc, TCHAR **argv, const TCHAR *userTag)
+uint32_t EventController::sendEvent(uint32_t code, const TCHAR *name, uint32_t objectId, int argc, TCHAR **argv, const TCHAR *userTag, bool useNamedParameters)
 {
    NXCPMessage msg(CMD_TRAP, m_session->createMessageId());
    msg.setField(VID_EVENT_CODE, code);
@@ -126,8 +126,31 @@ uint32_t EventController::sendEvent(uint32_t code, const TCHAR *name, uint32_t o
    msg.setField(VID_OBJECT_ID, objectId);
 	msg.setField(VID_USER_TAG, CHECK_NULL_EX(userTag));
    msg.setField(VID_NUM_ARGS, (UINT16)argc);
+
    for(int i = 0; i < argc; i++)
-      msg.setField(VID_EVENT_ARG_BASE + i, argv[i]);
+   {
+      if (useNamedParameters)
+      {
+         TCHAR *separator = _tcschr(argv[i], '=');
+         if (separator != nullptr)
+         {
+            *separator = 0;
+            msg.setField(VID_EVENT_ARG_BASE + i, separator + 1);
+            msg.setField(VID_EVENT_ARG_NAMES_BASE + i, argv[i]);
+         }
+         else
+         {
+            TCHAR buffer[32];
+            _sntprintf(buffer, 32, _T("parameter%d"), i + 1);
+            msg.setField(VID_EVENT_ARG_BASE + i, argv[i]);
+            msg.setField(VID_EVENT_ARG_NAMES_BASE + i, buffer);
+         }
+      }
+      else
+      {
+         msg.setField(VID_EVENT_ARG_BASE + i, argv[i]);
+      }
+   }
 
    if (!m_session->sendMessage(&msg))
       return RCC_COMM_FAILURE;

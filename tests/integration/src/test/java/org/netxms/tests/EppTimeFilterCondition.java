@@ -144,7 +144,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       session.saveEventProcessingPolicy(policy);
 
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));// checking that PS does not contain a value for the given key
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
 
       assertNotNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
 
@@ -153,7 +153,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       
       testRule.setFlags(testRule.getFlags() | testRule.NEGATED_TIME_FRAMES); // making inverse rule
       session.saveEventProcessingPolicy(policy);
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
@@ -201,7 +201,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       session.saveEventProcessingPolicy(policy);
 
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));// checking that PS does not contain a value for the given key
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
 
       assertNotNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
 
@@ -212,7 +212,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
 
       testRule.setFlags(testRule.getFlags() | testRule.NEGATED_TIME_FRAMES); 
       session.saveEventProcessingPolicy(policy);
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
@@ -228,7 +228,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       testRule.setFlags(testRule.getFlags() & ~testRule.NEGATED_TIME_FRAMES);
 
       session.saveEventProcessingPolicy(policy);
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
@@ -276,7 +276,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       session.saveEventProcessingPolicy(policy);
 
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));// checking that PS does not contain a value for the given key
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
 
       assertNotNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
 
@@ -285,7 +285,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       
       testRule.setFlags(testRule.getFlags() | testRule.NEGATED_TIME_FRAMES); //making inverse rule
       session.saveEventProcessingPolicy(policy);
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
@@ -303,7 +303,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       testRule.setFlags(testRule.getFlags() & ~testRule.NEGATED_TIME_FRAMES);
 
       session.saveEventProcessingPolicy(policy);
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
 
@@ -348,7 +348,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       session.saveEventProcessingPolicy(policy);
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));// checking that PS does not contain a value for the given key
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
 
       assertNotNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
@@ -357,7 +357,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       
       testRule.setFlags(testRule.getFlags() | testRule.NEGATED_TIME_FRAMES); //making inverse rule
       session.saveEventProcessingPolicy(policy);
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
@@ -373,7 +373,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       testRule.setFlags(testRule.getFlags() & ~testRule.NEGATED_TIME_FRAMES);
 
       session.saveEventProcessingPolicy(policy);
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
@@ -417,7 +417,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       session.saveEventProcessingPolicy(policy);
 
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));// checking that PS does not contain a value for the given key
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
 
       assertNotNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
 
@@ -426,7 +426,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
        
       testRule.setFlags(testRule.getFlags() | testRule.NEGATED_TIME_FRAMES); //making inverse rule
       session.saveEventProcessingPolicy(policy);
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
@@ -450,7 +450,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       testRule.setFlags(testRule.getFlags() & ~testRule.NEGATED_TIME_FRAMES);
 
       session.saveEventProcessingPolicy(policy);
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
 
@@ -494,7 +494,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       session.saveEventProcessingPolicy(policy);
 
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));// checking that PS does not contain a value for the given key
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
 
       assertNotNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
 
@@ -503,7 +503,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       
       testRule.setFlags(testRule.getFlags() | testRule.NEGATED_TIME_FRAMES); //making inverse rule
       session.saveEventProcessingPolicy(policy);
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
@@ -518,7 +518,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       testRule.setFlags(testRule.getFlags() & ~testRule.NEGATED_TIME_FRAMES);
 
       session.saveEventProcessingPolicy(policy);
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
 
@@ -562,7 +562,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       session.saveEventProcessingPolicy(policy);
 
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));// checking that PS does not contain a value for the given key
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
 
       assertNotNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
 
@@ -571,7 +571,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       
       testRule.setFlags(testRule.getFlags() | testRule.NEGATED_TIME_FRAMES); //making inverse rule
       session.saveEventProcessingPolicy(policy);
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
@@ -594,7 +594,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       testRule.setFlags(testRule.getFlags() & ~testRule.NEGATED_TIME_FRAMES);
 
       session.saveEventProcessingPolicy(policy);
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
 

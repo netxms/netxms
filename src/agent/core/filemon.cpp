@@ -140,7 +140,7 @@ static void ProcessFile(const TCHAR *path, const NX_STAT_STRUCT *stat)
       s_files.set(path, new FileInfo(fi));
       SaveToDB(path, &fi);
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Detected new file %s"), path);
-      PostEvent(EVENT_AGENT_FILE_ADDED, nullptr, 0, "s", path);
+      PostEvent(EVENT_AGENT_FILE_ADDED, nullptr, 0, StringMap().set(_T("file"), path));
    }
    else
    {
@@ -154,7 +154,7 @@ static void ProcessFile(const TCHAR *path, const NX_STAT_STRUCT *stat)
 
          SaveToDB(path, oldFi);
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Detected change in file %s"), path);
-         PostEvent(EVENT_AGENT_FILE_CHANGED, nullptr, 0, "s", path);
+         PostEvent(EVENT_AGENT_FILE_CHANGED, nullptr, 0, StringMap().set(_T("file"), path));
       }
       oldFi->checkPassed = true;
    }
@@ -240,7 +240,7 @@ static void FileMonitoringThread()
          else
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Detected deletion of file %s"), e->key);
-            PostEvent(EVENT_AGENT_FILE_DELETED, nullptr, 0, "s", e->key);
+            PostEvent(EVENT_AGENT_FILE_DELETED, nullptr, 0, StringMap().set(_T("file"), e->key));
             DeleteFromDB(e->key);
             i.remove();
          }

@@ -7475,7 +7475,7 @@ void ClientSession::onTrap(const NXCPMessage& request)
 			   .origin(EventOrigin::CLIENT)
 			   .originTimestamp(request.getFieldAsTime(VID_ORIGIN_TIMESTAMP))
 			   .tag(userTag)
-			   .params(request, VID_EVENT_ARG_BASE, VID_NUM_ARGS)
+			   .params(request, VID_EVENT_ARG_BASE, VID_EVENT_ARG_NAMES_BASE, VID_NUM_ARGS)
             .post();
          response.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INVALID_EVENT_CODE);
       }

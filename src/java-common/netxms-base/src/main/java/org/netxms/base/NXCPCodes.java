@@ -1359,6 +1359,7 @@ public class NXCPCodes
 	public static final long VID_DCI_SCHEDULE_BASE = 0x10000000L;
 	public static final long VID_EVENT_ARG_BASE = 0x00008000L;
 	public static final long VID_EVENT_ARG_LAST = 0x00008FFFL;
+   public static final long VID_EVENT_ARG_NAMES_BASE = 0x10000000; 
 	public static final long VID_TRAP_PBASE = 0x00009000L;
    public static final long VID_POLL_STATE_LIST_BASE = 0x0000A000L;
 	public static final long VID_PARENT_ID_BASE = 0x00003000L;

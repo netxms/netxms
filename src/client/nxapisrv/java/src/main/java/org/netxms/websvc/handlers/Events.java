@@ -55,7 +55,7 @@ public class Events extends AbstractHandler
       long date = JsonTools.getLongFromJson(data, "originTimestamp", -1);
       originTimestamp = date > 0 ? new Date(date * 1000) : null;
 
-      getSession().sendEvent(eventCode, eventName, objectId, parameters, userTag, originTimestamp);
+      getSession().sendEvent(eventCode, eventName, objectId, parameters, null, userTag, originTimestamp);
 
       return null;
    }

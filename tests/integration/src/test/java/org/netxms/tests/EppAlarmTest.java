@@ -117,7 +117,7 @@ public class EppAlarmTest extends AbstractSessionTest
       testRule2.setFlags(testRule2.getFlags() | testRule2.TERMINATE_BY_REGEXP);
       session.saveEventProcessingPolicy(policy);
 
-      session.sendEvent(0, templateNameEventDown, node.getObjectId(), new String[] {}, null, null); // sending event which generated
+      session.sendEvent(0, templateNameEventDown, node.getObjectId(), new String[] {}, null, null, null); // sending event which generated
                                                                                                     // alarm to the server
       Thread.sleep(1000);
       alarm = findAlarmByKey(session, alarmKey); // founding alarm
@@ -139,13 +139,13 @@ public class EppAlarmTest extends AbstractSessionTest
 
       eventTestTemplate.setSeverity(Severity.CRITICAL); // Changing the alarm severity through the event test template
       session.modifyEventObject(eventTestTemplate);
-      session.sendEvent(0, templateNameEventDown, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, templateNameEventDown, node.getObjectId(), new String[] {}, null, null, null);
       alarm = findAlarmByKey(session, alarmKey);
       assertEquals(eventTestTemplate.getSeverity(), alarm.getCurrentSeverity());// checking that alarm severity is Critical
 
       testRule.setAlarmSeverity(Severity.RESOLVE); // changing alarm STATE
       session.saveEventProcessingPolicy(policy);
-      session.sendEvent(0, templateNameEventDown, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, templateNameEventDown, node.getObjectId(), new String[] {}, null, null, null);
       Thread.sleep(1000);
       alarm = findAlarmByKey(session, alarmKey);
 
@@ -153,12 +153,12 @@ public class EppAlarmTest extends AbstractSessionTest
 
       testRule.setAlarmSeverity(Severity.MAJOR); // Changing the severity of testRule to MAJOR
       session.saveEventProcessingPolicy(policy);
-      session.sendEvent(0, templateNameEventDown, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, templateNameEventDown, node.getObjectId(), new String[] {}, null, null, null);
       alarm = findAlarmByKey(session, alarmKey);
 
       assertEquals(testRule.getAlarmSeverity(), alarm.getCurrentSeverity());// checking that alarm takes severity from rule
 
-      session.sendEvent(0, templateNameEventUp, node.getObjectId(), new String[] {}, null, null); // sending rule which terminated
+      session.sendEvent(0, templateNameEventUp, node.getObjectId(), new String[] {}, null, null, null); // sending rule which terminated
                                                                                                   // alarm
       Thread.sleep(500);
       alarm = findAlarmByKey(session, alarmKey);

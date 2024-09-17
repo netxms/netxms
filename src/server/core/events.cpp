@@ -787,18 +787,25 @@ void ReloadEvents()
 }
 
 /**
- * Add event parameters to builder from NXCP message (message does not contain parameter names)
+ * Add event parameters to builder from NXCP message
  */
-EventBuilder& EventBuilder::params(const NXCPMessage& msg, uint32_t baseId, uint32_t countId)
+EventBuilder& EventBuilder::params(const NXCPMessage& msg, uint32_t valuesBaseId, uint32_t namesBaseId, uint32_t countId)
 {
-   int count = msg.getFieldAsInt32(countId);
-   TCHAR name[32] = _T("parameter");
-   for(int i = 0; i < count; i++)
+   m_event->m_parameters.addAllFromMessage(msg, valuesBaseId, countId);
+   if (msg.isFieldExist(namesBaseId))
    {
-      IntegerToString(i + 1, &name[9]);
-      m_event->m_parameterNames.add(name);
+      m_event->m_parameterNames.addAllFromMessage(msg, namesBaseId, countId);
    }
-   m_event->m_parameters.addAllFromMessage(msg, baseId, countId);
+   else
+   {
+      int count = msg.getFieldAsInt32(countId);
+      TCHAR name[32] = _T("parameter");
+      for(int i = 0; i < count; i++)
+      {
+         IntegerToString(i + 1, &name[9]);
+         m_event->m_parameterNames.add(name);
+      }
+   }
    return *this;
 }
 

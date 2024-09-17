@@ -93,17 +93,17 @@ static void JNICALL J_postEvent(JNIEnv *jenv, jclass jcls, jint event, jstring j
       TCHAR *name = CStringFromJavaString(jenv, jname);
       int numArgs = (jargs != NULL) ? jenv->GetArrayLength(jargs) : 0;
 
-      TCHAR **arrayOfString = (numArgs > 0) ? (TCHAR **)MemAllocLocal(sizeof(TCHAR *) * numArgs) : nullptr;
+      StringMap parameters;
+      TCHAR paramName[32] = _T("parameter");
       for(jsize i = 0; i < numArgs; i++)
       {
          jstring resString = reinterpret_cast<jstring>(jenv->GetObjectArrayElement(jargs, i));
-         arrayOfString[i] = CStringFromJavaString(jenv, resString);
+         IntegerToString(i + 1, &paramName[9]);
+         parameters.set(paramName, CStringFromJavaString(jenv, resString));
          jenv->DeleteLocalRef(resString);
       }
-      AgentPostEvent2(static_cast<UINT32>(event), name, static_cast<time_t>(timestamp), numArgs, const_cast<const TCHAR**>(arrayOfString));
+      AgentPostEvent(static_cast<UINT32>(event), name, static_cast<time_t>(timestamp), parameters);
       MemFree(name);
-      for(jsize i = 0; i < numArgs; i++)
-         MemFree(arrayOfString[i]);
       MemFreeLocal(arrayOfString);
    }
 }

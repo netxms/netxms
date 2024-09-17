@@ -201,7 +201,7 @@ public:
    uint32_t getEventTemplates(ObjectArray<EventTemplate> *templates);
    TCHAR *getEventName(uint32_t code, TCHAR *buffer, size_t bufferSize);
 
-   uint32_t sendEvent(uint32_t code, const TCHAR *name, uint32_t objectId, int argc, TCHAR **argv, const TCHAR *userTag);
+   uint32_t sendEvent(uint32_t code, const TCHAR *name, uint32_t objectId, int argc, TCHAR **argv, const TCHAR *userTag, bool useNamedParameters);
 };
 
 struct ObjectCacheEntry;

@@ -237,7 +237,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));// make sure that PS doesn't contain an entry with the given key
 
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
       sleep2000();
       
       assertNotNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));//make sure that the script has executed, and the entry has appeared in the PS 
@@ -275,7 +275,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
 
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));// make sure that PS doesn't contain an entry with the given key
 
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
       sleep2000();
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));//make sure that the script has not been executed, and the entry in not in PS 
@@ -316,8 +316,8 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A2"));
       assertEquals(countScheduledTasks(session, TIMER_KEY), 0);
 
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
       
       sleep2000();
       
@@ -369,8 +369,8 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A2"));
       assertEquals(countScheduledTasks(session, TIMER_KEY), 0);
 
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
       
       sleep2000();
       
@@ -423,8 +423,8 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A2"));
       assertEquals(countScheduledTasks(session, TIMER_KEY), 0);
 
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null); 
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null); 
       
       sleep2000();
       
@@ -474,8 +474,8 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A2"));
       assertEquals(countScheduledTasks(session, TIMER_KEY), 0);
       
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null); 
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null); 
       
       sleep2000();
 
@@ -529,7 +529,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
       assertEquals(countScheduledTasks(session, TIMER_KEY), 0);
 
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
       
       sleep2000();
       assertEquals(countScheduledTasks(session, TIMER_KEY), 0);// make sure that won't be any entry because it cancels itself.
@@ -571,7 +571,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
       assertEquals(countScheduledTasks(session, TIMER_KEY), 0);
 
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
       
       sleep2000();
 
@@ -615,7 +615,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
       assertEquals(countScheduledTasks(session, TIMER_KEY), 0);
 
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
       
       sleep2000();
 
@@ -658,7 +658,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
       assertEquals(countScheduledTasks(session, TIMER_KEY), 0);
 
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
       
       sleep2000();
 
@@ -702,7 +702,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
       assertEquals(countScheduledTasks(session, TIMER_KEY), 0);
 
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
 
       sleep2000();
 
@@ -745,7 +745,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
       assertEquals(countScheduledTasks(session, TIMER_KEY), 0);
 
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
 
       sleep2000();
 
@@ -790,7 +790,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
       assertEquals(countScheduledTasks(session, TIMER_KEY), 0);
 
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
 
       sleep2000();
 
@@ -835,7 +835,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
       assertEquals(countScheduledTasks(session, TIMER_KEY), 0);
 
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
 
       sleep2000();
 

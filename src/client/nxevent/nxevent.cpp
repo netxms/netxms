@@ -40,6 +40,7 @@ static TCHAR m_eventName[MAX_EVENT_NAME] = _T("");
 static DWORD m_dwObjectId = 0;
 static DWORD m_dwTimeOut = 3;
 static bool s_ignoreProtocolVersion = false;
+static bool s_useNamedEventNames = false;
 
 /**
  * Callback function for debug printing
@@ -60,7 +61,7 @@ static uint32_t SendEventInLoop(EventController *ctrl, uint32_t code, const TCHA
    int64_t startTime = lastReportTime;
    for(uint32_t i = 0; i < repeatCount; i++)
    {
-      uint32_t rcc = ctrl->sendEvent(code, name, m_dwObjectId, argc, argv, userTag);
+      uint32_t rcc = ctrl->sendEvent(code, name, m_dwObjectId, argc, argv, userTag, s_useNamedEventNames);
       if (rcc != RCC_SUCCESS)
          return rcc;
       sendCount++;
@@ -118,7 +119,7 @@ static uint32_t SendEvent(int iNumArgs, char **pArgList, bool repeat, uint32_t r
 			if (repeat)
 			   rcc = SendEventInLoop(ctrl, m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, argList, m_szUserTag, repeatInterval, repeatCount);
 			else
-			   rcc = ctrl->sendEvent(m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, argList, m_szUserTag);
+			   rcc = ctrl->sendEvent(m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, argList, m_szUserTag, s_useNamedEventNames);
 			for(int i = 0; i < iNumArgs; i++)
 				MemFree(argList[i]);
 			MemFree(argList);
@@ -138,9 +139,9 @@ static uint32_t SendEvent(int iNumArgs, char **pArgList, bool repeat, uint32_t r
 }
 
 #ifdef _WIN32
-#define CMDLINE_OPTIONS "C:dehi:o:P:ST:u:vw:"
+#define CMDLINE_OPTIONS "C:dehi:no:P:ST:u:vw:"
 #else
-#define CMDLINE_OPTIONS "c:C:dehi:o:P:ST:u:vw:"
+#define CMDLINE_OPTIONS "c:C:dehi:no:P:ST:u:vw:"
 #endif
 
 /**
@@ -172,6 +173,7 @@ int main(int argc, char *argv[])
                    "   -e            : Encrypt session (for compatibility only, session is always encrypted).\n"
                    "   -h            : Display help and exit.\n"
                    "   -i <interval> : Repeat event sending with given interval in milliseconds.\n"
+                   "   -n            : Parameters are provided in named format: name=value.\n"
                    "   -o <id>       : Specify source object ID.\n"
                    "   -P <password> : Specify user's password. Default is empty password.\n"
                    "   -S            : Skip protocol version check (use with care).\n"
@@ -201,6 +203,9 @@ int main(int argc, char *argv[])
          case 'i':
             repeat = true;
             repeatInterval = strtoul(optarg, nullptr, 0);
+            break;
+         case 'n':
+            s_useNamedEventNames = true;
             break;
          case 'o':
             m_dwObjectId = strtoul(optarg, nullptr, 0);

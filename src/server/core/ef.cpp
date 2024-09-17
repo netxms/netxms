@@ -82,22 +82,11 @@ bool EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *r
 			}
 
 			bool success;
-			if (request->isFieldExist(VID_EVENT_ARG_NAMES_BASE))
-			{
-            success = EventBuilder(code, object->getId())
-               .origin(EventOrigin::REMOTE_SERVER)
-               .tags(request->getFieldAsSharedString(VID_TAGS))
-               .params(*request, VID_EVENT_ARG_BASE, VID_EVENT_ARG_NAMES_BASE, VID_NUM_ARGS)
-               .post();
-         }
-         else
-         {
-            success = EventBuilder(code, object->getId())
-               .origin(EventOrigin::REMOTE_SERVER)
-               .tags(request->getFieldAsSharedString(VID_TAGS))
-               .params(*request, VID_EVENT_ARG_BASE, VID_NUM_ARGS)
-               .post();
-         }
+         success = EventBuilder(code, object->getId())
+            .origin(EventOrigin::REMOTE_SERVER)
+            .tags(request->getFieldAsSharedString(VID_TAGS))
+            .params(*request, VID_EVENT_ARG_BASE, VID_EVENT_ARG_NAMES_BASE, VID_NUM_ARGS)
+            .post();
          response->setField(VID_RCC, success ? ISC_ERR_SUCCESS : ISC_ERR_POST_EVENT_FAILED);
 		}
 		else

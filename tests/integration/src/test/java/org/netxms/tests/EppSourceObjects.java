@@ -220,10 +220,10 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
 
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null, null);
 
       Thread.sleep(500);
 
@@ -283,10 +283,10 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
 
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null, null);
 
       Thread.sleep(500);
       
@@ -341,10 +341,10 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
 
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null, null);
 
       Thread.sleep(500);
 
@@ -398,10 +398,10 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
 
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null, null);
       
       Thread.sleep(500);
 
@@ -459,10 +459,10 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
 
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null, null);
 
       Thread.sleep(500);
 
@@ -517,10 +517,10 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
 
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null, null);
 
       Thread.sleep(500);
 
@@ -578,10 +578,10 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
 
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null, null);
 
       Thread.sleep(500);
 
@@ -639,10 +639,10 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
 
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null, null);
 
       Thread.sleep(500);
 
@@ -697,10 +697,10 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
 
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null, null);
 
       Thread.sleep(500);
 
@@ -749,10 +749,10 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
 
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null, null);
       
       Thread.sleep(500);
       
@@ -811,10 +811,10 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
 
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null, null);
 
       Thread.sleep(500);
 
@@ -869,10 +869,10 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
 
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null, null);
 
       Thread.sleep(500);
 
@@ -930,10 +930,10 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
 
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null, null);
 
       Thread.sleep(500);
 
@@ -981,10 +981,10 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
 
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_A).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null, null);
 
       Thread.sleep(500);
 

@@ -69,7 +69,7 @@ void Topic::processMessage(const char *topic, const char *msg)
 
    if (m_event != nullptr)
    {
-      AgentPostEvent(0, m_event, 0, "mm", topic, msg);
+      AgentPostEvent(0, m_event, 0, StringMap().setMBString(_T("topic"), topic).setMBString(_T("message"), msg));
    }
    else
    {

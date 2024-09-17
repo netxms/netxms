@@ -840,10 +840,8 @@ uint32_t UpgradeAgent(const TCHAR *pkgFile);
 
 bool IsVNCServerRunning(const InetAddress& addr, uint16_t port);
 
-void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, int argc, const TCHAR **argv);
-void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const char *format, ...);
-void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const char *format, va_list args);
-void PostEventWithNames(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const StringMap &parameters);
+void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp);
+void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const StringMap &parameters);
 void ForwardEvent(NXCPMessage *msg);
 void StartEventConnector();
 

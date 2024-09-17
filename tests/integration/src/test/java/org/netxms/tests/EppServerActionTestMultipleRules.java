@@ -222,13 +222,13 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set B"));
       assertEquals(countScheduledTasks(session, TIMER_KEY_1), 0);
       
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
 
       sleep2000();
       
       assertEquals(countScheduledTasks(session, TIMER_KEY_1), 1);
       
-      session.sendEvent(0, TEMPLATE_NAME_B, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_B, node.getObjectId(), new String[] {}, null, null, null);
       
       sleep2000();
 
@@ -285,8 +285,8 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set B"));
       assertEquals(countScheduledTasks(session, TIMER_KEY_2), 0);
 
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME_B, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_B, node.getObjectId(), new String[] {}, null, null, null);
 
       sleep2000();
 
@@ -344,13 +344,13 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set B"));
       assertEquals(countScheduledTasks(session, TIMER_KEY_2), 0);
 
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
 
       sleep2000();
 
       assertEquals(countScheduledTasks(session, TIMER_KEY_2), 1);// can find only 1 entry because A rule doesn't have delay key
       
-      session.sendEvent(0, TEMPLATE_NAME_B, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_B, node.getObjectId(), new String[] {}, null, null, null);
       
       sleep2000();
 
@@ -412,7 +412,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
       assertEquals(countScheduledTasks(session, TIMER_KEY_2), 0);
       assertEquals(countScheduledTasks(session, TIMER_KEY_1), 0);
 
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
 
       sleep2000();
 
@@ -420,7 +420,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
       assertEquals(countScheduledTasks(session, TIMER_KEY_1), 1);
       assertEquals(countScheduledTasks(session, TIMER_KEY_2), 1);
 
-      session.sendEvent(0, TEMPLATE_NAME_B, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_B, node.getObjectId(), new String[] {}, null, null, null);
       
       sleep2000();
 
@@ -471,8 +471,8 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set B"));
 
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME_B, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_B, node.getObjectId(), new String[] {}, null, null, null);
 
       sleep2000();
 
@@ -526,8 +526,8 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set B"));
 
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME_B, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_B, node.getObjectId(), new String[] {}, null, null, null);
 
       sleep2000();
 
@@ -587,8 +587,8 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
       assertEquals(countScheduledTasks(session, "Akey"), 0);
       assertEquals(countScheduledTasks(session, "aKey"), 0);
 
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME_B, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_B, node.getObjectId(), new String[] {}, null, null, null);
 
       sleep2000();
       
@@ -647,8 +647,8 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
       assertEquals(countScheduledTasks(session, "Akey"), 0);
       assertEquals(countScheduledTasks(session, "akey"), 0);
 
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME_B, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_B, node.getObjectId(), new String[] {}, null, null, null);
 
       sleep2000();
 
@@ -700,7 +700,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
     
       session.saveEventProcessingPolicy(policy);
       
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
       
       sleep2000();
 
@@ -708,7 +708,7 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
       assertEquals(countScheduledTasks(session, TEMPLATE_NAME_A), 1);
       assertEquals(countScheduledTasks(session, node.getGuid().toString()), 1);
 
-      session.sendEvent(0, TEMPLATE_NAME_B, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_B, node.getObjectId(), new String[] {}, null, null, null);
      
       sleep2000();
       
@@ -764,8 +764,8 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
       assertEquals(countScheduledTasks(session, "123key"), 0);
       assertEquals(countScheduledTasks(session, "3key"), 0);
 
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
-      session.sendEvent(0, TEMPLATE_NAME_B, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_B, node.getObjectId(), new String[] {}, null, null, null);
 
       sleep2000();
 
@@ -824,13 +824,13 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
       
       createCustomAtribute(session, node, "nameForTest", "valueForTest"); // creating custom attribute 
       
-      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_A, node.getObjectId(), new String[] {}, null, null, null);
       
       sleep2000();
 
       assertEquals(countScheduledTasks(session, "valueForTest"), 2); //make sure that both macros expanded identically and correctly
 
-      session.sendEvent(0, TEMPLATE_NAME_B, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME_B, node.getObjectId(), new String[] {}, null, null, null);
 
       sleep2000();
       

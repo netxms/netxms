@@ -39,6 +39,7 @@ static NamedPipe *s_pipe = nullptr;
 static uint32_t s_eventCode = 0;
 static TCHAR *s_eventName = nullptr;
 static StringList s_parameters;
+static StringList s_parameterNames;
 
 /**
  * options
@@ -46,6 +47,7 @@ static StringList s_parameters;
 static uint32_t s_optObjectId = 0;
 static int s_optVerbose = 1;
 static time_t s_timestamp = time(nullptr);
+static bool s_optNamed = false;
 
 /**
  * Initialize and connect to the agent
@@ -80,6 +82,8 @@ static bool Send()
    msg.setField(VID_NUM_ARGS, static_cast<uint16_t>(s_parameters.size()));
    for(int i = 0; i < s_parameters.size(); i++)
       msg.setField(VID_EVENT_ARG_BASE + i, s_parameters.get(i));
+   for(int i = 0; i < s_parameterNames.size(); i++)
+      msg.setField(VID_EVENT_ARG_NAMES_BASE + i, s_parameterNames.get(i));
 
 	// Send message to pipe
 	NXCP_MESSAGE *rawMsg = msg.serialize();
@@ -106,18 +110,19 @@ static bool Teardown()
 #if HAVE_GETOPT_LONG
 static struct option longOptions[] =
 {
-	{ (char *)"help",           no_argument,       nullptr,        'h'},
-	{ (char *)"object",         required_argument, nullptr,        'o'},
-	{ (char *)"quiet",          no_argument,       nullptr,        'q'},
-	{ (char *)"timestamp-unix", required_argument, nullptr,        't'},
-	{ (char *)"timestamp-text", required_argument, nullptr,        'T'},
-	{ (char *)"verbose",        no_argument,       nullptr,        'v'},
-	{ (char *)"version",        no_argument,       nullptr,        'V'},
+	{ (char *)"help",             no_argument,       nullptr,        'h'},
+   { (char *)"named-parameters", no_argument,       nullptr,        'n'},
+	{ (char *)"object",           required_argument, nullptr,        'o'},
+	{ (char *)"quiet",            no_argument,       nullptr,        'q'},
+	{ (char *)"timestamp-unix",   required_argument, nullptr,        't'},
+	{ (char *)"timestamp-text",   required_argument, nullptr,        'T'},
+	{ (char *)"verbose",          no_argument,       nullptr,        'v'},
+	{ (char *)"version",          no_argument,       nullptr,        'V'},
 	{ nullptr, 0, nullptr, 0}
 };
 #endif
 
-#define SHORT_OPTIONS "ho:qt:T:vV"
+#define SHORT_OPTIONS "hno:qt:T:vV"
 
 /**
  * Show online help
@@ -132,6 +137,7 @@ _T("  \n")
 _T("Options:\n")
 #if HAVE_GETOPT_LONG
 _T("  -h, --help                  Display this help message.\n")
+_T("  -n, --named-parameters      Parameters are provided in named format: name=value.\n")
 _T("  -o, --object <id>           Send event on behalf of object with given id.\n")
 _T("  -q, --quiet                 Suppress all messages.\n")
 _T("  -t, --timestamp-unix <time> Specify timestamp for event as UNIX timestamp.\n")
@@ -140,6 +146,7 @@ _T("  -v, --verbose               Enable verbose messages. Add twice for debug\n
 _T("  -V, --version               Display version information.\n\n")
 #else
 _T("  -h             Display this help message.\n")
+_T("  -n             Parameters are provided in named format: name=value.\n")
 _T("  -o <id>        Send event on behalf of object with given id.\n")
 _T("  -q             Suppress all messages.\n")
 _T("  -t <time>      Specify timestamp for event as UNIX timestamp.\n")
@@ -183,8 +190,11 @@ int main(int argc, char *argv[])
 			   ShowUsage(argv[0]);
 			   exit(0);
 			   break;
+         case 'n': // use named paramer format
+            s_optNamed = true;
+            break;
 		   case 'o': // object ID
-			   s_optObjectId = strtoul(optarg, nullptr, 0);
+		      s_optObjectId = strtoul(optarg, nullptr, 0);
 			   break;
 		   case 'q': // quiet
 			   s_optVerbose = 0;
@@ -244,10 +254,31 @@ int main(int argc, char *argv[])
    for(int i = optind + 1; i < argc; i++)
    {
 #ifdef UNICODE
-      s_parameters.addPreallocated(WideStringFromMBStringSysLocale(argv[i]));
+      TCHAR *param = WideStringFromMBStringSysLocale(argv[i]);
 #else
-      s_parameters.add(argv[i]);
+      TCHAR *param = MemCopyString(argv[i]);
 #endif
+      if (s_optNamed)
+      {
+         TCHAR *separator = _tcschr(param, '=');
+         if (separator != nullptr)
+         {
+            *separator = 0;
+            s_parameters.add(separator + 1);
+            s_parameterNames.addPreallocated(param);
+         }
+         else
+         {
+            TCHAR buffer[32];
+            _sntprintf(buffer, 32, _T("parameter%d"), s_parameterNames.size() + 1);
+            s_parameterNames.add(buffer);
+            s_parameters.addPreallocated(param);
+         }
+      }
+      else
+      {
+         s_parameters.addPreallocated(param);
+      }
    }
 
    int ret = 0;

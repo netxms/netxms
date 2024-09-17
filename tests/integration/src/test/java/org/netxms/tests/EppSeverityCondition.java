@@ -68,7 +68,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);   
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);   
             
       assertNotNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
@@ -111,7 +111,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);   
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);   
             
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
@@ -149,7 +149,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
       
       assertNotNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
@@ -191,7 +191,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
@@ -229,7 +229,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
       
       assertNotNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
@@ -271,7 +271,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
@@ -309,7 +309,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
       
       assertNotNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
@@ -351,7 +351,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
@@ -389,7 +389,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
       
       assertNotNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
@@ -431,7 +431,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null);
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
       
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
       

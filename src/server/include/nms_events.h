@@ -444,14 +444,7 @@ public:
       return *this;
    }
 
-   EventBuilder& params(const NXCPMessage& msg, uint32_t baseId, uint32_t countId);
-
-   EventBuilder& params(const NXCPMessage& msg, uint32_t valuesBaseId, uint32_t namesBaseId, uint32_t countId)
-   {
-      m_event->m_parameters.addAllFromMessage(msg, valuesBaseId, countId);
-      m_event->m_parameterNames.addAllFromMessage(msg, namesBaseId, countId);
-      return *this;
-   }
+   EventBuilder& params(const NXCPMessage& msg, uint32_t valuesBaseId, uint32_t namesBaseId, uint32_t countId);
 
    EventBuilder& params(const StringMap& map);
 

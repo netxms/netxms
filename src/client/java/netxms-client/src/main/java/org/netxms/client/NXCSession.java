@@ -9186,12 +9186,13 @@ public class NXCSession
     * @param eventName event name. Must be set to null if event identified by code.
     * @param objectId Object ID to send event on behalf of. If set to 0, server will determine object ID by client IP address.
     * @param parameters event's parameters
+    * @param paramerNames event's parameter names
     * @param userTag event's user tag
     * @param originTimestamp origin timestamp or null
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void sendEvent(long eventCode, String eventName, long objectId, String[] parameters, String userTag, Date originTimestamp)
+   public void sendEvent(long eventCode, String eventName, long objectId, String[] parameters, String[] paramerNames, String userTag, Date originTimestamp)
          throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_TRAP);
@@ -9208,6 +9209,14 @@ public class NXCSession
       {
          msg.setField(varId++, parameters[i]);
       }
+      if (paramerNames != null)
+      {
+         varId = NXCPCodes.VID_EVENT_ARG_NAMES_BASE;
+         for(int i = 0; i < paramerNames.length; i++)
+         {
+            msg.setField(varId++, paramerNames[i]);
+         }
+      }
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -9217,12 +9226,13 @@ public class NXCSession
     *
     * @param eventCode  event code
     * @param parameters event's parameters
+    * @param paramerNames event's parameter names
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void sendEvent(long eventCode, String[] parameters) throws IOException, NXCException
+   public void sendEvent(long eventCode, String[] parameters, String[] paramerNames) throws IOException, NXCException
    {
-      sendEvent(eventCode, null, 0, parameters, null, null);
+      sendEvent(eventCode, null, 0, parameters, paramerNames, null, null);
    }
 
    /**
@@ -9230,12 +9240,13 @@ public class NXCSession
     *
     * @param eventName  event name
     * @param parameters event's parameters
+    * @param paramerNames event's parameter names
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void sendEvent(String eventName, String[] parameters) throws IOException, NXCException
+   public void sendEvent(String eventName, String[] parameters, String[] paramerNames) throws IOException, NXCException
    {
-      sendEvent(0, eventName, 0, parameters, null, null);
+      sendEvent(0, eventName, 0, parameters, paramerNames, null, null);
    }
 
    /**
