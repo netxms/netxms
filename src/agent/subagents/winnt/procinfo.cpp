@@ -304,8 +304,8 @@ static bool MatchProcess(DWORD pid, const WCHAR *imageName, bool extendedMatch, 
 		return (imageName != nullptr) ? wcsicmp(imageName, moduleNamePattern) == 0 : false;
 	}
 
-   //Cmd line match
-   if (cmdLinePattern != nullptr && cmdLinePattern[0] != 0) // not empty, check if match
+   // command line match
+   if ((cmdLinePattern != nullptr) && (cmdLinePattern[0] != 0)) // not empty, check if match
    {
 		TCHAR commandLine[8192];
 		memset(commandLine, 0, sizeof(commandLine));
@@ -313,23 +313,23 @@ static bool MatchProcess(DWORD pid, const WCHAR *imageName, bool extendedMatch, 
          return false;
 	}
 
-   //Process name match
-   if (moduleNamePattern != nullptr && moduleNamePattern[0] != 0)
+   // process name match
+   if ((moduleNamePattern != nullptr) && (moduleNamePattern[0] != 0))
    {	
-		if(imageName == nullptr || RegexpMatch(imageName, moduleNamePattern, false))
+      if ((imageName == nullptr) || !RegexpMatch(imageName, moduleNamePattern, false))
          return false;
 	}
 
-   //User name match
-   if (userPattern != nullptr && userPattern[0] != 0)
+   // user name match
+   if ((userPattern != nullptr) && (userPattern[0] != 0))
    {
 		TCHAR userName[256];
       if (!GetProcessOwner(pid, userName, sizeof(userName) / sizeof(TCHAR)) || !RegexpMatch(userName, userPattern, false))
          return false;
    }
 
-   //Window name match
-   if (windowNamePattern != nullptr && windowNamePattern[0] != 0)
+   // window name match
+   if ((windowNamePattern != nullptr) && (windowNamePattern[0] != 0))
    {
 		bool windowMatch = false;
 		StringList *windowList = GetProcessWindows(pid);
