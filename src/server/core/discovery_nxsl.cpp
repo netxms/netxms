@@ -176,6 +176,10 @@ NXSL_Value *NXSL_DiscoveredNodeClass::getAttr(NXSL_Object *object, const NXSL_Id
       TCHAR buffer[64];
       value = vm->createValue(data->ipAddr.toString(buffer));
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ipAddress"))
+   {
+      value = NXSL_InetAddressClass::createObject(vm, data->ipAddr);
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isAgent"))
    {
       value = vm->createValue((LONG)((data->flags & NNF_IS_AGENT) ? 1 : 0));

@@ -858,7 +858,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const NXSL_Identifie
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("ipAddress"))
    {
-      value = vm->createValue(NXSL_InetAddressClass::createObject(vm, object->getPrimaryIpAddress()));
+      value = NXSL_InetAddressClass::createObject(vm, object->getPrimaryIpAddress());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isInMaintenanceMode"))
    {
@@ -3340,7 +3340,7 @@ NXSL_Value *NXSL_WirelessStationClass::getAttr(NXSL_Object *object, const NXSL_I
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("ipAddress"))
    {
-      value = vm->createValue(NXSL_InetAddressClass::createObject(vm, ws->ipAddr));
+      value = NXSL_InetAddressClass::createObject(vm, ws->ipAddr);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("macAddress"))
    {
@@ -4298,7 +4298,7 @@ NXSL_Value *NXSL_TunnelClass::getAttr(NXSL_Object *object, const NXSL_Identifier
 
    if (NXSL_COMPARE_ATTRIBUTE_NAME("address"))
    {
-      value = vm->createValue(NXSL_InetAddressClass::createObject(vm, tunnel->getAddress()));
+      value = NXSL_InetAddressClass::createObject(vm, tunnel->getAddress());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("agentBuildTag"))
    {
@@ -6565,7 +6565,7 @@ NXSL_Value *NXSL_OSPFNeighborClass::getAttr(NXSL_Object *object, const NXSL_Iden
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("ipAddress"))
    {
-      value = vm->createValue(NXSL_InetAddressClass::createObject(vm, neighbor->ipAddress));
+      value = NXSL_InetAddressClass::createObject(vm, neighbor->ipAddress);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isVirtual"))
    {
