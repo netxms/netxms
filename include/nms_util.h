@@ -2185,12 +2185,18 @@ public:
 
 	StringMap& operator =(const StringMap &src);
 
-	void set(const TCHAR *key, const TCHAR *value) { if (key != nullptr) setObject((TCHAR *)key, MemCopyString(value), false); }
-	void setPreallocated(TCHAR *key, TCHAR *value) { setObject(key, value, true); }
-   void set(const TCHAR *key, int32_t value);
-	void set(const TCHAR *key, uint32_t value);
-   void set(const TCHAR *key, int64_t value);
-   void set(const TCHAR *key, uint64_t value);
+	StringMap& set(const TCHAR *key, const TCHAR *value) { if (key != nullptr) setObject((TCHAR *)key, MemCopyString(value), false); return *this; }
+	StringMap& setPreallocated(TCHAR *key, TCHAR *value) { setObject(key, value, true); return *this; }
+	StringMap& set(const TCHAR *key, int32_t value);
+	StringMap& set(const TCHAR *key, uint32_t value);
+	StringMap& set(const TCHAR *key, int64_t value);
+	StringMap& set(const TCHAR *key, uint64_t value);
+	StringMap& setUTF8String(const TCHAR *key, const char *value);
+#ifdef UNICODE
+	StringMap& setMBString(const TCHAR *key, const char *value) { setObject(const_cast<TCHAR *>(key), WideStringFromMBString(value), false); return *this; }
+#else
+	StringMap& setMBString(const TCHAR *key, const char *value) { set(key, value); return *this; }
+#endif
    TCHAR *unlink(const TCHAR *key) { return (TCHAR *)StringMapBase::unlink(key); }
 
    void addAll(const StringMap *src, bool (*filter)(const TCHAR *, const TCHAR *, void *) = nullptr, void *context = nullptr);
