@@ -495,6 +495,7 @@ protected:
    uint32_t m_requiredCacheSize;
    ItemValue **m_ppValueCache;
    ItemValue m_prevRawValue;     // Previous raw value (used for delta calculation)
+   uint64_t m_prevDeltaValue;    // Previous delta value for counter types
    time_t m_prevValueTimeStamp;
    bool m_cacheLoaded;
    bool m_anomalyDetected;

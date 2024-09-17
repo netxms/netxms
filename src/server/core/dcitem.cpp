@@ -44,6 +44,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
       m_ppValueCache = nullptr;
    }
    m_prevValueTimeStamp = shadowCopy ? src->m_prevValueTimeStamp : 0;
+   m_prevDeltaValue = shadowCopy ? src->m_prevDeltaValue : 0;
    m_cacheLoaded = shadowCopy ? src->m_cacheLoaded : false;
    m_anomalyDetected = shadowCopy ? src->m_anomalyDetected : false;
 	m_multiplier = src->m_multiplier;
@@ -98,6 +99,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
    m_requiredCacheSize = 0;
    m_ppValueCache = nullptr;
    m_prevValueTimeStamp = 0;
+   m_prevDeltaValue = 0;
    m_cacheLoaded = false;
    m_anomalyDetected = false;
    m_flags = DBGetFieldLong(hResult, row, 13);
@@ -171,6 +173,7 @@ DCItem::DCItem(UINT32 id, const TCHAR *name, int source, int dataType, BYTE sche
    m_requiredCacheSize = 0;
    m_ppValueCache = nullptr;
    m_prevValueTimeStamp = 0;
+   m_prevDeltaValue = 0;
    m_cacheLoaded = false;
    m_anomalyDetected = false;
 	m_multiplier = 0;
@@ -192,6 +195,7 @@ DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner
    m_requiredCacheSize = 0;
    m_ppValueCache = nullptr;
    m_prevValueTimeStamp = 0;
+   m_prevDeltaValue = 0;
    m_cacheLoaded = false;
    m_anomalyDetected = false;
 	m_multiplier = config->getSubEntryValueAsInt(_T("multiplier"));
@@ -1026,7 +1030,7 @@ void DCItem::generateEventsAfterMaintenance()
 /**
  * Transform received value. Assuming that DCI object is locked.
  */
-bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
+bool DCItem::transform(ItemValue &value, time_t elapsedTime)
 {
    bool success = true;
 
@@ -1042,16 +1046,29 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
                value = value.getUInt32() - m_prevRawValue.getUInt32();
                break;
             case DCI_DT_COUNTER32:
-	       if (value.getUInt32() >= m_prevRawValue.getUInt32())
-	       {
-		  value = value.getUInt32() - m_prevRawValue.getUInt32();
-	       }
-	       else
-	       {
-		  // discontinuity: counter reset or wraparound, return error per NX-2461
-		  success = false;
-		  m_prevRawValue = value;
-	       }
+               if (value.getUInt32() >= m_prevRawValue.getUInt32())
+               {
+                  uint32_t delta = value.getUInt32() - m_prevRawValue.getUInt32();
+                  value = delta;
+                  m_prevDeltaValue = delta;
+               }
+               else
+               {
+                  // discontinuity: counter reset or wrap around
+                  uint32_t delta = value.getUInt32() - m_prevRawValue.getUInt32();  // unsigned math
+                  if (delta > static_cast<uint32_t>(m_prevDeltaValue))
+                  {
+                     // Value (probably) too big, return error
+                     success = false;
+                     m_prevRawValue = value;
+                  }
+                  else
+                  {
+                     // Assume counter wrap around, value looks valid
+                     value = delta;
+                     m_prevDeltaValue = delta;
+                  }
+               }
                break;
             case DCI_DT_INT64:
                value = value.getInt64() - m_prevRawValue.getInt64();
@@ -1061,16 +1078,28 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
                break;
             case DCI_DT_COUNTER64:
                // assume counter reset if new value is less then previous
-	       if (value.getUInt64() >= m_prevRawValue.getUInt64())
-	       {
-		  value = value.getUInt64() - m_prevRawValue.getUInt64();
-	       }
-	       else
-	       {
-		  // discontinuity: counter reset or wraparound, return error per NX-2461
-		  success = false;
-		  m_prevRawValue = value;
-	       }
+               if (value.getUInt64() >= m_prevRawValue.getUInt64())
+               {
+                  m_prevDeltaValue = value.getUInt64() - m_prevRawValue.getUInt64();
+                  value = m_prevDeltaValue;
+               }
+               else
+               {
+                  // discontinuity: counter reset or wrap around
+                  uint64_t delta = value.getUInt64() - m_prevRawValue.getUInt64();  // unsigned math
+                  if (delta > m_prevDeltaValue)
+                  {
+                     // Value (probably) too big, return error
+                     success = false;
+                     m_prevRawValue = value;
+                  }
+                  else
+                  {
+                     // Assume counter wrap around, value looks valid
+                     value = delta;
+                     m_prevDeltaValue = delta;
+                  }
+               }
                break;
             case DCI_DT_FLOAT:
                value = value.getDouble() - m_prevRawValue.getDouble();
@@ -1084,56 +1113,79 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
          }
          break;
       case DCM_AVERAGE_PER_MINUTE:
-         nElapsedTime /= 60;  // Convert to minutes
+         elapsedTime /= 60;  // Convert to minutes
          /* no break */
       case DCM_AVERAGE_PER_SECOND:
          // Check elapsed time to prevent divide-by-zero exception
-         if (nElapsedTime == 0)
-            nElapsedTime++;
+         if (elapsedTime == 0)
+            elapsedTime++;
 
          switch(m_dataType)
          {
             case DCI_DT_INT:
-               value = (value.getInt32() - m_prevRawValue.getInt32()) / (INT32)nElapsedTime;
+               value = (value.getInt32() - m_prevRawValue.getInt32()) / static_cast<int32_t>(elapsedTime);
                break;
             case DCI_DT_UINT:
-               value = (value.getUInt32() - m_prevRawValue.getUInt32()) / (UINT32)nElapsedTime;
+               value = (value.getUInt32() - m_prevRawValue.getUInt32()) / static_cast<uint32_t>(elapsedTime);
                break;
             case DCI_DT_COUNTER32:
-               value = (value.getUInt32() > m_prevRawValue.getUInt32()) ? (value.getUInt32() - m_prevRawValue.getUInt32()) / (UINT32)nElapsedTime : 0;
-	       if (value.getUInt32() >= m_prevRawValue.getUInt32())
-	       {
-		  value = (value.getUInt32() - m_prevRawValue.getUInt32()) / (UINT32)nElapsedTime;
-	       }
-	       else
-	       {
-		  // discontinuity: counter reset or wraparound, return error per NX-2461
-		  success = false;
-		  m_prevRawValue = value;
-	       }
+               if (value.getUInt32() >= m_prevRawValue.getUInt32())
+               {
+                  uint32_t delta = value.getUInt32() - m_prevRawValue.getUInt32();
+                  value = delta / static_cast<uint32_t>(elapsedTime);
+                  m_prevDeltaValue = delta;
+               }
+               else
+               {
+                  // discontinuity: counter reset or wrap around
+                  uint32_t delta = value.getUInt32() - m_prevRawValue.getUInt32();  // unsigned math
+                  if (delta > static_cast<uint32_t>(m_prevDeltaValue))
+                  {
+                     // Value (probably) too big, return error
+                     success = false;
+                     m_prevRawValue = value;
+                  }
+                  else
+                  {
+                     // Assume counter wrap around, value looks valid
+                     value = delta / static_cast<uint32_t>(elapsedTime);
+                     m_prevDeltaValue = delta;
+                  }
+               }
                break;
             case DCI_DT_INT64:
-               value = (value.getInt64() - m_prevRawValue.getInt64()) / (INT64)nElapsedTime;
+               value = (value.getInt64() - m_prevRawValue.getInt64()) / static_cast<int64_t>(elapsedTime);
                break;
             case DCI_DT_UINT64:
-               value = (value.getUInt64() - m_prevRawValue.getUInt64()) / (UINT64)nElapsedTime;
+               value = (value.getUInt64() - m_prevRawValue.getUInt64()) / static_cast<uint64_t>(elapsedTime);
                break;
             case DCI_DT_COUNTER64:
-               value = (value.getUInt64() > m_prevRawValue.getUInt64()) ? (value.getUInt64() - m_prevRawValue.getUInt64()) / (UINT64)nElapsedTime : 0;
                // assume counter reset if new value is less then previous
-	       if (value.getUInt64() >= m_prevRawValue.getUInt64())
-	       {
-		  value = (value.getUInt64() - m_prevRawValue.getUInt64()) / (UINT64)nElapsedTime;
-	       }
-	       else
-	       {
-		  // discontinuity: counter reset or wraparound, return error per NX-2461
-		  success = false;
-		  m_prevRawValue = value;
-	       }
+               if (value.getUInt64() >= m_prevRawValue.getUInt64())
+               {
+                  m_prevDeltaValue = value.getUInt64() - m_prevRawValue.getUInt64();
+                  value = m_prevDeltaValue / static_cast<uint64_t>(elapsedTime);
+               }
+               else
+               {
+                  // discontinuity: counter reset or wrap around
+                  uint64_t delta = value.getUInt64() - m_prevRawValue.getUInt64();  // unsigned math
+                  if (delta > m_prevDeltaValue)
+                  {
+                     // Value (probably) too big, return error
+                     success = false;
+                     m_prevRawValue = value;
+                  }
+                  else
+                  {
+                     // Assume counter wrap around, value looks valid
+                     value = delta / static_cast<uint64_t>(elapsedTime);
+                     m_prevDeltaValue = delta;
+                  }
+               }
                break;
             case DCI_DT_FLOAT:
-               value = (value.getDouble() - m_prevRawValue.getDouble()) / (double)nElapsedTime;
+               value = (value.getDouble() - m_prevRawValue.getDouble()) / static_cast<double>(elapsedTime);
                break;
             case DCI_DT_STRING:
                // I don't see any meaning in _T("average delta per second (minute)") for string
