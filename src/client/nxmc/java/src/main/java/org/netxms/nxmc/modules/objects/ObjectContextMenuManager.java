@@ -63,6 +63,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewPlacement;
+import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.helpers.MenuContributionItem;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.agentmanagement.PackageDeployment;
@@ -141,6 +142,7 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionRemoveWirelessController;
    private Action actionRouteFrom;
    private Action actionRouteTo;
+   private Action actionRouteFromMgmtNode;
    private Action actionLayer2Topology;
    private Action actionIPTopology;
    private Action actionInternalTopology;
@@ -412,6 +414,14 @@ public class ObjectContextMenuManager extends MenuManager
          }
       };
 
+      actionRouteFromMgmtNode = new Action(i18n.tr("Route from NetXMS server")) {
+         @Override
+         public void run()
+         {
+            showRouteFromManagementNode();
+         }
+      };
+
       actionLayer2Topology = new Action(i18n.tr("&Layer 2 topology")) {
          @Override
          public void run()
@@ -671,6 +681,8 @@ public class ObjectContextMenuManager extends MenuManager
             if (((Node)object).getPrimaryIP().isValidUnicastAddress() || ((Node)object).isManagementServer())
             {
                add(new Separator());
+               if (!((Node)object).isManagementServer())
+                  add(actionRouteFromMgmtNode);
                add(actionRouteFrom);
                add(actionRouteTo);
                MenuManager topologyMapMenu = new MenuManager(i18n.tr("Topology maps"));
@@ -1516,6 +1528,27 @@ public class ObjectContextMenuManager extends MenuManager
             swap ?
                new RouteView((Node)destination, (Node)source, contextId) :
                new RouteView((Node)source, (Node)destination, contextId));
+   }
+
+   /**
+    * Show route from management server to selected node
+    */
+   private void showRouteFromManagementNode()
+   {
+      AbstractObject destination = getObjectFromSelection();
+      if (!(destination instanceof Node))
+         return;
+
+      NXCSession session = Registry.getSession();
+      Node source = (Node)session.findObject((o) -> (o instanceof Node) && ((Node)o).isManagementServer());
+      if (source == null)
+      {
+         view.addMessage(MessageArea.ERROR, i18n.tr("NetXMS server node is not accessible"));
+         return;
+      }
+
+      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : destination.getObjectId();
+      view.openView(new RouteView(source, (Node)destination, contextId));
    }
 
    /**
