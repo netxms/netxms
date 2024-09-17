@@ -36,10 +36,12 @@ import org.eclipse.jface.util.ISafeRunnableRunner;
 import org.eclipse.jface.util.SafeRunnable;
 import org.eclipse.jface.window.Window;
 import org.eclipse.jface.window.Window.IExceptionHandler;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.internal.DPIUtil;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.base.VersionInfo;
 import org.netxms.certificate.loader.KeyStoreRequestListener;
@@ -97,6 +99,7 @@ public class Startup
    public static Image[] windowIcons = new Image[6];
 
    private static ReconnectDialog reconnectDialog = null;
+   private static long activityTimestamp = System.currentTimeMillis();
 
    /**
     * @param args
@@ -188,6 +191,7 @@ public class Startup
          });
          session.enableReconnect(true);
          Registry.setSingleton(UIElementFilter.class, new UIElementFilter(session));
+         setInactivityHandler(display, session.getClientConfigurationHintAsInt("InactivityTimeout", 0));
          openWindows(session, args);
       }
 
@@ -205,6 +209,51 @@ public class Startup
       logger.debug("Running threads on shutdown:");
       for(Thread t : Thread.getAllStackTraces().keySet())
          logger.debug("   " + t.getName() + " state=" + t.getState() + " daemon=" + t.isDaemon());
+   }
+
+   /**
+    * Set session inactivity handler.
+    *
+    * @param display current display
+    * @param inactivityTimeout inactivity timeout in seconds
+    */
+   private static void setInactivityHandler(Display display, int inactivityTimeout)
+   {
+      if (inactivityTimeout <= 0)
+      {
+         logger.debug("User inactivity timer not set");
+         return;
+      }
+
+      Listener activityListener = (e) -> {
+         activityTimestamp = System.currentTimeMillis();
+      };
+      display.addFilter(SWT.MouseDown, activityListener);
+      display.addFilter(SWT.MouseDoubleClick, activityListener);
+      display.addFilter(SWT.KeyDown, activityListener);
+
+      final long inactivityTimeoutMs = inactivityTimeout * 1000L;
+      Thread thread = new Thread(() -> {
+         logger.debug("User inactivity timer started");
+         while(true)
+         {
+            try
+            {
+               Thread.sleep(10000);
+            }
+            catch(InterruptedException e)
+            {
+            }
+            if (activityTimestamp < System.currentTimeMillis() - inactivityTimeoutMs)
+            {
+               logger.debug("User inactivity timer fired");
+               Registry.getSession().disconnectInactiveSession();
+               break;
+            }
+         }
+      }, "InactivityTimer");
+      thread.setDaemon(true);
+      thread.start();
    }
 
    /**
@@ -515,7 +564,7 @@ public class Startup
       }
       catch(Exception e)
       {
-         logger.error("Exception in getSignature", e); //$NON-NLS-1$
+         logger.error("Exception in getSignature", e);
          return null;
       }
 
@@ -619,6 +668,9 @@ public class Startup
       {
          case SessionNotification.CONNECTION_BROKEN:
             processDisconnect(i18n.tr("communication error"));
+            break;
+         case SessionNotification.INACTIVITY_TIMEOUT:
+            processDisconnect(i18n.tr("session terminated due to inactivity"));
             break;
          case SessionNotification.RECONNECT_COMPLETED:
             Display.getDefault().asyncExec(() -> {

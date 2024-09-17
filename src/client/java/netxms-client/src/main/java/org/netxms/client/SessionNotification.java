@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -110,7 +110,8 @@ public class SessionNotification
    public static final int RECONNECT_STARTED = 2003;
    public static final int RECONNECT_COMPLETED = 2004;
    public static final int RECONNECT_ATTEMPT_FAILED = 2005;
-	
+   public static final int INACTIVITY_TIMEOUT = 2006;
+
    // Reporting server notification
    public static final int RS_RESULTS_MODIFIED = 3001;
 

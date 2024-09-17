@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.12 to 51.13
+ */
+static bool H_UpgradeFromV12()
+{
+   if (GetSchemaLevelForMajorVersion(50) < 46)
+   {
+      CHK_EXEC(CreateConfigParam(_T("Client.InactivityTimeout"),
+                                 _T("0"),
+                                 _T("User inactivity timeout in seconds. Client will disconnect if no user activity detected within given time interval. Value of 0 disables inactivity timeout."),
+                                 _T("seconds"), 'I', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(50, 46));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(13));
+   return true;
+}
+
+/**
  * Upgrade from 51.11 to 51.12
  */
 static bool H_UpgradeFromV11()
@@ -124,7 +141,7 @@ static bool H_UpgradeFromV8()
 {
    CHK_EXEC(CreateConfigParam(_T("Client.ObjectOverview.ShowCommentsOnlyIfPresent"),
                               _T("1"),
-                              _T("If enabled, commens section in object overview will only be shown when object comments are not empty."),
+                              _T("If enabled, comments section in object overview will only be shown when object comments are not empty."),
                               nullptr, 'B', true, false, false, false));
    CHK_EXEC(SetMinorSchemaVersion(9));
    return true;
@@ -282,6 +299,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 12, 51, 13, H_UpgradeFromV12 },
    { 11, 51, 12, H_UpgradeFromV11 },
    { 10, 51, 11, H_UpgradeFromV10 },
    { 9,  51, 10, H_UpgradeFromV9  },
