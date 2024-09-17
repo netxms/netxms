@@ -151,6 +151,14 @@ NXSL_Value *NXSL_InetAddressClass::getAttr(NXSL_Object *object, const NXSL_Ident
    {
       value = vm->createValue(a->isMulticast());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSubnetBase"))
+   {
+      value = vm->createValue(a->getSubnetAddress().equals(*a));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSubnetBroadcast"))
+   {
+      value = vm->createValue(a->isSubnetBroadcast());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isValid"))
    {
       value = vm->createValue(a->isValid());
@@ -162,6 +170,10 @@ NXSL_Value *NXSL_InetAddressClass::getAttr(NXSL_Object *object, const NXSL_Ident
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("mask"))
    {
       value = vm->createValue(a->getMaskBits());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("subnet"))
+   {
+      value = NXSL_InetAddressClass::createObject(vm, a->getSubnetAddress());
    }
    return value;
 }

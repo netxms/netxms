@@ -4540,6 +4540,7 @@ public:
    InetAddress getSubnetAddress() const;
    InetAddress getSubnetBroadcast() const;
    bool isSubnetBroadcast(int maskBits) const;
+   bool isSubnetBroadcast() const { return isSubnetBroadcast(m_maskBits); }
 
    String toString() const;
    TCHAR *toString(TCHAR *buffer) const;
