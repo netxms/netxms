@@ -24,6 +24,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -37,6 +38,7 @@ public class CommentsView extends ObjectView
    private final I18n i18n = LocalizationHelper.getI18n(CommentsView.class);
 
    private Text content;
+   private boolean showEmptyComments;
 
    /**
     * Create new comments view
@@ -44,6 +46,7 @@ public class CommentsView extends ObjectView
    public CommentsView()
    {
       super(LocalizationHelper.getI18n(CommentsView.class).tr("Comments"), ResourceManager.getImageDescriptor("icons/object-views/comments.png"), "objects.comments", false);
+      showEmptyComments = !Registry.getSession().getClientConfigurationHintAsBoolean("ObjectOverview.ShowCommentsOnlyIfPresent", true);
    }
 
    /**
@@ -52,7 +55,7 @@ public class CommentsView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && (context instanceof AbstractObject) && !((AbstractObject)context).getComments().isBlank();
+      return (context != null) && (context instanceof AbstractObject) && (showEmptyComments || !((AbstractObject)context).getComments().isBlank());
    }
 
    /**
