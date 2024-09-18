@@ -20,25 +20,13 @@ package org.netxms.nxmc.modules.nxsl.views;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
-import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.IInputValidator;
-import org.eclipse.jface.dialogs.InputDialog;
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.dnd.Clipboard;
-import org.eclipse.swt.dnd.TextTransfer;
-import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
 import org.netxms.client.ScriptCompilationResult;
@@ -50,13 +38,11 @@ import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.base.widgets.MessageArea;
-import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
-import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -76,10 +62,6 @@ public class ScriptEditorView extends ConfigurationView
    private Action actionCompile;
    private Action actionShowLineNumbers;
    private Action actionGoToLine;
-   private Action actionSelectAll;
-   private Action actionCut;
-   private Action actionCopy;
-   private Action actionPaste;
    private String savedScript = null;
 
    /**
@@ -143,7 +125,15 @@ public class ScriptEditorView extends ConfigurationView
    @Override
    protected void createContent(Composite parent)
    {
-      editor = new ScriptEditor(parent, SWT.NONE, SWT.H_SCROLL | SWT.V_SCROLL, showLineNumbers, false);
+      editor = new ScriptEditor(parent, SWT.NONE, SWT.H_SCROLL | SWT.V_SCROLL, showLineNumbers, false) {
+         @Override
+         protected void fillContextMenu(IMenuManager manager)
+         {
+            super.fillContextMenu(manager);
+            manager.add(new Separator());
+            manager.add(actionCompile);
+         }
+      };
       editor.getTextWidget().addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
@@ -152,25 +142,11 @@ public class ScriptEditorView extends ConfigurationView
             {
                modified = true;
                actionSave.setEnabled(true);
-
-               boolean selected = editor.getTextWidget().getSelectionCount() > 0;
-               actionCut.setEnabled(selected);
-               actionCopy.setEnabled(selected);
             }
-         }
-      });
-      editor.getTextWidget().addSelectionListener(new SelectionAdapter() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            boolean selected = editor.getTextWidget().getSelectionCount() > 0;
-            actionCut.setEnabled(selected);
-            actionCopy.setEnabled(selected);
          }
       });
 
       createActions();
-      createContextMenu();
    }
 
    /**
@@ -225,88 +201,29 @@ public class ScriptEditorView extends ConfigurationView
       actionShowLineNumbers.setChecked(showLineNumbers);
       addKeyBinding("M1+M3+L", actionShowLineNumbers);
 
-      actionGoToLine = new Action(i18n.tr("&Go to line...")) {
+      actionGoToLine = new Action(i18n.tr("&Go to line..."), ResourceManager.getImageDescriptor("icons/nxsl/go-to-line.png")) {
          @Override
          public void run()
          {
-            goToLine();
+            editor.goToLine();
          }
       };
       addKeyBinding("M1+G", actionGoToLine);
-
-      actionSelectAll = new Action(i18n.tr("Select &all")) {
-         @Override
-         public void run()
-         {
-            editor.getTextWidget().selectAll();
-         }
-      };
-      addKeyBinding("M1+A", actionSelectAll);
-      
-      //Do not require key bindings (already part of Styles text)
-      actionCut = new Action(i18n.tr("C&ut") + "\t" + KeyStroke.parse("M1+X").toString(), SharedIcons.CUT) {
-         @Override
-         public void run()
-         {
-            editor.getTextWidget().cut();
-         }
-      };
-      actionCut.setEnabled(false);
-      addKeyBinding("M1+X", actionCut);
-
-      actionCopy = new Action(i18n.tr("&Copy") + "\t" + KeyStroke.parse("M1+C").toString(), SharedIcons.COPY) {
-         @Override
-         public void run()
-         {
-            editor.getTextWidget().copy();
-         }
-      };
-      actionCopy.setEnabled(false);
-
-      actionPaste = new Action(i18n.tr("&Paste") + "\t" + KeyStroke.parse("M1+P").toString(), SharedIcons.PASTE) {
-         @Override
-         public void run()
-         {
-            editor.getTextWidget().paste();
-         }
-      };
-      actionPaste.setEnabled(canPaste());
    }
 
    /**
-    * Create context menu
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
     */
-   private void createContextMenu()
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
    {
-      // Create menu manager.
-      MenuManager menuMgr = new MenuManager();
-      menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
-         {
-            fillContextMenu(mgr);
-         }
-      });
-
-      // Create menu.
-      Menu menu = menuMgr.createContextMenu(editor.getTextWidget());
-      editor.getTextWidget().setMenu(menu);
-   }
-
-   /**
-    * Fill context menu
-    * 
-    * @param mgr Menu manager
-    */
-   protected void fillContextMenu(final IMenuManager mgr)
-   {
-      mgr.add(actionCopy);
-      mgr.add(actionCut);
-      mgr.add(actionPaste);
-      mgr.add(new Separator());      
-      mgr.add(actionSelectAll);
-      mgr.add(new Separator());
-      mgr.add(actionCompile);
+      manager.add(actionGoToLine);
+      manager.add(new Separator());
+      manager.add(actionShowLineNumbers);
+      manager.add(new Separator());
+      manager.add(actionCompile);
+      manager.add(actionSave);
+      super.fillLocalMenu(manager);
    }
 
    /**
@@ -315,31 +232,10 @@ public class ScriptEditorView extends ConfigurationView
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
    {
-      super.fillLocalToolBar(manager);
+      manager.add(actionGoToLine);
       manager.add(actionCompile);
       manager.add(actionSave);
-   }
-
-   /**
-    * Check if paste action can work
-    * 
-    * @return
-    */
-   private boolean canPaste()
-   {
-      Clipboard cb = new Clipboard(Display.getCurrent());
-      TransferData[] available = WidgetHelper.getAvailableTypes(cb);
-      boolean enabled = false;
-      for(int i = 0; i < available.length; i++)
-      {
-         if (TextTransfer.getInstance().isSupportedType(available[i]))
-         {
-            enabled = true;
-            break;
-         }
-      }
-      cb.dispose();
-      return enabled;
+      super.fillLocalToolBar(manager);
    }
 
    /**
@@ -489,36 +385,6 @@ public class ScriptEditorView extends ConfigurationView
             return i18n.tr("Cannot save script");
          }
       }.start();
-   }
-
-   /**
-    * Go to specific line
-    */
-   private void goToLine()
-   {
-      final int maxLine = editor.getLineCount();
-      InputDialog dlg = new InputDialog(getWindow().getShell(), i18n.tr("Go to Line"), String.format(i18n.tr("Enter line number (1..%d)"), maxLine),
-            Integer.toString(editor.getCurrentLine()), new IInputValidator() {
-               @Override
-               public String isValid(String newText)
-               {
-                  try
-                  {
-                     int n = Integer.parseInt(newText);
-                     if ((n < 1) || (n > maxLine))
-                        return i18n.tr("Number out of range");
-                     return null;
-                  }
-                  catch(NumberFormatException e)
-                  {
-                     return i18n.tr("Invalid number");
-                  }
-               }
-            });
-      if (dlg.open() != Window.OK)
-         return;
-
-      editor.setCaretToLine(Integer.parseInt(dlg.getValue()));
    }
 
    /**

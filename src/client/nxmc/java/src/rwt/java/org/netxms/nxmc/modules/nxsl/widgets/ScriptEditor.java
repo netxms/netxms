@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,13 @@ package org.netxms.nxmc.modules.nxsl.widgets;
 import java.util.Collection;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.IInputValidator;
+import org.eclipse.jface.dialogs.InputDialog;
+import org.eclipse.jface.window.Window;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
@@ -28,6 +35,8 @@ import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
@@ -40,6 +49,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
@@ -49,6 +59,8 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.CompositeWithMessageArea;
 import org.netxms.nxmc.base.widgets.MessageArea;
+import org.netxms.nxmc.keyboard.KeyBindingManager;
+import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -69,6 +81,13 @@ public class ScriptEditor extends CompositeWithMessageArea
 	private Text hintTextControl = null;
 	private Label hintsExpandButton = null;
 	private Button compileButton;
+   private KeyBindingManager keyBindingManager;
+   private Action actionGoToLine;
+   private Action actionSelectAll;
+   private Action actionCut;
+   private Action actionCopy;
+   private Action actionPaste;
+   private Action actionDeleteLine;
 
    /**
     * @param parent
@@ -199,6 +218,19 @@ public class ScriptEditor extends CompositeWithMessageArea
          compileButton.setSize(compileButton.computeSize(SWT.DEFAULT, SWT.DEFAULT));
          positionCompileButton();
       }
+
+      keyBindingManager = new KeyBindingManager();
+
+      createActions();
+      createContextMenu();
+
+      editor.addKeyListener(new KeyAdapter() {
+         @Override
+         public void keyPressed(KeyEvent e)
+         {
+            keyBindingManager.processKeyStroke(new KeyStroke(e.stateMask, e.keyCode));
+         }
+      });
 	}
 
    /**
@@ -280,6 +312,105 @@ public class ScriptEditor extends CompositeWithMessageArea
       
       Label separator = new Label(content, SWT.SEPARATOR | SWT.HORIZONTAL);
       separator.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+   }
+
+   /**
+    * Create actions
+    */
+   private void createActions()
+   {
+      actionGoToLine = new Action(i18n.tr("&Go to line..."), ResourceManager.getImageDescriptor("icons/nxsl/go-to-line.png")) {
+         @Override
+         public void run()
+         {
+            goToLine();
+         }
+      };
+      keyBindingManager.addBinding("M1+L", actionGoToLine);
+
+      actionSelectAll = new Action(i18n.tr("Select &all")) {
+         @Override
+         public void run()
+         {
+            selectAll();
+         }
+      };
+      keyBindingManager.addBinding("M1+A", actionSelectAll);
+
+      actionDeleteLine = new Action(i18n.tr("&Delete line")) {
+         @Override
+         public void run()
+         {
+            deleteLine();
+         }
+      };
+      keyBindingManager.addBinding("M1+M2+K", actionDeleteLine);
+
+      // Do not require key bindings (handled by StyledText widget)
+      actionCut = new Action(i18n.tr("C&ut") + "\t" + KeyStroke.parse("M1+X").toString(), SharedIcons.CUT) {
+         @Override
+         public void run()
+         {
+            cut();
+         }
+      };
+      actionCut.setEnabled(false);
+
+      actionCopy = new Action(i18n.tr("&Copy") + "\t" + KeyStroke.parse("M1+C").toString(), SharedIcons.COPY) {
+         @Override
+         public void run()
+         {
+            copy();
+         }
+      };
+      actionCopy.setEnabled(false);
+
+      actionPaste = new Action(i18n.tr("&Paste") + "\t" + KeyStroke.parse("M1+P").toString(), SharedIcons.PASTE) {
+         @Override
+         public void run()
+         {
+            paste();
+         }
+      };
+      actionPaste.setEnabled(false);
+   }
+
+   /**
+    * Create context menu
+    */
+   private void createContextMenu()
+   {
+      // Create menu manager.
+      MenuManager menuMgr = new MenuManager();
+      menuMgr.setRemoveAllWhenShown(true);
+      menuMgr.addMenuListener((m) -> fillContextMenu(m));
+
+      // Create menu.
+      Menu menu = menuMgr.createContextMenu(editor);
+      editor.setMenu(menu);
+   }
+
+   /**
+    * Fill context menu.
+    *
+    * @param manager menu manager
+    */
+   protected void fillContextMenu(IMenuManager manager)
+   {
+      manager.add(actionSelectAll);
+      manager.add(new Separator());
+      manager.add(actionCopy);
+      manager.add(actionCut);
+      manager.add(actionPaste);
+      manager.add(new Separator());
+      manager.add(actionDeleteLine);
+      manager.add(new Separator());
+      manager.add(actionGoToLine);
+
+      int selectionLength = editor.getSelectionCount();
+      actionCut.setEnabled(selectionLength > 0);
+      actionCopy.setEnabled(selectionLength > 0);
+      actionPaste.setEnabled(canPaste());
    }
 
 	/**
@@ -481,6 +612,36 @@ public class ScriptEditor extends CompositeWithMessageArea
    }
 
    /**
+    * Go to line specified by user (will display interactive UI element)
+    */
+   public void goToLine()
+   {
+      final int maxLine = getLineCount();
+      InputDialog dlg = new InputDialog(getShell(), i18n.tr("Go to Line"), String.format(i18n.tr("Enter line number (1..%d)"), maxLine), Integer.toString(getCurrentLine()),
+            new IInputValidator() {
+               @Override
+               public String isValid(String newText)
+               {
+                  try
+                  {
+                     int n = Integer.parseInt(newText);
+                     if ((n < 1) || (n > maxLine))
+                        return i18n.tr("Number out of range");
+                     return null;
+                  }
+                  catch(NumberFormatException e)
+                  {
+                     return i18n.tr("Invalid number");
+                  }
+               }
+            });
+      if (dlg.open() != Window.OK)
+         return;
+
+      setCaretToLine(Integer.parseInt(dlg.getValue()));
+   }
+
+   /**
     * Highlight error line.
     *
     * @param lineNumber line number to highlight
@@ -525,8 +686,18 @@ public class ScriptEditor extends CompositeWithMessageArea
     */
    public int getCurrentLine()
    {
-      int i = editor.getCaretPosition();
-      String text = editor.getText().substring(0, i);
+      return getLineAtOffset(editor.getCaretPosition());
+   }
+
+   /**
+    * Get line number at given caret position
+    *
+    * @param offset caret position
+    * @return line number
+    */
+   private int getLineAtOffset(int offset)
+   {
+      String text = editor.getText().substring(0, offset);
       if (text.isEmpty())
          return 0;
       return text.split(editor.getLineDelimiter()).length + 1;
@@ -540,5 +711,69 @@ public class ScriptEditor extends CompositeWithMessageArea
    public void setCaretToLine(int lineNumber)
    {
       // TODO: implement if possible
+   }
+
+   /**
+    * Select whole text
+    */
+   public void selectAll()
+   {
+      editor.selectAll();
+   }
+
+   /**
+    * Delete current line
+    */
+   public void deleteLine()
+   {
+      String d = editor.getLineDelimiter();
+      char de = d.charAt(d.length() - 1);
+
+      String text = editor.getText();
+      int start = editor.getCaretPosition();
+      while((start > 0) && (text.charAt(start) != de))
+         start--;
+      if (text.charAt(start) == de)
+         start++;
+
+      int end = editor.getCaretPosition();
+      while((end < text.length()) && (text.charAt(end) != de))
+         end++;
+
+      editor.setText(text.substring(0, start) + text.substring(end));
+   }
+
+   /**
+    * Cut selected text
+    */
+   public void cut()
+   {
+      editor.cut();
+   }
+
+   /**
+    * Copy selected text
+    */
+   public void copy()
+   {
+      editor.copy();
+   }
+
+   /**
+    * Paste text from clipboard
+    */
+   public void paste()
+   {
+      editor.paste();
+   }
+
+   /**
+    * Check if paste action can work
+    * 
+    * @return
+    */
+   public boolean canPaste()
+   {
+      return true; // TODO: can we determine if client-side clipboard is available?
    }
 }
