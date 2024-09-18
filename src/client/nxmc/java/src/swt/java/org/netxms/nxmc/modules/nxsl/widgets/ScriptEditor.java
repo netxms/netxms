@@ -392,7 +392,7 @@ public class ScriptEditor extends CompositeWithMessageArea
             goToLine();
          }
       };
-      keyBindingManager.addBinding("M1+L", actionGoToLine);
+      keyBindingManager.addBinding("M1+G", actionGoToLine);
 
       actionSelectAll = new Action(i18n.tr("Select &all")) {
          @Override
