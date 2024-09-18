@@ -24,6 +24,19 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.13 to 51.14
+ */
+static bool H_UpgradeFromV13()
+{
+   CHK_EXEC(CreateConfigParam(_T("Client.ObjectBrowser.ShowTargetsUnderTemplates"),
+                              _T("0"),
+                              _T("If enabled, template target objects (nodes, access points, etc.) will be shown under templates applied to those objects."),
+                              nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(14));
+   return true;
+}
+
+/**
  * Upgrade from 51.12 to 51.13
  */
 static bool H_UpgradeFromV12()
@@ -299,6 +312,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 13, 51, 14, H_UpgradeFromV13 },
    { 12, 51, 13, H_UpgradeFromV12 },
    { 11, 51, 12, H_UpgradeFromV11 },
    { 10, 51, 11, H_UpgradeFromV10 },

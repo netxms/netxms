@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,17 +24,17 @@ import org.netxms.base.InetAddressEx;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.interfaces.NodeChild;
+import org.netxms.client.objects.interfaces.NodeComponent;
 
 /**
  * VPN connector object
  */
-public class VPNConnector extends GenericObject implements NodeChild
+public class VPNConnector extends GenericObject implements NodeComponent
 {
    private long peerGatewayId;
    private List<InetAddressEx> localSubnets;
    private List<InetAddressEx> remoteSubnets;
-   
+
    /**
     * Create from NXCP message
     * 
@@ -64,10 +64,9 @@ public class VPNConnector extends GenericObject implements NodeChild
    }
 
    /**
-    * Get parent node object.
-    * 
-    * @return parent node object or null if it is not exist or inaccessible
+    * @see org.netxms.client.objects.interfaces.NodeComponent#getParentNode()
     */
+   @Override
    public AbstractNode getParentNode()
    {
       AbstractNode node = null;
@@ -86,8 +85,8 @@ public class VPNConnector extends GenericObject implements NodeChild
       return node;
    }
    
-   /* (non-Javadoc)
-    * @see org.netxms.client.objects.GenericObject#getObjectClassName()
+   /**
+    * @see org.netxms.client.objects.AbstractObject#getObjectClassName()
     */
    @Override
    public String getObjectClassName()

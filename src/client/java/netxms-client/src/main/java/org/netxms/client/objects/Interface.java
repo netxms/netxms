@@ -34,14 +34,14 @@ import org.netxms.client.constants.LinkLayerDiscoveryProtocol;
 import org.netxms.client.constants.OSPFInterfaceState;
 import org.netxms.client.constants.OSPFInterfaceType;
 import org.netxms.client.constants.SpanningTreePortState;
-import org.netxms.client.objects.interfaces.NodeChild;
+import org.netxms.client.objects.interfaces.NodeComponent;
 import org.netxms.client.objects.interfaces.ZoneMember;
 import org.netxms.client.snmp.SnmpObjectId;
 
 /**
  * Network interface object
  */
-public class Interface extends GenericObject implements ZoneMember, NodeChild
+public class Interface extends GenericObject implements ZoneMember, NodeComponent
 {
 	// Interface flags
 	public static final int IF_SYNTHETIC_MASK            = 0x00000001;
@@ -492,10 +492,9 @@ public class Interface extends GenericObject implements ZoneMember, NodeChild
 	}
 
    /**
-	 * Get parent node object.
-	 * 
-	 * @return parent node object or null if it is not exist or inaccessible
-	 */
+    * @see org.netxms.client.objects.interfaces.NodeComponent#getParentNode()
+    */
+   @Override
 	public AbstractNode getParentNode()
 	{
 		AbstractNode node = null;

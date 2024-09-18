@@ -430,6 +430,18 @@ public class ObjectBrowser extends NavigationView
             classFilter.add(AbstractObject.OBJECT_TEMPLATE);
             classFilter.add(AbstractObject.OBJECT_TEMPLATEGROUP);
             classFilter.add(AbstractObject.OBJECT_TEMPLATEROOT);
+            if (Registry.getSession().getClientConfigurationHintAsBoolean("ObjectBrowser.ShowTargetsUnderTemplates", false))
+            {
+               classFilter.add(AbstractObject.OBJECT_ACCESSPOINT);
+               classFilter.add(AbstractObject.OBJECT_CLUSTER);
+               classFilter.add(AbstractObject.OBJECT_COLLECTOR);
+               classFilter.add(AbstractObject.OBJECT_INTERFACE);
+               classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
+               classFilter.add(AbstractObject.OBJECT_NETWORKSERVICE);
+               classFilter.add(AbstractObject.OBJECT_NODE);
+               classFilter.add(AbstractObject.OBJECT_SENSOR);
+               classFilter.add(AbstractObject.OBJECT_VPNCONNECTOR);
+            }
             break;
       }
       return classFilter;

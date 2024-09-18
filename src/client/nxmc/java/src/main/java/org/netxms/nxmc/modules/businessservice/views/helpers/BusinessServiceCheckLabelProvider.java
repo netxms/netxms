@@ -32,7 +32,7 @@ import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.interfaces.NodeChild;
+import org.netxms.client.objects.interfaces.NodeComponent;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.businessservice.views.BusinessServiceChecksView;
@@ -133,10 +133,10 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
       if (object != null)
       {
          name.append(object.getObjectName());
-         if (object instanceof NodeChild)
+         if (object instanceof NodeComponent)
          {
             name.append(" @ ");
-            AbstractNode node = ((NodeChild)object).getParentNode();
+            AbstractNode node = ((NodeComponent)object).getParentNode();
             name.append(node.getObjectName());
          }
       }

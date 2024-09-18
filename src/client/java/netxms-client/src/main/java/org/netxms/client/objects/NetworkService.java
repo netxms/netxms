@@ -22,12 +22,12 @@ import org.netxms.base.InetAddressEx;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.interfaces.NodeChild;
+import org.netxms.client.objects.interfaces.NodeComponent;
 
 /**
  * Network Service object
  */
-public class NetworkService extends GenericObject implements NodeChild
+public class NetworkService extends GenericObject implements NodeComponent
 {
 	public static final int CUSTOM = 0;
 	public static final int SSH = 1;
@@ -138,12 +138,11 @@ public class NetworkService extends GenericObject implements NodeChild
 	{
 		return pollCount;
 	}
-	
-	  /**
-    * Get parent node object.
-    * 
-    * @return parent node object or null if it is not exist or inaccessible
+
+   /**
+    * @see org.netxms.client.objects.interfaces.NodeComponent#getParentNode()
     */
+   @Override
    public AbstractNode getParentNode()
    {
       AbstractNode node = null;
