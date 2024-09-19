@@ -993,6 +993,11 @@ public:
     * Get region size
     */
    size_t regionSize() const { return m_regionSize; }
+
+   /**
+    * Get number of allocated regions
+    */
+   size_t getRegionCount() const;
 };
 
 /**

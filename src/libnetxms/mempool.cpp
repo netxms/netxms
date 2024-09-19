@@ -115,3 +115,18 @@ void MemoryPool::clear()
    *((void **)m_currentRegion) = nullptr;
    m_allocated = m_headerSize;
 }
+
+/**
+ * Get number of allocated regions
+ */
+size_t MemoryPool::getRegionCount() const
+{
+   size_t count = 0;
+   void *r = m_currentRegion;
+   while(r != nullptr)
+   {
+      count++;
+      r = *((void **)r);
+   }
+   return count;
+}
