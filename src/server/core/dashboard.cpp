@@ -260,7 +260,7 @@ void Dashboard::updateObjectAndDciList(DashboardElement *e)
       do
       {
          int offsets[9];
-         cgcount = _pcre_exec_t(nodeRegexp, NULL, reinterpret_cast<const PCRE_TCHAR*>(e->m_data), static_cast<int>(_tcslen(e->m_data)), ofset, 0, offsets, 9);
+         cgcount = _pcre_exec_t(nodeRegexp, nullptr, reinterpret_cast<const PCRE_TCHAR*>(e->m_data), static_cast<int>(_tcslen(e->m_data)), ofset, 0, offsets, 9);
          if (cgcount > 0)
          {
             int i = offsets[2] == -1 ? 2 : 1;
@@ -271,7 +271,7 @@ void Dashboard::updateObjectAndDciList(DashboardElement *e)
 
             TCHAR *eptr;
             uint32_t n = _tcstoul(num, &eptr, 10);
-            if ((*eptr == 0))
+            if (*eptr == 0)
             {
                m_objectSet.put(n);
             }
@@ -288,7 +288,7 @@ void Dashboard::updateObjectAndDciList(DashboardElement *e)
       do
       {
          int offsets[9];
-         cgcount = _pcre_exec_t(dciRegexp, NULL, reinterpret_cast<const PCRE_TCHAR*>(e->m_data), static_cast<int>(_tcslen(e->m_data)), ofset, 0, offsets, 9);
+         cgcount = _pcre_exec_t(dciRegexp, nullptr, reinterpret_cast<const PCRE_TCHAR*>(e->m_data), static_cast<int>(_tcslen(e->m_data)), ofset, 0, offsets, 9);
          if (cgcount > 0)
          {
             TCHAR num[16];
@@ -299,7 +299,7 @@ void Dashboard::updateObjectAndDciList(DashboardElement *e)
 
             TCHAR *eptr;
             uint32_t n = _tcstoul(num, &eptr, 10);
-            if ((*eptr == 0))
+            if (*eptr == 0)
             {
                m_dciSet.put(n);
             }

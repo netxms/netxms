@@ -101,6 +101,7 @@ public:
    ItemValue();
    ItemValue(const TCHAR *value, time_t timestamp);
    ItemValue(DB_RESULT hResult, int row, int column, bool parseSuffix);
+   ItemValue(const ItemValue& src) = default;
 
    void setTimeStamp(time_t timestamp) { m_timestamp = timestamp; }
    time_t getTimeStamp() const { return m_timestamp; }
@@ -126,7 +127,7 @@ public:
    operator int64_t() const { return m_int64; }
    operator const TCHAR*() const { return m_string; }
 
-   ItemValue& operator=(const ItemValue &src) = default;
+   ItemValue& operator=(const ItemValue& src) = default;
    ItemValue& operator=(const TCHAR *value) { set(value); return *this; }
    ItemValue& operator=(double value) { set(value); return *this; }
    ItemValue& operator=(int32_t value) { set(value); return *this; }
