@@ -229,27 +229,27 @@ static void GetAgentList(ToolStartupInfo *toolData)
 {
    NXCPMessage msg(CMD_TABLE_DATA, toolData->requestId);
 
-   TCHAR *pszRegEx, buffer[256];
-	Table table;
-
    // Parse tool data. For agent table, it should have the following format:
    // table_title<separator>enum<separator>matching_regexp
    // where <separator> is a character with code 0x7F
-   TCHAR *pszEnum = _tcschr(toolData->toolData, _T('\x7F'));
-   if (pszEnum != nullptr)
+   TCHAR *listName = _tcschr(toolData->toolData, _T('\x7F'));
+   TCHAR *regex = nullptr;
+   if (listName != nullptr)
    {
-      *pszEnum = 0;
-      pszEnum++;
-      pszRegEx = _tcschr(pszEnum, _T('\x7F'));
-      if (pszRegEx != nullptr)
+      *listName = 0;
+      listName++;
+      regex = _tcschr(listName, _T('\x7F'));
+      if (regex != nullptr)
       {
-         *pszRegEx = 0;
-         pszRegEx++;
+         *regex = 0;
+         regex++;
       }
    }
+
+   Table table;
 	table.setTitle(toolData->toolData);
 
-   if ((pszEnum != nullptr) && (pszRegEx != nullptr))
+   if ((listName != nullptr) && (regex != nullptr))
    {
       // Load column information
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -264,6 +264,8 @@ static void GetAgentList(ToolStartupInfo *toolData)
             int numCols = DBGetNumRows(hResult);
             if (numCols > 0)
             {
+               TCHAR buffer[1024];
+
                int *pnSubstrPos = MemAllocArray<int>(numCols);
                for(int i = 0; i < numCols; i++)
                {
@@ -274,21 +276,21 @@ static void GetAgentList(ToolStartupInfo *toolData)
 
                const char *eptr;
                int eoffset;
-               PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pszRegEx), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+               PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(regex), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
                if (preg != nullptr)
                {
                   shared_ptr<AgentConnectionEx> pConn = toolData->node->createAgentConnection();
                   if (pConn != nullptr)
                   {
                      StringList *values;
-                     UINT32 dwResult = pConn->getList(pszEnum, &values);
-                     if (dwResult == ERR_SUCCESS)
+                     uint32_t rcc = pConn->getList(listName, &values);
+                     if (rcc == ERR_SUCCESS)
                      {
-                        int *pMatchList = MemAllocArray<int>((numCols + 1) * 3);
+                        Buffer<int, 64> offsets((numCols + 1) * 3);
                         for(int i = 0; i < values->size(); i++)
                         {
                            const TCHAR *line = values->get(i);
-                           if (_pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, pMatchList, (numCols + 1) * 3) >= 0)
+                           if (_pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, offsets, (numCols + 1) * 3) >= 0)
                            {
                               table.addRow();
 
@@ -296,10 +298,10 @@ static void GetAgentList(ToolStartupInfo *toolData)
                               for(int j = 0; j < numCols; j++)
                               {
                                  int pos = pnSubstrPos[j];
-                                 if (pMatchList[pos * 2] != -1)
+                                 if (offsets[pos * 2] != -1)
                                  {
-                                    size_t len = pMatchList[pos * 2 + 1] - pMatchList[pos * 2];
-                                    memcpy(buffer, &line[pMatchList[pos * 2]], len * sizeof(TCHAR));
+                                    size_t len = std::min(static_cast<size_t>(offsets[pos * 2 + 1] - offsets[pos * 2]), sizeof(buffer) / sizeof(TCHAR) - 1);
+                                    memcpy(buffer, &line[offsets[pos * 2]], len * sizeof(TCHAR));
                                     buffer[len] = 0;
                                  }
                                  else
@@ -310,7 +312,6 @@ static void GetAgentList(ToolStartupInfo *toolData)
                               }
                            }
                         }
-                        MemFree(pMatchList);
                         delete values;
 
                         msg.setField(VID_RCC, RCC_SUCCESS);
@@ -318,7 +319,7 @@ static void GetAgentList(ToolStartupInfo *toolData)
                      }
                      else
                      {
-                        msg.setField(VID_RCC, AgentErrorToRCC(dwResult));
+                        msg.setField(VID_RCC, AgentErrorToRCC(rcc));
                      }
                   }
                   else
