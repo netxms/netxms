@@ -1824,7 +1824,7 @@ SharedString DCObject::getAttribute(const TCHAR *attribute) const
 /**
  * Data collection object info - constructor
  */
-DCObjectInfo::DCObjectInfo(const DCObject& object)
+DCObjectInfo::DCObjectInfo(const DCObject& object) : m_pollingSchedules(object.getPollingSchedules())
 {
    m_id = object.m_id;
    m_ownerId = object.getOwnerId();
@@ -1853,6 +1853,7 @@ DCObjectInfo::DCObjectInfo(const DCObject& object)
    m_status = object.m_status;
    m_errorCount = object.m_errorCount;
    m_pollingInterval = object.getEffectivePollingInterval();
+   m_pollingScheduleType = object.m_pollingScheduleType;
    m_lastPollTime = object.m_lastPoll;
    m_lastCollectionTime = object.m_lastValueTimestamp;
    m_hasActiveThreshold = false;
@@ -1863,7 +1864,7 @@ DCObjectInfo::DCObjectInfo(const DCObject& object)
 /**
  * Data collection object info - constructor for client provided DCI info
  */
-DCObjectInfo::DCObjectInfo(const NXCPMessage& msg, const DCObject *object)
+DCObjectInfo::DCObjectInfo(const NXCPMessage& msg, const DCObject *object) : m_pollingSchedules((object != nullptr) ? object->m_schedules : nullptr)
 {
    m_id = msg.getFieldAsUInt32(VID_DCI_ID);
    m_ownerId = msg.getFieldAsUInt32(VID_OBJECT_ID);
@@ -1891,6 +1892,7 @@ DCObjectInfo::DCObjectInfo(const NXCPMessage& msg, const DCObject *object)
    m_origin = msg.getFieldAsInt16(VID_DCI_SOURCE_TYPE);
    m_status = msg.getFieldAsInt16(VID_DCI_STATUS);
    m_pollingInterval = (object != nullptr) ? object->getEffectivePollingInterval() : 0;
+   m_pollingScheduleType = (object != nullptr) ? object->getPollingScheduleType() : 0;
    m_errorCount = (object != nullptr) ? object->getErrorCount() : 0;
    m_lastPollTime = (object != nullptr) ? object->getLastPollTime() : 0;
    m_lastCollectionTime = (object != nullptr) ? object->getLastValueTimestamp() : 0;
@@ -1911,7 +1913,7 @@ DCObjectInfo::~DCObjectInfo()
 /**
  * List of units that should be exempt from multiplication
  */
-static const TCHAR* s_unitsWithoutMultipliers[] = { _T("%"), _T("°C"), _T("°F"), _T("dbm") };
+static const TCHAR *s_unitsWithoutMultipliers[] = { _T("%"), _T("°C"), _T("°F"), _T("dbm") };
 
 /**
  * Format DCI value

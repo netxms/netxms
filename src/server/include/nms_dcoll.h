@@ -387,7 +387,9 @@ public:
    SharedString getName() const { return GetAttributeWithLock(m_name, m_mutex); }
    SharedString getDescription() const { return GetAttributeWithLock(m_description, m_mutex); }
 	const TCHAR *getPerfTabSettings() const { return m_pszPerfTabSettings; }
+	int32_t getPollingScheduleType() const { return m_pollingScheduleType; }
    int32_t getEffectivePollingInterval() const { return (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? std::max(m_pollingInterval, 1) : m_defaultPollingInterval; }
+   StringList getPollingSchedules() const { return (m_schedules != nullptr) ? StringList(*m_schedules) : StringList(); }
    shared_ptr<DataCollectionOwner> getOwner() const { return m_owner.lock(); }
    uint32_t getOwnerId() const { return m_ownerId; }
    const TCHAR *getOwnerName() const;
@@ -888,6 +890,8 @@ private:
    int m_status;
    uint32_t m_errorCount;
    int32_t m_pollingInterval;
+   int32_t m_pollingScheduleType;
+   StringList m_pollingSchedules;
    time_t m_lastPollTime;
    time_t m_lastCollectionTime;
    bool m_hasActiveThreshold;
@@ -915,6 +919,8 @@ public:
    int getStatus() const { return m_status; }
    uint32_t getErrorCount() const { return m_errorCount; }
    int32_t getPollingInterval() const { return m_pollingInterval; }
+   int32_t getPollingScheduleType() const { return m_pollingScheduleType; }
+   const StringList& getPollingSchedules() const { return m_pollingSchedules; }
    time_t getLastPollTime() const { return m_lastPollTime; }
    time_t getLastCollectionTime() const { return m_lastCollectionTime; }
    uint32_t getOwnerId() const { return m_ownerId; }

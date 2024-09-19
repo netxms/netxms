@@ -5194,6 +5194,14 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const NXSL_Identifier& a
    {
       value = vm->createValue(dci->getPollingInterval());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("pollingSchedules"))
+   {
+      value = vm->createValue(new NXSL_Array(vm, dci->getPollingSchedules()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("pollingScheduleType"))
+   {
+      value = vm->createValue(dci->getPollingScheduleType());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("relatedObject"))
    {
       if (dci->getRelatedObject() != 0)
