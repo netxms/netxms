@@ -24,9 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.dashboards.DashboardElement;
@@ -72,13 +71,9 @@ public abstract class ComparisonChartElement extends ElementWidget
       super(parent, element, view);
       session = Registry.getSession();
 
-		addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            if (refreshController != null)
-               refreshController.dispose();
-         }
+      addDisposeListener((e) -> {
+         if (refreshController != null)
+            refreshController.dispose();
       });
    }
 
@@ -87,7 +82,7 @@ public abstract class ComparisonChartElement extends ElementWidget
     */
    protected void configureMetrics()
    {
-      Job job = new Job("Reading measurement unit information", view) {
+      Job job = new Job("Reading measurement unit information", view, this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -105,23 +100,29 @@ public abstract class ComparisonChartElement extends ElementWidget
 
                   if (dci.regexMatch)
                   {
-                     Pattern namePattern = Pattern.compile(dci.dciName);
-                     Pattern descriptionPattern = Pattern.compile(dci.dciDescription);
-                     for(DciValue dciInfo : nodeDciList)
+                     try
                      {
-                        if (dciInfo.getDcObjectType() != DataCollectionObject.DCO_TYPE_ITEM)
-                           continue;
-   
-                        Matcher nameMatch = namePattern.matcher(dciInfo.getName());
-                        Matcher descriptionMatch = descriptionPattern.matcher(dciInfo.getDescription());
-                        if ((!dci.dciName.isEmpty() && nameMatch.find()) || 
-                              (!dci.dciDescription.isEmpty() && descriptionMatch.find()))
+                        Pattern namePattern = Pattern.compile(dci.dciName);
+                        Pattern descriptionPattern = Pattern.compile(dci.dciDescription);
+                        for(DciValue dciInfo : nodeDciList)
                         {
-                           ChartDciConfig instance = new ChartDciConfig(dci, (!dci.dciName.isEmpty() && nameMatch.find()) ? nameMatch : descriptionMatch, dciInfo);
-                           runtimeDciList.add(instance);
-                           if (!dci.multiMatch)
-                              break;
+                           if (dciInfo.getDcObjectType() != DataCollectionObject.DCO_TYPE_ITEM)
+                              continue;
+
+                           Matcher nameMatch = namePattern.matcher(dciInfo.getName());
+                           Matcher descriptionMatch = descriptionPattern.matcher(dciInfo.getDescription());
+                           if ((!dci.dciName.isEmpty() && nameMatch.find()) || (!dci.dciDescription.isEmpty() && descriptionMatch.find()))
+                           {
+                              ChartDciConfig instance = new ChartDciConfig(dci, (!dci.dciName.isEmpty() && nameMatch.find()) ? nameMatch : descriptionMatch, dciInfo);
+                              runtimeDciList.add(instance);
+                              if (!dci.multiMatch)
+                                 break;
+                           }
                         }
+                     }
+                     catch(PatternSyntaxException e)
+                     {
+                        throw new Exception(i18n.tr("Error in DCI matching regular expression: ") + e.getLocalizedMessage(), e);
                      }
                   }
                   else

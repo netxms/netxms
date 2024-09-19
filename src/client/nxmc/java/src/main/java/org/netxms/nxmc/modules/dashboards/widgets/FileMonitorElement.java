@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016-2022 Raden Solutions
+ * Copyright (C) 2016-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -94,13 +94,7 @@ public class FileMonitorElement extends ElementWidget
             }
             catch(Exception e)
             {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     viewer.startTracking(null, nodeId, config.getFileName());
-                  }
-               });
+               runInUIThread(() -> viewer.startTracking(null, nodeId, config.getFileName()));
             }
          }
 

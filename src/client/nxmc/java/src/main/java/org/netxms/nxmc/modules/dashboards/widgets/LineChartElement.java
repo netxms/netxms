@@ -24,15 +24,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.TimeUnit;
@@ -124,13 +122,9 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 
       chart = new Chart(getContentArea(), SWT.NONE, ChartType.LINE, chartConfig);
 
-		addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            if (refreshController != null)
-               refreshController.dispose();
-         }
+      addDisposeListener((e) -> {
+         if (refreshController != null)
+            refreshController.dispose();
       });
 
 		if (config.isInteractive())
@@ -147,7 +141,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
     */
    private void configureMetrics()
    {
-      Job job = new Job("Get DCI info", null) {
+      Job job = new Job("Get DCI info", view, this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -165,20 +159,26 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 
                   if (dci.regexMatch)
                   {
-                     Pattern namePattern = Pattern.compile(dci.dciName);
-                     Pattern descriptionPattern = Pattern.compile(dci.dciDescription);
-                     for(DciValue dciInfo : nodeDciList)
+                     try
                      {
-                        Matcher nameMatch = namePattern.matcher(dciInfo.getName());
-                        Matcher descriptionMatch = descriptionPattern.matcher(dciInfo.getDescription());
-                        if ((!dci.dciName.isEmpty() && nameMatch.find()) ||
-                            (!dci.dciDescription.isEmpty() && descriptionMatch.find()))
+                        Pattern namePattern = Pattern.compile(dci.dciName);
+                        Pattern descriptionPattern = Pattern.compile(dci.dciDescription);
+                        for(DciValue dciInfo : nodeDciList)
                         {
-                           ChartDciConfig instance = new ChartDciConfig(dci, (!dci.dciName.isEmpty() && nameMatch.find()) ? nameMatch : descriptionMatch, dciInfo);
-                           runtimeDciList.add(instance);
-                           if (!dci.multiMatch)
-                              break;
+                           Matcher nameMatch = namePattern.matcher(dciInfo.getName());
+                           Matcher descriptionMatch = descriptionPattern.matcher(dciInfo.getDescription());
+                           if ((!dci.dciName.isEmpty() && nameMatch.find()) || (!dci.dciDescription.isEmpty() && descriptionMatch.find()))
+                           {
+                              ChartDciConfig instance = new ChartDciConfig(dci, (!dci.dciName.isEmpty() && nameMatch.find()) ? nameMatch : descriptionMatch, dciInfo);
+                              runtimeDciList.add(instance);
+                              if (!dci.multiMatch)
+                                 break;
+                           }
                         }
+                     }
+                     catch(PatternSyntaxException e)
+                     {
+                        throw new Exception(i18n.tr("Error in DCI matching regular expression: ") + e.getLocalizedMessage(), e);
                      }
                   }
                   else
@@ -202,41 +202,33 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
             }
 
             final Map<Long, MeasurementUnit> measurementUnits = session.getDciMeasurementUnits(runtimeDciList);
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
+            runInUIThread(() -> {
+               if (chart.isDisposed())
+                  return;
+
+               for(ChartDciConfig dci : runtimeDciList)
                {
-                  if (chart.isDisposed())
+                  dci.measurementUnit = measurementUnits.get(dci.getDciId());
+                  chart.addParameter(new ChartDciConfig(dci));
+               }
+
+               chart.rebuild();
+               layout(true, true);
+               refreshData();
+
+               refreshController = new ViewRefreshController(view, config.getRefreshRate(), () -> {
+                  if (LineChartElement.this.isDisposed())
                      return;
 
-                  for(ChartDciConfig dci : runtimeDciList)
-                  {
-                     dci.measurementUnit = measurementUnits.get(dci.getDciId());
-                     chart.addParameter(new ChartDciConfig(dci));
-                  }
-
-                  chart.rebuild();
-                  layout(true, true);          
                   refreshData();
-
-                  refreshController = new ViewRefreshController(view, config.getRefreshRate(), new Runnable() {
-                     @Override
-                     public void run()
-                     {
-                        if (LineChartElement.this.isDisposed())
-                           return;
-
-                        refreshData();
-                     }
-                  });
-               }
+               });
             });
          }
 
          @Override
          protected String getErrorMessage()
          {
-            return null;
+            return i18n.tr("Cannot configure metrics");
          }
       };
       job.setUser(false);
@@ -278,12 +270,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 	{
 	   final MenuManager manager = new MenuManager();
 	   manager.setRemoveAllWhenShown(true);
-	   manager.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
-         {
-            fillContextMenu(manager);
-         }
-      });
+      manager.addMenuListener((m) -> fillContextMenu(m));
       chart.setMenuManager(manager);
 	}
 
@@ -342,25 +329,21 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
                   thresholds[i] = null;
                }
             }
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
+            runInUIThread(() -> {
+               if (!chart.isDisposed())
                {
-                  if (!chart.isDisposed())
+                  dataCache.clear();
+                  chart.setTimeRange(from, to);
+                  for(int i = 0; i < data.length; i++)
                   {
-                     dataCache.clear();
-                     chart.setTimeRange(from, to);
-                     for(int i = 0; i < data.length; i++)
-                     {
-                        chart.updateParameter(i, data[i], false);
-                        dataCache.add(new DataCacheElement(runtimeDciList.get(i), data[i]));
-                     }
-                     chart.setThresholds(thresholds);
-                     chart.refresh();
-                     clearMessages();
+                     chart.updateParameter(i, data[i], false);
+                     dataCache.add(new DataCacheElement(runtimeDciList.get(i), data[i]));
                   }
-                  updateInProgress = false;
+                  chart.setThresholds(thresholds);
+                  chart.refresh();
+                  clearMessages();
                }
+               updateInProgress = false;
             });
 			}
 
