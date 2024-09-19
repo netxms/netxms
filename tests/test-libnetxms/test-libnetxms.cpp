@@ -116,6 +116,32 @@ static void TestStringList()
    delete s4;
    EndTest(GetMonotonicClockTime() - startTime);
 #endif
+
+   StartTest(_T("String list - copy"));
+   StringList slist;
+   slist.add(_T("text1"));
+   slist.add(_T("text2"));
+   slist.add(3.1415);
+   AssertEquals(slist.size(), 3);
+   StringList clist(slist);
+   AssertEquals(clist.size(), 3);
+   AssertEquals(clist.get(0), _T("text1"));
+   AssertEquals(clist.get(1), _T("text2"));
+   AssertTrue(!_tcsncmp(clist.get(2), _T("3.1415"), 6));
+   AssertEquals(slist.size(), 3);
+   AssertEquals(slist.get(0), _T("text1"));
+   AssertEquals(slist.get(1), _T("text2"));
+   AssertTrue(!_tcsncmp(slist.get(2), _T("3.1415"), 6));
+   EndTest();
+
+   StartTest(_T("String list - move"));
+   StringList mlist(std::move(slist));
+   AssertEquals(mlist.size(), 3);
+   AssertEquals(mlist.get(0), _T("text1"));
+   AssertEquals(mlist.get(1), _T("text2"));
+   AssertTrue(!_tcsncmp(mlist.get(2), _T("3.1415"), 6));
+   AssertEquals(slist.size(), 0);
+   EndTest();
 }
 
 /**
@@ -277,10 +303,10 @@ static void TestStringMap()
    StringMap dst(src);
    AssertEquals(src.size(), 3);
    AssertTrue(src.contains(_T("K3")));
-   AssertTrue(!_tcscmp(src.get(_T("K3")), _T("Text")));
+   AssertEquals(src.get(_T("K3")), _T("Text"));
    AssertEquals(dst.size(), 3);
    AssertTrue(dst.contains(_T("K3")));
-   AssertTrue(!_tcscmp(dst.get(_T("K3")), _T("Text")));
+   AssertEquals(dst.get(_T("K3")), _T("Text"));
    EndTest();
 
    StartTest(_T("String map - move"));
@@ -289,7 +315,7 @@ static void TestStringMap()
    AssertFalse(src.contains(_T("K3")));
    AssertEquals(mdst.size(), 3);
    AssertTrue(mdst.contains(_T("K3")));
-   AssertTrue(!_tcscmp(mdst.get(_T("K3")), _T("Text")));
+   AssertEquals(mdst.get(_T("K3")), _T("Text"));
    EndTest();
 }
 

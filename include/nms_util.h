@@ -909,6 +909,16 @@ public:
    MemoryPool(size_t regionSize = 8192);
    
    /**
+    * Forbid copy construction
+    */
+   MemoryPool(const MemoryPool& src) = delete;
+
+   /**
+    * Move constructor
+    */
+   MemoryPool(MemoryPool&& src);
+
+   /**
     * Destroy memory pool (object destructors will not be called)
     */
    ~MemoryPool();
@@ -2476,11 +2486,11 @@ public:
 	StringList();
 	StringList(const StringList *src);
    StringList(const StringList &src);
+   StringList(StringList&& src);
 	StringList(const TCHAR *src, const TCHAR *separator);
    StringList(const NXCPMessage& msg, uint32_t baseId, uint32_t countId);
    StringList(const NXCPMessage& msg, uint32_t fieldId);
    StringList(json_t *json);
-	~StringList();
 
 	void add(const TCHAR *value);
 	void addPreallocated(TCHAR *value);

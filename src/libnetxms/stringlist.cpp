@@ -46,12 +46,12 @@ StringList::StringList()
 }
 
 /**
- * Constructor: create copy of existing string list
+ * Constructor: create copy of existing string list. Null-safe, passing null pointer will create empty string list.
  */
 StringList::StringList(const StringList *src)
 {
 	m_count = 0;
-   m_allocated = src->m_allocated;
+   m_allocated = (src != nullptr) ? src->m_allocated : INITIAL_CAPACITY;
    m_values = m_pool.allocateArray<TCHAR*>(m_allocated);
    addAll(src);
 }
@@ -65,6 +65,19 @@ StringList::StringList(const StringList &src)
    m_allocated = src.m_allocated;
    m_values = m_pool.allocateArray<TCHAR*>(m_allocated);
    addAll(&src);
+}
+
+/**
+ * Move constructor
+ */
+StringList::StringList(StringList&& src) : m_pool(std::move(src.m_pool))
+{
+   m_count = src.m_count;
+   m_allocated = src.m_allocated;
+   m_values = src.m_values;
+   src.m_count = 0;
+   src.m_allocated = 0;
+   src.m_values = nullptr;
 }
 
 /**
@@ -153,13 +166,6 @@ StringList::StringList(json_t *json)
       m_allocated = INITIAL_CAPACITY;
       m_values = m_pool.allocateArray<TCHAR*>(m_allocated);
    }
-}
-
-/**
- * Destructor
- */
-StringList::~StringList()
-{
 }
 
 /**
@@ -390,8 +396,9 @@ void StringList::remove(int index)
  */
 void StringList::addAll(const StringList *src)
 {
-   for(int i = 0; i < src->m_count; i++)
-      add(src->m_values[i]);
+   if (src != nullptr)
+      for(int i = 0; i < src->m_count; i++)
+         add(src->m_values[i]);
 }
 
 /**
@@ -399,8 +406,9 @@ void StringList::addAll(const StringList *src)
  */
 void StringList::insertAll(int pos, const StringList *src)
 {
-   for(int i = 0; i < src->m_count; i++)
-      insert(pos++, src->m_values[i]);
+   if (src != nullptr)
+      for(int i = 0; i < src->m_count; i++)
+         insert(pos++, src->m_values[i]);
 }
 
 /**
