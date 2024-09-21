@@ -169,7 +169,11 @@ public class SelectDciDialog extends Dialog
 
          int objectId = settings.getAsInteger("SelectDciDialog.selectionNode", 0);
          if (objectId != 0)
-            objectTree.selectObject(Registry.getSession().findObjectById(objectId));
+         {
+            AbstractObject object = Registry.getSession().findObjectById(objectId);
+            if (object != null)
+               objectTree.selectObject(object);
+         }
 			objectTree.setFocus();
 		}
 		else
@@ -189,18 +193,18 @@ public class SelectDciDialog extends Dialog
 		Point pleace = getShell().getLocation();
       PreferenceStore settings = PreferenceStore.getInstance();
 
-      settings.set("SelectDciDialog.cx", pleace.x); //$NON-NLS-1$
-      settings.set("SelectDciDialog.cy", pleace.y); //$NON-NLS-1$
-      settings.set("SelectDciDialog.width", size.x); //$NON-NLS-1$
-      settings.set("SelectDciDialog.height", size.y); //$NON-NLS-1$
+      settings.set("SelectDciDialog.cx", pleace.x);
+      settings.set("SelectDciDialog.cy", pleace.y);
+      settings.set("SelectDciDialog.width", size.x);
+      settings.set("SelectDciDialog.height", size.y);
 		if (fixedNode == 0)
 		{
-         settings.set("SelectDciDialog.Filter", objectTree.getFilterText()); //$NON-NLS-1$
-			
+         settings.set("SelectDciDialog.Filter", objectTree.getFilterText());
+
 			int[] weights = splitter.getWeights();
-         settings.set("SelectDciDialog.weight1", weights[0]); //$NON-NLS-1$
-         settings.set("SelectDciDialog.weight2", weights[1]); //$NON-NLS-1$
-         
+         settings.set("SelectDciDialog.weight1", weights[0]);
+         settings.set("SelectDciDialog.weight2", weights[1]);
+
          settings.set("SelectDciDialog.selectionNode", objectTree.getFirstSelectedObject()); 
 		}
 	}
