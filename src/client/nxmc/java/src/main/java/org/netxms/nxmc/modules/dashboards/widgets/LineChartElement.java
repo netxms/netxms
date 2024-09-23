@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,6 +51,7 @@ import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.LineChartConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
+import org.netxms.nxmc.modules.dashboards.widgets.helpers.UnmappedDciException;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView.ChartActionType;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView.HistoricalChartOwner;
@@ -301,7 +302,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 	{
 		if (updateInProgress)
 			return;
-		
+
 		updateInProgress = true;
 
       final long dashboardId = getDashboardObjectId();
@@ -318,6 +319,8 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
             for(int i = 0; i < runtimeDciList.size(); i++)
             {
                currentDci = runtimeDciList.get(i);
+               if ((currentDci.nodeId == AbstractObject.UNKNOWN) || (currentDci.dciId <= 0))
+                  throw new UnmappedDciException();
                if (currentDci.type == ChartDciConfig.ITEM)
                {
                   data[i] = session.getCollectedData(currentDci.nodeId, currentDci.dciId, from, to, 0, HistoricalDataType.PROCESSED, dashboardId);
@@ -350,6 +353,8 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 			@Override
 			protected String getErrorMessage()
 			{
+            if ((currentDci.nodeId == AbstractObject.UNKNOWN) || (currentDci.dciId <= 0))
+               return i18n.tr("Dashboard misconfiguration");
             return String.format(i18n.tr("Cannot get value for DCI %s:\"%s\""), session.getObjectName(currentDci.nodeId), currentDci.name);
 			}
 

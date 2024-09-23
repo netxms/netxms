@@ -170,15 +170,24 @@ public class ObjectSelectionDialog extends Dialog
    }
 
 	/**
-	 * Create filter for node selection - it allows node objects and possible
-	 * parents - subnets and containers.
-	 * 
-	 * @return Class filter for node selection
-	 */
+    * Create filter for container selection
+    * 
+    * @return Class filter for container selection
+    */
 	public static Set<Integer> createContainerSelectionFilter()
 	{
 		return ObjectSelectionFilterFactory.getInstance().createContainerSelectionFilter();
 	}
+
+   /**
+    * Create filter for circuit selection
+    * 
+    * @return Class filter for circuit selection
+    */
+   public static Set<Integer> createCircuitSelectionFilter()
+   {
+      return ObjectSelectionFilterFactory.getInstance().createCircuitSelectionFilter();
+   }
 
 	/**
 	 * Create filter for business service selection.

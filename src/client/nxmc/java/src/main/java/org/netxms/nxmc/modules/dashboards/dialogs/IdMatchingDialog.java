@@ -18,13 +18,10 @@
  */
 package org.netxms.nxmc.modules.dashboards.dialogs;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
-import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -84,7 +81,7 @@ public class IdMatchingDialog extends Dialog
 		super(parentShell);
 		this.objects = objects;
 		this.dcis = dcis;
-		setShellStyle(getShellStyle() | SWT.RESIZE);
+      setShellStyle(getShellStyle() | SWT.RESIZE);
 	}
 
    /**
@@ -115,7 +112,7 @@ public class IdMatchingDialog extends Dialog
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		gd.widthHint = 0;
+      gd.widthHint = 800;
 		label.setLayoutData(gd);
 
       final String[] names = { i18n.tr("Original ID"), i18n.tr("Original Name"), i18n.tr("Match ID"), i18n.tr("Match Name") };
@@ -128,7 +125,7 @@ public class IdMatchingDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
-		gd.heightHint = 400;
+      gd.heightHint = 400;
 		viewer.getControl().setLayoutData(gd);
 		viewer.setContentProvider(new IdMatchingContentProvider());
 		viewer.setLabelProvider(new IdMatchingLabelProvider());
@@ -140,7 +137,7 @@ public class IdMatchingDialog extends Dialog
 
 		return dialogArea;
 	}
-	
+
 	/**
 	 * Create actions
 	 */
@@ -150,10 +147,10 @@ public class IdMatchingDialog extends Dialog
 			@Override
 			public void run()
 			{
-				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+            IStructuredSelection selection = viewer.getStructuredSelection();
 				if (selection.size() != 1)
 					return;
-				
+
 				Object element = selection.getFirstElement();
 				if (element instanceof ObjectIdMatchingData)
 					mapNode((ObjectIdMatchingData)element);
@@ -171,18 +168,13 @@ public class IdMatchingDialog extends Dialog
 		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			public void menuAboutToShow(IMenuManager mgr)
-			{
-            mgr.add(actionMap);
-			}
-		});
+      menuMgr.addMenuListener((m) -> m.add(actionMap));
 
 		// Create menu.
 		Menu menu = menuMgr.createContextMenu(viewer.getControl());
 		viewer.getControl().setMenu(menu);
 	}
-	
+
 	/**
 	 * Map node
 	 * 
@@ -195,6 +187,7 @@ public class IdMatchingDialog extends Dialog
 		{
          case AbstractObject.OBJECT_ACCESSPOINT:
          case AbstractObject.OBJECT_CHASSIS:
+         case AbstractObject.OBJECT_CIRCUIT:
          case AbstractObject.OBJECT_CLUSTER:
          case AbstractObject.OBJECT_MOBILEDEVICE:
 			case AbstractObject.OBJECT_NODE:
@@ -204,19 +197,16 @@ public class IdMatchingDialog extends Dialog
 				break;
          case AbstractObject.OBJECT_COLLECTOR:
 			case AbstractObject.OBJECT_CONTAINER:
-			   //TODO: circuit
 				classFilter = ObjectSelectionDialog.createContainerSelectionFilter();
 				showFilterToolTip = false;
 				break;
-			case AbstractObject.OBJECT_ZONE:
-				classFilter = ObjectSelectionDialog.createZoneSelectionFilter();
-				showFilterToolTip = true;
-				break;
 			case AbstractObject.OBJECT_DASHBOARD:
-				classFilter = new HashSet<Integer>(2);
-				classFilter.add(AbstractObject.OBJECT_DASHBOARD);
-				classFilter.add(AbstractObject.OBJECT_DASHBOARDROOT);
+            classFilter = ObjectSelectionDialog.createDashboardSelectionFilter();
 				break;
+         case AbstractObject.OBJECT_ZONE:
+            classFilter = ObjectSelectionDialog.createZoneSelectionFilter();
+            showFilterToolTip = true;
+            break;
 			default:
 				classFilter = null;
 				break;
@@ -230,7 +220,7 @@ public class IdMatchingDialog extends Dialog
 			{
 				data.dstId = object.getObjectId();
 				data.dstName = object.getObjectName();
-				
+
 				updateDciMapping(data);
 				viewer.update(data, null);
 			}
@@ -250,34 +240,30 @@ public class IdMatchingDialog extends Dialog
 	{
 		if (objData.dcis.size() == 0)
 			return;
-		
+
       final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Get DCI information from node"), null) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
 				final DciValue[] dciValues = session.getLastValues(objData.dstId);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
+            runInUIThread(() -> {
+               for(DciIdMatchingData d : objData.dcis)
 					{
-						for(DciIdMatchingData d : objData.dcis)
+                  d.dstNodeId = objData.dstId;
+                  d.dstDciId = -1;
+                  d.dstName = null;
+                  for(DciValue v : dciValues)
 						{
-							d.dstNodeId = objData.dstId;
-							d.dstDciId = 0;
-							d.dstName = null;
-							for(DciValue v : dciValues)
+                     if (v.getDescription().equalsIgnoreCase(d.srcName))
 							{
-								if (v.getDescription().equalsIgnoreCase(d.srcName))
-								{
-									d.dstDciId = v.getId();
-									d.dstName = v.getDescription();
-									break;
-								}
+                        d.dstDciId = v.getId();
+                        d.dstName = v.getDescription();
+                        break;
 							}
 						}
-						viewer.refresh(true);
 					}
+               viewer.refresh(true);
 				});
 			}
 
@@ -322,7 +308,7 @@ public class IdMatchingDialog extends Dialog
 		boolean ok = true;
 		for(ObjectIdMatchingData o : objects.values())
       {
-			if (o.dstId == 0)
+         if (o.dstId == AbstractObject.UNKNOWN)
 			{
 				ok = false;
 				break;
@@ -330,7 +316,7 @@ public class IdMatchingDialog extends Dialog
       }
 		for(DciIdMatchingData d : dcis.values())
       {
-			if ((d.dstNodeId == 0) || (d.dstDciId == 0))
+         if ((d.dstNodeId == AbstractObject.UNKNOWN) || (d.dstDciId == 0))
 			{
 				ok = false;
 				break;

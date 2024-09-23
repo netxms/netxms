@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ import org.xnap.commons.i18n.I18n;
 public class DciListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
    private final I18n i18n = LocalizationHelper.getI18n(DciListLabelProvider.class);
+   private final DciInfo unresolvedDci = new DciInfo(i18n.tr("<unresolved>"), i18n.tr("<unresolved>"));
 
    private NXCSession session;
 	private Map<Long, DciInfo> dciNameCache = new HashMap<Long, DciInfo>();
@@ -77,16 +78,17 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 			case DataSources.COLUMN_POSITION:
 				return Integer.toString(elementList.indexOf(dci) + 1);
 			case DataSources.COLUMN_NODE:
-            return ((dci.nodeId == 0) || (dci.nodeId == AbstractObject.CONTEXT)) ? i18n.tr("<context>") : session.getObjectName(dci.nodeId);
+            return ((dci.nodeId == 0) || (dci.nodeId == AbstractObject.CONTEXT)) ? i18n.tr("<context>") :
+                  ((dci.nodeId == AbstractObject.UNKNOWN) ? i18n.tr("<unknown>") : session.getObjectName(dci.nodeId));
          case DataSources.COLUMN_METRIC_DISPLAYNAME:
             if (dci.dciId == 0)
                return dci.dciDescription;
-            String displayName = dciNameCache.get(dci.dciId).displayName;
+            String displayName = safeDciLookup(dci.dciId).displayName;
             return (displayName != null) ? displayName : i18n.tr("<unresolved>");
 			case DataSources.COLUMN_METRIC:
             if (dci.dciId == 0)
                return dci.dciName;
-				String name = dciNameCache.get(dci.dciId).metric;
+            String name = safeDciLookup(dci.dciId).metric;
             return (name != null) ? name : i18n.tr("<unresolved>");
 			case DataSources.COLUMN_LABEL:
 				return dci.name;
@@ -95,6 +97,18 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 		}
 		return null;
 	}
+
+   /**
+    * Safe DCI lookup (never return null).
+    *
+    * @param dciId DCI ID
+    * @return DCI name info
+    */
+   private DciInfo safeDciLookup(long dciId)
+   {
+      DciInfo i = dciNameCache.get(dciId);
+      return (i != null) ? i : unresolvedDci;
+   }
 
 	/**
 	 * Resolve DCI names for given collection of condition DCIs and add to cache
@@ -108,13 +122,8 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
          protected void run(IProgressMonitor monitor) throws Exception
 			{
 				final Map<Long, DciInfo> names = session.dciIdsToNames(dciList);
-
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						dciNameCache = names;
-					}
+            runInUIThread(() -> {
+               dciNameCache = names;
 				});
 			}
 

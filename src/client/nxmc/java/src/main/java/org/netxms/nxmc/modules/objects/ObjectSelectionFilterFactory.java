@@ -210,7 +210,7 @@ public class ObjectSelectionFilterFactory
     */
    public Set<Integer> createDataCollectionTargetSelectionFilter()
    {
-      HashSet<Integer> classFilter = new HashSet<Integer>(12);
+      HashSet<Integer> classFilter = new HashSet<Integer>(16);
       classFilter.add(AbstractObject.OBJECT_ACCESSPOINT);
       classFilter.add(AbstractObject.OBJECT_NETWORK);
       classFilter.add(AbstractObject.OBJECT_ZONE);
@@ -231,14 +231,29 @@ public class ObjectSelectionFilterFactory
    }
 
    /**
-    * Create filter for node selection - it allows node objects and possible parents - subnets and containers.
+    * Create filter for container selection
     * 
-    * @return Class filter for node selection
+    * @return Class filter for container selection
     */
    public Set<Integer> createContainerSelectionFilter()
    {
-      HashSet<Integer> classFilter = new HashSet<Integer>(2);
+      HashSet<Integer> classFilter = new HashSet<Integer>(3);
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_COLLECTOR);
+      classFilter.add(AbstractObject.OBJECT_CONTAINER);
+      return classFilter;
+   }
+
+   /**
+    * Create filter for circuit selection - allows circuits and possible parents
+    * 
+    * @return Class filter for circuit selection
+    */
+   public Set<Integer> createCircuitSelectionFilter()
+   {
+      HashSet<Integer> classFilter = new HashSet<Integer>(4);
+      classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_CIRCUIT);
       classFilter.add(AbstractObject.OBJECT_COLLECTOR);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       return classFilter;
@@ -251,7 +266,7 @@ public class ObjectSelectionFilterFactory
     */
    public Set<Integer> createBusinessServiceSelectionFilter()
    {
-      HashSet<Integer> classFilter = new HashSet<Integer>(2);
+      HashSet<Integer> classFilter = new HashSet<Integer>(3);
       classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICEROOT);
       classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICEPROTOTYPE);
       classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICE);

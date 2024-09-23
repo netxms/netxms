@@ -39,7 +39,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.TableItem;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciValue;
@@ -150,13 +149,9 @@ public class DataSources extends DashboardElementPropertyPage
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(labelProvider);
       viewer.disableSorting();
-      viewer.getTable().addListener(SWT.PaintItem, new Listener() {
-			@Override
-			public void handleEvent(Event event)
-			{
-				if (event.index == COLUMN_COLOR)
-					drawColorCell(event);
-			}
+      viewer.getTable().addListener(SWT.PaintItem, (event) -> {
+			if (event.index == COLUMN_COLOR)
+				drawColorCell(event);
 		});
       viewer.setInput(dciList);
 

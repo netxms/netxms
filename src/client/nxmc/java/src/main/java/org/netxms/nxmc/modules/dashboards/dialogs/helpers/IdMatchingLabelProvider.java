@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.dialogs.IdMatchingDialog;
@@ -72,7 +73,7 @@ public class IdMatchingLabelProvider extends LabelProvider implements ITableLabe
 				return ((IdMatchingData)element).getSourceName();
 			case IdMatchingDialog.COLUMN_DESTINATION_ID:
 				long id = ((IdMatchingData)element).getDestinationId();
-            return (id > 0) ? Long.toString(id) : i18n.tr("no match");
+            return ((id > 0) && (id != AbstractObject.UNKNOWN)) ? Long.toString(id) : i18n.tr("no match");
 			case IdMatchingDialog.COLUMN_DESTINATION_NAME:
 				return ((IdMatchingData)element).getDestinationName();
 		}
@@ -85,7 +86,8 @@ public class IdMatchingLabelProvider extends LabelProvider implements ITableLabe
 	@Override
 	public Color getForeground(Object element)
 	{
-      return (((IdMatchingData)element).getDestinationId() != 0) ? null : ThemeEngine.getForegroundColor("List.Error");
+      long id = ((IdMatchingData)element).getDestinationId();
+      return ((id > 0) && (id != AbstractObject.UNKNOWN)) ? null : ThemeEngine.getForegroundColor("List.Error");
 	}
 
    /**

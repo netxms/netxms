@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.dashboards.dialogs.helpers;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.netxms.client.objects.AbstractObject;
 
 /**
  * Data for object ID matching
@@ -32,7 +33,7 @@ public class ObjectIdMatchingData implements IdMatchingData
 	public long dstId;
 	public String dstName;
 	public List<DciIdMatchingData> dcis = new ArrayList<DciIdMatchingData>();
-	
+
 	/**
 	 * @param srcId
 	 * @param srcName
@@ -43,7 +44,7 @@ public class ObjectIdMatchingData implements IdMatchingData
 		this.srcId = srcId;
 		this.srcName = srcName;
 		this.objectClass = objectClass;
-		this.dstId = 0;
+      this.dstId = AbstractObject.UNKNOWN;
 		this.dstName = null;
 	}
 

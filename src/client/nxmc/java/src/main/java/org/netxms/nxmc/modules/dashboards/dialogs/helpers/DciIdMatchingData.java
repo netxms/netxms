@@ -18,6 +18,8 @@
  */
 package org.netxms.nxmc.modules.dashboards.dialogs.helpers;
 
+import org.netxms.client.objects.AbstractObject;
+
 /**
  * Data for DCI ID matching
  */
@@ -40,8 +42,8 @@ public class DciIdMatchingData implements IdMatchingData
 		this.srcNodeId = srcNodeId;
 		this.srcDciId = srcDciId;
 		this.srcName = srcName;
-		this.dstNodeId = 0;
-		this.dstDciId = 0;
+      this.dstNodeId = AbstractObject.UNKNOWN;
+      this.dstDciId = -1;
 		this.dstName = null;
 	}
 

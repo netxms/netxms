@@ -42,6 +42,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
+import org.netxms.nxmc.modules.dashboards.widgets.helpers.UnmappedDciException;
 import org.netxms.nxmc.tools.ViewRefreshController;
 import org.xnap.commons.i18n.I18n;
 
@@ -204,6 +205,8 @@ public abstract class ComparisonChartElement extends ElementWidget
             for(int i = 0; i < runtimeDciList.size(); i++)
 				{
                ChartDciConfig dci = runtimeDciList.get(i);
+               if ((dci.nodeId == AbstractObject.UNKNOWN) || (dci.dciId <= 0))
+                  throw new UnmappedDciException();
                if (dci.type == ChartDciConfig.ITEM)
                   data[i] = session.getCollectedData(dci.nodeId, dci.dciId, null, null, 1, HistoricalDataType.PROCESSED, dashboardId);
 					else
@@ -228,24 +231,20 @@ public abstract class ComparisonChartElement extends ElementWidget
                thresholds = null;
             }
 
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-                  updateInProgress = false;
-                  if (chart.isDisposed())
-                     return;
+            runInUIThread(() -> {
+               updateInProgress = false;
+               if (chart.isDisposed())
+                  return;
 
-                  for(int i = 0; i < data.length; i++)
-						{
-                     DciDataRow lastValue = data[i].getLastValue();
-                     chart.updateParameter(i, (lastValue != null) ? lastValue : new DciDataRow(new Date(), 0.0), data[i].getDataType(), false);
-                     if (updateThresholds)
-                        chart.updateParameterThresholds(i, thresholds[i]);
-						}
-                  chart.refresh();
-                  clearMessages();
+               for(int i = 0; i < data.length; i++)
+					{
+                  DciDataRow lastValue = data[i].getLastValue();
+                  chart.updateParameter(i, (lastValue != null) ? lastValue : new DciDataRow(new Date(), 0.0), data[i].getDataType(), false);
+                  if (updateThresholds)
+                     chart.updateParameterThresholds(i, thresholds[i]);
 					}
+               chart.refresh();
+               clearMessages();
 				});
 			}
 

@@ -67,6 +67,8 @@ public abstract class AbstractObject
    public static final long DASHBOARDROOT = 7L;
 	/** Business Services */
    public static final long BUSINESSSERVICEROOT = 9L;
+   /** Unknown object indicator */
+   public static final long UNKNOWN = 0xFFFFFFFEL;
    /** Context object indicator */
    public static final long CONTEXT = 0xFFFFFFFFL;
 

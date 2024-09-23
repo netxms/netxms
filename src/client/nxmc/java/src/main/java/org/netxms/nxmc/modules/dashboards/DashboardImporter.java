@@ -199,7 +199,7 @@ public class DashboardImporter
 			// bind DCI data to appropriate node data
 			od.dcis.add(d);
 
-			if (od.dstId == 0)
+         if (od.dstId == AbstractObject.UNKNOWN)
 				continue;	// no match for node
 
 			d.dstNodeId = od.dstId;
@@ -217,13 +217,9 @@ public class DashboardImporter
 
 		// show matching results to user
       boolean[] success = new boolean[1];
-      display.syncExec(new Runnable() {
-         @Override
-         public void run()
-         {
-            IdMatchingDialog dlg = new IdMatchingDialog(view.getWindow().getShell(), objects, dcis);
-            success[0] = (dlg.open() == Window.OK);
-         }
+      display.syncExec(() -> {
+         IdMatchingDialog dlg = new IdMatchingDialog(view.getWindow().getShell(), objects, dcis);
+         success[0] = (dlg.open() == Window.OK);
       });
       if (success[0])
 		{

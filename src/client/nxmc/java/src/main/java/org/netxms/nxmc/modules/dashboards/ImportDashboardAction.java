@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Reden Solutions
+ * Copyright (C) 2003-2024 Reden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -91,7 +91,7 @@ public class ImportDashboardAction extends ObjectAction<AbstractObject>
    protected void run(List<AbstractObject> selection)
    {
       final long parentId = selection.get(0).getObjectId();
-      
+
 		final ImportDashboardDialog dlg = new ImportDashboardDialog(getShell());
 		if (dlg.open() != Window.OK)
 			return;
@@ -171,7 +171,7 @@ public class ImportDashboardAction extends ObjectAction<AbstractObject>
 		for(DciIdMatchingData d : dcis.values())
 		{
          if (!objects.containsKey(d.srcNodeId) && (d.srcNodeId != 0) && (d.srcNodeId != AbstractObject.CONTEXT))
-				objects.put(d.srcNodeId, new ObjectIdMatchingData(d.srcNodeId, "", AbstractObject.OBJECT_NODE)); //$NON-NLS-1$
+            objects.put(d.srcNodeId, new ObjectIdMatchingData(d.srcNodeId, "", AbstractObject.OBJECT_NODE));
 		}
 
 		// try to match objects
@@ -194,7 +194,7 @@ public class ImportDashboardAction extends ObjectAction<AbstractObject>
 				d.dstName = object.getObjectName();
 			}
 		}
-		
+
 		// try to match DCIs
 		for(DciIdMatchingData d : dcis.values())
 		{
@@ -207,7 +207,7 @@ public class ImportDashboardAction extends ObjectAction<AbstractObject>
 			// bind DCI data to appropriate node data
 			od.dcis.add(d);
 
-			if (od.dstId == 0)
+         if (od.dstId == AbstractObject.UNKNOWN)
 				continue;	// no match for node
 
 			d.dstNodeId = od.dstId;
@@ -224,14 +224,9 @@ public class ImportDashboardAction extends ObjectAction<AbstractObject>
 		}
 
 		// show matching results to user
-		getShell().getDisplay().syncExec(new Runnable() {
-         
-         @Override
-         public void run()
-         {
-            IdMatchingDialog dlg = new IdMatchingDialog(getShell(), objects, dcis);
-            result = dlg.open();
-         }
+      getShell().getDisplay().syncExec(() -> {
+         IdMatchingDialog dlg = new IdMatchingDialog(getShell(), objects, dcis);
+         result = dlg.open();
       });
 		if (result == Window.OK)
 		{
@@ -270,7 +265,7 @@ public class ImportDashboardAction extends ObjectAction<AbstractObject>
 		DashboardElementConfig config = DashboardElementConfigFactory.create(e);
 		if (config == null)
 			return;
-		
+
 		config.remapObjects(objects);
 		config.remapDataCollectionItems(dcis);
 		e.setData(config.createXml());
@@ -285,18 +280,18 @@ public class ImportDashboardAction extends ObjectAction<AbstractObject>
 	private Map<Long, ObjectIdMatchingData> readSourceObjects(Element root)
 	{
 		Map<Long, ObjectIdMatchingData> objects = new HashMap<Long, ObjectIdMatchingData>();
-		NodeList objectsRoot = root.getElementsByTagName("objectMap"); //$NON-NLS-1$
+      NodeList objectsRoot = root.getElementsByTagName("objectMap");
 		for(int i = 0; i < objectsRoot.getLength(); i++)
 		{
 			if (objectsRoot.item(i).getNodeType() != Node.ELEMENT_NODE)
 				continue;
 			
-			NodeList elements = ((Element)objectsRoot.item(i)).getElementsByTagName("object"); //$NON-NLS-1$
+         NodeList elements = ((Element)objectsRoot.item(i)).getElementsByTagName("object");
 			for(int j = 0; j < elements.getLength(); j++)
 			{
 				Element e = (Element)elements.item(j);
-				long id = getAttributeAsLong(e, "id", 0); //$NON-NLS-1$
-				objects.put(id, new ObjectIdMatchingData(id, e.getTextContent(), (int)getAttributeAsLong(e, "class", 0))); //$NON-NLS-1$
+            long id = getAttributeAsLong(e, "id", 0);
+            objects.put(id, new ObjectIdMatchingData(id, e.getTextContent(), (int)getAttributeAsLong(e, "class", 0)));
 			}
 		}
 		return objects;
@@ -311,18 +306,18 @@ public class ImportDashboardAction extends ObjectAction<AbstractObject>
 	private Map<Long, DciIdMatchingData> readSourceDci(Element root)
 	{
 		Map<Long, DciIdMatchingData> dcis = new HashMap<Long, DciIdMatchingData>();
-		NodeList objectsRoot = root.getElementsByTagName("dciMap"); //$NON-NLS-1$
+      NodeList objectsRoot = root.getElementsByTagName("dciMap");
 		for(int i = 0; i < objectsRoot.getLength(); i++)
 		{
 			if (objectsRoot.item(i).getNodeType() != Node.ELEMENT_NODE)
 				continue;
 			
-			NodeList elements = ((Element)objectsRoot.item(i)).getElementsByTagName("dci"); //$NON-NLS-1$
+         NodeList elements = ((Element)objectsRoot.item(i)).getElementsByTagName("dci");
 			for(int j = 0; j < elements.getLength(); j++)
 			{
 				Element e = (Element)elements.item(j);
-				long id = getAttributeAsLong(e, "id", 0); //$NON-NLS-1$
-				dcis.put(id, new DciIdMatchingData(getAttributeAsLong(e, "node", 0), id, e.getTextContent())); //$NON-NLS-1$
+            long id = getAttributeAsLong(e, "id", 0);
+            dcis.put(id, new DciIdMatchingData(getAttributeAsLong(e, "node", 0), id, e.getTextContent()));
 			}
 		}
 		return dcis;
