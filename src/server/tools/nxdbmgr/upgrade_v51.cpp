@@ -24,6 +24,19 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.14 to 51.15
+ */
+static bool H_UpgradeFromV14()
+{
+   CHK_EXEC(CreateConfigParam(_T("Client.DefaultLineChartPeriod"),
+                              _T("60"),
+                              _T("Default period (in minutes) to display collected data for when opening ad-hoc line chart."),
+                              _T("minutes"), 'I', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(15));
+   return true;
+}
+
+/**
  * Upgrade from 51.13 to 51.14
  */
 static bool H_UpgradeFromV13()
@@ -312,6 +325,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 14, 51, 15, H_UpgradeFromV14 },
    { 13, 51, 14, H_UpgradeFromV13 },
    { 12, 51, 13, H_UpgradeFromV12 },
    { 11, 51, 12, H_UpgradeFromV11 },

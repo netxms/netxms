@@ -41,8 +41,10 @@ import org.eclipse.swt.widgets.Widget;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.TimePeriod;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.constants.TimeFrameType;
 import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartConfigurationChangeListener;
@@ -110,7 +112,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    private boolean updateInProgress = false;
    private ViewRefreshController refreshController;
    private Composite chartParent = null;
-   private GraphDefinition configuration = new GraphDefinition();
+   private GraphDefinition configuration;
    private boolean multipleSourceNodes = false;
    private boolean showDeleteAction = false;
 
@@ -181,6 +183,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       this.contextId = contextId;
       fullName = i18n.tr("Line Chart");
 
+      configuration = new GraphDefinition();
       if (templateConfig != null)
       {
          configuration.setArea(templateConfig.isArea());
@@ -196,51 +199,15 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          configuration.setTranslucent(templateConfig.isTranslucent());
          configuration.setUseMultipliers(templateConfig.isUseMultipliers());
          configuration.setYAxisLabel(templateConfig.getYAxisLabel());
+         configuration.setTimePeriod(templateConfig.getTimePeriod());
+      }
+      else
+      {
+         configuration.setTimePeriod(new TimePeriod(TimeFrameType.BACK_FROM_NOW, session.getClientConfigurationHintAsInt("DefaultLineChartPeriod", 60), TimeUnit.MINUTE, null, null));
       }
 
       configuration.setDciList(items.toArray(new ChartDciConfig[items.size()]));
       updateFullName(configuration.getDciList());
-   }
-
-   void updateFullName(ChartDciConfig[] chartDciConfigs)
-   {
-   // Set view title to "host name: dci description" if we have only one DCI
-      if (chartDciConfigs.length == 1)
-      {
-         ChartDciConfig item = chartDciConfigs[0];
-         if (item.useRawValues)
-            setName(item.name.isEmpty() ? item.dciDescription : item.name + " " + i18n.tr("(raw)"));
-         else
-            setName(item.name.isEmpty() ? item.dciDescription : item.name);
-         AbstractObject object = session.findObjectById(item.nodeId);
-         if (object != null)
-         {
-            fullName = object.getObjectName() + ": " + getName();
-         }
-         else
-         {
-            fullName = getName();
-         }
-      }
-      else
-      {
-         long nodeId = chartDciConfigs[0].nodeId;
-         for(ChartDciConfig item : chartDciConfigs)
-            if (item.nodeId != nodeId)
-            {
-               nodeId = -1;
-               break;
-            }
-         if (nodeId != -1)
-         {
-            // All DCIs from same node, set title to "host name"
-            AbstractObject object = session.findObjectById(nodeId);
-            if (object != null)
-            {
-               fullName = String.format(i18n.tr("%s: Line Chart"), object.getObjectName());
-            }
-         }
-      }
    }
 
    /**
@@ -250,7 +217,6 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    {
       super(LocalizationHelper.getI18n(HistoricalGraphView.class).tr("Line Chart"),
             ResourceManager.getImageDescriptor("icons/object-views/chart-line.png"), UUID.randomUUID().toString(), false); 
-
       fullName = i18n.tr("Line Chart");
    }
 
@@ -267,7 +233,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       view.configuration = new GraphDefinition(configuration);
       return view;
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.ViewWithContext#getFullName()
     */
@@ -1289,9 +1255,9 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    }  
 
    /**
-    * @throws ViewNotRestoredException 
     * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
     */
+   @Override
    public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
       super.restoreState(memento);
@@ -1307,5 +1273,55 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          throw(new ViewNotRestoredException(i18n.tr("Failed to load configuration"), e));
       }
       updateFullName(configuration.getDciList());
+   }
+
+   /**
+    * Update view full name
+    *
+    * @param chartDciConfigs DCI configurations
+    */
+   private void updateFullName(ChartDciConfig[] chartDciConfigs)
+   {
+      // Set view title to "host name: dci description" if we have only one DCI
+      if (chartDciConfigs.length == 1)
+      {
+         ChartDciConfig item = chartDciConfigs[0];
+         if (item.useRawValues)
+         {
+            setName(item.name.isEmpty() ? item.dciDescription : item.name + " " + i18n.tr("(raw)"));
+         }
+         else
+         {
+            setName(item.name.isEmpty() ? item.dciDescription : item.name);
+         }
+         AbstractObject object = session.findObjectById(item.nodeId);
+         if (object != null)
+         {
+            fullName = object.getObjectName() + ": " + getName();
+         }
+         else
+         {
+            fullName = getName();
+         }
+      }
+      else
+      {
+         long nodeId = chartDciConfigs[0].nodeId;
+         for(ChartDciConfig item : chartDciConfigs)
+            if (item.nodeId != nodeId)
+            {
+               nodeId = -1;
+               break;
+            }
+         if (nodeId != -1)
+         {
+            // All DCIs from same node, set title to "host name"
+            AbstractObject object = session.findObjectById(nodeId);
+            if (object != null)
+            {
+               fullName = String.format(i18n.tr("%s: Line Chart"), object.getObjectName());
+            }
+         }
+      }
    }
 }

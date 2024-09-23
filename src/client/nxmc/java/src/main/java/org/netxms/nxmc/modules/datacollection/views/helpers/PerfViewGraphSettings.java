@@ -18,6 +18,8 @@
  */
 package org.netxms.nxmc.modules.datacollection.views.helpers;
 
+import org.netxms.client.TimePeriod;
+import org.netxms.client.constants.TimeFrameType;
 import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.nxmc.Registry;
@@ -26,6 +28,9 @@ import org.simpleframework.xml.Root;
 
 /**
  * Settings for performance view graph
+ */
+/**
+ * 
  */
 @Root(name = "config", strict = false)
 public class PerfViewGraphSettings
@@ -370,7 +375,9 @@ public class PerfViewGraphSettings
    }
 
    /**
-    * @return the timeInterval
+    * Get graph time interval expressed in time units.
+    *
+    * @return graph time interval expressed in time units
     */
    public int getTimeRange()
    {
@@ -378,9 +385,9 @@ public class PerfViewGraphSettings
    }
 
    /**
-    * Get time range covered by graph in milliseconds
+    * Get time range covered by graph in milliseconds.
     * 
-    * @return
+    * @return time range covered by graph in milliseconds
     */
    public long getTimeRangeMillis()
    {
@@ -394,6 +401,16 @@ public class PerfViewGraphSettings
             return (long)timeRange * 24L * 60L * 60L * 1000L;
       }
       return 0;
+   }
+
+   /**
+    * Get time range covered by graph as TimePeriod object.
+    *
+    * @return time range covered by graph as TimePeriod object
+    */
+   public TimePeriod getTimePeriod()
+   {
+      return new TimePeriod(TimeFrameType.BACK_FROM_NOW, timeRange, TimeUnit.getByValue(timeUnits), null, null);
    }
 
    /**

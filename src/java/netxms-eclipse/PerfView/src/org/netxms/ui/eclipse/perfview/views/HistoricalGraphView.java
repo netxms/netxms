@@ -49,8 +49,10 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.TimePeriod;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.constants.TimeFrameType;
 import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartConfigurationChangeListener;
@@ -145,18 +147,14 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
 
       session = ConsoleSharedData.getSession();
 
-      if (configuration.getTimePeriod().isBackFromNow())
-      {
-         configuration.setTimeFrom(new Date(System.currentTimeMillis() - configuration.getTimeRangeMillis()));
-         configuration.setTimeTo(new Date(System.currentTimeMillis()));
-      }
-
       // Extract DCI ids from view id
       // (first field will be unique view id, so we skip it)
       String id = site.getSecondaryId();
       String[] fields = id.split("&"); //$NON-NLS-1$
       if (!fields[0].equals(PREDEFINED_GRAPH_SUBID))
       {
+         configuration.setTimePeriod(new TimePeriod(TimeFrameType.BACK_FROM_NOW, session.getClientConfigurationHintAsInt("DefaultLineChartPeriod", 60), TimeUnit.MINUTE, null, null));
+
          List<ChartDciConfig> items = new ArrayList<ChartDciConfig>();
          for(int i = 1; i < fields.length; i++)
          {
@@ -286,7 +284,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
             e.printStackTrace();
             return;
          }
-         
+
          ConsoleJob job = new ConsoleJob(Messages.get().HistoricalGraphView_JobName, this, Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
