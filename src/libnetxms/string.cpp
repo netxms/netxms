@@ -118,6 +118,29 @@ String::String(const TCHAR *init, ssize_t len, Ownership takeOwnership)
 }
 
 /**
+ * Create string with given initial content
+ */
+String::String(const char *init, const char *codepage)
+{
+   size_t len = strlen(init);
+   m_buffer = (len < STRING_INTERNAL_BUFFER_SIZE) ? m_internalBuffer : MemAllocStringW(len + 1);
+#ifdef UNICODE
+   m_length = mbcp_to_wchar(init, len, m_buffer, len + 1, codepage);
+#else
+   if (!stricmp(codepage, "UTF8") || !stricmp(codepage, "UTF-8"))
+   {
+      m_length = utf8_to_mb(init, len, m_buffer, len + 1);
+   }
+   else
+   {
+      memcpy(m_buffer, init, len + 1);
+      m_length = len;
+   }
+#endif
+   m_buffer[m_length] = 0;
+}
+
+/**
  * Destructor
  */
 String::~String()
@@ -579,6 +602,15 @@ StringBuffer::StringBuffer(const TCHAR *init) : String(init)
  * Create string buffer with given initial content
  */
 StringBuffer::StringBuffer(const TCHAR *init, size_t length) : String(init, length)
+{
+   m_allocated = isInternalBuffer() ? 0 : m_length + 1;
+   m_allocationStep = 256;
+}
+
+/**
+ * Create string buffer with given initial content
+ */
+StringBuffer::StringBuffer(const char *init, const char *codepage) : String(init, codepage)
 {
    m_allocated = isInternalBuffer() ? 0 : m_length + 1;
    m_allocationStep = 256;

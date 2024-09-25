@@ -833,6 +833,20 @@ static void TestString()
    AssertTrue(!_tcscmp(dst2, _T("long string to move - 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")));
    AssertTrue(src2.isEmpty());
    EndTest();
+
+   StartTest(_T("String - construct from multibyte string"));
+   String mbtest1("Simple string", nullptr);
+   AssertEquals(mbtest1.cstr(), _T("Simple string"));
+   String mbtest2("long multibyte string - 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890", nullptr);
+   AssertEquals(mbtest2.cstr(), _T("long multibyte string - 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"));
+   EndTest();
+
+#ifdef UNICODE
+   StartTest(_T("String - construct from UTF-8 string"));
+   String utf8test1("It is 16\xE2\x84\x83 today", "utf8");
+   AssertEquals(utf8test1.cstr(), L"It is 16\x2103 today");
+   EndTest();
+#endif
 }
 
 /**
