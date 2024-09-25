@@ -1147,6 +1147,7 @@ public:
    String(const TCHAR *init, ssize_t len, Ownership takeOwnership = Ownership::False);
    String(const String& src);
    String(String&& src);
+   String(const char *init, const char *codepage);
    virtual ~String();
 
    operator const TCHAR*() const { return m_buffer; }
@@ -1220,6 +1221,7 @@ public:
    MutableString(const String& src) : String(src) { }
    MutableString(const MutableString& src) : String(src) { }
    MutableString(MutableString&& src) : String(src) { }
+   MutableString(const char *init, const char *codepage) : String(init, codepage) { }
 
    MutableString& operator =(const String &src);
    MutableString& operator =(const MutableString &src);
@@ -1244,6 +1246,7 @@ public:
    SharedString(const String& str) { m_string = make_shared<String>(str); }
    SharedString(const TCHAR *str) { if (str != nullptr) m_string = make_shared<String>(str); }
    SharedString(TCHAR *str, Ownership takeOwnership) { if (str != nullptr) m_string = make_shared<String>(str, -1, takeOwnership); }
+   SharedString(const char *str, const char *codepage) { if (str != nullptr) m_string = make_shared<String>(str, codepage); }
 
    SharedString& operator=(const SharedString &str)
    {
@@ -1305,6 +1308,7 @@ public:
    StringBuffer();
    StringBuffer(const TCHAR *init);
    StringBuffer(const TCHAR *init, size_t length);
+   StringBuffer(const char *init, const char *codepage);
    StringBuffer(const StringBuffer& src);
    StringBuffer(StringBuffer&& src);
    StringBuffer(const String& src);
