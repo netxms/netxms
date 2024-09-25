@@ -10737,7 +10737,18 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
                   shared_ptr<WirelessDomain> wirelessDomain = getWirelessDomain();
                   if (wirelessDomain != nullptr)
                   {
-                     ap = (ws->apMatchPolicy == AP_MATCH_BY_BSSID) ? wirelessDomain->findAccessPointByBSSID(ws->bssid) : wirelessDomain->findAccessPointByRadioId(ws->rfIndex);
+                     switch(ws->apMatchPolicy)
+                     {
+                        case AP_MATCH_BY_BSSID:
+                           ap = wirelessDomain->findAccessPointByBSSID(ws->bssid);
+                           break;
+                        case AP_MATCH_BY_RFINDEX:
+                           ap = wirelessDomain->findAccessPointByRadioId(ws->rfIndex);
+                           break;
+                        case AP_MATCH_BY_SERIAL:
+                           ap = wirelessDomain->findAccessPointBySerial(ws->apSerial);
+                           break;
+                     }
                   }
                   if (ap != nullptr)
                   {

@@ -222,6 +222,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="curl.cpp" />
+    <ClCompile Include="hfcl.cpp" />
     <ClCompile Include="ruckus.cpp" />
     <ClCompile Include="wlcbridge.cpp" />
   </ItemGroup>

@@ -318,6 +318,7 @@ public:
  */
 #define AP_MATCH_BY_RFINDEX   0
 #define AP_MATCH_BY_BSSID     1
+#define AP_MATCH_BY_SERIAL    2
 
 /**
  * Wireless station information
@@ -331,6 +332,7 @@ struct WirelessStationInfo
    int16_t apMatchPolicy;
    BYTE bssid[MAC_ADDR_LENGTH];
    TCHAR ssid[MAX_SSID_LENGTH];
+   TCHAR apSerial[24];
    int32_t vlan;
    int32_t rssi;
    uint32_t txRate;
@@ -534,9 +536,9 @@ struct WirelessControllerBridge
 {
    ObjectArray<AccessPointInfo> *(*getAccessPoints)(NObject *wirelessDomain);
    ObjectArray<WirelessStationInfo> *(*getWirelessStations)(NObject *wirelessDomain);
-   AccessPointState (*getAccessPointState)(NObject *wirelessDomain, uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces);
-   DataCollectionError (*getAccessPointMetric)(NObject *wirelessDomain, uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const TCHAR *name, TCHAR *value, size_t size);
-   ObjectArray<WirelessStationInfo> *(*getAccessPointWirelessStations)(NObject *wirelessDomain, uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr);
+   AccessPointState (*getAccessPointState)(NObject *wirelessDomain, uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const TCHAR *serial, const StructArray<RadioInterfaceInfo>& radioInterfaces);
+   DataCollectionError (*getAccessPointMetric)(NObject *wirelessDomain, uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const TCHAR *serial, const TCHAR *name, TCHAR *value, size_t size);
+   ObjectArray<WirelessStationInfo> *(*getAccessPointWirelessStations)(NObject *wirelessDomain, uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const TCHAR *serial);
 };
 
 /**

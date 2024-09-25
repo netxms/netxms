@@ -31,6 +31,7 @@ DEFINE_MODULE_METADATA("WLCBRIDGE", "Raden Solutions", NETXMS_VERSION_STRING_A, 
 /**
  * Interfaces
  */
+extern WirelessControllerBridge g_hfclBridge;
 extern WirelessControllerBridge g_ruckusBridge;
 
 /**
@@ -38,6 +39,8 @@ extern WirelessControllerBridge g_ruckusBridge;
  */
 static WirelessControllerBridge *GetWLCBridgeInterface(const TCHAR *bridgeName)
 {
+   if (!_tcsicmp(bridgeName, _T("HFCL")))
+      return &g_hfclBridge;
    if (!_tcsicmp(bridgeName, _T("RUCKUS")))
       return &g_ruckusBridge;
    return nullptr;

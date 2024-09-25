@@ -15,6 +15,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="curl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hfcl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="ruckus.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

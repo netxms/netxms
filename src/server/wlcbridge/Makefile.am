@@ -1,7 +1,7 @@
 MODULE = wlcbridge
 
 pkglib_LTLIBRARIES = wlcbridge.la
-wlcbridge_la_SOURCES = ruckus.cpp wlcbridge.cpp
+wlcbridge_la_SOURCES = curl.cpp hfcl.cpp ruckus.cpp wlcbridge.cpp
 wlcbridge_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 wlcbridge_la_LDFLAGS = -module -avoid-version
 wlcbridge_la_LIBADD = ../../libnetxms/libnetxms.la ../libnxsrv/libnxsrv.la ../core/libnxcore.la
