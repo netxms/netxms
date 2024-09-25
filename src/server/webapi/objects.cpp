@@ -240,7 +240,7 @@ int H_ObjectExecuteAgentCommand(Context *context)
       return 400;
    }
 
-   String commandLine(json_object_get_string_t(request, "command", nullptr), -1, Ownership::True);
+   String commandLine(json_object_get_string_utf8(request, "command", nullptr), "utf8");
    if (commandLine.isEmpty())
    {
       nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_ObjectExecuteAgentCommand: missing command"));

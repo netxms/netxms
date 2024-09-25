@@ -502,6 +502,26 @@ shared_ptr<AccessPoint> WirelessDomain::findAccessPointByBSSID(const BYTE *bssid
 }
 
 /**
+ * Find attached access point by serial number
+ */
+shared_ptr<AccessPoint> WirelessDomain::findAccessPointBySerial(const TCHAR *serial) const
+{
+   shared_ptr<AccessPoint> ap;
+   readLockChildList();
+   for(int i = 0; i < getChildList().size(); i++)
+   {
+      NetObj *curr = getChildList().get(i);
+      if ((curr->getObjectClass() == OBJECT_ACCESSPOINT) && !_tcscmp(serial, static_cast<AccessPoint*>(curr)->getSerialNumber()))
+      {
+         ap = static_pointer_cast<AccessPoint>(getChildList().getShared(i));
+         break;
+      }
+   }
+   unlockChildList();
+   return ap;
+}
+
+/**
  * Create NXSL object for this object
  */
 NXSL_Value *WirelessDomain::createNXSLObject(NXSL_VM *vm)

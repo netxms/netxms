@@ -4652,6 +4652,7 @@ public:
    shared_ptr<AccessPoint> findAccessPointByMAC(const MacAddress& macAddr) const;
    shared_ptr<AccessPoint> findAccessPointByBSSID(const BYTE *bssid) const;
    shared_ptr<AccessPoint> findAccessPointByRadioId(uint32_t rfIndex) const;
+   shared_ptr<AccessPoint> findAccessPointBySerial(const TCHAR *serial) const;
 
    int getApCountUp() const { return m_apCount[AP_UP]; }
    int getApCountDown() const { return m_apCount[AP_DOWN]; }

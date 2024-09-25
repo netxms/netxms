@@ -510,7 +510,7 @@ void AccessPoint::statusPollFromController(ClientSession *session, uint32_t requ
 
    AccessPointState state;
    if (bridge != nullptr)
-      state = bridge->getAccessPointState(this, m_index, m_macAddress, m_ipAddress, m_radioInterfaces);
+      state = bridge->getAccessPointState(getWirelessDomain().get(), m_index, m_macAddress, m_ipAddress, m_serialNumber, m_radioInterfaces);
    else if (controller != nullptr)
       state = controller->getAccessPointState(this, snmpTransport, m_radioInterfaces);
    else
@@ -750,14 +750,13 @@ DataCollectionError AccessPoint::getInternalMetric(const TCHAR *name, TCHAR *buf
          {
             TCHAR attribute[256];
             AgentGetParameterArg(name, 1, attribute, 256);
-            rc = bridge->getAccessPointMetric(wirelessDomain.get(), m_index, m_macAddress, m_ipAddress, attribute, buffer, size);
+            rc = bridge->getAccessPointMetric(wirelessDomain.get(), m_index, m_macAddress, m_ipAddress, m_serialNumber, attribute, buffer, size);
          }
       }
    }
 
    return rc;
 }
-
 
 /**
  * Get wireless stations registered on this AP.
@@ -777,7 +776,7 @@ ObjectArray<WirelessStationInfo> *AccessPoint::getWirelessStations() const
    if (bridge == nullptr)
       return nullptr;
 
-   ObjectArray<WirelessStationInfo> *wirelessStations = bridge->getAccessPointWirelessStations(wirelessDomain.get(), m_index, m_macAddress, m_ipAddress);
+   ObjectArray<WirelessStationInfo> *wirelessStations = bridge->getAccessPointWirelessStations(wirelessDomain.get(), m_index, m_macAddress, m_ipAddress, m_serialNumber);
    if (wirelessStations == nullptr)
       return nullptr;
 
@@ -807,7 +806,7 @@ NXSL_Value *AccessPoint::getWirelessStationsForNXSL(NXSL_VM *vm) const
    if (bridge == nullptr)
       return vm->createValue();
 
-   ObjectArray<WirelessStationInfo> *wirelessStations = bridge->getAccessPointWirelessStations(wirelessDomain.get(), m_index, m_macAddress, m_ipAddress);
+   ObjectArray<WirelessStationInfo> *wirelessStations = bridge->getAccessPointWirelessStations(wirelessDomain.get(), m_index, m_macAddress, m_ipAddress, m_serialNumber);
    if (wirelessStations == nullptr)
       return vm->createValue();
 
@@ -846,7 +845,7 @@ bool AccessPoint::writeWsListToMessage(NXCPMessage *msg) const
    if (bridge == nullptr)
       return false;
 
-   ObjectArray<WirelessStationInfo> *wirelessStations = bridge->getAccessPointWirelessStations(wirelessDomain.get(), m_index, m_macAddress, m_ipAddress);
+   ObjectArray<WirelessStationInfo> *wirelessStations = bridge->getAccessPointWirelessStations(wirelessDomain.get(), m_index, m_macAddress, m_ipAddress, m_serialNumber);
    if (wirelessStations == nullptr)
       return false;
 

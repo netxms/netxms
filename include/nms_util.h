@@ -1145,9 +1145,9 @@ public:
    String();
    String(const TCHAR *init);
    String(const TCHAR *init, ssize_t len, Ownership takeOwnership = Ownership::False);
+   String(const char *init, const char *codepage);
    String(const String& src);
    String(String&& src);
-   String(const char *init, const char *codepage);
    virtual ~String();
 
    operator const TCHAR*() const { return m_buffer; }
@@ -1218,10 +1218,10 @@ public:
    MutableString() : String() { }
    MutableString(const TCHAR *init) : String(init) { }
    MutableString(const TCHAR *init, size_t len) : String(init, len) { }
+   MutableString(const char *init, const char *codepage) : String(init, codepage) { }
    MutableString(const String& src) : String(src) { }
    MutableString(const MutableString& src) : String(src) { }
    MutableString(MutableString&& src) : String(src) { }
-   MutableString(const char *init, const char *codepage) : String(init, codepage) { }
 
    MutableString& operator =(const String &src);
    MutableString& operator =(const MutableString &src);

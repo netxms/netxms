@@ -22,50 +22,22 @@
 
 #include "wlcbridge.h"
 #include <nddrv.h>
-#include <nxlibcurl.h>
-#include <jansson.h>
-#include <netxms-version.h>
 
 #define DEBUG_TAG WLCBRIDGE_DEBUG_TAG _T(".ruckus")
-
-/**
- * Callback for processing data received from cURL
- */
-static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *context)
-{
-   size_t bytes = size * nmemb;
-   static_cast<ByteStream*>(context)->write(ptr, bytes);
-   return bytes;
-}
 
 /**
  * Read JSON document from bridge process
  */
 static json_t *ReadJsonFromBridge(const char *endpoint)
 {
-   CURL *curl = curl_easy_init();
-   if (curl == nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
-      return nullptr;
-   }
-
-#if HAVE_DECL_CURLOPT_NOSIGNAL
-   curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
-#endif
-
-   curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
-   curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30);
-   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
-   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
-   curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS WLC Bridge/" NETXMS_VERSION_STRING_A);
-
    ByteStream responseData(32768);
    responseData.setAllocationStep(32768);
-   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
 
    char errorBuffer[CURL_ERROR_SIZE];
-   curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuffer);
+
+   CURL *curl = CreateCurlHandle(&responseData, errorBuffer);
+   if (curl == nullptr)
+      return nullptr;
 
    bool success = true;
 
@@ -284,28 +256,6 @@ static ObjectArray<WirelessStationInfo> *GetWirelessStations(NObject *wirelessDo
 }
 
 /**
- * Cache entry for access point data
- */
-struct AccessPointCacheEntry
-{
-   json_t *data;
-   time_t timestamp;
-   bool processing;
-
-   AccessPointCacheEntry()
-   {
-      data = nullptr;
-      timestamp = 0;
-      processing = false;
-   }
-
-   ~AccessPointCacheEntry()
-   {
-      json_decref(data);
-   }
-};
-
-/**
  * Access point data cache
  */
 static ObjectMemoryPool<AccessPointCacheEntry> s_apMemPool;
@@ -378,7 +328,7 @@ static json_t *GetAccessPointData(const MacAddress& macAddr)
 /**
  * Get access point state
  */
-static AccessPointState GetAccessPointState(NObject *wirelessDomain, uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces)
+static AccessPointState GetAccessPointState(NObject *wirelessDomain, uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const TCHAR *serial, const StructArray<RadioInterfaceInfo>& radioInterfaces)
 {
    LockGuard lockGuard(s_apCacheLock);
 
@@ -400,7 +350,7 @@ static AccessPointState GetAccessPointState(NObject *wirelessDomain, uint32_t ap
 /**
  * Get access point metric
  */
-static DataCollectionError GetAccessPointMetric(NObject *wirelessDomain, uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const TCHAR *name, TCHAR *value, size_t size)
+static DataCollectionError GetAccessPointMetric(NObject *wirelessDomain, uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const TCHAR *serial, const TCHAR *name, TCHAR *value, size_t size)
 {
    LockGuard lockGuard(s_apCacheLock);
 
@@ -408,41 +358,13 @@ static DataCollectionError GetAccessPointMetric(NObject *wirelessDomain, uint32_
    if (ap == nullptr)
       return DCE_COLLECTION_ERROR;
 
-   json_t *data = json_object_get_by_path(ap, name);
-   if (data == nullptr)
-      return DCE_NOT_SUPPORTED;
-
-   TCHAR buffer[32];
-   switch(json_typeof(data))
-   {
-      case JSON_STRING:
-         utf8_to_tchar(json_string_value(data), -1, value, size);
-         value[size - 1] = 0;
-         break;
-      case JSON_INTEGER:
-         IntegerToString(static_cast<int64_t>(json_integer_value(data)), buffer);
-         _tcslcpy(value, buffer, size);
-         break;
-      case JSON_REAL:
-         _sntprintf(value, size, _T("%f"), json_real_value(data));
-         break;
-      case JSON_TRUE:
-         _tcslcpy(value, _T("true"), size);
-         break;
-      case JSON_FALSE:
-         _tcslcpy(value, _T("false"), size);
-         break;
-      default:
-         *value = 0;
-         break;
-   }
-   return DCE_SUCCESS;
+   return GetValueFromJson(ap, name, value, size);
 }
 
 /**
  * Get list of stations registered at given controller
  */
-static ObjectArray<WirelessStationInfo> *GetAccessPointWirelessStations(NObject *wirelessDomain, uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr)
+static ObjectArray<WirelessStationInfo> *GetAccessPointWirelessStations(NObject *wirelessDomain, uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const TCHAR *serial)
 {
    char endpoint[64], macAddrText[24];
    snprintf(endpoint, 64, "clients/%s", BinToStrExA(macAddr.value(), MAC_ADDR_LENGTH, macAddrText, ':', 0));
