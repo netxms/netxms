@@ -335,6 +335,18 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
 
       objectName = new Label(headerArea, SWT.LEFT);
       objectName.setFont(JFaceResources.getBannerFont());
+      Menu objectNameMenu = new Menu(objectName);
+      MenuItem menuItem = new MenuItem(objectNameMenu, SWT.PUSH);
+      menuItem.setText("&Copy");
+      menuItem.setImage(SharedIcons.IMG_COPY);
+      menuItem.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            WidgetHelper.copyToClipboard(objectName.getText());
+         }
+      });
+      objectName.setMenu(objectNameMenu);
 
       Label separator = new Label(headerArea, SWT.SEPARATOR | SWT.VERTICAL);
       GridData gd = new GridData(SWT.CENTER, SWT.FILL, false, true);
