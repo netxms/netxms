@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -406,12 +406,12 @@ void StringList::insertAll(int pos, const StringList *src)
 /**
  * Merge with another list
  */
-void StringList::merge(const StringList *src, bool matchCase)
+void StringList::merge(const StringList& src, bool matchCase)
 {
-   for(int i = 0; i < src->m_count; i++)
+   for(int i = 0; i < src.m_count; i++)
    {
-      if ((matchCase ? indexOf(src->m_values[i]) : indexOfIgnoreCase(src->m_values[i])) == -1)
-         add(src->m_values[i]);
+      if ((matchCase ? indexOf(src.m_values[i]) : indexOfIgnoreCase(src.m_values[i])) == -1)
+         add(src.m_values[i]);
    }
 }
 
