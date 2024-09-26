@@ -876,13 +876,17 @@ json_t *AccessPoint::toJson()
    json_object_set_new(root, "domainId", json_integer(m_domainId));
    json_object_set_new(root, "controllerId", json_integer(m_controllerId));
    TCHAR macAddrText[64];
-   json_object_set_new(root, "macAddr", json_string_t(m_macAddress.toString(macAddrText)));
+   json_object_set_new(root, "macAddress", json_string_t(m_macAddress.toString(macAddrText)));
    json_object_set_new(root, "vendor", json_string_t(m_vendor));
    json_object_set_new(root, "model", json_string_t(m_model));
    json_object_set_new(root, "serialNumber", json_string_t(m_serialNumber));
    json_object_set_new(root, "radioInterfaces", json_struct_array(m_radioInterfaces));
    json_object_set_new(root, "state", json_integer(m_apState));
    json_object_set_new(root, "prevState", json_integer(m_prevState));
+   json_object_set_new(root, "peerNodeId", json_integer(m_peerNodeId));
+   json_object_set_new(root, "peerInterfaceId", json_integer(m_peerInterfaceId));
+   json_object_set_new(root, "peerDiscoveryProtocol", json_integer(m_peerDiscoveryProtocol));
+   json_object_set_new(root, "downSince", json_integer(m_downSince));
    unlockProperties();
 
    return root;
