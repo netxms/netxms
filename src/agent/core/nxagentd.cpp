@@ -1059,6 +1059,17 @@ BOOL Initialize()
    nxlog_write_tag(NXLOG_INFO, _T("config"), _T("Configuration tree:"));
    g_config->print();
 
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("PATH = %s"), GetEnvironmentVariableEx(_T("PATH")).cstr());
+#if defined(_AIX)
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("LIBPATH = %s"), GetEnvironmentVariableEx(_T("LIBPATH")).cstr());
+#elif !defined(_WIN32)
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("LD_LIBRARY_PATH = %s"), GetEnvironmentVariableEx(_T("LD_LIBRARY_PATH")).cstr());
+#ifdef __sunos
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("LD_LIBRARY_PATH_32 = %s"), GetEnvironmentVariableEx(_T("LD_LIBRARY_PATH_32")).cstr());
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("LD_LIBRARY_PATH_64 = %s"), GetEnvironmentVariableEx(_T("LD_LIBRARY_PATH_64")).cstr());
+#endif
+#endif
+
    if (s_debugTags != nullptr)
    {
       int count;
