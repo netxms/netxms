@@ -116,6 +116,22 @@ static void TestStringList()
    delete s4;
    EndTest(GetCurrentTimeMs() - startTime);
 #endif
+
+   StartTest(_T("String list - merge"));
+   StringList msrc;
+   msrc.add(_T("Word1"));
+   msrc.add(_T("Word2"));
+   msrc.add(_T("Word3"));
+   StringList mdst;
+   msrc.add(_T("Word1"));
+   msrc.add(_T("Word4"));
+   mdst.merge(msrc, true);
+   AssertEquals(mdst.size(), 4);
+   AssertNotEquals(mdst.indexOf(_T("Word1")), -1);
+   AssertNotEquals(mdst.indexOf(_T("Word2")), -1);
+   AssertNotEquals(mdst.indexOf(_T("Word3")), -1);
+   AssertNotEquals(mdst.indexOf(_T("Word4")), -1);
+   EndTest();
 }
 
 /**

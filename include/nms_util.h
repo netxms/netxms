@@ -2375,7 +2375,7 @@ public:
    void addAllFromMessage(const NXCPMessage& msg, uint32_t baseId, uint32_t countId);
    void addAllFromMessage(const NXCPMessage& msg, uint32_t fieldId);
 
-   void merge(const StringList *src, bool matchCase);
+   void merge(const StringList& src, bool matchCase);
    void splitAndAdd(const TCHAR *src, const TCHAR *separator);
 
    void remove(int index);
