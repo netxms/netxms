@@ -377,6 +377,8 @@ static LONG H_HardwareSerialNumber(const TCHAR *param, const TCHAR *arg, TCHAR *
  */
 static LONG H_RunningConfigList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
+   if (!session->isMasterServer())
+      return SYSINFO_RC_ACCESS_DENIED;
    g_config->print(value);
    return SYSINFO_RC_SUCCESS;
 }
