@@ -124,7 +124,7 @@ public class LogDescriptor
     */
    public boolean isApplicableForObject(AbstractObject object)
    {
-      return (filterColumn != null) && (object instanceof DataCollectionTarget) || ObjectTool.isContainerObject(object);
+      return (filterColumn != null) && ((object instanceof DataCollectionTarget) || ObjectTool.isContainerObject(object));
    }
 
    /**
