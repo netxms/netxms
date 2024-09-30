@@ -63,16 +63,11 @@ public class DashboardComposite extends Canvas implements PaintListener
       backgroundColor = getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND);
 
 		hasBorder = ((style & SWT.BORDER) != 0);
-		addPaintListener(this);
 		setBackground(backgroundColor);
-	}
 
-   @Override
-   public void dispose()
-   {
-      removePaintListener(this);
-      super.dispose();
-   }
+      addPaintListener(this);
+      addDisposeListener((e) -> removePaintListener(this));
+	}
 
    /**
     * @see org.eclipse.swt.widgets.Scrollable#computeTrim(int, int, int, int)

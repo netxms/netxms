@@ -19,13 +19,17 @@
 package org.netxms.nxmc.modules.objects.views;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.widgets.MarkdownViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
@@ -37,7 +41,11 @@ public class CommentsView extends ObjectView
 {
    private final I18n i18n = LocalizationHelper.getI18n(CommentsView.class);
 
-   private Text content;
+   private MarkdownViewer markdownViewer;
+   private Text textViewer;
+   private Control currentViewer = null;
+   private Composite content;
+   private boolean markdownMode = false;
    private boolean showEmptyComments;
 
    /**
@@ -55,7 +63,12 @@ public class CommentsView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && (context instanceof AbstractObject) && (showEmptyComments || !((AbstractObject)context).getComments().isBlank());
+      if ((context == null) || !(context instanceof AbstractObject))
+         return false;
+      if (showEmptyComments)
+         return true;
+      String comments = ((AbstractObject)context).getComments();
+      return !comments.isBlank() && !(comments.startsWith(AbstractObject.MARKDOWN_COMMENTS_INDICATOR) && comments.substring(AbstractObject.MARKDOWN_COMMENTS_INDICATOR.length()).isBlank());
    }
 
    /**
@@ -73,7 +86,8 @@ public class CommentsView extends ObjectView
    @Override
    protected void createContent(Composite parent)
    {
-      content = new Text(parent, SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI);
+      content = new Composite(parent, SWT.NONE);
+      content.setLayout(new FillLayout());
    }
 
    /**
@@ -82,7 +96,7 @@ public class CommentsView extends ObjectView
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      content.setText((object != null) ? object.getComments() : "");
+      onObjectUpdate(object);
    }
 
    /**
@@ -91,7 +105,17 @@ public class CommentsView extends ObjectView
    @Override
    protected void onObjectUpdate(AbstractObject object)
    {
-      content.setText((object != null) ? object.getComments() : "");
+      String comments = (object != null) ? object.getComments() : "";
+      if (comments.startsWith(AbstractObject.MARKDOWN_COMMENTS_INDICATOR))
+      {
+         createViewer(true);
+         markdownViewer.setText(comments.substring(AbstractObject.MARKDOWN_COMMENTS_INDICATOR.length()));
+      }
+      else
+      {
+         createViewer(false);
+         textViewer.setText(comments);
+      }
    }
 
    /**
@@ -114,5 +138,33 @@ public class CommentsView extends ObjectView
             return i18n.tr("Cannot resynchromize object");
          }
       }.start();
+   }
+
+   /**
+    * Create viewer depending on mode
+    * 
+    * @param markdownMode true if viewer should be for markdown
+    */
+   private void createViewer(boolean markdownMode)
+   {
+      if ((currentViewer != null) && !currentViewer.isDisposed())
+      {
+         if (this.markdownMode == markdownMode)
+            return; // Already in correct mode
+         currentViewer.dispose();
+      }
+
+      if (markdownMode)
+      {
+         markdownViewer = new MarkdownViewer(content, SWT.NONE);
+         currentViewer = markdownViewer;
+      }
+      else
+      {
+         textViewer = new Text(content, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+         textViewer.setFont(JFaceResources.getDialogFont());
+         currentViewer = textViewer;
+      }
+      this.markdownMode = markdownMode;
    }
 }

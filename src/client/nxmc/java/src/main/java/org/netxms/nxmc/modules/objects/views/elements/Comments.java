@@ -18,13 +18,17 @@
  */
 package org.netxms.nxmc.modules.objects.views.elements;
 
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.widgets.MarkdownViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.views.ObjectOverviewView;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.xnap.commons.i18n.I18n;
 
@@ -35,7 +39,11 @@ public class Comments extends OverviewPageElement
 {
    private final I18n i18n = LocalizationHelper.getI18n(Comments.class);
 
-	private Text comments;
+   private MarkdownViewer markdownViewer;
+   private Text textViewer;
+   private Control currentViewer = null;
+   private Composite content;
+   private boolean markdownMode = false;
    private boolean showEmptyComments;
 
 	/**
@@ -57,12 +65,45 @@ public class Comments extends OverviewPageElement
 	@Override
 	protected Control createClientArea(Composite parent)
 	{
-		comments = new Text(parent, SWT.MULTI | SWT.READ_ONLY | SWT.WRAP);
-		comments.setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
-		if (getObject() != null)
-			comments.setText(getObject().getComments());
-		return comments;
+      content = new Composite(parent, SWT.NONE);
+      content.setLayout(new FillLayout());
+      onObjectChange();
+      return content;
 	}
+
+   /**
+    * Create viewer depending on mode
+    * 
+    * @param markdownMode true if viewer should be for markdown
+    */
+   private void createViewer(boolean markdownMode)
+   {
+      if ((currentViewer != null) && !currentViewer.isDisposed())
+      {
+         if (this.markdownMode == markdownMode)
+            return; // Already in correct mode
+         currentViewer.dispose();
+      }
+
+      if (markdownMode)
+      {
+         markdownViewer = new MarkdownViewer(content, SWT.NONE);
+         markdownViewer.setRenderCompletionHandler(() -> {
+            ObjectView view = getObjectView();
+            if (view != null)
+               ((ObjectOverviewView)view).requestElementLayout();
+         });
+         currentViewer = markdownViewer;
+      }
+      else
+      {
+         textViewer = new Text(content, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+         textViewer.setFont(JFaceResources.getDialogFont());
+         currentViewer = textViewer;
+      }
+      currentViewer.setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
+      this.markdownMode = markdownMode;
+   }
 
    /**
     * @see org.netxms.nxmc.modules.objects.views.elements.OverviewPageElement#getTitle()
@@ -79,8 +120,20 @@ public class Comments extends OverviewPageElement
 	@Override
 	protected void onObjectChange()
 	{
-		if (getObject() != null)
-			comments.setText(getObject().getComments());
+      if (getObject() == null)
+         return;
+
+      String comments = getObject().getComments();
+      if (comments.startsWith(AbstractObject.MARKDOWN_COMMENTS_INDICATOR))
+      {
+         createViewer(true);
+         markdownViewer.setText(comments.substring(AbstractObject.MARKDOWN_COMMENTS_INDICATOR.length()));
+      }
+      else
+      {
+         createViewer(false);
+         textViewer.setText(comments);
+      }
 	}
 
    /**
@@ -89,6 +142,9 @@ public class Comments extends OverviewPageElement
    @Override
    public boolean isApplicableForObject(AbstractObject object)
    {
-      return showEmptyComments || !object.getComments().isBlank();
+      if (showEmptyComments)
+         return true;
+      String comments = object.getComments();
+      return !comments.isBlank() && !(comments.startsWith(AbstractObject.MARKDOWN_COMMENTS_INDICATOR) && comments.substring(AbstractObject.MARKDOWN_COMMENTS_INDICATOR.length()).isBlank());
    }
 }

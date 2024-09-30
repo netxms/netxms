@@ -123,6 +123,8 @@ public abstract class AbstractObject
 	public static final int PROPAGATE_RELATIVE = 3;
 	public static final int PROPAGATE_TRANSLATED = 4;
 
+   public static final String MARKDOWN_COMMENTS_INDICATOR = "{\u007f}";
+
 	@Internal protected NXCSession session = null;
 	protected long objectId = 0;
 	protected UUID guid;

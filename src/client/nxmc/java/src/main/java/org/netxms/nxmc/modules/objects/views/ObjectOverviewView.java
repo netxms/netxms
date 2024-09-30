@@ -258,6 +258,16 @@ public class ObjectOverviewView extends ObjectView
    }
 
    /**
+    * Request element layout. Can be used by elements when they need to relayout other elements after size change.
+    */
+   public void requestElementLayout()
+   {
+      viewArea.layout(true, true);
+      Rectangle r = scroller.getClientArea();
+      scroller.setMinSize(viewArea.computeSize(r.width, SWT.DEFAULT));
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.View#refresh()
     */
    @Override

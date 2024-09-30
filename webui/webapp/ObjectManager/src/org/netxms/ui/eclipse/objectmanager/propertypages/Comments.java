@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
@@ -40,65 +41,78 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class Comments extends PropertyPage
 {
-	private AbstractObject object;
-	private Text comments;
-	private String initialComments;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
-	@Override
-	protected Control createContents(Composite parent)
-	{
-		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
-		object = (AbstractObject)getElement().getAdapter(AbstractObject.class);
-		initialComments = object.getCommentsSource();
-		if (initialComments == null)
-			initialComments = ""; //$NON-NLS-1$
+   private AbstractObject object;
+   private Text comments;
+   private Button checkMarkdown;
+   private String initialComments;
 
-		GridLayout layout = new GridLayout();
-		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
-		layout.marginWidth = 0;
-		layout.marginHeight = 0;
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   protected Control createContents(Composite parent)
+   {
+      Composite dialogArea = new Composite(parent, SWT.NONE);
+
+      object = (AbstractObject)getElement().getAdapter(AbstractObject.class);
+      initialComments = object.getCommentsSource();
+      if ((initialComments == null) || initialComments.isEmpty())
+         initialComments = AbstractObject.MARKDOWN_COMMENTS_INDICATOR;
+
+      GridLayout layout = new GridLayout();
+      layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
       dialogArea.setLayout(layout);
 
       comments = new Text(dialogArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
-		comments.setText(initialComments);
-
-		GridData gd = new GridData();
-		gd.grabExcessHorizontalSpace = true;
-		gd.grabExcessVerticalSpace = true;
-		gd.horizontalAlignment = SWT.FILL;
-		gd.verticalAlignment = SWT.FILL;
-		gd.widthHint = 0;
+      GridData gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.grabExcessVerticalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.FILL;
+      gd.widthHint = 0;
       gd.heightHint = 0;
-		comments.setLayoutData(gd);
-		
-		return dialogArea;
-	}
+      comments.setLayoutData(gd);
 
-	/**
-	 * Apply changes
-	 * 
-	 * @param isApply true if update operation caused by "Apply" button
-	 */
-	protected void applyChanges(final boolean isApply)
-	{
-		if (initialComments.equals(comments.getText()))
-			return;	// Nothing to apply
-		
-		if (isApply)
-			setValid(false);
-		
-		final String newComments = new String(comments.getText());
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      checkMarkdown = new Button(dialogArea, SWT.CHECK);
+      checkMarkdown.setText("Use &markdown");
+
+      if (initialComments.startsWith(AbstractObject.MARKDOWN_COMMENTS_INDICATOR))
+      {
+         checkMarkdown.setSelection(true);
+         comments.setText(initialComments.substring(AbstractObject.MARKDOWN_COMMENTS_INDICATOR.length()));
+      }
+      else
+      {
+         comments.setText(initialComments);
+      }
+
+      return dialogArea;
+   }
+
+   /**
+    * Apply changes
+    * 
+    * @param isApply true if update operation caused by "Apply" button
+    */
+   protected void applyChanges(final boolean isApply)
+   {
+      final String updatedComments = checkMarkdown.getSelection() ? AbstractObject.MARKDOWN_COMMENTS_INDICATOR + comments.getText() : comments.getText();
+
+      if (initialComments.equals(updatedComments))
+         return; // Nothing to apply
+
+      if (isApply)
+         setValid(false);
+
+		final NXCSession session = ConsoleSharedData.getSession();
 		new ConsoleJob(String.format(Messages.get().Comments_JobName, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				session.updateObjectComments(object.getObjectId(), newComments);
-				initialComments = newComments;
+				session.updateObjectComments(object.getObjectId(), updatedComments);
+				initialComments = updatedComments;
 			}
 
 			@Override
@@ -111,22 +125,14 @@ public class Comments extends PropertyPage
 			protected void jobFinalize()
 			{
 				if (isApply)
-				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							Comments.this.setValid(true);
-						}
-					});
-				}
+               runInUIThread(() -> Comments.this.setValid(true));
 			}
 		}.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
@@ -134,22 +140,23 @@ public class Comments extends PropertyPage
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{
 		applyChanges(true);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
-	 */
-	@Override
-	protected void performDefaults()
-	{
-		super.performDefaults();
-		comments.setText(""); //$NON-NLS-1$
-	}
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+    */
+   @Override
+   protected void performDefaults()
+   {
+      super.performDefaults();
+      comments.setText(""); //$NON-NLS-1$
+      checkMarkdown.setSelection(true);
+   }
 }

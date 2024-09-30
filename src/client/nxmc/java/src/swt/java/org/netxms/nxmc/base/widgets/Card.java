@@ -22,10 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.jface.action.Action;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.ControlListener;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.PaintEvent;
@@ -80,14 +79,6 @@ public abstract class Card extends DashboardComposite
 		headerSize = WidgetHelper.getTextExtent(this, text);
       headerSize.y += HEADER_MARGIN_HEIGHT * 2 + getBorderWidth();
 
-		addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            titleFont.dispose();
-         }
-      });
-
       GridLayout layout = new GridLayout();
       layout.marginWidth = 0;
       layout.marginHeight = 0;
@@ -98,25 +89,16 @@ public abstract class Card extends DashboardComposite
 
       clientArea = createClientAreaInternal();
 
-		addPaintListener(new PaintListener() {
+      final PaintListener paintListener = new PaintListener() {
 			@Override
 			public void paintControl(PaintEvent e)
 			{
 				doPaint(e.gc);
 			}
-		});
-		
-		addMouseListener(new MouseListener() {
-			@Override
-			public void mouseUp(MouseEvent e)
-			{
-			}
+      };
+      addPaintListener(paintListener);
 
-			@Override
-			public void mouseDown(MouseEvent e)
-			{
-			}
-
+      addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseDoubleClick(MouseEvent e)
 			{
@@ -125,17 +107,17 @@ public abstract class Card extends DashboardComposite
 			}
 		});
 
-		addControlListener(new ControlListener() {
+      addControlListener(new ControlAdapter() {
          @Override
          public void controlResized(ControlEvent e)
          {
             layoutButtons();
          }
-         
-         @Override
-         public void controlMoved(ControlEvent e)
-         {
-         }
+      });
+
+      addDisposeListener((e) -> {
+         removePaintListener(paintListener);
+         titleFont.dispose();
       });
 	}
 

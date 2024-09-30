@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 
@@ -45,9 +46,9 @@ public class Comments extends OverviewPageElement
 		super(parent, anchor, objectTab);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.DashboardElement#createClientArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.DashboardElement#createClientArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createClientArea(Composite parent)
 	{
@@ -58,22 +59,25 @@ public class Comments extends OverviewPageElement
 		return comments;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#getTitle()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#getTitle()
+    */
 	@Override
 	protected String getTitle()
 	{
 		return Messages.get().Comments_Title;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#onObjectChange()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#onObjectChange()
+    */
 	@Override
 	protected void onObjectChange()
 	{
 		if (getObject() != null)
-			comments.setText(getObject().getComments());
+      {
+         String text = getObject().getComments();
+         comments.setText(text.startsWith(AbstractObject.MARKDOWN_COMMENTS_INDICATOR) ? text.substring(AbstractObject.MARKDOWN_COMMENTS_INDICATOR.length()) : text);
+      }
 	}
 }
