@@ -1632,17 +1632,13 @@ int ProcessConsoleCommand(const TCHAR *command, ServerConsole *console)
                libraryLocked = false;
             }
 
-            NXSL_Value *argv[32];
-            int argc = 0;
-            while(argc < 32)
-            {
-               pArg = ExtractWord(pArg, szBuffer);
-               if (szBuffer[0] == 0)
-                  break;
-               argv[argc++] = vm->createValue(szBuffer);
-            }
+            StringList *cmdLine = ParseCommandLine(pArg);
+            ObjectRefArray<NXSL_Value> argv(cmdLine->size());
+            for(int i = 0; i < cmdLine->size(); i++)
+               argv.add(vm->createValue(cmdLine->get(i)));
+            delete cmdLine;
 
-            if (vm->run(argc, argv))
+            if (vm->run(argv))
             {
                ConsolePrintf(console, _T("INFO: Script finished with return value %s\n\n"), vm->getResult()->getValueAsCString());
             }
