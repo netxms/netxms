@@ -55,12 +55,14 @@ public class RouteLabelProvider extends LabelProvider implements ITableLabelProv
       HopInfo hop = (HopInfo)element;
       switch(columnIndex)
       {
+         case RouteView.COLUMN_HOP:
+            return Integer.toString(hop.getIndex());
          case RouteView.COLUMN_NAME:
             return hop.getName();
          case RouteView.COLUMN_NEXT_HOP:
             return (hop.getNextHop() != null) ? hop.getNextHop().getHostAddress() : "";
          case RouteView.COLUMN_NODE:
-            return session.getObjectName(hop.getNodeId());
+            return (hop.getNodeId() > 0) ? session.getObjectName(hop.getNodeId()) : i18n.tr("??");
          case RouteView.COLUMN_TYPE:
             switch(hop.getType())
             {

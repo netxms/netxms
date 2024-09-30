@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2023 Victor Kirhenshtein
+ * Copyright (C) 2023-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,11 +18,18 @@
  */
 package org.netxms.nxmc.modules.objects.views;
 
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CLabel;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
+import org.netxms.client.constants.Severity;
 import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.topology.HopInfo;
 import org.netxms.client.topology.NetworkPath;
 import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.jobs.Job;
@@ -32,6 +39,7 @@ import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.helpers.RouteLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -41,10 +49,11 @@ public class RouteView extends AdHocObjectView
 {
    private final I18n i18n = LocalizationHelper.getI18n(RouteView.class);
 
-   public static final int COLUMN_NODE = 0;
-   public static final int COLUMN_NEXT_HOP = 1;
-   public static final int COLUMN_TYPE = 2;
-   public static final int COLUMN_NAME = 3;
+   public static final int COLUMN_HOP = 0;
+   public static final int COLUMN_NODE = 1;
+   public static final int COLUMN_NEXT_HOP = 2;
+   public static final int COLUMN_TYPE = 3;
+   public static final int COLUMN_NAME = 4;
 
    /**
     * Generate name for the view.
@@ -63,6 +72,7 @@ public class RouteView extends AdHocObjectView
       return LocalizationHelper.getI18n(RouteView.class).tr("Route {0} - {1}", source.getObjectName(), destination.getObjectName());
    }
 
+   private CLabel status;
    private SortableTableViewer viewer;
    private AbstractNode source;
    private AbstractNode destination;
@@ -97,12 +107,24 @@ public class RouteView extends AdHocObjectView
    @Override
    protected void createContent(Composite parent)
    {
-      final String[] names = { i18n.tr("Node"), i18n.tr("Next hop"), i18n.tr("Type"), i18n.tr("Name") };
-      final int[] widths = { 150, 150, 150, 150 };
+      GridLayout layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.verticalSpacing = 0;
+      parent.setLayout(layout);
+
+      status = new CLabel(parent, SWT.NONE);
+      status.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+
+      new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+
+      final String[] names = { i18n.tr("Hop"), i18n.tr("Node"), i18n.tr("Next hop"), i18n.tr("Type"), i18n.tr("Name") };
+      final int[] widths = { 80, 150, 150, 150, 150 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.disableSorting();
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new RouteLabelProvider());
+      viewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
    }
 
    /**
@@ -158,7 +180,25 @@ public class RouteView extends AdHocObjectView
          {
             final NetworkPath path = session.getNetworkPath(source.getObjectId(), destination.getObjectId());
             runInUIThread(() -> {
-               viewer.setInput(path.getPath());
+               List<HopInfo> hops = path.getPath();
+
+               status.setImage(StatusDisplayInfo.getStatusImage(path.isComplete() ? Severity.NORMAL : Severity.MINOR));
+               if (hops.size() == 2)
+               {
+                  // Use separate code for singular form because gettext fallback bundle do not handle it correctly
+                  status.setText(i18n.tr("{0}; 1 hop", path.isComplete() ? i18n.tr("Complete") : i18n.tr("Incomplete")));
+               }
+               else
+               {
+                  // TODO: check that it works in translated bundles
+                  status.setText(i18n.trn("{0}; {1} hops", "{0}; {1} hops", hops.size() - 1, path.isComplete() ? i18n.tr("Complete") : i18n.tr("Incomplete"), hops.size() - 1));
+               }                        
+
+               if (!path.isComplete())
+               {
+                  hops.add(new HopInfo(hops.size()));
+               }
+               viewer.setInput(hops);
                viewer.packColumns();
             });
          }
@@ -190,13 +230,11 @@ public class RouteView extends AdHocObjectView
    public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
       super.restoreState(memento);
-      long id = memento.getAsLong("source", 0);
-      source = session.findObjectById(id, AbstractNode.class);
-      id = memento.getAsLong("destination", 0);
-      destination = session.findObjectById(id, AbstractNode.class);
+      source = session.findObjectById(memento.getAsLong("source", 0), AbstractNode.class);
+      destination = session.findObjectById(memento.getAsLong("destination", 0), AbstractNode.class);
       if (source == null)
-         throw(new ViewNotRestoredException(i18n.tr("Invalid source object id")));
+         throw new ViewNotRestoredException(i18n.tr("Source object no longer exists or is not accessible"));
       if (destination == null)
-         throw(new ViewNotRestoredException(i18n.tr("Invalid destination object id")));
+         throw new ViewNotRestoredException(i18n.tr("Destination object no longer exists or is not accessible"));
    }
 }

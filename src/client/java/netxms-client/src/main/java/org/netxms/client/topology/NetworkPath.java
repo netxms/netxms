@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ public class NetworkPath
 {
 	private List<HopInfo> path;
 	private boolean complete;
-	
+
 	/**
 	 * Create network path object from NXCP message
 	 * 
@@ -42,11 +42,11 @@ public class NetworkPath
 		complete = msg.getFieldAsBoolean(NXCPCodes.VID_IS_COMPLETE);
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_HOP_COUNT);
 		path = new ArrayList<HopInfo>(count);
-		long varId = NXCPCodes.VID_NETWORK_PATH_BASE;
+		long fieldId = NXCPCodes.VID_NETWORK_PATH_BASE;
 		for(int i = 0; i < count; i++)
 		{
-			path.add(new HopInfo(msg, varId));
-			varId += 10;
+         path.add(new HopInfo(msg, fieldId, i));
+			fieldId += 10;
 		}
 	}
 

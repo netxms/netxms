@@ -19,7 +19,6 @@
 package org.netxms.client.topology;
 
 import java.net.InetAddress;
-
 import org.netxms.base.NXCPMessage;
 
 /**
@@ -32,20 +31,38 @@ public class HopInfo
    public static final int PROXY = 2;
    public static final int DUMMY = 3;
 
+   private int index;
 	private long nodeId;
 	private InetAddress nextHop;
 	private int ifIndex;
    private int type;
 	private String name;
 
+   /**
+    * Create "invalid" hop info object
+    *
+    * @param hop index
+    */
+   public HopInfo(int index)
+   {
+      this.index = index;
+      nodeId = -1;
+      nextHop = null;
+      ifIndex = 0;
+      type = DUMMY;
+      name = "";
+   }
+
 	/**
-	 * Create hop info object from NXCP message
-	 * 
-	 * @param msg NXCP message
-	 * @param baseId base variable ID
-	 */
-	protected HopInfo(NXCPMessage msg, long baseId)
+    * Create hop info object from NXCP message
+    * 
+    * @param msg NXCP message
+    * @param baseId base variable ID
+    * @param hop index
+    */
+   protected HopInfo(NXCPMessage msg, long baseId, int index)
 	{
+      this.index = index;
 		nodeId = msg.getFieldAsInt64(baseId);
 		nextHop = msg.getFieldAsInetAddress(baseId + 1);
 		ifIndex = msg.getFieldAsInt32(baseId + 2);
@@ -54,8 +71,16 @@ public class HopInfo
 	}
 
 	/**
-	 * @return the nodeId
-	 */
+    * @return the index
+    */
+   public int getIndex()
+   {
+      return index;
+   }
+
+   /**
+    * @return the nodeId
+    */
 	public long getNodeId()
 	{
 		return nodeId;
