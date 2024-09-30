@@ -41,7 +41,7 @@ public class HopInfo
    /**
     * Create "invalid" hop info object
     *
-    * @param hop index
+    * @param index hop index
     */
    public HopInfo(int index)
    {
@@ -58,7 +58,7 @@ public class HopInfo
     * 
     * @param msg NXCP message
     * @param baseId base variable ID
-    * @param hop index
+    * @param index hop index
     */
    protected HopInfo(NXCPMessage msg, long baseId, int index)
 	{
