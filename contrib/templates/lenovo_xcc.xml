@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-	<formatVersion>4</formatVersion>
+	<formatVersion>5</formatVersion>
+	<nxslVersionV5>true</nxslVersionV5>
 	<server>
-		<version>4.2.327</version>
-		<buildTag>4.2-327-g5b8c7b6629</buildTag>
-		<operatingSystem>Linux 5.4.0-125-generic</operatingSystem>
+		<version>5.0.7</version>
+		<buildTag>5.0-1038-gb71146219d</buildTag>
+		<operatingSystem>Linux 6.8.0-45-generic</operatingSystem>
 	</server>
 	<description></description>
 	<events>
 	</events>
 	<templates>
-		<template id="465">
+		<template id="112">
 			<guid>aca23a4f-fa2a-411a-aa31-bd168dfbf3b7</guid>
 			<name>Lenovo XCC</name>
 			<comments></comments>
@@ -19,7 +20,7 @@
 				<element id="2">Remote Management Interfaces</element>
 			</path>
 			<dataCollection>
-				<dci id="1849">
+				<dci id="46">
 					<guid>1bd0ecd9-6458-4bdc-9687-cb3dce1565f1</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.3.7.0</name>
 					<description>Lenovo XCC - System - Version</description>
@@ -46,7 +47,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1850">
+				<dci id="47">
 					<guid>cfb23b72-16ea-4626-a84c-30fd4cdbeb70</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.1.2.1.3.{instance}</name>
 					<description>Lenovo XCC - Temperature - {instance-name} - Temperature</description>
@@ -72,9 +73,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.19046.11.1.1.1.2.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.1.2.1.11.&quot; . $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return false;&#x0D;&#x0A;sensorLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.1.2.1.2.&quot; . $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;if ( sensorLabel ~= &quot;.*DTS$&quot; ) return false;&#x0D;&#x0A;return %(true, $1, sensorLabel);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.1.2.1.11.&quot; .. $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return false;&#x0D;&#x0A;sensorLabel = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.1.2.1.2.&quot; .. $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;if ( sensorLabel.trim() ~= &quot;.*DTS$&quot; ) return false;&#x0D;&#x0A;return [true, $1, sensorLabel];</instanceFilter>
 				</dci>
-				<dci id="1851">
+				<dci id="48">
 					<guid>d6c7fed5-8b24-4b1f-9d42-4819e97f13df</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.1.2.1.11.{instance}</name>
 					<description>Lenovo XCC - Temperature - {instance-name} - Status</description>
@@ -100,9 +101,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.19046.11.1.1.1.2.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.1.2.1.11.&quot; . $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return false;&#x0D;&#x0A;sensorLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.1.2.1.2.&quot; . $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;if ( sensorLabel ~= &quot;.*DTS$&quot; ) return false;&#x0D;&#x0A;return %(true, $1, sensorLabel);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.1.2.1.11.&quot; .. $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return false;&#x0D;&#x0A;sensorLabel = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.1.2.1.2.&quot; .. $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;if ( sensorLabel.trim() ~= &quot;.*DTS$&quot; ) return false;&#x0D;&#x0A;return [true, $1, sensorLabel];</instanceFilter>
 				</dci>
-				<dci id="1852">
+				<dci id="49">
 					<guid>0469f46c-e759-416e-9432-1bebb007f923</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.11.2.1.6.{instance}</name>
 					<description>Lenovo XCC - PSU - {instance-name} - Status</description>
@@ -128,9 +129,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.19046.11.1.1.11.2.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.11.2.1.6.&quot; . $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return false;&#x0D;&#x0A;sensorLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.11.2.1.2.&quot; . $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;return %(true, $1, sensorLabel);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.11.2.1.6.&quot; .. $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return false;&#x0D;&#x0A;sensorLabel = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.11.2.1.2.&quot; .. $1);&#x0D;&#x0A;if ( sensorLabel.trim() == NULL ) return NULL;&#x0D;&#x0A;return [true, $1, sensorLabel];</instanceFilter>
 				</dci>
-				<dci id="1853">
+				<dci id="50">
 					<guid>59028da8-fa7b-43b8-9b87-672495d628c9</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.5.21.1.8.{instance}</name>
 					<description>Lenovo XCC - Memory - {instance-name} - Status</description>
@@ -156,9 +157,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.19046.11.1.1.5.21.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.5.21.1.8.&quot; . $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return false;&#x0D;&#x0A;sensorLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.5.21.1.2.&quot; . $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;return %(true, $1, sensorLabel);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.5.21.1.8.&quot; .. $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return false;&#x0D;&#x0A;sensorLabel = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.5.21.1.2.&quot; .. $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;return [true, $1, sensorLabel];</instanceFilter>
 				</dci>
-				<dci id="1854">
+				<dci id="51">
 					<guid>4f6163dc-18d0-4543-bfeb-1ba6cc089a48</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.3.2.1.10.{instance}</name>
 					<description>Lenovo XCC - Fan - {instance-name} - Status</description>
@@ -184,9 +185,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.19046.11.1.1.3.2.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.3.2.1.10.&quot; . $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return false;&#x0D;&#x0A;sensorLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.3.2.1.2.&quot; . $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;return %(true, $1, sensorLabel);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.3.2.1.10.&quot; .. $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return false;&#x0D;&#x0A;sensorLabel = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.3.2.1.2.&quot; .. $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;return [true, $1, sensorLabel];</instanceFilter>
 				</dci>
-				<dci id="1855">
+				<dci id="52">
 					<guid>6a1b14e6-dfad-4787-b0b5-2a32a842c43a</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.3.2.1.3.{instance}</name>
 					<description>Lenovo XCC - Fan - {instance-name} - Speed</description>
@@ -213,9 +214,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.19046.11.1.1.3.2.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.3.2.1.10.&quot; . $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return false;&#x0D;&#x0A;sensorLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.3.2.1.2.&quot; . $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;return %(true, $1, sensorLabel);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.3.2.1.10.&quot; .. $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return false;&#x0D;&#x0A;sensorLabel = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.3.2.1.2.&quot; .. $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;return [true, $1, sensorLabel];</instanceFilter>
 				</dci>
-				<dci id="1856">
+				<dci id="53">
 					<guid>6d8f8bd4-5c43-452f-b75d-fbf4a5a641e6</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.12.2.1.3.{instance}</name>
 					<description>Lenovo XCC - Storage - Disk - Physical - {instance-name} - Status</description>
@@ -241,9 +242,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.19046.11.1.1.12.2.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.12.2.1.3.&quot; . $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return false;&#x0D;&#x0A;sensorLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.12.2.1.2.&quot; . $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;sensorLabel = trim(sensorLabel);&#x0D;&#x0A;if ( sensorLabel ~= &quot;.*DTS$&quot; ) return false;&#x0D;&#x0A;return %(true, $1, sensorLabel);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.12.2.1.3.&quot; .. $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return false;&#x0D;&#x0A;sensorLabel = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.12.2.1.2.&quot; .. $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;if ( sensorLabel.trim() ~= &quot;.*DTS$&quot; ) return false;&#x0D;&#x0A;return [true, $1, sensorLabel];</instanceFilter>
 				</dci>
-				<dci id="1857">
+				<dci id="54">
 					<guid>356d5387-7569-4153-babe-230f404f19e2</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.13.1.7.1.4.{instance}</name>
 					<description>Lenovo XCC - Storage - Disk - Logical - {instance-name} - Status</description>
@@ -269,9 +270,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.19046.11.1.1.13.1.7.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.7.1.4.&quot; . $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return false;&#x0D;&#x0A;sensorLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.7.1.2.&quot; . $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;if ( sensorLabel ~= &quot;.*DTS$&quot; ) return false;&#x0D;&#x0A;return %(true, $1, sensorLabel);</instanceFilter>
+					<instanceFilter>transport = $node.CreateSNMPTransport();&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = transport.SNMPGetValue(&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.7.1.4.&quot; .. $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return false;&#x0D;&#x0A;sensorLabel = transport.SNMPGetValue(&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.7.1.2.&quot; .. $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;if ( sensorLabel.trim() ~= &quot;.*DTS$&quot; ) return false;&#x0D;&#x0A;return [true, $1, sensorLabel];</instanceFilter>
 				</dci>
-				<dci id="1858">
+				<dci id="55">
 					<guid>26ef7ffc-401e-48e2-8844-e08e0147809f</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.5.20.1.11.{instance}</name>
 					<description>Lenovo XCC - CPU - {instance-name} - Status</description>
@@ -297,9 +298,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.19046.11.1.1.5.20.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.5.20.1.11.&quot; . $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return false;&#x0D;&#x0A;sensorLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.5.20.1.2.&quot; . $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;return %(true, $1, sensorLabel);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.5.20.1.11.&quot; .. $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return false;&#x0D;&#x0A;sensorLabel = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.5.20.1.2.&quot; .. $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;return [true, $1, sensorLabel];</instanceFilter>
 				</dci>
-				<dci id="1859">
+				<dci id="56">
 					<guid>6d0940af-8706-4408-8cbf-94a241a10a29</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.10.1.9.0</name>
 					<description>Lenovo XCC - Power - Maximum Available</description>
@@ -326,7 +327,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1860">
+				<dci id="57">
 					<guid>7cf9e9ce-9c74-4924-acce-8e713d8b2ce7</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.10.1.10.0</name>
 					<description>Lenovo XCC - Power - Consumption - Total</description>
@@ -353,7 +354,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1861">
+				<dci id="58">
 					<guid>00b2af51-77e7-47dc-b337-04adb26eab2f</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.10.1.13.0</name>
 					<description>Lenovo XCC - Power - Consumption - Other</description>
@@ -380,7 +381,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1862">
+				<dci id="59">
 					<guid>e2840203-7ed1-4fc4-a831-b3f5547fbcc0</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.10.1.12.0</name>
 					<description>Lenovo XCC - Power - Consumption - Memory</description>
@@ -407,7 +408,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1863">
+				<dci id="60">
 					<guid>cd77806d-160c-4d67-a980-7e06ced4562d</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.10.1.11.0</name>
 					<description>Lenovo XCC - Power - Consumption - CPU</description>
@@ -434,7 +435,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1864">
+				<dci id="61">
 					<guid>da3171de-8ce4-4aa0-b6f4-a818d7f61551</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.13.1.2.1.24.{instance}</name>
 					<description>Lenovo XCC - Storage - BBU - {instance-name} - Status</description>
@@ -460,9 +461,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.19046.11.1.1.13.1.2.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;bbuInstalled = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.2.1.5.&quot; . $1);&#x0D;&#x0A;if ( bbuInstalled == NULL ) return NULL;&#x0D;&#x0A;if ( bbuInstalled != 1 ) return false;&#x0D;&#x0A;status = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.2.1.24.&quot; . $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return false;&#x0D;&#x0A;sensorLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.2.1.2.&quot; . $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;return %(true, $1, sensorLabel);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;bbuInstalled = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.2.1.5.&quot; .. $1);&#x0D;&#x0A;if ( bbuInstalled == NULL ) return NULL;&#x0D;&#x0A;if ( bbuInstalled != 1 ) return false;&#x0D;&#x0A;status = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.2.1.24.&quot; .. $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return false;&#x0D;&#x0A;sensorLabel = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.2.1.2.&quot; .. $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;return [true, $1, sensorLabel];</instanceFilter>
 				</dci>
-				<dci id="1865">
+				<dci id="62">
 					<guid>96afb4f7-fcf1-40f7-8e5c-43fabaa6c26a</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.5.2.1.5.0</name>
 					<description>Lenovo XCC - Chassis - Product Name</description>
@@ -489,7 +490,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1866">
+				<dci id="63">
 					<guid>0c92f011-cca1-41a8-8c24-15221c83cadf</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.5.2.1.2.0</name>
 					<description>Lenovo XCC - Chassis - Machine Model</description>
@@ -516,7 +517,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1867">
+				<dci id="64">
 					<guid>6fd1220b-4a21-4250-a6cd-8d9b55e9df7c</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.5.2.1.1.0</name>
 					<description>Lenovo XCC - Chassis - Machine Type</description>
@@ -543,7 +544,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1868">
+				<dci id="65">
 					<guid>d2dd0594-674d-44d4-bdc1-f2dbf59fef77</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.5.2.1.3.0</name>
 					<description>Lenovo XCC - Chassis - Serial Number</description>
@@ -570,7 +571,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1869">
+				<dci id="66">
 					<guid>a0861d55-b478-4220-b8f9-e51eb7e46126</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.3.{instance}</name>
 					<description>Lenovo XCC - Storage - Disk - Physical - {instance-name} - Model</description>
@@ -596,9 +597,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.11.&quot; . $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return NULL;&#x0D;&#x0A;sensorLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.2.&quot; . $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;sensorLabel = trim(sensorLabel);&#x0D;&#x0A;if ( sensorLabel ~= &quot;.*DTS$&quot; ) return false;&#x0D;&#x0A;return %(true, $1, sensorLabel);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.11.&quot; .. $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return NULL;&#x0D;&#x0A;sensorLabel = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.2.&quot; .. $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;if ( sensorLabel.trim() ~= &quot;.*DTS$&quot; ) return false;&#x0D;&#x0A;return [true, $1, sensorLabel];</instanceFilter>
 				</dci>
-				<dci id="1870">
+				<dci id="67">
 					<guid>91917bd3-a7c3-4512-bd76-60805cacbec8</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.17.{instance}</name>
 					<description>Lenovo XCC - Storage - Disk - Physical - {instance-name} - Serial</description>
@@ -624,9 +625,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.11.&quot; . $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return NULL;&#x0D;&#x0A;sensorLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.2.&quot; . $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;sensorLabel = trim(sensorLabel);&#x0D;&#x0A;if ( sensorLabel ~= &quot;.*DTS$&quot; ) return false;&#x0D;&#x0A;return %(true, $1, sensorLabel);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.11.&quot; .. $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return NULL;&#x0D;&#x0A;sensorLabel = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.2.&quot; .. $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;if ( sensorLabel.trim() ~= &quot;.*DTS$&quot; ) return false;&#x0D;&#x0A;return [true, $1, sensorLabel];</instanceFilter>
 				</dci>
-				<dci id="1871">
+				<dci id="68">
 					<guid>ec4563a1-619f-45ef-80ea-6d2563437d60</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.10.{instance}</name>
 					<description>Lenovo XCC - Storage - Disk - Physical - {instance-name} - Temperature</description>
@@ -653,9 +654,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.11.&quot; . $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return NULL;&#x0D;&#x0A;sensorLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.2.&quot; . $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;sensorLabel = trim(sensorLabel);&#x0D;&#x0A;if ( sensorLabel ~= &quot;.*DTS$&quot; ) return false;&#x0D;&#x0A;return %(true, $1, sensorLabel);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.11.&quot; .. $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return NULL;&#x0D;&#x0A;sensorLabel = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.2.&quot; .. $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;if ( sensorLabel.trim() ~= &quot;.*DTS$&quot; ) return false;&#x0D;&#x0A;return [true, $1, sensorLabel];</instanceFilter>
 				</dci>
-				<dci id="1872">
+				<dci id="69">
 					<guid>47b0c505-9093-4e7a-baac-d1c5e17a4254</guid>
 					<name>.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.4.{instance}</name>
 					<description>Lenovo XCC - Storage - Disk - Physical - {instance-name} - State</description>
@@ -681,13 +682,13 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.11.&quot; . $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return NULL;&#x0D;&#x0A;sensorLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.2.&quot; . $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;sensorLabel = trim(sensorLabel);&#x0D;&#x0A;if ( sensorLabel ~= &quot;.*DTS$&quot; ) return false;&#x0D;&#x0A;return %(true, $1, sensorLabel);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == NULL ) return NULL;&#x0D;&#x0A;status = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.11.&quot; .. $1);&#x0D;&#x0A;if ( status == NULL ) return NULL;&#x0D;&#x0A;if ( status == &quot;Unknown&quot; ) return NULL;&#x0D;&#x0A;sensorLabel = transport.getValue(&quot;.1.3.6.1.4.1.19046.11.1.1.13.1.3.1.2.&quot; .. $1);&#x0D;&#x0A;if ( sensorLabel == NULL ) return NULL;&#x0D;&#x0A;if ( sensorLabel.trim() ~= &quot;.*DTS$&quot; ) return false;&#x0D;&#x0A;return [true, $1, sensorLabel];</instanceFilter>
 				</dci>
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node-&gt;isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ($node-&gt;snmpOID == &quot;1.3.6.1.4.1.19046.11.1&quot;) return true;&#x0D;&#x0A;return false;</filter>
-			<filter2 autoBind="0" autoUnbind="0"></filter2>
+			<filter autoBind="true" autoUnbind="false">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node.isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ($node.snmpOID == &quot;1.3.6.1.4.1.19046.11.1&quot;) return true;&#x0D;&#x0A;return false;</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
 	</templates>
 	<traps>
@@ -704,4 +705,6 @@
 	</actions>
 	<webServiceDefinitions>
 	</webServiceDefinitions>
+	<assetManagementSchema>
+	</assetManagementSchema>
 </configuration>

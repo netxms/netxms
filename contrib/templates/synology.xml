@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-	<formatVersion>4</formatVersion>
+	<formatVersion>5</formatVersion>
+	<nxslVersionV5>true</nxslVersionV5>
 	<server>
-		<version>4.2.327</version>
-		<buildTag>4.2-327-g5b8c7b6629</buildTag>
-		<operatingSystem>Linux 5.4.0-125-generic</operatingSystem>
+		<version>5.0.7</version>
+		<buildTag>5.0-1038-gb71146219d</buildTag>
+		<operatingSystem>Linux 6.8.0-45-generic</operatingSystem>
 	</server>
 	<description></description>
 	<events>
 	</events>
 	<templates>
-		<template id="454">
+		<template id="148">
 			<guid>de34102a-8ac7-402c-8c81-7f2e6441751b</guid>
 			<name>Synology NAS</name>
 			<comments></comments>
@@ -19,7 +20,7 @@
 				<element id="2">NAS</element>
 			</path>
 			<dataCollection>
-				<dci id="1676">
+				<dci id="270">
 					<guid>e6b9e355-1a5b-42f6-8b92-2392841f57e6</guid>
 					<name>.1.3.6.1.4.1.6574.102.1.1.9.{instance}</name>
 					<description>Synology NAS - Performance - File System - {instance-name} - I/O Utilisation</description>
@@ -45,9 +46,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.6574.102.1.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;diskDescription = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.6574.102.1.1.2.&quot; . $1);&#x0D;&#x0A;return %(true, $1, diskDescription);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;diskDescription = transport.getValue(&quot;.1.3.6.1.4.1.6574.102.1.1.2.&quot; .. $1);&#x0D;&#x0A;return [true, $1, diskDescription];</instanceFilter>
 				</dci>
-				<dci id="1677">
+				<dci id="271">
 					<guid>2268bb8d-38e3-42d9-a7a2-6733d5b997e8</guid>
 					<name>.1.3.6.1.4.1.6574.102.1.1.13.{instance}</name>
 					<description>Synology NAS - Performance - File System - {instance-name} - Written</description>
@@ -74,9 +75,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;200&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.6574.102.1.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;diskDescription = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.6574.102.1.1.2.&quot; . $1);&#x0D;&#x0A;return %(true, $1, diskDescription);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;diskDescription = transport.getValue(&quot;.1.3.6.1.4.1.6574.102.1.1.2.&quot; .. $1);&#x0D;&#x0A;return [true, $1, diskDescription];</instanceFilter>
 				</dci>
-				<dci id="1678">
+				<dci id="272">
 					<guid>9c0f97ba-2f72-4d54-bbfc-9260e0634aa8</guid>
 					<name>.1.3.6.1.4.1.6574.102.1.1.12.{instance}</name>
 					<description>Synology NAS - Performance - File System - {instance-name} - Read</description>
@@ -103,9 +104,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;Disk Performance - Transfer Rate&lt;/title&gt;&#x0A;   &lt;name&gt;Read Bytes/sec&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;##163756&lt;/groupName&gt;&#x0A;   &lt;order&gt;200&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;163756&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.6574.102.1.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;diskDescription = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.6574.102.1.1.2.&quot; . $1);&#x0D;&#x0A;return %(true, $1, diskDescription);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;diskDescription = transport.getValue(&quot;.1.3.6.1.4.1.6574.102.1.1.2.&quot; .. $1);&#x0D;&#x0A;return [true, $1, diskDescription];</instanceFilter>
 				</dci>
-				<dci id="1679">
+				<dci id="273">
 					<guid>a2043215-4e6d-4ac6-b044-b1f050595e87</guid>
 					<name>.1.3.6.1.4.1.6574.2.1.1.3.{instance}</name>
 					<description>Synology NAS - Storage - Disk - Physical - {instance-name} - Model</description>
@@ -131,9 +132,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.6574.2.1.1.2</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;diskDescription = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.6574.2.1.1.2.&quot; . $1);&#x0D;&#x0A;return %(true, $1, diskDescription);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;diskDescription = transport.getValue(&quot;.1.3.6.1.4.1.6574.2.1.1.2.&quot; .. $1);&#x0D;&#x0A;return [true, $1, diskDescription];</instanceFilter>
 				</dci>
-				<dci id="1680">
+				<dci id="274">
 					<guid>79039821-bbe3-4caf-878a-5cbc400e8d4a</guid>
 					<name>.1.3.6.1.4.1.6574.2.1.1.5.{instance}</name>
 					<description>Synology NAS - Storage - Disk - Physical - {instance-name} - Status</description>
@@ -156,13 +157,13 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Initialised&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Not Initialised&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;System Partition Failed&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Crashed&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Initialised&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Not Initialised&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;System Partition Failed&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Crashed&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.6574.2.1.1.2</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;diskDescription = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.6574.2.1.1.2.&quot; . $1);&#x0D;&#x0A;return %(true, $1, diskDescription);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;diskDescription = transport.getValue(&quot;.1.3.6.1.4.1.6574.2.1.1.2.&quot; .. $1);&#x0D;&#x0A;return [true, $1, diskDescription];</instanceFilter>
 				</dci>
-				<dci id="1681">
+				<dci id="275">
 					<guid>12fd6f5c-7a0f-4577-85f6-daac68e725f1</guid>
 					<name>.1.3.6.1.4.1.6574.2.1.1.6.{instance}</name>
 					<description>Synology NAS - Storage - Disk - Physical - {instance-name} - Temperature</description>
@@ -188,9 +189,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.6574.2.1.1.2</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;diskDescription = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.6574.2.1.1.2.&quot; . $1);&#x0D;&#x0A;return %(true, $1, diskDescription);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;diskDescription = transport.getValue(&quot;.1.3.6.1.4.1.6574.2.1.1.2.&quot; .. $1);&#x0D;&#x0A;return [true, $1, diskDescription];</instanceFilter>
 				</dci>
-				<dci id="1682">
+				<dci id="276">
 					<guid>1ca479f7-98f2-4ddb-be85-3ea53194d46e</guid>
 					<name>.1.3.6.1.4.1.6574.3.1.1.3.{instance}</name>
 					<description>Synology NAS - Storage - Disk - Logical - {instance-name} - Status</description>
@@ -213,13 +214,13 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Repairing&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Migrating&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Expanding&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Deleting&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Creating&quot;;&#x0D;&#x0A;&#x09;case &quot;7&quot;: return &quot;Syncing&quot;;&#x0D;&#x0A;&#x09;case &quot;8&quot;: return &quot;Parity Checking&quot;;&#x0D;&#x0A;&#x09;case &quot;9&quot;: return &quot;Assembling&quot;;&#x0D;&#x0A;&#x09;case &quot;10&quot;: return &quot;Cancelling&quot;;&#x0D;&#x0A;&#x09;case &quot;11&quot;: return &quot;Degraded&quot;;&#x0D;&#x0A;&#x09;case &quot;12&quot;: return &quot;Crashed&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Repairing&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Migrating&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Expanding&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Deleting&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Creating&quot;;&#x0D;&#x0A;&#x09;case &quot;7&quot;: return &quot;Syncing&quot;;&#x0D;&#x0A;&#x09;case &quot;8&quot;: return &quot;Parity Checking&quot;;&#x0D;&#x0A;&#x09;case &quot;9&quot;: return &quot;Assembling&quot;;&#x0D;&#x0A;&#x09;case &quot;10&quot;: return &quot;Cancelling&quot;;&#x0D;&#x0A;&#x09;case &quot;11&quot;: return &quot;Degraded&quot;;&#x0D;&#x0A;&#x09;case &quot;12&quot;: return &quot;Crashed&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.6574.3.1.1.2</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;diskDescription = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.6574.3.1.1.2.&quot; . $1);&#x0D;&#x0A;return %(true, $1, diskDescription);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;diskDescription = transport.getValue(&quot;.1.3.6.1.4.1.6574.2.1.1.2.&quot; .. $1);&#x0D;&#x0A;return [true, $1, diskDescription];</instanceFilter>
 				</dci>
-				<dci id="1683">
+				<dci id="277">
 					<guid>228abb89-e520-4e0e-9984-f34c2fe89317</guid>
 					<name>.1.3.6.1.4.1.6574.1.5.4.0</name>
 					<description>Synology NAS - Firmware - Version - Upgrade Available</description>
@@ -242,12 +243,12 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch ($1) {&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Available&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unavailable&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Connecting&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Disconnected&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Others&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch ($1) {&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Available&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unavailable&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Connecting&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Disconnected&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Others&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1684">
+				<dci id="278">
 					<guid>994a609e-9bff-4072-86e8-529499d0d993</guid>
 					<name>.1.3.6.1.4.1.6574.1.2.0</name>
 					<description>Synology NAS - Chassis - Temperature</description>
@@ -274,7 +275,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1685">
+				<dci id="279">
 					<guid>0570f519-2435-4794-b034-7a22dcebcc8d</guid>
 					<name>.1.3.6.1.4.1.6574.1.1.0</name>
 					<description>Synology NAS - Chassis - Status</description>
@@ -297,12 +298,12 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Failed&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Failed&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1686">
+				<dci id="280">
 					<guid>3746e5c8-fca8-4fca-b3ed-5db2cb4f39ca</guid>
 					<name>.1.3.6.1.4.1.6574.1.4.1.0</name>
 					<description>Synology NAS - Fan - Status</description>
@@ -325,12 +326,12 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Failed&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Failed&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1687">
+				<dci id="281">
 					<guid>4eedcd41-153d-4bec-82ac-8cf4badea2d9</guid>
 					<name>.1.3.6.1.4.1.6574.1.5.2.0</name>
 					<description>Synology NAS - Chassis - Serial</description>
@@ -357,7 +358,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1688">
+				<dci id="282">
 					<guid>479e4208-5dac-4edd-9db4-2cdde411afbe</guid>
 					<name>.1.3.6.1.4.1.6574.1.3.0</name>
 					<description>Synology NAS - PSU - Status</description>
@@ -380,12 +381,12 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Failed&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Failed&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1689">
+				<dci id="283">
 					<guid>5e50ff06-d396-4b83-b9c4-2809d53816d2</guid>
 					<name>.1.3.6.1.4.1.6574.1.5.1.0</name>
 					<description>Synology NAS - Chassis - Model Name</description>
@@ -412,7 +413,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1690">
+				<dci id="284">
 					<guid>528534d5-21d9-419d-bc4e-fcae3d2f2017</guid>
 					<name>.1.3.6.1.4.1.6574.1.5.3.0</name>
 					<description>Synology NAS - Firmware - Firmware Version</description>
@@ -439,7 +440,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1691">
+				<dci id="285">
 					<guid>355d6c59-4a5f-4358-ad6c-35ce7135e52a</guid>
 					<name>.1.3.6.1.4.1.6574.1.4.2.0</name>
 					<description>Synology NAS - CPU Fan - Status</description>
@@ -462,7 +463,7 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Failed&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Failed&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
@@ -470,8 +471,8 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node-&gt;isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ($node-&gt;snmpOID ~= &quot;1.3.6.1.4.1.8072.*&quot;) &#x0D;&#x0A;{&#x0D;&#x0A;&#x09;snmpTransport = CreateSNMPTransport($node);&#x0D;&#x0A;&#x09;if (snmpTransport == null) return false;&#x0D;&#x0A;&#x09;snmpResult = SNMPGetValue(snmpTransport,&quot;.1.3.6.1.4.1.6574.1.5.1.0&quot;);&#x0D;&#x0A;&#x09;if (snmpResult == null)&#x09;return false;&#x0D;&#x0A;&#x09;else return true;&#x0D;&#x0A;}&#x0D;&#x0A;return false;</filter>
-			<filter2 autoBind="0" autoUnbind="0"></filter2>
+			<filter autoBind="true" autoUnbind="false">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node.isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ($node.snmpOID ~= &quot;1.3.6.1.4.1.8072.*&quot;) &#x0D;&#x0A;{&#x0D;&#x0A;&#x09;snmpTransport = CreateSNMPTransport($node);&#x0D;&#x0A;&#x09;if (snmpTransport == null) return false;&#x0D;&#x0A;&#x09;snmpResult = SNMPGetValue(snmpTransport,&quot;.1.3.6.1.4.1.6574.1.5.1.0&quot;);&#x0D;&#x0A;&#x09;if (snmpResult == null)&#x09;return false;&#x0D;&#x0A;&#x09;else return true;&#x0D;&#x0A;}&#x0D;&#x0A;return false;</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
 	</templates>
 	<traps>
@@ -488,4 +489,6 @@
 	</actions>
 	<webServiceDefinitions>
 	</webServiceDefinitions>
+	<assetManagementSchema>
+	</assetManagementSchema>
 </configuration>

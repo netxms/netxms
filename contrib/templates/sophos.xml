@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-	<formatVersion>4</formatVersion>
+	<formatVersion>5</formatVersion>
+	<nxslVersionV5>true</nxslVersionV5>
 	<server>
-		<version>4.2.327</version>
-		<buildTag>4.2-327-g5b8c7b6629</buildTag>
-		<operatingSystem>Linux 5.4.0-125-generic</operatingSystem>
+		<version>5.0.7</version>
+		<buildTag>5.0-1038-gb71146219d</buildTag>
+		<operatingSystem>Linux 6.8.0-45-generic</operatingSystem>
 	</server>
 	<description></description>
 	<events>
 	</events>
 	<templates>
-		<template id="462">
+		<template id="106">
 			<guid>49097297-6824-4ac0-8555-23d858e63a9e</guid>
 			<name>Sophos Email Appliance (SAE)</name>
 			<comments></comments>
@@ -19,7 +20,7 @@
 				<element id="2">Security Appliances</element>
 			</path>
 			<dataCollection>
-				<dci id="1800">
+				<dci id="1">
 					<guid>7655484b-644e-4086-b9ee-4cf63601da6f</guid>
 					<name>.1.3.6.1.4.1.2604.1.1.1.4.1.3.{instance}</name>
 					<description>Sophos SAE - Filter - Message - {instance-name} - Inbound</description>
@@ -46,231 +47,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.2604.1.1.1.4.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;diskDescription = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.2604.1.1.1.4.1.2.&quot; . $1);&#x0D;&#x0A;return %(true, $1, diskDescription);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;diskDescription = transport.getValue(&quot;.1.3.6.1.4.1.2604.1.1.1.4.1.2.&quot; .. $1);&#x0D;&#x0A;return [true, $1, diskDescription];</instanceFilter>
 				</dci>
-				<dci id="1801">
-					<guid>db4d8611-3508-4f71-99b4-e9b5b6b23304</guid>
-					<name>.1.3.6.1.4.1.2604.1.1.1.4.1.4.{instance}</name>
-					<description>Sophos SAE - Filter - Message - {instance-name} - Outbound</description>
-					<dataType>2</dataType>
-					<samples>0</samples>
-					<origin>2</origin>
-					<scheduleType>0</scheduleType>
-					<interval></interval>
-					<retentionType>0</retentionType>
-					<retention></retention>
-					<systemTag></systemTag>
-					<delta>1</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<snmpVersion>127</snmpVersion>
-					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
-					<instanceRetentionTime>-1</instanceRetentionTime>
-					<comments></comments>
-					<isDisabled>false</isDisabled>
-					<unitName>Messages</unitName>
-					<multiplier>0</multiplier>
-					<transformation>if ( ( $1 &lt; 0 ) || ( $1 &gt; 1000 ) ) return 0;&#x0D;&#x0A;return $1;</transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instance></instance>
-					<instanceDiscoveryData>.1.3.6.1.4.1.2604.1.1.1.4.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;diskDescription = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.2604.1.1.1.4.1.2.&quot; . $1);&#x0D;&#x0A;return %(true, $1, diskDescription);</instanceFilter>
-				</dci>
-				<dci id="1802">
-					<guid>fd6ea732-163b-4aa8-942f-e88b547c6848</guid>
-					<name>.1.3.6.1.4.1.2604.3.14</name>
-					<description>Sophos SAE - Voltage - Status</description>
-					<dataType>4</dataType>
-					<samples>0</samples>
-					<origin>2</origin>
-					<scheduleType>1</scheduleType>
-					<interval>300</interval>
-					<retentionType>0</retentionType>
-					<retention></retention>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<snmpVersion>127</snmpVersion>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<instanceRetentionTime>-1</instanceRetentionTime>
-					<comments></comments>
-					<isDisabled>false</isDisabled>
-					<unitName></unitName>
-					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;. $1 .&quot;)&quot;;&#x0D;&#x0A;}</transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instance></instance>
-					<instanceDiscoveryData></instanceDiscoveryData>
-				</dci>
-				<dci id="1803">
-					<guid>faa723e9-7dd1-4fa0-b190-14e122a0b2a0</guid>
-					<name>.1.3.6.1.4.1.2604.3.13</name>
-					<description>Sophos SAE - Temperature - Status</description>
-					<dataType>4</dataType>
-					<samples>0</samples>
-					<origin>2</origin>
-					<scheduleType>1</scheduleType>
-					<interval>300</interval>
-					<retentionType>0</retentionType>
-					<retention></retention>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<snmpVersion>127</snmpVersion>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<instanceRetentionTime>-1</instanceRetentionTime>
-					<comments></comments>
-					<isDisabled>false</isDisabled>
-					<unitName></unitName>
-					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instance></instance>
-					<instanceDiscoveryData></instanceDiscoveryData>
-				</dci>
-				<dci id="1804">
-					<guid>0a4ad982-c296-4ba6-9cf0-ef35e6e8f4ec</guid>
-					<name>.1.3.6.1.4.1.2604.2.1.1.18</name>
-					<description>Sophos SAE - Load - Status</description>
-					<dataType>4</dataType>
-					<samples>0</samples>
-					<origin>2</origin>
-					<scheduleType>1</scheduleType>
-					<interval>300</interval>
-					<retentionType>0</retentionType>
-					<retention></retention>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<snmpVersion>127</snmpVersion>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<instanceRetentionTime>-1</instanceRetentionTime>
-					<comments></comments>
-					<isDisabled>false</isDisabled>
-					<unitName></unitName>
-					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instance></instance>
-					<instanceDiscoveryData></instanceDiscoveryData>
-				</dci>
-				<dci id="1805">
-					<guid>f2589c97-9eba-4b14-b145-67814946179a</guid>
-					<name>.1.3.6.1.4.1.2604.3.12</name>
-					<description>Sophos SAE - Fan - Status</description>
-					<dataType>4</dataType>
-					<samples>0</samples>
-					<origin>2</origin>
-					<scheduleType>1</scheduleType>
-					<interval>300</interval>
-					<retentionType>0</retentionType>
-					<retention></retention>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<snmpVersion>127</snmpVersion>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<instanceRetentionTime>-1</instanceRetentionTime>
-					<comments></comments>
-					<isDisabled>false</isDisabled>
-					<unitName></unitName>
-					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instance></instance>
-					<instanceDiscoveryData></instanceDiscoveryData>
-				</dci>
-				<dci id="1806">
-					<guid>d452e0c5-1c9a-4861-bd2f-60743fec9d98</guid>
-					<name>.1.3.6.1.4.1.2604.2.2</name>
-					<description>Sophos SAE - Software - Version</description>
-					<dataType>4</dataType>
-					<samples>0</samples>
-					<origin>2</origin>
-					<scheduleType>1</scheduleType>
-					<interval>3600</interval>
-					<retentionType>0</retentionType>
-					<retention></retention>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>2056</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<snmpVersion>127</snmpVersion>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<instanceRetentionTime>-1</instanceRetentionTime>
-					<comments></comments>
-					<isDisabled>false</isDisabled>
-					<unitName></unitName>
-					<multiplier>0</multiplier>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instance></instance>
-					<instanceDiscoveryData></instanceDiscoveryData>
-				</dci>
-				<dci id="1807">
-					<guid>2936e1a0-117d-47b5-ab61-23bc23a0bf56</guid>
-					<name>.1.3.6.1.4.1.2604.3.15</name>
-					<description>Sophos SAE - Chassis - Serial Number</description>
-					<dataType>4</dataType>
-					<samples>0</samples>
-					<origin>2</origin>
-					<scheduleType>1</scheduleType>
-					<interval>86400</interval>
-					<retentionType>0</retentionType>
-					<retention></retention>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>2056</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<snmpVersion>127</snmpVersion>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<instanceRetentionTime>-1</instanceRetentionTime>
-					<comments></comments>
-					<isDisabled>false</isDisabled>
-					<unitName></unitName>
-					<multiplier>0</multiplier>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instance></instance>
-					<instanceDiscoveryData></instanceDiscoveryData>
-				</dci>
-				<dci id="1808">
-					<guid>2de46720-e709-4f7b-8457-6e2112c5af8a</guid>
-					<name>.1.3.6.1.4.1.2604.1.1.1.5</name>
-					<description>Sophos SAE - Filter - Messages - Queued</description>
-					<dataType>0</dataType>
-					<samples>0</samples>
-					<origin>2</origin>
-					<scheduleType>0</scheduleType>
-					<interval></interval>
-					<retentionType>0</retentionType>
-					<retention></retention>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<snmpVersion>127</snmpVersion>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<instanceRetentionTime>-1</instanceRetentionTime>
-					<comments></comments>
-					<isDisabled>false</isDisabled>
-					<unitName></unitName>
-					<multiplier>0</multiplier>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;Queued Messages&lt;/title&gt;&#x0A;   &lt;name&gt;messages&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instance></instance>
-					<instanceDiscoveryData></instanceDiscoveryData>
-				</dci>
-				<dci id="1809">
+				<dci id="10">
 					<guid>2b6c9cea-f06c-495f-8c3d-9dce97fd4046</guid>
 					<name>.1.3.6.1.4.1.2604.3.16</name>
 					<description>Sophos SAE - PSU - Status</description>
@@ -293,12 +72,12 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1810">
+				<dci id="11">
 					<guid>0c00270a-4764-4556-bbdd-f04c16d50e36</guid>
 					<name>.1.3.6.1.4.1.2604.3.2</name>
 					<description>Sophos SAE - Chassis - Model</description>
@@ -325,7 +104,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1811">
+				<dci id="12">
 					<guid>7e74fb47-34aa-4a72-9ad8-b87d2255eb25</guid>
 					<name>.1.3.6.1.4.1.2604.1.1.1.2</name>
 					<description>Sophos SAE - Filter - Messages - Delay</description>
@@ -353,7 +132,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1812">
+				<dci id="13">
 					<guid>080882f3-490a-4432-a46b-8dc7ffe6c308</guid>
 					<name>.1.3.6.1.4.1.2604.3.5</name>
 					<description>Sophos SAE - Memory - Status</description>
@@ -376,12 +155,12 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1813">
+				<dci id="14">
 					<guid>05b653f2-a7e0-40d3-9d58-1728c64395ce</guid>
 					<name>.1.3.6.1.4.1.2604.3.4</name>
 					<description>Sophos SAE - Memory - Consumption Status</description>
@@ -404,12 +183,12 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1814">
+				<dci id="15">
 					<guid>5fae74d9-d96f-494d-a311-7d571492e756</guid>
 					<name>.1.3.6.1.4.1.2604.2.1.1.27</name>
 					<description>Sophos SAE - License - Status</description>
@@ -432,12 +211,12 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1815">
+				<dci id="16">
 					<guid>85b9945a-c0fd-472b-97b4-877154bff07d</guid>
 					<name>.1.3.6.1.4.1.2604.2.4</name>
 					<description>Sophos SAE - AV - Definition - Last Update</description>
@@ -464,7 +243,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1816">
+				<dci id="17">
 					<guid>6689a4bd-ddf0-4680-8c92-125dbb072ab8</guid>
 					<name>.1.3.6.1.4.1.2604.2.3</name>
 					<description>Sophos SAE - AV - Engine - Last Update</description>
@@ -491,7 +270,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1817">
+				<dci id="18">
 					<guid>528f2bde-99e4-40b9-840c-ff94e08f2125</guid>
 					<name>.1.3.6.1.4.1.2604.3.3</name>
 					<description>Sophos SAE - Chassis - Hardware Version</description>
@@ -518,7 +297,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1818">
+				<dci id="19">
 					<guid>0527c74b-9400-4e4b-85ef-d5e84b83a840</guid>
 					<name>.1.3.6.1.4.1.2604.3.7</name>
 					<description>Sophos SAE - CPU - Status</description>
@@ -541,12 +320,41 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1819">
+				<dci id="2">
+					<guid>db4d8611-3508-4f71-99b4-e9b5b6b23304</guid>
+					<name>.1.3.6.1.4.1.2604.1.1.1.4.1.4.{instance}</name>
+					<description>Sophos SAE - Filter - Message - {instance-name} - Outbound</description>
+					<dataType>2</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<delta>1</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>Messages</unitName>
+					<multiplier>0</multiplier>
+					<transformation>if ( ( $1 &lt; 0 ) || ( $1 &gt; 1000 ) ) return 0;&#x0D;&#x0A;return $1;</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData>.1.3.6.1.4.1.2604.1.1.1.4.1.1</instanceDiscoveryData>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;diskDescription = transport.getValue(&quot;.1.3.6.1.4.1.2604.1.1.1.4.1.2.&quot; .. $1);&#x0D;&#x0A;return [true, $1, diskDescription];</instanceFilter>
+				</dci>
+				<dci id="20">
 					<guid>179cd4eb-e8be-4b94-ad0a-731ec3c93564</guid>
 					<name>.1.3.6.1.4.1.2604.2.1.1.26</name>
 					<description>Sophos SAE - Certificate - Status</description>
@@ -569,16 +377,209 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
+				<dci id="3">
+					<guid>fd6ea732-163b-4aa8-942f-e88b547c6848</guid>
+					<name>.1.3.6.1.4.1.2604.3.14</name>
+					<description>Sophos SAE - Voltage - Status</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<scheduleType>1</scheduleType>
+					<interval>300</interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.. $1 ..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
+				<dci id="4">
+					<guid>faa723e9-7dd1-4fa0-b190-14e122a0b2a0</guid>
+					<name>.1.3.6.1.4.1.2604.3.13</name>
+					<description>Sophos SAE - Temperature - Status</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<scheduleType>1</scheduleType>
+					<interval>300</interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
+				<dci id="5">
+					<guid>0a4ad982-c296-4ba6-9cf0-ef35e6e8f4ec</guid>
+					<name>.1.3.6.1.4.1.2604.2.1.1.18</name>
+					<description>Sophos SAE - Load - Status</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<scheduleType>1</scheduleType>
+					<interval>300</interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
+				<dci id="6">
+					<guid>f2589c97-9eba-4b14-b145-67814946179a</guid>
+					<name>.1.3.6.1.4.1.2604.3.12</name>
+					<description>Sophos SAE - Fan - Status</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<scheduleType>1</scheduleType>
+					<interval>300</interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
+				<dci id="7">
+					<guid>d452e0c5-1c9a-4861-bd2f-60743fec9d98</guid>
+					<name>.1.3.6.1.4.1.2604.2.2</name>
+					<description>Sophos SAE - Software - Version</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<scheduleType>1</scheduleType>
+					<interval>3600</interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>2056</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
+				<dci id="8">
+					<guid>2936e1a0-117d-47b5-ab61-23bc23a0bf56</guid>
+					<name>.1.3.6.1.4.1.2604.3.15</name>
+					<description>Sophos SAE - Chassis - Serial Number</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<scheduleType>1</scheduleType>
+					<interval>86400</interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>2056</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
+				<dci id="9">
+					<guid>2de46720-e709-4f7b-8457-6e2112c5af8a</guid>
+					<name>.1.3.6.1.4.1.2604.1.1.1.5</name>
+					<description>Sophos SAE - Filter - Messages - Queued</description>
+					<dataType>0</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;Queued Messages&lt;/title&gt;&#x0A;   &lt;name&gt;messages&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node-&gt;isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ($node-&gt;snmpOID == &quot;1.3.6.1.4.1.2604&quot;) &#x0D;&#x0A;{&#x0D;&#x0A;&#x09;snmpTransport = CreateSNMPTransport($node);&#x0D;&#x0A;&#x09;if (snmpTransport == null) return false;&#x0D;&#x0A;&#x09;snmpResult = SNMPGetValue(snmpTransport,&quot;.1.3.6.1.4.1.2604.2.1.1.2&quot;);&#x0D;&#x0A;&#x09;if (snmpResult == null)&#x09;return false;&#x0D;&#x0A;&#x09;else return true;&#x0D;&#x0A;}&#x0D;&#x0A;return false;</filter>
-			<filter2 autoBind="0" autoUnbind="0"></filter2>
+			<filter autoBind="true" autoUnbind="false">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node.isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ($node.snmpOID == &quot;1.3.6.1.4.1.2604&quot;) &#x0D;&#x0A;{&#x0D;&#x0A;&#x09;snmpTransport = CreateSNMPTransport($node);&#x0D;&#x0A;&#x09;if (snmpTransport == null) return false;&#x0D;&#x0A;&#x09;snmpResult = SNMPGetValue(snmpTransport,&quot;.1.3.6.1.4.1.2604.2.1.1.2&quot;);&#x0D;&#x0A;&#x09;if (snmpResult == null)&#x09;return false;&#x0D;&#x0A;&#x09;else return true;&#x0D;&#x0A;}&#x0D;&#x0A;return false;</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
 	</templates>
 	<traps>
@@ -595,4 +596,6 @@
 	</actions>
 	<webServiceDefinitions>
 	</webServiceDefinitions>
+	<assetManagementSchema>
+	</assetManagementSchema>
 </configuration>

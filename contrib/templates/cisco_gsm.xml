@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-	<formatVersion>4</formatVersion>
+	<formatVersion>5</formatVersion>
+	<nxslVersionV5>true</nxslVersionV5>
 	<server>
-		<version>4.2.327</version>
-		<buildTag>4.2-327-g5b8c7b6629</buildTag>
-		<operatingSystem>Linux 5.4.0-125-generic</operatingSystem>
+		<version>5.0.7</version>
+		<buildTag>5.0-1038-gb71146219d</buildTag>
+		<operatingSystem>Linux 6.8.0-45-generic</operatingSystem>
 	</server>
 	<description></description>
 	<events>
 	</events>
 	<templates>
-		<template id="443">
+		<template id="130">
 			<guid>88d08be7-3b34-4c92-9d21-22813a6ac69d</guid>
 			<name>Cisco - 3G/4G</name>
 			<comments></comments>
@@ -19,7 +20,7 @@
 				<element id="2">Routers &amp; Switches</element>
 			</path>
 			<dataCollection>
-				<dci id="1594">
+				<dci id="147">
 					<guid>0ecfecea-4303-4f39-91d2-43e342ba29da</guid>
 					<name>.1.3.6.1.4.1.9.9.661.1.3.4.1.1.2.{instance}</name>
 					<description>Cisco - Cellular {instance-name} - Connection - ECIO</description>
@@ -45,9 +46,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;16711680&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;300&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.9.9.661.1.1.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; . $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, interfaceName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = transport.getValue(&quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; .. $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, interfaceName];</instanceFilter>
 				</dci>
-				<dci id="1595">
+				<dci id="148">
 					<guid>e4d476c8-2bfe-4bb1-923f-83a982d935b9</guid>
 					<name>.1.3.6.1.4.1.9.9.661.1.3.4.1.1.1.{instance}</name>
 					<description>Cisco - Cellular {instance-name} - Connection - RSSI</description>
@@ -73,9 +74,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;16711680&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;300&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.9.9.661.1.1.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; . $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, interfaceName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = transport.getValue(&quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; .. $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, interfaceName];</instanceFilter>
 				</dci>
-				<dci id="1596">
+				<dci id="149">
 					<guid>01d60dab-cea3-466f-9027-60b569b320d9</guid>
 					<name>.1.3.6.1.4.1.9.9.661.1.1.1.8.{instance}</name>
 					<description>Cisco - Cellular {instance-name} - Modem - Connection Status</description>
@@ -102,9 +103,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;16711680&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;300&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.9.9.661.1.1.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; . $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, interfaceName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = transport.getValue(&quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; .. $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, interfaceName];</instanceFilter>
 				</dci>
-				<dci id="1597">
+				<dci id="150">
 					<guid>6e2804a9-4ae9-4260-bf24-9af04103ab27</guid>
 					<name>.1.3.6.1.4.1.9.9.661.1.1.1.3.{instance}</name>
 					<description>Cisco - Cellular {instance-name} - Modem - Status</description>
@@ -131,9 +132,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;16711680&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;300&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.9.9.661.1.1.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; . $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, interfaceName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = transport.getValue(&quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; .. $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, interfaceName];</instanceFilter>
 				</dci>
-				<dci id="1598">
+				<dci id="151">
 					<guid>229cd002-915e-4b69-8e77-801747dc5b81</guid>
 					<name>.1.3.6.1.4.1.9.9.661.1.1.1.12.{instance}</name>
 					<description>Cisco - Cellular {instance-name} - Modem - Temperature</description>
@@ -159,9 +160,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;16711680&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;300&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.9.9.661.1.1.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; . $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, interfaceName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = transport.getValue(&quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; .. $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, interfaceName];</instanceFilter>
 				</dci>
-				<dci id="1599">
+				<dci id="152">
 					<guid>1bc5b308-948f-4ccc-9cfa-664972d49001</guid>
 					<name>.1.3.6.1.4.1.9.9.661.1.3.2.1.5.{instance}</name>
 					<description>Cisco - Cellular {instance-name} - Network - Connection Type</description>
@@ -188,9 +189,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;16711680&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;300&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.9.9.661.1.1.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; . $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, interfaceName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = transport.getValue(&quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; .. $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, interfaceName];</instanceFilter>
 				</dci>
-				<dci id="1600">
+				<dci id="153">
 					<guid>f1a2b33f-7976-4b78-8d74-fb95d9a969e4</guid>
 					<name>.1.3.6.1.4.1.9.9.661.1.3.2.1.9.{instance}</name>
 					<description>Cisco - Cellular {instance-name} - Network - Name</description>
@@ -216,9 +217,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;16711680&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;300&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.9.9.661.1.1.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; . $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, interfaceName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = transport.getValue(&quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; .. $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, interfaceName];</instanceFilter>
 				</dci>
-				<dci id="1601">
+				<dci id="154">
 					<guid>8b1ee7b5-ab5a-47e0-9173-3b7cfa77aa24</guid>
 					<name>.1.3.6.1.4.1.9.9.661.1.3.2.1.3.{instance}</name>
 					<description>Cisco - Cellular {instance-name} - Network - Service Error</description>
@@ -245,9 +246,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;16711680&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;300&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.9.9.661.1.1.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; . $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, interfaceName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = transport.getValue(&quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; .. $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, interfaceName];</instanceFilter>
 				</dci>
-				<dci id="1602">
+				<dci id="155">
 					<guid>843a40c4-9916-42a3-9b3b-f2ac7a950f35</guid>
 					<name>.1.3.6.1.4.1.9.9.661.1.3.2.1.2.{instance}</name>
 					<description>Cisco - Cellular {instance-name} - Network - Service Status</description>
@@ -274,9 +275,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;16711680&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;300&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.9.9.661.1.1.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; . $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, interfaceName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = transport.getValue(&quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; .. $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, interfaceName];</instanceFilter>
 				</dci>
-				<dci id="1603">
+				<dci id="156">
 					<guid>9559a85a-9f5d-498d-97ab-57419a92e271</guid>
 					<name>.1.3.6.1.4.1.9.9.661.1.3.5.1.1.1.{instance}</name>
 					<description>Cisco - Cellular {instance-name} - SIM - PIN Verification Enabled</description>
@@ -303,9 +304,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;16711680&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;300&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.9.9.661.1.1.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; . $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, interfaceName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = transport.getValue(&quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; .. $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, interfaceName];</instanceFilter>
 				</dci>
-				<dci id="1604">
+				<dci id="157">
 					<guid>72536e66-a3a9-4a83-98be-87fb087932a3</guid>
 					<name>.1.3.6.1.4.1.9.9.661.1.3.5.1.1.2.{instance}</name>
 					<description>Cisco - Cellular {instance-name} - SIM - Status</description>
@@ -332,9 +333,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;16711680&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;300&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.9.9.661.1.1.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; . $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, interfaceName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = transport.getValue(&quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; .. $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, interfaceName];</instanceFilter>
 				</dci>
-				<dci id="1605">
+				<dci id="158">
 					<guid>af6ed4df-4613-4d24-b9a2-b2d099d59a1c</guid>
 					<name>.1.3.6.1.4.1.9.9.661.1.3.2.1.13.{instance}</name>
 					<description>Cisco - Cellular {instance-name} - Network - Cell ID</description>
@@ -360,9 +361,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;16711680&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;300&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.9.9.661.1.1.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; . $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, interfaceName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = transport.getValue(&quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; .. $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, interfaceName];</instanceFilter>
 				</dci>
-				<dci id="1606">
+				<dci id="159">
 					<guid>ef91fc8f-20c8-4bad-9c1c-458d727f15a1</guid>
 					<name>.1.3.6.1.4.1.9.9.661.1.3.2.1.11.{instance}</name>
 					<description>Cisco - Cellular {instance-name} - Network - Mobile Network Code (MNC)</description>
@@ -388,9 +389,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;16711680&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;300&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.9.9.661.1.1.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; . $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, interfaceName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = transport.getValue(&quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; .. $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, interfaceName];</instanceFilter>
 				</dci>
-				<dci id="1607">
+				<dci id="160">
 					<guid>0810e652-fbd9-40ca-91f6-523c17220a7b</guid>
 					<name>.1.3.6.1.4.1.9.9.661.1.3.2.1.10.{instance}</name>
 					<description>Cisco - Cellular {instance-name} - Network - Mobile Country Code (MCC)</description>
@@ -416,9 +417,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;16711680&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;300&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.9.9.661.1.1.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; . $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, interfaceName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = transport.getValue(&quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; .. $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, interfaceName];</instanceFilter>
 				</dci>
-				<dci id="1608">
+				<dci id="161">
 					<guid>e47c08c8-797e-4a0b-bd3a-92322a13f8c7</guid>
 					<name>.1.3.6.1.4.1.9.9.661.1.3.2.1.1.{instance}</name>
 					<description>Cisco - Cellular {instance-name} - Network - Local Area Code (LAC)</description>
@@ -444,13 +445,13 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;16711680&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;300&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.9.9.661.1.1.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; . $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, interfaceName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;// get the interface name to return as instance-name&#x0D;&#x0A;interfaceName = transport.getValue(&quot;.1.3.6.1.4.1.9.9.661.1.3.1.1.2.&quot; .. $1);&#x0D;&#x0A;if (interfaceName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, interfaceName];</instanceFilter>
 				</dci>
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node-&gt;isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ( $node-&gt;snmpOID ~= &quot;1\.3\.6\.1\.4\.1\.9\.1\..*&quot; ) {&#x0D;&#x0A;&#x09;transport = CreateSNMPTransport($node);&#x0D;&#x0A;&#x09;if (transport == null) return null;&#x0D;&#x0A;&#x09;modem = SNMPWalk(transport, &quot;.1.3.6.1.4.1.9.9.661.1.1.1.1&quot;);&#x0D;&#x0A;&#x09;if (modem == null) return false;&#x0D;&#x0A;&#x09;foreach (m : modem) {&#x0D;&#x0A;&#x09;&#x09;return true;&#x0D;&#x0A;&#x09;}&#x0D;&#x0A;}&#x0D;&#x0A;return false;</filter>
-			<filter2 autoBind="0" autoUnbind="0"></filter2>
+			<filter autoBind="true" autoUnbind="false">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node.isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ( $node.snmpOID ~= &quot;1\.3\.6\.1\.4\.1\.9\.1\..*&quot; ) {&#x0D;&#x0A;&#x09;transport = CreateSNMPTransport($node);&#x0D;&#x0A;&#x09;if (transport == null) return null;&#x0D;&#x0A;&#x09;modem = SNMPWalk(transport, &quot;.1.3.6.1.4.1.9.9.661.1.1.1.1&quot;);&#x0D;&#x0A;&#x09;if (modem == null) return false;&#x0D;&#x0A;&#x09;foreach (m : modem) {&#x0D;&#x0A;&#x09;&#x09;return true;&#x0D;&#x0A;&#x09;}&#x0D;&#x0A;}&#x0D;&#x0A;return false;</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
 	</templates>
 	<traps>
@@ -467,4 +468,6 @@
 	</actions>
 	<webServiceDefinitions>
 	</webServiceDefinitions>
+	<assetManagementSchema>
+	</assetManagementSchema>
 </configuration>

@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-	<formatVersion>4</formatVersion>
+	<formatVersion>5</formatVersion>
+	<nxslVersionV5>true</nxslVersionV5>
 	<server>
-		<version>4.2.327</version>
-		<buildTag>4.2-327-g5b8c7b6629</buildTag>
-		<operatingSystem>Linux 5.4.0-125-generic</operatingSystem>
+		<version>5.0.7</version>
+		<buildTag>5.0-1038-gb71146219d</buildTag>
+		<operatingSystem>Linux 6.8.0-45-generic</operatingSystem>
 	</server>
 	<description></description>
 	<events>
 	</events>
 	<templates>
-		<template id="449">
+		<template id="119">
 			<guid>1f438761-296e-47cf-832f-a4139a952204</guid>
 			<name>Ubiquiti UniFi (pre-3.9.19)</name>
 			<comments></comments>
@@ -19,7 +20,7 @@
 				<element id="2">Access Points</element>
 			</path>
 			<dataCollection>
-				<dci id="1637">
+				<dci id="94">
 					<guid>61ab42bd-958d-4ea8-8205-5eaa297f35ac</guid>
 					<name>.1.3.6.1.4.1.41112.1.6.3.3</name>
 					<description>Ubiquiti UniFi - Chassis - Model</description>
@@ -46,7 +47,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1638">
+				<dci id="95">
 					<guid>b7462c99-6823-495c-a05c-fe0524fb0c38</guid>
 					<name>.1.3.6.1.4.1.41112.1.6.3.6</name>
 					<description>Ubiquiti UniFi - Firmware - Version</description>
@@ -76,10 +77,10 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node-&gt;isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ( ( $node-&gt;snmpOID == &quot;1.3.6.1.4.1.10002.1&quot; ) || ( $node-&gt;snmpOID ~= &quot;1.3.6.1.4.1.41112.*&quot;) ) {&#x0D;&#x0A;&#x09;snmpTransport = CreateSNMPTransport($node);&#x0D;&#x0A;&#x09;if ( snmpTransport == null ) return NULL;&#x0D;&#x0A;&#x09;snmpResult = SNMPGetValue(snmpTransport,&quot;.1.3.6.1.4.1.41112.1.6.3.1&quot;);&#x0D;&#x0A;&#x09;if ( snmpResult == null ) return false;&#x0D;&#x0A;&#x09;else return true;&#x0D;&#x0A;} else {&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;}</filter>
-			<filter2 autoBind="0" autoUnbind="0"></filter2>
+			<filter autoBind="true" autoUnbind="false">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node.isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ( ( $node.snmpOID == &quot;1.3.6.1.4.1.10002.1&quot; ) || ( $node.snmpOID ~= &quot;1.3.6.1.4.1.41112.*&quot;) ) {&#x0D;&#x0A;&#x09;snmpTransport = CreateSNMPTransport($node);&#x0D;&#x0A;&#x09;if ( snmpTransport == null ) return NULL;&#x0D;&#x0A;&#x09;snmpResult = SNMPGetValue(snmpTransport,&quot;.1.3.6.1.4.1.41112.1.6.3.1&quot;);&#x0D;&#x0A;&#x09;if ( snmpResult == null ) return false;&#x0D;&#x0A;&#x09;else return true;&#x0D;&#x0A;} else {&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;}</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
-		<template id="450">
+		<template id="120">
 			<guid>72acbcc7-04cc-4120-9820-7017f7e1bf4f</guid>
 			<name>Ubiquiti UniFi (post-3.9.19)</name>
 			<comments></comments>
@@ -88,7 +89,7 @@
 				<element id="2">Access Points</element>
 			</path>
 			<dataCollection>
-				<dci id="1639">
+				<dci id="96">
 					<guid>a1c02389-7fc8-4ac2-9b56-ad46946a1d9c</guid>
 					<name>.1.3.6.1.4.1.41112.1.6.3.3.0</name>
 					<description>Ubiquiti UniFi - Chassis - Model</description>
@@ -115,7 +116,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1640">
+				<dci id="97">
 					<guid>dffa9a90-fdbd-4a38-8cfe-fb413947dccd</guid>
 					<name>.1.3.6.1.4.1.41112.1.6.3.6.0</name>
 					<description>Ubiquiti UniFi - Firmware - Version</description>
@@ -145,10 +146,10 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node-&gt;isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ( $node-&gt;snmpOID == &quot;1.3.6.1.4.1.8072.3.2.10&quot; ) {&#x0D;&#x0A;&#x09;snmpTransport = CreateSNMPTransport($node);&#x0D;&#x0A;&#x09;if ( snmpTransport == null ) return null;&#x0D;&#x0A;&#x09;snmpResult = SNMPGetValue(snmpTransport,&quot;.1.3.6.1.4.1.41112.1.6.3.1.0&quot;);&#x0D;&#x0A;&#x09;if ( snmpResult == null ) return false;&#x0D;&#x0A;&#x09;else return true;&#x0D;&#x0A;} else {&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;}</filter>
-			<filter2 autoBind="0" autoUnbind="0"></filter2>
+			<filter autoBind="true" autoUnbind="false">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node.isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ( $node.snmpOID == &quot;1.3.6.1.4.1.8072.3.2.10&quot; ) {&#x0D;&#x0A;&#x09;snmpTransport = CreateSNMPTransport($node);&#x0D;&#x0A;&#x09;if ( snmpTransport == null ) return null;&#x0D;&#x0A;&#x09;snmpResult = SNMPGetValue(snmpTransport,&quot;.1.3.6.1.4.1.41112.1.6.3.1.0&quot;);&#x0D;&#x0A;&#x09;if ( snmpResult == null ) return false;&#x0D;&#x0A;&#x09;else return true;&#x0D;&#x0A;} else {&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;}</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
-		<template id="451">
+		<template id="121">
 			<guid>cefebfa2-12f0-41b8-9eac-dcbea5804815</guid>
 			<name>Ubiquiti</name>
 			<comments></comments>
@@ -157,62 +158,7 @@
 				<element id="2">Access Points</element>
 			</path>
 			<dataCollection>
-				<dci id="1641">
-					<guid>6bfdde34-a687-4738-a9e7-116039ab6217</guid>
-					<name>.1.3.6.1.4.1.10002.1.1.1.4.2.1.3.1</name>
-					<description>Ubiquiti - Performance - CPU - Load Average</description>
-					<dataType>1</dataType>
-					<samples>0</samples>
-					<origin>2</origin>
-					<scheduleType>0</scheduleType>
-					<interval></interval>
-					<retentionType>0</retentionType>
-					<retention></retention>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<snmpVersion>127</snmpVersion>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<instanceRetentionTime>-1</instanceRetentionTime>
-					<comments></comments>
-					<isDisabled>false</isDisabled>
-					<unitName>%</unitName>
-					<multiplier>0</multiplier>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;255&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;CPU Utilisation&lt;/title&gt;&#x0A;   &lt;name&gt;%&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instance></instance>
-					<instanceDiscoveryData></instanceDiscoveryData>
-				</dci>
-				<dci id="1642">
-					<guid>3ee0127d-1d10-4f91-b472-c3ff3d7785c4</guid>
-					<name>.1.3.6.1.4.1.10002.1.1.1.1.2.0</name>
-					<description>Ubiquiti - Performance - Memory - Free</description>
-					<dataType>1</dataType>
-					<samples>0</samples>
-					<origin>2</origin>
-					<scheduleType>0</scheduleType>
-					<interval></interval>
-					<retentionType>0</retentionType>
-					<retention></retention>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<snmpVersion>127</snmpVersion>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<instanceRetentionTime>-1</instanceRetentionTime>
-					<comments></comments>
-					<isDisabled>false</isDisabled>
-					<unitName>B (IEC)</unitName>
-					<multiplier>0</multiplier>
-					<transformation>return $1*1024;</transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;Memory&lt;/title&gt;&#x0A;   &lt;name&gt;Bytes Free&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instance></instance>
-					<instanceDiscoveryData></instanceDiscoveryData>
-				</dci>
-				<dci id="1643">
+				<dci id="100">
 					<guid>64399101-6393-4097-8649-4979e68caad5</guid>
 					<name>.1.3.6.1.4.1.10002.1.1.1.1.1.0</name>
 					<description>Ubiquiti - Performance - Memory - Total</description>
@@ -240,13 +186,68 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
+				<dci id="98">
+					<guid>6bfdde34-a687-4738-a9e7-116039ab6217</guid>
+					<name>.1.3.6.1.4.1.10002.1.1.1.4.2.1.3.1</name>
+					<description>Ubiquiti - Performance - CPU - Load Average</description>
+					<dataType>1</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>%</unitName>
+					<multiplier>0</multiplier>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;255&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;CPU Utilisation&lt;/title&gt;&#x0A;   &lt;name&gt;%&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
+				<dci id="99">
+					<guid>3ee0127d-1d10-4f91-b472-c3ff3d7785c4</guid>
+					<name>.1.3.6.1.4.1.10002.1.1.1.1.2.0</name>
+					<description>Ubiquiti - Performance - Memory - Free</description>
+					<dataType>1</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>B (IEC)</unitName>
+					<multiplier>0</multiplier>
+					<transformation>return $1*1024;</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;4&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;Memory&lt;/title&gt;&#x0A;   &lt;name&gt;Bytes Free&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node-&gt;isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ($node-&gt;snmpOID == &quot;1.3.6.1.4.1.10002.1&quot;)&#x0D;&#x0A;&#x09;return true;&#x0D;&#x0A;if ($node-&gt;snmpOID ~= &quot;1.3.6.1.4.1.41112.*&quot;)&#x0D;&#x0A;&#x09;return true;&#x0D;&#x0A;if (($node-&gt;snmpOID == &quot;1.3.6.1.4.1.8072.3.2.10&quot;) &amp;&amp;&#x0D;&#x0A;    ($node-&gt;sysDescription ~= &quot;^UAP&quot;))&#x0D;&#x0A;&#x09;return true;&#x0D;&#x0A;return false;</filter>
-			<filter2 autoBind="0" autoUnbind="0"></filter2>
+			<filter autoBind="true" autoUnbind="false">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node.isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ($node.snmpOID == &quot;1.3.6.1.4.1.10002.1&quot;)&#x0D;&#x0A;&#x09;return true;&#x0D;&#x0A;if ($node.snmpOID ~= &quot;1.3.6.1.4.1.41112.*&quot;)&#x0D;&#x0A;&#x09;return true;&#x0D;&#x0A;if (($node.snmpOID == &quot;1.3.6.1.4.1.8072.3.2.10&quot;) &amp;&amp;&#x0D;&#x0A;    ($node.sysDescription ~= &quot;^UAP&quot;))&#x0D;&#x0A;&#x09;return true;&#x0D;&#x0A;return false;</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
-		<template id="452">
+		<template id="122">
 			<guid>d489fc57-eca9-434d-b5ce-cecffa52692d</guid>
 			<name>Ubiquiti AirMAX</name>
 			<comments></comments>
@@ -255,7 +256,7 @@
 				<element id="2">Access Points</element>
 			</path>
 			<dataCollection>
-				<dci id="1644">
+				<dci id="101">
 					<guid>5c366bd4-ae37-4661-a3bb-6825ba1a9e7a</guid>
 					<name>.1.3.6.1.4.1.41112.1.4.7.1.14.{instance}</name>
 					<description>Ubiquiti AirMAX - Network - {instance-name} - Traffic - Inbound</description>
@@ -282,9 +283,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.41112.1.4.7.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;stationName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.41112.1.4.7.1.2.&quot; .$1);&#x0D;&#x0A;if ( stationName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, stationName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;stationName = transport.getValue(&quot;.1.3.6.1.4.1.41112.1.4.7.1.2.&quot; ..$1);&#x0D;&#x0A;if ( stationName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, stationName];</instanceFilter>
 				</dci>
-				<dci id="1645">
+				<dci id="102">
 					<guid>fcbbfe3c-ad57-40f0-8d06-452550fdaab7</guid>
 					<name>.1.3.6.1.4.1.41112.1.4.7.1.13.{instance}</name>
 					<description>Ubiquiti AirMAX - Network - {instance-name} - Traffic - Outbound</description>
@@ -311,9 +312,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.41112.1.4.7.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;stationName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.41112.1.4.7.1.2.&quot; .$1);&#x0D;&#x0A;if ( stationName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, stationName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;stationName = transport.getValue(&quot;.1.3.6.1.4.1.41112.1.4.7.1.2.&quot; ..$1);&#x0D;&#x0A;if ( stationName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, stationName];</instanceFilter>
 				</dci>
-				<dci id="1646">
+				<dci id="103">
 					<guid>d3c4cb8a-c465-4ac9-8e09-d1abd8537a2f</guid>
 					<name>.1.3.6.1.4.1.41112.1.4.7.1.15.{instance}</name>
 					<description>Ubiquiti AirMAX - Network - {instance-name} - Connection Uptime</description>
@@ -339,9 +340,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.41112.1.4.7.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;stationName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.41112.1.4.7.1.2.&quot; .$1);&#x0D;&#x0A;if ( stationName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, stationName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;stationName = transport.getValue(&quot;.1.3.6.1.4.1.41112.1.4.7.1.2.&quot; ..$1);&#x0D;&#x0A;if ( stationName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, stationName];</instanceFilter>
 				</dci>
-				<dci id="1647">
+				<dci id="104">
 					<guid>62b78fc0-c877-4a18-8547-83cdfdb341b1</guid>
 					<name>.1.3.6.1.4.1.41112.1.4.7.1.3.{instance}</name>
 					<description>Ubiquiti AirMAX - Network - {instance-name} - Signal Strength</description>
@@ -367,9 +368,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.41112.1.4.7.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;stationName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.41112.1.4.7.1.2.&quot; .$1);&#x0D;&#x0A;if ( stationName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, stationName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;stationName = transport.getValue(&quot;.1.3.6.1.4.1.41112.1.4.7.1.2.&quot; ..$1);&#x0D;&#x0A;if ( stationName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, stationName];</instanceFilter>
 				</dci>
-				<dci id="1648">
+				<dci id="105">
 					<guid>580e48b1-4536-49ae-b7e2-410a1d6afca9</guid>
 					<name>.1.3.6.1.4.1.41112.1.4.7.1.4.{instance}</name>
 					<description>Ubiquiti AirMAX - Network - {instance-name} - Noise Floor</description>
@@ -395,9 +396,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.41112.1.4.7.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;stationName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.41112.1.4.7.1.2.&quot; .$1);&#x0D;&#x0A;if ( stationName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, stationName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;stationName = transport.getValue(&quot;.1.3.6.1.4.1.41112.1.4.7.1.2.&quot; ..$1);&#x0D;&#x0A;if ( stationName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, stationName];</instanceFilter>
 				</dci>
-				<dci id="1649">
+				<dci id="106">
 					<guid>b6151105-d866-4ca7-b1ae-eaaf7ac62746</guid>
 					<name>.1.3.6.1.4.1.41112.1.4.7.1.6.{instance}</name>
 					<description>Ubiquiti AirMAX - Network - {instance-name} - Client Connection Quality (CCQ)</description>
@@ -423,9 +424,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.41112.1.4.7.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;stationName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.41112.1.4.7.1.2.&quot; .$1);&#x0D;&#x0A;if ( stationName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, stationName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;stationName = transport.getValue(&quot;.1.3.6.1.4.1.41112.1.4.7.1.2.&quot; ..$1);&#x0D;&#x0A;if ( stationName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, stationName];</instanceFilter>
 				</dci>
-				<dci id="1650">
+				<dci id="107">
 					<guid>2dd14ad3-4baa-423b-80a6-476859ab0b90</guid>
 					<name>.1.3.6.1.4.1.41112.1.4.1.1.6.{instance}</name>
 					<description>Ubiquiti AirMAX - Radio - &quot;{instance-name}&quot; - Transmit Power</description>
@@ -451,9 +452,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.41112.1.4.1.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;stationName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.41112.1.4.1.1.9.&quot; .$1);&#x0D;&#x0A;if ( stationName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, stationName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;stationName = transport.getValue(&quot;.1.3.6.1.4.1.41112.1.4.1.1.9.&quot; ..$1);&#x0D;&#x0A;if ( stationName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, stationName];</instanceFilter>
 				</dci>
-				<dci id="1651">
+				<dci id="108">
 					<guid>f4a026b1-5f13-4007-906d-5642a65edeba</guid>
 					<name>.1.3.6.1.4.1.41112.1.4.1.1.4.{instance}</name>
 					<description>Ubiquiti AirMAX - Radio - &quot;{instance-name}&quot; - Frequency</description>
@@ -480,13 +481,13 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.41112.1.4.1.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;stationName = SNMPGetValue(transport, &quot;.1.3.6.1.4.1.41112.1.4.1.1.9.&quot; .$1);&#x0D;&#x0A;if ( stationName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, stationName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;stationName = transport.getValue(&quot;.1.3.6.1.4.1.41112.1.4.1.1.9.&quot; ..$1);&#x0D;&#x0A;if ( stationName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, stationName];</instanceFilter>
 				</dci>
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node-&gt;isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ( ( $node-&gt;snmpOID == &quot;1.3.6.1.4.1.10002.1&quot; ) || ( $node-&gt;snmpOID ~= &quot;1\.3\.6\.1\.4\.1\.41112\.*&quot;) ) {&#x0D;&#x0A;&#x09;snmpTransport = CreateSNMPTransport($node);&#x0D;&#x0A;&#x09;if ( snmpTransport == null ) return NULL;&#x0D;&#x0A;&#x09;snmpResult = SNMPGetValue(snmpTransport,&quot;.1.3.6.1.4.1.41112.1.4.1.1.9.1&quot;);&#x0D;&#x0A;&#x09;if ( snmpResult == null ) return false;&#x0D;&#x0A;&#x09;else return true;&#x0D;&#x0A;}</filter>
-			<filter2 autoBind="0" autoUnbind="0"></filter2>
+			<filter autoBind="true" autoUnbind="false">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node.isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ( ( $node.snmpOID == &quot;1.3.6.1.4.1.10002.1&quot; ) || ( $node.snmpOID ~= &quot;1\.3\.6\.1\.4\.1\.41112\.*&quot;) ) {&#x0D;&#x0A;&#x09;snmpTransport = CreateSNMPTransport($node);&#x0D;&#x0A;&#x09;if ( snmpTransport == null ) return NULL;&#x0D;&#x0A;&#x09;snmpResult = SNMPGetValue(snmpTransport,&quot;.1.3.6.1.4.1.41112.1.4.1.1.9.1&quot;);&#x0D;&#x0A;&#x09;if ( snmpResult == null ) return false;&#x0D;&#x0A;&#x09;else return true;&#x0D;&#x0A;}</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
 	</templates>
 	<traps>
@@ -503,4 +504,6 @@
 	</actions>
 	<webServiceDefinitions>
 	</webServiceDefinitions>
+	<assetManagementSchema>
+	</assetManagementSchema>
 </configuration>

@@ -1,216 +1,217 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-	<formatVersion>4</formatVersion>
+	<formatVersion>5</formatVersion>
+	<nxslVersionV5>true</nxslVersionV5>
 	<server>
-		<version>4.2.327</version>
-		<buildTag>4.2-327-g5b8c7b6629</buildTag>
-		<operatingSystem>Linux 5.4.0-125-generic</operatingSystem>
+		<version>5.0.7</version>
+		<buildTag>5.0-1038-gb71146219d</buildTag>
+		<operatingSystem>Linux 6.8.0-45-generic</operatingSystem>
 	</server>
 	<description></description>
 	<events>
-		<event id="100001">
-			<guid>6f5dbf00-e7ef-c545-9cfe-4493c43192fe</guid>
-			<name>DC_DELL_HW_STORAGE_GLOBAL_OK</name>
-			<code>100001</code>
-			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;    dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
-			<severity>0</severity>
-			<flags>1</flags>
-			<message>Global health of Storage Management subsystem OK</message>
-			<tags></tags>
-		</event>
-		<event id="100000">
-			<guid>16bad8ab-8d05-0e4d-ab63-20eec24cd7a5</guid>
-			<name>DC_DELL_HW_STORAGE_GLOBAL</name>
-			<code>100000</code>
-			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
-			<severity>3</severity>
-			<flags>1</flags>
-			<message>Global health of Storage Management subsystem NOT OK</message>
-			<tags></tags>
-		</event>
-		<event id="100003">
-			<guid>ef968f7b-30fc-1645-8511-c19b90d3ecca</guid>
-			<name>DC_DELL_HW_STORAGE_VDISK_OK</name>
-			<code>100003</code>
-			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
-			<severity>0</severity>
-			<flags>1</flags>
-			<message>Condition of virtual disk %&lt;instance&gt; OK</message>
-			<tags></tags>
-		</event>
-		<event id="100002">
-			<guid>8e5f2742-ecd1-b14b-b4dd-68f44ac17748</guid>
-			<name>DC_DELL_HW_STORAGE_VDISK</name>
-			<code>100002</code>
-			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
-			<severity>3</severity>
-			<flags>1</flags>
-			<message>Condition of virtual disk %&lt;instance&gt; NOT OK</message>
-			<tags></tags>
-		</event>
-		<event id="100005">
-			<guid>fc063c01-e4c0-9c4d-861d-fea4a16d8e4a</guid>
-			<name>DC_DELL_HW_THERMAL_OK</name>
-			<code>100005</code>
-			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
-			<severity>0</severity>
-			<flags>1</flags>
-			<message>Reading of temperature probe %&lt;instance&gt; OK</message>
-			<tags></tags>
-		</event>
-		<event id="100004">
-			<guid>5fe4b245-5441-7644-b391-8df5e93b279e</guid>
-			<name>DC_DELL_HW_THERMAL</name>
-			<code>100004</code>
-			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
-			<severity>3</severity>
-			<flags>1</flags>
-			<message>Reading for a temperature probe %&lt;instance&gt; current: %&lt;{multipliers, units}currentValue&gt; treshold: %&lt;{multipliers, units}thresholdValue&gt;</message>
-			<tags></tags>
-		</event>
-		<event id="100007">
-			<guid>61f1b7ae-d27b-9046-a2f8-4adaf703692d</guid>
-			<name>DC_DELL_HW_VOLTAGE_OK</name>
-			<code>100007</code>
-			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
-			<severity>0</severity>
-			<flags>1</flags>
-			<message>Status of the voltage probe %&lt;instance&gt; OK</message>
-			<tags></tags>
-		</event>
-		<event id="100006">
-			<guid>9f57ca18-3b94-bc49-92b0-61895263b21d</guid>
-			<name>DC_DELL_HW_VOLTAGE</name>
-			<code>100006</code>
-			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
-			<severity>3</severity>
-			<flags>1</flags>
-			<message>Status of the voltage probe %&lt;instance&gt; NOT OK</message>
-			<tags></tags>
-		</event>
-		<event id="100009">
-			<guid>38b10a76-ee80-e743-b289-16abaaf0eb76</guid>
-			<name>DC_DELL_HW_COOLING_OK</name>
-			<code>100009</code>
-			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
-			<severity>0</severity>
-			<flags>1</flags>
-			<message>Status of the cooling unit OK</message>
-			<tags></tags>
-		</event>
-		<event id="100008">
-			<guid>896c65bb-8672-3340-b066-9a4ad28477c4</guid>
-			<name>DC_DELL_HW_COOLING</name>
-			<code>100008</code>
-			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
-			<severity>3</severity>
-			<flags>1</flags>
-			<message>Status of the cooling unit NOT OK</message>
-			<tags></tags>
-		</event>
-		<event id="100011">
-			<guid>db319cd4-1af5-ff49-8b69-b04472ad5902</guid>
-			<name>DC_DELL_HW_CPU_OK</name>
-			<code>100011</code>
-			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
-			<severity>0</severity>
-			<flags>1</flags>
-			<message>Status of processor %&lt;instance&gt; OK</message>
-			<tags></tags>
-		</event>
-		<event id="100010">
-			<guid>30cc70a6-6b27-7541-bb53-373eacac0c30</guid>
-			<name>DC_DELL_HW_CPU</name>
-			<code>100010</code>
-			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;  dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
-			<severity>3</severity>
-			<flags>1</flags>
-			<message>Status of processor %&lt;instance&gt; NOT OK</message>
-			<tags></tags>
-		</event>
-		<event id="100013">
-			<guid>b118f8f2-2b43-e647-b688-75c9c6ec245e</guid>
-			<name>DC_DELL_HW_MEMMORY_OK</name>
-			<code>100013</code>
-			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
-			<severity>0</severity>
-			<flags>1</flags>
-			<message>Status of the physical memory array OK</message>
-			<tags></tags>
-		</event>
-		<event id="100012">
-			<guid>da555df0-e72d-fa4c-a859-079371d5b56d</guid>
-			<name>DC_DELL_HW_MEMMORY</name>
-			<code>100012</code>
-			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
-			<severity>3</severity>
-			<flags>1</flags>
-			<message>Status of the physical memory array NOT OK</message>
-			<tags></tags>
-		</event>
-		<event id="100015">
-			<guid>8ceceb3c-8c2f-3541-9f8a-ac8391771211</guid>
-			<name>DC_DELL_HW_PSU_STATUS_OK</name>
-			<code>100015</code>
-			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
-			<severity>0</severity>
-			<flags>1</flags>
-			<message>Status of the power supply %&lt;instance&gt; OK</message>
-			<tags></tags>
-		</event>
-		<event id="100014">
-			<guid>68e72103-941c-d64f-8d8e-575204357e82</guid>
-			<name>DC_DELL_HW_PSU_STATUS</name>
-			<code>100014</code>
-			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
-			<severity>3</severity>
-			<flags>1</flags>
-			<message>Status of the power supply %&lt;instance&gt; NOT OK</message>
-			<tags></tags>
-		</event>
-		<event id="100017">
-			<guid>b953155f-fce2-8744-997e-0db8ee2fd85f</guid>
-			<name>DC_DELL_HW_STORAGE_BATTERY_OK</name>
-			<code>100017</code>
-			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
-			<severity>0</severity>
-			<flags>1</flags>
-			<message>Status of the battery %&lt;instance&gt; OK</message>
-			<tags></tags>
-		</event>
-		<event id="100016">
-			<guid>7ed86154-618d-9949-95f8-e3755adf6202</guid>
-			<name>DC_DELL_HW_STORAGE_BATTERY</name>
-			<code>100016</code>
-			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
-			<severity>2</severity>
-			<flags>1</flags>
-			<message>Status of the battery %&lt;instance&gt; NOT OK</message>
-			<tags></tags>
-		</event>
-		<event id="100019">
+		<event id="100033">
 			<guid>f5d47f1b-4d50-7b4c-9f66-14d79228a53b</guid>
 			<name>DC_DELL_HW_STORAGE_DISK_OK</name>
-			<code>100019</code>
+			<code>100033</code>
 			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>0</severity>
 			<flags>1</flags>
 			<message>Condition of array disk %&lt;instance&gt; OK</message>
 			<tags></tags>
 		</event>
-		<event id="100018">
+		<event id="100032">
+			<guid>7ed86154-618d-9949-95f8-e3755adf6202</guid>
+			<name>DC_DELL_HW_STORAGE_BATTERY</name>
+			<code>100032</code>
+			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
+			<severity>2</severity>
+			<flags>1</flags>
+			<message>Status of the battery %&lt;instance&gt; NOT OK</message>
+			<tags></tags>
+		</event>
+		<event id="100034">
 			<guid>8b002b5d-4f23-f24b-bd31-ab4f6c86a3ac</guid>
 			<name>DC_DELL_HW_STORAGE_DISK</name>
-			<code>100018</code>
+			<code>100034</code>
 			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>3</severity>
 			<flags>1</flags>
 			<message>Condition of array disk %&lt;instance&gt; NOT OK</message>
 			<tags></tags>
 		</event>
+		<event id="100015">
+			<guid>6f5dbf00-e7ef-c545-9cfe-4493c43192fe</guid>
+			<name>DC_DELL_HW_STORAGE_GLOBAL_OK</name>
+			<code>100015</code>
+			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;    dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
+			<severity>0</severity>
+			<flags>1</flags>
+			<message>Global health of Storage Management subsystem OK</message>
+			<tags></tags>
+		</event>
+		<event id="100017">
+			<guid>ef968f7b-30fc-1645-8511-c19b90d3ecca</guid>
+			<name>DC_DELL_HW_STORAGE_VDISK_OK</name>
+			<code>100017</code>
+			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
+			<severity>0</severity>
+			<flags>1</flags>
+			<message>Condition of virtual disk %&lt;instance&gt; OK</message>
+			<tags></tags>
+		</event>
+		<event id="100016">
+			<guid>16bad8ab-8d05-0e4d-ab63-20eec24cd7a5</guid>
+			<name>DC_DELL_HW_STORAGE_GLOBAL</name>
+			<code>100016</code>
+			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
+			<severity>3</severity>
+			<flags>1</flags>
+			<message>Global health of Storage Management subsystem NOT OK</message>
+			<tags></tags>
+		</event>
+		<event id="100019">
+			<guid>fc063c01-e4c0-9c4d-861d-fea4a16d8e4a</guid>
+			<name>DC_DELL_HW_THERMAL_OK</name>
+			<code>100019</code>
+			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
+			<severity>0</severity>
+			<flags>1</flags>
+			<message>Reading of temperature probe %&lt;instance&gt; OK</message>
+			<tags></tags>
+		</event>
+		<event id="100018">
+			<guid>8e5f2742-ecd1-b14b-b4dd-68f44ac17748</guid>
+			<name>DC_DELL_HW_STORAGE_VDISK</name>
+			<code>100018</code>
+			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
+			<severity>3</severity>
+			<flags>1</flags>
+			<message>Condition of virtual disk %&lt;instance&gt; NOT OK</message>
+			<tags></tags>
+		</event>
+		<event id="100021">
+			<guid>61f1b7ae-d27b-9046-a2f8-4adaf703692d</guid>
+			<name>DC_DELL_HW_VOLTAGE_OK</name>
+			<code>100021</code>
+			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
+			<severity>0</severity>
+			<flags>1</flags>
+			<message>Status of the voltage probe %&lt;instance&gt; OK</message>
+			<tags></tags>
+		</event>
+		<event id="100020">
+			<guid>5fe4b245-5441-7644-b391-8df5e93b279e</guid>
+			<name>DC_DELL_HW_THERMAL</name>
+			<code>100020</code>
+			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
+			<severity>3</severity>
+			<flags>1</flags>
+			<message>Reading for a temperature probe %&lt;instance&gt; current: %&lt;{multipliers, units}currentValue&gt; treshold: %&lt;{multipliers, units}thresholdValue&gt;</message>
+			<tags></tags>
+		</event>
+		<event id="100023">
+			<guid>38b10a76-ee80-e743-b289-16abaaf0eb76</guid>
+			<name>DC_DELL_HW_COOLING_OK</name>
+			<code>100023</code>
+			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
+			<severity>0</severity>
+			<flags>1</flags>
+			<message>Status of the cooling unit OK</message>
+			<tags></tags>
+		</event>
+		<event id="100022">
+			<guid>9f57ca18-3b94-bc49-92b0-61895263b21d</guid>
+			<name>DC_DELL_HW_VOLTAGE</name>
+			<code>100022</code>
+			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
+			<severity>3</severity>
+			<flags>1</flags>
+			<message>Status of the voltage probe %&lt;instance&gt; NOT OK</message>
+			<tags></tags>
+		</event>
+		<event id="100025">
+			<guid>db319cd4-1af5-ff49-8b69-b04472ad5902</guid>
+			<name>DC_DELL_HW_CPU_OK</name>
+			<code>100025</code>
+			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
+			<severity>0</severity>
+			<flags>1</flags>
+			<message>Status of processor %&lt;instance&gt; OK</message>
+			<tags></tags>
+		</event>
+		<event id="100024">
+			<guid>896c65bb-8672-3340-b066-9a4ad28477c4</guid>
+			<name>DC_DELL_HW_COOLING</name>
+			<code>100024</code>
+			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
+			<severity>3</severity>
+			<flags>1</flags>
+			<message>Status of the cooling unit NOT OK</message>
+			<tags></tags>
+		</event>
+		<event id="100027">
+			<guid>b118f8f2-2b43-e647-b688-75c9c6ec245e</guid>
+			<name>DC_DELL_HW_MEMMORY_OK</name>
+			<code>100027</code>
+			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
+			<severity>0</severity>
+			<flags>1</flags>
+			<message>Status of the physical memory array OK</message>
+			<tags></tags>
+		</event>
+		<event id="100026">
+			<guid>30cc70a6-6b27-7541-bb53-373eacac0c30</guid>
+			<name>DC_DELL_HW_CPU</name>
+			<code>100026</code>
+			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;  dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
+			<severity>3</severity>
+			<flags>1</flags>
+			<message>Status of processor %&lt;instance&gt; NOT OK</message>
+			<tags></tags>
+		</event>
+		<event id="100029">
+			<guid>8ceceb3c-8c2f-3541-9f8a-ac8391771211</guid>
+			<name>DC_DELL_HW_PSU_STATUS_OK</name>
+			<code>100029</code>
+			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
+			<severity>0</severity>
+			<flags>1</flags>
+			<message>Status of the power supply %&lt;instance&gt; OK</message>
+			<tags></tags>
+		</event>
+		<event id="100028">
+			<guid>da555df0-e72d-fa4c-a859-079371d5b56d</guid>
+			<name>DC_DELL_HW_MEMMORY</name>
+			<code>100028</code>
+			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
+			<severity>3</severity>
+			<flags>1</flags>
+			<message>Status of the physical memory array NOT OK</message>
+			<tags></tags>
+		</event>
+		<event id="100031">
+			<guid>b953155f-fce2-8744-997e-0db8ee2fd85f</guid>
+			<name>DC_DELL_HW_STORAGE_BATTERY_OK</name>
+			<code>100031</code>
+			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
+			<severity>0</severity>
+			<flags>1</flags>
+			<message>Status of the battery %&lt;instance&gt; OK</message>
+			<tags></tags>
+		</event>
+		<event id="100030">
+			<guid>68e72103-941c-d64f-8d8e-575204357e82</guid>
+			<name>DC_DELL_HW_PSU_STATUS</name>
+			<code>100030</code>
+			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
+			<severity>3</severity>
+			<flags>1</flags>
+			<message>Status of the power supply %&lt;instance&gt; NOT OK</message>
+			<tags></tags>
+		</event>
 	</events>
 	<templates>
-		<template id="420">
+		<template id="162">
 			<guid>beb3c70c-6de0-4499-a209-05db229e5eb2</guid>
 			<name>DELL OpenManage</name>
 			<comments></comments>
@@ -219,7 +220,7 @@
 				<element id="2">Hardware</element>
 			</path>
 			<dataCollection>
-				<dci id="1408">
+				<dci id="409">
 					<guid>e8d69ce5-bd5d-4951-b25b-54cb6aed8674</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.300.10.1.4.{instance}</name>
 					<description>DELL OpenManage - Chassis - {instance-name} - Status</description>
@@ -242,13 +243,13 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.1.300.10.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;chassisName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.1.300.10.1.7.&quot; . $1);&#x0D;&#x0A;return %(true, $1, chassisName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;chassisName = transport.getValue(&quot;.1.3.6.1.4.1.674.10892.1.300.10.1.7.&quot; .. $1);&#x0D;&#x0A;return [true, $1, chassisName];</instanceFilter>
 				</dci>
-				<dci id="1409">
+				<dci id="410">
 					<guid>09e08f97-de46-4ca7-90f2-95017be9f54e</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.300.10.1.11.{instance}</name>
 					<description>DELL OpenManage - Chassis - {instance-name} - Service Tag</description>
@@ -274,9 +275,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.1.300.10.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;chassisName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.1.300.10.1.7.&quot; . $1);&#x0D;&#x0A;return %(true, $1, chassisName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;chassisName = transport.getValue(&quot;.1.3.6.1.4.1.674.10892.1.300.10.1.7.&quot; .. $1);&#x0D;&#x0A;return [true, $1, chassisName];</instanceFilter>
 				</dci>
-				<dci id="1410">
+				<dci id="411">
 					<guid>bd760d75-9418-4c94-a7d2-61c9c4f98943</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.300.10.1.9.{instance}</name>
 					<description>DELL OpenManage - Chassis - {instance-name} - Model Name</description>
@@ -302,9 +303,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.1.300.10.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;chassisName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.1.300.10.1.7.&quot; . $1);&#x0D;&#x0A;return %(true, $1, chassisName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;chassisName = transport.getValue(&quot;.1.3.6.1.4.1.674.10892.1.300.10.1.7.&quot; .. $1);&#x0D;&#x0A;return [true, $1, chassisName];</instanceFilter>
 				</dci>
-				<dci id="1411">
+				<dci id="412">
 					<guid>a217b2c8-cedf-4cd9-b6e6-bd65eeb789f3</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.700.20.1.5.{instance}</name>
 					<description>DELL OpenManage - Temperature - {instance-name} - Status</description>
@@ -327,13 +328,13 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.1.700.20.1.2</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;sensorLocation = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.1.700.20.1.8.&quot; . $1);&#x0D;&#x0A;return %(true, $1, sensorLocation);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;sensorLocation = transport.getValue(&quot;.1.3.6.1.4.1.674.10892.1.700.20.1.8.&quot; .. $1);&#x0D;&#x0A;return [true, $1, sensorLocation];</instanceFilter>
 				</dci>
-				<dci id="1412">
+				<dci id="413">
 					<guid>207c30af-39f3-4f71-a9fd-c8c929f4600e</guid>
 					<name>.1.3.6.1.4.1.674.10893.1.20.140.1.1.4.{instance}</name>
 					<description>DELL OpenManage - Storage - Disk - Logical - {instance-name} - Status</description>
@@ -360,9 +361,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10893.1.20.140.1.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return null;&#x0D;&#x0A;diskLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10893.1.20.140.1.1.2.&quot; . $1);&#x0D;&#x0A;if ( diskLabel == null ) return null;&#x0D;&#x0A;raidLevel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10893.1.20.140.1.1.13.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;switch ( raidLevel )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;&#x09;&#x09;case &quot;1&quot;:&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;raidLevelName = &quot;Concatenated&quot;;&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;break;&#x0D;&#x0A;&#x09;&#x09;&#x09;case &quot;2&quot;:&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;raidLevelName = &quot;RAID-0&quot;;&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;break;&#x0D;&#x0A;&#x09;&#x09;&#x09;case &quot;3&quot;:&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;raidLevelName = &quot;RAID-1&quot;;&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;break;&#x0D;&#x0A;&#x09;&#x09;&#x09;case &quot;7&quot;:&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;raidLevelName = &quot;RAID-5&quot;;&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;break;&#x0D;&#x0A;&#x09;&#x09;&#x09;case &quot;8&quot;:&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;raidLevelName = &quot;RAID-6&quot;;&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;break;&#x0D;&#x0A;&#x09;&#x09;&#x09;case &quot;10&quot;:&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;raidLevelName = &quot;RAID-10&quot;;&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;break;&#x0D;&#x0A;&#x09;&#x09;&#x09;case &quot;12&quot;:&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;raidLevelName = &quot;RAID-50&quot;;&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;break;&#x0D;&#x0A;&#x09;&#x09;&#x09;case &quot;19&quot;:&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;raidLevelName = &quot;Concatenated RAID-1&quot;;&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;break;&#x0D;&#x0A;&#x09;&#x09;&#x09;case &quot;24&quot;:&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;raidLevelName = &quot;RAID-60&quot;;&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;break;&#x0D;&#x0A;&#x09;&#x09;&#x09;case &quot;25&quot;:&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;raidLevelName = &quot;CacheCade&quot;;&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;break;&#x0D;&#x0A;&#x09;&#x09;&#x09;default:&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;raidLevelName = &quot;INVALID DATA (&quot;.raidLevel.&quot;)&quot;;&#x0D;&#x0A;}&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, diskLabel . &quot; (&quot; . raidLevelName . &quot;)&quot;);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return null;&#x0D;&#x0A;diskLabel = transport.getValue(&quot;.1.3.6.1.4.1.674.10893.1.20.140.1.1.2.&quot; .. $1);&#x0D;&#x0A;if ( diskLabel == null ) return null;&#x0D;&#x0A;raidLevel = transport.getValue(&quot;.1.3.6.1.4.1.674.10893.1.20.140.1.1.13.&quot; .. $1);&#x0D;&#x0A;&#x0D;&#x0A;switch ( raidLevel )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;&#x09;&#x09;case &quot;1&quot;:&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;raidLevelName = &quot;Concatenated&quot;;&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;break;&#x0D;&#x0A;&#x09;&#x09;&#x09;case &quot;2&quot;:&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;raidLevelName = &quot;RAID-0&quot;;&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;break;&#x0D;&#x0A;&#x09;&#x09;&#x09;case &quot;3&quot;:&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;raidLevelName = &quot;RAID-1&quot;;&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;break;&#x0D;&#x0A;&#x09;&#x09;&#x09;case &quot;7&quot;:&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;raidLevelName = &quot;RAID-5&quot;;&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;break;&#x0D;&#x0A;&#x09;&#x09;&#x09;case &quot;8&quot;:&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;raidLevelName = &quot;RAID-6&quot;;&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;break;&#x0D;&#x0A;&#x09;&#x09;&#x09;case &quot;10&quot;:&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;raidLevelName = &quot;RAID-10&quot;;&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;break;&#x0D;&#x0A;&#x09;&#x09;&#x09;case &quot;12&quot;:&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;raidLevelName = &quot;RAID-50&quot;;&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;break;&#x0D;&#x0A;&#x09;&#x09;&#x09;case &quot;19&quot;:&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;raidLevelName = &quot;Concatenated RAID-1&quot;;&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;break;&#x0D;&#x0A;&#x09;&#x09;&#x09;case &quot;24&quot;:&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;raidLevelName = &quot;RAID-60&quot;;&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;break;&#x0D;&#x0A;&#x09;&#x09;&#x09;case &quot;25&quot;:&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;raidLevelName = &quot;CacheCade&quot;;&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;break;&#x0D;&#x0A;&#x09;&#x09;&#x09;default:&#x0D;&#x0A;&#x09;&#x09;&#x09;&#x09;raidLevelName = &quot;INVALID DATA (&quot;..raidLevel..&quot;)&quot;;&#x0D;&#x0A;}&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, diskLabel .. &quot; (&quot; .. raidLevelName .. &quot;)&quot;];</instanceFilter>
 				</dci>
-				<dci id="1413">
+				<dci id="414">
 					<guid>df7cb5fd-b501-4032-83a7-9e4f65bb3340</guid>
 					<name>.1.3.6.1.4.1.674.10893.1.20.130.4.1.31.{instance}</name>
 					<description>DELL OpenManage - Storage - Disk - Physical - {instance-name} - Predictive Failure Alert</description>
@@ -385,13 +386,13 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10893.1.20.130.4.1.1</instanceDiscoveryData>
-					<instanceFilter>oid = $1;&#x0D;&#x0A;transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;arrayDiskName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.2.&quot; . oid);&#x0D;&#x0A;if ( arrayDiskName == null ) arrayDiskName = &quot;&quot;;&#x0D;&#x0A;if ( arrayDiskName imatch &quot;Physical Disk(.*)&quot; ) arrayDiskName = &quot;PD&quot;.$1;&#x0D;&#x0A;&#x0D;&#x0A;controllerName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.6.&quot; . oid);&#x0D;&#x0A;if ( controllerName == null ) controllerName = &quot;&quot;;&#x0D;&#x0A;if ( controllerName imatch &quot;(.*) Adapter&quot; ) controllerName = $1;&#x0D;&#x0A;if ( controllerName imatch &quot;(.*) Integrated&quot; ) controllerName = $1;&#x0D;&#x0A;&#x0D;&#x0A;enclosureName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.4.&quot; . oid);&#x0D;&#x0A;if ( ( enclosureName == null ) || ( enclosureName == &quot;&quot; ) ) enclosureName = &quot;N/A&quot;;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, oid, controllerName .&quot;\\&quot;. arrayDiskName .&quot; (&quot;. enclosureName . &quot;)&quot;);</instanceFilter>
+					<instanceFilter>oid = $1;&#x0D;&#x0A;transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;arrayDiskName = transport.getValue(&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.2.&quot; .. oid);&#x0D;&#x0A;if ( arrayDiskName == null ) arrayDiskName = &quot;&quot;;&#x0D;&#x0A;if ( arrayDiskName imatch &quot;Physical Disk(.*)&quot; ) arrayDiskName = &quot;PD&quot;..$1;&#x0D;&#x0A;&#x0D;&#x0A;controllerName = transport.getValue(&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.6.&quot; .. oid);&#x0D;&#x0A;if ( controllerName == null ) controllerName = &quot;&quot;;&#x0D;&#x0A;if ( controllerName imatch &quot;(.*) Adapter&quot; ) controllerName = $1;&#x0D;&#x0A;if ( controllerName imatch &quot;(.*) Integrated&quot; ) controllerName = $1;&#x0D;&#x0A;&#x0D;&#x0A;enclosureName = transport.getValue(&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.4.&quot; .. oid);&#x0D;&#x0A;if ( ( enclosureName == null ) || ( enclosureName == &quot;&quot; ) ) enclosureName = &quot;N/A&quot;;&#x0D;&#x0A;&#x0D;&#x0A;return [true, oid, controllerName ..&quot;\\&quot;.. arrayDiskName ..&quot; (&quot;.. enclosureName .. &quot;)&quot;];</instanceFilter>
 				</dci>
-				<dci id="1414">
+				<dci id="415">
 					<guid>c33dc5e1-f714-4061-8f41-338980efd865</guid>
 					<name>.1.3.6.1.4.1.674.10893.1.20.130.4.1.4.{instance}</name>
 					<description>DELL OpenManage - Storage - Disk - Physical - {instance-name} - Status</description>
@@ -418,9 +419,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10893.1.20.130.4.1.1</instanceDiscoveryData>
-					<instanceFilter>oid = $1;&#x0D;&#x0A;transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;arrayDiskName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.2.&quot; . oid);&#x0D;&#x0A;if ( arrayDiskName == null ) arrayDiskName = &quot;&quot;;&#x0D;&#x0A;if ( arrayDiskName imatch &quot;Physical Disk(.*)&quot; ) arrayDiskName = &quot;PD&quot;.$1;&#x0D;&#x0A;&#x0D;&#x0A;controllerName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.6.&quot; . oid);&#x0D;&#x0A;if ( controllerName == null ) controllerName = &quot;&quot;;&#x0D;&#x0A;if ( controllerName imatch &quot;(.*) Adapter&quot; ) controllerName = $1;&#x0D;&#x0A;if ( controllerName imatch &quot;(.*) Integrated&quot; ) controllerName = $1;&#x0D;&#x0A;&#x0D;&#x0A;enclosureName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.4.&quot; . oid);&#x0D;&#x0A;if ( ( enclosureName == null ) || ( enclosureName == &quot;&quot; ) ) enclosureName = &quot;N/A&quot;;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, oid, controllerName .&quot;\\&quot;. arrayDiskName .&quot; (&quot;. enclosureName . &quot;)&quot;);</instanceFilter>
+					<instanceFilter>oid = $1;&#x0D;&#x0A;transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;arrayDiskName = transport.getValue(&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.2.&quot; .. oid);&#x0D;&#x0A;if ( arrayDiskName == null ) arrayDiskName = &quot;&quot;;&#x0D;&#x0A;if ( arrayDiskName imatch &quot;Physical Disk(.*)&quot; ) arrayDiskName = &quot;PD&quot;..$1;&#x0D;&#x0A;&#x0D;&#x0A;controllerName = transport.getValue(&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.6.&quot; .. oid);&#x0D;&#x0A;if ( controllerName == null ) controllerName = &quot;&quot;;&#x0D;&#x0A;if ( controllerName imatch &quot;(.*) Adapter&quot; ) controllerName = $1;&#x0D;&#x0A;if ( controllerName imatch &quot;(.*) Integrated&quot; ) controllerName = $1;&#x0D;&#x0A;&#x0D;&#x0A;enclosureName = transport.getValue(&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.4.&quot; .. oid);&#x0D;&#x0A;if ( ( enclosureName == null ) || ( enclosureName == &quot;&quot; ) ) enclosureName = &quot;N/A&quot;;&#x0D;&#x0A;&#x0D;&#x0A;return [true, oid, controllerName ..&quot;\\&quot;.. arrayDiskName ..&quot; (&quot;.. enclosureName .. &quot;)&quot;];</instanceFilter>
 				</dci>
-				<dci id="1415">
+				<dci id="416">
 					<guid>e54ad25f-3224-486a-8d2c-639c4c7bb004</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.300.80.1.5.{instance}</name>
 					<description>DELL OpenManage - Baseboard - {instance-name} - Status</description>
@@ -443,13 +444,13 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.1.300.80.1.2</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;boardName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.1.300.80.1.8.&quot; . $1);&#x0D;&#x0A;return %(true, $1, boardName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;boardName = transport.getValue(&quot;.1.3.6.1.4.1.674.10892.1.300.80.1.8.&quot; .. $1);&#x0D;&#x0A;return [true, $1, boardName];</instanceFilter>
 				</dci>
-				<dci id="1416">
+				<dci id="417">
 					<guid>c727e9b0-d544-4e3f-a297-0bf02e789cc2</guid>
 					<name>.1.3.6.1.4.1.674.10893.1.20.130.15.1.4.{instance}</name>
 					<description>DELL OpenManage - Storage - Battery - {instance-name} - Status</description>
@@ -476,9 +477,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10893.1.20.130.16.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;batteryStatus = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10893.1.20.130.15.1.4.&quot; . $1);&#x0D;&#x0A;if ( batteryStatus == 21 ) return false;&#x0D;&#x0A;&#x0D;&#x0A;batteryName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10893.1.20.130.16.1.2.&quot; . $1);&#x0D;&#x0A;controllerName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10893.1.20.130.16.1.4.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, batteryName .&quot; (&quot;. controllerName .&quot;)&quot;);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;batteryStatus = transport.getValue(&quot;.1.3.6.1.4.1.674.10893.1.20.130.15.1.4.&quot; .. $1);&#x0D;&#x0A;if ( batteryStatus == 21 ) return false;&#x0D;&#x0A;&#x0D;&#x0A;batteryName = transport.getValue(&quot;.1.3.6.1.4.1.674.10893.1.20.130.16.1.2.&quot; .. $1);&#x0D;&#x0A;controllerName = transport.getValue(&quot;.1.3.6.1.4.1.674.10893.1.20.130.16.1.4.&quot; .. $1);&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, batteryName ..&quot; (&quot;.. controllerName ..&quot;)&quot;];</instanceFilter>
 				</dci>
-				<dci id="1417">
+				<dci id="418">
 					<guid>ad6be7cd-94d4-4b37-981a-905f756e7cfa</guid>
 					<name>.1.3.6.1.4.1.674.10893.1.20.130.4.1.7.{instance}</name>
 					<description>DELL OpenManage - Storage - Disk - Physical - {instance-name} - Serial</description>
@@ -504,9 +505,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10893.1.20.130.4.1.1</instanceDiscoveryData>
-					<instanceFilter>oid = $1;&#x0D;&#x0A;transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;arrayDiskName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.2.&quot; . oid);&#x0D;&#x0A;if ( arrayDiskName == null ) arrayDiskName = &quot;&quot;;&#x0D;&#x0A;if ( arrayDiskName imatch &quot;Physical Disk(.*)&quot; ) arrayDiskName = &quot;PD&quot;.$1;&#x0D;&#x0A;&#x0D;&#x0A;controllerName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.6.&quot; . oid);&#x0D;&#x0A;if ( controllerName == null ) controllerName = &quot;&quot;;&#x0D;&#x0A;if ( controllerName imatch &quot;(.*) Adapter&quot; ) controllerName = $1;&#x0D;&#x0A;if ( controllerName imatch &quot;(.*) Integrated&quot; ) controllerName = $1;&#x0D;&#x0A;&#x0D;&#x0A;enclosureName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.4.&quot; . oid);&#x0D;&#x0A;if ( ( enclosureName == null ) || ( enclosureName == &quot;&quot; ) ) enclosureName = &quot;N/A&quot;;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, oid, controllerName .&quot;\\&quot;. arrayDiskName .&quot; (&quot;. enclosureName . &quot;)&quot;);</instanceFilter>
+					<instanceFilter>oid = $1;&#x0D;&#x0A;transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;arrayDiskName = transport.getValue(&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.2.&quot; .. oid);&#x0D;&#x0A;if ( arrayDiskName == null ) arrayDiskName = &quot;&quot;;&#x0D;&#x0A;if ( arrayDiskName imatch &quot;Physical Disk(.*)&quot; ) arrayDiskName = &quot;PD&quot;..$1;&#x0D;&#x0A;&#x0D;&#x0A;controllerName = transport.getValue(&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.6.&quot; .. oid);&#x0D;&#x0A;if ( controllerName == null ) controllerName = &quot;&quot;;&#x0D;&#x0A;if ( controllerName imatch &quot;(.*) Adapter&quot; ) controllerName = $1;&#x0D;&#x0A;if ( controllerName imatch &quot;(.*) Integrated&quot; ) controllerName = $1;&#x0D;&#x0A;&#x0D;&#x0A;enclosureName = transport.getValue(&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.4.&quot; .. oid);&#x0D;&#x0A;if ( ( enclosureName == null ) || ( enclosureName == &quot;&quot; ) ) enclosureName = &quot;N/A&quot;;&#x0D;&#x0A;&#x0D;&#x0A;return [true, oid, controllerName ..&quot;\\&quot;.. arrayDiskName ..&quot; (&quot;.. enclosureName .. &quot;)&quot;];</instanceFilter>
 				</dci>
-				<dci id="1418">
+				<dci id="419">
 					<guid>8bef4ab7-32ad-4e64-92be-2cc41b69bd2a</guid>
 					<name>.1.3.6.1.4.1.674.10893.1.20.130.4.1.6.{instance}</name>
 					<description>DELL OpenManage - Storage - Disk - Physical - {instance-name} - Model</description>
@@ -532,9 +533,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10893.1.20.130.4.1.1</instanceDiscoveryData>
-					<instanceFilter>oid = $1;&#x0D;&#x0A;transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;arrayDiskName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.2.&quot; . oid);&#x0D;&#x0A;if ( arrayDiskName == null ) arrayDiskName = &quot;&quot;;&#x0D;&#x0A;if ( arrayDiskName imatch &quot;Physical Disk(.*)&quot; ) arrayDiskName = &quot;PD&quot;.$1;&#x0D;&#x0A;&#x0D;&#x0A;controllerName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.6.&quot; . oid);&#x0D;&#x0A;if ( controllerName == null ) controllerName = &quot;&quot;;&#x0D;&#x0A;if ( controllerName imatch &quot;(.*) Adapter&quot; ) controllerName = $1;&#x0D;&#x0A;if ( controllerName imatch &quot;(.*) Integrated&quot; ) controllerName = $1;&#x0D;&#x0A;&#x0D;&#x0A;enclosureName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.4.&quot; . oid);&#x0D;&#x0A;if ( ( enclosureName == null ) || ( enclosureName == &quot;&quot; ) ) enclosureName = &quot;N/A&quot;;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, oid, controllerName .&quot;\\&quot;. arrayDiskName .&quot; (&quot;. enclosureName . &quot;)&quot;);</instanceFilter>
+					<instanceFilter>oid = $1;&#x0D;&#x0A;transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;arrayDiskName = transport.getValue(&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.2.&quot; .. oid);&#x0D;&#x0A;if ( arrayDiskName == null ) arrayDiskName = &quot;&quot;;&#x0D;&#x0A;if ( arrayDiskName imatch &quot;Physical Disk(.*)&quot; ) arrayDiskName = &quot;PD&quot;..$1;&#x0D;&#x0A;&#x0D;&#x0A;controllerName = transport.getValue(&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.6.&quot; .. oid);&#x0D;&#x0A;if ( controllerName == null ) controllerName = &quot;&quot;;&#x0D;&#x0A;if ( controllerName imatch &quot;(.*) Adapter&quot; ) controllerName = $1;&#x0D;&#x0A;if ( controllerName imatch &quot;(.*) Integrated&quot; ) controllerName = $1;&#x0D;&#x0A;&#x0D;&#x0A;enclosureName = transport.getValue(&quot;.1.3.6.1.4.1.674.10893.1.20.130.5.1.4.&quot; .. oid);&#x0D;&#x0A;if ( ( enclosureName == null ) || ( enclosureName == &quot;&quot; ) ) enclosureName = &quot;N/A&quot;;&#x0D;&#x0A;&#x0D;&#x0A;return [true, oid, controllerName ..&quot;\\&quot;.. arrayDiskName ..&quot; (&quot;.. enclosureName .. &quot;)&quot;];</instanceFilter>
 				</dci>
-				<dci id="1419">
+				<dci id="420">
 					<guid>575c6fa0-37f4-4942-a43d-fb6638fd0d72</guid>
 					<name>.1.3.6.1.4.1.674.10893.1.20.130.1.1.38.{instance}</name>
 					<description>DELL OpenManage - Storage - Controller - {instance-name} - Status</description>
@@ -561,9 +562,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10893.1.20.130.1.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;controllerName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10893.1.20.130.1.1.2.&quot; . $1);&#x0D;&#x0A;if (controllerName == false || controllerName == &quot;&quot; || controllerName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, controllerName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;controllerName = transport.getValue(&quot;.1.3.6.1.4.1.674.10893.1.20.130.1.1.2.&quot; .. $1);&#x0D;&#x0A;if (controllerName == false || controllerName == &quot;&quot; || controllerName == null) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, controllerName];</instanceFilter>
 				</dci>
-				<dci id="1420">
+				<dci id="421">
 					<guid>bda739a6-8c97-483f-9aa2-6f8d1fd10fa4</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.300.10.1.49.{instance}</name>
 					<description>DELL OpenManage - Chassis - {instance-name} - Express Service Code</description>
@@ -589,9 +590,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.1.300.10.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;chassisName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.1.300.10.1.7.&quot; . $1);&#x0D;&#x0A;return %(true, $1, chassisName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;chassisName = transport.getValue(&quot;.1.3.6.1.4.1.674.10892.1.300.10.1.7.&quot; .. $1);&#x0D;&#x0A;return [true, $1, chassisName];</instanceFilter>
 				</dci>
-				<dci id="1421">
+				<dci id="422">
 					<guid>758579f6-21ef-4668-b1d0-c20bcf5160eb</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.1900.10.1.12.{instance}</name>
 					<description>DELL OpenManage - BMC - {instance-name} - URL</description>
@@ -617,9 +618,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;0.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.1.1900.10.1.2</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;bmcName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.1.1900.10.1.6.&quot; . $1);&#x0D;&#x0A;return %(true, $1, bmcName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;bmcName = transport.getValue(&quot;.1.3.6.1.4.1.674.10892.1.1900.10.1.6.&quot; .. $1);&#x0D;&#x0A;return [true, $1, bmcName];</instanceFilter>
 				</dci>
-				<dci id="1422">
+				<dci id="423">
 					<guid>8c36103c-380d-47f3-844f-401967044a12</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.1900.10.1.5.{instance}</name>
 					<description>DELL OpenManage - BMC - {instance-name} - Status</description>
@@ -642,13 +643,13 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA(&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA(&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;0.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.1.1900.10.1.2</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;bmcName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.1.1900.10.1.6.&quot; . $1);&#x0D;&#x0A;return %(true, $1, bmcName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;bmcName = transport.getValue(&quot;.1.3.6.1.4.1.674.10892.1.1900.10.1.6.&quot; .. $1);&#x0D;&#x0A;return [true, $1, bmcName];</instanceFilter>
 				</dci>
-				<dci id="1423">
+				<dci id="424">
 					<guid>4fba6276-a600-493c-b197-4cdb662b602c</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.1300.10.1.5.{instance}</name>
 					<description>DELL OpenManage - Memory Array - {instance} - Status</description>
@@ -671,12 +672,12 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA(&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA(&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;0.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.1.1900.10.1.2</instanceDiscoveryData>
 				</dci>
-				<dci id="1424">
+				<dci id="425">
 					<guid>0e7a7a7f-be0c-45bd-b70d-8f13259dd09e</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.1300.10.1.10.{instance}</name>
 					<description>DELL OpenManage - Memory Array - {instance} - Sockets Total</description>
@@ -703,7 +704,7 @@
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.1.1900.10.1.2</instanceDiscoveryData>
 				</dci>
-				<dci id="1425">
+				<dci id="426">
 					<guid>f07b485c-5683-436c-8358-105dcfc320e1</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.1300.10.1.11.{instance}</name>
 					<description>DELL OpenManage - Memory Array - {instance} - Sockets In Use</description>
@@ -730,7 +731,7 @@
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.1.1900.10.1.2</instanceDiscoveryData>
 				</dci>
-				<dci id="1426">
+				<dci id="427">
 					<guid>6435fc0b-1d03-4f6e-a57b-31ffc90da55f</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.300.60.1.11.{instance}</name>
 					<description>DELL OpenManage - Firmware - {instance-name} - Version</description>
@@ -756,9 +757,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;0.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.1.300.60.1.2</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;firmwareTypeName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.1.300.60.1.8.&quot; . $1);&#x0D;&#x0A;return %(true, $1, firmwareTypeName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;firmwareTypeName = transport.getValue(&quot;.1.3.6.1.4.1.674.10892.1.300.60.1.8.&quot; .. $1);&#x0D;&#x0A;return [true, $1, firmwareTypeName];</instanceFilter>
 				</dci>
-				<dci id="1427">
+				<dci id="428">
 					<guid>6c64bbcd-c6b6-4f16-b35e-8a37fe3c59e4</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.300.50.1.8.{instance}</name>
 					<description>DELL OpenManage - BIOS - {instance} - Version</description>
@@ -785,7 +786,7 @@
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.1.300.50.1.2</instanceDiscoveryData>
 				</dci>
-				<dci id="1428">
+				<dci id="429">
 					<guid>27b9ae33-dfad-4ea8-bf40-2a584353cce8</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.700.12.1.6.{instance}</name>
 					<description>DELL OpenManage - Cooling Device - {instance-name} - Speed</description>
@@ -811,9 +812,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;0.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.1.700.12.1.2</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;coolingDeviceName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.1.700.12.1.8.&quot; . $1);&#x0D;&#x0A;return %(true, $1, coolingDeviceName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;coolingDeviceName = transport.getValue(&quot;.1.3.6.1.4.1.674.10892.1.700.12.1.8.&quot; .. $1);&#x0D;&#x0A;return [true, $1, coolingDeviceName];</instanceFilter>
 				</dci>
-				<dci id="1429">
+				<dci id="430">
 					<guid>6ae09f1b-72fd-4945-a1e7-2396e673e54d</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.700.12.1.5.{instance}</name>
 					<description>DELL OpenManage - Cooling Device - {instance-name} - Status</description>
@@ -836,13 +837,13 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA(&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA(&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;0.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.1.700.12.1.2</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;coolingDeviceName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.1.700.12.1.8.&quot; . $1);&#x0D;&#x0A;return %(true, $1, coolingDeviceName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;coolingDeviceName = transport.getValue(&quot;.1.3.6.1.4.1.674.10892.1.700.12.1.8.&quot; .. $1);&#x0D;&#x0A;return [true, $1, coolingDeviceName];</instanceFilter>
 				</dci>
-				<dci id="1430">
+				<dci id="431">
 					<guid>a6737d60-7224-4678-b12a-08614b6a476c</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.700.20.1.6.{instance}</name>
 					<description>DELL OpenManage - Temperature - {instance-name} - Temperature</description>
@@ -869,9 +870,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.1.700.20.1.2</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;sensorLocation = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.1.700.20.1.8.&quot; . $1);&#x0D;&#x0A;return %(true, $1, sensorLocation);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;sensorLocation = transport.getValue(&quot;.1.3.6.1.4.1.674.10892.1.700.20.1.8.&quot; .. $1);&#x0D;&#x0A;return [true, $1, sensorLocation];</instanceFilter>
 				</dci>
-				<dci id="1431">
+				<dci id="432">
 					<guid>821d06ff-1d6c-4cd5-8511-c70e38e8cc8a</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.600.20.1.5.{instance}</name>
 					<description>DELL OpenManage - Voltage - {instance-name} - Status</description>
@@ -894,13 +895,13 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.1.600.20.1.2</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;boardName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.1.600.20.1.8.&quot; . $1);&#x0D;&#x0A;return %(true, $1, boardName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;boardName = transport.getValue(&quot;.1.3.6.1.4.1.674.10892.1.600.20.1.8.&quot; .. $1);&#x0D;&#x0A;return [true, $1, boardName];</instanceFilter>
 				</dci>
-				<dci id="1432">
+				<dci id="433">
 					<guid>884c9402-f50c-4dfc-97a4-557af3cd6dea</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.600.20.1.6.{instance}</name>
 					<description>DELL OpenManage - Voltage - {instance-name} - Voltage</description>
@@ -927,9 +928,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.1.600.20.1.2</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return null;&#x0D;&#x0A;isDiscrete = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.1.600.20.1.7.&quot; . $1);&#x0D;&#x0A;// discrete sensors don&apos;t return actual values&#x0D;&#x0A;if ( isDiscrete == 16 ) return null;&#x0D;&#x0A;boardName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.1.600.20.1.8.&quot; . $1);&#x0D;&#x0A;return %(true, $1, boardName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return null;&#x0D;&#x0A;isDiscrete = transport.getValue(&quot;.1.3.6.1.4.1.674.10892.1.600.20.1.7.&quot; .. $1);&#x0D;&#x0A;// discrete sensors don&apos;t return actual values&#x0D;&#x0A;if ( isDiscrete == 16 ) return null;&#x0D;&#x0A;boardName = transport.getValue(&quot;.1.3.6.1.4.1.674.10892.1.600.20.1.8.&quot; .. $1);&#x0D;&#x0A;return [true, $1, boardName];</instanceFilter>
 				</dci>
-				<dci id="1433">
+				<dci id="434">
 					<guid>31fb842d-c9f7-460b-9dd3-5eea51cae74c</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.600.50.1.5.{instance}</name>
 					<description>DELL OpenManage - System Battery - {instance-name} - Status</description>
@@ -952,19 +953,19 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;0.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.1.600.50.1.2</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;batteryName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.1.600.50.1.7.&quot; . $1);&#x0D;&#x0A;return %(true, $1, batteryName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;batteryName = transport.getValue(&quot;.1.3.6.1.4.1.674.10892.1.600.50.1.7.&quot; .. $1);&#x0D;&#x0A;return [true, $1, batteryName];</instanceFilter>
 				</dci>
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node-&gt;isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ($node-&gt;snmpOID ~= &quot;1.3.6.1.4.1.8072.3.2.10&quot;)&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;snmpTransport = CreateSNMPTransport($node);&#x0D;&#x0A;&#x09;if (snmpTransport == null) return NULL;&#x0D;&#x0A;&#x09;snmpResult = SNMPGetValue(snmpTransport,&quot;.1.3.6.1.4.1.674.10892.1.300.80.1.2.1.1&quot;);&#x0D;&#x0A;&#x09;if (snmpResult == null)&#x09;return false;&#x0D;&#x0A;&#x09;else return true;&#x0D;&#x0A;}&#x0D;&#x0A;if ( $node-&gt;platformName ~= &quot;windows&quot;)&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;table = AgentReadTable($node, &quot;System.InstalledProducts&quot;);&#x0D;&#x0A;&#x09;if ( table == null ) return NULL;&#x0D;&#x0A;&#x09;colName = table-&gt;getColumnIndex(&quot;NAME&quot;);&#x0D;&#x0A;&#x09;for (currentRow = 0; currentRow &lt; table-&gt;rowCount; currentRow++)&#x0D;&#x0A;&#x09;{&#x0D;&#x0A;&#x09;&#x09;if ( table-&gt;get(currentRow, colName) ~= &quot;Dell (EMC )?OpenManage Systems Management&quot; ) return true;&#x0D;&#x0A;&#x09;}&#x0D;&#x0A;}&#x0D;&#x0A;return false;</filter>
-			<filter2 autoBind="0" autoUnbind="0"></filter2>
+			<filter autoBind="true" autoUnbind="false">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node.isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ($node.snmpOID ~= &quot;1.3.6.1.4.1.8072.3.2.10&quot;)&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;snmpTransport = CreateSNMPTransport($node);&#x0D;&#x0A;&#x09;if (snmpTransport == null) return NULL;&#x0D;&#x0A;&#x09;snmpResult = SNMPGetValue(snmpTransport,&quot;.1.3.6.1.4.1.674.10892.1.300.80.1.2.1.1&quot;);&#x0D;&#x0A;&#x09;if (snmpResult == null)&#x09;return false;&#x0D;&#x0A;&#x09;else return true;&#x0D;&#x0A;}&#x0D;&#x0A;if ( $node.platformName ~= &quot;windows&quot;)&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;table = AgentReadTable($node, &quot;System.InstalledProducts&quot;);&#x0D;&#x0A;&#x09;if ( table == null ) return NULL;&#x0D;&#x0A;&#x09;colName = table.getColumnIndex(&quot;NAME&quot;);&#x0D;&#x0A;&#x09;for (currentRow = 0; currentRow &lt; table.rowCount; currentRow++)&#x0D;&#x0A;&#x09;{&#x0D;&#x0A;&#x09;&#x09;if ( table.get(currentRow, colName) ~= &quot;Dell (EMC )?OpenManage Systems Management&quot; ) return true;&#x0D;&#x0A;&#x09;}&#x0D;&#x0A;}&#x0D;&#x0A;return false;</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
-		<template id="421">
+		<template id="163">
 			<guid>231132b7-6650-4c0e-b26e-fb8bd62edc7c</guid>
 			<name>DELL</name>
 			<comments></comments>
@@ -973,7 +974,7 @@
 				<element id="2">Hardware</element>
 			</path>
 			<dataCollection>
-				<dci id="1434">
+				<dci id="435">
 					<guid>5906cb57-0129-b248-9d81-d199db09d59f</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.1100.30.1.5.1.{instance}</name>
 					<description>DELL status of CPU{instance}</description>
@@ -1011,9 +1012,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance>CPU1</instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.1.1100.30.1.5.1</instanceDiscoveryData>
-					<instanceFilter>return %(true, $1, $2);</instanceFilter>
+					<instanceFilter>return [true, $1, $2];</instanceFilter>
 				</dci>
-				<dci id="1435">
+				<dci id="436">
 					<guid>60a4e85e-d976-8a4b-ac25-034d6686c666</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.600.12.1.5.1.{instance}</name>
 					<description>DELL status of the power supply {instance}</description>
@@ -1051,9 +1052,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance>1</instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.1.600.12.1.5.1</instanceDiscoveryData>
-					<instanceFilter>return %(true, $1, $2);</instanceFilter>
+					<instanceFilter>return [true, $1, $2];</instanceFilter>
 				</dci>
-				<dci id="1436">
+				<dci id="437">
 					<guid>0a832511-466a-094a-a533-56b417cc2016</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.1300.10.1.5.1.1</name>
 					<description>DELL status of the physical memory array</description>
@@ -1092,7 +1093,7 @@
 					<instance>memmory</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1437">
+				<dci id="438">
 					<guid>952a15e6-dd41-7d44-a6c7-da1b27583ccc</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.600.20.1.5.1.14</name>
 					<description>DELL status of the voltage probe: System Board CPU Power Fault</description>
@@ -1131,7 +1132,7 @@
 					<instance>System Board CPU Power Fault</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1438">
+				<dci id="439">
 					<guid>1157a03e-fd3f-4d4f-9bf9-29b28b8ad7c8</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.600.20.1.5.1.11</name>
 					<description>DELL status of the voltage probe: System Board Linear PG</description>
@@ -1170,7 +1171,7 @@
 					<instance>System Board Linear PG</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1439">
+				<dci id="440">
 					<guid>54efc35c-6a2e-5a43-893b-b8b705092cdb</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.600.20.1.5.1.10</name>
 					<description>DELL status of the voltage probe: System Board Backplane PG</description>
@@ -1209,7 +1210,7 @@
 					<instance>System Board Backplane PG</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1440">
+				<dci id="441">
 					<guid>45529cf5-7c0f-254a-9bf5-c0a4632b0834</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.600.20.1.5.1.8</name>
 					<description>DELL status of the voltage probe: Riser 1.5V PXH PG</description>
@@ -1248,7 +1249,7 @@
 					<instance>Riser 1.5V PXH PG</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1441">
+				<dci id="442">
 					<guid>54c7970c-5111-054e-979f-1f5f97d8938f</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.600.20.1.5.1.5</name>
 					<description>DELL status of the voltage probe: System Board 1.8V PG</description>
@@ -1287,7 +1288,7 @@
 					<instance>System Board 1.8V PG</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1442">
+				<dci id="443">
 					<guid>7262335f-c4e0-e84b-ae2d-a1b16246471e</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.600.20.1.5.1.4</name>
 					<description>DELL status of the voltage probe: System Board 1.5V PG</description>
@@ -1326,7 +1327,7 @@
 					<instance>System Board 1.5V PG</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1443">
+				<dci id="444">
 					<guid>3ee88436-8f1e-3a44-bd8f-60020aa10866</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.600.20.1.5.1.3</name>
 					<description>DELL status of the voltage probe: System Board CPU VTT</description>
@@ -1365,7 +1366,7 @@
 					<instance>System Board CPU VTT</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1444">
+				<dci id="445">
 					<guid>3e4b9404-4ac4-6149-8e54-e3ea78534d28</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.600.20.1.5.1.1</name>
 					<description>DELL status of the voltage probe: CPU1 VCORE</description>
@@ -1404,7 +1405,7 @@
 					<instance>CPU1 VCORE</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1445">
+				<dci id="446">
 					<guid>3c055f94-7771-d94e-9b2d-2b14fbe83d46</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.700.20.1.6.1.1</name>
 					<description>DELL reading for a temperature probe: System Board Ambient Temp</description>
@@ -1444,7 +1445,7 @@
 					<instance>System Board Ambient Temp</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1446">
+				<dci id="447">
 					<guid>412f02ab-0d60-504a-b8ce-63afddeaca2d</guid>
 					<name>.1.3.6.1.4.1.674.10893.1.20.140.1.1.4.{instance}</name>
 					<description>DELL condition of virtual disk {instance}</description>
@@ -1482,9 +1483,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance>0</instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10893.1.20.140.1.1.4</instanceDiscoveryData>
-					<instanceFilter>return %(true, $1, $2);</instanceFilter>
+					<instanceFilter>return [true, $1, $2];</instanceFilter>
 				</dci>
-				<dci id="1447">
+				<dci id="448">
 					<guid>5804a80a-1887-e141-a9e7-f5570832fd40</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.600.20.1.5.1.7</name>
 					<description>DELL status of the voltage probe: System Board 5V PG</description>
@@ -1523,7 +1524,7 @@
 					<instance>System Board 5V PG</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1448">
+				<dci id="449">
 					<guid>8d78cf91-c695-1d4b-96fb-4b3b1b79d465</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.600.20.1.5.1.2</name>
 					<description>DELL status of the voltage probe: CPU2 VCORE</description>
@@ -1562,7 +1563,7 @@
 					<instance>CPU2 VCORE</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1449">
+				<dci id="450">
 					<guid>712162e5-7522-f849-89de-50b5cf046d57</guid>
 					<name>.1.3.6.1.4.1.674.10893.1.20.130.15.1.6.1</name>
 					<description>DELL status of the storage controller battery</description>
@@ -1601,7 +1602,7 @@
 					<instance>1</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1450">
+				<dci id="451">
 					<guid>36c81a78-bd0f-f845-a3f9-94f7a3a62617</guid>
 					<name>.1.3.6.1.4.1.674.10893.1.20.110.13.0</name>
 					<description>DELL Global health of the Storage Management</description>
@@ -1640,7 +1641,7 @@
 					<instance>Storage Management</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1451">
+				<dci id="452">
 					<guid>10dbef6c-0695-5d4e-8473-a114e87f0193</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.600.20.1.5.1.9</name>
 					<description>DELL status of the voltage probe: Riser 5V Riser PG</description>
@@ -1679,7 +1680,7 @@
 					<instance>Riser 5V Riser PG</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1452">
+				<dci id="453">
 					<guid>7ef052cf-9876-e74c-8c00-3b40cda93f88</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.600.20.1.5.1.13</name>
 					<description>DELL status of the voltage probe: System Board 0.9V Over Volt</description>
@@ -1718,7 +1719,7 @@
 					<instance>System Board 0.9V Over Volt</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1453">
+				<dci id="454">
 					<guid>835f3575-d5c9-6548-a564-622eb2288aca</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.600.20.1.5.1.12</name>
 					<description>DELL status of the voltage probe: System Board 0.9V PG</description>
@@ -1757,7 +1758,7 @@
 					<instance>System Board 0.9V PG</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1454">
+				<dci id="455">
 					<guid>daa7b602-12c2-244e-a0ab-47c5fff7462b</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.600.20.1.5.1.6</name>
 					<description>DELL status of the voltage probe: System Board 3.3V PG</description>
@@ -1796,7 +1797,7 @@
 					<instance>System Board 3.3V PG</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1455">
+				<dci id="456">
 					<guid>c9f1a7bb-e21f-514e-97ba-eb900b0f63e8</guid>
 					<name>.1.3.6.1.4.1.674.10892.1.700.10.1.5.1.1</name>
 					<description>DELL status of the cooling unit</description>
@@ -1835,7 +1836,7 @@
 					<instance>cooling unit</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1456">
+				<dci id="457">
 					<guid>d35af66c-31c6-0e48-bc54-3168d3ba533a</guid>
 					<name>.1.3.6.1.4.1.674.10893.1.20.130.4.1.24.{instance}</name>
 					<description>DELL condition of the array disk {instance}</description>
@@ -1873,13 +1874,13 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance>0</instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.674.10893.1.20.130.4.1.24</instanceDiscoveryData>
-					<instanceFilter>return %(true, $1, $2);</instanceFilter>
+					<instanceFilter>return [true, $1, $2];</instanceFilter>
 				</dci>
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="0" autoUnbind="0"></filter>
-			<filter2 autoBind="0" autoUnbind="0"></filter2>
+			<filter autoBind="false" autoUnbind="false"></filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
 	</templates>
 	<traps>
@@ -1896,4 +1897,6 @@
 	</actions>
 	<webServiceDefinitions>
 	</webServiceDefinitions>
+	<assetManagementSchema>
+	</assetManagementSchema>
 </configuration>

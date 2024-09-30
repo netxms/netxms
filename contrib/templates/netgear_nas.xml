@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-	<formatVersion>4</formatVersion>
+	<formatVersion>5</formatVersion>
+	<nxslVersionV5>true</nxslVersionV5>
 	<server>
-		<version>4.2.327</version>
-		<buildTag>4.2-327-g5b8c7b6629</buildTag>
-		<operatingSystem>Linux 5.4.0-125-generic</operatingSystem>
+		<version>5.0.7</version>
+		<buildTag>5.0-1038-gb71146219d</buildTag>
+		<operatingSystem>Linux 6.8.0-45-generic</operatingSystem>
 	</server>
 	<description></description>
 	<events>
 	</events>
 	<templates>
-		<template id="464">
+		<template id="110">
 			<guid>612eedef-ac5a-43e0-9f7d-e882e92e7f33</guid>
 			<name>Netgear ReadyNAS</name>
 			<comments></comments>
@@ -19,7 +20,7 @@
 				<element id="2">NAS</element>
 			</path>
 			<dataCollection>
-				<dci id="1836">
+				<dci id="33">
 					<guid>06e2f104-b01c-46cf-81cf-e9ba44c88a76</guid>
 					<name>.1.3.6.1.4.1.4526.22.1.0</name>
 					<description>Netgear ReadyNAS - Version - Firmware</description>
@@ -46,7 +47,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1837">
+				<dci id="34">
 					<guid>e252a7d0-26a0-4ae4-bf23-0657586c3276</guid>
 					<name>.1.3.6.1.4.1.4526.22.2.0</name>
 					<description>Netgear ReadyNAS - Chassis - Serial</description>
@@ -73,7 +74,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1838">
+				<dci id="35">
 					<guid>86723cd7-c55b-4513-8301-54c784084ae9</guid>
 					<name>.1.3.6.1.4.1.4526.22.5.1.2.{instance}</name>
 					<description>Netgear ReadyNAS - Temperature - {instance-name} - Temperature</description>
@@ -99,9 +100,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.4526.22.5.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;probeName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.4526.22.5.1.3.&quot; . $1);&#x0D;&#x0A;if (probeName == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, probeName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;probeName = transport.getValue(&quot;.1.3.6.1.4.1.4526.22.5.1.3.&quot; .. $1);&#x0D;&#x0A;if (probeName == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, probeName];</instanceFilter>
 				</dci>
-				<dci id="1839">
+				<dci id="36">
 					<guid>48cfdcc9-a132-4629-a9a8-f6f2b478f0a7</guid>
 					<name>.1.3.6.1.4.1.4526.22.4.1.3.{instance}</name>
 					<description>Netgear ReadyNAS - Fan - {instance-name} ({instance}) - Status</description>
@@ -127,9 +128,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.4526.22.4.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;fanType = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.4526.22.4.1.4.&quot; . $1);&#x0D;&#x0A;if (fanType == null) return null;</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;fanType = transport.getValue(&quot;.1.3.6.1.4.1.4526.22.4.1.4.&quot; .. $1);&#x0D;&#x0A;if (fanType == null) return null;</instanceFilter>
 				</dci>
-				<dci id="1840">
+				<dci id="37">
 					<guid>ffca762d-3370-44be-a453-cde8e18d2a85</guid>
 					<name>.1.3.6.1.4.1.4526.22.4.1.2.{instance}</name>
 					<description>Netgear ReadyNAS - Fan - {instance-name} ({instance}) - Speed</description>
@@ -155,9 +156,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.4526.22.4.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;fanType = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.4526.22.4.1.4.&quot; . $1);&#x0D;&#x0A;if (fanType == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, fanType);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;fanType = transport.getValue(&quot;.1.3.6.1.4.1.4526.22.4.1.4.&quot; .. $1);&#x0D;&#x0A;if (fanType == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, fanType];</instanceFilter>
 				</dci>
-				<dci id="1841">
+				<dci id="38">
 					<guid>4272078c-ffbd-4132-8c34-ee7135f13286</guid>
 					<name>.1.3.6.1.4.1.4526.22.3.1.10.{instance}</name>
 					<description>Netgear ReadyNAS - Storage - Disk - Physical - {instance-name} - Temperature</description>
@@ -183,9 +184,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.4526.22.3.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;diskName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.4526.22.3.1.2.&quot; . $1);&#x0D;&#x0A;if (diskName == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, diskName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;diskName = transport.getValue(&quot;.1.3.6.1.4.1.4526.22.3.1.2.&quot; .. $1);&#x0D;&#x0A;if (diskName == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, diskName];</instanceFilter>
 				</dci>
-				<dci id="1842">
+				<dci id="39">
 					<guid>da6101db-3924-47a2-81f9-6a0645050ad9</guid>
 					<name>.1.3.6.1.4.1.4526.22.3.1.9.{instance}</name>
 					<description>Netgear ReadyNAS - Storage - Disk - Physical - {instance-name} - Status</description>
@@ -211,9 +212,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.4526.22.3.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;diskName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.4526.22.3.1.2.&quot; . $1);&#x0D;&#x0A;if (diskName == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, diskName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;diskName = transport.getValue(&quot;.1.3.6.1.4.1.4526.22.3.1.2.&quot; .. $1);&#x0D;&#x0A;if (diskName == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, diskName];</instanceFilter>
 				</dci>
-				<dci id="1843">
+				<dci id="40">
 					<guid>19f6927f-306a-4bb0-a63c-5b466c71c271</guid>
 					<name>.1.3.6.1.4.1.4526.22.3.1.6.{instance}</name>
 					<description>Netgear ReadyNAS - Storage - Disk - Physical - {instance-name} - SMART Error Count</description>
@@ -239,9 +240,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.4526.22.3.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;diskName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.4526.22.3.1.2.&quot; . $1);&#x0D;&#x0A;if (diskName == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, diskName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;diskName = transport.getValue(&quot;.1.3.6.1.4.1.4526.22.3.1.2.&quot; .. $1);&#x0D;&#x0A;if (diskName == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, diskName];</instanceFilter>
 				</dci>
-				<dci id="1844">
+				<dci id="41">
 					<guid>97251605-0c65-45f8-b499-185a3deb0889</guid>
 					<name>.1.3.6.1.4.1.4526.22.3.1.4.{instance}</name>
 					<description>Netgear ReadyNAS - Storage - Disk - Physical - {instance-name} - Serial</description>
@@ -267,9 +268,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.4526.22.3.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;diskName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.4526.22.3.1.2.&quot; . $1);&#x0D;&#x0A;if (diskName == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, diskName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;diskName = transport.getValue(&quot;.1.3.6.1.4.1.4526.22.3.1.2.&quot; .. $1);&#x0D;&#x0A;if (diskName == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, diskName];</instanceFilter>
 				</dci>
-				<dci id="1845">
+				<dci id="42">
 					<guid>6f014d6b-aa9c-446f-9648-d04e348f0c70</guid>
 					<name>.1.3.6.1.4.1.4526.22.3.1.5.{instance}</name>
 					<description>Netgear ReadyNAS - Storage - Disk - Physical - {instance-name} - Model</description>
@@ -295,9 +296,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.4526.22.3.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;diskName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.4526.22.3.1.2.&quot; . $1);&#x0D;&#x0A;if (diskName == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, diskName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;diskName = transport.getValue(&quot;.1.3.6.1.4.1.4526.22.3.1.2.&quot; .. $1);&#x0D;&#x0A;if (diskName == null) return null;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, diskName];</instanceFilter>
 				</dci>
-				<dci id="1846">
+				<dci id="43">
 					<guid>cbb9f16a-da7e-4b12-8ff4-86edb7e5bbf8</guid>
 					<name>.1.3.6.1.4.1.4526.22.7.1.4.{instance}</name>
 					<description>Netgear ReadyNAS - Storage - Disk - Logical - {instance-name} - Status</description>
@@ -323,9 +324,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.4526.22.7.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;diskName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.4526.22.7.1.2.&quot; . $1);&#x0D;&#x0A;if (diskName == null) return null;&#x0D;&#x0A;raidLevel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.4526.22.7.1.3.&quot; . $1);&#x0D;&#x0A;if (raidLevel == null) return null;&#x0D;&#x0A;return %(true, $1, diskName.&quot; (RAID &quot;.raidLevel.&quot;)&quot;);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;diskName = transport.getValue(&quot;.1.3.6.1.4.1.4526.22.7.1.2.&quot; .. $1);&#x0D;&#x0A;if (diskName == null) return null;&#x0D;&#x0A;raidLevel = transport.getValue(&quot;.1.3.6.1.4.1.4526.22.7.1.3.&quot; .. $1);&#x0D;&#x0A;if (raidLevel == null) return null;&#x0D;&#x0A;return [true, $1, diskName..&quot; (RAID &quot;..raidLevel..&quot;)&quot;];</instanceFilter>
 				</dci>
-				<dci id="1847">
+				<dci id="44">
 					<guid>37a7385d-6d72-4282-8deb-b9c3217eb4b8</guid>
 					<name>.1.3.6.1.4.1.4526.22.7.1.5.{instance}</name>
 					<description>Netgear ReadyNAS - Storage - Disk - Logical - {instance-name} - Size</description>
@@ -352,9 +353,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.4526.22.7.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;diskName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.4526.22.7.1.2.&quot; . $1);&#x0D;&#x0A;if (diskName == null) return null;&#x0D;&#x0A;raidLevel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.4526.22.7.1.3.&quot; . $1);&#x0D;&#x0A;if (raidLevel == null) return null;&#x0D;&#x0A;return %(true, $1, diskName.&quot; (RAID &quot;.raidLevel.&quot;)&quot;);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;diskName = transport.getValue(&quot;.1.3.6.1.4.1.4526.22.7.1.2.&quot; .. $1);&#x0D;&#x0A;if (diskName == null) return null;&#x0D;&#x0A;raidLevel = transport.getValue(&quot;.1.3.6.1.4.1.4526.22.7.1.3.&quot; .. $1);&#x0D;&#x0A;if (raidLevel == null) return null;&#x0D;&#x0A;return [true, $1, diskName..&quot; (RAID &quot;..raidLevel..&quot;)&quot;];</instanceFilter>
 				</dci>
-				<dci id="1848">
+				<dci id="45">
 					<guid>d86e500f-e19a-4833-a1d7-714de879431d</guid>
 					<name>.1.3.6.1.4.1.4526.22.7.1.6.{instance}</name>
 					<description>Netgear ReadyNAS - Storage - Disk - Logical - {instance-name} - Free Space</description>
@@ -381,13 +382,13 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.4526.22.7.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;diskName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.4526.22.7.1.2.&quot; . $1);&#x0D;&#x0A;if (diskName == null) return null;&#x0D;&#x0A;raidLevel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.4526.22.7.1.3.&quot; . $1);&#x0D;&#x0A;if (raidLevel == null) return null;&#x0D;&#x0A;return %(true, $1, diskName.&quot; (RAID &quot;.raidLevel.&quot;)&quot;);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;diskName = transport.getValue(&quot;.1.3.6.1.4.1.4526.22.7.1.2.&quot; .. $1);&#x0D;&#x0A;if (diskName == null) return null;&#x0D;&#x0A;raidLevel = transport.getValue(&quot;.1.3.6.1.4.1.4526.22.7.1.3.&quot; .. $1);&#x0D;&#x0A;if (raidLevel == null) return null;&#x0D;&#x0A;return [true, $1, diskName..&quot; (RAID &quot;..raidLevel..&quot;)&quot;];</instanceFilter>
 				</dci>
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node-&gt;isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ( $node-&gt;snmpOID ~= &quot;1.3.6.1.4.1.4526.100.16.*&quot; ) return true;&#x0D;&#x0A;if ( $node-&gt;sysDescription == &quot;ReadyDATA OS&quot; ) return true;</filter>
-			<filter2 autoBind="0" autoUnbind="0"></filter2>
+			<filter autoBind="true" autoUnbind="false">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node.isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ( $node.snmpOID ~= &quot;1.3.6.1.4.1.4526.100.16.*&quot; ) return true;&#x0D;&#x0A;if ( $node.sysDescription == &quot;ReadyDATA OS&quot; ) return true;</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
 	</templates>
 	<traps>
@@ -404,4 +405,6 @@
 	</actions>
 	<webServiceDefinitions>
 	</webServiceDefinitions>
+	<assetManagementSchema>
+	</assetManagementSchema>
 </configuration>

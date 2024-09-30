@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-	<formatVersion>4</formatVersion>
+	<formatVersion>5</formatVersion>
+	<nxslVersionV5>true</nxslVersionV5>
 	<server>
-		<version>4.2.327</version>
-		<buildTag>4.2-327-g5b8c7b6629</buildTag>
-		<operatingSystem>Linux 5.4.0-125-generic</operatingSystem>
+		<version>5.0.7</version>
+		<buildTag>5.0-1038-gb71146219d</buildTag>
+		<operatingSystem>Linux 6.8.0-45-generic</operatingSystem>
 	</server>
 	<description></description>
 	<events>
 	</events>
 	<templates>
-		<template id="455">
+		<template id="166">
 			<guid>73d7c706-a8d8-4d3c-98ed-429946789341</guid>
 			<name>QNAP NAS</name>
 			<comments></comments>
@@ -19,7 +20,7 @@
 				<element id="2">NAS</element>
 			</path>
 			<dataCollection>
-				<dci id="1692">
+				<dci id="476">
 					<guid>426757cb-5256-44ee-b544-3b20ec35915e</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.1.1.3.2.1.4.{instance}</name>
 					<description>QNAP - PSU {instance} - Status</description>
@@ -42,12 +43,12 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch($1) {&#x0D;&#x0A;&#x09;case &quot;-1&quot;: return &quot;FAILED&quot;;&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;OK&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch($1) {&#x0D;&#x0A;&#x09;case &quot;-1&quot;: return &quot;FAILED&quot;;&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;OK&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.1.1.3.2.1.1</instanceDiscoveryData>
 				</dci>
-				<dci id="1693">
+				<dci id="477">
 					<guid>150b34b9-5a95-4b7b-9970-fe6622f03c57</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.1.1.2.2.1.4.{instance}</name>
 					<description>QNAP - Fan {instance} - Status</description>
@@ -70,12 +71,12 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch($1) {&#x0D;&#x0A;&#x09;case &quot;-1&quot;: return &quot;FAILED&quot;;&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;OK&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch($1) {&#x0D;&#x0A;&#x09;case &quot;-1&quot;: return &quot;FAILED&quot;;&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;OK&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.1.1.2.2.1.1</instanceDiscoveryData>
 				</dci>
-				<dci id="1694">
+				<dci id="478">
 					<guid>44f9482f-fd2d-4e48-8ca9-ff68b129c10b</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.1.1.2.2.1.5.{instance}</name>
 					<description>QNAP - Fan {instance} - Speed</description>
@@ -101,9 +102,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.1.1.2.2.1.1</instanceDiscoveryData>
-					<instanceFilter>if ( $node-&gt;sysDescription ~= &quot;^Linux TS-X31&quot; ) return false;&#x0D;&#x0A;return true;</instanceFilter>
+					<instanceFilter>if ( $node.sysDescription ~= &quot;^Linux TS-X31&quot; ) return false;&#x0D;&#x0A;return true;</instanceFilter>
 				</dci>
-				<dci id="1695">
+				<dci id="479">
 					<guid>93e69251-fa86-4b03-abd5-ab849cc1f0a1</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.1.1.4.3.1.3.{instance}</name>
 					<description>QNAP - Performance - CPU {instance} - Usage</description>
@@ -130,7 +131,7 @@
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.1.1.4.3.1.1</instanceDiscoveryData>
 				</dci>
-				<dci id="1696">
+				<dci id="480">
 					<guid>593107d9-dfbf-425f-be3e-53b1cb2bd8db</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.1.1.4.2.0</name>
 					<description>QNAP - CPU - Temperature</description>
@@ -157,7 +158,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1697">
+				<dci id="481">
 					<guid>dc606208-aabd-4327-b05d-0e92d69cebb1</guid>
 					<name>.1.3.6.1.2.1.47.1.1.1.1.9.1</name>
 					<description>QNAP - Version - Firmware</description>
@@ -184,7 +185,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1698">
+				<dci id="482">
 					<guid>5278ba47-caef-4a36-9573-8c5227fd5c2f</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.1.1.1.2.1.3.{instance}</name>
 					<description>QNAP - Chassis - {instance-name} - Model</description>
@@ -210,9 +211,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.1.1.1.2.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x0D;&#x0A;enclosureName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.1.1.2.1.6.&quot; . $1);&#x0D;&#x0A;if ( enclosureName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, enclosureName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x0D;&#x0A;enclosureName = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.1.1.2.1.6.&quot; .. $1);&#x0D;&#x0A;if ( enclosureName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, enclosureName];</instanceFilter>
 				</dci>
-				<dci id="1699">
+				<dci id="483">
 					<guid>ae9e9810-4af4-4c03-a8a8-d544edf67289</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.1.1.1.2.1.4.{instance}</name>
 					<description>QNAP - Chassis - {instance-name} - Serial</description>
@@ -238,9 +239,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.1.1.1.2.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x0D;&#x0A;enclosureName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.1.1.2.1.6.&quot; . $1);&#x0D;&#x0A;if ( enclosureName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, enclosureName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x0D;&#x0A;enclosureName = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.1.1.2.1.6.&quot; .. $1);&#x0D;&#x0A;if ( enclosureName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, enclosureName];</instanceFilter>
 				</dci>
-				<dci id="1700">
+				<dci id="484">
 					<guid>d61e3a00-dbe7-49d0-bd07-aa1e5db133fd</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.1.1.1.2.1.5.{instance}</name>
 					<description>QNAP - Chassis - {instance-name} - Disk Slots</description>
@@ -266,9 +267,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.1.1.1.2.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x0D;&#x0A;enclosureName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.1.1.2.1.6.&quot; . $1);&#x0D;&#x0A;if ( enclosureName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, enclosureName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x0D;&#x0A;enclosureName = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.1.1.2.1.6.&quot; .. $1);&#x0D;&#x0A;if ( enclosureName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, enclosureName];</instanceFilter>
 				</dci>
-				<dci id="1701">
+				<dci id="485">
 					<guid>1a61fe14-a9a7-4961-b8ea-1caeaeeb7be9</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.1.1.1.2.1.7.{instance}</name>
 					<description>QNAP - Temperature - {instance-name} - Temperature</description>
@@ -294,9 +295,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.1.1.1.2.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x0D;&#x0A;sensorName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.1.1.2.1.6.&quot; . $1);&#x0D;&#x0A;if ( sensorName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, sensorName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x0D;&#x0A;sensorName = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.1.1.2.1.6.&quot; .. $1);&#x0D;&#x0A;if ( sensorName == null ) return null;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, sensorName];</instanceFilter>
 				</dci>
-				<dci id="1702">
+				<dci id="486">
 					<guid>6553121e-6269-4768-ae0f-e3b3e31d69c8</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.1.2.3.2.1.5.{instance}</name>
 					<description>QNAP - Storage - Disk - Logical - {instance-name} - Status</description>
@@ -322,9 +323,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.1.2.3.2.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;// Do not monitor non-SMART disks (generally indicates there is no disk)&#x0D;&#x0A;diskStatus = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.2.3.2.1.5.&quot; . $1);&#x0D;&#x0A;if ( diskStatus == null ) return NULL;&#x0D;&#x0A;if ( diskStatus == &quot;--&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;diskDescription = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.2.3.2.1.8.&quot; . $1);&#x0D;&#x0A;if ( diskDescription == null ) return false;&#x0D;&#x0A;if ( diskDescription ~= &quot;^[0-9]+$&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, diskDescription);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;// Do not monitor non-SMART disks (generally indicates there is no disk)&#x0D;&#x0A;diskStatus = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.2.3.2.1.5.&quot; .. $1);&#x0D;&#x0A;if ( diskStatus == null ) return NULL;&#x0D;&#x0A;if ( diskStatus == &quot;--&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;diskDescription = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.2.3.2.1.8.&quot; .. $1);&#x0D;&#x0A;if ( diskDescription == null ) return false;&#x0D;&#x0A;if ( diskDescription ~= &quot;^[0-9]+$&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, diskDescription];</instanceFilter>
 				</dci>
-				<dci id="1703">
+				<dci id="487">
 					<guid>3af93070-0d07-44c8-b0e4-4899d43beb84</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.1.2.3.2.1.3.{instance}</name>
 					<description>QNAP - Storage - Disk - Logical - {instance-name} - Capacity Total</description>
@@ -350,9 +351,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.1.2.3.2.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;// Do not monitor non-SMART disks (generally indicates there is no disk)&#x0D;&#x0A;diskStatus = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.2.3.2.1.5.&quot; . $1);&#x0D;&#x0A;if ( diskStatus == null ) return NULL;&#x0D;&#x0A;if ( diskStatus == &quot;--&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;diskDescription = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.2.3.2.1.8.&quot; . $1);&#x0D;&#x0A;if ( diskDescription == null ) return false;&#x0D;&#x0A;if ( diskDescription ~= &quot;^[0-9]+$&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, diskDescription);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;// Do not monitor non-SMART disks (generally indicates there is no disk)&#x0D;&#x0A;diskStatus = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.2.3.2.1.5.&quot; .. $1);&#x0D;&#x0A;if ( diskStatus == null ) return NULL;&#x0D;&#x0A;if ( diskStatus == &quot;--&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;diskDescription = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.2.3.2.1.8.&quot; .. $1);&#x0D;&#x0A;if ( diskDescription == null ) return false;&#x0D;&#x0A;if ( diskDescription ~= &quot;^[0-9]+$&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, diskDescription];</instanceFilter>
 				</dci>
-				<dci id="1704">
+				<dci id="488">
 					<guid>a9c78058-4ba7-4712-8e2d-795672d8b4c8</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.1.2.3.2.1.4.{instance}</name>
 					<description>QNAP - Storage - Disk - Logical - {instance-name} - Capacity Free</description>
@@ -378,9 +379,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.1.2.3.2.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;// Do not monitor non-SMART disks (generally indicates there is no disk)&#x0D;&#x0A;diskStatus = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.2.3.2.1.5.&quot; . $1);&#x0D;&#x0A;if ( diskStatus == null ) return NULL;&#x0D;&#x0A;if ( diskStatus == &quot;--&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;diskDescription = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.2.3.2.1.8.&quot; . $1);&#x0D;&#x0A;if ( diskDescription == null ) return false;&#x0D;&#x0A;if ( diskDescription ~= &quot;^[0-9]+$&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, diskDescription);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;// Do not monitor non-SMART disks (generally indicates there is no disk)&#x0D;&#x0A;diskStatus = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.2.3.2.1.5.&quot; .. $1);&#x0D;&#x0A;if ( diskStatus == null ) return NULL;&#x0D;&#x0A;if ( diskStatus == &quot;--&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;diskDescription = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.2.3.2.1.8.&quot; .. $1);&#x0D;&#x0A;if ( diskDescription == null ) return false;&#x0D;&#x0A;if ( diskDescription ~= &quot;^[0-9]+$&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, diskDescription];</instanceFilter>
 				</dci>
-				<dci id="1705">
+				<dci id="489">
 					<guid>af70a8a8-54cb-4575-b3a5-e7cc802ca848</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.1.1.5.2.1.6.{instance}</name>
 					<description>QNAP - Storage - Disk - Physical - {instance} - Temperature</description>
@@ -407,7 +408,7 @@
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.1.1.5.2.1.1</instanceDiscoveryData>
 				</dci>
-				<dci id="1706">
+				<dci id="490">
 					<guid>ea810126-5c58-498b-a9eb-ff0c744ef149</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.1.1.5.2.1.5.{instance}</name>
 					<description>QNAP - Storage - Disk - Physical - {instance} - Status</description>
@@ -430,12 +431,12 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch($1) {&#x0D;&#x0A;&#x09;case &quot;-1&quot;: return &quot;ERROR&quot;;&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Good&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Abnormal&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch($1) {&#x0D;&#x0A;&#x09;case &quot;-1&quot;: return &quot;ERROR&quot;;&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Good&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Abnormal&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.1.1.5.2.1.1</instanceDiscoveryData>
 				</dci>
-				<dci id="1707">
+				<dci id="491">
 					<guid>f8bbfab4-f6a8-4e16-aea1-6de87c756af1</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.1.1.5.2.1.8.{instance}</name>
 					<description>QNAP - Storage - Disk - Physical - {instance} - Model</description>
@@ -462,7 +463,7 @@
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.1.1.5.2.1.1</instanceDiscoveryData>
 				</dci>
-				<dci id="1708">
+				<dci id="492">
 					<guid>4119ae1c-26c7-4026-8596-11fc5b80694b</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.2.1.11.2.1.5.{instance}</name>
 					<description>QNAP - Storage - iSCSI - Target - {instance-name} - Status</description>
@@ -485,13 +486,13 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch($1) {&#x0D;&#x0A;&#x09;case &quot;-1&quot;: return &quot;Offline&quot;;&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Ready&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Connected&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch($1) {&#x0D;&#x0A;&#x09;case &quot;-1&quot;: return &quot;Offline&quot;;&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Ready&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Connected&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.2.1.11.2.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x0D;&#x0A;iscsiTarget = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.4.1.1.2.1.11.2.1.3.&quot; . $1);&#x0D;&#x0A;if ( iscsiTarget == null ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, iscsiTarget);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x0D;&#x0A;iscsiTarget = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.4.1.1.2.1.11.2.1.3.&quot; .. $1);&#x0D;&#x0A;if ( iscsiTarget == null ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, iscsiTarget];</instanceFilter>
 				</dci>
-				<dci id="1709">
+				<dci id="493">
 					<guid>980e7e6f-d3b7-43cd-84cb-e72f203621e4</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.2.1.11.2.1.4.{instance}</name>
 					<description>QNAP - Storage - iSCSI - Target - {instance-name} - IQN</description>
@@ -517,9 +518,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.2.1.11.2.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x0D;&#x0A;iscsiTarget = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.4.1.1.2.1.11.2.1.3.&quot; . $1);&#x0D;&#x0A;if ( iscsiTarget == null ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, iscsiTarget);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x0D;&#x0A;iscsiTarget = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.4.1.1.2.1.11.2.1.3.&quot; .. $1);&#x0D;&#x0A;if ( iscsiTarget == null ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, iscsiTarget];</instanceFilter>
 				</dci>
-				<dci id="1710">
+				<dci id="494">
 					<guid>65ac6d4b-3887-4fd5-9936-44eacce143cd</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.2.1.11.2.1.5.{instance}</name>
 					<description>QNAP - Storage - iSCSI - LUN - {instance-name} - Status</description>
@@ -545,9 +546,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.2.1.10.2.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x0D;&#x0A;lunName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.4.1.1.2.1.10.2.1.6.&quot; . $1);&#x0D;&#x0A;if ( lunName == null ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, lunName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x0D;&#x0A;lunName = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.4.1.1.2.1.10.2.1.6.&quot; .. $1);&#x0D;&#x0A;if ( lunName == null ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, lunName];</instanceFilter>
 				</dci>
-				<dci id="1711">
+				<dci id="495">
 					<guid>651e8ac3-0a58-47c0-a9d9-4c16f0fbf410</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.2.1.10.2.1.8.{instance}</name>
 					<description>QNAP - Storage - iSCSI - LUN - {instance-name} - Mapped</description>
@@ -570,13 +571,13 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch($1) {&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Unmapped&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Mapped&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch($1) {&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Unmapped&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Mapped&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.2.1.10.2.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x0D;&#x0A;lunName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.4.1.1.2.1.10.2.1.6.&quot; . $1);&#x0D;&#x0A;if ( lunName == null ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, lunName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x0D;&#x0A;lunName = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.4.1.1.2.1.10.2.1.6.&quot; .. $1);&#x0D;&#x0A;if ( lunName == null ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, lunName];</instanceFilter>
 				</dci>
-				<dci id="1712">
+				<dci id="496">
 					<guid>5639f72a-bb0d-46be-9a9f-2db1985f68e0</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.2.1.10.2.1.4.{instance}</name>
 					<description>QNAP - Storage - iSCSI - LUN - {instance-name} - Capacity Used</description>
@@ -602,9 +603,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.2.1.10.2.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x0D;&#x0A;lunName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.4.1.1.2.1.10.2.1.6.&quot; . $1);&#x0D;&#x0A;if ( lunName == null ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, lunName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x0D;&#x0A;lunName = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.4.1.1.2.1.10.2.1.6.&quot; .. $1);&#x0D;&#x0A;if ( lunName == null ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, lunName];</instanceFilter>
 				</dci>
-				<dci id="1713">
+				<dci id="497">
 					<guid>bf289f6f-625b-4d39-a6c9-31cd2dcc05bb</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.2.1.10.2.1.3.{instance}</name>
 					<description>QNAP - Storage - iSCSI - LUN - {instance-name} - Capacity</description>
@@ -630,9 +631,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.2.1.10.2.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x0D;&#x0A;lunName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.4.1.1.2.1.10.2.1.6.&quot; . $1);&#x0D;&#x0A;if ( lunName == null ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, lunName);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x0D;&#x0A;lunName = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.4.1.1.2.1.10.2.1.6.&quot; .. $1);&#x0D;&#x0A;if ( lunName == null ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, lunName];</instanceFilter>
 				</dci>
-				<dci id="1714">
+				<dci id="498">
 					<guid>a9dac609-56cd-445c-a005-7faf6135a676</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.1.2.2.2.1.5.{instance}</name>
 					<description>QNAP - Storage - Disk - Pool {instance} - Status</description>
@@ -655,12 +656,12 @@
 					<isDisabled>false</isDisabled>
 					<unitName></unitName>
 					<multiplier>0</multiplier>
-					<transformation>switch($1) {&#x0D;&#x0A;&#x09;case &quot;-3&quot;: return &quot;ERROR&quot;;&#x0D;&#x0A;&#x09;case &quot;-2&quot;: return &quot;Not Ready&quot;;&#x0D;&#x0A;&#x09;case &quot;-1&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Ready&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;.$1.&quot;)&quot;;&#x0D;&#x0A;}</transformation>
+					<transformation>switch($1) {&#x0D;&#x0A;&#x09;case &quot;-3&quot;: return &quot;ERROR&quot;;&#x0D;&#x0A;&#x09;case &quot;-2&quot;: return &quot;Not Ready&quot;;&#x0D;&#x0A;&#x09;case &quot;-1&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Ready&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA (&quot;..$1..&quot;)&quot;;&#x0D;&#x0A;}</transformation>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.1.2.2.2.1.1</instanceDiscoveryData>
 				</dci>
-				<dci id="1715">
+				<dci id="499">
 					<guid>a6950753-78f5-48c9-8d7d-46a6f73243c3</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.1.2.2.2.1.3.{instance}</name>
 					<description>QNAP - Storage - Disk - Pool {instance} - Capacity Total</description>
@@ -687,7 +688,7 @@
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.1.2.2.2.1.1</instanceDiscoveryData>
 				</dci>
-				<dci id="1716">
+				<dci id="500">
 					<guid>f0460dbf-a3e7-4a50-9bba-cdd7494ab8dd</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.1.2.2.2.1.4.{instance}</name>
 					<description>QNAP - Storage - Disk - Pool {instance} - Capacity Free</description>
@@ -714,7 +715,7 @@
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.1.2.2.2.1.1</instanceDiscoveryData>
 				</dci>
-				<dci id="1717">
+				<dci id="501">
 					<guid>a9e2f1a9-8c5b-4135-9104-60e7c677bee2</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.1.2.1.2.1.5.{instance}</name>
 					<description>QNAP - Storage - Disk - RAID {instance} - Status</description>
@@ -741,7 +742,7 @@
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.1.2.1.2.1.1</instanceDiscoveryData>
 				</dci>
-				<dci id="1718">
+				<dci id="502">
 					<guid>8a598bde-51f8-4bbe-840b-f017de820497</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.1.2.1.2.1.7.{instance}</name>
 					<description>QNAP - Storage - Disk - RAID {instance} - RAID Level</description>
@@ -768,7 +769,7 @@
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.1.2.1.2.1.1</instanceDiscoveryData>
 				</dci>
-				<dci id="1719">
+				<dci id="503">
 					<guid>dd3e2572-c19c-4221-b350-548d851a1a4b</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.1.2.1.2.1.3.{instance}</name>
 					<description>QNAP - Storage - Disk - RAID {instance} - Capacity Total</description>
@@ -795,7 +796,7 @@
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.4.1.1.1.2.1.2.1.1</instanceDiscoveryData>
 				</dci>
-				<dci id="1720">
+				<dci id="504">
 					<guid>bb2d152a-e31c-45a3-bf1c-63a1f42f0e65</guid>
 					<name>.1.3.6.1.4.1.24681.1.4.1.1.1.2.1.2.1.4.{instance}</name>
 					<description>QNAP - Storage - Disk - RAID {instance} - Capacity Free</description>
@@ -825,10 +826,10 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node-&gt;isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ($node-&gt;snmpOID ~= &quot;1.3.6.1.4.1.24681.*&quot;) {&#x0D;&#x0A;&#x09;transport = CreateSNMPTransport($node);&#x0D;&#x0A;&#x09;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x09;cpuTemperature = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.1.4.2.0&quot;);&#x0D;&#x0A;&#x09;if ( cpuTemperature == null ) return NULL;&#x0D;&#x0A;&#x09;else return true;&#x0D;&#x0A;}</filter>
-			<filter2 autoBind="0" autoUnbind="0"></filter2>
+			<filter autoBind="true" autoUnbind="false">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node.isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ($node.snmpOID ~= &quot;1.3.6.1.4.1.24681.*&quot;) {&#x0D;&#x0A;&#x09;transport = CreateSNMPTransport($node);&#x0D;&#x0A;&#x09;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x09;cpuTemperature = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.1.4.2.0&quot;);&#x0D;&#x0A;&#x09;if ( cpuTemperature == null ) return NULL;&#x0D;&#x0A;&#x09;else return true;&#x0D;&#x0A;}</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
-		<template id="456">
+		<template id="167">
 			<guid>8b181c81-d269-491d-9740-c0d0e1e032d2</guid>
 			<name>QNAP NAS (Old)</name>
 			<comments></comments>
@@ -837,7 +838,7 @@
 				<element id="2">NAS</element>
 			</path>
 			<dataCollection>
-				<dci id="1721">
+				<dci id="505">
 					<guid>75ea9759-056e-4b34-80ba-6e865db3c2fd</guid>
 					<name>.1.3.6.1.4.1.24681.1.3.12.0</name>
 					<description>QNAP (old) - Chassis - Model</description>
@@ -864,7 +865,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1722">
+				<dci id="506">
 					<guid>8ebedf54-2eaf-4ed4-9171-1d964fb01065</guid>
 					<name>.1.3.6.1.2.1.47.1.1.1.1.11.1</name>
 					<description>QNAP (old) - Chassis - Serial</description>
@@ -891,7 +892,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1723">
+				<dci id="507">
 					<guid>6e4025bd-6ede-442a-8be8-939b656911f3</guid>
 					<name>.1.3.6.1.2.1.47.1.1.1.1.9.1</name>
 					<description>QNAP (old) - Version - Firmware</description>
@@ -918,7 +919,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1724">
+				<dci id="508">
 					<guid>820be09e-0462-40a8-bf30-723d3ab7ec8e</guid>
 					<name>.1.3.6.1.4.1.24681.1.3.15.1.3.{instance}</name>
 					<description>QNAP (old) - Fan - {instance-name} - Speed</description>
@@ -944,9 +945,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.3.15.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return null;&#x0D;&#x0A;probeDescription = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.3.15.1.2.&quot; . $1);&#x0D;&#x0A;if ( probeDescription == null ) return null;&#x0D;&#x0A;if ( probeDescription ~= &quot;Temp&quot; ) return false;&#x0D;&#x0A;return %(true, $1, probeDescription);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return null;&#x0D;&#x0A;probeDescription = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.3.15.1.2.&quot; .. $1);&#x0D;&#x0A;if ( probeDescription == null ) return null;&#x0D;&#x0A;if ( probeDescription ~= &quot;Temp&quot; ) return false;&#x0D;&#x0A;return [true, $1, probeDescription];</instanceFilter>
 				</dci>
-				<dci id="1725">
+				<dci id="509">
 					<guid>a7956a53-cb85-4167-a137-6f5341d95fd9</guid>
 					<name>.1.3.6.1.4.1.24681.1.3.1.0</name>
 					<description>QNAP (old) - Performance - CPU Usage</description>
@@ -973,7 +974,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1726">
+				<dci id="510">
 					<guid>8444fe6e-4f9d-46b9-896f-3d938a2dfe19</guid>
 					<name>.1.3.6.1.4.1.24681.1.3.3.0</name>
 					<description>QNAP (old) - Performance - Memory - Free</description>
@@ -1000,7 +1001,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1727">
+				<dci id="511">
 					<guid>715f0372-ad69-4bee-9750-4e020dac4a3f</guid>
 					<name>.1.3.6.1.4.1.24681.1.3.2.0</name>
 					<description>QNAP (old) - Performance - Memory - Total</description>
@@ -1027,7 +1028,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1728">
+				<dci id="512">
 					<guid>b2888ff1-3ee1-4f08-b854-aa5d3df6e84f</guid>
 					<name>.1.3.6.1.4.1.24681.1.3.6.0</name>
 					<description>QNAP (old) - Sensors - System Temperature</description>
@@ -1054,7 +1055,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1729">
+				<dci id="513">
 					<guid>d5ba314e-33e3-472a-90b2-55cc6022d34b</guid>
 					<name>.1.3.6.1.4.1.24681.1.2.17.1.6.{instance}</name>
 					<description>QNAP (old) - Storage - Disk - Logical - {instance-name} - Status</description>
@@ -1080,9 +1081,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.2.17.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;diskStatus = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.2.17.1.6.&quot; . $1);&#x0D;&#x0A;if ( diskStatus == null ) return NULL;&#x0D;&#x0A;if ( diskStatus == false || diskStatus == &quot;&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;diskDescription = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.2.17.1.2.&quot; . $1);&#x0D;&#x0A;if ( diskDescription == null ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, diskDescription);</instanceFilter>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;diskStatus = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.2.17.1.6.&quot; .. $1);&#x0D;&#x0A;if ( diskStatus == null ) return NULL;&#x0D;&#x0A;if ( diskStatus == false || diskStatus == &quot;&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;diskDescription = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.2.17.1.2.&quot; .. $1);&#x0D;&#x0A;if ( diskDescription == null ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, diskDescription);</instanceFilter>
 				</dci>
-				<dci id="1730">
+				<dci id="514">
 					<guid>d9ccbd5f-26aa-4bb3-b094-e33d7fef4183</guid>
 					<name>.1.3.6.1.4.1.24681.1.2.17.1.4.{instance}</name>
 					<description>QNAP (old) - Storage - Disk - Logical - {instance-name} - Capacity Total</description>
@@ -1108,9 +1109,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.2.17.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;diskStatus = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.2.17.1.6.&quot; . $1);&#x0D;&#x0A;if ( diskStatus == null ) return NULL;&#x0D;&#x0A;if ( diskStatus == false || diskStatus == &quot;&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;diskDescription = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.2.17.1.2.&quot; . $1);&#x0D;&#x0A;if ( diskDescription == null ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, diskDescription);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;diskStatus = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.2.17.1.6.&quot; .. $1);&#x0D;&#x0A;if ( diskStatus == null ) return NULL;&#x0D;&#x0A;if ( diskStatus == false || diskStatus == &quot;&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;diskDescription = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.2.17.1.2.&quot; .. $1);&#x0D;&#x0A;if ( diskDescription == null ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, diskDescription];</instanceFilter>
 				</dci>
-				<dci id="1731">
+				<dci id="515">
 					<guid>01d5debe-3632-4280-ae25-4d6f306f97e1</guid>
 					<name>.1.3.6.1.4.1.24681.1.2.17.1.5.{instance}</name>
 					<description>QNAP (old) - Storage - Disk - Logical - {instance-name} - Capacity Free</description>
@@ -1136,9 +1137,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.2.17.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;diskStatus = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.2.17.1.6.&quot; . $1);&#x0D;&#x0A;if ( diskStatus == null ) return NULL;&#x0D;&#x0A;if ( diskStatus == false || diskStatus == &quot;&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;diskDescription = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.2.17.1.2.&quot; . $1);&#x0D;&#x0A;if ( diskDescription == null ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, diskDescription);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;diskStatus = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.2.17.1.6.&quot; .. $1);&#x0D;&#x0A;if ( diskStatus == null ) return NULL;&#x0D;&#x0A;if ( diskStatus == false || diskStatus == &quot;&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;diskDescription = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.2.17.1.2.&quot; .. $1);&#x0D;&#x0A;if ( diskDescription == null ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, diskDescription];</instanceFilter>
 				</dci>
-				<dci id="1732">
+				<dci id="516">
 					<guid>33f5c164-603a-4bcf-8340-eecf8ebe7ebf</guid>
 					<name>.1.3.6.1.4.1.24681.1.3.11.1.3.{instance}</name>
 					<description>QNAP (old) - Storage - Disk - Physical - {instance-name} - Temperature</description>
@@ -1164,9 +1165,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.3.11.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;// Do not monitor non-SMART disks (generally indicates there is no disk)&#x0D;&#x0A;diskStatus = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.3.11.1.7.&quot; . $1);&#x0D;&#x0A;if ( diskStatus == null ) return NULL;&#x0D;&#x0A;if ( diskStatus == &quot;--&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;diskDescription = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.3.11.1.2.&quot; . $1);&#x0D;&#x0A;if ( diskDescription == null ) return false;&#x0D;&#x0A;if ( diskDescription ~= &quot;^[0-9]+$&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, diskDescription);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;// Do not monitor non-SMART disks (generally indicates there is no disk)&#x0D;&#x0A;diskStatus = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.3.11.1.7.&quot; .. $1);&#x0D;&#x0A;if ( diskStatus == null ) return NULL;&#x0D;&#x0A;if ( diskStatus == &quot;--&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;diskDescription = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.3.11.1.2.&quot; .. $1);&#x0D;&#x0A;if ( diskDescription == null ) return false;&#x0D;&#x0A;if ( diskDescription ~= &quot;^[0-9]+$&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, diskDescription];</instanceFilter>
 				</dci>
-				<dci id="1733">
+				<dci id="517">
 					<guid>7bdf7bfc-4e1c-4bf5-bde5-df18faf787c7</guid>
 					<name>.1.3.6.1.4.1.24681.1.2.11.1.7.{instance}</name>
 					<description>QNAP (old) - Storage - Disk - Physical - {instance-name} - Status</description>
@@ -1192,9 +1193,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.3.11.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;// Do not monitor non-SMART disks (generally indicates there is no disk)&#x0D;&#x0A;diskStatus = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.3.11.1.7.&quot; . $1);&#x0D;&#x0A;if ( diskStatus == null ) return NULL;&#x0D;&#x0A;if ( diskStatus == &quot;--&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;diskDescription = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.3.11.1.2.&quot; . $1);&#x0D;&#x0A;if ( diskDescription == null ) return false;&#x0D;&#x0A;if ( diskDescription ~= &quot;^[0-9]+$&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, diskDescription);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;// Do not monitor non-SMART disks (generally indicates there is no disk)&#x0D;&#x0A;diskStatus = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.3.11.1.7.&quot; .. $1);&#x0D;&#x0A;if ( diskStatus == null ) return NULL;&#x0D;&#x0A;if ( diskStatus == &quot;--&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;diskDescription = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.3.11.1.2.&quot; .. $1);&#x0D;&#x0A;if ( diskDescription == null ) return false;&#x0D;&#x0A;if ( diskDescription ~= &quot;^[0-9]+$&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, diskDescription];</instanceFilter>
 				</dci>
-				<dci id="1734">
+				<dci id="518">
 					<guid>21d490d3-b4b1-4e1b-90cd-28b5c10a7833</guid>
 					<name>.1.3.6.1.4.1.24681.1.2.11.1.5.{instance}</name>
 					<description>QNAP (old) - Storage - Disk - Physical - {instance-name} - Model</description>
@@ -1220,13 +1221,13 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>.1.3.6.1.4.1.24681.1.3.11.1.1</instanceDiscoveryData>
-					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;// Do not monitor non-SMART disks (generally indicates there is no disk)&#x0D;&#x0A;diskStatus = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.3.11.1.7.&quot; . $1);&#x0D;&#x0A;if ( diskStatus == null ) return NULL;&#x0D;&#x0A;if ( diskStatus == &quot;--&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;diskDescription = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.3.11.1.2.&quot; . $1);&#x0D;&#x0A;if ( diskDescription == null ) return false;&#x0D;&#x0A;if ( diskDescription ~= &quot;^[0-9]+$&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, diskDescription);</instanceFilter>
+					<instanceFilter>transport = $node.createSNMPTransport();&#x0D;&#x0A;if ( transport == null ) return NULL;&#x0D;&#x0A;// Do not monitor non-SMART disks (generally indicates there is no disk)&#x0D;&#x0A;diskStatus = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.3.11.1.7.&quot; .. $1);&#x0D;&#x0A;if ( diskStatus == null ) return NULL;&#x0D;&#x0A;if ( diskStatus == &quot;--&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;diskDescription = transport.getValue(&quot;.1.3.6.1.4.1.24681.1.3.11.1.2.&quot; .. $1);&#x0D;&#x0A;if ( diskDescription == null ) return false;&#x0D;&#x0A;if ( diskDescription ~= &quot;^[0-9]+$&quot; ) return false;&#x0D;&#x0A;&#x0D;&#x0A;return [true, $1, diskDescription];</instanceFilter>
 				</dci>
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node-&gt;isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ($node-&gt;snmpOID ~= &quot;1.3.6.1.4.1.24681.*&quot;) {&#x0D;&#x0A;&#x09;transport = CreateSNMPTransport($node);&#x0D;&#x0A;&#x09;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x09;cpuTemperature = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.1.4.2.0&quot;);&#x0D;&#x0A;&#x09;if ( cpuTemperature == null ) return true;&#x0D;&#x0A;&#x09;else return false;&#x0D;&#x0A;}</filter>
-			<filter2 autoBind="0" autoUnbind="0"></filter2>
+			<filter autoBind="true" autoUnbind="false">if (classof($object) != &quot;Node&quot;)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if (!$node.isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ($node.snmpOID ~= &quot;1.3.6.1.4.1.24681.*&quot;) {&#x0D;&#x0A;&#x09;transport = CreateSNMPTransport($node);&#x0D;&#x0A;&#x09;if ( transport == null ) return NULL;&#x0D;&#x0A;&#x09;cpuTemperature = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.24681.1.4.1.1.1.1.4.2.0&quot;);&#x0D;&#x0A;&#x09;if ( cpuTemperature == null ) return true;&#x0D;&#x0A;&#x09;else return false;&#x0D;&#x0A;}</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
 	</templates>
 	<traps>
@@ -1243,4 +1244,6 @@
 	</actions>
 	<webServiceDefinitions>
 	</webServiceDefinitions>
+	<assetManagementSchema>
+	</assetManagementSchema>
 </configuration>
