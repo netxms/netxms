@@ -16,7 +16,7 @@ jobs:
       - name: Update apt cache
         run: sudo apt-get update
       - name: Install dependencies
-        run: sudo apt-get install -y libpq-dev libcurl4-openssl-dev libssh-dev libmosquitto-dev libjq-dev
+        run: sudo apt-get install -y libpq-dev libcurl4-openssl-dev libssh-dev libmosquitto-dev libjq-dev cppcheck
       - name: Prepare release build
         run: ./build/prepare_release_build.sh
       - name: autoconf
@@ -32,3 +32,5 @@ jobs:
           /tmp/build/bin/netxmsd -v || true
           /tmp/build/bin/nxagentd -v || true
           /tmp/build/bin/netxms-test-suite
+      - name: Run cppcheck
+        run: cppcheck src/agent
