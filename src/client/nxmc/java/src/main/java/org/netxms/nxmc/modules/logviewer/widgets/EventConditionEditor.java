@@ -72,7 +72,7 @@ public class EventConditionEditor extends ConditionEditor
       if ((initialFilter != null) && (initialFilter.getType() == ColumnFilterType.EQUALS))
       {
          setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
-         eventSelector.setEventCode(initialFilter.getNumericValue());
+         eventSelector.setEventCode((int)initialFilter.getNumericValue());
       }
 	}
 

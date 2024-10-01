@@ -33,9 +33,9 @@ public class EventDatabaseSyncTest extends AbstractSessionTest
 	{
 		final NXCSession session = connectAndLogin();
 		
-		assertNull(session.findEventTemplateByCode(1L));
+      assertNull(session.findEventTemplateByCode(1));
 		session.syncEventTemplates();
-		assertNotNull(session.findEventTemplateByCode(1L));
+      assertNotNull(session.findEventTemplateByCode(1));
 		
 		session.disconnect();
 	}

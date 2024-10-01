@@ -24,6 +24,35 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.15 to 51.16
+ */
+static bool H_UpgradeFromV15()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_ALL_THRESHOLDS_REARMED, _T("SYS_ALL_THRESHOLDS_REARMED"),
+         EVENT_SEVERITY_NORMAL, EF_LOG, _T("12ecc8fa-e39e-497b-ad9f-a7786fcbcf46"),
+         _T("All thresholds rearmed for data collection item %<dciDescription> (Metric: %<dciName>)"),
+         _T("Generated when all thresholds are rearmed for specific data collection item.\r\n")
+         _T("Parameters are accessible via %<...> and can have \"m\" or \"multipliers\" and \"u\" or \"units\" format modifiers for value formatting (for example %<{m,u}currentValue>).\r\n\r\n")
+         _T("Parameters:\r\n")
+         _T("   1) dciName - Metric name\r\n")
+         _T("   2) dciDescription - Data collection item description\r\n")
+         _T("   3) dciId - Data collection item ID\r\n")
+         _T("   4) instance - Instance\r\n")
+         _T("   5) dciValue - Last collected DCI value")
+      ));
+
+   static const TCHAR *batch =
+      _T("ALTER TABLE items ADD all_rearmed_event integer\n")
+      _T("UPDATE items SET all_rearmed_event=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("items"), _T("all_rearmed_event")));
+
+   CHK_EXEC(SetMinorSchemaVersion(16));
+   return true;
+}
+
+/**
  * Upgrade from 51.14 to 51.15
  */
 static bool H_UpgradeFromV14()
@@ -325,6 +354,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 15, 51, 16, H_UpgradeFromV15 },
    { 14, 51, 15, H_UpgradeFromV14 },
    { 13, 51, 14, H_UpgradeFromV13 },
    { 12, 51, 13, H_UpgradeFromV12 },

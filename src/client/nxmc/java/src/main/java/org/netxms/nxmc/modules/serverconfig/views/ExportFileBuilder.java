@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -119,16 +119,16 @@ public class ExportFileBuilder extends ConfigurationView
    private TableViewer assetAttributeViewer;
 	private Action actionExport;
 	private Action actionClear;
-   private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
-	private Map<Long, EventTemplate> events = new HashMap<Long, EventTemplate>();
-   private Map<UUID, EventProcessingPolicyRule> rules = new HashMap<UUID, EventProcessingPolicyRule>();
+   private Map<Long, ServerAction> actions = new HashMap<>();
+   private Map<Integer, EventTemplate> events = new HashMap<>();
+   private Map<UUID, EventProcessingPolicyRule> rules = new HashMap<>();
    private Map<Long, Script> scripts = new HashMap<Long, Script>();
-   private Map<Integer, DciSummaryTableDescriptor> summaryTables = new HashMap<Integer, DciSummaryTableDescriptor>();
+   private Map<Integer, DciSummaryTableDescriptor> summaryTables = new HashMap<>();
 	private Map<Long, Template> templates = new HashMap<Long, Template>();
    private Map<Long, ObjectTool> tools = new HashMap<Long, ObjectTool>();
 	private Map<Long, SnmpTrap> traps = new HashMap<Long, SnmpTrap>();
-   private Map<Integer, WebServiceDefinition> webServices = new HashMap<Integer, WebServiceDefinition>();
-   private Map<String, AssetAttribute> assetAttributes = new HashMap<String, AssetAttribute>();
+   private Map<Integer, WebServiceDefinition> webServices = new HashMap<>();
+   private Map<String, AssetAttribute> assetAttributes = new HashMap<>();
 	private boolean modified = false;
 	private List<SnmpTrap> snmpTrapCache = null;
 	private List<EventProcessingPolicyRule> rulesCache = null;
@@ -1291,12 +1291,12 @@ public class ExportFileBuilder extends ConfigurationView
 				@Override
 				protected void run(IProgressMonitor monitor) throws Exception
 				{
-					final Set<Long> eventCodes = new HashSet<Long>();
-					final Map<Long, Script> scriptList = new HashMap<Long, Script>();
+               final Set<Integer> eventCodes = new HashSet<>();
+               final Map<Long, Script> scriptList = new HashMap<>();
 					for(Long id : idList)
 					{
-						long[] e = session.getRelatedEvents(id);
-						for(long c : e)
+                  int[] e = session.getRelatedEvents(id);
+                  for(int c : e)
 						{
 							if (c >= 100000)
 								eventCodes.add(c);
@@ -1305,19 +1305,15 @@ public class ExportFileBuilder extends ConfigurationView
 						for(Script s : session.getDataCollectionScripts(id))
 						   scriptList.put(s.getId(), s);
 					}
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-                     for(EventTemplate e : session.findMultipleEventTemplates(eventCodes))
-						   {
-						      events.put(e.getCode(), e);
-						   }
-							eventViewer.setInput(events.values().toArray());
-							
-							scripts.putAll(scriptList);
-							scriptViewer.setInput(scripts.values().toArray());
-						}
+               runInUIThread(() -> {
+                  for(EventTemplate e : session.findMultipleEventTemplates(eventCodes))
+                  {
+                     events.put(e.getCode(), e);
+                  }
+                  eventViewer.setInput(events.values().toArray());
+
+                  scripts.putAll(scriptList);
+                  scriptViewer.setInput(scripts.values().toArray());
 					});
 				}
 				
@@ -1338,13 +1334,13 @@ public class ExportFileBuilder extends ConfigurationView
 		SelectSnmpTrapDialog dlg = new SelectSnmpTrapDialog(getWindow().getShell(), snmpTrapCache);
 		if (dlg.open() == Window.OK)
 		{
-			final Set<Long> eventCodes = new HashSet<Long>();
+         final Set<Integer> eventCodes = new HashSet<>();
 			for(SnmpTrap t : dlg.getSelection())
 			{
 				traps.put(t.getId(), t);
 				if (t.getEventCode() >= 100000)
 				{
-					eventCodes.add((long)t.getEventCode());
+               eventCodes.add(t.getEventCode());
 				}
 			}
 			trapViewer.setInput(traps.values().toArray());
@@ -1359,7 +1355,7 @@ public class ExportFileBuilder extends ConfigurationView
 			};
 		}
 	}
-	
+
 	/**
 	 * Add rules to list
 	 */
@@ -1368,11 +1364,11 @@ public class ExportFileBuilder extends ConfigurationView
 		RuleSelectionDialog dlg = new RuleSelectionDialog(getWindow().getShell(), rulesCache);
 		if (dlg.open() == Window.OK)
 		{
-			final Set<Long> eventCodes = new HashSet<Long>();
+         final Set<Integer> eventCodes = new HashSet<>();
 			for(EventProcessingPolicyRule r : dlg.getSelectedRules())
 			{
             rules.put(r.getGuid(), r);
-				for(Long e : r.getEvents())
+            for(Integer e : r.getEvents())
 				{
 					if (e >= 100000)
 					{

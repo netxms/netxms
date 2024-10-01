@@ -100,10 +100,10 @@ public class EppAlarmTest extends AbstractSessionTest
       testRule.setAlarmMessage(alarmMessage + "%N"); // %N to understand which event alarm is generated
       testRule.setAlarmSeverity(Severity.UNKNOWN);
       testRule.setAlarmTimeout(4);
-      List<Long> evnts = new ArrayList<Long>();
-      evnts.add(eventTestTemplate.getCode());
-      evnts.add(testRule.getAlarmTimeoutEvent());
-      testRule.setEvents(evnts);
+      List<Integer> events = new ArrayList<>();
+      events.add(eventTestTemplate.getCode());
+      events.add(testRule.getAlarmTimeoutEvent());
+      testRule.setEvents(events);
       eventTestTemplate.setSeverity(Severity.NORMAL); // Changing it back so that the test can be run multiple times in a row
                                                       // without deleting EPPR
       session.modifyEventObject(eventTestTemplate);

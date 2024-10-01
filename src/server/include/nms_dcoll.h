@@ -329,6 +329,7 @@ protected:
    int32_t m_instanceRetentionTime;      // Retention time if instance is not found
    time_t m_startTime;                 // Time to start data collection
    uint32_t m_relatedObject;
+   uint32_t m_allThresholdsRearmEvent; // Event to be generated when all thresholds are rearmed
 
    void lock() const { m_mutex.lock(); }
    bool tryLock() const { return m_mutex.tryLock(); }
@@ -418,6 +419,7 @@ public:
    bool hasValue();
    bool hasAccess(uint32_t userId);
    uint32_t getRelatedObject() const { return m_relatedObject; }
+   uint32_t getAllThresholdRearmEvent() const { return m_allThresholdsRearmEvent; }
    bool isDisabledByUser() { return (m_stateFlags & DCO_STATE_DISABLED_BY_USER) ? true : false; }
    SharedString getComments() const { return GetAttributeWithLock(m_comments, m_mutex); }
 

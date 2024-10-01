@@ -56,7 +56,7 @@ public class EventProcessingPolicyRule
    private UUID guid;
    private List<Long> sources;
    private List<Long> sourceExclusions;
-   private List<Long> events;
+   private List<Integer> events;
    private String filterScript;
    private List<TimeFrame> timeFrames;
    private int flags;
@@ -64,7 +64,7 @@ public class EventProcessingPolicyRule
    private String alarmMessage;
    private Severity alarmSeverity;
    private int alarmTimeout;
-   private long alarmTimeoutEvent;
+   private int alarmTimeoutEvent;
    private List<Long> alarmCategoryIds;
    private String rcaScriptName;
    private String downtimeTag;
@@ -86,7 +86,7 @@ public class EventProcessingPolicyRule
       guid = UUID.randomUUID();
       sources = new ArrayList<Long>(0);
       sourceExclusions = new ArrayList<Long>(0);
-      events = new ArrayList<Long>(0);
+      events = new ArrayList<Integer>(0);
       filterScript = "";
       timeFrames = new ArrayList<TimeFrame>();
       flags = SEVERITY_ANY;
@@ -119,7 +119,7 @@ public class EventProcessingPolicyRule
       guid = UUID.randomUUID();
       sources = new ArrayList<Long>(src.sources);
       sourceExclusions = new ArrayList<Long>(src.sourceExclusions);
-      events = new ArrayList<Long>(src.events);
+      events = new ArrayList<Integer>(src.events);
       filterScript = src.filterScript;
       timeFrames = new ArrayList<TimeFrame>(src.timeFrames.size());
       for(TimeFrame d : src.timeFrames)
@@ -157,7 +157,7 @@ public class EventProcessingPolicyRule
       guid = msg.getFieldAsUUID(NXCPCodes.VID_GUID);
       sources = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_RULE_SOURCES));
       sourceExclusions = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_RULE_SOURCE_EXCLUSIONS));
-      events = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_RULE_EVENTS));
+      events = Arrays.asList(msg.getFieldAsInt32ArrayEx(NXCPCodes.VID_RULE_EVENTS));
       filterScript = msg.getFieldAsString(NXCPCodes.VID_SCRIPT);
       int frameCount = msg.getFieldAsInt32(NXCPCodes.VID_NUM_TIME_FRAMES);
       timeFrames = new ArrayList<TimeFrame>(frameCount);
@@ -171,7 +171,7 @@ public class EventProcessingPolicyRule
       alarmMessage = msg.getFieldAsString(NXCPCodes.VID_ALARM_MESSAGE);
       alarmSeverity = Severity.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_ALARM_SEVERITY));
       alarmTimeout = msg.getFieldAsInt32(NXCPCodes.VID_ALARM_TIMEOUT);
-      alarmTimeoutEvent = msg.getFieldAsInt64(NXCPCodes.VID_ALARM_TIMEOUT_EVENT);
+      alarmTimeoutEvent = msg.getFieldAsInt32(NXCPCodes.VID_ALARM_TIMEOUT_EVENT);
       alarmCategoryIds = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ALARM_CATEGORY_ID));
       rcaScriptName = msg.getFieldAsString(NXCPCodes.VID_RCA_SCRIPT_NAME);
       downtimeTag = msg.getFieldAsString(NXCPCodes.VID_DOWNTIME_TAG);
@@ -365,7 +365,7 @@ public class EventProcessingPolicyRule
    /**
     * @return the alarmTimeoutEvent
     */
-   public long getAlarmTimeoutEvent()
+   public int getAlarmTimeoutEvent()
    {
       return alarmTimeoutEvent;
    }
@@ -373,7 +373,7 @@ public class EventProcessingPolicyRule
    /**
     * @param alarmTimeoutEvent the alarmTimeoutEvent to set
     */
-   public void setAlarmTimeoutEvent(long alarmTimeoutEvent)
+   public void setAlarmTimeoutEvent(int alarmTimeoutEvent)
    {
       this.alarmTimeoutEvent = alarmTimeoutEvent;
    }
@@ -459,7 +459,7 @@ public class EventProcessingPolicyRule
    /**
     * @return the events
     */
-   public List<Long> getEvents()
+   public List<Integer> getEvents()
    {
       return events;
    }
@@ -499,7 +499,7 @@ public class EventProcessingPolicyRule
    /**
     * @param events the events to set
     */
-   public void setEvents(List<Long> events)
+   public void setEvents(List<Integer> events)
    {
       this.events = events;
    }

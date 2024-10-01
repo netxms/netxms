@@ -84,7 +84,7 @@ public class EventTemplateList extends Composite implements SessionListener
    public static final int COLUMN_MESSAGE = 4;
    public static final int COLUMN_TAGS = 5;
 
-   private HashMap<Long, EventTemplate> eventTemplates;
+   private HashMap<Integer, EventTemplate> eventTemplates;
    private SortableTableViewer viewer;
    private FilterText filterControl;
    private Action actionNew;
@@ -244,15 +244,11 @@ public class EventTemplateList extends Composite implements SessionListener
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             final List<EventTemplate> list = session.getEventTemplates();
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  eventTemplates = new HashMap<Long, EventTemplate>(list.size());
-                  for(final EventTemplate t: list)
-                     eventTemplates.put(t.getCode(), t);
-                  viewer.setInput(eventTemplates.values().toArray());
-               }
+            runInUIThread(() -> {
+               eventTemplates = new HashMap<>(list.size());
+               for(final EventTemplate t : list)
+                  eventTemplates.put(t.getCode(), t);
+               viewer.setInput(eventTemplates.values().toArray());
             });
          }
       }.start();
@@ -274,7 +270,7 @@ public class EventTemplateList extends Composite implements SessionListener
                @Override
                public void run()
                {
-                  EventTemplate old = eventTemplates.get(n.getSubCode());
+                  EventTemplate old = eventTemplates.get((int)n.getSubCode());
                   if (old != null)
                   {
                      old.setAll((EventTemplate)n.getObject());
@@ -282,7 +278,7 @@ public class EventTemplateList extends Composite implements SessionListener
                   }
                   else
                   {
-                     eventTemplates.put(n.getSubCode(), new EventTemplate((EventTemplate)n.getObject()));
+                     eventTemplates.put((int)n.getSubCode(), new EventTemplate((EventTemplate)n.getObject()));
                      viewer.setInput(eventTemplates.values().toArray());
                   }
                }
@@ -293,7 +289,7 @@ public class EventTemplateList extends Composite implements SessionListener
                @Override
                public void run()
                {
-                  eventTemplates.remove(n.getSubCode());
+                  eventTemplates.remove((int)n.getSubCode());
                   viewer.setInput(eventTemplates.values().toArray());
                }
             });

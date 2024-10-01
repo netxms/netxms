@@ -72,7 +72,7 @@ public class TestHelperForEpp
          testRule = new EventProcessingPolicyRule();
          testRule.setRuleNumber(policy.getRules().size());
          testRule.setComments(commentForSearching);
-         List<Long> evnts = new ArrayList<Long>();
+         List<Integer> evnts = new ArrayList<>();
          evnts.add(eventTemplate.getCode());
          testRule.setEvents(evnts);
          policy.insertRule(testRule, testRule.getRuleNumber());

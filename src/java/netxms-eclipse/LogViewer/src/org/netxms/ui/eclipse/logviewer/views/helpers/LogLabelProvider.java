@@ -173,7 +173,7 @@ public class LogLabelProvider extends LabelProvider implements ITableLabelProvid
          case LogColumn.LC_EVENT_CODE:
             try
             {
-               return session.getEventName(Long.parseLong(value));
+               return session.getEventName(Integer.parseInt(value));
             }
             catch(NumberFormatException e)
             {

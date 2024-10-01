@@ -120,7 +120,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
    private TableViewer actionViewer;
    private TableViewer webServiceViewer;
 	private Action actionSave;
-	private Map<Long, EventTemplate> events = new HashMap<Long, EventTemplate>();
+   private Map<Integer, EventTemplate> events = new HashMap<>();
 	private Map<Long, Template> templates = new HashMap<Long, Template>();
 	private Map<Long, SnmpTrap> traps = new HashMap<Long, SnmpTrap>();
    private Map<UUID, EventProcessingPolicyRule> rules = new HashMap<UUID, EventProcessingPolicyRule>();
@@ -1170,16 +1170,16 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			}
 			templateViewer.setInput(templates.values().toArray());
 			setModified();
-			new ConsoleJob(Messages.get().ExportFileBuilder_ResolveJobName, this, Activator.PLUGIN_ID, null) {
+         new ConsoleJob(Messages.get().ExportFileBuilder_ResolveJobName, this, Activator.PLUGIN_ID) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					final Set<Long> eventCodes = new HashSet<Long>();
-					final Map<Long, Script> scriptList = new HashMap<Long, Script>();
+               final Set<Integer> eventCodes = new HashSet<>();
+               final Map<Long, Script> scriptList = new HashMap<>();
 					for(Long id : idList)
 					{
-						long[] e = session.getRelatedEvents(id);
-						for(long c : e)
+                  int[] e = session.getRelatedEvents(id);
+                  for(int c : e)
 						{
 							if (c >= 100000)
 								eventCodes.add(c);
@@ -1188,19 +1188,15 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 						for(Script s : session.getDataCollectionScripts(id))
 						   scriptList.put(s.getId(), s);
 					}
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-                     for(EventTemplate e : session.findMultipleEventTemplates(eventCodes))
-						   {
-						      events.put(e.getCode(), e);
-						   }
-							eventViewer.setInput(events.values().toArray());
-							
-							scripts.putAll(scriptList);
-							scriptViewer.setInput(scripts.values().toArray());
-						}
+               runInUIThread(() -> {
+                  for(EventTemplate e : session.findMultipleEventTemplates(eventCodes))
+                  {
+                     events.put(e.getCode(), e);
+                  }
+                  eventViewer.setInput(events.values().toArray());
+
+                  scripts.putAll(scriptList);
+                  scriptViewer.setInput(scripts.values().toArray());
 					});
 				}
 				
@@ -1221,13 +1217,13 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		SelectSnmpTrapDialog dlg = new SelectSnmpTrapDialog(getSite().getShell(), snmpTrapCache);
 		if (dlg.open() == Window.OK)
 		{
-			final Set<Long> eventCodes = new HashSet<Long>();
+         final Set<Integer> eventCodes = new HashSet<>();
 			for(SnmpTrap t : dlg.getSelection())
 			{
 				traps.put(t.getId(), t);
 				if (t.getEventCode() >= 100000)
 				{
-					eventCodes.add((long)t.getEventCode());
+               eventCodes.add(t.getEventCode());
 				}
 			}
 			trapViewer.setInput(traps.values().toArray());
@@ -1251,11 +1247,11 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		RuleSelectionDialog dlg = new RuleSelectionDialog(getSite().getShell(), rulesCache);
 		if (dlg.open() == Window.OK)
 		{
-			final Set<Long> eventCodes = new HashSet<Long>();
+         final Set<Integer> eventCodes = new HashSet<>();
 			for(EventProcessingPolicyRule r : dlg.getSelectedRules())
 			{
             rules.put(r.getGuid(), r);
-				for(Long e : r.getEvents())
+            for(Integer e : r.getEvents())
 				{
 					if (e >= 100000)
 					{

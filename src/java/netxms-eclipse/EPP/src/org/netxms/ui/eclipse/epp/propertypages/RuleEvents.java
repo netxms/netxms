@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ public class RuleEvents extends PropertyPage
 	private RuleEditor editor;
 	private EventProcessingPolicyRule rule;
 	private SortableTableViewer viewer;
-	private Map<Long, EventTemplate> events = new HashMap<Long, EventTemplate>();
+   private Map<Integer, EventTemplate> events = new HashMap<>();
 	private Button addButton;
 	private Button deleteButton;
 	private Button checkInverted;
@@ -198,7 +198,7 @@ public class RuleEvents extends PropertyPage
       else
          flags &= ~EventProcessingPolicyRule.NEGATED_EVENTS;
       rule.setFlags(flags);
-      rule.setEvents(new ArrayList<Long>(events.keySet()));
+      rule.setEvents(new ArrayList<Integer>(events.keySet()));
 		editor.setModified(true);
 	}
 

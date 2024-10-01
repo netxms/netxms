@@ -545,7 +545,7 @@ public class RuleEditor extends Composite
          addConditionGroupLabel(clientArea, Messages.get().RuleEditor_EventIs, needAnd, rule.isEventsInverted(), listener);
 
          List<EventTemplate> sortedEvents = new ArrayList<EventTemplate>(rule.getEvents().size());
-         for(Long code : rule.getEvents())
+         for(Integer code : rule.getEvents())
          {
             EventTemplate event = session.findEventTemplateByCode(code);
             if (event == null)

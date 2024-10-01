@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,16 +24,12 @@ import java.util.Iterator;
 import java.util.List;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -51,6 +47,7 @@ import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.ThresholdLabelProvider;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditThresholdDialog;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPropertyPage;
+import org.netxms.ui.eclipse.eventmanager.widgets.EventSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -67,6 +64,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 	private DataCollectionItem dci;
 	private List<Threshold> thresholds;
 	private LabeledText instance;
+   private Button checkDetectAnomalies;
 	private Button checkAllThresholds;
    private SortableTableViewer thresholdList;
 	private Button addButton;
@@ -75,6 +73,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 	private Button upButton;
 	private Button downButton;
    private Button duplicateButton;
+   private EventSelector rearmEventSelector;
 
    /**
     * @see org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPropertyPage#createContents(org.eclipse.swt.widgets.Composite)
@@ -107,6 +106,10 @@ public class Thresholds extends AbstractDCIPropertyPage
 		instance.setLayoutData(gd);
 		if (dci.getTemplateId() == dci.getNodeId())	// DCI created by instance discovery
 			instance.getTextControl().setEditable(false);
+
+      checkDetectAnomalies = new Button(dialogArea, SWT.CHECK);
+      checkDetectAnomalies.setText("Detect anomalies");
+      checkDetectAnomalies.setSelection(dci.isAnomalyDetectionEnabled());
 
 		checkAllThresholds = new Button(dialogArea, SWT.CHECK);
 		checkAllThresholds.setText(Messages.get().Thresholds_ProcessAll);
@@ -158,13 +161,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 		upButton = new Button(leftButtons, SWT.PUSH);
 		upButton.setText(Messages.get().Thresholds_Up);
 		upButton.setEnabled(false);
-		upButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      upButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -175,13 +172,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 		downButton = new Button(leftButtons, SWT.PUSH);
 		downButton.setText(Messages.get().Thresholds_Down);
 		downButton.setEnabled(false);
-		downButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      downButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -208,13 +199,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 		RowData rd = new RowData();
 		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
 		addButton.setLayoutData(rd);
-		addButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      addButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -228,13 +213,7 @@ public class Thresholds extends AbstractDCIPropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       duplicateButton.setLayoutData(rd);
       duplicateButton.setEnabled(false);
-      duplicateButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      duplicateButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -248,13 +227,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
 		modifyButton.setLayoutData(rd);
 		modifyButton.setEnabled(false);
-		modifyButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      modifyButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -268,13 +241,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
 		deleteButton.setLayoutData(rd);
 		deleteButton.setEnabled(false);
-		deleteButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      deleteButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -282,28 +249,23 @@ public class Thresholds extends AbstractDCIPropertyPage
 			}
 		});
 
+      rearmEventSelector = new EventSelector(dialogArea, SWT.NONE);
+      rearmEventSelector.setLabel("Generate event when all thresholds are deactivated");
+      rearmEventSelector.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      rearmEventSelector.setEventCode(dci.getAllThresholdsRearmEvent());
+
 		/*** Selection change listener for thresholds list ***/
-		thresholdList.addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent event)
-			{
-				IStructuredSelection selection = (IStructuredSelection)event.getSelection();
-				int index = thresholds.indexOf(selection.getFirstElement());
-				upButton.setEnabled((selection.size() == 1) && (index > 0));
-				downButton.setEnabled((selection.size() == 1) && (index >= 0) && (index < thresholds.size() - 1));
-				modifyButton.setEnabled(selection.size() == 1);
-				deleteButton.setEnabled(selection.size() > 0);
-				duplicateButton.setEnabled(selection.size() > 0);
-			}
+      thresholdList.addSelectionChangedListener((event) -> {
+         IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+         int index = thresholds.indexOf(selection.getFirstElement());
+         upButton.setEnabled((selection.size() == 1) && (index > 0));
+         downButton.setEnabled((selection.size() == 1) && (index >= 0) && (index < thresholds.size() - 1));
+         modifyButton.setEnabled(selection.size() == 1);
+         deleteButton.setEnabled(selection.size() > 0);
+         duplicateButton.setEnabled(selection.size() > 0);
 		});
 
-		thresholdList.addDoubleClickListener(new IDoubleClickListener() {
-			@Override
-			public void doubleClick(DoubleClickEvent event)
-			{
-				editThreshold();
-			}
-		});
+      thresholdList.addDoubleClickListener((e) -> editThreshold());
 
 		return dialogArea;
 	}
@@ -432,7 +394,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 		column.setText(Messages.get().Thresholds_Event);
       
       column = new TableColumn(table, SWT.LEFT);
-      column.setText("Deactivation Event");
+      column.setText("Deactivation event");
 
 		thresholdList.setContentProvider(new ArrayContentProvider());
 		thresholdList.setLabelProvider(new ThresholdLabelProvider());
@@ -467,9 +429,11 @@ public class Thresholds extends AbstractDCIPropertyPage
 	protected void applyChanges(final boolean isApply)
 	{
 		dci.setInstanceName(instance.getText());
-		dci.setProcessAllThresholds(checkAllThresholds.getSelection());
+      dci.setAnomalyDetectionEnabled(checkDetectAnomalies.getSelection());
+      dci.setProcessAllThresholds(checkAllThresholds.getSelection());
 		dci.getThresholds().clear();
 		dci.getThresholds().addAll(thresholds);
+      dci.setAllThresholdsRearmEvent(rearmEventSelector.getEventCode());
 		editor.modify();
 	}
 }

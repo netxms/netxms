@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ public class EventSelector extends AbstractSelector
 {
    private final I18n i18n = LocalizationHelper.getI18n(EventSelector.class);
 
-	private long eventCode = 0;
+   private int eventCode = 0;
    private String eventName = null;
 
 	/**
@@ -70,7 +70,7 @@ public class EventSelector extends AbstractSelector
       dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{
-			long prevEventCode = eventCode;
+         int prevEventCode = eventCode;
 			EventTemplate[] events = dlg.getSelectedEvents();
 			if (events.length > 0)
 			{
@@ -115,7 +115,7 @@ public class EventSelector extends AbstractSelector
 	 * 
 	 * @return Selected event's code
 	 */
-	public long getEventCode()
+   public int getEventCode()
 	{
 		return eventCode;
 	}
@@ -134,7 +134,7 @@ public class EventSelector extends AbstractSelector
 	 * Set event code
 	 * @param eventCode
 	 */
-	public void setEventCode(long eventCode)
+   public void setEventCode(int eventCode)
 	{
 		if (this.eventCode == eventCode)
 			return;	// nothing to change

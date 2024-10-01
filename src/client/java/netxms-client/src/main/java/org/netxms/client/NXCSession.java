@@ -400,7 +400,7 @@ public class NXCSession
    private List<Runnable> callbackList = new ArrayList<Runnable>();
 
    // Event objects
-   private Map<Long, EventTemplate> eventTemplates = new HashMap<Long, EventTemplate>();
+   private Map<Integer, EventTemplate> eventTemplates = new HashMap<>();
    private boolean eventTemplatesSynchronized = false;
 
    // Alarm categories
@@ -1127,7 +1127,7 @@ public class NXCSession
       private void processEventConfigChange(final NXCPMessage msg)
       {
          int code = msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + SessionNotification.NOTIFY_BASE;
-         long eventCode = msg.getFieldAsInt64(NXCPCodes.VID_EVENT_CODE);
+         int eventCode = msg.getFieldAsInt32(NXCPCodes.VID_EVENT_CODE);
          EventTemplate tmpl = (code != SessionNotification.EVENT_TEMPLATE_DELETED) ?
                new EventTemplate(msg, NXCPCodes.VID_ELEMENT_LIST_BASE) :
                null;
@@ -9036,7 +9036,7 @@ public class NXCSession
     * @param code event code
     * @return event name or event code as string if event not found
     */
-   public String getEventName(long code)
+   public String getEventName(int code)
    {
       synchronized(eventTemplates)
       {
@@ -9054,7 +9054,7 @@ public class NXCSession
     * @param code Event code
     * @return Event template object or null if not found
     */
-   public EventTemplate findEventTemplateByCode(long code)
+   public EventTemplate findEventTemplateByCode(int code)
    {
       synchronized(eventTemplates)
       {
@@ -9069,12 +9069,12 @@ public class NXCSession
     * @param codes set of event codes
     * @return List of found event templates
     */
-   public List<EventTemplate> findMultipleEventTemplates(Collection<Long> codes)
+   public List<EventTemplate> findMultipleEventTemplates(Collection<Integer> codes)
    {
       List<EventTemplate> list = new ArrayList<EventTemplate>();
       synchronized(eventTemplates)
       {
-         for(long code : codes)
+         for(int code : codes)
          {
             EventTemplate t = eventTemplates.get(code);
             if (t != null)
@@ -9093,12 +9093,12 @@ public class NXCSession
     * @param codes List of event codes
     * @return List of found event templates
     */
-   public List<EventTemplate> findMultipleEventTemplates(final long[] codes)
+   public List<EventTemplate> findMultipleEventTemplates(final int[] codes)
    {
       List<EventTemplate> list = new ArrayList<EventTemplate>();
       synchronized(eventTemplates)
       {
-         for(long code : codes)
+         for(int code : codes)
          {
             EventTemplate t = eventTemplates.get(code);
             if (t != null)
@@ -9616,15 +9616,15 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public long[] getRelatedEvents(long objectId) throws IOException, NXCException
+   public int[] getRelatedEvents(long objectId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_RELATED_EVENTS_LIST);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       if (response.getFieldAsInt32(NXCPCodes.VID_NUM_EVENTS) == 0)
-         return new long[0];
-      return response.getFieldAsUInt32Array(NXCPCodes.VID_EVENT_LIST);
+         return new int[0];
+      return response.getFieldAsInt32Array(NXCPCodes.VID_EVENT_LIST);
    }
 
    /**

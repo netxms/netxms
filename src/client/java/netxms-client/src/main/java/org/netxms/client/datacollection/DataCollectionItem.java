@@ -19,6 +19,7 @@
 package org.netxms.client.datacollection;
 
 import java.util.ArrayList;
+import java.util.List;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.DataType;
@@ -68,8 +69,9 @@ public class DataCollectionItem extends DataCollectionObject
 	private int multiplier;
 	private String unitName;
 	private int snmpRawValueType;
-	private ArrayList<Threshold> thresholds;
+   private List<Threshold> thresholds;
 	private String predictionEngine;
+   private int allThresholdsRearmEvent;
 
 	/**
 	 * Create data collection item object from NXCP message
@@ -87,14 +89,15 @@ public class DataCollectionItem extends DataCollectionObject
 		multiplier = msg.getFieldAsInt32(NXCPCodes.VID_MULTIPLIER);
 		unitName = msg.getFieldAsString(NXCPCodes.VID_UNITS_NAME);
 		snmpRawValueType = msg.getFieldAsInt32(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE);
+      allThresholdsRearmEvent = msg.getFieldAsInt32(NXCPCodes.VID_DEACTIVATION_EVENT);
 		predictionEngine = msg.getFieldAsString(NXCPCodes.VID_NPE_NAME);
 
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_THRESHOLDS);
 		thresholds = new ArrayList<Threshold>(count);
-		long varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
-		for(int i = 0; i < count; i++, varId += 20)
+		long fieldId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
+		for(int i = 0; i < count; i++, fieldId += 20)
 		{
-			thresholds.add(new Threshold(msg, varId));
+			thresholds.add(new Threshold(msg, fieldId));
 		}
 	}
 
@@ -114,6 +117,7 @@ public class DataCollectionItem extends DataCollectionObject
 		multiplier = 0;
 		unitName = null;
 		snmpRawValueType = SNMP_RAWTYPE_NONE;
+      allThresholdsRearmEvent = 0;
 		predictionEngine = "";
 		thresholds = new ArrayList<Threshold>(0);
 	}
@@ -163,6 +167,7 @@ public class DataCollectionItem extends DataCollectionObject
       multiplier = src.multiplier;
       unitName = src.unitName;
       snmpRawValueType = src.snmpRawValueType;
+      allThresholdsRearmEvent = src.allThresholdsRearmEvent;
       thresholds = new ArrayList<Threshold>(src.thresholds);
       predictionEngine = src.predictionEngine;
    }
@@ -181,6 +186,7 @@ public class DataCollectionItem extends DataCollectionObject
 		msg.setFieldInt16(NXCPCodes.VID_DCI_DELTA_CALCULATION, deltaCalculation);
 		msg.setFieldInt16(NXCPCodes.VID_SAMPLE_COUNT, sampleCount);
 		msg.setFieldInt16(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE, snmpRawValueType);
+      msg.setFieldInt32(NXCPCodes.VID_DEACTIVATION_EVENT, allThresholdsRearmEvent);
 		msg.setField(NXCPCodes.VID_NPE_NAME, predictionEngine);
 		msg.setFieldInt32(NXCPCodes.VID_MULTIPLIER, multiplier);
 		if (unitName != null)
@@ -355,10 +361,26 @@ public class DataCollectionItem extends DataCollectionObject
 	/**
 	 * @return the thresholds
 	 */
-	public ArrayList<Threshold> getThresholds()
+   public List<Threshold> getThresholds()
 	{
 		return thresholds;
 	}
+
+   /**
+    * @return the allThresholdsRearmEvent
+    */
+   public int getAllThresholdsRearmEvent()
+   {
+      return allThresholdsRearmEvent;
+   }
+
+   /**
+    * @param allThresholdsRearmEvent the allThresholdsRearmEvent to set
+    */
+   public void setAllThresholdsRearmEvent(int allThresholdsRearmEvent)
+   {
+      this.allThresholdsRearmEvent = allThresholdsRearmEvent;
+   }
 
 	/**
 	 * @return the snmpRawValueType
@@ -488,6 +510,4 @@ public class DataCollectionItem extends DataCollectionObject
       else
          flags &= ~DCF_STORE_CHANGES_ONLY;
    }
-   
-   
 }

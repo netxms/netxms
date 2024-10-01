@@ -1447,9 +1447,9 @@ public class AlarmList extends CompositeWithMessageBar
       public String[] getValues()
       {
          NXCSession session = ConsoleSharedData.getSession();
-         Set<Long> eventCodes = new HashSet<Long>();
+         Set<Integer> eventCodes = new HashSet<>();
          for(AlarmHandle a : displayList.values())
-            eventCodes.add(Long.valueOf(a.alarm.getSourceEventCode()));
+            eventCodes.add(a.alarm.getSourceEventCode());
          List<EventTemplate> eventTemplates = session.findMultipleEventTemplates(eventCodes);
          if (eventTemplates.isEmpty())
             return null;

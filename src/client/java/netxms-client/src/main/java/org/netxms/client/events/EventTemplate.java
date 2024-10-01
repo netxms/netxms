@@ -34,7 +34,7 @@ public class EventTemplate
    public static final int FLAG_WRITE_TO_LOG = 0x0001;
    public static final int FLAG_DO_NOT_MONITOR = 0x0002;
 
-   private long code;
+   private int code;
    private UUID guid;
    private String name;
    private String message;
@@ -49,7 +49,7 @@ public class EventTemplate
 	 * 
 	 * @param code Event code assigned by server
 	 */
-	public EventTemplate(long code)
+   public EventTemplate(int code)
 	{
       this.code = code;
       guid = NXCommon.EMPTY_GUID;
@@ -70,7 +70,7 @@ public class EventTemplate
 	 */
 	public EventTemplate(final NXCPMessage msg, long baseId)
 	{
-      code = msg.getFieldAsInt64(baseId + 1);
+      code = msg.getFieldAsInt32(baseId + 1);
       description = msg.getFieldAsString(baseId + 2);
       name = msg.getFieldAsString(baseId + 3);
 		severity = Severity.getByValue(msg.getFieldAsInt32(baseId + 4));
@@ -131,7 +131,7 @@ public class EventTemplate
          msg.setField(NXCPCodes.VID_TAGS, sb.toString());
       }
 	}
-	
+
 	/**
 	 * Set all attributes from another event template object.
 	 * 
@@ -233,7 +233,7 @@ public class EventTemplate
    /**
     * @return the code
     */
-   public long getCode()
+   public int getCode()
    {
       return code;
    }
@@ -249,7 +249,7 @@ public class EventTemplate
    /**
     * @param code the code to set
     */
-   public void setCode(long code)
+   public void setCode(int code)
    {
       this.code = code;
    }

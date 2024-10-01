@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1290,7 +1290,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
          return true;
 
       // check event names
-      for(Long code : rule.getEvents())
+      for(Integer code : rule.getEvents())
       {
          EventTemplate evt = session.findEventTemplateByCode(code);
          if ((evt != null) && evt.getName().toLowerCase().contains(filterText))

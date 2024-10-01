@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.datacollection.views.helpers;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -152,7 +151,7 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 			   StringBuilder thresholds = new StringBuilder();
 			   if((dci instanceof DataCollectionItem))
 			   {
-			      ArrayList<Threshold> list = ((DataCollectionItem)dci).getThresholds();
+               List<Threshold> list = ((DataCollectionItem)dci).getThresholds();
                for(int i = 0; i < list.size(); i++)
                {
                   Threshold tr = list.get(i);

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -429,12 +429,12 @@ public class LogParserRuleEditor extends DashboardComposite
       layout.numColumns = 2;
       area.setLayout(layout);
 
-      long eventCode = 0;
+      int eventCode = 0;
       if (rule.getEvent() != null)
       {
          try
          {
-            eventCode = Long.parseLong(rule.getEvent().getEvent());
+            eventCode = Integer.parseInt(rule.getEvent().getEvent());
          }
          catch(NumberFormatException e)
          {

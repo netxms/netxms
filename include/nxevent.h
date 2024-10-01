@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -81,7 +81,7 @@
 #define EVENT_SERVICE_UNKNOWN                       27
 #define EVENT_NODE_DOWN                             28
 #define EVENT_NODE_UP                               29
-// #define EVENT_SMS_FAILURE                           30
+#define EVENT_ALL_THRESHOLDS_REARMED                30
 #define EVENT_SNMP_OK                               31
 #define EVENT_AGENT_OK                              32
 #define EVENT_SCRIPT_ERROR                          33

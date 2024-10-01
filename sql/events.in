@@ -259,43 +259,57 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 	(
 		EVENT_THRESHOLD_REACHED, 'SYS_THRESHOLD_REACHED', '05161c3d-7ceb-406f-af0a-af5c77f324a5',
 		EVENT_SEVERITY_WARNING, 1,
-		'Threshold reached for data collection item "%<dciDescription>" (Parameter: %<dciName>; Threshold value: %<{multipliers, units}thresholdValue>; Actual value: %<{multipliers, units}currentValue>)',
+		'Threshold reached for data collection item "%<dciDescription>" (Metric: %<dciName>; Threshold value: %<{multipliers, units}thresholdValue>; Actual value: %<{multipliers, units}currentValue>)',
 		'Generated when threshold value reached for specific data collection item.' CONCAT CRLF CONCAT
 		'Parameters are accessible via %<...> and can have "m" or "multipliers" and "u" or "units" format modifiers for value formatting (for example %<{m,u}currentValue>).' CONCAT CRLF CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   dciName - Parameter name' CONCAT CRLF CONCAT
-		'   dciDescription - Item description' CONCAT CRLF CONCAT
-		'   thresholdValue - Threshold value' CONCAT CRLF CONCAT
-		'   currentValue - Actual value which is compared to threshold value' CONCAT CRLF CONCAT
-		'   dciId - Data collection item ID' CONCAT CRLF CONCAT
-		'   instance - Instance' CONCAT CRLF CONCAT
-		'   isRepeatedEvent - Repeat flag' CONCAT CRLF CONCAT
-		'   dciValue - Last collected DCI value' CONCAT CRLF CONCAT
-		'   operation - Threshold''s operation code' CONCAT CRLF CONCAT
-		'   function - Threshold''s function code' CONCAT CRLF CONCAT
-		'   pollCount - Threshold''s required poll count' CONCAT CRLF CONCAT
-		'   thresholdDefinition - Threshold''s textual definition'
+		'   1) dciName - Metric name' CONCAT CRLF CONCAT
+		'   2) dciDescription - Item description' CONCAT CRLF CONCAT
+		'   3) thresholdValue - Threshold value' CONCAT CRLF CONCAT
+		'   4) currentValue - Actual value which is compared to threshold value' CONCAT CRLF CONCAT
+		'   5) dciId - Data collection item ID' CONCAT CRLF CONCAT
+		'   6) instance - Instance' CONCAT CRLF CONCAT
+		'   7) isRepeatedEvent - Repeat flag' CONCAT CRLF CONCAT
+		'   8) dciValue - Last collected DCI value' CONCAT CRLF CONCAT
+		'   9) operation - Threshold''s operation code' CONCAT CRLF CONCAT
+		'   10) function - Threshold''s function code' CONCAT CRLF CONCAT
+		'   11) pollCount - Threshold''s required poll count' CONCAT CRLF CONCAT
+		'   12) thresholdDefinition - Threshold''s textual definition'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_THRESHOLD_REARMED, 'SYS_THRESHOLD_REARMED', '25eef3a7-6158-4c5e-b4e3-8a7aa7ade73c',
 		EVENT_SEVERITY_NORMAL, 1,
-		'Threshold rearmed for data collection item %<dciDescription> (Parameter: %<dciName>)',
+		'Threshold rearmed for data collection item %<dciDescription> (Metric: %<dciName>)',
 		'Generated when threshold check is rearmed for specific data collection item.' CONCAT CRLF CONCAT
 		'Parameters are accessible via %<...> and can have "m" or "multipliers" and "u" or "units" format modifiers for value formatting (for example %<{m,u}currentValue>).' CONCAT CRLF CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   dciName - Parameter name' CONCAT CRLF CONCAT
-		'   dciDescription - Item description' CONCAT CRLF CONCAT
-		'   dciId - Data collection item ID' CONCAT CRLF CONCAT
-		'   instance - Instance' CONCAT CRLF CONCAT
-		'   thresholdValue - Threshold value' CONCAT CRLF CONCAT
-		'   currentValue - Actual value which is compared to threshold value' CONCAT CRLF CONCAT
-		'   dciValue - Last collected DCI value' CONCAT CRLF CONCAT
-		'   operation - Threshold''s operation code' CONCAT CRLF CONCAT
-		'   function - Threshold''s function code' CONCAT CRLF CONCAT
-		'   pollCount - Threshold''s required poll count' CONCAT CRLF CONCAT
-		'   thresholdDefinition - Threshold''s textual definition'
+		'   1) dciName - Metric name' CONCAT CRLF CONCAT
+		'   2) dciDescription - Item description' CONCAT CRLF CONCAT
+		'   3) dciId - Data collection item ID' CONCAT CRLF CONCAT
+		'   4) instance - Instance' CONCAT CRLF CONCAT
+		'   5) thresholdValue - Threshold value' CONCAT CRLF CONCAT
+		'   6) currentValue - Actual value which is compared to threshold value' CONCAT CRLF CONCAT
+		'   7) dciValue - Last collected DCI value' CONCAT CRLF CONCAT
+		'   8) operation - Threshold''s operation code' CONCAT CRLF CONCAT
+		'   9) function - Threshold''s function code' CONCAT CRLF CONCAT
+		'   10) pollCount - Threshold''s required poll count' CONCAT CRLF CONCAT
+		'   11) thresholdDefinition - Threshold''s textual definition'
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+        (
+                EVENT_ALL_THRESHOLDS_REARMED, 'SYS_ALL_THRESHOLDS_REARMED', '12ecc8fa-e39e-497b-ad9f-a7786fcbcf46',
+                EVENT_SEVERITY_NORMAL, 1,
+                'All thresholds rearmed for data collection item %<dciDescription> (Metric: %<dciName>)',
+                'Generated when all thresholds are rearmed for specific data collection item.' CONCAT CRLF CONCAT
+                'Parameters are accessible via %<...> and can have "m" or "multipliers" and "u" or "units" format modifiers for value formatting (for example %<{m,u}currentValue>).' CONCAT CRLF CONCAT CRLF CONCAT
+                'Parameters:' CONCAT CRLF CONCAT
+                '   1) dciName - Metric name' CONCAT CRLF CONCAT
+                '   2) dciDescription - Data collection item description' CONCAT CRLF CONCAT
+                '   3) dciId - Data collection item ID' CONCAT CRLF CONCAT
+                '   4) instance - Instance' CONCAT CRLF CONCAT
+                '   5) dciValue - Last collected DCI value'
+        );
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_SUBNET_DELETED, 'SYS_SUBNET_DELETED', 'af188eb3-e84f-4fd9-aecf-f1ba934a9f1a',

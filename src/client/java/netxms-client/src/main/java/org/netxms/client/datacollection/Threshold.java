@@ -142,7 +142,7 @@ public class Threshold
 	protected void fillMessage(final NXCPMessage msg, final long baseId)
 	{
 		long fieldId = baseId;
-		msg.setFieldInt32(fieldId++, (int)id);
+      msg.setFieldUInt32(fieldId++, id);
 		msg.setFieldInt32(fieldId++, fireEvent);
 		msg.setFieldInt32(fieldId++, rearmEvent);
 		msg.setFieldInt16(fieldId++, function);

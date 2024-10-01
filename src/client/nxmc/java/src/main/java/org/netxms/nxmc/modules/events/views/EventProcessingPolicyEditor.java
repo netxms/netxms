@@ -1095,7 +1095,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
          return true;
 
       // check event names
-      for(Long code : rule.getEvents())
+      for(Integer code : rule.getEvents())
       {
          EventTemplate evt = session.findEventTemplateByCode(code);
          if ((evt != null) && evt.getName().toLowerCase().contains(filterText))

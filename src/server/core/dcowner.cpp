@@ -288,12 +288,12 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb)
 				  _T("instd_method,instd_data,instd_filter,samples,comments,guid,npe_name,")
 				  _T("instance_retention_time,grace_period_start,related_object,")
 				  _T("polling_schedule_type,retention_type,polling_interval_src,retention_time_src,")
-				  _T("snmp_version,state_flags FROM items WHERE node_id=?"));
-	if (hStmt != NULL)
+				  _T("snmp_version,state_flags,all_rearmed_event FROM items WHERE node_id=?"));
+	if (hStmt != nullptr)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
-		if (hResult != NULL)
+		if (hResult != nullptr)
 		{
 			int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)

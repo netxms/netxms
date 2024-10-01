@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
  */
 public class EventSelector extends AbstractSelector
 {
-	private long eventCode = 0;
+   private int eventCode = 0;
    private String eventName = null;
 
 	/**
@@ -110,7 +110,7 @@ public class EventSelector extends AbstractSelector
 	 * 
 	 * @return Selected event's code
 	 */
-	public long getEventCode()
+   public int getEventCode()
 	{
 		return eventCode;
 	}
@@ -129,7 +129,7 @@ public class EventSelector extends AbstractSelector
 	 * Set event code
 	 * @param eventCode
 	 */
-	public void setEventCode(long eventCode)
+   public void setEventCode(int eventCode)
 	{
 		if (this.eventCode == eventCode)
 			return;	// nothing to change

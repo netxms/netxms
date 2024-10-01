@@ -51,6 +51,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
 	m_unitName = src->m_unitName;
 	m_snmpRawValueType = src->m_snmpRawValueType;
    _tcscpy(m_predictionEngine, src->m_predictionEngine);
+   m_allThresholdsRearmEvent = src->m_allThresholdsRearmEvent;
 
    // Copy thresholds
 	if (src->getThresholdCount() > 0)
@@ -77,7 +78,8 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
  *    units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type,
  *    instd_method,instd_data,instd_filter,samples,comments,guid,npe_name,
  *    instance_retention_time,grace_period_start,related_object,polling_schedule_type,
- *    retention_type,polling_interval_src,retention_time_src,snmp_version,state_flags
+ *    retention_type,polling_interval_src,retention_time_src,snmp_version,state_flags,
+ *    all_rearmed_event
  */
 DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
@@ -131,6 +133,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
    m_retentionTimeSrc = (m_retentionType == DC_RETENTION_CUSTOM) ? DBGetField(hResult, row, 35, nullptr, 0) : nullptr;
    m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldLong(hResult, row, 36));
    m_stateFlags = DBGetFieldLong(hResult, row, 37);
+   m_allThresholdsRearmEvent = DBGetFieldULong(hResult, row, 38);
 
    int effectivePollingInterval = getEffectivePollingInterval();
    m_startTime = (useStartupDelay && (effectivePollingInterval >= 10)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
@@ -179,6 +182,7 @@ DCItem::DCItem(UINT32 id, const TCHAR *name, int source, int dataType, BYTE sche
 	m_multiplier = 0;
 	m_snmpRawValueType = SNMP_RAWTYPE_NONE;
 	m_predictionEngine[0] = 0;
+	m_allThresholdsRearmEvent = 0;
 
    updateCacheSizeInternal(false);
 }
@@ -200,6 +204,7 @@ DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner
    m_anomalyDetected = false;
 	m_multiplier = config->getSubEntryValueAsInt(_T("multiplier"));
 	m_snmpRawValueType = static_cast<uint16_t>(config->getSubEntryValueAsInt(_T("snmpRawValueType")));
+   m_allThresholdsRearmEvent = config->getSubEntryValueAsUInt(_T("allThresholdsRearmEvent"));
    _tcslcpy(m_predictionEngine, config->getSubEntryValue(_T("predictionEngine"), 0, _T("")), MAX_NPE_NAME_LEN);
 
    // for compatibility with old format
@@ -304,7 +309,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
       _T("perftab_settings"), _T("system_tag"), _T("snmp_port"), _T("snmp_raw_value_type"), _T("instd_method"), _T("instd_data"),
       _T("instd_filter"), _T("samples"), _T("comments"), _T("guid"), _T("npe_name"), _T("instance_retention_time"),
       _T("grace_period_start"), _T("related_object"), _T("polling_interval_src"), _T("retention_time_src"),
-      _T("polling_schedule_type"), _T("retention_type"), _T("snmp_version"), _T("state_flags"),
+      _T("polling_schedule_type"), _T("retention_type"), _T("snmp_version"), _T("state_flags"), _T("all_rearmed_event"),
       nullptr
    };
 
@@ -344,7 +349,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, m_guid);
    DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, m_predictionEngine, DB_BIND_STATIC);
    DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_instanceRetentionTime);
-   DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, (INT32)m_instanceGracePeriodStart);
+   DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_instanceGracePeriodStart));
    DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_relatedObject);
    DBBind(hStmt, 33, DB_SQLTYPE_VARCHAR, m_pollingIntervalSrc, DB_BIND_STATIC, MAX_DB_STRING - 1);
    DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, m_retentionTimeSrc, DB_BIND_STATIC, MAX_DB_STRING - 1);
@@ -357,7 +362,8 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, rt, DB_BIND_STATIC);
    DBBind(hStmt, 37, DB_SQLTYPE_INTEGER, m_snmpVersion);
    DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, m_stateFlags);
-   DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_allThresholdsRearmEvent);
+   DBBind(hStmt, 40, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -426,7 +432,9 @@ void DCItem::checkThresholds(ItemValue &value)
 
 	auto owner = m_owner.lock();
 
+   bool hasActiveThresholds = false;
 	bool thresholdDeactivated = false;
+	bool resendActivationEvent = false;
    for(int i = 0; i < m_thresholds->size(); i++)
    {
 		Threshold *t = m_thresholds->get(i);
@@ -458,6 +466,7 @@ void DCItem::checkThresholds(ItemValue &value)
             if (!(m_flags & DCF_ALL_THRESHOLDS))
                i = m_thresholds->size();  // Stop processing
             NotifyClientsOnThresholdChange(m_ownerId, m_id, thresholdId, nullptr, result);
+            hasActiveThresholds = true;
             break;
          case ThresholdCheckResult::DEACTIVATED:
             {
@@ -480,16 +489,17 @@ void DCItem::checkThresholds(ItemValue &value)
             if (!(m_flags & DCF_ALL_THRESHOLDS))
             {
                // this flag used to re-send activation event for next active threshold
-               thresholdDeactivated = true;
+               resendActivationEvent = true;
             }
             NotifyClientsOnThresholdChange(m_ownerId, m_id, thresholdId, nullptr, result);
+            thresholdDeactivated = true;
             break;
          case ThresholdCheckResult::ALREADY_ACTIVE:
             {
    				// Check if we need to re-sent threshold violation event
 	            time_t now = time(nullptr);
 	            time_t repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : static_cast<time_t>(t->getRepeatInterval());
-				   if (thresholdDeactivated || ((repeatInterval != 0) && (t->getLastEventTimestamp() + repeatInterval <= now)))
+				   if (resendActivationEvent || ((repeatInterval != 0) && (t->getLastEventTimestamp() + repeatInterval <= now)))
 				   {
 	               shared_ptr<DCObject> sharedThis(shared_from_this());
 		            EventBuilder(t->getEventCode(), m_ownerId)
@@ -513,11 +523,24 @@ void DCItem::checkThresholds(ItemValue &value)
 				{
 					i = m_thresholds->size();  // Threshold condition still true, stop processing
 				}
-				thresholdDeactivated = false;
+				resendActivationEvent = false;
+            hasActiveThresholds = true;
             break;
          default:
             break;
       }
+   }
+
+   if (thresholdDeactivated && !hasActiveThresholds && (m_allThresholdsRearmEvent != 0))
+   {
+      EventBuilder(m_allThresholdsRearmEvent, m_ownerId)
+         .dci(m_id)
+         .param(_T("dciName"), m_name)
+         .param(_T("dciDescription"), m_description)
+         .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+         .param(_T("instance"), m_instanceName)
+         .param(_T("dciValue"), value.getString())
+         .post();
    }
 }
 
@@ -536,6 +559,7 @@ void DCItem::createMessage(NXCPMessage *pMsg)
 	pMsg->setField(VID_SNMP_RAW_VALUE_TYPE, m_snmpRawValueType);
 	pMsg->setField(VID_NPE_NAME, m_predictionEngine);
    pMsg->setField(VID_UNITS_NAME, m_unitName);
+   pMsg->setField(VID_DEACTIVATION_EVENT, m_allThresholdsRearmEvent);
 	if (m_thresholds != nullptr)
 	{
 		pMsg->setField(VID_NUM_THRESHOLDS, static_cast<uint32_t>(m_thresholds->size()));
@@ -584,30 +608,31 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
 	m_multiplier = msg.getFieldAsInt32(VID_MULTIPLIER);
 	m_unitName = msg.getFieldAsSharedString(VID_UNITS_NAME);
 	m_snmpRawValueType = msg.getFieldAsUInt16(VID_SNMP_RAW_VALUE_TYPE);
+	m_allThresholdsRearmEvent = msg.getFieldAsUInt32(VID_DEACTIVATION_EVENT);
    msg.getFieldAsString(VID_NPE_NAME, m_predictionEngine, MAX_NPE_NAME_LEN);
 
    // Update thresholds
-   uint32_t dwNum = msg.getFieldAsUInt32(VID_NUM_THRESHOLDS);
-   uint32_t *newThresholds = MemAllocArray<uint32_t>(dwNum);
-   *mapIndex = MemAllocArray<uint32_t>(dwNum);
-   *mapId = MemAllocArray<uint32_t>(dwNum);
+   uint32_t numThresholds = msg.getFieldAsUInt32(VID_NUM_THRESHOLDS);
+   Buffer<uint32_t> newThresholdIds(numThresholds);
+   *mapIndex = MemAllocArray<uint32_t>(numThresholds);
+   *mapId = MemAllocArray<uint32_t>(numThresholds);
    *numMaps = 0;
 
    // Read all new threshold ids from message
-   for(uint32_t i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < dwNum; i++, dwId += 10)
+   for(uint32_t i = 0, fieldId = VID_DCI_THRESHOLD_BASE; i < numThresholds; i++, fieldId += 10)
    {
-      newThresholds[i] = msg.getFieldAsUInt32(dwId);
+      newThresholdIds[i] = msg.getFieldAsUInt32(fieldId);
    }
 
    // Check if some thresholds was deleted, and reposition others if needed
-   Threshold **ppNewList = MemAllocArray<Threshold*>(dwNum);
+   Buffer<Threshold*> newThresholdObjects(numThresholds);
    for(int i = 0; i < getThresholdCount(); i++)
    {
       uint32_t j;
-      for(j = 0; j < dwNum; j++)
-         if (m_thresholds->get(i)->getId() == newThresholds[j])
+      for(j = 0; j < numThresholds; j++)
+         if (m_thresholds->get(i)->getId() == newThresholdIds[j])
             break;
-      if (j == dwNum)
+      if (j == numThresholds)
       {
          // No threshold with that id in new list, delete it
 			m_thresholds->remove(i);
@@ -616,28 +641,28 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
       else
       {
          // Move existing thresholds to appropriate positions in new list
-         ppNewList[j] = m_thresholds->get(i);
+         newThresholdObjects[j] = m_thresholds->get(i);
       }
    }
 
    // Add or update thresholds
-   for(uint32_t i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < dwNum; i++, dwId += 10)
+   for(uint32_t i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < numThresholds; i++, dwId += 10)
    {
-      if (newThresholds[i] == 0)    // New threshold?
+      if (newThresholdIds[i] == 0)    // New threshold?
       {
-         ppNewList[i] = new Threshold(this);
-         ppNewList[i]->createId();
+         newThresholdObjects[i] = new Threshold(this);
+         newThresholdObjects[i]->createId();
 
          // Add index -> id mapping
          (*mapIndex)[*numMaps] = i;
-         (*mapId)[*numMaps] = ppNewList[i]->getId();
+         (*mapId)[*numMaps] = newThresholdObjects[i]->getId();
          (*numMaps)++;
       }
-      if (ppNewList[i] != nullptr)
-         ppNewList[i]->updateFromMessage(msg, dwId);
+      if (newThresholdObjects[i] != nullptr)
+         newThresholdObjects[i]->updateFromMessage(msg, dwId);
    }
 
-	if (dwNum > 0)
+	if (numThresholds > 0)
 	{
 		if (m_thresholds != nullptr)
 		{
@@ -647,12 +672,12 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
 		}
 		else
 		{
-			m_thresholds = new ObjectArray<Threshold>((int)dwNum, 8, Ownership::True);
+			m_thresholds = new ObjectArray<Threshold>((int)numThresholds, 8, Ownership::True);
 		}
-		for(uint32_t i = 0; i < dwNum; i++)
+		for(uint32_t i = 0; i < numThresholds; i++)
       {
-         if (ppNewList[i] != nullptr)
-			   m_thresholds->add(ppNewList[i]);
+         if (newThresholdObjects[i] != nullptr)
+			   m_thresholds->add(newThresholdObjects[i]);
       }
 	}
 	else
@@ -664,8 +689,6 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
    for(int i = 0; i < getThresholdCount(); i++)
       m_thresholds->get(i)->setDataType(m_dataType);
 
-	MemFree(ppNewList);
-   MemFree(newThresholds);
    updateCacheSizeInternal(true);
    unlock();
 }
@@ -870,6 +893,8 @@ void DCItem::processNewError(bool noInstance, time_t now)
 
    m_errorCount++;
 
+   bool hasActiveThresholds = false;
+   bool thresholdDeactivated = false;
 	for(int i = 0; i < getThresholdCount(); i++)
    {
 		Threshold *t = m_thresholds->get(i);
@@ -901,6 +926,7 @@ void DCItem::processNewError(bool noInstance, time_t now)
                i = m_thresholds->size();  // Stop processing
             }
             NotifyClientsOnThresholdChange(m_ownerId, m_id, thresholdId, nullptr, result);
+            hasActiveThresholds = true;
             break;
          case ThresholdCheckResult::DEACTIVATED:
             {
@@ -921,6 +947,7 @@ void DCItem::processNewError(bool noInstance, time_t now)
                   .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, SEVERITY_NORMAL, nullptr); });
             }
             NotifyClientsOnThresholdChange(m_ownerId, m_id, thresholdId, nullptr, result);
+            thresholdDeactivated = true;
             break;
          case ThresholdCheckResult::ALREADY_ACTIVE:
             {
@@ -950,10 +977,23 @@ void DCItem::processNewError(bool noInstance, time_t now)
 				{
 					i = m_thresholds->size();  // Threshold condition still true, stop processing
 				}
+            hasActiveThresholds = true;
             break;
          default:
             break;
       }
+   }
+
+   if (thresholdDeactivated && !hasActiveThresholds && (m_allThresholdsRearmEvent != 0))
+   {
+      EventBuilder(m_allThresholdsRearmEvent, m_ownerId)
+         .dci(m_id)
+         .param(_T("dciName"), m_name)
+         .param(_T("dciDescription"), m_description)
+         .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+         .param(_T("instance"), m_instanceName)
+         .param(_T("dciValue"), _T(""))
+         .post();
    }
 
    unlock();
@@ -2154,7 +2194,9 @@ void DCItem::createExportRecord(TextFileWriter& xml) const
    xml.append(EscapeStringForXML2(m_unitName));
    xml.append(_T("</unitName>\n\t\t\t\t\t<multiplier>"));
    xml.append(m_multiplier);
-   xml.append(_T("</multiplier>\n"));
+   xml.append(_T("</multiplier>\n\t\t\t\t\t<allThresholdsRearmEvent>"));
+   xml.append(m_allThresholdsRearmEvent);
+   xml.append(_T("</allThresholdsRearmEvent>\n"));
 
 	if (m_transformationScriptSource != nullptr)
 	{
@@ -2369,6 +2411,7 @@ void DCItem::updateFromImport(ConfigEntry *config, bool nxslV5)
    m_snmpRawValueType = static_cast<uint16_t>(config->getSubEntryValueAsInt(_T("snmpRawValueType")));
    m_unitName = config->getSubEntryValue(_T("unitName"));
    m_multiplier = config->getSubEntryValueAsInt(_T("multiplier"));
+   m_allThresholdsRearmEvent = config->getSubEntryValueAsUInt(_T("allThresholdsRearmEvent"));
 
    ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
    if (thresholdsRoot != nullptr)
@@ -2417,6 +2460,7 @@ json_t *DCItem::toJson()
    json_object_set_new(root, "unitName", json_string_t(m_unitName));
    json_object_set_new(root, "snmpRawValueType", json_integer(m_snmpRawValueType));
    json_object_set_new(root, "predictionEngine", json_string_t(m_predictionEngine));
+   json_object_set_new(root, "allThresholdsRearmEvent", json_integer(m_allThresholdsRearmEvent));
    unlock();
    return root;
 }
