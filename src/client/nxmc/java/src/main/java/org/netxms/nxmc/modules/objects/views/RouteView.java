@@ -20,6 +20,10 @@ package org.netxms.nxmc.modules.objects.views;
 
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
@@ -27,11 +31,14 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.topology.HopInfo;
 import org.netxms.client.topology.NetworkPath;
 import org.netxms.nxmc.Memento;
+import org.netxms.nxmc.base.actions.CopyTableRowsAction;
+import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewNotRestoredException;
@@ -76,6 +83,9 @@ public class RouteView extends AdHocObjectView
    private SortableTableViewer viewer;
    private AbstractNode source;
    private AbstractNode destination;
+   private Action actionExportToCsv;
+   private Action actionExportAllToCsv;
+   private Action actionCopyRowToClipboard;
 
    /**
     * @param name
@@ -102,6 +112,28 @@ public class RouteView extends AdHocObjectView
    }
 
    /**
+    * @see org.netxms.nxmc.modules.objects.views.AdHocObjectView#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      RouteView view = (RouteView)super.cloneView();
+      view.source = source;
+      view.destination = destination;
+      return view;
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      super.postClone(view);
+      refresh();
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -125,6 +157,12 @@ public class RouteView extends AdHocObjectView
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new RouteLabelProvider());
       viewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+      actionCopyRowToClipboard = new CopyTableRowsAction(viewer, true);
+      actionExportToCsv = new ExportToCsvAction(this, viewer, true);
+      actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
+
+      createContextMenu();
    }
 
    /**
@@ -138,25 +176,47 @@ public class RouteView extends AdHocObjectView
    }
 
    /**
-    * @see org.netxms.nxmc.modules.objects.views.AdHocObjectView#cloneView()
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
     */
    @Override
-   public View cloneView()
+   protected void fillLocalMenu(IMenuManager manager)
    {
-      RouteView view = (RouteView)super.cloneView();
-      view.source = source;
-      view.destination = destination;
-      return view;
+      manager.add(actionExportAllToCsv);
    }
 
    /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#postClone(org.netxms.nxmc.base.views.View)
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
     */
    @Override
-   protected void postClone(View view)
+   protected void fillLocalToolBar(IToolBarManager manager)
    {
-      super.postClone(view);
-      refresh();
+      manager.add(actionExportAllToCsv);
+   }
+
+   /**
+    * Create pop-up menu
+    */
+   private void createContextMenu()
+   {
+      // Create menu manager.
+      MenuManager menuMgr = new MenuManager();
+      menuMgr.setRemoveAllWhenShown(true);
+      menuMgr.addMenuListener((m) -> fillContextMenu(m));
+
+      // Create menu.
+      Menu menu = menuMgr.createContextMenu(viewer.getControl());
+      viewer.getControl().setMenu(menu);
+   }
+
+   /**
+    * Fill context menu
+    * 
+    * @param mgr Menu manager
+    */
+   protected void fillContextMenu(IMenuManager manager)
+   {
+      manager.add(actionCopyRowToClipboard);
+      manager.add(actionExportToCsv);
    }
 
    /**
@@ -181,19 +241,25 @@ public class RouteView extends AdHocObjectView
             final NetworkPath path = session.getNetworkPath(source.getObjectId(), destination.getObjectId());
             runInUIThread(() -> {
                List<HopInfo> hops = path.getPath();
-
-               status.setImage(StatusDisplayInfo.getStatusImage(path.isComplete() ? Severity.NORMAL : Severity.MINOR));
-               if (hops.size() == 2)
+               if (!hops.isEmpty())
                {
-                  // Use separate code for singular form because gettext fallback bundle do not handle it correctly
-                  status.setText(i18n.tr("{0}; 1 hop", path.isComplete() ? i18n.tr("Complete") : i18n.tr("Incomplete")));
+                  status.setImage(StatusDisplayInfo.getStatusImage(path.isComplete() ? Severity.NORMAL : Severity.MINOR));
+                  if (hops.size() == 2)
+                  {
+                     // Use separate code for singular form because gettext fallback bundle do not handle it correctly
+                     status.setText(i18n.tr("{0}; 1 hop", path.isComplete() ? i18n.tr("Complete") : i18n.tr("Incomplete")));
+                  }
+                  else
+                  {
+                     // TODO: check that it works in translated bundles
+                     status.setText(i18n.trn("{0}; {1} hops", "{0}; {1} hops", hops.size() - 1, path.isComplete() ? i18n.tr("Complete") : i18n.tr("Incomplete"), hops.size() - 1));
+                  }
                }
                else
                {
-                  // TODO: check that it works in translated bundles
-                  status.setText(i18n.trn("{0}; {1} hops", "{0}; {1} hops", hops.size() - 1, path.isComplete() ? i18n.tr("Complete") : i18n.tr("Incomplete"), hops.size() - 1));
-               }                        
-
+                  status.setImage(StatusDisplayInfo.getStatusImage(Severity.CRITICAL));
+                  status.setText(i18n.tr("No route from source"));
+               }
                if (!path.isComplete())
                {
                   hops.add(new HopInfo(hops.size()));
