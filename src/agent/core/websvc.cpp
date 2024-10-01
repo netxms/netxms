@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2020-2023 Raden Solutions
+** Copyright (C) 2020-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -76,15 +76,16 @@ char *RemoveNewLines(char* str)
 }
 
 /**
- * One cached service entry
+ * Executed web service request
  */
-class ServiceEntry
+class WebServiceRequest
 {
 private:
    time_t m_lastRequestTime;
    Mutex m_mutex;
    DocumentType m_type;
    uint32_t m_responseCode;
+   char *m_responseData;
    union
    {
       pugi::xml_document *xml;
@@ -94,6 +95,7 @@ private:
 
    void deleteContent()
    {
+      MemFree(m_responseData);
       switch(m_type)
       {
          case DocumentType::JSON:
@@ -120,13 +122,16 @@ private:
    uint32_t getListFromText(const TCHAR *pattern, StringList *result);
 
 public:
-   ServiceEntry();
-   ~ServiceEntry();
+   WebServiceRequest();
+   ~WebServiceRequest()
+   {
+      deleteContent();
+   }
 
    uint32_t getParams(StringList *params, NXCPMessage *response);
    uint32_t getList(const TCHAR *path, NXCPMessage *response);
-   const TCHAR *getText();
-   uint32_t getResponseCode();
+   const char *getResponseData() const { return m_responseData; }
+   uint32_t getResponseCode() const { return m_responseCode; }
    bool isDataExpired(uint32_t retentionTime) { return (time(nullptr) - m_lastRequestTime) >= retentionTime; }
    uint32_t query(const TCHAR *url, uint16_t requestMethod, const char *requestData, const char *userName, const char *password,
          WebServiceAuthType authType, struct curl_slist *headers, bool verifyPeer, bool verifyHost, bool followLocation, bool forcePlainTextParser, uint32_t requestTimeout);
@@ -138,31 +143,24 @@ public:
 /**
  * Static data
  */
-Mutex s_serviceCacheLock;
-SharedStringObjectMap<ServiceEntry> s_serviceCache;
+Mutex s_serviceRequestCacheLock;
+SharedStringObjectMap<WebServiceRequest> s_serviceRequestCache;
 
 /**
  * Constructor
  */
-ServiceEntry::ServiceEntry()
+WebServiceRequest::WebServiceRequest()
 {
    m_lastRequestTime = 0;
    m_type = DocumentType::NONE;
    m_responseCode = 0;
-}
-
-/**
- * Destructor
- */
-ServiceEntry::~ServiceEntry()
-{
-   deleteContent();
+   m_responseData = nullptr;
 }
 
 /**
  * Get parameters from XML cached data
  */
-void ServiceEntry::getParamsFromXML(StringList *params, NXCPMessage *response)
+void WebServiceRequest::getParamsFromXML(StringList *params, NXCPMessage *response)
 {
    char xpath[1024];
    uint32_t fieldId = VID_PARAM_LIST_BASE;
@@ -170,7 +168,7 @@ void ServiceEntry::getParamsFromXML(StringList *params, NXCPMessage *response)
    for (int i = 0; i < params->size(); i++)
    {
       const TCHAR *metric = params->get(i);
-      nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromXML(): get parameter \"%s\""), metric);
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("WebServiceRequest::getParamsFromXML(): get parameter \"%s\""), metric);
       tchar_to_utf8(metric, -1, xpath, 1024);
       pugi::xpath_node node = m_content.xml->select_node(xpath);
       if (node)
@@ -184,7 +182,7 @@ void ServiceEntry::getParamsFromXML(StringList *params, NXCPMessage *response)
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParamsFromXML(): cannot execute select_node() for parameter \"%s\""), metric);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceRequest::getParamsFromXML(): cannot execute select_node() for parameter \"%s\""), metric);
       }
    }
    response->setField(VID_NUM_PARAMETERS, resultCount);
@@ -261,12 +259,12 @@ static bool SetFieldFromJVObject(NXCPMessage *msg, uint32_t fieldId, jv jvResult
 /**
  * Get parameters from JSON cached data
  */
-void ServiceEntry::getParamsFromJSON(StringList *params, NXCPMessage *response)
+void WebServiceRequest::getParamsFromJSON(StringList *params, NXCPMessage *response)
 {
    uint32_t fieldId = VID_PARAM_LIST_BASE;
    int resultCount = 0;
    jq_state *jqState = jq_init();
-   jq_set_error_cb(jqState, JqMessageCallback, const_cast<TCHAR *>(_T("ServiceEntry::getParamsFromJSON()")));
+   jq_set_error_cb(jqState, JqMessageCallback, const_cast<TCHAR *>(_T("WebServiceRequest::getParamsFromJSON()")));
    for (int i = 0; i < params->size(); i++)
    {
       String param = ConvertRequestToJqFormat(params->get(i));
@@ -284,9 +282,9 @@ void ServiceEntry::getParamsFromJSON(StringList *params, NXCPMessage *response)
             if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 7)
             {
                jv resultAsText = jv_dump_string(jv_copy(result), 0);
-               nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParamsFromJSON(): request query: %hs"), program);
-               nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParamsFromJSON(): result kind: %d"), jv_get_kind(result));
-               nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParamsFromJSON(): result: %hs"), jv_string_value(resultAsText));
+               nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceRequest::getParamsFromJSON(): request query: %hs"), program);
+               nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceRequest::getParamsFromJSON(): result kind: %d"), jv_get_kind(result));
+               nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceRequest::getParamsFromJSON(): result: %hs"), jv_string_value(resultAsText));
                jv_free(resultAsText);
             }
 
@@ -309,7 +307,10 @@ void ServiceEntry::getParamsFromJSON(StringList *params, NXCPMessage *response)
    response->setField(VID_NUM_PARAMETERS, resultCount);
 }
 
-void GetStirngFromJvArrayElement(jv jvResult, StringList *resultList)
+/**
+ * Get string from JSON array element
+ */
+static void GetStirngFromJvArrayElement(jv jvResult, StringList *resultList)
 {
    switch(jv_get_kind(jvResult))
    {
@@ -317,10 +318,10 @@ void GetStirngFromJvArrayElement(jv jvResult, StringList *resultList)
          resultList->addUTF8String(jv_string_value(jvResult));
          break;
       case JV_KIND_ARRAY: //do nothing for array in array
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::getListFromJSON(): skip array as element of array"));
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("WebServiceRequest::getListFromJSON(): skip array as element of array"));
          break;
       case JV_KIND_NULL://Valid request - nothing found
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::getListFromJSON(): array element is empty"));
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("WebServiceRequest::getListFromJSON(): array element is empty"));
          break;
       case JV_KIND_OBJECT:
          jv_object_foreach(jvResult, key, val)
@@ -336,17 +337,16 @@ void GetStirngFromJvArrayElement(jv jvResult, StringList *resultList)
          jv_free(jvValueAsString);
          break;
    }
-
 }
 
 /**
  * Get list from JSON cached data
  */
-void ServiceEntry::getListFromJSON(const TCHAR *path, StringList *resultList)
+void WebServiceRequest::getListFromJSON(const TCHAR *path, StringList *resultList)
 {
-   nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromJSON(): Get child object list for JSON path \"%s\""), path);
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("WebServiceRequest::getListFromJSON(): Get child object list for JSON path \"%s\""), path);
    jq_state *jqState = jq_init();
-   jq_set_error_cb(jqState, JqMessageCallback, const_cast<TCHAR *>(_T("ServiceEntry::getListFromJSON()")));
+   jq_set_error_cb(jqState, JqMessageCallback, const_cast<TCHAR *>(_T("WebServiceRequest::getListFromJSON()")));
    String param = ConvertRequestToJqFormat(path);
    char *programm;
 #ifdef UNICODE
@@ -363,9 +363,9 @@ void ServiceEntry::getListFromJSON(const TCHAR *path, StringList *resultList)
          if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 8)
          {
             jv resultAsText = jv_dump_string(jv_copy(result), 0);
-            nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromJSON(): request query: %hs"), programm);
-            nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromJSON(): result kind: %d"), jv_get_kind(result));
-            nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromJSON(): result: %hs"), jv_string_value(resultAsText));
+            nxlog_debug_tag(DEBUG_TAG, 8, _T("WebServiceRequest::getListFromJSON(): request query: %hs"), programm);
+            nxlog_debug_tag(DEBUG_TAG, 8, _T("WebServiceRequest::getListFromJSON(): result kind: %d"), jv_get_kind(result));
+            nxlog_debug_tag(DEBUG_TAG, 8, _T("WebServiceRequest::getListFromJSON(): result: %hs"), jv_string_value(resultAsText));
             jv_free(resultAsText);
          }
 
@@ -396,13 +396,13 @@ void ServiceEntry::getListFromJSON(const TCHAR *path, StringList *resultList)
                break;
             }
             case JV_KIND_NULL://Valid request - nothing found
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::getListFromJSON(): for \"%hs\" request result is empty"), programm);
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("WebServiceRequest::getListFromJSON(): for \"%hs\" request result is empty"), programm);
                break;
             default://Valid request - nothing found
                if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 7)
                {
                   jv jvValueAsString = jv_dump_string(jv_copy(result), 0);
-                  nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getListFromJSON(): invalid object: \"%s\", type: %d"), jv_string_value(jvValueAsString), jv_get_kind(result));
+                  nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceRequest::getListFromJSON(): invalid object: \"%s\", type: %d"), jv_string_value(jvValueAsString), jv_get_kind(result));
                }
                break;
          }
@@ -419,7 +419,7 @@ void ServiceEntry::getListFromJSON(const TCHAR *path, StringList *resultList)
 /**
  * Default implementation for build without libjq
  */
-void ServiceEntry::getParamsFromJSON(StringList *params, NXCPMessage *response)
+void WebServiceRequest::getParamsFromJSON(StringList *params, NXCPMessage *response)
 {
    //do nothing
 }
@@ -427,7 +427,7 @@ void ServiceEntry::getParamsFromJSON(StringList *params, NXCPMessage *response)
 /**
  * Get list from JSON cached data
  */
-void ServiceEntry::getListFromJSON(const TCHAR *path, StringList *result)
+void WebServiceRequest::getListFromJSON(const TCHAR *path, StringList *result)
 {
    //do nothing
 }
@@ -437,7 +437,7 @@ void ServiceEntry::getListFromJSON(const TCHAR *path, StringList *result)
 /**
  * Get parameters from Text cached data
  */
-void ServiceEntry::getParamsFromText(StringList *params, NXCPMessage *response)
+void WebServiceRequest::getParamsFromText(StringList *params, NXCPMessage *response)
 {
    StringList *dataLines = String::split(m_content.text, _tcslen(m_content.text), _T("\n"));
    uint32_t fieldId = VID_PARAM_LIST_BASE;
@@ -445,14 +445,14 @@ void ServiceEntry::getParamsFromText(StringList *params, NXCPMessage *response)
    for (int i = 0; i < params->size(); i++)
    {
       const TCHAR *pattern = params->get(i);
-      nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromText(): using pattern \"%s\""), pattern);
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("WebServiceRequest::getParamsFromText(): using pattern \"%s\""), pattern);
 
       const char *eptr;
       int eoffset;
       PCRE *compiledPattern = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pattern), PCRE_COMMON_FLAGS, &eptr, &eoffset, nullptr);
       if (compiledPattern == nullptr)
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("ServiceEntry::getParamsFromText(): \"%s\" pattern compilation failure: %hs at offset %d"), pattern, eptr, eoffset);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("WebServiceRequest::getParamsFromText(): \"%s\" pattern compilation failure: %hs at offset %d"), pattern, eptr, eoffset);
          continue;
       }
 
@@ -460,7 +460,7 @@ void ServiceEntry::getParamsFromText(StringList *params, NXCPMessage *response)
       for (int j = 0; j < dataLines->size(); j++)
       {
          const TCHAR *dataLine = dataLines->get(j);
-         nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromText(): checking data line \"%s\""), dataLine);
+         nxlog_debug_tag(DEBUG_TAG, 8, _T("WebServiceRequest::getParamsFromText(): checking data line \"%s\""), dataLine);
          int fields[30];
          int result = _pcre_exec_t(compiledPattern, nullptr, reinterpret_cast<const PCRE_TCHAR*>(dataLine), static_cast<int>(_tcslen(dataLine)), 0, 0, fields, 30);
          if (result >= 0)
@@ -470,7 +470,7 @@ void ServiceEntry::getParamsFromText(StringList *params, NXCPMessage *response)
                matchedString = MemAllocString(fields[3] + 1 - fields[2]);
                memcpy(matchedString, &dataLine[fields[2]], (fields[3] - fields[2]) * sizeof(TCHAR));
                matchedString[fields[3] - fields[2]] = 0;
-               nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromText(): data match: \"%s\""), matchedString);
+               nxlog_debug_tag(DEBUG_TAG, 8, _T("WebServiceRequest::getParamsFromText(): data match: \"%s\""), matchedString);
             }
             break;
          }
@@ -494,24 +494,24 @@ void ServiceEntry::getParamsFromText(StringList *params, NXCPMessage *response)
 /**
  * Get parameters from cached data
  */
-uint32_t ServiceEntry::getParams(StringList *params, NXCPMessage *response)
+uint32_t WebServiceRequest::getParams(StringList *params, NXCPMessage *response)
 {
    uint32_t result = ERR_SUCCESS;
    switch(m_type)
    {
       case DocumentType::XML:
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParams(): get parameter from XML"));
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceRequest::getParams(): get parameter from XML"));
          getParamsFromXML(params, response);
          break;
       case DocumentType::JSON:
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParams(): get parameter from JSON"));
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceRequest::getParams(): get parameter from JSON"));
          getParamsFromJSON(params, response);
 #ifndef HAVE_LIBJQ
          result = ERR_FUNCTION_NOT_SUPPORTED;
 #endif
          break;
       default:
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParams(): get parameter from Text"));
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceRequest::getParams(): get parameter from Text"));
          getParamsFromText(params, response);
          break;
    }
@@ -521,9 +521,9 @@ uint32_t ServiceEntry::getParams(StringList *params, NXCPMessage *response)
 /**
  * Get list from XML cached data
  */
-void ServiceEntry::getListFromXML(const TCHAR *path, StringList *result)
+void WebServiceRequest::getListFromXML(const TCHAR *path, StringList *result)
 {
-   nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromXML(): Get child tag list for path \"%s\""), path);
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("WebServiceRequest::getListFromXML(): Get child tag list for path \"%s\""), path);
 
    char xpath[1024];
    tchar_to_utf8(path, -1, xpath, 1024);
@@ -540,11 +540,11 @@ void ServiceEntry::getListFromXML(const TCHAR *path, StringList *result)
 /**
  * Get list from Text cached data
  */
-uint32_t ServiceEntry::getListFromText(const TCHAR *pattern, StringList *resultList)
+uint32_t WebServiceRequest::getListFromText(const TCHAR *pattern, StringList *resultList)
 {
    uint32_t retVal = ERR_SUCCESS;
    StringList *dataLines = String::split(m_content.text, _tcslen(m_content.text), _T("\n"));
-   nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromText(): get list of matched lines for pattern \"%s\""), pattern);
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("WebServiceRequest::getListFromText(): get list of matched lines for pattern \"%s\""), pattern);
 
    const char *eptr;
    int eoffset;
@@ -555,7 +555,7 @@ uint32_t ServiceEntry::getListFromText(const TCHAR *pattern, StringList *resultL
       for (int j = 0; j < dataLines->size(); j++)
       {
          const TCHAR *dataLine = dataLines->get(j);
-         nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromText(): checking data line \"%s\""), dataLine);
+         nxlog_debug_tag(DEBUG_TAG, 8, _T("WebServiceRequest::getListFromText(): checking data line \"%s\""), dataLine);
          int fields[30];
          int result = _pcre_exec_t(compiledPattern, nullptr, reinterpret_cast<const PCRE_TCHAR*>(dataLine), static_cast<int>(_tcslen(dataLine)), 0, 0, fields, 30);
          if (result >= 0)
@@ -565,7 +565,7 @@ uint32_t ServiceEntry::getListFromText(const TCHAR *pattern, StringList *resultL
                matchedString = MemAllocString(fields[3] + 1 - fields[2]);
                memcpy(matchedString, &dataLine[fields[2]], (fields[3] - fields[2]) * sizeof(TCHAR));
                matchedString[fields[3] - fields[2]] = 0;
-               nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromText(): data match: \"%s\""), matchedString);
+               nxlog_debug_tag(DEBUG_TAG, 8, _T("WebServiceRequest::getListFromText(): data match: \"%s\""), matchedString);
                resultList->add(matchedString);
             }
          }
@@ -573,7 +573,7 @@ uint32_t ServiceEntry::getListFromText(const TCHAR *pattern, StringList *resultL
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("ServiceEntry::getListFromText(): \"%s\" pattern compilation failure: %hs at offset %d"), pattern, eptr, eoffset);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("WebServiceRequest::getListFromText(): \"%s\" pattern compilation failure: %hs at offset %d"), pattern, eptr, eoffset);
       retVal = ERR_MALFORMED_COMMAND;
    }
 
@@ -587,7 +587,7 @@ uint32_t ServiceEntry::getListFromText(const TCHAR *pattern, StringList *resultL
  * Get list from cached data
  * If path is empty: "/" will be used for XML and JSOn types and "(*)" will be used for text type
  */
-uint32_t ServiceEntry::getList(const TCHAR *path, NXCPMessage *response)
+uint32_t WebServiceRequest::getList(const TCHAR *path, NXCPMessage *response)
 {
    uint32_t result = ERR_SUCCESS;
    StringList list;
@@ -595,43 +595,27 @@ uint32_t ServiceEntry::getList(const TCHAR *path, NXCPMessage *response)
    switch(m_type)
    {
       case DocumentType::XML:
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getList(): get list from XML"));
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceRequest::getList(): get list from XML"));
          getListFromXML(correctPath, &list);
          break;
       case DocumentType::JSON:
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getList(): get list from JSON"));
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceRequest::getList(): get list from JSON"));
          getListFromJSON(correctPath, &list);
 #ifndef HAVE_LIBJQ
          result = ERR_FUNCTION_NOT_SUPPORTED;
 #endif
          break;
       case DocumentType::TEXT:
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getList(): get list from TEXT"));
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceRequest::getList(): get list from TEXT"));
          result = getListFromText(correctPath, &list);
          break;
       default:
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getList(): unsupported document type"));
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceRequest::getList(): unsupported document type"));
          result = ERR_NOT_IMPLEMENTED;
          break;
    }
    list.fillMessage(response, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
    return result;
-}
-
-/**
- * Get Text cached data
- */
-const TCHAR *ServiceEntry::getText()
-{
-   return m_content.text;
-}
-
-/**
- * Get HTTP response code
- */
-uint32_t ServiceEntry::getResponseCode()
-{
-   return m_responseCode;
 }
 
 /**
@@ -667,7 +651,7 @@ static long CurlAuthType(WebServiceAuthType authType)
 /**
  * Query web service
  */
-uint32_t ServiceEntry::query(const TCHAR *url, uint16_t requestMethod, const char *requestData, const char *userName, const char *password,
+uint32_t WebServiceRequest::query(const TCHAR *url, uint16_t requestMethod, const char *requestData, const char *userName, const char *password,
       WebServiceAuthType authType, struct curl_slist *headers, bool verifyPeer, bool verifyHost, bool followLocation, bool forcePlainTextParser, uint32_t requestTimeout)
 {
    uint32_t rcc = ERR_SUCCESS;
@@ -680,7 +664,7 @@ uint32_t ServiceEntry::query(const TCHAR *url, uint16_t requestMethod, const cha
       curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
       curl_easy_setopt(curl, CURLOPT_HEADER, static_cast<long>(0));
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, static_cast<long>((requestTimeout != 0) ? requestTimeout : 10));
-      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, OnCurlDataReceived);
+      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
       curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Agent/" NETXMS_VERSION_STRING_A);
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, verifyPeer ? 1 : 0);
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, verifyHost ? 2 : 0);
@@ -735,9 +719,9 @@ uint32_t ServiceEntry::query(const TCHAR *url, uint16_t requestMethod, const cha
 retry:
       if (curl_easy_setopt(curl, CURLOPT_URL, urlUtf8) == CURLE_OK)
       {
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::query(%s): requesting URL %hs"), url, urlUtf8);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceRequest::query(%s): requesting URL %hs"), url, urlUtf8);
          if (requestData != nullptr)
-            nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::query(%s): request data: %hs"), url, requestData);
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceRequest::query(%s): request data: %hs"), url, requestData);
 
          CURLcode rc = curl_easy_perform(curl);
          if (rc == CURLE_OK)
@@ -752,13 +736,14 @@ retry:
 
                size_t size;
                const char *text = reinterpret_cast<const char*>(data.buffer(&size));
+               m_responseData = MemCopyBlock(text, size);
                size--;  // Because of added zero byte
                while((size > 0) && isspace(*text))
                {
                   text++;
                   size--;
                }
-               nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::query(%s): response data: %hs"), url, text);
+               nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceRequest::query(%s): response data: %hs"), url, text);
 
                if (!forcePlainTextParser && (*text == '<'))
                {
@@ -767,7 +752,7 @@ retry:
                   if (!m_content.xml->load_buffer(text, size))
                   {
                      rcc = ERR_MALFORMED_RESPONSE;
-                     nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): Failed to load XML"), url);
+                     nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceRequest::query(%s): Failed to load XML"), url);
                   }
                }
                else if (!forcePlainTextParser && ((*text == '{') || (*text == '[')))
@@ -780,13 +765,13 @@ retry:
                      rcc = ERR_MALFORMED_RESPONSE;
                      jv error = jv_invalid_get_msg(jv_copy(m_content.jvData));
                      char *msg = MemCopyStringA(jv_string_value(error));
-                     nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): JSON document parsing error (%hs)"), url, RemoveNewLines(msg));
+                     nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceRequest::query(%s): JSON document parsing error (%hs)"), url, RemoveNewLines(msg));
                      MemFree(msg);
 
                   }
 #else
                   rcc = ERR_FUNCTION_NOT_SUPPORTED;
-                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): JSON document parsing error (agent was built without libjq support)"), url);
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceRequest::query(%s): JSON document parsing error (agent was built without libjq support)"), url);
 #endif
                }
                else
@@ -799,7 +784,7 @@ retry:
 #endif
                }
                m_lastRequestTime = time(nullptr);
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::query(%s): response data type=%d, length=%u"), url, static_cast<int>(m_type), static_cast<unsigned int>(data.size()));
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("WebServiceRequest::query(%s): response data type=%d, length=%u"), url, static_cast<int>(m_type), static_cast<unsigned int>(data.size()));
                if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 8)
                {
 #ifdef UNICODE
@@ -810,7 +795,7 @@ retry:
                   for(TCHAR *s = responseText; *s != 0; s++)
                      if (*s < ' ')
                         *s = ' ';
-                  nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::query(%s): response data: %s"), url, responseText);
+                  nxlog_debug_tag(DEBUG_TAG, 6, _T("WebServiceRequest::query(%s): response data: %s"), url, responseText);
                   MemFree(responseText);
                }
             }
@@ -824,44 +809,44 @@ retry:
                   {
                      if (redirectLimit-- > 0)
                      {
-                        nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::query(%s): follow redirect to %hs"), url, redirectURL);
+                        nxlog_debug_tag(DEBUG_TAG, 6, _T("WebServiceRequest::query(%s): follow redirect to %hs"), url, redirectURL);
                         MemFree(urlUtf8);
                         urlUtf8 = MemCopyStringA(redirectURL);
                         data.clear();
                         goto retry;
                      }
-                     nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::query(%s): HTTP redirect to %hs, do not follow (redirect limit reached)"), url, redirectURL);
+                     nxlog_debug_tag(DEBUG_TAG, 6, _T("WebServiceRequest::query(%s): HTTP redirect to %hs, do not follow (redirect limit reached)"), url, redirectURL);
                   }
                   else
                   {
-                     nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::query(%s): HTTP redirect to %hs, do not follow (forbidden)"), url, redirectURL);
+                     nxlog_debug_tag(DEBUG_TAG, 6, _T("WebServiceRequest::query(%s): HTTP redirect to %hs, do not follow (forbidden)"), url, redirectURL);
                   }
                }
                else
                {
-                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): HTTP response %03d but redirect URL not set"), url, m_responseCode);
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceRequest::query(%s): HTTP response %03d but redirect URL not set"), url, m_responseCode);
                }
                rcc = ERR_MALFORMED_RESPONSE;
             }
             else
             {
                if (m_responseCode < 200 || m_responseCode > 299)
-                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): HTTP response %03d"), url, m_responseCode);
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceRequest::query(%s): HTTP response %03d"), url, m_responseCode);
                else if (data.size() == 0)
-                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): empty response"), url);
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceRequest::query(%s): empty response"), url);
                m_type = DocumentType::NONE;
                rcc = ERR_MALFORMED_RESPONSE;
             }
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): call to curl_easy_perform failed (%d: %hs)"), url, rc, errbuf);
+            nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceRequest::query(%s): call to curl_easy_perform failed (%d: %hs)"), url, rc, errbuf);
             rcc = ERR_MALFORMED_RESPONSE;
          }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): curl_easy_setopt failed for CURLOPT_URL"), url);
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceRequest::query(%s): curl_easy_setopt failed for CURLOPT_URL"), url);
          rcc = ERR_UNSUPPORTED_METRIC;
       }
       MemFree(urlUtf8);
@@ -869,7 +854,7 @@ retry:
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): curl_init failed"), url);
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceRequest::query(%s): curl_init failed"), url);
       rcc = ERR_INTERNAL_ERROR;
    }
    return rcc;
@@ -892,29 +877,32 @@ void QueryWebService(NXCPMessage* request, shared_ptr<AbstractCommSession> sessi
 
    TCHAR *url = request->getFieldAsString(VID_URL);
 
-   s_serviceCacheLock.lock();
-   shared_ptr<ServiceEntry> cachedEntry = nullptr;
-   if (requestMethodCode == (uint16_t)HttpRequestMethod::_GET) {
-      cachedEntry = s_serviceCache.getShared(url);
-      if (cachedEntry == nullptr)
+   s_serviceRequestCacheLock.lock();
+   shared_ptr<WebServiceRequest> serviceRequest;
+   if (requestMethodCode == (uint16_t)HttpRequestMethod::_GET)
+   {
+      serviceRequest = s_serviceRequestCache.getShared(url);
+      if (serviceRequest == nullptr)
       {
-         cachedEntry = make_shared<ServiceEntry>();
-         s_serviceCache.set(url, cachedEntry);
+         serviceRequest = make_shared<WebServiceRequest>();
+         s_serviceRequestCache.set(url, serviceRequest);
          nxlog_debug_tag(DEBUG_TAG, 5, _T("QueryWebService(): Create new cache entry for URL %s"), url);
       }
-   } else {
-      // Request methods other than GET are never cached, so we don't put it into s_serviceCache.
+   }
+   else
+   {
+      // Request methods other than GET are never cached, so we don't put it into s_serviceRequestCache.
       // Also such requests invalidate the cache for that URL per https://www.rfc-editor.org/rfc/rfc7234#section-4.4 .
       // Cache should be invalidated upon successful response, but unconditional early invalidation will still behave correctly.
-      s_serviceCache.set(url, nullptr);
-      cachedEntry = make_shared<ServiceEntry>();
+      s_serviceRequestCache.remove(url);
+      serviceRequest = make_shared<WebServiceRequest>();
    }
-   s_serviceCacheLock.unlock();
+   s_serviceRequestCacheLock.unlock();
 
-   cachedEntry->lock();
+   serviceRequest->lock();
    uint32_t retentionTime = request->getFieldAsUInt32(VID_RETENTION_TIME);
    uint32_t result = ERR_SUCCESS;
-   if (cachedEntry->isDataExpired(retentionTime))
+   if (serviceRequest->isDataExpired(retentionTime))
    {
       char *login = request->getFieldAsUtf8String(VID_LOGIN_NAME);
       char *password = request->getFieldAsUtf8String(VID_PASSWORD);
@@ -937,7 +925,7 @@ void QueryWebService(NXCPMessage* request, shared_ptr<AbstractCommSession> sessi
          nxlog_debug_tag(DEBUG_TAG, 7, _T("QueryWebService(): request header: %hs"), header);
       }
 
-      result = cachedEntry->query(url, requestMethodCode, requestData, login, password, authType, headers,
+      result = serviceRequest->query(url, requestMethodCode, requestData, login, password, authType, headers,
                request->getFieldAsBoolean(VID_VERIFY_CERT), verifyHost,
                request->getFieldAsBoolean(VID_FOLLOW_LOCATION),
                request->getFieldAsBoolean(VID_FORCE_PLAIN_TEXT_PARSER),
@@ -964,19 +952,19 @@ void QueryWebService(NXCPMessage* request, shared_ptr<AbstractCommSession> sessi
          case WebServiceRequestType::PARAMETER:
          {
             StringList params(*request, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);
-            result = cachedEntry->getParams(&params, &response);
+            result = serviceRequest->getParams(&params, &response);
             break;
          }
          case WebServiceRequestType::LIST:
          {
             TCHAR path[1024];
             request->getFieldAsString(VID_PARAM_LIST_BASE, path, 1024);
-            result = cachedEntry->getList(path, &response);
+            result = serviceRequest->getList(path, &response);
             break;
          }
       }
    }
-   cachedEntry->unlock();
+   serviceRequest->unlock();
 
    response.setField(VID_RCC, result);
    session->sendMessage(&response);
@@ -1000,29 +988,32 @@ void WebServiceCustomRequest(NXCPMessage* request, shared_ptr<AbstractCommSessio
 
    TCHAR *url = request->getFieldAsString(VID_URL);
 
-   s_serviceCacheLock.lock();
-   shared_ptr<ServiceEntry> cachedEntry = nullptr;
-   if (requestMethodCode == (uint16_t)HttpRequestMethod::_GET) {
-      cachedEntry = s_serviceCache.getShared(url);
-      if (cachedEntry == nullptr)
+   s_serviceRequestCacheLock.lock();
+   shared_ptr<WebServiceRequest> serviceRequest;
+   if (requestMethodCode == (uint16_t)HttpRequestMethod::_GET)
+   {
+      serviceRequest = s_serviceRequestCache.getShared(url);
+      if (serviceRequest == nullptr)
       {
-         cachedEntry = make_shared<ServiceEntry>();
-         s_serviceCache.set(url, cachedEntry);
+         serviceRequest = make_shared<WebServiceRequest>();
+         s_serviceRequestCache.set(url, serviceRequest);
          nxlog_debug_tag(DEBUG_TAG, 5, _T("WebServiceCustomRequest(): Create new cache entry for URL %s"), url);
       }
-   } else {
-      // Request methods other than GET are never cached, so we don't put it into s_serviceCache.
+   }
+   else
+   {
+      // Request methods other than GET are never cached, so we don't put it into s_serviceRequestCache.
       // Also such requests invalidate the cache for that URL per https://www.rfc-editor.org/rfc/rfc7234#section-4.4 .
       // Cache should be invalidated upon successful response, but unconditional early invalidation will still behave correctly.
-      s_serviceCache.set(url, nullptr);
-      cachedEntry = make_shared<ServiceEntry>();
+      s_serviceRequestCache.remove(url);
+      serviceRequest = make_shared<WebServiceRequest>();
    }
-   s_serviceCacheLock.unlock();
+   s_serviceRequestCacheLock.unlock();
 
-   cachedEntry->lock();
+   serviceRequest->lock();
    uint32_t retentionTime = request->getFieldAsUInt32(VID_RETENTION_TIME);
    uint32_t result = ERR_SUCCESS;
-   if (cachedEntry->isDataExpired(retentionTime))
+   if (serviceRequest->isDataExpired(retentionTime))
    {
       char *login = request->getFieldAsUtf8String(VID_LOGIN_NAME);
       char *password = request->getFieldAsUtf8String(VID_PASSWORD);
@@ -1044,7 +1035,7 @@ void WebServiceCustomRequest(NXCPMessage* request, shared_ptr<AbstractCommSessio
          nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceCustomRequest(): request header: %hs"), header);
       }
 
-      result = cachedEntry->query(url, requestMethodCode, requestData, login, password, authType, headers,
+      result = serviceRequest->query(url, requestMethodCode, requestData, login, password, authType, headers,
                request->getFieldAsBoolean(VID_VERIFY_CERT),
                request->getFieldAsBoolean(VID_VERIFY_HOST),
                request->getFieldAsBoolean(VID_FOLLOW_LOCATION),
@@ -1063,9 +1054,9 @@ void WebServiceCustomRequest(NXCPMessage* request, shared_ptr<AbstractCommSessio
    }
 
    NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
-   response.setField(VID_WEBSVC_RESPONSE, cachedEntry->getText());
-   response.setField(VID_WEBSVC_RESPONSE_CODE, cachedEntry->getResponseCode());
-   cachedEntry->unlock();
+   response.setFieldFromUtf8String(VID_WEBSVC_RESPONSE, serviceRequest->getResponseData());
+   response.setField(VID_WEBSVC_RESPONSE_CODE, serviceRequest->getResponseCode());
+   serviceRequest->unlock();
 
    response.setField(VID_RCC, result);
 
@@ -1082,19 +1073,19 @@ static void WebServiceHousekeeper()
 {
    nxlog_debug_tag(DEBUG_TAG, 6, _T("WebServiceHousekeeper(): running cache entry check"));
 
-   s_serviceCacheLock.lock();
-   auto it = s_serviceCache.begin();
+   s_serviceRequestCacheLock.lock();
+   auto it = s_serviceRequestCache.begin();
    while(it.hasNext())
    {
       auto entry = it.next();
-      shared_ptr<ServiceEntry> svc = *entry->value;
+      shared_ptr<WebServiceRequest> svc = *entry->value;
       if (svc->isDataExpired(g_webSvcCacheExpirationTime))
       {
          nxlog_debug_tag(DEBUG_TAG, 5, _T("WebServiceHousekeeper(): Cache entry for URL \"%s\" removed because of inactivity"), entry->key);
          it.remove();
       }
    }
-   s_serviceCacheLock.unlock();
+   s_serviceRequestCacheLock.unlock();
 
    ThreadPoolScheduleRelative(g_webSvcThreadPool, (MAX(g_webSvcCacheExpirationTime, 60) / 2) * 1000, WebServiceHousekeeper);
 }
