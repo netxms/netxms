@@ -240,6 +240,9 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
       case DS_INTERNAL:
          ds = _T("internal");
          break;
+      case DS_MODBUS:
+         ds = _T("modbus");
+         break;
       case DS_MQTT:
          ds = _T("mqtt");
          break;
