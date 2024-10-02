@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,18 +20,20 @@ package org.netxms.nxmc.modules.datacollection.propertypages;
 
 import java.util.Arrays;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.nxmc.base.widgets.LabeledCombo;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.modules.datacollection.dialogs.TestTransformationDlg;
+import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
 import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
 import org.netxms.nxmc.tools.WidgetFactory;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -47,7 +49,8 @@ public class Transformation extends AbstractDCIPropertyPage
    private static final String[] DCI_FUNCTIONS = { "FindDCIByName", "FindDCIByDescription", "GetDCIObject", "GetDCIValue", "GetDCIValueByDescription", "GetDCIValueByName" };
    private static final String[] DCI_VARIABLES = { "$dci", "$node" };
 
-	private Combo deltaCalculation;
+   private LabeledCombo transformedDataType;
+   private LabeledCombo deltaCalculation;
 	private ScriptEditor transformationScript;
 	private Button testScriptButton;
 
@@ -77,7 +80,23 @@ public class Transformation extends AbstractDCIPropertyPage
 
       if (editor.getObject() instanceof DataCollectionItem)
       {
-         deltaCalculation = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, i18n.tr("Step 1 - delta calculation"), WidgetHelper.DEFAULT_LAYOUT_DATA);
+         transformedDataType = new LabeledCombo(dialogArea, SWT.NONE);
+         transformedDataType.setLabel(i18n.tr("Data type after transformation"));
+         transformedDataType.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+         transformedDataType.add(i18n.tr("Same as original"));
+         transformedDataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.INT32));
+         transformedDataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.UINT32));
+         transformedDataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.COUNTER32));
+         transformedDataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.INT64));
+         transformedDataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.UINT64));
+         transformedDataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.COUNTER64));
+         transformedDataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.FLOAT));
+         transformedDataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.STRING));
+         transformedDataType.select(getDataTypePosition(editor.getObjectAsItem().getTransformedDataType()));
+
+         deltaCalculation = new LabeledCombo(dialogArea, SWT.NONE);
+         deltaCalculation.setLabel(i18n.tr("Step 1 - delta calculation"));
+         deltaCalculation.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
          deltaCalculation.add(i18n.tr("None (keep original value)"));
          deltaCalculation.add(i18n.tr("Simple delta"));
          deltaCalculation.add(i18n.tr("Average delta per second"));
@@ -114,18 +133,12 @@ public class Transformation extends AbstractDCIPropertyPage
          gd.horizontalAlignment = SWT.RIGHT;
          gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
          testScriptButton.setLayoutData(gd);
-         testScriptButton.addSelectionListener(new SelectionListener() {
+         testScriptButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e)
             {
                TestTransformationDlg dlg = new TestTransformationDlg(getShell(), editor.getObject(), transformationScript.getText());
                dlg.open();
-            }
-
-            @Override
-            public void widgetDefaultSelected(SelectionEvent e)
-            {
-               widgetSelected(e);
             }
          });
       }
@@ -139,13 +152,16 @@ public class Transformation extends AbstractDCIPropertyPage
 	 * @param isApply true if update operation caused by "Apply" button
 	 */
 	protected boolean applyChanges(final boolean isApply)
-	{	   
+	{
 		if (editor.getObject() instanceof DataCollectionItem)
+      {
 			editor.getObjectAsItem().setDeltaCalculation(deltaCalculation.getSelectionIndex());
-		editor.getObject().setTransformationScript(transformationScript.getText());
-		editor.modify();		
-		return true;
-	}
+         editor.getObjectAsItem().setTransformedDataType(getDataTypeByPosition(transformedDataType.getSelectionIndex()));
+      }
+      editor.getObject().setTransformationScript(transformationScript.getText());
+      editor.modify();
+      return true;
+   }
 
    /**
     * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
@@ -158,4 +174,54 @@ public class Transformation extends AbstractDCIPropertyPage
 			deltaCalculation.select(DataCollectionItem.DELTA_NONE);
       transformationScript.setText("");
 	}
+
+   /**
+    * Get selector position for given data type
+    * 
+    * @param type data type
+    * @return corresponding selector's position
+    */
+   private static int getDataTypePosition(DataType type)
+   {
+      switch(type)
+      {
+         case COUNTER32:
+            return 3;
+         case COUNTER64:
+            return 4;
+         case FLOAT:
+            return 7;
+         case INT32:
+            return 1;
+         case INT64:
+            return 4;
+         case STRING:
+            return 8;
+         case UINT32:
+            return 2;
+         case UINT64:
+            return 5;
+         default:
+            return 0; // fallback to "no change"
+      }
+   }
+
+   /**
+    * Data type positions in selector
+    */
+   private static final DataType[] TYPES = { 
+      DataType.NULL, DataType.INT32, DataType.UINT32, DataType.COUNTER32, DataType.INT64,
+      DataType.UINT64, DataType.COUNTER64, DataType.FLOAT, DataType.STRING
+   };
+
+   /**
+    * Get data type by selector position
+    * 
+    * @param position selector position
+    * @return corresponding data type
+    */
+   private static DataType getDataTypeByPosition(int position)
+   {
+      return TYPES[position];
+   }
 }

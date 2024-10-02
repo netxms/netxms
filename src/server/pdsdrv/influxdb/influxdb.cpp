@@ -221,7 +221,7 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    nxlog_debug_tag(DEBUG_TAG, 8,
             _T("Raw metric: OwnerName:%s DataSource:%i Type:%i Name:%s Description: %s Instance:%s DataType:%i DeltaCalculationMethod:%i RelatedObject:%i Value:%s timestamp:") INT64_FMT,
             dci->getOwnerName(), dci->getDataSource(), dci->getType(), dci->getName().cstr(), dci->getDescription().cstr(),
-            dci->getInstanceName().cstr(), dci->getDataType(), dci->getDeltaCalculationMethod(), dci->getRelatedObject(),
+            dci->getInstanceName().cstr(), dci->getTransformedDataType(), dci->getDeltaCalculationMethod(), dci->getRelatedObject(),
             value, static_cast<INT64>(timestamp));
 
    // Dont't try to send empty values
@@ -297,7 +297,7 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
 
    const TCHAR *dt; // DCI (data collection item) data types
    bool isInteger, isUnsigned = false;
-   switch (dci->getDataType())
+   switch (dci->getTransformedDataType())
    {
       case DCI_DT_INT:
          dt = _T("signed-integer32");
@@ -413,7 +413,7 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    data.append(_T(",relatedobjecttype="));
    data.append((relatedObject != nullptr) ? relatedObject->getObjectClassName() : _T("none"));
    data.append(tags);
-   if (dci->getDataType() == DCI_DT_STRING)
+   if (dci->getTransformedDataType() == DCI_DT_STRING)
    {
       data.append(_T(" value=\""));
       data.append(value);

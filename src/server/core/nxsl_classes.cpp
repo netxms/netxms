@@ -5242,6 +5242,10 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const NXSL_Identifier& a
    {
       value = vm->createValue(dci->getTemplateItemId());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("transformedDataType") && (dci->getType() == DCO_TYPE_ITEM))
+   {
+      value = vm->createValue(dci->getTransformedDataType());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("type"))
    {
 		value = vm->createValue((LONG)dci->getType());

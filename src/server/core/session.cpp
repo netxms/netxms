@@ -5078,7 +5078,7 @@ static void ProcessDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientSession
    switch(dci->getType())
    {
       case DCO_TYPE_ITEM:
-         dataType = static_cast<DCItem&>(*dci).getDataType();
+         dataType = (historicalDataType == HDT_RAW) ? static_cast<DCItem&>(*dci).getDataType() : static_cast<DCItem&>(*dci).getTransformedDataType();
          break;
       case DCO_TYPE_TABLE:
          dataType = static_cast<DCTable&>(*dci).getColumnDataType(dataColumn);
@@ -5319,7 +5319,7 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
       switch(dciType)
       {
          case DCO_TYPE_ITEM:
-            dataType = static_cast<DCItem*>(dci.get())->getDataType();
+            dataType = static_cast<DCItem*>(dci.get())->getTransformedDataType();
             break;
          case DCO_TYPE_TABLE:
             dataType = static_cast<DCTable*>(dci.get())->getColumnDataType(dataColumn);
@@ -10560,8 +10560,9 @@ void ClientSession::getDCIInfo(const NXCPMessage& request)
 				{
 					response.setField(VID_TEMPLATE_ID, dcObject->getTemplateId());
 					response.setField(VID_RESOURCE_ID, dcObject->getResourceId());
-					response.setField(VID_DCI_DATA_TYPE, static_cast<UINT16>(static_cast<DCItem&>(*dcObject).getDataType()));
-					response.setField(VID_DCI_SOURCE_TYPE, static_cast<UINT16>(static_cast<DCItem&>(*dcObject).getDataSource()));
+					response.setField(VID_DCI_DATA_TYPE, static_cast<uint16_t>(static_cast<DCItem&>(*dcObject).getDataType()));
+               response.setField(VID_TRANSFORMED_DATA_TYPE, static_cast<uint16_t>(static_cast<DCItem&>(*dcObject).getTransformedDataType()));
+					response.setField(VID_DCI_SOURCE_TYPE, static_cast<uint16_t>(static_cast<DCItem&>(*dcObject).getDataSource()));
 					response.setField(VID_NAME, dcObject->getName());
 					response.setField(VID_DESCRIPTION, dcObject->getDescription());
 	            response.setField(VID_RCC, RCC_SUCCESS);
@@ -10588,7 +10589,6 @@ void ClientSession::getDCIInfo(const NXCPMessage& request)
 
    sendMessage(response);
 }
-
 
 /**
  * Get DCI measurement units

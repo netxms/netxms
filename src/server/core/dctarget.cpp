@@ -1801,7 +1801,7 @@ void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition
             }
             tableData->setStatusAt(row, i + offset, static_cast<DCItem*>(object)->getThresholdSeverity());
             tableData->setCellObjectIdAt(row, i + offset, object->getId());
-            tableData->getColumnDefinitions().get(i + offset)->setDataType(static_cast<DCItem*>(object)->getDataType());
+            tableData->getColumnDefinitions().get(i + offset)->setDataType(static_cast<DCItem*>(object)->getTransformedDataType());
             tableData->getColumnDefinitions().get(i + offset)->setUnitName(static_cast<DCItem*>(object)->getUnitName());
             tableData->getColumnDefinitions().get(i + offset)->setMultiplier(static_cast<DCItem*>(object)->getMultiplier());
             if (tableDefinition->getAggregationFunction() == DCI_AGG_LAST)

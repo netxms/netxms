@@ -64,6 +64,7 @@ public class DataCollectionItem extends DataCollectionObject
    public static final int SNMP_RAWTYPE_IP6_ADDR = 8;
 
 	private DataType dataType;
+   private DataType transformedDataType;
 	private int deltaCalculation;
 	private int sampleCount;
 	private int multiplier;
@@ -84,6 +85,7 @@ public class DataCollectionItem extends DataCollectionObject
 		super(owner, msg);
 
 		dataType = DataType.getByValue(msg.getFieldAsInt16(NXCPCodes.VID_DCI_DATA_TYPE));
+      transformedDataType = DataType.getByValue(msg.getFieldAsInt16(NXCPCodes.VID_TRANSFORMED_DATA_TYPE));
 		deltaCalculation = msg.getFieldAsInt32(NXCPCodes.VID_DCI_DELTA_CALCULATION);
 		sampleCount = msg.getFieldAsInt32(NXCPCodes.VID_SAMPLE_COUNT);
 		multiplier = msg.getFieldAsInt32(NXCPCodes.VID_MULTIPLIER);
@@ -112,6 +114,7 @@ public class DataCollectionItem extends DataCollectionObject
 	{
       super(owner, nodeId, id);
 		dataType = DataType.INT32;
+      transformedDataType = DataType.NULL;
 		deltaCalculation = DELTA_NONE;
 		sampleCount = 0;
 		multiplier = 0;
@@ -162,6 +165,7 @@ public class DataCollectionItem extends DataCollectionObject
    {
       super(owner, src);
       dataType = src.dataType;
+      transformedDataType = src.transformedDataType;
       deltaCalculation = src.deltaCalculation;
       sampleCount = src.sampleCount;
       multiplier = src.multiplier;
@@ -180,9 +184,10 @@ public class DataCollectionItem extends DataCollectionObject
 	public void fillMessage(final NXCPMessage msg)
 	{
 		super.fillMessage(msg);
-		
+
 		msg.setFieldInt16(NXCPCodes.VID_DCOBJECT_TYPE, DCO_TYPE_ITEM);
 		msg.setFieldInt16(NXCPCodes.VID_DCI_DATA_TYPE, dataType.getValue());
+      msg.setFieldInt16(NXCPCodes.VID_TRANSFORMED_DATA_TYPE, transformedDataType.getValue());
 		msg.setFieldInt16(NXCPCodes.VID_DCI_DELTA_CALCULATION, deltaCalculation);
 		msg.setFieldInt16(NXCPCodes.VID_SAMPLE_COUNT, sampleCount);
 		msg.setFieldInt16(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE, snmpRawValueType);
@@ -191,7 +196,7 @@ public class DataCollectionItem extends DataCollectionObject
 		msg.setFieldInt32(NXCPCodes.VID_MULTIPLIER, multiplier);
 		if (unitName != null)
 			msg.setField(NXCPCodes.VID_UNITS_NAME, unitName);
-		
+
 		msg.setFieldInt32(NXCPCodes.VID_NUM_THRESHOLDS, thresholds.size());
 		long varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
 		for(int i = 0; i < thresholds.size(); i++, varId +=10)
@@ -217,8 +222,24 @@ public class DataCollectionItem extends DataCollectionObject
 	}
 
 	/**
-	 * @return the deltaCalculation
-	 */
+    * @return the transformedDataType
+    */
+   public DataType getTransformedDataType()
+   {
+      return transformedDataType;
+   }
+
+   /**
+    * @param transformedDataType the transformedDataType to set
+    */
+   public void setTransformedDataType(DataType transformedDataType)
+   {
+      this.transformedDataType = transformedDataType;
+   }
+
+   /**
+    * @return the deltaCalculation
+    */
 	public int getDeltaCalculation()
 	{
 		return deltaCalculation;

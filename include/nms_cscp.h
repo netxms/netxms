@@ -1531,6 +1531,8 @@ typedef struct
 #define VID_DASHBOARD_ID            ((uint32_t)849)
 #define VID_ELEMENT_INDEX           ((uint32_t)850)
 #define VID_USE_L1_TOPOLOGY         ((uint32_t)851)
+#define VID_USE_CARBONE_RENDERER    ((uint32_t)852)
+#define VID_TRANSFORMED_DATA_TYPE   ((uint32_t)853)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

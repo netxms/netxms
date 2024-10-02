@@ -329,7 +329,6 @@ protected:
    int32_t m_instanceRetentionTime;      // Retention time if instance is not found
    time_t m_startTime;                 // Time to start data collection
    uint32_t m_relatedObject;
-   uint32_t m_allThresholdsRearmEvent; // Event to be generated when all thresholds are rearmed
 
    void lock() const { m_mutex.lock(); }
    bool tryLock() const { return m_mutex.tryLock(); }
@@ -419,7 +418,6 @@ public:
    bool hasValue();
    bool hasAccess(uint32_t userId);
    uint32_t getRelatedObject() const { return m_relatedObject; }
-   uint32_t getAllThresholdRearmEvent() const { return m_allThresholdsRearmEvent; }
    bool isDisabledByUser() { return (m_stateFlags & DCO_STATE_DISABLED_BY_USER) ? true : false; }
    SharedString getComments() const { return GetAttributeWithLock(m_comments, m_mutex); }
 
@@ -494,6 +492,7 @@ class NXCORE_EXPORTABLE DCItem : public DCObject
 protected:
    BYTE m_deltaCalculation;      // Delta calculation method
    BYTE m_dataType;
+   BYTE m_transformedDataType;   // Data type after transformation
 	int m_sampleCount;            // Number of samples required to calculate value
 	ObjectArray<Threshold> *m_thresholds;
    uint32_t m_cacheSize;          // Number of items in cache
@@ -508,6 +507,7 @@ protected:
 	SharedString m_unitName;
 	uint16_t m_snmpRawValueType;		// Actual SNMP raw value type for input transformation
 	TCHAR m_predictionEngine[MAX_NPE_NAME_LEN];
+   uint32_t m_allThresholdsRearmEvent; // Event to be generated when all thresholds are rearmed
 
    bool transform(ItemValue &value, time_t nElapsedTime);
    void checkThresholds(ItemValue &value);
@@ -534,7 +534,7 @@ protected:
 public:
    DCItem(const DCItem *src, bool shadowCopy);
    DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay);
-   DCItem(UINT32 id, const TCHAR *name, int source, int dataType, BYTE scheduleType, const TCHAR *pollingInterval,
+   DCItem(uint32_t id, const TCHAR *name, int source, int dataType, BYTE scheduleType, const TCHAR *pollingInterval,
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
 	DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5);
@@ -561,6 +561,7 @@ public:
    void reloadCache(bool forceReload);
 
    int getDataType() const { return m_dataType; }
+   int getTransformedDataType() const { return (m_transformedDataType != DCI_DT_NULL) ? m_transformedDataType : m_dataType; }
    int getNXSLDataType() const;
    int getDeltaCalculationMethod() const { return m_deltaCalculation; }
 	bool isInterpretSnmpRawValue() const { return (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? true : false; }
@@ -604,10 +605,9 @@ public:
    virtual json_t *toJson() override;
 
 	int getThresholdCount() const { return (m_thresholds != nullptr) ? m_thresholds->size() : 0; }
+   uint32_t getAllThresholdRearmEvent() const { return m_allThresholdsRearmEvent; }
 
 	void setUnitName(const SharedString &unitName) { SetAttributeWithLock(m_unitName, unitName, m_mutex); }
-	void setDataType(int dataType) { m_dataType = dataType; }
-	void setDeltaCalculationMethod(int method) { m_deltaCalculation = method; }
 	void setAllThresholdsFlag(BOOL bFlag) { if (bFlag) m_flags |= DCF_ALL_THRESHOLDS; else m_flags &= ~DCF_ALL_THRESHOLDS; }
 	void addThreshold(Threshold *pThreshold);
 	void deleteAllThresholds();
@@ -889,6 +889,7 @@ private:
    SharedString m_unitName;
    int m_multiplier;
    int m_dataType;
+   int m_transformedDataType;
    int m_origin;
    int m_status;
    uint32_t m_errorCount;
@@ -918,6 +919,7 @@ public:
    const TCHAR *getInstanceData() const { return m_instanceData; }
    const TCHAR *getComments() const { return m_comments; }
    int getDataType() const { return m_dataType; }
+   int getTransformedDataType() const { return m_transformedDataType; }
    int getOrigin() const { return m_origin; }
    int getStatus() const { return m_status; }
    uint32_t getErrorCount() const { return m_errorCount; }

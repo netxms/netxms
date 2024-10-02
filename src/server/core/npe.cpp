@@ -287,7 +287,7 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage& request, NXCPMe
    static_cast<DCItem*>(dci.get())->fillMessageWithThresholds(response, false);
    session->sendMessage(response);
 
-   int16_t dataType = static_cast<DCItem*>(dci.get())->getDataType();
+   int16_t dataType = static_cast<DCItem*>(dci.get())->getTransformedDataType();
    time_t timeFrom = request.getFieldAsTime(VID_TIME_FROM);
    time_t timestamp = request.getFieldAsTime(VID_TIME_TO);
    time_t interval = dci->getEffectivePollingInterval();

@@ -29,6 +29,7 @@
 DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
 {
    m_dataType = src->m_dataType;
+   m_transformedDataType = src->m_transformedDataType;
    m_deltaCalculation = src->m_deltaCalculation;
 	m_sampleCount = src->m_sampleCount;
    m_cacheSize = shadowCopy ? src->m_cacheSize : 0;
@@ -79,7 +80,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
  *    instd_method,instd_data,instd_filter,samples,comments,guid,npe_name,
  *    instance_retention_time,grace_period_start,related_object,polling_schedule_type,
  *    retention_type,polling_interval_src,retention_time_src,snmp_version,state_flags,
- *    all_rearmed_event
+ *    all_rearmed_event,transformed_datatype
  */
 DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
@@ -134,6 +135,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
    m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldLong(hResult, row, 36));
    m_stateFlags = DBGetFieldLong(hResult, row, 37);
    m_allThresholdsRearmEvent = DBGetFieldULong(hResult, row, 38);
+   m_transformedDataType = (BYTE)DBGetFieldLong(hResult, row, 39);
 
    int effectivePollingInterval = getEffectivePollingInterval();
    m_startTime = (useStartupDelay && (effectivePollingInterval >= 10)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
@@ -162,13 +164,14 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
 /**
  * Constructor for creating new DCItem from scratch
  */
-DCItem::DCItem(UINT32 id, const TCHAR *name, int source, int dataType, BYTE scheduleType,
+DCItem::DCItem(uint32_t id, const TCHAR *name, int source, int dataType, BYTE scheduleType,
       const TCHAR *pollingInterval, BYTE retentionType, const TCHAR *retentionTime,
       const shared_ptr<DataCollectionOwner>& owner, const TCHAR *description, const TCHAR *systemTag)
 	: DCObject(id, name, source, scheduleType, pollingInterval, retentionType, retentionTime, owner,
 	      description, systemTag)
 {
    m_dataType = dataType;
+   m_transformedDataType = DCI_DT_NULL;
    m_deltaCalculation = DCM_ORIGINAL_VALUE;
 	m_sampleCount = 0;
    m_thresholds = nullptr;
@@ -193,6 +196,7 @@ DCItem::DCItem(UINT32 id, const TCHAR *name, int source, int dataType, BYTE sche
 DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5) : DCObject(config, owner, nxslV5), m_unitName(config->getSubEntryValue(_T("unitName")))
 {
    m_dataType = (BYTE)config->getSubEntryValueAsInt(_T("dataType"));
+   m_transformedDataType = (BYTE)config->getSubEntryValueAsInt(_T("transformedDataType"));
    m_deltaCalculation = (BYTE)config->getSubEntryValueAsInt(_T("delta"));
    m_sampleCount = (BYTE)config->getSubEntryValueAsInt(_T("samples"));
    m_cacheSize = 0;
@@ -310,7 +314,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
       _T("instd_filter"), _T("samples"), _T("comments"), _T("guid"), _T("npe_name"), _T("instance_retention_time"),
       _T("grace_period_start"), _T("related_object"), _T("polling_interval_src"), _T("retention_time_src"),
       _T("polling_schedule_type"), _T("retention_type"), _T("snmp_version"), _T("state_flags"), _T("all_rearmed_event"),
-      nullptr
+      _T("transformed_datatype"), nullptr
    };
 
 	DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("items"), _T("item_id"), m_id, columns);
@@ -323,7 +327,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_templateId);
 	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC, MAX_ITEM_NAME - 1);
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)m_source);
-	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (INT32)m_dataType);
+	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_dataType));
 	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_pollingInterval);
 	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (INT32)m_retentionTime);
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (INT32)m_status);
@@ -363,7 +367,8 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 37, DB_SQLTYPE_INTEGER, m_snmpVersion);
    DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, m_stateFlags);
    DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_allThresholdsRearmEvent);
-   DBBind(hStmt, 40, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 40, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_transformedDataType));
+   DBBind(hStmt, 41, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -553,6 +558,7 @@ void DCItem::createMessage(NXCPMessage *pMsg)
 
    lock();
    pMsg->setField(VID_DCI_DATA_TYPE, static_cast<uint16_t>(m_dataType));
+   pMsg->setField(VID_TRANSFORMED_DATA_TYPE, static_cast<uint16_t>(m_transformedDataType));
    pMsg->setField(VID_DCI_DELTA_CALCULATION, static_cast<uint16_t>(m_deltaCalculation));
    pMsg->setField(VID_SAMPLE_COUNT, static_cast<uint16_t>(m_sampleCount));
 	pMsg->setField(VID_MULTIPLIER, static_cast<uint32_t>(m_multiplier));
@@ -603,6 +609,7 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
    lock();
 
    m_dataType = (BYTE)msg.getFieldAsUInt16(VID_DCI_DATA_TYPE);
+   m_transformedDataType = (BYTE)msg.getFieldAsUInt16(VID_TRANSFORMED_DATA_TYPE);
    m_deltaCalculation = (BYTE)msg.getFieldAsUInt16(VID_DCI_DELTA_CALCULATION);
 	m_sampleCount = msg.getFieldAsInt16(VID_SAMPLE_COUNT);
 	m_multiplier = msg.getFieldAsInt32(VID_MULTIPLIER);
@@ -687,7 +694,7 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
 
 	// Update data type in thresholds
    for(int i = 0; i < getThresholdCount(); i++)
-      m_thresholds->get(i)->setDataType(m_dataType);
+      m_thresholds->get(i)->setDataType(getTransformedDataType());
 
    updateCacheSizeInternal(true);
    unlock();
@@ -1068,6 +1075,37 @@ void DCItem::generateEventsAfterMaintenance()
 }
 
 /**
+ * Convert DCI value to given data type
+ */
+static inline void ConvertValue(ItemValue& value, int destinationDataType, int sourceDataType)
+{
+   switch(destinationDataType)
+   {
+      case DCI_DT_INT:
+         value.set(value.getInt32());
+         break;
+      case DCI_DT_INT64:
+         // Other data types are good without conversion
+         if ((sourceDataType == DCI_DT_STRING) || (sourceDataType == DCI_DT_FLOAT))
+            value.set(value.getInt64());
+         break;
+      case DCI_DT_UINT:
+      case DCI_DT_COUNTER32:
+         value.set(value.getUInt32());
+         break;
+      case DCI_DT_UINT64:
+      case DCI_DT_COUNTER64:
+         value.set(value.getUInt64());
+         break;
+      case DCI_DT_FLOAT:
+         // Other data types are good without conversion
+         if (sourceDataType == DCI_DT_STRING)
+            value.set(value.getDouble());
+         break;
+   }
+}
+
+/**
  * Transform received value. Assuming that DCI object is locked.
  */
 bool DCItem::transform(ItemValue &value, time_t elapsedTime)
@@ -1266,24 +1304,24 @@ bool DCItem::transform(ItemValue &value, time_t elapsedTime)
             }
             if (!nxslValue->isNull() && success)
             {
-               switch(m_dataType)
+               switch(getTransformedDataType())
                {
                   case DCI_DT_INT:
-                     value.set(nxslValue->getValueAsInt32(), nxslValue->getValueAsCString());
+                     value.set(nxslValue->getValueAsInt32());
                      break;
                   case DCI_DT_UINT:
                   case DCI_DT_COUNTER32:
-                     value.set(nxslValue->getValueAsUInt32(), nxslValue->getValueAsCString());
+                     value.set(nxslValue->getValueAsUInt32());
                      break;
                   case DCI_DT_INT64:
-                     value.set(nxslValue->getValueAsInt64(), nxslValue->getValueAsCString());
+                     value.set(nxslValue->getValueAsInt64());
                      break;
                   case DCI_DT_UINT64:
                   case DCI_DT_COUNTER64:
-                     value.set(nxslValue->getValueAsUInt64(), nxslValue->getValueAsCString());
+                     value.set(nxslValue->getValueAsUInt64());
                      break;
                   case DCI_DT_FLOAT:
-                     value.set(nxslValue->getValueAsReal(), nxslValue->getValueAsCString());
+                     value.set(nxslValue->getValueAsReal());
                      break;
                   case DCI_DT_STRING:
                      value.set(nxslValue->getValueAsCString());
@@ -1311,7 +1349,12 @@ bool DCItem::transform(ItemValue &value, time_t elapsedTime)
          }
          vm.destroy();
       }
-      else if (vm.failureReason() != ScriptVMFailureReason::SCRIPT_IS_EMPTY)
+      else if (vm.failureReason() == ScriptVMFailureReason::SCRIPT_IS_EMPTY)
+      {
+         if (getTransformedDataType() != m_dataType)
+            ConvertValue(value, getTransformedDataType(), m_dataType);
+      }
+      else
       {
          time_t now = time(nullptr);
          if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
@@ -1323,6 +1366,10 @@ bool DCItem::transform(ItemValue &value, time_t elapsedTime)
          }
          success = false;
       }
+   }
+   else if (getTransformedDataType() != m_dataType)
+   {
+      ConvertValue(value, getTransformedDataType(), m_dataType);
    }
    return success;
 }
@@ -1644,7 +1691,7 @@ void DCItem::fillLastValueMessage(NXCPMessage *msg)
    msg->setField(VID_DCI_SOURCE_TYPE, m_source);
    if (m_cacheSize > 0)
    {
-      msg->setField(VID_DCI_DATA_TYPE, static_cast<uint16_t>(m_dataType));
+      msg->setField(VID_DCI_DATA_TYPE, static_cast<uint16_t>(getTransformedDataType()));
       msg->setField(VID_VALUE, m_ppValueCache[0]->getString());
       msg->setField(VID_RAW_VALUE, m_prevRawValue.getString());
       msg->setFieldFromTime(VID_TIMESTAMP, m_ppValueCache[0]->getTimeStamp());
@@ -1673,7 +1720,7 @@ void DCItem::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId, cons
    msg->setField(baseId++, static_cast<uint16_t>(m_source));
    if (m_cacheSize > 0)
    {
-      msg->setField(baseId++, static_cast<uint16_t>(m_dataType));
+      msg->setField(baseId++, static_cast<uint16_t>(getTransformedDataType()));
       msg->setField(baseId++, m_ppValueCache[0]->getString());
       msg->setFieldFromTime(baseId++, m_ppValueCache[0]->getTimeStamp());
    }
@@ -1790,13 +1837,13 @@ NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int function, int sampleCount)
       case F_LAST:
          // cache placeholders will have timestamp 1
          value = (m_cacheLoaded && (m_cacheSize > 0) && (m_ppValueCache[0]->getTimeStamp() != 1)) ? vm->createValue(m_ppValueCache[0]->getString()) : vm->createValue();
-         CastNXSLValue(value, m_dataType);
+         CastNXSLValue(value, getTransformedDataType());
          break;
       case F_DIFF:
          if (m_cacheLoaded && (m_cacheSize >= 2))
          {
             ItemValue result;
-            CalculateItemValueDiff(&result, m_dataType, *m_ppValueCache[0], *m_ppValueCache[1]);
+            CalculateItemValueDiff(&result, getTransformedDataType(), *m_ppValueCache[0], *m_ppValueCache[1]);
             value = vm->createValue(result.getString());
          }
          else
@@ -1808,9 +1855,9 @@ NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int function, int sampleCount)
          if (m_cacheLoaded && (m_cacheSize > 0))
          {
             ItemValue result;
-            CalculateItemValueAverage(&result, m_dataType, m_ppValueCache, std::min(m_cacheSize, static_cast<uint32_t>(sampleCount)));
+            CalculateItemValueAverage(&result, getTransformedDataType(), m_ppValueCache, std::min(m_cacheSize, static_cast<uint32_t>(sampleCount)));
             value = vm->createValue(result.getString());
-            CastNXSLValue(value, m_dataType);
+            CastNXSLValue(value, getTransformedDataType());
          }
          else
          {
@@ -1821,7 +1868,7 @@ NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int function, int sampleCount)
          if (m_cacheLoaded && (m_cacheSize > 0))
          {
             ItemValue result;
-            CalculateItemValueMeanDeviation(&result, m_dataType, m_ppValueCache, std::min(m_cacheSize, static_cast<uint32_t>(sampleCount)));
+            CalculateItemValueMeanDeviation(&result, getTransformedDataType(), m_ppValueCache, std::min(m_cacheSize, static_cast<uint32_t>(sampleCount)));
             value = vm->createValue(result.getString());
          }
          else
@@ -2072,6 +2119,7 @@ void DCItem::updateFromTemplate(DCObject *src)
 	DCItem *item = static_cast<DCItem*>(src);
 
    m_dataType = item->m_dataType;
+   m_transformedDataType = item->m_transformedDataType;
    m_deltaCalculation = item->m_deltaCalculation;
    m_sampleCount = item->m_sampleCount;
    m_snmpRawValueType = item->m_snmpRawValueType;
@@ -2105,7 +2153,7 @@ void DCItem::updateFromTemplate(DCObject *src)
 
    // Update data type in thresholds
    for(i = 0; i < getThresholdCount(); i++)
-      m_thresholds->get(i)->setDataType(m_dataType);
+      m_thresholds->get(i)->setDataType(getTransformedDataType());
 
    updateCacheSizeInternal(true);
    unlock();
@@ -2158,7 +2206,9 @@ void DCItem::createExportRecord(TextFileWriter& xml) const
    xml.append(EscapeStringForXML2(m_description));
    xml.append(_T("</description>\n\t\t\t\t\t<dataType>"));
    xml.append(static_cast<int32_t>(m_dataType));
-   xml.append(_T("</dataType>\n\t\t\t\t\t<samples>"));
+   xml.append(_T("</dataType>\n\t\t\t\t\t<transformedDataType>"));
+   xml.append(static_cast<int32_t>(m_transformedDataType));
+   xml.append(_T("</transformedDataType>\n\t\t\t\t\t<samples>"));
    xml.append(m_sampleCount);
    xml.append(_T("</samples>\n\t\t\t\t\t<origin>"));
    xml.append(static_cast<int32_t>(m_source));
@@ -2406,6 +2456,7 @@ void DCItem::updateFromImport(ConfigEntry *config, bool nxslV5)
 
    lock();
    m_dataType = (BYTE)config->getSubEntryValueAsInt(_T("dataType"));
+   m_transformedDataType = (BYTE)config->getSubEntryValueAsInt(_T("transformedDataType"));
    m_deltaCalculation = (BYTE)config->getSubEntryValueAsInt(_T("delta"));
    m_sampleCount = (BYTE)config->getSubEntryValueAsInt(_T("samples"));
    m_snmpRawValueType = static_cast<uint16_t>(config->getSubEntryValueAsInt(_T("snmpRawValueType")));
@@ -2452,6 +2503,7 @@ json_t *DCItem::toJson()
    lock();
    json_object_set_new(root, "deltaCalculation", json_integer(m_deltaCalculation));
    json_object_set_new(root, "dataType", json_integer(m_dataType));
+   json_object_set_new(root, "transformedDataType", json_integer(m_transformedDataType));
    json_object_set_new(root, "sampleCount", json_integer(m_sampleCount));
    json_object_set_new(root, "thresholds", json_object_array(m_thresholds));
    json_object_set_new(root, "prevRawValue", json_string_t(m_prevRawValue));

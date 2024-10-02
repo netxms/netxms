@@ -35,7 +35,7 @@ Threshold::Threshold(DCItem *relatedItem)
    m_expandValue = false;
    m_function = F_LAST;
    m_operation = OP_EQ;
-   m_dataType = relatedItem->getDataType();
+   m_dataType = relatedItem->getTransformedDataType();
    m_sampleCount = 1;
    m_scriptSource = nullptr;
    m_script = nullptr;
@@ -143,7 +143,7 @@ Threshold::Threshold(DB_RESULT hResult, int row, DCItem *relatedItem) : m_value(
    m_lastScriptErrorReport = 0;
    m_itemId = relatedItem->getId();
    m_targetId = relatedItem->getOwnerId();
-   m_dataType = relatedItem->getDataType();
+   m_dataType = relatedItem->getTransformedDataType();
    m_expandValue = (NumChars(m_value, '%') > 0);
 
 	if ((m_function == F_LAST) && (m_sampleCount < 1))
@@ -162,7 +162,7 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem, bool nxslV5)
    m_rearmEventCode = EventCodeFromName(config->getSubEntryValue(_T("deactivationEvent"), 0, _T("SYS_THRESHOLD_REARMED")), EVENT_THRESHOLD_REARMED);
    m_function = (BYTE)config->getSubEntryValueAsInt(_T("function"), 0, F_LAST);
    m_operation = (BYTE)config->getSubEntryValueAsInt(_T("condition"), 0, OP_EQ);
-   m_dataType = parentItem->getDataType();
+   m_dataType = parentItem->getTransformedDataType();
 	m_value.set(config->getSubEntryValue(_T("value"), 0, _T("")), true);
    m_expandValue = (NumChars(m_value, '%') > 0);
    m_sampleCount = (config->getSubEntryValue(_T("sampleCount")) != nullptr) ? config->getSubEntryValueAsInt(_T("sampleCount"), 0, 1) : config->getSubEntryValueAsInt(_T("param1"), 0, 1);
@@ -1027,7 +1027,7 @@ void Threshold::associate(DCItem *pItem)
 {
    m_itemId = pItem->getId();
    m_targetId = pItem->getOwnerId();
-   m_dataType = pItem->getDataType();
+   m_dataType = pItem->getTransformedDataType();
 }
 
 /**

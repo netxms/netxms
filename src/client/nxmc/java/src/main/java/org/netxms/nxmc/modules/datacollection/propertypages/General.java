@@ -123,7 +123,12 @@ public class General extends AbstractDCIPropertyPage
 	private Text pollingInterval;
 	private Text retentionTime;
 	private Button checkSaveOnlyChangedValues;
-   
+
+   /**
+    * Create page.
+    *
+    * @param editor data collection object editor
+    */
    public General(DataCollectionObjectEditor editor)
    {
       super(LocalizationHelper.getI18n(General.class).tr("General"), editor);

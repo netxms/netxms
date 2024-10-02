@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.16 to 51.17
+ */
+static bool H_UpgradeFromV16()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE items ADD transformed_datatype integer\n")
+      _T("UPDATE items SET transformed_datatype=6\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("items"), _T("transformed_datatype")));
+
+   CHK_EXEC(SetMinorSchemaVersion(17));
+   return true;
+}
+
+/**
  * Upgrade from 51.15 to 51.16
  */
 static bool H_UpgradeFromV15()
@@ -354,6 +370,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 16, 51, 17, H_UpgradeFromV16 },
    { 15, 51, 16, H_UpgradeFromV15 },
    { 14, 51, 15, H_UpgradeFromV14 },
    { 13, 51, 14, H_UpgradeFromV13 },

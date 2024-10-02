@@ -876,6 +876,7 @@ CREATE TABLE items
   snmp_port integer not null,
   snmp_version integer not null,
   datatype integer not null,
+  transformed_datatype integer not null,
   polling_schedule_type char(1) not null,
   polling_interval integer not null,
   polling_interval_src varchar(255) null,
