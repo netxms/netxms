@@ -218,9 +218,9 @@ public class EventProcessingPolicyRule
       }
       msg.setFieldStringCollection(NXCPCodes.VID_TIMER_LIST, timerCancellations);
 
-      msg.setField(NXCPCodes.VID_RULE_EVENTS, events.toArray(new Long[events.size()]));
-      msg.setField(NXCPCodes.VID_RULE_SOURCES, sources.toArray(new Long[sources.size()]));
-      msg.setField(NXCPCodes.VID_RULE_SOURCE_EXCLUSIONS, sourceExclusions.toArray(new Long[sourceExclusions.size()]));
+      msg.setField(NXCPCodes.VID_RULE_EVENTS, events);
+      msg.setField(NXCPCodes.VID_RULE_SOURCES, sources);
+      msg.setField(NXCPCodes.VID_RULE_SOURCE_EXCLUSIONS, sourceExclusions);
       msg.setFieldInt32(NXCPCodes.VID_NUM_TIME_FRAMES, timeFrames.size());
       fieldId = NXCPCodes.VID_TIME_FRAME_LIST_BASE;
       for(TimeFrame frame : timeFrames)
@@ -228,13 +228,13 @@ public class EventProcessingPolicyRule
          frame.fillMessage(msg, fieldId);
          fieldId += 2;
       }
-      
+
       msg.setField(NXCPCodes.VID_ALARM_KEY, alarmKey);
       msg.setField(NXCPCodes.VID_ALARM_MESSAGE, alarmMessage);
       msg.setFieldInt16(NXCPCodes.VID_ALARM_SEVERITY, alarmSeverity.getValue());
       msg.setFieldInt32(NXCPCodes.VID_ALARM_TIMEOUT, alarmTimeout);
-      msg.setFieldInt32(NXCPCodes.VID_ALARM_TIMEOUT_EVENT, (int)alarmTimeoutEvent);
-      msg.setField(NXCPCodes.VID_ALARM_CATEGORY_ID, alarmCategoryIds.toArray(new Long[alarmCategoryIds.size()]));
+      msg.setFieldInt32(NXCPCodes.VID_ALARM_TIMEOUT_EVENT, alarmTimeoutEvent);
+      msg.setField(NXCPCodes.VID_ALARM_CATEGORY_ID, alarmCategoryIds);
       msg.setField(NXCPCodes.VID_RCA_SCRIPT_NAME, rcaScriptName);
       msg.setField(NXCPCodes.VID_DOWNTIME_TAG, downtimeTag);
       msg.setField(NXCPCodes.VID_ACTION_SCRIPT, actionScript);

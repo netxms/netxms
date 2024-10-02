@@ -392,14 +392,15 @@ public class NXCPMessage
    {
       setField(new NXCPMessageField(fieldId, value));
    }
+
    /**
-    * Set binary field from collection of long integers. Each element will be converted to network byte order and then array will be
-    * serialized as array of bytes.
+    * Set binary field from collection of integers. Each element will be converted to 32 bit integer in network byte order and then
+    * array will be serialized as array of bytes.
     * 
     * @param fieldId field ID
     * @param value value to be encoded
     */
-   public void setField(final long fieldId, final Collection<Long> value)
+   public <T extends Number> void setField(final long fieldId, final Collection<T> value)
    {
       setField(new NXCPMessageField(fieldId, value));
    }

@@ -268,13 +268,13 @@ public class NXCPMessageField
    }
 
    /**
-    * Create binary field from collection of long integers. Each element will be converted to network byte order and then array will
-    * be serialized as array of bytes.
+    * Create binary field from collection of integers. Each element will be converted to 32 bit integer in network byte order and
+    * then array will be serialized as array of bytes.
     * 
     * @param fieldId field ID
     * @param value value to be encoded
     */
-   public NXCPMessageField(final long fieldId, final Collection<Long> value)
+   public <T extends Number> NXCPMessageField(final long fieldId, final Collection<T> value)
    {
       id = fieldId;
       type = TYPE_BINARY;
@@ -283,7 +283,7 @@ public class NXCPMessageField
       final DataOutputStream out = new DataOutputStream(byteStream);
       try
       {
-         for(Long v : value)
+         for(Number v : value)
             out.writeInt(v.intValue());
       }
       catch(IOException e)
