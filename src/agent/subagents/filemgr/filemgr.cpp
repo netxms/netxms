@@ -73,7 +73,7 @@ bool SetPrivilege(HANDLE hToken, const TCHAR* privilege, bool enabled)
  * Root folders
  */
 static ObjectArray<RootFolder> s_rootDirectories(16, 16, Ownership::True);
-static SynchronizedHashMap<uint32_t, VolatileCounter> s_downloadFileStopMarkers(Ownership::True);
+static SynchronizedHashMap<uint64_t, VolatileCounter> s_downloadFileStopMarkers(Ownership::False);
 
 /**
  * Monitored file list
@@ -1145,9 +1145,10 @@ struct FileSendData
    TCHAR *fileId;
    bool follow;
    NXCPStreamCompressionMethod compressionMethod;
-   uint32_t id;
+   uint64_t id;
    off64_t offset;
    shared_ptr<AbstractCommSession> session;
+   VolatileCounter stopMarker;
 
    FileSendData(const shared_ptr<AbstractCommSession>& _session, TCHAR *_fileName, const NXCPMessage& request) : session(_session)
    {
@@ -1163,8 +1164,9 @@ struct FileSendData
          bool allowCompression = request.getFieldAsBoolean(VID_ENABLE_COMPRESSION);
          compressionMethod = allowCompression ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE;
       }
-      id = request.getId();
+      id = (static_cast<uint64_t>(session->getId()) << 32) | static_cast<uint64_t>(request.getId());
       offset = request.getFieldAsInt32(VID_FILE_OFFSET);
+      stopMarker = 0;
    }
 
    ~FileSendData()
@@ -1197,7 +1199,7 @@ static void SendFile(FileSendData *data)
    }
    nxlog_debug_tag(DEBUG_TAG, 5, _T("SendFile: request for file \"%s\", follow = %s, compression = %s"),
                data->fileName, data->follow ? _T("true") : _T("false"), compressionMethodName);
-   bool success = data->session->sendFile(data->id, data->fileName, data->offset, data->compressionMethod, s_downloadFileStopMarkers.get(data->id));
+   bool success = data->session->sendFile(static_cast<uint32_t>(data->id & _LL(0xFFFFFFFF)), data->fileName, data->offset, data->compressionMethod, &data->stopMarker);
    if (data->follow && success)
    {
       g_monitorFileList.add(data->fileId);
@@ -1226,8 +1228,9 @@ static void CH_GetFile(const NXCPMessage& request, NXCPMessage *response, Abstra
    TCHAR *fullPath;
    if (CheckFullPath(fileName, &fullPath, false))
    {
-      s_downloadFileStopMarkers.set(request.getId(), new VolatileCounter(0));
-      ThreadCreateEx(SendFile, new FileSendData(session->self(), fullPath, request));
+      auto fd = new FileSendData(session->self(), fullPath, request);
+      s_downloadFileStopMarkers.set(fd->id, &fd->stopMarker);
+      ThreadCreateEx(SendFile, fd);
       response->setField(VID_RCC, ERR_SUCCESS);
    }
    else
@@ -1503,9 +1506,10 @@ static void CH_ChangeFileOwner(NXCPMessage *request, NXCPMessage *response, Abst
 /**
  * Handler for "cancel file download" command
  */
-static void CH_CancelFileDownload(NXCPMessage *request, NXCPMessage *response)
+static void CH_CancelFileDownload(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
 {
-   VolatileCounter *counter = s_downloadFileStopMarkers.get(request->getFieldAsUInt32(VID_REQUEST_ID));
+   uint64_t requestId = request->getFieldAsUInt32(VID_REQUEST_ID);
+   VolatileCounter *counter = s_downloadFileStopMarkers.get((static_cast<uint64_t>(session->getId()) << 32) | requestId);
    if (counter != nullptr)
    {
       InterlockedIncrement(counter);
@@ -1513,7 +1517,7 @@ static void CH_CancelFileDownload(NXCPMessage *request, NXCPMessage *response)
    }
    else
    {
-      response->setField(VID_RCC, ERR_INTERNAL_ERROR);
+      response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
    }
 }
 
@@ -1722,7 +1726,7 @@ static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          CH_GetFile(*request, response, session);
          break;
       case CMD_CANCEL_FILE_DOWNLOAD:
-         CH_CancelFileDownload(request, response);
+         CH_CancelFileDownload(request, response, session);
          break;
       case CMD_CANCEL_FILE_MONITORING:
          CH_CancelFileMonitoring(request, response);
