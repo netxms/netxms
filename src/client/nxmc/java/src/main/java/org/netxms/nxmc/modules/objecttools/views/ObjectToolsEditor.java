@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
@@ -34,15 +33,9 @@ import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
@@ -121,35 +114,19 @@ public class ObjectToolsEditor extends ConfigurationView implements SessionListe
       setFilterClient(viewer, filter);
 
       viewer.setComparator(new ObjectToolsComparator());
-      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-         @Override
-         public void selectionChanged(SelectionChangedEvent event)
+      viewer.addSelectionChangedListener((event) -> {
+         IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+         if (selection != null)
          {
-            IStructuredSelection selection = (IStructuredSelection)event.getSelection();
-            if (selection != null)
-            {
-               actionEdit.setEnabled(selection.size() == 1);
-               actionClone.setEnabled(selection.size() == 1);
-               actionDelete.setEnabled(selection.size() > 0);
-               actionDisable.setEnabled(containsEnabled(selection));
-               actionEnable.setEnabled(containsDisabled(selection));
-            }
+            actionEdit.setEnabled(selection.size() == 1);
+            actionClone.setEnabled(selection.size() == 1);
+            actionDelete.setEnabled(selection.size() > 0);
+            actionDisable.setEnabled(containsEnabled(selection));
+            actionEnable.setEnabled(containsDisabled(selection));
          }
       });
-      viewer.addDoubleClickListener(new IDoubleClickListener() {
-         @Override
-         public void doubleClick(DoubleClickEvent event)
-         {
-            actionEdit.run();
-         }
-      });
-      viewer.getTable().addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            WidgetHelper.saveTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
-         }
-      });
+      viewer.addDoubleClickListener((e) -> editTool());
+      viewer.getTable().addDisposeListener((e) -> WidgetHelper.saveTableViewerSettings(viewer, TABLE_CONFIG_PREFIX));
 
       createActions();
       createContextMenu();
@@ -200,37 +177,34 @@ public class ObjectToolsEditor extends ConfigurationView implements SessionListe
     */
    private void createActions()
    {
-      actionNew = new Action(i18n.tr("&New...")) {
+      actionNew = new Action(i18n.tr("&New..."), SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
          {
             createTool();
          }
       };
-      actionNew.setImageDescriptor(SharedIcons.ADD_OBJECT);
       addKeyBinding("M1+N", actionNew);
 
-      actionEdit = new Action(i18n.tr("&Edit...")) {
+      actionEdit = new Action(i18n.tr("&Edit..."), SharedIcons.EDIT) {
          @Override
          public void run()
          {
             editTool();
          }
       };
-      actionEdit.setImageDescriptor(SharedIcons.EDIT);
       addKeyBinding("M3+ENTER", actionEdit);
 
-      actionDelete = new Action(i18n.tr("&Delete")) {
+      actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
          {
             deleteTools();
          }
       };
-      actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
       addKeyBinding("M1+D", actionDelete);
 
-      actionDisable = new Action(i18n.tr("D&isable")) {
+      actionDisable = new Action(i18n.tr("D&isable"), SharedIcons.DISABLE) {
          @Override
          public void run()
          {
@@ -248,13 +222,14 @@ public class ObjectToolsEditor extends ConfigurationView implements SessionListe
       };
       addKeyBinding("M1+E", actionEnable);
 
-      actionClone = new Action(i18n.tr("Clone")) {
+      actionClone = new Action(i18n.tr("Clone"), SharedIcons.CLONE) {
          @Override
          public void run()
          {
             cloneTool();
          }
       };
+      addKeyBinding("M1+M3+C", actionClone);
    }
 
    /**
@@ -283,12 +258,7 @@ public class ObjectToolsEditor extends ConfigurationView implements SessionListe
       // Create menu manager
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
-         {
-            fillContextMenu(mgr);
-         }
-      });
+      menuMgr.addMenuListener((m) -> fillContextMenu(m));
 
       // Create menu
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
@@ -328,15 +298,11 @@ public class ObjectToolsEditor extends ConfigurationView implements SessionListe
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final List<ObjectTool> tl = session.getObjectTools();
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  tools.clear();
-                  for(ObjectTool t : tl)
-                     tools.put(t.getId(), t);
-                  viewer.setInput(tools.values().toArray());
-               }
+            runInUIThread(() -> {
+               tools.clear();
+               for(ObjectTool t : tl)
+                  tools.put(t.getId(), t);
+               viewer.setInput(tools.values().toArray());
             });
          }
 
@@ -508,7 +474,7 @@ public class ObjectToolsEditor extends ConfigurationView implements SessionListe
 
       final ObjectTool currentTool = (ObjectTool)selection.getFirstElement();
 
-      final InputDialog dlg = new InputDialog(getWindow().getShell(), "Clone Object Tool", "Enter name for cloned object tool", currentTool.getName() + "2", new IInputValidator() {
+      final InputDialog dlg = new InputDialog(getWindow().getShell(), "Clone Object Tool", "Enter name for cloned object tool", i18n.tr("Copy of {}", currentTool.getName()), new IInputValidator() {
          @Override
          public String isValid(String newText)
          {

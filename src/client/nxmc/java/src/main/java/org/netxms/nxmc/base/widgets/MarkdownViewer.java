@@ -30,6 +30,7 @@ import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
@@ -71,7 +72,8 @@ public class MarkdownViewer extends Composite
       });
       FontData f = JFaceResources.getDefaultFont().getFontData()[0];
       htmlHeader = "<html><head><style>body { font-family: " + f.getName() +
-            "; font-size: " + f.getHeight() + "px; font-weight: normal; margin: 0; padding: 0; }</style></head><body><div class=\"content\" style=\"padding-left: 5px; padding-right: 5px;\">";
+            "; font-size: " + f.getHeight() + (Registry.IS_WEB_CLIENT ? "px" : "pt") +
+            "; font-weight: normal; margin: 0; padding: 0; }</style></head><body><div class=\"content\" style=\"padding-left: 5px; padding-right: 5px;\">";
    }
 
    /**
