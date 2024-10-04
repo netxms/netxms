@@ -30,17 +30,17 @@ NETXMS_EXECUTABLE_HEADER(nxevent)
 /**
  * Static data
  */
-static BOOL m_bDebug = FALSE;
-static TCHAR m_szServer[MAX_DB_STRING] = _T("127.0.0.1");
-static TCHAR m_szLogin[MAX_DB_STRING] = _T("guest");
-static TCHAR m_szPassword[MAX_DB_STRING] = _T("");
-static TCHAR m_szUserTag[MAX_USERTAG_LENGTH] = _T("");
-static DWORD m_dwEventCode = 0;
-static TCHAR m_eventName[MAX_EVENT_NAME] = _T("");
-static DWORD m_dwObjectId = 0;
-static DWORD m_dwTimeOut = 3;
+static bool s_debug = false;
+static TCHAR s_server[MAX_DB_STRING] = _T("127.0.0.1");
+static TCHAR s_login[MAX_DB_STRING] = _T("guest");
+static TCHAR s_password[MAX_DB_STRING] = _T("");
+static TCHAR s_userTag[MAX_USERTAG_LENGTH] = _T("");
+static uint32_t s_eventCode = 0;
+static TCHAR s_eventName[MAX_EVENT_NAME] = _T("");
+static uint32_t s_objectId = 0;
+static uint32_t s_timeout = 3;
 static bool s_ignoreProtocolVersion = false;
-static bool s_useNamedEventNames = false;
+static bool s_namedParameters = false;
 
 /**
  * Callback function for debug printing
@@ -61,7 +61,7 @@ static uint32_t SendEventInLoop(EventController *ctrl, uint32_t code, const TCHA
    int64_t startTime = lastReportTime;
    for(uint32_t i = 0; i < repeatCount; i++)
    {
-      uint32_t rcc = ctrl->sendEvent(code, name, m_dwObjectId, argc, argv, userTag, s_useNamedEventNames);
+      uint32_t rcc = ctrl->sendEvent(code, name, s_objectId, argc, argv, userTag, s_namedParameters);
       if (rcc != RCC_SUCCESS)
          return rcc;
       sendCount++;
@@ -95,12 +95,12 @@ static uint32_t SendEvent(int iNumArgs, char **pArgList, bool repeat, uint32_t r
    }
    else
    {
-      if (m_bDebug)
+      if (s_debug)
          NXCSetDebugCallback(DebugCallback);
 
       NXCSession *session = new NXCSession();
       static uint32_t protocolVersions[] = { CPV_INDEX_TRAP };
-      rcc = session->connect(m_szServer, m_szLogin, m_szPassword,
+      rcc = session->connect(s_server, s_login, s_password,
             (s_ignoreProtocolVersion ? NXCF_IGNORE_PROTOCOL_VERSION : 0),
             _T("nxevent/") NETXMS_VERSION_STRING, s_ignoreProtocolVersion ? nullptr : protocolVersions,
             s_ignoreProtocolVersion ? 0 : sizeof(protocolVersions) / sizeof(uint32_t));
@@ -110,24 +110,24 @@ static uint32_t SendEvent(int iNumArgs, char **pArgList, bool repeat, uint32_t r
       }
       else
       {
-         session->setCommandTimeout(m_dwTimeOut * 1000);
+         session->setCommandTimeout(s_timeout * 1000);
          EventController *ctrl = (EventController *)session->getController(CONTROLLER_EVENTS);
 #ifdef UNICODE
 			WCHAR **argList = MemAllocArray<WCHAR*>(iNumArgs);
 			for(int i = 0; i < iNumArgs; i++)
 				argList[i] = WideStringFromMBStringSysLocale(pArgList[i]);
 			if (repeat)
-			   rcc = SendEventInLoop(ctrl, m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, argList, m_szUserTag, repeatInterval, repeatCount);
+			   rcc = SendEventInLoop(ctrl, s_eventCode, s_eventName, s_objectId, iNumArgs, argList, s_userTag, repeatInterval, repeatCount);
 			else
-			   rcc = ctrl->sendEvent(m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, argList, m_szUserTag, s_useNamedEventNames);
+			   rcc = ctrl->sendEvent(s_eventCode, s_eventName, s_objectId, iNumArgs, argList, s_userTag, s_namedParameters);
 			for(int i = 0; i < iNumArgs; i++)
 				MemFree(argList[i]);
 			MemFree(argList);
 #else
 			if (repeat)
-            rcc = SendEventInLoop(ctrl, m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, pArgList, m_szUserTag, repeatInterval, repeatCount);
+            rcc = SendEventInLoop(ctrl, s_eventCode, s_eventName, s_objectId, iNumArgs, pArgList, s_userTag, repeatInterval, repeatCount);
          else
-			   rcc = ctrl->sendEvent(m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, pArgList, m_szUserTag);
+			   rcc = ctrl->sendEvent(s_eventCode, s_eventName, s_objectId, iNumArgs, pArgList, s_userTag);
 #endif
          if (rcc != RCC_SUCCESS)
             _tprintf(_T("Unable to send event: %s\n"), NXCGetErrorText(rcc));
@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
                    "   -e            : Encrypt session (for compatibility only, session is always encrypted).\n"
                    "   -h            : Display help and exit.\n"
                    "   -i <interval> : Repeat event sending with given interval in milliseconds.\n"
-                   "   -n            : Parameters are provided in named format: name=value.\n"
+                   "   -n            : Parameters are provided in named format (name=value).\n"
                    "   -o <id>       : Specify source object ID.\n"
                    "   -P <password> : Specify user's password. Default is empty password.\n"
                    "   -S            : Skip protocol version check (use with care).\n"
@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
             repeatCount = strtoul(optarg, nullptr, 0);
             break;
          case 'd':
-            m_bDebug = true;
+            s_debug = true;
             break;
          case 'e':
             // do nothing, server is always encrypted
@@ -205,25 +205,25 @@ int main(int argc, char *argv[])
             repeatInterval = strtoul(optarg, nullptr, 0);
             break;
          case 'n':
-            s_useNamedEventNames = true;
+            s_namedParameters = true;
             break;
          case 'o':
-            m_dwObjectId = strtoul(optarg, nullptr, 0);
+            s_objectId = strtoul(optarg, nullptr, 0);
             break;
          case 'u':
 #ifdef UNICODE
-				MultiByteToWideCharSysLocale(optarg, m_szLogin, MAX_DB_STRING);
-				m_szLogin[MAX_DB_STRING - 1] = 0;
+				MultiByteToWideCharSysLocale(optarg, s_login, MAX_DB_STRING);
+				s_login[MAX_DB_STRING - 1] = 0;
 #else
-            strlcpy(m_szLogin, optarg, MAX_DB_STRING);
+            strlcpy(s_login, optarg, MAX_DB_STRING);
 #endif
             break;
          case 'P':
 #ifdef UNICODE
-            MultiByteToWideCharSysLocale(optarg, m_szPassword, MAX_DB_STRING);
-				m_szPassword[MAX_DB_STRING - 1] = 0;
+            MultiByteToWideCharSysLocale(optarg, s_password, MAX_DB_STRING);
+				s_password[MAX_DB_STRING - 1] = 0;
 #else
-            strlcpy(m_szPassword, optarg, MAX_DB_STRING);
+            strlcpy(s_password, optarg, MAX_DB_STRING);
 #endif
             break;
          case 'S':
@@ -231,15 +231,15 @@ int main(int argc, char *argv[])
             break;
          case 'T':
 #ifdef UNICODE
-            MultiByteToWideCharSysLocale(optarg, m_szUserTag, MAX_USERTAG_LENGTH);
-				m_szUserTag[MAX_USERTAG_LENGTH - 1] = 0;
+            MultiByteToWideCharSysLocale(optarg, s_userTag, MAX_USERTAG_LENGTH);
+				s_userTag[MAX_USERTAG_LENGTH - 1] = 0;
 #else
-            strlcpy(m_szUserTag, optarg, MAX_USERTAG_LENGTH);
+            strlcpy(s_userTag, optarg, MAX_USERTAG_LENGTH);
 #endif
             break;
          case 'w':
-            m_dwTimeOut = strtoul(optarg, NULL, 0);
-            if ((m_dwTimeOut < 1) || (m_dwTimeOut > 120))
+            s_timeout = strtoul(optarg, nullptr, 0);
+            if ((s_timeout < 1) || (s_timeout > 120))
             {
                _tprintf(_T("Invalid timeout %hs\n"), optarg);
                start = false;
@@ -276,23 +276,23 @@ int main(int argc, char *argv[])
          }
 #endif
 #ifdef UNICODE
-         MultiByteToWideCharSysLocale(argv[optind], m_szServer, 256);
-			m_szServer[255] = 0;
+         MultiByteToWideCharSysLocale(argv[optind], s_server, 256);
+			s_server[255] = 0;
 #else
-         strlcpy(m_szServer, argv[optind], 256);
+         strlcpy(s_server, argv[optind], 256);
 #endif
 
          char *eptr;
-         m_dwEventCode = strtoul(argv[optind + 1], &eptr, 0);
+         s_eventCode = strtoul(argv[optind + 1], &eptr, 0);
          if (*eptr != 0)
          {
             // assume that event is specified by name
-            m_dwEventCode = 0;
+            s_eventCode = 0;
 #ifdef UNICODE
-            MultiByteToWideCharSysLocale(argv[optind + 1], m_eventName, MAX_EVENT_NAME);
-            m_eventName[MAX_EVENT_NAME - 1] = 0;
+            MultiByteToWideCharSysLocale(argv[optind + 1], s_eventName, MAX_EVENT_NAME);
+            s_eventName[MAX_EVENT_NAME - 1] = 0;
 #else
-            strlcpy(m_eventName, argv[optind + 1], MAX_EVENT_NAME);
+            strlcpy(s_eventName, argv[optind + 1], MAX_EVENT_NAME);
 #endif
          }
 
