@@ -107,6 +107,7 @@ ProcessExecutor::ProcessExecutor(const TCHAR *cmd, bool shellExec, bool selfDest
    m_pipe[1] = -1;
 #endif
    m_cmd = MemCopyString(cmd);
+   m_workingDirectory = nullptr;
    Trim(m_cmd);
    m_shellExec = shellExec && (m_cmd[0] != '[');
    m_sendOutput = false;
@@ -129,6 +130,7 @@ ProcessExecutor::~ProcessExecutor()
    else
       ThreadJoin(m_outputThread);
    MemFree(m_cmd);
+   MemFree(m_workingDirectory);
 #ifdef _WIN32
    if (m_phandle != INVALID_HANDLE_VALUE)
       CloseHandle(m_phandle);
@@ -288,7 +290,7 @@ bool ProcessExecutor::executeWithOutput()
    StringBuffer appNameBuffer;
    StringBuffer cmdLine(m_shellExec ? _T("CMD.EXE /C ") : _T(""));
    const TCHAR *appName = BuildCommandLine(m_cmd, appNameBuffer, cmdLine);
-   if (CreateProcess(appName, cmdLine.getBuffer(), nullptr, nullptr, TRUE, EXTENDED_STARTUPINFO_PRESENT, nullptr, nullptr, &si.StartupInfo, &pi))
+   if (CreateProcess(appName, cmdLine.getBuffer(), nullptr, nullptr, TRUE, EXTENDED_STARTUPINFO_PRESENT, nullptr, m_workingDirectory, &si.StartupInfo, &pi))
    {
       if (appName != nullptr)
          nxlog_debug_tag_object(DEBUG_TAG, m_id, 5, _T("ProcessExecutor::executeWithOutput(): process [exec=\"%s\" cmdline=\"%s\"] started (PID=%u)"), appName, cmdLine.cstr(), pi.dwProcessId);
@@ -335,7 +337,7 @@ bool ProcessExecutor::executeWithoutOutput()
    si.cb = sizeof(STARTUPINFO);
 
    PROCESS_INFORMATION pi;
-   if (!CreateProcess(appName, cmdLine.getBuffer(), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si, &pi))
+   if (!CreateProcess(appName, cmdLine.getBuffer(), nullptr, nullptr, FALSE, 0, nullptr, m_workingDirectory, &si, &pi))
    {
       TCHAR buffer[1024];
       if (appName != nullptr)
@@ -423,6 +425,16 @@ bool ProcessExecutor::execute()
          else
          {
             close(STDIN_FILENO);
+         }
+         if (m_workingDirectory != nullptr)
+         {
+            if (chdir(m_workingDirectory) != 0)
+            {
+               char errorMessage[MAX_PATH + 256];
+               snprintf(errorMessage, sizeof(errorMessage), "Cannot change working directory to \"%s\" (%s)\n", m_workingDirectory, strerror(errno));
+               write(STDERR_FILENO, errorMessage, strlen(errorMessage));
+               _exit(127);
+            }
          }
          if (m_shellExec)
          {
