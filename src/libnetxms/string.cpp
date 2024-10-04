@@ -123,7 +123,7 @@ String::String(const TCHAR *init, ssize_t len, Ownership takeOwnership)
 String::String(const char *init, const char *codepage)
 {
    size_t len = strlen(init);
-   m_buffer = (len < STRING_INTERNAL_BUFFER_SIZE) ? m_internalBuffer : MemAllocStringW(len + 1);
+   m_buffer = (len < STRING_INTERNAL_BUFFER_SIZE) ? m_internalBuffer : MemAllocString(len + 1);
 #ifdef UNICODE
    m_length = mbcp_to_wchar(init, len, m_buffer, len + 1, codepage);
 #else
@@ -731,7 +731,6 @@ void StringBuffer::insertFormattedString(size_t index, const TCHAR *format, ...)
  */
 void StringBuffer::insertFormattedStringV(size_t index, const TCHAR *format, va_list args)
 {
-   int len;
    TCHAR *buffer;
 
 #ifdef UNICODE
@@ -742,14 +741,14 @@ void StringBuffer::insertFormattedStringV(size_t index, const TCHAR *format, va_
    va_list argsCopy;
    va_copy(argsCopy, args);
 
-   len = (int)vscwprintf(format, args) + 1;
+   auto len = vscwprintf(format, args) + 1;
    buffer = MemAllocStringW(len);
 
    vsnwprintf(buffer, len, format, argsCopy);
    va_end(argsCopy);
 #else
    // No way to determine required buffer size, guess
-   len = wcslen(format) + NumCharsW(format, L'%') * 1000 + 1;
+   size_t len = wcslen(format) + NumCharsW(format, L'%') * 1000 + 1;
    buffer = MemAllocStringW(len);
 
    nx_vswprintf(buffer, len, format, args);
@@ -767,7 +766,7 @@ void StringBuffer::insertFormattedStringV(size_t index, const TCHAR *format, va_
    va_list argsCopy;
    va_copy(argsCopy, args);
 
-   len = (int)vscprintf(format, args) + 1;
+   auto len = vscprintf(format, args) + 1;
    buffer = MemAllocStringA(len);
 
    vsnprintf(buffer, len, format, argsCopy);
@@ -776,14 +775,14 @@ void StringBuffer::insertFormattedStringV(size_t index, const TCHAR *format, va_
    va_list argsCopy;
    va_copy(argsCopy, args);
 
-   len = (int)vsnprintf(nullptr, 0, format, args) + 1;
+   auto len = vsnprintf(nullptr, 0, format, args) + 1;
    buffer = MemAllocStringA(len);
 
    vsnprintf(buffer, len, format, argsCopy);
    va_end(argsCopy);
 #else
    // No way to determine required buffer size, guess
-   len = strlen(format) + NumChars(format, '%') * 1000 + 1;
+   size_t len = strlen(format) + NumChars(format, '%') * 1000 + 1;
    buffer = MemAllocStringA(len);
 
    vsnprintf(buffer, len, format, args);
