@@ -44,6 +44,7 @@ static bool H_UpgradeFromV16()
  */
 static bool H_UpgradeFromV15()
 {
+   CHK_EXEC(SQLQuery(_T("DELETE FROM event_cfg WHERE event_code=30"))); // Delete old event with same code (SYS_SMS_FAILURE) if still there
    CHK_EXEC(CreateEventTemplate(EVENT_ALL_THRESHOLDS_REARMED, _T("SYS_ALL_THRESHOLDS_REARMED"),
          EVENT_SEVERITY_NORMAL, EF_LOG, _T("12ecc8fa-e39e-497b-ad9f-a7786fcbcf46"),
          _T("All thresholds rearmed for data collection item %<dciDescription> (Metric: %<dciName>)"),
