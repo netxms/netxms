@@ -1146,136 +1146,137 @@ public:
  */
 uint32_t CommSession::installPackage(NXCPMessage *request)
 {
-   if (m_masterServer)
-   {
-      char packageType[16] = "";
-      request->getFieldAsMBString(VID_PACKAGE_TYPE, packageType, 16);
-
-      TCHAR packageName[MAX_PATH] = _T("");
-      request->getFieldAsString(VID_FILE_NAME, packageName, MAX_PATH);
-      TCHAR fullPath[MAX_PATH];
-      BuildFullPath(packageName, fullPath);
-
-      TCHAR command[MAX_PATH] = _T("");
-      request->getFieldAsString(VID_COMMAND, command, MAX_PATH);
-
-      StringBuffer commandLine;
-      if (!stricmp(packageType, "executable"))
-      {
-         if (command[0] != 0)
-         {
-            commandLine.append(command);
-            commandLine.replace(_T("${file}"), fullPath);
-         }
-         else
-         {
-            commandLine.append(_T("\""));
-            commandLine.append(fullPath);
-            commandLine.append(_T("\""));
-         }
-      }
-#ifdef _WIN32
-      else if (!stricmp(packageType, "msi"))
-      {
-         commandLine.append(_T("msiexec.exe /i \""));
-         commandLine.append(fullPath);
-         commandLine.append(_T("\" /qn"));
-         if (command[0] != 0)
-         {
-            commandLine.append(_T(" "));
-            commandLine.append(command);
-         }
-      }
-      else if (!stricmp(packageType, "msp"))
-      {
-         commandLine.append(_T("msiexec.exe /p \""));
-         commandLine.append(fullPath);
-         commandLine.append(_T("\" /qn"));
-         if (command[0] != 0)
-         {
-            commandLine.append(_T(" "));
-            commandLine.append(command);
-         }
-         commandLine.append(_T(" REINSTALLMODE=\"ecmus\" REINSTALL=\"ALL\""));
-      }
-      else if (!stricmp(packageType, "msu"))
-      {
-         commandLine.append(_T("wusa.exe \""));
-         commandLine.append(fullPath);
-         commandLine.append(_T("\" /quiet"));
-         if (command[0] != 0)
-         {
-            commandLine.append(_T(" "));
-            commandLine.append(command);
-         }
-      }
-#else
-      else if (!stricmp(packageType, "deb"))
-      {
-         commandLine.append(_T("/usr/bin/dpkg -i"));
-         if (command[0] != 0)
-         {
-            commandLine.append(_T(" "));
-            commandLine.append(command);
-         }
-         commandLine.append(_T(" '"));
-         commandLine.append(fullPath);
-         commandLine.append(_T("'"));
-      }
-      else if (!stricmp(packageType, "rpm"))
-      {
-         commandLine.append(_T("/usr/bin/rpm -i"));
-         if (command[0] != 0)
-         {
-            commandLine.append(_T(" "));
-            commandLine.append(command);
-         }
-         commandLine.append(_T(" '"));
-         commandLine.append(fullPath);
-         commandLine.append(_T("'"));
-      }
-      else if (!stricmp(packageType, "tgz"))
-      {
-         commandLine.append(_T("tar"));
-         if (command[0] != 0)
-         {
-            commandLine.append(_T(" -C '"));
-            commandLine.append(command);
-            commandLine.append(_T("'"));
-         }
-         commandLine.append(_T(" zxf '"));
-         commandLine.append(fullPath);
-         commandLine.append(_T("'"));
-      }
-#endif
-      else if (!stricmp(packageType, "zip"))
-      {
-         commandLine.append(_T("unzip"));
-         commandLine.append(_T(" '"));
-         commandLine.append(fullPath);
-         commandLine.append(_T("'"));
-         if (command[0] != 0)
-         {
-            commandLine.append(_T(" -d '"));
-            commandLine.append(command);
-            commandLine.append(_T("'"));
-         }
-      }
-
-      writeLog(NXLOG_INFO, _T("Starting package installation using command line %s"), commandLine.cstr());
-      PackageInstallerProcessExecutor executor(commandLine, this);
-      if (!executor.execute())
-      {
-         writeLog(NXLOG_INFO, _T("Package installer execution failed"));
-         return ERR_EXEC_FAILED;
-      }
-      return executor.waitForCompletion(600000) ? ERR_SUCCESS : ERR_REQUEST_TIMEOUT; // FIXME: what timeout to use?
-   }
-   else
+   if (!m_masterServer)
    {
       writeLog(NXLOG_WARNING, _T("Package installation request from server which is not master (installation will not start)"));
       return ERR_ACCESS_DENIED;
    }
+
+   char packageType[16] = "";
+   request->getFieldAsMBString(VID_PACKAGE_TYPE, packageType, 16);
+
+   TCHAR packageName[MAX_PATH] = _T("");
+   request->getFieldAsString(VID_FILE_NAME, packageName, MAX_PATH);
+   TCHAR fullPath[MAX_PATH];
+   BuildFullPath(packageName, fullPath);
+
+   TCHAR command[MAX_PATH] = _T("");
+   request->getFieldAsString(VID_COMMAND, command, MAX_PATH);
+
+   const TCHAR *workingDirectory = nullptr;
+   StringBuffer commandLine;
+   if (!stricmp(packageType, "executable"))
+   {
+      if (command[0] != 0)
+      {
+         commandLine.append(command);
+         commandLine.replace(_T("${file}"), fullPath);
+      }
+      else
+      {
+         commandLine.append(_T("\""));
+         commandLine.append(fullPath);
+         commandLine.append(_T("\""));
+      }
+   }
+#ifdef _WIN32
+   else if (!stricmp(packageType, "msi"))
+   {
+      commandLine.append(_T("msiexec.exe /i \""));
+      commandLine.append(fullPath);
+      commandLine.append(_T("\" /qn"));
+      if (command[0] != 0)
+      {
+         commandLine.append(_T(" "));
+         commandLine.append(command);
+      }
+   }
+   else if (!stricmp(packageType, "msp"))
+   {
+      commandLine.append(_T("msiexec.exe /p \""));
+      commandLine.append(fullPath);
+      commandLine.append(_T("\" /qn"));
+      if (command[0] != 0)
+      {
+         commandLine.append(_T(" "));
+         commandLine.append(command);
+      }
+      commandLine.append(_T(" REINSTALLMODE=\"ecmus\" REINSTALL=\"ALL\""));
+   }
+   else if (!stricmp(packageType, "msu"))
+   {
+      commandLine.append(_T("wusa.exe \""));
+      commandLine.append(fullPath);
+      commandLine.append(_T("\" /quiet"));
+      if (command[0] != 0)
+      {
+         commandLine.append(_T(" "));
+         commandLine.append(command);
+      }
+   }
+#else
+   else if (!stricmp(packageType, "deb"))
+   {
+      commandLine.append(_T("/usr/bin/dpkg -i"));
+      if (command[0] != 0)
+      {
+         commandLine.append(_T(" "));
+         commandLine.append(command);
+      }
+      commandLine.append(_T(" '"));
+      commandLine.append(fullPath);
+      commandLine.append(_T("'"));
+   }
+   else if (!stricmp(packageType, "rpm"))
+   {
+      commandLine.append(_T("/usr/bin/rpm -i"));
+      if (command[0] != 0)
+      {
+         commandLine.append(_T(" "));
+         commandLine.append(command);
+      }
+      commandLine.append(_T(" '"));
+      commandLine.append(fullPath);
+      commandLine.append(_T("'"));
+   }
+   else if (!stricmp(packageType, "tgz"))
+   {
+      commandLine.append(_T("tar"));
+      if (command[0] != 0)
+      {
+         workingDirectory = command;
+      }
+      commandLine.append(_T(" zxf '"));
+      commandLine.append(fullPath);
+      commandLine.append(_T("'"));
+   }
+#endif
+   else if (!stricmp(packageType, "zip"))
+   {
+      commandLine.append(_T("unzip"));
+      commandLine.append(_T(" '"));
+      commandLine.append(fullPath);
+      commandLine.append(_T("'"));
+      if (command[0] != 0)
+      {
+         commandLine.append(_T(" -d '"));
+         commandLine.append(command);
+         commandLine.append(_T("'"));
+      }
+   }
+
+   writeLog(NXLOG_INFO, _T("Starting package installation using command line %s"), commandLine.cstr());
+   PackageInstallerProcessExecutor executor(commandLine, this);
+   if (workingDirectory != nullptr)
+      executor.setWorkingDirectory(workingDirectory);
+
+   if (!executor.execute())
+   {
+      writeLog(NXLOG_INFO, _T("Package installer execution failed"));
+      return ERR_EXEC_FAILED;
+   }
+
+   return executor.waitForCompletion(600000) ? ERR_SUCCESS : ERR_REQUEST_TIMEOUT; // FIXME: what timeout to use?
 }
 
 /**
