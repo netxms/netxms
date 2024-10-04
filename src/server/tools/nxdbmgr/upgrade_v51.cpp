@@ -24,6 +24,17 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.17 to 51.18
+ */
+static bool H_UpgradeFromV17()
+{
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("access_points"), _T("mac_address"), 16, true));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("interfaces"), _T("mac_addr"), 16, true));
+   CHK_EXEC(SetMinorSchemaVersion(18));
+   return true;
+}
+
+/**
  * Upgrade from 51.16 to 51.17
  */
 static bool H_UpgradeFromV16()
@@ -371,6 +382,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 17, 51, 18, H_UpgradeFromV17 },
    { 16, 51, 17, H_UpgradeFromV16 },
    { 15, 51, 16, H_UpgradeFromV15 },
    { 14, 51, 15, H_UpgradeFromV14 },

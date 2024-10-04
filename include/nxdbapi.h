@@ -179,10 +179,10 @@ int32_t LIBNXDB_EXPORTABLE DBGetFieldInt32(DB_RESULT hResult, int row, int colum
 uint32_t LIBNXDB_EXPORTABLE DBGetFieldUInt32(DB_RESULT hResult, int row, int column);
 int64_t LIBNXDB_EXPORTABLE DBGetFieldInt64(DB_RESULT hResult, int row, int column);
 uint64_t LIBNXDB_EXPORTABLE DBGetFieldUInt64(DB_RESULT hResult, int row, int column);
-double LIBNXDB_EXPORTABLE DBGetFieldDouble(DB_RESULT hResult, int iRow, int iColumn);
+double LIBNXDB_EXPORTABLE DBGetFieldDouble(DB_RESULT hResult, int row, int column);
 uint32_t LIBNXDB_EXPORTABLE DBGetFieldIPAddr(DB_RESULT hResult, int row, int column);
-InetAddress LIBNXDB_EXPORTABLE DBGetFieldInetAddr(DB_RESULT hResult, int iRow, int iColumn);
-MacAddress LIBNXDB_EXPORTABLE DBGetFieldMacAddr(DB_RESULT hResult, int iRow, int iColumn);
+InetAddress LIBNXDB_EXPORTABLE DBGetFieldInetAddr(DB_RESULT hResult, int row, int column);
+MacAddress LIBNXDB_EXPORTABLE DBGetFieldMacAddr(DB_RESULT hResult, int row, int column);
 bool LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iColumn, int *pnArray, size_t size, int defaultValue);
 bool LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iColumn, BYTE *data, size_t size, BYTE defaultValue);
 uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int iRow, int iColumn);

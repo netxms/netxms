@@ -764,12 +764,11 @@ InetAddress LIBNXDB_EXPORTABLE DBGetFieldInetAddr(DB_RESULT hResult, int row, in
 /**
  * Get field`s value as MAC address
  */
-MacAddress LIBNXDB_EXPORTABLE DBGetFieldMacAddr(DB_RESULT hResult, int iRow, int iColumn)
+MacAddress LIBNXDB_EXPORTABLE DBGetFieldMacAddr(DB_RESULT hResult, int row, int column)
 {
-   TCHAR *pszVal, buffer[36];
-   pszVal = DBGetField(hResult, iRow, iColumn, buffer, 36);
-
-   return pszVal == NULL ? MacAddress(MacAddress::ZERO) : MacAddress::parse(pszVal);
+   TCHAR buffer[36];
+   TCHAR *v = DBGetField(hResult, row, column, buffer, 36);
+   return (v != nullptr) ? MacAddress::parse(v) : MacAddress::ZERO;
 }
 
 /**
