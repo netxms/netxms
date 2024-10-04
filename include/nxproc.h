@@ -111,6 +111,11 @@ private:
 
 protected:
    TCHAR *m_cmd;
+#ifdef _WIN32
+   TCHAR *m_workingDirectory;
+#else
+   char *m_workingDirectory;
+#endif
    bool m_shellExec;
    bool m_sendOutput;
    bool m_replaceNullCharacters;
@@ -155,6 +160,16 @@ public:
 #ifdef _WIN32
    void detach();
 #endif
+
+   void setWorkingDirectory(const TCHAR *workingDirectory)
+   {
+      MemFree(m_workingDirectory);
+#if defined(_WIN32) || !defined(UNICODE)
+      m_workingDirectory = MemCopyString(workingDirectory);
+#else
+      m_workingDirectory = MBStringFromWideStringSysLocale(workingDirectory);
+#endif
+   }
 
    static bool execute(const TCHAR *cmdLine, bool shellExec = true);
    static uint32_t executeAndWait(const TCHAR *cmdLine, uint32_t timeout, bool shellExec = true);
