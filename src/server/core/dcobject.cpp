@@ -1841,11 +1841,13 @@ DCObjectInfo::DCObjectInfo(const DCObject& object) : m_pollingSchedules(object.g
       m_unitName = static_cast<const DCItem&>(object).m_unitName;
       m_multiplier = static_cast<const DCItem&>(object).m_multiplier;
       m_dataType = static_cast<const DCItem&>(object).m_dataType;
+      m_transformedDataType = static_cast<const DCItem&>(object).m_transformedDataType;
    }
    else
    {
       m_multiplier = 0;
       m_dataType = -1;
+      m_transformedDataType = -1;
    }
    m_instanceData = MemCopyString(object.m_instanceDiscoveryData);
    m_comments = MemCopyString(object.m_comments);
@@ -1881,11 +1883,13 @@ DCObjectInfo::DCObjectInfo(const NXCPMessage& msg, const DCObject *object) : m_p
       m_unitName = static_cast<const DCItem*>(object)->m_unitName;
       m_multiplier = static_cast<const DCItem*>(object)->m_multiplier;
       m_dataType = msg.getFieldAsInt16(VID_DCI_DATA_TYPE);
+      m_transformedDataType = msg.getFieldAsInt16(VID_TRANSFORMED_DATA_TYPE);
    }
    else
    {
       m_multiplier = 0;
       m_dataType = -1;
+      m_transformedDataType = -1;
    }
    m_instanceData = msg.getFieldAsString(VID_INSTD_DATA);
    m_comments = msg.getFieldAsString(VID_COMMENTS);
