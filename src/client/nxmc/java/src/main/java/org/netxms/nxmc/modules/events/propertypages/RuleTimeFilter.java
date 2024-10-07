@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -56,6 +54,7 @@ import org.xnap.commons.i18n.I18n;
 public class RuleTimeFilter extends RuleBasePropertyPage
 {
    private final I18n i18n = LocalizationHelper.getI18n(RuleTimeFilter.class);
+   private final String EMPTY_LIST_PLACEHOLDER[] = { i18n.tr("Any time") };
 
    private List<TimeFrame> frames = new ArrayList<TimeFrame>();
    private TableViewer viewer;
@@ -100,14 +99,16 @@ public class RuleTimeFilter extends RuleBasePropertyPage
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
-				int size = ((IStructuredSelection)viewer.getSelection()).size();
-				deleteButton.setEnabled(size > 0);
-            editButton.setEnabled(size == 1);
+            IStructuredSelection selection = viewer.getStructuredSelection();
+            int size = selection.size();
+            boolean placeholder = selection.getFirstElement() instanceof String;
+            deleteButton.setEnabled(!placeholder && (size > 0));
+            editButton.setEnabled(!placeholder && (size == 1));
 			}
       });
 
       frames.addAll(rule.getTimeFrames());
-      viewer.setInput(frames);
+      setViewerInput();
 
       GridData gd = new GridData();
       gd.verticalAlignment = GridData.FILL;
@@ -117,13 +118,7 @@ public class RuleTimeFilter extends RuleBasePropertyPage
       gd.heightHint = 0;
       gd.horizontalSpan = 1;
       viewer.getControl().setLayoutData(gd);      
-      viewer.addDoubleClickListener(new IDoubleClickListener() {
-         @Override
-         public void doubleClick(DoubleClickEvent event)
-         {
-            editFrame();
-         }
-      });
+      viewer.addDoubleClickListener((event) -> editFrame());
 
       Composite buttons = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
@@ -187,7 +182,7 @@ public class RuleTimeFilter extends RuleBasePropertyPage
 		if (dlg.open() == Window.OK)
 		{
 		   frames.add(dlg.getTimeFrame());
-	      viewer.setInput(frames);
+         setViewerInput();
 		}
 	}
 
@@ -197,7 +192,7 @@ public class RuleTimeFilter extends RuleBasePropertyPage
    private void editFrame()
    {
       IStructuredSelection selection = viewer.getStructuredSelection();
-      if (selection.size() == 1)
+      if ((selection.size() == 1) && !(selection.getFirstElement() instanceof String))
       {
          TimeFrame element = (TimeFrame)selection.getFirstElement();
          TimeFrameEditorDialog dlg = new TimeFrameEditorDialog(getShell(), element);
@@ -222,7 +217,7 @@ public class RuleTimeFilter extends RuleBasePropertyPage
 			   TimeFrame e = (TimeFrame)it.next();
 			   frames.remove(e);
 			}
-	      viewer.setInput(frames);
+         setViewerInput();
 		}
 	}
 
@@ -242,4 +237,15 @@ public class RuleTimeFilter extends RuleBasePropertyPage
 		editor.setModified(true);
 		return true;
 	}
+
+   /**
+    * Set input for source object viewer
+    */
+   private void setViewerInput()
+   {
+      if (frames.isEmpty())
+         viewer.setInput(EMPTY_LIST_PLACEHOLDER);
+      else
+         viewer.setInput(frames);
+   }
 }

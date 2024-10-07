@@ -23,14 +23,17 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -38,6 +41,7 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
@@ -57,6 +61,7 @@ import org.xnap.commons.i18n.I18n;
 public class RuleEvents extends RuleBasePropertyPage
 {
    private final I18n i18n = LocalizationHelper.getI18n(RuleEvents.class);
+   private final String EMPTY_LIST_PLACEHOLDER[] = { i18n.tr("Any event") };
 
 	private NXCSession session;
 	private SortableTableViewer viewer;
@@ -97,20 +102,21 @@ public class RuleEvents extends RuleBasePropertyPage
       final int[] columnWidths = { 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new BaseEventTemplateLabelProvider());
+      viewer.setLabelProvider(new EventListLabelProvider());
       viewer.setComparator(new ElementLabelComparator((ILabelProvider)viewer.getLabelProvider()));
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
-				int size = ((IStructuredSelection)viewer.getSelection()).size();
-				deleteButton.setEnabled(size > 0);
+            IStructuredSelection selection = viewer.getStructuredSelection();
+            int size = selection.size();
+            deleteButton.setEnabled((size > 0) && !(selection.getFirstElement() instanceof String));
 			}
       });
 
       for(EventTemplate o : session.findMultipleEventTemplates(rule.getEvents()))
       	events.put(o.getCode(), o);
-      viewer.setInput(events.values().toArray());
+      setViewerInput();
 
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
@@ -133,13 +139,7 @@ public class RuleEvents extends RuleBasePropertyPage
 
       addButton = new Button(buttons, SWT.PUSH);
       addButton.setText(i18n.tr("&Add..."));
-      addButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      addButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -152,13 +152,7 @@ public class RuleEvents extends RuleBasePropertyPage
 
       deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText(i18n.tr("&Delete"));
-      deleteButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      deleteButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -185,7 +179,7 @@ public class RuleEvents extends RuleBasePropertyPage
 			for(EventTemplate e : dlg.getSelectedEvents())
 				events.put(e.getCode(), e);
 		}
-      viewer.setInput(events.values().toArray());
+      setViewerInput();
 	}
 
 	/**
@@ -202,7 +196,7 @@ public class RuleEvents extends RuleBasePropertyPage
 			   EventTemplate e = (EventTemplate)it.next();
 				events.remove(e.getCode());
 			}
-	      viewer.setInput(events.values().toArray());
+         setViewerInput();
 		}
 	}
 
@@ -222,4 +216,61 @@ public class RuleEvents extends RuleBasePropertyPage
 		editor.setModified(true);
       return true;
 	}
+
+   /**
+    * Set input for source object viewer
+    */
+   private void setViewerInput()
+   {
+      if (events.isEmpty())
+         viewer.setInput(EMPTY_LIST_PLACEHOLDER);
+      else
+         viewer.setInput(events.values().toArray());
+   }
+
+   /**
+    * Label provider for event list
+    */
+   private static class EventListLabelProvider extends BaseEventTemplateLabelProvider implements IColorProvider
+   {
+      private static final Color HINT_FOREGROUND = new Color(Display.getDefault(), 192, 192, 192);
+
+      /**
+       * @see org.netxms.nxmc.modules.events.widgets.helpers.BaseEventTemplateLabelProvider#getImage(java.lang.Object)
+       */
+      @Override
+      public Image getImage(Object element)
+      {
+         return (element instanceof String) ? null : super.getImage(element);
+      }
+
+      /**
+       * @see org.netxms.nxmc.modules.events.widgets.helpers.BaseEventTemplateLabelProvider#getText(java.lang.Object)
+       */
+      @Override
+      public String getText(Object element)
+      {
+         return (element instanceof String) ? (String)element : super.getText(element);
+      }
+
+      /**
+       * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
+       */
+      @Override
+      public Color getForeground(Object element)
+      {
+         if (element instanceof String)
+            return HINT_FOREGROUND;
+         return null;
+      }
+
+      /**
+       * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
+       */
+      @Override
+      public Color getBackground(Object element)
+      {
+         return null;
+      }
+   }
 }

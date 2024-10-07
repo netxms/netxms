@@ -28,8 +28,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -57,15 +57,15 @@ import org.xnap.commons.i18n.I18n;
 public class AccessControl extends AbstractDCIPropertyPage
 {
    private final I18n i18n = LocalizationHelper.getI18n(AccessControl.class);
+   private final String EMPTY_LIST_PLACEHOLDER[] = { i18n.tr("Inherited from object access rights") };
 
    private DataCollectionObject dco;
 	private Set<AbstractUserObject> acl = new HashSet<AbstractUserObject>();
 	private TableViewer viewer;
 	private Button buttonAdd;
 	private Button buttonRemove;
-	private static final String info[] = {"Inherited from object access rights"};
 	private NXCSession session;
-	
+
 	/**
 	 * Constructor
 	 * 
@@ -75,16 +75,16 @@ public class AccessControl extends AbstractDCIPropertyPage
    {
       super(LocalizationHelper.getI18n(AccessControl.class).tr("Access Control"), editor);
    }
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
       Composite dialogArea = (Composite)super.createContents(parent);
       dco = editor.getObject();      
-		
+
 		// Build internal copy of access list
 		session = Registry.getSession();
       for(Integer uid : dco.getAccessList())
@@ -116,7 +116,7 @@ public class AccessControl extends AbstractDCIPropertyPage
 		gd.heightHint = 300;
 		viewer.getTable().setLayoutData(gd);
 		setViewerInput();
-		
+
       Composite buttons = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
@@ -130,13 +130,7 @@ public class AccessControl extends AbstractDCIPropertyPage
 
       buttonAdd = new Button(buttons, SWT.PUSH);
       buttonAdd.setText(i18n.tr("Add"));
-      buttonAdd.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      buttonAdd.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -149,13 +143,7 @@ public class AccessControl extends AbstractDCIPropertyPage
 		
       buttonRemove = new Button(buttons, SWT.PUSH);
       buttonRemove.setText(i18n.tr("Remove"));
-      buttonRemove.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      buttonRemove.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -165,9 +153,9 @@ public class AccessControl extends AbstractDCIPropertyPage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       buttonRemove.setLayoutData(rd);
-      
+
       getUsersAndRefresh();
-		
+
 		return dialogArea;
 	}
 	
@@ -182,19 +170,14 @@ public class AccessControl extends AbstractDCIPropertyPage
          {
             if (session.syncMissingUsers(new HashSet<Integer>(dco.getAccessList())))
             {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {       
-                     for(Integer uid : dco.getAccessList())
-                     {
-                        AbstractUserObject o = session.findUserDBObjectById(uid, null);
-                        if (o != null)
-                           acl.add(o);
-                     }
-                     
-                     setViewerInput();
+               runInUIThread(() -> {
+                  for(Integer uid : dco.getAccessList())
+                  {
+                     AbstractUserObject o = session.findUserDBObjectById(uid, null);
+                     if (o != null)
+                        acl.add(o);
                   }
+                  setViewerInput();
                });
             }
          }
@@ -215,7 +198,7 @@ public class AccessControl extends AbstractDCIPropertyPage
 	private void setViewerInput()
 	{
       if (acl.isEmpty())
-         viewer.setInput(info);
+         viewer.setInput(EMPTY_LIST_PLACEHOLDER);
       else
          viewer.setInput(acl.toArray());
 	}

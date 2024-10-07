@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -32,6 +33,8 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -39,6 +42,7 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventProcessingPolicyRule;
@@ -58,6 +62,7 @@ import org.xnap.commons.i18n.I18n;
 public class RuleSourceObjects extends RuleBasePropertyPage
 {
    private final I18n i18n = LocalizationHelper.getI18n(RuleSourceObjects.class);
+   private final String EMPTY_LIST_PLACEHOLDER[] = { i18n.tr("Any object") };
 
 	private NXCSession session;
 	private TableViewer sourceViewer;
@@ -103,21 +108,22 @@ public class RuleSourceObjects extends RuleBasePropertyPage
 
       sourceViewer = new TableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       sourceViewer.setContentProvider(new ArrayContentProvider());
-      sourceViewer.setLabelProvider(new BaseObjectLabelProvider());
+      sourceViewer.setLabelProvider(new SourceObjectLabelProvider());
       sourceViewer.setComparator(new ElementLabelComparator((ILabelProvider)sourceViewer.getLabelProvider()));
       sourceViewer.getTable().setSortDirection(SWT.UP);
       sourceViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
-            int size = sourceViewer.getStructuredSelection().size();
-            deleteButtonSource.setEnabled(size > 0);
+            IStructuredSelection selection = sourceViewer.getStructuredSelection();
+            int size = selection.size();
+            deleteButtonSource.setEnabled((size > 0) && !(selection.getFirstElement() instanceof String));
 			}
       });
 
       for(AbstractObject o : session.findMultipleObjects(rule.getSources(), true))
       	objects.put(o.getObjectId(), o);
-      sourceViewer.setInput(objects.values().toArray());      
+      setSourceViewerInput();
 
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
@@ -236,6 +242,17 @@ public class RuleSourceObjects extends RuleBasePropertyPage
 		return dialogArea;
 	}
 
+   /**
+    * Set input for source object viewer
+    */
+   private void setSourceViewerInput()
+   {
+      if (objects.isEmpty())
+         sourceViewer.setInput(EMPTY_LIST_PLACEHOLDER);
+      else
+         sourceViewer.setInput(objects.values().toArray());
+   }
+
 	/**
 	 * Add new source object
 	 */
@@ -248,9 +265,9 @@ public class RuleSourceObjects extends RuleBasePropertyPage
 			for(AbstractObject o : dlg.getSelectedObjects())
 				objects.put(o.getObjectId(), o);
 		}
-      sourceViewer.setInput(objects.values().toArray());
+      setSourceViewerInput();
 	}
-	
+
 	/**
 	 * Delete object from list
 	 */
@@ -258,6 +275,9 @@ public class RuleSourceObjects extends RuleBasePropertyPage
 	private void deleteSourceObject()
 	{
 		IStructuredSelection selection = sourceViewer.getStructuredSelection();
+      if ((selection.size() == 1) && (selection.getFirstElement() instanceof String))
+         return;
+
 		Iterator<AbstractObject> it = selection.iterator();
 		if (it.hasNext())
 		{
@@ -266,7 +286,7 @@ public class RuleSourceObjects extends RuleBasePropertyPage
 				AbstractObject o = it.next();
 	         objects.remove(o.getObjectId());
 			}
-         sourceViewer.setInput(objects.values().toArray());
+         setSourceViewerInput();
 		}
 	}
 
@@ -324,4 +344,50 @@ public class RuleSourceObjects extends RuleBasePropertyPage
 		editor.setModified(true);
       return true;
 	}
+
+   /**
+    * Label provider for source object list
+    */
+   private static class SourceObjectLabelProvider extends BaseObjectLabelProvider implements IColorProvider
+   {
+      private static final Color HINT_FOREGROUND = new Color(Display.getDefault(), 192, 192, 192);
+
+      /**
+       * @see org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider#getImage(java.lang.Object)
+       */
+      @Override
+      public Image getImage(Object element)
+      {
+         return (element instanceof String) ? null : super.getImage(element);
+      }
+
+      /**
+       * @see org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider#getText(java.lang.Object)
+       */
+      @Override
+      public String getText(Object element)
+      {
+         return (element instanceof String) ? (String)element : super.getText(element);
+      }
+
+      /**
+       * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
+       */
+      @Override
+      public Color getForeground(Object element)
+      {
+         if (element instanceof String)
+            return HINT_FOREGROUND;
+         return null;
+      }
+
+      /**
+       * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
+       */
+      @Override
+      public Color getBackground(Object element)
+      {
+         return null;
+      }
+   }
 }
