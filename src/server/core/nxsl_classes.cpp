@@ -133,6 +133,34 @@ NXSL_METHOD_DEFINITION(NetObj, bindTo)
 }
 
 /**
+ * NetObj::calculateDowntime(tag, periodStart, periodEnd)
+ */
+NXSL_METHOD_DEFINITION(NetObj, calculateDowntime)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   if (!argv[1]->isInteger() || !argv[2]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   uint32_t objectId = static_cast<shared_ptr<NetObj>*>(object->getData())->get()->getId();
+   StructArray<DowntimeInfo> downtimes = CalculateDowntime(objectId, static_cast<time_t>(argv[1]->getValueAsInt64()), static_cast<time_t>(argv[2]->getValueAsInt64()), argv[0]->getValueAsCString());
+   if (!downtimes.isEmpty())
+   {
+      NXSL_Array *a = new NXSL_Array(vm);
+      for(int i = 0; i < downtimes.size(); i++)
+         a->append(vm->createValue(vm->createObject(&g_nxslDowntimeInfoClass, MemCopyBlock(downtimes.get(i), sizeof(DowntimeInfo)))));
+      *result = vm->createValue(a);
+   }
+   else
+   {
+      *result = vm->createValue();
+   }
+
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
  * NetObj::clearGeoLocation()
  */
 NXSL_METHOD_DEFINITION(NetObj, clearGeoLocation)
@@ -683,6 +711,7 @@ NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
 
    NXSL_REGISTER_METHOD(NetObj, bind, 1);
    NXSL_REGISTER_METHOD(NetObj, bindTo, 1);
+   NXSL_REGISTER_METHOD(NetObj, calculateDowntime, 3);
    NXSL_REGISTER_METHOD(NetObj, clearGeoLocation, 0);
    NXSL_REGISTER_METHOD(NetObj, createUserAgentNotification, -1);
    NXSL_REGISTER_METHOD(NetObj, delete, 0);
@@ -7028,7 +7057,6 @@ NXSL_Value *NXSL_NetworkMapLinkClass::getAttr(NXSL_Object *object, const NXSL_Id
    return value;
 }
 
-
 /**
  * NXSL "LinkDataSource" class
  */
@@ -7088,6 +7116,54 @@ void NXSL_LinkDataSourceClass::onObjectDelete(NXSL_Object *object)
 }
 
 /**
+ * NXSL "DowntimeInfo" class
+ */
+NXSL_DowntimeInfoClass::NXSL_DowntimeInfoClass()
+{
+   setName(_T("DowntimeInfo"));
+}
+
+/**
+ * NXSL class DowntimeInfo: get attribute
+ */
+NXSL_Value *NXSL_DowntimeInfoClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto downtimeInfo = static_cast<DowntimeInfo*>(object->getData());
+
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("object"))
+   {
+      shared_ptr<NetObj> object = FindObjectById(downtimeInfo->objectId);
+      value = (object != nullptr) ? object->createNXSLObject(vm) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("objectId"))
+   {
+      value = vm->createValue(downtimeInfo->objectId);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("totalDowntime"))
+   {
+      value = vm->createValue(downtimeInfo->totalDowntime);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("uptimePercentage"))
+   {
+      value = vm->createValue(downtimeInfo->uptimePct);
+   }
+   return value;
+}
+
+/**
+ * Object destruction handler
+ */
+void NXSL_DowntimeInfoClass::onObjectDelete(NXSL_Object *object)
+{
+   MemFree(object->getData());
+}
+
+/**
  * Class objects
  */
 NXSL_AccessPointClass g_nxslAccessPointClass;
@@ -7105,6 +7181,7 @@ NXSL_CollectorClass g_nxslCollectorClass;
 NXSL_ContainerClass g_nxslContainerClass;
 NXSL_DciClass g_nxslDciClass;
 NXSL_DCTargetClass g_nxslDCTargetClass;
+NXSL_DowntimeInfoClass g_nxslDowntimeInfoClass;
 NXSL_EventClass g_nxslEventClass;
 NXSL_HardwareComponent g_nxslHardwareComponent;
 NXSL_InterfaceClass g_nxslInterfaceClass;

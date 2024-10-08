@@ -602,6 +602,18 @@ public:
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
+/**
+ * NXSL "DowntimeInfo" class
+ */
+class NXSL_DowntimeInfoClass : public NXSL_Class
+{
+public:
+   NXSL_DowntimeInfoClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
 class ScheduleParameters;
 
 /**
@@ -667,6 +679,7 @@ extern NXSL_ClusterClass g_nxslClusterClass;
 extern NXSL_CollectorClass g_nxslCollectorClass;
 extern NXSL_ContainerClass g_nxslContainerClass;
 extern NXSL_DciClass g_nxslDciClass;
+extern NXSL_DowntimeInfoClass g_nxslDowntimeInfoClass;
 extern NXSL_EventClass g_nxslEventClass;
 extern NXSL_HardwareComponent g_nxslHardwareComponent;
 extern NXSL_InterfaceClass g_nxslInterfaceClass;

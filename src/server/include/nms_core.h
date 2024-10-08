@@ -1618,6 +1618,22 @@ void NXCORE_EXPORTABLE UnregisterLicenseProblem(const TCHAR *component, const TC
 void NXCORE_EXPORTABLE FillLicenseProblemsMessage(NXCPMessage *msg);
 
 
+/**
+ * Downtime information
+ */
+struct DowntimeInfo
+{
+   uint32_t objectId;
+   uint32_t totalDowntime;  // number of seconds in downtime
+   double uptimePct;  // uptime percentage
+};
+
+/**
+ * Calculate downtime
+ */
+StructArray<DowntimeInfo> CalculateDowntime(uint32_t objectId, time_t periodStart, time_t periodEnd, const TCHAR *tag);
+
+
 /**********************
  * Distance calculation
  **********************/

@@ -195,3 +195,59 @@ void EndDowntime(uint32_t objectId, String tag)
    }
    DBConnectionPoolReleaseConnection(hdb);
 }
+
+/**
+ * Calculate downtime information for given object and given period
+ */
+StructArray<DowntimeInfo> CalculateDowntime(uint32_t objectId, time_t periodStart, time_t periodEnd, const TCHAR *tag)
+{
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+      return StructArray<DowntimeInfo>();
+
+   StringBuffer query(_T("SELECT object_id, sum((CASE WHEN end_time=0 THEN ? ELSE end_time END) - (CASE WHEN start_time < ? THEN ? ELSE start_time END)) AS seconds FROM downtime_log WHERE object_id "));
+   if (object->isEventSource())
+   {
+      query.append(_T("= ? "));
+   }
+   else
+   {
+      query.append(_T("IN (SELECT object_id FROM container_members WHERE container_id = ?) "));
+   }
+   query.append(_T("AND downtime_tag = ? AND start_time <= ? AND (end_time = 0 OR end_time >= ?) GROUP BY object_id"));
+
+   uint32_t interval = static_cast<uint32_t>(periodEnd - periodStart);
+   StructArray<DowntimeInfo> output;
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, query);
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(periodEnd));
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(periodStart));
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(periodStart));
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, objectId);
+      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, tag, DB_BIND_STATIC);
+      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(periodEnd));
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(periodStart));
+
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
+         {
+            DowntimeInfo *d = output.addPlaceholder();
+            d->objectId = DBGetFieldUInt32(hResult, i, 0);
+            d->totalDowntime = DBGetFieldUInt32(hResult, i, 1);
+            d->uptimePct = (d->totalDowntime == interval) ? 0 :  100.0 - static_cast<double>(d->totalDowntime) * 100.0 / interval;
+         }
+         DBFreeResult(hResult);
+      }
+
+      DBFreeStatement(hStmt);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return output;
+}

@@ -42,10 +42,54 @@ int F_GetSyslogRuleMatchCount(int argc, NXSL_Value **argv, NXSL_Value **result, 
 int F_GetServerQueueNames(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 
 /**
+ * Calculate downtime for given period
+ * Arguments: object/objectId, tag, periodStart, periodEnd
+ */
+static int F_CalculateDowntime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isObject() && !argv[0]->isInteger())
+      return NXSL_ERR_NOT_OBJECT;
+
+   if (!argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   if (!argv[2]->isInteger() || !argv[3]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   uint32_t objectId;
+   if (argv[0]->isObject())
+   {
+      NXSL_Object *object = argv[0]->getValueAsObject();
+      if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
+         return NXSL_ERR_BAD_CLASS;
+      objectId = static_cast<shared_ptr<NetObj>*>(object->getData())->get()->getId();
+   }
+   else
+   {
+      objectId = argv[0]->getValueAsUInt32();
+   }
+
+   StructArray<DowntimeInfo> downtimes = CalculateDowntime(objectId, static_cast<time_t>(argv[2]->getValueAsInt64()), static_cast<time_t>(argv[3]->getValueAsInt64()), argv[1]->getValueAsCString());
+   if (!downtimes.isEmpty())
+   {
+      NXSL_Array *a = new NXSL_Array(vm);
+      for(int i = 0; i < downtimes.size(); i++)
+         a->append(vm->createValue(vm->createObject(&g_nxslDowntimeInfoClass, MemCopyBlock(downtimes.get(i), sizeof(DowntimeInfo)))));
+      *result = vm->createValue(a);
+   }
+   else
+   {
+      *result = vm->createValue();
+   }
+
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
  * Get node's custom attribute
  * First argument is a node object, and second is an attribute name
  */
-static int F_GetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_GetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -57,10 +101,10 @@ static int F_GetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 	if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-	NetObj *netxmsObject = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
-	NXSL_Value *value = netxmsObject->getCustomAttributeForNXSL(vm, argv[1]->getValueAsCString());
-	*ppResult = (value != nullptr) ? value : vm->createValue(); // Return nullptr if attribute not found
-	return 0;
+   NetObj *netxmsObject = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   NXSL_Value *value = netxmsObject->getCustomAttributeForNXSL(vm, argv[1]->getValueAsCString());
+   *result = (value != nullptr) ? value : vm->createValue(); // Return nullptr if attribute not found
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -2142,6 +2186,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 	{ "AgentReadParameter", F_AgentReadParameter, 2, true },
 	{ "AgentReadTable", F_AgentReadTable, 2, true },
    { "CancelScheduledTasksByKey", F_CancelScheduledTasksByKey, 1 },
+   { "CalculateDowntime", F_CalculateDowntime, 4 },
 	{ "CreateSNMPTransport", F_CreateSNMPTransport, -1, true },
    { "CountryAlphaCode", F_CountryAlphaCode, 1 },
    { "CountryName", F_CountryName, 1 },
