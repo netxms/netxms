@@ -374,7 +374,7 @@ public class Objects extends AbstractObjectHandler
       int type = JsonTools.getIntFromJson(data, "objectType", -1);
       String name = JsonTools.getStringFromJson(data, "name", null);
       long parentId = JsonTools.getLongFromJson(data, "parentId", -1);
-      if (type == -1 || name == null || parentId == 1)
+      if ((type == -1) || (name == null) || (parentId == -1))
          return createErrorResponseRepresentation(RCC.INVALID_ARGUMENT);
 
       NXCObjectCreationData createData = new NXCObjectCreationData(type, name, parentId);
