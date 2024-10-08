@@ -96,6 +96,7 @@ void StopSnmpTrapReceiver();
 
 void CheckUserAuthenticationTokens(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameters);
+void ExecuteScheduledAgentCommand(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteScheduledPackageDeployment(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteScheduledScript(const shared_ptr<ScheduledTaskParameters>& parameters);
 void MaintenanceModeEnter(const shared_ptr<ScheduledTaskParameters>& parameters);
@@ -1296,22 +1297,23 @@ retry_db_lock:
    pollManagerInitialized.wait(INFINITE);
    nxlog_debug_tag(DEBUG_TAG_STARTUP, 2, _T("Poll manager initialized"));
 
-   RegisterSchedulerTaskHandler(_T("System.CheckUserAuthTokens"), CheckUserAuthenticationTokens, 0); //No access right because it will be used only by server
+   RegisterSchedulerTaskHandler(_T("Agent.DeployPackage"), ExecuteScheduledPackageDeployment, SYSTEM_ACCESS_MANAGE_PACKAGES);
+   RegisterSchedulerTaskHandler(_T("Agent.ExecuteCommand"), ExecuteScheduledAgentCommand, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
+   RegisterSchedulerTaskHandler(_T("DataCollection.RemoveTemplate"), DataCollectionTarget::removeTemplate, 0);
+   RegisterSchedulerTaskHandler(_T("Dummy"), DummyScheduledTaskExecutor, SYSTEM_ACCESS_USER_SCHEDULED_TASKS);
    RegisterSchedulerTaskHandler(_T("Execute.Action"), ExecuteScheduledAction, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
    RegisterSchedulerTaskHandler(_T("Execute.Script"), ExecuteScheduledScript, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
    RegisterSchedulerTaskHandler(_T("Maintenance.Enter"), MaintenanceModeEnter, SYSTEM_ACCESS_SCHEDULE_MAINTENANCE);
    RegisterSchedulerTaskHandler(_T("Maintenance.Leave"), MaintenanceModeLeave, SYSTEM_ACCESS_SCHEDULE_MAINTENANCE);
-   RegisterSchedulerTaskHandler(_T("Dummy"), DummyScheduledTaskExecutor, SYSTEM_ACCESS_USER_SCHEDULED_TASKS);
-   RegisterSchedulerTaskHandler(ALARM_SUMMARY_EMAIL_TASK_ID, SendAlarmSummaryEmail, 0); //No access right because it will be used only by server
-   RegisterSchedulerTaskHandler(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, ProcessUnboundTunnels, 0); //No access right because it will be used only by server
-   RegisterSchedulerTaskHandler(RENEW_AGENT_CERTIFICATES_TASK_ID, RenewAgentCertificates, 0); //No access right because it will be used only by server
-   RegisterSchedulerTaskHandler(RELOAD_CRLS_TASK_ID, ReloadCRLs, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(_T("Objects.ExpandCommentMacros"), ExpandCommentMacrosTask, 0);     // No access right because it will be used only by server
+   RegisterSchedulerTaskHandler(_T("System.CheckUserAuthTokens"), CheckUserAuthenticationTokens, 0); //No access right because it will be used only by server
+   RegisterSchedulerTaskHandler(_T("Upload.File"), ScheduledFileUpload, SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD);
+   RegisterSchedulerTaskHandler(ALARM_SUMMARY_EMAIL_TASK_ID, SendAlarmSummaryEmail, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(DCT_RESET_POLL_TIMERS_TASK_ID, ResetObjectPollTimers, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(EXECUTE_REPORT_TASK_ID, ExecuteReport, SYSTEM_ACCESS_REPORTING_SERVER);
-   RegisterSchedulerTaskHandler(_T("DataCollection.RemoveTemplate"), DataCollectionTarget::removeTemplate, 0);
-   RegisterSchedulerTaskHandler(_T("Agent.DeployPackage"), ExecuteScheduledPackageDeployment, SYSTEM_ACCESS_MANAGE_PACKAGES);
-   RegisterSchedulerTaskHandler(_T("Upload.File"), ScheduledFileUpload, SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD);
+   RegisterSchedulerTaskHandler(RELOAD_CRLS_TASK_ID, ReloadCRLs, 0); //No access right because it will be used only by server
+   RegisterSchedulerTaskHandler(RENEW_AGENT_CERTIFICATES_TASK_ID, RenewAgentCertificates, 0); //No access right because it will be used only by server
+   RegisterSchedulerTaskHandler(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, ProcessUnboundTunnels, 0); //No access right because it will be used only by server
    InitializeTaskScheduler();
 
    // Schedule unbound agent tunnel processing and automatic agent certificate renewal

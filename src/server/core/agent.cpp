@@ -985,3 +985,64 @@ void AgentConnectionEx::onDisconnect()
    if (m_tcpProxySession != nullptr)
       m_tcpProxySession->processTcpProxyAgentDisconnect(this);
 }
+
+#define DEBUG_TAG _T("agent")
+
+/**
+ * Execute scheduled agent command
+ */
+void ExecuteScheduledAgentCommand(const shared_ptr<ScheduledTaskParameters>& parameters)
+{
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("ExecuteScheduledAgentCommand: requested scheduled execution of command \"%s\" on object [%u]"), parameters->m_persistentData, parameters->m_objectId);
+
+   shared_ptr<NetObj> object = FindObjectById(parameters->m_objectId);
+   if (object == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteScheduledAgentCommand: invalid object ID [%u]"), parameters->m_objectId);
+      return;
+   }
+
+   if (!object->checkAccessRights(parameters->m_userId, OBJECT_ACCESS_READ))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteScheduledPackageDeployment: user [%u] has no read rights on object %s [%u]"), parameters->m_userId, object->getName(), object->getId());
+      return;
+   }
+
+   SharedObjectArray<Node> nodes;
+   if (object->getObjectClass() == OBJECT_NODE)
+   {
+      nodes.add(static_pointer_cast<Node>(object));
+   }
+   else
+   {
+      object->addChildNodesToList(&nodes, parameters->m_userId);
+   }
+
+   for(int i = 0; i < nodes.size(); i++)
+   {
+      Node *node = nodes.get(i);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("ExecuteScheduledAgentCommand: scheduled execution of command \"%s\" on node %s [%u]"), parameters->m_persistentData, node->getName(), node->getId());
+      if (node->checkAccessRights(parameters->m_userId, OBJECT_ACCESS_CONTROL))
+      {
+         shared_ptr<AgentConnectionEx> conn = node->createAgentConnection();
+         if (conn != nullptr)
+         {
+            StringList *args = SplitCommandLine(parameters->m_persistentData);
+            String command(args->get(0));
+            args->remove(0);
+            uint32_t rcc = conn->executeCommand(command, *args);
+            delete args;
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteScheduledAgentCommand: scheduled command execution on node %s [%u] by user [%u]: %s"),
+               node->getName(), node->getId(), parameters->m_userId, AgentErrorCodeToText(rcc));
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteScheduledAgentCommand: cannot create agent connection to node %s [%u]"), node->getName(), node->getId());
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteScheduledAgentCommand: user [%u] has no control rights on node %s [%u]"), parameters->m_userId, node->getName(), node->getId());
+      }
+   }
+}
