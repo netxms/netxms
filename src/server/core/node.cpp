@@ -2614,6 +2614,7 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rqId
 
    uint64_t oldCapabilities = m_capabilities;
    uint32_t oldState = m_state;
+   NetworkPathCheckResult oldPathCheckResult = m_pathCheckResult;
 
    poller->setStatus(_T("preparing"));
    m_pollRequestor = pSession;
@@ -3593,7 +3594,7 @@ restart_status_poll:
       markAsModified(MODIFY_RUNTIME); // only notify clients
    }
 
-   if (oldCapabilities != m_capabilities)
+   if ((oldCapabilities != m_capabilities) || !oldPathCheckResult.equals(m_pathCheckResult))
    {
       markAsModified(MODIFY_NODE_PROPERTIES);
    }

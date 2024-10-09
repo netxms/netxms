@@ -3273,7 +3273,18 @@ struct NetworkPathCheckResult
       rootCauseInterfaceId = 0;
    }
 
+   /**
+    * Build description
+    */
    String buildDescription() const;
+
+   /**
+    * Check if two results are equal
+    */
+   bool equals(const NetworkPathCheckResult& other) const
+   {
+      return (reason == other.reason) && (rootCauseNodeId == other.rootCauseNodeId) && (rootCauseInterfaceId == other.rootCauseInterfaceId);
+   }
 };
 
 /**
