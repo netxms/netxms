@@ -614,6 +614,18 @@ public:
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
+/**
+ * NXSL "NetworkPathCheckResult" class
+ */
+class NXSL_NetworkPathCheckResultClass : public NXSL_Class
+{
+public:
+   NXSL_NetworkPathCheckResultClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
 class ScheduleParameters;
 
 /**
@@ -689,6 +701,7 @@ extern NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 extern NXSL_NetObjClass g_nxslNetObjClass;
 extern NXSL_NetworkMapClass g_nxslNetworkMapClass;
 extern NXSL_NetworkMapLinkClass g_nxslNetworkMapLinkClass;
+extern NXSL_NetworkPathCheckResultClass g_nxslNetworkPathCheckResultClass;
 extern NXSL_NodeClass g_nxslNodeClass;
 extern NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 extern NXSL_OSPFAreaClass g_nxslOSPFAreaClass;

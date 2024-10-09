@@ -18,8 +18,10 @@
  */
 package org.netxms.nxmc.modules.objects.views.elements;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.NetworkPathFailureReason;
 import org.netxms.client.constants.SpanningTreePortState;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
@@ -29,8 +31,10 @@ import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
+import org.netxms.client.topology.NetworkPathCheckResult;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
@@ -44,13 +48,8 @@ import org.xnap.commons.i18n.I18n;
 public class ObjectState extends TableElement
 {
    private final I18n i18n = LocalizationHelper.getI18n(ObjectState.class);
-   private static final String[] ifaceExpectedState = 
-      { 
-         LocalizationHelper.getI18n(ObjectState.class).tr("Up"), 
-         LocalizationHelper.getI18n(ObjectState.class).tr("Down"), 
-         LocalizationHelper.getI18n(ObjectState.class).tr("Ignore"), 
-         LocalizationHelper.getI18n(ObjectState.class).tr("Auto") 
-      };
+   private final String[] ifaceExpectedState = { i18n.tr("Up"), i18n.tr("Down"), i18n.tr("Ignore"), i18n.tr("Auto") };
+   private final NXCSession session = Registry.getSession();
 
 	/**
     * @param parent
@@ -69,7 +68,6 @@ public class ObjectState extends TableElement
 	protected void fillTable()
 	{
 		final AbstractObject object = getObject();
-      final NXCSession session = Registry.getSession();
 
       if (object.isInMaintenanceMode())
       {
@@ -161,9 +159,25 @@ public class ObjectState extends TableElement
             if (node.getBootTime() != null)
                addPair(i18n.tr("Boot time"), DateFormatFactory.getDateTimeFormat().format(node.getBootTime()), false);
             if (node.hasAgent())
+            {
                addPair(i18n.tr("Agent status"), (node.getStateFlags() & Node.NSF_AGENT_UNREACHABLE) != 0 ? i18n.tr("Unreachable") : i18n.tr("Connected"));
-            if (node.getLastAgentCommTime() != null)
-               addPair(i18n.tr("Last agent contact"), DateFormatFactory.getDateTimeFormat().format(node.getLastAgentCommTime()), false);
+               if (node.getLastAgentCommTime() != null)
+                  addPair(i18n.tr("Last agent contact"), DateFormatFactory.getDateTimeFormat().format(node.getLastAgentCommTime()), false);
+            }
+            if (node.hasSnmpAgent())
+            {
+               addPair(i18n.tr("SNMP status"), (node.getStateFlags() & Node.NSF_SNMP_UNREACHABLE) != 0 ? i18n.tr("Unreachable") : i18n.tr("Responding"));
+            }
+            if ((node.getCapabilities() & AbstractNode.NC_IS_SSH) != 0)
+            {
+               addPair(i18n.tr("SSH status"), (node.getStateFlags() & Node.NSF_SSH_UNREACHABLE) != 0 ? i18n.tr("Unreachable") : i18n.tr("Responding"));
+            }
+            if ((node.getStateFlags() & (AbstractNode.DCSF_NETWORK_PATH_PROBLEM | AbstractNode.DCSF_UNREACHABLE)) == (AbstractNode.DCSF_NETWORK_PATH_PROBLEM | AbstractNode.DCSF_UNREACHABLE))
+            {
+               NetworkPathCheckResult pathCheckResult = node.getNetworkPathCheckResult();
+               if (pathCheckResult.getReason() != NetworkPathFailureReason.NONE)
+                  addPair(i18n.tr("Network path problem"), buildNetworkPathFailureDescription(pathCheckResult), false);
+            }
 				break;
 			case AbstractObject.OBJECT_MOBILEDEVICE:
 				MobileDevice md = (MobileDevice)object;
@@ -198,4 +212,52 @@ public class ObjectState extends TableElement
 	{
       return i18n.tr("State");
 	}
+
+   /**
+    * Build description for network path failure.
+    *
+    * @param pathCheckResult path check result
+    * @return description for given result
+    */
+   private String buildNetworkPathFailureDescription(final NetworkPathCheckResult pathCheckResult)
+   {
+      if ((pathCheckResult.getRootCauseInterfaceId() != 0) && (session.findObjectById(pathCheckResult.getRootCauseInterfaceId()) == null))
+      {
+         new Job(i18n.tr("Synchronize interface objects"), getObjectView()) {
+            @Override
+            protected void run(IProgressMonitor monitor) throws Exception
+            {
+               session.syncMissingObjects(new long[] { pathCheckResult.getRootCauseInterfaceId() }, NXCSession.OBJECT_SYNC_WAIT);
+               runInUIThread(() -> getObjectView().refresh());
+            }
+
+            @Override
+            protected String getErrorMessage()
+            {
+               return null;
+            }
+         }.start();
+      }
+      switch(pathCheckResult.getReason())
+      {
+         case INTERFACE_DISABLED:
+            return i18n.tr("Interface {0} on node {1} is disabled", session.getObjectName(pathCheckResult.getRootCauseInterfaceId()), session.getObjectName(pathCheckResult.getRootCauseNodeId()));
+         case PROXY_AGENT_UNREACHABLE:
+            return i18n.tr("Agent on proxy node {0} is unreachable", session.getObjectName(pathCheckResult.getRootCauseNodeId()));
+         case PROXY_NODE_DOWN:
+            return i18n.tr("Proxy node {0} is down", session.getObjectName(pathCheckResult.getRootCauseNodeId()));
+         case ROUTER_DOWN:
+            return i18n.tr("Intermediate router {0} is down", session.getObjectName(pathCheckResult.getRootCauseNodeId()));
+         case ROUTING_LOOP:
+            return i18n.tr("Routing loop detected on intermediate router {0}", session.getObjectName(pathCheckResult.getRootCauseNodeId()));
+         case SWITCH_DOWN:
+            return i18n.tr("Intermediate switch {0} is down", session.getObjectName(pathCheckResult.getRootCauseNodeId()));
+         case VPN_TUNNEL_DOWN:
+            return i18n.tr("VPN tunnel {0} on node {1} is down", session.getObjectName(pathCheckResult.getRootCauseInterfaceId()), session.getObjectName(pathCheckResult.getRootCauseNodeId()));
+         case WIRELESS_AP_DOWN:
+            return i18n.tr("Wireless access point {0} is down", session.getObjectName(pathCheckResult.getRootCauseNodeId()));
+         default:
+            return null;
+      }
+   }
 }

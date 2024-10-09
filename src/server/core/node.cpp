@@ -414,7 +414,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("cip_status,cip_state,eip_proxy,eip_port,hardware_id,cip_vendor_code,agent_cert_mapping_method,")
       _T("agent_cert_mapping_data,snmp_engine_id,ssh_port,ssh_key_id,syslog_codepage,snmp_codepage,ospf_router_id,")
       _T("mqtt_proxy,modbus_proxy,modbus_tcp_port,modbus_unit_id,snmp_context_engine_id,vnc_password,vnc_port,")
-      _T("vnc_proxy FROM nodes WHERE id=?"));
+      _T("vnc_proxy,path_check_reason,path_check_node_id,path_check_iface_id FROM nodes WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -598,6 +598,13 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_vncPassword = DBGetFieldAsSharedString(hResult, 0, 83);
    m_vncPort = DBGetFieldUInt16(hResult, 0, 84);
    m_vncProxy = DBGetFieldUInt32(hResult, 0, 85);
+   m_pathCheckResult.reason = static_cast<NetworkPathFailureReason>(DBGetFieldInt32(hResult, 0, 86));
+   if (m_pathCheckResult.reason != NetworkPathFailureReason::NONE)
+   {
+      m_pathCheckResult.rootCauseFound = true;
+      m_pathCheckResult.rootCauseNodeId = DBGetFieldUInt32(hResult, 0, 87);
+      m_pathCheckResult.rootCauseInterfaceId = DBGetFieldUInt32(hResult, 0, 88);
+   }
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -1053,7 +1060,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          _T("cip_status"), _T("cip_state"), _T("eip_proxy"), _T("eip_port"), _T("hardware_id"), _T("cip_vendor_code"),
          _T("agent_cert_mapping_method"), _T("agent_cert_mapping_data"), _T("snmp_engine_id"), _T("snmp_context_engine_id"),
          _T("syslog_codepage"), _T("snmp_codepage"), _T("ospf_router_id"), _T("mqtt_proxy"), _T("modbus_proxy"), _T("modbus_tcp_port"),
-         _T("modbus_unit_id"), _T("vnc_password"), _T("vnc_port"), _T("vnc_proxy"), nullptr
+         _T("modbus_unit_id"), _T("vnc_password"), _T("vnc_port"), _T("vnc_proxy"), _T("path_check_reason"), _T("path_check_node_id"),
+         _T("path_check_iface_id"), nullptr
       };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("nodes"), _T("id"), m_id, columns);
@@ -1200,7 +1208,10 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 84, DB_SQLTYPE_VARCHAR, m_vncPassword, DB_BIND_STATIC, 63);
          DBBind(hStmt, 85, DB_SQLTYPE_INTEGER, m_vncPort);
          DBBind(hStmt, 86, DB_SQLTYPE_INTEGER, m_vncProxy);
-         DBBind(hStmt, 87, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 87, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_pathCheckResult.reason));
+         DBBind(hStmt, 88, DB_SQLTYPE_INTEGER, m_pathCheckResult.rootCauseNodeId);
+         DBBind(hStmt, 89, DB_SQLTYPE_INTEGER, m_pathCheckResult.rootCauseInterfaceId);
+         DBBind(hStmt, 90, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -3319,48 +3330,16 @@ restart_status_poll:
                // Clear delayed event queue
                delete_and_null(eventQueue);
 
+               lockProperties();
+               m_pathCheckResult = patchCheckResult;
+               unlockProperties();
+
                static const TCHAR *reasonNames[] = {
                         _T("None"), _T("Router down"), _T("Switch down"), _T("Wireless AP down"),
                         _T("Proxy node down"), _T("Proxy agent unreachable"), _T("VPN tunnel down"),
                         _T("Routing loop"), _T("Interface disabled")
                };
-
-               TCHAR description[1024];
-               switch(patchCheckResult.reason)
-               {
-                  case NetworkPathFailureReason::INTERFACE_DISABLED:
-                     _sntprintf(description, 1024, _T("Interface %s on node %s is disabled"),
-                              GetObjectName(patchCheckResult.rootCauseInterfaceId, _T("UNKNOWN")),
-                              GetObjectName(patchCheckResult.rootCauseNodeId, _T("UNKNOWN")));
-                     break;
-                  case NetworkPathFailureReason::PROXY_AGENT_UNREACHABLE:
-                     _sntprintf(description, 1024, _T("Agent on proxy node %s is unreachable"), GetObjectName(patchCheckResult.rootCauseNodeId, _T("UNKNOWN")));
-                     break;
-                  case NetworkPathFailureReason::PROXY_NODE_DOWN:
-                     _sntprintf(description, 1024, _T("Proxy node %s is down"), GetObjectName(patchCheckResult.rootCauseNodeId, _T("UNKNOWN")));
-                     break;
-                  case NetworkPathFailureReason::ROUTER_DOWN:
-                     _sntprintf(description, 1024, _T("Intermediate router %s is down"), GetObjectName(patchCheckResult.rootCauseNodeId, _T("UNKNOWN")));
-                     break;
-                  case NetworkPathFailureReason::ROUTING_LOOP:
-                     _sntprintf(description, 1024, _T("Routing loop detected on intermediate router %s"), GetObjectName(patchCheckResult.rootCauseNodeId, _T("UNKNOWN")));
-                     break;
-                  case NetworkPathFailureReason::SWITCH_DOWN:
-                     _sntprintf(description, 1024, _T("Intermediate switch %s is down"), GetObjectName(patchCheckResult.rootCauseNodeId, _T("UNKNOWN")));
-                     break;
-                  case NetworkPathFailureReason::VPN_TUNNEL_DOWN:
-                     _sntprintf(description, 1024, _T("VPN tunnel %s on node %s is down"),
-                              GetObjectName(patchCheckResult.rootCauseInterfaceId, _T("UNKNOWN")),
-                              GetObjectName(patchCheckResult.rootCauseNodeId, _T("UNKNOWN")));
-                     break;
-                  case NetworkPathFailureReason::WIRELESS_AP_DOWN:
-                     _sntprintf(description, 1024, _T("Wireless access point %s is down"), GetObjectName(patchCheckResult.rootCauseNodeId, _T("UNKNOWN")));
-                     break;
-                  default:
-                     _tcscpy(description, reasonNames[static_cast<int32_t>(patchCheckResult.reason)]);
-                     break;
-               }
-
+               String description = patchCheckResult.buildDescription();
                EventBuilder(EVENT_NODE_UNREACHABLE, m_id)
                   .param(_T("reasonCode"), static_cast<int32_t>(patchCheckResult.reason))
                   .param(_T("reason"), reasonNames[static_cast<int32_t>(patchCheckResult.reason)])
@@ -3371,7 +3350,7 @@ restart_status_poll:
                   .param(_T("description"), description)
                   .post();
 
-               sendPollerMsg(POLLER_WARNING _T("Detected network path problem (%s)\r\n"), description);
+               sendPollerMsg(POLLER_WARNING _T("Detected network path problem (%s)\r\n"), description.cstr());
             }
             else if ((m_flags & (NF_DISABLE_NXCP | NF_DISABLE_SNMP | NF_DISABLE_ICMP | NF_DISABLE_ETHERNET_IP)) == (NF_DISABLE_NXCP | NF_DISABLE_SNMP | NF_DISABLE_ICMP | NF_DISABLE_ETHERNET_IP))
             {
@@ -8710,6 +8689,10 @@ void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setFieldFromUtf8String(VID_SYSLOG_CODEPAGE, m_syslogCodepage);
    msg->setFieldFromUtf8String(VID_SNMP_CODEPAGE, m_snmpCodepage);
    msg->setField(VID_OSPF_ROUTER_ID, InetAddress(m_ospfRouterId));
+
+   msg->setField(VID_PATH_CHECK_REASON, static_cast<int16_t>(m_pathCheckResult.reason));
+   msg->setField(VID_PATH_CHECK_NODE_ID, m_pathCheckResult.rootCauseNodeId);
+   msg->setField(VID_PATH_CHECK_INTERFACE_ID, m_pathCheckResult.rootCauseInterfaceId);
 
    int networkServiceCount = 0;
    int vpnCount = 0;

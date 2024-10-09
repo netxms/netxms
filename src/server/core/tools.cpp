@@ -708,3 +708,46 @@ void ReportConfigurationError(const TCHAR *subsystem, const TCHAR *tag, const TC
          .param(_T("description"), description)
          .post();
 }
+
+/**
+ * Build description for network path check result
+ */
+String NetworkPathCheckResult::buildDescription() const
+{
+   TCHAR description[1024];
+   switch(reason)
+   {
+      case NetworkPathFailureReason::INTERFACE_DISABLED:
+         _sntprintf(description, 1024, _T("Interface %s on node %s is disabled"),
+                  GetObjectName(rootCauseInterfaceId, _T("UNKNOWN")),
+                  GetObjectName(rootCauseNodeId, _T("UNKNOWN")));
+         break;
+      case NetworkPathFailureReason::PROXY_AGENT_UNREACHABLE:
+         _sntprintf(description, 1024, _T("Agent on proxy node %s is unreachable"), GetObjectName(rootCauseNodeId, _T("UNKNOWN")));
+         break;
+      case NetworkPathFailureReason::PROXY_NODE_DOWN:
+         _sntprintf(description, 1024, _T("Proxy node %s is down"), GetObjectName(rootCauseNodeId, _T("UNKNOWN")));
+         break;
+      case NetworkPathFailureReason::ROUTER_DOWN:
+         _sntprintf(description, 1024, _T("Intermediate router %s is down"), GetObjectName(rootCauseNodeId, _T("UNKNOWN")));
+         break;
+      case NetworkPathFailureReason::ROUTING_LOOP:
+         _sntprintf(description, 1024, _T("Routing loop detected on intermediate router %s"), GetObjectName(rootCauseNodeId, _T("UNKNOWN")));
+         break;
+      case NetworkPathFailureReason::SWITCH_DOWN:
+         _sntprintf(description, 1024, _T("Intermediate switch %s is down"), GetObjectName(rootCauseNodeId, _T("UNKNOWN")));
+         break;
+      case NetworkPathFailureReason::VPN_TUNNEL_DOWN:
+         _sntprintf(description, 1024, _T("VPN tunnel %s on node %s is down"),
+                  GetObjectName(rootCauseInterfaceId, _T("UNKNOWN")),
+                  GetObjectName(rootCauseNodeId, _T("UNKNOWN")));
+         break;
+      case NetworkPathFailureReason::WIRELESS_AP_DOWN:
+         _sntprintf(description, 1024, _T("Wireless access point %s is down"), GetObjectName(rootCauseNodeId, _T("UNKNOWN")));
+         break;
+      default:
+         return String(_T("Unknown reason"));
+   }
+
+   return String(description);
+}

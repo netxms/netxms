@@ -3849,7 +3849,6 @@ public class NXCSession
          if (object == null)
          { 
             addListener(new SessionListener() {
-               
                @Override
                public void notificationHandler(SessionNotification n)
                {

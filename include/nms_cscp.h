@@ -1533,6 +1533,9 @@ typedef struct
 #define VID_USE_L1_TOPOLOGY         ((uint32_t)851)
 #define VID_USE_CARBONE_RENDERER    ((uint32_t)852)
 #define VID_TRANSFORMED_DATA_TYPE   ((uint32_t)853)
+#define VID_PATH_CHECK_REASON       ((uint32_t)854)
+#define VID_PATH_CHECK_NODE_ID      ((uint32_t)855)
+#define VID_PATH_CHECK_INTERFACE_ID ((uint32_t)856)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

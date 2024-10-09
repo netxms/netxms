@@ -2454,6 +2454,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    {
       value = vm->createValue(node->getModbusUnitId());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("networkPathCheckResult"))
+   {
+      value = vm->createValue(vm->createObject(&g_nxslNetworkPathCheckResultClass, new NetworkPathCheckResult(node->getNetworkPathCheckResult())));
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("nodeSubType"))
    {
       value = vm->createValue(node->getSubType());
@@ -7164,6 +7168,63 @@ void NXSL_DowntimeInfoClass::onObjectDelete(NXSL_Object *object)
 }
 
 /**
+ * NXSL "NetworkPathCheckResult" class
+ */
+NXSL_NetworkPathCheckResultClass::NXSL_NetworkPathCheckResultClass()
+{
+   setName(_T("NetworkPathCheckResult"));
+}
+
+/**
+ * NXSL class NetworkPathCheckResult: get attribute
+ */
+NXSL_Value *NXSL_NetworkPathCheckResultClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto pathCheckResult = static_cast<NetworkPathCheckResult*>(object->getData());
+
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("description"))
+   {
+      value = vm->createValue(pathCheckResult->buildDescription());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("reason"))
+   {
+      value = vm->createValue(static_cast<int32_t>(pathCheckResult->reason));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("rootCauseInterface"))
+   {
+      shared_ptr<NetObj> object = FindObjectById(pathCheckResult->rootCauseInterfaceId, OBJECT_INTERFACE);
+      value = (object != nullptr) ? object->createNXSLObject(vm) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("rootCauseInterfaceId"))
+   {
+      value = vm->createValue(pathCheckResult->rootCauseInterfaceId);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("rootCauseNode"))
+   {
+      shared_ptr<NetObj> object = FindObjectById(pathCheckResult->rootCauseNodeId);
+      value = (object != nullptr) ? object->createNXSLObject(vm) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("rootCauseNodeId"))
+   {
+      value = vm->createValue(pathCheckResult->rootCauseNodeId);
+   }
+   return value;
+}
+
+/**
+ * Object destruction handler
+ */
+void NXSL_NetworkPathCheckResultClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<NetworkPathCheckResult*>(object->getData());
+}
+
+/**
  * Class objects
  */
 NXSL_AccessPointClass g_nxslAccessPointClass;
@@ -7191,6 +7252,7 @@ NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 NXSL_NetObjClass g_nxslNetObjClass;
 NXSL_NetworkMapClass g_nxslNetworkMapClass;
 NXSL_NetworkMapLinkClass g_nxslNetworkMapLinkClass;
+NXSL_NetworkPathCheckResultClass g_nxslNetworkPathCheckResultClass;
 NXSL_NodeClass g_nxslNodeClass;
 NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 NXSL_OSPFAreaClass g_nxslOSPFAreaClass;

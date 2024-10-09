@@ -3261,6 +3261,19 @@ struct NetworkPathCheckResult
       rootCauseNodeId = nodeId;
       rootCauseInterfaceId = interfaceId;
    }
+
+   /**
+    * Reset
+    */
+   void reset()
+   {
+      rootCauseFound = false;
+      reason = NetworkPathFailureReason::NONE;
+      rootCauseNodeId = 0;
+      rootCauseInterfaceId = 0;
+   }
+
+   String buildDescription() const;
 };
 
 /**
@@ -3406,6 +3419,7 @@ protected:
    time_t m_lastAgentCommTime;
    time_t m_lastAgentConnectAttempt;
    time_t m_agentRestartTime;
+   NetworkPathCheckResult m_pathCheckResult;
    Mutex m_agentMutex;
    Mutex m_smclpMutex;
    Mutex m_routingTableMutex;
@@ -3732,6 +3746,7 @@ public:
    uint32_t getOSPFRouterId() const { return m_ospfRouterId; }
    StructArray<OSPFArea> getOSPFAreas() const { return GetAttributeWithLock(m_ospfAreas, m_mutexProperties); }
    StructArray<OSPFNeighbor> getOSPFNeighbors() const { return GetAttributeWithLock(m_ospfNeighbors, m_mutexProperties); }
+   NetworkPathCheckResult getNetworkPathCheckResult() const { return GetAttributeWithLock(m_pathCheckResult, m_mutexProperties); }
 
    bool isDown() { return is_bit_set(m_state, DCSF_UNREACHABLE); }
    time_t getDownSince() const { return m_downSince; }

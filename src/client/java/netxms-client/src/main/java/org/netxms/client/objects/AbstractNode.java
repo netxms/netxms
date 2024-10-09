@@ -40,6 +40,7 @@ import org.netxms.client.objects.interfaces.HardwareEntity;
 import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.client.objects.interfaces.ZoneMember;
 import org.netxms.client.snmp.SnmpVersion;
+import org.netxms.client.topology.NetworkPathCheckResult;
 import org.netxms.client.topology.RadioInterface;
 import org.netxms.client.xml.XMLTools;
 import org.slf4j.Logger;
@@ -110,9 +111,14 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public static final int NF_DISABLE_MODBUS_TCP        = 0x80000000;
 
 	// Node state flags
-	public static final int NSF_AGENT_UNREACHABLE  = 0x00010000;
-	public static final int NSF_SNMP_UNREACHABLE   = 0x00020000;
-	public static final int NSF_CPSNMP_UNREACHABLE = 0x00040000;
+	public static final int NSF_AGENT_UNREACHABLE        = 0x00010000;
+	public static final int NSF_SNMP_UNREACHABLE         = 0x00020000;
+	public static final int NSF_ETHERNET_IP_UNREACHABLE  = 0x00040000;
+	public static final int NSF_CACHE_MODE_NOT_SUPPORTED = 0x00080000;
+	public static final int NSF_SNMP_TRAP_FLOOD          = 0x00100000;
+	public static final int NSF_ICMP_UNREACHABLE         = 0x00200000;
+	public static final int NSF_SSH_UNREACHABLE          = 0x00400000;
+	public static final int NSF_MODBUS_UNREACHABLE       = 0x00800000;
 
 	public static final int IFXTABLE_DEFAULT = 0;
 	public static final int IFXTABLE_ENABLED = 1;
@@ -215,7 +221,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    protected InetAddress ospfRouterId;
    protected int networkServiceCount;
    protected int vpnConnectorCount;
-   private RadioInterface[] radios;
+   protected RadioInterface[] radios;
+   protected NetworkPathCheckResult networkPathCheckResult;
 
 	/**
 	 * Create new node object.
@@ -330,6 +337,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       ospfRouterId = msg.getFieldAsInetAddress(NXCPCodes.VID_OSPF_ROUTER_ID);
       networkServiceCount = msg.getFieldAsInt32(NXCPCodes.VID_NETWORK_SERVICE_COUNT);
       vpnConnectorCount = msg.getFieldAsInt32(NXCPCodes.VID_VPN_CONNECTOR_COUNT);
+      networkPathCheckResult = new NetworkPathCheckResult(msg);
 
       chassisPlacement = null;
       String config = msg.getFieldAsString(NXCPCodes.VID_CHASSIS_PLACEMENT_CONFIG);
@@ -1489,5 +1497,13 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public RadioInterface[] getRadios()
    {
       return radios;
+   }
+
+   /**
+    * @return the networkPathCheckResult
+    */
+   public NetworkPathCheckResult getNetworkPathCheckResult()
+   {
+      return networkPathCheckResult;
    }
 }

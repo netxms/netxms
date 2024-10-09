@@ -24,6 +24,25 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.18 to 51.19
+ */
+static bool H_UpgradeFromV18()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE nodes ADD path_check_reason integer\n")
+      _T("ALTER TABLE nodes ADD path_check_node_id integer\n")
+      _T("ALTER TABLE nodes ADD path_check_iface_id integer\n")
+      _T("UPDATE nodes SET path_check_reason=0,path_check_node_id=0,path_check_iface_id=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("path_check_reason")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("path_check_node_id")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("path_check_iface_id")));
+   CHK_EXEC(SetMinorSchemaVersion(19));
+   return true;
+}
+
+/**
  * Upgrade from 51.17 to 51.18
  */
 static bool H_UpgradeFromV17()
@@ -382,6 +401,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 18, 51, 19, H_UpgradeFromV18 },
    { 17, 51, 18, H_UpgradeFromV17 },
    { 16, 51, 17, H_UpgradeFromV16 },
    { 15, 51, 16, H_UpgradeFromV15 },
