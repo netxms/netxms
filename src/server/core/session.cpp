@@ -6074,6 +6074,24 @@ void ClientSession::createObject(const NXCPMessage& request)
             }
          }
 
+#if defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD)
+         if ((rcc == RCC_SUCCESS) && (objectClass == OBJECT_NODE) && !(g_flags & AF_UNLIMITED_NODES) && (g_idxNodeById.size() >= 250))
+         {
+            int count = 0;
+            g_idxNodeById.forEach(
+               [&count](NetObj *node) -> void
+            {
+               if (node->getStatus() != STATUS_UNMANAGED)
+                  count++;
+            });
+            if (count >= 250)
+            {
+               debugPrintf(4, _T("Creation of node \"%s\" blocked by license check"), objectName);
+               rcc = RCC_LICENSE_VIOLATION;
+            }
+         }
+#endif
+
          // Do additional validation by modules
          if (rcc == RCC_SUCCESS)
          {

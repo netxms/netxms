@@ -93,6 +93,7 @@ void StopSNMPAgent();
 void LoadTrapMappings();
 void StartSnmpTrapReceiver();
 void StopSnmpTrapReceiver();
+void CheckNodeCountRestrictions();
 
 void CheckUserAuthenticationTokens(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameters);
@@ -1344,13 +1345,14 @@ retry_db_lock:
    InitMobileDeviceListeners();
    s_mobileDeviceListenerThread = ThreadCreateEx(MobileDeviceListenerThread);
 
-   //Validate scripts in script library
+   // Validate scripts in script library
    ValidateScripts();
 
    // Call startup functions for the modules
    CALL_ALL_MODULES(pfServerStarted, ());
 
    ExecuteStartupScripts();
+   CheckNodeCountRestrictions();
 
    // Internal stat collector should be started last when all queues
    // and thread pools already created

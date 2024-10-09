@@ -24,6 +24,10 @@
 #include <netxms-regex.h>
 #include <agent_tunnel.h>
 
+#if defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD)
+#include <licensing.cpp>
+#endif
+
 /**
  * Global data
  */
@@ -2462,4 +2466,61 @@ void ResetObjectPollTimers(const shared_ptr<ScheduledTaskParameters>& parameters
    g_idxSensorById.forEach(ResetPollTimers, nullptr);
    g_idxAccessPointById.forEach(ResetPollTimers, nullptr);
    g_idxChassisById.forEach(ResetPollTimers, nullptr);
+}
+
+#if defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD)
+
+/**
+ * Unmanage nodes that exceeed node limit
+ */
+static void UnmanageExtraNodes()
+{
+   if (g_idxNodeById.size() > 250)
+   {
+      int count = 0;
+      g_idxNodeById.forEach(
+         [&count](NetObj *node) -> void
+         {
+            if (node->getStatus() != STATUS_UNMANAGED)
+            {
+               count++;
+               if (count > 250)
+               {
+                  node->setMgmtStatus(false);
+                  nxlog_write_tag(NXLOG_WARNING, _T("licensing"), _T("Node \"%s\" [%u] set to unmanaged state because limit of number of managed nodes is exceeded"), node->getName(), node->getId());
+               }
+            }
+         });
+   }
+
+   // Schedule next run in 1 hour
+   ThreadPoolScheduleRelative(g_mainThreadPool, 3600000, UnmanageExtraNodes);
+}
+
+#endif
+
+/**
+ * Check restrictions on node count
+ */
+void CheckNodeCountRestrictions()
+{
+#if defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD)
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   bool enterpriseEdition = (CountLicensesForProduct(hdb, "NXEE") > 0);
+   bool unrestrictedWindowsBuild = (CountLicensesForProduct(hdb, "WINEXT") > 0);
+   DBConnectionPoolReleaseConnection(hdb);
+
+   if (enterpriseEdition)
+      return;
+
+   if (unrestrictedWindowsBuild)
+   {
+      nxlog_write_tag(NXLOG_INFO, _T("licensing"), _T("Initialized without restriction on number of managed nodes"));
+      InterlockedOr64(&g_flags, AF_UNLIMITED_NODES);
+      return;
+   }
+
+   nxlog_write_tag(NXLOG_INFO, _T("licensing"), _T("Number of managed nodes restricted to 250"));
+   UnmanageExtraNodes();
+#endif
 }

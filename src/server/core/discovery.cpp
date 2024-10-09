@@ -771,8 +771,10 @@ static void CreateDiscoveredNode(NewNodeData *newNodeData)
    // Double check IP address because parallel discovery may already create that node
    if ((FindNodeByIP(newNodeData->zoneUIN, newNodeData->ipAddr) == nullptr) && (FindSubnetByIP(newNodeData->zoneUIN, newNodeData->ipAddr) == nullptr))
    {
-      PollNewNode(newNodeData);
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("CreateDiscoveredNode(%s): initial poll completed"), ipAddrText);
+      if (PollNewNode(newNodeData) != nullptr)
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("CreateDiscoveredNode(%s): initial poll completed"), ipAddrText);
+      else
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("CreateDiscoveredNode(%s): node object creation failed"), ipAddrText);
    }
    else
    {
