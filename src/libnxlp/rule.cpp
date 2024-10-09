@@ -256,7 +256,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, uint32_t ev
 
 	   if ((eventId < m_idStart) || (eventId > m_idEnd))
 	   {
-		   m_parser->trace(7, _T("  event id 0x%08x not in range 0x%08x - 0x%08x"), eventId, m_idStart, m_idEnd);
+		   m_parser->trace(7, _T("  event id %u not in range %u - %u"), eventId, m_idStart, m_idEnd);
 		   return false;
 	   }
 
