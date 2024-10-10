@@ -801,7 +801,7 @@ NXSL_Value *BusinessService::createNXSLObject(NXSL_VM *vm)
  */
 double GetServiceUptime(uint32_t serviceId, time_t from, time_t to)
 {
-   double res = 0;
+   double uptimePercentage = 0;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb,
             _T("SELECT from_timestamp,to_timestamp FROM business_service_downtime ")
@@ -818,7 +818,7 @@ double GetServiceUptime(uint32_t serviceId, time_t from, time_t to)
       DB_RESULT hResult = DBSelectPrepared(hStmt);
       if (hResult != nullptr)
       {
-         time_t totalUptime = to - from;
+         int64_t totalUptime = to - from;
          int count = DBGetNumRows(hResult);
          for (int i = 0; i < count; i++)
          {
@@ -829,13 +829,13 @@ double GetServiceUptime(uint32_t serviceId, time_t from, time_t to)
             time_t downtime = (toTimestamp > to ? to : toTimestamp) - (fromTimestamp < from ? from : fromTimestamp);
             totalUptime -= downtime;
          }
-         res = (double)totalUptime / (double)((to - from) / 100);
+         uptimePercentage = static_cast<double>(totalUptime * 10000 / static_cast<int64_t>(to - from)) / 100;
          DBFreeResult(hResult);
       }
       DBFreeStatement(hStmt);
    }
    DBConnectionPoolReleaseConnection(hdb);
-   return res;
+   return uptimePercentage;
 }
 
 /**
