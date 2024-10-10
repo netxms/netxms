@@ -345,6 +345,10 @@ Source: "..\..\..\x64\Release\nxshell.exe"; DestDir: "{app}\bin"; Flags: ignorev
 Source: "..\..\client\java\netxms-client\target\netxms-client-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: tools or server\reporting
 Source: "..\..\client\nxshell\java\target\nxshell-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: tools
 Source: "..\..\client\nxshell\java\target\lib\*.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: tools
+; License manager
+#ifexist "..\..\..\private\common\x64\Release\nxlicmgr.exe"
+Source: "..\..\..\private\common\x64\Release\nxlicmgr.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+#endif
 ; Diagnostic tools
 Source: "..\..\server\tools\scripts\nx-collect-server-diag.cmd"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 Source: "..\..\server\tools\scripts\zip.ps1"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
