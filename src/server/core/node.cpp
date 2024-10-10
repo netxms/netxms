@@ -3535,7 +3535,7 @@ restart_status_poll:
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): unable to get agent local database status"), m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%u]): unable to get agent local database status"), m_name, m_id);
       }
    }
 
@@ -3553,7 +3553,40 @@ restart_status_poll:
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): cannot get user agent information"), m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%u]): cannot get user agent information"), m_name, m_id);
+      }
+   }
+
+   // Check time on remote system
+   if (!(m_state & DCSF_UNREACHABLE) && isNativeAgent())
+   {
+      shared_ptr<AgentConnectionEx> conn = getAgentConnection();
+      if (conn != nullptr)
+      {
+         int64_t remoteTime;
+         int32_t offset;
+         bool allowSync;
+         uint32_t rcc = conn->getRemoteSystemTime(&remoteTime, &offset, nullptr, &allowSync);
+         if (rcc == ERR_SUCCESS)
+         {
+            TCHAR timeText[64];
+            FormatTimestamp(static_cast<time_t>(remoteTime / 1000), timeText);
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%u]): remote system time is %s, offset %d ms"), m_name, m_id, timeText, offset);
+            sendPollerMsg(_T("Remote system time is %s, offset %d ms\r\n"), timeText, offset);
+            if (abs(offset) > 5000)
+            {
+               sendPollerMsg(POLLER_WARNING _T("   Time difference exceeds 5 seconds\r\n"));
+               if (allowSync)
+               {
+                  sendPollerMsg(_T("   Performing coarse time synchronization\r\n"));
+                  uint32_t rcc = conn->synchronizeTime();
+                  if (rcc == ERR_SUCCESS)
+                     sendPollerMsg(POLLER_INFO _T("   Time is synchronized\r\n"));
+                  else
+                     sendPollerMsg(POLLER_ERROR _T("   Cannot synchronize time (%s)\r\n"), AgentErrorCodeToText(rcc));
+               }
+            }
+         }
       }
    }
 

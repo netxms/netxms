@@ -1138,6 +1138,8 @@ public:
          uint32_t retentionTime, const TCHAR *login, const TCHAR *password, WebServiceAuthType authType, const StringMap& headers,
          const TCHAR *path, bool verifyCert, bool verifyHost, bool followLocation, bool forcePlainTextParser, StringList *results);
    uint32_t nop();
+   uint32_t getRemoteSystemTime(int64_t *remoteTime, int32_t *offset = nullptr, uint32_t *roundtripTime = nullptr, bool *allowSync = nullptr);
+   uint32_t synchronizeTime();
    uint32_t executeCommand(const TCHAR *command, const StringList &args, bool withOutput = false,
          void (*outputCallback)(ActionCallbackEvent, const TCHAR*, void*) = nullptr, void *cbData = nullptr);
    uint32_t changeFileOwner(const TCHAR *file, bool allowPathExpansion, const TCHAR *newOwner, const TCHAR *newGroup);

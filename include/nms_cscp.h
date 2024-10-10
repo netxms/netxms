@@ -452,8 +452,8 @@ typedef struct
 #define CMD_CLOSE_CONSOLE                 0x00F8
 #define CMD_GET_SELECTED_OBJECTS          0x00F9
 #define CMD_GET_VLANS                     0x00FA
-//#define CMD_HOLD_JOB                      0x00FB
-//#define CMD_UNHOLD_JOB                    0x00FC
+#define CMD_GET_SYSTEM_TIME               0x00FB
+#define CMD_SET_SYSTEM_TIME               0x00FC
 #define CMD_CHANGE_ZONE                   0x00FD
 #define CMD_GET_AGENT_FILE                0x00FE
 #define CMD_GET_FILE_DETAILS              0x00FF
@@ -1525,6 +1525,15 @@ typedef struct
 #define VID_CONTEXT_OBJECT_ID       ((uint32_t)846)
 #define VID_UI_ACCESS_RULES         ((uint32_t)847)
 #define VID_DELEGATE_OBJECT_ID      ((uint32_t)848)
+#define VID_DASHBOARD_ID            ((uint32_t)849)
+#define VID_ELEMENT_INDEX           ((uint32_t)850)
+#define VID_USE_L1_TOPOLOGY         ((uint32_t)851)
+#define VID_USE_CARBONE_RENDERER    ((uint32_t)852)
+#define VID_TRANSFORMED_DATA_TYPE   ((uint32_t)853)
+#define VID_PATH_CHECK_REASON       ((uint32_t)854)
+#define VID_PATH_CHECK_NODE_ID      ((uint32_t)855)
+#define VID_PATH_CHECK_INTERFACE_ID ((uint32_t)856)
+#define VID_TIME_SYNC_ALLOWED       ((uint32_t)857)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

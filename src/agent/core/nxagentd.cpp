@@ -397,6 +397,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("SNMPTrapPort"), CT_WORD, 0, 0, 0, 0, &g_snmpTrapPort, nullptr },
    { _T("StartupDelay"), CT_LONG, 0, 0, 0, 0, &g_startupDelay, nullptr },
    { _T("SubAgent"), CT_STRING_CONCAT, '\n', 0, 0, 0, &m_pszSubagentList, nullptr },
+   { _T("SyncTimeWithServer"), CT_BOOLEAN_FLAG_32, 0, 0, AF_SYNC_TIME_WITH_SERVER, 0, &g_dwFlags, nullptr },
    { _T("SyslogListenPort"), CT_WORD, 0, 0, 0, 0, &g_syslogListenPort, nullptr },
    { _T("SystemName"), CT_STRING, 0, 0, MAX_OBJECT_NAME, 0, g_systemName, nullptr },
    { _T("TrustedRootCertificate"), CT_STRING_SET, 0, 0, 0, 0, &g_trustedRootCertificates, nullptr },
