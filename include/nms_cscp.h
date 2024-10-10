@@ -452,8 +452,8 @@ typedef struct
 #define CMD_CLOSE_CONSOLE                 0x00F8
 #define CMD_GET_SELECTED_OBJECTS          0x00F9
 #define CMD_GET_VLANS                     0x00FA
-//#define CMD_HOLD_JOB                      0x00FB
-//#define CMD_UNHOLD_JOB                    0x00FC
+#define CMD_GET_SYSTEM_TIME               0x00FB
+#define CMD_SET_SYSTEM_TIME               0x00FC
 #define CMD_CHANGE_ZONE                   0x00FD
 #define CMD_GET_AGENT_FILE                0x00FE
 #define CMD_GET_FILE_DETAILS              0x00FF
@@ -1536,6 +1536,7 @@ typedef struct
 #define VID_PATH_CHECK_REASON       ((uint32_t)854)
 #define VID_PATH_CHECK_NODE_ID      ((uint32_t)855)
 #define VID_PATH_CHECK_INTERFACE_ID ((uint32_t)856)
+#define VID_TIME_SYNC_ALLOWED       ((uint32_t)857)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

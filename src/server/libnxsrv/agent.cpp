@@ -1713,18 +1713,81 @@ uint32_t AgentConnection::authenticate(BOOL bProxyData)
    if (*secret == 0)
       return ERR_SUCCESS;  // No authentication required
 
-   NXCPMessage msg(m_nProtocolVersion);
-   msg.setCode(CMD_AUTHENTICATE);
    uint32_t requestId = generateRequestId();
-   msg.setId(requestId);
-   msg.setField(VID_AUTH_METHOD, (WORD)AUTH_SHA1_HASH);  // For compatibility with agents before 3.3
+   NXCPMessage msg(CMD_AUTHENTICATE, requestId, m_nProtocolVersion);
+   msg.setField(VID_AUTH_METHOD, static_cast<uint16_t>(AUTH_SHA1_HASH));  // For compatibility with agents before 3.3
    BYTE hash[SHA1_DIGEST_SIZE];
    CalculateSHA1Hash(reinterpret_cast<const BYTE*>(secret), strlen(secret), hash);
    msg.setField(VID_SHARED_SECRET, hash, SHA1_DIGEST_SIZE);
-   if (sendMessage(&msg))
-      return waitForRCC(requestId, m_commandTimeout);
-   else
+   if (!sendMessage(&msg))
       return ERR_CONNECTION_BROKEN;
+
+   return waitForRCC(requestId, m_commandTimeout);
+}
+
+/**
+ * Get time of remote system
+ */
+uint32_t AgentConnection::getRemoteSystemTime(int64_t *remoteTime, int32_t *offset, uint32_t *roundtripTime, bool *allowSync)
+{
+   NXCPMessage request(CMD_GET_SYSTEM_TIME, generateRequestId(), m_nProtocolVersion);
+
+   int64_t sendTime = GetCurrentTimeMs();
+   if (!sendMessage(&request))
+      return ERR_CONNECTION_BROKEN;
+
+   NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, request.getId(), m_commandTimeout);
+   int64_t now = GetCurrentTimeMs();
+
+   if (response == nullptr)
+      return ERR_REQUEST_TIMEOUT;
+
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
+   if (rcc == ERR_SUCCESS)
+   {
+      uint32_t rtt = static_cast<uint32_t>(now - sendTime);
+      *remoteTime = response->getFieldAsInt64(VID_TIMESTAMP);
+      if (offset != nullptr)
+         *offset = *remoteTime - (now - rtt / 2);
+      if (roundtripTime != nullptr)
+         *roundtripTime = rtt;
+      if (allowSync != nullptr)
+         *allowSync = response->getFieldAsBoolean(VID_TIME_SYNC_ALLOWED);
+   }
+   delete response;
+   return rcc;
+}
+
+/**
+ * Synchronize time with server
+ */
+uint32_t AgentConnection::synchronizeTime()
+{
+   int32_t avgOffset = 0;
+   uint32_t avgRTT = 0;
+   for(int i = 0; i < 5; i++)
+   {
+      int64_t remoteTime;
+      int32_t offset;
+      uint32_t rtt;
+      uint32_t rcc = getRemoteSystemTime(&remoteTime, &offset, &rtt);
+      if (rcc != ERR_SUCCESS)
+         return rcc;
+      avgOffset += offset;
+      avgRTT += rtt;
+   }
+   avgOffset /= 5;
+   avgRTT /= 5;
+   if (abs(avgOffset) < 500)
+      return ERR_SUCCESS;  // Time difference is too small to attempt such coarse sync
+
+   NXCPMessage request(CMD_SET_SYSTEM_TIME, generateRequestId(), m_nProtocolVersion);
+   request.setField(VID_ACCURACY, avgRTT / 2);
+   request.setField(VID_TIMESTAMP, GetCurrentTimeMs());
+   if (!sendMessage(&request))
+      return ERR_CONNECTION_BROKEN;
+
+   return waitForRCC(request.getId(), m_commandTimeout);
 }
 
 /**

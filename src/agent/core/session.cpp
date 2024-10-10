@@ -35,6 +35,7 @@ uint32_t AddUserAgentNotification(uint64_t serverId, NXCPMessage *request);
 uint32_t RemoveUserAgentNotification(uint64_t serverId, NXCPMessage *request);
 uint32_t UpdateUserAgentNotifications(uint64_t serverId, NXCPMessage *request);
 void RegisterSessionForNotifications(const shared_ptr<CommSession>& session);
+void SetLocalSystemTime(int64_t newTime);
 
 extern VolatileCounter g_authenticationFailures;
 
@@ -329,6 +330,16 @@ void CommSession::readThread()
             uint32_t rcc;
             switch(msg->getCode())
             {
+               case CMD_GET_SYSTEM_TIME:
+                  {
+                     NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), m_protocolVersion);
+                     response.setField(VID_RCC, ERR_SUCCESS);
+                     response.setField(VID_TIME_SYNC_ALLOWED, m_masterServer && (g_dwFlags & AF_SYNC_TIME_WITH_SERVER));
+                     response.setField(VID_TIMESTAMP, GetCurrentTimeMs());
+                     sendMessage(response);
+                     delete msg;
+                  }
+                  break;
                case CMD_REQUEST_COMPLETED:
                   m_responseQueue->put(msg);
                   break;
@@ -342,6 +353,24 @@ void CommSession::readThread()
                      sendMessage(response);
                      delete response;
                      receiver.setEncryptionContext(m_encryptionContext);
+                  }
+                  delete msg;
+                  break;
+               case CMD_SET_SYSTEM_TIME:
+                  if (m_masterServer && (g_dwFlags & AF_SYNC_TIME_WITH_SERVER))
+                  {
+                     uint32_t accuracy = msg->getFieldAsUInt32(VID_ACCURACY); // Half of average RTT
+                     int64_t serverTime = msg->getFieldAsInt64(VID_TIMESTAMP);
+                     SetLocalSystemTime(serverTime + accuracy);
+                     NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), m_protocolVersion);
+                     response.setField(VID_RCC, ERR_SUCCESS);
+                     sendMessage(response);
+                  }
+                  else
+                  {
+                     NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), m_protocolVersion);
+                     response.setField(VID_RCC, ERR_ACCESS_DENIED);
+                     sendMessage(response);
                   }
                   delete msg;
                   break;

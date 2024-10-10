@@ -41,6 +41,7 @@ enum class Operation
    GET_LIST,
    GET_PARAMS,
    GET_SCREENSHOT,
+   GET_SYSTEM_TIME,
    GET_TABLE,
    GET_USER_SESSIONS
 };
@@ -332,6 +333,32 @@ static int GetUserSessions(AgentConnection *conn)
 }
 
 /**
+ * Get remote system time
+ */
+static int GetSystemTime(AgentConnection *conn)
+{
+   int64_t remoteTime;
+   int32_t offset;
+   uint32_t rtt;
+   bool allowSync;
+   uint32_t rcc = conn->getRemoteSystemTime(&remoteTime, &offset, &rtt, &allowSync);
+   if (rcc != ERR_SUCCESS)
+   {
+      WriteToTerminalEx(_T("%d: %s\n"), rcc, AgentErrorCodeToText(rcc));
+      return 1;
+   }
+
+   time_t t = static_cast<time_t>(remoteTime / 1000);
+   WriteToTerminalEx(_T("Time..........: %s.%03d\n"), FormatTimestamp(t).cstr(), static_cast<int>(remoteTime % 1000));
+   WriteToTerminalEx(_T("UNIX time.....: ") INT64_FMT _T("\n"), remoteTime);
+   WriteToTerminalEx(_T("Offset........: %d ms\n"), offset);
+   WriteToTerminalEx(_T("RTT...........: %u ms\n"), rtt);
+   WriteToTerminalEx(_T("Sync allowed..: %s\n"), BooleanToString(allowSync));
+
+   return 0;
+}
+
+/**
  * Parser for nxget specific options
  */
 static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
@@ -471,6 +498,9 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
       case 'U':
          s_operation = Operation::GET_USER_SESSIONS;
          break;
+      case 'Y':
+         s_operation = Operation::GET_SYSTEM_TIME;
+         break;
       default:
          break;
    }
@@ -482,7 +512,7 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
  */
 static bool IsArgMissingCb(int currentCount)
 {
-   return currentCount < (((s_operation == Operation::CHECK_SERVICE) || (s_operation == Operation::GET_PARAMS) || (s_operation == Operation::GET_CONFIG) || (s_operation == Operation::GET_USER_SESSIONS)) ? 1 : 2);
+   return currentCount < (((s_operation == Operation::CHECK_SERVICE) || (s_operation == Operation::GET_PARAMS) || (s_operation == Operation::GET_CONFIG) || (s_operation == Operation::GET_SYSTEM_TIME) || (s_operation == Operation::GET_USER_SESSIONS)) ? 1 : 2);
 }
 
 /**
@@ -520,6 +550,9 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int o
             break;
          case Operation::GET_SCREENSHOT:
             exitCode = GetScreenshot(conn, (argc > optind + 2) ? argv[optind + 2] : _T("Console"), argv[optind + 1]);
+            break;
+         case Operation::GET_SYSTEM_TIME:
+            exitCode = GetSystemTime(conn);
             break;
          case Operation::GET_TABLE:
             exitCode = GetTable(conn, argv[optind + 1]);
@@ -570,8 +603,9 @@ int main(int argc, char *argv[])
                        _T("   -t type      : Set type of service to be checked.\n")
                        _T("                  Possible types are: custom, ssh, pop3, smtp, ftp, http, https, telnet.\n")
                        _T("   -T           : Requested parameter is a table.\n")
-                       _T("   -U           : Get list of active user sessions.\n");
-   tool.additionalOptions = "bCd:EfFi:IlnN:o:P:r:R:t:TU";
+                       _T("   -U           : Get list of active user sessions.\n")
+                       _T("   -Y           : Read remote system time.\n");
+   tool.additionalOptions = "bCd:EfFi:IlnN:o:P:r:R:t:TUY";
    tool.executeCommandCb = &ExecuteCommandCb;
    tool.parseAdditionalOptionCb = &ParseAdditionalOptionCb;
    tool.isArgMissingCb = &IsArgMissingCb;

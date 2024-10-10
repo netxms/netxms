@@ -156,6 +156,27 @@ done:
 	return success;
 }
 
+/**
+ * Set time of local system
+ */
+void SetLocalSystemTime(int64_t newTime)
+{
+#ifdef _WIN32
+   LARGE_INTEGER li;
+   li.QuadPart = newTime * 10000 + EPOCHFILETIME;
+   FILETIME ft;
+   ft.dwLowDateTime = li.LowPart;
+   ft.dwHighDateTime = li.HighPart;
+   SYSTEMTIME st;
+   FileTimeToSystemTime(&ft, &st);
+   SetSystemTime(&st);
+#else
+   struct timeval tv;
+   tv.tv_sec = newTime / 1000;
+   tv.tv_usec = (newTime % 1000) * 1000;
+   settimeofday(&tv, nullptr);
+#endif
+}
 
 /**********************************************************
  Following functions are Windows specific
