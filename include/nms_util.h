@@ -597,8 +597,10 @@ public:
    operator const T*() const { return buffer(); }
    T& operator[](size_t index) { return buffer()[index]; }
    T& operator[](ssize_t index) { return buffer()[index]; }
+#ifdef __64BIT__
    T& operator[](int index) { return buffer()[index]; }
    T& operator[](uint32_t index) { return buffer()[index]; }
+#endif
    size_t size() const { return m_size; }
    size_t numElements() const { return m_size / sizeof(T); }
    bool isInternal() const { return m_allocatedBuffer == nullptr; }
