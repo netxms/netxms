@@ -50,7 +50,7 @@ public abstract class AbstractSessionTest
       s.login(TestConstants.SERVER_LOGIN, TestConstants.SERVER_PASSWORD);
       if (s.isPasswordExpired())
       {
-         session.setUserPassword(session.getUserId(), TestConstants.SERVER_PASSWORD, TestConstants.SERVER_PASSWORD);
+         s.setUserPassword(session.getUserId(), TestConstants.SERVER_PASSWORD, TestConstants.SERVER_PASSWORD);
       }
       return s;
    }

@@ -43,8 +43,6 @@ import org.netxms.utilities.TestHelperForEpp;
  */
 public class EppAlarmTest extends AbstractSessionTest
 {
-   Alarm alarm = null;
-
    /**
     * Find alarm 
     * 
@@ -56,13 +54,10 @@ public class EppAlarmTest extends AbstractSessionTest
    private Alarm findAlarmByKey(final NXCSession session, String key) throws Exception
    {
       HashMap<Long, Alarm> allAlarms = session.getAlarms();
-      for(HashMap.Entry<Long, Alarm> entry : allAlarms.entrySet())
+      for(Alarm a : allAlarms.values())
       {
-         if (entry.getValue().getKey().equals(key))
-         {
-            alarm = entry.getValue();
-            return alarm;
-         }
+         if (a.getKey().equals(key))
+            return a;
       }
       return null;
    }
@@ -120,7 +115,7 @@ public class EppAlarmTest extends AbstractSessionTest
       session.sendEvent(0, templateNameEventDown, node.getObjectId(), new String[] {}, null, null, null); // sending event which generated
                                                                                                     // alarm to the server
       Thread.sleep(1000);
-      alarm = findAlarmByKey(session, alarmKey); // founding alarm
+      Alarm alarm = findAlarmByKey(session, alarmKey); // founding alarm
 
       assertNotNull(alarm);
       Thread.sleep(500);
