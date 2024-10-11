@@ -127,7 +127,7 @@ static uint32_t SendEvent(int iNumArgs, char **pArgList, bool repeat, uint32_t r
 			if (repeat)
             rcc = SendEventInLoop(ctrl, s_eventCode, s_eventName, s_objectId, iNumArgs, pArgList, s_userTag, repeatInterval, repeatCount);
          else
-			   rcc = ctrl->sendEvent(s_eventCode, s_eventName, s_objectId, iNumArgs, pArgList, s_userTag);
+			   rcc = ctrl->sendEvent(s_eventCode, s_eventName, s_objectId, iNumArgs, pArgList, s_userTag, s_namedParameters);
 #endif
          if (rcc != RCC_SUCCESS)
             _tprintf(_T("Unable to send event: %s\n"), NXCGetErrorText(rcc));

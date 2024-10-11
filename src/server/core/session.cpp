@@ -10059,9 +10059,9 @@ void ClientSession::getAddrList(const NXCPMessage& request)
       ObjectArray<InetAddressListElement> *list = LoadServerAddressList(request.getFieldAsInt32(VID_ADDR_LIST_TYPE));
       if (list != nullptr)
       {
-         response.setField(VID_NUM_RECORDS, (INT32)list->size());
+         response.setField(VID_NUM_RECORDS, list->size());
 
-         UINT32 fieldId = VID_ADDR_LIST_BASE;
+         uint32_t fieldId = VID_ADDR_LIST_BASE;
          for(int i = 0; i < list->size(); i++)
          {
             list->get(i)->fillMessage(&response, fieldId);
