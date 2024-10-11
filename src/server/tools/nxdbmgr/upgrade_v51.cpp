@@ -24,6 +24,62 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.19 to 51.20
+ */
+static bool H_UpgradeFromV19()
+{
+   int ruleId = NextFreeEPPruleID();
+
+   int count = 0;
+   DB_RESULT hResult = SQLSelect(_T("SELECT rule_id FROM event_policy WHERE rule_guid='b76f142a-6932-499e-aa6e-ac16cf8effb1'"));
+   if (hResult != nullptr)
+   {
+      count = DBGetNumRows(hResult);
+   }
+   else
+   {
+      if (!g_ignoreErrors)
+         return false;
+   }
+
+   TCHAR query[1024];
+   if (count == 0)
+   {
+      _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event) ")
+                              _T("VALUES (%d,'b76f142a-6932-499e-aa6e-ac16cf8effb1',7976,'Terminate alarms for hanged or unexpectedly stopped system threads that could have been created prior to server restart','%%m',6,'SYS_THREAD_HANG_.*','',0,%d)"),
+            ruleId, EVENT_ALARM_TIMEOUT);
+      CHK_EXEC(SQLQuery(query));
+
+      _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_SERVER_STARTED);
+      CHK_EXEC(SQLQuery(query));
+
+      ruleId++;
+   }
+
+   _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,downtime_tag) ")
+                           _T("VALUES (%d,'202d5b85-48fc-4b6e-9da9-53a6eb9a341d',89856,'Start downtime','%%m',5,'','',0,%d,'NODE_DOWN')"),
+         ruleId, EVENT_ALARM_TIMEOUT);
+   CHK_EXEC(SQLQuery(query));
+
+   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_NODE_DOWN);
+   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_NODE_UNREACHABLE);
+   CHK_EXEC(SQLQuery(query));
+
+   ruleId++;
+
+   _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,downtime_tag) ")
+                           _T("VALUES (%d,'256c2abd-3e14-4e02-9606-7c78c77e1a78',139008,'End downtime','%%m',5,'','',0,%d,'NODE_DOWN')"),
+         ruleId, EVENT_ALARM_TIMEOUT);
+   CHK_EXEC(SQLQuery(query));
+
+   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_NODE_UP);
+   CHK_EXEC(SQLQuery(query));
+
+   CHK_EXEC(SetMinorSchemaVersion(20));
+   return true;
+}
+
+/**
  * Upgrade from 51.18 to 51.19
  */
 static bool H_UpgradeFromV18()
@@ -401,6 +457,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 19, 51, 20, H_UpgradeFromV19 },
    { 18, 51, 19, H_UpgradeFromV18 },
    { 17, 51, 18, H_UpgradeFromV17 },
    { 16, 51, 17, H_UpgradeFromV16 },
