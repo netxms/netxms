@@ -35,6 +35,7 @@ static bool H_UpgradeFromV19()
    if (hResult != nullptr)
    {
       count = DBGetNumRows(hResult);
+      DBFreeResult(hResult);
    }
    else
    {
