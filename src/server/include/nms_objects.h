@@ -3233,7 +3233,7 @@ static inline NetworkPathFailureReason NetworkPathFailureReasonFromInt(int32_t i
 /**
  * Result of network path check
  */
-struct NetworkPathCheckResult
+struct NXCORE_EXPORTABLE NetworkPathCheckResult
 {
    bool rootCauseFound;
    NetworkPathFailureReason reason;

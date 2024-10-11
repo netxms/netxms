@@ -104,7 +104,7 @@
 /**
  * Define __64BIT__ if compiling for 64bit platform with Visual C++
  */
-#if defined(_M_X64) || defined(_M_IA64) || defined(__LP64__) || defined(__PPC64__) || defined(__x86_64__)
+#if defined(_M_X64) || defined(_M_IA64) || defined(__LP64__) || defined(__PPC64__) || defined(__x86_64__) || defined(_M_ARM64)
 #ifndef __64BIT__
 #define __64BIT__
 #endif
