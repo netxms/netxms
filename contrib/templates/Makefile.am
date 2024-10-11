@@ -19,7 +19,6 @@ templates_DATA = \
 	dell_hw.xml \
 	dell_idrac.xml \
 	eaton_ups.xml \
-	epp_terminate_thread_alarms.xml \
 	generic_unix.xml \
 	hp_ilo.xml \
 	hpux.xml \
