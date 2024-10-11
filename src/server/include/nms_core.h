@@ -504,7 +504,7 @@ protected:
    }
 
 public:
-   virtual ~GenericClientSession() = default;
+   virtual ~GenericClientSession() {}
 
    const TCHAR *getLoginName() const { return m_loginName; }
    uint32_t getUserId() const { return m_userId; }

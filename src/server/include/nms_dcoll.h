@@ -34,7 +34,7 @@
 class NXCORE_EXPORTABLE SearchAttributeProvider
 {
 public:
-   virtual ~SearchAttributeProvider() = default;
+   virtual ~SearchAttributeProvider() {}
 
    virtual SharedString getText() const = 0;
    virtual SharedString getAttribute(const TCHAR *attribute) const = 0;
