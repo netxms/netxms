@@ -127,7 +127,7 @@ String::String(const char *init, const char *codepage)
 #ifdef UNICODE
    m_length = mbcp_to_wchar(init, len, m_buffer, len + 1, codepage);
 #else
-   if (!stricmp(codepage, "UTF8") || !stricmp(codepage, "UTF-8"))
+   if ((codepage != nullptr) && (!stricmp(codepage, "UTF8") || !stricmp(codepage, "UTF-8")))
    {
       m_length = utf8_to_mb(init, len, m_buffer, len + 1);
    }
