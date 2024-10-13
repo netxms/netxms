@@ -1,0 +1,17 @@
+#!/bin/bash
+set -euo pipefail
+cd /etc/wireguard
+cat > gw.conf <<EOF
+[Interface]
+PrivateKey = $(<privkey)
+Address = 192.168.1.1/24, 192.168.2.1/24
+ListenPort = 51820
+
+[Peer]
+PublicKey = $(<pubkey.aa)
+AllowedIPs = 192.168.1.2/32
+
+[Peer]
+PublicKey = $(<pubkey.bb)
+AllowedIPs = 192.168.2.2/32
+EOF
