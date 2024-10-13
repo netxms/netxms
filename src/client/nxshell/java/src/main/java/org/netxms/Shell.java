@@ -20,7 +20,9 @@ package org.netxms;
 
 import java.io.Console;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 import org.netxms.base.VersionInfo;
 import org.netxms.client.NXCException;
@@ -39,6 +41,7 @@ public class Shell
    private static final String DEFAULT_SERVER = "127.0.0.1";
    private static final String DEFAULT_LOGIN = "admin";
 
+   private Properties configuration = new Properties();
    private String optServer;
    private String optPort;
    private String optLogin;
@@ -53,6 +56,11 @@ public class Shell
       final Shell shell = new Shell();
       try
       {
+         shell.configuration.putAll(System.getProperties());
+         shell.configuration.putAll(loadProperties("nxshell.properties"));
+         String customPropertyFile = shell.configuration.getProperty("nxshell.properties");
+         if (customPropertyFile != null)
+            shell.configuration.putAll(loadProperties(customPropertyFile));
          shell.run(args);
       }
       catch(Throwable e)
@@ -97,11 +105,11 @@ public class Shell
     */
    private void readCredentials(boolean interactive)
    {
-      optServer = System.getProperty("netxms.server");
-      optPort = System.getProperty("netxms.port");
-      optLogin = System.getProperty("netxms.login");
-      optPassword = System.getProperty("netxms.password");
-      optToken = System.getProperty("netxms.token");
+      optServer = configuration.getProperty("netxms.server");
+      optPort = configuration.getProperty("netxms.port");
+      optLogin = configuration.getProperty("netxms.login");
+      optPassword = configuration.getProperty("netxms.password");
+      optToken = configuration.getProperty("netxms.token");
 
       if (interactive)
       {
@@ -161,14 +169,14 @@ public class Shell
    private NXCSession connect() throws IOException, NXCException
    {
       boolean enableCompression = true;
-      String enableCompressionOption = System.getProperty("netxms.enableCompression");
+      String enableCompressionOption = configuration.getProperty("netxms.enableCompression");
       if (enableCompressionOption != null)
       {
          enableCompression = Boolean.parseBoolean(enableCompressionOption);
       }
 
       boolean sync = true;
-      String syncOption = System.getProperty("netxms.syncObjects");
+      String syncOption = configuration.getProperty("netxms.syncObjects");
       if (syncOption != null)
       {
          sync = Boolean.parseBoolean(syncOption);
@@ -190,7 +198,7 @@ public class Shell
       }
       else
       {
-         final String[] parts = optServer.split(":"); //$NON-NLS-1$
+         final String[] parts = optServer.split(":");
          if (parts.length == 2)
          {
             hostName = parts[0];
@@ -294,10 +302,58 @@ public class Shell
    private void initJython(String[] args)
    {
       final Properties postProperties = new Properties();
-      final File tempDirectory = new File(System.getProperty("java.io.tmpdir"));
+      final File tempDirectory = new File(configuration.getProperty("java.io.tmpdir"));
       final File cacheDir = new File(tempDirectory, "nxshell");
       postProperties.setProperty("python.cachedir", cacheDir.getPath());
       postProperties.setProperty("python.cachedir.skip", "false");
       PySystemState.initialize(PySystemState.getBaseProperties(), postProperties, args);
+   }
+
+   /**
+    * Load properties from file without throwing exception
+    *
+    * @param name property file name
+    * @return properties loaded from file or empty properties
+    */
+   private static Properties loadProperties(String name)
+   {
+      ClassLoader classLoader = Shell.class.getClassLoader();
+      Properties properties = new Properties();
+      InputStream stream = null;
+      try
+      {
+         stream = classLoader.getResourceAsStream(name);
+         if (stream == null)
+         {
+            File f = new File(name);
+            if (f.isFile())
+            {
+               stream = new FileInputStream(f);
+            }
+         }
+         if (stream != null)
+         {
+            properties.load(stream);
+         }
+      }
+      catch(Exception e)
+      {
+         System.err.println("Error loading properties file " + name);
+         e.printStackTrace();
+      }
+      finally
+      {
+         if (stream != null)
+         {
+            try
+            {
+               stream.close();
+            }
+            catch(IOException e)
+            {
+            }
+         }
+      }
+      return properties;
    }
 }

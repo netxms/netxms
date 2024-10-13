@@ -36,6 +36,7 @@ static const char *s_optPassword = nullptr;
 static const char *s_optToken = nullptr;
 static const char *s_optJre = nullptr;
 static const char *s_optClassPath = nullptr;
+static const char *s_optPropertiesFile = nullptr;
 static bool s_optSync = true;
 
 /**
@@ -106,6 +107,12 @@ static int StartApp(int argc, char *argv[])
       vmOptions.addMBString(buffer);
    }
 
+   if (s_optPropertiesFile != nullptr)
+   {
+      snprintf(buffer, 256, "-Dnxshell.properties=%s", s_optPropertiesFile);
+      vmOptions.addMBString(buffer);
+   }
+
    int debugLevel = nxlog_get_debug_level();
    if (debugLevel > 0)
    {
@@ -168,6 +175,7 @@ static struct option longOptions[] =
 	{ (char *)"no-sync",        required_argument, nullptr,        'n' },
 	{ (char *)"password",       required_argument, nullptr,        'P' },
    { (char *)"port",           required_argument, nullptr,        'p' },
+   { (char *)"properties",     required_argument, nullptr,        'r' },
    { (char *)"token",          required_argument, nullptr,        't' },
 	{ (char *)"user",           required_argument, nullptr,        'u' },
 	{ (char *)"version",        no_argument,       nullptr,        'v' },
@@ -175,7 +183,7 @@ static struct option longOptions[] =
 };
 #endif
 
-#define SHORT_OPTIONS "C:DhH:j:np:P:t:u:v"
+#define SHORT_OPTIONS "C:DhH:j:np:P:r:t:u:v"
 
 /**
  * Print usage info
@@ -202,6 +210,7 @@ static void ShowUsage(bool showVersion)
       _T("  -n, --no-sync               Do not synchronize objects on connect.\n")
       _T("  -p, --port <port>           Specify TCP port for connection. Default is 4701.\n")
       _T("  -P, --password <password>   Specify user's password. Default is empty.\n")
+      _T("  -r, --properties <file>     File with additional Java properties.\n")
       _T("  -t, --token <token>         Login to server using given authentication token.\n")
       _T("  -u, --user <user>           Login to server as user. Default is \"admin\".\n")
       _T("  -v, --version               Display version information.\n\n")
@@ -214,6 +223,7 @@ static void ShowUsage(bool showVersion)
       _T("  -n             Do not synchronize objects on connect.\n")
       _T("  -p <port>      Specify TCP port for connection. Default is 4701.\n")
       _T("  -P <password>  Specify user's password. If not given, password will be read from terminal.\n")
+      _T("  -r <file>      File with additinal Java properties.\n")
       _T("  -t <token>     Login to server using given authentication token.\n")
       _T("  -u <user>      Login to server as user. Default is \"admin\".\n")
       _T("  -v             Display version information.\n\n")
@@ -281,6 +291,9 @@ int main(int argc, char *argv[])
 		   case 'P': // password
 			   s_optPassword = optarg;
 			   break;
+         case 'r': // properties file
+            s_optPropertiesFile = optarg;
+            break;
 		   case 't': // token
 			   s_optToken = optarg;
 			   break;
