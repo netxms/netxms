@@ -230,10 +230,10 @@ bool Initialize()
    }
 #endif
 
-   // Initialize cryptografy
+   // Initialize cryptography
    if (!InitCryptoLib(0xFFFF))
    {
-      nxlog_write(NXLOG_ERROR, _T("Failed to initialize cryptografy module"));
+      nxlog_write(NXLOG_ERROR, _T("Failed to initialize cryptography module"));
       return false;
    }
 
