@@ -810,19 +810,29 @@ static void EndElement(void *userData, const char *name)
 
 		if (!ps->id.isEmpty())
 		{
-			uint32_t start, end;
 			TCHAR *eptr;
-
-			start = _tcstoul(ps->id, &eptr, 0);
+			uint32_t start = _tcstoul(ps->id, &eptr, 0);
+         uint32_t end;
 			if (*eptr == 0)
 			{
 				end = start;
 			}
-			else	/* TODO: add better error handling */
+			else
 			{
-				while(!_istdigit(*eptr))
-					eptr++;
-				end = _tcstoul(eptr, nullptr, 0);
+				while((*eptr == ' '))
+					++eptr;
+				if (*eptr == '-')
+				{
+				   ++eptr;
+	            while((*eptr == ' '))
+	               ++eptr;
+				   end = _tcstoul(eptr, nullptr, 0);
+				}
+				else
+				{
+				   nxlog_debug_tag(DEBUG_TAG _T(".parser"), 4, _T("Invalid event ID range definition \"%s\""), ps->id);
+				   end = start;
+				}
 			}
 			rule->setIdRange(start, end);
 		}

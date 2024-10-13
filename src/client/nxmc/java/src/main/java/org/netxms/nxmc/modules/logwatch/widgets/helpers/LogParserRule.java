@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,28 +49,29 @@ public class LogParserRule
 	
 	@Element(required=false)
 	private LogParserEvent event = null;
-   
+
    //severity == level
    //severity in syslog\level for other logs	
 	@Element(required=false)
 	private Integer severity = null;
-	
+
    @Element(required=false)
    private Integer level = null;
-	
+
 	//facility == id
    //facility in syslog\id for other logs
 	@Element(required=false)
 	private Integer facility = null;
-	
+
+   // Could be single ID or ID range in form nn-nn
 	@Element(required=false)
-	private Integer id = null;
+   private String id = null;
 
    //source == tag
    //tag in syslog\source for other logs
 	@Element(required = false)
 	private String source = null;
-	
+
 	@Element(required=false)
 	private String tag = null;
    
@@ -92,7 +93,7 @@ public class LogParserRule
 
 	@Element(required=false)
 	private LogParserAgentAction agentAction = null;
-	
+
 	private LogParserRuleEditor editor;
 
 	/**
@@ -221,25 +222,51 @@ public class LogParserRule
 	 */
 	public String getFacilityOrId(boolean isSyslogParser)
 	{
-      return isSyslogParser ? integerToString(facility) : integerToString(id);
+      return isSyslogParser ? integerToString(facility) : id;
 	}
 
 	/**
 	 * @param facility the facility to set
 	 */
-	public void setFacilityOrId(Integer facility)
+   public void setFacility(Integer facility)
 	{
-	   if(editor.getParserType() == LogParserType.SYSLOG)
+      if (editor.getParserType() == LogParserType.SYSLOG)
       {
 	      this.facility = facility;
 	      this.id = null;
       }
 	   else
 	   {
-	      this.id = facility;
+         this.id = Integer.toString(facility);
 	      this.facility = null;
 	   }
 	}
+
+   /**
+    * Set event ID.
+    *
+    * @param idDefinition event ID or range
+    */
+   public void setEventId(String idDefinition)
+   {
+      if (editor.getParserType() == LogParserType.SYSLOG)
+      {
+         try
+         {
+            facility = Integer.parseInt(idDefinition);
+         }
+         catch(NumberFormatException e)
+         {
+            facility = null;
+         }
+         id = null;
+      }
+      else
+      {
+         id = idDefinition;
+         facility = null;
+      }
+   }
 
 	/**
 	 * @return the tag
@@ -360,8 +387,16 @@ public class LogParserRule
    {
       if (parserType == LogParserType.SYSLOG)
       {
-         if (facility == null || facility == 0)
-            facility = id;
+         if (((facility == null) || (facility == 0)) && (id != null) && !id.isEmpty())
+         {
+            try
+            {
+               facility = Integer.parseInt(id);
+            }
+            catch(NumberFormatException e)
+            {
+            }
+         }
          if (tag == null || tag.isEmpty())
             tag = source;
          if (severity == null || severity == 0)
@@ -372,8 +407,8 @@ public class LogParserRule
       }
       else
       {
-         if (id == null || id == 0)
-            id = facility;
+         if (((id == null) || id.isEmpty()) && (facility != null) && (facility != 0))
+            id = facility.toString();
          if (source == null || source.isEmpty())
             source = tag;
          if (level == null || level == 0)

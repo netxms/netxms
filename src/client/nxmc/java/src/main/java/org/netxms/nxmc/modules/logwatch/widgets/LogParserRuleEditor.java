@@ -276,7 +276,7 @@ public class LogParserRuleEditor extends DashboardComposite
          gd.grabExcessHorizontalSpace = true;
          gd.horizontalSpan = 2;
          matcherRepeatConf.setLayoutData(gd);
-   
+
          layout = new GridLayout();
          layout.numColumns = 3;
          layout.marginWidth = 0;
@@ -344,7 +344,7 @@ public class LogParserRuleEditor extends DashboardComposite
       severity.getTextControl().addModifyListener(listener);
 
       facility = new LabeledText(area, SWT.NONE);
-      facility.setLabel(editor.getParserType() == LogParserType.SYSLOG ? i18n.tr("Facility") : i18n.tr("Id"));
+      facility.setLabel(editor.getParserType() == LogParserType.SYSLOG ? i18n.tr("Facility") : i18n.tr("Event ID or ID range"));
       facility.setText(rule.getFacilityOrId(editor.getParserType() == LogParserType.SYSLOG));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -365,7 +365,7 @@ public class LogParserRuleEditor extends DashboardComposite
       {
          logName = new LabeledText(area, SWT.NONE);
          logName.setLabel("Log name");
-         logName.setText(rule.getLogName()); // $NON-NLS-1$
+         logName.setText(rule.getLogName());
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
@@ -715,7 +715,7 @@ public class LogParserRuleEditor extends DashboardComposite
       {
          rule.setMatch(new LogParserMatch(regexp.getText(), checkboxInvert.getSelection(), null, 0, false));         
       }
-      rule.setFacilityOrId(intOrNull(facility.getText()));
+      rule.setEventId(facility.getText());
       rule.setSeverityOrLevel(intOrNull(severity.getText()));
       rule.setTagOrSource(tag.getText());
 
