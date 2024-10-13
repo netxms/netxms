@@ -1,7 +1,7 @@
 
 # NetXMS — enterprise-grade monitoring
 
-NetXMS is an open-source network and infrastructure monitoring and management solution, providing performance and availability monitoring with flexible event processing, alerting, reporting and graphing for all layers of IT infrastructure. It’s a solution for every type of device — it can monitor and manage your entire IT infrastructure — from network switches to apps — all in one place.
+[NetXMS](https://netxms.com/) is an open-source network and infrastructure monitoring and management solution, providing performance and availability monitoring with flexible event processing, alerting, reporting and graphing for all layers of IT infrastructure. It’s a solution for every type of device — it can monitor and manage your entire IT infrastructure — from network switches to apps — all in one place.
 
 ## Architecture
 
