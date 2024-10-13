@@ -585,6 +585,16 @@ public class EventProcessingPolicyRule
    }
 
    /**
+    * Check rule's ACCEPT_CORRELATED flag
+    *
+    * @return true if ACCEPT_CORRELATED flag set
+    */
+   public boolean isCorrelatedEventProcessingAllowed()
+   {
+      return (flags & ACCEPT_CORRELATED) != 0;
+   }
+
+   /**
     * @return the guid
     */
    public UUID getGuid()

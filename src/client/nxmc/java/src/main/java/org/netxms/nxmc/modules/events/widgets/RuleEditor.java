@@ -551,7 +551,9 @@ public class RuleEditor extends Composite
       if (rule.getEvents().size() > 0)
       {
          final MouseListener listener = createMouseListener("Events");
-         addConditionGroupLabel(clientArea, i18n.tr("event code is one of the following:"), needAnd, rule.isEventsInverted(), listener);
+         addConditionGroupLabel(clientArea,
+               rule.isCorrelatedEventProcessingAllowed() ? i18n.tr("event code is one of the following (including correlated events):") : i18n.tr("event code is one of the following:"), needAnd,
+               rule.isEventsInverted(), listener);
 
          List<EventTemplate> sortedEvents = new ArrayList<EventTemplate>(rule.getEvents().size());
          for(Long code : rule.getEvents())
