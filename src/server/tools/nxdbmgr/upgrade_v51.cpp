@@ -63,6 +63,7 @@ static bool H_UpgradeFromV19()
    CHK_EXEC(SQLQuery(query));
 
    _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_NODE_DOWN);
+   CHK_EXEC(SQLQuery(query));
    _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_NODE_UNREACHABLE);
    CHK_EXEC(SQLQuery(query));
 
