@@ -830,7 +830,7 @@ static void EndElement(void *userData, const char *name)
 				}
 				else
 				{
-				   nxlog_debug_tag(DEBUG_TAG _T(".parser"), 4, _T("Invalid event ID range definition \"%s\""), ps->id);
+               nxlog_debug_tag(DEBUG_TAG _T(".parser"), 4, _T("Invalid event ID range definition \"%s\""), ps->id.cstr());
 				   end = start;
 				}
 			}
