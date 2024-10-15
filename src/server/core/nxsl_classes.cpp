@@ -2715,6 +2715,17 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
 /**
  * Interface::enableAgentStatusPolling(enabled) method
  */
+NXSL_METHOD_DEFINITION(Interface, clearPeer)
+{
+   Interface *iface = static_cast<shared_ptr<Interface>*>(object->getData())->get();
+   ClearPeer(iface->getPeerInterfaceId());
+   ClearPeer(iface->getId());
+   return 0;
+}
+
+/**
+ * Interface::enableAgentStatusPolling(enabled) method
+ */
 NXSL_METHOD_DEFINITION(Interface, enableAgentStatusPolling)
 {
    return ChangeFlagMethod(object, argv[0], result, IF_DISABLE_AGENT_STATUS_POLL, true);
@@ -2795,6 +2806,7 @@ NXSL_InterfaceClass::NXSL_InterfaceClass() : NXSL_NetObjClass()
 {
    setName(_T("Interface"));
 
+   NXSL_REGISTER_METHOD(Interface, clearPeer, 0);
    NXSL_REGISTER_METHOD(Interface, enableAgentStatusPolling, 1);
    NXSL_REGISTER_METHOD(Interface, enableICMPStatusPolling, 1);
    NXSL_REGISTER_METHOD(Interface, enableSNMPStatusPolling, 1);
