@@ -1035,7 +1035,7 @@ NXSL_Value *NXSL_AssetClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("properties"))
    {
-      value = vm->createValue(vm->createObject(&g_nxslAssetPropertiesClass, new shared_ptr<Asset>(asset)));
+      value = vm->createValue(vm->createObject(&g_nxslAssetPropertiesClass, new shared_ptr<Asset>(asset->self())));
    }
    return value;
 }
