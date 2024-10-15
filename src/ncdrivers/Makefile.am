@@ -158,7 +158,7 @@ websms_la_LIBADD = ../libnetxms/libnetxms.la
 xmpp_la_SOURCES = xmpp/xmpp.cpp
 xmpp_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 xmpp_la_LDFLAGS = -module -avoid-version -rpath '$(pkglibdir)'
-xmpp_la_LIBADD = ../libnetxms/libnetxms.la ../libstrophe/libstrophe.la
+xmpp_la_LIBADD = ../libnetxms/libnetxms.la -lstrophe
 
 install-exec-hook:
 	mkdir -p $(DESTDIR)$(pkglibdir)/ncdrv ; for _DRIVER in $(DRIVERS); do if test "x`uname -s`" = "xAIX"; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(DESTDIR)$(pkglibdir)/$$_DRIVER.a $(DESTDIR)$(pkglibdir)/$$_DRIVER@SHLIB_SUFFIX@ ; rm -f $(DESTDIR)$(pkglibdir)/$$_DRIVER.a; fi ; mv -f $(DESTDIR)$(pkglibdir)/$$_DRIVER@SHLIB_SUFFIX@ $(DESTDIR)$(pkglibdir)/ncdrv/$$_DRIVER.ncd ; rm -f $(DESTDIR)$(pkglibdir)/$$_DRIVER.la; done

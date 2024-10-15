@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Notification driver for XMPP protocol
-** Copyright (C) 2022 Raden Solutions
+** Copyright (C) 2022-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -361,18 +361,14 @@ void XmppDriver::connectionManager()
                std::pair<XmppDriver*, xmpp_ctx_t*> container(this, context);
                xmpp_connect_client(connection, (m_server[0] != 0) ? m_server : nullptr, (m_server[0] != 0) ? m_port : 0, runConnectionHandler, &container);
 
-               xmpp_set_loop_status(context, XMPP_LOOP_RUNNING);
-               while (xmpp_get_loop_status(context) == XMPP_LOOP_RUNNING)
+               while (m_connected)
                {
-                  if (m_shutdownFlag)
-                  {
-                     xmpp_set_loop_status(context, XMPP_LOOP_QUIT);
-                     xmpp_disconnect(connection);
-                  }
                   checkSendQueue(context, connection);
                   xmpp_run_once(context, 100);
                }
+               xmpp_disconnect(connection);
                xmpp_conn_release(connection);
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("XMPP connection released"));
             }
             else
             {

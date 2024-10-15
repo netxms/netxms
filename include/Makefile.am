@@ -65,7 +65,6 @@ include_HEADERS = \
 	pugixml.h \
 	rwlock.h \
 	socket_listener.h \
-	strophe.h \
 	symbol_visibility.h \
 	tls_conn.h \
 	unicode.h \

@@ -1011,7 +1011,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="appagent jansson java-common libexpat libstrophe zlib libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy mobile-agent"
+	MODULES="appagent jansson java-common libexpat zlib libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy mobile-agent"
 	TEST_MODULES="agent test-libnxcc test-libnxsl test-libnxsnmp"
 	AGENT_UNIT_TESTS="linux-cpu-usage-collector"
 	TOOLS="nxlptest"
@@ -2388,11 +2388,13 @@ fi
 #--------------------------------------------------------------------
 
 if test "x$DISABLE_XMPP" != "xyes"; then
-   MODULES="libstrophe $MODULES"
-   NCDRV_MODULES="$NCDRV_MODULES xmpp"
-   XMPP_SUPPORT="yes"
-	AC_CHECK_HEADERS([arpa/nameser_compat.h])
-	AC_CHECK_FUNC(res_query, , [AC_CHECK_LIB(resolv, res_query, [], [AC_CHECK_LIB(resolv, __res_query)])])
+	AC_CHECK_HEADER(strophe.h,HAVE_LIBSTROPHE=yes,HAVE_LIBSTROPHE=no)
+	if test "x$HAVE_LIBSTROPHE" = "xyes"; then
+		AC_CHECK_LIB(strophe, xmpp_ctx_new, [
+			NCDRV_MODULES="$NCDRV_MODULES xmpp"
+			XMPP_SUPPORT="yes"
+		], [ HAVE_LIBSTROPHE=no ])
+	fi
 fi
 
 
@@ -4626,7 +4628,6 @@ AM_CONDITIONAL([USE_INTERNAL_ZLIB], [test "$HAVE_ZLIB" = "no"])
 AM_CONDITIONAL([USE_ENCRYPTION], [test "x${WITH_ENCRYPTION}" = "xyes"])
 AM_CONDITIONAL([USE_LIBJQ], [test "x$HAVE_LIBJQ" = "xyes"])
 AM_CONDITIONAL([WITH_PRIVATE_EXTENSIONS], [test "x$WITH_PRIVATE_EXTENSIONS" = "xyes"])
-AM_CONDITIONAL([XMPP_SUPPORT], [test "x$XMPP_SUPPORT" = "xyes"])
 
 
 #--------------------------------------------------------------------
@@ -4907,7 +4908,6 @@ AC_CONFIG_FILES([
 	src/libnxmb/Makefile
 	src/libnxpython/Makefile
 	src/libnxsl/Makefile
-	src/libstrophe/Makefile
 	src/mobile-agent/Makefile
 	src/mobile-agent/java/Makefile
 	src/ncdrivers/Makefile

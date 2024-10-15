@@ -400,7 +400,6 @@ typedef unsigned __int64 uint64_t;
 #endif
 
 #define HAVE_LIBEXPAT  1
-#define XMPP_SUPPORTED 1
 #define HAVE_LOCALE_H  1
 #define HAVE_SETLOCALE 1
 
