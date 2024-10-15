@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -186,11 +186,12 @@ NXCPMessage *NXCPMessage::deserialize(const NXCP_MESSAGE *rawMsg, int version)
 /**
  * Calculate size hint for message memory pool
  */
-inline size_t SizeHint(const NXCP_MESSAGE *msg)
+static inline size_t SizeHint(const NXCP_MESSAGE *msg)
 {
    bool compressed = (ntohs(msg->flags) & MF_COMPRESSED) != 0;
-   size_t size = ntohl(msg->size) + 1024;
-   if (compressed)
+   size_t msgSize = ntohl(msg->size);
+   size_t size = msgSize + 1024;
+   if (compressed && (msgSize >= NXCP_HEADER_SIZE + sizeof(uint32_t)))
       size += ntohl(*reinterpret_cast<const uint32_t*>(reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE)) - NXCP_HEADER_SIZE;
    return size + 4096 - (size % 4096);
 }
@@ -1474,18 +1475,16 @@ static TCHAR *GetStringFromFieldUTF8(void *df)
 StringBuffer NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
 {
    StringBuffer out;
-   int i;
-   TCHAR *str, buffer[128];
 
-   WORD flags = ntohs(msg->flags);
-   WORD code = ntohs(msg->code);
-   UINT32 id = ntohl(msg->id);
-   UINT32 size = ntohl(msg->size);
-   int numFields = (int)ntohl(msg->numFields);
+   uint16_t flags = ntohs(msg->flags);
+   uint16_t code = ntohs(msg->code);
+   uint32_t id = ntohl(msg->id);
+   uint32_t size = ntohl(msg->size);
+   int numFields = static_cast<int>(ntohl(msg->numFields));
 
    // Dump raw message
-   TCHAR textForm[32];
-   for(i = 0; i < (int)size; i += 16)
+   TCHAR textForm[32], buffer[128];
+   for(uint32_t i = 0; i < size; i += 16)
    {
       const BYTE *block = reinterpret_cast<const BYTE*>(msg) + i;
       size_t blockSize = MIN(16, size - i);
@@ -1558,6 +1557,7 @@ StringBuffer NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
    }
    
    // Parse data fields
+   TCHAR *str;
    size_t pos = 0;
    for(int f = 0; f < numFields; f++)
    {
