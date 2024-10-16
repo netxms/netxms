@@ -77,6 +77,8 @@ public:
 
    String createDescription() const
    {
+      if (!m_valid)
+         return String(_T("Invalid job"));
       StringBuffer sb(_T("Uploading file "));
       sb.append(GetCleanFileName(m_localFile));
       sb.append(_T(" to "));
@@ -188,6 +190,12 @@ void FileUploadJob::setLocalFileFullPath()
  */
 bool FileUploadJob::run(BackgroundTask *task)
 {
+   if (!m_valid)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("File upload to %s [%u] failed (invalid job configuration)"), m_node->getName(), m_node->getId());
+      return false;
+   }
+
 	bool success = false;
 
 	shared_ptr<AgentConnectionEx> conn = m_node->createAgentConnection();
