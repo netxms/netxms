@@ -43,13 +43,13 @@ Root: HKLM; Subkey: "Software\NetXMS\Client"; ValueType: string; ValueName: "Ins
 ; Common files
 Source: "..\..\..\x64\Release\jansson.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
 Source: "..\..\..\x64\Release\libnetxms.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\Release\libexpat.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\Release\nxzlib.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\libexpat.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
 Source: "..\files\windows\x64\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
 Source: "..\files\windows\x64\pcre.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
 Source: "..\files\windows\x64\pcre16.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
 Source: "..\files\windows\x64\openssl-3\libcrypto-3-x64.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
 Source: "..\files\windows\x64\openssl-3\libssl-3-x64.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\zlib.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
 Source: "..\..\client\nxmc\nxmc.ico"; DestDir: "{app}"; Flags: ignoreversion
 ; Common files for Java based components
 Source: "..\..\..\x64\Release\libnxjava.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxmc or nxshell

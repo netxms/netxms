@@ -36,6 +36,4 @@ libnxzlib_la_SOURCES = \
 
 EXTRA_DIST = \
 	ChangeLog \
-	README \
-	nxzlib.def \
-	nxzlib.vcxproj nxzlib.vcxproj.filters
+	README

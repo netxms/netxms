@@ -6,8 +6,6 @@ libnxexpat_la_CPPFLAGS = -I@top_srcdir@/include -DHAVE_EXPAT_CONFIG_H -DXML_BUIL
 libnxexpat_la_LDFLAGS = -version-info 2:0:0
 
 EXTRA_DIST = \
-	libexpat.vcxproj libexpat.vcxproj.filters \
-	libexpat.cpp \
 	ascii.h \
 	asciitab.h \
 	expat_external.h \

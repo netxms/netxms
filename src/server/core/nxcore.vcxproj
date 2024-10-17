@@ -196,7 +196,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
@@ -225,7 +225,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
@@ -254,7 +254,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
     </Link>
@@ -276,7 +276,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -302,7 +302,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -330,7 +330,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -357,7 +357,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -385,7 +385,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -412,7 +412,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -671,9 +671,6 @@
     <ProjectReference Include="..\..\snmp\libnxsnmp\libnxsnmp.vcxproj">
       <Project>{7dc90ee4-e31c-4f12-8f1e-81f10e9099fb}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\zlib\nxzlib.vcxproj">
-      <Project>{e7410eb4-3355-4c83-8e05-d2877581cda1}</Project>
     </ProjectReference>
     <ProjectReference Include="..\libnxsrv\libnxsrv.vcxproj">
       <Project>{cb89d905-c8be-4027-b2d8-f96c245e9160}</Project>
