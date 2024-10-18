@@ -13,10 +13,6 @@ nxcproxy_SOURCES = messages.c listener.cpp nxcproxy.cpp session.cpp tools.cpp
 nxcproxy_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 nxcproxy_LDADD = ../libnetxms/libnetxms.la
 
-if USE_INTERNAL_EXPAT
-nxcproxy_LDADD += ../libexpat/libexpat/libnxexpat.la
-endif
-
 CLEANFILES = messages.c messages.h
 
 messages.c: messages.h

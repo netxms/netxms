@@ -172,9 +172,7 @@ TOP_LEVEL_MODULES=""
 CONTRIB_MODULES=""
 CLIENT_COMPONENTS=""
 BUILD_UNICODE="yes"
-FORCE_INTERNAL_EXPAT="no"
 FORCE_INTERNAL_JANSSON="no"
-FORCE_INTERNAL_ZLIB="no"
 FORCE_INTERNAL_SQLITE="no"
 FORCE_32BIT_BUILD="no"
 FORCE_INTERNAL_GETOPT="no"
@@ -323,10 +321,8 @@ AC_ARG_WITH(static-agent,
 [AS_HELP_STRING(--with-static-agent,build statically linked agent)],
 [
 	COMPONENTS="$COMPONENTS sqlite snmp static-agent sqlite_drv"
-	FORCE_INTERNAL_EXPAT="yes"
 	FORCE_INTERNAL_JANSSON="yes"
 	FORCE_INTERNAL_SQLITE="yes"
-	FORCE_INTERNAL_ZLIB="yes"
 ])
 
 AC_ARG_WITH(sdk,
@@ -372,22 +368,30 @@ AC_ARG_WITH(private-extensions,
 	fi
 ])
 
-AC_ARG_WITH(internal-libexpat,
-[AS_HELP_STRING(--with-internal-libexpat,force use of bundled libexpat)],
+AC_ARG_WITH(zlib,
+[AS_HELP_STRING(--with-zlib,specify zlib location)],
 [
-	FORCE_INTERNAL_EXPAT="yes"
+	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno"; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+		LDFLAGS="$LDFLAGS -L${withval}/lib"
+		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+	fi
+])
+
+AC_ARG_WITH(libexpat,
+[AS_HELP_STRING(--with-libexpat,specify libexpat location)],
+[
+	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno"; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+		LDFLAGS="$LDFLAGS -L${withval}/lib"
+		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+	fi
 ])
 
 AC_ARG_WITH(internal-libjansson,
 [AS_HELP_STRING(--with-internal-libjansson,force use of bundled libjansson)],
 [
         FORCE_INTERNAL_JANSSON="yes"
-])
-
-AC_ARG_WITH(internal-zlib,
-[AS_HELP_STRING(--with-internal-zlib,force use of bundled zlib)],
-[
-	FORCE_INTERNAL_ZLIB="yes"
 ])
 
 AC_ARG_WITH(internal-sqlite,
@@ -1011,7 +1015,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="appagent jansson java-common libexpat zlib libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy mobile-agent"
+	MODULES="appagent jansson java-common libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy mobile-agent"
 	TEST_MODULES="agent test-libnxcc test-libnxsl test-libnxsnmp"
 	AGENT_UNIT_TESTS="linux-cpu-usage-collector"
 	TOOLS="nxlptest"
@@ -2449,50 +2453,41 @@ if test $? = 0; then
 	fi
 fi
 
-if test "x$FORCE_INTERNAL_ZLIB" = "xyes"; then
-	HAVE_ZLIB=no
-else
-	HAVE_ZLIB=yes
-	AC_CHECK_HEADER(zlib.h,,HAVE_ZLIB=no)
-	if test "x$HAVE_ZLIB" = "xyes"; then
-		AC_CHECK_LIB(z, deflate, [], [ HAVE_ZLIB=no ])
-	fi
-	if test "x$HAVE_ZLIB" = "xyes"; then
-		AC_MSG_CHECKING(whether z_stream.next_in is a pointer to const)
-		AC_LANG_PUSH([C++])
-		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+HAVE_ZLIB=yes
+AC_CHECK_HEADER(zlib.h,,HAVE_ZLIB=no)
+if test "x$HAVE_ZLIB" = "xyes"; then
+	AC_CHECK_LIB(z, deflate, [], [ HAVE_ZLIB=no ])
+fi
+if test "x$HAVE_ZLIB" = "xyes"; then
+	AC_MSG_CHECKING(whether z_stream.next_in is a pointer to const)
+	AC_LANG_PUSH([C++])
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #define ZLIB_CONST
 #include <zlib.h>
 static const unsigned char *data = (const unsigned char *)"1 2 3";
-			]],[[
-				z_stream s;
-				s.next_in = data;
-				return 0;
-			]])
-			],[
-			        AC_MSG_RESULT(yes)
-			        AC_DEFINE(ZLIB_CONST_INPUT,1,Define to 1 if zlib accepts const pointer as z_stream input)
-			],[
-			        AC_MSG_RESULT(no)
-			        AC_DEFINE(ZLIB_CONST_INPUT,0,Define to 1 if zlib accepts const pointer as z_stream input)
-			])
-		AC_LANG_POP([C++])
-	fi
+		]],[[
+			z_stream s;
+			s.next_in = data;
+			return 0;
+		]])
+		],[
+		        AC_MSG_RESULT(yes)
+		        AC_DEFINE(ZLIB_CONST_INPUT,1,Define to 1 if zlib accepts const pointer as z_stream input)
+		],[
+		        AC_MSG_RESULT(no)
+		        AC_DEFINE(ZLIB_CONST_INPUT,0,Define to 1 if zlib accepts const pointer as z_stream input)
+		])
+	AC_LANG_POP([C++])
 fi
 if test "x$HAVE_ZLIB" = "xno"; then
-	MODULES="zlib $MODULES"
-        AC_DEFINE(ZLIB_CONST_INPUT,1,Define to 1 if zlib accepts const pointer as z_stream input)
+	AC_MSG_ERROR(zlib is required. Check that it is installed or use --with-zlib to specify non-standard location)
 fi
 
-if test "x$FORCE_INTERNAL_EXPAT" = "xyes"; then
-	HAVE_LIBEXPAT=no
-else
-	HAVE_LIBEXPAT=yes
-	AC_CHECK_HEADER(expat.h,,HAVE_LIBEXPAT=no)
-	AC_CHECK_LIB(expat, XML_Parse, [], [ HAVE_LIBEXPAT=no ])
-fi
+HAVE_LIBEXPAT=yes
+AC_CHECK_HEADER(expat.h,,HAVE_LIBEXPAT=no)
+AC_CHECK_LIB(expat, XML_Parse, [], [ HAVE_LIBEXPAT=no ])
 if test "x$HAVE_LIBEXPAT" = "xno"; then
-	MODULES="libexpat $MODULES"
+	AC_MSG_ERROR(libexpat is required. Check that it is installed or use --with-libexpat to specify non-standard location)
 fi
 
 if test "x$FORCE_INTERNAL_JANSSON" = "xyes"; then
@@ -4621,10 +4616,8 @@ AM_CONDITIONAL([MQTT_SUPPORT], [test "x$MQTT_SUPPORT" = "xyes"])
 AM_CONDITIONAL([PYTHON_SUPPORT], [test "x$PYTHON_SUPPORT" = "xyes"])
 AM_CONDITIONAL([RELEASE_BUILD], [test "x$RELEASE_BUILD" = "xyes"])
 AM_CONDITIONAL([STATIC_BUILD], [test "x$STATIC_BUILD" = "xyes"])
-AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_JANSSON], [test "x$HAVE_JANSSON" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_SQLITE], [test "x$HAVE_SQLITE" = "xno"])
-AM_CONDITIONAL([USE_INTERNAL_ZLIB], [test "$HAVE_ZLIB" = "no"])
 AM_CONDITIONAL([USE_ENCRYPTION], [test "x${WITH_ENCRYPTION}" = "xyes"])
 AM_CONDITIONAL([USE_LIBJQ], [test "x$HAVE_LIBJQ" = "xyes"])
 AM_CONDITIONAL([WITH_PRIVATE_EXTENSIONS], [test "x$WITH_PRIVATE_EXTENSIONS" = "xyes"])
@@ -4898,8 +4891,6 @@ AC_CONFIG_FILES([
 	src/jansson/Makefile
 	src/java-common/Makefile
 	src/java-common/netxms-base/Makefile
-	src/libexpat/Makefile
-	src/libexpat/libexpat/Makefile
 	src/libnetxms/Makefile
 	src/libnxcc/Makefile
 	src/libnxjava/Makefile
@@ -5017,7 +5008,6 @@ AC_CONFIG_FILES([
 	src/tools/nxlptest/Makefile
 	src/tools/nxping/Makefile
 	src/tools/scripts/Makefile
-	src/zlib/Makefile
 	sql/Makefile
 	tests/Makefile
 	tests/agent/Makefile
@@ -5205,11 +5195,6 @@ if test "x${BUILD_UNICODE}" = "xyes"; then
 else
 	echo "UNICODE build           : NO"
 fi
-if test "x${HAVE_LIBEXPAT}" = "xno"; then
-	echo "Use internal libexpat   : YES"
-else
-	echo "Use internal libexpat   : NO"
-fi
 if test "x${HAVE_JANSSON}" = "xno"; then
 	echo "Use internal libjansson : YES"
 else
@@ -5222,11 +5207,6 @@ if test $? = 0; then
 	else
 		echo "Use internal sqlite     : NO"
 	fi
-fi
-if test "x${HAVE_ZLIB}" = "xno"; then
-	echo "Use internal zlib       : YES"
-else
-	echo "Use internal zlib       : NO"
 fi
 if test "x${FORCE_32BIT_BUILD}" = "xyes"; then
 	echo "Force 32bit build       : YES"

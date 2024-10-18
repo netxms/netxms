@@ -9,10 +9,6 @@ libnxsnmp_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build -DLIBNXSNMP_
 libnxsnmp_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxsnmp_la_LIBADD = ../../libnetxms/libnetxms.la
 
-if USE_INTERNAL_ZLIB
-libnxsnmp_la_CPPFLAGS += -I../../zlib
-libnxsnmp_la_LIBADD += ../../zlib/libnxzlib.la
-endif
 if USE_INTERNAL_JANSSON
 libnxsnmp_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
 else

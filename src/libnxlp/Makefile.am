@@ -7,11 +7,6 @@ libnxlp_la_CPPFLAGS=-I@top_srcdir@/include -DLIBNXLP_EXPORTS -I@top_srcdir@/buil
 libnxlp_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxlp_la_LIBADD = @top_srcdir@/src/libnetxms/libnetxms.la
 
-if USE_INTERNAL_EXPAT
-libnxlp_la_CPPFLAGS+=-I@top_srcdir@/src/libexpat/libexpat
-libnxlp_la_LIBADD += @top_srcdir@/src/libexpat/libexpat/libnxexpat.la
-endif
-
 EXTRA_DIST = \
 	vss.cpp wevt.cpp \
 	libnxlp.vcxproj libnxlp.vcxproj.filters \

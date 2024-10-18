@@ -41,10 +41,8 @@ all notification channel drivers GPL
 
 Third party components bundled with NetXMS:
 
-libexpat        BSD-like
 libipfix        LGPL
 sqlite          BSD-like
-zlib            BSD-like
 
 
 Third party code within NetXMS:
