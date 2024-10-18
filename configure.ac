@@ -2453,41 +2453,43 @@ if test $? = 0; then
 	fi
 fi
 
-HAVE_ZLIB=yes
-AC_CHECK_HEADER(zlib.h,,HAVE_ZLIB=no)
-if test "x$HAVE_ZLIB" = "xyes"; then
-	AC_CHECK_LIB(z, deflate, [], [ HAVE_ZLIB=no ])
-fi
-if test "x$HAVE_ZLIB" = "xyes"; then
-	AC_MSG_CHECKING(whether z_stream.next_in is a pointer to const)
-	AC_LANG_PUSH([C++])
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+if test "x$DIST_BUILD" != "xyes"; then
+	HAVE_ZLIB=yes
+	AC_CHECK_HEADER(zlib.h,,HAVE_ZLIB=no)
+	if test "x$HAVE_ZLIB" = "xyes"; then
+		AC_CHECK_LIB(z, deflate, [], [ HAVE_ZLIB=no ])
+	fi
+	if test "x$HAVE_ZLIB" = "xyes"; then
+		AC_MSG_CHECKING(whether z_stream.next_in is a pointer to const)
+		AC_LANG_PUSH([C++])
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #define ZLIB_CONST
 #include <zlib.h>
 static const unsigned char *data = (const unsigned char *)"1 2 3";
-		]],[[
-			z_stream s;
-			s.next_in = data;
-			return 0;
-		]])
-		],[
-		        AC_MSG_RESULT(yes)
-		        AC_DEFINE(ZLIB_CONST_INPUT,1,Define to 1 if zlib accepts const pointer as z_stream input)
-		],[
-		        AC_MSG_RESULT(no)
-		        AC_DEFINE(ZLIB_CONST_INPUT,0,Define to 1 if zlib accepts const pointer as z_stream input)
-		])
-	AC_LANG_POP([C++])
-fi
-if test "x$HAVE_ZLIB" = "xno"; then
-	AC_MSG_ERROR(zlib is required. Check that it is installed or use --with-zlib to specify non-standard location)
-fi
+			]],[[
+				z_stream s;
+				s.next_in = data;
+				return 0;
+			]])
+			],[
+			        AC_MSG_RESULT(yes)
+			        AC_DEFINE(ZLIB_CONST_INPUT,1,Define to 1 if zlib accepts const pointer as z_stream input)
+			],[
+			        AC_MSG_RESULT(no)
+			        AC_DEFINE(ZLIB_CONST_INPUT,0,Define to 1 if zlib accepts const pointer as z_stream input)
+			])
+		AC_LANG_POP([C++])
+	fi
+	if test "x$HAVE_ZLIB" = "xno"; then
+		AC_MSG_ERROR(zlib is required. Check that it is installed or use --with-zlib to specify non-standard location)
+	fi
 
-HAVE_LIBEXPAT=yes
-AC_CHECK_HEADER(expat.h,,HAVE_LIBEXPAT=no)
-AC_CHECK_LIB(expat, XML_Parse, [], [ HAVE_LIBEXPAT=no ])
-if test "x$HAVE_LIBEXPAT" = "xno"; then
-	AC_MSG_ERROR(libexpat is required. Check that it is installed or use --with-libexpat to specify non-standard location)
+	HAVE_LIBEXPAT=yes
+	AC_CHECK_HEADER(expat.h,,HAVE_LIBEXPAT=no)
+	AC_CHECK_LIB(expat, XML_Parse, [], [ HAVE_LIBEXPAT=no ])
+	if test "x$HAVE_LIBEXPAT" = "xno"; then
+		AC_MSG_ERROR(libexpat is required. Check that it is installed or use --with-libexpat to specify non-standard location)
+	fi
 fi
 
 if test "x$FORCE_INTERNAL_JANSSON" = "xyes"; then

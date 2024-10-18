@@ -8,4 +8,4 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = nxagent.iss nxagent-x64.iss setup.iss common.iss
+EXTRA_DIST = nxagent-aarch64.iss nxagent-x86.iss nxagent-x64.iss setup.iss common.iss
