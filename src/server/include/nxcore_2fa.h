@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2021-2023 Raden Solutions
+** Copyright (C) 2021-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ public:
    {
       _tcslcpy(m_methodName, methodName, MAX_OBJECT_NAME);
    }
-   virtual ~TwoFactorAuthenticationToken() = default;
+   virtual ~TwoFactorAuthenticationToken() {}
 
    virtual const TCHAR *getChallenge() const { return nullptr; }
    virtual const TCHAR *getQRLabel() const { return nullptr; }
@@ -83,7 +83,7 @@ public:
    MessageToken(const TCHAR* methodName, uint32_t secret) : TwoFactorAuthenticationToken(methodName), m_secret(secret)
    {
    }
-   virtual ~MessageToken() = default;
+   virtual ~MessageToken() {}
 
    uint32_t getSecret() const { return m_secret; };
 };
