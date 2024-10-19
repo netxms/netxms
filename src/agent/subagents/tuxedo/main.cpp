@@ -201,7 +201,7 @@ static bool SubAgentInit(Config *config)
    }
    if (nc == NULL)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("Tuxedo: Enduro/X environment is not configured"));
+      nxlog_write_tag(NXLOG_ERROR, TUXEDO_DEBUG_TAG, _T("Enduro/X environment is not configured"));
       return false;
    }
    nxlog_debug_tag(TUXEDO_DEBUG_TAG, 2, _T("Using Enduro/X configuration %hs"), nc);
@@ -209,7 +209,7 @@ static bool SubAgentInit(Config *config)
    const char *tc = getenv("TUXCONFIG");
    if (tc == NULL)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("Tuxedo: TUXCONFIG environment variable not set"));
+      nxlog_write_tag(NXLOG_ERROR, TUXEDO_DEBUG_TAG, _T("TUXCONFIG environment variable not set"));
       return false;
    }
    nxlog_debug_tag(TUXEDO_DEBUG_TAG, 2, _T("Using Tuxedo configuration file %hs"), tc);

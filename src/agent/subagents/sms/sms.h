@@ -1,6 +1,6 @@
 /*
 ** NetXMS SMS sending subagent
-** Copyright (C) 2006-2014 Raden Solutions
+** Copyright (C) 2006-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,6 +27,8 @@
 #include <nms_util.h>
 #include <nms_agent.h>
 
+#define DEBUG_TAG _T("sms")
+
 #define PDU_BUFFER_SIZE    512
 
 /**
@@ -38,6 +40,6 @@ bool SendSMS(const char *pszPhoneNumber, const char *pszText);
 /**
  * Global variables
  */
-extern TCHAR g_szDeviceModel[];
+extern TCHAR g_deviceModel[];
 
 #endif

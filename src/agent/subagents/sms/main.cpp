@@ -1,6 +1,6 @@
 /*
 ** NetXMS SMS sending subagent
-** Copyright (C) 2006-2021 Raden Solutions
+** Copyright (C) 2006-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,12 +26,12 @@
 /**
  * Model of attacjed modem
  */
-TCHAR g_szDeviceModel[256] = _T("<unknown>");
+TCHAR g_deviceModel[256] = _T("<unknown>");
 
 /**
  * Port name
  */
-static TCHAR m_szDevice[MAX_PATH];
+static TCHAR s_device[MAX_PATH];
 
 /**
  * Handler for SMS.SerialConfig and SMS.DeviceModel
@@ -69,18 +69,18 @@ static bool SubAgentInit(Config *config)
 {
 	// Parse configuration
 	const TCHAR *value = config->getValue(_T("/SMS/Device"));
-	if (value != NULL)
+	if (value != nullptr)
 	{
-		_tcslcpy(m_szDevice, value, MAX_PATH);
-		if (!InitSender(m_szDevice))
+		_tcslcpy(s_device, value, MAX_PATH);
+		if (!InitSender(s_device))
 			return false;
 	}
 	else
 	{
-		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("SMS: device not specified"));
+	   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Serial port for GSM modem not provided"));
 	}
 
-	return value != NULL;
+	return value != nullptr;
 }
 
 /**
@@ -95,8 +95,8 @@ static void SubAgentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-	{ _T("SMS.DeviceModel"), H_StringConst, g_szDeviceModel, DCI_DT_STRING, _T("Current serial port configuration") },
-	{ _T("SMS.SerialConfig"), H_StringConst, m_szDevice, DCI_DT_STRING, _T("Current serial port configuration") }
+	{ _T("SMS.DeviceModel"), H_StringConst, g_deviceModel, DCI_DT_STRING, _T("GSM modem model") },
+	{ _T("SMS.SerialConfig"), H_StringConst, s_device, DCI_DT_STRING, _T("Current serial port configuration") }
 };
 
 /**

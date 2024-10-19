@@ -25,7 +25,6 @@
 /**
  * Static data
  */
-static void (*s_fpWriteLog)(int, int, const TCHAR*) = nullptr;
 static void (*s_fpPostEvent1)(uint32_t, const TCHAR*, time_t) = nullptr;
 static void (*s_fpPostEvent2)(uint32_t, const TCHAR*, time_t, const StringMap&) = nullptr;
 static shared_ptr<AbstractCommSession> (*s_fpFindServerSession)(uint64_t) = nullptr;
@@ -44,7 +43,6 @@ static ThreadPool *s_timerThreadPool = nullptr;
  * Initialize subagent API
  */
 void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
-      void (*writeLog)(int, int, const TCHAR *),
       void (*postEvent1)(uint32_t, const TCHAR*, time_t),
       void (*postEvent2)(uint32_t, const TCHAR*, time_t, const StringMap&),
       bool (*enumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void*),
@@ -59,7 +57,6 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
       void (*unregisterProblem)(const TCHAR*),
       ThreadPool *timerThreadPool)
 {
-   s_fpWriteLog = writeLog;
    s_fpPostEvent1 = postEvent1;
    s_fpPostEvent2 = postEvent2;
 	s_fpEnumerateSessions = enumerateSessions;
@@ -73,72 +70,6 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
    s_fpRegisterProblem = registerProblem;
    s_fpUnregisterProblem = unregisterProblem;
    s_timerThreadPool = timerThreadPool;
-}
-
-/**
- * Write message to agent's log
- */
-void LIBNXAGENT_EXPORTABLE AgentWriteLog(int logLevel, const TCHAR *format, ...)
-{
-   TCHAR szBuffer[4096];
-   va_list args;
-
-   if (s_fpWriteLog != nullptr)
-   {
-      va_start(args, format);
-      _vsntprintf(szBuffer, 4096, format, args);
-      va_end(args);
-      szBuffer[4095] = 0;
-      s_fpWriteLog(logLevel, 0, szBuffer);
-   }
-}
-
-/**
- * Write message to agent's log
- */
-void LIBNXAGENT_EXPORTABLE AgentWriteLog2(int logLevel, const TCHAR *format, va_list args)
-{
-   TCHAR szBuffer[4096];
-
-   if (s_fpWriteLog != nullptr)
-   {
-      _vsntprintf(szBuffer, 4096, format, args);
-      szBuffer[4095] = 0;
-      s_fpWriteLog(logLevel, 0, szBuffer);
-   }
-}
-
-/**
- * Write debug message to agent's log
- */
-void LIBNXAGENT_EXPORTABLE AgentWriteDebugLog(int level, const TCHAR *format, ...)
-{
-   TCHAR szBuffer[4096];
-   va_list args;
-
-   if (s_fpWriteLog != nullptr)
-   {
-      va_start(args, format);
-      _vsntprintf(szBuffer, 4096, format, args);
-      va_end(args);
-      szBuffer[4095] = 0;
-      s_fpWriteLog(NXLOG_DEBUG, level, szBuffer);
-   }
-}
-
-/**
- * Write debug message to agent's log
- */
-void LIBNXAGENT_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, va_list args)
-{
-   TCHAR szBuffer[4096];
-
-   if (s_fpWriteLog != nullptr)
-   {
-      _vsntprintf(szBuffer, 4096, format, args);
-      szBuffer[4095] = 0;
-      s_fpWriteLog(NXLOG_DEBUG, level, szBuffer);
-   }
 }
 
 /**

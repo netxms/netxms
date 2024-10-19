@@ -1,6 +1,6 @@
 /**
  * NetXMS lmsensors subagent
- * Copyright (C) 2012-2021 Alex Kirhenshtein
+ * Copyright (C) 2012-2024 Alex Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,8 @@
 #include <netxms-version.h>
 #include <sensors/sensors.h>
 #include <sensors/error.h>
+
+#define DEBUG_TAG _T("lmsensors")
 
 /**
  * Configuration
@@ -178,7 +180,7 @@ static bool SubagentInit(Config *config)
          configFile = _tfopen(m_configFileName, _T("rb"));
 
          if (configFile == NULL) {
-            AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("Unable to open lm_sensors config file \"%s\""), m_configFileName);
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to open lm_sensors config file \"%s\""), m_configFileName);
             ret = false;
          }
       }
@@ -186,12 +188,12 @@ static bool SubagentInit(Config *config)
       if (ret) {
          int err = sensors_init(configFile);
          if (err != 0) {
-            AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("sensors_init() failed: %hs"), sensors_strerror(err));
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("sensors_init() failed: %hs"), sensors_strerror(err));
             ret = false;
          }
       }
 
-      if (configFile != NULL)
+      if (configFile != nullptr)
       {
          fclose(configFile);
       }

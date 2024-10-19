@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
 
 #include "nxagentd.h"
 
+#define DEBUG_TAG _T("dc.push")
+
 /**
  * Request ID
  */
@@ -35,7 +37,7 @@ bool PushData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, tim
 {
 	bool success = false;
 
-	nxlog_debug(6, _T("PushData: \"%s\" = \"%s\""), parameter, value);
+	nxlog_debug_tag(DEBUG_TAG, 6, _T("PushData: \"%s\" = \"%s\""), parameter, value);
 
 	NXCPMessage msg(CMD_PUSH_DCI_DATA, 0, 4); // Use version 4 to avoid compatibility issues
 	msg.setField(VID_NAME, parameter);
@@ -85,14 +87,14 @@ struct PushDataEntry
  */
 static ObjectMemoryPool<PushDataEntry> s_localCachePool;
 static StringObjectMap<PushDataEntry> s_localCache(Ownership::False);
-static Mutex s_localCacheLock;
+static Mutex s_localCacheLock(MutexType::FAST);
 
 /**
  * Store pushed data locally
  */
 static void StoreLocalData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, time_t timestamp)
 {
-   nxlog_debug(6, _T("StoreLocalData: \"%s\" = \"%s\""), parameter, value);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("StoreLocalData: \"%s\" = \"%s\""), parameter, value);
    s_localCacheLock.lock();
    s_localCache.set(parameter, new(s_localCachePool.allocate()) PushDataEntry(timestamp, value));
    s_localCacheLock.unlock();
@@ -105,7 +107,7 @@ static void ProcessPushRequest(NamedPipe *pipe, void *arg)
 {
 	TCHAR buffer[256];
 
-	AgentWriteDebugLog(5, _T("ProcessPushRequest: connection established"));
+	nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessPushRequest: connection established"));
    PipeMessageReceiver receiver(pipe->handle(), 8192, 1048576);  // 8K initial, 1M max
 	while(true)
 	{
@@ -113,7 +115,7 @@ static void ProcessPushRequest(NamedPipe *pipe, void *arg)
 		NXCPMessage *msg = receiver.readMessage(5000, &result);
 		if (msg == NULL)
 			break;
-		AgentWriteDebugLog(6, _T("ProcessPushRequest: received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+		nxlog_debug_tag(DEBUG_TAG, 6, _T("ProcessPushRequest: received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
 		if (msg->getCode() == CMD_PUSH_DCI_DATA)
 		{
          UINT32 objectId = msg->getFieldAsUInt32(VID_OBJECT_ID);
@@ -134,7 +136,7 @@ static void ProcessPushRequest(NamedPipe *pipe, void *arg)
 		}
 		delete msg;
 	}
-	AgentWriteDebugLog(5, _T("ProcessPushRequest: connection by user %s closed"), pipe->user());
+	nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessPushRequest: connection by user %s closed"), pipe->user());
 }
 
 /**
@@ -166,10 +168,10 @@ LONG H_PushValue(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommS
 
    s_localCacheLock.lock();
    const PushDataEntry *v = s_localCache.get(key);
-   if (v != NULL)
+   if (v != nullptr)
       _tcscpy(value, v->value);
    s_localCacheLock.unlock();
-   return (v != NULL) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_NO_SUCH_INSTANCE;
+   return (v != nullptr) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_NO_SUCH_INSTANCE;
 }
 
 /**

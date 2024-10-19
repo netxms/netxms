@@ -121,7 +121,7 @@ reconnect:
          int64_t startTime = GetCurrentTimeMs();
          if (!poll())
          {
-            AgentWriteLog(NXLOG_WARNING, _T("Connection with database %s lost"), m_info.id);
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_ORACLE, _T("Connection with database %s lost"), m_info.id);
             break;
          }
          int64_t currTime = GetCurrentTimeMs();

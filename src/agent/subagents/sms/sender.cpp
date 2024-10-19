@@ -1,6 +1,6 @@
 /*
 ** NetXMS SMS sending subagent
-** Copyright (C) 2006-2021 Raden Solutions
+** Copyright (C) 2006-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ static bool ReadToOK(Serial *serial, char *data = nullptr)
       int rc = serial->readToMark(buffer, 1024, s_eosMarks, &mark);
       if (rc <= 0)
       {
-         AgentWriteDebugLog(5, _T("SMS: ReadToOK: readToMark returned %d"), rc);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("SMS: ReadToOK: readToMark returned %d"), rc);
          return false;
       }
       if (mark != nullptr)
@@ -61,9 +61,9 @@ static bool ReadToOK(Serial *serial, char *data = nullptr)
             return true;
  
 #ifdef UNICODE
-      	AgentWriteDebugLog(5, _T("SMS: non-OK response (%hs)"), mark);
+      	nxlog_debug_tag(DEBUG_TAG, 5, _T("SMS: non-OK response (%hs)"), mark);
 #else
-      	AgentWriteDebugLog(5, _T("SMS: non-OK response (%s)"), mark);
+      	nxlog_debug_tag(DEBUG_TAG, 5, _T("SMS: non-OK response (%s)"), mark);
 #endif
          return false;
       }
@@ -81,12 +81,12 @@ static bool InitModem(Serial *serial)
 	serial->write("ATZ\r\n", 5); // init modem
    if (!ReadToOK(serial))
       return false;
-	AgentWriteDebugLog(5, _T("SMS: ATZ sent, got OK"));
+	nxlog_debug_tag(DEBUG_TAG, 5, _T("SMS: ATZ sent, got OK"));
 
    serial->write("ATE0\r\n", 6); // disable echo
    if (!ReadToOK(serial))
       return false;
-	AgentWriteDebugLog(5, _T("SMS: ATE0 sent, got OK"));
+	nxlog_debug_tag(DEBUG_TAG, 5, _T("SMS: ATE0 sent, got OK"));
    
    return true;
 }
@@ -112,7 +112,7 @@ bool InitSender(const TCHAR *pszInitArgs)
 		portName = _tcsdup(pszInitArgs);
 	}
 	
-	AgentWriteDebugLog(1, _T("SMS Sender: initializing GSM modem at %s"), pszInitArgs);
+	nxlog_debug_tag(DEBUG_TAG, 1, _T("SMS Sender: initializing GSM modem at %s"), pszInitArgs);
 	
 	TCHAR *p;
 	const TCHAR *parityAsText;
@@ -192,17 +192,17 @@ bool InitSender(const TCHAR *pszInitArgs)
 			parityAsText = _T("NONE");
 			break;
 	}
-	AgentWriteDebugLog(1, _T("SMS: initialize for port=\"%s\", speed=%d, data=%d, parity=%s, stop=%d"),
+	nxlog_debug_tag(DEBUG_TAG, 1, _T("Initializing GSM modem: port=\"%s\", speed=%d, data=%d, parity=%s, stop=%d"),
 	                portName, portSpeed, dataBits, parityAsText, stopBits == TWOSTOPBITS ? 2 : 1);
 	
 	if (s_serial.open(portName))
 	{
-		AgentWriteDebugLog(5, _T("SMS: port opened"));
+		nxlog_debug_tag(DEBUG_TAG, 5, _T("GSM modem port opened"));
 		s_serial.setTimeout(2000);
 		
       if (!s_serial.set(portSpeed, dataBits, parity, stopBits))
       {
-   		AgentWriteDebugLog(5, _T("SMS: cannot set port parameters"));
+   		nxlog_debug_tag(DEBUG_TAG, 5, _T("Cannot set serial port parameters"));
          goto cleanup;
       }
 		
@@ -216,23 +216,23 @@ bool InitSender(const TCHAR *pszInitArgs)
 		char vendorId[1024];
       if (!ReadToOK(&s_serial, vendorId))
          goto cleanup;
-		AgentWriteDebugLog(5, _T("SMS init: ATI3 sent, got OK"));
+		nxlog_debug_tag(DEBUG_TAG, 5, _T("GSM modem init: ATI3 sent, got OK"));
 		
 		char *sptr, *eptr;	
 		for(sptr = vendorId; (*sptr != 0) && ((*sptr == '\r') || (*sptr == '\n') || (*sptr == ' ') || (*sptr == '\t')); sptr++);
 		for(eptr = sptr; (*eptr != 0) && (*eptr != '\r') && (*eptr != '\n'); eptr++);
 		*eptr = 0;
 #ifdef UNICODE
-		mb_to_wchar(sptr, -1, g_szDeviceModel, 256);
-		g_szDeviceModel[255] = 0;
+		mb_to_wchar(sptr, -1, g_deviceModel, 256);
+		g_deviceModel[255] = 0;
 #else
-		strlcpy(g_szDeviceModel, sptr, 256);
+		strlcpy(g_deviceModel, sptr, 256);
 #endif
-		AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("SMS Sender: GSM modem initialized (Device=\"%s\" Model=\"%s\")"), pszInitArgs, g_szDeviceModel);
+		nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("GSM modem initialized (Device=\"%s\" Model=\"%s\")"), pszInitArgs, g_deviceModel);
 	}
 	else
 	{
-		AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("SMS Sender: Unable to open serial port (%s)"), pszInitArgs);
+		nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Unable to open serial port (%s)"), pszInitArgs);
 	}
 
 cleanup:
@@ -249,10 +249,10 @@ bool SendSMS(const char *pszPhoneNumber, const char *pszText)
 	if ((pszPhoneNumber == nullptr) || (pszText == nullptr))
       return false;
 
-	AgentWriteDebugLog(3, _T("SMS: send to {%hs}: {%hs}"), pszPhoneNumber, pszText);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending SMS to {%hs}: {%hs}"), pszPhoneNumber, pszText);
    if (!s_serial.restart())
    {
-   	AgentWriteDebugLog(5, _T("SMS: failed to open port"));
+   	nxlog_debug_tag(DEBUG_TAG, 5, _T("Cannot open serial port"));
       return false;
    }
 
@@ -265,7 +265,7 @@ bool SendSMS(const char *pszPhoneNumber, const char *pszText)
 	   s_serial.write("AT+CMGF=0\r\n", 11); // =0 - PDU message
       if (!ReadToOK(&s_serial))
          goto cleanup;
-	   AgentWriteDebugLog(5, _T("SMS: AT+CMGF=0 sent, got OK"));
+	   nxlog_debug_tag(DEBUG_TAG, 5, _T("SMS: AT+CMGF=0 sent, got OK"));
 
 		char pduBuffer[PDU_BUFFER_SIZE];
 		SMSCreatePDUString(pszPhoneNumber, pszText, pduBuffer);
@@ -279,7 +279,7 @@ bool SendSMS(const char *pszPhoneNumber, const char *pszText)
          goto cleanup;
       if ((mark == NULL) || (*mark != '>'))
       {
-   	   AgentWriteDebugLog(5, _T("SMS: wrong response to AT+CMGS=\"%hs\" (%hs)"), pszPhoneNumber, mark);
+   	   nxlog_debug_tag(DEBUG_TAG, 5, _T("SMS: wrong response to AT+CMGS=\"%hs\" (%hs)"), pszPhoneNumber, mark);
          goto cleanup;
       }
 
@@ -291,7 +291,7 @@ bool SendSMS(const char *pszPhoneNumber, const char *pszText)
 	   s_serial.write("AT+CMGF=1\r\n", 11); // =1 - text message
       if (!ReadToOK(&s_serial))
          goto cleanup;
-	   AgentWriteDebugLog(5, _T("SMS: AT+CMGF=1 sent, got OK"));
+	   nxlog_debug_tag(DEBUG_TAG, 5, _T("SMS: AT+CMGF=1 sent, got OK"));
 
       char buffer[256];
       snprintf(buffer, sizeof(buffer), "AT+CMGS=\"%s\"\r\n", pszPhoneNumber);
@@ -302,7 +302,7 @@ bool SendSMS(const char *pszPhoneNumber, const char *pszText)
          goto cleanup;
       if ((mark == NULL) || (*mark != '>'))
       {
-   	   AgentWriteDebugLog(5, _T("SMS: wrong response to AT+CMGS=\"%hs\" (%hs)"), pszPhoneNumber, mark);
+   	   nxlog_debug_tag(DEBUG_TAG, 5, _T("SMS: wrong response to AT+CMGS=\"%hs\" (%hs)"), pszPhoneNumber, mark);
          goto cleanup;
       }
    	
@@ -322,7 +322,7 @@ bool SendSMS(const char *pszPhoneNumber, const char *pszText)
    if (!ReadToOK(&s_serial))
       goto cleanup;
 
-   AgentWriteDebugLog(5, _T("SMS: AT+CMGS + message body sent, got OK"));
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("SMS: AT+CMGS + message body sent, got OK"));
    success = true;
 
 cleanup:

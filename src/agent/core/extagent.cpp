@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@
 **/
 
 #include "nxagentd.h"
+
+#define DEBUG_TAG _T("extagent")
 
 /**
  * Action list
@@ -119,7 +121,7 @@ void ExternalSubagent::stopListener()
 bool ExternalSubagent::sendMessage(const NXCPMessage *msg)
 {
 	TCHAR buffer[256];
-	AgentWriteDebugLog(6, _T("ExternalSubagent::sendMessage(%s): sending message %s"), m_name, NXCPMessageCodeName(msg->getCode(), buffer));
+	nxlog_debug_tag(DEBUG_TAG, 6, _T("ExternalSubagent::sendMessage(%s): sending message %s"), m_name, NXCPMessageCodeName(msg->getCode(), buffer));
 
 	NXCP_MESSAGE *rawMsg = msg->serialize();
 	bool success = (m_pipe != nullptr) ? m_pipe->write(rawMsg, ntohl(rawMsg->size)) : false;
@@ -152,7 +154,7 @@ void ExternalSubagent::connect(NamedPipe *pipe)
 {
    m_pipe = pipe;
    m_connected = true;
-   nxlog_debug(2, _T("ExternalSubagent(%s): connection established"), m_name);
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("ExternalSubagent(%s): connection established"), m_name);
 
    syncPolicies();
 
@@ -165,12 +167,12 @@ void ExternalSubagent::connect(NamedPipe *pipe)
       {
 		   if (result == MSGRECV_TIMEOUT)
 		      continue;
-         AgentWriteDebugLog(6, _T("ExternalSubagent(%s): receiver failure (%s)"), m_name, AbstractMessageReceiver::resultToText(result));
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("ExternalSubagent(%s): receiver failure (%s)"), m_name, AbstractMessageReceiver::resultToText(result));
 			break;
       }
 
 	   TCHAR buffer[256];
-		AgentWriteDebugLog(6, _T("ExternalSubagent(%s): received message %s"), m_name, NXCPMessageCodeName(msg->getCode(), buffer));
+		nxlog_debug_tag(DEBUG_TAG, 6, _T("ExternalSubagent(%s): received message %s"), m_name, NXCPMessageCodeName(msg->getCode(), buffer));
       switch(msg->getCode())
       {
          case CMD_PUSH_DCI_DATA:
@@ -196,7 +198,7 @@ void ExternalSubagent::connect(NamedPipe *pipe)
       }
 	}
 
-	AgentWriteDebugLog(2, _T("ExternalSubagent(%s): connection closed"), m_name);
+	nxlog_debug_tag(DEBUG_TAG, 2, _T("ExternalSubagent(%s): connection closed"), m_name);
 	m_connected = false;
 	m_msgQueue->clear();
 	m_pipe = nullptr;
@@ -240,12 +242,12 @@ NETXMS_SUBAGENT_PARAM *ExternalSubagent::getSupportedParameters(UINT32 *count)
 			{
 				*count = response->getFieldAsUInt32(VID_NUM_PARAMETERS);
 				result = (NETXMS_SUBAGENT_PARAM *)malloc(*count * sizeof(NETXMS_SUBAGENT_PARAM));
-				UINT32 varId = VID_PARAM_LIST_BASE;
-				for(UINT32 i = 0; i < *count; i++)
+				uint32_t fieldId = VID_PARAM_LIST_BASE;
+				for(uint32_t i = 0; i < *count; i++)
 				{
-					response->getFieldAsString(varId++, result[i].name, MAX_PARAM_NAME);
-					response->getFieldAsString(varId++, result[i].description, MAX_DB_STRING);
-					result[i].dataType = (int)response->getFieldAsUInt16(varId++);
+					response->getFieldAsString(fieldId++, result[i].name, MAX_PARAM_NAME);
+					response->getFieldAsString(fieldId++, result[i].description, MAX_DB_STRING);
+					result[i].dataType = response->getFieldAsInt16(fieldId++);
 				}
 			}
 			delete response;
@@ -964,7 +966,7 @@ void ShutdownExtSubagents(bool restart)
    {
       if (s_subagents.get(i)->isConnected())
       {
-         nxlog_debug(1, _T("Sending SHUTDOWN command to external subagent %s"), s_subagents.get(i)->getName());
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("Sending SHUTDOWN command to external subagent %s"), s_subagents.get(i)->getName());
          s_subagents.get(i)->shutdown(restart);
       }
    }
@@ -979,7 +981,7 @@ void RestartExtSubagents()
    {
       if (s_subagents.get(i)->isConnected())
       {
-         nxlog_debug(1, _T("Sending RESTART command to external subagent %s"), s_subagents.get(i)->getName());
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("Sending RESTART command to external subagent %s"), s_subagents.get(i)->getName());
          s_subagents.get(i)->restart();
       }
    }
@@ -994,7 +996,7 @@ void SyncPoliciesWithExtSubagents()
    {
       if (s_subagents.get(i)->isConnected())
       {
-         nxlog_debug(1, _T("Requesting policies synchronization with external subagent %s"), s_subagents.get(i)->getName());
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("Requesting policies synchronization with external subagent %s"), s_subagents.get(i)->getName());
          s_subagents.get(i)->syncPolicies();
       }
    }
@@ -1009,7 +1011,7 @@ void NotifyExtSubagentsOnPolicyInstall(uuid *guid)
    {
       if (s_subagents.get(i)->isConnected())
       {
-         nxlog_debug(1, _T("Sending policy installation notification to external subagent %s"), s_subagents.get(i)->getName());
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("Sending policy installation notification to external subagent %s"), s_subagents.get(i)->getName());
          s_subagents.get(i)->notifyOnPolicyInstall(*guid);
       }
    }

@@ -133,7 +133,6 @@ extern TCHAR g_windowsServiceDisplayName[];
 #endif
 
 void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
-      void (*writeLog)(int, int, const TCHAR *),
       void (*postEvent)(uint32_t, const TCHAR *, time_t),
       void (*postEvent2)(uint32_t, const TCHAR *, time_t, const StringMap &),
       bool (*enumerateSessions)(EnumerationCallbackResult(*)(AbstractCommSession *, void *), void*),
@@ -821,17 +820,6 @@ static uint32_t H_TerminateProcess(const shared_ptr<ActionExecutionContext>& con
 #endif
 
 /**
- * This function writes message from subagent to agent's log
- */
-static void WriteSubAgentMsg(int logLevel, int debugLevel, const TCHAR *message)
-{
-	if (logLevel == NXLOG_DEBUG)
-	   nxlog_debug(debugLevel, message);
-	else
-		nxlog_write(logLevel, _T("%s"), message);
-}
-
-/**
  * Signal handler for UNIX platforms
  */
 #if !defined(_WIN32)
@@ -1182,7 +1170,7 @@ BOOL Initialize()
    s_timerThreadPool = ThreadPoolCreate(_T("TIMER"), 2, 16);
 
    // Initialize API for subagents
-   InitSubAgentAPI(WriteSubAgentMsg, PostEvent, PostEvent, EnumerateSessions, FindServerSessionByServerId,
+   InitSubAgentAPI(PostEvent, PostEvent, EnumerateSessions, FindServerSessionByServerId,
       PushData, GetLocalDatabaseHandle, g_szDataDirectory, ExecuteAction, GetScreenInfoForUserSession, QueueNotificationMessage,
       RegisterProblem, UnregisterProblem, s_timerThreadPool);
    nxlog_debug_tag(DEBUG_TAG_STARTUP, 1, _T("Subagent API initialized"));

@@ -205,7 +205,7 @@ void TuxedoQueryQueues()
       }
       else
       {
-         AgentWriteDebugLog(3, _T("Tuxedo: tpcall() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
+         nxlog_debug_tag(TUXEDO_DEBUG_TAG, 3, _T("tpcall() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
          delete_and_null(queues);
          delete_and_null(queuesByServer);
       }

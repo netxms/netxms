@@ -1285,7 +1285,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(int16_t severity, const TCHAR *format, ...
 {
    va_list args;
    va_start(args, format);
-   WriteLog(severity, NULL, format, args);
+   WriteLog(severity, nullptr, format, args);
    va_end(args);
 }
 
@@ -1294,7 +1294,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(int16_t severity, const TCHAR *format, ...
  */
 void LIBNETXMS_EXPORTABLE nxlog_write2(int16_t severity, const TCHAR *format, va_list args)
 {
-   WriteLog(severity, NULL, format, args);
+   WriteLog(severity, nullptr, format, args);
 }
 
 /**

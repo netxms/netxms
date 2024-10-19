@@ -1298,19 +1298,6 @@ bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsInt64(const TCHAR *metric, int ind
 bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsUInt64(const TCHAR *metric, int index, uint64_t *value, uint64_t defaultValue = 0, bool inBrackets = true);
 bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsBoolean(const TCHAR *metric, int index, bool *value, bool defaultValue = false, bool inBrackets = true);
 
-void LIBNXAGENT_EXPORTABLE AgentWriteLog(int logLevel, const TCHAR *format, ...)
-#if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
-   __attribute__ ((format(printf, 2, 3)))
-#endif
-;
-void LIBNXAGENT_EXPORTABLE AgentWriteLog2(int logLevel, const TCHAR *format, va_list args);
-void LIBNXAGENT_EXPORTABLE AgentWriteDebugLog(int level, const TCHAR *format, ...)
-#if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
-   __attribute__ ((format(printf, 2, 3)))
-#endif
-;
-void LIBNXAGENT_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, va_list args);
-
 void LIBNXAGENT_EXPORTABLE AgentPostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp);
 void LIBNXAGENT_EXPORTABLE AgentPostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const StringMap &args);
 void LIBNXAGENT_EXPORTABLE AgentQueueNotifictionMessage(NXCPMessage *msg);
@@ -1384,6 +1371,26 @@ int LIBNXAGENT_EXPORTABLE ModbusExecute(const InetAddress& addr, uint16_t port, 
 int LIBNXAGENT_EXPORTABLE ModbusReadHoldingRegisters(modbus_t *mb, int address, const TCHAR *conversion, TCHAR *value, size_t size);
 int LIBNXAGENT_EXPORTABLE ModbusReadInputRegisters(modbus_t *mb, int address, const TCHAR *conversion, TCHAR *value, size_t size);
 #endif
+
+/* legacy logging functions - to be removed */
+static inline void AgentWriteLog(int logLevel, const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   nxlog_write2(logLevel, format, args);
+   va_end(args);
+}
+
+static inline void AgentWriteDebugLog(int level, const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   nxlog_debug2(level, format, args);
+   va_end(args);
+}
+
+#define AgentWriteLog2 nxlog_write2
+#define AgentWriteDebugLog2 nxlog_debug2
 
 /**
  * TFTP client error codes
