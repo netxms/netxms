@@ -47,6 +47,7 @@ import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.ST;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.ImageTransfer;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.dnd.TransferData;
@@ -63,6 +64,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageDataProvider;
+import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
@@ -692,6 +694,19 @@ public class WidgetHelper
 		final Clipboard cb = new Clipboard(Display.getCurrent());
       Transfer transfer = TextTransfer.getInstance();
       cb.setContents(new Object[] { (text != null) ? text : "" }, new Transfer[] { transfer });
+      cb.dispose();
+   }
+
+   /**
+    * Copy given image to clipboard
+    * 
+    * @param text
+    */
+   public static void copyToClipboard(final Image image)
+   {
+      final Clipboard cb = new Clipboard(Display.getCurrent());
+      ImageTransfer imageTransfer = ImageTransfer.getInstance();
+      cb.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
       cb.dispose();
    }
 
@@ -1393,6 +1408,23 @@ public class WidgetHelper
                return imageData;
             }
          });
+   }
+
+   /**
+    * Save given image to file (will show file save dialog in desktop client and initiate download in web client).
+    * 
+    * @param view parent view (can be null)
+    * @param fileNameHint hint for the file name (can be null)
+    * @param image image to save
+    */
+   public static void saveImageToFile(View view, String fileNameHint, Image image)
+   {
+      final ImageData[] data = new ImageData[] { image.getImageData() };
+      exportFile(view, fileNameHint, new String[] { "*.png", "*.*" }, new String[] { "PNG files", "All files" }, "application/octet-stream", (fileName) -> {
+         ImageLoader saver = new ImageLoader();
+         saver.data = data;
+         saver.save(fileName, SWT.IMAGE_PNG);
+      });
    }
 
    /**

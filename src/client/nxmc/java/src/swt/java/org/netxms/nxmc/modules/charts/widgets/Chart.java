@@ -27,21 +27,15 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.dnd.Clipboard;
-import org.eclipse.swt.dnd.ImageTransfer;
-import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
@@ -61,6 +55,7 @@ import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorCache;
+import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
  * Generic chart widget
@@ -778,9 +773,7 @@ public class Chart extends Composite
    public void copyToClipboard()
    {
       Image image = takeSnapshot();
-      ImageTransfer imageTransfer = ImageTransfer.getInstance();
-      final Clipboard clipboard = new Clipboard(getDisplay());
-      clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
+      WidgetHelper.copyToClipboard(image);
       image.dispose();
    }
 
@@ -792,22 +785,7 @@ public class Chart extends Composite
    public void saveAsImage(Shell parentShell)
    {
       Image image = takeSnapshot();
-
-      FileDialog fd = new FileDialog(parentShell, SWT.SAVE);
-      fd.setText("Save graph as image");
-      String[] filterExtensions = { "*.*" };
-      fd.setFilterExtensions(filterExtensions);
-      String[] filterNames = { ".png" };
-      fd.setFilterNames(filterNames);
-      fd.setFileName("graph.png");
-      final String selected = fd.open();
-      if (selected == null)
-         return;
-
-      ImageLoader saver = new ImageLoader();
-      saver.data = new ImageData[] { image.getImageData() };
-      saver.save(selected, SWT.IMAGE_PNG);
-
+      WidgetHelper.saveImageToFile(null, "graph.png", image);
       image.dispose();
    }
 

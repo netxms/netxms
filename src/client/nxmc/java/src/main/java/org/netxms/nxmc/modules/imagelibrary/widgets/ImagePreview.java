@@ -201,7 +201,7 @@ public class ImagePreview extends Composite
     * @param imageDescriptor
     * @return
     */
-   private static Image createImageFromDescriptor(Display display, LibraryImage imageDescriptor)
+   public static Image createImageFromDescriptor(Display display, LibraryImage imageDescriptor)
    {
       if (imageDescriptor == null)
          return null;

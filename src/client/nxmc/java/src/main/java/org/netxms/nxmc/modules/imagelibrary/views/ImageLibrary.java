@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,22 +29,19 @@ import java.util.Set;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -67,6 +64,7 @@ import org.netxms.nxmc.modules.imagelibrary.widgets.ImagePreview;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -77,10 +75,9 @@ import org.xnap.commons.i18n.I18n;
 public class ImageLibrary extends ConfigurationView
 {
    private static final Logger logger = LoggerFactory.getLogger(ImageLibrary.class);
+
    private final I18n i18n = LocalizationHelper.getI18n(ImageLibrary.class);
 
-	public static final String ID = "org.netxms.ui.eclipse.imagelibrary.view.imagelibrary"; //$NON-NLS-1$
-	
 	public static final int COLUMN_NAME = 0;
    public static final int COLUMN_TYPE = 1;
    public static final int COLUMN_PROTECTED = 2;
@@ -95,7 +92,12 @@ public class ImageLibrary extends ConfigurationView
    private Action actionNew;
    private Action actionEdit;
    private Action actionDelete;
+   private Action actionCopy;
+   private Action actionSave;
 
+   /**
+    * Create image library view
+    */
    public ImageLibrary()
    {
       super(LocalizationHelper.getI18n(ImageLibrary.class).tr("Image Library"), ResourceManager.getImageDescriptor("icons/config-views/image_library.png"), "ImageLibrary", false);
@@ -109,7 +111,7 @@ public class ImageLibrary extends ConfigurationView
 	{
 		splitter = new SashForm(parent, SWT.HORIZONTAL);
 
-      final String[] names = { "Name", "MIME type", "Protected", "GUID" };
+      final String[] names = { i18n.tr("Name"), i18n.tr("MIME type"), i18n.tr("Protected"), i18n.tr("GUID") };
 		final int[] widths = { 400, 120, 80, 200 };
 		viewer = new SortableTreeViewer(splitter, names, widths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION | SWT.BORDER);
 		viewer.setContentProvider(new ImageLibraryContentProvider());
@@ -124,37 +126,35 @@ public class ImageLibrary extends ConfigurationView
          }
       });
 
-		viewer.addDoubleClickListener(new IDoubleClickListener() {
-         @Override
-         public void doubleClick(DoubleClickEvent event)
+      viewer.addDoubleClickListener((e) -> {
+         IStructuredSelection selection = viewer.getStructuredSelection();
+         if (selection.getFirstElement() instanceof ImageCategory)
          {
-            IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-            if (selection.getFirstElement() instanceof ImageCategory)
-            {
-               if (viewer.getExpandedState(selection.getFirstElement()))
-                  viewer.collapseToLevel(selection.getFirstElement(), TreeViewer.ALL_LEVELS);
-               else
-                  viewer.expandToLevel(selection.getFirstElement(), 1);
-            }
-            else if (selection.getFirstElement() instanceof LibraryImage)
-            {
-               editImage();
-            }
+            if (viewer.getExpandedState(selection.getFirstElement()))
+               viewer.collapseToLevel(selection.getFirstElement(), TreeViewer.ALL_LEVELS);
+            else
+               viewer.expandToLevel(selection.getFirstElement(), 1);
+         }
+         else if (selection.getFirstElement() instanceof LibraryImage)
+         {
+            editImage();
          }
       });
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-         @Override
-         public void selectionChanged(SelectionChangedEvent event)
+      viewer.addSelectionChangedListener((e) -> {
+         IStructuredSelection selection = viewer.getStructuredSelection();
+         if ((selection.size() == 1) && (selection.getFirstElement() instanceof LibraryImage))
          {
-            IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-            if ((selection.size() == 1) && (selection.getFirstElement() instanceof LibraryImage))
-            {
-               imagePreview.setImage((LibraryImage)selection.getFirstElement());
-            }
-            else
-            {
-               imagePreview.setImage(null);
-            }
+            imagePreview.setImage((LibraryImage)selection.getFirstElement());
+            actionEdit.setEnabled(true);
+            actionCopy.setEnabled(true);
+            actionSave.setEnabled(true);
+         }
+         else
+         {
+            imagePreview.setImage(null);
+            actionEdit.setEnabled(false);
+            actionCopy.setEnabled(false);
+            actionSave.setEnabled(false);
          }
       });
 		
@@ -163,7 +163,7 @@ public class ImageLibrary extends ConfigurationView
 		splitter.setWeights(new int[] { 70, 30 });
 
 		createActions();
-		createPopupMenu();
+		createContextMenu();
 
       sessionListener = new SessionListener() {
          @Override
@@ -249,8 +249,23 @@ public class ImageLibrary extends ConfigurationView
 			{
 				deleteImages();
 			}
-
 		};
+
+      actionCopy = new Action(i18n.tr("&Copy"), SharedIcons.COPY) {
+         @Override
+         public void run()
+         {
+            copyImage();
+         }
+      };
+
+      actionSave = new Action(i18n.tr("&Save as..."), SharedIcons.SAVE_AS) {
+         @Override
+         public void run()
+         {
+            saveImage();
+         }
+      };
 	}
 
    /**
@@ -332,6 +347,48 @@ public class ImageLibrary extends ConfigurationView
          }
       }
 	}
+
+   /**
+    * Copy selected image to clipboard
+    */
+   private void copyImage()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      if (selection.getFirstElement() instanceof LibraryImage)
+      {
+         LibraryImage imageDescriptor = (LibraryImage)selection.getFirstElement();
+         Image image = ImagePreview.createImageFromDescriptor(getDisplay(), imageDescriptor);
+         if (image != null)
+         {
+            WidgetHelper.copyToClipboard(image);
+            image.dispose();
+         }
+      }
+   }
+
+   /**
+    * Save selected image to file
+    */
+   private void saveImage()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      if (selection.getFirstElement() instanceof LibraryImage)
+      {
+         LibraryImage imageDescriptor = (LibraryImage)selection.getFirstElement();
+         Image image = ImagePreview.createImageFromDescriptor(getDisplay(), imageDescriptor);
+         if (image != null)
+         {
+            WidgetHelper.saveImageToFile(this, imageDescriptor.getName() + ".png", image);
+            image.dispose();
+         }
+      }
+   }
 
 	/**
 	 * @param galleryItem
@@ -545,18 +602,13 @@ public class ImageLibrary extends ConfigurationView
 	}
 
 	/**
-	 * Create viewer popup menu
-	 */
-	private void createPopupMenu()
+    * Create viewer context menu
+    */
+	private void createContextMenu()
 	{
 		MenuManager menuManager = new MenuManager();
 		menuManager.setRemoveAllWhenShown(true);
-		menuManager.addMenuListener(new IMenuListener() {
-			public void menuAboutToShow(IMenuManager manager)
-			{
-				fillContextMenu(manager);
-			}
-		});
+      menuManager.addMenuListener((m) -> fillContextMenu(m));
 
 		final Menu menu = menuManager.createContextMenu(viewer.getTree());
 		viewer.getTree().setMenu(menu);
@@ -568,7 +620,7 @@ public class ImageLibrary extends ConfigurationView
 	protected void fillContextMenu(IMenuManager manager)
 	{
 		manager.add(actionNew);
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
 		if ((selection.size() == 1) && (selection.getFirstElement() instanceof LibraryImage))
 		{
 			manager.add(actionEdit);
@@ -594,6 +646,12 @@ public class ImageLibrary extends ConfigurationView
 				manager.add(actionDelete);
 			}
 		}
+      if ((selection.size() == 1) && (selection.getFirstElement() instanceof LibraryImage))
+      {
+         manager.add(new Separator());
+         manager.add(actionCopy);
+         manager.add(actionSave);
+      }
 	}
 
 	/**
@@ -634,13 +692,9 @@ public class ImageLibrary extends ConfigurationView
 						}
 					}
 				}
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-                  if (!viewer.getControl().isDisposed())
-                     refreshUI(imageLibrary);
-					}
+            runInUIThread(() -> {
+               if (!viewer.getControl().isDisposed())
+                  refreshUI(imageLibrary);
 				});
 			}
 
