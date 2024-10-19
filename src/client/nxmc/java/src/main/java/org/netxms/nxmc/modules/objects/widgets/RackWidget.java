@@ -201,6 +201,23 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
       gc.fillRectangle(rect.x + borderWidth * 2 - (borderWidth + 1) / 2, rect.y + rect.height, borderWidth * 2, (int)(borderWidth * 1.5));
       gc.fillRectangle(rect.x + rect.width - borderWidth * 3 - (borderWidth + 1) / 2, rect.y + rect.height, borderWidth * 2, (int)(borderWidth * 1.5));
 
+      // Inner bars
+      int bw = (int)((double)rect.width * 0.03);
+      int bx = rect.x + (borderWidth + 1) / 2 + bw;
+      gc.setLineWidth(bw);
+      gc.setLineStyle(SWT.LINE_DOT);
+      gc.drawLine(bx - bw / 2, rect.y, bx - bw / 2, rect.y + rect.height);
+      gc.setLineWidth(1);
+      gc.setLineStyle(SWT.LINE_SOLID);
+      gc.drawLine(bx, rect.y, bx, rect.y + rect.height);
+      bx = rect.x + rect.width - (borderWidth + 1) / 2 - bw;
+      gc.setLineWidth(bw);
+      gc.setLineStyle(SWT.LINE_DOT);
+      gc.drawLine(bx + bw / 2, rect.y, bx + bw / 2, rect.y + rect.height);
+      gc.setLineWidth(1);
+      gc.setLineStyle(SWT.LINE_SOLID);
+      gc.drawLine(bx, rect.y, bx, rect.y + rect.height);
+
       // Draw unit numbers
       int[] unitBaselines = new int[rack.getHeight() + 1];
       gc.setFont(WidgetHelper.getBestFittingFont(gc, labelFonts, "00", UNIT_NUMBER_WIDTH, (int)unitHeight - 2)); //$NON-NLS-1$
