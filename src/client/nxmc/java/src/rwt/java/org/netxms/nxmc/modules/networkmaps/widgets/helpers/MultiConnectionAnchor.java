@@ -25,10 +25,7 @@ import org.eclipse.draw2d.geometry.Rectangle;
 import org.netxms.client.maps.NetworkMapLink;
 
 public class MultiConnectionAnchor extends ChopboxAnchor
-{
-   private static final int MAX_LINK_COUNT = 5;
-   private static final int[] MULTIPLIERS = { 0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6 };
-   
+{   
    private NetworkMapLink link;
 
    /**
@@ -74,18 +71,26 @@ public class MultiConnectionAnchor extends ChopboxAnchor
       double opp = Math.abs((reference.preciseY() - centerY));
       double theta = Math.atan(opp/adj);
       
-      double xOffset;
-      double yOffset;
-      if ((centerX < reference.preciseX() && centerY < reference.preciseY()) ||
-          (centerX > reference.preciseX() && centerY > reference.preciseY()))
+      double xOffset = centerX;
+      double yOffset = centerY;
+      
+      if (link.getDuplicateCount() > 0)
       {
-         xOffset = (centerX + (0.5f * Math.min(r.height, r.width) / MAX_LINK_COUNT) * MULTIPLIERS[link.getPosition() % MULTIPLIERS.length] * Math.sin(-theta));
-         yOffset = (centerY + (0.5f * Math.min(r.height, r.width) / MAX_LINK_COUNT) * MULTIPLIERS[link.getPosition() % MULTIPLIERS.length] * Math.cos(-theta));
-      }
-      else
-      {
-         xOffset = (centerX + (0.5f * Math.min(r.height, r.width) / MAX_LINK_COUNT) * MULTIPLIERS[link.getPosition() % MULTIPLIERS.length] * Math.sin(theta));
-         yOffset = (centerY + (0.5f * Math.min(r.height, r.width) / MAX_LINK_COUNT) * MULTIPLIERS[link.getPosition() % MULTIPLIERS.length] * Math.cos(theta));
+         float maxWidth = Math.min(r.height, r.width) * 1.3f; //Maximum width a bit wider than minimal side
+         float maxWidthBetweenLinks = Math.min(r.height, r.width) * 0.35f;   
+         float pixelsPerLink =  Math.min(maxWidthBetweenLinks, Math.round(maxWidth/link.getDuplicateCount()));
+         float shift = ((pixelsPerLink * link.getDuplicateCount()) / 2 * -1) + link.getPosition() * pixelsPerLink;
+         if ((centerX < reference.preciseX() && centerY < reference.preciseY()) ||
+               (centerX > reference.preciseX() && centerY > reference.preciseY()))
+         {
+            xOffset = (centerX + shift * Math.sin(-theta));
+            yOffset = (centerY + shift * Math.cos(-theta));
+         }
+         else
+         {
+            xOffset = (centerX + shift * Math.sin(theta));
+            yOffset = (centerY + shift * Math.cos(theta));
+         }         
       }
       
       centerX = dx + xOffset;
