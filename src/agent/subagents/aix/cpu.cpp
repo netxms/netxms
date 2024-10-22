@@ -409,7 +409,6 @@ LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 {
 	int count, cpu;
 	TCHAR buffer[256], *eptr;
-	struct CpuUsageParam *p = (struct CpuUsageParam *)pValue;
 
 	if (!AgentGetParameterArg(pszParam, 1, buffer, 256))
 		return SYSINFO_RC_UNSUPPORTED;
