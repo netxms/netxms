@@ -165,6 +165,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	protected Action actionFiguresStatusIcons;
 	protected Action actionFiguresFloorPlan;
 	protected Action actionShowGrid;
+   protected Action actionShowSize;
 	protected Action actionAlignToGrid;
 	protected Action actionSnapToGrid;
 	protected Action actionShowObjectDetails;
@@ -750,8 +751,17 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 			}
 		};
       actionShowGrid.setImageDescriptor(ResourceManager.getImageDescriptor("icons/netmap/grid.png"));
-		actionShowGrid.setChecked(viewer.isGridVisible());
+      actionShowGrid.setChecked(viewer.isGridVisible());
       addKeyBinding("M1+G", actionShowGrid);
+
+      actionShowSize = new Action(i18n.tr("Show map &size border"), Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            viewer.showSize(actionShowSize.isChecked());
+         }
+      };
+      actionShowSize.setChecked(viewer.isSizeVisible());
 
       actionSnapToGrid = new Action(i18n.tr("S&nap to grid"), Action.AS_CHECK_BOX) {
 			@Override
@@ -963,6 +973,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       manager.add(actionAlignToGrid);
       manager.add(actionSnapToGrid);
       manager.add(actionShowGrid);
+      manager.add(actionShowSize);
       manager.add(new Separator());
       manager.add(actionHideLinkLabels);
       manager.add(actionHideLinks);
@@ -1109,6 +1120,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       manager.add(actionAlignToGrid);
       manager.add(actionSnapToGrid);
       manager.add(actionShowGrid);
+      manager.add(actionShowSize);
       manager.add(new Separator());
       manager.add(actionHideLinkLabels);
       manager.add(actionHideLinks);

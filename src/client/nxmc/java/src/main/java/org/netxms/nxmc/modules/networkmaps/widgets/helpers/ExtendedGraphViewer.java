@@ -123,6 +123,7 @@ public class ExtendedGraphViewer extends GraphViewer
    private boolean centeredBackground = false;
    private boolean fitBackground = false;
    private boolean dragStarted = false;
+   private boolean showMapSize = false;
    private volatile int blockRefresh;
    private Point rightClickLocation = null;
 
@@ -774,6 +775,53 @@ public class ExtendedGraphViewer extends GraphViewer
 	{
 		return gridFigure != null;
 	}
+   
+   /**
+    * Show/hide map size border
+    * 
+    * @param show
+    */
+   public void showSize(boolean show)
+   {
+      showMapSize = show;
+      if (show)
+      {
+         backgroundFigure.setBorder(new AbstractBorder() {
+            @Override
+            public void paint(IFigure figure, Graphics graphics, Insets insets)
+            {
+               tempRect.setBounds(getPaintRectangle(figure, insets));
+               tempRect.shrink(1, 1);
+               graphics.setLineWidth(1);
+               graphics.setLineStyle(SWT.LINE_DASH);
+               graphics.setLineDash(new int[] { 4, 8 });
+               graphics.setForegroundColor(ThemeEngine.getForegroundColor("Map.Border"));
+               graphics.drawRectangle(tempRect);
+            }
+   
+            @Override
+            public Insets getInsets(IFigure figure)
+            {
+               return new Insets(1, 1, 1, 1);
+            }
+         });
+      }
+      else
+      {
+         backgroundFigure.setBorder(null);
+      }
+   }
+
+   /**
+    * If map size border is visible 
+    * 
+    * @return true if map size border is visible
+    */
+   public boolean isSizeVisible()
+   {
+      return showMapSize;
+   }
+   
 	
 	/**
 	 * Align objects to grid
@@ -1195,25 +1243,28 @@ public class ExtendedGraphViewer extends GraphViewer
    {
       graph.setPreferredSize(width, height);
       backgroundFigure.setSize(width, height);
-      backgroundFigure.setBorder(new AbstractBorder() {
-         @Override
-         public void paint(IFigure figure, Graphics graphics, Insets insets)
-         {
-            tempRect.setBounds(getPaintRectangle(figure, insets));
-            tempRect.shrink(1, 1);
-            graphics.setLineWidth(1);
-            graphics.setLineStyle(SWT.LINE_DASH);
-            graphics.setLineDash(new int[] { 4, 8 });
-            graphics.setForegroundColor(ThemeEngine.getForegroundColor("Map.Border"));
-            graphics.drawRectangle(tempRect);
-         }
-
-         @Override
-         public Insets getInsets(IFigure figure)
-         {
-            return new Insets(1, 1, 1, 1);
-         }
-      });
+      if (showMapSize)
+      {
+         backgroundFigure.setBorder(new AbstractBorder() {
+            @Override
+            public void paint(IFigure figure, Graphics graphics, Insets insets)
+            {
+               tempRect.setBounds(getPaintRectangle(figure, insets));
+               tempRect.shrink(1, 1);
+               graphics.setLineWidth(1);
+               graphics.setLineStyle(SWT.LINE_DASH);
+               graphics.setLineDash(new int[] { 4, 8 });
+               graphics.setForegroundColor(ThemeEngine.getForegroundColor("Map.Border"));
+               graphics.drawRectangle(tempRect);
+            }
+   
+            @Override
+            public Insets getInsets(IFigure figure)
+            {
+               return new Insets(1, 1, 1, 1);
+            }
+         });
+      }
    }
 
    /**
