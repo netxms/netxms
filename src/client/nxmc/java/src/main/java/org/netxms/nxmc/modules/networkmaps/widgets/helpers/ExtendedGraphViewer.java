@@ -48,6 +48,7 @@ import org.eclipse.gef4.zest.core.widgets.IDecorationFigure;
 import org.eclipse.gef4.zest.core.widgets.IDecorationLayer;
 import org.eclipse.gef4.zest.core.widgets.ZestStyles;
 import org.eclipse.gef4.zest.core.widgets.custom.CGraphNode;
+import org.eclipse.gef4.zest.core.widgets.zooming.ZoomListener;
 import org.eclipse.gef4.zest.core.widgets.zooming.ZoomManager;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -174,6 +175,13 @@ public class ExtendedGraphViewer extends GraphViewer
       rootLayer.add(controlLayer, null);
 
 		getZoomManager().setZoomLevels(zoomLevels);
+		getZoomManager().addZoomListener(new ZoomListener() {         
+         @Override
+         public void zoomChanged(double zoom)
+         {
+            ExtendedGraphViewer.this.refresh(true);
+         }
+      });
 
       graph.addSelectionListener(new SelectionAdapter() {
 			@Override
