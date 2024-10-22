@@ -1606,7 +1606,7 @@ uint32_t NXCORE_EXPORTABLE RegisterLicenseProblem(const TCHAR *component, const 
 void NXCORE_EXPORTABLE UnregisterLicenseProblem(uint32_t id);
 void NXCORE_EXPORTABLE UnregisterLicenseProblem(const TCHAR *component, const TCHAR *type);
 void NXCORE_EXPORTABLE FillLicenseProblemsMessage(NXCPMessage *msg);
-
+time_t NXCORE_EXPORTABLE GetLicenseProblemTimestamp(uint32_t id);
 
 /**********************
  * Distance calculation
