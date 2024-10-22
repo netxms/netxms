@@ -22,6 +22,8 @@
 #include <nms_agent.h>
 #include <bcm2835.h>
 
+#define DEBUG_TAG _T("rpi.htsensor")
+
 #define GPIO_BASE 0x20200000
 #define PIN 4
 
@@ -126,37 +128,36 @@ static bool ReadSensor()
 /**
  * Sensor polling thread
  */
-THREAD_RESULT THREAD_CALL SensorPollingThread(void *)
+static void SensorPollingThread()
 {
-	AgentWriteDebugLog(1, _T("RPI: sensor polling thread started"));
+	nxlog_debug_tag(DEBUG_TAG, 1, _T("Sensor polling thread started"));
 
 	struct sched_param sp;
 	sp.sched_priority = 99;
 	int rc = pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp);
 	if (rc == 0)
 	{
-		AgentWriteDebugLog(1, _T("RPI: sensor polling thread priority elevated"));
+		nxlog_debug_tag(DEBUG_TAG, 1, _T("Sensor polling thread priority elevated"));
 	}
 	else
 	{
-		AgentWriteDebugLog(1, _T("RPI: call to pthread_set_schedparam failed (%s)"), _tcserror(rc));
+		nxlog_debug_tag(DEBUG_TAG, 1, _T("Call to pthread_set_schedparam failed (%s)"), _tcserror(rc));
 	}
 
 	while(!m_stopCollectorThread) 
 	{
 		if (ReadSensor())
 		{
-			g_sensorUpdateTime = time(NULL);
+			g_sensorUpdateTime = time(nullptr);
 		}
 		ThreadSleepMs(1500);
 	}
 	
-	return THREAD_OK;
 }
 
 bool StartSensorCollector()
 {
-	m_collector = ThreadCreateEx(SensorPollingThread, 0, NULL);
+	m_collector = ThreadCreateEx(SensorPollingThread);
 	return true;
 }
 

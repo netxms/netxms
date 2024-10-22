@@ -1,6 +1,6 @@
 /*
  ** Raspberry Pi subagent
- ** Copyright (C) 2013-2021 Victor Kirhenshtein
+ ** Copyright (C) 2013-2024 Victor Kirhenshtein
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
 #include <nms_agent.h>
 #include <netxms-version.h>
 #include <bcm2835.h>
+
+#define DEBUG_TAG _T("rpi")
 
 /**
  * 
@@ -148,8 +150,7 @@ static void ConfigureGPIO(TCHAR *str, uint8_t mode)
             *end = 0;
          }
          uint8_t pin = (uint8_t)_tcstol(Trim(item), nullptr, 10);
-         AgentWriteDebugLog(1, _T("RPI: configuring gpio%u as %s"), pin,
-               mode == BCM2835_GPIO_FSEL_INPT ? _T("INPUT") : _T("OUTPUT"));
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Configuring gpio-%u as %s"), pin, mode == BCM2835_GPIO_FSEL_INPT ? _T("INPUT") : _T("OUTPUT"));
          bcm2835_gpio_fsel(pin, mode);
       }
       MemFree(str);
@@ -163,7 +164,7 @@ static bool SubagentInit(Config *config)
 {
    if (bcm2835_init() != 1)
    {    
-      AgentWriteLog(NXLOG_ERROR, _T("RPI: call to bcm2835_init failed"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Call to bcm2835_init failed"));
       return false;
    }
 
@@ -195,7 +196,7 @@ static void SubagentShutdown()
 /**
  * Parameters
  */
-static NETXMS_SUBAGENT_PARAM m_parameters[] =
+static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
    { _T("GPIO.PinState(*)"), H_PinState, nullptr, DCI_DT_INT, _T("Pin {instance} state") },
    { _T("Sensors.Humidity"), H_Sensors, (TCHAR *)0, DCI_DT_INT, _T("Humidity") },
@@ -206,7 +207,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 /**
  * Subagent's actions
  */
-static NETXMS_SUBAGENT_ACTION m_actions[] =
+static NETXMS_SUBAGENT_ACTION s_actions[] =
 {
    { _T("GPIO.SetPinState"), H_SetPinState, nullptr, _T("Set GPIO pin ($1) state to high/low ($2 - 1/0)") }
 };
@@ -222,12 +223,12 @@ static NETXMS_SUBAGENT_INFO m_info =
 	SubagentShutdown,
 	NULL, // command handler
 	NULL, // notification handler
-	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
-	m_parameters,
+	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
+	s_parameters,
 	0, NULL,		// lists
 	0, NULL,		// tables
-	sizeof(m_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
-	m_actions,
+	sizeof(s_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
+	s_actions,
 	0, NULL		// push parameters
 };
 
@@ -236,6 +237,6 @@ static NETXMS_SUBAGENT_INFO m_info =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(RPI)
 {
-	*ppInfo = &m_info;
-	return true;
+   *ppInfo = &m_info;
+   return true;
 }
