@@ -325,6 +325,18 @@ void NXCORE_EXPORTABLE FillLicenseProblemsMessage(NXCPMessage *msg)
 }
 
 /**
+ * Get timestamp of given license problem
+ */
+time_t NXCORE_EXPORTABLE GetLicenseProblemTimestamp(uint32_t id)
+{
+   LockGuard lockGuard(s_licenseProblemsLock);
+   for(int i = 0; i < s_licenseProblems.size(); i++)
+      if (s_licenseProblems.get(i)->id == id)
+         return s_licenseProblems.get(i)->timestamp;
+   return 0;
+}
+
+/**
  * Disconnect from database (exportable function for startup module)
  */
 void NXCORE_EXPORTABLE ShutdownDatabase()
