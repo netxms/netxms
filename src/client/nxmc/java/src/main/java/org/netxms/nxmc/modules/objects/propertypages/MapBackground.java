@@ -63,6 +63,7 @@ public class MapBackground extends ObjectPropertyPage
    private NetworkMap map;
    private LabeledSpinner width;
    private LabeledSpinner height;
+   private Button fitToScreen;
 	private Button radioTypeNone;
 	private Button radioTypeImage;
 	private Button radioTypeGeoMap;
@@ -75,6 +76,7 @@ public class MapBackground extends ObjectPropertyPage
 	private Label zoomLabel;
 	private ColorSelector backgroundColor;
 	private boolean disableGeolocationBackground;
+
 	
 	/**
 	 * Constructor 
@@ -133,6 +135,24 @@ public class MapBackground extends ObjectPropertyPage
       layout = new GridLayout();
       layout.numColumns = 2;
       sizeGroup.setLayout(layout);
+
+      fitToScreen = new Button(sizeGroup, SWT.CHECK);
+      fitToScreen.setText("Fit to scrren");
+      fitToScreen.setSelection(map.isFitToScreen());
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.horizontalSpan = 2;
+      fitToScreen.setLayoutData(gd);
+      fitToScreen.addSelectionListener(new SelectionAdapter() {
+         
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            width.setEnabled(!fitToScreen.getSelection());
+            height.setEnabled(!fitToScreen.getSelection());
+         }
+      });
       
       width = new LabeledSpinner(sizeGroup, SWT.NONE);
       width.setRange(0, Integer.MAX_VALUE);
@@ -142,6 +162,7 @@ public class MapBackground extends ObjectPropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       width.setLayoutData(gd);
+      width.setEnabled(!fitToScreen.getSelection());
       
       height = new LabeledSpinner(sizeGroup, SWT.NONE);
       height.setRange(0, Integer.MAX_VALUE);
@@ -151,6 +172,7 @@ public class MapBackground extends ObjectPropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       height.setLayoutData(gd);
+      height.setEnabled(!fitToScreen.getSelection());
       
 		Group typeGroup = new Group(dialogArea, SWT.NONE);
       typeGroup.setText(i18n.tr("Background type"));
@@ -344,7 +366,16 @@ public class MapBackground extends ObjectPropertyPage
 	{
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 
-		md.setMapSize(width.getSelection(), height.getSelection());
+      if (fitToScreen.getSelection())
+      {
+         md.setObjectFlags(NetworkMap.MF_FIT_TO_SCREEN, NetworkMap.MF_FIT_TO_SCREEN);  
+      }
+      else
+      {
+         md.setObjectFlags(0, NetworkMap.MF_FIT_TO_SCREEN);           
+         md.setMapSize(width.getSelection(), height.getSelection());
+      }
+      
 		if (radioTypeNone.getSelection())
 		{
 			md.setMapBackground(NXCommon.EMPTY_GUID, new GeoLocation(false), 0, ColorConverter.rgbToInt(backgroundColor.getColorValue()));

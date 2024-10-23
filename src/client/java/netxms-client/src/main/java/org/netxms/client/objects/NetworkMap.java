@@ -58,6 +58,7 @@ public class NetworkMap extends GenericObject implements PollingTarget
    public static final int MF_TRANSLUCENT_LABEL_BKGND = 0x000200;
    public static final int MF_DONT_UPDATE_LINK_TEXT   = 0x000400;
    public static final int MF_FIT_BKGND_IMAGE         = 0x000800;
+   public static final int MF_FIT_TO_SCREEN           = 0x001000;
 
    public static final int MF_BKGND_IMAGE_FLAGS       = 0x000900;
 
@@ -411,6 +412,24 @@ public class NetworkMap extends GenericObject implements PollingTarget
    }
 
    /**
+    * @return true if background image should fit map size
+    */
+   public boolean isFitBackgroundImage()
+   {
+      return (flags & NetworkMap.MF_FIT_BKGND_IMAGE) != 0;
+   }
+
+   /**
+    * Returns the MF_FIT_TO_SCREEN flag status
+    * 
+    * @return true if MF_FIT_TO_SCREEN flag is set
+    */
+   public boolean isFitToScreen()
+   {
+      return (flags & NetworkMap.MF_FIT_TO_SCREEN) != 0;
+   }
+
+   /**
     * @return the mapWidth
     */
    public int getWidth()
@@ -424,14 +443,6 @@ public class NetworkMap extends GenericObject implements PollingTarget
    public int getHeight()
    {
       return mapHeight;
-   }
-
-   /**
-    * @return true if background image should fit map size
-    */
-   public boolean isFitBackgroundImage()
-   {
-      return (flags & NetworkMap.MF_FIT_BKGND_IMAGE) != 0;
    }
 
    /**

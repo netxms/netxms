@@ -162,7 +162,7 @@ public class ExtendedGraphViewer extends GraphViewer
       backgroundLayer = new FreeformLayer();
       rootLayer.add(backgroundLayer, null, 0);           
       backgroundFigure = new BackgroundFigure();
-      backgroundFigure.setSize(10, 10);
+      backgroundFigure.setSize(-1, -1);
       backgroundLayer.add(backgroundFigure);
 
 		decorationLayer = new FreeformLayer();
@@ -543,7 +543,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	 */
 	private void reloadMapBackground()
 	{
-		final Dimension controlSize = backgroundFigure.getSize();
+      Dimension controlSize = backgroundFigure.getSize();
 		final Point mapSize = new Point(controlSize.width, controlSize.height); 
       Job job = new Job(i18n.tr("Download map tiles"), view) {
 			@Override
@@ -740,6 +740,16 @@ public class ExtendedGraphViewer extends GraphViewer
 	}
 	
 	/**
+	 * If map is fit to screen
+	 * 
+	 * @return true if map is fit to screen map
+	 */
+	boolean isFitToScreen()
+	{
+	   return backgroundFigure.getSize().equals(new Dimension(-1, -1));
+	}
+	
+	/**
 	 * Show/hide grid
 	 * 
 	 * @param show
@@ -752,7 +762,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			{
 				gridFigure = new GridFigure();
 				backgroundLayer.add(gridFigure, null, 1);
-				if (backgroundFigure.getSize().equals(new Dimension(10, 10)))//check if it is adhock map
+				if (isFitToScreen())
 				   gridFigure.setSize(backgroundLayer.getSize());
 				else
                gridFigure.setSize(backgroundFigure.getSize());	

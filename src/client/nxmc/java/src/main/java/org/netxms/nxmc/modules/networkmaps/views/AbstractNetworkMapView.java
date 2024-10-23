@@ -859,7 +859,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          public void run()
          {            
             Rectangle visibleArea = viewer.getGraphControl().getClientArea();
-            updateMapSize(visibleArea.width, visibleArea.height);
+            updateMapSize((int)(visibleArea.width * 1 / viewer.getZoom()), (int)(visibleArea.height * 1 / viewer.getZoom()));
          }
       };
 

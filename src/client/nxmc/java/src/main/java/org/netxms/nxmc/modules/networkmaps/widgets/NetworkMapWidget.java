@@ -251,9 +251,16 @@ public class NetworkMapWidget extends Composite
    {
       syncObjects(mapObject);
       
-      int width = mapObject.getWidth() == 0 ? session.getNetworkMapDefaultWidth() : mapObject.getWidth();
-      int height = mapObject.getHeight() == 0 ? session.getNetworkMapDefaultHeight() : mapObject.getHeight();
-      viewer.setMapSize(width, height);
+      if(!mapObject.isFitToScreen())
+      {
+         int width = mapObject.getWidth() == 0 ? session.getNetworkMapDefaultWidth() : mapObject.getWidth();
+         int height = mapObject.getHeight() == 0 ? session.getNetworkMapDefaultHeight() : mapObject.getHeight();
+         viewer.setMapSize(width, height);
+      }
+      else
+      {
+         viewer.setMapSize(-1, -1);         
+      }
       
       currentMapId = mapObject.getObjectId();
 		setMapLayout(mapObject.getLayout());
