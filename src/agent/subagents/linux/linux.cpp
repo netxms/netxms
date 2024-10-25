@@ -439,7 +439,8 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
    { _T("System.ActiveUserSessions"), H_UserSessionList, nullptr },
    { _T("System.IO.Devices"), H_IoDevices, nullptr },
    { _T("System.IO.LogicalDevices"), H_IoLogicalDevices, nullptr },
-   { _T("System.ProcessList"), H_ProcessList, nullptr }
+   { _T("System.Processes"), H_ProcessList, _T("2") },
+   { _T("System.ProcessList"), H_ProcessList, _T("1") }
 };
 
 /**

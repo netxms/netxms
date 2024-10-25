@@ -24,7 +24,7 @@
 /**
  * Maximum possible length of process name
  */
-#define MAX_PROCESS_NAME_LEN 32
+#define MAX_PROCESS_NAME_LEN 64
 #define MAX_USER_NAME_LEN    32
 
 /**
@@ -576,27 +576,42 @@ LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
 }
 
 /**
+ * Format process entry for list version 1
+ */
+static TCHAR *FormatProcessEntryV1(Process *p, TCHAR *buffer)
+{
+   _sntprintf(buffer, 2048, _T("%u %hs"), p->pid, p->name);
+   return buffer;
+}
+
+/**
+ * Format process entry for list version 2
+ */
+static TCHAR *FormatProcessEntryV2(Process *p, TCHAR *buffer)
+{
+   _sntprintf(buffer, 2048, _T("%u %hs"), p->pid, (p->cmdLine != nullptr) && (*p->cmdLine != 0) ? p->cmdLine : p->name);
+   buffer[2047] = 0;
+   return buffer;
+}
+
+/**
  * Handler for System.ProcessList list
  */
-LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
+LONG H_ProcessList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-   int nRet = SYSINFO_RC_ERROR;
-
    ObjectArray<Process> procList(128, 128, Ownership::True);
-   int nCount = ProcRead(&procList, nullptr, nullptr, nullptr, false, false);
-   if (nCount >= 0)
-   {
-      nRet = SYSINFO_RC_SUCCESS;
+   int nCount = ProcRead(&procList, nullptr, nullptr, nullptr, false, *arg == '2');
+   if (nCount < 0)
+      return SYSINFO_RC_ERROR;
 
-      for (int i = 0; i < procList.size(); i++)
-      {
-         Process *p = procList.get(i);
-         TCHAR szBuff[128];
-         _sntprintf(szBuff, sizeof(szBuff), _T("%d %hs"), p->pid, p->name);
-         value->add(szBuff);
-      }
+   auto format = (*arg == '2') ? FormatProcessEntryV2 : FormatProcessEntryV1;
+   for (int i = 0; i < procList.size(); i++)
+   {
+      Process *p = procList.get(i);
+      TCHAR buffer[2048];
+      value->add(format(p, buffer));
    }
-   return nRet;
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
