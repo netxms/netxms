@@ -334,7 +334,8 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
    { _T("Net.InterfaceList"), H_NetInterfaceList, nullptr },
    { _T("Net.InterfaceNames"), H_NetInterfaceNames, nullptr },
    { _T("Net.IP.RoutingTable"), H_NetRoutingTable, nullptr },
-   { _T("System.ProcessList"), H_ProcessList, nullptr }
+   { _T("System.Processes"), H_ProcessList, _T("2") },
+   { _T("System.ProcessList"), H_ProcessList, _T("1") }
 };
 
 /**

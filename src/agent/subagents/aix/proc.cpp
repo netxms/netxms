@@ -164,35 +164,39 @@ retry_getprocs:
 }
 
 /**
- * Handler for System.ProcessList enum
+ * Handler for lists System.Processes and System.ProcessList
  */
-LONG H_ProcessList(const TCHAR *metric, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
+LONG H_ProcessList(const TCHAR *metric, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-   LONG nRet;
-   char szBuffer[256];
+   int procCount;
+   PROCENTRY *plist = GetProcessList(&procCount);
+   if (plist == nullptr)
+      return SYSINFO_RC_ERROR;
 
-   int nProcCount;
-   PROCENTRY *pList = GetProcessList(&nProcCount);
-   if (pList != nullptr)
+   bool useCmdLine = (*arg == '2');
+   for (int i = 0; i < procCount; i++)
    {
-      for (int i = 0; i < nProcCount; i++)
+      if (useCmdLine)
       {
-         snprintf(szBuffer, 256, "%d %s", pList[i].pi_pid, pList[i].pi_comm);
-#ifdef UNICODE
-         pValue->addPreallocated(WideStringFromMBString(szBuffer));
-#else
-         pValue->add(szBuffer);
-#endif
+         char cmdLine[MAX_CMD_LINE_LEN + 16];
+         IntegerToString(plist[i].pi_pid, cmdLine);
+         size_t pos = strlen(cmdLine);
+         cmdLine[pos++] = ' ';
+         if (!ReadProcCmdLine(plist[i].pi_pid, &cmdLine[pos]) || (cmdLine[pos] == 0))
+         {
+            strcpy(&cmdLine[pos], plist[i].pi_comm);
+         }
+         value->addMBString(cmdLine);
       }
-      MemFree(pList);
-      nRet = SYSINFO_RC_SUCCESS;
+      else
+      {
+         char buffer[256];
+         snprintf(buffer, 256, "%d %s", plist[i].pi_pid, plist[i].pi_comm);
+         value->addMBString(buffer);
+      }
    }
-   else
-   {
-      nRet = SYSINFO_RC_ERROR;
-   }
-
-   return nRet;
+   MemFree(plist);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
