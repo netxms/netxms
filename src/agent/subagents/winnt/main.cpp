@@ -185,7 +185,7 @@ static void SubAgentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
-   { _T("Agent.Desktop"), H_AgentDesktop, NULL, DCI_DT_STRING, _T("Desktop associated with agent process") },
+   { _T("Agent.Desktop"), H_AgentDesktop, nullptr, DCI_DT_STRING, _T("Desktop associated with agent process") },
 
    { _T("Disk.Free(*)"), H_FileSystemInfo, (TCHAR *)FSINFO_FREE_BYTES, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
    { _T("Disk.FreePerc(*)"), H_FileSystemInfo, (TCHAR *)FSINFO_FREE_SPACE_PCT, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
@@ -250,8 +250,8 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
    { _T("Hardware.System.Version"), SMBIOS_ParameterHandler, _T("HV"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_VERSION },
    { _T("Hardware.WakeUpEvent"), SMBIOS_ParameterHandler, _T("W"), DCI_DT_STRING, DCIDESC_HARDWARE_WAKEUPEVENT },
 
-   { _T("Hypervisor.Type"), H_HypervisorType, NULL, DCI_DT_STRING, DCIDESC_HYPERVISOR_TYPE },
-   { _T("Hypervisor.Version"), H_HypervisorVersion, NULL, DCI_DT_STRING, DCIDESC_HYPERVISOR_VERSION },
+   { _T("Hypervisor.Type"), H_HypervisorType, nullptr, DCI_DT_STRING, DCIDESC_HYPERVISOR_TYPE },
+   { _T("Hypervisor.Version"), H_HypervisorVersion, nullptr, DCI_DT_STRING, DCIDESC_HYPERVISOR_VERSION },
 
    { _T("Net.Interface.64BitCounters"), H_NetInterface64bitSupport, NULL, DCI_DT_INT, DCIDESC_NET_INTERFACE_64BITCOUNTERS },
    { _T("Net.Interface.AdminStatus(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_ADMIN_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_ADMINSTATUS },
@@ -308,7 +308,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
 	{ _T("System.CPU.Interrupts(*)"), H_CpuInterrupts, _T("C"), DCI_DT_UINT, DCIDESC_SYSTEM_CPU_INTERRUPTS_EX },
 	{ _T("System.CPU.ContextSwitches"), H_CpuContextSwitches, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_CONTEXT_SWITCHES },
    
-   { _T("System.CPU.Count"), H_CpuCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
+   { _T("System.CPU.Count"), H_CpuCount, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
 
    { _T("System.CPU.CurrentUsage"), H_CpuUsage, _T("T0U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGECURR },
    { _T("System.CPU.CurrentUsage.Idle"), H_CpuUsage, _T("T0I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGECURR_IDLE },
@@ -402,14 +402,14 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
    { _T("System.OS.ServicePack"), H_SystemVersionInfo, _T("S"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_SERVICE_PACK },
    { _T("System.OS.Version"), H_SystemVersionInfo, _T("V"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_VERSION },
 
-   { _T("System.ProcessCount"), H_ProcCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_PROCESSCOUNT },
-	{ _T("System.ServiceState(*)"), H_ServiceState, NULL, DCI_DT_INT, DCIDESC_SYSTEM_SERVICESTATE },
-	{ _T("System.ThreadCount"), H_ThreadCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_THREADCOUNT },
-   { _T("System.Uname"), H_SystemUname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
+   { _T("System.ProcessCount"), H_ProcCount, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_PROCESSCOUNT },
+	{ _T("System.ServiceState(*)"), H_ServiceState, nullptr, DCI_DT_INT, DCIDESC_SYSTEM_SERVICESTATE },
+	{ _T("System.ThreadCount"), H_ThreadCount, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_THREADCOUNT },
+   { _T("System.Uname"), H_SystemUname, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
    { _T("System.Update.LastDetectTime"), H_SysUpdateTime, _T("Detect"), DCI_DT_INT64, _T("System update: last detect time") },
    { _T("System.Update.LastDownloadTime"), H_SysUpdateTime, _T("Download"), DCI_DT_INT64, _T("System update: last download time") },
    { _T("System.Update.LastInstallTime"), H_SysUpdateTime, _T("Install"), DCI_DT_INT64, _T("System update: last install time") },
-   { _T("System.Uptime"), H_Uptime, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME },
+   { _T("System.Uptime"), H_Uptime, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME },
 
    { _T("WindowsFirewall.CurrentProfile"), H_WindowsFirewallCurrentProfile, nullptr, DCI_DT_STRING, _T("Windows firewall: current profile") },
    { _T("WindowsFirewall.State"), H_WindowsFirewallState, nullptr, DCI_DT_INT, _T("Windows firewall: state of current profile") },
@@ -421,21 +421,22 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-   { _T("FileSystem.MountPoints"), H_MountPoints, NULL },
+   { _T("FileSystem.MountPoints"), H_MountPoints, nullptr },
    { _T("Hardware.Batteries"), SMBIOS_ListHandler, _T("B") },
    { _T("Hardware.MemoryDevices"), SMBIOS_ListHandler, _T("M") },
    { _T("Hardware.Processors"), SMBIOS_ListHandler, _T("P") },
-   { _T("Hardware.StorageDevices"), H_StorageDeviceList, NULL },
-   { _T("Net.ArpCache"), H_ArpCache, NULL },
-   { _T("Net.InterfaceList"), H_InterfaceList, NULL },
-   { _T("Net.InterfaceNames"), H_InterfaceNames, NULL },
-   { _T("Net.IP.RoutingTable"), H_IPRoutingTable, NULL },
-	{ _T("System.ActiveUserSessions"), H_ActiveUserSessionsList, NULL },
-	{ _T("System.Desktops(*)"), H_Desktops, NULL },
-   { _T("System.IO.Devices"), H_IoDeviceList, NULL },
-   { _T("System.ProcessList"), H_ProcessList, NULL },
-	{ _T("System.Services"), H_ServiceList, NULL },
-	{ _T("System.WindowStations"), H_WindowStations, NULL }
+   { _T("Hardware.StorageDevices"), H_StorageDeviceList, nullptr },
+   { _T("Net.ArpCache"), H_ArpCache, nullptr },
+   { _T("Net.InterfaceList"), H_InterfaceList, nullptr },
+   { _T("Net.InterfaceNames"), H_InterfaceNames, nullptr },
+   { _T("Net.IP.RoutingTable"), H_IPRoutingTable, nullptr },
+	{ _T("System.ActiveUserSessions"), H_ActiveUserSessionsList, nullptr },
+	{ _T("System.Desktops(*)"), H_Desktops, nullptr },
+   { _T("System.IO.Devices"), H_IoDeviceList, nullptr },
+   { _T("System.Processes"), H_ProcessList, _T("2") },
+   { _T("System.ProcessList"), H_ProcessList, _T("1") },
+   { _T("System.Services"), H_ServiceList, nullptr },
+	{ _T("System.WindowStations"), H_WindowStations, nullptr }
 };
 
 /**
@@ -443,15 +444,15 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
  */
 static NETXMS_SUBAGENT_TABLE s_tables[] =
 {
-   { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("VOLUME"), DCTDESC_FILESYSTEM_VOLUMES },
+   { _T("FileSystem.Volumes"), H_FileSystems, nullptr, _T("VOLUME"), DCTDESC_FILESYSTEM_VOLUMES },
    { _T("Hardware.Batteries"), SMBIOS_TableHandler, _T("B"), _T("HANDLE"), DCTDESC_HARDWARE_BATTERIES },
    { _T("Hardware.MemoryDevices"), SMBIOS_TableHandler, _T("M"), _T("HANDLE"), DCTDESC_HARDWARE_MEMORY_DEVICES },
    { _T("Hardware.Processors"), SMBIOS_TableHandler, _T("P"), _T("HANDLE"), DCTDESC_HARDWARE_PROCESSORS },
-   { _T("Hardware.StorageDevices"), H_StorageDeviceTable, NULL, _T("NUMBER"), DCTDESC_HARDWARE_STORAGE_DEVICES },
-   { _T("System.ActiveUserSessions"), H_ActiveUserSessionsTable, NULL, _T("ID"), DCTDESC_SYSTEM_ACTIVE_USER_SESSIONS },
-   { _T("System.InstalledProducts"), H_InstalledProducts, NULL, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS },
-	{ _T("System.Processes"), H_ProcessTable, NULL, _T("PID"), DCTDESC_SYSTEM_PROCESSES },
-	{ _T("System.Services"), H_ServiceTable, NULL, _T("Name"), _T("Services") }
+   { _T("Hardware.StorageDevices"), H_StorageDeviceTable, nullptr, _T("NUMBER"), DCTDESC_HARDWARE_STORAGE_DEVICES },
+   { _T("System.ActiveUserSessions"), H_ActiveUserSessionsTable, nullptr, _T("ID"), DCTDESC_SYSTEM_ACTIVE_USER_SESSIONS },
+   { _T("System.InstalledProducts"), H_InstalledProducts, nullptr, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS },
+	{ _T("System.Processes"), H_ProcessTable, nullptr, _T("PID"), DCTDESC_SYSTEM_PROCESSES },
+	{ _T("System.Services"), H_ServiceTable, nullptr, _T("Name"), _T("Services") }
 };
 
 /**

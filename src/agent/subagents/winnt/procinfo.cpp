@@ -1,6 +1,6 @@
 /* 
 ** Windows NT+ NetXMS subagent
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -533,12 +533,31 @@ LONG H_ProcessList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstra
       return SYSINFO_RC_ERROR;
    }
 
-   WCHAR buffer[MAX_PATH + 64];
+   WCHAR buffer[4096];
    SYSTEM_PROCESS_INFORMATION *process = static_cast<SYSTEM_PROCESS_INFORMATION*>(processInfoBuffer);
    do
    {
-      snwprintf(buffer, MAX_PATH + 64, L"%u %s", static_cast<uint32_t>(reinterpret_cast<ULONG_PTR>(process->UniqueProcessId)), 
-            (process->ImageName.Buffer == nullptr) ? L"System Idle Process" : process->ImageName.Buffer);
+      uint32_t pid = static_cast<uint32_t>(reinterpret_cast<ULONG_PTR>(process->UniqueProcessId));
+      if (*arg == '2')
+      {
+         TCHAR cmdLine[4096];
+         if (GetProcessCommandLine(pid, cmdLine, 4096))
+         {
+            snwprintf(buffer, 4096, L"%u %s", pid, (cmdLine[0] != 0) ? cmdLine : process->ImageName.Buffer);
+         }
+         else if (process->ImageName.Buffer != nullptr)
+         {
+            snwprintf(buffer, 4096, L"%u %s", pid, process->ImageName.Buffer);
+         }
+         else
+         {
+            snwprintf(buffer, 4096, L"%u System Idle Process", pid);
+         }
+      }
+      else
+      {
+         snwprintf(buffer, 4096, L"%u %s", pid, (process->ImageName.Buffer == nullptr) ? L"System Idle Process" : process->ImageName.Buffer);
+      }
       value->add(buffer);
       process = reinterpret_cast<SYSTEM_PROCESS_INFORMATION*>(reinterpret_cast<char*>(process) + process->NextEntryOffset);
    } while (process->NextEntryOffset != 0);
