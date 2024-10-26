@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for FreeBSD
-** Copyright (C) 2004-2009 Alex Kirhenshtein, Victor Kirhenshtein
+** Copyright (C) 2004-2024 Alex Kirhenshtein, Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -298,29 +298,39 @@ LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
 }
 
 /**
- * Handler for System.ProcessList enum
+ * Handler for System.ProcessList and System.Processes
  */
 LONG H_ProcessList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    int ret = SYSINFO_RC_ERROR;
-   int procCount = -1;
-
    kvm_t *kd = kvm_openfiles(nullptr, "/dev/null", nullptr, O_RDONLY, nullptr);
    if (kd != nullptr)
    {
+      int procCount = -1;
       kinfo_proc *kp = kvm_getprocs(kd, KERN_PROC_PROC, 0, &procCount);
       if (kp != nullptr)
       {
+         bool useCmdLine = (*arg == '2');
+         char buffer[MAX_CMD_LINE_LEN + 32];
          for (int i = 0; i < procCount; i++)
          {
-            char szBuff[128];
-
-            snprintf(szBuff, sizeof(szBuff), "%d %s", kp[i].ki_pid, kp[i].ki_comm);
-#ifdef UNICODE
-            value->addPreallocated(WideStringFromMBString(szBuff));
-#else
-            value->add(szBuff);
-#endif
+            if (useCmdLine)
+            {
+               char cmdLine[MAX_CMD_LINE_LEN];
+               if (ReadProcCmdLine(kp[i].ki_pid, cmdLine) && (cmdLine[0] != 0))
+               {
+                  snprintf(buffer, sizeof(buffer), "%d %s", kp[i].ki_pid, cmdLine);
+               }
+               else
+               {
+                  snprintf(buffer, sizeof(buffer), "%d %s", kp[i].ki_pid, kp[i].ki_comm);
+               }
+            }
+            else
+            {
+               snprintf(buffer, sizeof(buffer), "%d %s", kp[i].ki_pid, kp[i].ki_comm);
+            }
+            value->addMBString(buffer);
          }
       }
       kvm_close(kd);

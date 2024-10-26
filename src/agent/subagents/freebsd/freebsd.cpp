@@ -313,7 +313,8 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
    { _T("Net.InterfaceList"),            H_NetIfList,       NULL },
    { _T("Net.InterfaceNames"),           H_NetIfNames,      NULL },
    { _T("Net.IP.RoutingTable"),          H_NetRoutingTable, NULL },
-   { _T("System.ProcessList"),           H_ProcessList,     NULL },
+   { _T("System.Processes"),             H_ProcessList,     _T("2") },
+   { _T("System.ProcessList"),           H_ProcessList,     _T("1") },
 };
 
 /**
@@ -352,8 +353,8 @@ static NETXMS_SUBAGENT_INFO m_info =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(FREEBSD)
 {
-	*ppInfo = &m_info;
-	return true;
+   *ppInfo = &m_info;
+   return true;
 }
 
 /**
