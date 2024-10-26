@@ -1006,8 +1006,8 @@ public class AlarmList extends CompositeWithMessageArea
 
       synchronized(newAlarmList)
       {
-         getDisplay().syncExec(() -> {
-            if ((view != null) && view.isVisible() && isLocalNotificationsEnabled)
+         display.syncExec(() -> {
+            if (!isDisposed() && (view != null) && view.isVisible() && isLocalNotificationsEnabled)
             {
                for(Alarm a : newAlarmList)
                {
