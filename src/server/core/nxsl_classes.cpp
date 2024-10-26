@@ -6936,7 +6936,6 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, removeDataSource)
    return 0;
 }
 
-
 /**
  * NXSL "NetworkMapLink" class
  */

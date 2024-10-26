@@ -5974,10 +5974,10 @@ bool Node::confPollSnmp()
       unlockProperties();
 
       uint32_t type;
-      BYTE data[256];
+      BYTE data[120];
       uint32_t dataLen;
       if ((SnmpGetEx(pTransport, LLDP_OID(_T("1.3.1.0"), lldpV2MIB), nullptr, 0, &type, sizeof(uint32_t), 0, nullptr) == SNMP_ERR_SUCCESS) &&
-          (SnmpGetEx(pTransport, LLDP_OID(_T("1.3.2.0"), lldpV2MIB), nullptr, 0, data, 256, SG_RAW_RESULT, &dataLen) == SNMP_ERR_SUCCESS))
+          (SnmpGetEx(pTransport, LLDP_OID(_T("1.3.2.0"), lldpV2MIB), nullptr, 0, data, 120, SG_RAW_RESULT, &dataLen) == SNMP_ERR_SUCCESS))
       {
          String lldpId = BuildLldpId(type, data, dataLen);
          lockProperties();

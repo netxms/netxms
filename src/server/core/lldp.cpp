@@ -927,7 +927,18 @@ String BuildLldpId(uint32_t type, const BYTE *data, size_t length)
       }
       else
       {
-         sb.appendAsHexString(data, length);
+         // Some devices return MAC address followed by lot of zero bytes
+         bool allZeroes = true;
+         for(size_t i = 6; i < length; i++)
+            if (data[i] != 0)
+            {
+               allZeroes = false;
+               break;
+            }
+         if (allZeroes)
+            sb.appendAsHexString(data, MIN(length, 6));
+         else
+            sb.appendAsHexString(data, length);
       }
    }
    else
