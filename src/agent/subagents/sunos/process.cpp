@@ -229,29 +229,41 @@ static int ProcRead(t_ProcEnt **pEnt, bool extended, char *procNameFilter, char 
 }
 
 /**
- * Handler for System.ProcessList parameter
+ * Handler for System.ProcessList and System.Processes lists
  */
-LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
+LONG H_ProcessList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-   LONG rc;
    t_ProcEnt *pList;
    int nProc = ProcRead(&pList, false, nullptr, nullptr, nullptr, 0);
-   if (nProc != -1)
+   if (nProc == -1)
+      return SYSINFO_RC_ERROR;
+
+   bool useCmdLine = (*arg == '2');
+   char buffer[4096];
+   for (int i = 0; i < nProc; i++)
    {
-      TCHAR buffer[256];
-      for (int i = 0; i < nProc; i++)
+      if (useCmdLine)
       {
-         _sntprintf(buffer, 256, _T("%d %hs"), pList[i].pid, pList[i].name);
-         pValue->add(buffer);
+         char pid[16];
+         IntegerToString(pList[i].pid, pid);
+         psinfo_t pi;
+         if (ReadProcInfo<psinfo_t>("psinfo", pid, &pi) && (pi.pr_psargs[0] != 0))
+         {
+            snprintf(buffer, sizeof(buffer), "%d %s", pList[i].pid, pi.pr_psargs);
+         }
+         else
+         {
+            snprintf(buffer, sizeof(buffer), "%d %s", pList[i].pid, pList[i].name);
+         }
       }
-      rc = SYSINFO_RC_SUCCESS;
-   }
-   else
-   {
-      rc = SYSINFO_RC_ERROR;
+      else
+      {
+         snprintf(buffer, sizeof(buffer), "%d %s", pList[i].pid, pList[i].name);
+      }
+      value->addMBString(buffer);
    }
    MemFree(pList);
-   return rc;
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -547,9 +559,9 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
          value->set(0, procs[i].pid);
 
          char pidAsChar[10];
-         sprintf(pidAsChar, "%i", static_cast<int>(procs[i].pid));
-         char user[MAX_USER_NAME_LEN];
+         IntegerToString(procs[i].pid, pidAsChar);
 
+         char user[MAX_USER_NAME_LEN];
          psinfo_t pi;
          if (ReadProcInfo<psinfo_t>("psinfo", pidAsChar, &pi))
          {

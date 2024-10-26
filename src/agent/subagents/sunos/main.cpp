@@ -411,7 +411,8 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
    { _T("Hardware.Processors"), SMBIOS_ListHandler, _T("P") },
    { _T("Net.InterfaceList"), H_NetIfList, nullptr },
    { _T("Net.InterfaceNames"), H_NetIfNames, nullptr },
-   { _T("System.ProcessList"), H_ProcessList, nullptr }
+   { _T("System.Processes"), H_ProcessList, _T("2") },
+   { _T("System.ProcessList"), H_ProcessList, _T("1") }
 };
 
 /**
@@ -423,8 +424,8 @@ static NETXMS_SUBAGENT_TABLE m_tables[] =
    { _T("Hardware.Batteries"), SMBIOS_TableHandler, _T("B"), _T("HANDLE"), DCTDESC_HARDWARE_BATTERIES },
    { _T("Hardware.MemoryDevices"), SMBIOS_TableHandler, _T("M"), _T("HANDLE"), DCTDESC_HARDWARE_MEMORY_DEVICES },
    { _T("Hardware.Processors"), SMBIOS_TableHandler, _T("P"), _T("HANDLE"), DCTDESC_HARDWARE_PROCESSORS },
-   { _T("System.InstalledProducts"), H_InstalledProducts, NULL, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS },
-   { _T("System.Processes"), H_ProcessTable, NULL, _T("PID"), DCTDESC_SYSTEM_PROCESSES }
+   { _T("System.InstalledProducts"), H_InstalledProducts, nullptr, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS },
+   { _T("System.Processes"), H_ProcessTable, nullptr, _T("PID"), DCTDESC_SYSTEM_PROCESSES }
 };
 
 /**
