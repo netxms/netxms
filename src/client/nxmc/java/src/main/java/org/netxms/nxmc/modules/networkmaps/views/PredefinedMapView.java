@@ -569,7 +569,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 			}
 		};
 
-      actionGroupBoxProperties = new Action(i18n.tr("&Properties")) {
+      actionGroupBoxProperties = new Action(i18n.tr("&Properties"), SharedIcons.PROPERTIES) {
          @Override
          public void run()
          {
@@ -585,7 +585,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 			}
 		};
 
-      actionImageProperties = new Action(i18n.tr("&Properties")) {
+      actionImageProperties = new Action(i18n.tr("&Properties"), SharedIcons.PROPERTIES) {
          @Override
          public void run()
          {
@@ -611,7 +611,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 		};
       addKeyBinding("M1+R", actionRemove);
 
-      actionDCIContainerProperties = new Action(i18n.tr("&Properties")) {
+      actionDCIContainerProperties = new Action(i18n.tr("&Properties"), SharedIcons.PROPERTIES) {
          @Override
          public void run()
          {
@@ -619,7 +619,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          }
       };
       
-      actionDCIImageProperties = new Action(i18n.tr("&Properties")) {
+      actionDCIImageProperties = new Action(i18n.tr("&Properties"), SharedIcons.PROPERTIES) {
          @Override
          public void run()
          {
@@ -627,7 +627,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          }
       };
 
-      actionMapProperties = new Action(i18n.tr("&Properties")) {
+      actionMapProperties = new Action(i18n.tr("&Properties"), SharedIcons.PROPERTIES) {
 			@Override
 			public void run()
 			{
@@ -635,7 +635,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 			}
 		};
 
-      actionLinkProperties = new Action(i18n.tr("&Properties")) {
+      actionLinkProperties = new Action(i18n.tr("&Properties"), SharedIcons.PROPERTIES) {
 			@Override
 			public void run()
 			{
@@ -651,7 +651,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          }
       };
       
-      actionTextBoxProperties = new Action(i18n.tr("&Properties")) {
+      actionTextBoxProperties = new Action(i18n.tr("&Properties"), SharedIcons.PROPERTIES) {
          @Override
          public void run()
          {
@@ -701,7 +701,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	{
 	   if (!readOnly)
 	   {
-   		int size = ((IStructuredSelection)viewer.getSelection()).size();
+         int size = viewer.getStructuredSelection().size();
    		if (size == 2)
    			manager.add(actionLinkObjects);
    		manager.add(actionRemove);
@@ -721,11 +721,11 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	      super.fillLinkContextMenu(manager);
 	      return;
 	   }
-	   
-		int size = ((IStructuredSelection)viewer.getSelection()).size();
-		manager.add(actionRemove);
-		manager.add(new Separator());
+
+      int size = viewer.getStructuredSelection().size();
 		super.fillLinkContextMenu(manager);
+      manager.add(new Separator());
+      manager.add(actionRemove);
 		if (size == 1)
 		{
 			manager.add(new Separator());
@@ -741,7 +741,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	   if (!readOnly)
 	   {
    		manager.add(actionRemove);
-   		Object o = ((IStructuredSelection)viewer.getSelection()).getFirstElement();
+         Object o = viewer.getStructuredSelection().getFirstElement();
    		if (o instanceof NetworkMapDCIContainer)
    		{
    		   manager.add(actionDCIContainerProperties);

@@ -1218,7 +1218,7 @@ public class ExtendedGraphViewer extends GraphViewer
          getShell().setSize(shellSize.width, shellSize.height);
       }
    }
-   
+
    /**
     * On link change
     */

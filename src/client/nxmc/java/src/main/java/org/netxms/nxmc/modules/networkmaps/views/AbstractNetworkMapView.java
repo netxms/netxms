@@ -180,6 +180,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    protected Action actionHSpanFull;
    protected Action actionVSpanIncrease;
    protected Action actionVSpanDecrease;
+   protected Action actionShowLineChart;
 
 	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
 	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
@@ -316,7 +317,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 				}
 				else if (selectionType == SELECTION_LINKS && objectMoveLocked)
 				{
-				   openLinkDci();
+				   showLinkLineChart();
 				}
 			}
 		});
@@ -880,6 +881,15 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
             updateMapSize(size.width, (int)Math.round(size.height * 0.75));
          }
       };
+
+      actionShowLineChart = new Action(i18n.tr("&Line chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png")) {
+         @Override
+         public void run()
+         {
+            showLinkLineChart();
+         }
+      };
+      addKeyBinding("M1+M3+L", actionShowLineChart);
 	}
 
 	/**
@@ -1080,6 +1090,8 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	 */
 	protected void fillLinkContextMenu(IMenuManager manager)
 	{
+      if ((currentSelection.size() == 1) && selectedLinkHasData())
+         manager.add(actionShowLineChart);
 	}
 
 	/**
@@ -1347,12 +1359,23 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       }
 	}
 
+   /**
+    * Check if currently selected link has DCI data.
+    *
+    * @return true if currently selected link has DCI data
+    */
+   protected boolean selectedLinkHasData()
+   {
+      Object o = currentSelection.getFirstElement();
+      return (o != null) && (o instanceof NetworkMapLink) && ((NetworkMapLink)o).hasDciData();
+   }
+
 	/**
-	 * Handler for opening network map dci on double click
-	 */
-	private void openLinkDci()
+    * Show line chart for DCIs configured on network map link
+    */
+	private void showLinkLineChart()
 	{
-	   final NetworkMapLink link = (NetworkMapLink)currentSelection.getFirstElement();	   
+      final NetworkMapLink link = (NetworkMapLink)currentSelection.getFirstElement();
 	   if (!link.hasDciData())
 	      return;
 
