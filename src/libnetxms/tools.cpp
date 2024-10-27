@@ -1309,19 +1309,17 @@ const char LIBNETXMS_EXPORTABLE *ExtractWordA(const char *line, char *buffer, in
 #if defined(_WIN32)
 
 /**
- * Get system error string by call to FormatMessage
- * (Windows only)
+ * Get system error string by call to FormatMessage (Windows only)
  */
-TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(UINT32 error, TCHAR *buffer, size_t size)
+TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(uint32_t error, TCHAR *buffer, size_t size)
 {
    TCHAR *msgBuf;
-
    if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                     FORMAT_MESSAGE_FROM_SYSTEM |
-                     FORMAT_MESSAGE_IGNORE_INSERTS,
-                     NULL, error,
-                     MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-                     (LPTSTR)&msgBuf, 0, NULL) > 0)
+         FORMAT_MESSAGE_FROM_SYSTEM |
+         FORMAT_MESSAGE_IGNORE_INSERTS,
+         NULL, error,
+         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+         (LPTSTR)&msgBuf, 0, nullptr) > 0)
    {
       msgBuf[_tcscspn(msgBuf, _T("\r\n"))] = 0;
       _tcslcpy(buffer, msgBuf, size);
@@ -1332,6 +1330,30 @@ TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(UINT32 error, TCHAR *buffer, size
       _sntprintf(buffer, size, _T("No description for error code 0x%08X"), error);
    }
    return buffer;
+}
+
+/**
+ * Get system error string by call to FormatMessage (Windows only)
+ */
+String LIBNETXMS_EXPORTABLE GetSystemErrorText(uint32_t error)
+{
+   TCHAR *msgBuf;
+   if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+         FORMAT_MESSAGE_FROM_SYSTEM |
+         FORMAT_MESSAGE_IGNORE_INSERTS,
+         NULL, error,
+         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+         (LPTSTR)&msgBuf, 0, nullptr) > 0)
+   {
+      msgBuf[_tcscspn(msgBuf, _T("\r\n"))] = 0;
+      String text(msgBuf);
+      LocalFree(msgBuf);
+      return text;
+   }
+
+   TCHAR buffer[128];
+   _sntprintf(buffer, 128, _T("No description for error code 0x%08X"), error);
+   return String(buffer);
 }
 
 #endif
@@ -2923,7 +2945,7 @@ SaveFileStatus LIBNETXMS_EXPORTABLE SaveFile(const TCHAR *fileName, const void *
 /**
  * Get memory consumed by current process
  */
-INT64 LIBNETXMS_EXPORTABLE GetProcessRSS()
+int64_t LIBNETXMS_EXPORTABLE GetProcessRSS()
 {
 	PROCESS_MEMORY_COUNTERS pmc;
 

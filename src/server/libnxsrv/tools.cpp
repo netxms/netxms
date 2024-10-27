@@ -86,6 +86,7 @@ static struct
    { ERR_FUNCTION_NOT_SUPPORTED, _T("Function not supported") },
    { ERR_FILE_APPEND_POSSIBLE, _T("New data can be appended to existing file") },
    { ERR_REMOTE_CONNECT_FAILED, _T("Connect to remote system failed") },
+   { ERR_SYSCALL_FAILED, _T("System API call failed") },
    { 0xFFFFFFFF, nullptr }
 };
 

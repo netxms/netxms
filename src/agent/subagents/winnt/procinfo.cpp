@@ -676,9 +676,16 @@ uint32_t H_TerminateProcess(const shared_ptr<ActionExecutionContext>& context)
 
    HANDLE hp = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
    if (hp == nullptr)
-      return ERR_INTERNAL_ERROR;
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("H_TerminateProcess: call to OpenProcess failed for PID %u (%s)"), pid, GetSystemErrorText(GetLastError()).cstr());
+      return ERR_SYSCALL_FAILED;
+   }
  
    BOOL success = TerminateProcess(hp, 127);
+   if (success)
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("H_TerminateProcess: call to TerminateProcess for PID %u successfull"), pid);
+   else
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("H_TerminateProcess: call to TerminateProcess for PID %u failed (%s)"), pid, GetSystemErrorText(GetLastError()).cstr());
    CloseHandle(hp);
-   return success ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+   return success ? ERR_SUCCESS : ERR_SYSCALL_FAILED;
 }

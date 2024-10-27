@@ -592,6 +592,29 @@ LONG H_ActiveUserSessionsTable(const TCHAR *cmd, const TCHAR *arg, Table *value,
 }
 
 /**
+ * Terminate user session
+ */
+uint32_t H_TerminateUserSession(const shared_ptr<ActionExecutionContext>& context)
+{
+   if (!context->hasArgs())
+      return ERR_BAD_ARGUMENTS;
+
+   TCHAR *eptr;
+   DWORD sid = _tcstoul(context->getArg(0), &eptr, 0);
+   if ((*eptr != 0) || (sid == WTS_CURRENT_SESSION) || (sid == WTS_ANY_SESSION))
+      return ERR_BAD_ARGUMENTS;
+
+   if (!WTSLogoffSession(WTS_CURRENT_SERVER_HANDLE, sid, false))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("H_TerminateUserSession: call to WTSLogoffSession for SID %u failed (%s)"), sid, GetSystemErrorText(GetLastError()).cstr());
+      return ERR_SYSCALL_FAILED;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("H_TerminateUserSession: call to WTSLogoffSession for SID %u successfull"), sid);
+   return ERR_SUCCESS;
+}
+
+/**
  * Callback for window stations enumeration
  */
 static BOOL CALLBACK WindowStationsEnumCallback(LPTSTR lpszWindowStation, LPARAM lParam)

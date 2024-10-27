@@ -5401,10 +5401,13 @@ void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule);
 void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const char *symbol, TCHAR *errorText);
 
 #ifdef _WIN32
-TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(UINT32 error, TCHAR *buffer, size_t size);
+
+TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(uint32_t error, TCHAR *buffer, size_t size);
+String LIBNETXMS_EXPORTABLE GetSystemErrorText(uint32_t error);
 bool LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, size_t size);
 void LIBNETXMS_EXPORTABLE WindowsProductNameFromVersion(OSVERSIONINFOEX *ver, TCHAR *buffer);
-INT64 LIBNETXMS_EXPORTABLE GetProcessRSS();
+int64_t LIBNETXMS_EXPORTABLE GetProcessRSS();
+
 #endif
 
 TCHAR LIBNETXMS_EXPORTABLE *GetLastSocketErrorText(TCHAR *buffer, size_t size);
