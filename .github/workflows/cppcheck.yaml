@@ -1,0 +1,37 @@
+name: Run cppcheck
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  Build-and-Run-Tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update apt cache
+        run: sudo apt-get update
+      - name: Install dependencies
+        run: sudo apt-get install -y libpq-dev libcurl4-openssl-dev libssh-dev libmosquitto-dev libjq-dev cpptest
+      - name: Prepare release build
+        run: ./build/prepare_release_build.sh
+      - name: autoconf
+        run: ./reconf
+      - name: configure
+        run: ./configure --prefix=/tmp/build --with-server --with-agent --with-pgsql
+      - name: restore cppcheck cache
+        uses: actions/cache/restore@v4
+        with:
+          path: /tmp/cppcheck
+          key: ${{ runner.os }}-cppcheck-${{ hashFiles('cppcheck.yaml') }}
+      - name: cppcheck
+        run: cppcheck -q --check-level=exhaustive -I build -I include -I . -j $(nproc)  --std=c++17 --cppcheck-build-dir=/tmp/cppcheck src
+      - name: save cppcheck cache
+        uses: actions/cache/save@v4
+        with:
+          path: /tmp/cppcheck
+          key: ${{ runner.os }}-cppcheck-${{ hashFiles('cppcheck.yaml') }}
