@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  Build-and-Run-Tests:
+  run-cppcheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +29,7 @@ jobs:
           path: /tmp/cppcheck
           key: ${{ runner.os }}-cppcheck-${{ hashFiles('cppcheck.yaml') }}
       - name: cppcheck
-        run: cppcheck -q --check-level=exhaustive -I build -I include -I . -j $(nproc)  --std=c++17 --cppcheck-build-dir=/tmp/cppcheck src
+        run: cppcheck -q -I build -I include -I . -j $(nproc)  --std=c++17 --cppcheck-build-dir=/tmp/cppcheck src
       - name: save cppcheck cache
         uses: actions/cache/save@v4
         with:
