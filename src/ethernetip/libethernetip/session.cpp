@@ -86,7 +86,8 @@ void EIP_Session::disconnect()
    if (!m_connected)
       return;
 
-   EIP_Message request(EIP_UNREGISTER_SESSION, 0);
+   // There is no reply to UnregisterSession command
+   EIP_Message request(EIP_UNREGISTER_SESSION, 0, m_handle);
    SendEx(m_socket, request.getBytes(), request.getSize(), 0, nullptr);
 
    shutdown(m_socket, SHUT_RDWR);
@@ -102,7 +103,7 @@ EIP_Status EIP_Session::getAttribute(const TCHAR *path, void *buffer, size_t *si
    CIP_EPATH epath;
    if (!CIP_EncodeAttributePath(path, &epath))
       return EIP_Status::callFailure(EIP_INVALID_EPATH);
-   return getAttribute(&epath, buffer, size);
+   return getAttribute(epath, buffer, size);
 }
 
 /**
@@ -112,29 +113,31 @@ EIP_Status EIP_Session::getAttribute(uint32_t classId, uint32_t instance, uint32
 {
    CIP_EPATH epath;
    CIP_EncodeAttributePath(classId, instance, attributeId, &epath);
-   return getAttribute(&epath, buffer, size);
+   return getAttribute(epath, buffer, size);
 }
 
 /**
  * Get attribute from device
  */
-EIP_Status EIP_Session::getAttribute(const CIP_EPATH *path, void *buffer, size_t *size)
+EIP_Status EIP_Session::getAttribute(const CIP_EPATH& path, void *buffer, size_t *size)
 {
    EIP_Message request(EIP_SEND_RR_DATA, 1024, m_handle);
    request.advanceWritePosition(6); // Interface ID and timeout left as 0
    request.writeDataAsUInt16(2);    // Item count
    request.advanceWritePosition(4); // Item type 0 followed by length 0 - NULL address
    request.writeDataAsUInt16(0xB2); // Type B2 - UCMM message
-   request.writeDataAsUInt16(static_cast<uint16_t>(path->size + 2)); // Second item size: service + path length + path
+   request.writeDataAsUInt16(static_cast<uint16_t>(path.size + 2)); // Second item size: service + path length + path
    request.writeDataAsUInt8(CIP_Get_Attribute_Single);
-   request.writeDataAsUInt8(static_cast<uint8_t>(path->size / 2)); // Path length in 2 byte words
-   request.writeData(path->value, path->size);
+   request.writeDataAsUInt8(static_cast<uint8_t>(path.size / 2)); // Path length in 2 byte words
+   request.writeData(path.value, path.size);
    request.completeDataWrite();
 
    EIP_Status status;
    EIP_Message *response = EIP_DoRequest(m_socket, request, m_timeout, &status);
    if (response == nullptr)
       return status;
+
+   response->prepareCPFRead(6);
 
    CPF_Item item;
    if (response->findItem(0xB2, &item))

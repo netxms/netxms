@@ -470,7 +470,7 @@ public:
 
    EIP_Status getAttribute(const TCHAR *path, void *buffer, size_t *size);
    EIP_Status getAttribute(uint32_t classId, uint32_t instance, uint32_t attributeId, void *buffer, size_t *size);
-   EIP_Status getAttribute(const CIP_EPATH *path, void *buffer, size_t *size);
+   EIP_Status getAttribute(const CIP_EPATH& path, void *buffer, size_t *size);
 
    EIP_SessionHandle getHandle() const { return m_handle; }
    SOCKET getSocket() const { return m_socket; }
