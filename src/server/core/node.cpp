@@ -76,6 +76,11 @@ int64_t GetSyncerRunTime(StatisticType statType);
 DataCollectionError GetPerfDataStorageDriverMetric(const TCHAR *driver, const TCHAR *metric, TCHAR *value);
 
 /**
+ * Get attribute via EtherNet/IP
+ */
+DataCollectionError GetEtherNetIPAttribute(const InetAddress& addr, uint16_t port, const TCHAR *symbolicPath, uint32_t timeout, TCHAR *buffer, size_t size);
+
+/**
  * Get status of notification channel
  */
 bool GetNotificationChannelStatus(const TCHAR *name, NotificationChannelStatus *status);
@@ -7678,6 +7683,19 @@ DataCollectionError Node::getMetricFromModbus(const TCHAR *metric, TCHAR *buffer
    DataCollectionError result = (status == MODBUS_STATUS_SUCCESS) ? DCE_SUCCESS :
             ((status == MODBUS_STATUS_PROTOCOL_ERROR) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
    nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 7, _T("Node(%s)->getMetricFromModbus(%s): modbusStatus=%d result=%d"), m_name, metric, status, result);
+   return result;
+}
+
+/**
+ * Get metric value via EtherNet/IP protocol
+ */
+DataCollectionError Node::getMetricFromEtherNetIP(const TCHAR *metric, TCHAR *buffer, size_t size)
+{
+   if (!(m_capabilities & NC_IS_ETHERNET_IP))
+      return DCE_NOT_SUPPORTED;
+
+   DataCollectionError result = GetEtherNetIPAttribute(m_ipAddress, m_eipPort, metric, 5000, buffer, size);
+   nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 7, _T("Node(%s)->getMetricFromEtherNetIP(%s): result=%d"), m_name, metric, result);
    return result;
 }
 

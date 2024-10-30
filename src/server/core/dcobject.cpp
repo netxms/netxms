@@ -563,12 +563,12 @@ void DCObject::setStatus(int status, bool generateEvent, bool userChange)
          if (generateEvent && IsEventSource(owner->getObjectClass()))
          {
             static uint32_t eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
-            static const TCHAR *originName[12] =
+            static const TCHAR *originName[13] =
             {
                _T("Internal"), _T("NetXMS Agent"), _T("SNMP"),
                _T("Web Service"), _T("Push"), _T("WinPerf"),
                _T("iLO"), _T("Script"), _T("SSH"), _T("MQTT"),
-               _T("Device Driver"), _T("Modbus")
+               _T("Device Driver"), _T("Modbus"), _T("EtherNet/IP")
             };
             EventBuilder(eventCode[status], owner->getId())
                .dci(m_id)
@@ -632,7 +632,6 @@ void DCObject::setRetention(const TCHAR *retention)
    m_retentionTimeSrc = MemCopyString(retention);
    updateTimeIntervalsInternal();
    unlock();
-
 }
 
 /**

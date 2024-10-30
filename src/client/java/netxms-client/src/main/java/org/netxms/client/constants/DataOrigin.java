@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,7 +39,8 @@ public enum DataOrigin
    SSH(8),
    MQTT(9),
    DEVICE_DRIVER(10),
-   MODBUS(11);
+   MODBUS(11),
+   ETHERNET_IP(12);
 
    private static Logger logger = LoggerFactory.getLogger(DataOrigin.class);
    private static Map<Integer, DataOrigin> lookupTable = new HashMap<Integer, DataOrigin>();

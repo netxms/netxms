@@ -153,6 +153,9 @@
     <ClCompile Include="ef.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="eip.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="entirenet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

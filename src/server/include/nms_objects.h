@@ -3866,6 +3866,7 @@ public:
    DataCollectionError getMetricFromSMCLP(const TCHAR *metric, TCHAR *buffer, size_t size);
    DataCollectionError getMetricFromDeviceDriver(const TCHAR *metric, TCHAR *buffer, size_t size);
    DataCollectionError getMetricFromModbus(const TCHAR *metric, TCHAR *buffer, size_t size, uint16_t defaultUnitId = 0xFFFF);
+   DataCollectionError getMetricFromEtherNetIP(const TCHAR *metric, TCHAR *buffer, size_t size);
 
    double getMetricFromAgentAsDouble(const TCHAR *name, double defaultValue = 0);
    int32_t getMetricFromAgentAsInt32(const TCHAR *name, int32_t defaultValue = 0);

@@ -165,6 +165,16 @@ static void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, TCHAR
                *error = DCE_NOT_SUPPORTED;
             }
             break;
+         case DS_ETHERNET_IP:
+            if (dcTarget->getObjectClass() == OBJECT_NODE)
+            {
+               *error = static_cast<Node*>(dcTarget)->getMetricFromEtherNetIP(dci.getName(), buffer, MAX_RESULT_LENGTH);
+            }
+            else
+            {
+               *error = DCE_NOT_SUPPORTED;
+            }
+            break;
          case DS_MQTT:
             if (dcTarget->getObjectClass() == OBJECT_NODE)
             {

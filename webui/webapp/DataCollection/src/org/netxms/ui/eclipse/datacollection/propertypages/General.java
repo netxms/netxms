@@ -164,6 +164,7 @@ public class General extends AbstractDCIPropertyPage
       origin.add(Messages.get().DciLabelProvider_SourceMQTT);
       origin.add(Messages.get().DciLabelProvider_SourceDeviceDriver);
       origin.add("Modbus");
+      origin.add("EtherNet/IP");
       origin.select(dco.getOrigin().getValue());
       origin.addSelectionListener(new SelectionAdapter() {
          @Override

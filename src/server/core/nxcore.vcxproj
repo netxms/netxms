@@ -479,6 +479,7 @@
     <ClCompile Include="download_task.cpp" />
     <ClCompile Include="downtime.cpp" />
     <ClCompile Include="ef.cpp" />
+    <ClCompile Include="eip.cpp" />
     <ClCompile Include="entirenet.cpp" />
     <ClCompile Include="epp.cpp" />
     <ClCompile Include="events.cpp" />

@@ -150,6 +150,7 @@ void SaveCurrentFreeId();
 #define DEBUG_TAG_DC_AGENT          _T("dc.agent")
 #define DEBUG_TAG_DC_CACHE          _T("dc.cache")
 #define DEBUG_TAG_DC_COLLECTOR      _T("dc.collector")
+#define DEBUG_TAG_DC_EIP            _T("dc.eip")
 #define DEBUG_TAG_DC_MODBUS         _T("dc.modbus")
 #define DEBUG_TAG_DC_POLLER         _T("dc.poller")
 #define DEBUG_TAG_DC_TEMPLATES      _T("dc.templates")

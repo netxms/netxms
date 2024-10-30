@@ -176,6 +176,7 @@ public class General extends AbstractDCIPropertyPage
       origin.add(i18n.tr("MQTT"));
       origin.add(i18n.tr("Network Device Driver"));
       origin.add(i18n.tr("Modbus"));
+      origin.add(i18n.tr("EtherNet/IP"));
       origin.select(dco.getOrigin().getValue());
       origin.addSelectionListener(new SelectionAdapter() {
          @Override
