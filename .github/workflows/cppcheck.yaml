@@ -29,7 +29,7 @@ jobs:
           path: /tmp/cppcheck
           key: ${{ runner.os }}-cppcheck-${{ hashFiles('cppcheck.yaml') }}
       - name: cppcheck
-        run: cppcheck -q -I build -I include -I . -j $(nproc)  --std=c++17 --cppcheck-build-dir=/tmp/cppcheck src
+        run: cppcheck --platform=unix64 --language=c++ --max-ctu-depth=3 -I . -I build -I include -I src/server/include -I src/nxcproxy -j $(nproc) --std=c++17 --cppcheck-build-dir=/tmp/cppcheck src
       - name: save cppcheck cache
         uses: actions/cache/save@v4
         with:
