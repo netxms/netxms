@@ -1,15 +1,15 @@
 name: Run cppcheck
 
 on:
-  push:
-  pull_request:
+  schedule:
+    - cron: "15 3 * * *"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  run-cppcheck:
+  cppcheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,11 +27,11 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: /tmp/cppcheck
-          key: ${{ runner.os }}-cppcheck-${{ hashFiles('cppcheck.yaml') }}
+          key: ${{ runner.os }}-cppcheck-${{ github.ref_name }}
       - name: cppcheck
         run: cppcheck -q --platform=unix64 --language=c++ --max-ctu-depth=3 -I . -I build -I include -I src/server/include -I src/nxcproxy -j $(nproc) --std=c++17 --cppcheck-build-dir=/tmp/cppcheck src
       - name: save cppcheck cache
         uses: actions/cache/save@v4
         with:
           path: /tmp/cppcheck
-          key: ${{ runner.os }}-cppcheck-${{ hashFiles('cppcheck.yaml') }}
+          key: ${{ runner.os }}-cppcheck-${{ github.ref_name }}
