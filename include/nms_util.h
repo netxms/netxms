@@ -1247,7 +1247,7 @@ private:
 public:
    SharedString() { }
    SharedString(const SharedString& str) : m_string(str.m_string) { }
-   SharedString(const String& str) { m_string = make_shared<String>(str); }
+   SharedString(const String& str) : m_string(make_shared<String>(str)) { }
    SharedString(const TCHAR *str) { if (str != nullptr) m_string = make_shared<String>(str); }
    SharedString(TCHAR *str, Ownership takeOwnership) { if (str != nullptr) m_string = make_shared<String>(str, -1, takeOwnership); }
    SharedString(const char *str, const char *codepage) { if (str != nullptr) m_string = make_shared<String>(str, codepage); }

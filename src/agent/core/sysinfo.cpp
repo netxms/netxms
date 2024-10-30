@@ -169,10 +169,10 @@ static bool MatchFileFilter(const char *fileName, const NX_STAT_STRUCT &fileInfo
  * Helper function for H_DirInfo
  */
 #ifdef _WIN32
-static LONG GetDirInfo(const WCHAR *path, const WCHAR *pattern, bool bRecursive, unsigned int &uFileCount,
+static LONG GetDirInfo(const WCHAR *path, const WCHAR *pattern, bool isRecursive, unsigned int &uFileCount,
                        uint64_t &llFileSize, int ageFilter, int64_t sizeFilter, bool countFiles, bool countFolders, bool searchInverse)
 #else
-static LONG GetDirInfo(const char *path, const char *pattern, bool bRecursive, unsigned int &uFileCount,
+static LONG GetDirInfo(const char *path, const char *pattern, bool isRecursive, unsigned int &uFileCount,
                        uint64_t &llFileSize, int ageFilter, int64_t sizeFilter, bool countFiles, bool countFolders, bool searchInverse)
 #endif
 {
@@ -248,9 +248,9 @@ static LONG GetDirInfo(const char *path, const char *pattern, bool bRecursive, u
             continue;
 #endif
 
-         if (S_ISDIR(fileInfo.st_mode) && bRecursive)
+         if (S_ISDIR(fileInfo.st_mode) && isRecursive)
          {
-            nRet = GetDirInfo(szFileName, pattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter, countFiles, countFolders, searchInverse);
+            nRet = GetDirInfo(szFileName, pattern, isRecursive, uFileCount, llFileSize, ageFilter, sizeFilter, countFiles, countFolders, searchInverse);
             if (nRet != SYSINFO_RC_SUCCESS)
                 break;
          }
@@ -287,64 +287,66 @@ static LONG GetDirInfo(const char *path, const char *pattern, bool bRecursive, u
  */
 LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   TCHAR szPath[MAX_PATH], szRealPath[MAX_PATH], szPattern[MAX_PATH], szRealPattern[MAX_PATH], szRecursive[10], szBuffer[128];
-   bool bRecursive = false;
+   TCHAR path[MAX_PATH], patternBuffer[MAX_PATH], buffer[128];
+   if (!AgentGetMetricArg(cmd, 1, path, MAX_PATH) ||
+       !AgentGetParameterArg(cmd, 2, patternBuffer, MAX_PATH) ||
+       !AgentGetParameterArg(cmd, 3, buffer, 128))
+      return SYSINFO_RC_UNSUPPORTED;
+   bool isRecursive = ((_tcstol(buffer, nullptr, 0) != 0) || !_tcsicmp(buffer, _T("TRUE")));
+
+   if (!AgentGetMetricArg(cmd, 4, buffer, 128))
+      return SYSINFO_RC_UNSUPPORTED;
+   int64_t sizeFilter = _tcstoll(buffer, nullptr, 0);
+
+   if (!AgentGetMetricArg(cmd, 5, buffer, 128))
+      return SYSINFO_RC_UNSUPPORTED;
+   int ageFilter = _tcstoul(buffer, nullptr, 0);
+
    bool searchInverse = false;
-
-   unsigned int uFileCount = 0;
-   uint64_t llFileSize = 0;
-   LONG nRet;
-
-   if (!AgentGetMetricArg(cmd, 1, szPath, MAX_PATH) ||
-       !AgentGetParameterArg(cmd, 2, szPattern, MAX_PATH) ||
-       !AgentGetParameterArg(cmd, 3, szRecursive, 10))
-      return SYSINFO_RC_UNSUPPORTED;
-
-   if (!AgentGetMetricArg(cmd, 4, szBuffer, 128))
-      return SYSINFO_RC_UNSUPPORTED;
-   int64_t sizeFilter = _tcstoll(szBuffer, nullptr, 0);
-
-   if (!AgentGetMetricArg(cmd, 5, szBuffer, 128))
-      return SYSINFO_RC_UNSUPPORTED;
-   int ageFilter = _tcstoul(szBuffer, nullptr, 0);
-
-   // Recursion flag
-   bRecursive = ((_tcstol(szRecursive, nullptr, 0) != 0) || !_tcsicmp(szRecursive, _T("TRUE")));
+   const TCHAR *pattern;
 
    // If pattern is omited use asterisk
-   if (szPattern[0] == 0)
+   if (patternBuffer[0] == 0)
    {
-      _tcscpy(szPattern, _T("*"));
+      pattern = _T("*");
    }
-   else if (szPattern[0] == _T('!'))
+   else if (patternBuffer[0] == _T('!'))
    {
       // Inverse counting flag
       searchInverse = true;
-      memmove(szPattern, &szPattern[1], ((MAX_PATH - 1) * sizeof(WCHAR)));
+      pattern = &patternBuffer[1];
+   }
+   else
+   {
+      pattern = patternBuffer;
    }
 
    // Expand strftime macros in the path and in the pattern
-   if ((ExpandFileName(szPath, szRealPath, MAX_PATH, session == nullptr ? false : session->isMasterServer()) == nullptr) ||
-       (ExpandFileName(szPattern, szRealPattern, MAX_PATH, session == nullptr ? false : session->isMasterServer()) == nullptr))
+   TCHAR realPath[MAX_PATH], realPattern[MAX_PATH];
+   if ((ExpandFileName(path, realPath, MAX_PATH, session == nullptr ? false : session->isMasterServer()) == nullptr) ||
+       (ExpandFileName(pattern, realPattern, MAX_PATH, session == nullptr ? false : session->isMasterServer()) == nullptr))
       return SYSINFO_RC_UNSUPPORTED;
 
    // Remove trailing backslash on Windows
 #ifdef _WIN32
-   size_t i = _tcslen(szRealPath) - 1;
-   if (szRealPath[i] == _T('\\'))
-      szRealPath[i] = 0;
+   size_t i = _tcslen(realPath) - 1;
+   if (realPath[i] == _T('\\'))
+      realPath[i] = 0;
 #endif
 
    int mode = CAST_FROM_POINTER(arg, int);
-   nxlog_debug_tag(FILEMON_DEBUG_TAG, 6, _T("H_DirInfo: path=\"%s\" pattern=\"%s\" recursive=%s mode=%d"), szRealPath, szRealPattern, BooleanToString(bRecursive), mode);
+   nxlog_debug_tag(FILEMON_DEBUG_TAG, 6, _T("H_DirInfo: path=\"%s\" pattern=\"%s\" recursive=%s mode=%d"), realPath, realPattern, BooleanToString(isRecursive), mode);
+
+   unsigned int uFileCount = 0;
+   uint64_t llFileSize = 0;
 
 #if defined(_WIN32) || !defined(UNICODE)
-   nRet = GetDirInfo(szRealPath, szRealPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter, mode != DIRINFO_FOLDER_COUNT, mode == DIRINFO_FOLDER_COUNT, searchInverse);
+   LONG nRet = GetDirInfo(realPath, realPattern, isRecursive, uFileCount, llFileSize, ageFilter, sizeFilter, mode != DIRINFO_FOLDER_COUNT, mode == DIRINFO_FOLDER_COUNT, searchInverse);
 #else
    char mbRealPath[MAX_PATH], mbRealPattern[MAX_PATH];
-   WideCharToMultiByteSysLocale(szRealPath, mbRealPath, MAX_PATH);
-   WideCharToMultiByteSysLocale(szRealPattern, mbRealPattern, MAX_PATH);
-   nRet = GetDirInfo(mbRealPath, mbRealPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter, mode != DIRINFO_FOLDER_COUNT, mode == DIRINFO_FOLDER_COUNT, searchInverse);
+   WideCharToMultiByteSysLocale(realPath, mbRealPath, MAX_PATH);
+   WideCharToMultiByteSysLocale(realPattern, mbRealPattern, MAX_PATH);
+   LONG nRet = GetDirInfo(mbRealPath, mbRealPattern, isRecursive, uFileCount, llFileSize, ageFilter, sizeFilter, mode != DIRINFO_FOLDER_COUNT, mode == DIRINFO_FOLDER_COUNT, searchInverse);
 #endif
 
    switch(mode)
