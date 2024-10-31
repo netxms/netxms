@@ -544,7 +544,7 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
    StartStage(stageName);
 
    TCHAR query[256];
-   _sntprintf(query, 1024, _T("SELECT id,node_id FROM %s"), pszTable);
+   _sntprintf(query, 256, _T("SELECT id,node_id FROM %s"), pszTable);
    DB_RESULT hResult = SQLSelect(query);
    if (hResult != nullptr)
    {

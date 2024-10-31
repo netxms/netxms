@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -221,7 +221,7 @@ StringBuffer LogHandle::buildObjectAccessConstraint(uint32_t userId)
       else
       {
          list = &restricted;
-         constraint += _T("NOT (");
+         constraint.append(_T("NOT ("));
       }
 
       if (list->size() < 1000)
@@ -229,26 +229,28 @@ StringBuffer LogHandle::buildObjectAccessConstraint(uint32_t userId)
          constraint.appendFormattedString(_T("%s IN ("), m_log->relatedObjectIdColumn);
          for(int i = 0; i < list->size(); i++)
          {
-            TCHAR buffer[32];
-            _sntprintf(buffer, 32, _T("%d,"), list->get(i));
-            constraint += buffer;
+            constraint.append(list->get(i));
+            constraint.append(_T(','));
          }
          constraint.shrink();
-         constraint += _T(")");
+         constraint.append(_T(')'));
       }
       else
       {
          for(int i = 0; i < list->size(); i++)
          {
-            TCHAR buffer[32];
-   			constraint.appendFormattedString(_T("(%s=%d)OR"), m_log->relatedObjectIdColumn, list->get(i));
-            constraint += buffer;
+            constraint.append(_T('('));
+            constraint.append(m_log->relatedObjectIdColumn);
+            constraint.append(_T('='));
+            constraint.append(list->get(i));
+            constraint.append(_T(')'));
+            constraint.append(_T("OR"));
          }
          constraint.shrink(2);
       }
       if (allowed.size() >= restricted.size())
       {
-         constraint += _T(")");
+         constraint.append(_T(')'));
       }
    }
 	return constraint;

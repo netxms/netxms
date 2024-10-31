@@ -13000,7 +13000,7 @@ bool Node::getIcmpStatistics(const TCHAR *target, uint32_t *last, uint32_t *min,
 {
    lockProperties();
    IcmpStatCollector *collector = (m_icmpStatCollectors != nullptr) ? m_icmpStatCollectors->get(target) : nullptr;
-   if (collector->empty())
+   if ((collector != nullptr) && collector->empty())
       collector = nullptr;
    if (last != nullptr)
       *last = (collector != nullptr) ? collector->last() : 0;
