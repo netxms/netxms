@@ -363,15 +363,15 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, A
 				IFLIST *pTmp;
 
 				nIfCount++;
-				pTmp = (IFLIST *)realloc(pList, nIfCount * sizeof(IFLIST));
-				if (pTmp == NULL)
+				auto tmp = MemReallocArrayNoFree(pList, nIfCount);
+				if (tmp == NULL)
 				{
 					// out of memoty
 					nIfCount--;
 					nRet = SYSINFO_RC_ERROR;
 					break;
 				}
-				pList = pTmp;
+				pList = tmp;
 
 				memset(&(pList[nIfCount-1]), 0, sizeof(IFLIST));
 				pList[nIfCount-1].name = pNext->ifa_name;
@@ -482,11 +482,7 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, A
 				pList[i].addrCount = 0;
 			}
 		}
-		if (pList != NULL)
-		{
-			free(pList);
-			pList = NULL;
-		}
+		MemFree(pList);
 
 		freeifaddrs(pIfAddr);
 	}

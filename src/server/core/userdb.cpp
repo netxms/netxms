@@ -1551,20 +1551,20 @@ uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const TCHAR *newPassword
       {
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-         TCHAR query[8192], *ph = NULL;
+         TCHAR query[8192], *ph = nullptr;
 
          _sntprintf(query, 8192, _T("SELECT password_history FROM users WHERE id=%d"), id);
          DB_RESULT hResult = DBSelect(hdb, query);
-         if (hResult != NULL)
+         if (hResult != nullptr)
          {
             if (DBGetNumRows(hResult) > 0)
             {
-               ph = DBGetField(hResult, 0, 0, NULL, 0);
+               ph = DBGetField(hResult, 0, 0, nullptr, 0);
             }
             DBFreeResult(hResult);
          }
 
-         if (ph != NULL)
+         if (ph != nullptr)
          {
             BYTE newPasswdHash[SHA1_DIGEST_SIZE];
 #ifdef UNICODE
@@ -1598,7 +1598,7 @@ uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const TCHAR *newPassword
                }
                else
                {
-                  ph = (TCHAR *)realloc(ph, (phLen + 1) * SHA1_DIGEST_SIZE * 2 * sizeof(TCHAR) + sizeof(TCHAR));
+                  ph = MemRealloc(ph, (phLen + 1) * SHA1_DIGEST_SIZE * 2 * sizeof(TCHAR) + sizeof(TCHAR));
                   phLen++;
                }
                BinToStr(newPasswdHash, SHA1_DIGEST_SIZE, &ph[(phLen - 1) * SHA1_DIGEST_SIZE * 2]);

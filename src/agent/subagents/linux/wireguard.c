@@ -4,21 +4,11 @@
  * Copyright (C) 2008-2012 Pablo Neira Ayuso <pablo@netfilter.org>.
  */
 
-#include <errno.h>
+#include <nms_common.h>
 #include <linux/genetlink.h>
 #include <linux/if_link.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
-#include <netinet/in.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <time.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <assert.h>
 
 #include "wireguard.h"
 
@@ -793,13 +783,13 @@ static struct mnlg_socket *mnlg_socket_open(const char *family_name, uint8_t ver
 	struct nlmsghdr *nlh;
 	int err;
 
-	nlg = malloc(sizeof(*nlg));
+	nlg = MemAlloc(sizeof(*nlg));
 	if (!nlg)
 		return NULL;
 	nlg->id = 0;
 
 	err = -ENOMEM;
-	nlg->buf = malloc(mnl_ideal_socket_buffer_size());
+	nlg->buf = MemAlloc(mnl_ideal_socket_buffer_size());
 	if (!nlg->buf)
 		goto err_buf_alloc;
 
@@ -841,9 +831,9 @@ err_mnlg_socket_send:
 err_mnl_socket_bind:
 	mnl_socket_close(nlg->nl);
 err_mnl_socket_open:
-	free(nlg->buf);
+	MemFree(nlg->buf);
 err_buf_alloc:
-	free(nlg);
+	MemFree(nlg);
 	errno = -err;
 	return NULL;
 }
@@ -876,7 +866,7 @@ static int string_list_add(struct string_list *list, const char *str)
 
 		if (new_cap <  list->len +len + 1)
 			new_cap = list->len + len + 1;
-		new_buffer = realloc(list->buffer, new_cap);
+		new_buffer = MemRealloc(list->buffer, new_cap);
 		if (!new_buffer)
 			return -errno;
 		list->buffer = new_buffer;

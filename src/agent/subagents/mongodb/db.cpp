@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** Subagent for Mongo DB monitoring
- ** Copyright (C) 2009-2017 Raden Solutions
+ ** Copyright (C) 2009-2024 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -19,58 +19,49 @@
  **/
 
 #include "mongodb_subagent.h"
+
 #define STATUSSIZE 24
 
 /**
  * Read attribute from config string
  */
-static TCHAR *ReadAttribute(const TCHAR *config, const TCHAR *attribute)
+static String ReadAttribute(const TCHAR *config, const TCHAR *attribute)
 {
    TCHAR buffer[256];
    if (!ExtractNamedOptionValue(config, attribute, buffer, 256))
-      return nullptr;
-   return MemCopyString(buffer);
+      return String();
+   return String(buffer);
 }
 
 bool AddMongoDBFromConfig(const TCHAR *config)
 {
-   AgentWriteDebugLog(NXLOG_WARNING, _T("MONGODB: Trying to parse db."));
+   AgentWriteDebugLog(2, _T("MONGODB: Trying to parse db."));
    //parse id:server:login:password
    DatabaseInfo info;
-   TCHAR *tmp = ReadAttribute(config, _T("id"));
-   _tcslcpy(info.id, CHECK_NULL_EX(tmp), MAX_STR);
-   MemFree(tmp);
-   tmp = ReadAttribute(config, _T("server"));
-   _tcslcpy(info.server, CHECK_NULL_EX(tmp), MAX_STR);
-   MemFree(tmp);
-   tmp = ReadAttribute(config, _T("login"));
-   _tcslcpy(info.username, CHECK_NULL_EX(tmp), MAX_STR);
-   MemFree(tmp);
+   memset(&info, 0, sizeof(info));
+   _tcslcpy(info.id, ReadAttribute(config, _T("id")), MAX_STR);
+   _tcslcpy(info.server, ReadAttribute(config, _T("server")), MAX_STR);
+   _tcslcpy(info.username, ReadAttribute(config, _T("login")), MAX_STR);
 
-   TCHAR *password = ReadAttribute(config, _T("password"));
-   if (password == nullptr)
-   {
+   String password = ReadAttribute(config, _T("password"));
+   if (password.isEmpty())
       password = ReadAttribute(config, _T("encryptedPassword"));
-   }
 
-   if (password != nullptr)
-   {
-      DecryptPassword(CHECK_NULL_EX(info.username), password, info.password, MAX_PASSWORD);
-      MemFree(password);
-   }
+   if (!password.isEmpty())
+      DecryptPassword(info.username, password, info.password, MAX_PASSWORD);
 
    bool sucess = false;
    //add to list of DB connecdtions
    DatabaseInstance *db = new DatabaseInstance(&info);
    if (db->connectionEstablished())
    {
-      AgentWriteDebugLog(NXLOG_WARNING, _T("MONGODB: Connection estables and db added to list: %s"), info.id);
+      AgentWriteDebugLog(2, _T("MONGODB: Connection estables and db added to list: %s"), info.id);
       g_instances->add(db);
       sucess = true;
    }
    else
    {
-      AgentWriteDebugLog(NXLOG_WARNING, _T("MONGODB: Could not connect to database: %s"), info.id);
+      AgentWriteDebugLog(2, _T("MONGODB: Could not connect to database: %s"), info.id);
       delete db;
    }
    return sucess;
@@ -90,7 +81,7 @@ static LONG H_GetParameter(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
          TCHAR *paramName = _tcsdup(param+8);
          TCHAR *tmp = _tcschr(paramName, _T('('));
          *tmp = 0;
-         AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Searching for parameter: %s "), paramName);
+         AgentWriteDebugLog(5, _T("MONGODB: Searching for parameter: %s "), paramName);
 #ifdef UNICODE
          char *_paramName = UTF8StringFromWideString(paramName);
          result = g_instances->get(i)->getStatusParam(_paramName, value);
@@ -191,14 +182,14 @@ THREAD_RESULT THREAD_CALL DatabaseInstance::pollerThreadStarter(void *arg)
  */
 void DatabaseInstance::pollerThread()
 {
-   AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: poller thread for database %s started"), m_info.id);
+   AgentWriteDebugLog(3, _T("MONGODB: poller thread for database %s started"), m_info.id);
    do
    {
       getServerStatus();
       getDatabases();
    }
    while(!m_stopCondition.wait(60000));
-   AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: poller thread for database %s stopped"), m_info.id);
+   AgentWriteDebugLog(3, _T("MONGODB: poller thread for database %s stopped"), m_info.id);
 }
 
 /**
@@ -222,10 +213,10 @@ void DatabaseInstance::getDatabases()
    {
 #ifdef UNICODE
       TCHAR *_error = WideStringFromUTF8String(error.message);
-      AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Failed to run command: %s\n"), _error);
+      AgentWriteDebugLog(3, _T("MONGODB: Failed to run command: %s\n"), _error);
       MemFree(_error);
 #else
-      AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Failed to run command: %s\n"), error.message);
+      AgentWriteDebugLog(3, _T("MONGODB: Failed to run command: %s\n"), error.message);
 #endif
       bson_strfreev (m_databaseList);
       m_databaseList = nullptr;
@@ -260,10 +251,10 @@ bool DatabaseInstance::getServerStatus()
    {
 #ifdef UNICODE
       TCHAR *_error = WideStringFromUTF8String(error.message);
-      AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Failed to run command: %s\n"), _error);
+      AgentWriteDebugLog(3, _T("MONGODB: Failed to run command: %s\n"), _error);
       MemFree(_error);
 #else
-      AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Failed to run command: %s\n"), error.message);
+      AgentWriteDebugLog(3, _T("MONGODB: Failed to run command: %s\n"), error.message);
 #endif
       sucess = false;
       bson_destroy(m_serverStatus);
@@ -355,11 +346,11 @@ NETXMS_SUBAGENT_PARAM *DatabaseInstance::getParameters(int *paramCount)
 {
    //try to get data first time
    getServerStatus();
-   if(m_serverStatus == NULL)
-    return NULL;
+   if (m_serverStatus == nullptr)
+      return nullptr;
 
    int attrSize = STATUSSIZE;
-   NETXMS_SUBAGENT_PARAM *result = (NETXMS_SUBAGENT_PARAM *)malloc(sizeof(NETXMS_SUBAGENT_PARAM)*attrSize);
+   NETXMS_SUBAGENT_PARAM *result = MemAllocArray<NETXMS_SUBAGENT_PARAM>(attrSize);
    bson_iter_t iter;
    bson_iter_t child;
 
@@ -372,13 +363,13 @@ NETXMS_SUBAGENT_PARAM *DatabaseInstance::getParameters(int *paramCount)
          TCHAR name[MAX_PARAM_NAME];
          _tcscpy(name, _T("MongoDB."));
 #ifdef UNICODE
-         TCHAR *_name = WideStringFromUTF8String(bson_iter_key (&iter));
-         _tcscat(name, _name);
+         TCHAR *_name = WideStringFromUTF8String(bson_iter_key(&iter));
+         _tcslcat(name, _name, MAX_PARAM_NAME);
          MemFree(_name);
 #else
-         _tcscat(name, bson_iter_key (&iter));
+         _tcslcat(name, bson_iter_key(&iter), MAX_PARAM_NAME);
 #endif // UNICODE
-         if(!_tcsicmp(name, _T("MongoDB.ok")))
+         if (!_tcsicmp(name, _T("MongoDB.ok")))
             continue;
 
          if (bson_iter_recurse (&iter, &child))
@@ -389,18 +380,17 @@ NETXMS_SUBAGENT_PARAM *DatabaseInstance::getParameters(int *paramCount)
          {
             _tcscat(name, _T("(*)"));
          }
-         AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Param name added: %s"), name);
-         if((i+1)>attrSize)
+         AgentWriteDebugLog(6, _T("MONGODB: Param name added: %s"), name);
+         if (i >= attrSize)
          {
             attrSize++;
-            result = (NETXMS_SUBAGENT_PARAM *)realloc(result, sizeof(NETXMS_SUBAGENT_PARAM)*attrSize);
+            result = MemReallocArray(result, attrSize);
          }
 
-         memset(result+i, 0, sizeof(NETXMS_SUBAGENT_PARAM));
+         memset(&result[i], 0, sizeof(NETXMS_SUBAGENT_PARAM));
          _tcscpy(result[i].name, name);
          result[i].handler = H_GetParameter;
          result[i].dataType = DCI_DT_STRING;
-         //result[i].arg = NULL;
          _tcscpy(result[i].description, _T(""));
          i++;
       }
@@ -408,7 +398,7 @@ NETXMS_SUBAGENT_PARAM *DatabaseInstance::getParameters(int *paramCount)
    m_serverStatusLock.unlock();
    if (i < attrSize)
    {
-      result = (NETXMS_SUBAGENT_PARAM *)realloc(result, sizeof(NETXMS_SUBAGENT_PARAM)*i);
+      result = MemReallocArray(result, i);
    }
    *paramCount = i;
    return result;
@@ -515,22 +505,22 @@ bool MongoDBCommand::getData(mongoc_client_t *m_dbConn, const TCHAR *dbName, con
 #endif // UNICODE
       sucess = mongoc_database_command_simple (database, &cmd, NULL, &m_result, &error);
       bson_destroy (&cmd);
-      AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Command %s executed with result %d"), command, sucess);
+      AgentWriteDebugLog(5, _T("MONGODB: Command %s executed with result %d"), command, sucess);
       if(!sucess)
       {
 #ifdef UNICODE
          TCHAR *_error = WideStringFromUTF8String(error.message);
-         AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Failed to run command(%s): %s\n"), command, _error);
+         AgentWriteDebugLog(3, _T("MONGODB: Failed to run command(%s): %s\n"), command, _error);
          MemFree(_error);
 #else
-         AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Failed to run command(%s): %s\n"), command, error.message);
+         AgentWriteDebugLog(3, _T("MONGODB: Failed to run command(%s): %s\n"), command, error.message);
 #endif
       }
       mongoc_database_destroy(database);
    }
    else
    {
-      AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Database not found: %s\n"), dbName);
+      AgentWriteDebugLog(5, _T("MONGODB: Database not found: %s\n"), dbName);
       sucess = false;
    }
    return sucess;

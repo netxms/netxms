@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SMBIOS reader implementation for Windows
-** Copyright (C) 2004-2020 Raden Solutions
+** Copyright (C) 2004-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,23 +38,23 @@ struct BiosHeader
  */
 static BYTE *SMBIOS_Reader(size_t *size)
 {
-   BYTE *buffer = (BYTE *)MemAlloc(16384);
+   BYTE *buffer = MemAllocArrayNoInit<BYTE>(16384);
    UINT rc = GetSystemFirmwareTable('RSMB', 0, buffer, 16384);
    if (rc > 16384)
    {
-      buffer = (BYTE *)realloc(buffer, rc);
+      buffer = MemRealloc(buffer, rc);
       rc = GetSystemFirmwareTable('RSMB', 0, buffer, rc);
    }
    if (rc == 0)
    {
       TCHAR errorText[1024];
       nxlog_debug_tag(_T("smbios"), 3, _T("Call to GetSystemFirmwareTable failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
-      free(buffer);
-      return NULL;
+      MemFree(buffer);
+      return nullptr;
    }
 
    BiosHeader *header = reinterpret_cast<BiosHeader*>(buffer);
-   BYTE *bios = (BYTE *)MemAlloc(header->length);
+   BYTE *bios = MemAllocArrayNoInit<BYTE>(header->length);
    memcpy(bios, header->tables, header->length);
    *size = header->length;
    MemFree(buffer);

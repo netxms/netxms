@@ -447,7 +447,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
 	do
 	{
 		countersBufferSize += 8192;
-		counters = (TCHAR *)realloc(counters, countersBufferSize);
+		counters = MemRealloc(counters, countersBufferSize);
 		DWORD bytes = (DWORD)countersBufferSize;
       DWORD type;
 		status = RegQueryValueEx(HKEY_PERFORMANCE_DATA, _T("Counter 009"), nullptr, &type, (BYTE *)counters, &bytes);

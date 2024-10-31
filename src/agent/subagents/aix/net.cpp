@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2004-2023 Victor Kirhenshtein
+** Copyright (C) 2004-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -53,7 +53,7 @@ struct IF_INFO
 /**
  * Interface data
  */
-static perfstat_netinterface_t *s_ifaceData = NULL;
+static perfstat_netinterface_t *s_ifaceData = nullptr;
 static int s_ifaceDataSize = 0;
 static time_t s_ifaceDataTimestamp = 0;
 static Mutex s_ifaceDataLock;
@@ -83,7 +83,12 @@ static bool GetInterfaceData()
    if (ifCount != s_ifaceDataSize)
    {
       s_ifaceDataSize = ifCount;
-      s_ifaceData = (perfstat_netinterface_t *)realloc(s_ifaceData, sizeof(perfstat_netinterface_t) * ifCount);
+      s_ifaceData = MemReallocArray(s_ifaceData, ifCount);
+      if (s_ifaceData == nullptr)
+      {
+         s_ifaceDataSize = 0;
+	 return false;
+      }
    }
 
    perfstat_id_t firstIface;

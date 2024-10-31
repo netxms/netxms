@@ -1062,8 +1062,10 @@ static inline WCHAR *MemAllocStringW(size_t size) { return static_cast<WCHAR*>(M
 template <typename T> static inline T *MemAllocStruct() { return (T*)calloc(1, sizeof(T)); }
 template <typename T> static inline T *MemAllocArray(size_t count) { return (T*)calloc(count, sizeof(T)); }
 template <typename T> static inline T *MemAllocArrayNoInit(size_t count) { return (T*)MemAlloc(count * sizeof(T)); }
-template <typename T> static inline T *MemRealloc(T *p, size_t size) { return (T*)realloc(p, size); }
-template <typename T> static inline T *MemReallocArray(T *p, size_t count) { return (T*)realloc(p, count * sizeof(T)); }
+template <typename T> static inline T *MemRealloc(T *p, size_t size) { auto np = (T*)realloc(p, size); if (np == nullptr) free(p); return np; }
+template <typename T> static inline T *MemReallocArray(T *p, size_t count) { return MemRealloc(p, count * sizeof(T)); }
+template <typename T> static inline T *MemReallocNoFree(T *p, size_t size) { return (T*)realloc(p, size); }
+template <typename T> static inline T *MemReallocArrayNoFree(T *p, size_t count) { return (T*)realloc(p, count * sizeof(T)); }
 #if FREE_IS_NULL_SAFE
 static inline void MemFree(void *p) { free(p); }
 template <typename T> static inline void MemFreeAndNull(T* &p) { free(p); p = nullptr; }
