@@ -1314,6 +1314,9 @@ void NXCPMessage::setField(uint32_t fieldId, const StringSet &data)
  */
 void NXCPMessage::setFieldFromMBString(uint32_t fieldId, const char *value)
 {
+   if (value == nullptr)
+      return;
+
    size_t l = strlen(value) + 1;
    Buffer<WCHAR, 4096> wcValue(l);
    mb_to_wchar(value, -1, wcValue, l);

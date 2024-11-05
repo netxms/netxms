@@ -95,7 +95,7 @@ private:
 
    void deleteContent()
    {
-      MemFree(m_responseData);
+      MemFreeAndNull(m_responseData);
       switch(m_type)
       {
          case DocumentType::JSON:

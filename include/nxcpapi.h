@@ -136,9 +136,9 @@ public:
 #ifdef UNICODE
    void setFieldFromMBString(uint32_t fieldId, const char *value);
 #else
-   void setFieldFromMBString(uint32_t fieldId, const char *value) { set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value); }
+   void setFieldFromMBString(uint32_t fieldId, const char *value) { if (value != nullptr) set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value); }
 #endif
-   void setFieldFromUtf8String(uint32_t fieldId, const char *value) { set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value, false, 0, true); }
+   void setFieldFromUtf8String(uint32_t fieldId, const char *value) { if (value != nullptr) set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value, false, 0, true); }
    void setFieldFromTime(uint32_t fieldId, time_t value) { uint64_t t = static_cast<uint64_t>(value); set(fieldId, NXCP_DT_INT64, &t); }
    void setFieldFromInt32Array(uint32_t fieldId, size_t numElements, const uint32_t *elements);
    void setFieldFromInt32Array(uint32_t fieldId, const IntegerArray<uint32_t>& data);
