@@ -1029,7 +1029,6 @@ public:
 
    void onNewEvent(Event *pEvent);
    void onSyslogMessage(const SyslogMessage *sm);
-   void onNewSNMPTrap(NXCPMessage *pMsg);
    void onObjectChange(const shared_ptr<NetObj>& object);
    void onAlarmUpdate(UINT32 dwCode, const Alarm *alarm);
    void onActionDBUpdate(UINT32 dwCode, const Action *action);

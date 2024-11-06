@@ -9259,22 +9259,6 @@ void ClientSession::onSyslogMessage(const SyslogMessage *sm)
 }
 
 /**
- * Handler for new traps
- */
-void ClientSession::onNewSNMPTrap(NXCPMessage *pMsg)
-{
-   if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_SNMP_TRAPS) && (m_systemAccessRights & SYSTEM_ACCESS_VIEW_TRAP_LOG))
-   {
-      shared_ptr<NetObj> object = FindObjectById(pMsg->getFieldAsUInt32(VID_TRAP_LOG_MSG_BASE + 3));
-      // If can't find object - just send to all events, if object found send to thous who have rights
-      if ((object == nullptr) || object->checkAccessRights(m_userId, OBJECT_ACCESS_READ_ALARMS))
-      {
-         postMessage(pMsg);
-      }
-   }
-}
-
-/**
  * SNMP walker thread's startup parameters
  */
 struct SNMP_WalkerThreadArgs

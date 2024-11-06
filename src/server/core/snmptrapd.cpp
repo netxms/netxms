@@ -309,9 +309,15 @@ static void ProcessTrap(SnmpTrap *trap)
       msg.setField(VID_TRAP_LOG_MSG_BASE + 4, pdu->getTrapId().toString(oidText, 1024));
       msg.setField(VID_TRAP_LOG_MSG_BASE + 5, trap->varbinds);
       EnumerateClientSessions(
-         [&msg] (ClientSession *session) -> void
+         [node, &msg] (ClientSession *session) -> void
          {
-            session->onNewSNMPTrap(&msg);
+            if (session->isAuthenticated() &&
+                (session->getSystemAccessRights() & SYSTEM_ACCESS_VIEW_TRAP_LOG) &&
+                session->isSubscribedTo(NXC_CHANNEL_SNMP_TRAPS) &&
+                ((node == nullptr) || node->checkAccessRights(session->getUserId(), OBJECT_ACCESS_READ_ALARMS)))
+            {
+               session->postMessage(msg);
+            }
          });
 
       g_snmpTrapWriterQueue.put(trap);
