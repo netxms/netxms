@@ -474,11 +474,11 @@ public class ObjectToolsEditor extends ConfigurationView implements SessionListe
 
       final ObjectTool currentTool = (ObjectTool)selection.getFirstElement();
 
-      final InputDialog dlg = new InputDialog(getWindow().getShell(), "Clone Object Tool", "Enter name for cloned object tool", i18n.tr("Copy of {}", currentTool.getName()), new IInputValidator() {
+      final InputDialog dlg = new InputDialog(getWindow().getShell(), "Clone Object Tool", "Enter name for cloned object tool", i18n.tr("Copy of {0}", currentTool.getName()), new IInputValidator() {
          @Override
          public String isValid(String newText)
          {
-            return newText.isBlank() ? "Name should not be blank" : null;
+            return newText.isBlank() ? i18n.tr("Name should not be blank") : null;
          }
       });
       if (dlg.open() != Window.OK)
@@ -556,7 +556,7 @@ public class ObjectToolsEditor extends ConfigurationView implements SessionListe
          protected void configureShell(Shell newShell)
          {
             super.configureShell(newShell);
-            newShell.setText("Properties for " + objectTool.getCommandDisplayName());
+            newShell.setText(i18n.tr("Properties for {0}", objectTool.getCommandDisplayName()));
          }
       };
       dlg.setBlockOnOpen(true);
