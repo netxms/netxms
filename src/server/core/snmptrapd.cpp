@@ -297,8 +297,6 @@ static void ProcessTrap(SnmpTrap *trap)
    // Queue log write or discard
    if ((node != nullptr) || (g_flags & AF_LOG_ALL_SNMP_TRAPS))
    {
-      g_snmpTrapWriterQueue.put(trap);
-
       // Notify connected clients
       TCHAR oidText[1024];
       NXCPMessage msg(CMD_TRAP_LOG_RECORDS, 0);
@@ -315,6 +313,8 @@ static void ProcessTrap(SnmpTrap *trap)
          {
             session->onNewSNMPTrap(&msg);
          });
+
+      g_snmpTrapWriterQueue.put(trap);
    }
    else
    {
