@@ -405,7 +405,7 @@ public class RemoteControlView extends AdHocObjectView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            TcpPortForwarder tcpPortForwarder = new TcpPortForwarder(session, node.getObjectId(), (node.getCapabilities() & AbstractNode.NC_IS_LOCAL_VNC) != 0, 5900, 0);
+            TcpPortForwarder tcpPortForwarder = new TcpPortForwarder(session, node.getObjectId(), (node.getCapabilities() & AbstractNode.NC_IS_LOCAL_VNC) != 0, node.getVncPort(), 0);
             tcpPortForwarder.setDisplay(getDisplay());
             tcpPortForwarder.setMessageArea(RemoteControlView.this);
             tcpPortForwarder.run();
