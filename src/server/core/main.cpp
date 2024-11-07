@@ -49,6 +49,21 @@
 #include <server_custom_init.cpp>
 #endif
 
+#if defined(__FreeBSD__)
+#include "../../agent/smbios/freebsd.cpp"
+#elif defined(__linux__)
+#include "../../agent/smbios/linux.cpp"
+#elif defined(__sun)
+#include "../../agent/smbios/solaris.cpp"
+#elif defined(_WIN32)
+#include "../../agent/smbios/windows.cpp"
+#else
+static BYTE *SMBIOS_Reader(size_t *size)
+{
+   return nullptr;
+}
+#endif
+
 #define DEBUG_TAG_STARTUP  _T("startup")
 #define DEBUG_TAG_SHUTDOWN _T("shutdown")
 
@@ -896,6 +911,19 @@ bool NXCORE_EXPORTABLE Initialize()
 #else
 		nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Setting process CPU affinity is not supported on this operating system"));
 #endif
+	}
+
+	// Log hardware ID
+	SMBIOS_Parse(SMBIOS_Reader);
+	BYTE hwid[SHA1_DIGEST_SIZE];
+	if (GetSystemHardwareId(hwid))
+	{
+	   TCHAR hwidText[SHA1_DIGEST_SIZE * 2 + 1];
+	   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("System hardware ID %s"), BinToStr(hwid, SHA1_DIGEST_SIZE, hwidText));
+	}
+	else
+	{
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Cannot determine system hardware ID"));
 	}
 
 #ifdef _WIN32
