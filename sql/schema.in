@@ -302,6 +302,7 @@ CREATE TABLE access_points
   peer_node_id integer not null,
   peer_if_id integer not null,
   peer_proto integer not null,
+  down_since integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

@@ -725,6 +725,72 @@ static bool GetColumnDataType_SQLite(DB_HANDLE hdb, const TCHAR *table, const TC
 }
 
 /**
+ * Get column data type for given column (Oracle version)
+ */
+static bool GetColumnDataType_Oracle(DB_HANDLE hdb, const TCHAR *table, const TCHAR *column, TCHAR *definition, size_t len)
+{
+   bool success = false;
+   TCHAR query[1024];
+   _sntprintf(query, 1024, _T("SELECT data_type,data_length,data_precision,data_scale FROM user_tab_columns WHERE table_name=UPPER('%s') AND column_name=UPPER('%s')"), table, column);
+   DB_RESULT hResult = DBSelect(hdb, query);
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         TCHAR type[128];
+         DBGetField(hResult, 0, 0, type, 128);
+         if (!_tcsicmp(type, _T("number")))
+         {
+            int p = DBGetFieldLong(hResult, 0, 2);
+            if (p > 0)
+            {
+               TCHAR type[128];
+               DBGetField(hResult, 0, 0, type, 128);
+               int s = DBGetFieldLong(hResult, 0, 3);
+               if (s > 0)
+               {
+                  _sntprintf(definition, len, _T("%s(%d,%d)"), type, p, s);
+               }
+               else if (p == 22)
+               {
+                  _tcslcpy(definition, _T("INTEGER"), len);
+               }
+               else
+               {
+                  _sntprintf(definition, len, _T("%s(%d)"), type, p);
+               }
+            }
+            else
+            {
+               _tcslcpy(definition, type, len);
+            }
+         }
+         else if (!_tcsicmp(type, _T("varchar2")) || !_tcsicmp(type, _T("nvarchar2")) ||
+                  !_tcsicmp(type, _T("char")) || !_tcsicmp(type, _T("nchar")))
+         {
+            int ch = DBGetFieldLong(hResult, 0, 1);
+            if ((ch < INT_MAX) && (ch > 0))
+            {
+               _sntprintf(definition, len, _T("%s(%d)"), type, ch);
+            }
+            else
+            {
+               _tcslcpy(definition, type, len);
+            }
+         }
+         else
+         {
+            _tcslcpy(definition, type, len);
+         }
+         _tcslwr(definition);
+         success = true;
+      }
+      DBFreeResult(hResult);
+   }
+   return success;
+}
+
+/**
  * Get column data type for given column
  */
 bool LIBNXDB_EXPORTABLE DBGetColumnDataType(DB_HANDLE hdb, const TCHAR *table, const TCHAR *column, TCHAR *definition, size_t len)
@@ -739,6 +805,9 @@ bool LIBNXDB_EXPORTABLE DBGetColumnDataType(DB_HANDLE hdb, const TCHAR *table, c
          break;
       case DB_SYNTAX_MYSQL:
          success = GetColumnDataType_MYSQL(hdb, table, column, definition, len);
+         break;
+      case DB_SYNTAX_ORACLE:
+         success = GetColumnDataType_Oracle(hdb, table, column, definition, len);
          break;
       case DB_SYNTAX_SQLITE:
          success = GetColumnDataType_SQLite(hdb, table, column, definition, len);
