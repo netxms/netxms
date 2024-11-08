@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -166,9 +166,7 @@ public class ReportNavigationView extends NavigationView
                }
             }
             Collections.sort(definitions, (d1, d2) -> d1.getName().compareTo(d2.getName()));
-            runInUIThread(() -> {
-               viewer.setInput(definitions);
-            });
+            runInUIThread(() -> viewer.setInput(definitions));
          }
 
          @Override

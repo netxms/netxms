@@ -14613,11 +14613,11 @@ static bool ReportingScheduledTaskFilter(const ScheduledTask *task, void *contex
  */
 void ClientSession::getScheduledReportingTasks(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    uuid reportId = request.getFieldAsGUID(VID_REPORT_DEFINITION);
-   GetScheduledTasks(&msg, m_userId, m_systemAccessRights, ReportingScheduledTaskFilter, &reportId);
-   msg.setField(VID_RCC, RCC_SUCCESS);
-   sendMessage(&msg);
+   GetScheduledTasks(&response, m_userId, m_systemAccessRights, ReportingScheduledTaskFilter, &reportId);
+   response.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(response);
 }
 
 /**
