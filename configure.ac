@@ -2408,6 +2408,12 @@ if test "x$DISABLE_XMPP" != "xyes"; then
 			XMPP_SUPPORT="yes"
 		], [ HAVE_LIBSTROPHE=no ])
 	fi
+	if test "x$HAVE_LIBSTROPHE" = "xyes"; then
+		OLD_LIBS="$LIBS"
+		LIBS="$LIBS -lstrophe"
+		AC_CHECK_FUNCS([xmpp_stanza_add_child_ex])
+		LIBS="$OLD_LIBS"
+	fi
 fi
 
 

@@ -34,6 +34,21 @@
 
 static const NCConfigurationTemplate s_config(false, true);
 
+#if !HAVE_XMPP_STANZA_ADD_CHILD_EX
+
+/**
+ * Custom implementation of xmpp_stanza_add_child_ex for older libstrophe versions
+ */
+static inline int xmpp_stanza_add_child_ex(xmpp_stanza_t *stanza, xmpp_stanza_t *child, int do_clone)
+{
+   int rc = xmpp_stanza_add_child(stanza, child);
+   if (!do_clone)
+      xmpp_stanza_release(child);
+   return rc;
+}
+
+#endif
+
 /**
  * Logger
  */
