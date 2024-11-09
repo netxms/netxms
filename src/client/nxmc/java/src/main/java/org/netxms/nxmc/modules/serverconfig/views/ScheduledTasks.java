@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -79,7 +79,7 @@ public class ScheduledTasks extends ConfigurationView
    public static final int MANAGMENT_STATE = 9;
    public static final int OWNER = 10;
    public static final int COMMENTS = 11;
-   
+
    private NXCSession session;
    private SessionListener listener;
    private SortableTableViewer viewer;
@@ -248,7 +248,7 @@ public class ScheduledTasks extends ConfigurationView
          }
       };
       addKeyBinding("M1+I", actionDisable);
-      
+
       actionEnable = new Action(i18n.tr("En&able")) {
          @Override
          public void run()
@@ -314,20 +314,16 @@ public class ScheduledTasks extends ConfigurationView
 
       new Job(i18n.tr("Updating scheduled task"), this) {
          private ScheduledTask task = null;
-         
+
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final List<String> taskList = session.getScheduledTaskHandlers();
-            getDisplay().syncExec(new Runnable() {
-               @Override
-               public void run()
+            getDisplay().syncExec(() -> {
+               ScheduledTaskEditDialog dialog = new ScheduledTaskEditDialog(getWindow().getShell(), originalTask, taskList);
+               if (dialog.open() == Window.OK)
                {
-                  ScheduledTaskEditDialog dialog = new ScheduledTaskEditDialog(getWindow().getShell(), originalTask, taskList);
-                  if (dialog.open() == Window.OK)
-                  {
-                     task = dialog.getTask();
-                  }
+                  task = dialog.getTask();
                }
             });
             if (task != null)
