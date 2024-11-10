@@ -248,7 +248,7 @@ static int ScheduledTaskComparator(const ScheduledTask **e1, const ScheduledTask
 void ScheduledTask::startExecution(SchedulerCallback *callback)
 {
    lock();
-   if (!(m_flags & (SCHEDULED_TASK_RUNNING | SCHEDULED_TASK_COMPLETED)))
+   if (!(m_flags & SCHEDULED_TASK_RUNNING) && !((m_flags & SCHEDULED_TASK_COMPLETED) && !m_recurrent))
    {
       m_flags |= SCHEDULED_TASK_RUNNING;
       ThreadPoolExecute(g_schedulerThreadPool, this, &ScheduledTask::run, callback);
@@ -267,13 +267,17 @@ void ScheduledTask::startExecution(SchedulerCallback *callback)
  */
 void ScheduledTask::run(SchedulerCallback *callback)
 {
-   uint32_t diff = time(nullptr) - m_scheduledExecutionTime;
-   if (diff > 0)
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("Scheduled task [%u] execution delayed by %u seconds"), m_id, diff);
+   if (!m_recurrent)
+   {
+      uint32_t diff = time(nullptr) - m_scheduledExecutionTime;
+      if (diff > 0)
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("Scheduled task [%u] execution delayed by %u seconds"), m_id, diff);
+   }
 
 	NotifyClientSessions(NX_NOTIFY_SCHEDULE_UPDATE, 0);
 
    callback->m_handler(m_parameters);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("Scheduled task [%u] execution completed"), m_id);
 
    lock();
    m_lastExecutionTime = time(nullptr);
