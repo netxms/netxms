@@ -1342,6 +1342,12 @@ public class NXCPCodes
    public static final long VID_ELEMENT_INDEX = 850;
    public static final long VID_USE_L1_TOPOLOGY = 851;
    public static final long VID_USE_CARBONE_RENDERER = 852;
+   public static final long VID_TRANSFORMED_DATA_TYPE = 853;
+   public static final long VID_PATH_CHECK_REASON = 854;
+   public static final long VID_PATH_CHECK_NODE_ID = 855;
+   public static final long VID_PATH_CHECK_INTERFACE_ID = 856;
+   public static final long VID_TIME_SYNC_ALLOWED = 857;
+   public static final long VID_JDBC_OPTIONS = 858;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

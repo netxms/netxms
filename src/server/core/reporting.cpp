@@ -174,6 +174,10 @@ void RSConnector::sendConfiguration()
    msg.setField(VID_DB_LOGIN, g_szDbLogin);
    msg.setField(VID_DB_PASSWORD, g_szDbPassword);
 
+   TCHAR jdbcOptions[MAX_DB_STRING];
+   ConfigReadStr(_T("ReportingServer.JDBC.Properties"), jdbcOptions, MAX_DB_STRING, _T(""));
+   msg.setField(VID_JDBC_OPTIONS, jdbcOptions);
+
    TCHAR channelName[MAX_OBJECT_NAME];
    if (ConfigReadStr(_T("DefaultNotificationChannel.SMTP.Text"), channelName, MAX_OBJECT_NAME, _T("SMTP-Text")))
    {

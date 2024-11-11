@@ -26,6 +26,19 @@
 #include <nxsl.h>
 
 /**
+ * Upgrade from 50.46 to 50.47
+ */
+static bool H_UpgradeFromV46()
+{
+   CHK_EXEC(CreateConfigParam(_T("ReportingServer.JDBC.Properties"),
+                              _T(""),
+                              _T("Additional properties for JDBC connector on reporting server."),
+                              nullptr, 'S', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(47));
+   return true;
+}
+
+/**
  * Upgrade from 50.45 to 50.46
  */
 static bool H_UpgradeFromV45()
@@ -2196,6 +2209,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 46, 50, 47, H_UpgradeFromV46 },
    { 45, 50, 46, H_UpgradeFromV45 },
    { 44, 50, 45, H_UpgradeFromV44 },
    { 43, 50, 44, H_UpgradeFromV43 },

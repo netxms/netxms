@@ -1534,6 +1534,7 @@ typedef struct
 #define VID_PATH_CHECK_NODE_ID      ((uint32_t)855)
 #define VID_PATH_CHECK_INTERFACE_ID ((uint32_t)856)
 #define VID_TIME_SYNC_ALLOWED       ((uint32_t)857)
+#define VID_JDBC_OPTIONS            ((uint32_t)858)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

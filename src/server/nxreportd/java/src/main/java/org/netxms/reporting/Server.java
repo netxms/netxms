@@ -316,6 +316,8 @@ public final class Server implements Daemon
       String name = getConfigurationProperty("netxms.db.name", "netxms");
       String login = getConfigurationProperty("netxms.db.login");
       String password = getConfigurationProperty("netxms.db.password");
+      String options = getConfigurationProperty("netxms.db.jdbc.properties");
+
       DatabaseType type = DatabaseType.lookup(driver);
       if (type == null || login == null || password == null)
          throw new ServerException("Missing or invalid database connection configuration");
@@ -343,6 +345,27 @@ public final class Server implements Daemon
             break;
          default:
             throw new ServerException("Unsupported database type");
+      }
+
+      if (!options.isBlank())
+      {
+         if (type == DatabaseType.MSSQL)
+         {
+            url = url + ";" + options;
+         }
+         else
+         {
+            StringBuilder urlParameters = new StringBuilder("?");
+            for(String o : options.split(";"))
+            {
+               if (o.isBlank())
+                  continue;
+               if (urlParameters.length() > 1)
+                  urlParameters.append("&");
+               urlParameters.append(o);
+            }
+            url = url + urlParameters.toString();
+         }
       }
       logger.debug("JDBC URL: " + url);
 
