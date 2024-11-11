@@ -942,29 +942,26 @@ uint32_t DataCollectionTarget::getPerfTabDCIList(NXCPMessage *msg, uint32_t user
  */
 uint32_t DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, uint32_t baseId, uint32_t userId)
 {
-   uint32_t varId = baseId;
+   uint32_t fieldId = baseId;
 
-	msg->setField(varId++, m_id);
-	uint32_t countId = varId++;
+	msg->setField(fieldId++, m_id);
+	uint32_t countId = fieldId++;
 	uint32_t count = 0;
 
 	readLockDciAccess();
    for(int i = 0; i < m_dcObjects.size(); i++)
 	{
 		DCObject *object = m_dcObjects.get(i);
-		if (object->hasValue() && (object->getType() == DCO_TYPE_ITEM) && (object->getStatus() == ITEM_STATUS_ACTIVE) && object->hasAccess(userId))
-		{
-			if (static_cast<DCItem*>(object)->hasActiveThreshold())
-			{
-			   static_cast<DCItem*>(object)->fillLastValueSummaryMessage(msg, varId);
-				varId += 50;
-				count++;
-			}
-		}
+		if ((object->getType() == DCO_TYPE_ITEM) && (object->getStatus() == ITEM_STATUS_ACTIVE) && object->hasValue() && object->hasAccess(userId) && static_cast<DCItem*>(object)->hasActiveThreshold())
+      {
+         static_cast<DCItem*>(object)->fillLastValueSummaryMessage(msg, fieldId);
+         fieldId += 50;
+         count++;
+      }
 	}
 	unlockDciAccess();
 	msg->setField(countId, count);
-   return varId;
+   return fieldId;
 }
 
 /**

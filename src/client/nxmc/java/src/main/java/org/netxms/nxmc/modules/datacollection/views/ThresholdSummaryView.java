@@ -20,7 +20,6 @@ package org.netxms.nxmc.modules.datacollection.views;
 
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -90,13 +89,7 @@ public class ThresholdSummaryView extends ObjectView
             if (n.getCode() == SessionNotification.THRESHOLD_STATE_CHANGED)
             {
                final ThresholdStateChange stateChange = (ThresholdStateChange)n.getObject();
-               getDisplay().asyncExec(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     processNotification(stateChange);
-                  }
-               });
+               getDisplay().asyncExec(() -> processNotification(stateChange));
             }
          }
       };
@@ -146,13 +139,9 @@ public class ThresholdSummaryView extends ObjectView
          return;
 
       refreshScheduled = true;
-      getDisplay().timerExec(500, new Runnable() {
-         @Override
-         public void run()
-         {
-            refreshScheduled = false;
-            refresh();
-         }
+      getDisplay().timerExec(500, () -> {
+         refreshScheduled = false;
+         refresh();
       });
    }
 
@@ -164,12 +153,7 @@ public class ThresholdSummaryView extends ObjectView
       // Create menu manager.
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
-         {
-            fillContextMenu(mgr);
-         }
-      });
+      menuMgr.addMenuListener((m) -> fillContextMenu(m));
 
       // Create menu.
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
@@ -251,15 +235,11 @@ public class ThresholdSummaryView extends ObjectView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final List<ThresholdViolationSummary> data = session.getThresholdSummary(rootId);
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  if (isClientAreaDisposed() || (rootId != getObjectId()))
-                     return;
-                  viewer.setInput(data);
-                  viewer.expandAll();
-               }
+            runInUIThread(() -> {
+               if (isClientAreaDisposed() || (rootId != getObjectId()))
+                  return;
+               viewer.setInput(data);
+               viewer.expandAll();
             });
             if (!subscribed)
             {

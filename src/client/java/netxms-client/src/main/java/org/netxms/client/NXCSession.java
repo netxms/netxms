@@ -5796,12 +5796,12 @@ public class NXCSession
       final NXCPMessage response = waitForRCC(msg.getMessageId());
 
       List<ThresholdViolationSummary> list = new ArrayList<ThresholdViolationSummary>();
-      long varId = NXCPCodes.VID_THRESHOLD_BASE;
-      while(response.getFieldAsInt64(varId) != 0)
+      long fieldId = NXCPCodes.VID_THRESHOLD_BASE;
+      while(response.getFieldAsInt64(fieldId) != 0)
       {
-         final ThresholdViolationSummary t = new ThresholdViolationSummary(response, varId);
+         final ThresholdViolationSummary t = new ThresholdViolationSummary(response, fieldId);
          list.add(t);
-         varId += 50 * t.getDciList().size() + 2;
+         fieldId += 50 * t.getDciList().size() + 2;
       }
 
       return list;
