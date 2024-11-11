@@ -92,7 +92,7 @@ NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession
 void RemovePendingFileTransferRequests(ClientSession *session);
 bool UpdateAddressListFromMessage(const NXCPMessage& msg);
 void FillComponentsMessage(NXCPMessage *msg);
-void GetClientConfigurationHints(NXCPMessage *msg);
+void GetClientConfigurationHints(NXCPMessage *msg, uint32_t userId);
 
 void GetPredictionEngines(NXCPMessage *msg);
 bool GetPredictedData(ClientSession *session, const NXCPMessage& request, NXCPMessage *response, const DataCollectionTarget& dcTarget);
@@ -2577,7 +2577,7 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
       response->setField(VID_NETMAP_DEFAULT_WIDTH, ConfigReadULong(_T("Objects.NetworkMaps.DefaultWidth"), 1920));
       response->setField(VID_NETMAP_DEFAULT_HEIGHT, ConfigReadULong(_T("Objects.NetworkMaps.DefaultHeight"), 1080));
 
-      GetClientConfigurationHints(response);
+      GetClientConfigurationHints(response, m_userId);
       FillLicenseProblemsMessage(response);
 
       if (request.getFieldAsBoolean(VID_ENABLE_COMPRESSION))

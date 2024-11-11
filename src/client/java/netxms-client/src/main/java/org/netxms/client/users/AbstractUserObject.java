@@ -20,11 +20,8 @@ package org.netxms.client.users;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
-import java.util.Map.Entry;
-
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
@@ -82,7 +79,7 @@ public abstract class AbstractUserObject
 	protected String description;
 	protected String ldapDn;
 	protected String ldapId;
-	protected Map<String, String> customAttributes = new HashMap<String, String>(0);
+   protected Map<String, String> customAttributes;
    private Date created = null;
 
 	/**
@@ -97,6 +94,7 @@ public abstract class AbstractUserObject
 		this.name = name;
 		description = "";
 		guid = UUID.randomUUID();
+      customAttributes = new HashMap<String, String>(0);
 	}
 
 	/**
@@ -117,13 +115,7 @@ public abstract class AbstractUserObject
 		this.ldapDn = src.ldapDn;
 		this.ldapId = src.ldapId;
 		this.created = src.created;
-		this.customAttributes = new HashMap<String, String>(0);
-		Iterator<Entry<String, String>> it  = src.customAttributes.entrySet().iterator();
-		while(it.hasNext())
-		{
-			Entry<String, String> e = it.next();
-			this.customAttributes.put(new String(e.getKey()), new String(e.getValue()));
-		}
+      this.customAttributes = new HashMap<String, String>(src.customAttributes);
 	}
 
 	/**
@@ -144,15 +136,7 @@ public abstract class AbstractUserObject
 		ldapDn = msg.getFieldAsString(NXCPCodes.VID_LDAP_DN);
       ldapId = msg.getFieldAsString(NXCPCodes.VID_LDAP_ID);
       created = msg.getFieldAsDate(NXCPCodes.VID_CREATION_TIME);
-
-		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES);
-		long varId = NXCPCodes.VID_CUSTOM_ATTRIBUTES_BASE;
-		for(int i = 0; i < count; i++)
-		{
-			String name = msg.getFieldAsString(varId++);
-			String value = msg.getFieldAsString(varId++);
-			customAttributes.put(name, value);
-		}
+      customAttributes = msg.getStringMapFromFields(NXCPCodes.VID_CUSTOM_ATTRIBUTES_BASE, NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES);
 	}
 
 	/**
@@ -167,16 +151,7 @@ public abstract class AbstractUserObject
 		msg.setFieldInt64(NXCPCodes.VID_USER_SYS_RIGHTS, systemRights);
       msg.setField(NXCPCodes.VID_UI_ACCESS_RULES, uiAccessRules);
 		msg.setField(NXCPCodes.VID_USER_DESCRIPTION, description);
-
-		msg.setFieldInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES, customAttributes.size());
-		long fieldId = NXCPCodes.VID_CUSTOM_ATTRIBUTES_BASE;
-		Iterator<Entry<String, String>> it = customAttributes.entrySet().iterator();
-		while(it.hasNext())
-		{
-			Entry<String, String> e = it.next();
-			msg.setField(fieldId++, e.getKey());
-			msg.setField(fieldId++, e.getValue());
-		}
+      msg.setFieldsFromStringMap(customAttributes, NXCPCodes.VID_CUSTOM_ATTRIBUTES_BASE, NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES);
 	}
 
 	/**
@@ -340,9 +315,26 @@ public abstract class AbstractUserObject
 	}
 
 	/**
-	 * Check if object is disabled
-	 * @return true if object is disabled
-	 */
+    * @return the customAttributes
+    */
+   public Map<String, String> getCustomAttributes()
+   {
+      return customAttributes;
+   }
+
+   /**
+    * @param customAttributes the customAttributes to set
+    */
+   public void setCustomAttributes(Map<String, String> customAttributes)
+   {
+      this.customAttributes = customAttributes;
+   }
+
+   /**
+    * Check if object is disabled
+    * 
+    * @return true if object is disabled
+    */
 	public boolean isDisabled()
 	{
 		return ((flags & DISABLED) == DISABLED);

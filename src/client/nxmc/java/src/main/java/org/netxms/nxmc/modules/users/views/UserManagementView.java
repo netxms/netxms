@@ -59,6 +59,7 @@ import org.netxms.nxmc.modules.users.dialogs.ChangePasswordDialog;
 import org.netxms.nxmc.modules.users.dialogs.CreateUserOrGroupDialog;
 import org.netxms.nxmc.modules.users.dialogs.IssueTokenDialog;
 import org.netxms.nxmc.modules.users.propertypages.Authentication;
+import org.netxms.nxmc.modules.users.propertypages.CustomAttributes;
 import org.netxms.nxmc.modules.users.propertypages.General;
 import org.netxms.nxmc.modules.users.propertypages.GroupMembership;
 import org.netxms.nxmc.modules.users.propertypages.Members;
@@ -274,6 +275,7 @@ public class UserManagementView extends ConfigurationView
             }
             pm.addToRoot(new PreferenceNode("system-rights", new SystemRights(userObject, UserManagementView.this)));
             pm.addToRoot(new PreferenceNode("ui-access-rules", new UIAccessRules(userObject, UserManagementView.this)));
+            pm.addToRoot(new PreferenceNode("custom-attributes", new CustomAttributes(userObject, UserManagementView.this)));
 
             PropertyDialog dlg = new PropertyDialog(getWindow().getShell(), pm, String.format(i18n.tr("Properties for %s"), userObject.getLabel()));
             dlg.open();

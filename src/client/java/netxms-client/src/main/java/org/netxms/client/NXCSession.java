@@ -2566,9 +2566,9 @@ public class NXCSession
             String key = response.getFieldAsString(fieldId++);
             String value = response.getFieldAsString(fieldId++);
             clientConfigurationHints.put(key, value);
-            logger.info("Configuration hint: " + key + " = " + value);
          }
       }
+      clientConfigurationHints.forEach((key, value) -> logger.info("Configuration hint: {} = {}", key, value));
 
       messageOfTheDay = response.getFieldAsString(NXCPCodes.VID_MESSAGE_OF_THE_DAY);
 

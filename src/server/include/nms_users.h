@@ -288,6 +288,10 @@ public:
 
    const TCHAR *getAttribute(const TCHAR *name) const { return m_attributes.get(name); }
    uint32_t getAttributeAsUInt32(const TCHAR *name) const;
+   void enumerateCustomAttributes(EnumerationCallbackResult (*callback)(const TCHAR*, const TCHAR*, void*), void *context) const
+   {
+      m_attributes.forEach(callback, context);
+   }
    void setAttribute(const TCHAR *name, const TCHAR *value)
    {
       m_attributes.set(name, value);
@@ -475,6 +479,7 @@ Iterator<UserDatabaseObject> NXCORE_EXPORTABLE OpenUserDatabase();
 void NXCORE_EXPORTABLE CloseUserDatabase();
 const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(uint32_t id, const TCHAR *name);
 uint32_t NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(uint32_t id, const TCHAR *name);
+void NXCORE_EXPORTABLE EnumerateUserDbObjectAttributes(uint32_t id, EnumerationCallbackResult (*callback)(const TCHAR*, const TCHAR*, void*), void *context);
 void NXCORE_EXPORTABLE SetUserDbObjectAttr(uint32_t id, const TCHAR *name, const TCHAR *value);
 uint32_t NXCORE_EXPORTABLE ResolveUserName(const TCHAR *loginName);
 TCHAR NXCORE_EXPORTABLE *ResolveUserId(uint32_t id, TCHAR *buffer, bool noFail = false);
@@ -501,6 +506,14 @@ shared_ptr<Config> GetUser2FAMethodBinding(int userId, const TCHAR *method);
 void FillUser2FAMethodBindingInfo(uint32_t userId, NXCPMessage *msg);
 uint32_t ModifyUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName, const StringMap& configuration);
 uint32_t DeleteUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName);
+
+/**
+ * Template wrapper for EnumerateUserDbObjectAttributes
+ */
+template<typename C> static inline void EnumerateUserDbObjectAttributes(uint32_t id, EnumerationCallbackResult (*callback)(const TCHAR*, const TCHAR*, C*), C *context)
+{
+   EnumerateUserDbObjectAttributes(id, reinterpret_cast<EnumerationCallbackResult (*)(const TCHAR*, const TCHAR*, void*)>(callback), context);
+}
 
 /**
  * CAS API
