@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.21 to 51.22
+ */
+static bool H_UpgradeFromV21()
+{
+   if (GetSchemaLevelForMajorVersion(50) < 47)
+   {
+      CHK_EXEC(CreateConfigParam(_T("ReportingServer.JDBC.Properties"),
+                                 _T(""),
+                                 _T("Additional properties for JDBC connector on reporting server."),
+                                 nullptr, 'S', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(50, 47));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(22));
+   return true;
+}
+
+/**
  * Upgrade from 51.20 to 51.21
  */
 static bool H_UpgradeFromV20()
@@ -478,6 +495,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 21, 51, 22, H_UpgradeFromV21 },
    { 20, 51, 21, H_UpgradeFromV20 },
    { 19, 51, 20, H_UpgradeFromV19 },
    { 18, 51, 19, H_UpgradeFromV18 },

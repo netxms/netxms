@@ -338,6 +338,7 @@ public class CommunicationManager
       properties.setProperty("netxms.db.name@remote", request.getFieldAsString(NXCPCodes.VID_DB_NAME));
       properties.setProperty("netxms.db.login@remote", request.getFieldAsString(NXCPCodes.VID_DB_LOGIN));
       properties.setProperty("netxms.db.password@remote", request.getFieldAsString(NXCPCodes.VID_DB_PASSWORD));
+      properties.setProperty("netxms.db.jdbc.properties@remote", request.getFieldAsString(NXCPCodes.VID_JDBC_OPTIONS));
       properties.setProperty("smtp.fromAddr@remote", request.getFieldAsString(NXCPCodes.VID_SMTP_FROM_ADDRESS));
       properties.setProperty("smtp.fromName@remote", request.getFieldAsString(NXCPCodes.VID_SMTP_FROM_NAME));
       properties.setProperty("smtp.server@remote", request.getFieldAsString(NXCPCodes.VID_SMTP_SERVER));
