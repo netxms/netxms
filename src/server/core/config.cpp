@@ -1302,7 +1302,7 @@ static EnumerationCallbackResult GetClientConfigurationHints_Callback(const TCHA
 /**
  * Get client configuration hints
  */
-void GetClientConfigurationHints(NXCPMessage *msg)
+void GetClientConfigurationHints(NXCPMessage *msg, uint32_t userId)
 {
    GetClientConfigurationHints_CallbackData data;
    data.count = 0;
@@ -1312,6 +1312,8 @@ void GetClientConfigurationHints(NXCPMessage *msg)
    s_configCacheLock.readLock();
    s_configCache.forEach(GetClientConfigurationHints_Callback, &data);
    s_configCacheLock.unlock();
+
+   EnumerateUserDbObjectAttributes(userId, GetClientConfigurationHints_Callback, &data);
 
    msg->setField(VID_CONFIG_HINT_COUNT, data.count);
 }

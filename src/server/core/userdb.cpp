@@ -1874,6 +1874,20 @@ uint32_t NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(uint32_t id, const TCHAR *
 }
 
 /**
+ * Enumerate all custom attributes for given user database object
+ */
+void NXCORE_EXPORTABLE EnumerateUserDbObjectAttributes(uint32_t id, EnumerationCallbackResult (*callback)(const TCHAR*, const TCHAR*, void*), void *context)
+{
+   s_userDatabaseLock.readLock();
+
+   UserDatabaseObject *object = s_userDatabase.get(id);
+   if (object != nullptr)
+      object->enumerateCustomAttributes(callback, context);
+
+   s_userDatabaseLock.unlock();
+}
+
+/**
  * Set custom attribute's value
  */
 void NXCORE_EXPORTABLE SetUserDbObjectAttr(uint32_t id, const TCHAR *name, const TCHAR *value)
