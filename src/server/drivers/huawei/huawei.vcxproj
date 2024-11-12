@@ -302,6 +302,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="huawei.cpp" />
+    <ClCompile Include="lansw.cpp" />
     <ClCompile Include="optix.cpp" />
   </ItemGroup>
   <ItemGroup>

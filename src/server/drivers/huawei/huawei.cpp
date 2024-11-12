@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Drivers for Huawei devices
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
  * Driver module entry point
  */
 NDD_BEGIN_DRIVER_LIST
+NDD_DRIVER(HuaweiSWDriver)
 NDD_DRIVER(OptixDriver)
 NDD_END_DRIVER_LIST
 DECLARE_NDD_MODULE_ENTRY_POINT

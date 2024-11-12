@@ -57,7 +57,7 @@ const TCHAR* QtechSWDriver::getVersion()
  */
 int QtechSWDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return oid.startsWith({ 1, 3, 6, 1, 4, 1, 27514, 1, 1, 1 }) ? 127 : 0;
+   return (oid.startsWith({ 1, 3, 6, 1, 4, 1, 27514, 1, 1, 1 }) || oid.startsWith({ 1, 3, 6, 1, 4, 1, 27514, 1, 1, 10 })) ? 127 : 0;
 }
 
 /**

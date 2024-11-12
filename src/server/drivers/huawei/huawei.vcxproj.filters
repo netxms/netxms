@@ -23,6 +23,9 @@
     <ClCompile Include="huawei.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="lansw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="optix.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

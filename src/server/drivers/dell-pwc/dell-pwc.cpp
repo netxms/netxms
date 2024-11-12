@@ -74,6 +74,22 @@ void PowerConnectDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId
 }
 
 /**
+ * Get hardware information from device.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver data
+ * @param hwInfo pointer to hardware information structure to fill
+ * @return true if hardware information is available
+ */
+bool PowerConnectDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+{
+   // Only set vendor here, rest will be retrieved from ENTITY MIB
+   _tcscpy(hwInfo->vendor, _T("Dell"));
+   return true;
+}
+
+/**
  * Get list of interfaces for given node
  *
  * @param snmp SNMP transport

@@ -113,7 +113,7 @@ hpe_la_LIBADD = ../../libnetxms/libnetxms.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../libnxsrv/libnxsrv.la
 
-huawei_la_SOURCES = huawei/huawei.cpp huawei/optix.cpp
+huawei_la_SOURCES = huawei/huawei.cpp huawei/lansw.cpp huawei/optix.cpp
 huawei_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 huawei_la_LDFLAGS = -module -avoid-version
 huawei_la_LIBADD = ../../libnetxms/libnetxms.la \

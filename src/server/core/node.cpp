@@ -4185,7 +4185,7 @@ bool Node::updateSystemHardwareInformation(PollerInfo *poller, uint32_t requestI
          success = m_driver->getHardwareInformation(snmp, this, m_driverData, &hwInfo);
          delete snmp;
       }
-      if (!success && (m_capabilities & NC_HAS_ENTITY_MIB))
+      if ((!success || (hwInfo.vendor[0] == 0) || (hwInfo.productName[0] == 0) || (hwInfo.productVersion[0] == 0) || (hwInfo.serialNumber[0] == 0)) && (m_capabilities & NC_HAS_ENTITY_MIB))
       {
          // Try to get hardware information from ENTITY MIB
          lockProperties();
@@ -4201,10 +4201,14 @@ bool Node::updateSystemHardwareInformation(PollerInfo *poller, uint32_t requestI
                }
                if ((root->getClass() == COMPONENT_CLASS_CHASSIS) || (root->getClass() == COMPONENT_CLASS_STACK))
                {
-                  _tcslcpy(hwInfo.vendor, root->getVendor(), 128);
-                  _tcslcpy(hwInfo.productName, (*root->getModel() != 0) ? root->getModel() : root->getDescription(), 128);
-                  _tcslcpy(hwInfo.productVersion, root->getFirmware(), 16);
-                  _tcslcpy(hwInfo.serialNumber, root->getSerial(), 32);
+                  if (hwInfo.vendor[0] == 0)
+                     _tcslcpy(hwInfo.vendor, root->getVendor(), 128);
+                  if (hwInfo.productName[0] == 0)
+                     _tcslcpy(hwInfo.productName, (*root->getModel() != 0) ? root->getModel() : root->getDescription(), 128);
+                  if (hwInfo.productVersion[0] == 0)
+                     _tcslcpy(hwInfo.productVersion, root->getFirmware(), 16);
+                  if (hwInfo.serialNumber[0] == 0)
+                     _tcslcpy(hwInfo.serialNumber, root->getSerial(), 32);
                }
                success = (hwInfo.vendor[0] != 0) || (hwInfo.productName[0] != 0) || (hwInfo.productVersion[0] != 0) || (hwInfo.serialNumber[0] != 0);
             }
