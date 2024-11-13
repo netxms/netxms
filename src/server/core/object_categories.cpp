@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -74,10 +74,11 @@ shared_ptr<ObjectCategory> NXCORE_EXPORTABLE FindObjectCategoryByName(const TCHA
 /**
  * Reset category for objects
  */
-static void ResetObjectCategory(NetObj *object, uint32_t *categoryId)
+static EnumerationCallbackResult ResetObjectCategory(NetObj *object, uint32_t *categoryId)
 {
    if (object->getCategoryId() == *categoryId)
       object->setCategoryId(0);
+   return _CONTINUE;
 }
 
 /**
@@ -158,22 +159,19 @@ uint32_t ModifyObjectCategory(const NXCPMessage& msg, uint32_t *categoryId)
 }
 
 /**
- * Callback for filling NXCP message
- */
-static void FillMessage(ObjectCategory *category, std::pair<NXCPMessage*, uint32_t> *context)
-{
-   category->fillMessage(context->first, context->second);
-   context->second += 10;
-}
-
-/**
  * Get list of all object categories into NXCP message
  */
 void ObjectCategoriesToMessage(NXCPMessage *msg)
 {
-   std::pair<NXCPMessage*, uint32_t> context(msg, VID_ELEMENT_LIST_BASE);
-   s_objectCategories.forEach(FillMessage, &context);
-   msg->setField(VID_NUM_ELEMENTS, (context.second - VID_ELEMENT_LIST_BASE) / 10);
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   s_objectCategories.forEach(
+      [msg, &fieldId] (ObjectCategory *category) -> EnumerationCallbackResult
+      {
+         category->fillMessage(msg, fieldId);
+         fieldId += 10;
+         return _CONTINUE;
+      });
+   msg->setField(VID_NUM_ELEMENTS, (fieldId - VID_ELEMENT_LIST_BASE) / 10);
 }
 
 /**

@@ -224,7 +224,12 @@ static void DumpIndex(ServerConsole *console, HashIndex<uuid> *index)
  */
 static void DumpIndex(ServerConsole *console, ObjectIndex *index)
 {
-   index->forEach([console](NetObj *object) { console->printf(_T("%08X %p %s\n"), object->getId(), object, object->getName()); });
+   index->forEach(
+      [console] (NetObj *object) -> EnumerationCallbackResult
+      {
+         console->printf(_T("%08X %p %s\n"), object->getId(), object, object->getName());
+         return _CONTINUE;
+      });
 }
 
 /**

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2019-2022 Raden Solutions
+** Copyright (C) 2019-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -302,20 +302,20 @@ struct FillMessageCallbackData
 /**
  * Fill message with link information
  */
-static void FillMessageCallback(PhysicalLink *link, FillMessageCallbackData *data)
+static EnumerationCallbackResult FillMessageCallback(PhysicalLink *link, FillMessageCallbackData *data)
 {
    bool rightFirst = false;
    if (data->filter != nullptr) //filter objects
    {
       rightFirst = data->filter->indexOf(link->getRightObjectId()) != -1 || data->filter->indexOf(link->getRightParentId()) != -1;
-      if(data->filter->indexOf(link->getLeftObjectId()) == -1 && !rightFirst &&
-            data->filter->indexOf(link->getLeftParentId()) == -1)
-         return;
+      if (data->filter->indexOf(link->getLeftObjectId()) == -1 && !rightFirst && data->filter->indexOf(link->getLeftParentId()) == -1)
+         return _CONTINUE;
 
       if (data->patchPanelId != 0 && link->getLeftPatchPanelId() != data->patchPanelId && link->getRightPatchPanelId() != data->patchPanelId)
-         return;
+         return _CONTINUE;
    }
-   //check access
+
+   // check access
    shared_ptr<NetObj> object = FindObjectById(link->getLeftObjectId());
    bool accessLeft;
    bool accessRight;
@@ -336,6 +336,8 @@ static void FillMessageCallback(PhysicalLink *link, FillMessageCallbackData *dat
       data->base += 20;
       data->objCount++;
    }
+
+   return _CONTINUE;
 }
 
 /**

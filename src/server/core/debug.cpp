@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,10 +33,11 @@ void ShowServerStats(CONSOLE_CTX console)
 {
 	int dciCount = 0;
 	g_idxObjectById.forEach(
-	   [&dciCount] (NetObj *object)
+	   [&dciCount] (NetObj *object) -> EnumerationCallbackResult
 	   {
          if (object->isDataCollectionTarget())
             dciCount += static_cast<DataCollectionTarget*>(object)->getItemCount();
+         return _CONTINUE;
 	   });
 
 	uint32_t s = static_cast<uint32_t>(time(nullptr) - g_serverStartTime);
@@ -52,10 +53,11 @@ void ShowServerStats(CONSOLE_CTX console)
 
    int ifCount = 0;
    g_idxObjectById.forEach(
-      [&ifCount] (NetObj *object) -> void
+      [&ifCount] (NetObj *object) -> EnumerationCallbackResult
       {
          if (object->getObjectClass() == OBJECT_INTERFACE)
             ifCount++;
+         return _CONTINUE;
       });
 
    ConsolePrintf(console,

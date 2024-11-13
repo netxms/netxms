@@ -392,14 +392,15 @@ void DataCollector(const shared_ptr<DCObject>& dcObject)
 /**
  * Callback for queueing DCIs
  */
-static void QueueItems(NetObj *object, uint32_t *watchdogId)
+static EnumerationCallbackResult QueueItems(NetObj *object, uint32_t *watchdogId)
 {
    if (IsShutdownInProgress())
-      return;
+      return _STOP;
 
    WatchdogNotify(*watchdogId);
 	nxlog_debug_tag(DEBUG_TAG_DC_POLLER, 8, _T("ItemPoller: calling DataCollectionTarget::queueItemsForPolling for object %s [%u]"), object->getName(), object->getId());
 	static_cast<DataCollectionTarget*>(object)->queueItemsForPolling();
+	return _CONTINUE;
 }
 
 /**
@@ -507,7 +508,7 @@ struct WriteFullParamListToMessage_CallbackData
 /**
  * Update parameter list from node
  */
-static void UpdateParamList(NetObj *object, void *data)
+static EnumerationCallbackResult UpdateParamList(NetObj *object, void *data)
 {
    WriteFullParamListToMessage_CallbackData *cd = static_cast<WriteFullParamListToMessage_CallbackData*>(data);
 
@@ -530,12 +531,14 @@ static void UpdateParamList(NetObj *object, void *data)
 		}
 	}
 	static_cast<Node*>(object)->closeParamList();
+
+	return _CONTINUE;
 }
 
 /**
  * Update table list from node
  */
-static void UpdateTableList(NetObj *object, void *data)
+static EnumerationCallbackResult UpdateTableList(NetObj *object, void *data)
 {
 	ObjectArray<AgentTableDefinition> *fullList = (ObjectArray<AgentTableDefinition> *)data;
 
@@ -558,6 +561,8 @@ static void UpdateTableList(NetObj *object, void *data)
 		}
 	}
 	static_cast<Node*>(object)->closeTableList();
+
+	return _CONTINUE;
 }
 
 /**

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -165,32 +165,29 @@ shared_ptr<GeoArea> NXCORE_EXPORTABLE GetGeoArea(uint32_t id)
 }
 
 /**
- * Reset category for objects
- */
-static void ResetGeoArea(NetObj *object, uint32_t *areaId)
-{
-}
-
-/**
- * Compare category for objects
- */
-static bool CompareGeoAreaId(NetObj *object, uint32_t *areaId)
-{
-   return false;
-}
-
-/**
  * Delete geo area
  */
 uint32_t DeleteGeoArea(uint32_t id, bool forceDelete)
 {
    if (forceDelete)
    {
-      g_idxObjectById.forEach(ResetGeoArea, &id);
+      g_idxObjectById.forEach(
+         [id] (NetObj *object) -> EnumerationCallbackResult
+         {
+            if (object->isDataCollectionTarget())
+               static_cast<DataCollectionTarget*>(object)->removeGeoArea(id);
+            return _CONTINUE;
+         });
    }
    else
    {
-      shared_ptr<NetObj> object = g_idxObjectById.find(CompareGeoAreaId, &id);
+      shared_ptr<NetObj> object = g_idxObjectById.find(
+         [id] (NetObj *object) -> bool
+         {
+            if (object->isDataCollectionTarget())
+               return static_cast<DataCollectionTarget*>(object)->isGeoAreaReferenced(id);
+            return false;
+         });
       if (object != nullptr)
          return RCC_GEO_AREA_IN_USE;
    }
@@ -251,10 +248,11 @@ uint32_t ModifyGeoArea(const NXCPMessage& msg, uint32_t *areaId)
 /**
  * Callback for filling NXCP message
  */
-static void FillMessage(GeoArea *area, std::pair<NXCPMessage*, uint32_t> *context)
+static EnumerationCallbackResult FillMessage(GeoArea *area, std::pair<NXCPMessage*, uint32_t> *context)
 {
    area->fillMessage(context->first, context->second);
    context->second += 4096;
+   return _CONTINUE;
 }
 
 /**

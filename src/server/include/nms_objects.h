@@ -315,8 +315,8 @@ public:
    void *find(bool (*comparator)(void*, void*), void *data) const;
    void *find(std::function<bool (void*)> comparator) const;
 
-   void forEach(void (*callback)(void*, void*), void *data) const;
-   void forEach(std::function<void (void*)> callback) const;
+   void forEach(EnumerationCallbackResult (*callback)(void*, void*), void *data) const;
+   void forEach(std::function<EnumerationCallbackResult (void*)> callback) const;
 
    bool isOwner() const
    {
@@ -349,14 +349,15 @@ private:
       return context->first(element->get(), context->second);
    }
 
-   static void enumeratorWrapper(shared_ptr<T> *element, std::pair<void (*)(T*, void*), void*> *context)
+   static void enumeratorWrapper(shared_ptr<T> *element, std::pair<EnumerationCallbackResult (*)(T*, void*), void*> *context)
    {
       context->first(element->get(), context->second);
    }
 
-   static void getAllCallaback(shared_ptr<T> *element, SharedObjectArray<T> *resultSet)
+   static EnumerationCallbackResult getAllCallback(shared_ptr<T> *element, SharedObjectArray<T> *resultSet)
    {
       resultSet->add(*element);
+      return _CONTINUE;
    }
 
 public:
@@ -389,7 +390,7 @@ public:
    unique_ptr<SharedObjectArray<T>> getAll() const
    {
       auto resultSet = make_unique<SharedObjectArray<T>>();
-      AbstractIndexBase::forEach(reinterpret_cast<void (*)(void*, void*)>(getAllCallaback), resultSet.get());
+      AbstractIndexBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(void*, void*)>(getAllCallback), resultSet.get());
       return resultSet;
    }
 
@@ -437,21 +438,21 @@ public:
       return resultSet;
    }
 
-   void forEach(void (*callback)(T *, void *), void *context) const
+   void forEach(EnumerationCallbackResult (*callback)(T *, void *), void *context) const
    {
-      std::pair<void (*)(T*, void*), void*> wrapperData(callback, context);
-      AbstractIndexBase::forEach(reinterpret_cast<void (*)(void*, void*)>(enumeratorWrapper), &wrapperData);
+      std::pair<EnumerationCallbackResult (*)(T*, void*), void*> wrapperData(callback, context);
+      AbstractIndexBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(void*, void*)>(enumeratorWrapper), &wrapperData);
    }
 
-   template<typename P> void forEach(void (*callback)(T *, P *), P *context) const
+   template<typename P> void forEach(EnumerationCallbackResult (*callback)(T *, P *), P *context) const
    {
-      std::pair<void (*)(T*, void*), void*> wrapperData(reinterpret_cast<void (*)(T*, void*)>(callback), context);
-      AbstractIndexBase::forEach(reinterpret_cast<void (*)(void*, void*)>(enumeratorWrapper), &wrapperData);
+      std::pair<EnumerationCallbackResult (*)(T*, void*), void*> wrapperData(reinterpret_cast<EnumerationCallbackResult (*)(T*, void*)>(callback), context);
+      AbstractIndexBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(void*, void*)>(enumeratorWrapper), &wrapperData);
    }
 
-   void forEach(std::function<void (T*)> callback) const
+   void forEach(std::function<EnumerationCallbackResult (T*)> callback) const
    {
-      AbstractIndexBase::forEach([callback](void *element) { callback(static_cast<shared_ptr<T>*>(element)->get()); });
+      AbstractIndexBase::forEach([callback](void *element) -> EnumerationCallbackResult { return callback(static_cast<shared_ptr<T>*>(element)->get()); });
    }
 };
 
@@ -486,7 +487,11 @@ public:
 
    T *find(std::function<bool (T*)> comparator)
    {
-      return static_cast<T*>(AbstractIndexBase::find(reinterpret_cast<std::function<bool (void*)>>(comparator)));
+      return static_cast<T*>(AbstractIndexBase::find(
+         [comparator] (void *e) -> bool
+         {
+            return comparator(static_cast<T*>(e));
+         }));
    }
 
    ObjectArray<T> *findAll(bool (*comparator)(T *, void *), void *context)
@@ -508,19 +513,23 @@ public:
       return resultSet;
    }
 
-   void forEach(void (*callback)(T *, void *), void *context)
+   void forEach(EnumerationCallbackResult (*callback)(T *, void *), void *context)
    {
-      AbstractIndexBase::forEach(reinterpret_cast<void (*)(void*, void*)>(callback), context);
+      AbstractIndexBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(void*, void*)>(callback), context);
    }
 
-   template<typename P> void forEach(void (*callback)(T *, P *), P *context)
+   template<typename P> void forEach(EnumerationCallbackResult (*callback)(T *, P *), P *context)
    {
-      AbstractIndexBase::forEach(reinterpret_cast<void (*)(void*, void*)>(callback), context);
+      AbstractIndexBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(void*, void*)>(callback), context);
    }
 
-   void forEach(std::function<void (T*)> callback)
+   void forEach(std::function<EnumerationCallbackResult (T*)> callback)
    {
-      AbstractIndexBase::forEach(reinterpret_cast<std::function<void (void*)>>(callback));
+      AbstractIndexBase::forEach(
+         [callback] (void *e) -> EnumerationCallbackResult
+         {
+            return callback(static_cast<T*>(e));
+         });
    }
 };
 
@@ -1211,7 +1220,7 @@ private:
    typedef NObject super;
    time_t m_creationTime; //Object creation time
 
-   static void onObjectDeleteCallback(NetObj *object, NetObj *context);
+   static EnumerationCallbackResult onObjectDeleteCallback(NetObj *object, NetObj *context);
 
    void getFullChildListInternal(ObjectIndex *list, bool eventSourceOnly) const;
 
@@ -2584,7 +2593,7 @@ protected:
    void calculateProxyLoad();
 
    virtual void collectProxyInfo(ProxyInfo *info);
-   static void collectProxyInfoCallback(NetObj *object, void *data);
+   static EnumerationCallbackResult collectProxyInfoCallback(NetObj *object, void *data);
 
    bool saveDCIListForCleanup(DB_HANDLE hdb);
    void loadDCIListForCleanup(DB_HANDLE hdb);
@@ -2663,9 +2672,12 @@ public:
    void scheduleTemplateRemoval(Template *templateObject, NetObj *pollTarget);
    virtual void onTemplateRemove(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI);
 
-   static void removeTemplate(const shared_ptr<ScheduledTaskParameters>& parameters);
-
    shared_ptr<NetworkMapObjectList> buildInternalCommunicationTopology();
+
+   bool isGeoAreaReferenced(uint32_t id) const;
+   void removeGeoArea(uint32_t id);
+
+   static void removeTemplate(const shared_ptr<ScheduledTaskParameters>& parameters);
 };
 
 /**

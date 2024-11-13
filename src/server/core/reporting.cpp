@@ -260,13 +260,14 @@ struct ViewBuilderContext
 /**
  * Data view builder callback
  */
-static void ViewBuilderCallback(NetObj *object, ViewBuilderContext *context)
+static EnumerationCallbackResult ViewBuilderCallback(NetObj *object, ViewBuilderContext *context)
 {
    if (object->isDataCollectionTarget() && object->checkAccessRights(context->userId, OBJECT_ACCESS_READ) && (static_cast<DataCollectionTarget*>(object)->getItemCount() > 0))
    {
       context->query->append(_T("SELECT * FROM idata_")).append(object->getId()).append(_T(" UNION ALL "));
       context->tableCount++;
    }
+   return _CONTINUE;
 }
 
 /**

@@ -1464,7 +1464,12 @@ template<typename T> static void LoadObjectsFromTable(const TCHAR *className, DB
 void ExpandCommentMacrosTask(const shared_ptr<ScheduledTaskParameters> &parameters)
 {
    nxlog_debug_tag(_T("obj.comments"), 2, _T("Updating all objects comments macros"));
-   g_idxObjectById.forEach([](NetObj *object, void *context) { object->expandCommentMacros(); }, nullptr);
+   g_idxObjectById.forEach(
+      [] (NetObj *object) -> EnumerationCallbackResult
+      {
+         object->expandCommentMacros();
+         return _CONTINUE;
+      });
    nxlog_debug_tag(_T("obj.comments"), 5, _T("Objects comments macros update complete"));
 }
 
@@ -1729,7 +1734,12 @@ bool LoadObjects()
 
    // Execute post-load hooks on objects
    nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 2, _T("Executing post-load object hooks..."));
-	g_idxObjectById.forEach([] (NetObj *object) { object->postLoad(); });
+	g_idxObjectById.forEach(
+	   [] (NetObj *object) -> EnumerationCallbackResult
+	   {
+	      object->postLoad();
+	      return _CONTINUE;
+	   });
 
 	// Link custom object classes provided by modules
    CALL_ALL_MODULES(pfLinkObjects, ());
@@ -1740,7 +1750,12 @@ bool LoadObjects()
    // Prune custom attributes if required
    if (MetaDataReadInt32(_T("PruneCustomAttributes"), 0) > 0)
    {
-      g_idxObjectById.forEach([](NetObj *object, void *context) { object->pruneCustomAttributes(); }, nullptr);
+      g_idxObjectById.forEach(
+         [] (NetObj *object) -> EnumerationCallbackResult
+         {
+            object->pruneCustomAttributes();
+            return _CONTINUE;
+         });
       DBQuery(mainDB, _T("DELETE FROM metadata WHERE var_name='PruneCustomAttributes'"));
    }
    DBConnectionPoolReleaseConnection(mainDB);
@@ -1758,7 +1773,12 @@ bool LoadObjects()
    // Recalculate status for zone objects
    if (g_flags & AF_ENABLE_ZONING)
    {
-		g_idxZoneByUIN.forEach([](NetObj *object, void *context) { object->calculateCompoundStatus(); }, nullptr);
+		g_idxZoneByUIN.forEach(
+		   [] (NetObj *object) -> EnumerationCallbackResult
+		   {
+		      object->calculateCompoundStatus();
+		      return _CONTINUE;
+		   });
    }
 
    // Start template update applying thread
@@ -1766,11 +1786,16 @@ bool LoadObjects()
 
    // Expand comments macros
    nxlog_debug_tag(_T("obj.comments"), 2, _T("Updating all objects comments macros"));
-   g_idxObjectById.forEach([](NetObj *object, void *context) { object->expandCommentMacros(); }, nullptr);
+   g_idxObjectById.forEach(
+      [] (NetObj *object) -> EnumerationCallbackResult
+      {
+         object->expandCommentMacros();
+         return _CONTINUE;
+      });
 
    // check links between assets and other objects
    g_idxAssetById.forEach(
-      [] (NetObj *object) -> void
+      [] (NetObj *object) -> EnumerationCallbackResult
       {
          Asset *asset = static_cast<Asset*>(object);
          if (asset->getLinkedObjectId() != 0)
@@ -1789,9 +1814,10 @@ bool LoadObjects()
                 asset->setLinkedObjectId(0);
              }
           }
+         return _CONTINUE;
        });
    g_idxObjectById.forEach(
-      [] (NetObj *object) -> void
+      [] (NetObj *object) -> EnumerationCallbackResult
       {
          if (object->getAssetId() != 0)
          {
@@ -1808,6 +1834,7 @@ bool LoadObjects()
                object->setAssetId(0);
             }
          }
+         return _CONTINUE;
       });
 
    return true;
@@ -1818,7 +1845,12 @@ bool LoadObjects()
  */
 void CleanupObjects()
 {
-   g_idxObjectById.forEach([] (NetObj *object) { object->cleanup(); });
+   g_idxObjectById.forEach(
+      [] (NetObj *object) -> EnumerationCallbackResult
+      {
+         object->cleanup();
+         return _CONTINUE;
+      });
 }
 
 /**
@@ -1835,7 +1867,12 @@ void StopObjectMaintenanceThreads()
  */
 void DeleteUserFromAllObjects(uint32_t userId)
 {
-	g_idxObjectById.forEach([userId] (NetObj *object) { object->dropUserAccess(userId); });
+	g_idxObjectById.forEach(
+	   [userId] (NetObj *object) -> EnumerationCallbackResult
+	   {
+	      object->dropUserAccess(userId);
+	      return _CONTINUE;
+	   });
 }
 
 /**
@@ -2026,10 +2063,11 @@ void DumpObjects(ServerConsole *console, const TCHAR *filter)
    if (!findById)
    {
       g_idxObjectById.forEach(
-         [console, filter] (NetObj *object) -> void
+         [console, filter] (NetObj *object) -> EnumerationCallbackResult
          {
             if ((filter == nullptr) || MatchString(filter, object->getName(), false))
                DumpObject(console, *object);
+            return _CONTINUE;
          });
    }
 }
@@ -2301,7 +2339,7 @@ struct CreateObjectAccessSnapshot_CallbackData
 /**
  * Callback for CreateObjectAccessSnapshot
  */
-static void CreateObjectAccessSnapshot_Callback(NetObj *object, void *arg)
+static EnumerationCallbackResult CreateObjectAccessSnapshot_Callback(NetObj *object, void *arg)
 {
    CreateObjectAccessSnapshot_CallbackData *data = (CreateObjectAccessSnapshot_CallbackData *)arg;
    uint32_t accessRights = object->getUserRights(data->userId);
@@ -2312,6 +2350,7 @@ static void CreateObjectAccessSnapshot_Callback(NetObj *object, void *arg)
       e.accessRights = accessRights;
       data->accessList->add(&e);
    }
+   return _CONTINUE;
 }
 
 /**
@@ -2407,7 +2446,7 @@ struct NodeDependencyCheckData
 /**
  * Node dependency check callback
  */
-static void NodeDependencyCheckCallback(NetObj *object, void *context)
+static EnumerationCallbackResult NodeDependencyCheckCallback(NetObj *object, void *context)
 {
    NodeDependencyCheckData *d = static_cast<NodeDependencyCheckData*>(context);
    Node *node = static_cast<Node*>(object);
@@ -2429,6 +2468,8 @@ static void NodeDependencyCheckCallback(NetObj *object, void *context)
       dn.dependencyType = type;
       d->dependencies->add(&dn);
    }
+
+   return _CONTINUE;
 }
 
 /**
@@ -2446,10 +2487,11 @@ unique_ptr<StructArray<DependentNode>> GetNodeDependencies(uint32_t nodeId)
 /**
  * Callback for cleaning expired DCI data on node
  */
-static void ResetPollTimers(NetObj *object, void *data)
+static EnumerationCallbackResult ResetPollTimers(NetObj *object, void *data)
 {
    if (object->isPollable())
       object->getAsPollable()->resetPollTimers();
+   return _CONTINUE;
 }
 
 /**

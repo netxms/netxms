@@ -2180,9 +2180,10 @@ void DataCollectionTarget::collectProxyInfo(ProxyInfo *info)
 /**
  * Callback for collecting proxied SNMP DCIs
  */
-void DataCollectionTarget::collectProxyInfoCallback(NetObj *object, void *data)
+EnumerationCallbackResult DataCollectionTarget::collectProxyInfoCallback(NetObj *object, void *data)
 {
    static_cast<DataCollectionTarget*>(object)->collectProxyInfo(static_cast<ProxyInfo*>(data));
+   return _CONTINUE;
 }
 
 /**
@@ -2985,4 +2986,37 @@ void DataCollectionTarget::populateInternalCommunicationTopologyMap(NetworkMapOb
 {
    if ((map->getNumObjects() == 0) && (currentObjectId == m_id))
       map->addObject(m_id);
+}
+
+/**
+ * Check if geo area is referenced
+ */
+bool DataCollectionTarget::isGeoAreaReferenced(uint32_t id) const
+{
+   bool result = false;
+   lockProperties();
+   for(int i = 0; i < m_geoAreas.size(); i++)
+      if (m_geoAreas.get(i) == id)
+      {
+         result = true;
+         break;
+      }
+   unlockProperties();
+   return result;
+}
+
+/**
+ * Remove geo area from object
+ */
+void DataCollectionTarget::removeGeoArea(uint32_t id)
+{
+   lockProperties();
+   for(int i = 0; i < m_geoAreas.size(); i++)
+      if (m_geoAreas.get(i) == id)
+      {
+         m_geoAreas.remove(i);
+         setModified(MODIFY_DC_TARGET);
+         break;
+      }
+   unlockProperties();
 }

@@ -785,10 +785,11 @@ void NetObj::onCustomAttributeChange(const TCHAR *name, const TCHAR *value)
 /**
  * Walker callback to call OnObjectDelete for each active object
  */
-void NetObj::onObjectDeleteCallback(NetObj *object, NetObj *context)
+EnumerationCallbackResult NetObj::onObjectDeleteCallback(NetObj *object, NetObj *context)
 {
 	if ((object->getId() != context->getId()) && !object->isDeleted())
 		object->onObjectDelete(*context);
+	return _CONTINUE;
 }
 
 /**

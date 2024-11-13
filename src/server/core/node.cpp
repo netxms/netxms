@@ -8283,10 +8283,12 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       else if (!_tcsicmp(name, _T("Server.DataCollectionItems")))
       {
          int dciCount = 0;
-         g_idxObjectById.forEach([&dciCount](NetObj *object) {
-            if (object->isDataCollectionTarget())
-               dciCount += static_cast<DataCollectionTarget*>(object)->getItemCount();
-         });
+         g_idxObjectById.forEach([&dciCount](NetObj *object) -> EnumerationCallbackResult
+            {
+               if (object->isDataCollectionTarget())
+                  dciCount += static_cast<DataCollectionTarget*>(object)->getItemCount();
+               return _CONTINUE;
+            });
          ret_int(buffer, dciCount);
       }
       else if (!_tcsicmp(name, _T("Server.DB.Queries.Failed")))

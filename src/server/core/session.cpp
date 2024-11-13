@@ -8992,9 +8992,10 @@ void ClientSession::changeSubscription(const NXCPMessage& request)
 /**
  * Callback for counting DCIs in the system
  */
-static void DciCountCallback(NetObj *object, uint32_t *count)
+static EnumerationCallbackResult DciCountCallback(NetObj *object, uint32_t *count)
 {
 	*count += static_cast<DataCollectionTarget*>(object)->getItemCount();
+	return _CONTINUE;
 }
 
 /**

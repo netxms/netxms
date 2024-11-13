@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -218,10 +218,11 @@ struct GetObjectQueriesCallbackContext
 /**
  * Callback for getting configured object queries into NXCP message
  */
-static void GetObjectQueriesCallback(ObjectQuery *query, GetObjectQueriesCallbackContext *context)
+static EnumerationCallbackResult GetObjectQueriesCallback(ObjectQuery *query, GetObjectQueriesCallbackContext *context)
 {
    context->fieldId = query->fillMessage(context->msg, context->fieldId);
    context->count++;
+   return _CONTINUE;
 }
 
 /**

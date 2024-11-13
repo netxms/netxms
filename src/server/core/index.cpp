@@ -500,11 +500,12 @@ void AbstractIndexBase::findAll(Array *resultSet, std::function<bool (void*)> co
  * @param callback
  * @param data user data passed to callback
  */
-void AbstractIndexBase::forEach(void (*callback)(void*, void*), void *data) const
+void AbstractIndexBase::forEach(EnumerationCallbackResult (*callback)(void*, void*), void *data) const
 {
    INDEX_HEAD *index = acquireIndex();
 	for(size_t i = 0; i < index->size; i++)
-		callback(index->elements[i].object, data);
+		if (callback(index->elements[i].object, data) != _CONTINUE)
+		   break;
    ReleaseIndex(index);
 }
 
@@ -513,11 +514,12 @@ void AbstractIndexBase::forEach(void (*callback)(void*, void*), void *data) cons
  *
  * @param callback
  */
-void AbstractIndexBase::forEach(std::function<void (void*)> callback) const
+void AbstractIndexBase::forEach(std::function<EnumerationCallbackResult (void*)> callback) const
 {
    INDEX_HEAD *index = acquireIndex();
    for(size_t i = 0; i < index->size; i++)
-      callback(index->elements[i].object);
+      if (callback(index->elements[i].object) != _CONTINUE)
+         break;
    ReleaseIndex(index);
 }
 

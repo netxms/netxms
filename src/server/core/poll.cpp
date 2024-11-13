@@ -119,7 +119,7 @@ static void CreateManagementNode(const InetAddress& addr)
 /**
  * Callback to clear incorrectly set local management node flag
  */
-static void CheckMgmtFlagCallback(NetObj *object, void *data)
+static EnumerationCallbackResult CheckMgmtFlagCallback(NetObj *object, void *data)
 {
 	if ((g_dwMgmtNode != object->getId()) && static_cast<Node*>(object)->isLocalManagement())
 	{
@@ -127,6 +127,7 @@ static void CheckMgmtFlagCallback(NetObj *object, void *data)
 		nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 2, _T("Incorrectly set flag NC_IS_LOCAL_MGMT cleared from node %s [%d]"),
 					 object->getName(), object->getId());
 	}
+	return _CONTINUE;
 }
 
 /**
@@ -227,20 +228,20 @@ void CheckForMgmtNode()
 /**
  * Callback for queuing objects for polling
  */
-static void QueueForPolling(NetObj *object, void *data)
+static EnumerationCallbackResult QueueForPolling(NetObj *object, void *data)
 {
    WatchdogNotify(*static_cast<uint32_t*>(data));
    if (IsShutdownInProgress())
-      return;
+      return _STOP;
 
    // Only objects that are not yet completed construction or being
    // prepared for deletion are hidden, so any kind of polling should not be scheduled
    if (object->isHidden())
-      return;
+      return _CONTINUE;
 
    Pollable* pollableObject = object->getAsPollable();
    if (pollableObject == nullptr)
-      return;
+      return _CONTINUE;
 
    TCHAR threadKey[32];
    _sntprintf(threadKey, 32, _T("POLL_%u"), object->getId());
@@ -298,6 +299,8 @@ static void QueueForPolling(NetObj *object, void *data)
       nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("%s %s [%u] queued for map update poll"), object->getObjectClassName(), object->getName(), object->getId());
       ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, pollableObject, &Pollable::doMapUpdatePoll, RegisterPoller(PollerType::MAP_UPDATE, object->self()));
    }
+
+   return _CONTINUE;
 }
 
 /**

@@ -271,9 +271,10 @@ static void DropChunksForStorageClass(DB_HANDLE hdb, time_t cutoffTime, TCHAR ob
 /**
  * Callback for calculating cutoff time for TimescaleDB drop_chunks()
  */
-static void CalculateDciCutoffTimes(NetObj *object, CutoffTimes *data)
+static EnumerationCallbackResult CalculateDciCutoffTimes(NetObj *object, CutoffTimes *data)
 {
    static_cast<DataCollectionTarget*>(object)->calculateDciCutoffTimes(data->cutoffTimeIData, data->cutoffTimeTData);
+   return _CONTINUE;
 }
 
 /**
@@ -377,10 +378,11 @@ static void HouseKeeper()
 
    // Call policy validation for templates
    g_idxObjectById.forEach(
-      [] (NetObj *object)
+      [] (NetObj *object) -> EnumerationCallbackResult
       {
          if (object->getObjectClass() == OBJECT_TEMPLATE)
             static_cast<Template*>(object)->initiatePolicyValidation();
+         return _CONTINUE;
       });
 
    int sleepTime = GetSleepTime(hour, minute, 0);
@@ -533,10 +535,11 @@ static void HouseKeeper()
 
       // Call policy validation for templates
       g_idxObjectById.forEach(
-         [] (NetObj *object)
+         [] (NetObj *object) -> EnumerationCallbackResult
          {
             if (object->getObjectClass() == OBJECT_TEMPLATE)
                static_cast<Template*>(object)->initiatePolicyValidation();
+            return _CONTINUE;
          });
 
 	   // Save object runtime data
@@ -551,10 +554,11 @@ static void HouseKeeper()
 		// Validate template DCIs
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Queue template updates"));
 		g_idxObjectById.forEach(
-		   [] (NetObj *object)
+		   [] (NetObj *object) -> EnumerationCallbackResult
 		   {
             if (object->getObjectClass() == OBJECT_TEMPLATE)
                static_cast<Template*>(object)->queueUpdate();
+            return _CONTINUE;
 		   });
 
 	   //Validate scripts in script library
@@ -575,10 +579,11 @@ static void HouseKeeper()
 		// Run training on prediction engines
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Queue prediction engines training"));
 		g_idxObjectById.forEach(
-		   [] (NetObj *object)
+		   [] (NetObj *object) -> EnumerationCallbackResult
 		   {
             if (!s_shutdown && object->isDataCollectionTarget())
                static_cast<DataCollectionTarget*>(object)->queuePredictionEngineTraining();
+            return _CONTINUE;
 		   });
 
       g_pEventPolicy->validateConfig();

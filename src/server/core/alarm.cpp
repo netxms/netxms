@@ -53,58 +53,44 @@ class AlarmList
 {
 private:
    Mutex m_lock;
-   ObjectArray<Alarm> m_list;
+   AbstractIndexWithDestructor<Alarm> m_primaryIndex;
    StringObjectMap<Alarm> m_keyIndex;
 
 public:
-   AlarmList() : m_list(256, 256, Ownership::True), m_keyIndex(Ownership::False) { }
+   AlarmList() : m_primaryIndex(Ownership::True), m_keyIndex(Ownership::False) { }
    ~AlarmList() { }
 
    void lock() { m_lock.lock(); }
    void unlock() { m_lock.unlock(); }
 
-   int size() { return m_list.size(); }
+   int size() { return m_primaryIndex.size(); }
 
    uint64_t memoryUsage()
    {
       uint64_t memUsage = sizeof(AlarmList);
       lock();
-      for(int i = 0; i < m_list.size(); i++)
-         memUsage += m_list.get(i)->getMemoryUsage();
+      m_primaryIndex.forEach(
+         [&memUsage] (Alarm *a) -> EnumerationCallbackResult
+         {
+            memUsage += a->getMemoryUsage();
+            return _CONTINUE;
+         });
       unlock();
       return memUsage;
    }
 
-   Alarm *get(int index) { return m_list.get(index); }
-
    Alarm *find(const TCHAR *key) { return m_keyIndex.get(key); }
-   Alarm *find(uint32_t id)
-   {
-      for(int i = 0; i < m_list.size(); i++)
-         if (m_list.get(i)->getAlarmId() == id)
-            return m_list.get(i);
-      return nullptr;
-   }
+   Alarm *find(uint32_t id) { return m_primaryIndex.get(id); }
+   Alarm *find(std::function<bool (Alarm*)> comparator) { return m_primaryIndex.find(comparator); }
+
+   void forEach(std::function<EnumerationCallbackResult (Alarm*)> callback) { m_primaryIndex.forEach(callback); }
+   void forEachKey(std::function<EnumerationCallbackResult (const TCHAR*, Alarm*)> callback) { m_keyIndex.forEach(callback); }
 
    void add(Alarm *alarm)
    {
-      m_list.add(alarm);
+      m_primaryIndex.put(alarm->getAlarmId(), alarm);
       if (*alarm->getKey() != 0)
          m_keyIndex.set(alarm->getKey(), alarm);
-   }
-
-   void remove(int index)
-   {
-      Alarm *alarm = m_list.get(index);
-      if (alarm->getParentAlarmId() != 0)
-      {
-         Alarm *parent = find(alarm->getParentAlarmId());
-         if (parent != nullptr)
-            parent->removeSubordinateAlarm(alarm->getAlarmId());
-      }
-      if (*alarm->getKey() != 0)
-         m_keyIndex.remove(alarm->getKey());
-      m_list.remove(index);
    }
 
    void remove(Alarm *alarm)
@@ -117,7 +103,7 @@ public:
       }
       if (*alarm->getKey() != 0)
          m_keyIndex.remove(alarm->getKey());
-      m_list.remove(alarm);
+      m_primaryIndex.remove(alarm->getAlarmId());
    }
 };
 
@@ -1123,23 +1109,16 @@ uint32_t Alarm::acknowledge(GenericClientSession *session, bool sticky, uint32_t
  */
 uint32_t NXCORE_EXPORTABLE AckAlarmById(uint32_t alarmId, GenericClientSession *session, bool sticky, uint32_t acknowledgmentActionTime, bool includeSubordinates)
 {
-   uint32_t objectId, rcc = RCC_INVALID_ALARM_ID;
+   uint32_t rcc = RCC_INVALID_ALARM_ID;
 
    s_alarmList.lock();
-   for(int i = 0; i < s_alarmList.size(); i++)
+   Alarm *alarm = s_alarmList.find(alarmId);
+   if (alarm != nullptr)
    {
-      Alarm *alarm = s_alarmList.get(i);
-      if (alarm->getAlarmId() == alarmId)
-      {
-         rcc = alarm->acknowledge(session, sticky, acknowledgmentActionTime, includeSubordinates);
-         objectId = alarm->getSourceObject();
-         break;
-      }
+      rcc = alarm->acknowledge(session, sticky, acknowledgmentActionTime, includeSubordinates);
    }
    s_alarmList.unlock();
 
-   if (rcc == RCC_SUCCESS)
-      UpdateObjectStatus(objectId);
    return rcc;
 }
 
@@ -1148,23 +1127,20 @@ uint32_t NXCORE_EXPORTABLE AckAlarmById(uint32_t alarmId, GenericClientSession *
  */
 uint32_t NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, GenericClientSession *session, bool sticky, uint32_t acknowledgmentActionTime)
 {
-   uint32_t objectId, rcc = RCC_INVALID_ALARM_ID;
+   uint32_t rcc = RCC_INVALID_ALARM_ID;
 
    s_alarmList.lock();
-   for(int i = 0; i < s_alarmList.size(); i++)
-   {
-      Alarm *alarm = s_alarmList.get(i);
-      if (!_tcscmp(alarm->getHelpDeskRef(), hdref))
+   Alarm *alarm = s_alarmList.find(
+      [hdref] (Alarm *alarm) -> bool
       {
-         rcc = alarm->acknowledge(session, sticky, acknowledgmentActionTime, false);
-         objectId = alarm->getSourceObject();
-         break;
-      }
+         return _tcscmp(alarm->getHelpDeskRef(), hdref) == 0;
+      });
+   if (alarm != nullptr)
+   {
+      rcc = alarm->acknowledge(session, sticky, acknowledgmentActionTime, false);
    }
    s_alarmList.unlock();
 
-   if (rcc == RCC_SUCCESS)
-      UpdateObjectStatus(objectId);
    return rcc;
 }
 
@@ -1240,71 +1216,65 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(const IntegerArray<uint32_t>& alarmIds,
    {
       uint32_t currentId = alarmIds.get(i);
 
-      int n;
-      for(n = 0; n < s_alarmList.size(); n++)
+      Alarm *alarm = s_alarmList.find(currentId);
+      if (alarm != nullptr)
       {
-         Alarm *alarm = s_alarmList.get(n);
-         if (alarm->getAlarmId() == currentId)
+         // If alarm is open in helpdesk, it cannot be terminated. Check with helpdesk system if it is closed now.
+         if (alarm->getHelpDeskState() == ALARM_HELPDESK_OPEN)
          {
-            // If alarm is open in helpdesk, it cannot be terminated. Check with helpdesk system if it is closed now.
-            if (alarm->getHelpDeskState() == ALARM_HELPDESK_OPEN)
+            bool isOpen;
+            if (GetHelpdeskIssueState(alarm->getHelpDeskRef(), &isOpen) == RCC_SUCCESS)
             {
-               bool isOpen;
-               if (GetHelpdeskIssueState(alarm->getHelpDeskRef(), &isOpen) == RCC_SUCCESS)
-               {
-                  if (!isOpen)
-                     alarm->onHelpdeskIssueClose();
-               }
+               if (!isOpen)
+                  alarm->onHelpdeskIssueClose();
             }
-            if ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false))
+         }
+         if ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false))
+         {
+            if (terminate || (alarm->getState() != ALARM_STATE_RESOLVED))
             {
-               if (terminate || (alarm->getState() != ALARM_STATE_RESOLVED))
+               // Allow to resolve/terminate alarms for objects that are already deleted
+               shared_ptr<NetObj> object = FindObjectById(alarm->getSourceObject());
+               if ((session != nullptr) && (object != nullptr))
                {
-                  // Allow to resolve/terminate alarms for objects that are already deleted
-                  shared_ptr<NetObj> object = FindObjectById(alarm->getSourceObject());
-                  if ((session != nullptr) && (object != nullptr))
+                  // If user does not have the required object access rights, the alarm cannot be terminated
+                  if (!object->checkAccessRights(session->getUserId(), terminate ? OBJECT_ACCESS_TERM_ALARMS : OBJECT_ACCESS_UPDATE_ALARMS))
                   {
-                     // If user does not have the required object access rights, the alarm cannot be terminated
-                     if (!object->checkAccessRights(session->getUserId(), terminate ? OBJECT_ACCESS_TERM_ALARMS : OBJECT_ACCESS_UPDATE_ALARMS))
-                     {
-                        failIds->add(currentId);
-                        failCodes->add(RCC_ACCESS_DENIED);
-                        break;
-                     }
-
-                     session->writeAuditLog(AUDIT_OBJECTS, true, object->getId(),
-                        _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
-                        alarm->getAlarmId(), alarm->getMessage(), object->getName());
+                     failIds->add(currentId);
+                     failCodes->add(RCC_ACCESS_DENIED);
+                     break;
                   }
 
-                  alarm->resolve((session != nullptr) ? session->getUserId() : 0, nullptr, terminate, false, includeSubordinates);
-                  processedAlarms.add(alarm->getAlarmId());
-                  if (object != nullptr)
-                  {
-                     if (!updatedObjects.contains(object->getId()))
-                        updatedObjects.add(object->getId());
-                  }
-                  if (terminate)
-                  {
-                     s_alarmList.remove(n);
-                     n--;
-                  }
+                  session->writeAuditLog(AUDIT_OBJECTS, true, object->getId(),
+                     _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
+                     alarm->getAlarmId(), alarm->getMessage(), object->getName());
                }
-               else
+
+               alarm->resolve((session != nullptr) ? session->getUserId() : 0, nullptr, terminate, false, includeSubordinates);
+               processedAlarms.add(alarm->getAlarmId());
+               if (object != nullptr)
                {
-                  // Alarm is already resolved, just mark it as processed
-                  processedAlarms.add(alarm->getAlarmId());
+                  if (!updatedObjects.contains(object->getId()))
+                     updatedObjects.add(object->getId());
+               }
+               if (terminate)
+               {
+                  s_alarmList.remove(alarm);
                }
             }
             else
             {
-               failIds->add(currentId);
-               failCodes->add(RCC_ALARM_OPEN_IN_HELPDESK);
+               // Alarm is already resolved, just mark it as processed
+               processedAlarms.add(alarm->getAlarmId());
             }
-            break;
+         }
+         else
+         {
+            failIds->add(currentId);
+            failCodes->add(RCC_ALARM_OPEN_IN_HELPDESK);
          }
       }
-      if (n == s_alarmList.size())
+      else
       {
          failIds->add(currentId);
          failCodes->add(RCC_INVALID_ALARM_ID);
@@ -1334,30 +1304,37 @@ static void ResolveAlarmByKeyRegexp(const TCHAR *keyPattern, bool terminate, Eve
    if (preg != nullptr)
    {
       IntegerArray<uint32_t> objectList;
-      int ovector[60];
+      ObjectArray<Alarm> matchedAlarms(128, 128, Ownership::False);
 
       s_alarmList.lock();
-      for(int i = 0; i < s_alarmList.size(); i++)
-      {
-         Alarm *alarm = s_alarmList.get(i);
-         const TCHAR *key = alarm->getKey();
-         if ((_pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(key), static_cast<int>(_tcslen(key)), 0, 0, ovector, 60) >= 0) &&
-             ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false)) &&
-             (terminate || (alarm->getState() != ALARM_STATE_RESOLVED)))
-         {
-            // Add alarm's source object to update list
-            if (!objectList.contains(alarm->getSourceObject()))
-               objectList.add(alarm->getSourceObject());
 
-            // Resolve or terminate alarm
-            alarm->resolve(0, event, terminate, true, false);
-            if (terminate)
+      s_alarmList.forEachKey(
+         [preg, terminate, &matchedAlarms, &objectList] (const TCHAR *key, Alarm *alarm) -> EnumerationCallbackResult
+         {
+            int ovector[60];
+            if ((_pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(key), static_cast<int>(_tcslen(key)), 0, 0, ovector, 60) >= 0) &&
+                ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false)) &&
+                (terminate || (alarm->getState() != ALARM_STATE_RESOLVED)))
             {
-               s_alarmList.remove(i);
-               i--;
+               // Add alarm and alarm's source object to update list
+               matchedAlarms.add(alarm);
+               if (!objectList.contains(alarm->getSourceObject()))
+                  objectList.add(alarm->getSourceObject());
             }
+            return _CONTINUE;
+         });
+
+      // Resolve or terminate matched alarms
+      for(int i = 0; i < matchedAlarms.size(); i++)
+      {
+         Alarm *alarm = matchedAlarms.get(i);
+         alarm->resolve(0, event, terminate, true, false);
+         if (terminate)
+         {
+            s_alarmList.remove(alarm);
          }
       }
+
       s_alarmList.unlock();
 
       // Update status of objects
@@ -1417,28 +1394,35 @@ void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *key, bool useRegexp, bool 
 void NXCORE_EXPORTABLE ResolveAlarmByDCObjectId(uint32_t dciId, bool terminate)
 {
    IntegerArray<uint32_t> objectList;
+   ObjectArray<Alarm> matchedAlarms(128, 128, Ownership::False);
 
    s_alarmList.lock();
-   for(int i = 0; i < s_alarmList.size(); i++)
-   {
-      Alarm *alarm = s_alarmList.get(i);
-      if ((alarm->getDciId() == dciId) &&
-          ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false)) &&
-          (terminate || (alarm->getState() != ALARM_STATE_RESOLVED)))
+   s_alarmList.forEach(
+      [dciId, terminate, &matchedAlarms, &objectList] (Alarm *alarm) -> EnumerationCallbackResult
       {
-         // Add alarm's source object to update list
-         if (!objectList.contains(alarm->getSourceObject()))
-            objectList.add(alarm->getSourceObject());
-
-         // Resolve or terminate alarm
-         alarm->resolve(0, nullptr, terminate, true, false);
-         if (terminate)
+         if ((alarm->getDciId() == dciId) &&
+             ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false)) &&
+             (terminate || (alarm->getState() != ALARM_STATE_RESOLVED)))
          {
-            s_alarmList.remove(i);
-            i--;
+            // Add alarm and alarm's source object to update list
+            matchedAlarms.add(alarm);
+            if (!objectList.contains(alarm->getSourceObject()))
+               objectList.add(alarm->getSourceObject());
          }
+         return _CONTINUE;
+      });
+
+   // Resolve or terminate matched alarms
+   for(int i = 0; i < matchedAlarms.size(); i++)
+   {
+      Alarm *alarm = matchedAlarms.get(i);
+      alarm->resolve(0, nullptr, terminate, true, false);
+      if (terminate)
+      {
+         s_alarmList.remove(alarm);
       }
    }
+
    s_alarmList.unlock();
 
    // Update status of objects
@@ -1456,34 +1440,34 @@ uint32_t NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, GenericClient
    uint32_t rcc = RCC_INVALID_ALARM_ID;
 
    s_alarmList.lock();
-   for(int i = 0; i < s_alarmList.size(); i++)
-   {
-      Alarm *alarm = s_alarmList.get(i);
-      if (!_tcscmp(alarm->getHelpDeskRef(), hdref))
+   Alarm *alarm = s_alarmList.find(
+      [hdref] (Alarm *alarm) -> bool
       {
-         if (terminate || (alarm->getState() != ALARM_STATE_RESOLVED))
+         return _tcscmp(alarm->getHelpDeskRef(), hdref) == 0;
+      });
+   if (alarm != nullptr)
+   {
+      if (terminate || (alarm->getState() != ALARM_STATE_RESOLVED))
+      {
+         objectId = alarm->getSourceObject();
+         if (session != nullptr)
          {
-            objectId = alarm->getSourceObject();
-            if (session != nullptr)
-            {
-               session->writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("%s alarm %u (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
-                     alarm->getAlarmId(), alarm->getMessage(), GetObjectName(objectId, _T("")));
-            }
+            session->writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("%s alarm %u (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
+                  alarm->getAlarmId(), alarm->getMessage(), GetObjectName(objectId, _T("")));
+         }
 
-            alarm->resolve((session != nullptr) ? session->getUserId() : 0, nullptr, terminate, true, false);
-            if (terminate)
-            {
-               s_alarmList.remove(i);
-            }
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("Alarm with helpdesk reference \"%s\" %s"), hdref, terminate ? _T("terminated") : _T("resolved"));
-         }
-         else
+         alarm->resolve((session != nullptr) ? session->getUserId() : 0, nullptr, terminate, true, false);
+         if (terminate)
          {
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("Alarm with helpdesk reference \"%s\" already resolved"), hdref);
+            s_alarmList.remove(alarm);
          }
-         rcc = RCC_SUCCESS;
-         break;
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Alarm with helpdesk reference \"%s\" %s"), hdref, terminate ? _T("terminated") : _T("resolved"));
       }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Alarm with helpdesk reference \"%s\" already resolved"), hdref);
+      }
+      rcc = RCC_SUCCESS;
    }
    s_alarmList.unlock();
 
@@ -1549,17 +1533,13 @@ uint32_t OpenHelpdeskIssue(uint32_t alarmId, GenericClientSession *session, TCHA
    *hdref = 0;
 
    s_alarmList.lock();
-   for(int i = 0; i < s_alarmList.size(); i++)
+   Alarm *alarm = s_alarmList.find(alarmId);
+   if (alarm != nullptr)
    {
-      Alarm *alarm = s_alarmList.get(i);
-      if (alarm->getAlarmId() == alarmId)
-      {
-         if (alarm->checkCategoryAccess(session))
-            rcc = alarm->openHelpdeskIssue(hdref);
-         else
-            rcc = RCC_ACCESS_DENIED;
-         break;
-      }
+      if (alarm->checkCategoryAccess(session))
+         rcc = alarm->openHelpdeskIssue(hdref);
+      else
+         rcc = RCC_ACCESS_DENIED;
    }
    s_alarmList.unlock();
    return rcc;
@@ -1573,26 +1553,23 @@ uint32_t GetHelpdeskIssueUrlFromAlarm(uint32_t alarmId, uint32_t userId, TCHAR *
    uint32_t rcc = RCC_INVALID_ALARM_ID;
 
    s_alarmList.lock();
-   for(int i = 0; i < s_alarmList.size(); i++)
+   Alarm *alarm = s_alarmList.find(alarmId);
+   if (alarm != nullptr)
    {
-      if (s_alarmList.get(i)->getAlarmId() == alarmId)
+      if (alarm->checkCategoryAccess(session))
       {
-         if (s_alarmList.get(i)->checkCategoryAccess(session))
+         if ((alarm->getHelpDeskState() != ALARM_HELPDESK_IGNORED) && (alarm->getHelpDeskRef()[0] != 0))
          {
-            if ((s_alarmList.get(i)->getHelpDeskState() != ALARM_HELPDESK_IGNORED) && (s_alarmList.get(i)->getHelpDeskRef()[0] != 0))
-            {
-               rcc = GetHelpdeskIssueUrl(s_alarmList.get(i)->getHelpDeskRef(), url, size);
-            }
-            else
-            {
-               rcc = RCC_OUT_OF_STATE_REQUEST;
-            }
+            rcc = GetHelpdeskIssueUrl(alarm->getHelpDeskRef(), url, size);
          }
          else
          {
-            rcc = RCC_ACCESS_DENIED;
+            rcc = RCC_OUT_OF_STATE_REQUEST;
          }
-         break;
+      }
+      else
+      {
+         rcc = RCC_ACCESS_DENIED;
       }
    }
    s_alarmList.unlock();
@@ -1607,24 +1584,20 @@ uint32_t UnlinkHelpdeskIssueById(uint32_t alarmId, GenericClientSession *session
    uint32_t rcc = RCC_INVALID_ALARM_ID;
 
    s_alarmList.lock();
-   for(int i = 0; i < s_alarmList.size(); i++)
+   Alarm *alarm = s_alarmList.find(alarmId);
+   if (alarm != nullptr)
    {
-      Alarm *alarm = s_alarmList.get(i);
-      if (alarm->getAlarmId() == alarmId)
+      if (session != nullptr)
       {
-         if (session != nullptr)
-         {
-            session->writeAuditLog(AUDIT_OBJECTS, true,
-               alarm->getSourceObject(), _T("Helpdesk issue %s unlinked from alarm %d (%s) on object %s"),
-               alarm->getHelpDeskRef(), alarm->getAlarmId(), alarm->getMessage(),
-               GetObjectName(alarm->getSourceObject(), _T("")));
-         }
-         alarm->unlinkFromHelpdesk();
-			NotifyClients(NX_NOTIFY_ALARM_CHANGED, alarm);
-			alarm->updateInDatabase();
-         rcc = RCC_SUCCESS;
-         break;
+         session->writeAuditLog(AUDIT_OBJECTS, true,
+            alarm->getSourceObject(), _T("Helpdesk issue %s unlinked from alarm %d (%s) on object %s"),
+            alarm->getHelpDeskRef(), alarm->getAlarmId(), alarm->getMessage(),
+            GetObjectName(alarm->getSourceObject(), _T("")));
       }
+      alarm->unlinkFromHelpdesk();
+      NotifyClients(NX_NOTIFY_ALARM_CHANGED, alarm);
+      alarm->updateInDatabase();
+      rcc = RCC_SUCCESS;
    }
    s_alarmList.unlock();
 
@@ -1639,24 +1612,24 @@ uint32_t UnlinkHelpdeskIssueByHDRef(const TCHAR *hdref, GenericClientSession *se
    uint32_t rcc = RCC_INVALID_ALARM_ID;
 
    s_alarmList.lock();
-   for(int i = 0; i < s_alarmList.size(); i++)
-   {
-      Alarm *alarm = s_alarmList.get(i);
-      if (!_tcscmp(alarm->getHelpDeskRef(), hdref))
+   Alarm *alarm = s_alarmList.find(
+      [hdref] (Alarm *alarm) -> bool
       {
-         if (session != nullptr)
-         {
-            session->writeAuditLog(AUDIT_OBJECTS, true,
-               alarm->getSourceObject(), _T("Helpdesk issue %s unlinked from alarm %d (%s) on object %s"),
-               alarm->getHelpDeskRef(), alarm->getAlarmId(), alarm->getMessage(),
-               GetObjectName(alarm->getSourceObject(), _T("")));
-         }
-         alarm->unlinkFromHelpdesk();
-			NotifyClients(NX_NOTIFY_ALARM_CHANGED, alarm);
-			alarm->updateInDatabase();
-         rcc = RCC_SUCCESS;
-         break;
+         return _tcscmp(alarm->getHelpDeskRef(), hdref) == 0;
+      });
+   if (alarm != nullptr)
+   {
+      if (session != nullptr)
+      {
+         session->writeAuditLog(AUDIT_OBJECTS, true,
+            alarm->getSourceObject(), _T("Helpdesk issue %s unlinked from alarm %d (%s) on object %s"),
+            alarm->getHelpDeskRef(), alarm->getAlarmId(), alarm->getMessage(),
+            GetObjectName(alarm->getSourceObject(), _T("")));
       }
+      alarm->unlinkFromHelpdesk();
+      NotifyClients(NX_NOTIFY_ALARM_CHANGED, alarm);
+      alarm->updateInDatabase();
+      rcc = RCC_SUCCESS;
    }
    s_alarmList.unlock();
 
@@ -1674,17 +1647,13 @@ void NXCORE_EXPORTABLE DeleteAlarm(uint32_t alarmId, bool objectCleanup)
    // Delete alarm from in-memory list
    if (!objectCleanup)  // otherwise already locked
       s_alarmList.lock();
-   for(int i = 0; i < s_alarmList.size(); i++)
+   Alarm *alarm = s_alarmList.find(alarmId);
+   if (alarm != nullptr)
    {
-      Alarm *alarm = s_alarmList.get(i);
-      if (alarm->getAlarmId() == alarmId)
-      {
-         objectId = alarm->getSourceObject();
-         NotifyClients(NX_NOTIFY_ALARM_DELETED, alarm);
-         s_alarmList.remove(i);
-         found = true;
-         break;
-      }
+      objectId = alarm->getSourceObject();
+      NotifyClients(NX_NOTIFY_ALARM_DELETED, alarm);
+      s_alarmList.remove(alarm);
+      found = true;
    }
    if (!objectCleanup)
       s_alarmList.unlock();
@@ -1711,18 +1680,20 @@ void NXCORE_EXPORTABLE DeleteAlarm(uint32_t alarmId, bool objectCleanup)
  */
 bool DeleteObjectAlarms(uint32_t objectId, DB_HANDLE hdb)
 {
+   IntegerArray<uint32_t> deleteList(0, 128);
+
 	s_alarmList.lock();
-
-	// go through from end because s_alarmList.size() is decremented by DeleteAlarm()
-	for(int i = s_alarmList.size() - 1; i >= 0; i--)
+	s_alarmList.forEach(
+	   [objectId, &deleteList] (Alarm *alarm) -> EnumerationCallbackResult
+	   {
+	      if (alarm->getSourceObject() == objectId)
+	         deleteList.add(alarm->getAlarmId());
+	      return _CONTINUE;
+	   });
+	for(int i = 0; i < deleteList.size(); i++)
    {
-      Alarm *alarm = s_alarmList.get(i);
-		if (alarm->getSourceObject() == objectId)
-      {
-			DeleteAlarm(alarm->getAlarmId(), true);
-      }
+      DeleteAlarm(deleteList.get(i), true);
 	}
-
 	s_alarmList.unlock();
 
    // Delete all object alarms from database
@@ -1801,21 +1772,17 @@ uint32_t NXCORE_EXPORTABLE GetAlarm(uint32_t alarmId, NXCPMessage *msg, GenericC
    uint32_t rcc = RCC_INVALID_ALARM_ID;
 
    s_alarmList.lock();
-   for(int i = 0; i < s_alarmList.size(); i++)
+   Alarm *alarm = s_alarmList.find(alarmId);
+   if (alarm != nullptr)
    {
-      Alarm *alarm = s_alarmList.get(i);
-      if (alarm->getAlarmId() == alarmId)
+      if (alarm->checkCategoryAccess(session))
       {
-         if (alarm->checkCategoryAccess(session))
-         {
-            alarm->fillMessage(msg);
-            rcc = RCC_SUCCESS;
-         }
-         else
-         {
-            rcc = RCC_ACCESS_DENIED;
-         }
-         break;
+         alarm->fillMessage(msg);
+         rcc = RCC_SUCCESS;
+      }
+      else
+      {
+         rcc = RCC_ACCESS_DENIED;
       }
    }
    s_alarmList.unlock();
@@ -1850,19 +1817,16 @@ uint32_t NXCORE_EXPORTABLE GetAlarmEvents(uint32_t alarmId, NXCPMessage *msg, Ge
    uint32_t rcc = RCC_INVALID_ALARM_ID;
 
    s_alarmList.lock();
-   for(int i = 0; i < s_alarmList.size(); i++)
+   Alarm *alarm = s_alarmList.find(alarmId);
+   if (alarm != nullptr)
    {
-      if (s_alarmList.get(i)->getAlarmId() == alarmId)
+      if (alarm->checkCategoryAccess(session))
       {
-         if (s_alarmList.get(i)->checkCategoryAccess(session))
-         {
-            rcc = RCC_SUCCESS;
-         }
-         else
-         {
-            rcc = RCC_ACCESS_DENIED;
-         }
-         break;
+         rcc = RCC_SUCCESS;
+      }
+      else
+      {
+         rcc = RCC_ACCESS_DENIED;
       }
    }
 
@@ -1904,14 +1868,11 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(uint32_t alarmId, bool
 
    if (!alreadyLocked)
       s_alarmList.lock();
-   for(int i = 0; i < s_alarmList.size(); i++)
+
+   Alarm *alarm = s_alarmList.find(alarmId);
+   if (alarm != nullptr)
    {
-      Alarm *alarm = s_alarmList.get(i);
-      if (alarm->getAlarmId() == alarmId)
-      {
-         objectId = alarm->getSourceObject();
-         break;
-      }
+      objectId = alarm->getSourceObject();
    }
 
    if (!alreadyLocked)
@@ -1943,19 +1904,20 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(uint32_t alarmId, bool
  */
 shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(const TCHAR *hdref)
 {
-   UINT32 objectId = 0;
+   uint32_t objectId = 0;
 
    s_alarmList.lock();
-   for(int i = 0; i < s_alarmList.size(); i++)
-   {
-      Alarm *alarm = s_alarmList.get(i);
-      if (!_tcscmp(alarm->getHelpDeskRef(), hdref))
+   Alarm *alarm = s_alarmList.find(
+      [hdref] (Alarm *alarm) -> bool
       {
-         objectId = alarm->getSourceObject();
-         break;
-      }
+         return _tcscmp(alarm->getHelpDeskRef(), hdref) == 0;
+      });
+   if (alarm != nullptr)
+   {
+      objectId = alarm->getSourceObject();
    }
    s_alarmList.unlock();
+
    return (objectId != 0) ? FindObjectById(objectId) : shared_ptr<NetObj>();
 }
 
@@ -1966,18 +1928,20 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(const TCHAR *hdref)
 int GetMostCriticalStatusForObject(uint32_t objectId)
 {
    int status = STATUS_UNKNOWN;
-
    s_alarmList.lock();
-   for(int i = 0; (i < s_alarmList.size()) && (status != STATUS_CRITICAL); i++)
-   {
-      Alarm *alarm = s_alarmList.get(i);
-      if ((alarm->getSourceObject() == objectId) &&
-			 ((alarm->getState() & ALARM_STATE_MASK) < ALARM_STATE_RESOLVED) &&
-          ((alarm->getCurrentSeverity() > status) || (status == STATUS_UNKNOWN)))
+   s_alarmList.forEach(
+      [&status, objectId] (Alarm *alarm) -> EnumerationCallbackResult
       {
-         status = (int)alarm->getCurrentSeverity();
-      }
-   }
+         if ((alarm->getSourceObject() == objectId) &&
+             ((alarm->getState() & ALARM_STATE_MASK) < ALARM_STATE_RESOLVED) &&
+             ((alarm->getCurrentSeverity() > status) || (status == STATUS_UNKNOWN)))
+         {
+            status = (int)alarm->getCurrentSeverity();
+            if (status == STATUS_CRITICAL)
+               return _STOP;
+         }
+         return _CONTINUE;
+      });
    s_alarmList.unlock();
    return status;
 }
@@ -1985,17 +1949,22 @@ int GetMostCriticalStatusForObject(uint32_t objectId)
 /**
  * Fill message with alarm stats
  */
-void GetAlarmStats(NXCPMessage *pMsg)
+void GetAlarmStats(NXCPMessage *msg)
 {
-   UINT32 dwCount[5];
+   uint32_t counters[5];
+   memset(counters, 0, sizeof(counters));
 
    s_alarmList.lock();
-   pMsg->setField(VID_NUM_ALARMS, s_alarmList.size());
-   memset(dwCount, 0, sizeof(UINT32) * 5);
-   for(int i = 0; i < s_alarmList.size(); i++)
-      dwCount[s_alarmList.get(i)->getCurrentSeverity()]++;
+   msg->setField(VID_NUM_ALARMS, s_alarmList.size());
+   s_alarmList.forEach(
+      [&counters] (Alarm *alarm) -> EnumerationCallbackResult
+      {
+         counters[alarm->getCurrentSeverity()]++;
+         return _CONTINUE;
+      });
    s_alarmList.unlock();
-   pMsg->setFieldFromInt32Array(VID_ALARMS_BY_SEVERITY, 5, dwCount);
+
+   msg->setFieldFromInt32Array(VID_ALARMS_BY_SEVERITY, 5, counters);
 }
 
 /**
@@ -2029,65 +1998,76 @@ static void WatchdogThread()
 		if (!(g_flags & AF_SERVER_INITIALIZED))
 		   continue;   // Server not initialized yet
 
+		ObjectArray<Alarm> terminatedAlarms(0, 128, Ownership::False);
+
 		s_alarmList.lock();
 		time_t now = time(nullptr);
-	   for(int i = 0; i < s_alarmList.size(); i++)
+		s_alarmList.forEach(
+		   [now, &terminatedAlarms] (Alarm *alarm) -> EnumerationCallbackResult
+         {
+            if ((alarm->getTimeout() > 0) &&
+                ((alarm->getState() & ALARM_STATE_MASK) == ALARM_STATE_OUTSTANDING) &&
+                (((time_t)alarm->getLastChangeTime() + (time_t)alarm->getTimeout()) < now))
+            {
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("Outstanding timeout: alarm_id=%u, last_change=%u, timeout=%u, now=%u"),
+                        alarm->getAlarmId(), alarm->getLastChangeTime(), alarm->getTimeout(), (UINT32)now);
+
+               TCHAR eventName[MAX_EVENT_NAME];
+               if (!EventNameFromCode(alarm->getSourceEventCode(), eventName))
+               {
+                  _sntprintf(eventName, MAX_EVENT_NAME, _T("[%u]"), alarm->getSourceEventCode());
+               }
+               EventBuilder(alarm->getTimeoutEvent(), alarm->getSourceObject())
+                  .param(_T("alarmId"), alarm->getAlarmId())
+                  .param(_T("alarmMessage"), alarm->getMessage())
+                  .param(_T("alarmKey"), alarm->getKey())
+                  .param(_T("originalEventCode"), alarm->getSourceEventCode())
+                  .param(_T("originalEventName"), eventName)
+                  .post();
+               alarm->clearTimeout();	// Disable repeated timeout events
+               alarm->updateInDatabase();
+            }
+
+            if ((alarm->getAckTimeout() != 0) &&
+                ((alarm->getState() & ALARM_STATE_STICKY) != 0) &&
+                (((time_t)alarm->getAckTimeout() <= now)))
+            {
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("Acknowledgment timeout: alarm_id=%u, timeout=%u, now=%u"),
+                        alarm->getAlarmId(), alarm->getAckTimeout(), (UINT32)now);
+
+               EventBuilder(alarm->getTimeoutEvent(), alarm->getSourceObject())
+                  .param(_T("alarmId"), alarm->getAlarmId())
+                  .param(_T("alarmMessage"), alarm->getMessage())
+                  .param(_T("alarmKey"), alarm->getKey())
+                  .param(_T("originalEventCode"), alarm->getSourceEventCode())
+                  .post();
+
+               alarm->onAckTimeoutExpiration();
+               alarm->updateInDatabase();
+               NotifyClients(NX_NOTIFY_ALARM_CHANGED, alarm);
+            }
+
+            if ((s_resolveExpirationTime > 0) &&
+                ((alarm->getState() & ALARM_STATE_MASK) == ALARM_STATE_RESOLVED) &&
+                (alarm->getLastChangeTime() + s_resolveExpirationTime <= now) &&
+                (alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN))
+            {
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("Resolve timeout: alarm_id=%u, last_change=%u, timeout=%u, now=%u"),
+                        alarm->getAlarmId(), alarm->getLastChangeTime(), s_resolveExpirationTime, (UINT32)now);
+               terminatedAlarms.add(alarm);
+            }
+
+            return _CONTINUE;
+         });
+
+		// Terminate alarms
+		for(int i = 0; i < terminatedAlarms.size(); i++)
 		{
-         Alarm *alarm = s_alarmList.get(i);
-			if ((alarm->getTimeout() > 0) &&
-				 ((alarm->getState() & ALARM_STATE_MASK) == ALARM_STATE_OUTSTANDING) &&
-				 (((time_t)alarm->getLastChangeTime() + (time_t)alarm->getTimeout()) < now))
-			{
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("Outstanding timeout: alarm_id=%u, last_change=%u, timeout=%u, now=%u"),
-                     alarm->getAlarmId(), alarm->getLastChangeTime(), alarm->getTimeout(), (UINT32)now);
-
-				TCHAR eventName[MAX_EVENT_NAME];
-				if (!EventNameFromCode(alarm->getSourceEventCode(), eventName))
-				{
-				   _sntprintf(eventName, MAX_EVENT_NAME, _T("[%u]"), alarm->getSourceEventCode());
-				}
-            EventBuilder(alarm->getTimeoutEvent(), alarm->getSourceObject())
-               .param(_T("alarmId"), alarm->getAlarmId())
-               .param(_T("alarmMessage"), alarm->getMessage())
-               .param(_T("alarmKey"), alarm->getKey())
-               .param(_T("originalEventCode"), alarm->getSourceEventCode())
-               .param(_T("originalEventName"), eventName)
-               .post();
-				alarm->clearTimeout();	// Disable repeated timeout events
-				alarm->updateInDatabase();
-			}
-
-			if ((alarm->getAckTimeout() != 0) &&
-				 ((alarm->getState() & ALARM_STATE_STICKY) != 0) &&
-				 (((time_t)alarm->getAckTimeout() <= now)))
-			{
-			   nxlog_debug_tag(DEBUG_TAG, 5, _T("Acknowledgment timeout: alarm_id=%u, timeout=%u, now=%u"),
-			            alarm->getAlarmId(), alarm->getAckTimeout(), (UINT32)now);
-
-            EventBuilder(alarm->getTimeoutEvent(), alarm->getSourceObject())
-               .param(_T("alarmId"), alarm->getAlarmId())
-               .param(_T("alarmMessage"), alarm->getMessage())
-               .param(_T("alarmKey"), alarm->getKey())
-               .param(_T("originalEventCode"), alarm->getSourceEventCode())
-               .post();
-
-				alarm->onAckTimeoutExpiration();
-				alarm->updateInDatabase();
-				NotifyClients(NX_NOTIFY_ALARM_CHANGED, alarm);
-			}
-
-			if ((s_resolveExpirationTime > 0) &&
-			    ((alarm->getState() & ALARM_STATE_MASK) == ALARM_STATE_RESOLVED) &&
-			    (alarm->getLastChangeTime() + s_resolveExpirationTime <= now) &&
-			    (alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN))
-			{
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("Resolve timeout: alarm_id=%u, last_change=%u, timeout=%u, now=%u"),
-                     alarm->getAlarmId(), alarm->getLastChangeTime(), s_resolveExpirationTime, (UINT32)now);
-            alarm->resolve(0, nullptr, true, true, false);
-            s_alarmList.remove(i);
-            i--;
-			}
+		   Alarm *alarm = terminatedAlarms.get(i);
+         alarm->resolve(0, nullptr, true, true, false);
+		   s_alarmList.remove(alarm);
 		}
+
 		s_alarmList.unlock();
 	}
 }
@@ -2095,7 +2075,7 @@ static void WatchdogThread()
 /**
  * Check if given alarm/note id pair is valid
  */
-static bool IsValidNoteId(UINT32 alarmId, UINT32 noteId)
+static bool IsValidCommentId(uint32_t alarmId, uint32_t noteId)
 {
 	bool isValid = false;
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -2127,7 +2107,7 @@ uint32_t Alarm::updateAlarmComment(uint32_t *commentId, const TCHAR *text, uint3
 
 	if (*commentId != 0)
 	{
-      if (IsValidNoteId(m_alarmId, *commentId))
+      if (IsValidCommentId(m_alarmId, *commentId))
 		{
 			DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 			DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE alarm_notes SET change_time=?,user_id=?,note_text=? WHERE note_id=?"));
@@ -2196,15 +2176,15 @@ uint32_t AddAlarmComment(const TCHAR *hdref, const TCHAR *text, uint32_t userId)
    uint32_t rcc = RCC_INVALID_ALARM_ID;
 
    s_alarmList.lock();
-   for(int i = 0; i < s_alarmList.size(); i++)
-   {
-      Alarm *alarm = s_alarmList.get(i);
-      if (!_tcscmp(alarm->getHelpDeskRef(), hdref))
+   Alarm *alarm = s_alarmList.find(
+      [hdref] (Alarm *alarm) -> bool
       {
-         uint32_t id = 0;
-         rcc = alarm->updateAlarmComment(&id, text, userId, false);
-         break;
-      }
+         return _tcscmp(alarm->getHelpDeskRef(), hdref) == 0;
+      });
+   if (alarm != nullptr)
+   {
+      uint32_t id = 0;
+      rcc = alarm->updateAlarmComment(&id, text, userId, false);
    }
    s_alarmList.unlock();
 
@@ -2227,14 +2207,10 @@ uint32_t UpdateAlarmComment(uint32_t alarmId, uint32_t *noteId, const TCHAR *tex
    uint32_t rcc = RCC_INVALID_ALARM_ID;
 
    s_alarmList.lock();
-   for(int i = 0; i < s_alarmList.size(); i++)
+   Alarm *alarm = s_alarmList.find(alarmId);
+   if (alarm != nullptr)
    {
-      Alarm *alarm = s_alarmList.get(i);
-      if (alarm->getAlarmId() == alarmId)
-      {
-         rcc = alarm->updateAlarmComment(noteId, text, userId, syncWithHelpdesk);
-         break;
-      }
+      rcc = alarm->updateAlarmComment(noteId, text, userId, syncWithHelpdesk);
    }
    s_alarmList.unlock();
 
@@ -2247,7 +2223,7 @@ uint32_t UpdateAlarmComment(uint32_t alarmId, uint32_t *noteId, const TCHAR *tex
 uint32_t Alarm::deleteComment(uint32_t commentId)
 {
    uint32_t rcc;
-   if (IsValidNoteId(m_alarmId, commentId))
+   if (IsValidCommentId(m_alarmId, commentId))
    {
       DB_HANDLE db = DBConnectionPoolAcquireConnection();
       DB_STATEMENT stmt = DBPrepare(db, _T("DELETE FROM alarm_notes WHERE note_id=?"));
@@ -2283,14 +2259,10 @@ uint32_t DeleteAlarmCommentByID(uint32_t alarmId, uint32_t noteId)
    uint32_t rcc = RCC_INVALID_ALARM_ID;
 
    s_alarmList.lock();
-   for(int i = 0; i < s_alarmList.size(); i++)
+   Alarm *alarm = s_alarmList.find(alarmId);
+   if (alarm != nullptr)
    {
-      Alarm *alarm = s_alarmList.get(i);
-      if (alarm->getAlarmId() == alarmId)
-      {
-         rcc = alarm->deleteComment(noteId);
-         break;
-      }
+      rcc = alarm->deleteComment(noteId);
    }
    s_alarmList.unlock();
 
@@ -2347,30 +2319,30 @@ uint32_t GetAlarmComments(uint32_t alarmId, NXCPMessage *msg)
 			int count = DBGetNumRows(hResult);
 			msg->setField(VID_NUM_ELEMENTS, (UINT32)count);
 
-			UINT32 varId = VID_ELEMENT_LIST_BASE;
+			uint32_t fieldId = VID_ELEMENT_LIST_BASE;
 			for(int i = 0; i < count; i++)
 			{
-				msg->setField(varId++, DBGetFieldULong(hResult, i, 0));
-				msg->setField(varId++, alarmId);
-				msg->setField(varId++, DBGetFieldULong(hResult, i, 1));
-            UINT32 userId = DBGetFieldULong(hResult, i, 2);
-				msg->setField(varId++, userId);
+				msg->setField(fieldId++, DBGetFieldULong(hResult, i, 0));
+				msg->setField(fieldId++, alarmId);
+				msg->setField(fieldId++, DBGetFieldULong(hResult, i, 1));
+            uint32_t userId = DBGetFieldULong(hResult, i, 2);
+				msg->setField(fieldId++, userId);
 
             TCHAR *text = DBGetField(hResult, i, 3, nullptr, 0);
-				msg->setField(varId++, CHECK_NULL_EX(text));
+				msg->setField(fieldId++, CHECK_NULL_EX(text));
 				MemFree(text);
 
             TCHAR userName[MAX_USER_NAME];
             if (ResolveUserId(userId, userName) != nullptr)
             {
-   				msg->setField(varId++, userName);
+   				msg->setField(fieldId++, userName);
             }
             else
             {
-               varId++;
+               fieldId++;
             }
 
-            varId += 4;
+            fieldId += 4;
 			}
 			DBFreeResult(hResult);
 			rcc = RCC_SUCCESS;
@@ -2393,17 +2365,18 @@ uint32_t GetAlarmComments(uint32_t alarmId, NXCPMessage *msg)
  */
 ObjectArray<Alarm> NXCORE_EXPORTABLE *GetAlarms(uint32_t objectId, bool recursive)
 {
+   ObjectArray<Alarm> *result = new ObjectArray<Alarm>(128, 128, Ownership::True);
    s_alarmList.lock();
-   ObjectArray<Alarm> *result = new ObjectArray<Alarm>(s_alarmList.size(), 16, Ownership::True);
-   for(int i = 0; i < s_alarmList.size(); i++)
-   {
-      Alarm *alarm = s_alarmList.get(i);
-      if ((objectId == 0) || (alarm->getSourceObject() == objectId) ||
-          (recursive && IsParentObject(objectId, alarm->getSourceObject())))
+   s_alarmList.forEach(
+      [objectId, recursive, result] (Alarm *alarm) -> EnumerationCallbackResult
       {
-         result->add(new Alarm(alarm, true));
-      }
-   }
+         if ((objectId == 0) || (alarm->getSourceObject() == objectId) ||
+             (recursive && IsParentObject(objectId, alarm->getSourceObject())))
+         {
+            result->add(new Alarm(alarm, true));
+         }
+         return _CONTINUE;
+      });
    s_alarmList.unlock();
    return result;
 }
@@ -2450,18 +2423,29 @@ int F_FindAlarmByKeyRegex(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   const TCHAR *key = argv[0]->getValueAsCString();
+   const TCHAR *keyPattern = argv[0]->getValueAsCString();
    Alarm *alarm = nullptr;
 
-   s_alarmList.lock();
-   for(int i = 0; i < s_alarmList.size(); i++)
+   const char *errptr;
+   int erroffset;
+   PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(keyPattern), PCRE_COMMON_FLAGS, &errptr, &erroffset, nullptr);
+   if (preg != nullptr)
    {
-      Alarm *a = s_alarmList.get(i);
-      if (RegexpMatch(a->getKey(), key, TRUE))
-      {
-         alarm = new Alarm(a, false);
-         break;
-      }
+      s_alarmList.lock();
+
+      s_alarmList.forEachKey(
+         [preg, &alarm] (const TCHAR *key, Alarm *a) -> EnumerationCallbackResult
+         {
+            int ovector[60];
+            if (_pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(key), static_cast<int>(_tcslen(key)), 0, 0, ovector, 60) >= 0)
+            {
+               alarm = new Alarm(a, false);
+               return _STOP;
+            }
+            return _CONTINUE;
+         });
+
+      _pcre_free_t(preg);
    }
    s_alarmList.unlock();
 
@@ -2542,14 +2526,15 @@ static void RootCauseUpdateThread()
 
       ObjectArray<Alarm> updateList(0, 32, Ownership::True);
       s_alarmList.lock();
-      for(int i = 0; i < s_alarmList.size(); i++)
-      {
-         Alarm *a = s_alarmList.get(i);
-         if ((*a->getRcaScriptName() != 0) && (a->getParentAlarmId() == 0))
+      s_alarmList.forEach(
+         [&updateList] (Alarm *a) -> EnumerationCallbackResult
          {
-            updateList.add(new Alarm(a, false));
-         }
-      }
+            if ((*a->getRcaScriptName() != 0) && (a->getParentAlarmId() == 0))
+            {
+               updateList.add(new Alarm(a, false));
+            }
+            return _CONTINUE;
+         });
       s_alarmList.unlock();
 
       nxlog_debug_tag(DEBUG_TAG, 5, _T("%d alarms for re-evaluation by background root cause analyzer"));
@@ -2643,16 +2628,17 @@ bool InitAlarmManager()
       DBCloseInMemoryDatabase(cachedb);
 
    // Update subordinate alarm lists
-   for(int i = 0; i < s_alarmList.size(); i++)
-   {
-      Alarm *curr = s_alarmList.get(i);
-      if (curr->getParentAlarmId() != 0)
+   s_alarmList.forEach(
+      [] (Alarm *curr) -> EnumerationCallbackResult
       {
-         Alarm *parent = s_alarmList.find(curr->getParentAlarmId());
-         if (parent != nullptr)
-            parent->addSubordinateAlarm(curr->getAlarmId());
-      }
-   }
+         if (curr->getParentAlarmId() != 0)
+         {
+            Alarm *parent = s_alarmList.find(curr->getParentAlarmId());
+            if (parent != nullptr)
+               parent->addSubordinateAlarm(curr->getAlarmId());
+         }
+         return _CONTINUE;
+      });
 
    s_watchdogThread = ThreadCreateEx(WatchdogThread);
    s_rootCauseUpdateThread = ThreadCreateEx(RootCauseUpdateThread);

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -835,11 +835,12 @@ void Zone::dumpSubnetIndex(ServerConsole *console) const
 /**
  * Print proxy node info to server console
  */
-static void PrintProxyNodeInfo(ZoneProxy *p, ServerConsole *console)
+static EnumerationCallbackResult PrintProxyNodeInfo(ZoneProxy *p, ServerConsole *console)
 {
    console->printf(_T("      [\x1b[33;1m%7u\x1b[0m] assignments=%u available=\x1b[%s\x1b[0m senderLoad=%f(%f) dcLoad=%f cpuLoad=%f\n"),
             p->nodeId, p->assignments, p->isAvailable ? _T("32;1myes") : _T("31;1mno"),
             p->dataSenderLoad, p->dataSenderLoadTrend, p->dataCollectorLoad, p->cpuLoad);
+   return _CONTINUE;
 }
 
 /**
