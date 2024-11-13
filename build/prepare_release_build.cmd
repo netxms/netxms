@@ -14,6 +14,8 @@ type src\java\netxms-eclipse\Core\plugin.xml | sed -r "s,^(.*;Version) [0-9.]+(&
 copy /Y plugin.xml src\java\netxms-eclipse\Core\plugin.xml
 del plugin.xml
 
+if defined SKIP_BUILD_IN_PREPARE goto skip_build
+
 cmd /C mvn -f src/pom.xml versions:set -DnewVersion=%VERSION% -DprocessAllModules=true
 cmd /C mvn -f src/client/nxmc/java/pom.xml versions:set -DnewVersion=%VERSION%
 
@@ -30,6 +32,8 @@ copy /Y src\client\nxmc\java\target\nxmc-%VERSION%.jar src\client\nxmc\java
 
 cmd /C mvn -f src/pom.xml versions:revert -DprocessAllModules=true
 cmd /C mvn -f src/client/nxmc/java/pom.xml versions:revert
+
+:skip_build
 
 cd sql
 make -f Makefile.w32
