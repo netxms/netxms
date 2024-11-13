@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@ package org.netxms.nxmc.base.widgets;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.FocusAdapter;
+import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
@@ -32,10 +34,12 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Shell;
 import org.netxms.nxmc.base.widgets.events.HyperlinkAdapter;
 import org.netxms.nxmc.base.widgets.events.HyperlinkEvent;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.xnap.commons.i18n.I18n;
 
@@ -51,7 +55,6 @@ public class MessageArea extends Canvas implements MessageAreaHolder
    public static final int WARNING = 2;
    public static final int ERROR = 3;
 
-   private static final int MAX_ROWS = 4;
    private static final int MARGIN_WIDTH = 4;
    private static final int MARGIN_HEIGHT = 4;
    private static final int MESSAGE_SPACING = 4;
@@ -60,17 +63,15 @@ public class MessageArea extends Canvas implements MessageAreaHolder
 
    private static Image[] icons = null;
    private static Image iconClose = null;
+   private static Image iconShowAll = null;
 
    private int nextMessageId = 1;
    private List<Message> messages = new ArrayList<>(0);
-   private long messageTimeout = 60000; // 1 minute by default
-   private Runnable timer = new Runnable() {
-      @Override
-      public void run()
-      {
-         onTimer();
-      }
-   };
+   private long messageTimeout = 20000; // 20 seconds by default
+   private Runnable timer = null;
+   private ImageHyperlink buttonShowAll = null;
+   private ImageHyperlink buttonCloseAll = null;
+   private Shell popupListShell = null;
 
    /**
     * Create message area.
@@ -90,12 +91,14 @@ public class MessageArea extends Canvas implements MessageAreaHolder
          icons[WARNING] = ResourceManager.getImage("icons/messages/warning.png");
          icons[ERROR] = ResourceManager.getImage("icons/messages/error.png");
          iconClose = ResourceManager.getImage("icons/messages/close.png");
+         iconShowAll = ResourceManager.getImage("icons/messages/show-all.png");
       }
 
       GridLayout layout = new GridLayout();
       layout.marginHeight = MARGIN_HEIGHT;
       layout.marginWidth = MARGIN_WIDTH;
       layout.verticalSpacing = MESSAGE_SPACING;
+      layout.numColumns = 3;
       setLayout(layout);
    }
 
@@ -117,6 +120,10 @@ public class MessageArea extends Canvas implements MessageAreaHolder
       return addMessage(level, text, sticky, null, null);
    }
 
+   /**
+    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#addMessage(int, java.lang.String, boolean, java.lang.String,
+    *      java.lang.Runnable)
+    */
    @Override
    public int addMessage(int level, String text, boolean sticky, String buttonText, Runnable action)
    {
@@ -125,16 +132,51 @@ public class MessageArea extends Canvas implements MessageAreaHolder
 
       Message m = new Message(nextMessageId++, level, text, sticky, buttonText, action);
 
-      if (messages.size() >= MAX_ROWS)
-         messages.get(MAX_ROWS - 1).disposeControl();
+      if (!messages.isEmpty())
+         messages.get(0).disposeControl();
       messages.add(0, m);
 
-      m.control = new MessageComposite(m);
+      m.control = new MessageComposite(this, m, (mc) -> deleteMessage(m.id));
       m.control.moveAbove(null);
       m.control.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-      if (messages.size() == 1)
+      if (buttonShowAll == null)
+      {
+         buttonShowAll = new ImageHyperlink(this, SWT.NONE);
+         buttonShowAll.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
+         buttonShowAll.setImage(iconShowAll);
+         buttonShowAll.setToolTipText(i18n.tr("Show all notifications"));
+         buttonShowAll.setText("(1)");
+         buttonShowAll.addHyperlinkListener(new HyperlinkAdapter() {
+            @Override
+            public void linkActivated(HyperlinkEvent e)
+            {
+               showAllMessages();
+            }
+         });
+
+         buttonCloseAll = new ImageHyperlink(this, SWT.NONE);
+         buttonCloseAll.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
+         buttonCloseAll.setImage(SharedIcons.IMG_CLOSE);
+         buttonCloseAll.setToolTipText(i18n.tr("Close all notifications"));
+         buttonCloseAll.addHyperlinkListener(new HyperlinkAdapter() {
+            @Override
+            public void linkActivated(HyperlinkEvent e)
+            {
+               clearMessages();
+            }
+         });
+      }
+      else
+      {
+         buttonShowAll.setText("(" + Integer.toString(messages.size()) + ")");
+      }
+
+      if (timer == null)
+      {
+         timer = () -> onTimer();
          getDisplay().timerExec(1000, timer); // First message, start expiration check timer
+      }
 
       getParent().layout(true, true);
       return m.id;
@@ -155,16 +197,25 @@ public class MessageArea extends Canvas implements MessageAreaHolder
          if (m.id == id)
          {
             messages.remove(i);
-            m.disposeControl();
-
-            // Re-create composite for next hidden message, if any
-            if (messages.size() >= MAX_ROWS)
+            if (m.disposeControl() && !messages.isEmpty())
             {
-               m = messages.get(MAX_ROWS - 1);
-               m.control = new MessageComposite(m);
+               // Re-create composite for next hidden message, if any
+               m = messages.get(0);
+               m.control = new MessageComposite(this, m, (mc) -> deleteMessage(mc.message.id));
                m.control.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+               m.control.moveAbove(null);
             }
-
+            if (messages.isEmpty() && (buttonShowAll != null))
+            {
+               buttonShowAll.dispose();
+               buttonShowAll = null;
+               buttonCloseAll.dispose();
+               buttonCloseAll = null;
+            }
+            if (!messages.isEmpty())
+            {
+               buttonShowAll.setText("(" + Integer.toString(messages.size()) + ")");
+            }
             getParent().layout(true, true);
             break;
          }
@@ -183,6 +234,14 @@ public class MessageArea extends Canvas implements MessageAreaHolder
       for(Message m : messages)
          m.disposeControl();
       messages.clear();
+
+      if (buttonShowAll != null)
+      {
+         buttonShowAll.dispose();
+         buttonShowAll = null;
+         buttonCloseAll.dispose();
+         buttonCloseAll = null;
+      }
 
       getParent().layout(true, true);
    }
@@ -224,6 +283,8 @@ public class MessageArea extends Canvas implements MessageAreaHolder
 
       if (!messages.isEmpty())
          getDisplay().timerExec(1000, timer);
+      else
+         timer = null;
    }
 
    /**
@@ -233,6 +294,68 @@ public class MessageArea extends Canvas implements MessageAreaHolder
    public Point computeSize(int wHint, int hHint, boolean changed)
    {
       return messages.isEmpty() ? new Point(0, 0) : super.computeSize(wHint, hHint, changed);
+   }
+
+   /**
+    * Show all messages
+    */
+   private void showAllMessages()
+   {
+      if (popupListShell != null)
+      {
+         popupListShell.close();
+         popupListShell = null;
+      }
+
+      final Rectangle bounds = buttonShowAll.getBounds();
+      final Point p = toDisplay(new Point(bounds.x + bounds.width, bounds.y + bounds.height + 2));
+
+      popupListShell = new Shell(getDisplay(), SWT.TOOL | SWT.ON_TOP | SWT.MODELESS);
+
+      GridLayout layout = new GridLayout();
+      layout.marginHeight = MARGIN_HEIGHT;
+      layout.marginWidth = MARGIN_WIDTH;
+      layout.verticalSpacing = MESSAGE_SPACING;
+      popupListShell.setLayout(layout);
+
+      for(Message m : messages)
+      {
+         MessageComposite messageComposite = new MessageComposite(popupListShell, m, (mc) -> {
+            deleteMessage(m.id);
+            mc.dispose();
+            if (popupListShell.getChildren().length > 0)
+            {
+               popupListShell.pack();
+               popupListShell.setLocation(p.x - popupListShell.getBounds().width, p.y);
+               popupListShell.forceFocus();
+            }
+            else
+            {
+               popupListShell.close();
+               popupListShell = null;
+            }
+         });
+         messageComposite.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      }
+
+      popupListShell.addFocusListener(new FocusAdapter() {
+         @Override
+         public void focusLost(FocusEvent e)
+         {
+            popupListShell.close();
+            popupListShell = null;
+         }
+      });
+      popupListShell.addListener(SWT.Deactivate, (event) -> {
+         popupListShell.close();
+         popupListShell = null;
+      });
+
+      popupListShell.pack();
+      popupListShell.open();
+
+      popupListShell.setLocation(p.x - popupListShell.getBounds().width, p.y);
+      popupListShell.forceFocus();
    }
 
    /**
@@ -269,14 +392,17 @@ public class MessageArea extends Canvas implements MessageAreaHolder
 
       /**
        * Dispose control displaying this message, if any
+       * 
+       * @return true if control was disposed
        */
-      void disposeControl()
+      boolean disposeControl()
       {
-         if (control != null)
-         {
-            control.dispose();
-            control = null;
-         }
+         if (control == null)
+            return false;
+
+         control.dispose();
+         control = null;
+         return true;
       }
 
       /**
@@ -332,9 +458,9 @@ public class MessageArea extends Canvas implements MessageAreaHolder
        *
        * @param message message
        */
-      public MessageComposite(Message message)
+      public MessageComposite(Composite parent, Message message, CloseHandler closeHandler)
       {
-         super(MessageArea.this, SWT.NONE);
+         super(parent, SWT.NONE);
          this.message = message;
 
          setBackground(message.getBackgroundColor());
@@ -381,13 +507,16 @@ public class MessageArea extends Canvas implements MessageAreaHolder
             @Override
             public void linkActivated(HyperlinkEvent e)
             {
-               MessageArea.this.deleteMessage(message.id);
+               closeHandler.onClose(MessageComposite.this);
             }
          });
 
          addPaintListener(this);
       }      
-      
+
+      /**
+       * @see org.eclipse.swt.widgets.Widget#dispose()
+       */
       @Override
       public void dispose()
       {
@@ -407,5 +536,18 @@ public class MessageArea extends Canvas implements MessageAreaHolder
          e.gc.setForeground(message.getBorderColor());
          e.gc.drawRoundRectangle(clientArea.x, clientArea.y, clientArea.width - 1, clientArea.height - 1, 4, 4);
       }
+   }
+
+   /**
+    * Close handler for message composite
+    */
+   private interface CloseHandler
+   {
+      /**
+       * Called when user press "close" button.
+       *
+       * @param mc owning message composite
+       */
+      public void onClose(MessageComposite mc);
    }
 }
