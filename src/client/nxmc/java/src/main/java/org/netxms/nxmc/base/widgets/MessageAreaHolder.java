@@ -41,6 +41,19 @@ public interface MessageAreaHolder
     * @return ID assigned to added message
     */
    public int addMessage(int level, String text, boolean sticky);
+   
+   
+   /**
+    * Add message to message area with action button.
+    * 
+    * @param level message level (one of MessageArea.INFORMATION, MessageArea.SUCCESS, MessageArea.WARNING, MessageArea.ERROR)
+    * @param text message text
+    * @param sticky true to add sticky message (one that will not be dismissed by timeout)
+    * @param buttonText action button text
+    * @param action action function
+    * @return ID assigned to added message
+    */
+   public int addMessage(int level, String text, boolean sticky, String buttonText, Runnable action);
 
    /**
     * Delete message from message area.

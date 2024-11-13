@@ -158,6 +158,7 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
       super.configureShell(shell);
       shell.setText(view.getFullName());
       shell.setMaximized(true);
+      shell.setFullScreen(true);
    }
 
    /**
@@ -259,6 +260,15 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
    public int addMessage(int level, String text, boolean sticky)
    {
       return messageArea.addMessage(level, text, sticky);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#addMessage(int, java.lang.String, boolean, java.lang.String, java.lang.Runnable)
+    */
+   @Override
+   public int addMessage(int level, String text, boolean sticky, String buttonText, Runnable action)
+   {
+      return messageArea.addMessage(level, text, sticky, buttonText, action);
    }
 
    /**

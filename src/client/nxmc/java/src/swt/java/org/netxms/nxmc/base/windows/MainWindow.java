@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -772,6 +772,15 @@ public class MainWindow extends Window implements MessageAreaHolder
    public int addMessage(int level, String text, boolean sticky)
    {
       return messageArea.addMessage(level, text);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#addMessage(int, java.lang.String, boolean, java.lang.String, java.lang.Runnable)
+    */
+   @Override
+   public int addMessage(int level, String text, boolean sticky, String buttonText, Runnable action)
+   {
+      return messageArea.addMessage(level, text, sticky, buttonText, action);
    }
 
    /**

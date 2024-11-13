@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,11 +62,11 @@ public class ElementWidget extends DashboardComposite implements ControlListener
 	protected DashboardElement element;
    protected AbstractDashboardView view;
 
+   private DashboardControl dbc;
    private Label title;
    private Composite mainArea;
    private Composite content;
    private Font titleFont;
-	private DashboardControl dbc;
 	private DashboardElementLayout layout;
 	private boolean editMode = false;
 	private EditPaneWidget editPane = null;
@@ -199,13 +199,9 @@ public class ElementWidget extends DashboardComposite implements ControlListener
          content.setLayoutData(fd);
       }
 
-      addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            if (titleFont != null)
-               titleFont.dispose();
-         }
+      addDisposeListener((e) -> {
+         if (titleFont != null)
+            titleFont.dispose();
       });
    }
 
@@ -251,6 +247,7 @@ public class ElementWidget extends DashboardComposite implements ControlListener
 
       title = new Label(this, SWT.CENTER);
       title.setText(text.replace("&", "&&"));
+
       if (backgroundColor != null)
       {
          title.setBackground(colors.create(backgroundColor));
@@ -260,8 +257,10 @@ public class ElementWidget extends DashboardComposite implements ControlListener
       {
          title.setBackground(getBackground());
       }
+
       if (foregroundColor != null)
          title.setForeground(colors.create(foregroundColor));
+
       if (titleFont != null)
          titleFont.dispose();
       titleFont = FontTools.createAdjustedFont(JFaceResources.getBannerFont(), textSizeAdjustment);
@@ -470,6 +469,15 @@ public class ElementWidget extends DashboardComposite implements ControlListener
    public int addMessage(int level, String text, boolean sticky)
    {
       return messageArea.addMessage(level, text, sticky);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#addMessage(int, java.lang.String, boolean, java.lang.String, java.lang.Runnable)
+    */
+   @Override
+   public int addMessage(int level, String text, boolean sticky, String buttonText, Runnable action)
+   {
+      return messageArea.addMessage(level, text, sticky, buttonText, action);
    }
 
    /**
