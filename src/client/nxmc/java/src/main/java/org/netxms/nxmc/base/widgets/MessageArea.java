@@ -39,7 +39,6 @@ import org.netxms.nxmc.base.widgets.events.HyperlinkAdapter;
 import org.netxms.nxmc.base.widgets.events.HyperlinkEvent;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.xnap.commons.i18n.I18n;
 
@@ -70,7 +69,6 @@ public class MessageArea extends Canvas implements MessageAreaHolder
    private long messageTimeout = 20000; // 20 seconds by default
    private Runnable timer = null;
    private ImageHyperlink buttonShowAll = null;
-   private ImageHyperlink buttonCloseAll = null;
    private Shell popupListShell = null;
 
    /**
@@ -98,7 +96,7 @@ public class MessageArea extends Canvas implements MessageAreaHolder
       layout.marginHeight = MARGIN_HEIGHT;
       layout.marginWidth = MARGIN_WIDTH;
       layout.verticalSpacing = MESSAGE_SPACING;
-      layout.numColumns = 3;
+      layout.numColumns = 2;
       setLayout(layout);
    }
 
@@ -154,18 +152,6 @@ public class MessageArea extends Canvas implements MessageAreaHolder
                showAllMessages();
             }
          });
-
-         buttonCloseAll = new ImageHyperlink(this, SWT.NONE);
-         buttonCloseAll.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
-         buttonCloseAll.setImage(SharedIcons.IMG_CLOSE);
-         buttonCloseAll.setToolTipText(i18n.tr("Close all notifications"));
-         buttonCloseAll.addHyperlinkListener(new HyperlinkAdapter() {
-            @Override
-            public void linkActivated(HyperlinkEvent e)
-            {
-               clearMessages();
-            }
-         });
       }
       else
       {
@@ -209,8 +195,6 @@ public class MessageArea extends Canvas implements MessageAreaHolder
             {
                buttonShowAll.dispose();
                buttonShowAll = null;
-               buttonCloseAll.dispose();
-               buttonCloseAll = null;
             }
             if (!messages.isEmpty())
             {
@@ -239,8 +223,6 @@ public class MessageArea extends Canvas implements MessageAreaHolder
       {
          buttonShowAll.dispose();
          buttonShowAll = null;
-         buttonCloseAll.dispose();
-         buttonCloseAll = null;
       }
 
       getParent().layout(true, true);
@@ -318,8 +300,16 @@ public class MessageArea extends Canvas implements MessageAreaHolder
       layout.verticalSpacing = MESSAGE_SPACING;
       popupListShell.setLayout(layout);
 
+      int count = 0;
       for(Message m : messages)
       {
+         if ((count++ == 10) && (messages.size() > 11))
+         {
+            int r = messages.size() - 10;
+            new Label(popupListShell, SWT.NONE).setText(i18n.tr("{0} more messages", r));
+            break;
+         }
+
          MessageComposite messageComposite = new MessageComposite(popupListShell, m, (mc) -> {
             deleteMessage(m.id);
             mc.dispose();
