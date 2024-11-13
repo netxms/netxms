@@ -160,81 +160,88 @@ static void ProcessingThread(SOCKET sock)
       }
 
       NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
-      if (request->getCode() == CMD_ADM_REQUEST)
+      if (g_flags & AF_SERVER_INITIALIZED)
       {
-         uint32_t rcc;
-         if (isAuthenticated || !requireAuthentication)
+         if (request->getCode() == CMD_ADM_REQUEST)
          {
-            if (request->isFieldExist(VID_SCRIPT))
+            uint32_t rcc;
+            if (isAuthenticated || !requireAuthentication)
             {
-               TCHAR script[256];
-               request->getFieldAsString(VID_SCRIPT, script, 256);
+               if (request->isFieldExist(VID_SCRIPT))
+               {
+                  TCHAR script[256];
+                  request->getFieldAsString(VID_SCRIPT, script, 256);
 
-               StringList args(*request, VID_ACTION_ARG_BASE, VID_NUM_ARGS);
-               int executionResult = 0;
-               rcc = ExecuteServerScript(script, args, &console, &executionResult);
-               response.setField(VID_EXECUTION_RESULT, executionResult);
+                  StringList args(*request, VID_ACTION_ARG_BASE, VID_NUM_ARGS);
+                  int executionResult = 0;
+                  rcc = ExecuteServerScript(script, args, &console, &executionResult);
+                  response.setField(VID_EXECUTION_RESULT, executionResult);
+               }
+               else
+               {
+                  TCHAR command[256];
+                  request->getFieldAsString(VID_COMMAND, command, 256);
+
+                  int exitCode = ProcessConsoleCommand(command, &console);
+                  switch(exitCode)
+                  {
+                     case CMD_EXIT_SHUTDOWN:
+                        InitiateShutdown(ShutdownReason::FROM_REMOTE_CONSOLE);
+                        break;
+                     case CMD_EXIT_CLOSE_SESSION:
+                        delete request;
+                        goto close_session;
+                     default:
+                        break;
+                  }
+                  rcc = RCC_SUCCESS;
+               }
             }
             else
             {
-               TCHAR command[256];
-               request->getFieldAsString(VID_COMMAND, command, 256);
-
-               int exitCode = ProcessConsoleCommand(command, &console);
-               switch(exitCode)
-               {
-                  case CMD_EXIT_SHUTDOWN:
-                     InitiateShutdown(ShutdownReason::FROM_REMOTE_CONSOLE);
-                     break;
-                  case CMD_EXIT_CLOSE_SESSION:
-                     delete request;
-                     goto close_session;
-                  default:
-                     break;
-               }
-               rcc = RCC_SUCCESS;
+               rcc = RCC_ACCESS_DENIED;
             }
+            response.setField(VID_RCC, rcc);
+         }
+         else if (request->getCode() == CMD_LOGIN)
+         {
+            TCHAR loginName[MAX_USER_NAME], password[MAX_PASSWORD];
+            request->getFieldAsString(VID_LOGIN_NAME, loginName, MAX_USER_NAME);
+            request->getFieldAsString(VID_PASSWORD, password, MAX_PASSWORD);
+
+            uint32_t userId, graceLogins;
+            uint64_t systemRights;
+            bool changePassword, intruderLockout, closeOtherSessions;
+            uint32_t rcc = AuthenticateUser(loginName, password, 0, nullptr, nullptr, &userId, &systemRights, &changePassword, &intruderLockout, &closeOtherSessions, false, &graceLogins);
+            if (rcc == RCC_SUCCESS)
+            {
+               if (systemRights & SYSTEM_ACCESS_SERVER_CONSOLE)
+                  isAuthenticated = true;
+               else
+                  rcc = RCC_ACCESS_DENIED;
+            }
+            response.setField(VID_RCC, rcc);
+         }
+         else if (request->getCode() == CMD_SET_DB_PASSWORD)
+         {
+            request->getFieldAsString(VID_PASSWORD, g_szDbPassword, MAX_PASSWORD);
+            DecryptPassword(g_szDbLogin, g_szDbPassword, g_szDbPassword, MAX_PASSWORD);
+            g_dbPasswordReady.set();
+            response.setField(VID_RCC, RCC_SUCCESS);
+         }
+         else if (request->getCode() == CMD_GET_SERVER_INFO)
+         {
+            response.setField(VID_AUTH_TYPE, requireAuthentication);
+            response.setField(VID_RCC, RCC_SUCCESS);
          }
          else
          {
-            rcc = RCC_ACCESS_DENIED;
+            response.setField(VID_RCC, RCC_NOT_IMPLEMENTED);
          }
-         response.setField(VID_RCC, rcc);
-      }
-      else if (request->getCode() == CMD_LOGIN)
-      {
-         TCHAR loginName[MAX_USER_NAME], password[MAX_PASSWORD];
-         request->getFieldAsString(VID_LOGIN_NAME, loginName, MAX_USER_NAME);
-         request->getFieldAsString(VID_PASSWORD, password, MAX_PASSWORD);
-
-         uint32_t userId, graceLogins;
-         uint64_t systemRights;
-         bool changePassword, intruderLockout, closeOtherSessions;
-         uint32_t rcc = AuthenticateUser(loginName, password, 0, nullptr, nullptr, &userId, &systemRights, &changePassword, &intruderLockout, &closeOtherSessions, false, &graceLogins);
-         if (rcc == RCC_SUCCESS)
-         {
-            if (systemRights & SYSTEM_ACCESS_SERVER_CONSOLE)
-               isAuthenticated = true;
-            else
-               rcc = RCC_ACCESS_DENIED;
-         }
-         response.setField(VID_RCC, rcc);
-      }
-      else if (request->getCode() == CMD_SET_DB_PASSWORD)
-      {
-         request->getFieldAsString(VID_PASSWORD, g_szDbPassword, MAX_PASSWORD);
-         DecryptPassword(g_szDbLogin, g_szDbPassword, g_szDbPassword, MAX_PASSWORD);
-         g_dbPasswordReady.set();
-         response.setField(VID_RCC, RCC_SUCCESS);
-      }
-      else if (request->getCode() == CMD_GET_SERVER_INFO)
-      {
-         response.setField(VID_AUTH_TYPE, requireAuthentication);
-         response.setField(VID_RCC, RCC_SUCCESS);
       }
       else
       {
-         response.setField(VID_RCC, RCC_NOT_IMPLEMENTED);
+         response.setField(VID_RCC, RCC_RESOURCE_NOT_AVAILABLE);
       }
 
       NXCP_MESSAGE *rawMsgOut = response.serialize();
