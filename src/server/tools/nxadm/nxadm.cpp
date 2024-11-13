@@ -70,6 +70,8 @@ static const char *GetServerErrorText(uint32_t rcc)
          return "Access denied";
       case RCC_NOT_IMPLEMENTED:
          return "Command not implemented";
+      case RCC_RESOURCE_NOT_AVAILABLE:
+         return "Server initialization is not completed yet";
    }
    return "Internal error";
 }
