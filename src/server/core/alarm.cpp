@@ -120,6 +120,15 @@ public:
    {
       return (m_mostCritical != -1) ? m_mostCritical : STATUS_UNKNOWN;
    }
+
+   std::array<int, 5> getStats() const
+   {
+      LockGuard lockGuard(m_mutex);
+      std::array<int, 5> stats = { 0, 0, 0, 0, 0 };
+      for(int i = 0; i < m_severities.size(); i++)
+         stats[m_severities.get(i)->second]++;
+      return stats;
+   }
 };
 
 /**
@@ -135,6 +144,15 @@ int GetMostCriticalAlarmForObject(uint32_t objectId)
 {
    shared_ptr<ObjectAlarmSeverity> s = s_alarmSeverityByObject.get(objectId);
    return (s != nullptr) ? s->getMostCritical() : STATUS_UNKNOWN;
+}
+
+/**
+ * Get alarm statistic for object
+ */
+std::array<int, 5> GetAlarmStatsForObject(uint32_t objectId)
+{
+   shared_ptr<ObjectAlarmSeverity> s = s_alarmSeverityByObject.get(objectId);
+   return (s != nullptr) ? s->getStats() : std::array<int, 5>({ 0, 0, 0, 0, 0 });
 }
 
 /**
@@ -2578,7 +2596,7 @@ Alarm NXCORE_EXPORTABLE *FindAlarmById(UINT32 alarmId)
 /**
  * Load alarm from database
  */
-Alarm NXCORE_EXPORTABLE *LoadAlarmFromDatabase(UINT32 alarmId)
+Alarm NXCORE_EXPORTABLE *LoadAlarmFromDatabase(uint32_t alarmId)
 {
    if (alarmId == 0)
       return nullptr;

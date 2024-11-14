@@ -210,10 +210,11 @@ uint32_t NXCORE_EXPORTABLE GetAlarmEvents(uint32_t alarmId, NXCPMessage *msg, Ge
 shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(uint32_t alarmId, bool alreadyLocked = false, bool useDatabase = false);
 shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(const TCHAR *hdref);
 int GetMostCriticalAlarmForObject(uint32_t objectId);
-void GetAlarmStats(NXCPMessage *pMsg);
+std::array<int, 5> GetAlarmStatsForObject(uint32_t objectId);
+void GetAlarmStats(NXCPMessage *msg);
 int GetAlarmCount();
 uint64_t GetAlarmMemoryUsage();
-Alarm NXCORE_EXPORTABLE *LoadAlarmFromDatabase(UINT32 alarmId);
+Alarm NXCORE_EXPORTABLE *LoadAlarmFromDatabase(uint32_t alarmId);
 
 uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, const TCHAR *rule_description, const TCHAR *message, const TCHAR *key, const TCHAR *impact,
          int severity, uint32_t timeout, uint32_t timeoutEvent, uint32_t parentAlarmId, const TCHAR *rcaScriptName, Event *event,

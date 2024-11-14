@@ -772,6 +772,23 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const NXSL_Identifie
       value = vm->createValue(array);
       delete alarms;
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("alarmStats"))
+   {
+      std::array<int, 5> stats = GetAlarmStatsForObject(object->getId());
+
+      unique_ptr<SharedObjectArray<NetObj>> children = object->getAllChildren(true);
+      for(int n = 0; n < children->size(); n++)
+      {
+         std::array<int, 5> cs = GetAlarmStatsForObject(children->get(n)->getId());
+         for(int i = 0; i < 5; i++)
+            stats[i] += cs[i];
+      }
+
+      NXSL_Array *array = new NXSL_Array(vm);
+      for(int i = 0; i < 5; i++)
+         array->append(vm->createValue(stats[i]));
+      value = vm->createValue(array);
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("alias"))
    {
       value = vm->createValue(object->getAlias());
