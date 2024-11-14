@@ -135,9 +135,12 @@ static uint32_t ExecuteServerScript(const TCHAR *script, const StringList& args,
 static void ProcessingThread(SOCKET sock)
 {
    bool isAuthenticated = false;
-   bool requireAuthentication = ConfigReadBoolean(_T("Server.Security.RestrictLocalConsoleAccess"), true);
+   bool requireAuthentication = true;
+   bool isInitialized = false;
+
    SocketConsole console(sock);
    SocketMessageReceiver receiver(sock, 4096, MAX_MSG_SIZE);
+
    while(true)
    {
       MessageReceiverResult result;
@@ -160,8 +163,21 @@ static void ProcessingThread(SOCKET sock)
       }
 
       NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
-      if (g_flags & AF_SERVER_INITIALIZED)
+      if (request->getCode() == CMD_SET_DB_PASSWORD)
       {
+         request->getFieldAsString(VID_PASSWORD, g_szDbPassword, MAX_PASSWORD);
+         DecryptPassword(g_szDbLogin, g_szDbPassword, g_szDbPassword, MAX_PASSWORD);
+         g_dbPasswordReady.set();
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else if (g_flags & AF_SERVER_INITIALIZED)
+      {
+         if (!isInitialized)
+         {
+            requireAuthentication = ConfigReadBoolean(_T("Server.Security.RestrictLocalConsoleAccess"), true);
+            isInitialized = true;
+         }
+
          if (request->getCode() == CMD_ADM_REQUEST)
          {
             uint32_t rcc;
@@ -221,13 +237,6 @@ static void ProcessingThread(SOCKET sock)
                   rcc = RCC_ACCESS_DENIED;
             }
             response.setField(VID_RCC, rcc);
-         }
-         else if (request->getCode() == CMD_SET_DB_PASSWORD)
-         {
-            request->getFieldAsString(VID_PASSWORD, g_szDbPassword, MAX_PASSWORD);
-            DecryptPassword(g_szDbLogin, g_szDbPassword, g_szDbPassword, MAX_PASSWORD);
-            g_dbPasswordReady.set();
-            response.setField(VID_RCC, RCC_SUCCESS);
          }
          else if (request->getCode() == CMD_GET_SERVER_INFO)
          {

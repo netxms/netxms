@@ -828,6 +828,9 @@ bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE dbHandle, const TCHAR *variable
    if (s_configCacheLoaded)
       return false;
 
+   if (g_flags & AF_SHUTDOWN) // Database may not be available when shutdown is initiated
+      return false;
+
    bool success = false;
    DB_HANDLE hdb = (dbHandle == nullptr) ? DBConnectionPoolAcquireConnection() : dbHandle;
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config WHERE var_name=?"));
