@@ -209,7 +209,7 @@ Alarm NXCORE_EXPORTABLE *FindAlarmById(UINT32 alarmId);
 uint32_t NXCORE_EXPORTABLE GetAlarmEvents(uint32_t alarmId, NXCPMessage *msg, GenericClientSession *session);
 shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(uint32_t alarmId, bool alreadyLocked = false, bool useDatabase = false);
 shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(const TCHAR *hdref);
-int GetMostCriticalStatusForObject(uint32_t objectId);
+int GetMostCriticalAlarmForObject(uint32_t objectId);
 void GetAlarmStats(NXCPMessage *pMsg);
 int GetAlarmCount();
 uint64_t GetAlarmMemoryUsage();

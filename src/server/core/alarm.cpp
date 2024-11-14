@@ -47,6 +47,137 @@ AlarmComment::AlarmComment(uint32_t id, time_t changeTime, uint32_t userId, TCHA
 }
 
 /**
+ * Alarm severity information for object
+ */
+class ObjectAlarmSeverity
+{
+private:
+   Mutex m_mutex;
+   StructArray<std::pair<uint32_t, int>> m_severities;
+   int m_mostCritical;
+
+   int find(uint32_t alarmId)
+   {
+      for(int i = 0; i < m_severities.size(); i++)
+         if (m_severities.get(i)->first == alarmId)
+            return i;
+      return -1;
+   }
+
+   void updateMostCritical()
+   {
+      m_mostCritical = -1;
+      for(int i = 0; i < m_severities.size(); i++)
+         if (m_severities.get(i)->second > m_mostCritical)
+            m_mostCritical = m_severities.get(i)->second;
+   }
+
+public:
+   ObjectAlarmSeverity() : m_mutex(MutexType::FAST)
+   {
+      m_mostCritical = -1;
+   }
+
+   void updateAlarm(uint32_t alarmId, int severity)
+   {
+      LockGuard lockGuard(m_mutex);
+      int index = find(alarmId);
+      if (index == -1)
+      {
+         m_severities.add(std::pair<uint32_t, int>(alarmId, severity));
+         if (severity > m_mostCritical)
+            m_mostCritical = severity;
+      }
+      else if (m_severities.get(index)->second != severity)
+      {
+         if (m_severities.get(index)->second > severity)
+         {
+            m_severities.get(index)->second = severity;
+            updateMostCritical();
+         }
+         else
+         {
+            m_severities.get(index)->second = severity;
+            if (severity > m_mostCritical)
+               m_mostCritical = severity;
+         }
+      }
+   }
+
+   void removeAlarm(uint32_t alarmId)
+   {
+      LockGuard lockGuard(m_mutex);
+      int index = find(alarmId);
+      if (index == -1)
+         return;
+      int severity = m_severities.get(index)->second;
+      m_severities.remove(index);
+      if (severity >= m_mostCritical)
+         updateMostCritical();
+   }
+
+   int getMostCritical() const
+   {
+      return (m_mostCritical != -1) ? m_mostCritical : STATUS_UNKNOWN;
+   }
+};
+
+/**
+ * Alarm severity summary by object
+ */
+static SharedPointerIndex<ObjectAlarmSeverity> s_alarmSeverityByObject;
+
+/**
+ * Get most critical status among active alarms for given object
+ * Will return STATUS_UNKNOWN if there are no active alarms
+ */
+int GetMostCriticalAlarmForObject(uint32_t objectId)
+{
+   shared_ptr<ObjectAlarmSeverity> s = s_alarmSeverityByObject.get(objectId);
+   return (s != nullptr) ? s->getMostCritical() : STATUS_UNKNOWN;
+}
+
+/**
+ * Force object status recalculation
+ */
+static inline void RecalculateObjectStatus(uint32_t objectId)
+{
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object != nullptr)
+      object->calculateCompoundStatus();
+}
+
+/**
+ * Update object status after alarm creation or update
+ */
+static void UpdateObjectOnAlarmUpdate(uint32_t objectId, Alarm *alarm, bool recalculateStatus)
+{
+   shared_ptr<ObjectAlarmSeverity> s = s_alarmSeverityByObject.get(objectId);
+   if (s == nullptr)
+   {
+      s = make_shared<ObjectAlarmSeverity>();
+      s_alarmSeverityByObject.put(objectId, s);
+   }
+   s->updateAlarm(alarm->getAlarmId(), alarm->getCurrentSeverity());
+
+   if (recalculateStatus)
+      RecalculateObjectStatus(objectId);
+}
+
+/**
+ * Update object status after alarm resolution or deletion
+ */
+static void UpdateObjectOnAlarmResolve(uint32_t objectId, uint32_t alarmId, bool recalculateStatus)
+{
+   shared_ptr<ObjectAlarmSeverity> s = s_alarmSeverityByObject.get(objectId);
+   if (s != nullptr)
+      s->removeAlarm(alarmId);
+
+   if (recalculateStatus)
+      RecalculateObjectStatus(objectId);
+}
+
+/**
  * Alarm list
  */
 class AlarmList
@@ -743,16 +874,6 @@ json_t *Alarm::toJson() const
 }
 
 /**
- * Update object status after alarm acknowledgment or deletion
- */
-static inline void UpdateObjectStatus(uint32_t objectId)
-{
-   shared_ptr<NetObj> object = FindObjectById(objectId);
-   if (object != nullptr)
-      object->calculateCompoundStatus();
-}
-
-/**
  * Fill NXCP message with event data from SQL query
  * Expected field order: event_id,event_code,event_name,severity,source_object_id,event_timestamp,message
  */
@@ -964,6 +1085,7 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
             if (parent != nullptr)
                parent->addSubordinateAlarm(alarm->getAlarmId());
          }
+         uint32_t currSourceObject = alarm->getSourceObject();
          alarm->updateFromEvent(event, parentAlarmId, rcaScriptName, ruleGuid, ruleDescription, ALARM_STATE_OUTSTANDING, severity, timeout, timeoutEvent, ackTimeout, message, impact, alarmCategoryList);
          if (!alarm->isEventRelated(event->getId()))
          {
@@ -974,6 +1096,10 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
 
          if (openHelpdeskIssue)
             alarm->openHelpdeskIssue(nullptr);
+
+         if (currSourceObject != alarm->getSourceObject())
+            UpdateObjectOnAlarmResolve(currSourceObject, alarm->getAlarmId(), true);
+         UpdateObjectOnAlarmUpdate(event->getSourceId(), alarm, true);
 
          newAlarm = false;
       }
@@ -1030,12 +1156,9 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
          }
       }
 
-      // Notify connected clients about new alarm
       NotifyClients(NX_NOTIFY_NEW_ALARM, alarm);
+      UpdateObjectOnAlarmUpdate(event->getSourceId(), alarm, true);
    }
-
-   // Update status of related object
-   UpdateObjectStatus(event->getSourceId());
 
    if (updateRelatedEvent)
    {
@@ -1257,6 +1380,7 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(const IntegerArray<uint32_t>& alarmIds,
                   if (!updatedObjects.contains(object->getId()))
                      updatedObjects.add(object->getId());
                }
+               UpdateObjectOnAlarmResolve(alarm->getSourceObject(), alarm->getAlarmId(), false);
                if (terminate)
                {
                   s_alarmList.remove(alarm);
@@ -1290,7 +1414,7 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(const IntegerArray<uint32_t>& alarmIds,
    EnumerateClientSessions(SendBulkAlarmTerminateNotification, &notification);
 
    for(int i = 0; i < updatedObjects.size(); i++)
-      UpdateObjectStatus(updatedObjects.get(i));
+      RecalculateObjectStatus(updatedObjects.get(i));
 }
 
 /**
@@ -1329,6 +1453,7 @@ static void ResolveAlarmByKeyRegexp(const TCHAR *keyPattern, bool terminate, Eve
       {
          Alarm *alarm = matchedAlarms.get(i);
          alarm->resolve(0, event, terminate, true, false);
+         UpdateObjectOnAlarmResolve(alarm->getSourceObject(), alarm->getAlarmId(), false);
          if (terminate)
          {
             s_alarmList.remove(alarm);
@@ -1339,7 +1464,7 @@ static void ResolveAlarmByKeyRegexp(const TCHAR *keyPattern, bool terminate, Eve
 
       // Update status of objects
       for(int i = 0; i < objectList.size(); i++)
-         UpdateObjectStatus(objectList.get(i));
+         RecalculateObjectStatus(objectList.get(i));
 
       _pcre_free_t(preg);
    }
@@ -1354,7 +1479,7 @@ static void ResolveAlarmByKeyRegexp(const TCHAR *keyPattern, bool terminate, Eve
  */
 static void ResolveAlarmByKeyExact(const TCHAR *key, bool terminate, Event *event)
 {
-   uint32_t objectId = 0;
+   uint32_t objectId = 0, alarmId = 0;
    s_alarmList.lock();
    Alarm *alarm = s_alarmList.find(key);
    if ((alarm != nullptr) &&
@@ -1363,6 +1488,7 @@ static void ResolveAlarmByKeyExact(const TCHAR *key, bool terminate, Event *even
    {
       // Add alarm's source object to update list
       objectId = alarm->getSourceObject();
+      alarmId = alarm->getAlarmId();
 
       // Resolve or terminate alarm
       alarm->resolve(0, event, terminate, true, false);
@@ -1374,7 +1500,7 @@ static void ResolveAlarmByKeyExact(const TCHAR *key, bool terminate, Event *even
    s_alarmList.unlock();
 
    if (objectId != 0)
-      UpdateObjectStatus(objectId);
+      UpdateObjectOnAlarmResolve(objectId, alarmId, true);
 }
 
 /**
@@ -1417,6 +1543,7 @@ void NXCORE_EXPORTABLE ResolveAlarmByDCObjectId(uint32_t dciId, bool terminate)
    {
       Alarm *alarm = matchedAlarms.get(i);
       alarm->resolve(0, nullptr, terminate, true, false);
+      UpdateObjectOnAlarmResolve(alarm->getSourceObject(), alarm->getAlarmId(), false);
       if (terminate)
       {
          s_alarmList.remove(alarm);
@@ -1427,7 +1554,7 @@ void NXCORE_EXPORTABLE ResolveAlarmByDCObjectId(uint32_t dciId, bool terminate)
 
    // Update status of objects
    for (int i = 0; i < objectList.size(); i++)
-      UpdateObjectStatus(objectList.get(i));
+      RecalculateObjectStatus(objectList.get(i));
 }
 
 /**
@@ -1436,7 +1563,7 @@ void NXCORE_EXPORTABLE ResolveAlarmByDCObjectId(uint32_t dciId, bool terminate)
  */
 uint32_t NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, GenericClientSession *session, bool terminate)
 {
-   uint32_t objectId = 0;
+   uint32_t objectId = 0, alarmId = 0;
    uint32_t rcc = RCC_INVALID_ALARM_ID;
 
    s_alarmList.lock();
@@ -1450,6 +1577,7 @@ uint32_t NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, GenericClient
       if (terminate || (alarm->getState() != ALARM_STATE_RESOLVED))
       {
          objectId = alarm->getSourceObject();
+         alarmId = alarm->getAlarmId();
          if (session != nullptr)
          {
             session->writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("%s alarm %u (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
@@ -1472,7 +1600,7 @@ uint32_t NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, GenericClient
    s_alarmList.unlock();
 
    if (objectId != 0)
-      UpdateObjectStatus(objectId);
+      UpdateObjectOnAlarmResolve(objectId, alarmId, true);
    return rcc;
 }
 
@@ -1662,15 +1790,20 @@ void NXCORE_EXPORTABLE DeleteAlarm(uint32_t alarmId, bool objectCleanup)
    if (found && !objectCleanup)
    {
       TCHAR szQuery[256];
+
       _sntprintf(szQuery, 256, _T("DELETE FROM alarms WHERE alarm_id=%u"), alarmId);
       QueueSQLRequest(szQuery);
+
       _sntprintf(szQuery, 256, _T("DELETE FROM alarm_events WHERE alarm_id=%u"), alarmId);
       QueueSQLRequest(szQuery);
+
       _sntprintf(szQuery, 256, _T("DELETE FROM alarm_notes WHERE alarm_id=%u"), alarmId);
       QueueSQLRequest(szQuery);
+
       _sntprintf(szQuery, 256, _T("DELETE FROM alarm_state_changes WHERE alarm_id=%u"), alarmId);
       QueueSQLRequest(szQuery);
-      UpdateObjectStatus(objectId);
+
+      UpdateObjectOnAlarmResolve(objectId, alarmId, true);
    }
 }
 
@@ -1919,31 +2052,6 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(const TCHAR *hdref)
    s_alarmList.unlock();
 
    return (objectId != 0) ? FindObjectById(objectId) : shared_ptr<NetObj>();
-}
-
-/**
- * Get most critical status among active alarms for given object
- * Will return STATUS_UNKNOWN if there are no active alarms
- */
-int GetMostCriticalStatusForObject(uint32_t objectId)
-{
-   int status = STATUS_UNKNOWN;
-   s_alarmList.lock();
-   s_alarmList.forEach(
-      [&status, objectId] (Alarm *alarm) -> EnumerationCallbackResult
-      {
-         if ((alarm->getSourceObject() == objectId) &&
-             ((alarm->getState() & ALARM_STATE_MASK) < ALARM_STATE_RESOLVED) &&
-             ((alarm->getCurrentSeverity() > status) || (status == STATUS_UNKNOWN)))
-         {
-            status = (int)alarm->getCurrentSeverity();
-            if (status == STATUS_CRITICAL)
-               return _STOP;
-         }
-         return _CONTINUE;
-      });
-   s_alarmList.unlock();
-   return status;
 }
 
 /**
@@ -2432,7 +2540,6 @@ int F_FindAlarmByKeyRegex(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
    if (preg != nullptr)
    {
       s_alarmList.lock();
-
       s_alarmList.forEachKey(
          [preg, &alarm] (const TCHAR *key, Alarm *a) -> EnumerationCallbackResult
          {
@@ -2444,10 +2551,9 @@ int F_FindAlarmByKeyRegex(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
             }
             return _CONTINUE;
          });
-
+      s_alarmList.unlock();
       _pcre_free_t(preg);
    }
-   s_alarmList.unlock();
 
    *result = (alarm != nullptr) ? vm->createValue(vm->createObject(&g_nxslAlarmClass, alarm)) : vm->createValue();
    return 0;
@@ -2627,10 +2733,11 @@ bool InitAlarmManager()
    if (cachedb != nullptr)
       DBCloseInMemoryDatabase(cachedb);
 
-   // Update subordinate alarm lists
+   // Populate per object status mappings and update subordinate alarm lists
    s_alarmList.forEach(
       [] (Alarm *curr) -> EnumerationCallbackResult
       {
+         UpdateObjectOnAlarmUpdate(curr->getSourceObject(), curr, false);
          if (curr->getParentAlarmId() != 0)
          {
             Alarm *parent = s_alarmList.find(curr->getParentAlarmId());

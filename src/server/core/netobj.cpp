@@ -1003,7 +1003,6 @@ void NetObj::calculateCompoundStatus(bool forcedRecalc)
    if (m_status == STATUS_UNMANAGED)
       return;
 
-   int mostCriticalAlarm = GetMostCriticalStatusForObject(m_id);
    int mostCriticalStatus, i, count, iStatusAlg;
    int nSingleThreshold, *pnThresholds;
    int nRating[5], iChildStatus, nThresholds[4];
@@ -1081,46 +1080,58 @@ void NetObj::calculateCompoundStatus(bool forcedRecalc)
    }
 
    // If alarms exist for object, apply alarm severity to object's status
-   if (mostCriticalAlarm != STATUS_UNKNOWN)
+   if (newStatus != STATUS_CRITICAL)
    {
-      if (newStatus == STATUS_UNKNOWN)
+      int mostCriticalAlarm = GetMostCriticalAlarmForObject(m_id);
+      if (mostCriticalAlarm != STATUS_UNKNOWN)
       {
-         newStatus = mostCriticalAlarm;
-      }
-      else
-      {
-         newStatus = std::max(newStatus, mostCriticalAlarm);
+         if (newStatus == STATUS_UNKNOWN)
+         {
+            newStatus = mostCriticalAlarm;
+         }
+         else
+         {
+            newStatus = std::max(newStatus, mostCriticalAlarm);
+         }
       }
    }
 
    // Apply any additional most critical status
-   int mostCriticalAdditional = getAdditionalMostCriticalStatus();
-   if (mostCriticalAdditional != STATUS_UNKNOWN)
+   if (newStatus != STATUS_CRITICAL)
    {
-      if (newStatus == STATUS_UNKNOWN)
+      int mostCriticalAdditional = getAdditionalMostCriticalStatus();
+      if (mostCriticalAdditional != STATUS_UNKNOWN)
       {
-         newStatus = mostCriticalAdditional;
-      }
-      else
-      {
-         newStatus = std::max(newStatus, mostCriticalAdditional);
+         if (newStatus == STATUS_UNKNOWN)
+         {
+            newStatus = mostCriticalAdditional;
+         }
+         else
+         {
+            newStatus = std::max(newStatus, mostCriticalAdditional);
+         }
       }
    }
 
    // Query loaded modules for object status
-   ENUMERATE_MODULES(pfCalculateObjectStatus)
+   if (newStatus != STATUS_CRITICAL)
    {
-      int moduleStatus = CURRENT_MODULE.pfCalculateObjectStatus(this);
-      if (moduleStatus != STATUS_UNKNOWN)
+      ENUMERATE_MODULES(pfCalculateObjectStatus)
       {
-         if (newStatus == STATUS_UNKNOWN)
+         int moduleStatus = CURRENT_MODULE.pfCalculateObjectStatus(this);
+         if (moduleStatus != STATUS_UNKNOWN)
          {
-            newStatus = moduleStatus;
+            if (newStatus == STATUS_UNKNOWN)
+            {
+               newStatus = moduleStatus;
+            }
+            else
+            {
+               newStatus = std::max(m_status, moduleStatus);
+            }
          }
-         else
-         {
-            newStatus = std::max(m_status, moduleStatus);
-         }
+         if (newStatus == STATUS_CRITICAL)
+            break;
       }
    }
 
