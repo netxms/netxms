@@ -70,7 +70,16 @@ WirelessDomain::~WirelessDomain()
  */
 bool WirelessDomain::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
-   return super::loadFromDatabase(hdb, id);
+   if (!super::loadFromDatabase(hdb, id))
+      return false;
+
+   if (Pollable::loadFromDatabase(hdb, m_id))
+   {
+      if (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) < g_configurationPollingInterval)
+         m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
+   }
+
+   return true;
 }
 
 /**

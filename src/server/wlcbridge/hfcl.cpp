@@ -286,30 +286,36 @@ static json_t *DoRequest(NObject *wirelessDomain, const char *endpoint)
  */
 static ObjectMemoryPool<AccessPointCacheEntry> s_apMemPool;
 typedef char SerialNumber[16];
-static HashMap<SerialNumber, AccessPointCacheEntry> s_apCache(Ownership::True,
+static HashMap<SerialNumber, AccessPointCacheEntry> s_apDataCache(Ownership::True,
    [] (void *e, HashMapBase *hashMap) -> void
    {
       s_apMemPool.destroy(static_cast<AccessPointCacheEntry*>(e));
    });
+static HashMap<SerialNumber, AccessPointCacheEntry> s_apStateCache(Ownership::True,
+   [] (void *e, HashMapBase *hashMap) -> void
+   {
+      s_apMemPool.destroy(static_cast<AccessPointCacheEntry*>(e));
+   });
+static volatile bool s_stateReadInProgress = false;
 static Mutex s_apCacheLock(MutexType::FAST);
 
 /**
  * Get access point data from cache or bridge process. Assumes lock on s_apCacheLock.
  */
-static json_t *GetAccessPointData(NObject *wirelessDomain, const char *serial)
+static json_t *ReadAccessPointData(NObject *wirelessDomain, const char *serial)
 {
    SerialNumber key;
    memset(key, 0, sizeof(key));
    strlcpy(key, serial, sizeof(key));
 
-   AccessPointCacheEntry *ce = s_apCache.get(key);
+   AccessPointCacheEntry *ce = s_apDataCache.get(key);
    if ((ce != nullptr) && (ce->timestamp >= time(nullptr) - 10))
       return ce->data;
 
    if (ce == nullptr)
    {
       ce = s_apMemPool.create();
-      s_apCache.set(key, ce);
+      s_apDataCache.set(key, ce);
    }
 
    // Make sure that only one thread sends request to bridge process
@@ -370,7 +376,7 @@ static void GetAccessPointRadios(NObject *wirelessDomain, const char *apSerial, 
 {
    LockGuard lockGuard(s_apCacheLock);
 
-   json_t *data = GetAccessPointData(wirelessDomain, apSerial);
+   json_t *data = ReadAccessPointData(wirelessDomain, apSerial);
    if (data == nullptr)
       return;
 
@@ -402,6 +408,23 @@ static void GetAccessPointRadios(NObject *wirelessDomain, const char *apSerial, 
 }
 
 /**
+ * Get state from AP JSON object
+ */
+static inline AccessPointState GetStateFromJson(json_t *ap)
+{
+   json_t *attr = json_object_get(ap, "is_connected");
+   if (attr == nullptr)
+      return AP_UNKNOWN;
+   if (json_is_string(attr))
+      return (strtol(json_string_value(attr), nullptr, 10) != 0) ? AP_UP : AP_DOWN;
+   if (json_is_integer(attr))
+      return (json_integer_value(attr) != 0) ? AP_UP : AP_DOWN;
+   if (json_is_boolean(attr))
+      return json_is_true(attr) ? AP_UP : AP_DOWN;
+   return AP_UNKNOWN;
+}
+
+/**
  * Get access points
  */
 static ObjectArray<AccessPointInfo> *GetAccessPoints(NObject *wirelessDomain)
@@ -423,9 +446,8 @@ static ObjectArray<AccessPointInfo> *GetAccessPoints(NObject *wirelessDomain)
          String name(json_object_get_string_utf8(element, "ap_name", ""), "utf8");
          String model(json_object_get_string_utf8(element, "ap_model", ""), "utf8");
          String serial(json_object_get_string_utf8(element, "serial_no", ""), "utf8");
-         int connected = json_object_get_int32(element, "is_connected");
 
-         AccessPointInfo *ap = new AccessPointInfo(i, macAddress, ipAddress, connected ? AP_UP : AP_DOWN, !name.isEmpty() ? name : serial, _T("HFCL"), model, serial);
+         AccessPointInfo *ap = new AccessPointInfo(i, macAddress, ipAddress, GetStateFromJson(element), !name.isEmpty() ? name : serial, _T("HFCL"), model, serial);
          GetAccessPointRadios(wirelessDomain, json_object_get_string_utf8(element, "serial_no", ""), ap);
          accessPoints->add(ap);
       }
@@ -433,6 +455,107 @@ static ObjectArray<AccessPointInfo> *GetAccessPoints(NObject *wirelessDomain)
 
    json_decref(response);
    return accessPoints;
+}
+
+/**
+ * Get access point state from cache or bridge process. Assumes lock on s_apCacheLock.
+ */
+static json_t *ReadAccessPointState(NObject *wirelessDomain, const char *serial)
+{
+   SerialNumber key;
+   memset(key, 0, sizeof(key));
+   strlcpy(key, serial, sizeof(key));
+
+   AccessPointCacheEntry *ce = s_apStateCache.get(key);
+   if ((ce != nullptr) && (ce->timestamp >= time(nullptr) - 30))
+      return ce->data;
+
+   if (ce == nullptr)
+   {
+      ce = s_apMemPool.create();
+      s_apStateCache.set(key, ce);
+   }
+
+   // Make sure that only one thread sends request to bridge process
+   if (!s_stateReadInProgress)
+   {
+      bool updated = false;
+      s_stateReadInProgress = true;
+      s_apCacheLock.unlock();
+
+      json_t *response = DoRequest(wirelessDomain, "devices/list/");
+      if (response != nullptr)
+      {
+         s_apCacheLock.lock();
+
+         time_t now = time(nullptr);
+         json_t *list = json_object_get(response, "results");
+         if (json_is_array(list))
+         {
+            size_t i;
+            json_t *element;
+            json_array_foreach(list, i, element)
+            {
+               json_incref(element);
+               const char *s = json_object_get_string_utf8(element, "serial_no", "");
+               nxlog_debug_tag(DEBUG_TAG, 8, _T("GetAccessPointState(%hs): adding cache entry for AP %hs"), serial, s);
+               if (!strcmp(serial, s))
+               {
+                  json_decref(ce->data);
+                  ce->data = element;
+                  ce->timestamp = now;
+                  updated = true;
+               }
+               else
+               {
+                  memset(key, 0, sizeof(key));
+                  strlcpy(key, s, sizeof(key));
+                  AccessPointCacheEntry *e = s_apStateCache.get(key);
+                  if (e != nullptr)
+                  {
+                     json_decref(e->data);
+                  }
+                  else
+                  {
+                     e = s_apMemPool.create();
+                     s_apStateCache.set(key, e);
+                  }
+                  e->data = element;
+                  e->timestamp = now;
+               }
+            }
+         }
+         json_decref(response);
+
+         // Invalidate entry if AP with given serial number was not present in newly obtained list
+         if (!updated)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("GetAccessPointState(%hs): AP data not found in device list retrieved from controller"), serial);
+            ce->timestamp = 0;
+            json_decref(ce->data);
+            ce->data = nullptr;
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("GetAccessPointState(%hs): cannot read access point list from controller"), serial);
+      }
+
+      s_stateReadInProgress = false;
+   }
+   else
+   {
+      // Wait for other thread to complete request
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("GetAccessPointState(%hs): waiting for outstanding controller read by other thread"), serial);
+      do
+      {
+         s_apCacheLock.unlock();
+         ThreadSleepMs(200);
+         s_apCacheLock.lock();
+      } while(s_stateReadInProgress);
+   }
+
+   return ce->data;
 }
 
 /**
@@ -444,12 +567,13 @@ static AccessPointState GetAccessPointState(NObject *wirelessDomain, uint32_t ap
 
    char utf8serial[64];
    tchar_to_utf8(serial, -1, utf8serial, 64);
-   json_t *ap = GetAccessPointData(wirelessDomain, utf8serial);
+   json_t *ap = ReadAccessPointState(wirelessDomain, utf8serial);
    if (ap == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("GetAccessPointState(%s): cannot get AP state from controller"), serial);
       return AP_UNKNOWN;
-
-   json_t *connected = json_object_get(ap, "is_connected");
-   return json_is_integer(connected) ? (json_integer_value(connected) ? AP_UP : AP_DOWN) : AP_UNKNOWN;
+   }
+   return GetStateFromJson(ap);
 }
 
 /**
@@ -461,7 +585,7 @@ static DataCollectionError GetAccessPointMetric(NObject *wirelessDomain, uint32_
 
    char utf8serial[64];
    tchar_to_utf8(serial, -1, utf8serial, 64);
-   json_t *ap = GetAccessPointData(wirelessDomain, utf8serial);
+   json_t *ap = ReadAccessPointData(wirelessDomain, utf8serial);
    if (ap == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 6, _T("GetAccessPointMetric(%s/%s, %s): cannot read access point data"), wirelessDomain->getName(), serial, name);

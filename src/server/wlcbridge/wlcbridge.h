@@ -39,7 +39,7 @@ struct AccessPointCacheEntry
 {
    json_t *data;
    time_t timestamp;
-   bool processing;
+   volatile bool processing;
 
    AccessPointCacheEntry()
    {

@@ -52,7 +52,7 @@ CURL *CreateCurlHandle(ByteStream *responseData, char *errorBuffer)
 #endif
 
    curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
-   curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30);
+   curl_easy_setopt(curl, CURLOPT_TIMEOUT, 60);
    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, (long)0);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, (long)0);
