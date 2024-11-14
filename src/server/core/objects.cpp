@@ -2521,7 +2521,7 @@ static void UnmanageExtraNodes()
    {
       int count = 0;
       g_idxNodeById.forEach(
-         [&count](NetObj *node) -> void
+         [&count](NetObj *node) -> EnumerationCallbackResult
          {
             if (node->getStatus() != STATUS_UNMANAGED)
             {
@@ -2532,6 +2532,7 @@ static void UnmanageExtraNodes()
                   nxlog_write_tag(NXLOG_WARNING, _T("licensing"), _T("Node \"%s\" [%u] set to unmanaged state because limit of number of managed nodes is exceeded"), node->getName(), node->getId());
                }
             }
+            return _CONTINUE;
          });
    }
 

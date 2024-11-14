@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -147,10 +147,11 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
    {
       int count = 0;
       g_idxNodeById.forEach(
-         [&count](NetObj *node) -> void
+         [&count](NetObj *node) -> EnumerationCallbackResult
       {
          if (node->getStatus() != STATUS_UNMANAGED)
             count++;
+         return _CONTINUE;
       });
       if (count >= 250)
       {

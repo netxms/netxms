@@ -6079,10 +6079,11 @@ void ClientSession::createObject(const NXCPMessage& request)
          {
             int count = 0;
             g_idxNodeById.forEach(
-               [&count](NetObj *node) -> void
+               [&count](NetObj *node) -> EnumerationCallbackResult
             {
                if (node->getStatus() != STATUS_UNMANAGED)
                   count++;
+               return _CONTINUE;
             });
             if (count >= 250)
             {
