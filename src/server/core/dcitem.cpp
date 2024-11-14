@@ -196,7 +196,7 @@ DCItem::DCItem(uint32_t id, const TCHAR *name, int source, int dataType, BYTE sc
 DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5) : DCObject(config, owner, nxslV5), m_unitName(config->getSubEntryValue(_T("unitName")))
 {
    m_dataType = (BYTE)config->getSubEntryValueAsInt(_T("dataType"));
-   m_transformedDataType = (BYTE)config->getSubEntryValueAsInt(_T("transformedDataType"));
+   m_transformedDataType = (BYTE)config->getSubEntryValueAsInt(_T("transformedDataType"), 0, DCI_DT_NULL);
    m_deltaCalculation = (BYTE)config->getSubEntryValueAsInt(_T("delta"));
    m_sampleCount = (BYTE)config->getSubEntryValueAsInt(_T("samples"));
    m_cacheSize = 0;
@@ -2456,7 +2456,7 @@ void DCItem::updateFromImport(ConfigEntry *config, bool nxslV5)
 
    lock();
    m_dataType = (BYTE)config->getSubEntryValueAsInt(_T("dataType"));
-   m_transformedDataType = (BYTE)config->getSubEntryValueAsInt(_T("transformedDataType"));
+   m_transformedDataType = (BYTE)config->getSubEntryValueAsInt(_T("transformedDataType"), 0, DCI_DT_NULL);
    m_deltaCalculation = (BYTE)config->getSubEntryValueAsInt(_T("delta"));
    m_sampleCount = (BYTE)config->getSubEntryValueAsInt(_T("samples"));
    m_snmpRawValueType = static_cast<uint16_t>(config->getSubEntryValueAsInt(_T("snmpRawValueType")));

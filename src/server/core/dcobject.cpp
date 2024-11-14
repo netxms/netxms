@@ -1232,7 +1232,7 @@ void DCObject::updateFromImport(ConfigEntry *config, bool nxslV5)
    MemFree(m_pollingIntervalSrc);
    MemFree(m_retentionTimeSrc);
    m_pollingIntervalSrc = MemCopyString(config->getSubEntryValue(_T("interval"), 0, _T("0")));
-   if(config->findEntry(_T("scheduleType")) != nullptr)
+   if (config->findEntry(_T("scheduleType")) != nullptr)
    {
       m_pollingScheduleType = config->getSubEntryValueAsInt(_T("scheduleType"));
    }
@@ -1243,7 +1243,7 @@ void DCObject::updateFromImport(ConfigEntry *config, bool nxslV5)
          m_pollingScheduleType = DC_POLLING_SCHEDULE_ADVANCED;
    }
    m_retentionTimeSrc = MemCopyString(config->getSubEntryValue(_T("retention"), 0, _T("0")));
-   if(config->findEntry(_T("retentionType")) != nullptr)
+   if (config->findEntry(_T("retentionType")) != nullptr)
    {
       m_retentionType = config->getSubEntryValueAsInt(_T("retentionType"));
    }

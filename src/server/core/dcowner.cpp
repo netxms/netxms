@@ -1043,7 +1043,7 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config, ImportContext *c
          ConfigEntry *e = dctables->get(i);
          uuid guid = e->getSubEntryValueAsUUID(_T("guid"));
          shared_ptr<DCObject> curr = !guid.isNull() ? getDCObjectByGUID(guid, 0, false) : shared_ptr<DCObject>();
-         if ((curr != NULL) && (curr->getType() == DCO_TYPE_TABLE))
+         if ((curr != nullptr) && (curr->getType() == DCO_TYPE_TABLE))
          {
             curr->updateFromImport(e, nxslV5);
          }
