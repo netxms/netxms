@@ -93,7 +93,7 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *con
  */
 MattermostDriver *MattermostDriver::createInstance(Config *config)
 {
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("Creating new MS Teams driver instance"));
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Creating new Mattermost driver instance"));
 
    uint32_t flags = MM_USE_ATTACHMENTS;
    TCHAR colorDefinition[16] = _T("");
