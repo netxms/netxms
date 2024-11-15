@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2023 Victor Kirhenshtein
+** Copyright (C) 2004-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -298,8 +298,10 @@ static void AddLogToList(const char *logname, StringList *tableList)
       tableList->add(_T("alarms"));
       tableList->add(_T("alarm_events"));
       tableList->add(_T("alarm_notes"));
+      tableList->add(_T("alarm_state_changes"));
       tableList->add(_T("asset_change_log"));
       tableList->add(_T("audit_log"));
+      tableList->add(_T("certificate_action_log"));
       tableList->add(_T("event_log"));
       tableList->add(_T("maintenance_journal"));
       tableList->add(_T("notification_log"));
@@ -313,6 +315,7 @@ static void AddLogToList(const char *logname, StringList *tableList)
       tableList->add(_T("alarms"));
       tableList->add(_T("alarm_events"));
       tableList->add(_T("alarm_notes"));
+      tableList->add(_T("alarm_state_changes"));
    }
    else if (!stricmp(logname, "asset"))
    {
@@ -321,6 +324,10 @@ static void AddLogToList(const char *logname, StringList *tableList)
    else if (!stricmp(logname, "audit"))
    {
       tableList->add(_T("audit_log"));
+   }
+   else if (!stricmp(logname, "certificate"))
+   {
+      tableList->add(_T("certificate_action_log"));
    }
    else if (!stricmp(logname, "event"))
    {
@@ -489,7 +496,7 @@ stop_search:
                      _T("   * DBA credentials should be provided in form login/password\n")
                      _T("   * Configuration variable name pattern can include character %% to match any number of characters\n")
                      _T("   * Valid log names for -L and -Z options:\n")
-                     _T("        action, alarm, asset, audit, event, maintenance, notification, snmptrap, syslog, winevent\n")
+                     _T("        action, alarm, asset, audit, certificate, event, maintenance, notification, snmptrap, syslog, winevent\n")
                      _T("   * Use -Z all to exclude all logs\n")
                      _T("\n"), configFile);
             bStart = FALSE;
