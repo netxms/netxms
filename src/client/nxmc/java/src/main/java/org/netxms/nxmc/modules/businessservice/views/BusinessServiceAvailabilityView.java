@@ -249,7 +249,7 @@ public class BusinessServiceAvailabilityView extends ObjectView
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
+      gd.minimumWidth = WidgetHelper.BUTTON_WIDTH_HINT;
       button.setLayoutData(gd);
    }
 
