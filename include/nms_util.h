@@ -47,6 +47,7 @@
 #include <base64.h>
 
 #include <functional>
+#include <array>
 #include <vector>
 
 /*** Byte swapping ***/
