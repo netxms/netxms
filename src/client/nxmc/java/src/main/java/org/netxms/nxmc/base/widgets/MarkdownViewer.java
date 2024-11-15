@@ -18,12 +18,22 @@
  */
 package org.netxms.nxmc.base.widgets;
 
+import java.util.List;
+import org.commonmark.Extension;
+import org.commonmark.ext.autolink.AutolinkExtension;
+import org.commonmark.ext.footnotes.FootnotesExtension;
+import org.commonmark.ext.gfm.strikethrough.StrikethroughExtension;
+import org.commonmark.ext.gfm.tables.TablesExtension;
+import org.commonmark.ext.ins.InsExtension;
+import org.commonmark.ext.task.list.items.TaskListItemsExtension;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
+import org.eclipse.swt.browser.LocationEvent;
+import org.eclipse.swt.browser.LocationListener;
 import org.eclipse.swt.browser.ProgressEvent;
 import org.eclipse.swt.browser.ProgressListener;
 import org.eclipse.swt.graphics.FontData;
@@ -31,18 +41,26 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.tools.ExternalWebBrowser;
 import org.netxms.nxmc.tools.WidgetHelper;
+import fr.brouillard.oss.commonmark.ext.notifications.NotificationsExtension;
 
 /**
  * Widget to display markdown-formatted text
  */
 public class MarkdownViewer extends Composite
 {
+   private static final List<Extension> extensions =
+         List.of(AutolinkExtension.create(), FootnotesExtension.create(), InsExtension.create(),
+               NotificationsExtension.create().withClassMapper((n) -> "notification notification-" + n.name().toLowerCase()),
+               TaskListItemsExtension.create(), StrikethroughExtension.create(), TablesExtension.create());
+
    private Browser browser;
    private String text = "";
    private int htmlDocumentHeight = 0;
    private Runnable renderCompletionHandler = null;
    private String htmlHeader;
+   private boolean ignoreLocation = true;
 
    /**
     * Create new markdown viewer.
@@ -70,10 +88,37 @@ public class MarkdownViewer extends Composite
          {
          }
       });
+      browser.addLocationListener(new LocationListener() {
+         @Override
+         public void changing(LocationEvent event)
+         {
+            if (!ignoreLocation)
+            {
+               ExternalWebBrowser.open(event.location);
+               event.doit = false;
+            }
+            else
+            {
+               ignoreLocation = false;
+            }
+         }
+
+         @Override
+         public void changed(LocationEvent event)
+         {
+         }
+      });
       FontData f = JFaceResources.getDefaultFont().getFontData()[0];
       htmlHeader = "<html><head><style>body { font-family: " + f.getName() +
             "; font-size: " + f.getHeight() + (Registry.IS_WEB_CLIENT ? "px" : "pt") +
-            "; font-weight: normal; margin: 0; padding: 0; }</style></head><body><div class=\"content\" style=\"padding-left: 5px; padding-right: 5px;\">";
+            "; font-weight: normal; margin: 0; padding: 0; }" +
+            ".notification { padding: 4px 5px 5px; margin-top: 0.5rem; margin-bottom: 1rem; " +
+            "border: 1px solid transparent; border-radius: 0.5rem; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7); font-size: 120%; } " +
+            ".notification-info { color: #07525e; background-color: #d1ecf1; border-color: #bee5eb; } " +
+            ".notification-success { color: #125522; background-color: #d4edda; border-color: #c3e6cb; } " +
+            ".notification-warning { color: #6a4d00; background-color: #fff3cd; border-color: #ffeeba; } " +
+            ".notification-error { color: #900000; background: #ffd2d2; border-color: #f1a899; }" +
+            "</style></head><body><div class=\"content\" style=\"padding-left: 5px; padding-right: 5px;\">";
    }
 
    /**
@@ -96,10 +141,11 @@ public class MarkdownViewer extends Composite
    {
       htmlDocumentHeight = 0;
       this.text = (text != null) ? text : "";
-      Parser parser = Parser.builder().build();
+      Parser parser = Parser.builder().extensions(extensions).build();
       Node document = parser.parse(this.text);
-      HtmlRenderer renderer = HtmlRenderer.builder().build();
+      HtmlRenderer renderer = HtmlRenderer.builder().extensions(extensions).build();
       String html = htmlHeader + renderer.render(document) + "</div></body></html>";
+      ignoreLocation = true;
       browser.setText(html);
    }
 

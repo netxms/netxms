@@ -39,6 +39,7 @@
    <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <build.finalName>${project.artifactId}-${project.version}</build.finalName>
+      <commonmark.version>0.24.0</commonmark.version>
       <lib.scope>compile</lib.scope>
       <rwt.version>3.29.0</rwt.version>
       <swt.version>3.126.0</swt.version>
@@ -665,7 +666,49 @@
       <dependency>
          <groupId>org.commonmark</groupId>
          <artifactId>commonmark</artifactId>
-         <version>0.23.0</version>
+         <version>${commonmark.version}</version>
+         <scope>${lib.scope}</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.commonmark</groupId>
+         <artifactId>commonmark-ext-autolink</artifactId>
+         <version>${commonmark.version}</version>
+         <scope>${lib.scope}</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.commonmark</groupId>
+         <artifactId>commonmark-ext-footnotes</artifactId>
+         <version>${commonmark.version}</version>
+         <scope>${lib.scope}</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.commonmark</groupId>
+         <artifactId>commonmark-ext-gfm-strikethrough</artifactId>
+         <version>${commonmark.version}</version>
+         <scope>${lib.scope}</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.commonmark</groupId>
+         <artifactId>commonmark-ext-gfm-tables</artifactId>
+         <version>${commonmark.version}</version>
+         <scope>${lib.scope}</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.commonmark</groupId>
+         <artifactId>commonmark-ext-ins</artifactId>
+         <version>${commonmark.version}</version>
+         <scope>${lib.scope}</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.commonmark</groupId>
+         <artifactId>commonmark-ext-task-list-items</artifactId>
+         <version>${commonmark.version}</version>
+         <scope>${lib.scope}</scope>
+      </dependency>
+      <dependency>
+         <groupId>fr.brouillard.oss</groupId>
+         <artifactId>commonmark-ext-notifications</artifactId>
+         <version>1.1.1</version>
          <scope>${lib.scope}</scope>
       </dependency>
    </dependencies>
