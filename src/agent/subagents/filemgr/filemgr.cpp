@@ -1567,7 +1567,7 @@ static void CH_GetFileFingerprint(NXCPMessage *request, NXCPMessage *response, A
          CalculateFileSHA256Hash(fullPath, sha256);
          response->setField(VID_HASH_SHA256, sha256, SHA256_DIGEST_SIZE);
 
-         int fh = _topen(fullPath, O_RDONLY);
+         int fh = _topen(fullPath, O_RDONLY | O_BINARY);
          if (fh != -1)
          {
             BYTE buffer[64];
