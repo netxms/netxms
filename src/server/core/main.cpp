@@ -570,6 +570,7 @@ static void LoadGlobalConfig()
    g_instanceRetentionTime = ConfigReadInt(_T("DataCollection.InstanceRetentionTime"), 7); // Config values are in days
    g_snmpTrapStormCountThreshold = ConfigReadInt(_T("SNMP.Traps.RateLimit.Threshold"), 0);
    g_snmpTrapStormDurationThreshold = ConfigReadInt(_T("SNMP.Traps.RateLimit.Duration"), 15);
+   ConfigReadStrUTF8(_T("SNMP.Codepage"), g_snmpCodepage, 16, "");
 
    switch(ConfigReadInt(_T("Objects.Nodes.ResolveDNSToIPOnStatusPoll"), static_cast<int>(PrimaryIPUpdateMode::NEVER)))
    {
