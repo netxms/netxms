@@ -23,11 +23,6 @@
 #include "mssqldrv.h"
 
 /**
- * Selected ODBC driver
- */
-static char s_driver[SQL_MAX_DSN_LENGTH + 1] = "SQL Native Client";
-
-/**
  * Convert ODBC state to NetXMS database error code and get error text
  */
 static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, WCHAR *errorText)
@@ -106,6 +101,30 @@ static StringBuffer PrepareString(const TCHAR *str, size_t maxSize)
 }
 
 /**
+ * Selected ODBC driver
+ */
+static char s_driver[SQL_MAX_DSN_LENGTH + 1] = "SQL Native Client";
+
+/**
+ * Supported drivers in priority order
+ */
+static const char *s_supportedDrivers[] =
+{
+   "SQL Native Client",
+   "SQL Server Native Client 10.0",
+   "SQL Server Native Client 11.0",
+   "ODBC Driver 13 for SQL Server",
+   "ODBC Driver 17 for SQL Server",
+   "ODBC Driver 18 for SQL Server",
+   nullptr
+};
+
+/**
+ * Trust certificate option
+ */
+static bool s_trustServerCertificate = true;
+
+/**
  * Initialize driver
  */
 static bool Initialize(const char *options)
@@ -120,21 +139,40 @@ static bool Initialize(const char *options)
 	if ((rc != SQL_SUCCESS) && (rc != SQL_SUCCESS_WITH_INFO))
 		return false;
 
+   s_trustServerCertificate = ExtractNamedOptionValueAsBoolA(options, "trustServerCertificate", true);
+
 	// Find correct driver
-	// Default is "SQL Native Client", but switch to "SQL Server Native Client 10.0" if found
-	char name[SQL_MAX_DSN_LENGTH + 1], attrs[1024];
-	SQLSMALLINT l1, l2;
-	rc = SQLDriversA(sqlEnv, SQL_FETCH_FIRST, (SQLCHAR *)name, SQL_MAX_DSN_LENGTH + 1, &l1, (SQLCHAR *)attrs, 1024, &l2);
-	while((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
-	{
-		if (!strcmp(name, "SQL Server Native Client 10.0") ||
-          !strcmp(name, "SQL Server Native Client 11.0"))
-		{
-			strcpy(s_driver, name);
-			break;
-		}
-		rc = SQLDriversA(sqlEnv, SQL_FETCH_NEXT, (SQLCHAR *)name, SQL_MAX_DSN_LENGTH + 1, &l1, (SQLCHAR *)attrs, 1024, &l2);
-	}
+   char driver[SQL_MAX_DSN_LENGTH + 1] = "";
+   ExtractNamedOptionValueA(options, "driver", driver, sizeof(driver));
+   if (driver[0] == 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Enumerating available ODBC drivers:"));
+      int selectedDriverIndex = 0;
+      char name[SQL_MAX_DSN_LENGTH + 1], attrs[1024];
+      SQLSMALLINT l1, l2;
+      rc = SQLDriversA(sqlEnv, SQL_FETCH_FIRST, (SQLCHAR *)name, SQL_MAX_DSN_LENGTH + 1, &l1, (SQLCHAR *)attrs, 1024, &l2);
+      while ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("   Found ODBC driver \"%hs\""), name);
+         for (int i = 0; s_supportedDrivers[i] != nullptr; i++)
+         {
+            if (!strcmp(name, s_supportedDrivers[i]))
+            {
+               if (i > selectedDriverIndex)
+                  selectedDriverIndex = i;
+               break;
+            }
+         }
+         rc = SQLDriversA(sqlEnv, SQL_FETCH_NEXT, (SQLCHAR *)name, SQL_MAX_DSN_LENGTH + 1, &l1, (SQLCHAR *)attrs, 1024, &l2);
+      }
+      strcpy(s_driver, s_supportedDrivers[selectedDriverIndex]);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ODBC driver provided in configuration"));
+      strcpy(s_driver, driver);
+   }
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Selected ODBC driver \"%hs\""), s_driver);
 
    SQLFreeHandle(SQL_HANDLE_ENV, sqlEnv);
    return true;
@@ -186,13 +224,13 @@ static DBDRV_CONNECTION Connect(const char *host, const char *login, const char 
 
 	if (!strcmp(login, "*"))
 	{
-		snprintf(connectString, 1024, "DRIVER={%s};Server=%s;Trusted_Connection=yes;Database=%s;APP=NetXMS", s_driver, host, (database != nullptr) ? database : "master");
+      snprintf(connectString, 1024, "DRIVER={%s};Server=%s;TrustServerCertificate=%s;Trusted_Connection=yes;Database=%s;APP=NetXMS", s_driver, host, s_trustServerCertificate ? "yes" : "no", (database != nullptr) ? database : "master");
 	}
 	else
 	{
-		snprintf(connectString, 1024, "DRIVER={%s};Server=%s;UID=%s;PWD=%s;Database=%s;APP=NetXMS", s_driver, host, login, password, (database != nullptr) ? database : "master");
+		snprintf(connectString, 1024, "DRIVER={%s};Server=%s;TrustServerCertificate=%s;UID=%s;PWD=%s;Database=%s;APP=NetXMS", s_driver, host, s_trustServerCertificate ? "yes" : "no", login, password, (database != nullptr) ? database : "master");
 	}
-	iResult = SQLDriverConnectA(pConn->sqlConn, NULL, (SQLCHAR *)connectString, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
+	iResult = SQLDriverConnectA(pConn->sqlConn, nullptr, (SQLCHAR *)connectString, SQL_NTS, nullptr, 0, &outLen, SQL_DRIVER_NOPROMPT);
 
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
 	{
