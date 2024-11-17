@@ -297,8 +297,6 @@ static bool CreateDatabase_MSSQL(const TCHAR *dbName, const TCHAR *dbLogin, cons
          _sntprintf(query, 512, _T("GRANT ALL TO %s"), dbLogin);
          success = SQLQuery(query);
       }
-
-      SQLQuery(_T("EXEC xp_instance_regwrite N'HKEY_LOCAL_MACHINE', N'Software\Microsoft\MSSQLServer\MSSQLServer', N'LoginMode', REG_DWORD, 2"));
    }
 
    return success;
