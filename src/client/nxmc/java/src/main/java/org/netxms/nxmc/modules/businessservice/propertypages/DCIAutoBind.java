@@ -136,7 +136,7 @@ public class DCIAutoBind extends ObjectPropertyPage
       gd.verticalIndent = WidgetHelper.DIALOG_SPACING;
       label.setLayoutData(gd);
 
-      filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true,
+      filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, 
             "Variables:\n\t$node\t\tnode being tested (null if object is not a node).\n\t$object\t\tobject being tested.\n\t$dci\t\t\tDCI object being tested.\n\t$service\tcurrent business service this check belongs to.\n\nReturn value: true to bind dci to this business service, false to unbind, null to make no changes.");
       filterSource.setText(businessService.getDciAutoBindFilter());
       filterSource.setEnabled(businessService.isDciAutoBindEnabled());

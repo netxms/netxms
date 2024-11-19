@@ -141,7 +141,7 @@ public class ObjectQueryEditDialog extends Dialog
 
       new Label(sourceGroup, SWT.NONE).setText(i18n.tr("Source"));
 
-      source = new ScriptEditor(sourceGroup, SWT.BORDER, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL, true, 
+      source = new ScriptEditor(sourceGroup, SWT.BORDER, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL,  
             "Columns can be defined as global variables or as \"with\" statement variables.\n\nVariables:\n\t$INPUT\t\tmap with all input values where array elements are indexed by field name like: $INPUT[\"Field1\"];\n\tAll object attributes are available without dereference, so e.g. $node->primaryHostName can be referred just as primaryHostName\n\nReturn value: true if currently filtered object should be included in resulting set");
       source.setText((query != null) ? query.getSource() : "");
       gd = new GridData();

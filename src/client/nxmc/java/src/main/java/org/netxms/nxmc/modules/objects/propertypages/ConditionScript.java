@@ -102,7 +102,7 @@ public class ConditionScript extends ObjectPropertyPage
       Label label = new Label(dialogArea, SWT.NONE);
       label.setText(i18n.tr("Status calculation script"));
 
-      filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, false, "Variables:\n\t$values\tarray containing values for configured DCIs (in same order as DCIs are listed in configuration)\n\nReturn value: true/false to indicate if condition is active or not");
+      filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, "Variables:\n\t$values\tarray containing values for configured DCIs (in same order as DCIs are listed in configuration)\n\nReturn value: true/false to indicate if condition is active or not");
 		filterSource.setText(condition.getScript());
 		
 		GridData gd = new GridData();

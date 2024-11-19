@@ -125,7 +125,7 @@ public class ScriptEditorView extends ConfigurationView
    @Override
    protected void createContent(Composite parent)
    {
-      editor = new ScriptEditor(parent, SWT.NONE, SWT.H_SCROLL | SWT.V_SCROLL, showLineNumbers, false) {
+      editor = new ScriptEditor(parent, SWT.NONE, SWT.H_SCROLL | SWT.V_SCROLL, false) {
          @Override
          protected void fillContextMenu(IMenuManager manager)
          {
@@ -134,6 +134,7 @@ public class ScriptEditorView extends ConfigurationView
             manager.add(actionCompile);
          }
       };
+      editor.showLineNumbers(showLineNumbers);
       editor.getTextWidget().addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)

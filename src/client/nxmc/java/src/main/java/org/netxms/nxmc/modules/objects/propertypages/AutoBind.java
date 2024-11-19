@@ -154,7 +154,7 @@ public class AutoBind extends ObjectPropertyPage
       else
          hints = "";
 
-      filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true, hints);
+      filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, hints);
       filterSource.setText(autoBindObject.getAutoBindFilter());
       filterSource.setEnabled(autoBindObject.isAutoBindEnabled());
 

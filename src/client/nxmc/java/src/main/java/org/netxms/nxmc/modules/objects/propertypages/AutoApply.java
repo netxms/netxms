@@ -129,7 +129,7 @@ public class AutoApply extends ObjectPropertyPage
       gd.verticalIndent = WidgetHelper.DIALOG_SPACING;
 		label.setLayoutData(gd);
 
-      filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true,
+      filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, 
             "Variables:\n\t$node\tnode being tested (null if object is not a node).\n\t$object\tobject being tested.\n\t$template\tthis template object.\n\nReturn value: true to apply this template to node, false to remove, null to make no changes.");
 		filterSource.setText(template.getAutoApplyFilter());
 		filterSource.setEnabled(template.isAutoApplyEnabled());

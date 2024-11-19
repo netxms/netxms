@@ -115,7 +115,7 @@ public class Transformation extends AbstractDCIPropertyPage
          @Override
          public Control createControl(Composite parent, int style)
          {
-            return new ScriptEditor(parent, style, SWT.H_SCROLL | SWT.V_SCROLL, true,
+            return new ScriptEditor(parent, style, SWT.H_SCROLL | SWT.V_SCROLL, 
                   i18n.tr("Variables:\n\t$1\t\t\tvalue to transform (after delta calculation);\n\t$dci\t\t\tthis DCI object;\n\t$isCluster\ttrue if DCI is on cluster;\n\t$node\t\tcurrent node object (null if DCI is not on the node);\n\t$object\t\tcurrent object.\n\nReturn value: transformed DCI value or null to keep original value."));
          }
       };

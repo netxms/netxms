@@ -198,7 +198,7 @@ public class ScriptExecutorView extends AdHocObjectView
       label = new Label(container, SWT.LEFT);
       label.setText(i18n.tr("Source"));
 
-      scriptEditor = new ScriptEditor(container, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true);
+      scriptEditor = new ScriptEditor(container, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
       scriptEditor.setText("");
       scriptEditor.getTextWidget().addModifyListener(new ModifyListener() {
          @Override

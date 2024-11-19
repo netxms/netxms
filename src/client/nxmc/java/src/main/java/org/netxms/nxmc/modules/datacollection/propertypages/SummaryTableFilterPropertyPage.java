@@ -80,7 +80,7 @@ public class SummaryTableFilterPropertyPage extends PropertyPage
 			@Override
 			public Control createControl(Composite parent, int style)
 			{
-				return new ScriptEditor(parent, style,  SWT.H_SCROLL | SWT.V_SCROLL, false, 
+				return new ScriptEditor(parent, style,  SWT.H_SCROLL | SWT.V_SCROLL,  
 				      "Variables:\n\t$object\tcurrent object\n\t$node\tcurrent object if it's class is Node\n\nReturn value: true to include current object into this summary table");
 			}
       };

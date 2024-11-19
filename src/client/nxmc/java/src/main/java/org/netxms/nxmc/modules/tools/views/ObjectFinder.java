@@ -587,7 +587,7 @@ public class ObjectFinder extends View
       labelQueryList.setText("Saved queries");
       labelQueryList.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
 
-      queryEditor = new ScriptEditor(queryArea, SWT.BORDER, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL, true);
+      queryEditor = new ScriptEditor(queryArea, SWT.BORDER, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
       queryEditor.addVariables(Arrays.asList(OBJECT_ATTRIBUTES));
       queryEditor.addConstants(Arrays.asList(OBJECT_CONSTANTS));
       queryEditor.getTextWidget().addModifyListener(new ModifyListener() {

@@ -113,7 +113,7 @@ public class ObjectDetailsQuery extends DashboardElementPropertyPage
       Label label = new Label(dialogArea, SWT.NONE);
       label.setText(i18n.tr("Query"));
 
-      query = new ScriptEditor(dialogArea, SWT.BORDER, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL, true);
+      query = new ScriptEditor(dialogArea, SWT.BORDER, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
       query.setText(config.getQuery());
 
       gd = new GridData();

@@ -631,7 +631,7 @@ public class RuleEditor extends Composite
          final MouseListener listener = createMouseListener("FilteringScript");
          addConditionGroupLabel(clientArea, i18n.tr("the following script returns true:"), needAnd, false, listener);
 
-         ScriptEditor scriptEditor = new ScriptEditor(clientArea, SWT.BORDER, SWT.NONE, true, false);
+         ScriptEditor scriptEditor = new ScriptEditor(clientArea, SWT.BORDER, SWT.NONE, false);
          GridData gd = new GridData();
          gd.horizontalIndent = INDENT * 2;
          gd.horizontalAlignment = SWT.FILL;
@@ -914,7 +914,7 @@ public class RuleEditor extends Composite
          final MouseListener listener = createMouseListener("ActionScript"); //$NON-NLS-1$
          addActionGroupLabel(clientArea, i18n.tr("Execute script"), editor.getImageExecute(), listener);
 
-         ScriptEditor scriptEditor = new ScriptEditor(clientArea, SWT.BORDER, SWT.NONE, true, false);
+         ScriptEditor scriptEditor = new ScriptEditor(clientArea, SWT.BORDER, SWT.NONE, false);
          GridData gd = new GridData();
          gd.horizontalIndent = INDENT * 2;
          gd.horizontalAlignment = SWT.FILL;

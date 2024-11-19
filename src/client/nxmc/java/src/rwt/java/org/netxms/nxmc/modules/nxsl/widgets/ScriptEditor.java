@@ -96,18 +96,7 @@ public class ScriptEditor extends CompositeWithMessageArea
     */
    public ScriptEditor(Composite parent, int style, int editorStyle)
    {
-      this(parent, style, editorStyle, true, null, true);
-   }
-
-   /**
-    * @param parent
-    * @param style
-    * @param editorStyle
-    * @param showLineNumbers
-    */
-   public ScriptEditor(Composite parent, int style, int editorStyle, boolean showLineNumbers)
-   {
-      this(parent, style, editorStyle, showLineNumbers, null, true);
+      this(parent, style, editorStyle, null, true);
    }
 
    /**
@@ -115,13 +104,12 @@ public class ScriptEditor extends CompositeWithMessageArea
     * @param parent
     * @param style
     * @param editorStyle
-    * @param showLineNumbers
     * @param hints
     * @param showCompileButton
     */
-   public ScriptEditor(Composite parent, int style, int editorStyle, boolean showLineNumbers, String hints)
+   public ScriptEditor(Composite parent, int style, int editorStyle, String hints)
    {
-      this(parent, style, editorStyle, showLineNumbers, hints, true);
+      this(parent, style, editorStyle, hints, true);
    }
 
    /**
@@ -129,23 +117,21 @@ public class ScriptEditor extends CompositeWithMessageArea
     * @param parent
     * @param style
     * @param editorStyle
-    * @param showLineNumbers
     * @param showCompileButton
     */
-   public ScriptEditor(Composite parent, int style, int editorStyle, boolean showLineNumbers, boolean showCompileButton)
+   public ScriptEditor(Composite parent, int style, int editorStyle, boolean showCompileButton)
    {
-      this(parent, style, editorStyle, showLineNumbers, null, showCompileButton);
+      this(parent, style, editorStyle, null, showCompileButton);
    }
 
 	/**
 	 * @param parent
 	 * @param style
 	 * @param editorStyle
-	 * @param showLineNumbers
 	 * @param hints
 	 * @param showCompileButton
 	 */
-	public ScriptEditor(Composite parent, int style, int editorStyle, boolean showLineNumbers, String hints, boolean showCompileButton)
+	public ScriptEditor(Composite parent, int style, int editorStyle, String hints, boolean showCompileButton)
 	{
 		super(parent, style);
 

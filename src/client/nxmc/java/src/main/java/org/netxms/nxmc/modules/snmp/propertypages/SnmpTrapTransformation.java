@@ -62,7 +62,7 @@ public class SnmpTrapTransformation extends PropertyPage
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
       dialogArea.setLayout(layout);
 
-      scriptEditor = new ScriptEditor(dialogArea, SWT.BORDER, SWT.NONE, true,
+      scriptEditor = new ScriptEditor(dialogArea, SWT.BORDER, SWT.NONE, 
             "Variables:\n\t$trap - trap OID\n\t$varbinds - array of varbinds\n\t$event - event that is being prepared\n\t$node - node identified as trap source, can be null\n\t$object - alias for $node");
       scriptEditor.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       scriptEditor.setText(trap.getTransformationScript());

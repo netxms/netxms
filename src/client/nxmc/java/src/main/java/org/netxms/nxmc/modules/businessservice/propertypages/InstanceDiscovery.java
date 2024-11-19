@@ -145,7 +145,7 @@ public class InstanceDiscovery extends ObjectPropertyPage
 			@Override
 			public Control createControl(Composite dialogArea, int style)
 			{
-				return new ScriptEditor(dialogArea, style, SWT.H_SCROLL | SWT.V_SCROLL, false, 
+				return new ScriptEditor(dialogArea, style, SWT.H_SCROLL | SWT.V_SCROLL,  
 				      "Variables:\n\t$1\t\t\tInstance to test;\n\t$2\t\t\tInstance data (secondary value for Script method);\n\t$node\t\trelated node;\n\t$prototype\t\tthis business service prototype object;\n\nReturn value:\n\ttrue/false to accept or reject instance without additional changes or\n\tarray of one or two elements to accept instance while modifying it:\n\t\t1st element - new instance name;\n\t\t2nd element - new instance display name.");
 			}
       };

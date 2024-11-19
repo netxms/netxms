@@ -101,7 +101,7 @@ public class MapObjectLinkStylingScript extends ObjectPropertyPage
       gd.verticalIndent = WidgetHelper.DIALOG_SPACING;
 		label.setLayoutData(gd);
       
-		linkStylingScriptSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, false, 
+		linkStylingScriptSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL,  
             "Variables:\n\t$object\tcurrent map\n\t$link\tcurrently processed link information");
 		linkStylingScriptSource.setText(initialLinkStylingScript);
 		

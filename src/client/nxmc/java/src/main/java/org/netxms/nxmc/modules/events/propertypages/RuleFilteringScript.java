@@ -55,7 +55,7 @@ public class RuleFilteringScript extends RuleBasePropertyPage
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		dialogArea.setLayout(new FillLayout());
 
-      scriptEditor = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, false, 
+      scriptEditor = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL,  
             i18n.tr("Variables:\n\t$object\tevent source object\n\t$node\tevent source object if it's class is Node\n\t$event\tevent being processed\n\t$dci\tDCI associated with this event\n\nReturn value: true to pass event through rule filter"));
 		scriptEditor.setText(rule.getFilterScript());
 

@@ -68,7 +68,7 @@ public class ScriptEditDialog extends Dialog
    {
       Composite area = (Composite)super.createDialogArea(parent);
       
-      editor = new ScriptEditor(area, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true, hints);
+      editor = new ScriptEditor(area, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, hints);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;

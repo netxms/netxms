@@ -160,7 +160,7 @@ public class EditBusinessServiceCheckDlg extends Dialog
       gd.horizontalSpan = 2;
       scriptLabel.setLayoutData(gd);
 
-      scriptEditor = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true, true);
+      scriptEditor = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;

@@ -54,7 +54,7 @@ public class AssetAttributeAutoFillScript extends PropertyPage
       Composite dialogArea = new Composite(parent, SWT.NONE);
       dialogArea.setLayout(new FillLayout());
 
-      script = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true, 
+      script = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL,  
             i18n.tr("Variables:\n\t$object\tobject associated with this asset\n\t$node\tnode associated with this asset or null\n\t$asset\tcurrent asset object\n\t$name\tupdated property name\n\t$value\tcurrent property value\n\t$enumValues\tarray with possible enum values\n\nReturn value: new value for asset property"));
       script.setText(attribute.getAutofillScript());
       return dialogArea;
