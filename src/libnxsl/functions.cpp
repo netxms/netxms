@@ -490,7 +490,7 @@ int F_MathStandardDeviation(int argc, NXSL_Value **argv, NXSL_Value **result, NX
       }
       variance /= series->size();
 
-      *result = vm->createValue(fsqrt(variance));
+      *result = vm->createValue(sqrt(variance));
    }
    else
    {
