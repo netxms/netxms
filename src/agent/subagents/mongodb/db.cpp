@@ -43,7 +43,7 @@ bool AddMongoDBFromConfig(const TCHAR *config)
    _tcslcpy(info.server, ReadAttribute(config, _T("server")), MAX_STR);
    _tcslcpy(info.username, ReadAttribute(config, _T("login")), MAX_STR);
 
-   String password = ReadAttribute(config, _T("password"));
+   StringBuffer password = ReadAttribute(config, _T("password"));
    if (password.isEmpty())
       password = ReadAttribute(config, _T("encryptedPassword"));
 
