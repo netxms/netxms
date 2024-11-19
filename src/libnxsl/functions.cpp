@@ -402,7 +402,101 @@ int F_MathMax(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
          maxValue = argv[i];
    }
    *result = vm->createValue(maxValue);
-   return 0;
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * Find average value for given series
+ */
+int F_MathAverage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isArray())
+      return NXSL_ERR_NOT_ARRAY;
+
+   NXSL_Array *series = argv[0]->getValueAsArray();
+   if (series->size() > 0)
+   {
+      double total = 0;
+      for(int i = 0; i < series->size(); i++)
+      {
+         total += series->get(i)->getValueAsReal();
+      }
+      *result = vm->createValue(total / series->size());
+   }
+   else
+   {
+      *result = vm->createValue(0);
+   }
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * Find mean absolute deviation for given series
+ */
+int F_MathMeanAbsoluteDeviation(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isArray())
+      return NXSL_ERR_NOT_ARRAY;
+
+   NXSL_Array *series = argv[0]->getValueAsArray();
+   if (series->size() > 0)
+   {
+      double mean = 0;
+      for(int i = 0; i < series->size(); i++)
+      {
+         mean += series->get(i)->getValueAsReal();
+      }
+      mean /= series->size();
+
+      double deviation = 0;
+      for(int i = 0; i < series->size(); i++)
+      {
+         deviation += fabs(series->get(i)->getValueAsReal() - mean);
+      }
+      deviation /= series->size();
+
+      *result = vm->createValue(deviation);
+   }
+   else
+   {
+      *result = vm->createValue(0);
+   }
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * Find standard deviation for given series
+ */
+int F_MathStandardDeviation(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isArray())
+      return NXSL_ERR_NOT_ARRAY;
+
+   NXSL_Array *series = argv[0]->getValueAsArray();
+   if (series->size() > 0)
+   {
+      double mean = 0;
+      for(int i = 0; i < series->size(); i++)
+      {
+         mean += series->get(i)->getValueAsReal();
+      }
+      mean /= series->size();
+
+      double variance = 0;
+      for(int i = 0; i < series->size(); i++)
+      {
+         double v = series->get(i)->getValueAsReal();
+         variance += (v - mean) * (v - mean);
+      }
+      variance /= series->size();
+
+      *result = vm->createValue(fsqrt(variance));
+   }
+   else
+   {
+      *result = vm->createValue(0);
+   }
+   return NXSL_ERR_SUCCESS;
 }
 
 /**

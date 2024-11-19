@@ -92,6 +92,7 @@ int F_MathAsin(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_MathAtan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_MathAtan2(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_MathAtanh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathAverage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_MathCeil(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_MathCos(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_MathCosh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -100,6 +101,7 @@ int F_MathFloor(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_MathLog(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_MathLog10(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_MathMax(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathMeanAbsoluteDeviation(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_MathMin(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_MathPow(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_MathPow10(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -107,6 +109,7 @@ int F_MathRandom(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_MathRound(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_MathSin(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_MathSinh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_MathStandardDeviation(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_MathSqrt(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_MathTan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_MathTanh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -249,6 +252,7 @@ static NXSL_ExtFunction s_mathFunctions[] =
    { "Atan", F_MathAtan, 1 },
    { "Atan2", F_MathAtan2, 2 },
    { "Atanh", F_MathAtanh, 1 },
+   { "Average", F_MathAverage, 1 },
    { "Ceil", F_MathCeil, 1 },
    { "Cos", F_MathCos, 1 },
    { "Cosh", F_MathCosh, 1 },
@@ -257,6 +261,7 @@ static NXSL_ExtFunction s_mathFunctions[] =
    { "Log", F_MathLog, 1 },
    { "Log10", F_MathLog10, 1 },
    { "Max", F_MathMax, -1 },
+   { "MeanAbsoluteDeviation", F_MathMeanAbsoluteDeviation, 1 },
    { "Min", F_MathMin, -1 },
    { "Pow", F_MathPow, 2 },
    { "Pow10", F_MathPow10, 1 },
@@ -264,6 +269,7 @@ static NXSL_ExtFunction s_mathFunctions[] =
    { "Round", F_MathRound, -1 },
    { "Sin", F_MathSin, 1 },
    { "Sinh", F_MathSinh, 1 },
+   { "StandardDeviation", F_MathStandardDeviation, 1 },
    { "Sqrt", F_MathSqrt, 1 },
    { "Tan", F_MathTan, 1 },
    { "Tanh", F_MathTanh, 1 },
