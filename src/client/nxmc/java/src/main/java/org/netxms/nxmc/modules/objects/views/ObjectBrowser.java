@@ -59,6 +59,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
+import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.NetworkMapGroup;
@@ -316,7 +317,7 @@ public class ObjectBrowser extends NavigationView
     */
    private void moveObject(SubtreeType subtree)
    {
-      if (!isValidSelectionForMove(subtree))
+      if (!isValidSelectionForMove(subtree, true))
          return;
 
       List<AbstractObject> selectedObjects = new ArrayList<AbstractObject>();
@@ -448,37 +449,42 @@ public class ObjectBrowser extends NavigationView
    }
 
    /**
-    * Check if current selection is valid for moving object
-    * 
+    * Check if current selection is valid for copying or moving object
+    *
+    * @param subtree object subtree to check on
+    * @param move true if operation is to move object
     * @return true if current selection is valid for moving object
     */
-   public boolean isValidSelectionForMove(SubtreeType subtree)
+   public boolean isValidSelectionForMove(SubtreeType subtree, boolean move)
    {
       TreeItem[] selection = objectTree.getTreeControl().getSelection();
       if (selection.length < 1)
          return false;
 
+      long commonParentId = ((AbstractObject)selection[0].getParentItem().getData()).getObjectId();
       for(int i = 0; i < selection.length; i++)
       {
-         if (!isValidObjectForMove(selection, i, subtree) ||
-             ((AbstractObject)selection[0].getParentItem().getData()).getObjectId() != ((AbstractObject)selection[i].getParentItem().getData()).getObjectId())
+         if (!isValidObjectForMove(selection[i], subtree, move) || ((AbstractObject)selection[i].getParentItem().getData()).getObjectId() != commonParentId)
             return false;
       }
       return true;
    }
 
    /**
-    * Check if given selection object is valid for move
-    * 
+    * Check if given selection object is valid for copy or move
+    *
+    * @param item current tree selection item
+    * @param subtree object subtree to check on
+    * @param move true if operation is to move object
     * @return true if current selection object is valid for moving object
     */
-   public boolean isValidObjectForMove(TreeItem[] selection, int i, SubtreeType subtree)
+   private boolean isValidObjectForMove(TreeItem item, SubtreeType subtree, boolean move)
    {
-      if (selection[i].getParentItem() == null)
+      if (item.getParentItem() == null)
          return false;
 
-      final AbstractObject currentObject = (AbstractObject)selection[i].getData();
-      final AbstractObject parentObject = (AbstractObject)selection[i].getParentItem().getData();
+      final AbstractObject currentObject = (AbstractObject)item.getData();
+      final AbstractObject parentObject = (AbstractObject)item.getParentItem().getData();
 
       switch(subtree)
       {
@@ -488,6 +494,8 @@ public class ObjectBrowser extends NavigationView
                    ((parentObject instanceof AssetGroup) ||
                     (parentObject instanceof AssetRoot)) ? true : false;
          case INFRASTRUCTURE:
+            if (currentObject instanceof Interface)
+               return !move || (parentObject instanceof Circuit);
             return ((currentObject instanceof Node) ||
                     (currentObject instanceof Cluster) ||
                     (currentObject instanceof Subnet) ||

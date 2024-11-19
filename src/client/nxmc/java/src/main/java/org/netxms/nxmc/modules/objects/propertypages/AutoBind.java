@@ -97,7 +97,9 @@ public class AutoBind extends ObjectPropertyPage
       checkboxEnableBind = new Button(dialogArea, SWT.CHECK);
       if (autoBindObject instanceof Cluster)
          checkboxEnableBind.setText(i18n.tr("Automatically add nodes selected by filter to this cluster"));
-      else if (autoBindObject instanceof Container || autoBindObject instanceof Collector || autoBindObject instanceof Circuit)
+      else if (autoBindObject instanceof Circuit)
+         checkboxEnableBind.setText(i18n.tr("Automatically add interfaces selected by filter to this circuit"));
+      else if (autoBindObject instanceof Container || autoBindObject instanceof Collector)
          checkboxEnableBind.setText(i18n.tr("Automatically bind objects selected by filter to this container"));
       else if (autoBindObject instanceof Dashboard)
          checkboxEnableBind.setText(i18n.tr("Automatically add this dashboard to objects selected by filter"));
@@ -123,7 +125,9 @@ public class AutoBind extends ObjectPropertyPage
       checkboxEnableUnbind = new Button(dialogArea, SWT.CHECK);
       if (autoBindObject instanceof Cluster)
          checkboxEnableUnbind.setText(i18n.tr("Automatically remove nodes from this cluster when they no longer passes filter"));
-      else if (autoBindObject instanceof Container || autoBindObject instanceof Collector || autoBindObject instanceof Circuit)
+      else if (autoBindObject instanceof Circuit)
+         checkboxEnableUnbind.setText(i18n.tr("Automatically remove interfaces from this circuit when they no longer passes filter"));
+      else if (autoBindObject instanceof Container || autoBindObject instanceof Collector)
          checkboxEnableUnbind.setText(i18n.tr("Automatically unbind objects from this container when they no longer passes filter"));
       else if (autoBindObject instanceof Dashboard)
          checkboxEnableUnbind.setText(i18n.tr("Automatically remove this dashboard from objects when they no longer passes filter"));

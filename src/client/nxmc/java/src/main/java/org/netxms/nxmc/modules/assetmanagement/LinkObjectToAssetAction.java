@@ -26,7 +26,9 @@ import org.eclipse.jface.window.Window;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Asset;
+import org.netxms.client.objects.Circuit;
 import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Rack;
 import org.netxms.nxmc.Registry;
@@ -120,6 +122,11 @@ public class LinkObjectToAssetAction extends ObjectAction<AbstractObject>
    @Override
    public boolean isValidForSelection(IStructuredSelection selection)
    {
-      return (selection.size() == 1) && ((selection.getFirstElement() instanceof Rack) || (selection.getFirstElement() instanceof DataCollectionTarget)) && !(selection.getFirstElement() instanceof Cluster);
+      if (selection.size() != 1)
+         return false;
+      Object object = selection.getFirstElement();
+      if (object instanceof Rack)
+         return true;
+      return (object instanceof DataCollectionTarget) && !(object instanceof Cluster) && !(object instanceof Collector) && !(object instanceof Circuit);
    }
 }

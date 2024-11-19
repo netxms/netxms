@@ -70,6 +70,7 @@ import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.EntireNetwork;
+import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
@@ -735,7 +736,7 @@ public class ObjectTree extends Composite
    /**
     * Enable drop support in object tree
     */
-   public void enableDropSupport(final ObjectBrowser obj)
+   public void enableDropSupport(final ObjectBrowser objectBrowserView)
    {
       final Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
       objectTree.addDropSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new ViewerDropAdapter(objectTree) {
@@ -751,7 +752,7 @@ public class ObjectTree extends Composite
                AbstractObject movableObject = (AbstractObject)movableSelection.get(i);
                TreePath path = selection.getPaths()[0];
                AbstractObject parent = (AbstractObject)path.getSegment(path.getSegmentCount() - 2);
-               obj.moveObject((AbstractObject)getCurrentTarget(), parent, movableObject, (operation == DND.DROP_MOVE) ? true : false);
+               objectBrowserView.moveObject((AbstractObject)getCurrentTarget(), parent, movableObject, operation == DND.DROP_MOVE);
             }
             return true;
          }
@@ -772,17 +773,17 @@ public class ObjectTree extends Composite
                SubtreeType subtree = null;
                if ((object instanceof AbstractObject))
                {
-                  if (obj.isValidSelectionForMove(SubtreeType.INFRASTRUCTURE))
+                  if (objectBrowserView.isValidSelectionForMove(SubtreeType.INFRASTRUCTURE, operation == DND.DROP_MOVE))
                      subtree = SubtreeType.INFRASTRUCTURE;
-                  else if (obj.isValidSelectionForMove(SubtreeType.TEMPLATES))
+                  else if (objectBrowserView.isValidSelectionForMove(SubtreeType.TEMPLATES, operation == DND.DROP_MOVE))
                      subtree = SubtreeType.TEMPLATES;
-                  else if (obj.isValidSelectionForMove(SubtreeType.BUSINESS_SERVICES))
+                  else if (objectBrowserView.isValidSelectionForMove(SubtreeType.BUSINESS_SERVICES, operation == DND.DROP_MOVE))
                      subtree = SubtreeType.BUSINESS_SERVICES;
-                  else if (obj.isValidSelectionForMove(SubtreeType.DASHBOARDS))
+                  else if (objectBrowserView.isValidSelectionForMove(SubtreeType.DASHBOARDS, operation == DND.DROP_MOVE))
                      subtree = SubtreeType.DASHBOARDS;
-                  else if (obj.isValidSelectionForMove(SubtreeType.MAPS))
+                  else if (objectBrowserView.isValidSelectionForMove(SubtreeType.MAPS, operation == DND.DROP_MOVE))
                      subtree = SubtreeType.MAPS;
-                  else if (obj.isValidSelectionForMove(SubtreeType.ASSETS))
+                  else if (objectBrowserView.isValidSelectionForMove(SubtreeType.ASSETS, operation == DND.DROP_MOVE))
                      subtree = SubtreeType.ASSETS;
                }
 
@@ -796,7 +797,10 @@ public class ObjectTree extends Composite
                switch(subtree)
                {
                   case INFRASTRUCTURE:
-                     filter = ObjectSelectionDialog.createContainerSelectionFilter();
+                     if (object instanceof Interface)
+                        filter = Set.of(Integer.valueOf(AbstractObject.OBJECT_CIRCUIT));
+                     else
+                        filter = ObjectSelectionDialog.createContainerSelectionFilter();
                      break;
                   case TEMPLATES:
                      filter = ObjectSelectionDialog.createTemplateGroupSelectionFilter();

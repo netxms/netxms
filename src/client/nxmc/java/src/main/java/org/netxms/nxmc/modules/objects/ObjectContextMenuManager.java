@@ -25,8 +25,6 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
-import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ColumnViewer;
@@ -97,9 +95,9 @@ import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog.RelationType;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedTemplateObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
+import org.netxms.nxmc.modules.objects.views.RemoteControlView;
 import org.netxms.nxmc.modules.objects.views.RouteView;
 import org.netxms.nxmc.modules.objects.views.ScreenshotView;
-import org.netxms.nxmc.modules.objects.views.RemoteControlView;
 import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -177,12 +175,7 @@ public class ObjectContextMenuManager extends MenuManager
       this.selectionProvider = selectionProvider;
       this.objectViewer = objectViewer;
       setRemoveAllWhenShown(true);
-      addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
-         {
-            fillContextMenu();
-         }
-      });
+      addMenuListener((m) -> fillContextMenu());
       createActions();
    }
 
@@ -503,7 +496,7 @@ public class ObjectContextMenuManager extends MenuManager
             add(actionUnlinkAssetFromObject);
             add(new Separator());
          }
-         if ((object instanceof Collector) || (object instanceof Container) || (object instanceof ServiceRoot) || (object instanceof Circuit))
+         if ((object instanceof Circuit) || (object instanceof Collector) || (object instanceof Container) || (object instanceof ServiceRoot))
          {
             add(actionBind);
             add(actionUnbind);
@@ -522,7 +515,7 @@ public class ObjectContextMenuManager extends MenuManager
             add(actionRemoveClusterNode);
             add(new Separator());
          }
-         if (((object instanceof Rack) || (object instanceof DataCollectionTarget)) && !(object instanceof Cluster))
+         if (actionLinkObjectToAsset.isValidForSelection(selection))
          {
             add(actionLinkObjectToAsset);
             if (object.getAssetId() != 0)
