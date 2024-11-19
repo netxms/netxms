@@ -2625,6 +2625,60 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
+				<dci id="409">
+					<guid>def6a96f-d42b-4a13-bbcb-6f5303362841</guid>
+					<name>Server.ObjectCount.Interfaces</name>
+					<description>Server: Number of Interfaces</description>
+					<dataType>1</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<scheduleType>1</scheduleType>
+					<interval>86400</interval>
+					<retentionType>1</retentionType>
+					<retention>365</retention>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>131072</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
+					<perfTabSettings></perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
+				<dci id="410">
+					<guid>0b0ae12f-d463-48a2-a658-80445bad7fb9</guid>
+					<name>Server.ObjectCount.AccessPoints</name>
+					<description>Server: Number of Access Points</description>
+					<dataType>1</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<scheduleType>1</scheduleType>
+					<interval>86400</interval>
+					<retentionType>1</retentionType>
+					<retention>365</retention>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>131072</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
+					<perfTabSettings></perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
