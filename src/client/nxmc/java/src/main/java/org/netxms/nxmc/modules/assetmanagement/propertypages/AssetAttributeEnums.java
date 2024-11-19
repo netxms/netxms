@@ -61,7 +61,7 @@ public class AssetAttributeEnums extends PropertyPage
       layout.marginHeight = 0;
       dialogArea.setLayout(layout);
 
-      enumEditor = new KeyValueSetEditor(dialogArea, SWT.NONE, i18n.tr("Display name"));
+      enumEditor = new KeyValueSetEditor(dialogArea, SWT.NONE, i18n.tr("Value"), i18n.tr("Display name"));
       GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
       gd.horizontalSpan = 2;
       gd.heightHint = 150;

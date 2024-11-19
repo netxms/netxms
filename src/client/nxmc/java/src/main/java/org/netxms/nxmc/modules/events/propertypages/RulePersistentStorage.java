@@ -93,7 +93,7 @@ public class RulePersistentStorage extends RuleBasePropertyPage
       gd.verticalIndent = vInd;
       label.setLayoutData(gd);
       
-      keysToSetEditor = new KeyValueSetEditor(dialogArea, SWT.NONE, i18n.tr("Key"));
+      keysToSetEditor = new KeyValueSetEditor(dialogArea, SWT.NONE, i18n.tr("Key"), i18n.tr("Value"));
       keysToSetEditor.addAll(rule.getPStorageSet());
       gd = new GridData();
       gd.verticalIndent = vInd;
@@ -192,7 +192,7 @@ public class RulePersistentStorage extends RuleBasePropertyPage
 	 */
 	private void addPStorageDeleteAction()
 	{
-	   KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), null, null, false, false, i18n.tr("Key"));
+	   KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), null, null, false, false, i18n.tr("Key"), i18n.tr("Value"));
 		if (dlg.open() == Window.OK)
 		{
          keysToDelete.add(dlg.getKey());
@@ -210,7 +210,7 @@ public class RulePersistentStorage extends RuleBasePropertyPage
          return;
 
       String attr = (String)selection.getFirstElement();
-      KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), attr, null, false, false, i18n.tr("Key"));
+      KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), attr, null, false, false, i18n.tr("Key"), i18n.tr("Value"));
       if (dlg.open() == Window.OK)
       {         
          keysToDelete.set(keysToDelete.indexOf(attr), dlg.getKey());

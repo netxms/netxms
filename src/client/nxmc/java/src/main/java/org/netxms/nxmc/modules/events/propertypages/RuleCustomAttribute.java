@@ -93,7 +93,7 @@ public class RuleCustomAttribute extends RuleBasePropertyPage
       gd.verticalIndent = vInd;
       label.setLayoutData(gd);
       
-      namesToSetEditor = new KeyValueSetEditor(dialogArea, SWT.NONE, i18n.tr("Name"));
+      namesToSetEditor = new KeyValueSetEditor(dialogArea, SWT.NONE, i18n.tr("Name"), i18n.tr("Value"));
       namesToSetEditor.addAll(rule.getCustomAttributeStorageSet());
       gd = new GridData();
       gd.verticalIndent = vInd;
@@ -109,7 +109,7 @@ public class RuleCustomAttribute extends RuleBasePropertyPage
       gd.verticalIndent = vInd;
       label.setLayoutData(gd);
 
-      final String[] deleteColumnNames = { i18n.tr("Key") };
+      final String[] deleteColumnNames = { i18n.tr("Name") };
       final int[] deleteColumnWidths = { 150 };
       namesToDeleteViewer = new SortableTableViewer(dialogArea, deleteColumnNames, deleteColumnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       namesToDeleteViewer.setContentProvider(new ArrayContentProvider());
@@ -192,7 +192,7 @@ public class RuleCustomAttribute extends RuleBasePropertyPage
 	 */
 	private void addCustomAttributeDeleteAction()
 	{
-	   KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), null, null, false, false, i18n.tr("Name"));
+	   KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), null, null, false, false, i18n.tr("Name"), i18n.tr("Value"));
 		if (dlg.open() == Window.OK)
 		{
          namesToDelete.add(dlg.getKey());
@@ -210,7 +210,7 @@ public class RuleCustomAttribute extends RuleBasePropertyPage
          return;
 
       String attr = (String)selection.getFirstElement();
-      KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), attr, null, false, false, i18n.tr("Name"));
+      KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), attr, null, false, false, i18n.tr("Name"), i18n.tr("Value"));
       if (dlg.open() == Window.OK)
       {         
          namesToDelete.set(namesToDelete.indexOf(attr), dlg.getKey());
