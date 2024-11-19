@@ -1954,7 +1954,7 @@
 					<guid>3ecedaff-f323-4d21-805b-28759dae53e6</guid>
 					<name>Server.TotalEventsProcessed</name>
 					<description>Server: Number of Processed Events</description>
-					<dataType>3</dataType>
+					<dataType>8</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
 					<scheduleType>0</scheduleType>
@@ -2008,7 +2008,7 @@
 					<guid>c21bff7e-2a8c-47db-9270-80e577d5b1d1</guid>
 					<name>Server.DB.Queries.Select</name>
 					<description>Server DB queries: Select</description>
-					<dataType>3</dataType>
+					<dataType>8</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
 					<scheduleType>0</scheduleType>
@@ -2035,7 +2035,7 @@
 					<guid>0c5a4ba7-f16d-4a8c-8ba0-c490eec1632b</guid>
 					<name>Server.DB.Queries.Total</name>
 					<description>Server DB queries: Total</description>
-					<dataType>3</dataType>
+					<dataType>8</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
 					<scheduleType>0</scheduleType>
@@ -2062,7 +2062,7 @@
 					<guid>c3e938b2-2b43-4509-94f9-0f42c1c234a4</guid>
 					<name>Server.DB.Queries.NonSelect</name>
 					<description>Server DB queries: NonSelect</description>
-					<dataType>3</dataType>
+					<dataType>8</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
 					<scheduleType>0</scheduleType>
@@ -2089,7 +2089,7 @@
 					<guid>ed9132f1-3996-47d8-8134-d8af822f111f</guid>
 					<name>Server.DB.Queries.LongRunning</name>
 					<description>Server DB queries: LongRunning</description>
-					<dataType>3</dataType>
+					<dataType>8</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
 					<scheduleType>0</scheduleType>
@@ -2116,7 +2116,7 @@
 					<guid>5c0a9228-e955-49e9-a382-76d822c1505a</guid>
 					<name>Server.DB.Queries.Failed</name>
 					<description>Server DB queries: Failed</description>
-					<dataType>3</dataType>
+					<dataType>8</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
 					<scheduleType>0</scheduleType>
