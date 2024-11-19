@@ -45,7 +45,7 @@ int g_migrationTxnSize = 4096;
 /**
  * Static data
  */
-static char m_szCodePage[MAX_PATH] = ICONV_DEFAULT_CODEPAGE;
+static char s_codePage[MAX_PATH] = ICONV_DEFAULT_CODEPAGE;
 static TCHAR s_dbDriver[MAX_PATH] = _T("");
 static TCHAR s_dbDriverOptions[MAX_PATH] = _T("");
 static TCHAR s_dbServer[MAX_PATH] = _T("127.0.0.1");
@@ -56,7 +56,7 @@ static TCHAR s_dbSchema[MAX_DB_NAME] = _T("");
 static TCHAR *s_moduleLoadList = nullptr;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-   { _T("CodePage"), CT_MB_STRING, 0, 0, MAX_PATH, 0, m_szCodePage },
+   { _T("CodePage"), CT_MB_STRING, 0, 0, MAX_PATH, 0, s_codePage },
    { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDriver },
    { _T("DBDriverOptions"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDriverOptions },
    { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, s_dbLogin },
@@ -86,14 +86,10 @@ static void QueryTracerCallback(const TCHAR *query, bool failure, const TCHAR *e
 /**
  * Check that database has correct schema version and is not locked
  */
-bool ValidateDatabase()
+bool ValidateDatabase(bool allowLock)
 {
-	DB_RESULT hResult;
-	BOOL bLocked = FALSE;
-   TCHAR szLockStatus[MAX_DB_STRING], szLockInfo[MAX_DB_STRING];
-
    // Get database format version
-   INT32 major, minor;
+   int32_t major, minor;
    if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
    {
       _tprintf(_T("Unable to determine database schema version\n"));
@@ -102,7 +98,7 @@ bool ValidateDatabase()
    if ((major > DB_SCHEMA_VERSION_MAJOR) || ((major == DB_SCHEMA_VERSION_MAJOR) && (minor > DB_SCHEMA_VERSION_MINOR)))
    {
        _tprintf(_T("Your database has format version %d.%d, this tool is compiled for version %d.%d.\n")
-                   _T("You need to upgrade your server before using this database.\n"),
+                _T("You need to upgrade your server before using this database.\n"),
                 major, minor, DB_SCHEMA_VERSION_MAJOR, DB_SCHEMA_VERSION_MINOR);
        return false;
    }
@@ -113,34 +109,40 @@ bool ValidateDatabase()
 		return false;
    }
 
+   if (allowLock)
+      return true;
+
    // Check if database is locked
-   hResult = DBSelect(g_dbHandle, _T("SELECT var_value FROM config WHERE var_name='DBLockStatus'"));
-   if (hResult != NULL)
+   bool locked = false;
+   TCHAR lockStatus[MAX_DB_STRING], lockInfo[MAX_DB_STRING];
+   DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT var_value FROM config WHERE var_name='DBLockStatus'"));
+   if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
       {
-         DBGetField(hResult, 0, 0, szLockStatus, MAX_DB_STRING);
-         bLocked = _tcscmp(szLockStatus, _T("UNLOCKED"));
+         DBGetField(hResult, 0, 0, lockStatus, MAX_DB_STRING);
+         locked = _tcscmp(lockStatus, _T("UNLOCKED")) != 0;
       }
       DBFreeResult(hResult);
 
-      if (bLocked)
+      if (locked)
       {
+         lockInfo[0] = 0;
          hResult = DBSelect(g_dbHandle, _T("SELECT var_value FROM config WHERE var_name='DBLockInfo'"));
-         if (hResult != NULL)
+         if (hResult != nullptr)
          {
             if (DBGetNumRows(hResult) > 0)
             {
-               DBGetField(hResult, 0, 0, szLockInfo, MAX_DB_STRING);
+               DBGetField(hResult, 0, 0, lockInfo, MAX_DB_STRING);
             }
             DBFreeResult(hResult);
          }
       }
    }
 
-   if (bLocked)
+   if (locked)
    {
-      _tprintf(_T("Database is locked by server %s [%s]\n"), szLockStatus, szLockInfo);
+      _tprintf(_T("Database is locked by server %s [%s]\n"), lockStatus, lockInfo);
 		return false;
    }
 
@@ -445,10 +447,12 @@ stop_search:
 			   _tprintf(_T("NetXMS Database Manager Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG IS_UNICODE_BUILD_STRING _T("\n\n"));
             _tprintf(_T("Usage: nxdbmgr [<options>] <command> [<options>]\n")
                      _T("Valid commands are:\n")
+                     _T("   background-convert   : Convert collected data to TimescaleDB format in background\n")
                      _T("   background-upgrade   : Run pending background upgrade procedures\n")
                      _T("   batch <file>         : Run SQL batch file\n")
                      _T("   check                : Check database for errors\n")
                      _T("   check-data-tables    : Check database for missing data tables\n")
+                     _T("   convert              : Convert standard PostgreSQL schema to TimescaleDB schema\n")
                      _T("   export <file>        : Export database to file\n")
                      _T("   get <pattern>        : Get value of server configuration variable(s) matching given pattern\n")
                      _T("   import <file>        : Import database from file\n")
@@ -479,7 +483,7 @@ stop_search:
                      _T("   -o          : Show output from SELECT statements in a batch.\n")
                      _T("   -P          : Pause after error.\n")
                      _T("   -q          : Quiet mode (don't show startup banner).\n")
-                     _T("   -s          : Skip collected data during export, import, or migration.\n")
+                     _T("   -s          : Skip collected data during export, import, conversion, or migration.\n")
                      _T("   -S          : Skip collected data during export, import, or migration and do not clear or create data tables.\n")
                      _T("   -t          : Enable trace mode (show executed SQL queries).\n")
                      _T("   -T <recs>   : Transaction size for migration.\n")
@@ -624,10 +628,12 @@ stop_search:
       PAUSE;
       return 1;
    }
-   if (strcmp(argv[optind], "background-upgrade") &&
+   if (strcmp(argv[optind], "background-convert") &&
+       strcmp(argv[optind], "background-upgrade") &&
        strcmp(argv[optind], "batch") &&
        strcmp(argv[optind], "check") &&
        strcmp(argv[optind], "check-data-tables") &&
+       strcmp(argv[optind], "convert") &&
        strcmp(argv[optind], "export") &&
        strcmp(argv[optind], "get") &&
        strcmp(argv[optind], "import") &&
@@ -674,7 +680,7 @@ stop_search:
    DecryptPassword(s_dbLogin, s_dbPassword, s_dbPassword, MAX_PASSWORD);
 
 #ifndef _WIN32
-	SetDefaultCodepage(m_szCodePage);
+	SetDefaultCodepage(s_codePage);
 #endif
 
    // Connect to database
@@ -847,6 +853,22 @@ stop_search:
       {
          g_checkDataTablesOnly = true;
          CheckDatabase();
+      }
+      else if (!strcmp(argv[optind], "convert"))
+      {
+         if (!ConvertDatabase())
+         {
+            WriteToTerminal(_T("Database conversion \x1b[1;31mFAILED\x1b[0m\n"));
+            exitCode = 1;
+         }
+      }
+      else if (!strcmp(argv[optind], "background-convert"))
+      {
+         if (!ConvertDataTables())
+         {
+            WriteToTerminal(_T("Background data tables conversion \x1b[1;31mFAILED\x1b[0m\n"));
+            exitCode = 1;
+         }
       }
       else if (!strcmp(argv[optind], "upgrade"))
       {

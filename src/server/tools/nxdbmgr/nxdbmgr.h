@@ -51,13 +51,15 @@ int InitDatabase(const char *initFile);
 bool ClearDatabase(bool preMigration);
 void ExportDatabase(char *file, const StringList& excludedTables, const StringList& includedTables);
 void ImportDatabase(const char *file, const StringList& excludedTables, const StringList& includedTables, bool ignoreDataMigrationErrors);
+bool ConvertDatabase();
+bool ConvertDataTables();
 void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, const StringList& excludedTables, const StringList& includedTables, bool ignoreDataMigrationErrors);
 void UpgradeDatabase();
 void UnlockDatabase();
 void ReindexIData();
 
 bool ExecSQLBatch(const char *pszFile, bool showOutput);
-bool ValidateDatabase();
+bool ValidateDatabase(bool allowLock = false);
 
 bool SetMajorSchemaVersion(int32_t nextMajor, int32_t nextMinor);
 bool SetMinorSchemaVersion(int32_t nextMinor);

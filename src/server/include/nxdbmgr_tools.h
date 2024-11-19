@@ -119,7 +119,7 @@ extern int LIBNXDBMGR_EXPORTABLE g_dbCheckFixes;
 /**
  * Create save point
  */
-inline int64_t CreateSavePoint()
+static inline int64_t CreateSavePoint()
 {
    if ((g_dbSyntax != DB_SYNTAX_PGSQL) && (g_dbSyntax != DB_SYNTAX_TSDB))
       return 0;
@@ -133,7 +133,7 @@ inline int64_t CreateSavePoint()
 /**
  * Release save point
  */
-inline void ReleaseSavePoint(int64_t id)
+static inline void ReleaseSavePoint(int64_t id)
 {
    if ((g_dbSyntax != DB_SYNTAX_PGSQL) && (g_dbSyntax != DB_SYNTAX_TSDB))
       return;
@@ -145,7 +145,7 @@ inline void ReleaseSavePoint(int64_t id)
 /**
  * Rollback to save point
  */
-inline void RollbackToSavePoint(int64_t id)
+static inline void RollbackToSavePoint(int64_t id)
 {
    if ((g_dbSyntax != DB_SYNTAX_PGSQL) && (g_dbSyntax != DB_SYNTAX_TSDB))
       return;
@@ -158,6 +158,7 @@ inline void RollbackToSavePoint(int64_t id)
  * Execute with error check
  */
 #define CHK_EXEC(x) do { int64_t s = CreateSavePoint(); if (!(x)) { RollbackToSavePoint(s); if (!g_ignoreErrors) return false; } ReleaseSavePoint(s); } while (0)
+#define CHK_EXEC_RB(x) do { int64_t s = CreateSavePoint(); if (!(x)) { RollbackToSavePoint(s); if (!g_ignoreErrors) { DBRollback(g_dbHandle); return false; } } ReleaseSavePoint(s); } while (0)
 #define CHK_EXEC_NO_SP(x) do { if (!(x)) { if (!g_ignoreErrors) return false; } } while (0)
 #define CHK_EXEC_NO_SP_WITH_HOOK(x, hook) do { if (!(x)) { if (!g_ignoreErrors) { hook; return false; } } } while (0)
 

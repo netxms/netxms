@@ -1739,7 +1739,7 @@ static bool LockDatabase()
 /**
  * Unlock database
  */
-static void UnlockDB()
+static void RemoveDatabaseLock()
 {
    CreateConfigParam(_T("DBLockStatus"), _T("UNLOCKED"), false, true, true);
    CreateConfigParam(_T("DBLockInfo"), _T(""),  false, false, true);
@@ -1882,7 +1882,7 @@ void CheckDatabase()
       }
       completed = true;
 
-      UnlockDB();
+      RemoveDatabaseLock();
 
       MemFree(s_dciCache);
       MemFree(s_tableDciCache);

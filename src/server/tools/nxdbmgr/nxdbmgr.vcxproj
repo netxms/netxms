@@ -354,6 +354,7 @@
   <ItemGroup>
     <ClCompile Include="check.cpp" />
     <ClCompile Include="clear.cpp" />
+    <ClCompile Include="convert.cpp" />
     <ClCompile Include="datacoll.cpp" />
     <ClCompile Include="export.cpp" />
     <ClCompile Include="init.cpp" />

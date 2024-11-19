@@ -2549,7 +2549,8 @@ CREATE TABLE dci_delete_list
 /**
  * Stored Windows event log messages
  */
-CREATE TABLE win_event_log (
+CREATE TABLE win_event_log
+(
    id SQL_INT64 not null,
 #ifdef DB_TSDB
    event_timestamp timestamptz not null,
@@ -2746,7 +2747,8 @@ CREATE TABLE asset_properties
 /**
  * Asset change log
  */
-CREATE TABLE asset_change_log (
+CREATE TABLE asset_change_log
+(
    record_id SQL_INT64 not null,
 #ifdef DB_TSDB
    operation_timestamp timestamptz not null,

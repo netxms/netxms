@@ -24,6 +24,9 @@
     <ClCompile Include="clear.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="convert.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="export.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

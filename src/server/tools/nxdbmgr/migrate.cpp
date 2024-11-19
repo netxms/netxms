@@ -586,7 +586,7 @@ static inline StringBuffer BuildDataInsertQuery(bool tdata, const TCHAR *sclass)
 /**
  * Migrate collected data from multi-table to single table configuration (TSDB version)
  */
-static bool MigrateDataToSingleTable_TSDB(uint32_t nodeId, bool tdata)
+bool MigrateDataToSingleTable_TSDB(DB_HANDLE hdbSource, uint32_t nodeId, bool tdata)
 {
    const TCHAR *prefix = tdata ? _T("tdata") : _T("idata");
    WriteToTerminalEx(_T("%s table \x1b[1m%s_%u\x1b[0m to \x1b[1m%s\x1b[0m\n"), s_import ? _T("Importing") : _T("Migrating"), prefix, nodeId, prefix);
@@ -594,7 +594,7 @@ static bool MigrateDataToSingleTable_TSDB(uint32_t nodeId, bool tdata)
    bool success = false;
    TCHAR buffer[256], errorText[DBDRV_MAX_ERROR_TEXT];
    _sntprintf(buffer, 256, _T("SELECT item_id,%s_timestamp,%s_value%s FROM %s_%u"), prefix, prefix, tdata ? _T("") : _T(",raw_value"), prefix, nodeId);
-   DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(s_hdbSource, buffer, errorText);
+   DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(hdbSource, buffer, errorText);
    if (hResult == nullptr)
    {
       _tprintf(_T("ERROR: unable to read data from source table (%s)\n"), errorText);
@@ -846,9 +846,9 @@ static bool MigrateDataTablesToSingleTable(bool ignoreDataMigrationErrors)
       uint32_t id = targets->get(i);
       if (g_dbSyntax == DB_SYNTAX_TSDB)
       {
-         if (!MigrateDataToSingleTable_TSDB(id, false) && !ignoreDataMigrationErrors)
+         if (!MigrateDataToSingleTable_TSDB(s_hdbSource, id, false) && !ignoreDataMigrationErrors)
             break;
-         if (!MigrateDataToSingleTable_TSDB(id, true) && !ignoreDataMigrationErrors)
+         if (!MigrateDataToSingleTable_TSDB(s_hdbSource, id, true) && !ignoreDataMigrationErrors)
             break;
       }
       else
