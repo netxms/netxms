@@ -192,7 +192,9 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
          list.add(new AgentParameter("Server.NotificationChannel.QueueSize(*)", "Notification channel {instance}: queue size", DataType.UINT32));
          list.add(new AgentParameter("Server.NotificationChannel.SendFailureCount(*)", "Notification channel {instance}: number of send failures", DataType.COUNTER32));
          list.add(new AgentParameter("Server.NotificationChannel.SendStatus(*)", "Notification channel {instance}: status of last send attempt", DataType.INT32));
+         list.add(new AgentParameter("Server.ObjectCount.AccessPoints", "Objects: access points", DataType.UINT32));
          list.add(new AgentParameter("Server.ObjectCount.Clusters", "Objects: clusters", DataType.UINT32));
+         list.add(new AgentParameter("Server.ObjectCount.Interfaces", "Objects: interfaces", DataType.UINT32));
          list.add(new AgentParameter("Server.ObjectCount.Nodes", "Objects: nodes", DataType.UINT32));
          list.add(new AgentParameter("Server.ObjectCount.Sensors", "Objects: sensors", DataType.UINT32));
          list.add(new AgentParameter("Server.ObjectCount.Total", "Objects: total", DataType.UINT32));

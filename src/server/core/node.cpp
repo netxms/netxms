@@ -8409,9 +8409,25 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       {
          rc = GetNotificationChannelStatus(name, [buffer](const NotificationChannelStatus& status) { ret_boolean(buffer, status.sendStatus); });
       }
+      else if (!_tcsicmp(name, _T("Server.ObjectCount.AccessPoints")))
+      {
+         ret_uint(buffer, static_cast<uint32_t>(g_idxAccessPointById.size()));
+      }
       else if (!_tcsicmp(name, _T("Server.ObjectCount.Clusters")))
       {
          ret_uint(buffer, static_cast<uint32_t>(g_idxClusterById.size()));
+      }
+      else if (!_tcsicmp(name, _T("Server.ObjectCount.Interfaces")))
+      {
+         uint32_t count = 0;
+         g_idxObjectById.forEach(
+            [&count] (NetObj *object) -> EnumerationCallbackResult
+            {
+               if (object->getObjectClass() == OBJECT_INTERFACE)
+                  count++;
+               return _CONTINUE;
+            });
+         ret_uint(buffer, count);
       }
       else if (!_tcsicmp(name, _T("Server.ObjectCount.Nodes")))
       {
