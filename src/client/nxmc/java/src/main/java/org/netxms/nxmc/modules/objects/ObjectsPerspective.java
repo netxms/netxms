@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.resource.JFaceResources;
@@ -75,7 +74,6 @@ import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.base.views.View;
@@ -152,7 +150,6 @@ import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.services.ObjectActionDescriptor;
 import org.netxms.nxmc.services.ObjectViewDescriptor;
-import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -667,27 +664,6 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          if (a.isValidForSelection(selection))
             addObjectToolBarItem(a);
       }
-
-      addObjectToolBarItem(i18n.tr("Delete"), SharedIcons.IMG_DELETE_OBJECT, () -> {
-         String question = String.format(i18n.tr("Are you sure you want to delete \"%s\"?"), object.getObjectName());
-         if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Confirm Delete"), question))
-            return;
-
-         final NXCSession session = Registry.getSession();
-         new Job(i18n.tr("Delete objects"), null, ObjectsPerspective.this.getMessageArea()) {
-            @Override
-            protected void run(IProgressMonitor monitor) throws Exception
-            {
-               session.deleteObject(object.getObjectId());
-            }
-
-            @Override
-            protected String getErrorMessage()
-            {
-               return i18n.tr("Cannot delete object");
-            }
-         }.start();
-      });
    }
 
    /**

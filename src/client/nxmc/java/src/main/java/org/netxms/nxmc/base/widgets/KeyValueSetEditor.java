@@ -41,18 +41,14 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.nxmc.base.dialogs.KeyValuePairEditDialog;
 import org.netxms.nxmc.base.widgets.helpers.KeyValuePairLabelProvider;
-import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.ElementLabelComparator;
 import org.netxms.nxmc.tools.WidgetHelper;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Editor for generic set of key/value pairs
  */
 public class KeyValueSetEditor extends Composite
 {
-   private final I18n i18n = LocalizationHelper.getI18n(KeyValueSetEditor.class);
-
    private SortableTableViewer viewer;
    private Button buttonAdd;
    private Button buttonEdit;
