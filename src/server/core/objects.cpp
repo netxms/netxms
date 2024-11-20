@@ -24,7 +24,9 @@
 #include <netxms-regex.h>
 #include <agent_tunnel.h>
 
-#if defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD)
+#if WITH_PRIVATE_EXTENSIONS
+#include <nxlicensing.h>
+#elif defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD)
 #include <licensing.cpp>
 #endif
 
@@ -2594,8 +2596,12 @@ int GetMaxAllowedNodeCount()
       return 0x7fffffff;
 #endif
 
+#if WITH_PRIVATE_EXTENSIONS
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    int count = CountLicensesForProduct(hdb, "NXEE");
    DBConnectionPoolReleaseConnection(hdb);
    return count;
+#else
+   return 0;
+#endif
 }
