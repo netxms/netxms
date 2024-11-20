@@ -79,7 +79,7 @@ public class OtherOptions extends AbstractDCIPropertyPage
       dialogArea.setLayout(layout);
 
       checkShowOnTooltip = new Button(dialogArea, SWT.CHECK);
-      checkShowOnTooltip.setText(i18n.tr("&Show last value in object tooltips"));
+      checkShowOnTooltip.setText(i18n.tr("&Show last value in object tooltips and large labels on maps"));
       checkShowOnTooltip.setSelection(dci.isShowOnObjectTooltip());
 
       checkShowInOverview = new Button(dialogArea, SWT.CHECK);
