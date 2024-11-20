@@ -1028,6 +1028,7 @@ int ProcessConsoleCommand(const TCHAR *command, ServerConsole *console)
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ENABLE_ZONING));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_SYNC_NODE_NAMES_WITH_DNS));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_CHECK_TRUSTED_OBJECTS));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_UNLIMITED_NODES));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ENABLE_NXSL_CONTAINER_FUNCTIONS));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_USE_FQDN_FOR_NODE_NAMES));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE));
@@ -1070,6 +1071,7 @@ int ProcessConsoleCommand(const TCHAR *command, ServerConsole *console)
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DISABLE_SNMP_V3_PROBE));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DISABLE_SSH_PROBE));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ENABLE_UNMATCHED_TRAP_EVENT));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ENTERPRISE_EDITION));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_SHUTDOWN));
          ConsolePrintf(console, _T("\n"));

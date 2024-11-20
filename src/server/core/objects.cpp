@@ -2549,12 +2549,23 @@ void CheckNodeCountRestrictions()
 {
 #if defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD)
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   bool enterpriseEdition = (CountLicensesForProduct(hdb, "NXEE") > 0);
+   int enterpriseEditionCount = CountLicensesForProduct(hdb, "NXEE");
    bool unrestrictedWindowsBuild = (CountLicensesForProduct(hdb, "WINEXT") > 0);
    DBConnectionPoolReleaseConnection(hdb);
 
-   if (enterpriseEdition)
+   if (enterpriseEditionCount > 0)
+   {
+      if (enterpriseEditionCount == 0x7fffffff)
+      {
+         nxlog_write_tag(NXLOG_INFO, _T("licensing"), _T("Initialized without restriction on number of managed nodes"));
+         InterlockedOr64(&g_flags, AF_UNLIMITED_NODES);
+      }
+      else
+      {
+         nxlog_write_tag(NXLOG_INFO, _T("licensing"), _T("Number of managed nodes restricted to %d"), enterpriseEditionCount);
+      }
       return;
+   }
 
    if (unrestrictedWindowsBuild)
    {
@@ -2566,4 +2577,25 @@ void CheckNodeCountRestrictions()
    nxlog_write_tag(NXLOG_INFO, _T("licensing"), _T("Number of managed nodes restricted to 250"));
    UnmanageExtraNodes();
 #endif
+}
+
+/**
+ * Get maximum allowed number of managed nodes
+ */
+int GetMaxAllowedNodeCount()
+{
+   if (g_flags & AF_UNLIMITED_NODES)
+      return 0x7fffffff;
+
+   if (!(g_flags & AF_ENTERPRISE_EDITION))
+#if defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD)
+      return 250;
+#else
+      return 0x7fffffff;
+#endif
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   int count = CountLicensesForProduct(hdb, "NXEE");
+   DBConnectionPoolReleaseConnection(hdb);
+   return count;
 }

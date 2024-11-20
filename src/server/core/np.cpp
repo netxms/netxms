@@ -26,6 +26,11 @@
 #define DEBUG_TAG _T("obj.poll.node")
 
 /**
+ * Get maximum number of allowed nodes
+ */
+int GetMaxAllowedNodeCount();
+
+/**
  * Constructor for NewNodeData
  */
 NewNodeData::NewNodeData(const InetAddress& ipAddress) : ipAddr(ipAddress)
@@ -143,7 +148,7 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
             newNodeData->ipAddr.getMaskBits(), newNodeData->zoneUIN);
 
 #if defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD)
-   if (!(g_flags & AF_UNLIMITED_NODES) && (g_idxNodeById.size() >= 250))
+   if (!(g_flags & AF_UNLIMITED_NODES) && (g_idxNodeById.size() >= GetMaxAllowedNodeCount()))
    {
       int count = 0;
       g_idxNodeById.forEach(

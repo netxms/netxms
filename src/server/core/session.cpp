@@ -119,6 +119,8 @@ uint32_t CompileMibFiles(ClientSession *session, uint32_t requestId);
 
 uint64_t StartFileUploadToAgent(const shared_ptr<Node>& node, const TCHAR *localFile, const TCHAR *remoteFile, uint32_t userId);
 
+int GetMaxAllowedNodeCount();
+
 /**
  * Maximum client message size
  */
@@ -6075,7 +6077,7 @@ void ClientSession::createObject(const NXCPMessage& request)
          }
 
 #if defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD)
-         if ((rcc == RCC_SUCCESS) && (objectClass == OBJECT_NODE) && !(g_flags & AF_UNLIMITED_NODES) && (g_idxNodeById.size() >= 250))
+         if ((rcc == RCC_SUCCESS) && (objectClass == OBJECT_NODE) && !(g_flags & AF_UNLIMITED_NODES) && (g_idxNodeById.size() >= GetMaxAllowedNodeCount()))
          {
             int count = 0;
             g_idxNodeById.forEach(
