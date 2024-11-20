@@ -98,15 +98,17 @@ public class Startup
 
    public static Image[] windowIcons = new Image[6];
 
+   private static Display display;
    private static ReconnectDialog reconnectDialog = null;
    private static long activityTimestamp = System.currentTimeMillis();
+   private static boolean shutdownInProgress = false;
 
    /**
     * @param args
     */
    public static void main(String[] args)
    {
-      final Display display = new Display();
+      display = new Display();
 
       ServiceManager.registerClassLoader(display.getClass().getClassLoader());
 
@@ -175,6 +177,16 @@ public class Startup
       });
       SafeRunnable.setIgnoreErrors(true); // Prevent display of JFace error dialog
 
+      final Thread shutdownHook = new Thread("ShutdownHook") {
+         @Override
+         public void run()
+         {
+            logger.warn("Application shutdown on signal");
+            display.syncExec(() -> shutdown());
+         }
+      };
+      Runtime.getRuntime().addShutdownHook(shutdownHook);
+
       if (doLogin(display, args))
       {
          NXCSession session = Registry.getSession();
@@ -194,6 +206,20 @@ public class Startup
          setInactivityHandler(display, session.getClientConfigurationHintAsInt("InactivityTimeout", 0));
          openWindows(session, args);
       }
+
+      if (!shutdownInProgress)
+      {
+         Runtime.getRuntime().removeShutdownHook(shutdownHook);
+         shutdown();
+      }
+   }
+
+   /**
+    * Shutdown process
+    */
+   private static void shutdown()
+   {
+      shutdownInProgress = true;
 
       for(Image i : windowIcons)
       {
