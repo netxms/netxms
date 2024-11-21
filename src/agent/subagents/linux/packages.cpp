@@ -145,6 +145,7 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
 #if _OPENWRT
    const TCHAR *command = _T("opkg list-installed | awk -e '{ print \"@@@ #\" $1 \"|\" $3 \"||||\" }'");
    bool shellExec = true;
+   void (*parser)(const StringList&, Table*, const TCHAR*) = DefaultParser;
 #else
    PackageManager pm = PackageManager::UNKNOWN;
 
