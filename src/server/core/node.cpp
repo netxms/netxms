@@ -10174,7 +10174,7 @@ bool Node::setAgentProxy(AgentConnectionEx *conn)
 void Node::prepareForDeletion()
 {
    // Wait for all pending polls
-   nxlog_debug(4, _T("Node::PrepareForDeletion(%s [%u]): waiting for outstanding polls to finish"), m_name, m_id);
+   nxlog_debug(4, _T("Node::prepareForDeletion(%s [%u]): waiting for outstanding polls to finish"), m_name, m_id);
    while (m_statusPollState.isPending() || m_configurationPollState.isPending() ||
           m_discoveryPollState.isPending() || m_routingPollState.isPending() ||
           m_topologyPollState.isPending() || m_instancePollState.isPending() ||
@@ -10182,12 +10182,31 @@ void Node::prepareForDeletion()
    {
       ThreadSleepMs(100);
    }
-   nxlog_debug(4, _T("Node::PrepareForDeletion(%s [%u]): no outstanding polls left"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("Node::PrepareForDeletion(%s [%u]): no outstanding polls left"), m_name, m_id);
 
    UnbindAgentTunnel(m_id, 0);
 
    // Clear possible references to self and other nodes
    m_lastKnownNetworkPath.reset();
+
+   // Remove interfaces from all circuits
+   unique_ptr<SharedObjectArray<NetObj>> interfaces = getChildren(OBJECT_INTERFACE);
+   for(int i = 0; i < interfaces->size(); i++)
+   {
+      NetObj *iface = interfaces->get(i);
+      if (iface->getParentCount() > 1)
+      {
+         unique_ptr<SharedObjectArray<NetObj>> circuits = iface->getParents(OBJECT_CIRCUIT);
+         for(int j = 0; j < circuits->size(); j++)
+         {
+            NetObj *circuit = circuits->get(j);
+            NetObj::unlinkObjects(circuit, iface);
+            circuit->calculateCompoundStatus();
+            nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("Node::prepareForDeletion(%s [%u]): interface \"%s\" removed from circuit \"%s\" [%u]"),
+               m_name, m_id, iface->getName(), circuit->getName(), circuit->getId());
+         }
+      }
+   }
 
    super::prepareForDeletion();
 }
