@@ -147,7 +147,6 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
    nxlog_debug_tag(DEBUG_TAG, 4, _T("PollNode(%s/%d) zone %d"), newNodeData->ipAddr.toString(ipAddrText),
             newNodeData->ipAddr.getMaskBits(), newNodeData->zoneUIN);
 
-#if defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD)
    if (!(g_flags & AF_UNLIMITED_NODES) && (g_idxNodeById.size() >= GetMaxAllowedNodeCount()))
    {
       int count = 0;
@@ -164,7 +163,6 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
          return shared_ptr<Node>();
       }
    }
-#endif
 
    // Check for node existence
    if ((newNodeData->creationFlags & NXC_NCF_EXTERNAL_GATEWAY) == 0 &&

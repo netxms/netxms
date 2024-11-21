@@ -146,7 +146,7 @@ void StopWindowsEventProcessing();
  * Thread functions
  */
 void Syncer();
-void NodePoller();
+void DiscoveredAddressPoller();
 void PollManager(Condition *startCondition);
 void ClientListenerThread();
 void MobileDeviceListenerThread();
@@ -1301,7 +1301,7 @@ retry_db_lock:
    g_discoveryThreadPool = ThreadPoolCreate(_T("DISCOVERY"), ConfigReadInt(_T("ThreadPool.Discovery.BaseSize"), 8), ConfigReadInt(_T("ThreadPool.Discovery.MaxSize"), 64));
 
    // Start threads
-   ThreadCreate(NodePoller);
+   ThreadCreate(DiscoveredAddressPoller);
    s_syncerThread = ThreadCreateEx(Syncer);
 
    Condition pollManagerInitialized(true);

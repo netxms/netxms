@@ -2512,7 +2512,7 @@ void ResetObjectPollTimers(const shared_ptr<ScheduledTaskParameters>& parameters
    g_idxChassisById.forEach(ResetPollTimers, nullptr);
 }
 
-#if defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD)
+#if WITH_PRIVATE_EXTENSIONS || (defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD))
 
 /**
  * Unmanage nodes that exceeed node limit
@@ -2549,10 +2549,12 @@ static void UnmanageExtraNodes()
  */
 void CheckNodeCountRestrictions()
 {
-#if defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD)
+#if WITH_PRIVATE_EXTENSIONS || (defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD))
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    int enterpriseEditionCount = CountLicensesForProduct(hdb, "NXEE");
+#if defined(_WIN32) && !WITH_PRIVATE_EXTENSIONS
    bool unrestrictedWindowsBuild = (CountLicensesForProduct(hdb, "WINEXT") > 0);
+#endif
    DBConnectionPoolReleaseConnection(hdb);
 
    if (enterpriseEditionCount > 0)
@@ -2569,15 +2571,20 @@ void CheckNodeCountRestrictions()
       return;
    }
 
+#if defined(_WIN32) && !WITH_PRIVATE_EXTENSIONS
    if (unrestrictedWindowsBuild)
    {
       nxlog_write_tag(NXLOG_INFO, _T("licensing"), _T("Initialized without restriction on number of managed nodes"));
       InterlockedOr64(&g_flags, AF_UNLIMITED_NODES);
       return;
    }
+#endif
 
    nxlog_write_tag(NXLOG_INFO, _T("licensing"), _T("Number of managed nodes restricted to 250"));
    UnmanageExtraNodes();
+#else
+   nxlog_write_tag(NXLOG_INFO, _T("licensing"), _T("Initialized without restriction on number of managed nodes"));
+   InterlockedOr64(&g_flags, AF_UNLIMITED_NODES);
 #endif
 }
 

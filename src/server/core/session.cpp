@@ -6076,7 +6076,7 @@ void ClientSession::createObject(const NXCPMessage& request)
             }
          }
 
-#if defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD)
+#if WITH_PRIVATE_EXTENSIONS || (defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD))
          if ((rcc == RCC_SUCCESS) && (objectClass == OBJECT_NODE) && !(g_flags & AF_UNLIMITED_NODES) && (g_idxNodeById.size() >= GetMaxAllowedNodeCount()))
          {
             int count = 0;

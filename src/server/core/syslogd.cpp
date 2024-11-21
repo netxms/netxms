@@ -730,13 +730,13 @@ static void SyslogReceiver()
    if (hSocket != INVALID_SOCKET)
    {
       TCHAR ipAddrText[64];
-      nxlog_write(NXLOG_INFO, _T("Listening for syslog messages on UDP socket %s:%u"), InetAddress(ntohl(servAddr.sin_addr.s_addr)).toString(ipAddrText), port);
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Listening for syslog messages on UDP socket %s:%u"), InetAddress(ntohl(servAddr.sin_addr.s_addr)).toString(ipAddrText), port);
    }
 #ifdef WITH_IPV6
    if (hSocket6 != INVALID_SOCKET)
    {
       TCHAR ipAddrText[64];
-      nxlog_write(NXLOG_INFO, _T("Listening for syslog messages on UDP socket %s:%u"), InetAddress(servAddr6.sin6_addr.s6_addr).toString(ipAddrText), port);
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Listening for syslog messages on UDP socket %s:%u"), InetAddress(servAddr6.sin6_addr.s6_addr).toString(ipAddrText), port);
    }
 #endif
 

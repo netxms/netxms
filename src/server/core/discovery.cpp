@@ -812,14 +812,12 @@ static void ProcessDiscoveredAddressStage2(DiscoveredAddress *address)
 }
 
 /**
- * Node poller thread (poll new nodes and put them into the database)
+ * Discovered address poller thread (poll new nodes and put them into the database)
  */
-void NodePoller()
+void DiscoveredAddressPoller()
 {
-   TCHAR szIpAddr[MAX_IP_ADDR_TEXT_LEN];
-
    ThreadSetName("NodePoller");
-   nxlog_debug(1, _T("Node poller started"));
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 1, _T("Discovered address poller started"));
 
    while(!IsShutdownInProgress())
    {
@@ -827,15 +825,16 @@ void NodePoller()
       if (address == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator received
 
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("NodePoller: stage 2 processing for address %s/%d in zone %d (source type %s, source node [%u])"),
-               address->ipAddr.toString(szIpAddr), address->ipAddr.getMaskBits(), (int)address->zoneUIN,
+      TCHAR ipAddrText[MAX_IP_ADDR_TEXT_LEN];
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("DiscoveredAddressPoller: stage 2 processing for address %s/%d in zone %d (source type %s, source node [%u])"),
+               address->ipAddr.toString(ipAddrText), address->ipAddr.getMaskBits(), address->zoneUIN,
                s_discoveredAddrSourceTypeAsText[address->sourceType], address->sourceNodeId);
 
       ProcessDiscoveredAddressStage2(address);
       RemoveActiveAddress(address->zoneUIN, address->ipAddr);
       delete address;
    }
-   nxlog_debug(1, _T("Node poller thread terminated"));
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 1, _T("Discovered address poller thread terminated"));
 }
 
 /**
