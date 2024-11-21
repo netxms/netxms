@@ -497,9 +497,7 @@ static void CheckNodes()
    {
       uint32_t nodeId = DBGetFieldULong(hResult, i, 0);
 
-      TCHAR query[1024];
-      _sntprintf(query, 1024, _T("SELECT subnet_id FROM nsmap WHERE node_id=%d"), nodeId);
-      DB_RESULT hResult2 = SQLSelect(query);
+      DB_RESULT hResult2 = SQLSelect(StringBuffer(_T("SELECT subnet_id FROM nsmap WHERE node_id=")).append(nodeId));
       if (hResult2 != nullptr)
       {
          if ((DBGetNumRows(hResult2) == 0) && (!NodeInContainer(nodeId)))
@@ -509,14 +507,18 @@ static void CheckNodes()
             if (!FindSubnetForNode(nodeId, nodeName))
             {
                g_dbCheckErrors++;
-               if (GetYesNoEx(_T("Unlinked node object %d (\"%s\"). Delete it?"), nodeId, nodeName))
+               if (GetYesNoEx(_T("Unlinked node object \"%s\" [%u]. Delete it?"), nodeName, nodeId))
                {
-                  _sntprintf(query, 1024, _T("DELETE FROM nodes WHERE id=%d"), nodeId);
-                  bool success = SQLQuery(query);
-                  _sntprintf(query, 1024, _T("DELETE FROM acl WHERE object_id=%d"), nodeId);
-                  success = success && SQLQuery(query);
-                  _sntprintf(query, 1024, _T("DELETE FROM object_properties WHERE object_id=%d"), nodeId);
-                  if (success && SQLQuery(query))
+                  bool success = SQLQuery(StringBuffer(_T("DELETE FROM nodes WHERE id=")).append(nodeId));
+                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM acl WHERE object_id=")).append(nodeId));
+                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM icmp_statistics WHERE object_id=")).append(nodeId));
+                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM icmp_target_address_list WHERE node_id=")).append(nodeId));
+                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM software_inventory WHERE node_id=")).append(nodeId));
+                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM hardware_inventory WHERE node_id=")).append(nodeId));
+                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM node_components WHERE node_id=")).append(nodeId));
+                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM ospf_areas WHERE node_id=")).append(nodeId));
+                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM ospf_neighbors WHERE node_id=")).append(nodeId));
+                  if (success && SQLQuery(StringBuffer(_T("DELETE FROM object_properties WHERE object_id=%d")).append(nodeId)))
                      g_dbCheckFixes++;
                }
             }
@@ -555,7 +557,7 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
          uint32_t objectId = DBGetFieldULong(hResult, i, 0);
 
          // Check if referred node exists
-         _sntprintf(query, 256, _T("SELECT name FROM object_properties WHERE object_id=%d AND is_deleted=0"), DBGetFieldULong(hResult, i, 1));
+         _sntprintf(query, 256, _T("SELECT name FROM object_properties WHERE object_id=%u AND is_deleted=0"), DBGetFieldULong(hResult, i, 1));
          DB_RESULT hResult2 = SQLSelect(query);
          if (hResult2 != nullptr)
          {
@@ -563,12 +565,12 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
             {
                g_dbCheckErrors++;
                TCHAR objectName[MAX_OBJECT_NAME];
-               if (GetYesNoEx(_T("Unlinked %s object %d (\"%s\"). Delete it?"), pszDisplayName, objectId, DBMgrGetObjectName(objectId, objectName)))
+               if (GetYesNoEx(_T("Unlinked %s object \"%s\" [%u]. Delete it?"), pszDisplayName, DBMgrGetObjectName(objectId, objectName), objectId))
                {
-                  _sntprintf(query, 256, _T("DELETE FROM %s WHERE id=%d"), pszTable, objectId);
+                  _sntprintf(query, 256, _T("DELETE FROM %s WHERE id=%u"), pszTable, objectId);
                   if (SQLQuery(query))
                   {
-                     _sntprintf(query, 256, _T("DELETE FROM object_properties WHERE object_id=%d"), objectId);
+                     _sntprintf(query, 256, _T("DELETE FROM object_properties WHERE object_id=%u"), objectId);
                      SQLQuery(query);
                      g_dbCheckFixes++;
                   }
@@ -663,7 +665,7 @@ static void CheckContainerMembership()
             if (GetYesNoEx(_T("Container %u contains non-existing child %u. Fix it?"), containerId, objectId))
             {
                TCHAR query[1024];
-               _sntprintf(query, 1024, _T("DELETE FROM container_members WHERE object_id=%d AND container_id=%d"), objectId, containerId);
+               _sntprintf(query, 1024, _T("DELETE FROM container_members WHERE object_id=%u AND container_id=%u"), objectId, containerId);
                if (SQLQuery(query))
                   g_dbCheckFixes++;
             }
@@ -701,11 +703,11 @@ static void CheckClusters()
             g_dbCheckErrors++;
             uint32_t clusterId = DBGetFieldULong(hResult, i, 0);
             TCHAR name[MAX_OBJECT_NAME];
-            if (GetYesNoEx(_T("Cluster object %s [%d] refers to non-existing node %d. Dereference?"),
+            if (GetYesNoEx(_T("Cluster object \"%s\" [%u] refers to non-existing node [%u]. Dereference?"),
 				               DBMgrGetObjectName(clusterId, name), clusterId, nodeId))
             {
                TCHAR query[256];
-               _sntprintf(query, 256, _T("DELETE FROM cluster_members WHERE cluster_id=%d AND node_id=%d"), clusterId, nodeId);
+               _sntprintf(query, 256, _T("DELETE FROM cluster_members WHERE cluster_id=%u AND node_id=%u"), clusterId, nodeId);
                if (SQLQuery(query))
                {
                   g_dbCheckFixes++;
