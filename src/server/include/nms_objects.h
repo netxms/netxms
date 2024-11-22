@@ -5516,6 +5516,9 @@ int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds);
 
 PollerInfo *RegisterPoller(PollerType type, const shared_ptr<NetObj>& object);
 void ShowPollers(ServerConsole *console);
+void ShowPollerSummary(ServerConsole *console);
+int GetTotalPollerCount();
+int GetPollerCount(PollerType type);
 
 void InitUserAgentNotifications();
 void DeleteExpiredUserAgentNotifications(DB_HANDLE hdb,UINT32 retentionTime);

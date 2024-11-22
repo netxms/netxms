@@ -66,31 +66,91 @@ PollerInfo *RegisterPoller(PollerType type, const shared_ptr<NetObj>& object)
 }
 
 /**
- * Show poller information on console
- */
-static EnumerationCallbackResult ShowPollerInfo(const uint64_t& key, PollerInfo *poller, ServerConsole *console)
-{
-   static const TCHAR *pollerType[] = { _T("STAT"), _T("CONF"), _T("INST"), _T("ROUT"), _T("DISC"), _T("TOPO"), _T("ICMP"), _T("BIND"), _T("MAP ") };
-
-   NetObj *o = poller->getObject();
-
-   TCHAR name[32];
-   _tcslcpy(name, o->getName(), 31);
-   console->printf(_T("%s | %9d | %-30s | %s\n"), pollerType[static_cast<int>(poller->getType())], o->getId(), name, poller->getStatus());
-
-   return _CONTINUE;
-}
-
-/**
- * Get poller diagnostic
+ * Show pollers on console
  */
 void ShowPollers(ServerConsole *console)
 {
-   ConsoleWrite(console, _T("Type | Object ID | Object name                    | Status\n")
-                         _T("-----+-----------+--------------------------------+--------------------------\n"));
+   console->print(_T("Type | Object ID | Object name                    | Status\n")
+                  _T("-----+-----------+--------------------------------+--------------------------\n"));
+
    s_pollerLock.lock();
-   s_pollers.forEach(ShowPollerInfo, console);
+   s_pollers.forEach(
+      [console] (const uint64_t& key, PollerInfo *poller) -> EnumerationCallbackResult
+      {
+         static const TCHAR *pollerType[] = { _T("STAT"), _T("CONF"), _T("INST"), _T("ROUT"), _T("DISC"), _T("TOPO"), _T("ICMP"), _T("BIND"), _T("MAP ") };
+
+         NetObj *o = poller->getObject();
+
+         TCHAR name[32];
+         _tcslcpy(name, o->getName(), 31);
+         console->printf(_T("%s | %9d | %-30s | %s\n"), pollerType[static_cast<int>(poller->getType())], o->getId(), name, poller->getStatus());
+
+         return _CONTINUE;
+      });
    s_pollerLock.unlock();
+}
+
+/**
+ * Show poller summary on console
+ */
+void ShowPollerSummary(ServerConsole *console)
+{
+   int pollerCount[9];
+   memset(pollerCount, 0, sizeof(pollerCount));
+
+   s_pollerLock.lock();
+   int total = s_pollers.size();
+   s_pollers.forEach(
+      [&pollerCount] (const uint64_t& key, PollerInfo *poller) -> EnumerationCallbackResult
+      {
+         pollerCount[static_cast<int>(poller->getType())]++;
+         return _CONTINUE;
+      });
+   s_pollerLock.unlock();
+
+   console->printf(
+      _T("\n")
+      _T("Status .............. %d\n")
+      _T("Configuration ....... %d\n")
+      _T("Instance discovery .. %d\n")
+      _T("Routing table ....... %d\n")
+      _T("Discovery ........... %d\n")
+      _T("Topology ............ %d\n")
+      _T("ICMP ................ %d\n")
+      _T("Auto bind ........... %d\n")
+      _T("Map update .......... %d\n")
+      _T("Total ............... %d\n\n"),
+      pollerCount[0], pollerCount[1], pollerCount[2], pollerCount[3], pollerCount[4],
+      pollerCount[5], pollerCount[6], pollerCount[7], pollerCount[8], total);
+}
+
+/**
+ * Get total number of pollers
+ */
+int GetTotalPollerCount()
+{
+   s_pollerLock.lock();
+   int count = s_pollers.size();
+   s_pollerLock.unlock();
+   return count;
+}
+
+/**
+ * Get number of pollers of given type
+ */
+int GetPollerCount(PollerType type)
+{
+   int count = 0;
+   s_pollerLock.lock();
+   s_pollers.forEach(
+      [&count, type] (const uint64_t& key, PollerInfo *poller) -> EnumerationCallbackResult
+      {
+         if (poller->getType() == type)
+            count++;
+         return _CONTINUE;
+      });
+   s_pollerLock.unlock();
+   return count;
 }
 
 /**

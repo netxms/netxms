@@ -8448,6 +8448,46 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
          AgentGetParameterArg(name, 2, metric, 64);
          rc = GetPerfDataStorageDriverMetric(driver, metric, buffer);
       }
+      else if (!_tcsicmp(name, _T("Server.Pollers.Autobind")))
+      {
+         ret_int(buffer, GetPollerCount(PollerType::AUTOBIND));
+      }
+      else if (!_tcsicmp(name, _T("Server.Pollers.Configuration")))
+      {
+         ret_int(buffer, GetPollerCount(PollerType::CONFIGURATION));
+      }
+      else if (!_tcsicmp(name, _T("Server.Pollers.Discovery")))
+      {
+         ret_int(buffer, GetPollerCount(PollerType::DISCOVERY));
+      }
+      else if (!_tcsicmp(name, _T("Server.Pollers.ICMP")))
+      {
+         ret_int(buffer, GetPollerCount(PollerType::ICMP));
+      }
+      else if (!_tcsicmp(name, _T("Server.Pollers.InstanceDiscovery")))
+      {
+         ret_int(buffer, GetPollerCount(PollerType::INSTANCE_DISCOVERY));
+      }
+      else if (!_tcsicmp(name, _T("Server.Pollers.MapUpdate")))
+      {
+         ret_int(buffer, GetPollerCount(PollerType::MAP_UPDATE));
+      }
+      else if (!_tcsicmp(name, _T("Server.Pollers.RoutingTable")))
+      {
+         ret_int(buffer, GetPollerCount(PollerType::ROUTING_TABLE));
+      }
+      else if (!_tcsicmp(name, _T("Server.Pollers.Status")))
+      {
+         ret_int(buffer, GetPollerCount(PollerType::STATUS));
+      }
+      else if (!_tcsicmp(name, _T("Server.Pollers.Topology")))
+      {
+         ret_int(buffer, GetPollerCount(PollerType::TOPOLOGY));
+      }
+      else if (!_tcsicmp(name, _T("Server.Pollers.Total")))
+      {
+         ret_int(buffer, GetTotalPollerCount());
+      }
       else if (MatchString(_T("Server.QueueSize.Average(*)"), name, false))
       {
          rc = GetQueueStatistic(name, StatisticType::AVERAGE, buffer);

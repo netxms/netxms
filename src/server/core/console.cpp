@@ -1329,7 +1329,11 @@ int ProcessConsoleCommand(const TCHAR *command, ServerConsole *console)
       }
       else if (IsCommand(_T("POLLERS"), szBuffer, 2))
       {
-         ShowPollers(console);
+         ExtractWord(pArg, szBuffer);
+         if (IsCommand(_T("SUMMARY"), szBuffer, 1))
+            ShowPollerSummary(console);
+         else
+            ShowPollers(console);
       }
       else if (IsCommand(_T("QUEUES"), szBuffer, 1))
       {
@@ -1875,7 +1879,7 @@ int ProcessConsoleCommand(const TCHAR *command, ServerConsole *console)
             _T("   show ndd                          - Show loaded network device drivers\n")
             _T("   show objects [<filter>]           - Dump network objects to screen\n")
             _T("   show pe                           - Show registered prediction engines\n")
-            _T("   show pollers                      - Show poller threads state information\n")
+            _T("   show pollers [summary]            - Show pollers state information\n")
             _T("   show queues                       - Show internal queues statistics\n")
             _T("   show routing-table <node>         - Show cached routing table for node\n")
             _T("   show sessions                     - Show active client sessions\n")

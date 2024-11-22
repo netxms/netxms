@@ -198,6 +198,17 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
          list.add(new AgentParameter("Server.ObjectCount.Nodes", "Objects: nodes", DataType.UINT32));
          list.add(new AgentParameter("Server.ObjectCount.Sensors", "Objects: sensors", DataType.UINT32));
          list.add(new AgentParameter("Server.ObjectCount.Total", "Objects: total", DataType.UINT32));
+         list.add(new AgentParameter("Server.PDS.DriverStat(*)", "PDS driver metric", DataType.UINT32));
+         list.add(new AgentParameter("Server.Pollers.Autobind", "Pollers: auto bind", DataType.UINT32));
+         list.add(new AgentParameter("Server.Pollers.Configuration", "Pollers: configuration", DataType.UINT32));
+         list.add(new AgentParameter("Server.Pollers.Discovery", "Pollers: discovery", DataType.UINT32));
+         list.add(new AgentParameter("Server.Pollers.ICMP", "Pollers: ICMP", DataType.UINT32));
+         list.add(new AgentParameter("Server.Pollers.InstanceDiscovery", "Pollers: instance discovery", DataType.UINT32));
+         list.add(new AgentParameter("Server.Pollers.MapUpdate", "Pollers: map update", DataType.UINT32));
+         list.add(new AgentParameter("Server.Pollers.RoutingTable", "Pollers: routing table", DataType.UINT32));
+         list.add(new AgentParameter("Server.Pollers.Status", "Pollers: status", DataType.UINT32));
+         list.add(new AgentParameter("Server.Pollers.Topology", "Pollers: topology", DataType.UINT32));
+         list.add(new AgentParameter("Server.Pollers.Total", "Pollers: total", DataType.UINT32));
          list.add(new AgentParameter("Server.QueueSize.Average(*)", "Server queue {instance}: average size", DataType.FLOAT));
          list.add(new AgentParameter("Server.QueueSize.Current(*)", "Server queue {instance}: current size", DataType.INT64));
          list.add(new AgentParameter("Server.QueueSize.Max(*)", "Server queue {instance}: max size", DataType.INT64));
