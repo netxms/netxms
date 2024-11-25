@@ -338,11 +338,11 @@ typedef struct
 #define CMD_GET_ROUTING_TABLE             0x0086
 #define CMD_EXEC_TABLE_TOOL               0x0087
 #define CMD_TABLE_DATA                    0x0088
-//#define CMD_CANCEL_JOB                    0x0089
+#define CMD_START_CONFIG_BACKUP_JOB       0x0089
 #define CMD_CHANGE_SUBSCRIPTION           0x008A
 #define CMD_SET_CONFIG_TO_DEFAULT         0x008B
 #define CMD_SYSLOG_RECORDS                0x008C
-//#define CMD_JOB_CHANGE_NOTIFICATION       0x008D
+#define CMD_GET_LAST_CONFIG_BACKUP        0x008D
 #define CMD_DEPLOY_AGENT_POLICY           0x008E
 #define CMD_LOG_DATA                      0x008F
 #define CMD_GET_OBJECT_TOOL_DETAILS       0x0090
@@ -1538,6 +1538,7 @@ typedef struct
 #define VID_PATH_CHECK_INTERFACE_ID ((uint32_t)856)
 #define VID_TIME_SYNC_ALLOWED       ((uint32_t)857)
 #define VID_JDBC_OPTIONS            ((uint32_t)858)
+#define VID_LAST_BACKUP_JOB_STATUS  ((uint32_t)859)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

@@ -91,6 +91,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb, uint32_t objectId);
 };
 
+struct DeviceBackupInterface;
 struct WirelessControllerBridge;
 
 /**
@@ -140,6 +141,7 @@ typedef struct
             session_id_t sessionId, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *text);
    WirelessControllerBridge *(*pfGetWLCBridgeInterface)(const TCHAR *bridgeName);
    ObjectArray<PredictionEngine> *(*pfGetPredictionEngines)();
+   DeviceBackupInterface *deviceBackupInterface;
    NXCORE_LOG *logs;
    HMODULE hModule;
    NXMODULE_METADATA *metadata;

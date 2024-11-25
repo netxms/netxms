@@ -224,6 +224,7 @@
 #define NC_IS_WIFI_AP             _ULL(0x0040000000)  /* Node is wireless access point */
 #define NC_IS_VNC                 _ULL(0x0080000000)  /* Node supports VNC connection from server or zone proxy */
 #define NC_IS_LOCAL_VNC           _ULL(0x0100000000)  /* Node supports VNC connection via local agent */
+#define NC_REGISTERED_FOR_BACKUP  _ULL(0x0200000000)  /* Node is registered for device configuration backup */
 
 /**
  * Node flags

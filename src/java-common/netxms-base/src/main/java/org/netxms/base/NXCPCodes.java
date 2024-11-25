@@ -160,11 +160,11 @@ public class NXCPCodes
 	public static final int CMD_GET_ROUTING_TABLE = 0x0086;
 	public static final int CMD_EXEC_TABLE_TOOL = 0x0087;
 	public static final int CMD_TABLE_DATA = 0x0088;
-   // public static final int CMD_CANCEL_JOB = 0x0089;
+   public static final int CMD_START_CONFIG_BACKUP_JOB = 0x0089;
 	public static final int CMD_CHANGE_SUBSCRIPTION = 0x008A;
 	public static final int CMD_SET_CONFIG_TO_DEFAULT = 0x008B;
 	public static final int CMD_SYSLOG_RECORDS = 0x008C;
-   // public static final int CMD_JOB_CHANGE_NOTIFICATION = 0x008D;
+   public static final int CMD_GET_LAST_CONFIG_BACKUP = 0x008D;
 	public static final int CMD_DEPLOY_AGENT_POLICY = 0x008E;
 	public static final int CMD_LOG_DATA = 0x008F;
 	public static final int CMD_GET_OBJECT_TOOL_DETAILS = 0x0090;
@@ -1351,6 +1351,7 @@ public class NXCPCodes
    public static final long VID_PATH_CHECK_INTERFACE_ID = 856;
    public static final long VID_TIME_SYNC_ALLOWED = 857;
    public static final long VID_JDBC_OPTIONS = 858;
+   public static final long VID_LAST_BACKUP_JOB_STATUS = 859;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

@@ -13,6 +13,7 @@ serverinclude_HEADERS = \
 	agent_tunnel.h \
 	asset_management.h \
 	auth-token.h \
+	device-backup.h \
 	entity_mib.h \
 	hdlink.h \
 	local_admin.h \

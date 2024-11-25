@@ -1072,6 +1072,7 @@ int ProcessConsoleCommand(const TCHAR *command, ServerConsole *console)
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DISABLE_SSH_PROBE));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ENABLE_UNMATCHED_TRAP_EVENT));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ENTERPRISE_EDITION));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DEVICE_BACKUP_API_ENABLED));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_SHUTDOWN));
          ConsolePrintf(console, _T("\n"));

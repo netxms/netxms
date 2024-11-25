@@ -109,6 +109,7 @@ void LoadTrapMappings();
 void StartSnmpTrapReceiver();
 void StopSnmpTrapReceiver();
 void CheckNodeCountRestrictions();
+void InitializeDeviceBackupInterface();
 
 void CheckUserAuthenticationTokens(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameters);
@@ -1205,6 +1206,7 @@ retry_db_lock:
    // Load modules
    if (!LoadNetXMSModules())
       return false;   // Mandatory module not loaded
+   InitializeDeviceBackupInterface();
    RegisterPredictionEngines();
 
    // Load users and authentication methods

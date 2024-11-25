@@ -45,6 +45,7 @@ import org.netxms.nxmc.modules.objects.views.elements.Commands;
 import org.netxms.nxmc.modules.objects.views.elements.Comments;
 import org.netxms.nxmc.modules.objects.views.elements.Communications;
 import org.netxms.nxmc.modules.objects.views.elements.Connection;
+import org.netxms.nxmc.modules.objects.views.elements.DeviceBackup;
 import org.netxms.nxmc.modules.objects.views.elements.ExternalResources;
 import org.netxms.nxmc.modules.objects.views.elements.Inventory;
 import org.netxms.nxmc.modules.objects.views.elements.LastValues;
@@ -169,6 +170,8 @@ public class ObjectOverviewView extends ObjectView
       e = new Commands(rightColumn, null, this);
       elements.add(e);
       e = new Capabilities(rightColumn, e, this);
+      elements.add(e);
+      e = new DeviceBackup(rightColumn, e, this);
       elements.add(e);
       e = new PollStates(rightColumn, e, this);
       elements.add(e);

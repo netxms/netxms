@@ -27,6 +27,7 @@
 #include <netxms_maps.h>
 #include <asset_management.h>
 #include <ncdrv.h>
+#include <device-backup.h>
 
 #define DEBUG_TAG_DC_AGENT_CACHE    _T("dc.agent.cache")
 #define DEBUG_TAG_DC_SNMP           _T("dc.snmp")
@@ -102,6 +103,22 @@ String GetCurrentActiveDiscoveryRange();
  */
 #define POLL_CANCELLATION_CHECKPOINT_EX(hook) \
          do { if (g_flags & AF_SHUTDOWN) { hook; pollerUnlock(); return; } } while(0)
+
+/**
+ * Convert hook script load error to text
+ */
+static const TCHAR *HookScriptLoadErrorToText(ScriptVMFailureReason reason)
+{
+   switch(reason)
+   {
+      case ScriptVMFailureReason::SCRIPT_IS_EMPTY:
+         return _T("is empty");
+      case ScriptVMFailureReason::SCRIPT_NOT_FOUND:
+         return _T("not found");
+      default:
+         return _T("cannot be loaded");
+   }
+}
 
 /**
  * Node class default constructor
@@ -219,6 +236,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_cipVendorCode = 0;
    m_modbusTcpPort = MODBUS_TCP_DEFAULT_PORT;
    m_modbusUnitId = 255;
+   m_lastConfigBackupJobStatus = DeviceBackupJobStatus::UNKNOWN;
 }
 
 /**
@@ -353,6 +371,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_modbusUnitId = newNodeData->modbusUnitId;
    m_l1TopologyUsed = false;
    m_topologyDepth = -1;
+   m_lastConfigBackupJobStatus = DeviceBackupJobStatus::UNKNOWN;
 }
 
 /**
@@ -2203,10 +2222,7 @@ shared_ptr<Interface> Node::createInterfaceObject(const InterfaceInfo& info, boo
       ScriptVMHandle vm = CreateServerScriptVM(_T("Hook::CreateInterface"), self());
       if (!vm.isValid())
       {
-         if (vm.failureReason() == ScriptVMFailureReason::SCRIPT_IS_EMPTY)
-            nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 7, _T("Node::createInterfaceObject(%s [%u]): hook script \"Hook::CreateInterface\" is empty"), m_name, m_id);
-         else
-            nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 7, _T("Node::createInterfaceObject(%s [%u]): hook script \"Hook::CreateInterface\" not found"), m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 7, _T("Node::createInterfaceObject(%s [%u]): hook script \"Hook::CreateInterface\" %s"), m_name, m_id, HookScriptLoadErrorToText(vm.failureReason()));
          return iface;
       }
 
@@ -4818,6 +4834,76 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
    unlockProperties();
 
    POLL_CANCELLATION_CHECKPOINT();
+
+   // Network device configuration backup integration
+   if (g_flags & AF_DEVICE_BACKUP_API_ENABLED)
+   {
+      poller->setStatus(_T("backup"));
+      if (DevBackupIsDeviceRegistered(*this))
+      {
+         DeviceBackupApiStatus status = DevBackupValidateDeviceRegistration(this);
+         if (status == DeviceBackupApiStatus::SUCCESS)
+         {
+            std::pair<DeviceBackupApiStatus, DeviceBackupJobStatus> jobStatus = DevBackupGetLastJobStatus(*this);
+            m_lastConfigBackupJobStatus = (jobStatus.first == DeviceBackupApiStatus::SUCCESS) ? jobStatus.second : DeviceBackupJobStatus::UNKNOWN;
+         }
+         else
+         {
+            sendPollerMsg(POLLER_ERROR _T("Cannot validate registration for device configuration backup (%s)\r\n"), GetDeviceBackupApiErrorMessage(status));
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfigurationPoll(%s [%u]): registration for device configuration backup failed (%s)"), m_name, m_id, GetDeviceBackupApiErrorMessage(status));
+            if (status == DeviceBackupApiStatus::DEVICE_NOT_REGISTERED)
+               m_capabilities &= ~NC_REGISTERED_FOR_BACKUP;
+         }
+      }
+      else
+      {
+         bool pass;
+         ScriptVMHandle vm = CreateServerScriptVM(_T("Hook::RegisterForConfigurationBackup"), self());
+         if (vm.isValid())
+         {
+            vm->setUserData(this);
+            if (vm->run())
+            {
+               pass = vm->getResult()->getValueAsBoolean();
+            }
+            else
+            {
+               pass = false;  // Consider hook runtime error as blocking
+               ReportScriptError(SCRIPT_CONTEXT_OBJECT, this, 0, vm->getErrorText(), _T("Hook::RegisterForConfigurationBackup"));
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfigurationPoll(%s [%u]): hook script Hook::RegisterForConfigurationBackup execution error: %s"), m_name, m_id, vm->getErrorText());
+               sendPollerMsg(POLLER_ERROR _T("Runtime error in configuration backup registration hook script (%s)\r\n"), vm->getErrorText());
+            }
+            vm.destroy();
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("ConfigurationPoll(%s [%u]): hook script \"Hook::RegisterForConfigurationBackup\" %s"), m_name, m_id, HookScriptLoadErrorToText(vm.failureReason()));
+            pass = (vm.failureReason() == ScriptVMFailureReason::SCRIPT_IS_EMPTY) || (vm.failureReason() == ScriptVMFailureReason::SCRIPT_NOT_FOUND);
+         }
+
+         if (pass)
+         {
+            DeviceBackupApiStatus status = DevBackupRegisterDevice(this);
+            if (status == DeviceBackupApiStatus::SUCCESS)
+            {
+               m_capabilities |= NC_REGISTERED_FOR_BACKUP;
+               sendPollerMsg(POLLER_INFO _T("Successfully registered for device configuration backup\r\n"));
+            }
+            else
+            {
+               m_capabilities &= ~NC_REGISTERED_FOR_BACKUP;
+               sendPollerMsg(_T("Registration for device configuration backup failed (%s)\r\n"), GetDeviceBackupApiErrorMessage(status));
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfigurationPoll(%s [%u]): registration for device configuration backup failed (%s)"), m_name, m_id, GetDeviceBackupApiErrorMessage(status));
+            }
+         }
+         else
+         {
+            m_capabilities &= ~NC_REGISTERED_FOR_BACKUP;
+            sendPollerMsg(_T("Registration for device configuration backup blocked by hook script\r\n"));
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfigurationPoll(%s [%u]): registration for device configuration backup blocked by hook script"), m_name, m_id);
+         }
+      }
+   }
 
    // Call hooks in loaded modules
    ENUMERATE_MODULES(pfConfPollHook)
@@ -8797,6 +8883,8 @@ void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_MODBUS_TCP_PORT, m_modbusTcpPort);
    msg->setField(VID_MODBUS_UNIT_ID, m_modbusUnitId);
 
+   msg->setField(VID_LAST_BACKUP_JOB_STATUS, static_cast<int16_t>(m_lastConfigBackupJobStatus));
+
    msg->setField(VID_CERT_MAPPING_METHOD, static_cast<int16_t>(m_agentCertMappingMethod));
    msg->setField(VID_CERT_MAPPING_DATA, m_agentCertMappingData);
    msg->setField(VID_AGENT_CERT_SUBJECT, m_agentCertSubject);
@@ -11376,10 +11464,7 @@ shared_ptr<Subnet> Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
    }
    else
    {
-      if (vm.failureReason() == ScriptVMFailureReason::SCRIPT_IS_EMPTY)
-         nxlog_debug(7, _T("Node::createSubnet(%s [%u]): hook script \"Hook::CreateSubnet\" is empty"), m_name, m_id);
-      else
-         nxlog_debug(7, _T("Node::createSubnet(%s [%u]): hook script \"Hook::CreateSubnet\" not found"), m_name, m_id);
+      nxlog_debug(7, _T("Node::createSubnet(%s [%u]): hook script \"Hook::CreateSubnet\" %s"), m_name, m_id, HookScriptLoadErrorToText(vm.failureReason()));
    }
 
    if (subnet != nullptr)

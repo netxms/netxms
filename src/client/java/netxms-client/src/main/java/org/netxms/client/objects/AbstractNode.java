@@ -32,6 +32,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.constants.AgentCompressionMode;
 import org.netxms.client.constants.CertificateMappingMethod;
+import org.netxms.client.constants.DeviceBackupJobStatus;
 import org.netxms.client.constants.IcmpStatCollectionMode;
 import org.netxms.client.constants.NodeType;
 import org.netxms.client.constants.RackOrientation;
@@ -90,6 +91,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public static final long NC_IS_WIFI_AP             = 0x0040000000L;
    public static final long NC_IS_VNC                 = 0x0080000000L;
    public static final long NC_IS_LOCAL_VNC           = 0x0100000000L;
+   public static final long NC_REGISTERED_FOR_BACKUP  = 0x0200000000L;
 
 	// Node flags
    public static final int NF_DISABLE_VNC               = 0x00008000;
@@ -223,6 +225,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    protected int vpnConnectorCount;
    protected RadioInterface[] radios;
    protected NetworkPathCheckResult networkPathCheckResult;
+   protected DeviceBackupJobStatus lastConfigBackupJobStatus;
 
 	/**
 	 * Create new node object.
@@ -338,6 +341,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       networkServiceCount = msg.getFieldAsInt32(NXCPCodes.VID_NETWORK_SERVICE_COUNT);
       vpnConnectorCount = msg.getFieldAsInt32(NXCPCodes.VID_VPN_CONNECTOR_COUNT);
       networkPathCheckResult = new NetworkPathCheckResult(msg);
+      lastConfigBackupJobStatus = DeviceBackupJobStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_LAST_BACKUP_JOB_STATUS));
 
       chassisPlacement = null;
       String config = msg.getFieldAsString(NXCPCodes.VID_CHASSIS_PLACEMENT_CONFIG);
@@ -704,6 +708,16 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public boolean hasVNC()
    {
       return (capabilities & (NC_IS_VNC | NC_IS_LOCAL_VNC)) != 0;
+   }
+
+   /**
+    * Check if this node is registered for network device configuration backup.
+    *
+    * @return true if this node is registered for network device configuration backup
+    */
+   public boolean isRegisteredForConfigBackup()
+   {
+      return (capabilities & NC_REGISTERED_FOR_BACKUP) != 0;
    }
 
 	/**
@@ -1505,5 +1519,13 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public NetworkPathCheckResult getNetworkPathCheckResult()
    {
       return networkPathCheckResult;
+   }
+
+   /**
+    * @return the lastConfigBackupJobStatus
+    */
+   public DeviceBackupJobStatus getLastConfigBackupJobStatus()
+   {
+      return lastConfigBackupJobStatus;
    }
 }

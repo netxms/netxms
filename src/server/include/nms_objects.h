@@ -3353,6 +3353,16 @@ template class NXCORE_TEMPLATE_EXPORTABLE StructArray<OSPFNeighbor>;
 #endif
 
 /**
+ * Status of device configuration backup job
+ */
+enum class DeviceBackupJobStatus
+{
+   SUCCESSFUL = 0,
+   FAILED = 1,
+   UNKNOWN = 2
+};
+
+/**
  * Node
  */
 class NXCORE_EXPORTABLE Node : public DataCollectionTarget
@@ -3519,6 +3529,7 @@ protected:
    uint16_t m_cipVendorCode;
    uint16_t m_modbusTcpPort;
    uint16_t m_modbusUnitId;
+   DeviceBackupJobStatus m_lastConfigBackupJobStatus;
 
    virtual bool isDataCollectionDisabled() override;
    virtual void collectProxyInfo(ProxyInfo *info) override;
@@ -3770,6 +3781,7 @@ public:
    StructArray<OSPFArea> getOSPFAreas() const { return GetAttributeWithLock(m_ospfAreas, m_mutexProperties); }
    StructArray<OSPFNeighbor> getOSPFNeighbors() const { return GetAttributeWithLock(m_ospfNeighbors, m_mutexProperties); }
    NetworkPathCheckResult getNetworkPathCheckResult() const { return GetAttributeWithLock(m_pathCheckResult, m_mutexProperties); }
+   DeviceBackupJobStatus getLastConfigBackupJobStatus() const { return m_lastConfigBackupJobStatus; }
 
    bool isDown() { return is_bit_set(m_state, DCSF_UNREACHABLE); }
    time_t getDownSince() const { return m_downSince; }

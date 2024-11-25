@@ -142,7 +142,7 @@ ScriptVMHandle NXSL_Library::createVM(const TCHAR *name, std::function<NXSL_Envi
    NXSL_LibraryScript *s = findScript(name);
    ScriptVMFailureReason reson = ScriptVMFailureReason::SCRIPT_NOT_FOUND;
    NXSL_VM *vm = nullptr;
-   if (s != NULL)
+   if (s != nullptr)
    {
       if (s->isValid())
       {
