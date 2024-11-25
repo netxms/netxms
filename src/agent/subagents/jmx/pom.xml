@@ -4,7 +4,7 @@
 
     <groupId>org.netxms</groupId>
     <artifactId>netxms-subagent-jmx</artifactId>
-    <version>5.1-SNAPSHOT</version>
+    <version>5.2-SNAPSHOT</version>
 
     <properties>
         <java.version>11</java.version>

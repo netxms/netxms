@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
 Bundle-SymbolicName: org.netxms.ui.eclipse.console;singleton:=true
-Bundle-Version: 5.1.0
+Bundle-Version: 5.2.0
 Bundle-Activator: org.netxms.ui.eclipse.console.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui;bundle-version="3.201.100",
@@ -12,8 +12,8 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.201.100",
  org.eclipse.ui.forms;bundle-version="3.11.400",
  org.eclipse.ui.console;bundle-version="3.11.300",
  org.eclipse.jface.text;bundle-version="3.21.0",
- org.netxms.ui.base;bundle-version="5.1.0",
- org.netxms.ui.eclipse.clientlibrary;bundle-version="5.1.0",
+ org.netxms.ui.base;bundle-version="5.2.0",
+ org.netxms.ui.eclipse.clientlibrary;bundle-version="5.2.0",
  org.eclipse.ui.workbench.texteditor;bundle-version="3.16.600",
  org.eclipse.core.expressions;bundle-version="3.8.200",
  org.eclipse.swt;bundle-version="3.121.0",
