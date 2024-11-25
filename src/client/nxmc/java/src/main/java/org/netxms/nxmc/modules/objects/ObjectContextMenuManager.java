@@ -51,6 +51,7 @@ import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.DataCollectionTarget;
+import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
@@ -130,6 +131,8 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionUnbind;
    private Action actionBindTo;
    private Action actionUnbindFrom;
+   private Action actionAddToCircuit;
+   private Action actionRemoveFromCircuit;
    private Action actionApplyTemplate;
    private Action actionRemoveTemplate;
    private Action actionApplyNodeTemplate;
@@ -315,7 +318,7 @@ public class ObjectContextMenuManager extends MenuManager
          @Override
          public void run()
          {
-            bindToObject();
+            bindToContainer();
          }
       };
 
@@ -323,7 +326,23 @@ public class ObjectContextMenuManager extends MenuManager
          @Override
          public void run()
          {
-            unbindFromObjects();
+            unbindFromParents();
+         }
+      };
+
+      actionAddToCircuit = new Action(i18n.tr("&Add to circuit...")) {
+         @Override
+         public void run()
+         {
+            addToCircuit();
+         }
+      };
+
+      actionRemoveFromCircuit = new Action(i18n.tr("&Remove from circuit...")) {
+         @Override
+         public void run()
+         {
+            unbindFromParents();
          }
       };
 
@@ -560,12 +579,20 @@ public class ObjectContextMenuManager extends MenuManager
          add(actionBindTo);
          if (singleObject)
             add(actionUnbindFrom);
-         addObjectMoveActions();
+         addObjectMoveActions(selection);
+         add(new Separator());
+      }
+      else if (isAddToCircuitMenuAllowed(selection))
+      {
+         add(actionAddToCircuit);
+         if (singleObject)
+            add(actionRemoveFromCircuit);
+         addObjectMoveActions(selection);
          add(new Separator());
       }
       else if (!containsRootObject(selection))
       {
-         addObjectMoveActions();   
+         addObjectMoveActions(selection);
          add(new Separator()); 
       }
 
@@ -867,6 +894,22 @@ public class ObjectContextMenuManager extends MenuManager
          if ((objectClass != AbstractObject.OBJECT_CHASSIS) && (objectClass != AbstractObject.OBJECT_CLUSTER) && (objectClass != AbstractObject.OBJECT_MOBILEDEVICE) &&
              (objectClass != AbstractObject.OBJECT_NODE) && (objectClass != AbstractObject.OBJECT_RACK) && (objectClass != AbstractObject.OBJECT_SENSOR) &&
              (objectClass != AbstractObject.OBJECT_SUBNET) && (objectClass != AbstractObject.OBJECT_ACCESSPOINT))
+            return false;
+      }
+      return true;
+   }
+
+   /**
+    * Check if "add to circuit" / "remove from circuit" menu is allowed.
+    *
+    * @param selection current object selection
+    * @return true if "add to circuit" / "remove from circuit" menu is allowed
+    */
+   private static boolean isAddToCircuitMenuAllowed(IStructuredSelection selection)
+   {
+      for(Object o : selection.toList())
+      {
+         if (!(o instanceof Interface))
             return false;
       }
       return true;
@@ -1302,9 +1345,9 @@ public class ObjectContextMenuManager extends MenuManager
    }
 
    /**
-    * Bind selected objects to another object
+    * Bind selected objects to container
     */
-   private void bindToObject()
+   private void bindToContainer()
    {
       final List<Long> childIdList = new ArrayList<>();
       for(Object o : ((IStructuredSelection)selectionProvider.getSelection()).toList())
@@ -1339,16 +1382,54 @@ public class ObjectContextMenuManager extends MenuManager
    }
 
    /**
-    * Unbind selected objects from one or more containers
+    * Bind selected interfaces to circuit
     */
-   private void unbindFromObjects()
+   private void addToCircuit()
    {
-      final long childId = getObjectIdFromSelection();
-      if (childId == 0)
+      final List<Long> childIdList = new ArrayList<>();
+      for(Object o : ((IStructuredSelection)selectionProvider.getSelection()).toList())
+      {
+         if (o instanceof Interface)
+            childIdList.add(((AbstractObject)o).getObjectId());
+      }
+
+      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(view.getWindow().getShell(), ObjectSelectionDialog.createCircuitSelectionFilter());
+      if (dlg.open() != Window.OK)
          return;
 
-      final RelatedObjectSelectionDialog dlg = new RelatedObjectSelectionDialog(view.getWindow().getShell(), childId, RelatedObjectSelectionDialog.RelationType.DIRECT_SUPERORDINATES,
-            ObjectSelectionDialog.createContainerSelectionFilter());
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Binding objects"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            List<AbstractObject> parents = dlg.getSelectedObjects();
+            for(AbstractObject o : parents)
+            {
+               for(Long childId : childIdList)
+                  session.bindObject(o.getObjectId(), childId);
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot bind objects");
+         }
+      }.start();
+   }
+
+   /**
+    * Unbind selected objects from one or more containers
+    */
+   private void unbindFromParents()
+   {
+      final AbstractObject childObject = getObjectFromSelection();
+      if (childObject == null)
+         return;
+
+      final RelatedObjectSelectionDialog dlg = new RelatedObjectSelectionDialog(view.getWindow().getShell(), childObject.getObjectId(),
+            RelatedObjectSelectionDialog.RelationType.DIRECT_SUPERORDINATES,
+            (childObject.getObjectClass() == AbstractObject.OBJECT_INTERFACE) ? ObjectSelectionDialog.createCircuitSelectionFilter() : ObjectSelectionDialog.createContainerSelectionFilter());
       if (dlg.open() != Window.OK)
          return;
 
@@ -1359,7 +1440,7 @@ public class ObjectContextMenuManager extends MenuManager
          {
             List<AbstractObject> objects = dlg.getSelectedObjects();
             for(AbstractObject o : objects)
-               session.unbindObject(o.getObjectId(), childId);
+               session.unbindObject(o.getObjectId(), childObject.getObjectId());
          }
 
          @Override
@@ -1546,8 +1627,10 @@ public class ObjectContextMenuManager extends MenuManager
 
    /**
     * Add menu items for moving objects. Default implementation does nothing.
+    * 
+    * @param selection current selection
     */
-   protected void addObjectMoveActions()
+   protected void addObjectMoveActions(IStructuredSelection selection)
    {
    }
 }

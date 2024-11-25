@@ -33,6 +33,7 @@ import org.eclipse.jface.viewers.ColumnViewerEditorActivationStrategy;
 import org.eclipse.jface.viewers.ICellEditorListener;
 import org.eclipse.jface.viewers.ICellModifier;
 import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.TreeViewer;
@@ -94,6 +95,7 @@ public class ObjectBrowser extends NavigationView
    private ObjectTree objectTree;
 
    private Action actionMoveObject;
+   private Action actionMoveInterface;
    private Action actionMoveTemplate;
    private Action actionMoveBusinessService;
    private Action actionMoveDashboard;
@@ -141,12 +143,12 @@ public class ObjectBrowser extends NavigationView
       createActions();
       final MenuManager menuManager = new ObjectContextMenuManager(this, objectTree.getSelectionProvider(), objectTree.getTreeViewer()) {
          @Override
-         protected void addObjectMoveActions()
+         protected void addObjectMoveActions(IStructuredSelection selection)
          {
             switch(subtreeType)
             {
                case INFRASTRUCTURE:
-                  add(actionMoveObject);
+                  addInfrastructureTreeMoveAction(this, selection);
                   break;
                case TEMPLATES:
                   add(actionMoveTemplate);
@@ -254,47 +256,88 @@ public class ObjectBrowser extends NavigationView
    }
 
    /**
+    * Add correct move action to object context menu in infrastructure tree.
+    *
+    * @param manager menu manager
+    * @param selection current selection
+    */
+   private void addInfrastructureTreeMoveAction(ObjectContextMenuManager manager, IStructuredSelection selection)
+   {
+      boolean moveInterface = false;
+      for(Object o : selection.toList())
+      {
+         if (o instanceof Interface)
+            moveInterface = true;
+         else if (moveInterface)
+            return; // Mixed selection, cannot add move action
+      }
+
+      if (!moveInterface)
+      {
+         manager.add(actionMoveObject);
+         return;
+      }
+
+      // Check if all selected elements under same parent class (node or circuit)
+      boolean canMove = true;
+      TreeItem[] treeSelection = objectTree.getTreeControl().getSelection();
+      for(int i = 0; i < treeSelection.length; i++)
+      {
+         AbstractObject parent = (AbstractObject)treeSelection[i].getParentItem().getData();
+         if (!(parent instanceof Circuit))
+            canMove = false;
+      }
+
+      if (canMove)
+         manager.add(actionMoveInterface);
+   }
+
+   /**
     * Create actions
     */
    private void createActions()
    {
-      actionMoveObject = new Action(i18n.tr("Move to another conatainer")) {
+      actionMoveObject = new Action(i18n.tr("Move to another conatainer...")) {
          @Override
          public void run()
          {
             moveObject(SubtreeType.INFRASTRUCTURE);
          }
       };
-      actionMoveObject.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveObject");
 
-      actionMoveTemplate = new Action(i18n.tr("Move to another group")) {
+      actionMoveInterface = new Action(i18n.tr("Move to another circuit...")) {
+         @Override
+         public void run()
+         {
+            moveObject(SubtreeType.INFRASTRUCTURE);
+         }
+      };
+
+      actionMoveTemplate = new Action(i18n.tr("Move to another group...")) {
          @Override
          public void run()
          {
             moveObject(SubtreeType.TEMPLATES);
          }
       };
-      actionMoveTemplate.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveTemplate");
 
-      actionMoveBusinessService = new Action(i18n.tr("Move to another group")) {
+      actionMoveBusinessService = new Action(i18n.tr("Move to another group...")) {
          @Override
          public void run()
          {
             moveObject(SubtreeType.BUSINESS_SERVICES);
          }
       };
-      actionMoveBusinessService.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveBusinessService");
 
-      actionMoveDashboard = new Action(i18n.tr("Move to another group")) { 
+      actionMoveDashboard = new Action(i18n.tr("Move to another group...")) {
          @Override
          public void run()
          {
             moveObject(SubtreeType.DASHBOARDS);
          }
       };
-      actionMoveDashboard.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveDashboard");
 
-      actionMoveMap = new Action(i18n.tr("Move to another group")) { 
+      actionMoveMap = new Action(i18n.tr("Move to another group...")) {
          @Override
          public void run()
          {
@@ -302,16 +345,15 @@ public class ObjectBrowser extends NavigationView
          }
       };
 
-      actionMoveAsset = new Action(i18n.tr("Move to another group")) { 
+      actionMoveAsset = new Action(i18n.tr("Move to another group...")) {
          @Override
          public void run()
          {
             moveObject(SubtreeType.ASSETS);
          }
       };
-      actionMoveAsset.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveAsset");
    }
-   
+
    /**
     * Move selected objects to another container
     */
@@ -334,7 +376,10 @@ public class ObjectBrowser extends NavigationView
       switch(subtree)
       {
          case INFRASTRUCTURE:
-            filter = ObjectSelectionDialog.createContainerSelectionFilter();
+            if (selectedObjects.get(0) instanceof Interface)
+               filter = ObjectSelectionDialog.createCircuitSelectionFilter();
+            else
+               filter = ObjectSelectionDialog.createContainerSelectionFilter();
             break;
          case TEMPLATES:
             filter = ObjectSelectionDialog.createTemplateGroupSelectionFilter();
