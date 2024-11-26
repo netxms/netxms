@@ -24,6 +24,15 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.22 to 52.0
+ */
+static bool H_UpgradeFromV22()
+{
+   CHK_EXEC(SetMajorSchemaVersion(52, 0));
+   return true;
+}
+
+/**
  * Upgrade from 51.21 to 51.22
  */
 static bool H_UpgradeFromV21()
@@ -495,6 +504,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 22, 52, 0,  H_UpgradeFromV22 },
    { 21, 51, 22, H_UpgradeFromV21 },
    { 20, 51, 21, H_UpgradeFromV20 },
    { 19, 51, 20, H_UpgradeFromV19 },
@@ -529,7 +539,7 @@ bool MajorSchemaUpgrade_V51()
    if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
       return false;
 
-   while ((major == 51) && (minor < DB_SCHEMA_VERSION_V51_MINOR))
+   while (major == 51)
    {
       // Find upgrade procedure
       int i;
