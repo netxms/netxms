@@ -12,7 +12,7 @@ else
 	TAIL="tail"
 fi
 
-hashTool=`dirname \`echo $0\``/../src/tools/nxcsum/nxcsum
+hashTool="$4/bin/nxcsum"
 
 if [ "x"$3 = "x" ]; then
 	echo "Usage: $0 input.tar.gz scriptname output.sh"
