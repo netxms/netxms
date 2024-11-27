@@ -35,6 +35,6 @@ tar cvf inst.tar inst &&
 gzip inst.tar &&
 mv inst.tar.gz ../tools/ &&
 cd ../tools/ &&
-bash ./sharIt inst.tar.gz inst/installBinaryAgent.sh ../nxagent-$version-$suffix.apkg &&
+bash ./sharIt inst.tar.gz inst/installBinaryAgent.sh ../nxagent-$version-$suffix.apkg $prefix &&
 cd .. &&
 rm -rf contrib/inst
