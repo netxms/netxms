@@ -40,7 +40,6 @@ InfluxDBSender::InfluxDBSender(const Config& config) : m_hostname(config.getValu
    m_queuedMessages = 0;
    m_messageDrops = 0;
    m_queueFlushThreshold = config.getValueAsUInt(_T("/InfluxDB/QueueFlushThreshold"), 32768);   // Flush after 32K
-   m_queueSizeLimit = config.getValueAsUInt(_T("/InfluxDB/QueueSizeLimit"), 4194304);  // 4MB upper limit on queue size
    m_maxCacheWaitTime = config.getValueAsUInt(_T("/InfluxDB/MaxCacheWaitTime"), 30000);
    m_port = static_cast<uint16_t>(config.getValueAsUInt(_T("/InfluxDB/Port"), 0));
    m_lastConnect = 0;
@@ -61,6 +60,14 @@ InfluxDBSender::InfluxDBSender(const Config& config) : m_hostname(config.getValu
 #endif
    m_shutdown = false;
    m_workerThread = INVALID_THREAD_HANDLE;
+
+   m_queueSizeLimit = config.getValueAsUInt(_T("/InfluxDB/QueueSizeLimit"), 4194304);  // 4MB upper limit on queue size
+   m_queues[0].data = static_cast<char*>(MemAlloc(m_queueSizeLimit));
+   m_queues[0].size = 0;
+   m_queues[1].data = static_cast<char*>(MemAlloc(m_queueSizeLimit));
+   m_queues[1].size = 0;
+   m_activeQueue = &m_queues[0];
+   m_backendQueue = &m_queues[1];
 }
 
 /**
@@ -75,6 +82,8 @@ InfluxDBSender::~InfluxDBSender()
    pthread_mutex_destroy(&m_mutex);
    pthread_cond_destroy(&m_condition);
 #endif
+   MemFree(m_queues[0].data);
+   MemFree(m_queues[1].data);
 }
 
 /**
@@ -104,7 +113,7 @@ void InfluxDBSender::workerThread()
       }
 #else
       pthread_mutex_lock(&m_mutex);
-      if (m_queue.length() < m_queueFlushThreshold)
+      if (m_activeQueue->size < m_queueFlushThreshold)
       {
 #if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
          struct timespec timeout;
@@ -125,7 +134,7 @@ void InfluxDBSender::workerThread()
       }
 #endif
 
-      if (m_queue.isEmpty())
+      if (m_activeQueue->size == 0)
       {
 #ifdef _WIN32
          LeaveCriticalSection(&m_mutex);
@@ -135,8 +144,7 @@ void InfluxDBSender::workerThread()
          continue;
       }
 
-      char *data = m_queue.getUTF8String();
-      m_queue.clear();
+      std::swap(m_activeQueue, m_backendQueue);
       m_queuedMessages = 0;
 
 #ifdef _WIN32
@@ -145,18 +153,18 @@ void InfluxDBSender::workerThread()
       pthread_mutex_unlock(&m_mutex);
 #endif
 
-      if (!send(data))
+      m_backendQueue->data[m_backendQueue->size] = 0;
+      if (!send(m_backendQueue->data, m_backendQueue->size))
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Data block send failed"));
          while(!m_shutdown)
          {
             ThreadSleep(10);
-            if (send(data))
+            if (send(m_backendQueue->data, m_backendQueue->size))
                break;
          }
       }
-
-      MemFree(data);
+      m_backendQueue->size = 0;
    }
 
    nxlog_debug_tag(DEBUG_TAG, 2, _T("Sender thread stopped"));
@@ -188,16 +196,28 @@ void InfluxDBSender::stop()
 /**
  * Enqueue data
  */
-void InfluxDBSender::enqueue(const TCHAR *data)
+void InfluxDBSender::enqueue(const StringBuffer& data)
 {
+#ifdef UNICODE
+   size_t len = wchar_utf8len(data, data.length()) + 2;  // ensure space for new line and trailing zero byte
+#else
+   size_t len = data.length() + 2;
+#endif
+
    lock();
 
-   if (m_queue.length() < m_queueSizeLimit)
+   if (m_activeQueue->size + len < m_queueSizeLimit)
    {
-      m_queue.append(data);
-      m_queue.append(_T('\n'));
+#ifdef UNICODE
+      len = wchar_to_utf8(data, data.length(), m_activeQueue->data + m_activeQueue->size, len);
+#else
+      memcpy(m_activeQueue->data + m_activeQueue->size, data, data.length());
+      len = data.length();
+#endif
+      m_activeQueue->size += len;
+      m_activeQueue->data[m_activeQueue->size++] = '\n';
       m_queuedMessages++;
-      if (m_queue.length() >= m_queueFlushThreshold)
+      if (m_activeQueue->size >= m_queueFlushThreshold)
       {
 #ifdef _WIN32
          WakeAllConditionVariable(&m_condition);
@@ -220,7 +240,7 @@ void InfluxDBSender::enqueue(const TCHAR *data)
 uint64_t InfluxDBSender::getQueueSizeInBytes()
 {
    lock();
-   uint64_t s = m_queue.length();
+   uint64_t s = m_activeQueue->size;
    unlock();
    return s;
 }
@@ -242,7 +262,7 @@ uint32_t InfluxDBSender::getQueueSizeInMessages()
 bool InfluxDBSender::isFull()
 {
    lock();
-   bool result = (m_queue.length() >= m_queueSizeLimit);
+   bool result = (m_activeQueue->size >= m_queueSizeLimit);
    unlock();
    return result;
 }

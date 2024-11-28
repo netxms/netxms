@@ -59,7 +59,7 @@ APISender::~APISender()
 /**
  * Send data block via API
  */
-bool APISender::send(const char *data)
+bool APISender::send(const char *data, size_t size)
 {
    if (m_curl == nullptr)
    {
@@ -106,6 +106,7 @@ bool APISender::send(const char *data)
    curl_easy_setopt(m_curl, CURLOPT_ERRORBUFFER, errorText);
 
    curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, data);
+   nxlog_debug_tag(DEBUG_TAG, 9, _T("Sending data: %hs"), data);
 
    bool success;
    if (curl_easy_perform(m_curl) == CURLE_OK)

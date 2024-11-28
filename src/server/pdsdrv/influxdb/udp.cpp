@@ -2,7 +2,7 @@
  ** NetXMS - Network Management System
  ** Performance Data Storage Driver for InfluxDB
  ** Copyright (C) 2019 Sebastian YEPES FERNANDEZ & Julien DERIVIERE
- ** Copyright (C) 2021 Raden Solutions
+ ** Copyright (C) 2021-2024 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published by
@@ -77,7 +77,7 @@ void UDPSender::createSocket()
 /**
  * Send data block over UDP
  */
-bool UDPSender::send(const char *data)
+bool UDPSender::send(const char *data, size_t size)
 {
    if (m_socket == INVALID_SOCKET)
    {
@@ -90,7 +90,7 @@ bool UDPSender::send(const char *data)
          return false;
    }
 
-   if (SendEx(m_socket, data, strlen(data), 0, nullptr) <= 0)
+   if (SendEx(m_socket, data, size, 0, nullptr) <= 0)
    {
       closesocket(m_socket);
       m_socket = INVALID_SOCKET;
