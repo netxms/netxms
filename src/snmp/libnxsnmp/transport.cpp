@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -64,20 +64,6 @@ void LIBNXSNMP_EXPORTABLE SnmpSetDefaultRetryCount(int numRetries)
 int LIBNXSNMP_EXPORTABLE SnmpGetDefaultRetryCount()
 {
    return s_defaultRetryCount;
-}
-
-/**
- * Create new SNMP transport.
- */
-SNMP_Transport::SNMP_Transport()
-{
-	m_authoritativeEngine = nullptr;
-	m_contextEngine = nullptr;
-	m_securityContext = nullptr;
-	m_enableEngineIdAutoupdate = false;
-	m_updatePeerOnRecv = false;
-	m_reliable = false;
-	m_snmpVersion = SNMP_VERSION_2C;
 }
 
 /**
@@ -376,34 +362,6 @@ uint32_t SNMP_Transport::sendTrap(SNMP_PDU *trap, uint32_t timeout, int numRetri
 }
 
 /**
- * SNMP_UDPTransport default constructor
- */
-SNMP_UDPTransport::SNMP_UDPTransport() : SNMP_Transport()
-{
-   m_port = SNMP_DEFAULT_PORT;
-   m_hSocket = -1;
-   m_dwBufferSize = SNMP_DEFAULT_MSG_MAX_SIZE;
-   m_dwBufferPos = 0;
-   m_dwBytesInBuffer = 0;
-   m_pBuffer = (BYTE *)MemAlloc(m_dwBufferSize);
-	m_connected = false;
-}
-
-/**
- * Create SNMP_UDPTransport for existing socket
- */
-SNMP_UDPTransport::SNMP_UDPTransport(SOCKET hSocket) : SNMP_Transport()
-{
-   m_port = SNMP_DEFAULT_PORT;
-   m_hSocket = hSocket;
-   m_dwBufferSize = SNMP_DEFAULT_MSG_MAX_SIZE;
-   m_dwBufferPos = 0;
-   m_dwBytesInBuffer = 0;
-   m_pBuffer = (BYTE *)MemAlloc(m_dwBufferSize);
-	m_connected = false;
-}
-
-/**
  * Create SNMP_UDPTransport transport connected to given host using host name
  */
 uint32_t SNMP_UDPTransport::createUDPTransport(const TCHAR *hostName, uint16_t port)
@@ -477,39 +435,29 @@ uint32_t SNMP_UDPTransport::createUDPTransport(const InetAddress& hostAddr, uint
  */
 SNMP_UDPTransport::~SNMP_UDPTransport()
 {
-   MemFree(m_pBuffer);
-   if (m_hSocket != -1)
+   if (m_buffer != m_localBuffer)
+      MemFree(m_buffer);
+   if (m_hSocket != INVALID_SOCKET)
       closesocket(m_hSocket);
-}
-
-/**
- * Clear buffer
- */
-void SNMP_UDPTransport::clearBuffer()
-{
-   m_dwBytesInBuffer = 0;
-   m_dwBufferPos = 0;
 }
 
 /**
  * Receive data from socket
  */
-int SNMP_UDPTransport::recvData(UINT32 dwTimeout, struct sockaddr *pSender, socklen_t *piAddrSize)
+int SNMP_UDPTransport::recvData(uint32_t timeout, struct sockaddr *sender, socklen_t *addrSize)
 {
    SockAddrBuffer srcAddrBuffer;
 
 retry_wait:
-   if (dwTimeout != INFINITE)
+   if (timeout != INFINITE)
    {
-      if (!SocketCanRead(m_hSocket, dwTimeout))
+      if (!SocketCanRead(m_hSocket, timeout))
          return 0;
    }
 
-	struct sockaddr *senderAddr = (pSender != NULL) ? pSender : (struct sockaddr *)&srcAddrBuffer;
-   socklen_t srcAddrLenBuffer = (piAddrSize != NULL) ? *piAddrSize : sizeof(srcAddrBuffer);
-   int rc = recvfrom(m_hSocket, (char *)&m_pBuffer[m_dwBufferPos + m_dwBytesInBuffer],
-                     (int)(m_dwBufferSize - (m_dwBufferPos + m_dwBytesInBuffer)), 0,
-                     senderAddr, &srcAddrLenBuffer);
+	struct sockaddr *senderAddr = (sender != nullptr) ? sender : (struct sockaddr *)&srcAddrBuffer;
+   socklen_t srcAddrLenBuffer = (addrSize != nullptr) ? *addrSize : sizeof(srcAddrBuffer);
+   int rc = recvfrom(m_hSocket, (char*)m_buffer, (m_buffer == m_localBuffer) ? sizeof(m_localBuffer) : SNMP_DEFAULT_MSG_MAX_SIZE, 0, senderAddr, &srcAddrLenBuffer);
 
 	// Validate sender's address if socket is connected
 	if ((rc >= 0) && m_connected)
@@ -519,11 +467,12 @@ retry_wait:
 		{
 			goto retry_wait;
 		}
+      m_bytesInBuffer = rc;
 	}
 
-	if (piAddrSize != NULL)
+	if (addrSize != nullptr)
    {
-      *piAddrSize = srcAddrLenBuffer;
+      *addrSize = srcAddrLenBuffer;
    }
 
 	// Update peer address
@@ -531,6 +480,13 @@ retry_wait:
 	{
 		memcpy(&m_peerAddr, senderAddr, SA_LEN(senderAddr));
 	}
+
+#ifdef _WIN32
+	if ((rc < 0) && (m_buffer != m_localBuffer) && (WSAGetLAstError() == WSAEMSGSIZE))
+	{
+	   m_buffer = static_cast<BYTE*>(MemAlloc(SNMP_DEFAULT_MSG_MAX_SIZE));
+	}
+#endif
 
 	return rc;
 }
@@ -540,12 +496,11 @@ retry_wait:
  */
 size_t SNMP_UDPTransport::preParsePDU()
 {
-   UINT32 dwType;
+   uint32_t dwType;
    size_t dwLength, dwIdLength;
    const BYTE *pbCurrPos;
 
-   if (!BER_DecodeIdentifier(&m_pBuffer[m_dwBufferPos], m_dwBytesInBuffer,
-                             &dwType, &dwLength, &pbCurrPos, &dwIdLength))
+   if (!BER_DecodeIdentifier(m_buffer, m_bytesInBuffer, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
       return 0;
    if (dwType != ASN_SEQUENCE)
       return 0;   // Packet should start with SEQUENCE
@@ -559,42 +514,26 @@ size_t SNMP_UDPTransport::preParsePDU()
 int SNMP_UDPTransport::readMessage(SNMP_PDU **pdu, uint32_t timeout, struct sockaddr *sender,
          socklen_t *addrSize, SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t))
 {
-   if (m_dwBytesInBuffer < 2)
+   int rc = recvData(timeout, sender, addrSize);
+   if (rc <= 0)
    {
-      int bytes = recvData(timeout, sender, addrSize);
-      if (bytes <= 0)
-      {
-         clearBuffer();
-         return bytes;
-      }
-      m_dwBytesInBuffer += bytes;
+      clearBuffer();
+      return rc;
+   }
+
+   if (m_bytesInBuffer < 2)
+   {
+      clearBuffer();
+      return -1;
    }
 
    size_t pduLength = preParsePDU();
-   if (pduLength == 0)
+   if ((pduLength == 0) || (pduLength > m_bytesInBuffer))
    {
-      // Clear buffer
       clearBuffer();
+      if ((m_buffer == m_localBuffer) && (pduLength > m_bytesInBuffer))
+         m_buffer = static_cast<BYTE*>(MemAlloc(SNMP_DEFAULT_MSG_MAX_SIZE));
       return 0;
-   }
-
-   // Move existing data to the beginning of buffer if there are not enough space at the end
-   if (pduLength > m_dwBufferSize - m_dwBufferPos)
-   {
-      memmove(m_pBuffer, &m_pBuffer[m_dwBufferPos], m_dwBytesInBuffer);
-      m_dwBufferPos = 0;
-   }
-
-   // Read entire PDU into buffer
-   while(m_dwBytesInBuffer < pduLength)
-   {
-      int bytes = recvData(timeout, sender, addrSize);
-      if (bytes <= 0)
-      {
-         clearBuffer();
-         return bytes;
-      }
-      m_dwBytesInBuffer += bytes;
    }
 
 	// Change security context if needed
@@ -605,16 +544,13 @@ int SNMP_UDPTransport::readMessage(SNMP_PDU **pdu, uint32_t timeout, struct sock
 
    // Create new PDU object and remove parsed data from buffer
    *pdu = new SNMP_PDU;
-   if (!(*pdu)->parse(&m_pBuffer[m_dwBufferPos], pduLength, m_securityContext, m_enableEngineIdAutoupdate))
+   if (!(*pdu)->parse(m_buffer, pduLength, m_securityContext, m_enableEngineIdAutoupdate))
    {
       delete *pdu;
       *pdu = nullptr;
    }
-   m_dwBytesInBuffer -= pduLength;
-   if (m_dwBytesInBuffer == 0)
-      m_dwBufferPos = 0;
 
-   return (int)pduLength;
+   return static_cast<int>(pduLength);
 }
 
 /**

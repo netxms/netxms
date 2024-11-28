@@ -1004,7 +1004,16 @@ protected:
 	uint32_t doEngineIdDiscovery(SNMP_PDU *originalRequest, uint32_t timeout, int numRetries);
 
 public:
-   SNMP_Transport();
+	SNMP_Transport()
+	{
+	   m_authoritativeEngine = nullptr;
+	   m_contextEngine = nullptr;
+	   m_securityContext = nullptr;
+	   m_enableEngineIdAutoupdate = false;
+	   m_updatePeerOnRecv = false;
+	   m_reliable = false;
+	   m_snmpVersion = SNMP_VERSION_2C;
+	}
    virtual ~SNMP_Transport();
 
    virtual int readMessage(SNMP_PDU **pdu, uint32_t timeout = INFINITE, struct sockaddr *sender = nullptr,
@@ -1044,20 +1053,36 @@ class LIBNXSNMP_EXPORTABLE SNMP_UDPTransport : public SNMP_Transport
 protected:
    SOCKET m_hSocket;
    SockAddrBuffer m_peerAddr;
+   uint16_t m_port;
 	bool m_connected;
-   size_t m_dwBufferSize;
-   size_t m_dwBytesInBuffer;
-   size_t m_dwBufferPos;
-   BYTE *m_pBuffer;
-   UINT16 m_port;
+   size_t m_bytesInBuffer;
+   BYTE *m_buffer;
+   BYTE m_localBuffer[2048];
 
    size_t preParsePDU();
-   int recvData(UINT32 dwTimeout, struct sockaddr *pSender, socklen_t *piAddrSize);
-   void clearBuffer();
+   int recvData(uint32_t timeout, struct sockaddr *sender, socklen_t *addrSize);
+   void clearBuffer()
+   {
+      m_bytesInBuffer = 0;
+   }
 
 public:
-   SNMP_UDPTransport();
-   SNMP_UDPTransport(SOCKET hSocket);
+   SNMP_UDPTransport() : SNMP_Transport()
+   {
+      m_port = SNMP_DEFAULT_PORT;
+      m_hSocket = INVALID_SOCKET;
+      m_bytesInBuffer = 0;
+      m_buffer = m_localBuffer;
+      m_connected = false;
+   }
+   SNMP_UDPTransport(SOCKET hSocket) : SNMP_Transport()
+   {
+      m_port = SNMP_DEFAULT_PORT;
+      m_hSocket = hSocket;
+      m_bytesInBuffer = 0;
+      m_buffer = m_localBuffer;
+      m_connected = false;
+   }
    virtual ~SNMP_UDPTransport();
 
    virtual int readMessage(SNMP_PDU **pdu, uint32_t timeout = INFINITE, struct sockaddr *sender = nullptr,
