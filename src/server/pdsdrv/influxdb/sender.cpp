@@ -65,7 +65,7 @@ InfluxDBSender::InfluxDBSender(const Config& config) : m_hostname(config.getValu
    m_queues[0].data = static_cast<char*>(MemAlloc(m_queueSizeLimit));
    m_queues[0].size = 0;
    m_queues[1].data = static_cast<char*>(MemAlloc(m_queueSizeLimit));
-   m_queues[0].size = 0;
+   m_queues[1].size = 0;
    m_activeQueue = &m_queues[0];
    m_backendQueue = &m_queues[1];
 }
@@ -164,6 +164,7 @@ void InfluxDBSender::workerThread()
                break;
          }
       }
+      m_backendQueue->size = 0;
    }
 
    nxlog_debug_tag(DEBUG_TAG, 2, _T("Sender thread stopped"));
@@ -208,9 +209,10 @@ void InfluxDBSender::enqueue(const StringBuffer& data)
    if (m_activeQueue->size + len < m_queueSizeLimit)
    {
 #ifdef UNICODE
-      wchar_to_utf8(data, data.length(), m_activeQueue->data + m_activeQueue->size, len);
+      len = wchar_to_utf8(data, data.length(), m_activeQueue->data + m_activeQueue->size, len);
 #else
       memcpy(m_activeQueue->data + m_activeQueue->size, data, data.length());
+      len = data.length();
 #endif
       m_activeQueue->size += len;
       m_activeQueue->data[m_activeQueue->size++] = '\n';
