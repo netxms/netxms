@@ -596,9 +596,9 @@ inline shared_ptr<SessionAgentConnector> CreateSessionAgentConnector(uint32_t id
 class SNMP_TrapProxyTransport : public SNMP_UDPTransport
 {
 public:
-   SNMP_TrapProxyTransport(SOCKET hSocket);
+   SNMP_TrapProxyTransport(SOCKET hSocket) : SNMP_UDPTransport(hSocket) {}
 
-   int readRawMessage(BYTE **rawData, UINT32 timeout, struct sockaddr *sender, socklen_t *addrSize);
+   int readRawMessage(BYTE **rawData, uint32_t timeout, struct sockaddr *sender, socklen_t *addrSize);
 };
 
 /**
