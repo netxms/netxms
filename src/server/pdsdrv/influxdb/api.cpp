@@ -59,7 +59,7 @@ APISender::~APISender()
 /**
  * Send data block via API
  */
-bool APISender::send(const char *data)
+bool APISender::send(const char *data, size_t size)
 {
    if (m_curl == nullptr)
    {

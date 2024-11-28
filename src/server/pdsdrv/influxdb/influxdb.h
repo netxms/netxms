@@ -2,7 +2,7 @@
  ** NetXMS - Network Management System
  ** Performance Data Storage Driver for InfluxDB
  ** Copyright (C) 2019 Sebastian YEPES FERNANDEZ & Julien DERIVIERE
- ** Copyright (C) 2021 Raden Solutions
+ ** Copyright (C) 2021-2024 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published by
@@ -42,12 +42,25 @@
 #define DEBUG_TAG _T("pdsdrv.influxdb")
 
 /**
+ * Sender data queue
+ */
+struct SenderDataQueue
+{
+   char *data;
+   size_t size;
+};
+
+/**
  * Abstract sender
  */
 class InfluxDBSender
 {
+private:
+   SenderDataQueue m_queues[2];
+   SenderDataQueue *m_activeQueue;  // Queue being filled by clients
+   SenderDataQueue *m_backendQueue; // Queue being processing by network layer or idle
+
 protected:
-   StringBuffer m_queue;
    uint32_t m_queueFlushThreshold;
    uint32_t m_queueSizeLimit;
    uint32_t m_maxCacheWaitTime;
@@ -86,7 +99,7 @@ protected:
 
    void workerThread();
 
-   virtual bool send(const char *data) = 0;
+   virtual bool send(const char *data, size_t size) = 0;
 
 public:
    InfluxDBSender(const Config& config);
@@ -94,7 +107,7 @@ public:
 
    void start();
    void stop();
-   void enqueue(const TCHAR *data);
+   void enqueue(const StringBuffer& data);
 
    uint64_t getQueueSizeInBytes();
    uint32_t getQueueSizeInMessages();
@@ -110,7 +123,7 @@ class UDPSender : public InfluxDBSender
 protected:
    SOCKET m_socket;
 
-   virtual bool send(const char *data) override;
+   virtual bool send(const char *data, size_t size) override;
 
    void createSocket();
 
@@ -130,7 +143,7 @@ private:
    CURL *m_curl;
 
 protected:
-   virtual bool send(const char *data) override;
+   virtual bool send(const char *data, size_t size) override;
 
    virtual void buildURL(char *url) = 0;
    virtual void addHeaders(curl_slist **headers);

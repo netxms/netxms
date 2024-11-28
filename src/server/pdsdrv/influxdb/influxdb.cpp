@@ -400,6 +400,7 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
 
    // Build final metric structure
    StringBuffer data(name);
+   data.setAllocationStep(1024);
    data.append(_T(",host="));
    data.append(host);
    data.append(_T(",instance="));
