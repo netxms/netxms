@@ -182,7 +182,7 @@
 					<guid>77d3e9a2-912c-4ff9-8b5a-d5f0585564b0</guid>
 					<name>System.Memory.Swap.UsedPerc</name>
 					<description>System: used swap space</description>
-					<dataType>1</dataType>
+					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
 					<scheduleType>0</scheduleType>
