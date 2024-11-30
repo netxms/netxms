@@ -662,11 +662,11 @@ AC_ARG_WITH(pgsql,
 [AS_HELP_STRING(--with-pgsql,build PostgreSQL database driver)],
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		if find_existing_dir "${withval}/lib/postgresql" "${withval}/lib/postgresql@14" "${withval}/lib" "${withval}/lib/pgsql" "${withval}/lib/postgresql" "${withval}/pgsql/lib" "${withval}/postgresql/lib"; then
+		if find_existing_dir "${withval}/lib/postgresql" "${withval}/lib/postgresql@14" "${withval}/lib" "${withval}/lib/pgsql" "${withval}/pgsql/lib" "${withval}/postgresql/lib"; then
 			PGSQL_LD_RUN_PATH="$__dir$"    
 			PGSQL_LDFLAGS="-L$__dir"
 		fi
-		if find_existing_dir "${withval}/include/postgresql" "${withval}/include/postgresql@14" "${withval}/include" "${withval}/include/pgsql" "${withval}/include/postgresql" "${withval}/pgsql/include" "${withval}/postgresql/include"; then
+		if find_existing_dir "${withval}/include/postgresql" "${withval}/include/postgresql@14" "${withval}/include" "${withval}/include/pgsql" "${withval}/pgsql/include" "${withval}/postgresql/include"; then
 			PGSQL_CPPFLAGS="-I$__dir"
 		fi
 	else
