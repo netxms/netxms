@@ -523,6 +523,7 @@
     <ClCompile Include="ndp.cpp" />
     <ClCompile Include="netinfo.cpp" />
     <ClCompile Include="netmap.cpp" />
+    <ClCompile Include="netmap_content.cpp" />
     <ClCompile Include="netmap_element.cpp" />
     <ClCompile Include="netmap_link.cpp" />
     <ClCompile Include="netmap_objlist.cpp" />

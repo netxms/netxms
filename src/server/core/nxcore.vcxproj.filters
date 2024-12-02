@@ -270,6 +270,9 @@
     <ClCompile Include="netmap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="netmap_content.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="netmap_element.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

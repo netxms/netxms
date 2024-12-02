@@ -4608,6 +4608,21 @@ template class NXCORE_TEMPLATE_EXPORTABLE StructArray<NetworkMapObjectLocation>;
 #endif
 
 /**
+ * Content of network map
+ */
+struct NXCORE_EXPORTABLE NetworkMapContent
+{
+   ObjectArray<NetworkMapElement> m_elements;
+   ObjectArray<NetworkMapLink> m_links;
+
+   NetworkMapContent();
+   NetworkMapContent(const NetworkMapContent& src);
+
+   uint32_t objectIdFromElementId(uint32_t eid) const;
+   uint32_t elementIdFromObjectId(uint32_t eid) const;
+};
+
+/**
  * Network map object
  */
 class NXCORE_EXPORTABLE NetworkMap : public NetObj, public Pollable, public DelegateObject
@@ -4638,8 +4653,7 @@ protected:
    NXSL_Program *m_linkStylingScript;
    uint32_t m_nextElementId;
    uint32_t m_nextLinkId;
-   ObjectArray<NetworkMapElement> m_elements;
-   ObjectArray<NetworkMapLink> m_links;
+   NetworkMapContent m_mapContent;
    StructArray<NetworkMapObjectLocation> m_deletedObjects;
    bool m_updateFailed;
 
@@ -4653,9 +4667,6 @@ protected:
    bool connectTopologySubgraphs(NetworkMapObjectList *graph, int mapType, const ObjectArray<IntegerArray<uint32_t>>& unconnectedSubgraphs);
    void updateObjects(const NetworkMapObjectList& objects);
    void updateLinks();
-
-   uint32_t objectIdFromElementId(uint32_t eid) const;
-   uint32_t elementIdFromObjectId(uint32_t eid) const;
 
    void setFilter(const TCHAR *filter);
    void setLinkStylingScript(const TCHAR *script);
