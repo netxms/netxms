@@ -482,7 +482,7 @@ retry_wait:
 	}
 
 #ifdef _WIN32
-	if ((rc < 0) && (m_buffer != m_localBuffer) && (WSAGetLAstError() == WSAEMSGSIZE))
+	if ((rc < 0) && (m_buffer != m_localBuffer) && (WSAGetLastError() == WSAEMSGSIZE))
 	{
 	   m_buffer = static_cast<BYTE*>(MemAlloc(SNMP_DEFAULT_MSG_MAX_SIZE));
 	}
