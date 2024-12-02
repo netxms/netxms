@@ -705,7 +705,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
    // (for example, DLink DGS-3612 can return negative value)
    // Anyway it's just a hint for initial array size
 	uint32_t interfaceCount = 0;
-	SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.2.1.0"), nullptr, 0, &interfaceCount, sizeof(LONG), 0);
+	SnmpGet(snmp->getSnmpVersion(), snmp, { 1, 3, 6, 1, 2, 1, 2, 1, 0 }, &interfaceCount, sizeof(uint32_t), 0);
 	if ((interfaceCount <= 0) || (interfaceCount > 4096))
 	{
 	   nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): invalid interface count %d received from device"), snmp, interfaceCount);
@@ -1020,7 +1020,7 @@ VlanList *NetworkDeviceDriver::getVlans(SNMP_Transport *snmp, NObject *node, Dri
 	VlanList *vlanList = new VlanList();
 
    // dot1qVlanStaticName
-	if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.17.7.1.4.3.1.1"),
+	if (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 17, 7, 1, 4, 3, 1, 1 },
 	      [vlanList] (SNMP_Variable *var) -> uint32_t
 	      {
 	         TCHAR buffer[256];
@@ -1031,7 +1031,7 @@ VlanList *NetworkDeviceDriver::getVlans(SNMP_Transport *snmp, NObject *node, Dri
 		goto failure;
 
    // dot1qVlanCurrentUntaggedPorts
-   if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.17.7.1.4.2.1.5"),
+   if (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 17, 7, 1, 4, 2, 1, 5 },
          [vlanList] (SNMP_Variable *var) -> uint32_t
          {
             ProcessVlanPortRecord(var, vlanList, false);
@@ -1040,7 +1040,7 @@ VlanList *NetworkDeviceDriver::getVlans(SNMP_Transport *snmp, NObject *node, Dri
       goto failure;
 
    // dot1qVlanCurrentEgressPorts
-   if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.17.7.1.4.2.1.4"),
+   if (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 17, 7, 1, 4, 2, 1, 4 },
          [vlanList] (SNMP_Variable *var) -> uint32_t
          {
             ProcessVlanPortRecord(var, vlanList, true);
@@ -1053,7 +1053,7 @@ VlanList *NetworkDeviceDriver::getVlans(SNMP_Transport *snmp, NObject *node, Dri
    {
       // Some devices does not return anything under dot1qVlanCurrentEgressPorts.
       // In that case we use dot1qVlanStaticEgressPorts
-      if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.17.7.1.4.3.1.2"),
+      if (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 17, 7, 1, 4, 3, 1, 2 },
             [vlanList] (SNMP_Variable *var) -> uint32_t
             {
                ProcessVlanPortRecord(var, vlanList, false);
@@ -1466,7 +1466,7 @@ static uint32_t HandlerArp(SNMP_Variable *var, SNMP_Transport *transport, ArpCac
 shared_ptr<ArpCache> NetworkDeviceDriver::getArpCache(SNMP_Transport *snmp, DriverData *driverData)
 {
    shared_ptr<ArpCache> arpCache = make_shared<ArpCache>();
-   if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.22.1.2"), HandlerArp, arpCache.get()) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 22, 1, 2 }, HandlerArp, arpCache.get()) != SNMP_ERR_SUCCESS)
       arpCache.reset();
    return arpCache;
 }

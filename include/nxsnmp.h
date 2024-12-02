@@ -1324,6 +1324,22 @@ static inline uint32_t SnmpGet(SNMP_Version version, SNMP_Transport *transport, 
 }
 
 /**
+ * Get value for SNMP variable
+ * If SG_RAW_RESULT flag given and dataLen is not NULL actual data length will be stored there
+ * Note: buffer size is in bytes
+ */
+static inline uint32_t SnmpGetEx(SNMP_Transport *transport, std::initializer_list<uint32_t> oid,
+      void *value, size_t bufferSize, uint32_t flags, uint32_t *dataLen = nullptr, const char *codepage = nullptr)
+{
+#if __cpp_lib_nonmember_container_access
+   return SnmpGetEx(transport, nullptr, std::data(oid), oid.size(), value, bufferSize, flags, dataLen, codepage);
+#else
+   SNMP_ObjectId oidObject(oid);
+   return SnmpGetEx(transport, nullptr, oid.values(), oid.length(), value, bufferSize, flags, dataLen, codepage);
+#endif
+}
+
+/**
  * Enumerate multiple values by walking through MIB, starting at given root
  */
 static inline uint32_t SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid,

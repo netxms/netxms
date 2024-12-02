@@ -74,9 +74,9 @@ bool JuniperDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, 
    _tcscpy(hwInfo->vendor, _T("Juniper Networks"));
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.2636.3.1.2.0")));  // Product name
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.2636.3.1.3.0")));  // Serial number
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.2636.3.1.4.0")));  // Revision
+   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 2636, 3, 1, 2, 0 }));  // Product name
+   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 2636, 3, 1, 3, 0 }));  // Serial number
+   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 2636, 3, 1, 4, 0 }));  // Revision
 
    // Return success only if at least product name is available.
    // Driver should return false if product name cannot be retrieved to allow server to try ENTITY MIB.
@@ -195,20 +195,20 @@ InterfaceList *JuniperDriver::getInterfaces(SNMP_Transport *snmp, NObject *node,
 VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    BYTE buffer[256];
-   if (SnmpGetEx(snmp, _T(".1.3.6.1.4.1.2636.3.48.1.3.1.1.2"), nullptr, 0, buffer, 256, SG_GET_NEXT_REQUEST | SG_RAW_RESULT, nullptr) == SNMP_ERR_SUCCESS)
+   if (SnmpGetEx(snmp, { 1, 3, 6, 1, 4, 1, 2636, 3, 48, 1, 3, 1, 1, 2 }, buffer, 256, SG_GET_NEXT_REQUEST | SG_RAW_RESULT, nullptr) == SNMP_ERR_SUCCESS)
    {
       nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getVlans: device supports jnxL2aldVlanTable"));
       return getVlansDot1q(snmp, node, driverData);
    }
 
-   SNMP_Snapshot *vlanTable = SNMP_Snapshot::create(snmp, _T(".1.3.6.1.4.1.2636.3.40.1.5.1.5.1"));
+   SNMP_Snapshot *vlanTable = SNMP_Snapshot::create(snmp, { 1, 3, 6, 1, 4, 1, 2636, 3, 40, 1, 5, 1, 5, 1 });
    if (vlanTable == nullptr)
    {
       nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getVlans: cannot create snapshot of VLAN table, fallback to NetworkDeviceDriver::getVlans"));
       return NetworkDeviceDriver::getVlans(snmp, node, driverData);
    }
 
-   SNMP_Snapshot *portTable = SNMP_Snapshot::create(snmp, _T(".1.3.6.1.4.1.2636.3.40.1.5.1.7.1"));
+   SNMP_Snapshot *portTable = SNMP_Snapshot::create(snmp, { 1, 3, 6, 1, 4, 1, 2636, 3, 40, 1, 5, 1, 7, 1 });
    if (portTable == nullptr)
    {
       delete vlanTable;
@@ -217,7 +217,7 @@ VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverDat
    }
 
    VlanList *vlans = new VlanList();
-   SNMP_ObjectId oid = SNMP_ObjectId::parse(_T(".1.3.6.1.4.1.2636.3.40.1.5.1.5.1.5"));
+   SNMP_ObjectId oid { 1, 3, 6, 1, 4, 1, 2636, 3, 40, 1, 5, 1, 5, 1 };
    const SNMP_Variable *v;
    while((v = vlanTable->getNext(oid)) != nullptr)
    {
@@ -235,7 +235,7 @@ VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverDat
 
       // VLAN ports
       uint32_t vlanId = oid.getElement(oid.length() - 1);
-      SNMP_ObjectId baseOid = SNMP_ObjectId::parse(_T(".1.3.6.1.4.1.2636.3.40.1.5.1.7.1.5"));
+      SNMP_ObjectId baseOid { 1, 3, 6, 1, 4, 1, 2636, 3, 40, 1, 5, 1, 7, 1, 5 };
       baseOid.extend(vlanId);
       const SNMP_Variable *p = nullptr;
       while((p = portTable->getNext((p != nullptr) ? p->getName() : baseOid)) != nullptr)
@@ -282,7 +282,7 @@ VlanList *JuniperDriver::getVlansDot1q(SNMP_Transport *snmp, NObject *node, Driv
 {
    // Check if non-standard format of VLAN membership entries is used
    bool standardFormat = false;
-   SnmpWalk(snmp, _T("1.3.6.1.2.1.17.7.1.4.3.1.2"),
+   SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 17, 7, 1, 4, 3, 1, 2 },
       [&standardFormat] (SNMP_Variable *var) -> uint32_t
       {
          BYTE buffer[1024];
@@ -308,7 +308,7 @@ VlanList *JuniperDriver::getVlansDot1q(SNMP_Transport *snmp, NObject *node, Driv
    VlanList *vlanList = new VlanList();
 
    // dot1qVlanStaticName
-   if (SnmpWalk(snmp, _T("1.3.6.1.2.1.17.7.1.4.3.1.1"),
+   if (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 17, 7, 1, 4, 3, 1, 1 },
          [vlanList] (SNMP_Variable *var) -> uint32_t
          {
             uint32_t tag = var->getName().getLastElement();
@@ -332,7 +332,7 @@ VlanList *JuniperDriver::getVlansDot1q(SNMP_Transport *snmp, NObject *node, Driv
       goto failure;
 
    // dot1qVlanStaticName
-   if (SnmpWalk(snmp, _T("1.3.6.1.2.1.17.7.1.4.3.1.2"),
+   if (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 17, 7, 1, 4, 3, 1, 2 },
          [vlanList] (SNMP_Variable *var) -> uint32_t
          {
             ProcessVlanPortRecord(var, vlanList, true);
@@ -341,7 +341,7 @@ VlanList *JuniperDriver::getVlansDot1q(SNMP_Transport *snmp, NObject *node, Driv
       goto failure;
 
    // dot1qVlanStaticUntaggedPorts
-   if (SnmpWalk(snmp, _T("1.3.6.1.2.1.17.7.1.4.3.1.4"),
+   if (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 17, 7, 1, 4, 3, 1, 4 },
          [vlanList] (SNMP_Variable *var) -> uint32_t
          {
             ProcessVlanPortRecord(var, vlanList, false);
