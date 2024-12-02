@@ -329,6 +329,19 @@ uint32_t UpdateUsmCredentialsList(const NXCPMessage& request, int32_t zoneUIN)
 }
 
 /**
+ * In-memory cache of well-known ports
+ */
+struct WellKnownPort
+{
+   TCHAR tag[16];
+   int32_t zoneUIN;
+   int32_t id;
+   uint16_t port;
+};
+static StructArray<WellKnownPort> s_wellKnownPorts;
+static Mutex s_wellKnownPortsLock(MutexType::FAST);
+
+/**
  * Get list of well-known ports for given zone and tag
  * @param tag if no ports found, tag based default values are returned: "snmp" - 161, "ssh" - 22
  */
@@ -336,25 +349,16 @@ IntegerArray<uint16_t> GetWellKnownPorts(const TCHAR *tag, int32_t zoneUIN)
 {
    IntegerArray<uint16_t> ports;
 
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT port FROM well_known_ports WHERE tag=? AND (zone=? OR zone=-1) ORDER BY zone DESC, id ASC"));
-   if (hStmt != nullptr)
+   s_wellKnownPortsLock.lock();
+   for(int i = 0; i < s_wellKnownPorts.size(); i++)
    {
-      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, tag, DB_BIND_STATIC);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, zoneUIN);
-
-      DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != nullptr)
+      WellKnownPort *p = s_wellKnownPorts.get(i);
+      if (((zoneUIN == -1) || (p->zoneUIN == zoneUIN)) && !_tcscmp(p->tag, tag))
       {
-         int count = DBGetNumRows(hResult);
-         for(int i = 0; i < count; i++)
-
-            ports.add(DBGetFieldLong(hResult, i, 0));
-         DBFreeResult(hResult);
+         ports.add(p->port);
       }
-      DBFreeStatement(hStmt);
    }
-   DBConnectionPoolReleaseConnection(hdb);
+   s_wellKnownPortsLock.unlock();
 
    if (ports.size() == 0)
    {
@@ -464,6 +468,8 @@ uint32_t UpdateWellKnownPortList(const NXCPMessage& request, const TCHAR *tag, i
       return RCC_DB_FAILURE;
    }
 
+   StructArray<WellKnownPort> newPorts(0, 32);
+
    uint32_t rcc;
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM well_known_ports WHERE tag=? AND zone=?"));
    if (hStmt != nullptr)
@@ -485,13 +491,20 @@ uint32_t UpdateWellKnownPortList(const NXCPMessage& request, const TCHAR *tag, i
                uint32_t fieldId = VID_ZONE_PORT_LIST_BASE;
                for(int i = 0; i < count; i++)
                {
+                  uint16_t portNumber = request.getFieldAsUInt16(fieldId++);
                   DBBind(hStmt2, 1, DB_SQLTYPE_INTEGER, i + 1);
-                  DBBind(hStmt2, 2, DB_SQLTYPE_INTEGER, request.getFieldAsUInt16(fieldId++));
+                  DBBind(hStmt2, 2, DB_SQLTYPE_INTEGER, portNumber);
                   if (!DBExecute(hStmt2))
                   {
                      rcc = RCC_DB_FAILURE;
                      break;
                   }
+
+                  WellKnownPort *p = newPorts.addPlaceholder();
+                  p->id = i + 1;
+                  p->port = portNumber;
+                  _tcslcpy(p->tag, tag, 16);
+                  p->zoneUIN = zoneUIN;
                }
                DBFreeStatement(hStmt2);
             }
@@ -519,6 +532,20 @@ uint32_t UpdateWellKnownPortList(const NXCPMessage& request, const TCHAR *tag, i
    if (rcc == RCC_SUCCESS)
    {
       DBCommit(hdb);
+
+      s_wellKnownPortsLock.lock();
+      for(int i = 0; i < s_wellKnownPorts.size(); i++)
+      {
+         WellKnownPort *p = s_wellKnownPorts.get(i);
+         if ((p->zoneUIN == zoneUIN) && !_tcscmp(p->tag, tag))
+         {
+            s_wellKnownPorts.remove(i);
+            i--;
+         }
+      }
+      s_wellKnownPorts.addAll(newPorts);
+      s_wellKnownPortsLock.unlock();
+
       NotifyClientSessions(NX_NOTIFY_PORTS_CONFIG_CHANGED, zoneUIN);
    }
    else
@@ -528,6 +555,29 @@ uint32_t UpdateWellKnownPortList(const NXCPMessage& request, const TCHAR *tag, i
 
    DBConnectionPoolReleaseConnection(hdb);
    return rcc;
+}
+
+/**
+ * Load well known port list into memory on startup
+ */
+void LoadWellKnownPortList()
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT tag,zone,id,port FROM well_known_ports ORDER BY zone,id"));
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         WellKnownPort *p = s_wellKnownPorts.addPlaceholder();
+         DBGetField(hResult, i, 0, p->tag, 16);
+         p->zoneUIN = DBGetFieldInt32(hResult, i, 1);
+         p->id = DBGetFieldInt32(hResult, i, 2);
+         p->port = DBGetFieldUInt16(hResult, i, 3);
+      }
+      DBFreeResult(hResult);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
 }
 
 /**

@@ -109,6 +109,7 @@ void LoadTrapMappings();
 void StartSnmpTrapReceiver();
 void StopSnmpTrapReceiver();
 void CheckNodeCountRestrictions();
+void LoadWellKnownPortList();
 
 void CheckUserAuthenticationTokens(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameters);
@@ -1189,6 +1190,7 @@ retry_db_lock:
    InitCountryList();
    InitCurrencyList();
    LoadOUIDatabase();
+   LoadWellKnownPortList();
 
    // Load and compile scripts
    LoadScripts();
