@@ -21,7 +21,7 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			isc.cpp layer2.cpp ldap.cpp lln.cpp \
 			lldp.cpp locks.cpp logfilter.cpp loghandle.cpp logs.cpp macdb.cpp main.cpp \
 			maint.cpp market.cpp mdconn.cpp mdsession.cpp mj.cpp mobile.cpp \
-			modules.cpp mt.cpp ndd.cpp ndp.cpp netinfo.cpp netmap.cpp \
+			modules.cpp mt.cpp ndd.cpp ndp.cpp netinfo.cpp netmap.cpp netmap_content.cpp \
 			netmap_element.cpp netmap_link.cpp netmap_objlist.cpp netobj.cpp \
 			netsrv.cpp network_cred.cpp node.cpp notification_channel.cpp \
 			np.cpp npe.cpp nxsl_classes.cpp nxslext.cpp object_categories.cpp \

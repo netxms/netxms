@@ -47,7 +47,7 @@ bool NetworkMapGroup::showThresholdSummary() const
 /**
  * Network map object default constructor
  */
-NetworkMap::NetworkMap() : super(), Pollable(this, Pollable::MAP_UPDATE), DelegateObject(this), m_elements(0, 64, Ownership::True), m_links(0, 64, Ownership::True)
+NetworkMap::NetworkMap() : super(), Pollable(this, Pollable::MAP_UPDATE), DelegateObject(this)
 {
 	m_mapType = NETMAP_USER_DEFINED;
 	m_discoveryRadius = 0;
@@ -78,7 +78,7 @@ NetworkMap::NetworkMap() : super(), Pollable(this, Pollable::MAP_UPDATE), Delega
  * Network map object default constructor
  */
 NetworkMap::NetworkMap(const NetworkMap &src) : super(), Pollable(this, Pollable::MAP_UPDATE), DelegateObject(this, src),
-         m_seedObjects(src.m_seedObjects), m_elements(0, 64, Ownership::True), m_links(0, 64, Ownership::True), m_deletedObjects(src.m_deletedObjects)
+         m_seedObjects(src.m_seedObjects), m_mapContent(src.m_mapContent), m_deletedObjects(src.m_deletedObjects)
 
 {
    m_mapType = src.m_mapType;
@@ -105,14 +105,6 @@ NetworkMap::NetworkMap(const NetworkMap &src) : super(), Pollable(this, Pollable
    m_linkStylingScript = nullptr;
    m_linkStylingScriptSource = nullptr;
    setLinkStylingScript(src.m_linkStylingScriptSource);
-   for(int i = 0; i < src.m_elements.size(); i++)
-   {
-      m_elements.add(src.m_elements.get(i)->clone());
-   }
-   for(int i = 0; i < src.m_links.size(); i++)
-   {
-      m_links.add(new NetworkMapLink(*src.m_links.get(i)));
-   }
    m_isHidden = true;
    m_updateFailed = false;
    setCreationTime();
@@ -121,8 +113,8 @@ NetworkMap::NetworkMap(const NetworkMap &src) : super(), Pollable(this, Pollable
 /**
  * Create network map object from user session
  */
-NetworkMap::NetworkMap(int type, const IntegerArray<uint32_t>& seeds) : super(), Pollable(this, Pollable::MAP_UPDATE), DelegateObject(this),
-         m_seedObjects(seeds), m_elements(0, 64, Ownership::True), m_links(0, 64, Ownership::True)
+NetworkMap::NetworkMap(int type, const IntegerArray<uint32_t>& seeds) : super(), Pollable(this, Pollable::MAP_UPDATE),
+         DelegateObject(this), m_seedObjects(seeds)
 {
 	m_mapType = type;
 	if (type == MAP_INTERNAL_COMMUNICATION_TOPOLOGY)
@@ -202,9 +194,9 @@ void NetworkMap::calculateCompoundStatus(bool forcedRecalc)
             case SA_CALCULATE_MOST_CRITICAL:
                iCount = 0;
                iMostCriticalStatus = -1;
-               for(int i = 0; i < m_elements.size(); i++)
+               for(int i = 0; i < m_mapContent.m_elements.size(); i++)
                {
-                  NetworkMapElement *e = m_elements.get(i);
+                  NetworkMapElement *e = m_mapContent.m_elements.get(i);
                   if (e->getType() != MAP_ELEMENT_OBJECT)
                      continue;
 
@@ -226,9 +218,9 @@ void NetworkMap::calculateCompoundStatus(bool forcedRecalc)
                // Step 1: calculate severity ratings
                memset(nRating, 0, sizeof(int) * 5);
                iCount = 0;
-               for(int i = 0; i < m_elements.size(); i++)
+               for(int i = 0; i < m_mapContent.m_elements.size(); i++)
                {
-                  NetworkMapElement *e = m_elements.get(i);
+                  NetworkMapElement *e = m_mapContent.m_elements.get(i);
                   if (e->getType() != MAP_ELEMENT_OBJECT)
                      continue;
 
@@ -345,15 +337,15 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM network_map_elements WHERE map_id=?"));
 
       lockProperties();
-      if (success && !m_elements.isEmpty())
+      if (success && !m_mapContent.m_elements.isEmpty())
       {
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_elements (map_id,element_id,element_type,element_data,flags) VALUES (?,?,?,?,?)"));
          if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            for(int i = 0; success && (i < m_elements.size()); i++)
+            for(int i = 0; success && (i < m_mapContent.m_elements.size()); i++)
             {
-               NetworkMapElement *e = m_elements.get(i);
+               NetworkMapElement *e = m_mapContent.m_elements.get(i);
                Config *config = new Config();
                config->setTopLevelTag(_T("element"));
                e->updateConfig(config);
@@ -380,17 +372,17 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
          success = executeQueryOnObject(hdb, _T("DELETE FROM network_map_links WHERE map_id=?"));
 
       lockProperties();
-      if (success && !m_links.isEmpty())
+      if (success && !m_mapContent.m_links.isEmpty())
       {
          DB_STATEMENT hStmt = DBPrepare(hdb,
                   _T("INSERT INTO network_map_links (map_id,link_id,element1,interface1,element2,interface2,link_type,link_name,connector_name1,connector_name2,element_data,flags,color_source,color,color_provider) ")
-                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"), m_links.size() > 1);
+                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"), m_mapContent.m_links.size() > 1);
          if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            for(int i = 0; success && (i < m_links.size()); i++)
+            for(int i = 0; success && (i < m_mapContent.m_links.size()); i++)
             {
-               NetworkMapLink *l = m_links.get(i);
+               NetworkMapLink *l = m_mapContent.m_links.get(i);
                DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, l->getId());
                DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, l->getElement1());
                DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, l->getInterface1());
@@ -597,7 +589,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prep
 					e = new NetworkMapElement(id, flags);
 				}
 				delete config;
-				m_elements.add(e);
+				m_mapContent.m_elements.add(e);
 				if (m_nextElementId <= e->getId())
 					m_nextElementId = e->getId() + 1;
 			}
@@ -630,7 +622,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prep
             m_objectSet.put(l->getInterface2());
             l->updateColorSourceObjectList(m_objectSet, true);
             l->updateDciList(m_dciSet, true);
-				m_links.add(l);
+            m_mapContent.m_links.add(l);
             if (m_nextLinkId <= l->getId())
                m_nextLinkId = l->getId() + 1;
 			}
@@ -708,19 +700,19 @@ void NetworkMap::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_LINK_STYLING_SCRIPT, CHECK_NULL_EX(m_linkStylingScriptSource));
    msg->setField(VID_UPDATE_FAILED, m_updateFailed);
 
-	msg->setField(VID_NUM_ELEMENTS, (UINT32)m_elements.size());
+	msg->setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(m_mapContent.m_elements.size()));
 	uint32_t fieldId = VID_ELEMENT_LIST_BASE;
-	for(int i = 0; i < m_elements.size(); i++)
+	for(int i = 0; i < m_mapContent.m_elements.size(); i++)
 	{
-		m_elements.get(i)->fillMessage(msg, fieldId);
+	   m_mapContent.m_elements.get(i)->fillMessage(msg, fieldId);
 		fieldId += 100;
 	}
 
-	msg->setField(VID_NUM_LINKS, (UINT32)m_links.size());
+	msg->setField(VID_NUM_LINKS, static_cast<uint32_t>(m_mapContent.m_links.size()));
 	fieldId = VID_LINK_LIST_BASE;
-	for(int i = 0; i < m_links.size(); i++)
+	for(int i = 0; i < m_mapContent.m_links.size(); i++)
 	{
-		m_links.get(i)->fillMessage(msg, fieldId);
+	   m_mapContent.m_links.get(i)->fillMessage(msg, fieldId);
 		fieldId += 20;
 	}
 }
@@ -793,7 +785,7 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 
 	if (msg.isFieldExist(VID_NUM_ELEMENTS))
 	{
-	   ObjectArray<NetworkMapElement> newElements(0, 64, Ownership::False);
+	   ObjectArray<NetworkMapElement> newElements(0, 128, Ownership::False);
 	   m_dciSet.clear();
 	   m_objectSet.clear();
 		int numElements = msg.getFieldAsInt32(VID_NUM_ELEMENTS);
@@ -840,9 +832,9 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 		   NetworkMapElement *newElement = newElements.get(i);
 
 		   bool found = false;
-		   for(int j = 0; j < m_elements.size(); j++)
+		   for(int j = 0; j < m_mapContent.m_elements.size(); j++)
 		   {
-	         NetworkMapElement *oldElement = m_elements.get(j);
+	         NetworkMapElement *oldElement = m_mapContent.m_elements.get(j);
 		      if (newElement->getId() == oldElement->getId() && newElement->getType() == oldElement->getType())
 		      {
 		         newElement->updateInternalFields(oldElement);
@@ -868,9 +860,9 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 		   }
 		}
 
-		for(int j = 0; j < m_elements.size(); j++)
+		for(int j = 0; j < m_mapContent.m_elements.size(); j++)
       {
-         NetworkMapElement *oldElement = m_elements.get(j);
+         NetworkMapElement *oldElement = m_mapContent.m_elements.get(j);
          if (oldElement->getType() != MAP_ELEMENT_OBJECT)
             continue;
 
@@ -894,10 +886,10 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
                m_deletedObjects.remove(MAX_DELETED_OBJECT_COUNT);
          }
       }
-		m_elements.clear();
-		m_elements.addAll(newElements);
+		m_mapContent.m_elements.clear();
+		m_mapContent.m_elements.addAll(newElements);
 
-		m_links.clear();
+		m_mapContent.m_links.clear();
 		int numLinks = msg.getFieldAsInt32(VID_NUM_LINKS);
 		if (numLinks > 0)
 		{
@@ -909,7 +901,7 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
             m_objectSet.put(l->getInterface2());
             l->updateColorSourceObjectList(m_objectSet, true);
             l->updateDciList(m_dciSet, true);
-				m_links.add(l);
+            m_mapContent.m_links.add(l);
 				fieldId += 20;
 
             if (m_nextLinkId <= l->getId())
@@ -952,9 +944,9 @@ void NetworkMap::updateObjectLocation(const NXCPMessage& msg)
       for(int i = 0; i < numElements; i++)
       {
          NetworkMapElement newElement(msg, fieldId);
-         for(int j = 0; j < m_elements.size(); j++)
+         for(int j = 0; j < m_mapContent.m_elements.size(); j++)
          {
-            NetworkMapElement *oldElement = m_elements.get(j);
+            NetworkMapElement *oldElement = m_mapContent.m_elements.get(j);
             if (oldElement->getId() == newElement.getId())
             {
                oldElement->setPosition(newElement.getPosX(), newElement.getPosY());
@@ -972,9 +964,9 @@ void NetworkMap::updateObjectLocation(const NXCPMessage& msg)
       for(int i = 0; i < numLinks; i++)
       {
          NetworkMapLink newLink(msg, fieldId);
-         for (int j = 0; j < m_links.size(); j++)
+         for (int j = 0; j < m_mapContent.m_links.size(); j++)
          {
-            NetworkMapLink *oldLink = m_links.get(j);
+            NetworkMapLink *oldLink = m_mapContent.m_links.get(j);
             if (oldLink->getId() == newLink.getId())
             {
                oldLink->moveConfig(&newLink);
@@ -1170,17 +1162,20 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
    if (nxlog_get_debug_level_tag(_T("netmap")) >= 7)
       objects.dumpToLog();
 
+   // Make local copy of map content
    lockProperties();
+   NetworkMapContent content(m_mapContent);
+   unlockProperties();
 
    // remove non-existing links
-   for(int i = 0; i < m_links.size(); i++)
+   for(int i = 0; i < content.m_links.size(); i++)
    {
-      NetworkMapLink *link = m_links.get(i);
+      NetworkMapLink *link = content.m_links.get(i);
       if (!link->checkFlagSet(AUTO_GENERATED))
          continue;
 
-      uint32_t objID1 = objectIdFromElementId(link->getElement1());
-      uint32_t objID2 = objectIdFromElementId(link->getElement2());
+      uint32_t objID1 = content.objectIdFromElementId(link->getElement1());
+      uint32_t objID2 = content.objectIdFromElementId(link->getElement2());
       bool linkExists = false;
       if (objects.isLinkExist(objID1, link->getInterface1(), objID2, link->getInterface2(), link->getType()))
       {
@@ -1196,37 +1191,41 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
       {
          sendPollerMsg(_T("   Link between \"%s\" and \"%s\" removed\r\n"), GetObjectName(objID1, _T("unknown")), GetObjectName(objID2, _T("unknown")));
          nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: link %u - %u removed"), m_name, m_id, link->getElement1(), link->getElement2());
+
+         lockProperties();
          link->updateDciList(m_dciSet, false);
          link->updateColorSourceObjectList(m_objectSet, false);
          m_objectSet.remove(link->getInterface1());
          m_objectSet.remove(link->getInterface2());
-         m_links.remove(i);
+         unlockProperties();
+
+         content.m_links.remove(i);
          i--;
          modified = true;
       }
    }
 
    // Remove duplicate links
-   for(int i = 0; i < m_links.size(); i++)
+   for(int i = 0; i < content.m_links.size(); i++)
    {
-      NetworkMapLink *link = m_links.get(i);
+      NetworkMapLink *link = content.m_links.get(i);
       if (!link->checkFlagSet(AUTO_GENERATED))
          continue;
 
-      uint32_t objId1 = objectIdFromElementId(link->getElement1());
-      uint32_t objId2 = objectIdFromElementId(link->getElement2());
+      uint32_t objId1 = content.objectIdFromElementId(link->getElement1());
+      uint32_t objId2 = content.objectIdFromElementId(link->getElement2());
 
-      for(int j = i + 1; j < m_links.size(); j++)
+      for(int j = i + 1; j < content.m_links.size(); j++)
       {
-         NetworkMapLink *currLink = m_links.get(j);
+         NetworkMapLink *currLink = content.m_links.get(j);
          if (!currLink->checkFlagSet(AUTO_GENERATED))
             continue;
 
          if (currLink->getType() != link->getType())
             continue;
 
-         uint32_t currObjId1 = objectIdFromElementId(currLink->getElement1());
-         uint32_t currObjId2 = objectIdFromElementId(currLink->getElement2());
+         uint32_t currObjId1 = content.objectIdFromElementId(currLink->getElement1());
+         uint32_t currObjId2 = content.objectIdFromElementId(currLink->getElement2());
 
          bool duplicate = false;
          if ((objId1 == currObjId1) && (objId2 == currObjId2))
@@ -1242,11 +1241,15 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
          {
             sendPollerMsg(_T("   Duplicate link between \"%s\" and \"%s\" removed\r\n"), GetObjectName(currObjId1, _T("unknown")), GetObjectName(currObjId2, _T("unknown")));
             nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: duplicate link %u - %u removed"), m_name, m_id, currLink->getElement1(), currLink->getElement2());
+
+            lockProperties();
             currLink->updateDciList(m_dciSet, false);
             currLink->updateColorSourceObjectList(m_objectSet, false);
             m_objectSet.remove(currLink->getInterface1());
             m_objectSet.remove(currLink->getInterface2());
-            m_links.remove(j);
+            unlockProperties();
+
+            content.m_links.remove(j);
             j--;
             modified = true;
          }
@@ -1254,9 +1257,9 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
    }
 
    // remove non-existing objects
-   for(int i = 0; i < m_elements.size(); i++)
+   for(int i = 0; i < content.m_elements.size(); i++)
    {
-      NetworkMapElement *e = m_elements.get(i);
+      NetworkMapElement *e = content.m_elements.get(i);
       if ((e->getType() != MAP_ELEMENT_OBJECT) || !(e->getFlags() & AUTO_GENERATED))
          continue;
 
@@ -1266,15 +1269,20 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
       {
          sendPollerMsg(_T("   Object \"%s\" removed\r\n"), GetObjectName(objectId, _T("unknown")));
          nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: object element %u (object %u) removed"), m_name, m_id, e->getId(), objectId);
+
          NetworkMapObjectLocation loc;
          loc.objectId = objectId;
          loc.posX = netMapObject->getPosX();
          loc.posY = netMapObject->getPosY();
+
+         lockProperties();
          m_deletedObjects.insert(0, &loc);
          if (m_deletedObjects.size() > MAX_DELETED_OBJECT_COUNT)
             m_deletedObjects.remove(MAX_DELETED_OBJECT_COUNT);
          m_objectSet.remove(netMapObject->getObjectId());
-         m_elements.remove(i);
+         unlockProperties();
+
+         content.m_elements.remove(i);
          i--;
          modified = true;
       }
@@ -1283,14 +1291,15 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
    // add new objects
    for(int i = 0; i < objects.getNumObjects(); i++)
    {
+      uint32_t objectId = objects.getObjects().get(i);
       bool found = false;
       NetworkMapElement *e = nullptr;
-      for(int j = 0; j < m_elements.size(); j++)
+      for(int j = 0; j < content.m_elements.size(); j++)
       {
-         e = m_elements.get(j);
+         e = content.m_elements.get(j);
          if (e->getType() != MAP_ELEMENT_OBJECT)
             continue;
-         if (static_cast<NetworkMapObject*>(e)->getObjectId() == objects.getObjects().get(i))
+         if (static_cast<NetworkMapObject*>(e)->getObjectId() == objectId)
          {
             found = true;
             break;
@@ -1298,7 +1307,7 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
       }
       if (!found)
       {
-         uint32_t objectId = objects.getObjects().get(i);
+         lockProperties();
          NetworkMapObject *e = new NetworkMapObject(m_nextElementId++, objectId, 1);
          for (int i = 0; i < m_deletedObjects.size(); i++)
          {
@@ -1310,8 +1319,10 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
                break;
             }
          }
-         m_elements.add(e);
-         m_objectSet.put(e->getObjectId());
+         m_objectSet.put(objectId);
+         unlockProperties();
+
+         content.m_elements.add(e);
          modified = true;
          nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: new object %u (element ID %u) added"), m_name, m_id, objectId, e->getId());
          sendPollerMsg(_T("   Object \"%s\" added\r\n"), GetObjectName(objectId, _T("unknown")));
@@ -1325,13 +1336,13 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
       ObjLink *newLink = links.get(i);
       NetworkMapLink *link = nullptr;
       bool isNew = true;
-      for(int j = 0; j < m_links.size(); j++)
+      for(int j = 0; j < content.m_links.size(); j++)
       {
-         NetworkMapLink *currLink = m_links.get(j);
-         uint32_t obj1 = objectIdFromElementId(currLink->getElement1());
-         uint32_t obj2 = objectIdFromElementId(currLink->getElement2());
+         NetworkMapLink *currLink = content.m_links.get(j);
          if (newLink->type == currLink->getType())
          {
+            uint32_t obj1 = content.objectIdFromElementId(currLink->getElement1());
+            uint32_t obj2 = content.objectIdFromElementId(currLink->getElement2());
             if ((newLink->object1 == obj1) && (newLink->iface1 == currLink->getInterface1()) && (newLink->object2 == obj2) && (newLink->iface2 == currLink->getInterface2()))
             {
                link = currLink;
@@ -1351,11 +1362,12 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
       // Add new link if needed
       if (link == nullptr)
       {
-         uint32_t e1 = elementIdFromObjectId(newLink->object1);
-         uint32_t e2 = elementIdFromObjectId(newLink->object2);
+         uint32_t e1 = content.elementIdFromObjectId(newLink->object1);
+         uint32_t e2 = content.elementIdFromObjectId(newLink->object2);
          // Element ID can be 0 if link points to object removed by filter
          if ((e1 != 0) && (e2 != 0))
          {
+            lockProperties();
             link = new NetworkMapLink(m_nextLinkId++, e1, newLink->iface1, e2, newLink->iface2, newLink->type);
             link->setColorSource(MAP_LINK_COLOR_SOURCE_INTERFACE_STATUS);
             link->setFlags(AUTO_GENERATED);
@@ -1363,7 +1375,8 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
             link->updateColorSourceObjectList(m_objectSet, true);
             m_objectSet.put(link->getInterface1());
             m_objectSet.put(link->getInterface2());
-            m_links.add(link);
+            unlockProperties();
+            content.m_links.add(link);
          }
          else
          {
@@ -1375,11 +1388,13 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
       // Update link properties
       if (link != nullptr)
       {
+         lockProperties();
          m_objectSet.remove(link->getInterface1());
          m_objectSet.remove(link->getInterface2());
          bool updated = link->update(*newLink, !(m_flags & MF_DONT_UPDATE_LINK_TEXT));
          m_objectSet.put(newLink->iface1);
          m_objectSet.put(newLink->iface2);
+         unlockProperties();
          if (updated || isNew)
          {
             nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: link %u (%u) - %u (%u) %s"),
@@ -1391,9 +1406,14 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
    }
 
    if (modified)
+   {
+      lockProperties();
+      m_mapContent.m_elements.swap(content.m_elements);
+      m_mapContent.m_links.swap(content.m_links);
       setModified(MODIFY_MAP_CONTENT);
+      unlockProperties();
+   }
 
-   unlockProperties();
    nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s): updateObjects completed"), m_name);
 }
 
@@ -1402,25 +1422,25 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
  */
 void NetworkMap::updateLinks()
 {
-   ObjectArray<NetworkMapLink> colorUpdateList(0, 64, Ownership::True);
-   ObjectArray<NetworkMapLinkNXSLContainer> stylingUpdateList(0, 64, Ownership::True);
+   ObjectArray<NetworkMapLink> colorUpdateList(0, 128, Ownership::True);
+   ObjectArray<NetworkMapLinkNXSLContainer> stylingUpdateList(0, 128, Ownership::True);
 
    lockProperties();
-   for(int i = 0; i < m_links.size(); i++)
+   for(int i = 0; i < m_mapContent.m_links.size(); i++)
    {
-      NetworkMapLink *link = m_links.get(i);
+      NetworkMapLink *link = m_mapContent.m_links.get(i);
       if (link->getColorSource() == MAP_LINK_COLOR_SOURCE_SCRIPT)
       {
          // Replace element IDs with actual object IDs in temporary link object
          auto temp = new NetworkMapLink(*link);
-         temp->setConnectedElements(objectIdFromElementId(link->getElement1()), objectIdFromElementId(link->getElement2()));
+         temp->setConnectedElements(m_mapContent.objectIdFromElementId(link->getElement1()), m_mapContent.objectIdFromElementId(link->getElement2()));
          colorUpdateList.add(temp);
       }
       if (m_linkStylingScript != nullptr)
       {
          // Replace element IDs with actual object IDs in temporary link object
          auto temp = new NetworkMapLinkNXSLContainer(*link);
-         temp->get()->setConnectedElements(objectIdFromElementId(link->getElement1()), objectIdFromElementId(link->getElement2()));
+         temp->get()->setConnectedElements(m_mapContent.objectIdFromElementId(link->getElement1()), m_mapContent.objectIdFromElementId(link->getElement2()));
          stylingUpdateList.add(temp);
       }
    }
@@ -1505,9 +1525,9 @@ void NetworkMap::updateLinks()
    for(int i = 0; i < stylingUpdateList.size(); i++)
    {
       NetworkMapLinkNXSLContainer *linkUpdate = stylingUpdateList.get(i);
-      for(int j = 0; j < m_links.size(); j++)
+      for(int j = 0; j < m_mapContent.m_links.size(); j++)
       {
-         NetworkMapLink *link = m_links.get(j);
+         NetworkMapLink *link = m_mapContent.m_links.get(j);
          if ((link->getId() == linkUpdate->get()->getId()))
          {
             if (linkUpdate->isModified())
@@ -1528,7 +1548,7 @@ void NetworkMap::updateLinks()
                m_objectSet.put(link->getInterface1());
                m_objectSet.put(link->getInterface2());
 
-               m_links.replace(j, link);
+               m_mapContent.m_links.replace(j, link);
 
                modified = true;
             }
@@ -1539,9 +1559,9 @@ void NetworkMap::updateLinks()
    for(int i = 0; i < colorUpdateList.size(); i++)
    {
       NetworkMapLink *linkUpdate = colorUpdateList.get(i);
-      for(int j = 0; j < m_links.size(); j++)
+      for(int j = 0; j < m_mapContent.m_links.size(); j++)
       {
-         NetworkMapLink *link = m_links.get(j);
+         NetworkMapLink *link = m_mapContent.m_links.get(j);
          if ((link->getId() == linkUpdate->getId()))
          {
             if ((link->getColorSource() == MAP_LINK_COLOR_SOURCE_SCRIPT) && (link->getColor() != linkUpdate->getColor()))
@@ -1557,47 +1577,6 @@ void NetworkMap::updateLinks()
    if (modified)
       setModified(MODIFY_MAP_CONTENT);
    unlockProperties();
-}
-
-/**
- * Get object ID from map element ID
- * Assumes that object data already locked
- */
-uint32_t NetworkMap::objectIdFromElementId(uint32_t eid) const
-{
-	for(int i = 0; i < m_elements.size(); i++)
-	{
-		NetworkMapElement *e = m_elements.get(i);
-		if (e->getId() == eid)
-		{
-			if (e->getType() == MAP_ELEMENT_OBJECT)
-			{
-				return static_cast<NetworkMapObject*>(e)->getObjectId();
-			}
-			else
-			{
-				return 0;
-			}
-		}
-	}
-	return 0;
-}
-
-/**
- * Get map element ID from object ID
- * Assumes that object data already locked
- */
-uint32_t NetworkMap::elementIdFromObjectId(uint32_t oid) const
-{
-	for(int i = 0; i < m_elements.size(); i++)
-	{
-		NetworkMapElement *e = m_elements.get(i);
-		if ((e->getType() == MAP_ELEMENT_OBJECT) && (static_cast<NetworkMapObject*>(e)->getObjectId() == oid))
-		{
-			return e->getId();
-		}
-	}
-	return 0;
 }
 
 /**
@@ -1686,45 +1665,49 @@ bool NetworkMap::isAllowedOnMap(const shared_ptr<NetObj>& object)
 */
 void NetworkMap::onObjectDelete(const NetObj& object)
 {
+   uint32_t objectId = object.getId();
+   bool modified = false;
+
    lockProperties();
 
-   uint32_t elementId = elementIdFromObjectId(object.getId());
-
-   int i = 0;
-   while(i < m_links.size())
+   uint32_t elementId = 0;
+   for(int i = 0; i < m_mapContent.m_elements.size(); i++)
    {
-      NetworkMapLink *link = m_links.get(i);
-      if (link->getElement1() == elementId || link->getElement2() == elementId)
+      NetworkMapElement *element = m_mapContent.m_elements.get(i);
+      if ((element->getType() == MAP_ELEMENT_OBJECT) && (static_cast<NetworkMapObject*>(element)->getObjectId() == objectId))
       {
-         link->updateDciList(m_dciSet, false);
-         link->updateColorSourceObjectList(m_objectSet, false);
-         m_objectSet.remove(link->getInterface1());
-         m_objectSet.remove(link->getInterface2());
-         m_links.remove(i);
-      }
-      else
-      {
-         i++;
-      }
-   }
-
-   i = 0;
-   while(i < m_elements.size())
-   {
-      NetworkMapElement *element = m_elements.get(i);
-      if ((element->getType() == MAP_ELEMENT_OBJECT) && (static_cast<NetworkMapObject*>(element)->getObjectId() == object.getId()))
-      {
-         m_objectSet.remove(static_cast<NetworkMapObject*>(element)->getObjectId());
-         m_elements.remove(i);
+         elementId = element->getId();
+         m_objectSet.remove(objectId);
+         m_mapContent.m_elements.remove(i);
+         modified = true;
          break;
       }
-      else
+   }
+
+   if (elementId != 0)
+   {
+      int i = 0;
+      while(i < m_mapContent.m_links.size())
       {
-         i++;
+         NetworkMapLink *link = m_mapContent.m_links.get(i);
+         if (link->getElement1() == elementId || link->getElement2() == elementId)
+         {
+            link->updateDciList(m_dciSet, false);
+            link->updateColorSourceObjectList(m_objectSet, false);
+            m_objectSet.remove(link->getInterface1());
+            m_objectSet.remove(link->getInterface2());
+            m_mapContent.m_links.remove(i);
+            modified = true;
+         }
+         else
+         {
+            i++;
+         }
       }
    }
 
-   setModified(MODIFY_MAP_CONTENT);
+   if (modified)
+      setModified(MODIFY_MAP_CONTENT);
 
    unlockProperties();
 
@@ -1798,8 +1781,8 @@ json_t *NetworkMap::toJson()
    json_object_set_new(root, "backgroundLatitude", json_real(m_backgroundLatitude));
    json_object_set_new(root, "backgroundLongitude", json_real(m_backgroundLongitude));
    json_object_set_new(root, "backgroundZoom", json_integer(m_backgroundZoom));
-   json_object_set_new(root, "elements", json_object_array(m_elements));
-   json_object_set_new(root, "links", json_object_array(m_links));
+   json_object_set_new(root, "elements", json_object_array(m_mapContent.m_elements));
+   json_object_set_new(root, "links", json_object_array(m_mapContent.m_links));
    json_object_set_new(root, "filter", json_string_t(m_filterSource));
    json_object_set_new(root, "linkScript", json_string_t(m_linkStylingScriptSource));
    json_object_set_new(root, "width", json_integer(m_width));
