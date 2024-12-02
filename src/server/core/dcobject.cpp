@@ -341,59 +341,59 @@ DCObject::~DCObject()
 /**
  * Load access list
  */
-bool DCObject::loadAccessList(DB_HANDLE hdb)
+bool DCObject::loadAccessList(DB_HANDLE hdb, DB_STATEMENT *preparedStatements)
 {
    m_accessList.clear();
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT user_id FROM dci_access WHERE dci_id=?"));
+   DB_STATEMENT hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_DCI_ACL, _T("SELECT user_id FROM dci_access WHERE dci_id=?"));
    if (hStmt == nullptr)
       return false;
 
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
    DB_RESULT hResult = DBSelectPrepared(hStmt);
-   if (hResult != nullptr)
+   if (hResult == nullptr)
+      return false;
+
+   int count = DBGetNumRows(hResult);
+   for(int i = 0; i < count; i++)
    {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         m_accessList.add(DBGetFieldULong(hResult, i, 0));
-      }
-      DBFreeResult(hResult);
+      m_accessList.add(DBGetFieldULong(hResult, i, 0));
    }
-   DBFreeStatement(hStmt);
-   return hResult != nullptr;
+   DBFreeResult(hResult);
+
+   return true;
 }
 
 /**
  * Load custom schedules from database
  * (assumes that no schedules was created before this call)
  */
-bool DCObject::loadCustomSchedules(DB_HANDLE hdb)
+bool DCObject::loadCustomSchedules(DB_HANDLE hdb, DB_STATEMENT *preparedStatements)
 {
    if (m_pollingScheduleType != DC_POLLING_SCHEDULE_ADVANCED)
 		return true;
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT schedule FROM dci_schedules WHERE item_id=?"));
+   DB_STATEMENT hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_DCI_SCHEDULES, _T("SELECT schedule FROM dci_schedules WHERE item_id=?"));
    if (hStmt == nullptr)
       return false;
 
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
    DB_RESULT hResult = DBSelectPrepared(hStmt);
-   if (hResult != nullptr)
+   if (hResult == nullptr)
+      return false;
+
+   int count = DBGetNumRows(hResult);
+   if (count > 0)
    {
-      int count = DBGetNumRows(hResult);
-      if (count > 0)
+      m_schedules = new StringList();
+      for(int i = 0; i < count; i++)
       {
-         m_schedules = new StringList();
-         for(int i = 0; i < count; i++)
-         {
-            m_schedules->addPreallocated(DBGetField(hResult, i, 0, nullptr, 0));
-         }
+         m_schedules->addPreallocated(DBGetField(hResult, i, 0, nullptr, 0));
       }
-      DBFreeResult(hResult);
    }
-   DBFreeStatement(hStmt);
-	return hResult != nullptr;
+   DBFreeResult(hResult);
+
+	return true;
 }
 
 /**
@@ -1023,7 +1023,7 @@ void DCObject::deleteFromDatabase()
 /**
  * Load data collection object thresholds from database
  */
-bool DCObject::loadThresholdsFromDB(DB_HANDLE hdb)
+bool DCObject::loadThresholdsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatements)
 {
 	return true;
 }

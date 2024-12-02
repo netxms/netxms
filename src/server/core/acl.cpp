@@ -30,68 +30,61 @@ void AccessList::updateFromMessage(const NXCPMessage& msg)
 {
    LockGuard lockGuard(m_mutex);
 
-   m_size = 0;
    int count = msg.getFieldAsUInt32(VID_ACL_SIZE);
    if (count > 0)
    {
-      if (count > m_allocated)
-      {
-         m_allocated = count;
-         m_elements = MemReallocArray(m_elements, m_allocated);
-      }
-
       for(int i = 0; i < count; i++)
       {
          uint32_t userId = msg.getFieldAsUInt32(VID_ACL_USER_BASE + i);
 
          bool found = false;
-         for(int j = 0; j < m_size; j++)
-            if (m_elements[j].userId == userId)    // Object already exist in list
+         for(int j = 0; j < m_elements.size(); j++)
+            if (m_elements.get(j)->userId == userId)    // Object already exist in list
             {
-               m_elements[j].accessRights = msg.getFieldAsUInt32(VID_ACL_RIGHTS_BASE + i);
+               m_elements.get(j)->accessRights = msg.getFieldAsUInt32(VID_ACL_RIGHTS_BASE + i);
                found = true;
                break;
             }
 
          if (!found)
          {
-            m_elements[m_size].userId = userId;
-            m_elements[m_size].accessRights = msg.getFieldAsUInt32(VID_ACL_RIGHTS_BASE + i);
-            m_size++;
+            ACL_ELEMENT *e = m_elements.addPlaceholder();
+            e->userId = userId;
+            e->accessRights = msg.getFieldAsUInt32(VID_ACL_RIGHTS_BASE + i);
          }
       }
    }
    else
    {
-      m_allocated = 0;
-      MemFreeAndNull(m_elements);
+      m_elements.clear();
    }
+   m_cache.clear();
 }
 
 /**
  * Add element to list
  */
-bool AccessList::addElement(uint32_t userId, uint32_t accessRights)
+bool AccessList::addElement(uint32_t userId, uint32_t accessRights, bool cached)
 {
+   StructArray<ACL_ELEMENT>& list = cached ? m_cache : m_elements;
+
    LockGuard lockGuard(m_mutex);
 
-   for(int i = 0; i < m_size; i++)
-      if (m_elements[i].userId == userId)    // Object already exist in list
+   for(int i = 0; i < list.size(); i++)
+   {
+      ACL_ELEMENT *e = list.get(i);
+      if (e->userId == userId)    // Object already exist in list
       {
-         if (m_elements[i].accessRights == accessRights)
+         if (e->accessRights == accessRights)
             return false;
-         m_elements[i].accessRights = accessRights;
+         e->accessRights = accessRights;
          return true;
       }
-
-   if (m_size == m_allocated)
-   {
-      m_allocated += 16;
-      m_elements = MemReallocArray(m_elements, m_allocated);
    }
-   m_elements[m_size].userId = userId;
-   m_elements[m_size].accessRights = accessRights;
-   m_size++;
+
+   ACL_ELEMENT *e = list.addPlaceholder();
+   e->userId = userId;
+   e->accessRights = accessRights;
    return true;
 }
 
@@ -102,11 +95,10 @@ bool AccessList::deleteElement(uint32_t userId)
 {
    LockGuard lockGuard(m_mutex);
    bool deleted = false;
-   for(int i = 0; i < m_size; i++)
-      if (m_elements[i].userId == userId)
+   for(int i = 0; i < m_elements.size(); i++)
+      if (m_elements.get(i)->userId == userId)
       {
-         m_size--;
-         memmove(&m_elements[i], &m_elements[i + 1], sizeof(ACL_ELEMENT) * (m_size - i));
+         m_elements.remove(i);
          deleted = true;
          break;
       }
@@ -124,16 +116,16 @@ bool AccessList::getUserRights(uint32_t userId, uint32_t *accessRights) const
    // that 32 bit integer read will be atomic. So the only potential problem would be
    // when size is already updated, but data is not. But in that case mutex lock will cause
    // calling thread to wait for update completion.
-   if (m_size == 0)
+   if (m_elements.isEmpty())
    {
       *accessRights = 0;
       return false;
    }
 
    m_mutex.lock();
-   int size = m_size;
+   int size = m_elements.size();
    ACL_ELEMENT *elements = static_cast<ACL_ELEMENT*>(MemAllocLocal(sizeof(ACL_ELEMENT) * size));
-   memcpy(elements, m_elements, sizeof(ACL_ELEMENT) * size);
+   memcpy(elements, m_elements.getBuffer(), sizeof(ACL_ELEMENT) * size);
    m_mutex.unlock();
 
    bool found = false;
@@ -166,13 +158,41 @@ bool AccessList::getUserRights(uint32_t userId, uint32_t *accessRights) const
 }
 
 /**
+ * Retrieve cached access rights for specific user object
+ * Returns true on success and stores access rights to specific location
+ */
+bool AccessList::getCachedUserRights(uint32_t userId, uint32_t *accessRights) const
+{
+   // We can safely read size without lock here. It is guaranteed (on architectures we support)
+   // that 32 bit integer read will be atomic. So the only potential problem would be
+   // when size is already updated, but data is not. But in that case mutex lock will cause
+   // calling thread to wait for update completion.
+   if (m_cache.isEmpty())
+      return false;
+
+   LockGuard lockGuard(m_mutex);
+
+   for(int i = 0; i < m_cache.size(); i++)
+   {
+      ACL_ELEMENT *e = m_cache.get(i);
+      if (e->userId == userId)
+      {
+         *accessRights = e->accessRights;
+         return true;
+      }
+   }
+
+   return false;
+}
+
+/**
  * Enumerate all elements
  */
 void AccessList::enumerateElements(void (*handler)(uint32_t, uint32_t, void *), void *context) const
 {
    LockGuard lockGuard(m_mutex);
-   for(int i = 0; i < m_size; i++)
-      handler(m_elements[i].userId, m_elements[i].accessRights, context);
+   for(int i = 0; i < m_elements.size(); i++)
+      handler(m_elements.get(i)->userId, m_elements.get(i)->accessRights, context);
 }
 
 /**
@@ -182,14 +202,14 @@ void AccessList::fillMessage(NXCPMessage *msg) const
 {
    LockGuard lockGuard(m_mutex);
 
-   msg->setField(VID_ACL_SIZE, m_size);
+   msg->setField(VID_ACL_SIZE, m_elements.size());
 
    uint32_t id1, id2;
    int i;
-   for(i = 0, id1 = VID_ACL_USER_BASE, id2 = VID_ACL_RIGHTS_BASE; i < m_size; i++, id1++, id2++)
+   for(i = 0, id1 = VID_ACL_USER_BASE, id2 = VID_ACL_RIGHTS_BASE; i < m_elements.size(); i++, id1++, id2++)
    {
-      msg->setField(id1, m_elements[i].userId);
-      msg->setField(id2, m_elements[i].accessRights);
+      msg->setField(id1, m_elements.get(i)->userId);
+      msg->setField(id2, m_elements.get(i)->accessRights);
    }
 }
 
@@ -200,23 +220,12 @@ json_t *AccessList::toJson() const
 {
    LockGuard lockGuard(m_mutex);
    json_t *root = json_array();
-   for(int i = 0; i < m_size; i++)
+   for(int i = 0; i < m_elements.size(); i++)
    {
       json_t *e = json_object();
-      json_object_set_new(e, "userId", json_integer(m_elements[i].userId));
-      json_object_set_new(e, "access", json_integer(m_elements[i].accessRights));
+      json_object_set_new(e, "userId", json_integer(m_elements.get(i)->userId));
+      json_object_set_new(e, "access", json_integer(m_elements.get(i)->accessRights));
       json_array_append_new(root, e);
    }
    return root;
-}
-
-/**
- * Delete all elements
- */
-void AccessList::deleteAll()
-{
-   LockGuard lockGuard(m_mutex);
-   m_size = 0;
-   m_allocated = 0;
-   MemFreeAndNull(m_elements);
 }

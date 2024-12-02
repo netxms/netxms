@@ -290,8 +290,8 @@ protected:
    SharedString m_systemTag;
    time_t m_lastPoll;           // Last poll time
    time_t m_lastValueTimestamp; // Timestamp of last obtained value
-   int m_pollingInterval;       // Polling interval in seconds
-   int m_retentionTime;         // Retention time in days
+   int32_t m_pollingInterval;   // Polling interval in seconds
+   int32_t m_retentionTime;     // Retention time in days
    TCHAR *m_pollingIntervalSrc;
    TCHAR *m_retentionTimeSrc;
    BYTE m_pollingScheduleType;   // Polling schedule type - default, custom fixed, advanced
@@ -334,8 +334,8 @@ protected:
    bool tryLock() const { return m_mutex.tryLock(); }
    void unlock() const { m_mutex.unlock(); }
 
-   bool loadAccessList(DB_HANDLE hdb);
-	bool loadCustomSchedules(DB_HANDLE hdb);
+   bool loadAccessList(DB_HANDLE hdb, DB_STATEMENT *preparedStatements);
+	bool loadCustomSchedules(DB_HANDLE hdb, DB_STATEMENT *preparedStatements);
 	String expandSchedule(const TCHAR *schedule);
 
    void updateTimeIntervalsInternal();
@@ -367,7 +367,7 @@ public:
 
    virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual void deleteFromDatabase();
-   virtual bool loadThresholdsFromDB(DB_HANDLE hdb);
+   virtual bool loadThresholdsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatements);
    virtual void loadCache() = 0;
 
    void processNewError(bool noInstance);
@@ -533,7 +533,7 @@ protected:
 
 public:
    DCItem(const DCItem *src, bool shadowCopy);
-   DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay);
+   DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay);
    DCItem(uint32_t id, const TCHAR *name, int source, int dataType, BYTE scheduleType, const TCHAR *pollingInterval,
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
@@ -549,7 +549,7 @@ public:
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual void deleteFromDatabase() override;
-   virtual bool loadThresholdsFromDB(DB_HANDLE hdb) override;
+   virtual bool loadThresholdsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatements) override;
    virtual void loadCache() override;
 
    void updateCacheSize()
@@ -819,7 +819,7 @@ public:
    DCTable(uint32_t id, const TCHAR *name, int source, BYTE scheduleType, const TCHAR *pollingInterval,
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
-   DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay);
+   DCTable(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay);
    DCTable(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5);
 	virtual ~DCTable();
 

@@ -170,16 +170,16 @@ Interface::~Interface()
 /**
  * Create object from database record
  */
-bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
+bool Interface::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
    bool success = false;
 
    m_id = id;
 
-   if (!loadCommonProperties(hdb))
+   if (!loadCommonProperties(hdb, preparedStatements))
       return false;
 
-	DB_STATEMENT hStmt = DBPrepare(hdb,
+	DB_STATEMENT hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_INTERFACE,
 		_T("SELECT if_type,if_index,node_id,mac_addr,required_polls,bridge_port,phy_chassis,phy_module,")
 		_T("phy_pic,phy_port,peer_node_id,peer_if_id,description,if_name,if_alias,dot1x_pae_state,dot1x_backend_state,")
 		_T("admin_state,oper_state,peer_proto,mtu,speed,parent_iface,last_known_oper_state,last_known_admin_state,")
@@ -190,10 +190,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 
 	DB_RESULT hResult = DBSelectPrepared(hStmt);
    if (hResult == nullptr)
-	{
-		DBFreeStatement(hStmt);
       return false;     // Query failed
-	}
 
    if (DBGetNumRows(hResult) != 0)
    {
@@ -264,10 +261,9 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    }
 
    DBFreeResult(hResult);
-	DBFreeStatement(hStmt);
 
 	// Read VLANs
-   hStmt = DBPrepare(hdb, _T("SELECT vlan_id FROM interface_vlan_list WHERE iface_id=? ORDER BY vlan_id"));
+   hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_IF_VLANS, _T("SELECT vlan_id FROM interface_vlan_list WHERE iface_id=? ORDER BY vlan_id"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -285,11 +281,10 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
          }
          DBFreeResult(hResult);
       }
-      DBFreeStatement(hStmt);
    }
 
    // Read IP addresses
-   hStmt = DBPrepare(hdb, _T("SELECT ip_addr,ip_netmask FROM interface_address_list WHERE iface_id=?"));
+   hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_IF_ADDRESSES, _T("SELECT ip_addr,ip_netmask FROM interface_address_list WHERE iface_id=?"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -306,11 +301,10 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
          }
          DBFreeResult(hResult);
       }
-      DBFreeStatement(hStmt);
    }
 
    // Load access list
-   loadACLFromDB(hdb);
+   loadACLFromDB(hdb, preparedStatements);
 
 	// Validate loopback flag
 	if (m_type == IFTYPE_SOFTWARE_LOOPBACK)

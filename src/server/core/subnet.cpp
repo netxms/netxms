@@ -74,15 +74,15 @@ Subnet::~Subnet()
 /**
  * Create object from database data
  */
-bool Subnet::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
+bool Subnet::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
-   m_id = dwId;
+   m_id = id;
 
-   if (!loadCommonProperties(hdb))
+   if (!loadCommonProperties(hdb, preparedStatements))
       return false;
 
    TCHAR szQuery[256];
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT ip_addr,ip_netmask,zone_guid FROM subnets WHERE id=%u"), dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT ip_addr,ip_netmask,zone_guid FROM subnets WHERE id=%u"), id);
    DB_RESULT hResult = DBSelect(hdb, szQuery);
    if (hResult == 0)
       return false;     // Query failed
@@ -100,7 +100,7 @@ bool Subnet::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    DBFreeResult(hResult);
 
    // Load access list
-   loadACLFromDB(hdb);
+   loadACLFromDB(hdb, preparedStatements);
 
    return true;
 }

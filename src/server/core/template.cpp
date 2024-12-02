@@ -199,9 +199,9 @@ bool Template::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Load template object from database
  */
-bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
+bool Template::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
-   bool success = super::loadFromDatabase(hdb, id);
+   bool success = super::loadFromDatabase(hdb, id, preparedStatements);
 
    if (success)
       success = AutoBindTarget::loadFromDatabase(hdb, id);

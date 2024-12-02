@@ -76,11 +76,11 @@ AccessPoint::~AccessPoint()
 /**
  * Create object from database data
  */
-bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
+bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
-   m_id = dwId;
+   m_id = id;
 
-   if (!loadCommonProperties(hdb) || !super::loadFromDatabase(hdb, dwId))
+   if (!loadCommonProperties(hdb, preparedStatements) || !super::loadFromDatabase(hdb, id, preparedStatements))
       return false;
 
    if (Pollable::loadFromDatabase(hdb, m_id))
@@ -89,7 +89,13 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
    }
 
-	DB_RESULT hResult = executeSelectOnObject(hdb, _T("SELECT mac_address,vendor,model,serial_number,domain_id,controller_id,ap_state,ap_index,grace_period_start,peer_node_id,peer_if_id,peer_proto,down_since FROM access_points WHERE id={id}"));
+   DB_STATEMENT hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_ACCESS_POINT,
+      _T("SELECT mac_address,vendor,model,serial_number,domain_id,controller_id,ap_state,ap_index,grace_period_start,peer_node_id,peer_if_id,peer_proto,down_since FROM access_points WHERE id=?"));
+   if (hStmt == nullptr)
+      return false;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
 	if (hResult == nullptr)
 		return false;
 
@@ -110,10 +116,10 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 	DBFreeResult(hResult);
 
    // Load DCI and access list
-   loadACLFromDB(hdb);
-   loadItemsFromDB(hdb);
+   loadACLFromDB(hdb, preparedStatements);
+   loadItemsFromDB(hdb, preparedStatements);
    for(int i = 0; i < m_dcObjects.size(); i++)
-      if (!m_dcObjects.get(i)->loadThresholdsFromDB(hdb))
+      if (!m_dcObjects.get(i)->loadThresholdsFromDB(hdb, preparedStatements))
          return false;
    loadDCIListForCleanup(hdb);
 

@@ -203,7 +203,7 @@ void NetObj::unlinkObjects(NetObj *parent, NetObj *child)
 /**
  * Create object from database data
  */
-bool NetObj::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
+bool NetObj::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
    return false;     // Abstract objects cannot be loaded from database
 }
@@ -565,12 +565,12 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Load common object properties from database
  */
-bool NetObj::loadCommonProperties(DB_HANDLE hdb, bool ignoreEmptyResults)
+bool NetObj::loadCommonProperties(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, bool ignoreEmptyResults)
 {
    bool success = false;
 
    // Load access options
-   DB_STATEMENT hStmt = DBPrepare(hdb,
+   DB_STATEMENT hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_COMMON_PROPERTIES,
                                   _T("SELECT name,status,is_deleted,inherit_access_rights,last_modified,status_calc_alg,")
                                   _T("status_prop_alg,status_fixed_val,status_shift,status_translation,status_single_threshold,")
                                   _T("status_thresholds,comments,is_system,location_type,latitude,longitude,location_accuracy,")
@@ -647,13 +647,12 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb, bool ignoreEmptyResults)
 			}
          DBFreeResult(hResult);
       }
-      DBFreeStatement(hStmt);
    }
 
    // Load custom attributes
    if (success)
    {
-      hStmt = DBPrepare(hdb, _T("SELECT attr_name,attr_value,flags FROM object_custom_attributes WHERE object_id=?"));
+      hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_CUSTOM_ATTRIBUTES, _T("SELECT attr_name,attr_value,flags FROM object_custom_attributes WHERE object_id=?"));
 		if (hStmt != nullptr)
 		{
 			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -667,7 +666,6 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb, bool ignoreEmptyResults)
 			{
 				success = false;
 			}
-			DBFreeStatement(hStmt);
 		}
 		else
 		{
@@ -678,7 +676,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb, bool ignoreEmptyResults)
    // Load associated dashboards
    if (success)
    {
-      hStmt = DBPrepare(hdb, _T("SELECT dashboard_id FROM dashboard_associations WHERE object_id=?"));
+      hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_DASHBOARD_ASSOCIATIONS, _T("SELECT dashboard_id FROM dashboard_associations WHERE object_id=?"));
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -696,7 +694,6 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb, bool ignoreEmptyResults)
          {
             success = false;
          }
-         DBFreeStatement(hStmt);
       }
       else
       {
@@ -707,7 +704,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb, bool ignoreEmptyResults)
    // Load associated URLs
    if (success)
    {
-      hStmt = DBPrepare(hdb, _T("SELECT url_id,url,description FROM object_urls WHERE object_id=?"));
+      hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_OBJECT_URLS, _T("SELECT url_id,url,description FROM object_urls WHERE object_id=?"));
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -725,7 +722,6 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb, bool ignoreEmptyResults)
          {
             success = false;
          }
-         DBFreeStatement(hStmt);
       }
       else
       {
@@ -739,7 +735,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb, bool ignoreEmptyResults)
 	if (success)
 	{
       success = false;
-	   hStmt = DBPrepare(hdb, _T("SELECT user_id,tag FROM responsible_users WHERE object_id=?"));
+	   hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_RESPONSIBLE_USERS, _T("SELECT user_id,tag FROM responsible_users WHERE object_id=?"));
 	   if (hStmt != nullptr)
 	   {
 	      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -760,7 +756,6 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb, bool ignoreEmptyResults)
 	         }
 	         DBFreeResult(hResult);
 	      }
-	      DBFreeStatement(hStmt);
 	   }
 	}
 
@@ -1158,19 +1153,23 @@ void NetObj::calculateCompoundStatus(bool forcedRecalc)
 /**
  * Load ACL from database
  */
-bool NetObj::loadACLFromDB(DB_HANDLE hdb)
+bool NetObj::loadACLFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatements)
 {
-   bool success = false;
-   DB_RESULT hResult = ExecuteSelectOnObject(hdb, m_id, _T("SELECT user_id,access_rights FROM acl WHERE object_id={id}"));
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-         m_accessList.addElement(DBGetFieldULong(hResult, i, 0), DBGetFieldULong(hResult, i, 1));
-      DBFreeResult(hResult);
-      success = true;
-   }
-   return success;
+   DB_STATEMENT hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_ACL, _T("SELECT user_id,access_rights FROM acl WHERE object_id=?"));
+   if (hStmt == nullptr)
+      return false;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult == nullptr)
+      return false;
+
+   int count = DBGetNumRows(hResult);
+   for(int i = 0; i < count; i++)
+      m_accessList.addElement(DBGetFieldULong(hResult, i, 0), DBGetFieldULong(hResult, i, 1), false);
+   DBFreeResult(hResult);
+
+   return true;
 }
 
 /**
@@ -1654,17 +1653,16 @@ uint32_t NetObj::getUserRights(uint32_t userId) const
    // Check if have direct right assignment
    bool hasDirectRights = m_accessList.getUserRights(userId, &rights);
 
-   if (!hasDirectRights)
+   // If we don't and this object inherits rights from parents, get them
+   if (!hasDirectRights && m_inheritAccessRights && !m_accessList.getCachedUserRights(userId, &rights))
    {
-      // We don't. If this object inherit rights from parents, get them
-      if (m_inheritAccessRights)
-      {
-         rights = 0;
-         readLockParentList();
-         for(int i = 0; i < getParentList().size(); i++)
-            rights |= getParentList().get(i)->getUserRights(userId);
-         unlockParentList();
-      }
+      rights = 0;
+      readLockParentList();
+      for(int i = 0; i < getParentList().size(); i++)
+         rights |= getParentList().get(i)->getUserRights(userId);
+      unlockParentList();
+      // FIXME: temporarily disabled
+      // const_cast<NetObj*>(this)->m_accessList.addElement(userId, rights, true);
    }
 
    return rights;
@@ -1688,7 +1686,7 @@ bool NetObj::checkAccessRights(uint32_t userId, uint32_t requiredRights) const
  */
 void NetObj::setUserAccess(uint32_t userId, uint32_t accessRights)
 {
-   if (m_accessList.addElement(userId, accessRights))
+   if (m_accessList.addElement(userId, accessRights, false))
       setModified(MODIFY_ACCESS_LIST);
 }
 

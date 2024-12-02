@@ -257,11 +257,11 @@ bool Chassis::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Load from database
  */
-bool Chassis::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
+bool Chassis::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
    m_id = id;
 
-   if (!loadCommonProperties(hdb) || !super::loadFromDatabase(hdb, id))
+   if (!loadCommonProperties(hdb, preparedStatements) || !super::loadFromDatabase(hdb, id, preparedStatements))
       return false;
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT controller_id,rack_id,rack_image_front,rack_position,rack_height,rack_orientation,rack_image_rear FROM chassis WHERE id=?"));
@@ -287,10 +287,10 @@ bool Chassis::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
 
-   loadACLFromDB(hdb);
-   loadItemsFromDB(hdb);
+   loadACLFromDB(hdb, preparedStatements);
+   loadItemsFromDB(hdb, preparedStatements);
    for(int i = 0; i < m_dcObjects.size(); i++)
-      if (!m_dcObjects.get(i)->loadThresholdsFromDB(hdb))
+      if (!m_dcObjects.get(i)->loadThresholdsFromDB(hdb, preparedStatements))
          return false;
    loadDCIListForCleanup(hdb);
 

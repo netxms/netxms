@@ -25,14 +25,14 @@
 /**
  * Load from database
  */
-bool Collector::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
+bool Collector::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
    m_id = id;
 
-   if (!loadCommonProperties(hdb))
+   if (!loadCommonProperties(hdb, preparedStatements))
       return false;
 
-   if (!super::loadFromDatabase(hdb, id))
+   if (!super::loadFromDatabase(hdb, id, preparedStatements))
       return false;
 
    if (!AutoBindTarget::loadFromDatabase(hdb, id))
@@ -45,10 +45,10 @@ bool Collector::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
       ContainerBase::loadFromDatabase(hdb, id);
 
    // Load DCI and access list
-   loadACLFromDB(hdb);
-   loadItemsFromDB(hdb);
+   loadACLFromDB(hdb, preparedStatements);
+   loadItemsFromDB(hdb, preparedStatements);
    for(int i = 0; i < m_dcObjects.size(); i++)
-      if (!m_dcObjects.get(i)->loadThresholdsFromDB(hdb))
+      if (!m_dcObjects.get(i)->loadThresholdsFromDB(hdb, preparedStatements))
          return false;
    loadDCIListForCleanup(hdb);
 

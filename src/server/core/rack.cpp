@@ -43,9 +43,9 @@ Rack::Rack(const TCHAR *name, int height) : super(name), m_passiveElements(0, 16
 /**
  * Create object from database data
  */
-bool Rack::loadFromDatabase(DB_HANDLE hdb, uint32_t id)
+bool Rack::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
-	if (!super::loadFromDatabase(hdb, id))
+	if (!super::loadFromDatabase(hdb, id, preparedStatements))
 		return false;
 
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT height,top_bottom_num FROM racks WHERE id=?"));

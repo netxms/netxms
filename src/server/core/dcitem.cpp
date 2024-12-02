@@ -82,7 +82,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
  *    retention_type,polling_interval_src,retention_time_src,snmp_version,state_flags,
  *    all_rearmed_event,transformed_datatype
  */
-DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
+DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
    m_id = DBGetFieldULong(hResult, row, 0);
    m_name = DBGetFieldAsSharedString(hResult, row, 1);
@@ -141,22 +141,28 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
    m_startTime = (useStartupDelay && (effectivePollingInterval >= 10)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
 
    // Load last raw value from database
-   DB_RESULT hTempResult = ExecuteSelectOnObject(hdb, m_id, _T("SELECT raw_value,last_poll_time,anomaly_detected FROM raw_dci_values WHERE item_id={id}"));
-   if (hTempResult != nullptr)
+   DB_STATEMENT hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_DCI_RAW_VALUE,
+      _T("SELECT raw_value,last_poll_time,anomaly_detected FROM raw_dci_values WHERE item_id=?"));
+   if (hStmt != nullptr)
    {
-      if (DBGetNumRows(hTempResult) > 0)
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+      DB_RESULT hTempResult = DBSelectPrepared(hStmt);
+      if (hTempResult != nullptr)
       {
-		   TCHAR szBuffer[MAX_DB_STRING];
-         m_prevRawValue = DBGetField(hTempResult, 0, 0, szBuffer, MAX_DB_STRING);
-         m_prevValueTimeStamp = DBGetFieldULong(hTempResult, 0, 1);
-         m_anomalyDetected = (DBGetFieldLong(hTempResult, 0, 2) != 0);
-         m_lastPoll = m_lastValueTimestamp = m_prevValueTimeStamp;
+         if (DBGetNumRows(hTempResult) > 0)
+         {
+            TCHAR szBuffer[MAX_DB_STRING];
+            m_prevRawValue = DBGetField(hTempResult, 0, 0, szBuffer, MAX_DB_STRING);
+            m_prevValueTimeStamp = DBGetFieldULong(hTempResult, 0, 1);
+            m_anomalyDetected = (DBGetFieldLong(hTempResult, 0, 2) != 0);
+            m_lastPoll = m_lastValueTimestamp = m_prevValueTimeStamp;
+         }
+         DBFreeResult(hTempResult);
       }
-      DBFreeResult(hTempResult);
    }
 
-   loadAccessList(hdb);
-	loadCustomSchedules(hdb);
+   loadAccessList(hdb, preparedStatements);
+	loadCustomSchedules(hdb, preparedStatements);
 
 	updateTimeIntervalsInternal();
 }
@@ -269,11 +275,11 @@ void DCItem::clearCache()
 /**
  * Load data collection items thresholds from database
  */
-bool DCItem::loadThresholdsFromDB(DB_HANDLE hdb)
+bool DCItem::loadThresholdsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatements)
 {
    bool result = false;
 
-	DB_STATEMENT hStmt = DBPrepare(hdb,
+	DB_STATEMENT hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_DCI_THRESHOLDS,
 	           _T("SELECT threshold_id,fire_value,rearm_value,check_function,")
               _T("check_operation,sample_count,script,event_code,current_state,")
               _T("rearm_event_code,repeat_interval,current_severity,")
@@ -296,7 +302,6 @@ bool DCItem::loadThresholdsFromDB(DB_HANDLE hdb)
 			DBFreeResult(hResult);
 			result = true;
 		}
-		DBFreeStatement(hStmt);
 	}
    return result;
 }
@@ -326,12 +331,12 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_ownerId);
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_templateId);
 	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC, MAX_ITEM_NAME - 1);
-	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)m_source);
+	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_source));
 	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_dataType));
-	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_pollingInterval);
-	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (INT32)m_retentionTime);
-	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (INT32)m_status);
-	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (INT32)m_deltaCalculation);
+	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_pollingInterval);
+	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_retentionTime);
+	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_status));
+	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_deltaCalculation));
 	DBBind(hStmt, 10, DB_SQLTYPE_TEXT, m_transformationScriptSource, DB_BIND_STATIC);
 	DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC, MAX_DB_STRING - 1);
 	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_instanceName, DB_BIND_STATIC, MAX_INSTANCE_LEN - 1);
@@ -339,7 +344,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_flags);
 	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_resourceId);
 	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_sourceNode);
-	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, (INT32)m_multiplier);
+	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_multiplier));
 	DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_unitName, DB_BIND_STATIC);
 	DBBind(hStmt, 19, DB_SQLTYPE_TEXT, m_pszPerfTabSettings, DB_BIND_STATIC);
 	DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_systemTag, DB_BIND_STATIC, MAX_DB_STRING - 1);

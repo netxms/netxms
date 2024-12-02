@@ -109,8 +109,8 @@ bool UniversalRoot::saveToDatabase(DB_HANDLE hdb)
 /**
  * Load properties from database
  */
-void UniversalRoot::loadFromDatabase(DB_HANDLE hdb)
+void UniversalRoot::loadFromDatabase(DB_HANDLE hdb, DB_STATEMENT *preparedStatements)
 {
-   loadCommonProperties(hdb, true);
-   loadACLFromDB(hdb);
+   loadCommonProperties(hdb, preparedStatements, true);
+   loadACLFromDB(hdb, preparedStatements);
 }

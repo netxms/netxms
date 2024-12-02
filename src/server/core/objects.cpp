@@ -1422,7 +1422,8 @@ uint32_t FindLocalMgmtNode()
  * @param beforeInsert function called before object insertion in indexes
  * @param afterInsert  function called after object insertion in indexes
  */
-template<typename T> static void LoadObjectsFromTable(const TCHAR *className, DB_HANDLE hdb, const TCHAR* query, void (*beforeInsert)(const shared_ptr<T>& obj) = nullptr, void (*afterInsert)(const shared_ptr<T>& obj) = nullptr)
+template<typename T> static void LoadObjectsFromTable(const TCHAR *className, DB_HANDLE hdb, DB_STATEMENT *preparedStatements,
+   const TCHAR *query, void (*beforeInsert)(const shared_ptr<T>& obj) = nullptr, void (*afterInsert)(const shared_ptr<T>& obj) = nullptr)
 {
    nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 2, _T("Loading %s%s..."), className, _tcscmp(className, _T("chassis")) ? _T("s") : _T(""));
    DB_RESULT hResult = DBSelectFormatted(hdb, _T("SELECT id FROM %s"), query);
@@ -1433,7 +1434,7 @@ template<typename T> static void LoadObjectsFromTable(const TCHAR *className, DB
       {
          uint32_t id = DBGetFieldULong(hResult, i, 0);
          auto object = make_shared<T>();
-         if (object->loadFromDatabase(hdb, id))
+         if (object->loadFromDatabase(hdb, id, preparedStatements))
          {
             // In case we need some logic before inserting object to indexes
             if (beforeInsert != nullptr)
@@ -1595,15 +1596,18 @@ bool LoadObjects()
       }
    }
 
+   DB_STATEMENT preparedStatements[LSI_MAX_VALUE];
+   memset(preparedStatements, 0, sizeof(preparedStatements));
+
    // Load built-in object properties
    nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 2, _T("Loading built-in object properties..."));
-   g_entireNetwork->loadFromDatabase(hdb);
-   g_infrastructureServiceRoot->loadFromDatabase(hdb);
-   g_templateRoot->loadFromDatabase(hdb);
-	g_mapRoot->loadFromDatabase(hdb);
-	g_dashboardRoot->loadFromDatabase(hdb);
-   g_assetRoot->loadFromDatabase(hdb);
-	g_businessServiceRoot->loadFromDatabase(hdb);
+   g_entireNetwork->loadFromDatabase(hdb, preparedStatements);
+   g_infrastructureServiceRoot->loadFromDatabase(hdb, preparedStatements);
+   g_templateRoot->loadFromDatabase(hdb, preparedStatements);
+	g_mapRoot->loadFromDatabase(hdb, preparedStatements);
+	g_dashboardRoot->loadFromDatabase(hdb, preparedStatements);
+   g_assetRoot->loadFromDatabase(hdb, preparedStatements);
+	g_businessServiceRoot->loadFromDatabase(hdb, preparedStatements);
 
 	// Switch indexes to startup mode
 	g_idxObjectById.setStartupMode(true);
@@ -1628,12 +1632,12 @@ bool LoadObjects()
       // Load (or create) default zone
       auto zone = make_shared<Zone>();
       zone->generateGuid();
-      zone->loadFromDatabase(hdb, BUILTIN_OID_ZONE0);
+      zone->loadFromDatabase(hdb, BUILTIN_OID_ZONE0, preparedStatements);
       NetObjInsert(zone, false, false);
       NetObj::linkObjects(g_entireNetwork, zone);
 
       // Load zones from database
-      LoadObjectsFromTable<Zone>(_T("zone"), hdb, _T("zones WHERE id<>4"), nullptr,
+      LoadObjectsFromTable<Zone>(_T("zone"), hdb, preparedStatements, _T("zones WHERE id<>4"), nullptr,
          [] (const shared_ptr<Zone>& zone)
          {
             if (!zone->isDeleted())
@@ -1644,12 +1648,12 @@ bool LoadObjects()
 
    // We should load conditions before nodes because
    // DCI cache size calculation uses information from condition objects
-   LoadObjectsFromTable<ConditionObject>(_T("condition"), hdb, _T("conditions"));
+   LoadObjectsFromTable<ConditionObject>(_T("condition"), hdb, preparedStatements, _T("conditions"));
    g_idxConditionById.setStartupMode(false);
 
    if (IsZoningEnabled())
    {
-      LoadObjectsFromTable<Subnet>(_T("subnet"), hdb, _T("subnets"),
+      LoadObjectsFromTable<Subnet>(_T("subnet"), hdb, preparedStatements, _T("subnets"),
          [] (const shared_ptr<Subnet>& subnet)
          {
             if (!subnet->isDeleted())
@@ -1664,7 +1668,7 @@ bool LoadObjects()
    }
    else
    {
-      LoadObjectsFromTable<Subnet>(_T("subnet"), hdb, _T("subnets"),
+      LoadObjectsFromTable<Subnet>(_T("subnet"), hdb, preparedStatements, _T("subnets"),
          [] (const shared_ptr<Subnet>& subnet)
          {
             if (!subnet->isDeleted())
@@ -1675,15 +1679,15 @@ bool LoadObjects()
    }
    g_idxSubnetById.setStartupMode(false);
 
-   LoadObjectsFromTable<Rack>(_T("rack"), hdb, _T("racks"));
-   LoadObjectsFromTable<Chassis>(_T("chassis"), hdb, _T("chassis"));
+   LoadObjectsFromTable<Rack>(_T("rack"), hdb, preparedStatements, _T("racks"));
+   LoadObjectsFromTable<Chassis>(_T("chassis"), hdb, preparedStatements, _T("chassis"));
    g_idxChassisById.setStartupMode(false);
-   LoadObjectsFromTable<MobileDevice>(_T("mobile device"), hdb, _T("mobile_devices"));
+   LoadObjectsFromTable<MobileDevice>(_T("mobile device"), hdb, preparedStatements, _T("mobile_devices"));
    g_idxMobileDeviceById.setStartupMode(false);
-   LoadObjectsFromTable<Sensor>(_T("sensor"), hdb, _T("sensors"));
+   LoadObjectsFromTable<Sensor>(_T("sensor"), hdb, preparedStatements, _T("sensors"));
    g_idxSensorById.setStartupMode(false);
 
-   LoadObjectsFromTable<Node>(_T("node"), hdb, _T("nodes"), nullptr,
+   LoadObjectsFromTable<Node>(_T("node"), hdb, preparedStatements, _T("nodes"), nullptr,
       IsZoningEnabled() ?
          [] (const shared_ptr<Node>& node)
          {
@@ -1696,40 +1700,44 @@ bool LoadObjects()
       : static_cast<void (*)(const std::shared_ptr<Node>&)>(nullptr));
    g_idxNodeById.setStartupMode(false);
 
-   LoadObjectsFromTable<WirelessDomain>(_T("wireless domain"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_WIRELESSDOMAIN));
-   LoadObjectsFromTable<AccessPoint>(_T("access point"), hdb, _T("access_points"));
+   LoadObjectsFromTable<WirelessDomain>(_T("wireless domain"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_WIRELESSDOMAIN));
+   LoadObjectsFromTable<AccessPoint>(_T("access point"), hdb, preparedStatements, _T("access_points"));
    g_idxAccessPointById.setStartupMode(false);
-   LoadObjectsFromTable<Interface>(_T("interface"), hdb, _T("interfaces"));
-   LoadObjectsFromTable<NetworkService>(_T("network service"), hdb, _T("network_services"));
-   LoadObjectsFromTable<VPNConnector>(_T("VPN connector"), hdb, _T("vpn_connectors"));
-   LoadObjectsFromTable<Cluster>(_T("cluster"), hdb, _T("clusters"));
+   LoadObjectsFromTable<Interface>(_T("interface"), hdb, preparedStatements, _T("interfaces"));
+   LoadObjectsFromTable<NetworkService>(_T("network service"), hdb, preparedStatements, _T("network_services"));
+   LoadObjectsFromTable<VPNConnector>(_T("VPN connector"), hdb, preparedStatements, _T("vpn_connectors"));
+   LoadObjectsFromTable<Cluster>(_T("cluster"), hdb, preparedStatements, _T("clusters"));
    g_idxClusterById.setStartupMode(false);
-   LoadObjectsFromTable<Collector>(_T("collector"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_COLLECTOR));
+   LoadObjectsFromTable<Collector>(_T("collector"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_COLLECTOR));
    g_idxCollectorById.setStartupMode(false);
-   LoadObjectsFromTable<Circuit>(_T("circuit"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_CIRCUIT));
+   LoadObjectsFromTable<Circuit>(_T("circuit"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_CIRCUIT));
    g_idxCircuitById.setStartupMode(false);
 
    // Start cache loading thread.
    // All data collection targets must be loaded at this point.
    ThreadCreate(CacheLoadingThread);
 
-   LoadObjectsFromTable<Asset>(_T("asset"), hdb, _T("assets"));
+   LoadObjectsFromTable<Asset>(_T("asset"), hdb, preparedStatements, _T("assets"));
    g_idxAssetById.setStartupMode(false);
-   LoadObjectsFromTable<AssetGroup>(_T("asset group"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_ASSETGROUP));
+   LoadObjectsFromTable<AssetGroup>(_T("asset group"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_ASSETGROUP));
 
-   LoadObjectsFromTable<Template>(_T("template"), hdb, _T("templates"), nullptr, [](const shared_ptr<Template>& t) { t->calculateCompoundStatus(); });
-   LoadObjectsFromTable<NetworkMap>(_T("network map"), hdb, _T("network_maps"));
+   LoadObjectsFromTable<Template>(_T("template"), hdb, preparedStatements, _T("templates"), nullptr, [](const shared_ptr<Template>& t) { t->calculateCompoundStatus(); });
+   LoadObjectsFromTable<NetworkMap>(_T("network map"), hdb, preparedStatements, _T("network_maps"));
    g_idxNetMapById.setStartupMode(false);
-   LoadObjectsFromTable<Container>(_T("container"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_CONTAINER));
-   LoadObjectsFromTable<TemplateGroup>(_T("template group"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_TEMPLATEGROUP));
-   LoadObjectsFromTable<NetworkMapGroup>(_T("map group"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_NETWORKMAPGROUP));
-   LoadObjectsFromTable<Dashboard>(_T("dashboard"), hdb, _T("dashboards"));
-   LoadObjectsFromTable<DashboardGroup>(_T("dashboard group"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_DASHBOARDGROUP));
-   LoadObjectsFromTable<BusinessService>(_T("business service"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_BUSINESSSERVICE));
-   LoadObjectsFromTable<BusinessServicePrototype>(_T("business service prototype"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_BUSINESSSERVICEPROTO));
+   LoadObjectsFromTable<Container>(_T("container"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_CONTAINER));
+   LoadObjectsFromTable<TemplateGroup>(_T("template group"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_TEMPLATEGROUP));
+   LoadObjectsFromTable<NetworkMapGroup>(_T("map group"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_NETWORKMAPGROUP));
+   LoadObjectsFromTable<Dashboard>(_T("dashboard"), hdb, preparedStatements, _T("dashboards"));
+   LoadObjectsFromTable<DashboardGroup>(_T("dashboard group"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_DASHBOARDGROUP));
+   LoadObjectsFromTable<BusinessService>(_T("business service"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_BUSINESSSERVICE));
+   LoadObjectsFromTable<BusinessServicePrototype>(_T("business service prototype"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_BUSINESSSERVICEPROTO));
 
    g_idxBusinessServicesById.setStartupMode(false);
    g_idxObjectById.setStartupMode(false);
+
+   // Free prepared statements used during object load
+   for(int i = 0; i < LSI_MAX_VALUE; i++)
+      DBFreeStatement(preparedStatements[i]);
 
 	// Load custom object classes provided by modules
    CALL_ALL_MODULES(pfLoadObjects, ());

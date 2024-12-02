@@ -223,9 +223,9 @@ void BaseBusinessService::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
 /**
  * Load Business service from database
  */
-bool BaseBusinessService::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
+bool BaseBusinessService::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
-   if (!super::loadFromDatabase(hdb, id))
+   if (!super::loadFromDatabase(hdb, id, preparedStatements))
       return false;
 
    if (!loadChecksFromDatabase(hdb))

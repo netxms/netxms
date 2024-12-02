@@ -59,9 +59,9 @@ BusinessServicePrototype::~BusinessServicePrototype()
 /**
  * Load business service prototype from database
  */
-bool BusinessServicePrototype::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
+bool BusinessServicePrototype::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
-   if (!super::loadFromDatabase(hdb, id))
+   if (!super::loadFromDatabase(hdb, id, preparedStatements))
       return false;
 
    if (!Pollable::loadFromDatabase(hdb, m_id))

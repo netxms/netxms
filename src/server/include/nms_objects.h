@@ -1154,29 +1154,31 @@ class NXCORE_EXPORTABLE AccessList
 {
 private:
    Mutex m_mutex;
-   int m_size;
-   int m_allocated;
-   ACL_ELEMENT *m_elements;
+   StructArray<ACL_ELEMENT> m_elements;  // Assigned to object
+   StructArray<ACL_ELEMENT> m_cache;     // Cached inherited access rights
 
 public:
-   AccessList() : m_mutex(MutexType::FAST)
-   {
-      m_size = 0;
-      m_allocated = 0;
-      m_elements = nullptr;
-   }
-
-   ~AccessList()
-   {
-      MemFree(m_elements);
-   }
+   AccessList() : m_mutex(MutexType::FAST) {}
 
    void updateFromMessage(const NXCPMessage& msg);
-   bool addElement(uint32_t userId, uint32_t accessRights);
+   bool addElement(uint32_t userId, uint32_t accessRights, bool cache);
    bool deleteElement(uint32_t userId);
-   void deleteAll();
+
+   void deleteAll()
+   {
+      LockGuard lockGuard(m_mutex);
+      m_elements.clear();
+      m_cache.clear();
+   }
+
+   void clearCache()
+   {
+      LockGuard lockGuard(m_mutex);
+      m_cache.clear();
+   }
 
    bool getUserRights(uint32_t userId, uint32_t *accessRights) const;
+   bool getCachedUserRights(uint32_t userId, uint32_t *accessRights) const;
 
    void enumerateElements(void(*handler)(uint32_t, uint32_t, void*), void *context) const;
    template<typename C> void enumerateElements(void(*handler)(uint32_t, uint32_t, C*), C *context) const
@@ -1204,6 +1206,47 @@ struct ResponsibleUser
 };
 
 class ObjectIndex;
+
+/**
+ * Prepared statement indexes for loadFromDatabase
+ */
+enum LoadStatementIndex
+{
+   LSI_COMMON_PROPERTIES = 0,
+   LSI_CUSTOM_ATTRIBUTES,
+   LSI_ACL,
+   LSI_OBJECT_URLS,
+   LSI_DASHBOARD_ASSOCIATIONS,
+   LSI_RESPONSIBLE_USERS,
+   LSI_SUBNET_MAPPING,
+   LSI_NODE_COMPONENTS,
+   LSI_SOFTWARE_INVENTORY,
+   LSI_HARDWARE_INVENTORY,
+   LSI_DC_ITEMS,
+   LSI_DC_TABLES,
+   LSI_DCI_THRESHOLDS,
+   LSI_DCI_RAW_VALUE,
+   LSI_DCI_ACL,
+   LSI_DCI_SCHEDULES,
+   LSI_DCI_TABLE_COLUMNS,
+   LSI_DC_TARGET,
+   LSI_NODE,
+   LSI_INTERFACE,
+   LSI_IF_VLANS,
+   LSI_IF_ADDRESSES,
+   LSI_ACCESS_POINT,
+   LSI_MAX_VALUE
+};
+
+/**
+ * Prepare statement for object load and and cache it for reuse
+ */
+static inline DB_STATEMENT PrepareObjectLoadStatement(DB_HANDLE hdb, DB_STATEMENT *cache, int index, const TCHAR *statement)
+{
+   if (cache[index] == nullptr)
+      cache[index] = DBPrepare(hdb, statement, true);
+   return cache[index];
+}
 
 /**
  * Base class for network objects
@@ -1295,14 +1338,14 @@ protected:
 
    void setModified(uint32_t flags, bool notify = true);                  // Used to mark object as modified
 
-   bool loadACLFromDB(DB_HANDLE hdb);
-   bool loadCommonProperties(DB_HANDLE hdb, bool ignoreEmptyResults = false);
+   bool loadACLFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatements);
+   bool loadCommonProperties(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, bool ignoreEmptyResults = false);
    bool loadTrustedObjects(DB_HANDLE hdb);
    bool executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query)
    {
       return ExecuteQueryOnObject(hdb, m_id, query);
    }
-   DB_RESULT executeSelectOnObject(DB_HANDLE hdb, const TCHAR *query)
+   DB_RESULT executeSelectOnObject(DB_HANDLE hdb, const TCHAR *query) const
    {
       return ExecuteSelectOnObject(hdb, m_id, query);
    }
@@ -1403,7 +1446,7 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual bool saveRuntimeData(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements);
    virtual void postLoad();
    virtual void cleanup();
 
@@ -1867,7 +1910,7 @@ protected:
    virtual void onDataCollectionChange() { }
    virtual void onInstanceDiscoveryChange() { }
 
-   void loadItemsFromDB(DB_HANDLE hdb);
+   void loadItemsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatements);
    void destroyItems();
    void updateInstanceDiscoveryItems(DCObject *dci);
 
@@ -1888,7 +1931,7 @@ public:
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
 
    virtual void updateFromImport(ConfigEntry *config, ImportContext *context, bool nxslV5);
 
@@ -2097,7 +2140,7 @@ public:
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual void applyDCIChanges(bool forcedChange) override;
    virtual bool applyToTarget(const shared_ptr<DataCollectionTarget>& target) override;
 
@@ -2206,7 +2249,7 @@ public:
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
@@ -2436,7 +2479,7 @@ public:
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
 
    void statusPoll(ClientSession *session, uint32_t rqId, const shared_ptr<Node>& pollerNode, ObjectQueue<Event> *eventQueue);
 
@@ -2472,7 +2515,7 @@ public:
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
 
    bool isLocalAddr(const InetAddress& addr) const;
    bool isRemoteAddr(const InetAddress& addr) const;
@@ -2607,7 +2650,7 @@ public:
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
 
    virtual void onObjectDelete(const NetObj& object) override;
 
@@ -2756,7 +2799,7 @@ public:
 
    virtual int getObjectClass() const override { return OBJECT_MOBILEDEVICE; }
 
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
@@ -2833,7 +2876,7 @@ public:
    virtual int getObjectClass() const override { return OBJECT_ACCESSPOINT; }
    virtual InetAddress getPrimaryIpAddress() const override { return getIpAddress(); }
 
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
@@ -2935,7 +2978,7 @@ public:
    virtual int getObjectClass() const override { return OBJECT_CLUSTER; }
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool showThresholdSummary() const override;
 
    virtual void enterMaintenanceMode(uint32_t userId, const TCHAR *comments) override;
@@ -3015,7 +3058,7 @@ public:
    virtual int getObjectClass() const override { return OBJECT_CHASSIS; }
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual void postLoad() override;
    virtual bool showThresholdSummary() const override;
    virtual uint32_t getEffectiveSourceNode(DCObject *dco) override;
@@ -3093,7 +3136,7 @@ public:
 
    virtual int getObjectClass() const override { return OBJECT_SENSOR; }
 
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual void prepareForDeletion() override;
@@ -3637,7 +3680,7 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool saveRuntimeData(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual void postLoad() override;
    virtual void cleanup() override;
 
@@ -4008,7 +4051,7 @@ public:
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
@@ -4051,7 +4094,7 @@ public:
    virtual ~UniversalRoot();
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
-   void loadFromDatabase(DB_HANDLE hdb);
+   void loadFromDatabase(DB_HANDLE hdb, DB_STATEMENT *preparedStatements);
    virtual void postLoad() override;
 };
 
@@ -4130,7 +4173,7 @@ public:
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual void postLoad() override;
 
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
@@ -4161,7 +4204,7 @@ public:
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool showThresholdSummary() const override;
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
@@ -4265,7 +4308,7 @@ public:
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
 
    String getRackPasiveElementDescription(uint32_t id);
 
@@ -4385,7 +4428,7 @@ public:
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
 
    virtual void onObjectDelete(const NetObj& object) override;
 
@@ -4457,7 +4500,7 @@ public:
 
    virtual bool showThresholdSummary() const override;
 
-   void loadFromDatabase(DB_HANDLE hdb);
+   void loadFromDatabase(DB_HANDLE hdb, DB_STATEMENT *prepartedStatements);
 };
 
 #ifdef _WIN32
@@ -4503,7 +4546,7 @@ public:
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
 
    virtual json_t *toJson() override;
 
@@ -4631,7 +4674,7 @@ public:
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
 
    virtual void onObjectDelete(const NetObj& object) override;
 
@@ -4691,7 +4734,7 @@ public:
 
    virtual int getObjectClass() const override { return OBJECT_WIRELESSDOMAIN; }
 
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
@@ -4746,7 +4789,7 @@ public:
 
    virtual int getObjectClass() const override { return OBJECT_COLLECTOR; }
 
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
@@ -4784,7 +4827,7 @@ public:
 
    virtual int getObjectClass() const override { return OBJECT_CIRCUIT; }
 
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
@@ -4823,7 +4866,7 @@ public:
 
    virtual int getObjectClass() const override { return OBJECT_ASSET; }
 
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
@@ -4966,7 +5009,7 @@ public:
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
 
    virtual json_t *toJson() override;
 
@@ -5149,7 +5192,7 @@ public:
    shared_ptr<BaseBusinessService> self() { return static_pointer_cast<BaseBusinessService>(NObject::self()); }
    shared_ptr<const BaseBusinessService> self() const { return static_pointer_cast<const BaseBusinessService>(NObject::self()); }
 
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
@@ -5204,7 +5247,7 @@ public:
 
    virtual int getObjectClass() const override { return OBJECT_BUSINESSSERVICEPROTO; }
 
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
@@ -5258,7 +5301,7 @@ public:
 
    virtual int getObjectClass() const override { return OBJECT_BUSINESSSERVICE; }
 
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
