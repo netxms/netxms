@@ -1696,6 +1696,8 @@ public:
    void sort(int (*cb)(const void *, const void *));
    void sort(int (*cb)(void *, const void *, const void *), void *context);
 
+   void swap(Array& other);
+
    void *addPlaceholder();
    void *replaceWithPlaceholder(int index);
 

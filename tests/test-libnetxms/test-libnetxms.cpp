@@ -2265,6 +2265,26 @@ static void TestIntegerArray()
    AssertEquals(array->get(3), static_cast<uint64_t>(18));
    EndTest();
 
+   StartTest(_T("IntegerArray: swap"));
+   IntegerArray<uint64_t> a1;
+   a1.add(2);
+   a1.add(1);
+   a1.add(18);
+   IntegerArray<uint64_t> a2;
+   a2.add(32);
+   a2.add(100);
+   a2.add(18);
+   a2.add(1);
+   a2.add(44);
+   a1.swap(a2);
+   AssertEquals(a1.size(), 5);
+   AssertEquals(a2.size(), 3);
+   AssertEquals(a1.get(0), 32);
+   AssertEquals(a1.get(4), 44);
+   AssertEquals(a2.get(0), 2);
+   AssertEquals(a2.get(2), 18);
+   EndTest();
+
    delete array;
 }
 
@@ -2294,7 +2314,7 @@ static void TestObjectArray()
    AssertEquals(array->size(), 5);
    AssertNull(array->get(5));
    AssertNotNull(array->get(1));
-   AssertTrue(!_tcscmp(array->get(1)->cstr(), _T("value 2")));
+   AssertEquals(array->get(1)->cstr(), _T("value 2"));
    EndTest();
 
    StartTest(_T("ObjectArray: replace"));
@@ -2306,21 +2326,21 @@ static void TestObjectArray()
    StartTest(_T("ObjectArray: remove"));
    array->remove(0);
    AssertEquals(array->size(), 4);
-   AssertTrue(!_tcscmp(array->get(0)->cstr(), _T("value 2")));
+   AssertEquals(array->get(0)->cstr(), _T("value 2"));
    array->remove(3);
    AssertEquals(array->size(), 3);
-   AssertTrue(!_tcscmp(array->get(2)->cstr(), _T("value 4")));
+   AssertEquals(array->get(2)->cstr(), _T("value 4"));
    EndTest();
 
    StartTest(_T("ObjectArray: iterator"));
    it = array->begin();
    AssertTrue(it.hasNext());
    String *s = it.next();
-   AssertTrue(!_tcscmp(s->cstr(), _T("value 2")));
+   AssertEquals(s->cstr(), _T("value 2"));
    s = it.next();
-   AssertTrue(!_tcscmp(s->cstr(), _T("value 3")));
+   AssertEquals(s->cstr(), _T("value 3"));
    s = it.next();
-   AssertTrue(!_tcscmp(s->cstr(), _T("value 4")));
+   AssertEquals(s->cstr(), _T("value 4"));
    s = it.next();
    AssertNull(s);
    EndTest();
@@ -2334,7 +2354,7 @@ static void TestObjectArray()
          AssertNotNull(it.value());
          TCHAR value[64];
          _sntprintf(value, 64, _T("value %d"), i++);
-         AssertTrue(!_tcscmp(it.value()->cstr(), value));
+         AssertEquals(it.value()->cstr(), value);
       }
       AssertEquals(i, 5);
    }
@@ -2348,7 +2368,7 @@ static void TestObjectArray()
       {
          TCHAR value[64];
          _sntprintf(value, 64, _T("value %d"), i++);
-         AssertTrue(!_tcscmp(s->cstr(), value));
+         AssertEquals(s->cstr(), value);
       }
       AssertEquals(i, 5);
    }
@@ -2371,6 +2391,26 @@ static void TestObjectArray()
    EndTest();
 
    delete array;
+
+   StartTest(_T("ObjectArray: swap"));
+   ObjectArray<String> a1(16, 16, Ownership::True);
+   a1.add(new String(_T("value 11")));
+   a1.add(new String(_T("value 12")));
+   a1.add(new String(_T("value 13")));
+   ObjectArray<String> a2(16, 16, Ownership::True);
+   a2.add(new String(_T("value 21")));
+   a2.add(new String(_T("value 22")));
+   a2.add(new String(_T("value 23")));
+   a2.add(new String(_T("value 24")));
+   a2.add(new String(_T("value 25")));
+   a1.swap(a2);
+   AssertEquals(a1.size(), 5);
+   AssertEquals(a2.size(), 3);
+   AssertEquals(a1.get(0)->cstr(), _T("value 21"));
+   AssertEquals(a1.get(4)->cstr(), _T("value 25"));
+   AssertEquals(a2.get(0)->cstr(), _T("value 11"));
+   AssertEquals(a2.get(2)->cstr(), _T("value 13"));
+   EndTest();
 }
 
 /**
