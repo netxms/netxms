@@ -97,7 +97,7 @@ void InfluxDBSender::workerThread()
    {
 #ifdef _WIN32
       EnterCriticalSection(&m_mutex);
-      if (m_queues.length() < m_queueFlushThreshold)
+      if (m_activeQueue->size < m_queueFlushThreshold)
       {
          // SleepConditionVariableCS is subject to spurious wakeups so we need a loop here
          BOOL signalled = FALSE;
