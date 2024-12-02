@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -401,6 +401,22 @@ void Array::sort(int (*cb)(void *, const void *, const void *), void *context)
 void *Array::find(const void *key, int (*cb)(const void *, const void *)) const
 {
    return bsearch(key, m_data, m_size, m_elementSize, cb);
+}
+
+/**
+ * Swap two arrays
+ */
+void Array::swap(Array& other)
+{
+   std::swap(m_size, other.m_size);
+   std::swap(m_allocated, other.m_allocated);
+   std::swap(m_grow, other.m_grow);
+   std::swap(m_elementSize, other.m_elementSize);
+   std::swap(m_data, other.m_data);
+   std::swap(m_objectOwner, other.m_objectOwner);
+   std::swap(m_context, other.m_context);
+   std::swap(m_storePointers, other.m_storePointers);
+   std::swap(m_objectDestructor, other.m_objectDestructor);
 }
 
 /**
