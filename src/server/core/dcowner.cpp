@@ -69,20 +69,20 @@ void DataCollectionOwner::destroyItems()
  *
  * @param dwId object ID
  */
-bool DataCollectionOwner::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
+bool DataCollectionOwner::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
    bool success = true;
 
    m_id = id;
 
-   if (!loadCommonProperties(hdb))
+   if (!loadCommonProperties(hdb, preparedStatements))
       return false;
 
    // Load DCI and access list
-   loadACLFromDB(hdb);
-   loadItemsFromDB(hdb);
+   loadACLFromDB(hdb, preparedStatements);
+   loadItemsFromDB(hdb, preparedStatements);
    for(int i = 0; i < m_dcObjects.size(); i++)
-      if (!m_dcObjects.get(i)->loadThresholdsFromDB(hdb))
+      if (!m_dcObjects.get(i)->loadThresholdsFromDB(hdb, preparedStatements))
          success = false;
 
 	m_status = STATUS_NORMAL;
@@ -275,11 +275,11 @@ bool DataCollectionOwner::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Load data collection items from database
  */
-void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb)
+void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatements)
 {
    bool useStartupDelay = ConfigReadBoolean(_T("DataCollection.StartupDelay"), false);
 
-	DB_STATEMENT hStmt = DBPrepare(hdb,
+	DB_STATEMENT hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_DC_ITEMS,
 	           _T("SELECT item_id,name,source,datatype,polling_interval,retention_time,")
               _T("status,delta_calculation,transformation,template_id,description,")
               _T("instance,template_item_id,flags,resource_id,")
@@ -298,13 +298,12 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb)
 		{
 			int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)
-				m_dcObjects.add(make_shared<DCItem>(hdb, hResult, i, self(), useStartupDelay));
+				m_dcObjects.add(make_shared<DCItem>(hdb, preparedStatements, hResult, i, self(), useStartupDelay));
 			DBFreeResult(hResult);
 		}
-		DBFreeStatement(hStmt);
 	}
 
-	hStmt = DBPrepare(hdb,
+	hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_DC_TABLES,
 	           _T("SELECT item_id,template_id,template_item_id,name,")
 				  _T("description,flags,source,snmp_port,polling_interval,retention_time,")
               _T("status,system_tag,resource_id,proxy_node,perftab_settings,")
@@ -312,18 +311,17 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb)
               _T("instd_filter,instance,instance_retention_time,grace_period_start,")
               _T("related_object,polling_schedule_type,retention_type,polling_interval_src,")
               _T("retention_time_src,snmp_version,state_flags FROM dc_tables WHERE node_id=?"));
-	if (hStmt != NULL)
+	if (hStmt != nullptr)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
-		if (hResult != NULL)
+		if (hResult != nullptr)
 		{
 			int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)
-				m_dcObjects.add(make_shared<DCTable>(hdb, hResult, i, self(), useStartupDelay));
+				m_dcObjects.add(make_shared<DCTable>(hdb, preparedStatements, hResult, i, self(), useStartupDelay));
 			DBFreeResult(hResult);
 		}
-		DBFreeStatement(hStmt);
 	}
 
    onDataCollectionLoad();

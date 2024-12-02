@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -49,10 +49,10 @@ bool Network::saveToDatabase(DB_HANDLE hdb)
 /**
  * Load properties from database
  */
-void Network::loadFromDatabase(DB_HANDLE hdb)
+void Network::loadFromDatabase(DB_HANDLE hdb, DB_STATEMENT *preparedStatements)
 {
-   loadCommonProperties(hdb, true);
-   loadACLFromDB(hdb);
+   loadCommonProperties(hdb, preparedStatements, true);
+   loadACLFromDB(hdb, preparedStatements);
 }
 
 /**

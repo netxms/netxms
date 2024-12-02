@@ -63,7 +63,7 @@ DCTable::DCTable(uint32_t id, const TCHAR *name, int source, BYTE scheduleType, 
  *    related_object,polling_schedule_type,retention_type,polling_interval_src,
  *    retention_time_src,snmp_version,state_flags
  */
-DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
+DCTable::DCTable(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
    m_id = DBGetFieldULong(hResult, row, 0);
    m_templateId = DBGetFieldULong(hResult, row, 1);
@@ -105,7 +105,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<Dat
    m_startTime = (useStartupDelay && (effectivePollingInterval >= 10)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
 
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, Ownership::True);
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT column_name,flags,snmp_oid,display_name FROM dc_table_columns WHERE table_id=? ORDER BY sequence_number"));
+	DB_STATEMENT hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_DCI_TABLE_COLUMNS, _T("SELECT column_name,flags,snmp_oid,display_name FROM dc_table_columns WHERE table_id=? ORDER BY sequence_number"));
 	if (hStmt != nullptr)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -117,11 +117,10 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<Dat
 				m_columns->add(new DCTableColumn(hColumnList, i));
 			DBFreeResult(hColumnList);
 		}
-		DBFreeStatement(hStmt);
 	}
 
-   loadAccessList(hdb);
-   loadCustomSchedules(hdb);
+   loadAccessList(hdb, preparedStatements);
+   loadCustomSchedules(hdb, preparedStatements);
 
    m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, Ownership::True);
    loadThresholds(hdb);

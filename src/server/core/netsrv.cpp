@@ -117,21 +117,21 @@ bool NetworkService::saveToDatabase(DB_HANDLE hdb)
 /**
  * Load properties from database
  */
-bool NetworkService::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
+bool NetworkService::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
    TCHAR szQuery[256];
    DB_RESULT hResult;
    UINT32 dwHostNodeId;
    bool bResult = false;
 
-   m_id = dwId;
+   m_id = id;
 
-   if (!loadCommonProperties(hdb))
+   if (!loadCommonProperties(hdb, preparedStatements))
       return false;
 
    _sntprintf(szQuery, 256, _T("SELECT node_id,service_type,")
                                _T("ip_bind_addr,ip_proto,ip_port,check_request,check_response,")
-                               _T("poller_node_id,required_polls FROM network_services WHERE id=%d"), dwId);
+                               _T("poller_node_id,required_polls FROM network_services WHERE id=%d"), id);
    hResult = DBSelect(hdb, szQuery);
    if (hResult == nullptr)
       return false;     // Query failed
@@ -182,8 +182,7 @@ bool NetworkService::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
    DBFreeResult(hResult);
 
-   // Load access list
-   loadACLFromDB(hdb);
+   loadACLFromDB(hdb, preparedStatements);
 
    return bResult;
 }

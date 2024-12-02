@@ -72,11 +72,11 @@ Asset::~Asset()
 /**
  * Load asset object from database
  */
-bool Asset::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
+bool Asset::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
    m_id = id;
 
-   if (!loadCommonProperties(hdb))
+   if (!loadCommonProperties(hdb, preparedStatements))
       return false;
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT linked_object_id,last_update_timestamp,last_update_uid FROM assets WHERE id=?"));

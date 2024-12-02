@@ -58,9 +58,9 @@ void Dashboard::calculateCompoundStatus(bool forcedRecalc)
 /**
  * Create object from database
  */
-bool Dashboard::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
+bool Dashboard::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
-	if (!super::loadFromDatabase(hdb, id))
+	if (!super::loadFromDatabase(hdb, id, preparedStatements))
 		return false;
 
    if (!AutoBindTarget::loadFromDatabase(hdb, id))

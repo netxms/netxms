@@ -75,11 +75,11 @@ Zone::~Zone()
 /**
  * Create object from database data
  */
-bool Zone::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
+bool Zone::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
-   m_id = dwId;
+   m_id = id;
 
-   if (!loadCommonProperties(hdb))
+   if (!loadCommonProperties(hdb, preparedStatements))
       return false;
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT zone_guid FROM zones WHERE id=?"));
@@ -88,13 +88,13 @@ bool Zone::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
    bool success = false;
 
-   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwId);
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
    DB_RESULT hResult = DBSelectPrepared(hStmt);
    if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) == 0)
       {
-         if (dwId == BUILTIN_OID_ZONE0)
+         if (id == BUILTIN_OID_ZONE0)
          {
             m_uin = 0;
             success = true;
@@ -119,7 +119,7 @@ bool Zone::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       hStmt = DBPrepare(hdb, _T("SELECT proxy_node FROM zone_proxies WHERE object_id=?"));
       if (hStmt != nullptr)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwId);
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
          hResult = DBSelectPrepared(hStmt);
          if (hResult != nullptr)
          { 
@@ -138,7 +138,7 @@ bool Zone::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
    // Load access list
    if (success)
-      success = loadACLFromDB(hdb);
+      success = loadACLFromDB(hdb, preparedStatements);
 
    return success;
 }

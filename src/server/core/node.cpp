@@ -390,14 +390,14 @@ Node::~Node()
 /**
  * Create object from database data
  */
-bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
+bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
    int i, iNumRows;
    bool bResult = false;
 
-   m_id = dwId;
+   m_id = id;
 
-   if (!loadCommonProperties(hdb) || !super::loadFromDatabase(hdb, dwId))
+   if (!loadCommonProperties(hdb, preparedStatements) || !super::loadFromDatabase(hdb, id, preparedStatements))
       return false;
 
    if (Pollable::loadFromDatabase(hdb, m_id))
@@ -406,7 +406,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
    }
 
-   DB_STATEMENT hStmt = DBPrepare(hdb,
+   DB_STATEMENT hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_NODE,
       _T("SELECT primary_name,primary_ip,snmp_version,secret,agent_port,snmp_oid,agent_version,")
       _T("platform_name,poller_node_id,zone_guid,proxy_node,snmp_proxy,required_polls,uname,use_ifxtable,")
       _T("snmp_port,community,usm_auth_password,usm_priv_password,usm_methods,snmp_sys_name,bridge_base_addr,")
@@ -423,19 +423,15 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    if (hStmt == nullptr)
       return false;
 
-   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwId);
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
    DB_RESULT hResult = DBSelectPrepared(hStmt);
    if (hResult == nullptr)
-   {
-      DBFreeStatement(hStmt);
       return false;     // Query failed
-   }
 
    if (DBGetNumRows(hResult) == 0)
    {
       DBFreeResult(hResult);
-      DBFreeStatement(hStmt);
-      nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 2, _T("Missing record in \"nodes\" table for node object %d"), dwId);
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 2, _T("Missing record in \"nodes\" table for node object %d"), id);
       return false;
    }
 
@@ -612,7 +608,6 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    }
 
    DBFreeResult(hResult);
-   DBFreeStatement(hStmt);
 
    if (m_isDeleted)
    {
@@ -620,17 +615,14 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    }
 
    // Link node to subnets
-   hStmt = DBPrepare(hdb, _T("SELECT subnet_id FROM nsmap WHERE node_id=?"));
+   hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_SUBNET_MAPPING, _T("SELECT subnet_id FROM nsmap WHERE node_id=?"));
    if (hStmt == nullptr)
       return false;
 
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
    hResult = DBSelectPrepared(hStmt);
    if (hResult == nullptr)
-   {
-      DBFreeStatement(hStmt);
       return false;     // Query failed
-   }
 
    iNumRows = DBGetNumRows(hResult);
    for(i = 0; i < iNumRows; i++)
@@ -648,18 +640,17 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    }
 
    DBFreeResult(hResult);
-   DBFreeStatement(hStmt);
 
-   loadItemsFromDB(hdb);
-   loadACLFromDB(hdb);
+   loadItemsFromDB(hdb, preparedStatements);
+   loadACLFromDB(hdb, preparedStatements);
 
    // Walk through all items in the node and load appropriate thresholds
    bResult = true;
    for(i = 0; i < m_dcObjects.size(); i++)
    {
-      if (!m_dcObjects.get(i)->loadThresholdsFromDB(hdb))
+      if (!m_dcObjects.get(i)->loadThresholdsFromDB(hdb, preparedStatements))
       {
-         nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 3, _T("Cannot load thresholds for DCI %d of node %s [%u]"), m_dcObjects.get(i)->getId(), m_name, dwId);
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 3, _T("Cannot load thresholds for DCI %u of node %s [%u]"), m_dcObjects.get(i)->getId(), m_name, id);
          bResult = false;
       }
    }
@@ -670,7 +661,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    if (bResult)
    {
       // Load components
-      hStmt = DBPrepare(hdb, _T("SELECT component_index,parent_index,position,component_class,if_index,name,description,model,serial_number,vendor,firmware FROM node_components WHERE node_id=?"));
+      hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_NODE_COMPONENTS,
+         _T("SELECT component_index,parent_index,position,component_class,if_index,name,description,model,serial_number,vendor,firmware FROM node_components WHERE node_id=?"));
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -724,7 +716,6 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          {
             bResult = false;
          }
-         DBFreeStatement(hStmt);
       }
       else
       {
@@ -738,7 +729,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    if (bResult)
    {
       // Load software packages
-      hStmt = DBPrepare(hdb, _T("SELECT name,version,vendor,install_date,url,description,uninstall_key FROM software_inventory WHERE node_id=?"));
+      hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_SOFTWARE_INVENTORY,
+         _T("SELECT name,version,vendor,install_date,url,description,uninstall_key FROM software_inventory WHERE node_id=?"));
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -759,7 +751,6 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          {
             bResult = false;
          }
-         DBFreeStatement(hStmt);
       }
       else
       {
@@ -773,7 +764,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    if (bResult)
    {
       // Load hardware components
-      hStmt = DBPrepare(hdb, _T("SELECT category,component_index,hw_type,vendor,model,location,capacity,part_number,serial_number,description FROM hardware_inventory WHERE node_id=?"));
+      hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_HARDWARE_INVENTORY,
+         _T("SELECT category,component_index,hw_type,vendor,model,location,capacity,part_number,serial_number,description FROM hardware_inventory WHERE node_id=?"));
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -794,7 +786,6 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          {
             bResult = false;
          }
-         DBFreeStatement(hStmt);
       }
       else
       {
@@ -805,7 +796,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 3, _T("Cannot load hardware information for node %s [%u]"), m_name, m_id);
    }
 
-   if (bResult)
+   if (bResult && isOSPFSupported())
    {
       // Load OSPF areas
       hStmt = DBPrepare(hdb, _T("SELECT area_id FROM ospf_areas WHERE node_id=?"));
@@ -842,7 +833,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 3, _T("Cannot load OSPF area information for node %s [%u]"), m_name, m_id);
    }
 
-   if (bResult)
+   if (bResult && isOSPFSupported())
    {
       // Load OSPF neighbors
       hStmt = DBPrepare(hdb, _T("SELECT router_id,area_id,ip_address,remote_node_id,if_index,is_virtual,neighbor_state FROM ospf_neighbors WHERE node_id=?"));

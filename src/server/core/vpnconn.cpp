@@ -56,11 +56,11 @@ VPNConnector::~VPNConnector()
 /**
  * Create object from database data
  */
-bool VPNConnector::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
+bool VPNConnector::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
-   m_id = dwId;
+   m_id = id;
 
-   if (!loadCommonProperties(hdb))
+   if (!loadCommonProperties(hdb, preparedStatements))
       return false;
 
    // Load network lists
@@ -82,7 +82,7 @@ bool VPNConnector::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    DBFreeResult(hResult);
 
    // Load custom properties
-   _sntprintf(szQuery, 256, _T("SELECT node_id,peer_gateway FROM vpn_connectors WHERE id=%d"), dwId);
+   _sntprintf(szQuery, 256, _T("SELECT node_id,peer_gateway FROM vpn_connectors WHERE id=%d"), id);
    hResult = DBSelect(hdb, szQuery);
    if (hResult == nullptr)
       return false;     // Query failed
@@ -116,7 +116,7 @@ bool VPNConnector::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    DBFreeResult(hResult);
 
    // Load access list
-   loadACLFromDB(hdb);
+   loadACLFromDB(hdb, preparedStatements);
 
    return success;
 }

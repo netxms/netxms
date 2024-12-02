@@ -199,20 +199,20 @@ json_t *AbstractContainer::toJson()
  *
  * @param dwId object ID
  */
-bool AbstractContainer::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
+bool AbstractContainer::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
-   m_id = dwId;
+   m_id = id;
 
-   if (!loadCommonProperties(hdb))
+   if (!loadCommonProperties(hdb, preparedStatements))
       return false;
 
    // Load access list
-   loadACLFromDB(hdb);
+   loadACLFromDB(hdb, preparedStatements);
 
    // Load child list for later linkage
    if (!m_isDeleted)
    {
-      ContainerBase::loadFromDatabase(hdb, dwId);
+      ContainerBase::loadFromDatabase(hdb, id);
    }
 
    return true;
@@ -245,9 +245,9 @@ bool AbstractContainer::deleteFromDatabase(DB_HANDLE hdb)
  *
  * @param dwId object ID
  */
-bool Container::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
+bool Container::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
-   bool success = super::loadFromDatabase(hdb, dwId);
+   bool success = super::loadFromDatabase(hdb, id, preparedStatements);
    if (success)
       success = AutoBindTarget::loadFromDatabase(hdb, m_id);
    if (success)

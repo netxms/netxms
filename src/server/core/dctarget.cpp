@@ -178,11 +178,15 @@ uint32_t DataCollectionTarget::modifyFromMessageInternal(const NXCPMessage& msg)
 /**
  * Create object from database data
  */
-bool DataCollectionTarget::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
+bool DataCollectionTarget::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
-   TCHAR query[512];
-   _sntprintf(query, 512, _T("SELECT geolocation_ctrl_mode,geo_areas,web_service_proxy FROM dc_targets WHERE id=%u"), m_id);
-   DB_RESULT hResult = DBSelect(hdb, query);
+   DB_STATEMENT hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_DC_TARGET,
+      _T("SELECT geolocation_ctrl_mode,geo_areas,web_service_proxy FROM dc_targets WHERE id=?"));
+   if (hStmt == nullptr)
+      return false;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
    if (hResult == nullptr)
       return false;
 

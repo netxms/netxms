@@ -234,9 +234,9 @@ void BusinessService::deleteCheckFromPrototype(uint32_t prototypeCheckId)
 /**
  * Load Business service from database
  */
-bool BusinessService::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
+bool BusinessService::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
-   if (!super::loadFromDatabase(hdb, id))
+   if (!super::loadFromDatabase(hdb, id, preparedStatements))
       return false;
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT prototype_id,instance,object_status_threshold,dci_status_threshold FROM business_services WHERE id=?"));

@@ -500,19 +500,19 @@ bool NetworkMap::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Load from database
  */
-bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
+bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
-   m_id = dwId;
+   m_id = id;
 
-   if (!loadCommonProperties(hdb))
+   if (!loadCommonProperties(hdb, preparedStatements))
       return false;
 
    if (!m_isDeleted)
    {
-	   loadACLFromDB(hdb);
+	   loadACLFromDB(hdb, preparedStatements);
 
 		TCHAR query[256];
-		_sntprintf(query, 256, _T("SELECT map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,link_width,link_style,bg_color,object_display_mode,filter,link_styling_script,width,height FROM network_maps WHERE id=%d"), dwId);
+		_sntprintf(query, 256, _T("SELECT map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,link_width,link_style,bg_color,object_display_mode,filter,link_styling_script,width,height FROM network_maps WHERE id=%d"), id);
 		DB_RESULT hResult = DBSelect(hdb, query);
 		if (hResult == nullptr)
 			return false;

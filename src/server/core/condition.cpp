@@ -72,18 +72,18 @@ ConditionObject::~ConditionObject()
 /**
  * Load object from database
  */
-bool ConditionObject::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
+bool ConditionObject::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
    TCHAR szQuery[512];
    DB_RESULT hResult;
 
-   m_id = dwId;
+   m_id = id;
 
-   if (!loadCommonProperties(hdb))
+   if (!loadCommonProperties(hdb, preparedStatements))
       return false;
 
    // Load properties
-   _sntprintf(szQuery, 512, _T("SELECT activation_event,deactivation_event,source_object,active_status,inactive_status,script FROM conditions WHERE id=%d"), dwId);
+   _sntprintf(szQuery, 512, _T("SELECT activation_event,deactivation_event,source_object,active_status,inactive_status,script FROM conditions WHERE id=%d"), id);
    hResult = DBSelect(hdb, szQuery);
    if (hResult == nullptr)
       return false;     // Query failed
@@ -108,7 +108,7 @@ bool ConditionObject::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_script = CompileServerScript(m_scriptSource, SCRIPT_CONTEXT_OBJECT, this, 0, _T("Condition::%s"), m_name);
 
    // Load DCI map
-   _sntprintf(szQuery, 512, _T("SELECT dci_id,node_id,dci_func,num_polls FROM cond_dci_map WHERE condition_id=%u ORDER BY sequence_number"), dwId);
+   _sntprintf(szQuery, 512, _T("SELECT dci_id,node_id,dci_func,num_polls FROM cond_dci_map WHERE condition_id=%u ORDER BY sequence_number"), id);
    hResult = DBSelect(hdb, szQuery);
    if (hResult == nullptr)
       return false;     // Query failed
@@ -125,7 +125,7 @@ bool ConditionObject::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    }
    DBFreeResult(hResult);
 
-   return loadACLFromDB(hdb);
+   return loadACLFromDB(hdb, preparedStatements);
 }
 
 /**
