@@ -26,6 +26,19 @@
 #include <nxsl.h>
 
 /**
+ * Upgrade from 50.47 to 50.48
+ */
+static bool H_UpgradeFromV47()
+{
+   CHK_EXEC(CreateConfigParam(_T("Client.MinVersion"),
+                              _T(""),
+                              _T("Minimal client version allowed for connection to this server"),
+                              nullptr, 'S', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(48));
+   return true;
+}
+
+/**
  * Upgrade from 50.46 to 50.47
  */
 static bool H_UpgradeFromV46()
@@ -2209,6 +2222,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 47, 51, 48, H_UpgradeFromV47 },
    { 46, 50, 47, H_UpgradeFromV46 },
    { 45, 50, 46, H_UpgradeFromV45 },
    { 44, 50, 45, H_UpgradeFromV44 },

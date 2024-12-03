@@ -2319,6 +2319,20 @@ uint32_t ClientSession::authenticateUserByToken(const NXCPMessage& request, Logi
 }
 
 /**
+ * Parse version to int
+ */
+static uint32_t ParseVersionToInt(const TCHAR *version)
+{
+   uint32_t major = 0, minor = 0, release = 0, patch = 0;
+   int numElements = _stscanf(version, _T("%d.%d.%d.%d"), &major, &minor, &release, &patch);
+   if (numElements == 2 && _tcsstr(version, _T("-SNAPSHOT")) != nullptr)
+   {
+      release = 255;
+   }
+   return major << 24 | minor << 16 | release << 8 | patch;
+}
+
+/**
  * Authenticate client
  */
 void ClientSession::login(const NXCPMessage& request)
@@ -2333,6 +2347,22 @@ void ClientSession::login(const NXCPMessage& request)
       request.getFieldAsString(VID_OS_INFO, osInfo, 32);
       request.getFieldAsString(VID_LIBNXCL_VERSION, libVersion, 16);
       _sntprintf(m_clientInfo, 96, _T("%s (%s; libnxcl %s)"), clientInfo, osInfo, libVersion);
+
+      TCHAR *versionString = ConfigReadStr(_T("Client.MinVersion"), _T(""));
+      if (*versionString != 0)
+      {
+         uint32_t clientVersion = ParseVersionToInt(libVersion);
+         uint32_t minimalVersion = ParseVersionToInt(versionString);
+         if (clientVersion < minimalVersion)
+         {
+            response.setField(VID_VALUE, versionString);
+            response.setField(VID_RCC, RCC_VERSION_MISMATCH);
+            sendMessage(response);
+            MemFree(versionString);
+            return;
+         }
+      }
+      MemFree(versionString);
    }
 
 	m_clientType = request.getFieldAsUInt16(VID_CLIENT_TYPE);
