@@ -269,7 +269,7 @@ void ScheduledTask::run(SchedulerCallback *callback)
 {
    if (!m_recurrent)
    {
-      uint32_t diff = time(nullptr) - m_scheduledExecutionTime;
+      uint32_t diff = static_cast<uint32_t>(time(nullptr) - m_scheduledExecutionTime);
       if (diff > 0)
          nxlog_debug_tag(DEBUG_TAG, 6, _T("Scheduled task [%u] execution delayed by %u seconds"), m_id, diff);
    }

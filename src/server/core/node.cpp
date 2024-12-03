@@ -8173,7 +8173,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
    {
       if (!_tcsicmp(name, _T("Server.ActiveAlarms")))
       {
-         ret_int(buffer, GetAlarmCount());
+         ret_uint(buffer, GetAlarmCount());
       }
       else if (!_tcsicmp(name, _T("Server.ActiveNetworkDiscovery.CurrentRange")))
       {

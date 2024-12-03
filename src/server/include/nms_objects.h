@@ -1147,6 +1147,10 @@ struct ACL_ELEMENT
    uint32_t accessRights;
 };
 
+#ifdef _WIN32
+template class NXCORE_TEMPLATE_EXPORTABLE StructArray<ACL_ELEMENT>;
+#endif
+
 /**
  * Access list class
  */
