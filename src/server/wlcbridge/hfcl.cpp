@@ -447,7 +447,7 @@ static ObjectArray<AccessPointInfo> *GetAccessPoints(NObject *wirelessDomain)
          String model(json_object_get_string_utf8(element, "ap_model", ""), "utf8");
          String serial(json_object_get_string_utf8(element, "serial_no", ""), "utf8");
 
-         AccessPointInfo *ap = new AccessPointInfo(i, macAddress, ipAddress, GetStateFromJson(element), !name.isEmpty() ? name : serial, _T("HFCL"), model, serial);
+         AccessPointInfo *ap = new AccessPointInfo(static_cast<uint32_t>(i), macAddress, ipAddress, GetStateFromJson(element), !name.isEmpty() ? name : serial, _T("HFCL"), model, serial);
          GetAccessPointRadios(wirelessDomain, json_object_get_string_utf8(element, "serial_no", ""), ap);
          accessPoints->add(ap);
       }

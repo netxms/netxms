@@ -67,7 +67,7 @@ void ShowServerStats(CONSOLE_CTX console)
       _T("   Access points...: %d\n")
       _T("   Sensors.........: %d\n")
       _T("Collectible DCIs...: %d\n")
-      _T("Active alarms......: %d\n")
+      _T("Active alarms......: %u\n")
       _T("Uptime.............: %s\n")
       _T("\n"),
       g_idxObjectById.size(), g_idxNodeById.size(), ifCount, g_idxAccessPointById.size(), g_idxSensorById.size(), dciCount, GetAlarmCount(), uptime);

@@ -212,7 +212,7 @@ public:
    void lock() { m_lock.lock(); }
    void unlock() { m_lock.unlock(); }
 
-   int size() { return m_primaryIndex.size(); }
+   size_t size() { return m_primaryIndex.size(); }
 
    uint64_t memoryUsage()
    {
@@ -2096,10 +2096,10 @@ void GetAlarmStats(NXCPMessage *msg)
 /**
  * Get number of active alarms
  */
-int GetAlarmCount()
+uint32_t GetAlarmCount()
 {
    s_alarmList.lock();
-   int count = s_alarmList.size();
+   uint32_t count = static_cast<uint32_t>(s_alarmList.size());
    s_alarmList.unlock();
    return count;
 }

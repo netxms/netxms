@@ -472,6 +472,7 @@
     <ClCompile Include="dctthreshold.cpp" />
     <ClCompile Include="dc_nxsl.cpp" />
     <ClCompile Include="debug.cpp" />
+    <ClCompile Include="devbackup.cpp" />
     <ClCompile Include="devdb.cpp" />
     <ClCompile Include="dfile_info.cpp" />
     <ClCompile Include="discovery.cpp" />
