@@ -2510,10 +2510,15 @@ public class NXCSession
             }
          }
       }
-
-      if (rcc != RCC.SUCCESS)
+      else if (rcc == RCC.VERSION_MISMATCH)
       {
-         logger.warn("Login failed, RCC=" + rcc);
+         String minVersion = response.getFieldAsString(NXCPCodes.VID_VALUE);
+         logger.error("Login failed, server requires minimal client version {} (this client version is {})", minVersion, VersionInfo.version());
+         throw new NXCException(rcc, minVersion);
+      }
+      else if (rcc != RCC.SUCCESS)
+      {
+         logger.error("Login failed, RCC=" + rcc);
          throw new NXCException(rcc);
       }
 

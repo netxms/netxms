@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.22 to 51.23
+ */
+static bool H_UpgradeFromV22()
+{
+   if (GetSchemaLevelForMajorVersion(50) < 48)
+   {
+      CHK_EXEC(CreateConfigParam(_T("Client.MinVersion"),
+                              _T(""),
+                              _T("Minimal client version allowed for connection to this server"),
+                              nullptr, 'S', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(50, 48));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(23));
+   return true;
+}
+
+/**
  * Upgrade from 51.21 to 51.22
  */
 static bool H_UpgradeFromV21()
@@ -495,6 +512,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 22, 52, 23, H_UpgradeFromV22 },
    { 21, 51, 22, H_UpgradeFromV21 },
    { 20, 51, 21, H_UpgradeFromV20 },
    { 19, 51, 20, H_UpgradeFromV19 },
