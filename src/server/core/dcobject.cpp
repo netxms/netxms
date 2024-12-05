@@ -92,17 +92,12 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
    m_errorCount = 0;
 	m_resourceId = 0;
 	m_sourceNode = 0;
-	m_pszPerfTabSettings = nullptr;
 	m_snmpPort = 0;	// use default
 	m_snmpVersion = SNMP_VERSION_DEFAULT;
-   m_transformationScriptSource = nullptr;
-   m_transformationScript = nullptr;
    m_lastScriptErrorReport = 0;
    m_doForcePoll = false;
    m_pollingSession = nullptr;
    m_instanceDiscoveryMethod = IDM_NONE;
-   m_instanceFilterSource = nullptr;
-   m_instanceFilter = nullptr;
    m_instanceRetentionTime = -1;
    m_instanceGracePeriodStart = 0;
    m_startTime = 0;
@@ -114,7 +109,10 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
  */
 DCObject::DCObject(const DCObject *src, bool shadowCopy) :
          m_owner(src->m_owner), m_name(src->m_name), m_description(src->m_description), m_systemTag(src->m_systemTag),
-         m_mutex(MutexType::RECURSIVE), m_comments(src->m_comments), m_instanceDiscoveryData(src->m_instanceDiscoveryData),
+         m_mutex(MutexType::RECURSIVE), m_perfTabSettings(src->m_perfTabSettings),
+         m_transformationScriptSource(src->m_transformationScriptSource), m_transformationScript(src->m_transformationScript),
+         m_comments(src->m_comments), m_instanceDiscoveryData(src->m_instanceDiscoveryData),
+         m_instanceFilterSource(src->m_instanceFilterSource), m_instanceFilter(src->m_instanceFilter),
          m_instanceName(src->m_instanceName), m_accessList(src->m_accessList)
 {
    m_id = src->m_id;
@@ -140,23 +138,13 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
    m_stateFlags = src->m_stateFlags;
 	m_resourceId = src->m_resourceId;
 	m_sourceNode = src->m_sourceNode;
-	m_pszPerfTabSettings = MemCopyString(src->m_pszPerfTabSettings);
 	m_snmpPort = src->m_snmpPort;
    m_snmpVersion = src->m_snmpVersion;
 	m_doForcePoll = false;
 	m_pollingSession = nullptr;
-
-   m_transformationScriptSource = nullptr;
-   m_transformationScript = nullptr;
    m_lastScriptErrorReport = 0;
-   setTransformationScript(MemCopyString(src->m_transformationScriptSource));
-
    m_schedules = (src->m_schedules != nullptr) ? new StringList(src->m_schedules) : nullptr;
-
    m_instanceDiscoveryMethod = src->m_instanceDiscoveryMethod;
-   m_instanceFilterSource = nullptr;
-   m_instanceFilter = nullptr;
-   setInstanceFilter(src->m_instanceFilterSource);
    m_instanceRetentionTime = src->m_instanceRetentionTime;
    m_instanceGracePeriodStart = src->m_instanceGracePeriodStart;
    m_startTime = src->m_startTime;
@@ -170,8 +158,7 @@ DCObject::DCObject(uint32_t id, const TCHAR *name, int source, BYTE scheduleType
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description, const TCHAR *systemTag) :
          m_owner(owner), m_name(name), m_description(description), m_systemTag(systemTag),
-         m_mutex(MutexType::RECURSIVE), m_comments(_T("")), m_instanceDiscoveryData(_T("")),
-         m_instanceName(_T("")), m_accessList(0, 16)
+         m_mutex(MutexType::RECURSIVE), m_accessList(0, 16)
 {
    m_id = id;
    m_guid = uuid::generate();
@@ -195,17 +182,12 @@ DCObject::DCObject(uint32_t id, const TCHAR *name, int source, BYTE scheduleType
    m_errorCount = 0;
    m_resourceId = 0;
    m_sourceNode = 0;
-   m_pszPerfTabSettings = nullptr;
    m_snmpPort = 0;	// use default
    m_snmpVersion = SNMP_VERSION_DEFAULT;
-   m_transformationScriptSource = nullptr;
-   m_transformationScript = nullptr;
    m_lastScriptErrorReport = 0;
    m_doForcePoll = false;
    m_pollingSession = nullptr;
    m_instanceDiscoveryMethod = IDM_NONE;
-   m_instanceFilterSource = nullptr;
-   m_instanceFilter = nullptr;
    m_instanceRetentionTime = -1;
    m_instanceGracePeriodStart = 0;
    m_startTime = 0;
@@ -262,26 +244,21 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_errorCount = 0;
    m_resourceId = 0;
    m_sourceNode = 0;
-   const TCHAR *perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
-   m_pszPerfTabSettings = MemCopyString(perfTabSettings);
-   m_snmpPort = static_cast<UINT16>(config->getSubEntryValueAsInt(_T("snmpPort")));
+   m_perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
+   m_snmpPort = static_cast<uint16_t>(config->getSubEntryValueAsInt(_T("snmpPort")));
    m_snmpVersion = static_cast<SNMP_Version>(config->getSubEntryValueAsInt(_T("snmpVersion"), 0, SNMP_VERSION_DEFAULT));
    m_schedules = nullptr;
-
-   m_transformationScriptSource = nullptr;
-   m_transformationScript = nullptr;
    m_lastScriptErrorReport = 0;
    m_comments = config->getSubEntryValue(_T("comments"));
    m_doForcePoll = false;
    m_pollingSession = nullptr;
    if (nxslV5)
    {
-      setTransformationScript(MemCopyString(config->getSubEntryValue(_T("transformation"))));
+      setTransformationScript(config->getSubEntryValue(_T("transformation")));
    }
    else
    {
-      StringBuffer output = NXSLConvertToV5(config->getSubEntryValue(_T("transformation"), 0 , _T("")));
-      setTransformationScript(MemCopyString(output));
+      setTransformationScript(NXSLConvertToV5(config->getSubEntryValue(_T("transformation"), 0 , _T(""))));
    }
 
    // for compatibility with old format
@@ -303,16 +280,13 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
 
    m_instanceDiscoveryMethod = (WORD)config->getSubEntryValueAsInt(_T("instanceDiscoveryMethod"));
    m_instanceDiscoveryData = config->getSubEntryValue(_T("instanceDiscoveryData"));
-   m_instanceFilterSource = nullptr;
-   m_instanceFilter = nullptr;
    if (nxslV5)
    {
       setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
    }
    else
    {
-      StringBuffer output = NXSLConvertToV5(config->getSubEntryValue(_T("instanceFilter"), 0, _T("")));
-      setInstanceFilter(output);
+      setInstanceFilter(NXSLConvertToV5(config->getSubEntryValue(_T("instanceFilter"), 0, _T(""))));
    }
    m_instanceName = config->getSubEntryValue(_T("instance"));
    m_instanceRetentionTime = config->getSubEntryValueAsInt(_T("instanceRetentionTime"), 0, -1);
@@ -330,12 +304,7 @@ DCObject::~DCObject()
 {
    MemFree(m_retentionTimeSrc);
    MemFree(m_pollingIntervalSrc);
-   MemFree(m_transformationScriptSource);
-   delete m_transformationScript;
    delete m_schedules;
-   MemFree(m_pszPerfTabSettings);
-   MemFree(m_instanceFilterSource);
-   delete m_instanceFilter;
 }
 
 /**
@@ -825,22 +794,22 @@ void DCObject::createMessage(NXCPMessage *pMsg)
    pMsg->setField(VID_TEMPLATE_ITEM_ID, m_templateItemId);
    pMsg->setField(VID_NAME, m_name);
    pMsg->setField(VID_DESCRIPTION, m_description);
-   pMsg->setField(VID_TRANSFORMATION_SCRIPT, CHECK_NULL_EX(m_transformationScriptSource));
+   pMsg->setField(VID_TRANSFORMATION_SCRIPT, m_transformationScriptSource);
    pMsg->setField(VID_FLAGS, m_flags);
    pMsg->setField(VID_STATE_FLAGS, m_stateFlags);
    pMsg->setField(VID_SYSTEM_TAG, m_systemTag);
-   pMsg->setField(VID_POLLING_SCHEDULE_TYPE, static_cast<INT16>(m_pollingScheduleType));
+   pMsg->setField(VID_POLLING_SCHEDULE_TYPE, static_cast<int16_t>(m_pollingScheduleType));
    pMsg->setField(VID_POLLING_INTERVAL, m_pollingIntervalSrc);
-   pMsg->setField(VID_RETENTION_TYPE, static_cast<INT16>(m_retentionType));
+   pMsg->setField(VID_RETENTION_TYPE, static_cast<int16_t>(m_retentionType));
    pMsg->setField(VID_RETENTION_TIME, m_retentionTimeSrc);
    pMsg->setField(VID_DCI_SOURCE_TYPE, (WORD)m_source);
    pMsg->setField(VID_DCI_STATUS, (WORD)m_status);
 	pMsg->setField(VID_RESOURCE_ID, m_resourceId);
 	pMsg->setField(VID_AGENT_PROXY, m_sourceNode);
 	pMsg->setField(VID_SNMP_PORT, m_snmpPort);
-   pMsg->setField(VID_SNMP_VERSION, static_cast<INT16>(m_snmpVersion));
+   pMsg->setField(VID_SNMP_VERSION, static_cast<int16_t>(m_snmpVersion));
    pMsg->setField(VID_COMMENTS, m_comments);
-   pMsg->setField(VID_PERFTAB_SETTINGS, m_pszPerfTabSettings);
+   pMsg->setField(VID_PERFTAB_SETTINGS, m_perfTabSettings);
 	if (m_schedules != nullptr)
 	{
       pMsg->setField(VID_NUM_SCHEDULES, static_cast<uint32_t>(m_schedules->size()));
@@ -879,7 +848,7 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
 	m_sourceNode = msg.getFieldAsUInt32(VID_AGENT_PROXY);
    m_snmpPort = msg.getFieldAsUInt16(VID_SNMP_PORT);
    m_snmpVersion = msg.isFieldExist(VID_SNMP_VERSION) ? static_cast<SNMP_Version>(msg.getFieldAsInt16(VID_SNMP_VERSION)) : SNMP_VERSION_DEFAULT;
-	msg.getFieldAsString(VID_PERFTAB_SETTINGS, &m_pszPerfTabSettings);
+	m_perfTabSettings = msg.getFieldAsSharedString(VID_PERFTAB_SETTINGS);
 	m_comments = msg.getFieldAsSharedString(VID_COMMENTS);
 
    m_pollingScheduleType = static_cast<BYTE>(msg.getFieldAsUInt16(VID_POLLING_SCHEDULE_TYPE));
@@ -894,7 +863,9 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
       MemFreeAndNull(m_retentionTimeSrc);
    updateTimeIntervalsInternal();
 
-   setTransformationScript(msg.getFieldAsString(VID_TRANSFORMATION_SCRIPT));
+   TCHAR *tmp = msg.getFieldAsString(VID_TRANSFORMATION_SCRIPT);
+   setTransformationScript(tmp);
+   MemFree(tmp);
 
    // Update schedules
    int count = msg.getFieldAsInt32(VID_NUM_SCHEDULES);
@@ -905,7 +876,7 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
       else
          m_schedules = new StringList();
 
-      UINT32 fieldId = VID_DCI_SCHEDULE_BASE;
+      uint32_t fieldId = VID_DCI_SCHEDULE_BASE;
       for(int i = 0; i < count; i++, fieldId++)
       {
          TCHAR *s = msg.getFieldAsString(fieldId);
@@ -1069,13 +1040,11 @@ void DCObject::updateFromTemplate(DCObject *src)
    m_resourceId = src->m_resourceId;
    m_snmpPort = src->m_snmpPort;
    m_snmpVersion = src->m_snmpVersion;
-
    m_comments = src->m_comments;
+   m_perfTabSettings = src->m_perfTabSettings;
 
-   MemFree(m_pszPerfTabSettings);
-   m_pszPerfTabSettings = MemCopyString(src->m_pszPerfTabSettings);
-
-   setTransformationScript(MemCopyString(src->m_transformationScriptSource));
+   m_transformationScriptSource = src->m_transformationScriptSource;
+   m_transformationScript = src->m_transformationScript;
 
    m_accessList.clear();
    m_accessList.addAll(src->m_accessList);
@@ -1099,9 +1068,8 @@ void DCObject::updateFromTemplate(DCObject *src)
       m_instanceName = expandMacros(src->m_instanceName, MAX_ITEM_NAME);
       m_instanceDiscoveryMethod = src->m_instanceDiscoveryMethod;
       m_instanceDiscoveryData = src->m_instanceDiscoveryData;
-      MemFreeAndNull(m_instanceFilterSource);
-      delete_and_null(m_instanceFilter);
-      setInstanceFilter(src->m_instanceFilterSource);
+      m_instanceFilterSource = src->m_instanceFilterSource;
+      m_instanceFilter = src->m_instanceFilter;
    }
    m_instanceRetentionTime = src->m_instanceRetentionTime;
 
@@ -1144,27 +1112,17 @@ bool DCObject::hasValue()
 /**
  * Set new transformation script
  */
-void DCObject::setTransformationScript(TCHAR *source)
+void DCObject::setTransformationScript(const TCHAR *source)
 {
-   MemFree(m_transformationScriptSource);
-   delete m_transformationScript;
-   if (source != nullptr)
+   if ((source != nullptr) && !IsBlankString(source))
    {
-      m_transformationScriptSource = Trim(source);
-      if (m_transformationScriptSource[0] != 0)
-      {
-         m_transformationScript = CompileServerScript(m_transformationScriptSource, SCRIPT_CONTEXT_DCI, getOwner().get(), m_id, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
-      }
-      else
-      {
-         m_transformationScript = nullptr;
-         MemFreeAndNull(m_transformationScriptSource);
-      }
+      m_transformationScriptSource = source;
+      m_transformationScript = shared_ptr<NXSL_Program>(CompileServerScript(m_transformationScriptSource, SCRIPT_CONTEXT_DCI, getOwner().get(), m_id, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id));
    }
    else
    {
       m_transformationScriptSource = nullptr;
-      m_transformationScript = nullptr;
+      m_transformationScript.reset();
    }
    m_lastScriptErrorReport = 0;  // allow immediate error report after script change
 }
@@ -1221,10 +1179,8 @@ void DCObject::updateFromImport(ConfigEntry *config, bool nxslV5)
    m_systemTag = config->getSubEntryValue(_T("systemTag"), 0, nullptr);
    m_source = (BYTE)config->getSubEntryValueAsInt(_T("origin"));
    m_flags = config->getSubEntryValueAsInt(_T("flags"));
-   const TCHAR *perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
-   MemFree(m_pszPerfTabSettings);
-   m_pszPerfTabSettings = MemCopyString(perfTabSettings);
-   m_snmpPort = static_cast<UINT16>(config->getSubEntryValueAsInt(_T("snmpPort")));
+   m_perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
+   m_snmpPort = static_cast<uint16_t>(config->getSubEntryValueAsInt(_T("snmpPort")));
    m_snmpVersion = static_cast<SNMP_Version>(config->getSubEntryValueAsInt(_T("snmpVersion"), 0, SNMP_VERSION_DEFAULT));
    if (config->getSubEntryValueAsBoolean(_T("isDisabled")))
       m_status = ITEM_STATUS_DISABLED;
@@ -1258,12 +1214,11 @@ void DCObject::updateFromImport(ConfigEntry *config, bool nxslV5)
 
    if (nxslV5)
    {
-      setTransformationScript(MemCopyString(config->getSubEntryValue(_T("transformation"))));
+      setTransformationScript(config->getSubEntryValue(_T("transformation")));
    }
    else
    {
-      StringBuffer output = NXSLConvertToV5(config->getSubEntryValue(_T("transformation"), 0, _T("")));
-      setTransformationScript(MemCopyString(output));
+      setTransformationScript(NXSLConvertToV5(config->getSubEntryValue(_T("transformation"), 0, _T(""))));
    }
 
    ConfigEntry *schedules = config->findEntry(_T("schedules"));
@@ -1296,8 +1251,7 @@ void DCObject::updateFromImport(ConfigEntry *config, bool nxslV5)
    }
    else
    {
-      StringBuffer output = NXSLConvertToV5(config->getSubEntryValue(_T("instanceFilter"), 0, _T("")));
-      setInstanceFilter(output);
+      setInstanceFilter(NXSLConvertToV5(config->getSubEntryValue(_T("instanceFilter"), 0, _T(""))));
    }
    m_instanceName = config->getSubEntryValue(_T("instance"));
    m_instanceRetentionTime = config->getSubEntryValueAsInt(_T("instanceRetentionTime"), 0, -1);
@@ -1504,7 +1458,7 @@ StringObjectMap<InstanceDiscoveryData> *DCObject::filterInstanceList(StringMap *
    FilterCallbackData data;
    data.instanceFilter = new NXSL_VM(new NXSL_ServerEnv());
    data.instanceFilter->setUserData(getOwner().get());
-   if (!data.instanceFilter->load(m_instanceFilter))
+   if (!data.instanceFilter->load(m_instanceFilter.get()))
    {
       ReportScriptError(SCRIPT_CONTEXT_DCI, getOwner().get(), m_id, data.instanceFilter->getErrorText(), _T("DCI::%s::%d::InstanceFilter"), getOwnerName(), m_id);
       unlock();
@@ -1531,37 +1485,26 @@ StringObjectMap<InstanceDiscoveryData> *DCObject::filterInstanceList(StringMap *
  */
 void DCObject::setInstanceFilter(const TCHAR *script)
 {
-   MemFree(m_instanceFilterSource);
-   delete m_instanceFilter;
-   if (script != nullptr)
+   if ((script != nullptr) && !IsBlankString(script))
    {
-      m_instanceFilterSource = Trim(MemCopyString(script));
-      if (m_instanceFilterSource[0] != 0)
+      NXSL_CompilationDiagnostic diag;
+      NXSL_ServerEnv env;
+      m_instanceFilter = shared_ptr<NXSL_Program>(NXSLCompile(m_instanceFilterSource, &env, &diag));
+      if (m_instanceFilter == nullptr)
       {
-         NXSL_CompilationDiagnostic diag;
-         NXSL_ServerEnv env;
-         m_instanceFilter = NXSLCompile(m_instanceFilterSource, &env, &diag);
-         if (m_instanceFilter == nullptr)
+         // node can be nullptr if this DCO was just created from template
+         // in this case compilation error will be reported on template level anyway
+         auto owner = m_owner.lock();
+         if (owner != nullptr)
          {
-            // node can be nullptr if this DCO was just created from template
-            // in this case compilation error will be reported on template level anyway
-            auto owner = m_owner.lock();
-            if (owner != nullptr)
-            {
-               ReportScriptError(SCRIPT_CONTEXT_DCI, owner.get(), m_id, diag.errorText, _T("DCI::%s::%d::InstanceFilter"), owner->getName(), m_id);
-            }
+            ReportScriptError(SCRIPT_CONTEXT_DCI, owner.get(), m_id, diag.errorText, _T("DCI::%s::%d::InstanceFilter"), owner->getName(), m_id);
          }
-      }
-      else
-      {
-         m_instanceFilter = nullptr;
-         MemFreeAndNull(m_instanceFilterSource);
       }
    }
    else
    {
       m_instanceFilterSource = nullptr;
-      m_instanceFilter = nullptr;
+      m_instanceFilter.reset();
    }
 }
 
@@ -1639,7 +1582,7 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "sourceNode", json_integer(m_sourceNode));
    json_object_set_new(root, "snmpPort", json_integer(m_snmpPort));
    json_object_set_new(root, "snmpVersion", json_integer(m_snmpVersion));
-   json_object_set_new(root, "perfTabSettings", json_string_t(m_pszPerfTabSettings));
+   json_object_set_new(root, "perfTabSettings", json_string_t(m_perfTabSettings));
    json_object_set_new(root, "transformationScript", json_string_t(m_transformationScriptSource));
    json_object_set_new(root, "comments", json_string_t(m_comments));
    json_object_set_new(root, "instanceDiscoveryMethod", json_integer(m_instanceDiscoveryMethod));
@@ -1760,8 +1703,8 @@ void DCObject::getScriptDependencies(StringSet *dependencies) const
    if (m_instanceDiscoveryMethod == IDM_SCRIPT)
       AddScriptDependencies(dependencies, m_instanceDiscoveryData);
 
-   AddScriptDependencies(dependencies, m_transformationScript);
-   AddScriptDependencies(dependencies, m_instanceFilter);
+   AddScriptDependencies(dependencies, m_transformationScript.get());
+   AddScriptDependencies(dependencies, m_instanceFilter.get());
 }
 
 /**

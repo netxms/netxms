@@ -84,19 +84,19 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
  */
 DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
-   m_id = DBGetFieldULong(hResult, row, 0);
+   m_id = DBGetFieldUInt32(hResult, row, 0);
    m_name = DBGetFieldAsSharedString(hResult, row, 1);
    m_source = (BYTE)DBGetFieldLong(hResult, row, 2);
    m_dataType = (BYTE)DBGetFieldLong(hResult, row, 3);
-   m_pollingInterval = DBGetFieldLong(hResult, row, 4);
-   m_retentionTime = DBGetFieldLong(hResult, row, 5);
+   m_pollingInterval = DBGetFieldInt32(hResult, row, 4);
+   m_retentionTime = DBGetFieldInt32(hResult, row, 5);
    m_status = (BYTE)DBGetFieldLong(hResult, row, 6);
    m_deltaCalculation = (BYTE)DBGetFieldLong(hResult, row, 7);
-   setTransformationScript(DBGetField(hResult, row, 8, nullptr, 0));
+   setTransformationScript(DBGetFieldAsString(hResult, row, 8));
    m_templateId = DBGetFieldULong(hResult, row, 9);
    m_description = DBGetFieldAsSharedString(hResult, row, 10);
    m_instanceName = DBGetFieldAsSharedString(hResult, row, 11);
-   m_templateItemId = DBGetFieldULong(hResult, row, 12);
+   m_templateItemId = DBGetFieldUInt32(hResult, row, 12);
    m_thresholds = nullptr;
    m_cacheSize = 0;
    m_requiredCacheSize = 0;
@@ -105,36 +105,32 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
    m_prevDeltaValue = 0;
    m_cacheLoaded = false;
    m_anomalyDetected = false;
-   m_flags = DBGetFieldLong(hResult, row, 13);
-	m_resourceId = DBGetFieldULong(hResult, row, 14);
-	m_sourceNode = DBGetFieldULong(hResult, row, 15);
-	m_multiplier = DBGetFieldLong(hResult, row, 16);
+   m_flags = DBGetFieldUInt32(hResult, row, 13);
+	m_resourceId = DBGetFieldUInt32(hResult, row, 14);
+	m_sourceNode = DBGetFieldUInt32(hResult, row, 15);
+	m_multiplier = DBGetFieldInt32(hResult, row, 16);
 	m_unitName = DBGetFieldAsSharedString(hResult, row, 17);
-	m_pszPerfTabSettings = DBGetField(hResult, row, 18, nullptr, 0);
+	m_perfTabSettings = DBGetFieldAsSharedString(hResult, row, 18);
 	m_systemTag = DBGetFieldAsSharedString(hResult, row, 19);
-	m_snmpPort = static_cast<uint16_t>(DBGetFieldLong(hResult, row, 20));
-	m_snmpRawValueType = static_cast<uint16_t>(DBGetFieldLong(hResult, row, 21));
-	m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, row, 22);
+	m_snmpPort = DBGetFieldUInt16(hResult, row, 20);
+	m_snmpRawValueType = DBGetFieldUInt16(hResult, row, 21);
+	m_instanceDiscoveryMethod = DBGetFieldUInt16(hResult, row, 22);
 	m_instanceDiscoveryData = DBGetFieldAsSharedString(hResult, row, 23);
-	m_instanceFilterSource = nullptr;
-   m_instanceFilter = nullptr;
-   TCHAR *tmp = DBGetField(hResult, row, 24, nullptr, 0);
-	setInstanceFilter(tmp);
-   MemFree(tmp);
+	setInstanceFilter(DBGetFieldAsString(hResult, row, 24));
 	m_sampleCount = DBGetFieldLong(hResult, row, 25);
    m_comments = DBGetFieldAsSharedString(hResult, row, 26);
    m_guid = DBGetFieldGUID(hResult, row, 27);
    DBGetField(hResult, row, 28, m_predictionEngine, MAX_NPE_NAME_LEN);
-   m_instanceRetentionTime = DBGetFieldLong(hResult, row, 29);
+   m_instanceRetentionTime = DBGetFieldInt32(hResult, row, 29);
    m_instanceGracePeriodStart = DBGetFieldLong(hResult, row, 30);
-   m_relatedObject = DBGetFieldLong(hResult, row, 31);
+   m_relatedObject = DBGetFieldUInt32(hResult, row, 31);
    m_pollingScheduleType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 32));
    m_retentionType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 33));
    m_pollingIntervalSrc = (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? DBGetField(hResult, row, 34, nullptr, 0) : nullptr;
    m_retentionTimeSrc = (m_retentionType == DC_RETENTION_CUSTOM) ? DBGetField(hResult, row, 35, nullptr, 0) : nullptr;
-   m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldLong(hResult, row, 36));
-   m_stateFlags = DBGetFieldLong(hResult, row, 37);
-   m_allThresholdsRearmEvent = DBGetFieldULong(hResult, row, 38);
+   m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldInt32(hResult, row, 36));
+   m_stateFlags = DBGetFieldUInt32(hResult, row, 37);
+   m_allThresholdsRearmEvent = DBGetFieldUInt32(hResult, row, 38);
    m_transformedDataType = (BYTE)DBGetFieldLong(hResult, row, 39);
 
    int effectivePollingInterval = getEffectivePollingInterval();
@@ -153,8 +149,8 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
          {
             TCHAR szBuffer[MAX_DB_STRING];
             m_prevRawValue = DBGetField(hTempResult, 0, 0, szBuffer, MAX_DB_STRING);
-            m_prevValueTimeStamp = DBGetFieldULong(hTempResult, 0, 1);
-            m_anomalyDetected = (DBGetFieldLong(hTempResult, 0, 2) != 0);
+            m_prevValueTimeStamp = DBGetFieldUInt32(hTempResult, 0, 1);
+            m_anomalyDetected = (DBGetFieldInt32(hTempResult, 0, 2) != 0);
             m_lastPoll = m_lastValueTimestamp = m_prevValueTimeStamp;
          }
          DBFreeResult(hTempResult);
@@ -346,7 +342,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_sourceNode);
 	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_multiplier));
 	DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_unitName, DB_BIND_STATIC);
-	DBBind(hStmt, 19, DB_SQLTYPE_TEXT, m_pszPerfTabSettings, DB_BIND_STATIC);
+	DBBind(hStmt, 19, DB_SQLTYPE_TEXT, m_perfTabSettings, DB_BIND_STATIC);
 	DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_systemTag, DB_BIND_STATIC, MAX_DB_STRING - 1);
 	DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, (INT32)m_snmpPort);
 	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, (INT32)m_snmpRawValueType);
@@ -1287,7 +1283,7 @@ bool DCItem::transform(ItemValue &value, time_t elapsedTime)
 
    if (m_transformationScript != nullptr)
    {
-      ScriptVMHandle vm = CreateServerScriptVM(m_transformationScript, m_owner.lock(), createDescriptorInternal());
+      ScriptVMHandle vm = CreateServerScriptVM(m_transformationScript.get(), m_owner.lock(), createDescriptorInternal());
       if (vm.isValid())
       {
          NXSL_Value *nxslValue = vm->createValue(value.getString());
@@ -2253,7 +2249,7 @@ void DCItem::createExportRecord(TextFileWriter& xml) const
    xml.append(m_allThresholdsRearmEvent);
    xml.append(_T("</allThresholdsRearmEvent>\n"));
 
-	if (m_transformationScriptSource != nullptr)
+	if (!m_transformationScriptSource.isBlank())
 	{
 		xml.append(_T("\t\t\t\t\t<transformation>"));
 		xml.appendPreallocated(EscapeStringForXML(m_transformationScriptSource, -1));
@@ -2282,10 +2278,10 @@ void DCItem::createExportRecord(TextFileWriter& xml) const
 	   xml.append(_T("\t\t\t\t\t</thresholds>\n"));
 	}
 
-	if (m_pszPerfTabSettings != nullptr)
+	if (!m_perfTabSettings.isEmpty())
 	{
 		xml.append(_T("\t\t\t\t\t<perfTabSettings>"));
-		xml.appendPreallocated(EscapeStringForXML(m_pszPerfTabSettings, -1));
+		xml.appendPreallocated(EscapeStringForXML(m_perfTabSettings, -1));
 		xml.append(_T("</perfTabSettings>\n"));
 	}
 
@@ -2303,7 +2299,7 @@ void DCItem::createExportRecord(TextFileWriter& xml) const
 		xml.append(_T("</instanceDiscoveryData>\n"));
 	}
 
-   if (m_instanceFilterSource != nullptr)
+   if (!m_instanceFilterSource.isBlank())
 	{
 		xml.append(_T("\t\t\t\t\t<instanceFilter>"));
 		xml.appendPreallocated(EscapeStringForXML(m_instanceFilterSource, -1));

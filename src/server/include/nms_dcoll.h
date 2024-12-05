@@ -312,17 +312,17 @@ protected:
    uint32_t m_sourceNode;        // Source node ID or 0 to disable
 	uint16_t m_snmpPort;          // Custom SNMP port or 0 for node default
 	SNMP_Version m_snmpVersion;   // Custom SNMP version or SNMP_VERSION_DEFAULT for node default
-	TCHAR *m_pszPerfTabSettings;
-   TCHAR *m_transformationScriptSource;   // Transformation script (source code)
-   NXSL_Program *m_transformationScript;  // Compiled transformation script
+	SharedString m_perfTabSettings;
+	SharedString m_transformationScriptSource;   // Transformation script (source code)
+   shared_ptr<NXSL_Program> m_transformationScript;  // Compiled transformation script
    time_t m_lastScriptErrorReport;
    SharedString m_comments;
 	bool m_doForcePoll;                    // Force poll indicator
 	ClientSession *m_pollingSession;       // Force poll requestor session
    uint16_t m_instanceDiscoveryMethod;
    SharedString m_instanceDiscoveryData;  // Instance discovery data (instance value for discovered DCIs and method specific data for prototype)
-   TCHAR *m_instanceFilterSource;
-   NXSL_Program *m_instanceFilter;
+   SharedString m_instanceFilterSource;
+   shared_ptr<NXSL_Program> m_instanceFilter;
    SharedString m_instanceName;           // Instance display name (used only for display purposes)
    IntegerArray<uint32_t> m_accessList;
    time_t m_instanceGracePeriodStart;  // Start of grace period for missing instance
@@ -342,7 +342,7 @@ protected:
 
 	StringBuffer expandMacros(const TCHAR *src, size_t dstLen);
 
-   void setTransformationScript(TCHAR *source);
+   void setTransformationScript(const TCHAR *source);
 
 	virtual bool isCacheLoaded();
    virtual shared_ptr<DCObjectInfo> createDescriptorInternal() const;
@@ -387,7 +387,7 @@ public:
    int getStatus() const { return m_status; }
    SharedString getName() const { return GetAttributeWithLock(m_name, m_mutex); }
    SharedString getDescription() const { return GetAttributeWithLock(m_description, m_mutex); }
-	const TCHAR *getPerfTabSettings() const { return m_pszPerfTabSettings; }
+	SharedString getPerfTabSettings() const { return GetAttributeWithLock(m_perfTabSettings, m_mutex); }
 	int32_t getPollingScheduleType() const { return m_pollingScheduleType; }
    int32_t getEffectivePollingInterval() const { return (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? std::max(m_pollingInterval, 1) : m_defaultPollingInterval; }
    StringList getPollingSchedules() const { return (m_schedules != nullptr) ? StringList(*m_schedules) : StringList(); }
