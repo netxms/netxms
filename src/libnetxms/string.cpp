@@ -224,16 +224,27 @@ TCHAR *String::substring(size_t start, ssize_t len, TCHAR *buffer) const
 		{
 			count = std::min(static_cast<size_t>(len), m_length - start);
 		}
-		s = (buffer != nullptr) ? buffer : (TCHAR *)MemAlloc((count + 1) * sizeof(TCHAR));
+		s = (buffer != nullptr) ? buffer : MemAllocString(count + 1);
 		memcpy(s, &m_buffer[start], count * sizeof(TCHAR));
 		s[count] = 0;
 	}
 	else
 	{
-		s = (buffer != nullptr) ? buffer : (TCHAR *)MemAlloc(sizeof(TCHAR));
+		s = (buffer != nullptr) ? buffer : MemAllocString(1);
 		*s = 0;
 	}
 	return s;
+}
+
+/**
+ * Check if string is blank
+ */
+bool String::isBlank() const
+{
+   for(size_t i = 0; i < m_length; i++)
+      if (!_istspace(m_buffer[i]))
+         return false;
+   return true;
 }
 
 /**

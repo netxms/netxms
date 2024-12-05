@@ -65,41 +65,37 @@ DCTable::DCTable(uint32_t id, const TCHAR *name, int source, BYTE scheduleType, 
  */
 DCTable::DCTable(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
-   m_id = DBGetFieldULong(hResult, row, 0);
-   m_templateId = DBGetFieldULong(hResult, row, 1);
-   m_templateItemId = DBGetFieldULong(hResult, row, 2);
+   m_id = DBGetFieldUInt32(hResult, row, 0);
+   m_templateId = DBGetFieldUInt32(hResult, row, 1);
+   m_templateItemId = DBGetFieldUInt32(hResult, row, 2);
 	m_name = DBGetFieldAsSharedString(hResult, row, 3);
    m_description = DBGetFieldAsSharedString(hResult, row, 4);
-   m_flags = DBGetFieldLong(hResult, row, 5);
+   m_flags = DBGetFieldUInt32(hResult, row, 5);
    m_source = (BYTE)DBGetFieldLong(hResult, row, 6);
-	m_snmpPort = static_cast<UINT16>(DBGetFieldLong(hResult, row, 7));
-   m_pollingInterval = DBGetFieldLong(hResult, row, 8);
-   m_retentionTime = DBGetFieldLong(hResult, row, 9);
+	m_snmpPort = DBGetFieldUInt16(hResult, row, 7);
+   m_pollingInterval = DBGetFieldInt32(hResult, row, 8);
+   m_retentionTime = DBGetFieldInt32(hResult, row, 9);
    m_status = (BYTE)DBGetFieldLong(hResult, row, 10);
 	m_systemTag = DBGetFieldAsSharedString(hResult, row, 11);
-	m_resourceId = DBGetFieldULong(hResult, row, 12);
-	m_sourceNode = DBGetFieldULong(hResult, row, 13);
-	m_pszPerfTabSettings = DBGetField(hResult, row, 14, nullptr, 0);
-   setTransformationScript(DBGetField(hResult, row, 15, nullptr, 0));
+	m_resourceId = DBGetFieldUInt32(hResult, row, 12);
+	m_sourceNode = DBGetFieldUInt32(hResult, row, 13);
+	m_perfTabSettings = DBGetFieldAsSharedString(hResult, row, 14);
+   setTransformationScript(DBGetFieldAsString(hResult, row, 15));
    m_comments = DBGetFieldAsSharedString(hResult, row, 16);
    m_guid = DBGetFieldGUID(hResult, row, 17);
-   m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, row, 18);
+   m_instanceDiscoveryMethod = DBGetFieldUInt16(hResult, row, 18);
    m_instanceDiscoveryData = DBGetFieldAsSharedString(hResult, row, 19);
-   m_instanceFilterSource = nullptr;
-   m_instanceFilter = nullptr;
-   TCHAR *tmp = DBGetField(hResult, row, 20, nullptr, 0);
-   setInstanceFilter(tmp);
-   MemFree(tmp);
+   setInstanceFilter(DBGetFieldAsString(hResult, row, 20));
    m_instanceName = DBGetFieldAsSharedString(hResult, row, 21);
-   m_instanceRetentionTime = DBGetFieldLong(hResult, row, 22);
+   m_instanceRetentionTime = DBGetFieldInt32(hResult, row, 22);
    m_instanceGracePeriodStart = DBGetFieldLong(hResult, row, 23);
-   m_relatedObject = DBGetFieldLong(hResult, row, 24);
+   m_relatedObject = DBGetFieldUInt32(hResult, row, 24);
    m_pollingScheduleType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 25));
    m_retentionType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 26));
    m_pollingIntervalSrc = (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? DBGetField(hResult, row, 27, nullptr, 0) : nullptr;
    m_retentionTimeSrc = (m_retentionType == DC_RETENTION_CUSTOM) ? DBGetField(hResult, row, 28, nullptr, 0) : nullptr;
-   m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldLong(hResult, row, 29));
-   m_stateFlags = DBGetFieldLong(hResult, row, 30);
+   m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldInt32(hResult, row, 29));
+   m_stateFlags = DBGetFieldUInt32(hResult, row, 30);
 
    int effectivePollingInterval = getEffectivePollingInterval();
    m_startTime = (useStartupDelay && (effectivePollingInterval >= 10)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
@@ -345,7 +341,7 @@ bool DCTable::transform(const shared_ptr<Table>& value)
       return true;
 
    bool success = false;
-   ScriptVMHandle vm = CreateServerScriptVM(m_transformationScript, m_owner.lock(), createDescriptorInternal());
+   ScriptVMHandle vm = CreateServerScriptVM(m_transformationScript.get(), m_owner.lock(), createDescriptorInternal());
    if (vm.isValid())
    {
       NXSL_Value *nxslValue = vm->createValue(vm->createObject(&g_nxslTableClass, new shared_ptr<Table>(value)));
@@ -514,7 +510,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_systemTag, DB_BIND_STATIC, MAX_DB_STRING);
 	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_resourceId);
 	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_sourceNode);
-	DBBind(hStmt, 15, DB_SQLTYPE_TEXT, m_pszPerfTabSettings, DB_BIND_STATIC);
+	DBBind(hStmt, 15, DB_SQLTYPE_TEXT, m_perfTabSettings, DB_BIND_STATIC);
    DBBind(hStmt, 16, DB_SQLTYPE_TEXT, m_transformationScriptSource, DB_BIND_STATIC);
    DBBind(hStmt, 17, DB_SQLTYPE_TEXT, m_comments, DB_BIND_STATIC);
    DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_guid);
@@ -1087,7 +1083,7 @@ void DCTable::createExportRecord(TextFileWriter& xml) const
    xml.append(BooleanToString(m_status == ITEM_STATUS_DISABLED));
    xml.append(_T("</isDisabled>\n"));
 
-	if (m_transformationScriptSource != nullptr)
+	if (!m_transformationScriptSource.isBlank())
 	{
 		xml.append(_T("\t\t\t\t\t<transformation>"));
 		xml.appendPreallocated(EscapeStringForXML(m_transformationScriptSource, -1));
@@ -1126,10 +1122,10 @@ void DCTable::createExportRecord(TextFileWriter& xml) const
 	   xml.append(_T("\t\t\t\t\t</thresholds>\n"));
 	}
 
-	if (m_pszPerfTabSettings != nullptr)
+	if (!m_perfTabSettings.isEmpty())
 	{
 		xml.append(_T("\t\t\t\t\t<perfTabSettings>"));
-		xml.appendPreallocated(EscapeStringForXML(m_pszPerfTabSettings, -1));
+		xml.appendPreallocated(EscapeStringForXML(m_perfTabSettings, -1));
 		xml.append(_T("</perfTabSettings>\n"));
 	}
 
@@ -1140,7 +1136,7 @@ void DCTable::createExportRecord(TextFileWriter& xml) const
       xml += _T("</instanceDiscoveryData>\n");
    }
 
-   if (m_instanceFilterSource != nullptr)
+   if (!m_instanceFilterSource.isBlank())
    {
       xml.append(_T("\t\t\t\t\t<instanceFilter>"));
       xml.appendPreallocated(EscapeStringForXML(m_instanceFilterSource, -1));

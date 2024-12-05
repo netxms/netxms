@@ -1170,6 +1170,7 @@ public:
 
 	size_t length() const { return m_length; }
 	bool isEmpty() const { return m_length == 0; }
+	bool isBlank() const;
 
    ssize_t find(const TCHAR *str, size_t start = 0) const;
    ssize_t findIgnoreCase(const TCHAR *str, size_t start = 0) const;
@@ -1294,6 +1295,11 @@ public:
    {
       const String *s = m_string.get();
       return (s != nullptr) ? s->isEmpty() : true;
+   }
+   bool isBlank() const
+   {
+      const String *s = m_string.get();
+      return (s != nullptr) ? s->isBlank() : true;
    }
    size_t length() const { return m_string->length(); }
 };
