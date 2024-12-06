@@ -140,8 +140,8 @@ InterfaceList *JuniperDriver::getInterfaces(SNMP_Transport *snmp, NObject *node,
          if (iface->type != IFTYPE_ETHERNET_CSMACD)
             continue;
 
-         SNMP_ObjectId oid { 1, 3, 6, 1, 4, 1, 2636, 3, 3, 2, 1, 1 };
-         oid.extend(iface->index);
+         SNMP_ObjectId oid { 1, 3, 6, 1, 4, 1, 2636, 3, 3, 2, 1, 1, 0 };
+         oid.changeElement(oid.length() - 1, iface->index);
          int slot = chassisTable->getAsInt32(oid);
 
          oid.changeElement(oid.length() - 2, 2);
@@ -166,8 +166,8 @@ InterfaceList *JuniperDriver::getInterfaces(SNMP_Transport *snmp, NObject *node,
          if (iface->type != IFTYPE_PROP_VIRTUAL)
             continue;
 
-         SNMP_ObjectId oid { 1, 3, 6, 1, 4, 1, 2636, 3, 3, 2, 1, 1 };
-         oid.extend(iface->index);
+         SNMP_ObjectId oid { 1, 3, 6, 1, 4, 1, 2636, 3, 3, 2, 1, 1, 0 };
+         oid.changeElement(oid.length() - 1, iface->index);
          int slot = chassisTable->getAsInt32(oid);
 
          oid.changeElement(oid.length() - 2, 2);
@@ -235,8 +235,8 @@ VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverDat
 
       // VLAN ports
       uint32_t vlanId = oid.getElement(oid.length() - 1);
-      SNMP_ObjectId baseOid { 1, 3, 6, 1, 4, 1, 2636, 3, 40, 1, 5, 1, 7, 1, 5 };
-      baseOid.extend(vlanId);
+      SNMP_ObjectId baseOid { 1, 3, 6, 1, 4, 1, 2636, 3, 40, 1, 5, 1, 7, 1, 5, 0 };
+      baseOid.changeElement(baseOid.length() - 1, vlanId);
       const SNMP_Variable *p = nullptr;
       while((p = portTable->getNext((p != nullptr) ? p->getName() : baseOid)) != nullptr)
       {
