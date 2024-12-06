@@ -73,9 +73,9 @@ bool RuggedComDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectI
 bool RuggedComDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
-   request.bindVariable(new SNMP_Variable(_T("1.3.6.1.4.1.15004.4.2.3.3.0")));  // rcDeviceInfoMainSwVersion
-   request.bindVariable(new SNMP_Variable(_T("1.3.6.1.4.1.15004.4.2.3.1.0")));  // rcDeviceInfoSerialNumber
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.2.1.1.1.0")));           // sysDescr
+   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 15004, 4, 2, 3, 3, 0 }));  // rcDeviceInfoMainSwVersion
+   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 15004, 4, 2, 3, 1, 0 }));  // rcDeviceInfoSerialNumber
+   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 2, 1, 1, 1, 0 }));           // sysDescr
 
    SNMP_PDU *response;
    if (snmp->doRequest(&request, &response) != SNMP_ERR_SUCCESS)

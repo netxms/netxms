@@ -360,7 +360,7 @@ static void SNMPAgentReceiver()
                   response->setMessageId(pdu->getMessageId());
                   response->setContextEngineId(localEngine.getId(), localEngine.getIdLen());
 
-                  SNMP_Variable *var = new SNMP_Variable(_T(".1.3.6.1.6.3.15.1.1.4.0"));
+                  SNMP_Variable *var = new SNMP_Variable({ 1, 3, 6, 1, 6, 3, 15, 1, 1, 4, 0 });
                   var->setValueFromUInt32(ASN_INTEGER, 2);
                   response->bindVariable(var);
 
@@ -410,7 +410,7 @@ static THREAD s_receiverThread = INVALID_THREAD_HANDLE;
 /**
  * SNMP agent object ID
  */
-static SNMP_ObjectId s_agentObjectId = SNMP_ObjectId::parse(_T(".1.3.6.1.4.1.57163.1.2"));
+static SNMP_ObjectId s_agentObjectId { 1, 3, 6, 1, 4, 1, 57163, 1, 2 };
 
 /**
  * Start SNMP agent

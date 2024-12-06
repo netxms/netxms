@@ -142,11 +142,11 @@ SNMP_PDU::SNMP_PDU(SNMP_Command command, SNMP_Version version, const SNMP_Object
    if (version != SNMP_VERSION_1)
    {
       // V2 TRAP PDU - add uptime and OID varbinds
-      SNMP_Variable *v = new SNMP_Variable(_T(".1.3.6.1.2.1.1.3.0"));
+      SNMP_Variable *v = new SNMP_Variable({ 1, 3, 6, 1, 2, 1, 1, 3, 0 });
       v->setValueFromUInt32(ASN_TIMETICKS, sysUpTime);
       m_variables.add(v);
 
-      v = new SNMP_Variable(_T(".1.3.6.1.6.3.1.1.4.1.0"));
+      v = new SNMP_Variable({ 1, 3, 6, 1, 6, 3, 1, 1, 4, 1, 0 });
       v->setValueFromObjectId(ASN_OBJECT_ID, trapId);
       m_variables.add(v);
    }

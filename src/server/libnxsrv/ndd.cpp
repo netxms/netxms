@@ -868,60 +868,75 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex, const TCHAR *ifName,
          uint32_t ifType, int ifTableSuffixLen, const uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
 {
-   uint32_t state = 0;
-   TCHAR oid[256], suffix[128];
+   uint32_t oid[128] = { 1, 3, 6, 1, 2, 1, 2, 2, 1, 7 };
+   size_t oidLen;
    if (ifTableSuffixLen > 0)
-      _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.7%s"), SnmpConvertOIDToText(ifTableSuffixLen, ifTableSuffix, suffix, 128)); // Interface administrative state
-   else
-      _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.7.%u"), ifIndex); // Interface administrative state
-   SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &state, sizeof(uint32_t), 0);
-
-   switch(state)
    {
-		case 2:
-			*adminState = IF_ADMIN_STATE_DOWN;
-			*operState = IF_OPER_STATE_DOWN;
-         break;
-      case 1:
-		case 3:
-			*adminState = static_cast<InterfaceAdminState>(state);
-         // Get interface operational state
-         state = 0;
-         if (ifTableSuffixLen > 0)
-            _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.8%s"), SnmpConvertOIDToText(ifTableSuffixLen, ifTableSuffix, suffix, 128));
-         else
-            _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.8.%u"), ifIndex);
-         SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &state, sizeof(uint32_t), 0);
-         switch(state)
-         {
-            case 1:
-               *operState = IF_OPER_STATE_UP;
-               getInterfaceSpeed(snmp, ifIndex, ifTableSuffixLen, ifTableSuffix, speed);
-               break;
-            case 2:  // down: interface is down
-            case 7:  // lowerLayerDown: down due to state of lower-layer interface(s)
-               *operState = IF_OPER_STATE_DOWN;
-               break;
-            case 3:
-					*operState = IF_OPER_STATE_TESTING;
-               getInterfaceSpeed(snmp, ifIndex, ifTableSuffixLen, ifTableSuffix, speed);
-               break;
-            case 5:
-               *operState = IF_OPER_STATE_DORMANT;
-               getInterfaceSpeed(snmp, ifIndex, ifTableSuffixLen, ifTableSuffix, speed);
-               break;
-            case 6:
-               *operState = IF_OPER_STATE_NOT_PRESENT;
-               break;
-            default:
-					*operState = IF_OPER_STATE_UNKNOWN;
-               break;
-         }
-         break;
-      default:
-			*adminState = IF_ADMIN_STATE_UNKNOWN;
-			*operState = IF_OPER_STATE_UNKNOWN;
-         break;
+      memcpy(&oid[10], ifTableSuffix, ifTableSuffixLen * sizeof(uint32_t));
+      oidLen = ifTableSuffixLen + 10;
+   }
+   else
+   {
+      oidLen = 11;
+      oid[10] = ifIndex;
+   }
+
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+   request.bindVariable(new SNMP_Variable(oid, oidLen));
+
+   oid[9] = 8; // oper state
+   request.bindVariable(new SNMP_Variable(oid, oidLen));
+
+   SNMP_PDU *response;
+   if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
+   {
+      int32_t state = response->getVariable(0)->getValueAsInt();
+      switch(state)
+      {
+         case 2:
+            *adminState = IF_ADMIN_STATE_DOWN;
+            *operState = IF_OPER_STATE_DOWN;
+            break;
+         case 1:
+         case 3:
+            *adminState = static_cast<InterfaceAdminState>(state);
+            // Check interface operational state
+            switch(response->getVariable(1)->getValueAsInt())
+            {
+               case 1:
+                  *operState = IF_OPER_STATE_UP;
+                  getInterfaceSpeed(snmp, ifIndex, ifTableSuffixLen, ifTableSuffix, speed);
+                  break;
+               case 2:  // down: interface is down
+               case 7:  // lowerLayerDown: down due to state of lower-layer interface(s)
+                  *operState = IF_OPER_STATE_DOWN;
+                  break;
+               case 3:
+                  *operState = IF_OPER_STATE_TESTING;
+                  getInterfaceSpeed(snmp, ifIndex, ifTableSuffixLen, ifTableSuffix, speed);
+                  break;
+               case 5:
+                  *operState = IF_OPER_STATE_DORMANT;
+                  getInterfaceSpeed(snmp, ifIndex, ifTableSuffixLen, ifTableSuffix, speed);
+                  break;
+               case 6:
+                  *operState = IF_OPER_STATE_NOT_PRESENT;
+                  break;
+               default:
+                  *operState = IF_OPER_STATE_UNKNOWN;
+                  break;
+            }
+            break;
+         default:
+            *adminState = IF_ADMIN_STATE_UNKNOWN;
+            *operState = IF_OPER_STATE_UNKNOWN;
+            break;
+      }
+   }
+   else
+   {
+      *adminState = IF_ADMIN_STATE_UNKNOWN;
+      *operState = IF_OPER_STATE_UNKNOWN;
    }
 }
 

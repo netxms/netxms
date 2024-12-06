@@ -99,7 +99,7 @@ void SNMP_Transport::setSecurityContext(SNMP_SecurityContext *ctx)
 uint32_t SNMP_Transport::doEngineIdDiscovery(SNMP_PDU *originalRequest, uint32_t timeout, int numRetries)
 {
    SNMP_PDU discoveryRequest(SNMP_GET_REQUEST, originalRequest->getRequestId(), SNMP_VERSION_3);
-   discoveryRequest.bindVariable(new SNMP_Variable(_T(".1.3.6.1.6.3.10.2.1.1.0")));    // snmpEngineID
+   discoveryRequest.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 6, 3, 10, 2, 1, 1, 0 }));    // snmpEngineID
    SNMP_PDU *response = nullptr;
    uint32_t rc = doRequest(&discoveryRequest, &response, timeout, numRetries, true);
    if (rc != SNMP_ERR_SUCCESS)

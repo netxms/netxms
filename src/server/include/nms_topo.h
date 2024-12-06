@@ -260,12 +260,14 @@ template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<LinkLayerNeighbors>;
 #define VRRP_VIP_DISABLED     2
 #define VRRP_VIP_NOTREADY     3
 
+class VrrpInfo;
+
 /**
  * VRRP router
  */
 class VrrpRouter
 {
-   friend uint32_t VRRPHandler(SNMP_Variable *, SNMP_Transport *, void *);
+   friend uint32_t VRRPHandler(SNMP_Variable*, SNMP_Transport*, VrrpInfo*);
 
 private:
    uint32_t m_id;
@@ -297,22 +299,22 @@ public:
  */
 class VrrpInfo
 {
-   friend uint32_t VRRPHandler(SNMP_Variable *, SNMP_Transport *, void *);
+   friend uint32_t VRRPHandler(SNMP_Variable*, SNMP_Transport*, VrrpInfo*);
 
 private:
-   int m_version;
+   int32_t m_version;
    ObjectArray<VrrpRouter> m_routers;
 
 protected:
    void addRouter(VrrpRouter *router) { m_routers.add(router); }
 
 public:
-   VrrpInfo(int version) : m_routers(0, 16, Ownership::True)
+   VrrpInfo(int32_t version) : m_routers(0, 16, Ownership::True)
    {
       m_version = version;
    }
 
-   int getVersion() { return m_version; }
+   int32_t getVersion() { return m_version; }
    int size() { return m_routers.size(); }
    VrrpRouter *getRouter(int index) { return m_routers.get(index); }
 };

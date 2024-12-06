@@ -60,7 +60,7 @@ int ArubaSwitchDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 bool ArubaSwitchDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
 {
    TCHAR model[256];
-   if (SnmpGetEx(snmp, _T(".1.3.6.1.4.1.14823.2.2.1.2.1.3.0"), nullptr, 0, model, sizeof(model), SG_STRING_RESULT) != SNMP_ERR_SUCCESS)
+   if (SnmpGetEx(snmp, { 1, 3, 6, 1, 4, 1, 14823, 2, 2, 1, 2, 1, 3, 0 }, model, sizeof(model), SG_STRING_RESULT) != SNMP_ERR_SUCCESS)
       return false;
    nxlog_debug_tag(DEBUG_TAG_ARUBA_SW, 5, _T("ArubaSwitchDriver::isDeviceSupported(): model name = %s"), model);
    return true;
@@ -121,7 +121,7 @@ bool ArubaSwitchDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *no
 bool ArubaSwitchDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    BYTE buffer[256];
-   return SnmpGetEx(snmp, _T(".1.3.6.1.4.1.14823.2.2.1.5.2.1.1.0"), nullptr, 0, buffer, sizeof(buffer), SG_RAW_RESULT) == SNMP_ERR_SUCCESS;
+   return SnmpGetEx(snmp, { 1, 3, 6, 1, 4, 1, 14823, 2, 2, 1, 5, 2, 1, 1, 0 }, buffer, sizeof(buffer), SG_RAW_RESULT) == SNMP_ERR_SUCCESS;
 }
 
 /**
