@@ -272,7 +272,7 @@ void TestSQueue()
 #if !WITH_ADDRESS_SANITIZER
    StartTest(_T("SQueue: performance"));
    delete q;
-   q = new Queue();
+   q = new SQueue<TestStruct>();
    int64_t startTime = GetCurrentTimeMs();
    for(int i = 0; i < 100; i++)
    {
