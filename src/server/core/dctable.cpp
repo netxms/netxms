@@ -92,8 +92,8 @@ DCTable::DCTable(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hRes
    m_relatedObject = DBGetFieldUInt32(hResult, row, 24);
    m_pollingScheduleType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 25));
    m_retentionType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 26));
-   m_pollingIntervalSrc = (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? DBGetField(hResult, row, 27, nullptr, 0) : nullptr;
-   m_retentionTimeSrc = (m_retentionType == DC_RETENTION_CUSTOM) ? DBGetField(hResult, row, 28, nullptr, 0) : nullptr;
+   m_pollingIntervalSrc = (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? DBGetFieldAsString(hResult, row, 27) : nullptr;
+   m_retentionTimeSrc = (m_retentionType == DC_RETENTION_CUSTOM) ? DBGetFieldAsString(hResult, row, 28) : nullptr;
    m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldInt32(hResult, row, 29));
    m_stateFlags = DBGetFieldUInt32(hResult, row, 30);
 

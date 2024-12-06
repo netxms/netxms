@@ -292,8 +292,8 @@ protected:
    time_t m_lastValueTimestamp; // Timestamp of last obtained value
    int32_t m_pollingInterval;   // Polling interval in seconds
    int32_t m_retentionTime;     // Retention time in days
-   TCHAR *m_pollingIntervalSrc;
-   TCHAR *m_retentionTimeSrc;
+   StringContainer<6> m_pollingIntervalSrc;
+   StringContainer<6> m_retentionTimeSrc;
    BYTE m_pollingScheduleType;   // Polling schedule type - default, custom fixed, advanced
    BYTE m_retentionType;         // Retention type - default, custom, do not store
    BYTE m_source;                // origin: SNMP, agent, etc.
@@ -467,9 +467,9 @@ public:
    void setInstanceGracePeriodStart(time_t t) { m_instanceGracePeriodStart = t; }
    void setRelatedObject(uint32_t relatedObject) { m_relatedObject = relatedObject; }
    void setPollingIntervalType(BYTE pollingScheduleType);
-   void setPollingInterval(const TCHAR *schedule);
+   void setPollingInterval(const TCHAR *interval);
    void setRetentionType(BYTE retentionType);
-   void setRetention(const TCHAR *schedule);
+   void setRetention(const TCHAR *retention);
 
 	static int m_defaultRetentionTime;
 	static int m_defaultPollingInterval;

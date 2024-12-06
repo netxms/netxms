@@ -77,10 +77,8 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
 	m_scheduledForDeletion = 0;
 	m_pollingScheduleType = DC_POLLING_SCHEDULE_DEFAULT;
    m_pollingInterval = 0;
-   m_pollingIntervalSrc = nullptr;
    m_retentionType = DC_RETENTION_DEFAULT;
    m_retentionTime = 0;
-   m_retentionTimeSrc = nullptr;
    m_source = DS_INTERNAL;
    m_status = ITEM_STATUS_NOT_SUPPORTED;
    m_lastPoll = 0;
@@ -109,6 +107,7 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
  */
 DCObject::DCObject(const DCObject *src, bool shadowCopy) :
          m_owner(src->m_owner), m_name(src->m_name), m_description(src->m_description), m_systemTag(src->m_systemTag),
+         m_pollingIntervalSrc(src->m_pollingIntervalSrc), m_retentionTimeSrc(src->m_retentionTimeSrc),
          m_mutex(MutexType::RECURSIVE), m_perfTabSettings(src->m_perfTabSettings),
          m_transformationScriptSource(src->m_transformationScriptSource), m_transformationScript(src->m_transformationScript),
          m_comments(src->m_comments), m_instanceDiscoveryData(src->m_instanceDiscoveryData),
@@ -124,10 +123,8 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
 	m_scheduledForDeletion = 0;
 	m_pollingScheduleType = src->m_pollingScheduleType;
    m_pollingInterval = src->m_pollingInterval;
-   m_pollingIntervalSrc = MemCopyString(src->m_pollingIntervalSrc);
    m_retentionType = src->m_retentionType;
    m_retentionTime = src->m_retentionTime;
-   m_retentionTimeSrc = MemCopyString(src->m_retentionTimeSrc);
    m_source = src->m_source;
    m_status = src->m_status;
    m_lastPoll = shadowCopy ? src->m_lastPoll : 0;
@@ -158,7 +155,7 @@ DCObject::DCObject(uint32_t id, const TCHAR *name, int source, BYTE scheduleType
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description, const TCHAR *systemTag) :
          m_owner(owner), m_name(name), m_description(description), m_systemTag(systemTag),
-         m_mutex(MutexType::RECURSIVE), m_accessList(0, 16)
+         m_pollingIntervalSrc(pollingInterval), m_retentionTimeSrc(retentionTime), m_mutex(MutexType::RECURSIVE), m_accessList(0, 16)
 {
    m_id = id;
    m_guid = uuid::generate();
@@ -167,9 +164,7 @@ DCObject::DCObject(uint32_t id, const TCHAR *name, int source, BYTE scheduleType
    m_templateItemId = 0;
    m_source = source;
    m_pollingScheduleType = scheduleType;
-   m_pollingIntervalSrc = MemCopyString(pollingInterval);
    m_retentionType = retentionType;
-   m_retentionTimeSrc = MemCopyString(retentionTime);
    m_status = ITEM_STATUS_ACTIVE;
    m_busy = 0;
    m_scheduledForDeletion = 0;
@@ -213,25 +208,25 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_systemTag = config->getSubEntryValue(_T("systemTag"), 0, nullptr);
    m_source = (BYTE)config->getSubEntryValueAsInt(_T("origin"));
    m_flags = config->getSubEntryValueAsInt(_T("flags"));
-   m_pollingIntervalSrc = MemCopyString(config->getSubEntryValue(_T("interval"), 0, _T("0")));
+   m_pollingIntervalSrc = config->getSubEntryValue(_T("interval"), 0, nullptr);
    if (config->findEntry(_T("scheduleType")) != nullptr)
    {
       m_pollingScheduleType = config->getSubEntryValueAsInt(_T("scheduleType"));
    }
    else
    {
-      m_pollingScheduleType = !_tcscmp(m_pollingIntervalSrc, _T("")) || !_tcscmp(m_pollingIntervalSrc, _T("0")) ? DC_POLLING_SCHEDULE_DEFAULT : DC_POLLING_SCHEDULE_CUSTOM;
+      m_pollingScheduleType = (m_pollingIntervalSrc.isEmpty() || !_tcscmp(m_pollingIntervalSrc, _T("0"))) ? DC_POLLING_SCHEDULE_DEFAULT : DC_POLLING_SCHEDULE_CUSTOM;
       if (m_flags & 1)  // for compatibility with old format
          m_pollingScheduleType = DC_POLLING_SCHEDULE_ADVANCED;
    }
-   m_retentionTimeSrc = MemCopyString(config->getSubEntryValue(_T("retention"), 0, _T("0")));
+   m_retentionTimeSrc = config->getSubEntryValue(_T("retention"), 0, nullptr);
    if (config->findEntry(_T("retentionType")) != nullptr)
    {
       m_retentionType = config->getSubEntryValueAsInt(_T("retentionType"));
    }
    else
    {
-      m_retentionType = !_tcscmp(m_retentionTimeSrc, _T("")) || !_tcscmp(m_retentionTimeSrc, _T("0")) ? DC_RETENTION_DEFAULT : DC_RETENTION_CUSTOM;
+      m_retentionType = (m_retentionTimeSrc.isEmpty() || !_tcscmp(m_retentionTimeSrc, _T("0"))) ? DC_RETENTION_DEFAULT : DC_RETENTION_CUSTOM;
       if (m_flags & 0x200) // for compatibility with old format
          m_retentionType = DC_RETENTION_NONE;
    }
@@ -302,8 +297,6 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
  */
 DCObject::~DCObject()
 {
-   MemFree(m_retentionTimeSrc);
-   MemFree(m_pollingIntervalSrc);
    delete m_schedules;
 }
 
@@ -562,18 +555,17 @@ void DCObject::setPollingIntervalType(BYTE pollingScheduleType)
    lock();
    m_pollingScheduleType = pollingScheduleType;
    if (m_pollingScheduleType != DC_POLLING_SCHEDULE_CUSTOM)
-      MemFreeAndNull(m_pollingIntervalSrc);
+      m_pollingIntervalSrc.reset();
    unlock();
 }
 
 /**
  * Update polling interval
  */
-void DCObject::setPollingInterval(const TCHAR *schedule)
+void DCObject::setPollingInterval(const TCHAR *interval)
 {
    lock();
-   MemFree(m_pollingIntervalSrc);
-   m_pollingIntervalSrc = MemCopyString(schedule);
+   m_pollingIntervalSrc = interval;
    updateTimeIntervalsInternal();
    unlock();
 
@@ -587,7 +579,7 @@ void DCObject::setRetentionType(BYTE retentionType)
    lock();
    m_retentionType = retentionType;
    if (m_retentionType != DC_RETENTION_CUSTOM)
-      MemFreeAndNull(m_retentionTimeSrc);
+      m_retentionTimeSrc.reset();
    unlock();
 }
 
@@ -597,8 +589,7 @@ void DCObject::setRetentionType(BYTE retentionType)
 void DCObject::setRetention(const TCHAR *retention)
 {
    lock();
-   MemFree(m_retentionTimeSrc);
-   m_retentionTimeSrc = MemCopyString(retention);
+   m_retentionTimeSrc = retention;
    updateTimeIntervalsInternal();
    unlock();
 }
@@ -853,14 +844,24 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
 
    m_pollingScheduleType = static_cast<BYTE>(msg.getFieldAsUInt16(VID_POLLING_SCHEDULE_TYPE));
    if (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM)
-      msg.getFieldAsString(VID_POLLING_INTERVAL, &m_pollingIntervalSrc);
+   {
+      TCHAR buffer[MAX_DB_STRING];
+      m_pollingIntervalSrc = msg.getFieldAsString(VID_POLLING_INTERVAL, buffer, MAX_DB_STRING);
+   }
    else
-      MemFreeAndNull(m_pollingIntervalSrc);
+   {
+      m_pollingIntervalSrc.reset();
+   }
    m_retentionType = static_cast<BYTE>(msg.getFieldAsUInt16(VID_RETENTION_TYPE));
    if (m_retentionType == DC_RETENTION_CUSTOM)
-      msg.getFieldAsString(VID_RETENTION_TIME, &m_retentionTimeSrc);
+   {
+      TCHAR buffer[MAX_DB_STRING];
+      m_retentionTimeSrc = msg.getFieldAsString(VID_RETENTION_TIME, buffer, MAX_DB_STRING);
+   }
    else
-      MemFreeAndNull(m_retentionTimeSrc);
+   {
+      m_retentionTimeSrc.reset();
+   }
    updateTimeIntervalsInternal();
 
    TCHAR *tmp = msg.getFieldAsString(VID_TRANSFORMATION_SCRIPT);
@@ -1027,11 +1028,9 @@ void DCObject::updateFromTemplate(DCObject *src)
    m_systemTag = expandMacros(src->m_systemTag, MAX_DB_STRING);
 
    m_pollingScheduleType = src->m_pollingScheduleType;
-   MemFree(m_pollingIntervalSrc);
-   m_pollingIntervalSrc = MemCopyString(src->m_pollingIntervalSrc);
+   m_pollingIntervalSrc = src->m_pollingIntervalSrc;
    m_retentionType = src->m_retentionType;
-   MemFree(m_retentionTimeSrc);
-   m_retentionTimeSrc = MemCopyString(src->m_retentionTimeSrc);
+   m_retentionTimeSrc = src->m_retentionTimeSrc;
    updateTimeIntervalsInternal();
 
    m_source = src->m_source;
@@ -1185,27 +1184,25 @@ void DCObject::updateFromImport(ConfigEntry *config, bool nxslV5)
    if (config->getSubEntryValueAsBoolean(_T("isDisabled")))
       m_status = ITEM_STATUS_DISABLED;
 
-   MemFree(m_pollingIntervalSrc);
-   MemFree(m_retentionTimeSrc);
-   m_pollingIntervalSrc = MemCopyString(config->getSubEntryValue(_T("interval"), 0, _T("0")));
+   m_pollingIntervalSrc = config->getSubEntryValue(_T("interval"), 0, nullptr);
    if (config->findEntry(_T("scheduleType")) != nullptr)
    {
       m_pollingScheduleType = config->getSubEntryValueAsInt(_T("scheduleType"));
    }
    else
    {
-      m_pollingScheduleType = !_tcscmp(m_pollingIntervalSrc, _T("")) || !_tcscmp(m_pollingIntervalSrc, _T("0")) ? DC_POLLING_SCHEDULE_DEFAULT : DC_POLLING_SCHEDULE_CUSTOM;
+      m_pollingScheduleType = (m_pollingIntervalSrc.isEmpty() || !_tcscmp(m_pollingIntervalSrc, _T("0"))) ? DC_POLLING_SCHEDULE_DEFAULT : DC_POLLING_SCHEDULE_CUSTOM;
       if (m_flags & 1)  // for compatibility with old format
          m_pollingScheduleType = DC_POLLING_SCHEDULE_ADVANCED;
    }
-   m_retentionTimeSrc = MemCopyString(config->getSubEntryValue(_T("retention"), 0, _T("0")));
+   m_retentionTimeSrc = config->getSubEntryValue(_T("retention"), 0, nullptr);
    if (config->findEntry(_T("retentionType")) != nullptr)
    {
       m_retentionType = config->getSubEntryValueAsInt(_T("retentionType"));
    }
    else
    {
-      m_retentionType = !_tcscmp(m_retentionTimeSrc, _T("")) || !_tcscmp(m_retentionTimeSrc, _T("0")) ? DC_RETENTION_DEFAULT : DC_RETENTION_CUSTOM;
+      m_retentionType = (m_retentionTimeSrc.isEmpty() || !_tcscmp(m_retentionTimeSrc, _T("0"))) ? DC_RETENTION_DEFAULT : DC_RETENTION_CUSTOM;
       if (m_flags & 0x200) // for compatibility with old format
          m_retentionType = DC_RETENTION_NONE;
    }
@@ -1513,7 +1510,7 @@ void DCObject::setInstanceFilter(const TCHAR *script)
  */
 void DCObject::updateTimeIntervalsInternal()
 {
-   if ((m_retentionTimeSrc != nullptr) && (*m_retentionTimeSrc != 0))
+   if (!m_retentionTimeSrc.isEmpty())
    {
       StringBuffer exp = m_owner.lock()->expandText(m_retentionTimeSrc, nullptr, nullptr, createDescriptorInternal(), nullptr, nullptr, m_instanceName, nullptr, nullptr);
       m_retentionTime = _tcstol(exp, nullptr, 10);
@@ -1523,7 +1520,7 @@ void DCObject::updateTimeIntervalsInternal()
       m_retentionTime = 0;
    }
 
-   if ((m_pollingIntervalSrc != nullptr) && (*m_pollingIntervalSrc != 0))
+   if (!m_pollingIntervalSrc.isEmpty())
    {
       StringBuffer exp = m_owner.lock()->expandText(m_pollingIntervalSrc, nullptr, nullptr, createDescriptorInternal(), nullptr, nullptr, m_instanceName, nullptr, nullptr);
       m_pollingInterval = _tcstol(exp, nullptr, 10);
