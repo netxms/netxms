@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -206,15 +206,15 @@ void *Queue::getInternal()
    if (m_shutdownFlag)
       return INVALID_POINTER_VALUE;
 
-   void *element = NULL;
-   while((m_size > 0) && (element == NULL))
+   void *element = nullptr;
+   while((m_size > 0) && (element == nullptr))
    {
       element = m_head->elements[m_head->head++];
       if (m_head->head == m_blockSize)
          m_head->head = 0;
       m_size--;
       m_head->count--;
-      if ((m_head->count == 0) && (m_head->next != NULL))
+      if ((m_head->count == 0) && (m_head->next != nullptr))
       {
          auto tmp = m_head;
          m_head = m_head->next;
@@ -269,7 +269,7 @@ void *Queue::getOrBlock(uint32_t timeout)
 #else
          struct timeval now;
          struct timespec ts;
-         gettimeofday(&now, NULL);
+         gettimeofday(&now, nullptr);
          ts.tv_sec = now.tv_sec + (timeout / 1000);
          now.tv_usec += (timeout % 1000) * 1000;
          ts.tv_sec += now.tv_usec / 1000000;
@@ -362,7 +362,7 @@ void Queue::setShutdownMode()
  */
 void *Queue::find(const void *key, QueueComparator comparator, void *(*transform)(void*))
 {
-	void *element = NULL;
+	void *element = nullptr;
 	lock();
    for(auto buffer = m_head; buffer != nullptr; buffer = buffer->next)
    {

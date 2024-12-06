@@ -9,8 +9,8 @@ libnetxms_la_SOURCES = \
 	macaddr.cpp md4.cpp md5.cpp memmem.cpp mempool.cpp \
 	message.cpp msgrecv.cpp msgwq.cpp net.cpp nxcp.cpp npipe.cpp npipe_unix.cpp \
 	pa.cpp procexec.cpp pugixml.cpp qsort.cpp queue.cpp rbuffer.cpp scandir.cpp serial.cpp \
-	sha1.cpp sha2.cpp socket_listener.cpp spoll.cpp strcasestr.cpp streamcomp.cpp \
-	string.cpp stringlist.cpp strlcat.cpp strlcpy.cpp strmap.cpp \
+	sha1.cpp sha2.cpp socket_listener.cpp spoll.cpp squeue.cpp strcasestr.cpp \
+	streamcomp.cpp string.cpp stringlist.cpp strlcat.cpp strlcpy.cpp strmap.cpp \
 	strmapbase.cpp strptime.cpp strset.cpp strtoll.cpp strtoull.cpp \
 	subproc.cpp table.cpp tasks.cpp tfw.cpp threads.cpp timegm.cpp tls_conn.cpp \
 	tools.cpp tp.cpp unicode.cpp uuid.cpp wcstoll.cpp wcstoull.cpp xml.cpp \

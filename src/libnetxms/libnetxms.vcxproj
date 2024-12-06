@@ -465,6 +465,7 @@
     <ClCompile Include="sha2.cpp" />
     <ClCompile Include="socket_listener.cpp" />
     <ClCompile Include="spoll.cpp" />
+    <ClCompile Include="squeue.cpp" />
     <ClCompile Include="strcasestr.cpp" />
     <ClCompile Include="streamcomp.cpp" />
     <ClCompile Include="string.cpp" />

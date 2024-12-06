@@ -18,6 +18,7 @@ void TestThreadPool();
 void TestThreadPoolDelayedExecution();
 void TestQueue();
 void TestSharedObjectQueue();
+void TestSQueue();
 void TestMsgWaitQueue();
 void TestMessageClass();
 void TestMutex();
@@ -3073,6 +3074,7 @@ int main(int argc, char *argv[])
    TestIntegerToString();
    TestQueue();
    TestSharedObjectQueue();
+   TestSQueue();
    TestHashMap();
    TestSharedHashMap();
    TestSynchronizedSharedHashMap();

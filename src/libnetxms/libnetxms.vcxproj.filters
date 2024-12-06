@@ -138,6 +138,9 @@
     <ClCompile Include="spoll.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="squeue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="streamcomp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
