@@ -196,6 +196,60 @@ static void TestVariableClass()
 }
 
 /**
+ * Test PDU encoding
+ */
+static void TestPDUEncoding()
+{
+   StartTest(_T("SNMP_PDU encoding/decoding"));
+
+   SNMP_PDU pdu(SNMP_GET_REQUEST, SnmpNewRequestId(), SNMP_VERSION_2C);
+   pdu.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 17713, 22, 1, 1, 1, 8, 0 }));
+   pdu.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 17713, 22, 1, 1, 1, 4, 0 }));
+   pdu.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 17713, 22, 1, 1, 1, 5, 0 }));
+
+   SNMP_ObjectId oid { 1, 3, 6, 1, 4, 1, 17713, 22, 1, 2, 1, 4, 1, 1, 1 };
+   oid.changeElement(11, 6);
+   pdu.bindVariable(new SNMP_Variable(oid));
+
+   oid.changeElement(11, 8);
+   pdu.bindVariable(new SNMP_Variable(oid));
+
+   oid.changeElement(11, 2);
+   pdu.bindVariable(new SNMP_Variable(oid));
+
+   oid.changeElement(9, 4);
+   oid.changeElement(10, 1);
+   oid.changeElement(11, 2);
+   pdu.bindVariable(new SNMP_Variable(oid));
+
+   SNMP_SecurityContext securityContext("public");
+   BYTE *encodedPDU = nullptr;
+   size_t size = pdu.encode(&encodedPDU, &securityContext);
+   AssertNotNull(encodedPDU);
+   AssertTrue(size > 0);
+
+   SNMP_PDU pdu2;
+   AssertTrue(pdu2.parse(encodedPDU, size, &securityContext, false));
+   MemFree(encodedPDU);
+
+   AssertEquals(pdu.getCommand(), pdu2.getCommand());
+   AssertEquals(pdu2.getCommunity(), "public");
+   AssertEquals(pdu.getRequestId(), pdu2.getRequestId());
+   AssertEquals(pdu.getNumVariables(), pdu2.getNumVariables());
+
+   for(int i = 0; i < pdu.getNumVariables(); i++)
+   {
+      SNMP_Variable *v1 = pdu.getVariable(i);
+      SNMP_Variable *v2 = pdu2.getVariable(i);
+      AssertNotNull(v1);
+      AssertNotNull(v2);
+      AssertTrue(v1->getName().equals(v2->getName()));
+   }
+
+   EndTest();
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
@@ -205,5 +259,6 @@ int main(int argc, char *argv[])
    TestOidConversion();
    TestOidClass();
    TestVariableClass();
+   TestPDUEncoding();
    return 0;
 }
