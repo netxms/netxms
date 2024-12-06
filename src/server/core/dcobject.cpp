@@ -1484,6 +1484,8 @@ void DCObject::setInstanceFilter(const TCHAR *script)
 {
    if ((script != nullptr) && !IsBlankString(script))
    {
+      m_instanceFilterSource = script;
+
       NXSL_CompilationDiagnostic diag;
       NXSL_ServerEnv env;
       m_instanceFilter = shared_ptr<NXSL_Program>(NXSLCompile(m_instanceFilterSource, &env, &diag));
