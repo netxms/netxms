@@ -1416,6 +1416,185 @@ public:
 };
 
 /**
+ * String container with configurable internal buffer size
+ */
+template<size_t BufferSize> class StringContainer
+{
+private:
+   TCHAR *m_value;
+   TCHAR m_buffer[BufferSize];
+
+public:
+   StringContainer()
+   {
+      m_value = m_buffer;
+      m_buffer[0] = 0;
+   }
+
+   StringContainer(const TCHAR *src)
+   {
+      if (src != nullptr)
+      {
+         size_t len = _tcslen(src);
+         if (len >= BufferSize)
+         {
+            m_value = MemCopyBlock(src, (len + 1) * sizeof(TCHAR));
+         }
+         else
+         {
+            m_value = m_buffer;
+            memcpy(m_buffer, src, (len + 1) * sizeof(TCHAR));
+         }
+      }
+      else
+      {
+         m_value = m_buffer;
+         m_buffer[0] = 0;
+      }
+   }
+
+   StringContainer(const String& src)
+   {
+      if (src.length() >= BufferSize)
+      {
+         m_value = MemCopyBlock(src.cstr(), (src.length() + 1) * sizeof(TCHAR));
+      }
+      else
+      {
+         m_value = m_buffer;
+         memcpy(m_buffer, src.cstr(), (src.length() + 1) * sizeof(TCHAR));
+      }
+   }
+
+   StringContainer(const StringContainer& src)
+   {
+      if (src.m_value != src.m_buffer)
+      {
+         m_value = MemCopyString(src.m_value);
+      }
+      else
+      {
+         m_value = m_buffer;
+         memcpy(m_buffer, src.m_buffer, BufferSize * sizeof(TCHAR));
+      }
+   }
+
+   StringContainer(StringContainer&& src)
+   {
+      if (src.m_value != src.m_buffer)
+      {
+         m_value = src.m_value;
+         src.m_value = src.m_buffer;
+         src.m_buffer[0] = 0;
+      }
+      else
+      {
+         m_value = m_buffer;
+         memcpy(m_buffer, src.m_buffer, BufferSize * sizeof(TCHAR));
+      }
+   }
+
+   ~StringContainer()
+   {
+      if (m_value != m_buffer)
+         MemFree(m_value);
+   }
+
+   StringContainer& operator =(const TCHAR *src)
+   {
+      if (m_value != m_buffer)
+         MemFree(m_value);
+
+      if (src != nullptr)
+      {
+         size_t len = _tcslen(src);
+         if (len >= BufferSize)
+         {
+            m_value = MemCopyBlock(src, (len + 1) * sizeof(TCHAR));
+         }
+         else
+         {
+            m_value = m_buffer;
+            memcpy(m_buffer, src, (len + 1) * sizeof(TCHAR));
+         }
+      }
+      else
+      {
+         m_value = m_buffer;
+         m_buffer[0] = 0;
+      }
+      return *this;
+   }
+
+   StringContainer& operator =(const String& src)
+   {
+      if (m_value != m_buffer)
+         MemFree(m_value);
+
+      if (src.length() >= BufferSize)
+      {
+         m_value = MemCopyBlock(src.cstr(), (src.length() + 1) * sizeof(TCHAR));
+      }
+      else
+      {
+         m_value = m_buffer;
+         memcpy(m_buffer, src.cstr(), (src.length() + 1) * sizeof(TCHAR));
+      }
+      return *this;
+   }
+
+   StringContainer& operator =(const StringContainer& src)
+   {
+      if (m_value != m_buffer)
+         MemFree(m_value);
+
+      if (src.m_value != src.m_buffer)
+      {
+         m_value = MemCopyString(src.m_value);
+      }
+      else
+      {
+         m_value = m_buffer;
+         memcpy(m_buffer, src.m_buffer, BufferSize * sizeof(TCHAR));
+      }
+      return *this;
+   }
+
+   StringContainer& operator =(StringContainer&& src)
+   {
+      if (m_value != m_buffer)
+         MemFree(m_value);
+
+      if (src.m_value != src.m_buffer)
+      {
+         m_value = src.m_value;
+         src.m_value = src.m_buffer;
+         src.m_buffer[0] = 0;
+      }
+      else
+      {
+         m_value = m_buffer;
+         memcpy(m_buffer, src.m_buffer, BufferSize * sizeof(TCHAR));
+      }
+      return *this;
+   }
+
+   void reset()
+   {
+      if (m_value != m_buffer)
+      {
+         MemFree(m_value);
+         m_value = m_buffer;
+      }
+      m_value[0] = 0;
+   }
+
+   operator const TCHAR*() const { return m_value; }
+   const TCHAR *cstr() const { return m_value; }
+   bool isEmpty() const { return m_value[0] == 0; }
+};
+
+/**
  * Text file writer that uses StringBuffer interface
  */
 class LIBNETXMS_EXPORTABLE TextFileWriter
