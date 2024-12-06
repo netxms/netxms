@@ -2516,7 +2516,8 @@ public class NXCSession
          logger.error("Login failed, server requires minimal client version {} (this client version is {})", minVersion, VersionInfo.version());
          throw new NXCException(rcc, minVersion);
       }
-      else if (rcc != RCC.SUCCESS)
+      
+      if (rcc != RCC.SUCCESS)
       {
          logger.error("Login failed, RCC=" + rcc);
          throw new NXCException(rcc);
