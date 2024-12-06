@@ -88,8 +88,8 @@ public:
    Queue(const Queue& src) = delete;
    virtual ~Queue();
 
-   void put(void *object);
-   void insert(void *object);
+   void put(void *element);
+   void insert(void *element);
    void setShutdownMode();
    void setOwner(bool owner) { m_owner = owner; }
    void *get();
@@ -191,6 +191,94 @@ public:
 
    void put(shared_ptr<T> object) { Queue::put(new(m_pool.allocate()) shared_ptr<T>(object)); }
    void insert(shared_ptr<T> object) { Queue::insert(new(m_pool.allocate()) shared_ptr<T>(object)); }
+};
+
+/**
+ * Simplified queue that holds POD objects (base implementation for template)
+ */
+class LIBNETXMS_EXPORTABLE SQueueBase
+{
+private:
+#if defined(_WIN32)
+   CRITICAL_SECTION m_lock;
+   CONDITION_VARIABLE m_wakeupCondition;
+#elif defined(_USE_GNU_PTH)
+   pth_mutex_t m_lock;
+   pth_cond_t m_wakeupCondition;
+#else
+   pthread_mutex_t m_lock;
+   pthread_cond_t m_wakeupCondition;
+#endif
+   QueueBuffer *m_head;
+   QueueBuffer *m_tail;
+   size_t m_size;
+   size_t m_blockSize;
+   size_t m_blockCount;
+   size_t m_elementSize;
+   int m_readers;
+
+#if defined(_WIN32)
+   void lock() { EnterCriticalSection(&m_lock); }
+   void unlock() { LeaveCriticalSection(&m_lock); }
+#elif defined(_USE_GNU_PTH)
+   void lock() { pth_mutex_acquire(&m_lock, FALSE, nullptr); }
+   void unlock() { pth_mutex_release(&m_lock); }
+#else
+   void lock() { pthread_mutex_lock(&m_lock); }
+   void unlock() { pthread_mutex_unlock(&m_lock); }
+#endif
+
+   void dequeue(void *buffer);
+
+public:
+   SQueueBase(size_t elementSize, size_t blockSize = 256);
+   SQueueBase(const SQueueBase& src) = delete;
+   ~SQueueBase();
+
+   void put(const void *element);
+   void insert(const void *element);
+   void clear();
+
+   bool get(void *buffer)
+   {
+      bool success;
+      lock();
+      if (m_size > 0)
+      {
+         dequeue(buffer);
+         success = true;
+      }
+      else
+      {
+         success = false;
+      }
+      unlock();
+      return success;
+   }
+
+   bool getOrBlock(void *buffer, uint32_t timeout = INFINITE);
+
+   size_t size() const { return m_size; }
+   size_t allocated() const { return m_blockSize * m_blockCount; }
+};
+
+/**
+ * Simplified queue that holds POD objects (base implementation for template)
+ */
+template<typename T> class SQueue : public SQueueBase
+{
+public:
+   SQueue(size_t blockSize = 256) : SQueueBase(sizeof(T), blockSize) {}
+   SQueue(const SQueue& src) = delete;
+
+   void put(const T& element)
+   {
+      SQueueBase::put(&element);
+   }
+   void insert(const T& element)
+   {
+      SQueueBase::insert(&element);
+   }
 };
 
 #endif    /* _nxqueue_h_ */

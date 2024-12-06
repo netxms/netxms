@@ -30,6 +30,8 @@ void TestQueue()
       AssertEquals(CAST_FROM_POINTER(p, int), i + 1);
    }
    AssertEquals(q->size(), 0);
+   AssertNull(q->get());
+   AssertNull(q->getOrBlock(100));
    EndTest();
 
    StartTest(_T("Queue: insert"));
@@ -80,7 +82,7 @@ void TestQueue()
    StartTest(_T("Queue: performance"));
    delete q;
    q = new Queue();
-   INT64 startTime = GetCurrentTimeMs();
+   int64_t startTime = GetCurrentTimeMs();
    for(int i = 0; i < 100; i++)
    {
       for(int j = 0; j < 10000; j++)
@@ -88,7 +90,7 @@ void TestQueue()
       AssertEquals(q->size(), 10000);
 
       void *p;
-      while((p = q->get()) != NULL)
+      while((p = q->get()) != nullptr)
          ;
       AssertEquals(q->size(), 0);
    }
@@ -192,6 +194,99 @@ void TestSharedObjectQueue()
    AssertEquals(q->size(), 5);
    AssertEquals(q->allocated(), 16);
    EndTest();
+
+   delete q;
+}
+
+/**
+ * Test structure
+ */
+struct TestStruct
+{
+   int64_t id;
+   const char *text;
+};
+
+/**
+ * Test queue
+ */
+void TestSQueue()
+{
+   SQueue<TestStruct> *q = new SQueue<TestStruct>(16);
+   TestStruct s;
+
+   StartTest(_T("SQueue: put/get"));
+   AssertFalse(q->getOrBlock(&s, 100));
+   for(int i = 0; i < 40; i++)
+      q->put(TestStruct { i + 1, "put/get" });
+   AssertEquals(q->size(), 40);
+   AssertEquals(q->allocated(), 48);
+   for(int i = 0; i < 40; i++)
+   {
+      AssertTrue(q->get(&s));
+      AssertEquals(s.id, i + 1);
+   }
+   AssertEquals(q->size(), 0);
+   AssertFalse(q->get(&s));
+   AssertFalse(q->getOrBlock(&s, 100));
+   q->put(TestStruct { 111, "put/get" });
+   AssertTrue(q->getOrBlock(&s, 100));
+   AssertEquals(q->size(), 0);
+   EndTest();
+
+   StartTest(_T("SQueue: insert"));
+   for (int i = 0; i < 20; i++)
+      q->put(TestStruct { i, "LowPriority" });
+   AssertEquals(q->size(), 20);
+   q->insert(TestStruct { 0, "HighPriority" });
+   AssertEquals(q->size(), 21);
+   AssertTrue(q->get(&s));
+   AssertEquals(s.text, "HighPriority");
+   AssertEquals(q->size(), 20);
+   AssertTrue(q->get(&s));
+   AssertEquals(s.text, "LowPriority");
+   AssertEquals(q->size(), 19);
+   EndTest();
+
+   StartTest(_T("SQueue: clear"));
+   q->clear();
+   AssertEquals(q->size(), 0);
+   AssertFalse(q->get(&s));
+   AssertEquals(q->allocated(), 16);
+   EndTest();
+
+   StartTest(_T("SQueue: shrink"));
+   for(int i = 0; i < 60; i++)
+      q->put(TestStruct { i + 1, "shrink" });
+   AssertEquals(q->size(), 60);
+   AssertEquals(q->allocated(), 64);
+   for(int i = 0; i < 55; i++)
+   {
+      AssertTrue(q->get(&s));
+      AssertEquals(s.id, i + 1);
+   }
+   AssertEquals(q->size(), 5);
+   AssertEquals(q->allocated(), 16);
+   EndTest();
+
+#if !WITH_ADDRESS_SANITIZER
+   StartTest(_T("SQueue: performance"));
+   delete q;
+   q = new Queue();
+   int64_t startTime = GetCurrentTimeMs();
+   for(int i = 0; i < 100; i++)
+   {
+      for(int j = 0; j < 10000; j++)
+         q->put(TestStruct { j + 1, "performance" });
+      AssertEquals(q->size(), 10000);
+
+      TestStruct s;;
+      while(q->get(&s))
+         ;
+      AssertEquals(q->size(), 0);
+   }
+   EndTest(GetCurrentTimeMs() - startTime);
+#endif
 
    delete q;
 }

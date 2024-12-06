@@ -67,14 +67,13 @@ struct WorkRequest
 /**
  * Request queue for serialized execution
  */
-class SerializationQueue: public Queue
+class SerializationQueue: public SQueue<WorkRequest>
 {
 private:
    uint32_t m_maxWaitTime;
 
 public:
-   SerializationQueue() : Queue() { m_maxWaitTime = 0; }
-   SerializationQueue(size_t blockSize) : Queue(blockSize, Ownership::False) { m_maxWaitTime = 0; }
+   SerializationQueue() : SQueue<WorkRequest>(128) { m_maxWaitTime = 0; }
 
    uint32_t getMaxWaitTime() { return m_maxWaitTime; }
    void updateMaxWaitTime(uint32_t waitTime) { m_maxWaitTime = std::max(waitTime, m_maxWaitTime); }
@@ -86,12 +85,12 @@ public:
 struct ScheduledRequestsComparator
 {
 #if __cplusplus >= 201402L
-   constexpr bool operator() (const WorkRequest *lhs, const WorkRequest *rhs) const
+   constexpr bool operator() (const WorkRequest& lhs, const WorkRequest& rhs) const
 #else
-   bool operator() (const WorkRequest *lhs, const WorkRequest *rhs) const
+   bool operator() (const WorkRequest& lhs, const WorkRequest& rhs) const
 #endif
    {
-      return lhs->runTime > rhs->runTime;
+      return lhs.runTime > rhs.runTime;
    }
 };
 
@@ -108,10 +107,10 @@ struct ThreadPool
    THREAD maintThread;
    Condition maintThreadWakeup;
    HashMap<uint64_t, WorkerThreadInfo> threads;
-   ObjectQueue<WorkRequest> queue;
+   SQueue<WorkRequest> queue;
    StringObjectMap<SerializationQueue> serializationQueues;
    Mutex serializationLock;
-   std::priority_queue<WorkRequest*, std::vector<WorkRequest*>, ScheduledRequestsComparator> schedulerQueue;
+   std::priority_queue<WorkRequest, std::vector<WorkRequest>, ScheduledRequestsComparator> schedulerQueue;
    Mutex schedulerLock;
    TCHAR *name;
    bool shutdownMode;
@@ -123,10 +122,9 @@ struct ThreadPool
    uint64_t threadStartCount;
    uint64_t threadStopCount;
    VolatileCounter64 taskExecutionCount;
-   SynchronizedObjectMemoryPool<WorkRequest> workRequestMemoryPool;
 
    ThreadPool(const TCHAR *name, int minThreads, int maxThreads, int stackSize) :
-         mutex(MutexType::FAST), maintThreadWakeup(false), queue(64, Ownership::False), serializationQueues(Ownership::True),
+         mutex(MutexType::FAST), maintThreadWakeup(false), queue(512), serializationQueues(Ownership::True),
          serializationLock(MutexType::FAST), schedulerLock(MutexType::FAST)
    {
       this->name = (name != nullptr) ? MemCopyString(name) : MemCopyString(_T("NONAME"));
@@ -187,33 +185,33 @@ static void WorkerThread(WorkerThreadInfo *threadInfo)
 
    while(true)
    {
-      WorkRequest *rq = p->queue.getOrBlock(INFINITE);
-      if (rq->func == nullptr) // stop indicator
+      WorkRequest rq;
+      p->queue.getOrBlock(&rq, INFINITE);
+      if (rq.func == nullptr) // stop indicator
       {
-         if (rq->arg == s_stopAndUnregister)
+         if (rq.arg == s_stopAndUnregister)
          {
             p->mutex.lock();
             p->threads.remove(CAST_FROM_POINTER(threadInfo, uint64_t));
             p->threadStopCount++;
             p->mutex.unlock();
 
-            rq->func = JoinWorkerThread;
-            rq->arg = threadInfo;
-            rq->queueTime = GetCurrentTimeMs();
+            rq.func = JoinWorkerThread;
+            rq.arg = threadInfo;
+            rq.queueTime = GetCurrentTimeMs();
             InterlockedIncrement(&p->activeRequests);
             p->queue.put(rq);
          }
          break;
       }
 
-      int64_t waitTime = GetCurrentTimeMs() - rq->queueTime;
+      int64_t waitTime = GetCurrentTimeMs() - rq.queueTime;
       p->mutex.lock();
       UpdateExpMovingAverage(p->waitTimeEMA, EMA_EXP(1, 1000), waitTime); // Use last 1000 executions
       p->waitTimeVariance.update(waitTime);
       p->mutex.unlock();
 
-      rq->func(rq->arg);
-      p->workRequestMemoryPool.destroy(rq);
+      rq.func(rq.arg);
       InterlockedDecrement(&p->activeRequests);
    }
 
@@ -306,10 +304,10 @@ static void MaintenanceThread(ThreadPool *p)
                }
                for(int i = 0; i < stopped; i++)
                {
-                  WorkRequest *rq = p->workRequestMemoryPool.create();
-                  rq->func = nullptr;
-                  rq->arg = s_stopAndUnregister;
-                  rq->queueTime = GetCurrentTimeMs();
+                  WorkRequest rq;
+                  rq.func = nullptr;
+                  rq.arg = s_stopAndUnregister;
+                  rq.queueTime = GetCurrentTimeMs();
                   p->queue.put(rq);
                }
             }
@@ -343,20 +341,19 @@ static void MaintenanceThread(ThreadPool *p)
       if (p->schedulerQueue.size() > 0)
       {
          int64_t now = GetCurrentTimeMs();
-         WorkRequest *rq;
          while(p->schedulerQueue.size() > 0)
          {
-            rq = p->schedulerQueue.top();
-            if (rq->runTime > now)
+            WorkRequest rq = p->schedulerQueue.top();
+            if (rq.runTime > now)
             {
-               uint32_t delay = static_cast<uint32_t>(rq->runTime - now);
+               uint32_t delay = static_cast<uint32_t>(rq.runTime - now);
                if (delay < sleepTime)
                   sleepTime = delay;
                break;
             }
             InterlockedIncrement(&p->activeRequests);
             InterlockedIncrement64(&p->taskExecutionCount);
-            rq->queueTime = now;
+            rq.queueTime = now;
             p->queue.put(rq);
             p->schedulerQueue.pop();
          }
@@ -429,7 +426,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
    p->mutex.lock();
    int count = p->threads.size();
    for(int i = 0; i < count; i++)
-      p->queue.put(&rq);
+      p->queue.put(rq);
    p->mutex.unlock();
 
    p->threads.forEach(
@@ -453,10 +450,10 @@ void LIBNETXMS_EXPORTABLE ThreadPoolExecute(ThreadPool *p, ThreadPoolWorkerFunct
 
    InterlockedIncrement(&p->activeRequests);
    InterlockedIncrement64(&p->taskExecutionCount);
-   WorkRequest *rq = p->workRequestMemoryPool.create();
-   rq->func = f;
-   rq->arg = arg;
-   rq->queueTime = GetCurrentTimeMs();
+   WorkRequest rq;
+   rq.func = f;
+   rq.arg = arg;
+   rq.queueTime = GetCurrentTimeMs();
    p->queue.put(rq);
 }
 
@@ -477,16 +474,15 @@ static void ProcessSerializedRequests(RequestSerializationData *data)
 {
    while(true)
    {
-      WorkRequest *rq = static_cast<WorkRequest*>(data->queue->get());
-      if (rq == nullptr)
+      WorkRequest rq;
+      if (!data->queue->get(&rq))
       {
          // Because this thread normally does not hold serialization lock,
          // new serialized task may have been placed into queue between
          // get and lock calls. To avoid loosing it re-check queue again
          // with serialization lock being held.
          data->pool->serializationLock.lock();
-         rq = static_cast<WorkRequest*>(data->queue->get());
-         if (rq == nullptr)
+         if (!data->queue->get(&rq))
          {
             data->pool->serializationQueues.remove(data->key);
             data->pool->serializationLock.unlock();
@@ -494,10 +490,9 @@ static void ProcessSerializedRequests(RequestSerializationData *data)
          }
          data->pool->serializationLock.unlock();
       }
-      data->queue->updateMaxWaitTime(static_cast<uint32_t>(GetCurrentTimeMs() - rq->queueTime));
+      data->queue->updateMaxWaitTime(static_cast<uint32_t>(GetCurrentTimeMs() - rq.queueTime));
 
-      rq->func(rq->arg);
-      data->pool->workRequestMemoryPool.destroy(rq);
+      rq.func(rq.arg);
    }
    MemFree(data);
 }
@@ -510,16 +505,16 @@ void LIBNETXMS_EXPORTABLE ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR
    if (p->shutdownMode)
       return;
 
-   WorkRequest *rq = p->workRequestMemoryPool.create();
-   rq->func = f;
-   rq->arg = arg;
-   rq->queueTime = GetCurrentTimeMs();
+   WorkRequest rq;
+   rq.func = f;
+   rq.arg = arg;
+   rq.queueTime = GetCurrentTimeMs();
 
    p->serializationLock.lock();
    SerializationQueue *q = p->serializationQueues.get(key);
    if (q == nullptr)
    {
-      q = new SerializationQueue(64);
+      q = new SerializationQueue();
       p->serializationQueues.set(key, q);
       q->put(rq);
 
@@ -546,11 +541,11 @@ void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsoluteMs(ThreadPool *p, int64_t ru
    if (p->shutdownMode)
       return;
 
-   WorkRequest *rq = p->workRequestMemoryPool.create();
-   rq->func = f;
-   rq->arg = arg;
-   rq->runTime = runTime;
-   rq->queueTime = GetCurrentTimeMs();
+   WorkRequest rq;
+   rq.func = f;
+   rq.arg = arg;
+   rq.runTime = runTime;
+   rq.queueTime = GetCurrentTimeMs();
 
    p->schedulerLock.lock();
    p->schedulerQueue.push(rq);
