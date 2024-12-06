@@ -683,7 +683,7 @@ static void ReceiverThread()
                response->setMessageId(pdu->getMessageId());
                response->setContextEngineId(localEngine.getId(), localEngine.getIdLen());
 
-               SNMP_Variable *var = new SNMP_Variable(_T(".1.3.6.1.6.3.15.1.1.4.0"));
+               SNMP_Variable *var = new SNMP_Variable({ 1, 3, 6, 1, 6, 3, 15, 1, 1, 4, 0 });
                var->setValueFromUInt32(ASN_INTEGER, 2);
                response->bindVariable(var);
 

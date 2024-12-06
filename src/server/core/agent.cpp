@@ -487,7 +487,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
                response.setMessageId(pdu->getMessageId());
                response.setContextEngineId(localEngine.getId(), localEngine.getIdLen());
 
-               SNMP_Variable *var = new SNMP_Variable(_T(".1.3.6.1.6.3.15.1.1.4.0"));
+               SNMP_Variable *var = new SNMP_Variable({ 1, 3, 6, 1, 6, 3, 15, 1, 1, 4, 0 });
                var->setValueFromString(ASN_INTEGER, _T("2"));
                response.bindVariable(var);
 

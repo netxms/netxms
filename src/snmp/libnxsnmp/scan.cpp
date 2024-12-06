@@ -77,12 +77,12 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpScanAddressRange(const InetAddress& from, cons
    if (snmpVersion == SNMP_VERSION_3)
    {
       // Use engine ID discovery as request
-      request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.6.3.10.2.1.1.0")));
+      request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 6, 3, 10, 2, 1, 1, 0 }));
    }
    else
    {
       securityContext.setCommunity(community);
-      request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.2.1.1.1.0")));
+      request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 2, 1, 1, 1, 0 }));
    }
    BYTE *pdu;
    size_t size = request.encode(&pdu, &securityContext);

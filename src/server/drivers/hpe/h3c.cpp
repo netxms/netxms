@@ -73,7 +73,7 @@ bool H3CDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid
 void H3CDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
    TCHAR sysDescr[256];
-   if (SnmpGetEx(snmp, _T(".1.3.6.1.2.1.1.1.0"), nullptr, 0, sysDescr, sizeof(sysDescr), SG_STRING_RESULT, nullptr) != SNMP_ERR_SUCCESS)
+   if (SnmpGetEx(snmp, { 1, 3, 6, 1, 2, 1, 1, 1, 0 }, sysDescr, sizeof(sysDescr), SG_STRING_RESULT, nullptr) != SNMP_ERR_SUCCESS)
       return;
 
    const char *eptr;
