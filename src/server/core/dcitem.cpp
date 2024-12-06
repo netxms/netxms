@@ -126,8 +126,8 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
    m_relatedObject = DBGetFieldUInt32(hResult, row, 31);
    m_pollingScheduleType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 32));
    m_retentionType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 33));
-   m_pollingIntervalSrc = (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? DBGetField(hResult, row, 34, nullptr, 0) : nullptr;
-   m_retentionTimeSrc = (m_retentionType == DC_RETENTION_CUSTOM) ? DBGetField(hResult, row, 35, nullptr, 0) : nullptr;
+   m_pollingIntervalSrc = (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? DBGetFieldAsString(hResult, row, 34) : nullptr;
+   m_retentionTimeSrc = (m_retentionType == DC_RETENTION_CUSTOM) ? DBGetFieldAsString(hResult, row, 35) : nullptr;
    m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldInt32(hResult, row, 36));
    m_stateFlags = DBGetFieldUInt32(hResult, row, 37);
    m_allThresholdsRearmEvent = DBGetFieldUInt32(hResult, row, 38);
