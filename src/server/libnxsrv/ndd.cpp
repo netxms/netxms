@@ -932,6 +932,7 @@ void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node,
             *operState = IF_OPER_STATE_UNKNOWN;
             break;
       }
+      delete response;
    }
    else
    {
