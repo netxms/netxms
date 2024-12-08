@@ -582,10 +582,10 @@ static uint32_t HandlerIpAddressPrefixTable(SNMP_Variable *var, SNMP_Transport *
 /**
  * Handler for enumerating IP address prefixes via local routes in inetCidrRouteTable
  */
-static uint32_t HandlerInetCidrRouteTable(SNMP_Variable *var, SNMP_Transport *transport, InterfaceList *ifList)
+static void ProcessInetCidrRouteingTableEntry(SNMP_Variable *var, SNMP_Transport *transport, InterfaceList *ifList)
 {
    if (var->getName().length() < 27)
-      return SNMP_ERR_SUCCESS;
+      return;
 
    uint32_t oid[256];
    memset(oid, 0, sizeof(oid));
@@ -593,21 +593,21 @@ static uint32_t HandlerInetCidrRouteTable(SNMP_Variable *var, SNMP_Transport *tr
 
    // Check route type, only use 1 (other) and 3 (local)
    if ((var->getValueAsInt() != 1) && (var->getValueAsInt() != 3))
-      return SNMP_ERR_SUCCESS;
+      return;
 
    // Build IP address and next hop from OID
    int shift;
    InetAddress prefix = InetAddressFromOID(&oid[11], true, &shift);
    if (!prefix.isValid() || prefix.isAnyLocal() || prefix.isMulticast() || (prefix.getMaskBits() == 0) || (prefix.getHostBits() == 0))
-      return SNMP_ERR_SUCCESS;   // Unknown or unsupported address format, or prefix of no interest
+      return;   // Unknown or unsupported address format, or prefix of no interest
 
    uint32_t *policy = &oid[11 + shift]; // Policy follows prefix
    if (static_cast<size_t>(policy - oid + 3) >= var->getName().length())
-      return SNMP_ERR_SUCCESS;   // Check that length is valid and do not point beyond OID end
+      return;   // Check that length is valid and do not point beyond OID end
 
    InetAddress nextHop = InetAddressFromOID(policy + policy[0] + 1, false, nullptr);
    if (!nextHop.isValid() || !nextHop.isAnyLocal())
-      return SNMP_ERR_SUCCESS;   // Unknown or unsupported address format, or next hop is not 0.0.0.0
+      return;   // Unknown or unsupported address format, or next hop is not 0.0.0.0
 
    // Get interface index
    oid[10] = 7;   // inetCidrRouteIfIndex
@@ -627,7 +627,6 @@ static uint32_t HandlerInetCidrRouteTable(SNMP_Variable *var, SNMP_Transport *tr
          }
       }
    }
-   return SNMP_ERR_SUCCESS;
 }
 
 /**
@@ -716,6 +715,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 	InterfaceList *ifList = new InterfaceList(interfaceCount);
 
    // Gather interface indexes
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("NetworkDeviceDriver::getInterfaces(%p): reading indexes from ifTable"), snmp);
    if (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 2, 2, 1, 1 },
       [ifList] (SNMP_Variable *var) -> uint32_t
       {
@@ -724,6 +724,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
       }) == SNMP_ERR_SUCCESS)
    {
       // Gather additional interfaces from ifXTable
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("NetworkDeviceDriver::getInterfaces(%p): reading indexes from ifXTable"), snmp);
       SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 31, 1, 1, 1, 1 }, HandlerIndexIfXTable, ifList);
 
       // Enumerate interfaces
@@ -809,6 +810,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
       // Interface IP addresses and netmasks from ipAddrTable
 		if (!node->getCustomAttributeAsBoolean(_T("snmp.ignore.ipAddrTable"), false))
 		{
+	      nxlog_debug_tag(DEBUG_TAG, 7, _T("NetworkDeviceDriver::getInterfaces(%p): reading ipAddrTable"), snmp);
          uint32_t error = SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 20, 1, 1 }, HandlerIpAddr, ifList);
          if (error == SNMP_ERR_SUCCESS)
          {
@@ -827,11 +829,63 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
       // Get IP addresses from ipAddressTable if available
       if (!node->getCustomAttributeAsBoolean(_T("snmp.ignore.ipAddressTable"), false))
       {
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("NetworkDeviceDriver::getInterfaces(%p): reading ipAddressTable"), snmp);
          SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 34, 1, 3 }, HandlerIpAddressTable, ifList);
          if (ifList->isPrefixWalkNeeded())
          {
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): prefix length is not set for some IP addresses, walk on prefix table is needed"), snmp);
             SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 32, 1, 5 }, HandlerIpAddressPrefixTable, ifList);
-            SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 7, 1, 8 }, HandlerInetCidrRouteTable, ifList);
+
+            // Re-check addresses
+            bool prefixNotFoundV4 = false, prefixNotFoundV6 = false;
+            for(int i = 0; (i < ifList->size()) && (!prefixNotFoundV4 || !prefixNotFoundV6); i++)
+            {
+               InterfaceInfo *iface = ifList->get(i);
+               for(int j = 0; (j < iface->ipAddrList.size()) && (!prefixNotFoundV4 || !prefixNotFoundV6); j++)
+               {
+                  InetAddress a = iface->ipAddrList.get(j);
+                  if (a.getMaskBits() == 0)
+                  {
+                     if (a.getFamily() == AF_INET)
+                        prefixNotFoundV4 = true;
+                     else
+                        prefixNotFoundV6 = true;
+                  }
+               }
+            }
+
+            if (prefixNotFoundV4 || prefixNotFoundV6)
+            {
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): doing prefix lookup in routing table (IPv4=%s IPv6=%s)"), snmp, prefixNotFoundV4, prefixNotFoundV6);
+               int limit = 1000;
+               if (prefixNotFoundV4)
+               {
+                  SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 7, 1, 8, 1 },
+                     [&limit, ifList, snmp] (SNMP_Variable *v) -> uint32_t
+                     {
+                        ProcessInetCidrRouteingTableEntry(v, snmp, ifList);
+                        return (--limit == 0) ? SNMP_ERR_ABORTED : SNMP_ERR_SUCCESS;
+                     });
+                  if (limit == 0)
+                     nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): prefix lookup aborted because routing table is too big"), snmp);
+               }
+               if (prefixNotFoundV6 && (limit > 0))
+               {
+                  limit = 1000;
+                  SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 7, 1, 8, 2 },
+                     [&limit, ifList, snmp] (SNMP_Variable *v) -> uint32_t
+                     {
+                        ProcessInetCidrRouteingTableEntry(v, snmp, ifList);
+                        return (--limit == 0) ? SNMP_ERR_ABORTED : SNMP_ERR_SUCCESS;
+                     });
+                  if (limit == 0)
+                     nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): prefix lookup aborted because routing table is too big"), snmp);
+               }
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): prefix lookup in routing table is not needed"), snmp);
+            }
          }
       }
    }

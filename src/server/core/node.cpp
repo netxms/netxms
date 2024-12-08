@@ -1721,7 +1721,7 @@ InterfaceList *Node::getInterfaceList()
          }
          else
          {
-            useIfXTable = (m_nUseIfXTable == IFXTABLE_ENABLED) ? true : false;
+            useIfXTable = (m_nUseIfXTable == IFXTABLE_ENABLED);
          }
 
          nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::getInterfaceList(node=%s [%u]): calling driver (useIfXTable=%s)"),

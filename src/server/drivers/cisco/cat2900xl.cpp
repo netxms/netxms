@@ -88,6 +88,8 @@ static uint32_t HandlerPortList(SNMP_Variable *var, SNMP_Transport *transport, I
  *
  * @param snmp SNMP transport
  * @param node Node
+ * @param driverData driver data
+ * @param useIfXTable if true, usage of ifXTable is allowed
  */
 InterfaceList *Cat2900Driver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
 {

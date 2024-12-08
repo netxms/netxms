@@ -1102,18 +1102,21 @@ void DiscoveryPoller(PollerInfo *poller)
    }
 
    // Retrieve and analyze node's routing table
-   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("Discovery poll of node %s (%s) - reading routing table"), node->getName(), node->getIpAddress().toString().cstr());
-   RoutingTable *rt = node->getRoutingTable();
-   if (rt != nullptr)
+   if (!(node->getFlags() & NF_DISABLE_ROUTE_POLL))
    {
-      for(int i = 0; i < rt->size(); i++)
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("Discovery poll of node %s (%s) - reading routing table"), node->getName(), node->getIpAddress().toString().cstr());
+      RoutingTable *rt = node->getRoutingTable();
+      if (rt != nullptr)
       {
-         ROUTE *route = rt->get(i);
-         CheckPotentialNode(node, route->nextHop, route->ifIndex, MacAddress::NONE, DA_SRC_ROUTING_TABLE, node->getId());
-         if (route->destination.isValidUnicast() && (route->destination.getHostBits() == 0))
-            CheckHostRoute(node, route);
+         for(int i = 0; i < rt->size(); i++)
+         {
+            ROUTE *route = rt->get(i);
+            CheckPotentialNode(node, route->nextHop, route->ifIndex, MacAddress::NONE, DA_SRC_ROUTING_TABLE, node->getId());
+            if (route->destination.isValidUnicast() && (route->destination.getHostBits() == 0))
+               CheckHostRoute(node, route);
+         }
+         delete rt;
       }
-      delete rt;
    }
 
    node->executeHookScript(_T("DiscoveryPoll"));

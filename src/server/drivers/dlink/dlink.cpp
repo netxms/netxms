@@ -106,6 +106,8 @@ void DLinkDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, 
  *
  * @param snmp SNMP transport
  * @param node Node
+ * @param driverData driver data
+ * @param useIfXTable if true, usage of ifXTable is allowed
  */
 InterfaceList *DLinkDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
 {
