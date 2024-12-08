@@ -152,6 +152,8 @@ int CiscoSbDriver::getPhysicalPortLayout(SNMP_Transport *snmp, SB_MODULE_LAYOUT 
  *
  * @param snmp SNMP transport
  * @param node Node
+ * @param driverData driver data
+ * @param useIfXTable if true, usage of ifXTable is allowed
  */
 InterfaceList *CiscoSbDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
 {

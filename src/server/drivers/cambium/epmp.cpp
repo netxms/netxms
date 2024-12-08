@@ -274,6 +274,8 @@ GeoLocation CambiumEPMPDriver::getGeoLocation(SNMP_Transport *snmp, NObject *nod
  *
  * @param snmp SNMP transport
  * @param node Node
+ * @param driverData driver data
+ * @param useIfXTable if true, usage of ifXTable is allowed
  */
 InterfaceList *CambiumEPMPDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
 {
