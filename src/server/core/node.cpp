@@ -6578,9 +6578,21 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                   for(int n = 0; n < ifList->size(); n++)
                   {
                      const InetAddress& ifAddr = ifList->get(n);
-                     const InetAddress& addr = ifInfo->ipAddrList.findAddress(ifAddr);
+                     InetAddress addr = ifInfo->ipAddrList.findAddress(ifAddr);
                      if (addr.isValid())
                      {
+                        if (addr.getMaskBits() == 0)
+                        {
+                           shared_ptr<Subnet> subnet = FindSubnetForNode(m_zoneUIN, addr);
+                           if (subnet != nullptr)
+                           {
+                              TCHAR buffer[64];
+                              nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::getInterfaceList(node=%s [%u]): missing subnet mask for interface %s address %s set from subnet %s"),
+                                 m_name, m_id, pInterface->getName(), addr.toString(buffer), subnet->getName());
+                              addr.setMaskBits(subnet->getIpAddress().getMaskBits());
+                           }
+                        }
+
                         if (addr.getMaskBits() != ifAddr.getMaskBits())
                         {
                            EventBuilder(EVENT_IF_MASK_CHANGED, m_id)
@@ -6618,9 +6630,21 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                   // Check for added IPs
                   for(int m = 0; m < ifInfo->ipAddrList.size(); m++)
                   {
-                     const InetAddress& addr = ifInfo->ipAddrList.get(m);
+                     InetAddress addr = ifInfo->ipAddrList.get(m);
                      if (!ifList->hasAddress(addr))
                      {
+                        if (addr.getMaskBits() == 0)
+                        {
+                           shared_ptr<Subnet> subnet = FindSubnetForNode(m_zoneUIN, addr);
+                           if (subnet != nullptr)
+                           {
+                              TCHAR buffer[64];
+                              nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::getInterfaceList(node=%s [%u]): missing subnet mask for interface %s address %s set from subnet %s"),
+                                 m_name, m_id, pInterface->getName(), addr.toString(buffer), subnet->getName());
+                              addr.setMaskBits(subnet->getIpAddress().getMaskBits());
+                           }
+                        }
+
                         pInterface->addIpAddress(addr);
                         EventBuilder(EVENT_IF_IPADDR_ADDED, m_id)
                            .param(_T("interfaceObjectId"), pInterface->getId())
@@ -7050,13 +7074,14 @@ DataCollectionError Node::getMetricFromSNMP(uint16_t port, SNMP_Version version,
        (m_state & DCSF_UNREACHABLE) ||
        (m_flags & NF_DISABLE_SNMP))
    {
-      nxlog_debug_tag(DEBUG_TAG_DC_SNMP, 7, _T("Node(%s)->getMetricFromSNMP(%s): snmpResult=%d"), m_name, name, SNMP_ERR_COMM);
+      nxlog_debug_tag(DEBUG_TAG_DC_SNMP _T(".error"), 7, _T("Node(%s)->getMetricFromSNMP(%s): SNMP unreachable or disabled (state=0x%08x flags=0x%08x is_snmp=%s)"),
+         m_name, name, m_state, m_flags, BooleanToString((m_capabilities & NC_IS_SNMP) != 0));
       return DCErrorFromSNMPError(SNMP_ERR_COMM);
    }
 
    if (size < 64)
    {
-      nxlog_debug_tag(DEBUG_TAG_DC_SNMP, 7, _T("Node(%s)->getMetricFromSNMP(%s): result buffer is too small"), m_name, name);
+      nxlog_debug_tag(DEBUG_TAG_DC_SNMP _T(".error"), 7, _T("Node(%s)->getMetricFromSNMP(%s): result buffer is too small"), m_name, name);
       return DCE_COLLECTION_ERROR;
    }
 
@@ -7118,12 +7143,22 @@ DataCollectionError Node::getMetricFromSNMP(uint16_t port, SNMP_Version version,
          }
       }
       delete snmp;
+
+      if (snmpResult == SNMP_ERR_SUCCESS)
+      {
+         nxlog_debug_tag(DEBUG_TAG_DC_SNMP, 7, _T("Node(%s)->getMetricFromSNMP(%s): success"), m_name, name);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_DC_SNMP _T(".error"), 7, _T("Node(%s)->getMetricFromSNMP(%s): SNMP error %u (%s)"),
+            m_name, name, snmpResult, SnmpGetErrorText(snmpResult));
+      }
    }
    else
    {
+      nxlog_debug_tag(DEBUG_TAG_DC_SNMP _T(".error"), 7, _T("Node(%s)->getMetricFromSNMP(%s): cannot create SNMP transport"), m_name, name);
       snmpResult = SNMP_ERR_COMM;
    }
-   nxlog_debug_tag(DEBUG_TAG_DC_SNMP, 7, _T("Node(%s)->getMetricFromSNMP(%s): snmpResult=%u"), m_name, name, snmpResult);
    return DCErrorFromSNMPError(snmpResult);
 }
 

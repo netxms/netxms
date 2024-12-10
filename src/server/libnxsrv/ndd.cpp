@@ -542,7 +542,10 @@ static uint32_t HandlerIpAddressTable(SNMP_Variable *var, SNMP_Transport *transp
          }
          else
          {
+            TCHAR buffer[64];
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("NetworkDeviceDriver::getInterfaces(%p): no prefix reference for %s"), transport, addr.toString(buffer));
             ifList->setPrefixWalkNeeded();
+            addr.setMaskBits(0);
          }
          iface->ipAddrList.add(addr);
       }
@@ -573,6 +576,8 @@ static uint32_t HandlerIpAddressPrefixTable(SNMP_Variable *var, SNMP_Transport *
          if ((addr != nullptr) && prefix.contains(*addr))
          {
             addr->setMaskBits(prefix.getMaskBits());
+            TCHAR buffer[64];
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("NetworkDeviceDriver::getInterfaces(%p): mask bits set from prefix table: %s/%d"), transport, addr->toString(buffer), addr->getMaskBits());
          }
       }
    }
@@ -623,6 +628,8 @@ static void ProcessInetCidrRouteingTableEntry(SNMP_Variable *var, SNMP_Transport
             if ((addr != nullptr) && (addr->getHostBits() == 0) && prefix.contains(*addr))
             {
                addr->setMaskBits(prefix.getMaskBits());
+               TCHAR buffer[64];
+               nxlog_debug_tag(DEBUG_TAG, 7, _T("NetworkDeviceDriver::getInterfaces(%p): mask bits set from routing table: %s/%d"), transport, addr->toString(buffer), addr->getMaskBits());
             }
          }
       }
@@ -716,18 +723,22 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 
    // Gather interface indexes
    nxlog_debug_tag(DEBUG_TAG, 7, _T("NetworkDeviceDriver::getInterfaces(%p): reading indexes from ifTable"), snmp);
-   if (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 2, 2, 1, 1 },
+   uint32_t rc = SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 2, 2, 1, 1 },
       [ifList] (SNMP_Variable *var) -> uint32_t
       {
          ifList->add(new InterfaceInfo(var->getValueAsUInt()));
          return SNMP_ERR_SUCCESS;
-      }) == SNMP_ERR_SUCCESS)
+      });
+   if (rc == SNMP_ERR_SUCCESS)
    {
       // Gather additional interfaces from ifXTable
       nxlog_debug_tag(DEBUG_TAG, 7, _T("NetworkDeviceDriver::getInterfaces(%p): reading indexes from ifXTable"), snmp);
-      SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 31, 1, 1, 1, 1 }, HandlerIndexIfXTable, ifList);
+      rc = SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 31, 1, 1, 1, 1 }, HandlerIndexIfXTable, ifList);
+      if (rc != SNMP_ERR_SUCCESS)
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP WALK 1.3.6.1.2.1.31.1.1.1.1 failed (%s)"), snmp, SnmpGetErrorText(rc));
 
       // Enumerate interfaces
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("NetworkDeviceDriver::getInterfaces(%p): reading interface information"), snmp);
 		for(int i = 0; i < ifList->size(); i++)
       {
 			InterfaceInfo *iface = ifList->get(i);
@@ -856,7 +867,8 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 
             if (prefixNotFoundV4 || prefixNotFoundV6)
             {
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): doing prefix lookup in routing table (IPv4=%s IPv6=%s)"), snmp, prefixNotFoundV4, prefixNotFoundV6);
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): doing prefix lookup in routing table (IPv4=%s IPv6=%s)"),
+                  snmp, BooleanToString(prefixNotFoundV4), BooleanToString(prefixNotFoundV6));
                int limit = 1000;
                if (prefixNotFoundV4)
                {
@@ -891,7 +903,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
    }
 	else
 	{
-		nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP WALK 1.3.6.1.2.1.2.2.1.1 failed"), snmp);
+		nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP WALK 1.3.6.1.2.1.2.2.1.1 failed (%s)"), snmp, SnmpGetErrorText(rc));
 	}
 
    if (!success)
