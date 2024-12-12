@@ -343,6 +343,13 @@ struct NXSL_ExtMethod
       m_methods->set(#name, m); \
    }
 
+#define NXSL_REGISTER_METHOD_ALIAS(clazz, alias, argc, name) { \
+      NXSL_ExtMethod *m = new NXSL_ExtMethod; \
+      m->handler = M_##clazz##_##name; \
+      m->numArgs = argc; \
+      m_methods->set(#alias, m); \
+   }
+
 /**
  * Handle class attribute request. It is supposed to be used within getAttr methhod with standard parameter naming.
  */
