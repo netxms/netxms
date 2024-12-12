@@ -660,7 +660,11 @@ uint32_t WebServiceRequest::query(const TCHAR *url, uint16_t requestMethod, cons
    {
       char errbuf[CURL_ERROR_SIZE];
       curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
+#if HAVE_DECL_CURLOPT_PROTOCOLS_STR
+      curl_easy_setopt(curl, CURLOPT_PROTOCOLS_STR, "http,https");
+#else
       curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
+#endif
       curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
       curl_easy_setopt(curl, CURLOPT_HEADER, static_cast<long>(0));
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, static_cast<long>((requestTimeout != 0) ? requestTimeout : 10));
