@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -476,27 +476,26 @@ public class AgentConfigurationsManager extends ConfigurationView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final List<AgentConfigurationHandle> elements = session.getAgentConfigurations();
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  AgentConfigurationsManager.this.elements = elements;
-                  viewer.setInput(elements);
+            runInUIThread(() -> {
+               if (viewer.getControl().isDisposed())
+                  return;
 
-                  if (currentSelection.length > 0)
+               AgentConfigurationsManager.this.elements = elements;
+               viewer.setInput(elements);
+
+               if (currentSelection.length > 0)
+               {
+                  List<AgentConfigurationHandle> selection = new ArrayList<>();
+                  for(long id : currentSelection)
                   {
-                     List<AgentConfigurationHandle> selection = new ArrayList<>();
-                     for(long id : currentSelection)
+                     for(int i = 0; i < elements.size(); i++)
                      {
-                        for(int i = 0; i < elements.size(); i++)
-                        {
-                           AgentConfigurationHandle h = elements.get(i);
-                           if (h.getId() == id)
-                              selection.add(h);
-                        }
+                        AgentConfigurationHandle h = elements.get(i);
+                        if (h.getId() == id)
+                           selection.add(h);
                      }
-                     viewer.setSelection(new StructuredSelection(selection));
                   }
+                  viewer.setSelection(new StructuredSelection(selection));
                }
             });
          }
