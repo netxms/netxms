@@ -3631,35 +3631,43 @@ public:
 #define HostToBigEndian32(n) (n)
 #define HostToBigEndian64(n) (n)
 #define HostToBigEndianD(n) (n)
+#define HostToBigEndianF(n) (n)
 #define HostToLittleEndian16(n) bswap_16(n)
 #define HostToLittleEndian32(n) bswap_32(n)
 #define HostToLittleEndian64(n) bswap_64(n)
 #define HostToLittleEndianD(n) bswap_double(n)
+#define HostToLittleEndianF(n) bswap_float(n)
 #define BigEndianToHost16(n) (n)
 #define BigEndianToHost32(n) (n)
 #define BigEndianToHost64(n) (n)
 #define BigEndianToHostD(n) (n)
+#define BigEndianToHostF(n) (n)
 #define LittleEndianToHost16(n) bswap_16(n)
 #define LittleEndianToHost32(n) bswap_32(n)
 #define LittleEndianToHost64(n) bswap_64(n)
 #define LittleEndianToHostD(n) bswap_double(n)
+#define LittleEndianToHostF(n) bswap_float(n)
 #else
 #define HostToBigEndian16(n) bswap_16(n)
 #define HostToBigEndian32(n) bswap_32(n)
 #define HostToBigEndian64(n) bswap_64(n)
 #define HostToBigEndianD(n) bswap_double(n)
+#define HostToBigEndianF(n) bswap_float(n)
 #define HostToLittleEndian16(n) (n)
 #define HostToLittleEndian32(n) (n)
 #define HostToLittleEndian64(n) (n)
 #define HostToLittleEndianD(n) (n)
+#define HostToLittleEndianF(n) (n)
 #define BigEndianToHost16(n) bswap_16(n)
 #define BigEndianToHost32(n) bswap_32(n)
 #define BigEndianToHost64(n) bswap_64(n)
 #define BigEndianToHostD(n) bswap_double(n)
+#define BigEndianToHostF(n) bswap_float(n)
 #define LittleEndianToHost16(n) (n)
 #define LittleEndianToHost32(n) (n)
 #define LittleEndianToHost64(n) (n)
 #define LittleEndianToHostD(n) (n)
+#define LittleEndianToHostF(n) (n)
 #endif
 
 /**
@@ -3675,9 +3683,9 @@ protected:
    size_t m_pos;
 
    ssize_t getEncodedStringLength(ssize_t byteCount, bool isLenPrepended, bool isNullTerminated, size_t charSize);
-   char* readStringCore(ssize_t byteCount, bool isLenPrepended, bool isNullTerminated);
-   WCHAR* readStringWCore(const char* codepage, ssize_t byteCount, bool isLenPrepended, bool isNullTerminated);
-   char* readStringAsUTF8Core(const char* codepage, ssize_t byteCount, bool isLenPrepended, bool isNullTerminated);
+   char *readStringCore(ssize_t byteCount, bool isLenPrepended, bool isNullTerminated);
+   WCHAR *readStringWCore(const char* codepage, ssize_t byteCount, bool isLenPrepended, bool isNullTerminated);
+   char *readStringAsUTF8Core(const char* codepage, ssize_t byteCount, bool isLenPrepended, bool isNullTerminated);
    ssize_t readStringU(WCHAR* buffer, const char* codepage, ssize_t byteCount);
 
    ConstByteStream() {}
@@ -3739,6 +3747,13 @@ public:
       return BigEndianToHostD(n);
    }
 
+   float readFloatB()
+   {
+      float n = 0;
+      read(&n, 4);
+      return BigEndianToHostF(n);
+   }
+
    int16_t readInt16B() { return (int16_t)readUInt16B(); }
    int32_t readInt32B() { return (int32_t)readUInt32B(); }
    int64_t readInt64B() { return (int64_t)readUInt64B(); }
@@ -3769,6 +3784,13 @@ public:
       double n = 0;
       read(&n, 8);
       return LittleEndianToHostD(n);
+   }
+
+   float readFloatL()
+   {
+      float n = 0;
+      read(&n, 4);
+      return LittleEndianToHostF(n);
    }
 
    int16_t readInt16L() { return (int16_t)readUInt16L(); }
@@ -3885,6 +3907,7 @@ public:
    void writeB(int32_t n) { writeB(static_cast<uint32_t>(n)); }
    void writeB(uint64_t n) { n = HostToBigEndian64(n); write(&n, 8); }
    void writeB(int64_t n) { writeB(static_cast<uint64_t>(n)); }
+   void writeB(float n) { n = HostToBigEndianF(n); write(&n, 4); }
    void writeB(double n) { n = HostToBigEndianD(n); write(&n, 8); }
 
    void writeL(uint16_t n) { n = HostToLittleEndian16(n); write(&n, 2); }
@@ -3893,6 +3916,7 @@ public:
    void writeL(int32_t n) { writeL(static_cast<uint32_t>(n)); }
    void writeL(uint64_t n) { n = HostToLittleEndian64(n); write(&n, 8); }
    void writeL(int64_t n) { writeL(static_cast<uint64_t>(n)); }
+   void writeL(float n) { n = HostToLittleEndianF(n); write(&n, 4); }
    void writeL(double n) { n = HostToLittleEndianD(n); write(&n, 8); }
 
    size_t writeString(const WCHAR *str, const char *codepage, ssize_t length, bool prependLength, bool nullTerminate);

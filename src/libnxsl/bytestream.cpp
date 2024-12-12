@@ -109,9 +109,17 @@ NXSL_METHOD_DEFINITION(ByteStream, readUInt64B)
 }
 
 /**
- * ByteStream::readFloatB() method
+ * ByteStream::readFloat32B() method
  */
-NXSL_METHOD_DEFINITION(ByteStream, readFloatB)
+NXSL_METHOD_DEFINITION(ByteStream, readFloat32B)
+{
+   READ_FROM_BYTE_STREAM(readFloatB);
+}
+
+/**
+ * ByteStream::readFloat64B() method
+ */
+NXSL_METHOD_DEFINITION(ByteStream, readFloat64B)
 {
    READ_FROM_BYTE_STREAM(readDoubleB);
 }
@@ -165,9 +173,17 @@ NXSL_METHOD_DEFINITION(ByteStream, readUInt64L)
 }
 
 /**
+ * ByteStream::readFloat32L() method
+ */
+NXSL_METHOD_DEFINITION(ByteStream, readFloat32L)
+{
+   READ_FROM_BYTE_STREAM(readFloatL);
+}
+
+/**
  * ByteStream::readFloatL() method
  */
-NXSL_METHOD_DEFINITION(ByteStream, readFloatL)
+NXSL_METHOD_DEFINITION(ByteStream, readFloat64L)
 {
    READ_FROM_BYTE_STREAM(readDoubleL);
 }
@@ -292,15 +308,30 @@ NXSL_METHOD_DEFINITION(ByteStream, writeInt64B)
 }
 
 /**
- * ByteStream::writeFloatB(value) method
+ * ByteStream::writeFloat64B(value) method
  */
-NXSL_METHOD_DEFINITION(ByteStream, writeFloatB)
+NXSL_METHOD_DEFINITION(ByteStream, writeFloat64B)
 {
    if (!argv[0]->isReal())
       return NXSL_ERR_NOT_NUMBER;
 
    ByteStream* bs = static_cast<ByteStream*>(object->getData());
    bs->writeB(argv[0]->getValueAsReal());
+
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * ByteStream::writeFloat32B(value) method
+ */
+NXSL_METHOD_DEFINITION(ByteStream, writeFloat32B)
+{
+   if (!argv[0]->isReal())
+      return NXSL_ERR_NOT_NUMBER;
+
+   ByteStream* bs = static_cast<ByteStream*>(object->getData());
+   bs->writeB(static_cast<float>(argv[0]->getValueAsReal()));
 
    *result = vm->createValue();
    return 0;
@@ -352,9 +383,24 @@ NXSL_METHOD_DEFINITION(ByteStream, writeInt64L)
 }
 
 /**
- * ByteStream::writeFloatL(value) method
+ * ByteStream::writeFloat32L(value) method
  */
-NXSL_METHOD_DEFINITION(ByteStream, writeFloatL)
+NXSL_METHOD_DEFINITION(ByteStream, writeFloat32L)
+{
+   if (!argv[0]->isReal())
+      return NXSL_ERR_NOT_NUMBER;
+
+   ByteStream* bs = static_cast<ByteStream*>(object->getData());
+   bs->writeL(static_cast<float>(argv[0]->getValueAsReal()));
+
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * ByteStream::writeFloat64L(value) method
+ */
+NXSL_METHOD_DEFINITION(ByteStream, writeFloat64L)
 {
    if (!argv[0]->isReal())
       return NXSL_ERR_NOT_NUMBER;
@@ -446,7 +492,9 @@ NXSL_ByteStreamClass::NXSL_ByteStreamClass()
    NXSL_REGISTER_METHOD(ByteStream, readUInt16B, 0);
    NXSL_REGISTER_METHOD(ByteStream, readUInt32B, 0);
    NXSL_REGISTER_METHOD(ByteStream, readUInt64B, 0);
-   NXSL_REGISTER_METHOD(ByteStream, readFloatB, 0);
+   NXSL_REGISTER_METHOD_ALIAS(ByteStream, readFloatB, 0, readFloat64B);
+   NXSL_REGISTER_METHOD(ByteStream, readFloat32B, 0);
+   NXSL_REGISTER_METHOD(ByteStream, readFloat64B, 0);
 
    NXSL_REGISTER_METHOD(ByteStream, readInt16L, 0);
    NXSL_REGISTER_METHOD(ByteStream, readInt32L, 0);
@@ -454,7 +502,9 @@ NXSL_ByteStreamClass::NXSL_ByteStreamClass()
    NXSL_REGISTER_METHOD(ByteStream, readUInt16L, 0);
    NXSL_REGISTER_METHOD(ByteStream, readUInt32L, 0);
    NXSL_REGISTER_METHOD(ByteStream, readUInt64L, 0);
-   NXSL_REGISTER_METHOD(ByteStream, readFloatL, 0);
+   NXSL_REGISTER_METHOD_ALIAS(ByteStream, readFloatL, 0, readFloat64L);
+   NXSL_REGISTER_METHOD(ByteStream, readFloat32L, 0);
+   NXSL_REGISTER_METHOD(ByteStream, readFloat64L, 0);
 
    NXSL_REGISTER_METHOD(ByteStream, readCString, -1);
    NXSL_REGISTER_METHOD(ByteStream, readPString, -1);
@@ -466,12 +516,16 @@ NXSL_ByteStreamClass::NXSL_ByteStreamClass()
    NXSL_REGISTER_METHOD(ByteStream, writeInt16B, 1);
    NXSL_REGISTER_METHOD(ByteStream, writeInt32B, 1);
    NXSL_REGISTER_METHOD(ByteStream, writeInt64B, 1);
-   NXSL_REGISTER_METHOD(ByteStream, writeFloatB, 1);
+   NXSL_REGISTER_METHOD_ALIAS(ByteStream, writeFloatB, 1, writeFloat64B);
+   NXSL_REGISTER_METHOD(ByteStream, writeFloat32B, 1);
+   NXSL_REGISTER_METHOD(ByteStream, writeFloat64B, 1);
 
    NXSL_REGISTER_METHOD(ByteStream, writeInt16L, 1);
    NXSL_REGISTER_METHOD(ByteStream, writeInt32L, 1);
    NXSL_REGISTER_METHOD(ByteStream, writeInt64L, 1);
-   NXSL_REGISTER_METHOD(ByteStream, writeFloatL, 1);
+   NXSL_REGISTER_METHOD_ALIAS(ByteStream, writeFloatL, 1, writeFloat64L);
+   NXSL_REGISTER_METHOD(ByteStream, writeFloat32L, 1);
+   NXSL_REGISTER_METHOD(ByteStream, writeFloat64L, 1);
 
    NXSL_REGISTER_METHOD(ByteStream, writeCString, -1);
    NXSL_REGISTER_METHOD(ByteStream, writePString, -1);
