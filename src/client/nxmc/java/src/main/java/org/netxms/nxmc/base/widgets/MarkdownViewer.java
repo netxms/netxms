@@ -43,6 +43,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.tools.ExternalWebBrowser;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import fr.brouillard.oss.commonmark.ext.notifications.NotificationsExtension;
 
 /**
@@ -50,6 +52,7 @@ import fr.brouillard.oss.commonmark.ext.notifications.NotificationsExtension;
  */
 public class MarkdownViewer extends Composite
 {
+   private static final Logger logger = LoggerFactory.getLogger(MarkdownViewer.class);
    private static final List<Extension> extensions =
          List.of(AutolinkExtension.create(), FootnotesExtension.create(), InsExtension.create(),
                NotificationsExtension.create().withClassMapper((n) -> "notification notification-" + n.name().toLowerCase()),
@@ -60,7 +63,7 @@ public class MarkdownViewer extends Composite
    private int htmlDocumentHeight = 0;
    private Runnable renderCompletionHandler = null;
    private String htmlHeader;
-   private boolean ignoreLocation = true;
+   private int ignoreLocation = 0;
 
    /**
     * Create new markdown viewer.
@@ -92,14 +95,14 @@ public class MarkdownViewer extends Composite
          @Override
          public void changing(LocationEvent event)
          {
-            if (!ignoreLocation)
+            if (ignoreLocation == 0)
             {
                ExternalWebBrowser.open(event.location);
                event.doit = false;
             }
             else
             {
-               ignoreLocation = false;
+               ignoreLocation--;
             }
          }
 
@@ -112,13 +115,14 @@ public class MarkdownViewer extends Composite
       htmlHeader = "<html><head><style>body { font-family: " + f.getName() +
             "; font-size: " + f.getHeight() + (Registry.IS_WEB_CLIENT ? "px" : "pt") +
             "; font-weight: normal; margin: 0; padding: 0; }" +
-            ".notification { padding: 4px 5px 5px; margin-top: 0.5rem; margin-bottom: 1rem; " +
-            "border: 1px solid transparent; border-radius: 0.5rem; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7); font-size: 120%; } " +
+            ".notification { padding: 9.5px; margin-top: 0.5rem; margin-bottom: 1rem; " +
+            "border: 1px solid transparent; border-radius: 4px; font-size: 120%; font-weight: 500; } " +
+            ".notification p { padding: 0; margin: 0; } " +
             ".notification-info { color: #07525e; background-color: #d1ecf1; border-color: #bee5eb; } " +
             ".notification-success { color: #125522; background-color: #d4edda; border-color: #c3e6cb; } " +
             ".notification-warning { color: #6a4d00; background-color: #fff3cd; border-color: #ffeeba; } " +
-            ".notification-error { color: #900000; background: #ffd2d2; border-color: #f1a899; }" +
-            "code { display: block; padding: 9.5px; margin: 0 0 10px; color: #333333; word-break: break-all; word-wrap: break-word; background-color: #f5f5f5; border: 1px solid #cccccc; border-radius: 4px; }" +
+            ".notification-error { color: #900000; background: #ffd2d2; border-color: #f1a899; } " +
+            "code { display: block; padding: 9.5px; color: #333; word-break: break-all; word-wrap: break-word; background-color: #f5f5f5; border: 1px solid #ccc; border-radius: 4px; white-space: pre-wrap; }" +
             "</style></head><body><div class=\"content\" style=\"padding-left: 5px; padding-right: 5px;\">";
    }
 
@@ -140,13 +144,25 @@ public class MarkdownViewer extends Composite
     */
    public void setText(String text)
    {
+      if (this.text.equals((text != null) ? text : ""))
+         return; // no changes
+
       htmlDocumentHeight = 0;
       this.text = (text != null) ? text : "";
-      Parser parser = Parser.builder().extensions(extensions).build();
-      Node document = parser.parse(this.text);
-      HtmlRenderer renderer = HtmlRenderer.builder().extensions(extensions).build();
-      String html = htmlHeader + renderer.render(document) + "</div></body></html>";
-      ignoreLocation = true;
+      String html;
+      try
+      {
+         Parser parser = Parser.builder().extensions(extensions).build();
+         Node document = parser.parse(this.text);
+         HtmlRenderer renderer = HtmlRenderer.builder().extensions(extensions).build();
+         html = htmlHeader + renderer.render(document) + "</div></body></html>";
+      }
+      catch(Exception e)
+      {
+         logger.error("Exception in Markdown renderer", e);
+         html = htmlHeader + "<div class=\"notification notification-error\">Markdown rendering error</div><div>Original document source:</div><code>" + this.text.replace("\n", "<br/>") + "</code></div></body></html>";
+      }
+      ignoreLocation++;
       browser.setText(html);
    }
 

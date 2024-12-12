@@ -604,12 +604,16 @@ public abstract class Perspective
     */
    protected View[] getAllMainViews()
    {
-      return mainFolder.getAllViews();
+      return (mainFolder != null) ? mainFolder.getAllViews() : mainArea.getAllViews();
    }
-   
+
+   /**
+    * Update view set within main folder of this perspective
+    */
    protected void updateViewSet()
    {
-      mainFolder.updateViewSet();
+      if (mainFolder != null)
+         mainFolder.updateViewSet();
    }
 
    /**
