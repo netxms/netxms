@@ -20,7 +20,6 @@ package org.netxms.nxmc.modules.nxsl.views;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -76,9 +75,10 @@ public class ScriptExecutorView extends AdHocObjectView
    private long vmId;
    private Action actionSave;
    private Action actionSaveAs;
-   private Action actionClear;
+   private Action actionClearSource;
    private Action actionClearOutput;
    private Action actionExecute;
+   private Action actionClearOutputAndExecute;
    private Action actionStop;
    private List<Script> library;
    private int previousSelection = -1;
@@ -293,7 +293,7 @@ public class ScriptExecutorView extends AdHocObjectView
       };
       addKeyBinding("M1+M2+S", actionSaveAs);
 
-      actionClear = new Action(i18n.tr("&Clear source"), SharedIcons.CLEAR) {
+      actionClearSource = new Action(i18n.tr("&Clear source"), SharedIcons.CLEAR) {
          @Override
          public void run()
          {
@@ -327,6 +327,16 @@ public class ScriptExecutorView extends AdHocObjectView
          }
       };
       addKeyBinding("F9", actionExecute);
+
+      actionClearOutputAndExecute = new Action(i18n.tr("Clear o&utput and execute"), ResourceManager.getImageDescriptor("icons/nxsl/clear-and-execute.png")) {
+         @Override
+         public void run()
+         {
+            output.clear();
+            executeScript();
+         }
+      };
+      addKeyBinding("M2+F9", actionClearOutputAndExecute);
 
       actionStop = new Action(i18n.tr("&Stop"), SharedIcons.TERMINATE) {
          @Override
@@ -502,6 +512,7 @@ public class ScriptExecutorView extends AdHocObjectView
       final String parameters = parametersField.getText();
       consoleOutputStream = output.newOutputStream();
       actionExecute.setEnabled(false);
+      actionClearOutputAndExecute.setEnabled(false);
       actionStop.setEnabled(true);
       Job job = new Job(i18n.tr("Executing script"), this) {
          @Override
@@ -550,6 +561,7 @@ public class ScriptExecutorView extends AdHocObjectView
             }
             runInUIThread(() -> {
                actionExecute.setEnabled(true);
+               actionClearOutputAndExecute.setEnabled(true);
                actionStop.setEnabled(false);
             });
          } 
@@ -590,32 +602,22 @@ public class ScriptExecutorView extends AdHocObjectView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             library = session.getScriptLibrary();
-            Collections.sort(library, new Comparator<Script>() {
-               @Override
-               public int compare(Script lhs, Script rhs) {
-                   return lhs.getName().compareTo(rhs.getName());
-               }
-            });
-
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
+            Collections.sort(library, (lhs, rhs) -> lhs.getName().compareTo(rhs.getName()));
+            runInUIThread(() -> {
+               scriptCombo.removeAll();
+               for(Script s : library)
                {
-                  scriptCombo.removeAll();
-                  for(Script s : library)
+                  scriptCombo.add(s.getName());
+               }
+               if (postProcessor != null)
+               {
+                  postProcessor.run();
+               }
+               else
+               {
+                  if (selection != null)
                   {
-                     scriptCombo.add(s.getName());
-                  }
-                  if (postProcessor != null)
-                  {
-                     postProcessor.run();
-                  }
-                  else
-                  {
-                     if (selection != null)
-                     {
-                        scriptCombo.select(scriptCombo.indexOf(selection));
-                     }  
+                     scriptCombo.select(scriptCombo.indexOf(selection));
                   }
                }
             });
@@ -646,13 +648,7 @@ public class ScriptExecutorView extends AdHocObjectView
             session.modifyScript(s.getId(), s.getName(), scriptSource);
             if (!saveOnClose)
             {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     clearModificationFlag();
-                  }
-               });
+               runInUIThread(() -> clearModificationFlag());
             }
          }
 
@@ -680,12 +676,13 @@ public class ScriptExecutorView extends AdHocObjectView
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionExecute);
+      manager.add(actionClearOutputAndExecute);
       manager.add(actionStop);
       manager.add(actionClearOutput);
       manager.add(new Separator());
       manager.add(actionSave);
       manager.add(actionSaveAs);
-      manager.add(actionClear);
+      manager.add(actionClearSource);
    }
 
    /**
@@ -695,12 +692,13 @@ public class ScriptExecutorView extends AdHocObjectView
    protected void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(actionExecute);
+      manager.add(actionClearOutputAndExecute);
       manager.add(actionStop);
       manager.add(actionClearOutput);
       manager.add(new Separator());
       manager.add(actionSave);
       manager.add(actionSaveAs);
-      manager.add(actionClear);
+      manager.add(actionClearSource);
    }
 
    /**
