@@ -21,7 +21,6 @@
 **/
 
 #include "nxagentd.h"
-#include <openssl/engine.h>
 #include <openssl/ssl.h>
 #include <nxstat.h>
 #include <netxms-version.h>
@@ -43,10 +42,14 @@ bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, bool *p
 bool RegisterSession(const shared_ptr<CommSession>& session);
 
 #ifdef _WIN32
+
+#include <openssl/engine.h>
+
 ENGINE *CreateCNGEngine();
 bool MatchWindowsStoreCertificate(PCCERT_CONTEXT context, const TCHAR *id);
 void SSLSetCertificateId(SSL_CTX *sslctx, const TCHAR *id);
-#endif
+
+#endif  /* _WIN32 */
 
 class Tunnel;
 
