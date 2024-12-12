@@ -199,6 +199,7 @@ import org.netxms.client.server.ServerConsoleListener;
 import org.netxms.client.server.ServerFile;
 import org.netxms.client.server.ServerVariable;
 import org.netxms.client.snmp.MibCompilationLogEntry;
+import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.client.snmp.SnmpTrapLogRecord;
 import org.netxms.client.snmp.SnmpUsmCredential;
@@ -11675,6 +11676,21 @@ public class NXCSession
     * @param rootOid  root SNMP object ID (as text)
     * @param listener listener
     * @throws IOException  if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void snmpWalk(long nodeId, SnmpObjectId rootOid, SnmpWalkListener listener) throws IOException, NXCException
+   {
+      snmpWalk(nodeId, rootOid.toString(), listener);
+   }
+
+   /**
+    * Do SNMP walk. Operation will start at given root object, and callback will be called one or more times as data will come from
+    * server. This method will exit only when walk operation is complete.
+    *
+    * @param nodeId node object ID
+    * @param rootOid root SNMP object ID (as text)
+    * @param listener listener
+    * @throws IOException if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void snmpWalk(long nodeId, String rootOid, SnmpWalkListener listener) throws IOException, NXCException

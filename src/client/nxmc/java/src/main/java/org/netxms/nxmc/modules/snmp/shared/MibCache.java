@@ -199,4 +199,19 @@ public final class MibCache
       }
       return mt.findObject(id, exactMatch);
    }
+
+   /**
+    * Find matching object in tree. If exactMatch set to true, method will search for object with ID equal to given. If exactMatch
+    * set to false, and object with given id cannot be found, closest upper level object will be returned (i.e., if object 1.3.6.1.5
+    * does not exist in the tree, but 1.3.6.1 does, 1.3.6.1 will be returned in search for 1.3.6.1.5).
+    * 
+    * @param oid object id to find
+    * @param exactMatch set to true if exact match required
+    * @return MIB object or null if matching object not found
+    */
+   public static MibObject findObject(SnmpObjectId oid, boolean exactMatch)
+   {
+      MibTree mt = getMibTree();
+      return (mt != null) ? mt.findObject(oid, exactMatch) : null;
+   }
 }

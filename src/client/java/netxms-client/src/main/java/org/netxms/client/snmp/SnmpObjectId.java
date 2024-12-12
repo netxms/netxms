@@ -23,7 +23,6 @@ import org.netxms.base.NXCPMessage;
 
 /**
  * This class represents SNMP Object Id (OID)
- *
  */
 public class SnmpObjectId
 {
@@ -168,6 +167,21 @@ public class SnmpObjectId
 	{
 		return ((pos >= 0) && (pos < value.length)) ? value[pos] : -1;
 	}
+
+   /**
+    * Create sub ID of given length.
+    *
+    * @param length sub ID length
+    * @return sub ID object
+    */
+   public SnmpObjectId subId(int length)
+   {
+      if (length >= value.length)
+         return this;
+      if (length <= 0)
+         return new SnmpObjectId(new long[0]);
+      return new SnmpObjectId(Arrays.copyOfRange(value, 0, length));
+   }
 
    /**
     * @see java.lang.Object#equals(java.lang.Object)
