@@ -61,9 +61,7 @@ import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Template;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpObjectId;
-import org.netxms.client.snmp.SnmpObjectIdFormatException;
 import org.netxms.client.snmp.SnmpValue;
-import org.netxms.client.snmp.SnmpWalkListener;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -587,8 +585,9 @@ public class TableColumns extends AbstractDCIPropertyPage
          {
             try
             {
-               String oid = name.substring(0,name.lastIndexOf("."));
-               int itemNumber = (int)oid.chars().filter(ch -> ch =='.').count();
+               SnmpObjectId queryOID = SnmpObjectId.parseSnmpObjectId(name);
+               final SnmpObjectId baseOID = queryOID.subId(queryOID.getLength() - 1);
+
                long nodeId;
                if (editor.getSourceNode() != 0)
                {
@@ -597,39 +596,34 @@ public class TableColumns extends AbstractDCIPropertyPage
                else
                {
                   nodeId = (queryObject != null) ? queryObject.getObjectId() : dci.getNodeId();
-               }      
-               Map<Long, SnmpValue> oidMap = new HashMap<Long, SnmpValue>();
-               session.snmpWalk(nodeId, oid, new SnmpWalkListener() {
-                  @Override
-                  public void onSnmpWalkData(long nodeId, List<SnmpValue> data)
-                  {
-                     for (SnmpValue v : data)
-                     {
-                        oidMap.put(v.getObjectId().getIdFromPos(itemNumber), v);
-                     }
-                  }
-               });    
+               }
 
+               final Map<Long, SnmpValue> oidMap = new HashMap<>();
+               final int columnIdOffset = baseOID.getLength();
+               logger.debug("Running SNMP WALK on {}", baseOID);
+               session.snmpWalk(nodeId, baseOID, (nid, data) -> {
+                  for(SnmpValue v : data)
+                     oidMap.put(v.getObjectId().getIdFromPos(columnIdOffset), v);
+               });
+               logger.debug("SNMP WALK on {} completed, {} columns found", baseOID, oidMap.size());
                if (oidMap.isEmpty())
                   return;
 
                runInUIThread(() -> {
+                  if (columnList.getControl().isDisposed())
+                     return;
+
                   columns.clear();
                   for(Entry<Long, SnmpValue> entry : oidMap.entrySet())
                   {
-                     MibObject object = MibCache.findObject(entry.getValue().getName(), false);
-                     String columnName = object != null ? object.getName() : entry.getValue().getName();
+                     SnmpValue v = entry.getValue();
+                     logger.debug("Processing SNMP WALK value {} {}", v.getName(), v.getValue());
+                     MibObject object = MibCache.findObject(v.getObjectId(), false);
+                     String columnName = (object != null) ? object.getName() : v.getName();
                      ColumnDefinition c = new ColumnDefinition(columnName, columnName);
-                     c.setDataType(CreateSnmpDci.dciTypeFromAsnType(entry.getValue().getType()));
-                     c.setConvertSnmpStringToHex(entry.getValue().getType() == 0xFFFF);
-                     try
-                     {
-                        c.setSnmpObjectId(SnmpObjectId.parseSnmpObjectId(oid + "." + entry.getKey()));
-                     }
-                     catch(SnmpObjectIdFormatException e)
-                     {
-                        // ignore error
-                     }
+                     c.setDataType(CreateSnmpDci.dciTypeFromAsnType(v.getType()));
+                     c.setConvertSnmpStringToHex(v.getType() == 0xFFFF);
+                     c.setSnmpObjectId(new SnmpObjectId(baseOID, entry.getKey()));
                      columns.add(c);
                   }
                   columnList.refresh();
