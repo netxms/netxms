@@ -1335,7 +1335,7 @@ static inline uint32_t SnmpGetEx(SNMP_Transport *transport, std::initializer_lis
    return SnmpGetEx(transport, nullptr, std::data(oid), oid.size(), value, bufferSize, flags, dataLen, codepage);
 #else
    SNMP_ObjectId oidObject(oid);
-   return SnmpGetEx(transport, nullptr, oidObject.values(), oidObject.length(), value, bufferSize, flags, dataLen, codepage);
+   return SnmpGetEx(transport, nullptr, oidObject.value(), oidObject.length(), value, bufferSize, flags, dataLen, codepage);
 #endif
 }
 
