@@ -166,5 +166,6 @@ public class CommentsView extends ObjectView
          currentViewer = textViewer;
       }
       this.markdownMode = markdownMode;
+      content.layout(true, true);
    }
 }
