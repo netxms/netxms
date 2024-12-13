@@ -122,7 +122,8 @@ public class MarkdownViewer extends Composite
             ".notification-success { color: #125522; background-color: #d4edda; border-color: #c3e6cb; } " +
             ".notification-warning { color: #6a4d00; background-color: #fff3cd; border-color: #ffeeba; } " +
             ".notification-error { color: #900000; background: #ffd2d2; border-color: #f1a899; } " +
-            "code { display: block; padding: 9.5px; color: #333; word-break: break-all; word-wrap: break-word; background-color: #f5f5f5; border: 1px solid #ccc; border-radius: 4px; white-space: pre-wrap; }" +
+            "p code { padding: 2px 4px; font-size: 90%; border-radius: 4px; color: #333; background-color: #f5f5f5; }" +
+            "pre code { display: block; padding: 9.5px; color: #333; word-break: break-all; word-wrap: break-word; background-color: #f5f5f5; border: 1px solid #ccc; border-radius: 4px; white-space: pre-wrap; }" +
             "</style></head><body><div class=\"content\" style=\"padding-left: 5px; padding-right: 5px;\">";
    }
 
