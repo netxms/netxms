@@ -228,18 +228,15 @@ static bool IsArgMissingCb(int currentCount)
 static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int optind, RSA_KEY serverKey)
 {
    int exitCode = 3, pos;
-
    do
    {
-      TCHAR *url;
       StringList parameters;
       pos = optind + 1;
-      url = MemCopyString(argv[pos++]);
+      const TCHAR *url = argv[pos++];
       while (pos < argc)
          parameters.add(argv[pos++]);
       exitCode = QueryWebService(conn, url, parameters);
       ThreadSleep(s_interval);
-      MemFree(url);
    }
    while(s_interval > 0);
    return exitCode;
