@@ -372,7 +372,7 @@ Metadata:
 ;
 
 MetadataValues:
-	MetadataValue ',' MetadataValue
+	MetadataValue ',' MetadataValues
 |	MetadataValue
 ;
 
