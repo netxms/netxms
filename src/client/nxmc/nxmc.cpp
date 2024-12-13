@@ -43,8 +43,8 @@ NETXMS_EXECUTABLE_HEADER(nxmc)
 /**
  * Options
  */
+static bool s_autoLogin = false;
 static const NXMC_CHAR *s_optHost = _NXMC_T("127.0.0.1");
-static const NXMC_CHAR *s_optPort = _NXMC_T("");
 static const NXMC_CHAR *s_optUser = nullptr;
 static const NXMC_CHAR *s_optPassword = _NXMC_T("");
 static const NXMC_CHAR *s_optToken = nullptr;
@@ -114,12 +114,15 @@ static int StartApp(int argc, NXMC_CHAR *argv[], const StringList& jreOptions)
    nxlog_debug_tag(_T("nxmc"), 1, _T("Using JRE: %s"), jre);
 
    StringList vmOptions;
+   if (s_autoLogin)
+   {
+      NXMC_ADD_STRING(vmOptions,  _NXMC_T("-Dnetxms.autologin=true"));
+   }
+
    if ((s_optToken != nullptr) || (s_optUser != nullptr))
    {
       NXMC_CHAR buffer[256];
       NXMC_SNPRINTF(buffer, 256, _NXMC_T("-Dnetxms.server=%s"), s_optHost);
-      NXMC_ADD_STRING(vmOptions, buffer);
-      NXMC_SNPRINTF(buffer, 256, _NXMC_T("-Dnetxms.port=%s"), s_optPort);
       NXMC_ADD_STRING(vmOptions, buffer);
 
       if (s_optToken != nullptr)
@@ -245,6 +248,7 @@ static int StartApp(int argc, NXMC_CHAR *argv[], const StringList& jreOptions)
 #if HAVE_DECL_GETOPT_LONG
 static struct option longOptions[] =
 {
+   { (char *)"auto",           no_argument,       nullptr,        'a' },
 	{ (char *)"classpath",      required_argument, nullptr,        'C' },
 	{ (char *)"debug",          no_argument,       nullptr,        'D' },
 	{ (char *)"help",           no_argument,       nullptr,        'h' },
@@ -261,7 +265,7 @@ static struct option longOptions[] =
 };
 #endif
 
-#define SHORT_OPTIONS "C:DhH:j:m:o:p:P:t:u:v"
+#define SHORT_OPTIONS "aC:DhH:j:m:o:p:P:t:u:v"
 
 /**
  * Print usage info
@@ -275,10 +279,11 @@ static void ShowUsage()
 #endif
       _T("NetXMS Management Console  Version ") NETXMS_VERSION_STRING _T("\n")
       _T("Copyright (c) 2006-2024 Raden Solutions\n\n")
-      _T("Usage: nxmc [OPTIONS]\n")
-      _T("  \n")
-      _T("Options:\n")
+      _T("Usage: nxmc [LAUNCHER-OPTIONS] [-- APP-OPTIONS]\n")
+      _T("\n")
+      _T("Launcher options:\n")
 #if HAVE_GETOPT_LONG
+      _T("  -a, --auto                  Login automatically.\n")
       _T("  -C, --classpath <path>      Additional Java class path.\n")
 #ifdef _WIN32
       _T("  -D, --debug                 Write launcher debug log (use twice for extra verbose output).\n")
@@ -290,12 +295,12 @@ static void ShowUsage()
       _T("  -j, --jre <path>            Specify JRE location.\n")
       _T("  -m, --maxmem <size>         JVM max memory size (JVM option -Xmx).\n")
       _T("  -o, --option <option>       Additional JVM option.\n")
-      _T("  -p, --port <port>           Specify TCP port for connection. Default is 4701.\n")
       _T("  -P, --password <password>   Specify user's password. Default is empty.\n")
       _T("  -t, --token <token>         Login to server using given authentication token.\n")
       _T("  -u, --user <user>           Login to server as given user.\n")
       _T("  -v, --version               Display version information.\n\n")
 #else
+      _T("  -a             Login automatically.\n")
       _T("  -C <path>      Additional Java class path.\n")
       _T("  -D             Show additional debug output.\n")
       _T("  -h             Display this help message.\n")
@@ -303,12 +308,23 @@ static void ShowUsage()
       _T("  -j <path>      Specify JRE location.\n")
       _T("  -m <size>      JVM max memory size (JVM option -Xmx).\n")
       _T("  -o <option>    Additional JVM option.\n")
-      _T("  -p <port>      Specify TCP port for connection. Default is 4701.\n")
       _T("  -P <password>  Specify user's password. If not given, password will be read from terminal.\n")
       _T("  -t <token>     Login to server using given authentication token.\n")
       _T("  -u <user>      Login to server as given user.\n")
       _T("  -v             Display version information.\n\n")
 #endif
+      _T("Application options:\n")
+      _T("  -auto                    Login automatically.\n")
+      _T("  -ignore-protocol-version Do not check if protocol version is compatible.\n")
+      _T("  -dashboard=<dashboard>   Open dashboard with given name or ID after login.\n")
+      _T("  -disable-compression     Disable protocol level compression.\n")
+      _T("  -kiosk-mode              Start in kiosk mode (only show selected dashboard or map).\n")
+      _T("  -language=<lang>         Set language.\n")
+      _T("  -login=<user>            Login to server as given user.\n")
+      _T("  -map=<map>               Open map with given name or ID after login.\n")
+      _T("  -password=<password>     Specify user's password. Default is empty.\n")
+      _T("  -server=<hostname>       Specify host name or IP address. Could be in host:port form.\n")
+      _T("  -token=<token>           Login to server using given authentication token.\n\n")
 #ifdef _WIN32
       , _T("NetXMS Management Console"), MB_OK | MB_ICONINFORMATION
 #endif
@@ -358,6 +374,9 @@ int main(int argc, char *argv[])
    {
 		switch(c)
 		{
+         case 'a': // Auto login
+            s_autoLogin = true;
+            break;
 		   case 'C': // classpath
 			   s_optClassPath = NXMC_OPTARG;
 			   break;
@@ -383,9 +402,6 @@ int main(int argc, char *argv[])
 #else
             jreOptions.addPreallocated(WideStringFromMBStringSysLocale(NXMC_OPTARG));
 #endif
-            break;
-         case 'p': // port
-            s_optPort = NXMC_OPTARG;
             break;
 		   case 'P': // password
 			   s_optPassword = NXMC_OPTARG;

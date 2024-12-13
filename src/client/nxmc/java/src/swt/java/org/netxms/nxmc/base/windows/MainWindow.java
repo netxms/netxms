@@ -115,7 +115,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class MainWindow extends Window implements MessageAreaHolder
 {
-   private static Logger logger = LoggerFactory.getLogger(MainWindow.class);
+   private static final Logger logger = LoggerFactory.getLogger(MainWindow.class);
    private I18n i18n = LocalizationHelper.getI18n(MainWindow.class);
 
    private Composite windowContent;
@@ -190,7 +190,7 @@ public class MainWindow extends Window implements MessageAreaHolder
                Memento m = new Memento();
                p.saveState(m);
                ps.set(PreferenceStore.serverProperty(p.getId()), m);
-            }      
+            }
             savePinArea(ps, PinLocation.BOTTOM, bottomPinArea);
             savePinArea(ps, PinLocation.LEFT, leftPinArea);
             savePinArea(ps, PinLocation.RIGHT, rightPinArea);
@@ -247,7 +247,6 @@ public class MainWindow extends Window implements MessageAreaHolder
          @Override
          public void shellActivated(ShellEvent e)
          {
-            logger.debug("Main window activated");
             if (postOpenRunnables != null)
             {
                for(Runnable r : postOpenRunnables)
@@ -255,6 +254,7 @@ public class MainWindow extends Window implements MessageAreaHolder
                   logger.debug("Executing post-open handler");
                   r.run();
                }
+               postOpenRunnables.clear();
                postOpenRunnables = null;
             }
          }
