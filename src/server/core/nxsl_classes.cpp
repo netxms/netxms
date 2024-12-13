@@ -434,14 +434,46 @@ NXSL_METHOD_DEFINITION(NetObj, setCategory)
 }
 
 /**
- * setComments(text)
+ * setComments(text, [isMarkdown])
  */
 NXSL_METHOD_DEFINITION(NetObj, setComments)
 {
-   if (!argv[0]->isString())
+   if ((argc < 1) || (argc > 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString() && !argv[0]->isNull())
       return NXSL_ERR_NOT_STRING;
 
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setComments(argv[0]->getValueAsCString());
+   if ((argc == 1) || argv[1]->isNull())
+   {
+      static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setComments(argv[0]->getValueAsCString());
+   }
+   else
+   {
+      const TCHAR *s = argv[0]->getValueAsCString();
+      if ((argv[1]->isTrue() && !_tcsncmp(s, _T("{\x7f}"), 3)) || (argv[1]->isFalse() && _tcsncmp(s, _T("{\x7f}"), 3)))
+      {
+         // Correct mode already
+         static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setComments(s);
+      }
+      else
+      {
+         if (!_tcsncmp(s, _T("{\x7f}"), 3))
+         {
+            // Remove Markdown indicator
+            static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setComments(&s[3]);
+         }
+         else
+         {
+            // Add Markdown indicator
+            Buffer<TCHAR, 256> ms(_tcslen(s) + 4);
+            memcpy(ms, _T("{\x7f}"), 3 * sizeof(TCHAR));
+            _tcscpy(ms.buffer() + 3, s);
+            static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setComments(ms);
+         }
+      }
+   }
+
    *result = vm->createValue();
    return NXSL_ERR_SUCCESS;
 }
@@ -730,7 +762,7 @@ NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(NetObj, rename, 1);
    NXSL_REGISTER_METHOD(NetObj, setAlias, 1);
    NXSL_REGISTER_METHOD(NetObj, setCategory, 1);
-   NXSL_REGISTER_METHOD(NetObj, setComments, 1);
+   NXSL_REGISTER_METHOD(NetObj, setComments, -1);
    NXSL_REGISTER_METHOD(NetObj, setCustomAttribute, -1);
    NXSL_REGISTER_METHOD(NetObj, setGeoLocation, 1);
    NXSL_REGISTER_METHOD(NetObj, setMapImage, 1);
