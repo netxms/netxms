@@ -2174,6 +2174,18 @@ static int F_SQLQuery(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
 }
 
 /**
+ * Check if given string has Markdown comment indicator
+ */
+static int F_IsMarkdownComment(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString() && !argv[0]->isNull())
+      return NXSL_ERR_NOT_STRING;
+
+   *result = vm->createValue(_tcsncmp(argv[0]->getValueAsCString(), _T("{\x7f}"), 3) == 0);
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
  * Additional server functions to use within all scripts
  */
 static NXSL_ExtFunction m_nxslServerFunctions[] =
@@ -2230,6 +2242,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { "GetServerQueueNames", F_GetServerQueueNames, 0 },
    { "GetSyslogRuleCheckCount", F_GetSyslogRuleCheckCount, -1 },
    { "GetSyslogRuleMatchCount", F_GetSyslogRuleMatchCount, -1 },
+   { "IsMarkdownComment", F_IsMarkdownComment, 1 },
    { "LeaveMaintenance", F_LeaveMaintenance, 1, true },
    { "LoadEvent", F_LoadEvent, 1 },
    { "ManageObject", F_ManageObject, 1, true },
