@@ -325,7 +325,7 @@ public class ObjectFinder extends View
       radioPlainText.setSelection(view.radioPlainText.getSelection());
       radioPattern.setSelection(view.radioPattern.getSelection());
       radioRegularExpression.setSelection(view.radioRegularExpression.getSelection());
-      
+
       classList.setCheckedElements(view.classList.getCheckedElements());
       Object[] zoneElements = view.zoneList.getCheckedElements();
       for (Object element : zoneList.getCheckedElements()) //From the start all zones are checked
@@ -343,12 +343,12 @@ public class ObjectFinder extends View
             zoneList.setChecked(element, false);
          }
       }      
-      
+
       ipRangeStart.setText(view.ipRangeStart.getText());
       ipRangeEnd.setText(view.ipRangeEnd.getText());
-      
+
       queryEditor.setText(view.queryEditor.getText());
-          
+
       if (!view.searchResult.isEmpty())
          updateResultTable(view.searchResult);
       else
@@ -894,10 +894,12 @@ public class ObjectFinder extends View
       switch(tabFolder.getSelectionIndex())
       {
          case 0:
-            text.setFocus();
+            if (!text.isDisposed())
+               text.setFocus();
             break;
          case 1:
-            queryEditor.setFocus();
+            if (!queryEditor.isDisposed())
+               queryEditor.setFocus();
             break;
       }
    }
@@ -1209,6 +1211,7 @@ public class ObjectFinder extends View
       TableColumn[] columns = results.getTable().getColumns();
       for(int i = session.isZoningEnabled() ? 6 : 5; i < columns.length; i++)
          columns[i].dispose();
+      results.getTable().setSortColumn(null);
    }
 
    /**
@@ -1219,7 +1222,7 @@ public class ObjectFinder extends View
    private void updateResultTable(List<ObjectQueryResult> objects)
    {
       resetResultTable();
-      
+
       searchResult = objects;
 
       Set<String> registeredProperties = new HashSet<>();
