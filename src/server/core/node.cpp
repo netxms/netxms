@@ -7866,6 +7866,64 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, shared_ptr<Table> 
       }
       unlockProperties();
    }
+   else if (!_tcsicmp(name, _T("Network.Interfaces")))
+   {
+      auto table = make_shared<Table>();
+      table->addColumn(_T("ID"), DCI_DT_UINT, _T("ID"), true);
+      table->addColumn(_T("INDEX"), DCI_DT_UINT, _T("Index"));
+      table->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"));
+      table->addColumn(_T("DESCRIPTION"), DCI_DT_STRING, _T("Description"));
+      table->addColumn(_T("ALIAS"), DCI_DT_STRING, _T("Alias"));
+      table->addColumn(_T("TYPE"), DCI_DT_UINT, _T("Type"));
+      table->addColumn(_T("SPEED"), DCI_DT_UINT64, _T("Speed"));
+      table->addColumn(_T("MTU"), DCI_DT_UINT, _T("MTU"));
+      table->addColumn(_T("MAC_ADDRESS"), DCI_DT_STRING, _T("MAC address"));
+      table->addColumn(_T("IP_ADDRESSES"), DCI_DT_STRING, _T("IP addresses"));
+      table->addColumn(_T("ADMIN_STATE"), DCI_DT_UINT, _T("Administrative state"));
+      table->addColumn(_T("OPER_STATE"), DCI_DT_UINT, _T("Operational state"));
+      table->addColumn(_T("UTILIZATION_IN"), DCI_DT_FLOAT, _T("Inbound utilization"));
+      table->addColumn(_T("UTILIZATION_OUT"), DCI_DT_FLOAT, _T("Outbound utilization"));
+      table->addColumn(_T("BPORT"), DCI_DT_UINT, _T("Bridge port"));
+      table->addColumn(_T("LOCATION"), DCI_DT_STRING, _T("Location"));
+      table->addColumn(_T("PEER_IFACE_ID"), DCI_DT_UINT, _T("Peer interface ID"));
+      table->addColumn(_T("PEER_NODE_ID"), DCI_DT_UINT, _T("Peer node ID"));
+      table->addColumn(_T("PEER_PROTO"), DCI_DT_UINT, _T("Peer discovery protocol"));
+
+      TCHAR buffer[256];
+      readLockChildList();
+      for (int i = 0; i < getChildList().size(); i++)
+      {
+         const NetObj *object = getChildList().get(i);
+         if (object->getObjectClass() != OBJECT_INTERFACE)
+            continue;
+
+         const Interface *iface = static_cast<const Interface*>(object);
+         table->addRow();
+         table->set(0, iface->getId());
+         table->set(1, iface->getIfIndex());
+         table->set(2, iface->getName());
+         table->set(3, iface->getDescription());
+         table->set(4, iface->getIfAlias());
+         table->set(5, iface->getIfType());
+         table->set(6, iface->getSpeed());
+         table->set(7, iface->getMTU());
+         table->set(8, iface->getMacAddress().toString(buffer));
+         table->set(9, iface->getIpAddressList()->toString());
+         table->set(10, iface->getAdminState());
+         table->set(11, iface->getOperState());
+         if (iface->getInboundUtilization() >= 0)
+            table->set(12, static_cast<float>(iface->getInboundUtilization()) / 10.0);
+         if (iface->getOutboundUtilization() >= 0)
+            table->set(13, static_cast<float>(iface->getOutboundUtilization()) / 10.0);
+         table->set(14, iface->getBridgePortNumber());
+         table->set(15, iface->getPhysicalLocation().toString(buffer, 256));
+         table->set(16, iface->getPeerInterfaceId());
+         table->set(17, iface->getPeerNodeId());
+         table->set(18, iface->getPeerDiscoveryProtocol());
+      }
+      unlockChildList();
+      *result = table;
+   }
    else if (!_tcsicmp(name, _T("Topology.OSPF.Areas")))
    {
       if (isOSPFSupported())

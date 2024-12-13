@@ -709,6 +709,31 @@ void InetAddressList::fillMessage(NXCPMessage *msg, uint32_t baseFieldId, uint32
 }
 
 /**
+ * Convert address list to string representation
+ */
+String InetAddressList::toString(const TCHAR *separator) const
+{
+   if (m_list.isEmpty())
+      return String();
+
+   StringBuffer sb;
+   TCHAR text[64];
+   sb.append(m_list.get(0)->toString(text));
+   sb.append(_T('/'));
+   sb.append(m_list.get(0)->getMaskBits());
+
+   for(int i = 1; i < m_list.size(); i++)
+   {
+      sb.append(separator);
+      sb.append(m_list.get(i)->toString(text));
+      sb.append(_T('/'));
+      sb.append(m_list.get(i)->getMaskBits());
+   }
+
+   return sb;
+}
+
+/**
  * Resolve host name to address list
  */
 InetAddressList *InetAddressList::resolveHostName(const WCHAR *hostname)
