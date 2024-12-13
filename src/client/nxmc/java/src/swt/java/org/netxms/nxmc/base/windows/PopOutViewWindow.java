@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,11 +18,16 @@
  */
 package org.netxms.nxmc.base.windows;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.ShellAdapter;
+import org.eclipse.swt.events.ShellEvent;
+import org.eclipse.swt.events.ShellListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
@@ -44,6 +49,8 @@ import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.keyboard.KeyBindingManager;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -51,6 +58,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class PopOutViewWindow extends Window implements MessageAreaHolder
 {
+   private static final Logger logger = LoggerFactory.getLogger(PopOutViewWindow.class);
+
    /**
     * Open pop-out window with given view
     *
@@ -70,11 +79,13 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
     */
    public static void open(View view, boolean fullScreen, boolean blocking)
    {
-      PopOutViewWindow w = new PopOutViewWindow(view, fullScreen);
+      final PopOutViewWindow w = new PopOutViewWindow(view, fullScreen);
       w.setBlockOnOpen(blocking);
+      w.addPostOpenRunnable(() -> {
+         w.getShell().addDisposeListener((e) -> Registry.unregisterPopoutView(view));
+         Registry.registerPopoutView(view);
+      });
       w.open();
-      w.getShell().addDisposeListener((e) -> Registry.unregisterPopoutView(view));
-      Registry.registerPopoutView(view);
    }
 
    private final I18n i18n = LocalizationHelper.getI18n(PopOutViewWindow.class);
@@ -86,6 +97,7 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
    private Action actionToggleFullScreen;
    private KeyBindingManager keyBindingManager;
    private boolean openInFullScreen;
+   private List<Runnable> postOpenRunnables = new ArrayList<>();
 
    /**
     * Create new pop-out window.
@@ -96,8 +108,12 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
    {
       super((Shell)null);
       this.view = view;
-      this.openInFullScreen = openInFullScreen;
       this.keyBindingManager = new KeyBindingManager();
+      this.openInFullScreen = openInFullScreen;
+      if (openInFullScreen)
+      {
+         addPostOpenRunnable(() -> getShell().setFullScreen(true));
+      }
    }
 
    /**
@@ -108,20 +124,60 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
    {
       super.configureShell(shell);
       shell.setText(view.getFullName());
-      Point shellSize = PreferenceStore.getInstance().getAsPoint("PopupWindowSize." + view.getGlobalId(), null);
-      if (shellSize == null)
-         shellSize = PreferenceStore.getInstance().getAsPoint("PopupWindowSize." + view.getBaseId(), null);
-      Point location = PreferenceStore.getInstance().getAsPoint("PopupWindowLocation." + view.getGlobalId(), null);
-      if (location == null)
-         location = PreferenceStore.getInstance().getAsPoint("PopupWindowLocation." + view.getBaseId(), null);
-      boolean maximized = PreferenceStore.getInstance().getAsBoolean("PopupWindowMaximized." + view.getBaseId(), false);
-      if (shellSize != null)
-         shell.setSize(shellSize);
-      if (location != null)
-         shell.setLocation(location);
-      shell.setMaximized(maximized);
+      if (openInFullScreen)
+      {
+         shell.setFullScreen(true);
+      }
+      else
+      {
+         Point shellSize = PreferenceStore.getInstance().getAsPoint("PopupWindowSize." + view.getGlobalId(), null);
+         if (shellSize == null)
+            shellSize = PreferenceStore.getInstance().getAsPoint("PopupWindowSize." + view.getBaseId(), null);
+         Point location = PreferenceStore.getInstance().getAsPoint("PopupWindowLocation." + view.getGlobalId(), null);
+         if (location == null)
+            location = PreferenceStore.getInstance().getAsPoint("PopupWindowLocation." + view.getBaseId(), null);
+         boolean maximized = PreferenceStore.getInstance().getAsBoolean("PopupWindowMaximized." + view.getBaseId(), false);
+         if (shellSize != null)
+            shell.setSize(shellSize);
+         if (location != null)
+            shell.setLocation(location);
+         shell.setMaximized(maximized);
+      }
       shell.setImages(Startup.windowIcons);
-      shell.setFullScreen(openInFullScreen);
+   }
+
+   /**
+    * @see org.eclipse.jface.window.Window#getShellListener()
+    */
+   @Override
+   protected ShellListener getShellListener()
+   {
+      return new ShellAdapter() {
+         @Override
+         public void shellActivated(ShellEvent e)
+         {
+            if (postOpenRunnables != null)
+            {
+               for(Runnable r : postOpenRunnables)
+               {
+                  logger.debug("Executing post-open handler");
+                  r.run();
+               }
+               postOpenRunnables.clear();
+               postOpenRunnables = null;
+            }
+         }
+
+         @Override
+         public void shellClosed(ShellEvent event)
+         {
+            event.doit = false; // don't close now
+            if (canHandleShellCloseEvent())
+            {
+               handleShellCloseEvent();
+            }
+         }
+      };
    }
 
    /**
@@ -222,6 +278,16 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
       KeyStroke ks = new KeyStroke(stateMask, keyCode);
       if (!keyBindingManager.processKeyStroke(ks))
          viewContainer.processKeyStroke(ks);
+   }
+
+   /**
+    * Add runnable to be executed after window is open.
+    *
+    * @param postOpenRunnable runnable to be executed after window is open
+    */
+   public void addPostOpenRunnable(Runnable postOpenRunnable)
+   {
+      postOpenRunnables.add(postOpenRunnable);
    }
 
    /**

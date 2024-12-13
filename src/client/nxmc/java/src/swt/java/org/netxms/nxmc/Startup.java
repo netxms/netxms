@@ -204,7 +204,14 @@ public class Startup
          session.enableReconnect(true);
          Registry.setSingleton(UIElementFilter.class, new UIElementFilter(session));
          setInactivityHandler(display, session.getClientConfigurationHintAsInt("InactivityTimeout", 0));
-         openWindows(session, args);
+         try
+         {
+            openWindows(session, args);
+         }
+         catch(Throwable e)
+         {
+            logger.error("Exception during application window initialization", e);
+         }
       }
 
       if (!shutdownInProgress)
@@ -212,6 +219,7 @@ public class Startup
          Runtime.getRuntime().removeShutdownHook(shutdownHook);
          shutdown();
       }
+      logger.debug("main() method completed");
    }
 
    /**
@@ -325,8 +333,17 @@ public class Startup
 
       if (kioskMode)
       {
-         for(View v : fullScreenViews)
+         logger.debug("Starting in kiosk mode");
+         View v = fullScreenViews.get(0);
+         if (v != null)
+         {
             PopOutViewWindow.open(v, true, true);
+            logger.debug("Kiosk mode window closed");
+         }
+         else
+         {
+            logger.error("Kiosk mode selected but pop-out view not provided");
+         }
       }
       else
       {
@@ -340,8 +357,9 @@ public class Startup
          {
             w.addPostOpenRunnable(() -> Display.getCurrent().asyncExec(() -> PopOutViewWindow.open(v, true, false)));
          }
+         w.addPostOpenRunnable(() -> loadPopOutViews());
          w.open();
-         loadPopOutViews();
+         logger.debug("Main window closed");
       }
    }
 
@@ -443,6 +461,28 @@ public class Startup
          }
       });
 
+      // Update settings from JVM properties
+      updateSettingsFromProperty(settings, "netxms.server", "Connect.Server");
+      updateSettingsFromProperty(settings, "netxms.login", "Connect.Login");
+      String v = System.getProperty("netxms.password");
+      if (v != null)
+      {
+         password = v;
+         settings.set("Connect.AuthMethod", AuthenticationType.PASSWORD.getValue());
+      }
+      v = System.getProperty("netxms.token");
+      if (v != null)
+      {
+         settings.set("Connect.Login", v);
+         settings.set("Connect.AuthMethod", AuthenticationType.TOKEN.getValue());
+      }
+      v = System.getProperty("netxms.autologin");
+      if (v != null)
+      {
+         autoConnect = Boolean.parseBoolean(v);
+      }
+
+      // Parse command line arguments relevant for login
       for(String s : args)
       {
          if (s.startsWith("-server="))
@@ -573,6 +613,20 @@ public class Startup
       }
 
       return true;
+   }
+
+   /**
+    * Update settings from JVM property
+    *
+    * @param settings settings
+    * @param pname property name
+    * @param key configuration key name
+    */
+   private static void updateSettingsFromProperty(PreferenceStore settings, String pname, String key)
+   {
+      String v = System.getProperty(pname);
+      if (v != null)
+         settings.putValue(key, v);
    }
 
    /**

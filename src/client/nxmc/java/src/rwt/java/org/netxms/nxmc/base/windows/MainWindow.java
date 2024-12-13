@@ -180,7 +180,7 @@ public class MainWindow extends Window implements MessageAreaHolder
                Memento m = new Memento();
                p.saveState(m);
                ps.set(PreferenceStore.serverProperty(p.getId()), m);
-            } 
+            }
             savePinArea(ps, PinLocation.BOTTOM, bottomPinArea);
             savePinArea(ps, PinLocation.LEFT, leftPinArea);
             savePinArea(ps, PinLocation.RIGHT, rightPinArea);
@@ -213,7 +213,6 @@ public class MainWindow extends Window implements MessageAreaHolder
          @Override
          public void shellActivated(ShellEvent e)
          {
-            logger.debug("Main window activated");
             if (postOpenRunnables != null)
             {
                for(Runnable r : postOpenRunnables)
@@ -221,6 +220,7 @@ public class MainWindow extends Window implements MessageAreaHolder
                   logger.debug("Executing post-open handler");
                   r.run();
                }
+               postOpenRunnables.clear();
                postOpenRunnables = null;
             }
          }
