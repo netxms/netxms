@@ -2274,8 +2274,8 @@ public:
    uint32_t getIfType() const { return m_type; }
    uint32_t getMTU() const { return m_mtu; }
    uint64_t getSpeed() const { return m_speed; }
-   uint32_t getInboundUtilization() const { return m_inboundUtilization; }
-   uint32_t getOutboundUtilization() const { return m_outboundUtilization; }
+   int32_t getInboundUtilization() const { return m_inboundUtilization; }
+   int32_t getOutboundUtilization() const { return m_outboundUtilization; }
    uint32_t getBridgePortNumber() const { return m_bridgePortNumber; }
    uint32_t getChassis() const { return m_physicalLocation.chassis; }
    uint32_t getModule() const { return m_physicalLocation.module; }

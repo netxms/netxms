@@ -4879,6 +4879,7 @@ public:
    void fillMessage(NXCPMessage *msg, uint32_t baseFieldId, uint32_t sizeFieldId) const;
 
    json_t *toJson() const { return json_object_array(m_list); }
+   String toString(const TCHAR *separator = _T(", ")) const;
 
    static InetAddressList *resolveHostName(const WCHAR *hostname);
    static InetAddressList *resolveHostName(const char *hostname);

@@ -59,6 +59,8 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 
       list.add(new AgentTable("Hardware.Components", "Hardware components", new String[] { "CATEGORY", "INDEX" }));
 
+      list.add(new AgentTable("Network.Interfaces", "Network interfaces", new String[] { "ID" }));
+
       list.add(new AgentTable("Topology.OSPF.Areas", "OSPF areas", new String[] { "ID" }));
       list.add(new AgentTable("Topology.OSPF.Neighbors", "OSPF neighbors", new String[] { "ROUTER_ID", "IP_ADDRESS" }));
       list.add(new AgentTable("Topology.RoutingTable", "Routing table", new String[] { "ID" }));
