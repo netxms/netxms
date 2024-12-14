@@ -81,10 +81,9 @@ public class GraphsPerspective extends Perspective
 
       if ((selectedElement != null) && (selectedElement instanceof GraphDefinition))
       {
-         HistoricalGraphView view = new HistoricalGraphView();
+         HistoricalGraphView view = new HistoricalGraphView((GraphDefinition)selectedElement);
          view.setShowDeleteAction(true);
          setMainView(view);
-         view.initPredefinedGraph((GraphDefinition)selectedElement);
       }
       else
       {
