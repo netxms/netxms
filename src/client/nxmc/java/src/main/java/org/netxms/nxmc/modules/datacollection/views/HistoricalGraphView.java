@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
@@ -218,6 +217,17 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       super(LocalizationHelper.getI18n(HistoricalGraphView.class).tr("Line Chart"),
             ResourceManager.getImageDescriptor("icons/object-views/chart-line.png"), UUID.randomUUID().toString(), false); 
       fullName = i18n.tr("Line Chart");
+   }
+
+   /**
+    * Constructor for use by graphs perspective
+    */
+   public HistoricalGraphView(GraphDefinition configuration)
+   {
+      super(configuration.getName(), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png"), "historical-graph.predefined." + configuration.getId(), false);
+      this.configuration = new GraphDefinition(configuration);
+      this.fullName = configuration.getName();
+      this.configuration.addChangeListener(this);
    }
 
    /**
@@ -419,12 +429,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    {
       MenuManager menuManager = new MenuManager();
       menuManager.setRemoveAllWhenShown(true);
-      menuManager.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
-         {
-            fillContextMenu(mgr);
-         }
-      });
+      menuManager.addMenuListener((m) -> fillContextMenu(m));
       chart.setMenuManager(menuManager);
    }
 
