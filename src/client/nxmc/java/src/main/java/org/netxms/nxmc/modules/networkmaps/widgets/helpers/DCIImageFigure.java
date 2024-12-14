@@ -55,7 +55,8 @@ public class DCIImageFigure extends DecorationLayerAbstractFigure
       try
       {
          UUID guid = dciImageConfiguration.getCorrectImage(latDCIValue);
-         org.eclipse.swt.graphics.Rectangle bounds = ImageProvider.getInstance().getImage(guid).getBounds();
+         Image image = ImageProvider.getInstance().getImage(guid, () -> refresh());
+         org.eclipse.swt.graphics.Rectangle bounds = image.getBounds();
          setSize(bounds.width, bounds.height);
       }
       catch(IllegalArgumentException e)
@@ -75,7 +76,9 @@ public class DCIImageFigure extends DecorationLayerAbstractFigure
       try
       {
          UUID guid = dciImageConfiguration.getCorrectImage(latDCIValue);
-         Image image = ImageProvider.getInstance().getImage(guid);
+         Image image = ImageProvider.getInstance().getImage(guid, () -> refresh());
+         org.eclipse.swt.graphics.Rectangle bounds = image.getBounds();
+         setSize(bounds.width, bounds.height);
          Rectangle rect = new Rectangle(getBounds());
          gc.drawImage(image, rect.x, rect.y);
       }
