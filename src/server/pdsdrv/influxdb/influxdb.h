@@ -198,6 +198,8 @@ class InfluxDBStorageDriver : public PerfDataStorageDriver
 private:
    ObjectArray<InfluxDBSender> m_senders;
    bool m_enableUnsignedType;
+   bool m_validateValues;
+   bool m_correctValues;
 
 public:
    InfluxDBStorageDriver();

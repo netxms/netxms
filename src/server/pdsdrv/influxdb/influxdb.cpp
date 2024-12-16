@@ -43,6 +43,8 @@ static const TCHAR *s_driverName = _T("InfluxDB");
 InfluxDBStorageDriver::InfluxDBStorageDriver() : m_senders(0, 16, Ownership::True)
 {
    m_enableUnsignedType = false;
+   m_validateValues = false;
+   m_correctValues = false;
 }
 
 /**
@@ -88,6 +90,12 @@ bool InfluxDBStorageDriver::init(Config *config)
 
    m_enableUnsignedType = config->getValueAsBoolean(_T("/InfluxDB/EnableUnsignedType"), m_enableUnsignedType);
    nxlog_debug_tag(DEBUG_TAG, 2, _T("Unsigned integer data type is %s"), m_enableUnsignedType ? _T("enabled") : _T("disabled"));
+
+   m_validateValues = config->getValueAsBoolean(_T("/InfluxDB/ValidateValues"), m_validateValues);
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Value validation is %s"), m_validateValues ? _T("enabled") : _T("disabled"));
+
+   m_correctValues = config->getValueAsBoolean(_T("/InfluxDB/CorrectValues"), m_correctValues);
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Value correction is %s"), m_correctValues ? _T("enabled") : _T("disabled"));
 
    int queueCount = config->getValueAsInt(_T("/InfluxDB/Queues"), 1);
    if (queueCount < 1)
@@ -172,7 +180,7 @@ static bool GetTagsFromObject(const NetObj& object, StringBuffer *tags)
    if (ca == nullptr)
       return false;
 
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("Object: %s - CMA: #%d"), object.getName(), ca->size());
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("Object: %s - CMA: #%d"), object.getName(), ca->size());
 
    bool ignoreMetric = false;
    StringList *keys = ca->keys();
@@ -192,7 +200,7 @@ static bool GetTagsFromObject(const NetObj& object, StringBuffer *tags)
          if (!value.isEmpty())
          {
             StringBuffer name = NormalizeString(&key[4]);
-            nxlog_debug_tag(DEBUG_TAG, 7, _T("Object: %s - CA: K:%s = V:%s"), object.getName(), name.cstr(), value.cstr());
+            nxlog_debug_tag(DEBUG_TAG, 8, _T("Object: %s - CA: K:%s = V:%s"), object.getName(), name.cstr(), value.cstr());
             tags->append(_T(','));
             tags->append(name);
             tags->append(_T('='));
@@ -200,12 +208,12 @@ static bool GetTagsFromObject(const NetObj& object, StringBuffer *tags)
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 7, _T("Object: %s - CA: K:%s (Ignored)"), object.getName(), key);
+            nxlog_debug_tag(DEBUG_TAG, 8, _T("Object: %s - CA: K:%s (Ignored)"), object.getName(), key);
          }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("Object: %s - CA: K:%s (Ignored)"), object.getName(), key);
+         nxlog_debug_tag(DEBUG_TAG, 8, _T("Object: %s - CA: K:%s (Ignored)"), object.getName(), key);
       }
    }
    delete keys;
@@ -377,6 +385,74 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
       name = NormalizeString(dci->getName());
    }
 
+   // Host
+   StringBuffer host(dci->getOwner()->getName());
+   host.replace(_T(" "), _T("_"));
+   host.replace(_T(","), _T("_"));
+   host.replace(_T(":"), _T("_"));
+   FindAndReplaceAll(&host, _T("__"), _T("_"));
+   host.toLowercase();
+
+   // Validate value
+   TCHAR correctedValue[64];
+   correctedValue[0] = 0;
+   if (m_validateValues && (dci->getTransformedDataType() != DCI_DT_STRING))
+   {
+      TCHAR *eptr;
+
+      if (isInteger)
+      {
+         if (isUnsigned && m_enableUnsignedType)
+         {
+            errno = 0;
+            uint64_t u = _tcstoull(value, &eptr, 0);
+            if ((*eptr != 0) || (errno == ERANGE))
+            {
+               if (!m_correctValues)
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 7, _T("Metric not sent: value %s:%s:%s=\"%s\" did not pass unsigned integer validation (%s)"),
+                     ds, host.cstr(), name.cstr(), value, (*eptr != 0) ? _T("parse error") : _T("value is out of range"));
+                  return true;
+               }
+               IntegerToString(u, correctedValue);
+            }
+         }
+         else
+         {
+            errno = 0;
+            int64_t i = _tcstoll(value, &eptr, 0);
+            if ((*eptr != 0) || (errno == ERANGE))
+            {
+               if (!m_correctValues)
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 7, _T("Metric not sent: value %s:%s:%s=\"%s\" did not pass signed integer validation (%s)"),
+                     ds, host.cstr(), name.cstr(), value, (*eptr != 0) ? _T("parse error") : _T("value is out of range"));
+                  return true;
+               }
+               IntegerToString(i, correctedValue);
+            }
+         }
+      }
+      else
+      {
+         errno = 0;
+         double d = _tcstod(value, &eptr);
+         if ((*eptr != 0) || (errno == ERANGE))
+         {
+            if (!m_correctValues)
+            {
+               nxlog_debug_tag(DEBUG_TAG, 7, _T("Metric not sent: value %s:%s:%s=\"%s\" did not pass number validation (%s)"),
+                  ds, host.cstr(), name.cstr(), value, (*eptr != 0) ? _T("parse error") : _T("value is out of range"));
+               return true;
+            }
+            _sntprintf(correctedValue, 64, _T("%f"), d);
+         }
+      }
+
+      if (correctedValue[0] != 0)
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Value %s:%s:%s=\"%s\" corrected to \"%s\""), ds, host.cstr(), name.cstr(), value, correctedValue);
+   }
+
    // Instance
    StringBuffer instance = NormalizeString(dci->getInstanceName());
    if (instance.isEmpty())
@@ -389,14 +465,6 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
       name.replace(instance, _T(""));
       FindAndReplaceAll(&name, _T("__"), _T("_"));
    }
-
-   // Host
-   StringBuffer host(dci->getOwner()->getName());
-   host.replace(_T(" "), _T("_"));
-   host.replace(_T(","), _T("_"));
-   host.replace(_T(":"), _T("_"));
-   FindAndReplaceAll(&host, _T("__"), _T("_"));
-   host.toLowercase();
 
    // Build final metric structure
    StringBuffer data(name);
@@ -423,7 +491,7 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    else
    {
       data.append(_T(" value="));
-      data.append(value);
+      data.append((correctedValue[0] != 0) ? correctedValue : value);
       if (isInteger)
          data.append((isUnsigned && m_enableUnsignedType) ? _T("u ") : _T("i "));
       else
