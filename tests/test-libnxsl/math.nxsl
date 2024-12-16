@@ -59,11 +59,19 @@ assert(Ceil(0.0001) == 1);
 assert(Ceil(0.75) == 1);
 
 assert(Min(x, y, x * y, 1000, 254, -100000) == -100000);
+assert(Min([x, y, x * y, 1000, 254, -100000]) == -100000);
+assert(Min(x, y, [x * y, 1000], 254, -100000) == -100000);
 assert(Max(x, y, x * y, 1000, 254, -100000) == 1000);
-
-assert((Round(Weierstrass(0.5, 7, 10), 4) .. "") == "1.9992");
+assert(Max([x, y, x * y, 1000, 254, -100000]) == 1000);
+assert(Max([x, y], x * y, [1000, 254, -100000]) == 1000);
 
 assert(Round(MeanAbsoluteDeviation([2, 2, 3, 4, 14]), 1) == "3.6");
+assert(Round(MeanAbsoluteDeviation([2, 2, 3, 4], 14), 1) == "3.6");
+assert(Round(MeanAbsoluteDeviation(2, 2, 3, 4, 14), 1) == "3.6");
 assert(StandardDeviation([2, 4, 4, 4, 5, 5, 7, 9]) == 2);
+assert(StandardDeviation(2, 4, [4, 4, 5, 5, 7], 9) == 2);
+assert(StandardDeviation(2, 4, 4, 4, 5, 5, 7, 9) == 2);
+
+assert((Round(Weierstrass(0.5, 7, 10), 4) .. "") == "1.9992");
 
 return 0;

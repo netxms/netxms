@@ -438,6 +438,7 @@
     <ClCompile Include="lexer.cpp" />
     <ClCompile Include="library.cpp" />
     <ClCompile Include="macaddr.cpp" />
+    <ClCompile Include="math.cpp" />
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="parser.tab.cpp" />
     <ClCompile Include="program.cpp" />
