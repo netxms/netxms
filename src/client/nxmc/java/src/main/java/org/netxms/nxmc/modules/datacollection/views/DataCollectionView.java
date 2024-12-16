@@ -188,13 +188,13 @@ public class DataCollectionView extends BaseDataCollectionView
             return DataCollectionView.this.isActive();
          }
       };
+
+      createActions();
       
       if (editMode)
          createDataCollectionViewer(parent);  
       else 
          createLastValuesViewer(parent, validator);
-
-      createActions();
    }
 
    /**

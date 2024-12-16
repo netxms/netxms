@@ -155,8 +155,8 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
          }
       };
 
-      createLastValuesViewer(parent, validator);
       createActions();
+      createLastValuesViewer(parent, validator);
    }
 
    /**
@@ -181,6 +181,10 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
       setFilterClient(viewer, lvFilter); 
       if (isHideOwner())
          viewer.removeColumnById(LV_COLUMN_OWNER);
+
+      // Update viewer in export to CSV actions
+      actionExportToCsv.setViewer(viewer);
+      actionExportAllToCsv.setViewer(viewer);
 
       postLastValueViewCreation("LastValues", validator);
    }
