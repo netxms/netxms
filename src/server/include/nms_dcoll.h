@@ -271,6 +271,7 @@ enum DCObjectRetentionType
 #ifdef _WIN32
 template class NXCORE_TEMPLATE_EXPORTABLE weak_ptr<DataCollectionOwner>;
 template class NXCORE_TEMPLATE_EXPORTABLE weak_ptr<DCObject>;
+template class NXCORE_TEMPLATE_EXPORTABLE StringContainer<6>;
 #endif
 
 /**
