@@ -491,6 +491,8 @@ private:
 	int m_allocated;
 	NXSL_ArrayElement *m_data;
 
+	NXSL_ArrayElement *find(NXSL_Value *value) const;
+
 public:
 	NXSL_Array(NXSL_ValueManager *vm);
 	NXSL_Array(const NXSL_Array& src);
@@ -511,7 +513,10 @@ public:
    NXSL_Value *get(int index) const;
    NXSL_Value *getByPosition(int position) const;
 
-   bool contains(NXSL_Value *value);
+   bool contains(NXSL_Value *value) const
+   {
+      return find(value) != nullptr;
+   }
 
    void set(int index, NXSL_Value *value);
 	void append(NXSL_Value *value) { if (m_size == 0) { set(0, value); } else { set(getMaxIndex() + 1, value); } }

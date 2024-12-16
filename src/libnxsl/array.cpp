@@ -283,6 +283,13 @@ int NXSL_Array::callMethod(const NXSL_Identifier& name, int argc, NXSL_Value **a
          append(m_vm->createValue(a->getByPosition(i)));
       *result = m_vm->createValue(getMaxIndex());
    }
+   else if (!strcmp(name.value, "indexOf"))
+   {
+      if (argc != 1)
+         return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+      NXSL_ArrayElement *e = find(argv[0]);
+      *result = (e != nullptr) ? m_vm->createValue(e->index) : m_vm->createValue();
+   }
    else if (!strcmp(name.value, "insert"))
    {
       if (argc != 2)
@@ -352,7 +359,7 @@ int NXSL_Array::callMethod(const NXSL_Identifier& name, int argc, NXSL_Value **a
 /**
  * Check if given value is in array
  */
-bool NXSL_Array::contains(NXSL_Value *value)
+NXSL_ArrayElement *NXSL_Array::find(NXSL_Value *value) const
 {
    for(int i = 0; i < m_size; i++)
    {
@@ -360,32 +367,32 @@ bool NXSL_Array::contains(NXSL_Value *value)
       if ((curr->getDataType() == value->getDataType()) && curr->isNumeric())
       {
          if (curr->EQ(value))
-            return true;
+            return &m_data[i];
       }
       else if (value->isInteger() && curr->isInteger())
       {
          if (value->getValueAsInt64() == curr->getValueAsInt64())
-            return true;
+            return &m_data[i];
       }
       else if (value->isNumeric() && curr->isNumeric())
       {
          if (value->getValueAsReal() == curr->getValueAsReal())
-            return true;
+            return &m_data[i];
       }
       else if (value->isString() && curr->isString())
       {
-         UINT32 l1, l2;
+         uint32_t l1, l2;
          const TCHAR *s1 = value->getValueAsString(&l1);
          const TCHAR *s2 = curr->getValueAsString(&l2);
          if ((l1 == l2) && !memcmp(s1, s2, l1 * sizeof(TCHAR)))
-            return true;
+            return &m_data[i];
       }
       else if (value->isNull() && curr->isNull())
       {
-         return true;
+         return &m_data[i];
       }
    }
-   return false;
+   return nullptr;
 }
 
 /**
