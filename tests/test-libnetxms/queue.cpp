@@ -221,7 +221,7 @@ void TestSQueue()
       q->put(TestStruct { i + 1, "put/get" });
    AssertEquals(q->size(), 40);
    AssertEquals(q->allocated(), 48);
-   for(int i = 0; i < 40; i++)
+   for(int64_t i = 0; i < 40; i++)
    {
       AssertTrue(q->get(&s));
       AssertEquals(s.id, i + 1);
@@ -260,7 +260,7 @@ void TestSQueue()
       q->put(TestStruct { i + 1, "shrink" });
    AssertEquals(q->size(), 60);
    AssertEquals(q->allocated(), 64);
-   for(int i = 0; i < 55; i++)
+   for(int64_t i = 0; i < 55; i++)
    {
       AssertTrue(q->get(&s));
       AssertEquals(s.id, i + 1);

@@ -2280,10 +2280,10 @@ static void TestIntegerArray()
    a1.swap(a2);
    AssertEquals(a1.size(), 5);
    AssertEquals(a2.size(), 3);
-   AssertEquals(a1.get(0), 32);
-   AssertEquals(a1.get(4), 44);
-   AssertEquals(a2.get(0), 2);
-   AssertEquals(a2.get(2), 18);
+   AssertEquals(a1.get(0), _ULL(32));
+   AssertEquals(a1.get(4), _ULL(44));
+   AssertEquals(a2.get(0), _ULL(2));
+   AssertEquals(a2.get(2), _ULL(18));
    EndTest();
 
    delete array;

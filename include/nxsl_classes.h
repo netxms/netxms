@@ -1244,6 +1244,10 @@ public:
    static NXSL_Program *load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize);
 };
 
+#ifdef _WIN32
+template class LIBNXSL_TEMPLATE_EXPORTABLE shared_ptr<NXSL_Program>;
+#endif
+
 /**
  * NXSL Script
  */
