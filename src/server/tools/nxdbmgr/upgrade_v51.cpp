@@ -24,6 +24,19 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.23 to 51.24
+ */
+static bool H_UpgradeFromV23()
+{
+   CHK_EXEC(CreateConfigParam(_T("Objects.Nodes.ConfigurationPoll.AlwaysCheckSNMP"),
+         _T("1"),
+         _T("Always check possible SNMP credentials during configuration poll, even if node is marked as unreachable via SNMP."),
+         nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(24));
+   return true;
+}
+
+/**
  * Upgrade from 51.22 to 51.23
  */
 static bool H_UpgradeFromV22()
@@ -31,9 +44,9 @@ static bool H_UpgradeFromV22()
    if (GetSchemaLevelForMajorVersion(50) < 48)
    {
       CHK_EXEC(CreateConfigParam(_T("Client.MinVersion"),
-                              _T(""),
-                              _T("Minimal client version allowed for connection to this server"),
-                              nullptr, 'S', true, false, false, false));
+            _T(""),
+            _T("Minimal client version allowed for connection to this server"),
+            nullptr, 'S', true, false, false, false));
       CHK_EXEC(SetSchemaLevelForMajorVersion(50, 48));
    }
    CHK_EXEC(SetMinorSchemaVersion(23));
@@ -512,6 +525,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 23, 52, 24, H_UpgradeFromV23 },
    { 22, 52, 23, H_UpgradeFromV22 },
    { 21, 51, 22, H_UpgradeFromV21 },
    { 20, 51, 21, H_UpgradeFromV20 },

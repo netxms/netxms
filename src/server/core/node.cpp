@@ -5679,7 +5679,7 @@ static uint32_t IndicatorSnmpWalkerCallback(SNMP_Variable *var, SNMP_Transport *
  */
 bool Node::confPollSnmp()
 {
-   if (((m_capabilities & NC_IS_SNMP) && (m_state & NSF_SNMP_UNREACHABLE)) ||
+   if (((m_capabilities & NC_IS_SNMP) && (m_state & NSF_SNMP_UNREACHABLE) && !ConfigReadBoolean(_T("Objects.Nodes.ConfigurationPoll.AlwaysCheckSNMP"), true)) ||
        !m_ipAddress.isValidUnicast() || (m_flags & NF_DISABLE_SNMP))
    {
       sendPollerMsg(_T("   SNMP polling is %s\r\n"), (m_flags & NF_DISABLE_SNMP) ? _T("disabled") : _T("not possible"));
