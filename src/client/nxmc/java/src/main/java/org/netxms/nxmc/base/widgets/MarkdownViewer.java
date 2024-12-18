@@ -63,7 +63,6 @@ public class MarkdownViewer extends Composite
    private int htmlDocumentHeight = 0;
    private Runnable renderCompletionHandler = null;
    private String htmlHeader;
-   private int ignoreLocation = 0;
 
    /**
     * Create new markdown viewer.
@@ -95,14 +94,11 @@ public class MarkdownViewer extends Composite
          @Override
          public void changing(LocationEvent event)
          {
-            if (ignoreLocation == 0)
+            String url = event.location;
+            if (!url.startsWith("about:") && !url.startsWith("chrome:") && !url.startsWith("edge:"))
             {
                ExternalWebBrowser.open(event.location);
                event.doit = false;
-            }
-            else
-            {
-               ignoreLocation--;
             }
          }
 
@@ -163,7 +159,6 @@ public class MarkdownViewer extends Composite
          logger.error("Exception in Markdown renderer", e);
          html = htmlHeader + "<div class=\"notification notification-error\">Markdown rendering error</div><div>Original document source:</div><code>" + this.text.replace("\n", "<br/>") + "</code></div></body></html>";
       }
-      ignoreLocation++;
       browser.setText(html);
    }
 
