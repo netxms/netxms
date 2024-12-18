@@ -695,6 +695,12 @@
       </dependency>
       <dependency>
          <groupId>org.commonmark</groupId>
+         <artifactId>commonmark-ext-image-attributes</artifactId>
+         <version>${commonmark.version}</version>
+         <scope>${lib.scope}</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.commonmark</groupId>
          <artifactId>commonmark-ext-ins</artifactId>
          <version>${commonmark.version}</version>
          <scope>${lib.scope}</scope>

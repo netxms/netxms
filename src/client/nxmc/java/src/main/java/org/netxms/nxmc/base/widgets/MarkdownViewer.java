@@ -24,6 +24,7 @@ import org.commonmark.ext.autolink.AutolinkExtension;
 import org.commonmark.ext.footnotes.FootnotesExtension;
 import org.commonmark.ext.gfm.strikethrough.StrikethroughExtension;
 import org.commonmark.ext.gfm.tables.TablesExtension;
+import org.commonmark.ext.image.attributes.ImageAttributesExtension;
 import org.commonmark.ext.ins.InsExtension;
 import org.commonmark.ext.task.list.items.TaskListItemsExtension;
 import org.commonmark.node.Node;
@@ -54,7 +55,7 @@ public class MarkdownViewer extends Composite
 {
    private static final Logger logger = LoggerFactory.getLogger(MarkdownViewer.class);
    private static final List<Extension> extensions =
-         List.of(AutolinkExtension.create(), FootnotesExtension.create(), InsExtension.create(),
+         List.of(AutolinkExtension.create(), FootnotesExtension.builder().inlineFootnotes(true).build(), ImageAttributesExtension.create(), InsExtension.create(),
                NotificationsExtension.create().withClassMapper((n) -> "notification notification-" + n.name().toLowerCase()),
                TaskListItemsExtension.create(), StrikethroughExtension.create(), TablesExtension.create());
 
@@ -118,6 +119,7 @@ public class MarkdownViewer extends Composite
             ".notification-success { color: #125522; background-color: #d4edda; border-color: #c3e6cb; } " +
             ".notification-warning { color: #6a4d00; background-color: #fff3cd; border-color: #ffeeba; } " +
             ".notification-error { color: #900000; background: #ffd2d2; border-color: #f1a899; } " +
+            "img { max-width: 100%; }" +
             "p code { padding: 2px 4px; font-size: 90%; border-radius: 4px; color: #333; background-color: #f5f5f5; }" +
             "pre code { display: block; padding: 9.5px; color: #333; word-break: break-all; word-wrap: break-word; background-color: #f5f5f5; border: 1px solid #ccc; border-radius: 4px; white-space: pre-wrap; }" +
             "</style></head><body><div class=\"content\" style=\"padding-left: 5px; padding-right: 5px;\">";
