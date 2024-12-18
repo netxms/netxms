@@ -173,6 +173,21 @@ struct ExternalTableDefinition
 };
 
 /**
+ * External table definition
+ */
+struct StructuredExtractorParameterDefinition
+{
+   String query;
+   String description;
+   uint16_t dataType;
+
+   StructuredExtractorParameterDefinition(const TCHAR *q, const TCHAR *d, uint16_t dt) : query(q), description(d)
+   {
+      dataType = dt;
+   }
+};
+
+/**
  * Action definition structure
  */
 struct ACTION
@@ -773,6 +788,7 @@ bool AddExternalMetric(TCHAR *config, bool isList);
 bool AddBackgroundExternalMetric(TCHAR *config);
 bool AddExternalTable(TCHAR *config);
 bool AddExternalTable(ConfigEntry *config);
+bool AddExternalStructuredDataProvider(ConfigEntry *config);
 uint32_t GetMetricValue(const TCHAR *param, TCHAR *value, AbstractCommSession *session);
 uint32_t GetListValue(const TCHAR *param, StringList *value, AbstractCommSession *session);
 uint32_t GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *session);
@@ -799,6 +815,7 @@ LONG GetParameterValueFromExtProvider(const TCHAR *name, TCHAR *buffer);
 void ListParametersFromExtProviders(NXCPMessage *msg, uint32_t *baseId, uint32_t *count);
 void ListParametersFromExtProviders(StringList *list);
 void AddTableProvider(const TCHAR *name, ExternalTableDefinition *definition, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description);
+void AddStructuredMetricProvider(const TCHAR *name, const TCHAR *command, StringObjectMap<StructuredExtractorParameterDefinition> *metricDefenitions, bool forcePlainTextParser, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description);
 LONG GetTableValueFromExtProvider(const TCHAR *name, Table *table);
 void ListTablesFromExtProviders(NXCPMessage *msg, uint32_t *baseId, uint32_t *count);
 void ListTablesFromExtProviders(StringList *list);

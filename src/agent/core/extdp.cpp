@@ -21,6 +21,7 @@
 **/
 
 #include "nxagentd.h"
+#include <nxsde.h>
 
 #define DEBUG_TAG _T("ext.provider")
 
@@ -219,52 +220,21 @@ LONG MetricProvider::getValue(const TCHAR *name, TCHAR *buffer)
 }
 
 /**
- * Parameter list callback data
- */
-struct ParameterListCallbackData
-{
-   NXCPMessage *msg;
-   uint32_t id;
-   uint32_t count;
-};
-
-/**
- * Parameter list callback
- */
-static EnumerationCallbackResult ParameterListCallback(const TCHAR *key, const TCHAR *value, ParameterListCallbackData *context)
-{
-	context->msg->setField(context->id++, key);
-	context->msg->setField(context->id++, _T(""));
-	context->msg->setField(context->id++, static_cast<uint16_t>(DCI_DT_STRING));
-	context->count++;
-   return _CONTINUE;
-}
-
-/**
  * List available parameters
  */
 void MetricProvider::listParameters(NXCPMessage *msg, uint32_t *baseId, uint32_t *count)
 {
-   ParameterListCallbackData data;
-   data.msg = msg;
-   data.id = *baseId;
-   data.count = 0;
-
 	lock();
-	m_parameters->forEach(ParameterListCallback, &data);
+	m_parameters->forEach(
+	   [msg, baseId, count] (const TCHAR *key, void *value)
+	   {
+         msg->setField((*baseId)++, key);
+         msg->setField((*baseId)++, _T(""));
+         msg->setField((*baseId)++, static_cast<uint16_t>(DCI_DT_STRING));
+         (*count)++;
+         return _CONTINUE;
+	   });
 	unlock();
-
-	*baseId = data.id;
-   *count += data.count;
-}
-
-/**
- * Parameter list callback
- */
-static EnumerationCallbackResult ParameterListCallback2(const TCHAR *key, const TCHAR *value, StringList *context)
-{
-   context->add(key);
-   return _CONTINUE;
 }
 
 /**
@@ -273,7 +243,12 @@ static EnumerationCallbackResult ParameterListCallback2(const TCHAR *key, const 
 void MetricProvider::listParameters(StringList *list)
 {
 	lock();
-	m_parameters->forEach(ParameterListCallback2, list);
+	m_parameters->forEach(
+	   [list] (const TCHAR *key, const void *value)
+	   {
+	      list->add(key);
+         return _CONTINUE;
+	   });
 	unlock();
 }
 
@@ -406,6 +381,143 @@ LONG TableProvider::getTableValue(const TCHAR *name, Table *table)
 }
 
 /**
+ * External parameter provider
+ */
+class StructuredMetricProvider : public ExternalDataProvider
+{
+protected:
+   String m_name;
+   TCHAR m_genericParamName[MAX_PARAM_NAME];
+   String m_description;
+   StringObjectMap<StructuredExtractorParameterDefinition> *m_parameters;
+   StructuredDataParser m_data;
+   bool m_forcePlainTextParser;
+
+   virtual ProcessExecutor *createExecutor() override;
+   virtual void processPollResults() override;
+
+public:
+   StructuredMetricProvider(const TCHAR *name, const TCHAR *command, StringObjectMap<StructuredExtractorParameterDefinition> *metricDefenitions, bool forcePlainTextParser, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description);
+   virtual ~StructuredMetricProvider();
+
+   virtual void listParameters(NXCPMessage *msg, uint32_t *baseId, uint32_t *count) override;
+   virtual void listParameters(StringList *list) override;
+
+   virtual LONG getValue(const TCHAR *name, TCHAR *buffer) override;
+};
+
+/**
+ * Constructor
+ */
+StructuredMetricProvider::StructuredMetricProvider(const TCHAR *name, const TCHAR *command, StringObjectMap<StructuredExtractorParameterDefinition> *metricDefenitions, bool forcePlainTextParser, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description) :
+         ExternalDataProvider(command, pollingInterval, timeout), m_name(name), m_description(description), m_data(name)
+{
+   m_forcePlainTextParser = forcePlainTextParser;
+   m_parameters = metricDefenitions;
+   _tcslcpy(m_genericParamName, name, MAX_PARAM_NAME);
+   _tcslcat(m_genericParamName, _T("(*)"), MAX_PARAM_NAME);
+}
+
+/**
+ * Destructor
+ */
+StructuredMetricProvider::~StructuredMetricProvider()
+{
+   delete m_parameters;
+}
+
+/**
+ * Create executor
+ */
+ProcessExecutor *StructuredMetricProvider::createExecutor()
+{
+   return new OutputCapturingProcessExecutor(m_command, true);
+}
+
+/**
+ * Process poll result
+ */
+void StructuredMetricProvider::processPollResults()
+{
+   lock();
+   OutputCapturingProcessExecutor *ex = static_cast<OutputCapturingProcessExecutor*>(m_executor);
+   m_data.updateContent(ex->getOutput(), ex->getOutputSize(), m_forcePlainTextParser, m_command);
+   ex->clearOutput();
+   unlock();
+}
+
+/**
+ * Get parameter's value
+ */
+LONG StructuredMetricProvider::getValue(const TCHAR *name, TCHAR *buffer)
+{
+   LONG rc = SYSINFO_RC_UNKNOWN;
+
+   lock();
+
+   StructuredExtractorParameterDefinition *defenition = m_parameters->get(name);
+   if (defenition != nullptr)
+   {
+      TCHAR result[MAX_RESULT_LENGTH];
+      rc = m_data.getParams(defenition->query, result, MAX_RESULT_LENGTH);
+      if (rc == SYSINFO_RC_SUCCESS)
+      {
+         _tcslcpy(buffer, result, MAX_RESULT_LENGTH);
+      }
+   }
+   else if (MatchString(m_genericParamName, name, false))
+   {
+      TCHAR query[1024];
+      AgentGetParameterArg(name, 1, query, 1024);
+      rc = m_data.getParams(query, buffer, MAX_RESULT_LENGTH);
+   }
+
+   unlock();
+   return rc;
+}
+
+/**
+ * List available parameters
+ */
+void StructuredMetricProvider::listParameters(NXCPMessage *msg, uint32_t *baseId, uint32_t *count)
+{
+   lock();
+   m_parameters->forEach(
+      [msg, baseId, count] (const TCHAR *key, StructuredExtractorParameterDefinition *value)
+      {
+         msg->setField((*baseId)++, key);
+         msg->setField((*baseId)++, value->description);
+         msg->setField((*baseId)++, static_cast<uint16_t>(value->dataType));
+         (*count)++;
+         return _CONTINUE;
+
+      });
+   unlock();
+
+   msg->setField((*baseId)++, m_genericParamName);
+   msg->setField((*baseId)++, m_description);
+   msg->setField((*baseId)++, static_cast<uint16_t>(DCI_DT_STRING));
+   (*count)++;
+}
+
+/**
+ * List available parameters
+ */
+void StructuredMetricProvider::listParameters(StringList *list)
+{
+   lock();
+   m_parameters->forEach(
+      [list](const TCHAR *key, StructuredExtractorParameterDefinition *value)
+      {
+         list->add(key);
+         return _CONTINUE;
+      });
+
+   list->add(m_genericParamName);
+   unlock();
+}
+
+/**
  * Static data
  */
 static ObjectArray<ExternalDataProvider> s_providers(0, 8, Ownership::True);
@@ -484,6 +596,14 @@ bool AddMetricProvider(const TCHAR *line)
 void AddTableProvider(const TCHAR *name, ExternalTableDefinition *definition, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description)
 {
    s_providers.add(new TableProvider(name, definition, pollingInterval, timeout, description));
+}
+
+/**
+ * Add new external table provider
+ */
+void AddStructuredMetricProvider(const TCHAR *name, const TCHAR *command, StringObjectMap<StructuredExtractorParameterDefinition> *metricDefenitions, bool forcePlainTextParser, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description)
+{
+   s_providers.add(new StructuredMetricProvider(name, command, metricDefenitions, forcePlainTextParser, pollingInterval, timeout, description));
 }
 
 /**

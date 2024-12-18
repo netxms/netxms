@@ -205,6 +205,19 @@ public:
     * Get command output data
     */
    const char* getOutput() const { return reinterpret_cast<const char*>(m_output.buffer()); }
+
+   /**
+    * Get command output data
+    */
+   size_t getOutputSize() const { return m_output.size(); }
+
+   /**
+    * Clear previous output
+    */
+   void clearOutput()
+   {
+      m_output.clear();
+   }
 };
 
 /**

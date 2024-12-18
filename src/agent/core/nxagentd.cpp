@@ -1446,6 +1446,18 @@ BOOL Initialize()
       MemFree(s_externalMetricProviders);
    }
 
+   // Parse external structured data providers
+   unique_ptr<ObjectArray<ConfigEntry>> externalDataProvider = config->getSubEntries(_T("/ExternalDataProvider"));
+   if (externalDataProvider != nullptr)
+   {
+      for (int i = 0; i < externalDataProvider->size(); i++)
+      {
+         ConfigEntry *e = externalDataProvider->get(i);
+         if (!AddExternalStructuredDataProvider(e))
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Unable to add external data provider \"%s\""), e->getName());
+      }
+   }
+
    if (!(g_dwFlags & AF_SUBAGENT_LOADER))
    {
       // Parse external subagents list

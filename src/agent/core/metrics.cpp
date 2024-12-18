@@ -966,6 +966,52 @@ bool AddExternalTable(ConfigEntry *config)
 }
 
 /**
+ * Add structured data provider form configuration
+ */
+bool AddExternalStructuredDataProvider(ConfigEntry *config)
+{
+   const TCHAR *command = config->getSubEntryValue(_T("Command"));
+   if (command == nullptr)
+      return false;
+
+   StringObjectMap<StructuredExtractorParameterDefinition> *metricDefenitions = new StringObjectMap<StructuredExtractorParameterDefinition>(Ownership::True);
+   const ConfigEntry *metricRoot = config->findEntry(_T("Metrics"));
+   if (metricRoot != nullptr)
+   {
+      unique_ptr<ObjectArray<ConfigEntry>> metrics = metricRoot->getSubEntries(_T("*"));
+      for(int i = 0; i < metrics->size(); i++)
+      {
+         ConfigEntry *e = metrics->get(i);
+         String name = e->getName();
+         if (name.endsWith(_T(".description")) || name.endsWith(_T(".dataType")))
+         {
+            continue;
+         }
+
+         TCHAR tmp[512];
+         _tcscpy(tmp, name);
+         _tcscat(tmp, _T(".description"));
+         const TCHAR *description = metricRoot->getSubEntryValue(tmp, 0 , _T(""));
+
+         _tcscpy(tmp, name);
+         _tcscat(tmp, _T(".dataType"));
+         int dataType = TextToDataType(metricRoot->getSubEntryValue(tmp, 0 , _T("")));
+
+         metricDefenitions->set(e->getName(), new StructuredExtractorParameterDefinition(e->getValue(), description, (dataType == -1) ? DCI_DT_STRING : dataType));
+      }
+   }
+
+   AddStructuredMetricProvider(config->getName(), command,
+      metricDefenitions,
+      config->getSubEntryValueAsBoolean(_T("forcePlainTextParser"), false),
+      config->getSubEntryValueAsUInt(_T("PollingInterval"), 0, 60),
+      config->getSubEntryValueAsUInt(_T("Timeout"), 0, 0),
+      config->getSubEntryValue(_T("Description"), 0, _T("")));
+
+   return true;
+}
+
+/**
  * Get symbolic name for error code
  */
 static const TCHAR *GetErrorCodeSymbolicName(uint32_t e)

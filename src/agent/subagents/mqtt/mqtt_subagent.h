@@ -27,6 +27,7 @@
 #include <nms_util.h>
 #include <nms_agent.h>
 #include <mosquitto.h>
+#include <nxsde.h>
 
 #define DEBUG_TAG _T("mqtt")
 
@@ -41,18 +42,27 @@ private:
    char m_lastValue[MAX_RESULT_LENGTH];
    time_t m_timestamp;
    TCHAR *m_event;
+   TCHAR m_genericParamName[MAX_PARAM_NAME];
+   StringMap *m_parameters;
+   StructuredDataParser *m_dataParser;
+   bool m_parseAsText;
    Mutex m_mutex;
 
 public:
    Topic(const TCHAR *pattern, const TCHAR *event);
    Topic(const char *pattern);
+   Topic(const TCHAR *pattern, const TCHAR *name, bool parseAsText);
    ~Topic();
 
    const char *getPattern() const { return m_pattern; }
    time_t getTimestamp() const { return m_timestamp; }
+   const TCHAR *getGenericParameterName() { return m_genericParamName; }
+
+   void setExtractors(StringMap *parameters) { m_parameters = parameters; }
 
    void processMessage(const char *topic, const char *msg);
    bool retrieveData(TCHAR *buffer, size_t bufferLen);
+   LONG retrieveData(const TCHAR *metricName, TCHAR *buffer, size_t bufferLen);
 };
 
 /**

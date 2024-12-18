@@ -8,5 +8,5 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = smbios libnxagent @AGENT_DIRS@ subagents core install tools
+SUBDIRS = smbios libnxagent libnxsde @AGENT_DIRS@ subagents core install tools
 

@@ -36,6 +36,14 @@ static LONG H_TopicData(const TCHAR *name, const TCHAR *arg, TCHAR *result, Abst
 }
 
 /**
+ * Topic parameter handler
+ */
+static LONG H_TopicStructuredData(const TCHAR *name, const TCHAR *arg, TCHAR *result, AbstractCommSession *session)
+{
+   return ((Topic*)arg)->retrieveData(name, result, MAX_RESULT_LENGTH);
+}
+
+/**
  * Broker constructor
  */
 MqttBroker::MqttBroker(const uuid& guid, const TCHAR *name) : m_topics(16, 16, Ownership::True), m_topicLock(MutexType::FAST)
@@ -123,7 +131,81 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
          p.dataType = DCI_DT_STRING;
          p.handler = H_TopicData;
          _sntprintf(p.description, MAX_DB_STRING, _T("MQTT topic %hs"), t->getPattern());
+         parameters->add(p);
+      }
+   }
+
+   const ConfigEntry *extractorsRoot = config->findEntry(_T("Extractors"));
+   if (extractorsRoot != nullptr)
+   {
+      unique_ptr<ObjectArray<ConfigEntry>> extractors = extractorsRoot->getSubEntries(_T("*"));
+      for(int i = 0; i < extractors->size(); i++)
+      {
+         ConfigEntry *extractor = extractors->get(i);
+         const TCHAR *topic = extractor->getSubEntryValue(_T("Topic"));
+         if (topic == nullptr)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Skipping extractor without topic: %s"), extractor->getName());
+            continue;
+         }
+
+         bool parseAsText = extractor->getSubEntryValueAsBoolean(_T("ForcePlainTextParser"), false);
+         const TCHAR *description = extractor->getSubEntryValue(_T("Description"), 0, nullptr);
+
+         Topic *t = new Topic(topic, extractor->getName(), parseAsText);
+         broker->m_topics.add(t);
+
+         NETXMS_SUBAGENT_PARAM p;
+         memset(&p, 0, sizeof(NETXMS_SUBAGENT_PARAM));
+         _tcslcpy(p.name, t->getGenericParameterName(), MAX_PARAM_NAME);
+         p.arg = (const TCHAR *)t;
+         p.dataType = DCI_DT_STRING;
+         p.handler = H_TopicStructuredData;
+         if (description != nullptr)
+            _tcslcpy(p.description, description, MAX_DB_STRING);
+         else
+            _sntprintf(p.description, MAX_DB_STRING, _T("MQTT topic %s"), topic);
          parameters->add(&p);
+
+         StringMap *metricDefenitions = new StringMap();
+         const ConfigEntry *metricRoot = extractor->findEntry(_T("Metrics"));
+         if (metricRoot != nullptr)
+         {
+            unique_ptr<ObjectArray<ConfigEntry>> metrics = metricRoot->getSubEntries(_T("*"));
+            for(int i = 0; i < metrics->size(); i++)
+            {
+               ConfigEntry *e = metrics->get(i);
+               String name = e->getName();
+               if (name.endsWith(_T(".description")) || name.endsWith(_T(".dataType")))
+               {
+                  continue;
+               }
+
+               TCHAR tmp[512];
+               _tcscpy(tmp, name);
+               _tcscat(tmp, _T(".description"));
+               const TCHAR *description = metricRoot->getSubEntryValue(tmp, 0 , _T(""));
+
+               _tcscpy(tmp, name);
+               _tcscat(tmp, _T(".dataType"));
+               int dataType = TextToDataType(metricRoot->getSubEntryValue(tmp, 0 , _T("")));
+
+               metricDefenitions->set(e->getName(), e->getValue());
+
+               NETXMS_SUBAGENT_PARAM p;
+               memset(&p, 0, sizeof(NETXMS_SUBAGENT_PARAM));
+               _tcslcpy(p.name, e->getName(), MAX_PARAM_NAME);
+               p.arg = (const TCHAR *)t;
+               p.dataType = (dataType == -1) ? DCI_DT_STRING : dataType;
+               p.handler = H_TopicStructuredData;
+               if (description != nullptr)
+                  _tcslcpy(p.description, description, MAX_DB_STRING);
+               else
+                  _sntprintf(p.description, MAX_DB_STRING, _T("MQTT topic %s"), topic);
+               parameters->add(&p);
+            }
+         }
+         t->setExtractors(metricDefenitions);
       }
    }
 
