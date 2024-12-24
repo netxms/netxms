@@ -156,37 +156,29 @@ LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCo
 /**
  * Handler for System.CPU.LoadAvg parameters
  */
-LONG H_CpuLoad(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_CpuLoad(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	FILE *hFile = fopen("/proc/loadavg", "r");
-	if (hFile == nullptr)
+   char buffer[64];
+   if (!ReadLineFromFileA("/proc/loadavg", buffer, sizeof(buffer)))
 	   return SYSINFO_RC_ERROR;
 
-   LONG nRet = SYSINFO_RC_ERROR;
-   char buffer[64];
-   if (fgets(buffer, sizeof(buffer), hFile) != nullptr)
-   {
-      double load1, load5, load15;
-      if (sscanf(buffer, "%lf %lf %lf", &load1, &load5, &load15) == 3)
-      {
-         switch (CAST_FROM_POINTER(pArg, int))
-         {
-            case INTERVAL_5MIN:
-               ret_double(pValue, load5);
-               break;
-            case INTERVAL_15MIN:
-               ret_double(pValue, load15);
-               break;
-            default: // 1 min
-               ret_double(pValue, load1);
-               break;
-         }
-         nRet = SYSINFO_RC_SUCCESS;
-      }
-   }
+   double load1, load5, load15;
+   if (sscanf(buffer, "%lf %lf %lf", &load1, &load5, &load15) != 3)
+      return SYSINFO_RC_ERROR;
 
-   fclose(hFile);
-	return nRet;
+   switch (CAST_FROM_POINTER(arg, int))
+   {
+      case INTERVAL_5MIN:
+         ret_double(value, load5);
+         break;
+      case INTERVAL_15MIN:
+         ret_double(value, load15);
+         break;
+      default: // 1 min
+         ret_double(value, load1);
+         break;
+   }
+	return SYSINFO_RC_SUCCESS;
 }
 
 /**

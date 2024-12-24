@@ -6042,6 +6042,27 @@ BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *fileName, size_t *fileSize);
 char LIBNETXMS_EXPORTABLE *LoadFileAsUTF8String(const TCHAR *fileName);
 bool LIBNETXMS_EXPORTABLE ScanFile(const TCHAR *fileName, const void *data, size_t size);
 
+bool LIBNETXMS_EXPORTABLE ReadLineFromFileA(const char *path, char *buffer, size_t size);
+bool LIBNETXMS_EXPORTABLE ReadLineFromFileW(const WCHAR *path, WCHAR *buffer, size_t size);
+bool LIBNETXMS_EXPORTABLE ReadInt32FromFileA(const char *path, int32_t *value);
+bool LIBNETXMS_EXPORTABLE ReadInt32FromFileW(const WCHAR *path, int32_t *value);
+bool LIBNETXMS_EXPORTABLE ReadUInt64FromFileA(const char *path, uint64_t *value);
+bool LIBNETXMS_EXPORTABLE ReadUInt64FromFileW(const WCHAR *path, uint64_t *value);
+bool LIBNETXMS_EXPORTABLE ReadDoubleFromFileA(const char *path, double *value);
+bool LIBNETXMS_EXPORTABLE ReadDoubleFromFileW(const WCHAR *path, double *value);
+
+#ifdef UNICODE
+#define ReadLineFromFile ReadLineFromFileW
+#define ReadInt32FromFile ReadInt32FromFileW
+#define ReadUInt64FromFile ReadUInt64FromFileW
+#define ReadDoubleFromFile ReadDoubleFromFileW
+#else
+#define ReadLineFromFile ReadLineFromFileA
+#define ReadInt32FromFile ReadInt32FromFileA
+#define ReadUInt64FromFile ReadUInt64FromFileA
+#define ReadDoubleFromFile ReadDoubleFromFileA
+#endif
+
 /**
  * Postal address representation
  */
