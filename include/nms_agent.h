@@ -631,6 +631,9 @@ struct PolicyChangeNotification
 
 #define DCIDESC_SYSTEM_CPU_VENDORID                  _T("CPU vendor ID")
 
+#define DCIDESC_SYSTEM_ENERGYCONSUMPTION_POWERZONE   _T("Energy consumption: power zone {instance}")
+#define DCIDESC_SYSTEM_ENERGYCONSUMPTION_TOTAL       _T("Energy consumption: total")
+
 #define DCIDESC_SYSTEM_IO_DISKQUEUE                  _T("Average disk queue length for last minute")
 #define DCIDESC_SYSTEM_IO_DISKQUEUE_MIN              _T("Minimum disk queue length for last minute")
 #define DCIDESC_SYSTEM_IO_DISKQUEUE_MAX              _T("Maximum disk queue length for last minute")

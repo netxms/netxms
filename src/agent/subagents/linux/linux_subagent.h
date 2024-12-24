@@ -259,6 +259,11 @@ void ReadCPUVendorId();
 
 uint64_t GetTotalMemorySize();
 
+void ScanRAPLPowerZones();
+LONG H_PowerZoneList(const TCHAR *metric, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_ZoneEnergyConsumption(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_TotalEnergyConsumption(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+
 /**
  * Count items in a list of ranges, like e.g. /sys/devices/system/cpu/online
  *

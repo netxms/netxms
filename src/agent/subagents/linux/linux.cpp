@@ -105,6 +105,7 @@ static bool SubAgentInit(Config *config)
 {
    ReadCPUVendorId();
    SMBIOS_Parse(SMBIOS_Reader);
+   ScanRAPLPowerZones();
    StartCpuUsageCollector();
    StartIoStatCollector();
    InitDrbdCollector();
@@ -354,6 +355,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 
    { _T("System.CPU.VendorId"), H_CpuVendorId, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_CPU_VENDORID },
 
+   { _T("System.EnergyConsumption.PowerZone(*)"), H_ZoneEnergyConsumption, nullptr, DCI_DT_COUNTER64, DCIDESC_SYSTEM_ENERGYCONSUMPTION_POWERZONE },
+   { _T("System.EnergyConsumption.Total"), H_TotalEnergyConsumption, nullptr, DCI_DT_COUNTER64, DCIDESC_SYSTEM_ENERGYCONSUMPTION_TOTAL },
+
    { _T("System.HandleCount"), H_HandleCount, nullptr, DCI_DT_INT, DCIDESC_SYSTEM_HANDLECOUNT },
 
    /* iostat */
@@ -439,6 +443,7 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
    { _T("System.ActiveUserSessions"), H_UserSessionList, nullptr },
    { _T("System.IO.Devices"), H_IoDevices, nullptr },
    { _T("System.IO.LogicalDevices"), H_IoLogicalDevices, nullptr },
+   { _T("System.PowerZones"), H_PowerZoneList, nullptr },
    { _T("System.Processes"), H_ProcessList, _T("2") },
    { _T("System.ProcessList"), H_ProcessList, _T("1") }
 };
