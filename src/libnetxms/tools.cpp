@@ -2872,6 +2872,142 @@ char LIBNETXMS_EXPORTABLE *LoadFileAsUTF8String(const TCHAR *fileName)
 }
 
 /**
+ * Read first line from given file into buffer
+ */
+bool LIBNETXMS_EXPORTABLE ReadLineFromFileA(const char *path, char *buffer, size_t size)
+{
+   FILE *hFile = fopen(path, "r");
+   if (hFile == nullptr)
+      return false;
+
+   bool success;
+   if (fgets(buffer, size, hFile) != nullptr)
+   {
+      char *nl = strchr(buffer, '\n');
+      if (nl != nullptr)
+         *nl = 0;
+      success = true;
+   }
+   else
+   {
+      success = false;
+   }
+   fclose(hFile);
+   return success;
+}
+
+/**
+ * Read first line from given file into buffer
+ */
+bool LIBNETXMS_EXPORTABLE ReadLineFromFileW(const WCHAR *path, WCHAR *buffer, size_t size)
+{
+   FILE *hFile = wfopen(path, L"r");
+   if (hFile == nullptr)
+      return false;
+
+   bool success;
+   Buffer<char, 1024> mbBuffer(size);
+   if (fgets(mbBuffer, size, hFile) != nullptr)
+   {
+      char *nl = strchr(mbBuffer, '\n');
+      if (nl != nullptr)
+         *nl = 0;
+      MultiByteToWideCharSysLocale(mbBuffer, buffer, size);
+      success = true;
+   }
+   else
+   {
+      success = false;
+   }
+   fclose(hFile);
+   return success;
+}
+
+/**
+ * Read 32 bit integer from file
+ */
+bool LIBNETXMS_EXPORTABLE ReadInt32FromFileA(const char *path, int32_t *value)
+{
+   char buffer[256];
+   if (!ReadLineFromFileA(path, buffer, sizeof(buffer)))
+      return false;
+
+   char *eptr;
+   *value = strtol(buffer, &eptr, 0);
+   return *eptr == 0;
+}
+
+/**
+ * Read 32 bit integer from file
+ */
+bool LIBNETXMS_EXPORTABLE ReadInt32FromFileW(const WCHAR *path, int32_t *value)
+{
+   WCHAR buffer[256];
+   if (!ReadLineFromFileW(path, buffer, sizeof(buffer)))
+      return false;
+
+   WCHAR *eptr;
+   *value = wcstol(buffer, &eptr, 0);
+   return *eptr == 0;
+}
+
+/**
+ * Read 64 bit unsigned integer from file
+ */
+bool LIBNETXMS_EXPORTABLE ReadUInt64FromFileA(const char *path, uint64_t *value)
+{
+   char buffer[256];
+   if (!ReadLineFromFileA(path, buffer, sizeof(buffer)))
+      return false;
+
+   char *eptr;
+   *value = strtoull(buffer, &eptr, 0);
+   return *eptr == 0;
+}
+
+/**
+ * Read 64 bit unsigned integer from file
+ */
+bool LIBNETXMS_EXPORTABLE ReadUInt64FromFileW(const WCHAR *path, uint64_t *value)
+{
+   WCHAR buffer[256];
+   if (!ReadLineFromFileW(path, buffer, sizeof(buffer)))
+      return false;
+
+   WCHAR *eptr;
+   *value = wcstoull(buffer, &eptr, 0);
+   return *eptr == 0;
+}
+
+/**
+ * Read double value from file
+ */
+bool LIBNETXMS_EXPORTABLE ReadDoubleFromFileA(const char *path, double *value)
+{
+   char buffer[256];
+   if (!ReadLineFromFileA(path, buffer, sizeof(buffer) / sizeof(WCHAR)))
+      return false;
+
+   char *eptr;
+   *value = strtod(buffer, &eptr);
+   return *eptr == 0;
+}
+
+/**
+ * Read double value from file
+ */
+bool LIBNETXMS_EXPORTABLE ReadDoubleFromFileW(const WCHAR *path, double *value)
+{
+   WCHAR buffer[256];
+   if (!ReadLineFromFileW(path, buffer, sizeof(buffer) / sizeof(WCHAR)))
+      return false;
+
+   WCHAR *eptr;
+   *value = wcstod(buffer, &eptr);
+   return *eptr == 0;
+}
+
+/**
  * Save file atomically (do not replace existing file until all data is written)
  */
 SaveFileStatus LIBNETXMS_EXPORTABLE SaveFile(const TCHAR *fileName, const void *data, size_t size, bool binary, bool removeCR)

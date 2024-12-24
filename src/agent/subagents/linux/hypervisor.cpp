@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2020 Raden Solutions
+** Copyright (C) 2004-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -52,23 +52,23 @@ void ReadCPUVendorId()
 static bool CheckPid1Sched()
 {
    FILE *f = fopen("/proc/1/sched", "r");
-   if (f == NULL)
+   if (f == nullptr)
       return false;
 
    bool result = false;
 
    char line[1024] = "";
-   if (fgets(line, 1024, f) != NULL)
+   if (fgets(line, 1024, f) != nullptr)
    {
       char *p1 = strrchr(line, '(');
       if (p1 != NULL)
       {
          p1++;
          char *p2 = strchr(p1, ',');
-         if (p2 != NULL)
+         if (p2 != nullptr)
          {
             *p2 = 0;
-            result = (strtol(p1, NULL, 10) != 1);
+            result = (strtol(p1, nullptr, 10) != 1);
          }
       }
    }
@@ -83,23 +83,23 @@ static bool CheckPid1Sched()
 static bool DetectContainerByCGroup(char *detectedType)
 {
    FILE *f = fopen("/proc/1/cgroup", "r");
-   if (f == NULL)
+   if (f == nullptr)
       return false;
 
    bool result = false;
    char line[1024];
    while(!feof(f))
    {
-      if (fgets(line, 1024, f) == NULL)
+      if (fgets(line, 1024, f) == nullptr)
          break;
 
       char *p = strchr(line, ':');
-      if (p == NULL)
+      if (p == nullptr)
          continue;
 
       p++;
       p = strchr(p, ':');
-      if (p == NULL)
+      if (p == nullptr)
          continue;
 
       p++;
@@ -114,7 +114,7 @@ static bool DetectContainerByCGroup(char *detectedType)
       if (!strncmp(p, "/lxc/", 5))
       {
          result = true;
-         if (detectedType != NULL)
+         if (detectedType != nullptr)
             strcpy(detectedType, "LXC");
          break;
       }
@@ -139,27 +139,27 @@ static bool IsOpenVZ()
 static bool IsLinuxVServer()
 {
    FILE *f = fopen("/proc/self/status", "r");
-   if (f == NULL)
+   if (f == nullptr)
       return false;
 
    bool result = false;
    char line[1024];
    while(!feof(f))
    {
-      if (fgets(line, 1024, f) == NULL)
+      if (fgets(line, 1024, f) == nullptr)
          break;
 
       if (strncmp(line, "VxID:", 5) && strncmp(line, "s_context:", 10))
          continue;
 
       char *p = strchr(line, ':');
-      if (p == NULL)
+      if (p == nullptr)
          continue;
 
       p++;
       while(isspace(*p))
          p++;
-      if (strtol(p, NULL, 10) != 0) // ID 0 is for host
+      if (strtol(p, nullptr, 10) != 0) // ID 0 is for host
          result = true;
       break;
    }
@@ -237,13 +237,13 @@ static VirtualizationType IsVirtual()
 static bool IsVMware()
 {
    DIR *d = opendir("/sys/bus/pci/devices");
-   if (d == NULL)
+   if (d == nullptr)
       return false;
 
    bool result = false;
 
    struct dirent *e;
-   while(!result && ((e = readdir(d)) != NULL))
+   while(!result && ((e = readdir(d)) != nullptr))
    {
       if (e->d_name[0] == '.')
          continue;
@@ -251,13 +251,11 @@ static bool IsVMware()
       char path[1024];
       snprintf(path, 1024, "/sys/bus/pci/devices/%s/vendor", e->d_name);
 
-      size_t size;
-      BYTE *content = LoadFileA(path, &size);
-      if (content != nullptr)
+      int32_t vendorId;
+      if (ReadInt32FromFileA(path, &vendorId))
       {
-         if (!strncasecmp((char *)content, "0x15ad", MIN(size, 6)))
+         if (vendorId == 0x15AD)
             result = true;
-         free(content);
       }
    }
    closedir(d);
@@ -277,7 +275,7 @@ static bool GetVMwareVersionString(TCHAR *value)
       return false;
 
    const TCHAR *v = pe.getData().get(_T("version"));
-   if (v != NULL)
+   if (v != nullptr)
    {
       _tcslcpy(value, v, MAX_RESULT_LENGTH);
       return true;
@@ -293,13 +291,11 @@ static bool IsXEN()
    if (!strncmp(s_cpuVendorId, "XenVMM", 6))
       return true;
 
-   size_t size;
-   BYTE *content = LoadFileA("/sys/hypervisor/type", &size);
-   if (content == nullptr)
+   char type[32];
+   if (!ReadLineFromFileA("/sys/hypervisor/type", type, 32))
       return false;
    
-   bool result = (strncasecmp((char *)content, "xen", MIN(size, 3)) == 0);
-   MemFree(content);
+   bool result = (strncasecmp(type, "xen", 3) == 0);
    return result;
 }
 
@@ -308,28 +304,14 @@ static bool IsXEN()
  */
 static bool GetXENVersionString(TCHAR *value)
 {
-   size_t size;
-   BYTE *content = LoadFileA("/sys/hypervisor/version/major", &size);
-   if (content == nullptr)
-      return false;
-   int major = strtol((char *)content, nullptr, 10);
-   free(content);
+   int32_t major, minor;
 
-   content = LoadFileA("/sys/hypervisor/version/minor", &size);
-   if (content == nullptr)
+   if (!ReadInt32FromFileA("/sys/hypervisor/version/major", &major) ||
+       !ReadInt32FromFileA("/sys/hypervisor/version/minor", &minor))
       return false;
-   int minor = strtol((char *)content, nullptr, 10);
-   free(content);
 
-   const char *extra = "";
-   content = LoadFileA("/sys/hypervisor/version/extra", &size);
-   if (content != nullptr)
-   {
-      char *ptr = strchr((char *)content, '\n');
-      if (ptr != nullptr)
-         *ptr = 0;
-      extra = (const char *)content;
-   }
+   char extra[64] = "";
+   ReadLineFromFileA("/sys/hypervisor/version/extra", extra, sizeof(extra));
 
    _sntprintf(value, MAX_RESULT_LENGTH, _T("%d.%d%hs"), major, minor, extra);
    return true;
@@ -349,7 +331,7 @@ static bool IsVirtualBox()
 static bool GetVirtualBoxVersionString(TCHAR *value)
 {
    const char * const *oemStrings = SMBIOS_GetOEMStrings();
-   for(int i = 0; oemStrings[i] != NULL; i++)
+   for(int i = 0; oemStrings[i] != nullptr; i++)
    {
       if (!strncmp(oemStrings[i], "vboxVer_", 8))
       {
