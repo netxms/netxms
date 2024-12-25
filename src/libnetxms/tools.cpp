@@ -2879,7 +2879,7 @@ bool LIBNETXMS_EXPORTABLE ReadLineFromFileA(const char *path, char *buffer, size
  */
 bool LIBNETXMS_EXPORTABLE ReadLineFromFileW(const WCHAR *path, WCHAR *buffer, size_t size)
 {
-   FILE *hFile = wfopen(path, L"r");
+   FILE *hFile = _wfopen(path, L"r");
    if (hFile == nullptr)
       return false;
 
