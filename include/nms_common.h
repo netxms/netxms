@@ -785,6 +785,10 @@ FILE *open_memstream(char **, size_t *);
 #endif
 
 // Windows compatibility layer for standard C I/O functions
+#if !HAVE_WFOPEN
+FILE LIBNETXMS_EXPORTABLE *wfopen(const WCHAR *_name, const WCHAR *_type);
+#endif
+
 #ifdef __cplusplus
 
 static inline int _access(const char *pathname, int mode) { return ::access(pathname, mode); }

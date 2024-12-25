@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -55,8 +55,7 @@ const InetAddress __EXPORT InetAddress::IPV6_LINK_LOCAL((const BYTE *)"\xfe\x80\
 String InetAddress::toString() const
 {
    TCHAR buffer[64];
-   String s = (m_family == AF_UNSPEC) ? _T("UNSPEC") : ((m_family == AF_INET) ? IpToStr(m_addr.v4, buffer) : Ip6ToStr(m_addr.v6, buffer));
-   return s;
+   return String((m_family == AF_UNSPEC) ? _T("UNSPEC") : ((m_family == AF_INET) ? IpToStr(m_addr.v4, buffer) : Ip6ToStr(m_addr.v6, buffer)));
 }
 
 /**
