@@ -61,11 +61,7 @@ static inline uint32_t CIP_UInt32Swap(uint32_t value)
 #endif
 }
 
-#ifdef __HP_aCC
-#pragma pack 1
-#else
 #pragma pack(1)
-#endif
 
 /**
  * EIP encapsulation header
@@ -80,13 +76,7 @@ struct EIP_EncapsulationHeader
    uint32_t options;
 };
 
-#if defined(__HP_aCC)
-#pragma pack
-#elif defined(_AIX) && !defined(__GNUC__)
-#pragma pack(pop)
-#else
 #pragma pack()
-#endif
 
 /**
  * EtherNet/IP encapsulation commands

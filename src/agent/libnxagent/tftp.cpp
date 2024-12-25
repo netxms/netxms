@@ -62,11 +62,7 @@ struct Packet
    char data[BLOCK_SIZE];
 };
 
-#if defined(_AIX) && !defined(__GNUC__)
-#pragma pack(pop)
-#else
 #pragma pack()
-#endif
 
 /**
  * Buffer class for memory stream implementation

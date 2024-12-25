@@ -16,10 +16,6 @@
 #include <algorithm>    // std::swap
 #include <nxatomic.h>
 
-#if defined(__HP_aCC)
-typedef decltype(nullptr) nullptr_t;
-#endif
-
 /**
  * @brief implementation of reference counter for the following minimal smart pointer.
  *

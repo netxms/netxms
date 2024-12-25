@@ -23,7 +23,7 @@
 
 #include "libnxmb.h"
 
-#if defined(_WIN32) && !defined(UNDER_CE)
+#ifdef _WIN32
 
 /**
  * DLL entry point

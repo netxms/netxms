@@ -1408,9 +1408,7 @@ MODULES="$MODULES tools"
 
 if test "x$PLATFORM" = "xAIX"; then
 	AC_CHECK_PROG([CC], [xlclang], [xlclang])
-	AC_CHECK_PROG([CC], [xlc_r], [xlc_r])
 	AC_CHECK_PROG([CCC], [xlclang++], [xlclang++])
-	AC_CHECK_PROG([CCC], [xlC_r], [xlC_r])
 fi
 if test "x$PLATFORM" = "xSunOS"; then
 	AC_CHECK_PROG([CC], [cc], [cc])
@@ -1728,122 +1726,6 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 		AC_CPP_CHECK_OPTION(-ggdb3)
 		AC_CPP_CHECK_OPTION(-fno-omit-frame-pointer)
 	fi
-fi
-
-if test "x$CXX" = "xxlC_r" ; then
-	SQLFLAGS="-qnoppline"
-        if test "x$FORCE_32BIT_BUILD" = "xyes"; then
-                AC_MSG_CHECKING(whether C compiler accepts -q32)
-                OLD_CPPFLAGS="$CPPFLAGS"
-                CPPFLAGS="-q32 $CPPFLAGS"
-                AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-                        [
-                                LDFLAGS="-q32 $LDFLAGS"
-				OBJECT_MODE=32
-                                AC_MSG_RESULT(yes)
-                        ],
-                        [
-                                CPPFLAGS="$OLD_CPPFLAGS"
-                                AC_MSG_RESULT(no)
-                        ])
-        else
-                AC_MSG_CHECKING(whether C compiler accepts -q64)
-                OLD_CPPFLAGS="$CPPFLAGS"
-                CPPFLAGS="-q64 $CPPFLAGS"
-                AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-                        [
-                                LDFLAGS="-q64 $LDFLAGS"
-				OBJECT_MODE=64
-                                AC_MSG_RESULT(yes)
-                        ],
-                        [
-                                CPPFLAGS="$OLD_CPPFLAGS"
-                                AC_MSG_RESULT(no)
-                        ])
-        fi
-
-	if test "x$DISABLE_VISIBILITY_CONTROL" != "xyes"; then
-		AC_MSG_CHECKING(whether C compiler supports symbol visibility control)
-		OLD_CPPFLAGS="$CPPFLAGS"
-		CPPFLAGS="$CPPFLAGS -qvisibility=hidden"
-		AC_RUN_IFELSE([AC_LANG_PROGRAM([[ int __attribute__ ((visibility ("default"))) z = 0; ]], [[ ]])],
-			[ 
-				AC_DEFINE(VISIBILITY_ATTRIBUTE_SUPPORTED, 1, Define to 1 if compiler supports visibility attribute)
-				AC_MSG_RESULT(yes) 
-			], 
-			[ 
-				CPPFLAGS="$OLD_CPPFLAGS"
-				AC_MSG_RESULT(no)
-			])
-	fi
-
-	AC_CXX_CHECK_OPTION(-qlanglvl=extended0x)
-	AC_CXX_CHECK_OPTION(-qnoeh)
-	AC_CXX_CHECK_OPTION(-qsuppress=1540-0216)
-	AC_CXX_CHECK_OPTION(-qsuppress=1540-1090)
-
-	AC_C_CHECK_OPTION(-qlanglvl=extc1x)
-
-	AC_CPP_CHECK_OPTION(-qsuppress=1506-356)
-	AC_CPP_CHECK_OPTION(-qsuppress=1540-1401)
-
-	AC_LANG_PUSH([C++])
-
-	# Check for std::shared_ptr
-	AC_MSG_CHECKING(whether C++ compiler supports std::shared_ptr)
-	AC_COMPILE_IFELSE([
-		AC_LANG_PROGRAM([
-#include <memory>
-			],
-			[ std::shared_ptr<int> p; ])],
-		[
-			AC_MSG_RESULT(yes)
-		],
-		[
-			AC_MSG_RESULT(no)
-			AC_MSG_CHECKING(whether C++ compiler supports std::tr1::shared_ptr)
-			OLD_CXXFLAGS="$CXXFLAGS"
-			CXXFLAGS="$CXXFLAGS -D__IBMCPP_TR1__"
-			AC_COMPILE_IFELSE([
-				AC_LANG_PROGRAM([
-#include <memory>
-					],
-					[ std::tr1::shared_ptr<int> p; ])],
-				[
-					AC_MSG_RESULT(yes)
-				],
-				[
-					AC_MSG_RESULT(no)
-					CXXFLAGS="$OLD_CXXFLAGS"
-				]
-			)
-		]
-	)
-
-	# Check for std::nullptr_t
-	AC_MSG_CHECKING(whether C++ compiler supports std::nullptr_t)
-	AC_COMPILE_IFELSE([
-		AC_LANG_PROGRAM([
-#include <memory>
-#include <stddef.h>
-
-int func(std::nullptr_t p)
-{
-	return 0;
-}
-			],
-			[ return 0; ])],
-		[
-			AC_MSG_RESULT(yes)
-			AC_DEFINE(HAVE_STD_NULLPTR_T, 1, Define to 1 if compiler supports std::nullptr_t)
-		],
-		[
-			AC_MSG_RESULT(no)
-			AC_DEFINE(HAVE_STD_NULLPTR_T, 0, Define to 1 if compiler supports std::nullptr_t)
-		]
-	)
-
-	AC_LANG_POP([C++])
 fi
 
 if test "x$CXX" = "xCC" ; then
@@ -2911,7 +2793,7 @@ AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
 
 AC_CHECK_FUNCS([gettimeofday memmem strcspn strrchr strlwr strtok_r strtoll strtoull])
-AC_CHECK_FUNCS([strlcpy strlcat strcasestr setlocale strerror strerror_r toupper])
+AC_CHECK_FUNCS([strlcpy strlcat strcasestr setlocale strerror_r toupper])
 AC_CHECK_FUNCS([tolower if_nametoindex daemon mmap scandir uname poll])
 AC_CHECK_FUNCS([usleep nanosleep gmtime_r localtime_r stat64 fstat64 lstat64])
 AC_CHECK_FUNCS([fopen64 strptime timegm gethostbyname2_r getaddrinfo rand_r])
@@ -2920,7 +2802,7 @@ AC_CHECK_FUNCS([getpwnam getpwuid getpwuid_r getgrnam getgrgid getgrgid_r])
 AC_CHECK_FUNCS([getpeereid sched_yield getpid localeconv])
 AC_CHECK_FUNCS([setenv unsetenv])
 
-AC_CHECK_DECLS([nanosleep, daemon, strerror, toupper, tolower, explicit_bzero, memset_s],,,[
+AC_CHECK_DECLS([nanosleep, daemon, toupper, tolower, explicit_bzero, memset_s],,,[
 #if HAVE_CTYPE_H
 #include <ctype.h>
 #endif

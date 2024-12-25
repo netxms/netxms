@@ -243,11 +243,7 @@ struct LBS_INFO
    uint16_t mnc;
    int8_t signalLevel;
 };
-#if defined(_AIX) && !defined(__GNUC__)
-#pragma pack(pop)
-#else
 #pragma pack()
-#endif
 
 /**
  * Parser for field 77

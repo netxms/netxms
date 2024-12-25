@@ -33,10 +33,6 @@ escape		\\[bnrt0\"\\]
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#ifdef __HP_aCC
-#pragma diag_suppress 2111, 2177
-#endif
-
 #define YY_EXTRA_TYPE	NXSL_Lexer*
 #define YY_INPUT(buf, result, maxSize) { result = yyextra->lexerInput(buf, maxSize); }
 

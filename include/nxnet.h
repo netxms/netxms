@@ -23,11 +23,7 @@
 #ifndef _nxnet_h_
 #define _nxnet_h_
 
-#ifdef __HP_aCC
-#pragma pack 1
-#else
 #pragma pack(1)
-#endif
 
 /**
  * IP Header -- RFC 791
@@ -142,10 +138,6 @@ struct ICMP6_ERROR_REPORT
    BYTE destAddr[16];
 };
 
-#ifdef __HP_aCC
-#pragma pack
-#else
 #pragma pack()
-#endif
 
 #endif   /* _nxnet_h_ */

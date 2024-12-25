@@ -31,11 +31,8 @@
 
 #if !(HAVE_STRTOULL)
 
-#ifndef UNDER_CE
 #include <sys/types.h>
 #include <errno.h>
-#endif
-
 #include <ctype.h>
 #include <limits.h>
 #include <stdlib.h>
@@ -94,9 +91,7 @@ UINT64 LIBNETXMS_EXPORTABLE strtoull(const char *nptr, char **endptr, int base)
 		if (acc > cutoff || (acc == cutoff && c > cutlim)) {
 			any = -1;
 			acc = ULLONG_MAX;
-#ifndef UNDER_CE
 			errno = ERANGE;
-#endif
 		} else {
 			any = 1;
 			acc *= (UINT64)base;

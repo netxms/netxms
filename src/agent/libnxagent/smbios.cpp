@@ -648,11 +648,7 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_TableHandler(const TCHAR *cmd, const TCHAR *ar
    return SYSINFO_RC_SUCCESS;
 }
 
-#ifdef __HP_aCC
-#pragma pack 1
-#else
 #pragma pack(1)
-#endif
 
 /**
  * BIOS table header
@@ -664,13 +660,7 @@ struct TableHeader
    uint16_t handle;
 };
 
-#if defined(__HP_aCC)
-#pragma pack
-#elif defined(_AIX) && !defined(__GNUC__)
-#pragma pack(pop)
-#else
 #pragma pack()
-#endif
 
 /**
  * Get BIOS string by index

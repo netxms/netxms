@@ -33,8 +33,8 @@
 #include <openssl/evp.h>
 #endif
 
-#if defined(_WIN32) && !defined(UNDER_CE)
-# include <io.h>
+#ifdef _WIN32
+#include <io.h>
 #endif
 
 #include <nxcrypto.h>

@@ -43,11 +43,7 @@ static void TestStringList()
    StartTest(_T("String list - add"));
    StringList *s1 = new StringList();
    s1->add(1);
-#ifdef __HP_aCC
-   s1->add(static_cast<INT64>(_LL(12345000000001)));
-#else
    s1->add(_LL(12345000000001));
-#endif
    s1->add(_T("text1"));
    s1->addPreallocated(MemCopyString(_T("text2")));
    s1->add(3.1415);

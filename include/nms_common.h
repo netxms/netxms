@@ -878,7 +878,7 @@ typedef struct hostent HOSTENT;
 /**
  * Wrappers for 64-bit integer constants
  */
-#if defined(__GNUC__) || defined(__HP_aCC) || defined(__IBMC__) || defined(__IBMCPP__) || defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+#if defined(__GNUC__) || defined(__IBMC__) || defined(__IBMCPP__) || defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #ifdef INT64_C
 #define _LL(x) INT64_C(x)
 #else
@@ -987,47 +987,7 @@ static inline const WCHAR *CHECK_NULL_EX_W(const WCHAR *x) { return (x == nullpt
 
 #ifdef __cplusplus
 
-#if defined(__IBMCPP_TR1__)
-
-#include <memory>
-using std::tr1::shared_ptr;
-using std::tr1::weak_ptr;
-using std::tr1::static_pointer_cast;
-using std::tr1::enable_shared_from_this;
-
-// xlC++ implementation C++11 TR1 does not have make_shared
-template<typename T, typename... Args>
-static inline shared_ptr<T> make_shared(Args&&... args)
-{
-   return shared_ptr<T>(new T(args...));
-}
-
-// xlC++ implementation C++11 TR1 does not have unique_ptr
-#define unique_ptr std::auto_ptr
-
-#if HAVE_STD_NULLPTR_T
-using std::nullptr_t;
-#else
-typedef decltype(nullptr) nullptr_t;
-#endif
-
-// Implementation of == and != for comparing unique_ptr with nullptr_t
-template<typename T> bool operator ==(const unique_ptr<T> &a, const nullptr_t &b)
-{
-        return a.get() == nullptr;
-}
-
-template<typename T> bool operator !=(const unique_ptr<T> &a, const nullptr_t &b)
-{
-        return a.get() != nullptr;
-}
-
-#elif defined(__HP_aCC)
-
-// HP aC++ does not have shared_ptr implementation, use bundled one
-#include "nx_shared_ptr.h"
-
-#elif !defined(__clang__) && defined(__GNUC__) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 8))
+#if !defined(__clang__) && defined(__GNUC__) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 8))
 
 // GCC implementation before 4.8 does not work with RTTI disabled, use bundled one
 #include "nx_shared_ptr.h"

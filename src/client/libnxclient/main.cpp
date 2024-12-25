@@ -261,7 +261,7 @@ const TCHAR LIBNXCLIENT_EXPORTABLE *NXCGetErrorText(uint32_t error)
 	return (error <= RCC_REMOTE_CONNECT_FAILED) ? errorText[error] : _T("No message for this error");
 }
 
-#if defined(_WIN32) && !defined(UNDER_CE)
+#ifdef _WIN32
 
 /**
  * DLL entry point

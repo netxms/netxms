@@ -70,10 +70,6 @@ WHITESPC  [[:blank:]\t\n\r]
 #define fileno	_fileno
 #endif
 
-#ifdef __HP_aCC
-#pragma diag_suppress 2177, 2186
-#endif
-
 int mperror(const char *pszMsg);
 
 int g_nCurrLine;

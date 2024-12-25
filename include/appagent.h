@@ -80,11 +80,7 @@
  * Communication message structure
  */
 
-#ifdef __HP_aCC
-#pragma pack 1
-#else
 #pragma pack(1)
-#endif
 
 typedef struct __apagent_msg
 {
@@ -96,11 +92,7 @@ typedef struct __apagent_msg
 	BYTE payload[1];	// actual payload size determined by message length
 } APPAGENT_MSG;
 
-#ifdef __HP_aCC
-#pragma pack
-#else
 #pragma pack()
-#endif
 
 #ifdef __cplusplus
 extern "C" {

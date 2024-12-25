@@ -655,11 +655,7 @@ public:
 
 #define PROXY_CHALLENGE_SIZE 8
 
-#ifdef __HP_aCC
-#pragma pack 1
-#else
 #pragma pack(1)
-#endif
 
 /**
  * Data collection proxy message
@@ -674,11 +670,7 @@ struct ProxyMsg
    BYTE hmac[SHA256_DIGEST_SIZE];
 };
 
-#ifdef __HP_aCC
-#pragma pack
-#else
 #pragma pack()
-#endif
 
 /**
  * Zone configuration

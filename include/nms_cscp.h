@@ -167,11 +167,7 @@ typedef struct
    BYTE data[1];     // Encrypted payload
 } NXCP_ENCRYPTED_MESSAGE;
 
-#if defined(_AIX) && !defined(__GNUC__)
-#pragma pack(pop)
-#else
 #pragma pack()
-#endif
 
 /**
  * Data types

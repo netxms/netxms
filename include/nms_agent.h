@@ -709,11 +709,7 @@ struct PolicyChangeNotification
 #define DCTDESC_SYSTEM_OPEN_FILES                    _T("Open files")
 #define DCTDESC_SYSTEM_PROCESSES                     _T("Processes")
 
-#ifdef __HP_aCC
-#pragma pack 1
-#else
 #pragma pack(1)
-#endif
 
 /**
  * Hash map key for server objects (64 bit server ID + 32 bit object ID)
@@ -735,11 +731,7 @@ struct LIBNXAGENT_EXPORTABLE ServerObjectKey
    }
 };
 
-#ifdef __HP_aCC
-#pragma pack
-#else
 #pragma pack()
-#endif
 
 /**
  * Class that stores information about file that will be received
