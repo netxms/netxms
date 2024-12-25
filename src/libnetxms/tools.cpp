@@ -295,28 +295,20 @@ void LIBNETXMS_EXPORTABLE SecureZeroMemory(void *mem, size_t count)
 /**
  * Convert IP address from binary form (host bytes order) to string
  */
-TCHAR LIBNETXMS_EXPORTABLE *IpToStr(UINT32 dwAddr, TCHAR *szBuffer)
+TCHAR LIBNETXMS_EXPORTABLE *IpToStr(uint32_t ipAddr, TCHAR *buffer)
 {
-   static TCHAR szInternalBuffer[16];
-   TCHAR *szBufPtr;
-
-   szBufPtr = (szBuffer == NULL) ? szInternalBuffer : szBuffer;
-   _sntprintf(szBufPtr, 16, _T("%d.%d.%d.%d"), (int)(dwAddr >> 24), (int)((dwAddr >> 16) & 255),
-              (int)((dwAddr >> 8) & 255), (int)(dwAddr & 255));
-   return szBufPtr;
+   _sntprintf(buffer, 16, _T("%d.%d.%d.%d"), (int)(ipAddr >> 24), (int)((ipAddr >> 16) & 255),
+      (int)((ipAddr >> 8) & 255), (int)(ipAddr & 255));
+   return buffer;
 }
 
 #ifdef UNICODE
 
-char LIBNETXMS_EXPORTABLE *IpToStrA(UINT32 dwAddr, char *szBuffer)
+char LIBNETXMS_EXPORTABLE *IpToStrA(uint32_t ipAddr, char *buffer)
 {
-   static char szInternalBuffer[16];
-   char *szBufPtr;
-
-   szBufPtr = (szBuffer == NULL) ? szInternalBuffer : szBuffer;
-   snprintf(szBufPtr, 16, "%d.%d.%d.%d", (int)(dwAddr >> 24), (int)((dwAddr >> 16) & 255),
-            (int)((dwAddr >> 8) & 255), (int)(dwAddr & 255));
-   return szBufPtr;
+   snprintf(buffer, 16, "%d.%d.%d.%d", (int)(ipAddr >> 24), (int)((ipAddr >> 16) & 255),
+      (int)((ipAddr >> 8) & 255), (int)(ipAddr & 255));
+   return buffer;
 }
 
 #endif
@@ -343,27 +335,24 @@ TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer)
  */
 TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(const BYTE *addr, TCHAR *buffer)
 {
-   static TCHAR internalBuffer[64];
-   TCHAR *bufPtr = (buffer == NULL) ? internalBuffer : buffer;
-
 	if (!memcmp(addr, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 16))
 	{
-		_tcscpy(bufPtr, _T("::"));
-		return bufPtr;
+		_tcscpy(buffer, _T("::"));
+		return buffer;
 	}
 
-	TCHAR *out = bufPtr;
-	WORD *curr = (WORD *)addr;
+	TCHAR *out = buffer;
+	const uint16_t *curr = reinterpret_cast<const uint16_t*>(addr);
 	bool hasNulls = false;
 	for(int i = 0; i < 8; i++)
 	{
-		WORD value = ntohs(*curr);
+	   uint16_t value = ntohs(*curr);
 		if ((value != 0) || hasNulls)
 		{
-			if (out != bufPtr)
+			if (out != buffer)
 				*out++ = _T(':');
 			_sntprintf(out, 5, _T("%x"), value);
-			out = bufPtr + _tcslen(bufPtr);
+			out = buffer + _tcslen(buffer);
 			curr++;
 		}
 		else
@@ -385,7 +374,7 @@ TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(const BYTE *addr, TCHAR *buffer)
 		}
 	}
 	*out = 0;
-   return bufPtr;
+   return buffer;
 }
 
 #ifdef UNICODE
@@ -395,27 +384,24 @@ TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(const BYTE *addr, TCHAR *buffer)
  */
 char LIBNETXMS_EXPORTABLE *Ip6ToStrA(const BYTE *addr, char *buffer)
 {
-   static char internalBuffer[64];
-   char *bufPtr = (buffer == NULL) ? internalBuffer : buffer;
-
    if (!memcmp(addr, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 16))
    {
-      strcpy(bufPtr, "::");
-      return bufPtr;
+      strcpy(buffer, "::");
+      return buffer;
    }
 
-   char *out = bufPtr;
-   WORD *curr = (WORD *)addr;
+   char *out = buffer;
+   const uint16_t *curr = reinterpret_cast<const uint16_t*>(addr);
    bool hasNulls = false;
    for(int i = 0; i < 8; i++)
    {
-      WORD value = ntohs(*curr);
+      uint16_t value = ntohs(*curr);
       if ((value != 0) || hasNulls)
       {
-         if (out != bufPtr)
+         if (out != buffer)
             *out++ = ':';
          snprintf(out, 5, "%x", value);
-         out = bufPtr + strlen(bufPtr);
+         out = buffer + strlen(buffer);
          curr++;
       }
       else
@@ -437,7 +423,7 @@ char LIBNETXMS_EXPORTABLE *Ip6ToStrA(const BYTE *addr, char *buffer)
       }
    }
    *out = 0;
-   return bufPtr;
+   return buffer;
 }
 
 #endif
