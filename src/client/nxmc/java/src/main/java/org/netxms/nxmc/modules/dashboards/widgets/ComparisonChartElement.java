@@ -110,11 +110,23 @@ public abstract class ComparisonChartElement extends ElementWidget
                            if (dciInfo.getDcObjectType() != DataCollectionObject.DCO_TYPE_ITEM)
                               continue;
 
-                           Matcher nameMatch = namePattern.matcher(dciInfo.getName());
-                           Matcher descriptionMatch = descriptionPattern.matcher(dciInfo.getDescription());
-                           if ((!dci.dciName.isEmpty() && nameMatch.find()) || (!dci.dciDescription.isEmpty() && descriptionMatch.find()))
+                           Matcher matcher = null;
+                           boolean match = false;
+
+                           if (!dci.dciName.isEmpty())
                            {
-                              ChartDciConfig instance = new ChartDciConfig(dci, (!dci.dciName.isEmpty() && nameMatch.find()) ? nameMatch : descriptionMatch, dciInfo);
+                              matcher = namePattern.matcher(dciInfo.getName());
+                              match = matcher.find();
+                           }
+                           if (!match && !dci.dciDescription.isEmpty())
+                           {
+                              matcher = descriptionPattern.matcher(dciInfo.getDescription());
+                              match = matcher.find();
+                           }
+
+                           if (match)
+                           {
+                              ChartDciConfig instance = new ChartDciConfig(dci, matcher, dciInfo);
                               runtimeDciList.add(instance);
                               if (!dci.multiMatch)
                                  break;
@@ -130,6 +142,9 @@ public abstract class ComparisonChartElement extends ElementWidget
                   {
                      for(DciValue dciInfo : nodeDciList)
                      {
+                        if (dciInfo.getDcObjectType() != DataCollectionObject.DCO_TYPE_ITEM)
+                           continue;
+
                         if ((!dci.dciName.isEmpty() && dciInfo.getName().equalsIgnoreCase(dci.dciName)) ||
                             (!dci.dciDescription.isEmpty() && dciInfo.getDescription().equalsIgnoreCase(dci.dciDescription)))
                         {
