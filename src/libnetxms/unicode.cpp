@@ -1,6 +1,6 @@
 /*
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2023 Raden Solutions
+ ** Copyright (C) 2003-2024 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -1027,6 +1027,18 @@ int LIBNETXMS_EXPORTABLE wstat(const WCHAR *_path, struct stat *_sbuf)
 
 #endif /* !HAVE_WSTAT */
 
+#if !HAVE_WFOPEN
+
+FILE LIBNETXMS_EXPORTABLE *wfopen(const WCHAR *_name, const WCHAR *_type)
+{
+   char name[MAX_PATH], type[128];
+   WideCharToMultiByteSysLocale(_name, name, sizeof(name));
+   WideCharToMultiByteSysLocale(_type, type, sizeof(type));
+   return fopen(name, type);
+}
+
+#endif   /* !HAVE_WFOPEN */
+
 #if defined(UNICODE)
 
 /**
@@ -1083,18 +1095,6 @@ FILE LIBNETXMS_EXPORTABLE *wpopen(const WCHAR *_command, const WCHAR *_type)
    FILE *f = popen(command, type);
    MemFree(command);
    return f;
-}
-
-#endif
-
-#if !HAVE_WFOPEN
-
-FILE LIBNETXMS_EXPORTABLE *wfopen(const WCHAR *_name, const WCHAR *_type)
-{
-   char name[MAX_PATH], type[128];
-   WideCharToMultiByteSysLocale(_name, name, sizeof(name));
-   WideCharToMultiByteSysLocale(_type, type, sizeof(type));
-   return fopen(name, type);
 }
 
 #endif
