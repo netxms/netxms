@@ -631,7 +631,7 @@ AC_ARG_WITH(mariadb,
 			MARIADB_CPPFLAGS="-I$__dir"
 		fi
 	else
-		if find_existing_dir "/usr/local/mariadb/lib"; then
+		if find_existing_dir "/usr/local/mariadb/lib" "/usr/local/lib/mariadb"; then
 			MARIADB_LD_RUN_PATH="$__dir$"    
 			MARIADB_LDFLAGS="-L$__dir"
 		fi
