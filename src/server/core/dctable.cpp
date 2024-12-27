@@ -797,6 +797,7 @@ void DCTable::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t fieldId, co
    msg->setField(fieldId++, 0);
    msg->setField(fieldId++, !hasValue());
    msg->setField(fieldId++, m_comments);
+   msg->setField(fieldId++, false); // Anomaly detected
 
    if (m_thresholds != nullptr)
    {
