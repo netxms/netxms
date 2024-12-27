@@ -9414,7 +9414,7 @@ void ClientSession::startSnmpWalk(const NXCPMessage& request)
 /**
  * Resolve single DCI name
  */
-uint32_t ClientSession::resolveDCIName(uint32_t nodeId, uint32_t dciId, TCHAR *metric, TCHAR *displayName)
+uint32_t ClientSession::resolveDCIName(uint32_t nodeId, uint32_t dciId, WCHAR *metric, WCHAR *displayName, WCHAR *tag)
 {
    uint32_t rcc;
    shared_ptr<NetObj> object = FindObjectById(nodeId);
@@ -9427,14 +9427,16 @@ uint32_t ClientSession::resolveDCIName(uint32_t nodeId, uint32_t dciId, TCHAR *m
 				shared_ptr<DCObject> dci = static_cast<DataCollectionOwner&>(*object).getDCObjectById(dciId, m_userId);
 				if (dci != nullptr)
 				{
-               _tcslcpy(metric, dci->getName(), MAX_DB_STRING);
-               _tcslcpy(displayName, dci->getDescription(), MAX_DB_STRING);
+               wcslcpy(metric, dci->getName(), MAX_ITEM_NAME);
+               wcslcpy(displayName, dci->getDescription(), MAX_DB_STRING);
+               wcslcpy(tag, dci->getUserTag(), MAX_DCI_TAG_LENGTH);
 					rcc = RCC_SUCCESS;
 				}
 				else
 				{
                _sntprintf(metric, MAX_DB_STRING, _T("[%d]"), dciId);
                _sntprintf(displayName, MAX_DB_STRING, _T("[%d]"), dciId);
+               tag[0] = 0;
 					rcc = RCC_SUCCESS;
 				}
 			}
@@ -9473,14 +9475,14 @@ void ClientSession::resolveDCINames(const NXCPMessage& request)
    uint32_t fieldId = VID_DCI_LIST_BASE;
    for(; i < count; i++)
    {
-      TCHAR metric[MAX_DB_STRING];
-      TCHAR displayName[MAX_DB_STRING];
-      rcc = resolveDCIName(nodeList[i], dciList[i], metric, displayName);
+      WCHAR metric[MAX_ITEM_NAME], displayName[MAX_DB_STRING], tag[MAX_DCI_TAG_LENGTH];
+      rcc = resolveDCIName(nodeList[i], dciList[i], metric, displayName, tag);
       if (rcc != RCC_SUCCESS)
          break;
       response.setField(fieldId++, dciList[i]);
       response.setField(fieldId++, metric);
       response.setField(fieldId++, displayName);
+      response.setField(fieldId++, tag);
    }
    response.setField(VID_NUM_ITEMS, i);
 

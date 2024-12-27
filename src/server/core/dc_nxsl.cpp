@@ -117,7 +117,7 @@ static int F_GetDCIRawValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 /**
  * Internal implementation of GetDCIValueByName and GetDCIValueByDescription
  */
-static int GetDciValueExImpl(bool byName, int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int GetDciValueExImpl(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm, shared_ptr<DCObject> (DataCollectionOwner::*method)(const TCHAR*, uint32_t) const)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -130,26 +130,26 @@ static int GetDciValueExImpl(bool byName, int argc, NXSL_Value **argv, NXSL_Valu
       return NXSL_ERR_BAD_CLASS;
 
    shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
-	shared_ptr<DCObject> dci = byName ? node->getDCObjectByName(argv[1]->getValueAsCString(), 0) : node->getDCObjectByDescription(argv[1]->getValueAsCString(), 0);
+   shared_ptr<DCObject> dci = ((*node).*method)(argv[1]->getValueAsCString(), 0);
 	if (dci != NULL)
    {
       if (dci->getType() == DCO_TYPE_ITEM)
 	   {
-         *ppResult = static_cast<DCItem*>(dci.get())->getValueForNXSL(vm, F_LAST, 1);
+         *result = static_cast<DCItem*>(dci.get())->getValueForNXSL(vm, F_LAST, 1);
 	   }
       else if (dci->getType() == DCO_TYPE_TABLE)
       {
          shared_ptr<Table> t = static_cast<DCTable*>(dci.get())->getLastValue();
-         *ppResult = (t != nullptr) ? vm->createValue(vm->createObject(&g_nxslTableClass, new shared_ptr<Table>(t))) : vm->createValue();
+         *result = (t != nullptr) ? vm->createValue(vm->createObject(&g_nxslTableClass, new shared_ptr<Table>(t))) : vm->createValue();
       }
       else
       {
-   		*ppResult = vm->createValue();	// Return NULL
+   		*result = vm->createValue();	// Return NULL
       }
    }
 	else
 	{
-		*ppResult = vm->createValue();	// Return NULL if DCI not found
+		*result = vm->createValue();	// Return NULL if DCI not found
 	}
 
 	return 0;
@@ -160,9 +160,9 @@ static int GetDciValueExImpl(bool byName, int argc, NXSL_Value **argv, NXSL_Valu
  * First argument is a node object (passed to script via $node variable),
  * and second is DCI name
  */
-static int F_GetDCIValueByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_GetDCIValueByName(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-	return GetDciValueExImpl(true, argc, argv, ppResult, vm);
+	return GetDciValueExImpl(argc, argv, result, vm, &DataCollectionOwner::getDCObjectByName);
 }
 
 /**
@@ -170,30 +170,58 @@ static int F_GetDCIValueByName(int argc, NXSL_Value **argv, NXSL_Value **ppResul
  * First argument is a node object (passed to script via $node variable),
  * and second is DCI description
  */
-static int F_GetDCIValueByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_GetDCIValueByDescription(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-	return GetDciValueExImpl(false, argc, argv, ppResult, vm);
+	return GetDciValueExImpl(argc, argv, result, vm, &DataCollectionOwner::getDCObjectByDescription);
+}
+
+/**
+ * NXSL function: Get DCI value from within transformation script
+ * First argument is a node object (passed to script via $node variable),
+ * and second is DCI tag
+ */
+static int F_GetDCIValueByTag(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   return GetDciValueExImpl(argc, argv, result, vm, &DataCollectionOwner::getDCObjectByTag);
+}
+
+/**
+ * NXSL function: Get DCI value from within transformation script
+ * First argument is a node object (passed to script via $node variable),
+ * and second is DCI tag pattern
+ */
+static int F_GetDCIValueByTagPattern(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   return GetDciValueExImpl(argc, argv, result, vm, &DataCollectionOwner::getDCObjectByTagPattern);
+}
+
+/**
+ * Common implementation for FindDCIBy... functions
+ */
+static int FindDCIImpl(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm, shared_ptr<DCObject> (DataCollectionOwner::*method)(const TCHAR*, uint32_t) const)
+{
+   if (!argv[0]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
+
+   if (!argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   NXSL_Object *object = argv[0]->getValueAsObject();
+   if (!object->getClass()->instanceOf(_T("DataCollectionTarget")))
+      return NXSL_ERR_BAD_CLASS;
+
+   shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
+   shared_ptr<DCObject> dci = ((*node).*method)(argv[1]->getValueAsCString(), 0);
+   *result = (dci != nullptr) ? vm->createValue(dci->getId()) : vm->createValue(static_cast<uint32_t>(0));
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
  * NXSL function: Find DCI by name
  */
-static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-	if (!argv[0]->isObject())
-		return NXSL_ERR_NOT_OBJECT;
-
-	if (!argv[1]->isString())
-		return NXSL_ERR_NOT_STRING;
-
-	NXSL_Object *object = argv[0]->getValueAsObject();
-   if (!object->getClass()->instanceOf(_T("DataCollectionTarget")))
-      return NXSL_ERR_BAD_CLASS;
-
-   shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
-	shared_ptr<DCObject> dci = node->getDCObjectByName(argv[1]->getValueAsCString(), 0);
-	*ppResult = (dci != NULL) ? vm->createValue(dci->getId()) : vm->createValue((UINT32)0);
-	return 0;
+   return FindDCIImpl(argc, argv, result, vm, &DataCollectionOwner::getDCObjectByName);
 }
 
 /**
@@ -201,28 +229,31 @@ static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, N
  */
 static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-	if (!argv[0]->isObject())
-		return NXSL_ERR_NOT_OBJECT;
-
-	if (!argv[1]->isString())
-		return NXSL_ERR_NOT_STRING;
-
-	NXSL_Object *object = argv[0]->getValueAsObject();
-   if (!object->getClass()->instanceOf(_T("DataCollectionTarget")))
-      return NXSL_ERR_BAD_CLASS;
-
-   shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
-	shared_ptr<DCObject> dci = node->getDCObjectByDescription(argv[1]->getValueAsCString(), 0);
-	*result = (dci != nullptr) ? vm->createValue(dci->getId()) : vm->createValue((UINT32)0);
-	return 0;
+   return FindDCIImpl(argc, argv, result, vm, &DataCollectionOwner::getDCObjectByDescription);
 }
 
 /**
- * NXSL function: Find all DCIs with matching name or description
+ * NXSL function: Find DCI by tag
+ */
+static int F_FindDCIByTag(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   return FindDCIImpl(argc, argv, result, vm, &DataCollectionOwner::getDCObjectByTag);
+}
+
+/**
+ * NXSL function: Find DCI by tag pattern
+ */
+static int F_FindDCIByTagPattern(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   return FindDCIImpl(argc, argv, result, vm, &DataCollectionOwner::getDCObjectByTagPattern);
+}
+
+/**
+ * NXSL function: Find all DCIs with matching name, description, or tag
  */
 static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   if ((argc < 1) || (argc > 3))
+   if ((argc < 1) || (argc > 4))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
 	if (!argv[0]->isObject())
@@ -232,7 +263,7 @@ static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
    if (!object->getClass()->instanceOf(_T("DataCollectionTarget")))
       return NXSL_ERR_BAD_CLASS;
 
-   const TCHAR *nameFilter = nullptr, *descriptionFilter = nullptr;
+   const WCHAR *nameFilter = nullptr, *descriptionFilter = nullptr, *tagFilter = nullptr;
    if (argc > 1)
    {
       if (!argv[1]->isNull())
@@ -250,11 +281,21 @@ static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
                return NXSL_ERR_NOT_STRING;
             descriptionFilter = argv[2]->getValueAsCString();
          }
+
+         if (argc > 3)
+         {
+            if (!argv[3]->isNull())
+            {
+               if (!argv[3]->isString())
+                  return NXSL_ERR_NOT_STRING;
+               tagFilter = argv[3]->getValueAsCString();
+            }
+         }
       }
    }
 
    shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
-	*result = node->getAllDCObjectsForNXSL(vm, nameFilter, descriptionFilter, 0);
+	*result = node->getAllDCObjectsForNXSL(vm, nameFilter, descriptionFilter, tagFilter, 0);
 	return 0;
 }
 
@@ -470,7 +511,7 @@ static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 /**
  * NXSL function: create new DCI
  * Format: CreateDCI(node, origin, name, description, dataType, pollingInterval, retentionTime)
- * Possible origin values: "agent", "snmp", "internal", "push", "websvc", "winperf", "script", "ssh", "mqtt", "driver"
+ * Possible origin values: "agent", "snmp", "internal", "push", "websvc", "winperf", "script", "ssh", "mqtt", "driver", "modbus", "ethernetip"
  * Possible dataType values: "int32", "uint32", "int64", "uint64", "counter32", "counter64", "float", "string"
  * Returns DCI object on success and NULL of failure
  */
@@ -493,16 +534,17 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM
 	if (argv[1]->isInteger())
 	{
 	   origin = argv[1]->getValueAsInt32();
-	   if ((origin < 0) || (origin > 10))
+	   if ((origin < 0) || (origin > 12))
 	      origin = -1;
 	}
 	else
 	{
-	   static const TCHAR *originNames[] = { _T("internal"), _T("agent"), _T("snmp"), _T("websvc"),
-	            _T("push"), _T("winperf"), _T("smclp"), _T("script"), _T("ssh"), _T("mqtt"), _T("driver"), nullptr };
-      const TCHAR *name = argv[1]->getValueAsCString();
+	   static const WCHAR *originNames[] = {
+            L"internal", L"agent", L"snmp", L"websvc", L"push", L"winperf",
+            L"smclp", L"script", L"ssh", L"mqtt", L"driver", L"modbus", L"ethernetip", nullptr };
+      const WCHAR *name = argv[1]->getValueAsCString();
       for(int i = 0; originNames[i] != nullptr; i++)
-         if (!_tcsicmp(originNames[i], name))
+         if (!wcsicmp(originNames[i], name))
          {
             origin = i;
             break;
@@ -522,7 +564,7 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM
       dataType = TextToDataType(argv[4]->getValueAsCString());
 	}
 
-	StringBuffer type = argv[5]->isString() ? argv[5]->getValueAsCString() : _T("");
+	StringBuffer type(argv[5]->isString() ? argv[5]->getValueAsCString() : _T(""));
 	type.trim();
 	BYTE scheduleType = (type.isEmpty() || type.equals(_T("0"))) ? DC_POLLING_SCHEDULE_DEFAULT : DC_POLLING_SCHEDULE_CUSTOM;
 
@@ -640,6 +682,8 @@ static NXSL_ExtFunction m_nxslDCIFunctions[] =
    { "FindAllDCIs", F_FindAllDCIs, -1 },
    { "FindDCIByName", F_FindDCIByName, 2 },
    { "FindDCIByDescription", F_FindDCIByDescription, 2 },
+   { "FindDCIByTag", F_FindDCIByTag, 2 },
+   { "FindDCIByTagPattern", F_FindDCIByTagPattern, 2 },
 	{ "GetAvgDCIValue", F_GetAvgDCIValue, 4 },
    { "GetDCIObject", F_GetDCIObject, 2 },
    { "GetDCIRawValue", F_GetDCIRawValue, 2 },
@@ -647,6 +691,8 @@ static NXSL_ExtFunction m_nxslDCIFunctions[] =
    { "GetDCIValues", F_GetDCIValues, -1 },
    { "GetDCIValueByDescription", F_GetDCIValueByDescription, 2 },
    { "GetDCIValueByName", F_GetDCIValueByName, 2 },
+   { "GetDCIValueByTag", F_GetDCIValueByTag, 2 },
+   { "GetDCIValueByTagPattern", F_GetDCIValueByTagPattern, 2 },
 	{ "GetMaxDCIValue", F_GetMaxDCIValue, 4 },
 	{ "GetMinDCIValue", F_GetMinDCIValue, 4 },
 	{ "GetSumDCIValue", F_GetSumDCIValue, 4 },

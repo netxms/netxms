@@ -107,7 +107,7 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
  */
 DCObject::DCObject(const DCObject *src, bool shadowCopy) :
          m_owner(src->m_owner), m_name(src->m_name), m_description(src->m_description), m_systemTag(src->m_systemTag),
-         m_pollingIntervalSrc(src->m_pollingIntervalSrc), m_retentionTimeSrc(src->m_retentionTimeSrc),
+         m_userTag(src->m_userTag), m_pollingIntervalSrc(src->m_pollingIntervalSrc), m_retentionTimeSrc(src->m_retentionTimeSrc),
          m_mutex(MutexType::RECURSIVE), m_perfTabSettings(src->m_perfTabSettings),
          m_transformationScriptSource(src->m_transformationScriptSource), m_transformationScript(src->m_transformationScript),
          m_comments(src->m_comments), m_instanceDiscoveryData(src->m_instanceDiscoveryData),
@@ -206,6 +206,7 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_name = config->getSubEntryValue(_T("name"), 0, _T("unnamed"));
    m_description = config->getSubEntryValue(_T("description"), 0, m_name);
    m_systemTag = config->getSubEntryValue(_T("systemTag"), 0, nullptr);
+   m_userTag = config->getSubEntryValue(_T("userTag"), 0, nullptr);
    m_source = (BYTE)config->getSubEntryValueAsInt(_T("origin"));
    m_flags = config->getSubEntryValueAsInt(_T("flags"));
    m_pollingIntervalSrc = config->getSubEntryValue(_T("interval"), 0, nullptr);
@@ -776,49 +777,50 @@ bool DCObject::prepareForDeletion()
 /**
  * Create NXCP message with object data
  */
-void DCObject::createMessage(NXCPMessage *pMsg)
+void DCObject::createMessage(NXCPMessage *msg)
 {
 	lock();
-   pMsg->setField(VID_DCI_ID, m_id);
-	pMsg->setField(VID_DCOBJECT_TYPE, (WORD)getType());
-   pMsg->setField(VID_TEMPLATE_ID, m_templateId);
-   pMsg->setField(VID_TEMPLATE_ITEM_ID, m_templateItemId);
-   pMsg->setField(VID_NAME, m_name);
-   pMsg->setField(VID_DESCRIPTION, m_description);
-   pMsg->setField(VID_TRANSFORMATION_SCRIPT, m_transformationScriptSource);
-   pMsg->setField(VID_FLAGS, m_flags);
-   pMsg->setField(VID_STATE_FLAGS, m_stateFlags);
-   pMsg->setField(VID_SYSTEM_TAG, m_systemTag);
-   pMsg->setField(VID_POLLING_SCHEDULE_TYPE, static_cast<int16_t>(m_pollingScheduleType));
-   pMsg->setField(VID_POLLING_INTERVAL, m_pollingIntervalSrc);
-   pMsg->setField(VID_RETENTION_TYPE, static_cast<int16_t>(m_retentionType));
-   pMsg->setField(VID_RETENTION_TIME, m_retentionTimeSrc);
-   pMsg->setField(VID_DCI_SOURCE_TYPE, (WORD)m_source);
-   pMsg->setField(VID_DCI_STATUS, (WORD)m_status);
-	pMsg->setField(VID_RESOURCE_ID, m_resourceId);
-	pMsg->setField(VID_AGENT_PROXY, m_sourceNode);
-	pMsg->setField(VID_SNMP_PORT, m_snmpPort);
-   pMsg->setField(VID_SNMP_VERSION, static_cast<int16_t>(m_snmpVersion));
-   pMsg->setField(VID_COMMENTS, m_comments);
-   pMsg->setField(VID_PERFTAB_SETTINGS, m_perfTabSettings);
+   msg->setField(VID_DCI_ID, m_id);
+	msg->setField(VID_DCOBJECT_TYPE, static_cast<uint16_t>(getType()));
+   msg->setField(VID_TEMPLATE_ID, m_templateId);
+   msg->setField(VID_TEMPLATE_ITEM_ID, m_templateItemId);
+   msg->setField(VID_NAME, m_name);
+   msg->setField(VID_DESCRIPTION, m_description);
+   msg->setField(VID_TRANSFORMATION_SCRIPT, m_transformationScriptSource);
+   msg->setField(VID_FLAGS, m_flags);
+   msg->setField(VID_STATE_FLAGS, m_stateFlags);
+   msg->setField(VID_SYSTEM_TAG, m_systemTag);
+   msg->setField(VID_USER_TAG, m_userTag);
+   msg->setField(VID_POLLING_SCHEDULE_TYPE, static_cast<int16_t>(m_pollingScheduleType));
+   msg->setField(VID_POLLING_INTERVAL, m_pollingIntervalSrc);
+   msg->setField(VID_RETENTION_TYPE, static_cast<int16_t>(m_retentionType));
+   msg->setField(VID_RETENTION_TIME, m_retentionTimeSrc);
+   msg->setField(VID_DCI_SOURCE_TYPE, static_cast<uint16_t>(m_source));
+   msg->setField(VID_DCI_STATUS, static_cast<uint16_t>(m_status));
+	msg->setField(VID_RESOURCE_ID, m_resourceId);
+	msg->setField(VID_AGENT_PROXY, m_sourceNode);
+	msg->setField(VID_SNMP_PORT, m_snmpPort);
+   msg->setField(VID_SNMP_VERSION, static_cast<int16_t>(m_snmpVersion));
+   msg->setField(VID_COMMENTS, m_comments);
+   msg->setField(VID_PERFTAB_SETTINGS, m_perfTabSettings);
 	if (m_schedules != nullptr)
 	{
-      pMsg->setField(VID_NUM_SCHEDULES, static_cast<uint32_t>(m_schedules->size()));
+      msg->setField(VID_NUM_SCHEDULES, static_cast<uint32_t>(m_schedules->size()));
       uint32_t fieldId = VID_DCI_SCHEDULE_BASE;
       for(int i = 0; i < m_schedules->size(); i++, fieldId++)
-         pMsg->setField(fieldId, m_schedules->get(i));
+         msg->setField(fieldId, m_schedules->get(i));
 	}
 	else
 	{
-      pMsg->setField(VID_NUM_SCHEDULES, static_cast<uint32_t>(0));
+      msg->setField(VID_NUM_SCHEDULES, static_cast<uint32_t>(0));
 	}
-   pMsg->setField(VID_INSTD_METHOD, m_instanceDiscoveryMethod);
-   pMsg->setField(VID_INSTD_DATA, m_instanceDiscoveryData);
-   pMsg->setField(VID_INSTD_FILTER, m_instanceFilterSource);
-   pMsg->setField(VID_INSTANCE, m_instanceName);
-   pMsg->setFieldFromInt32Array(VID_ACL, m_accessList);
-   pMsg->setField(VID_INSTANCE_RETENTION, m_instanceRetentionTime);
-   pMsg->setField(VID_RELATED_OBJECT, m_relatedObject);
+   msg->setField(VID_INSTD_METHOD, m_instanceDiscoveryMethod);
+   msg->setField(VID_INSTD_DATA, m_instanceDiscoveryData);
+   msg->setField(VID_INSTD_FILTER, m_instanceFilterSource);
+   msg->setField(VID_INSTANCE, m_instanceName);
+   msg->setFieldFromInt32Array(VID_ACL, m_accessList);
+   msg->setField(VID_INSTANCE_RETENTION, m_instanceRetentionTime);
+   msg->setField(VID_RELATED_OBJECT, m_relatedObject);
    unlock();
 }
 
@@ -831,7 +833,8 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
 
    m_name = msg.getFieldAsSharedString(VID_NAME, MAX_ITEM_NAME);
    m_description = msg.getFieldAsSharedString(VID_DESCRIPTION, MAX_DB_STRING);
-   m_systemTag = msg.getFieldAsSharedString(VID_SYSTEM_TAG, MAX_DB_STRING);
+   m_systemTag = msg.getFieldAsSharedString(VID_SYSTEM_TAG, MAX_DCI_TAG_LENGTH);
+   m_userTag = msg.getFieldAsSharedString(VID_USER_TAG, MAX_DCI_TAG_LENGTH);
 	m_flags = msg.getFieldAsUInt32(VID_FLAGS);
    m_source = (BYTE)msg.getFieldAsUInt16(VID_DCI_SOURCE_TYPE);
    setStatus(msg.getFieldAsUInt16(VID_DCI_STATUS), true, true);
@@ -973,7 +976,7 @@ bool DCObject::saveToDatabase(DB_HANDLE hdb)
  */
 static void TerminateRelatedAlarms(void *arg)
 {
-   ResolveAlarmByDCObjectId(CAST_FROM_POINTER(arg, UINT32), true);
+   ResolveAlarmByDCObjectId(CAST_FROM_POINTER(arg, uint32_t), true);
 }
 
 /**
@@ -1026,6 +1029,7 @@ void DCObject::updateFromTemplate(DCObject *src)
    m_name = expandMacros(src->m_name, MAX_ITEM_NAME);
    m_description = expandMacros(src->m_description, MAX_DB_STRING);
    m_systemTag = expandMacros(src->m_systemTag, MAX_DB_STRING);
+   m_userTag = expandMacros(src->m_userTag, MAX_DB_STRING);
 
    m_pollingScheduleType = src->m_pollingScheduleType;
    m_pollingIntervalSrc = src->m_pollingIntervalSrc;
@@ -1176,6 +1180,7 @@ void DCObject::updateFromImport(ConfigEntry *config, bool nxslV5)
    m_name = config->getSubEntryValue(_T("name"), 0, _T("unnamed"));
    m_description = config->getSubEntryValue(_T("description"), 0, m_name);
    m_systemTag = config->getSubEntryValue(_T("systemTag"), 0, nullptr);
+   m_userTag = config->getSubEntryValue(_T("userTag"), 0, nullptr);
    m_source = (BYTE)config->getSubEntryValueAsInt(_T("origin"));
    m_flags = config->getSubEntryValueAsInt(_T("flags"));
    m_perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
@@ -1562,11 +1567,12 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "id", json_integer(m_id));
    json_object_set_new(root, "guid", m_guid.toJson());
    json_object_set_new(root, "name", json_string_t(m_name));
-   json_object_set_new(root, "description", json_string_t(m_description));
-   json_object_set_new(root, "systemTag", json_string_t(m_systemTag));
+   json_object_set_new(root, "description", json_string_w(m_description));
+   json_object_set_new(root, "systemTag", json_string_w(m_systemTag));
+   json_object_set_new(root, "userTag", json_string_w(m_userTag));
    json_object_set_new(root, "lastPoll", json_time_string(m_lastPoll));
-   json_object_set_new(root, "pollingInterval", json_string_t(m_pollingIntervalSrc));
-   json_object_set_new(root, "retentionTime", json_string_t(m_retentionTimeSrc));
+   json_object_set_new(root, "pollingInterval", json_string_w(m_pollingIntervalSrc));
+   json_object_set_new(root, "retentionTime", json_string_w(m_retentionTimeSrc));
    json_object_set_new(root, "source", json_integer(m_source));
    json_object_set_new(root, "status", json_integer(m_status));
    json_object_set_new(root, "busy", json_integer(m_busy));
@@ -1581,13 +1587,13 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "sourceNode", json_integer(m_sourceNode));
    json_object_set_new(root, "snmpPort", json_integer(m_snmpPort));
    json_object_set_new(root, "snmpVersion", json_integer(m_snmpVersion));
-   json_object_set_new(root, "perfTabSettings", json_string_t(m_perfTabSettings));
-   json_object_set_new(root, "transformationScript", json_string_t(m_transformationScriptSource));
-   json_object_set_new(root, "comments", json_string_t(m_comments));
+   json_object_set_new(root, "perfTabSettings", json_string_w(m_perfTabSettings));
+   json_object_set_new(root, "transformationScript", json_string_w(m_transformationScriptSource));
+   json_object_set_new(root, "comments", json_string_w(m_comments));
    json_object_set_new(root, "instanceDiscoveryMethod", json_integer(m_instanceDiscoveryMethod));
-   json_object_set_new(root, "instanceDiscoveryData", json_string_t(m_instanceDiscoveryData));
-   json_object_set_new(root, "instanceFilter", json_string_t(m_instanceFilterSource));
-   json_object_set_new(root, "instanceName", json_string_t(m_instanceName));
+   json_object_set_new(root, "instanceDiscoveryData", json_string_w(m_instanceDiscoveryData));
+   json_object_set_new(root, "instanceFilter", json_string_w(m_instanceFilterSource));
+   json_object_set_new(root, "instanceName", json_string_w(m_instanceName));
    json_object_set_new(root, "accessList", m_accessList.toJson());
    json_object_set_new(root, "instanceRetentionTime", json_integer(m_instanceRetentionTime));
    unlock();
@@ -1773,10 +1779,11 @@ DCObjectInfo::DCObjectInfo(const DCObject& object) : m_pollingSchedules(object.g
    m_templateItemId = object.m_templateItemId;
    m_flags = object.m_flags;
    m_type = object.getType();
-   _tcslcpy(m_name, object.m_name, MAX_ITEM_NAME);
-   _tcslcpy(m_description, object.m_description, MAX_DB_STRING);
-   _tcslcpy(m_systemTag, object.m_systemTag, MAX_DB_STRING);
-   _tcslcpy(m_instanceName, object.m_instanceName, MAX_DB_STRING);
+   wcslcpy(m_name, object.m_name, MAX_ITEM_NAME);
+   wcslcpy(m_description, object.m_description, MAX_DB_STRING);
+   wcslcpy(m_systemTag, object.m_systemTag, MAX_DCI_TAG_LENGTH);
+   wcslcpy(m_userTag, object.m_userTag, MAX_DCI_TAG_LENGTH);
+   wcslcpy(m_instanceName, object.m_instanceName, MAX_DB_STRING);
    if (m_type == DCO_TYPE_ITEM)
    {
       m_unitName = static_cast<const DCItem&>(object).m_unitName;
@@ -1817,7 +1824,8 @@ DCObjectInfo::DCObjectInfo(const NXCPMessage& msg, const DCObject *object) : m_p
    m_type = msg.getFieldAsInt16(VID_DCOBJECT_TYPE);
    msg.getFieldAsString(VID_NAME, m_name, MAX_ITEM_NAME);
    msg.getFieldAsString(VID_DESCRIPTION, m_description, MAX_DB_STRING);
-   msg.getFieldAsString(VID_SYSTEM_TAG, m_systemTag, MAX_DB_STRING);
+   msg.getFieldAsString(VID_SYSTEM_TAG, m_systemTag, MAX_DCI_TAG_LENGTH);
+   msg.getFieldAsString(VID_USER_TAG, m_userTag, MAX_DCI_TAG_LENGTH);
    msg.getFieldAsString(VID_INSTANCE, m_instanceName, MAX_DB_STRING);
    if ((m_type == DCO_TYPE_ITEM) && (object != nullptr))
    {

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,6 +73,7 @@ public class DciComparator extends ViewerComparator
          case DataCollectionView.DC_COLUMN_DATAUNIT:
 			case DataCollectionView.DC_COLUMN_DATATYPE:
 			case DataCollectionView.DC_COLUMN_STATUS:
+         case DataCollectionView.DC_COLUMN_TAG:
 			case DataCollectionView.DC_COLUMN_TEMPLATE:
          case DataCollectionView.DC_COLUMN_RELATEDOBJ:
          case DataCollectionView.DC_COLUMN_STATUSCALC:

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,7 +58,11 @@ public class LastValuesFilter extends ViewerFilter implements AbstractViewerFilt
 		if ((filterString == null) || (filterString.isEmpty()))
 			return true;
 
-      return value.getDescription().toLowerCase().contains(filterString) || value.getComments().toLowerCase().contains(filterString) || matchEventMessage(value) || matchEventName(value);
+      return value.getDescription().toLowerCase().contains(filterString) ||
+             value.getUserTag().toLowerCase().contains(filterString) ||
+             value.getComments().toLowerCase().contains(filterString) ||
+             matchEventMessage(value) ||
+             matchEventName(value);
 	}
 
    /**

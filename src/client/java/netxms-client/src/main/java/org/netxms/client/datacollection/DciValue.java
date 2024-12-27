@@ -39,6 +39,7 @@ public abstract class DciValue
 	protected String name;				// name
 	protected String description;	// description
 	protected String value;			// value
+   protected String userTag;
    protected String comments;
    protected DataOrigin source;  // data source (agent, SNMP, etc.)
 	protected DataType dataType;
@@ -109,6 +110,7 @@ public abstract class DciValue
       noValueObject = msg.getFieldAsBoolean(fieldId++);
       comments = msg.getFieldAsString(fieldId++);
       anomalyDetected = msg.getFieldAsBoolean(fieldId++);
+      userTag = msg.getFieldAsString(fieldId++);
 		if (msg.getFieldAsBoolean(fieldId++))
 			activeThreshold = new Threshold(msg, fieldId);
 		else
@@ -179,6 +181,14 @@ public abstract class DciValue
 	}
 
 	/**
+    * @return the userTag
+    */
+   public String getUserTag()
+   {
+      return userTag;
+   }
+
+   /**
     * Get DCI comments.
     *
     * @return DCI comments

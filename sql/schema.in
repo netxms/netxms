@@ -892,7 +892,8 @@ CREATE TABLE items
   delta_calculation integer not null,
   transformation SQL_TEXT,         // Transformation script
   instance varchar(1023) null,   // Free form text which can be used in events
-  system_tag varchar(255) null,         // System tag
+  system_tag varchar(63) null,   // System tag
+  user_tag varchar(63) null,     // User tag
   resource_id integer not null,   // associated cluster resource ID
   proxy_node integer not null,    // ID of proxy node (for SNMP and agent items)
   multiplier integer not null, // kilo, mega, milli, etc.
@@ -968,7 +969,8 @@ CREATE TABLE dc_tables
   retention_time integer not null,
   retention_time_src varchar(255) null,
   status integer not null,      // ACTIVE, DISABLED or NOT_SUPPORTED
-  system_tag varchar(255) null,         // System tag
+  system_tag varchar(63) null,   // System tag
+  user_tag varchar(63) null,     // User tag
   resource_id integer not null,   // associated cluster resource ID
   proxy_node integer not null,    // ID of proxy node (for SNMP and agent items)
   perftab_settings SQL_TEXT null,     // Settings for displaying graph on performance tab

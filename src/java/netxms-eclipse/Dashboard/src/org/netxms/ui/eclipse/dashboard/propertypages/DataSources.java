@@ -291,7 +291,7 @@ public class DataSources extends PropertyPage
 			{
 			   ChartDciConfig dci = new ChartDciConfig(item);
 			   newSelection.add(dci);
-   			labelProvider.addCacheEntry(dci.nodeId, dci.dciId, item.getName(), item.getDescription());
+            labelProvider.addCacheEntry(dci.nodeId, dci.dciId, item.getName(), item.getDescription(), item.getUserTag());
             dciList.add(dci);
 			}			
          viewer.refresh();

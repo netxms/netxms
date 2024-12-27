@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -66,8 +66,9 @@ public class TemplateDataSources extends PreferencePage
 	public static final int COLUMN_POSITION = 0;
 	public static final int COLUMN_NAME = 1;
 	public static final int COLUMN_DESCRIPTION = 2;
-	public static final int COLUMN_LABEL = 3;
-	public static final int COLUMN_COLOR = 4;
+   public static final int COLUMN_TAG = 3;
+   public static final int COLUMN_LABEL = 4;
+   public static final int COLUMN_COLOR = 5;
 
    private GraphDefinition config;
 	private DciTemplateListLabelProvider labelProvider;
@@ -113,8 +114,8 @@ public class TemplateDataSources extends PreferencePage
 		layout.numColumns = 2;
       dialogArea.setLayout(layout);
 
-      final String[] columnNames = { i18n.tr("Pos."), i18n.tr("DCI name"), i18n.tr("DCI description"), i18n.tr("Display name"), i18n.tr("Color") };
-      final int[] columnWidths = { 40, 130, 200, 150, 50 };
+      final String[] columnNames = { i18n.tr("Pos."), i18n.tr("DCI name"), i18n.tr("DCI description"), i18n.tr("DCI tag"), i18n.tr("Display name"), i18n.tr("Color") };
+      final int[] columnWidths = { 40, 130, 200, 120, 150, 50 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(labelProvider);
@@ -323,7 +324,7 @@ public class TemplateDataSources extends PreferencePage
 	 */
 	private void deleteItems()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      final IStructuredSelection selection = viewer.getStructuredSelection();
 		for(Object o : selection.toList())
 			dciList.remove(o);
       viewer.setInput(dciList.toArray());
@@ -334,7 +335,7 @@ public class TemplateDataSources extends PreferencePage
 	 */
 	private void moveUp()
 	{
-		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      final IStructuredSelection selection = viewer.getStructuredSelection();
 		if (selection.size() == 1)
 		{
 			Object element = selection.getFirstElement();
@@ -353,7 +354,7 @@ public class TemplateDataSources extends PreferencePage
 	 */
 	private void moveDown()
 	{
-		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      final IStructuredSelection selection = viewer.getStructuredSelection();
 		if (selection.size() == 1)
 		{
 			Object element = selection.getFirstElement();
@@ -392,15 +393,9 @@ public class TemplateDataSources extends PreferencePage
 				@Override
 				protected void jobFinalize()
 				{
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							TemplateDataSources.this.setValid(true);
-						}
-					});
+               runInUIThread(() -> TemplateDataSources.this.setValid(true));
 				}
-	
+
 				@Override
 				protected String getErrorMessage()
 				{

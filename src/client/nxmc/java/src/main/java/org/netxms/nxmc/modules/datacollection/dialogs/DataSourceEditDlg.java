@@ -20,8 +20,6 @@ package org.netxms.nxmc.modules.datacollection.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -54,6 +52,7 @@ public class DataSourceEditDlg extends Dialog
    private LabeledText displayFormat;
    private TemplateDciSelector dciName;
    private TemplateDciSelector dciDescription;
+   private TemplateDciSelector dciTag;
    private ExtendedColorSelector colorSelector;
 	private Combo displayType;
 	private Button checkShowThresholds;
@@ -107,39 +106,36 @@ public class DataSourceEditDlg extends Dialog
       if (isTemplate)
       {
          dciName = new TemplateDciSelector(dialogArea, SWT.NONE);
-         dciName.setLabel("Metric");
+         dciName.setLabel(i18n.tr("Metric"));
          dciName.setText(dci.dciName);
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
          gd.horizontalSpan = 2;
          dciName.setLayoutData(gd);       
+         addTemplateSelectorListener(dciName);
 
          dciDescription = new TemplateDciSelector(dialogArea, SWT.NONE);
-         dciDescription.setLabel("DCI display name");
+         dciDescription.setLabel(i18n.tr("DCI display name"));
          dciDescription.setText(dci.dciDescription);
-         dciDescription.setSelectDescription(true);
+         dciDescription.setField(TemplateDciSelector.Field.DESCRIPTION);
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
          gd.horizontalSpan = 2;
          dciDescription.setLayoutData(gd);
+         addTemplateSelectorListener(dciDescription);
          
-         ModifyListener listener = new ModifyListener() {            
-            @Override
-            public void modifyText(ModifyEvent e)
-            {
-               if (dciName.isNoValueObject() || dciDescription.isNoValueObject())
-               {
-                  checkMultipeMatch.setSelection(true);
-                  checkRegexpMatch.setSelection(true);
-                  if (name.getText().isEmpty())
-                     name.setText("\\1");
-               }
-            }
-         };
-         dciName.addModifyListener(listener);
-         dciDescription.addModifyListener(listener);
+         dciTag = new TemplateDciSelector(dialogArea, SWT.NONE);
+         dciTag.setLabel(i18n.tr("DCI tag"));
+         dciTag.setText(dci.dciTag);
+         dciTag.setField(TemplateDciSelector.Field.TAG);
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalSpan = 2;
+         dciTag.setLayoutData(gd);
+         addTemplateSelectorListener(dciTag);
       }
       else
       {
@@ -262,6 +258,24 @@ public class DataSourceEditDlg extends Dialog
 	}
 
    /**
+    * Add modification listener to template selector.
+    *
+    * @param selector template selector
+    */
+   private void addTemplateSelectorListener(final TemplateDciSelector selector)
+   {
+      selector.addModifyListener((e) -> {
+         if (selector.isNoValueObject())
+         {
+            checkMultipeMatch.setSelection(true);
+            checkRegexpMatch.setSelection(true);
+            if (name.getText().isEmpty())
+               name.setText("\\1");
+         }
+      });
+   }
+
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#okPressed()
     */
 	@Override
@@ -271,6 +285,7 @@ public class DataSourceEditDlg extends Dialog
       {
          dci.dciName = dciName.getText();
          dci.dciDescription = dciDescription.getText();
+         dci.dciTag = dciTag.getText();
          dci.multiMatch = checkMultipeMatch.getSelection();
          dci.regexMatch = checkRegexpMatch.getSelection();
       }

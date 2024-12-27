@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
@@ -30,8 +29,6 @@ import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
@@ -49,6 +46,7 @@ import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
+import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.dialogs.SaveGraphDlg;
@@ -70,8 +68,9 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
    private final I18n i18n = LocalizationHelper.getI18n(TemplateGraphView.class);
    
    public static final int COLUMN_NAME = 0;
-   public static final int COLUMN_DCI_NAME = 1;
-   public static final int COLUMN_DCI_DESCRIPTION = 2;
+   public static final int COLUMN_DCI_NAMES = 1;
+   public static final int COLUMN_DCI_DESCRIPTIONS = 2;
+   public static final int COLUMN_DCI_TAGS = 3;
 
 	private NXCSession session;
 	private SortableTableViewer viewer;
@@ -96,18 +95,12 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
    @Override
    public void createContent(Composite parent)
 	{
-		final String[] names = { "Graph name", "DCI names", "DCI descriptions" };
-		final int[] widths = { 150, 400, 400 };
+      final String[] names = { i18n.tr("Graph name"), i18n.tr("DCI names"), i18n.tr("DCI descriptions"), i18n.tr("DCI tags") };
+      final int[] widths = { 150, 400, 400, 400 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new TemplateGraphLabelProvider());
-      viewer.addDoubleClickListener(new IDoubleClickListener() {
-         @Override
-         public void doubleClick(DoubleClickEvent event)
-         {
-            editTemplateGraph();
-         }
-      });
+      viewer.addDoubleClickListener((e) -> editTemplateGraph());
 
 		createActions();
 		createPopupMenu();
@@ -190,34 +183,15 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
                {
                   if (e.getErrorCode() == RCC.OBJECT_ALREADY_EXISTS)
                   {
-                     runInUIThread(new Runnable() {
-
-                        @Override
-                        public void run()
-                        {
-                           saveGraph(gs.getName(), i18n.tr("Graph with given name already exists"), true);
-                        }
-
-                     });
+                     runInUIThread(() -> saveGraph(gs.getName(), i18n.tr("Graph with given name already exists"), true));
+                  }
+                  else if (e.getErrorCode() == RCC.ACCESS_DENIED)
+                  {
+                     runInUIThread(() -> saveGraph(gs.getName(), i18n.tr("Graph with given name already exists and cannot be be overwritten"), false));
                   }
                   else
                   {
-                     if (e.getErrorCode() == RCC.ACCESS_DENIED)
-                     {
-                        runInUIThread(new Runnable() {
-
-                           @Override
-                           public void run()
-                           {
-                              saveGraph(gs.getName(), i18n.tr("Graph with given name already exists and cannot be be overwritten"), false);
-                           }
-
-                        });
-                     }
-                     else
-                     {
-                        throw e;
-                     }
+                     throw e;
                   }
                }
             }
@@ -230,8 +204,8 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
          }.start();
       }
    }
-	
-   /* (non-Javadoc)
+
+   /**
     * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
     */
    @Override
@@ -240,59 +214,49 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
       switch(n.getCode())
       {
          case SessionNotification.PREDEFINED_GRAPHS_DELETED:
-            viewer.getControl().getDisplay().asyncExec(new Runnable() {
-               @Override
-               public void run()
-               { 
-                  for(int i = 0; i < graphList.size(); i++)
-                     if(graphList.get(i).getId() == n.getSubCode())
-                     {
-                        Object o = graphList.get(i);
-                        graphList.remove(o);
-                        viewer.setInput(graphList);
-                        break;
-                     }
-               }
+            viewer.getControl().getDisplay().asyncExec(() -> {
+               for(int i = 0; i < graphList.size(); i++)
+                  if (graphList.get(i).getId() == n.getSubCode())
+                  {
+                     Object o = graphList.get(i);
+                     graphList.remove(o);
+                     viewer.setInput(graphList);
+                     break;
+                  }
             });
             break;
          case SessionNotification.PREDEFINED_GRAPHS_CHANGED:            
-            viewer.getControl().getDisplay().asyncExec(new Runnable() {
-               @Override
-               public void run()
+            viewer.getControl().getDisplay().asyncExec(() -> {
+               if (!(n.getObject() instanceof GraphDefinition))
+                  return;
+
+               final IStructuredSelection selection = viewer.getStructuredSelection();
+
+               boolean objectUpdated = false;
+               for(int i = 0; i < graphList.size(); i++)
                {
-                  if(!(n.getObject() instanceof GraphDefinition))
+                  if (graphList.get(i).getId() == n.getSubCode())
                   {
-                     return;
-                  }                       
-                  
-                  final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();  
-                  
-                  boolean objectUpdated = false;
-                  for(int i = 0; i < graphList.size(); i++)
-                  {
-                     if(graphList.get(i).getId() == n.getSubCode())
-                     {
-                        graphList.set(i, (GraphDefinition)n.getObject());
-                        objectUpdated = true;
-                        break;
-                     }
+                     graphList.set(i, (GraphDefinition)n.getObject());
+                     objectUpdated = true;
+                     break;
                   }
-                  
-                  if(!objectUpdated)
+               }
+
+               if (!objectUpdated)
+               {
+                  if (((GraphDefinition)n.getObject()).isTemplate())
+                     graphList.add((GraphDefinition)n.getObject());
+               }
+               viewer.setInput(graphList);
+
+               if (selection.size() == 1)
+               {
+                  if (selection.getFirstElement() instanceof GraphDefinition)
                   {
-                     if(((GraphDefinition)n.getObject()).isTemplate())
-                        graphList.add((GraphDefinition)n.getObject());
-                  }
-                  viewer.setInput(graphList);
-                  
-                  if (selection.size() == 1)
-                  {
-                     if(selection.getFirstElement() instanceof GraphDefinition)
-                     {
-                        GraphDefinition element = (GraphDefinition)selection.getFirstElement();
-                        if(element.getId() == n.getSubCode())
-                              viewer.setSelection(new StructuredSelection((GraphDefinition)n.getObject()), true);
-                     }
+                     GraphDefinition element = (GraphDefinition)selection.getFirstElement();
+                     if (element.getId() == n.getSubCode())
+                        viewer.setSelection(new StructuredSelection((GraphDefinition)n.getObject()), true);
                   }
                }
             });
@@ -305,10 +269,10 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
     */
    private void editTemplateGraph()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
-      
+
       GraphDefinition settings = (GraphDefinition)selection.getFirstElement();
       if (showGraphPropertyPages(settings))
       {
@@ -320,15 +284,9 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
                protected void run(IProgressMonitor monitor) throws Exception
                {
                   session.saveGraph(newSettings, false);
-                  runInUIThread(new Runnable() {
-                     @Override
-                     public void run()
-                     {
-                        viewer.update(newSettings, null);
-                     }
-                  });
+                  runInUIThread(() -> viewer.update(newSettings, null));
                }
-               
+
                @Override
                protected String getErrorMessage()
                {
@@ -338,23 +296,23 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
          }
          catch(Exception e)
          {
-            MessageDialogHelper.openError(getWindow().getShell(), "Internal Error", String.format("Unexpected exception: %s", e.getLocalizedMessage())); //$NON-NLS-1$ //$NON-NLS-2$
+            addMessage(MessageArea.ERROR, i18n.tr("Internal error ({0})", e.getLocalizedMessage()));
          }
       }
    }
-   
+
    /**
     * Delete predefined graph(s)
     */
    private void deletePredefinedGraph()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() == 0)
          return;
 
       if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Delete Predefined Graphs"), i18n.tr("Selected predefined graphs will be deleted. Are you sure?")))
          return;
-      
+
       for(final Object o : selection.toList())
       {
          if (!(o instanceof GraphDefinition))
@@ -366,7 +324,7 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
             {
                session.deletePredefinedGraph(((GraphDefinition)o).getId());
             }
-            
+
             @Override
             protected String getErrorMessage()
             {
@@ -404,12 +362,7 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
 		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			public void menuAboutToShow(IMenuManager mgr)
-			{
-				fillContextMenu(mgr);
-			}
-		});
+      menuMgr.addMenuListener((m) -> fillContextMenu(m));
 
 		// Create menu.
 		Menu menu = menuMgr.createContextMenu(viewer.getControl());
@@ -427,9 +380,9 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
       manager.add(actionDelete);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.netxms.nxmc.base.views.View#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
@@ -443,28 +396,25 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
 	{
 		if (updateInProgress )
 			return;
+
 		updateInProgress = true;
-		
-		new Job(i18n.tr("Read DCI data from server"), this) {
+
+      new Job(i18n.tr("Reading predefined graph list"), this) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
 				final List<GraphDefinition> settings = session.getPredefinedGraphs(true);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-					   graphList = settings;
-						viewer.setInput(graphList.toArray());
-						updateInProgress = false;
-					}
+            runInUIThread(() -> {
+               graphList = settings;
+               viewer.setInput(graphList.toArray());
+               updateInProgress = false;
 				});
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
-			   return String.format("Error getting ");
+            return i18n.tr("Error reading predefined graph list");
 			}
 		}.start();
 	}	
@@ -483,7 +433,7 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
       pm.addToRoot(new PreferenceNode("general", new GeneralChart(settings, true)));
       pm.addToRoot(new PreferenceNode("filter", new Filter(settings)));
       pm.addToRoot(new PreferenceNode("template", new TemplateDataSources(settings, true)));
-      
+
       PreferenceDialog dlg = new PreferenceDialog(getWindow().getShell(), pm) {
          @Override
          protected void configureShell(Shell newShell)

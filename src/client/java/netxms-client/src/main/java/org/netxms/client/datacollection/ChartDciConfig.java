@@ -56,6 +56,9 @@ public class ChartDciConfig implements NodeItemPair
    public String dciDescription;
 
    @Element(required = false)
+   public String dciTag;
+
+   @Element(required = false)
    public int type;
 
    @Element(required = false)
@@ -119,6 +122,7 @@ public class ChartDciConfig implements NodeItemPair
       dciId = 0;
       dciName = "";
       dciDescription = "";
+      dciTag = "";
       type = ITEM;
       color = UNSET_COLOR;
       name = label;
@@ -146,6 +150,7 @@ public class ChartDciConfig implements NodeItemPair
 		this.dciId = src.dciId;
       this.dciName = src.dciName;
       this.dciDescription = src.dciDescription;
+      this.dciTag = src.dciTag;
 		this.type = src.type;
 		this.color = src.color;
 		this.name = src.name;
@@ -174,6 +179,7 @@ public class ChartDciConfig implements NodeItemPair
       dciId = dci.getId();
       dciName = dci.getName();
       dciDescription = dci.getDescription();
+      dciTag = dci.getUserTag();
       type = dci.getDcObjectType();
       name = "";
       color = UNSET_COLOR;
@@ -202,6 +208,7 @@ public class ChartDciConfig implements NodeItemPair
       dciId = dciValue.getId();
       dciName = dciValue.getName();
       dciDescription = dciValue.getDescription();
+      dciTag = dciValue.getUserTag();
       type = dciValue.getDcObjectType();
       this.color = src.color;
       this.lineWidth = src.lineWidth;
@@ -240,6 +247,7 @@ public class ChartDciConfig implements NodeItemPair
       dciId = dciValue.getId();
       dciName = dciValue.getName();
       dciDescription = dciValue.getDescription();
+      dciTag = dciValue.getUserTag();
       type = dciValue.getDcObjectType();
       this.color = src.color;
       this.lineWidth = src.lineWidth;
@@ -314,6 +322,7 @@ public class ChartDciConfig implements NodeItemPair
       dciId = dci.getId();
       dciName = dci.getName();
       dciDescription = dci.getDescription();
+      dciTag = dci.getUserTag();
       type = (dci instanceof DataCollectionItem) ? ITEM : TABLE;
       name = dci.getDescription();
       color = UNSET_COLOR;
@@ -364,6 +373,8 @@ public class ChartDciConfig implements NodeItemPair
 	      return dciDescription;
       if ((dciName != null) && !dciName.isEmpty())
          return dciName;
+      if ((dciTag != null) && !dciTag.isEmpty())
+         return dciTag;
       return "[" + Long.toString(dciId) + "]";
 	}
 
@@ -432,14 +443,31 @@ public class ChartDciConfig implements NodeItemPair
    }   
 
    /**
+    * @return the dciTag
+    */
+   public String getDciTag()
+   {
+      return (dciTag != null) ? dciTag : "";
+   }
+
+   /**
+    * @param dciTag the dciTag to set
+    */
+   public void setDciTag(String dciTag)
+   {
+      this.dciTag = dciTag;
+   }
+
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
    public String toString()
    {
-      return "ChartDciConfig [nodeId=" + nodeId + ", dciId=" + dciId + ", dciName=" + dciName + ", dciDescription=" + dciDescription + ", type=" + type + ", color=" + color + ", name=" + name +
-            ", lineWidth=" + lineWidth + ", lineChartType=" + lineChartType + ", displayType=" + displayType + ", showThresholds=" + showThresholds + ", invertValues=" +
-            invertValues + ", useRawValues=" + useRawValues + ", multiMatch=" + multiMatch  + ", useRegex=" + regexMatch + ", instance=" + instance + ", column=" + column + ", displayFormat=" + displayFormat + "]";
+      return "ChartDciConfig [nodeId=" + nodeId + ", dciId=" + dciId + ", dciName=" + dciName + ", dciDescription=" + dciDescription + ", dciTag=" + dciTag + ", type=" + type + ", color=" + color +
+            ", name=" + name + ", lineWidth=" + lineWidth + ", lineChartType=" + lineChartType + ", displayType=" + displayType + ", showThresholds=" + showThresholds + ", invertValues=" +
+            invertValues + ", useRawValues=" + useRawValues + ", multiMatch=" + multiMatch + ", regexMatch=" + regexMatch + ", instance=" + instance + ", column=" + column + ", displayFormat=" +
+            displayFormat + ", measurementUnit=" + measurementUnit + "]";
    }
 
    /**

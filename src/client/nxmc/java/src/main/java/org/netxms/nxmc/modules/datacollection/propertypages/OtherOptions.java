@@ -28,6 +28,7 @@ import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.nxmc.base.widgets.LabeledCombo;
+import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
@@ -51,6 +52,7 @@ public class OtherOptions extends AbstractDCIPropertyPage
    private LabeledCombo multiplierDegree;
    private LabeledCombo agentCacheMode;
    private LabeledCombo interpretation;
+   private LabeledText userTag;
    private ObjectSelector relatedObject;
 
    /**
@@ -76,23 +78,37 @@ public class OtherOptions extends AbstractDCIPropertyPage
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
+      layout.numColumns = 2;
+      layout.makeColumnsEqualWidth = true;
       dialogArea.setLayout(layout);
 
       checkShowOnTooltip = new Button(dialogArea, SWT.CHECK);
       checkShowOnTooltip.setText(i18n.tr("&Show last value in object tooltips and large labels on maps"));
       checkShowOnTooltip.setSelection(dci.isShowOnObjectTooltip());
+      GridData gd = new GridData();
+      gd.horizontalSpan = 2;
+      checkShowOnTooltip.setLayoutData(gd);
 
       checkShowInOverview = new Button(dialogArea, SWT.CHECK);
       checkShowInOverview.setText(i18n.tr("Show last value in object &overview"));
       checkShowInOverview.setSelection(dci.isShowInObjectOverview());
+      gd = new GridData();
+      gd.horizontalSpan = 2;
+      checkShowInOverview.setLayoutData(gd);
 
       checkCalculateStatus = new Button(dialogArea, SWT.CHECK);
       checkCalculateStatus.setText(i18n.tr("&Use this DCI for node status calculation"));
       checkCalculateStatus.setSelection(dci.isUsedForNodeStatusCalculation());
+      gd = new GridData();
+      gd.horizontalSpan = 2;
+      checkCalculateStatus.setLayoutData(gd);
 
       checkHideOnLastValues = new Button(dialogArea, SWT.CHECK);
       checkHideOnLastValues.setText("&Hide value on \"Last Values\" page");
       checkHideOnLastValues.setSelection(dci.isHideOnLastValuesView());      
+      gd = new GridData();
+      gd.horizontalSpan = 2;
+      checkHideOnLastValues.setLayoutData(gd);
 
       agentCacheMode = new LabeledCombo(dialogArea, SWT.NONE);
       agentCacheMode.setLabel(i18n.tr("Agent cache mode"));
@@ -100,6 +116,9 @@ public class OtherOptions extends AbstractDCIPropertyPage
       agentCacheMode.add(i18n.tr("On"));
       agentCacheMode.add(i18n.tr("Off"));
       agentCacheMode.select(dci.getCacheMode().getValue());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      agentCacheMode.setLayoutData(gd);
 
       multiplierDegree = new LabeledCombo(dialogArea, SWT.NONE);
       multiplierDegree.setLabel(i18n.tr("Multiplier degree"));
@@ -115,14 +134,18 @@ public class OtherOptions extends AbstractDCIPropertyPage
       multiplierDegree.add("Fixed to p");
       multiplierDegree.add("Fixed to f");
       multiplierDegree.select(5 - dci.getMultiplier());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      multiplierDegree.setLayoutData(gd);
 
       relatedObject = new ObjectSelector(dialogArea, SWT.NONE, true);
       relatedObject.setLabel("Related object");
       relatedObject.setObjectClass(GenericObject.class);
       relatedObject.setObjectId(dci.getRelatedObject());
-      GridData gd = new GridData();
+      gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
+      gd.horizontalSpan = 2;
       relatedObject.setLayoutData(gd);
 
       interpretation = new LabeledCombo(dialogArea, SWT.NONE);
@@ -136,6 +159,20 @@ public class OtherOptions extends AbstractDCIPropertyPage
       interpretation.add(i18n.tr("Interface traffic - Outbound - Utilization %"));
       interpretation.add(i18n.tr("Interface speed"));
       interpretation.select(interpretationFromTag(dci.getSystemTag()));
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.horizontalSpan = 2;
+      interpretation.setLayoutData(gd);
+
+      userTag = new LabeledText(dialogArea, SWT.NONE);
+      userTag.setLabel(i18n.tr("Tag"));
+      userTag.setText(dci.getUserTag());
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.horizontalSpan = 2;
+      userTag.setLayoutData(gd);
 
       return dialogArea;
    }
@@ -156,6 +193,7 @@ public class OtherOptions extends AbstractDCIPropertyPage
       dci.setMultiplier(5 - multiplierDegree.getSelectionIndex());
       dci.setRelatedObject(relatedObject.getObjectId());
       dci.setSystemTag(tagFromInterpretation(interpretation.getSelectionIndex()));
+      dci.setUserTag(userTag.getText().trim());
       editor.modify();
       return true;
    }
@@ -175,6 +213,7 @@ public class OtherOptions extends AbstractDCIPropertyPage
 		multiplierDegree.select(0);
 		relatedObject.setObjectId(0);
       interpretation.select(0);
+      userTag.setText("");
 	}
 
    /**

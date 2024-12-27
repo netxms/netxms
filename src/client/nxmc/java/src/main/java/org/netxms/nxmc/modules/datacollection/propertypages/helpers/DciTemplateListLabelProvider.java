@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ public class DciTemplateListLabelProvider extends LabelProvider implements ITabl
    private final I18n i18n = LocalizationHelper.getI18n(DciTemplateListLabelProvider.class);
 
 	private List<ChartDciConfig> elementList;
-	
+
 	/**
 	 * The constructor
 	 */
@@ -43,7 +43,7 @@ public class DciTemplateListLabelProvider extends LabelProvider implements ITabl
 	{
 		this.elementList = elementList;
 	}
-	
+
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
@@ -65,9 +65,11 @@ public class DciTemplateListLabelProvider extends LabelProvider implements ITabl
 			case TemplateDataSources.COLUMN_POSITION:
 				return Integer.toString(elementList.indexOf(dci) + 1);
 			case TemplateDataSources.COLUMN_NAME:
-				return dci.getDciName(); //$NON-NLS-1$ //$NON-NLS-2$
+            return dci.getDciName();
 			case TemplateDataSources.COLUMN_DESCRIPTION:
 				return dci.getDciDescription();
+         case TemplateDataSources.COLUMN_TAG:
+            return dci.getDciTag();
 			case TemplateDataSources.COLUMN_LABEL:
 				return dci.name;
 			case TemplateDataSources.COLUMN_COLOR:

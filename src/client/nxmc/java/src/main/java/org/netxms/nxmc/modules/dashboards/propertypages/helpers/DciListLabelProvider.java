@@ -42,7 +42,7 @@ import org.xnap.commons.i18n.I18n;
 public class DciListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
    private final I18n i18n = LocalizationHelper.getI18n(DciListLabelProvider.class);
-   private final DciInfo unresolvedDci = new DciInfo(i18n.tr("<unresolved>"), i18n.tr("<unresolved>"));
+   private final DciInfo unresolvedDci = new DciInfo(i18n.tr("<unresolved>"), i18n.tr("<unresolved>"), "");
 
    private NXCSession session;
 	private Map<Long, DciInfo> dciNameCache = new HashMap<Long, DciInfo>();
@@ -80,11 +80,16 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 			case DataSources.COLUMN_NODE:
             return ((dci.nodeId == 0) || (dci.nodeId == AbstractObject.CONTEXT)) ? i18n.tr("<context>") :
                   ((dci.nodeId == AbstractObject.UNKNOWN) ? i18n.tr("<unknown>") : session.getObjectName(dci.nodeId));
-         case DataSources.COLUMN_METRIC_DISPLAYNAME:
+         case DataSources.COLUMN_DCI_DISPLAY_NAME:
             if (dci.dciId == 0)
                return dci.dciDescription;
             String displayName = safeDciLookup(dci.dciId).displayName;
             return (displayName != null) ? displayName : i18n.tr("<unresolved>");
+         case DataSources.COLUMN_DCI_TAG:
+            if (dci.dciId == 0)
+               return dci.dciTag;
+            String tag = safeDciLookup(dci.dciId).userTag;
+            return (tag != null) ? tag : "";
 			case DataSources.COLUMN_METRIC:
             if (dci.dciId == 0)
                return dci.dciName;
@@ -136,15 +141,16 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	}
 
 	/**
-	 * Add single cache entry
-	 * 
-	 * @param nodeId
-	 * @param dciId
-	 * @param name
-	 * @param string 
-	 */
-	public void addCacheEntry(long nodeId, long dciId, String metric, String displayName)
+    * Add single cache entry
+    * 
+    * @param nodeId
+    * @param dciId
+    * @param metric
+    * @param displayName
+    * @param userTag
+    */
+   public void addCacheEntry(long nodeId, long dciId, String metric, String displayName, String userTag)
 	{
-		dciNameCache.put(dciId, new DciInfo(metric, displayName));
+      dciNameCache.put(dciId, new DciInfo(metric, displayName, userTag));
 	}
 }

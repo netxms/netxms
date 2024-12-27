@@ -37,6 +37,7 @@ import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.MeasurementUnit;
@@ -164,13 +165,34 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
                      {
                         Pattern namePattern = Pattern.compile(dci.dciName);
                         Pattern descriptionPattern = Pattern.compile(dci.dciDescription);
+                        Pattern tagPattern = Pattern.compile(dci.dciTag);
                         for(DciValue dciInfo : nodeDciList)
                         {
-                           Matcher nameMatch = namePattern.matcher(dciInfo.getName());
-                           Matcher descriptionMatch = descriptionPattern.matcher(dciInfo.getDescription());
-                           if ((!dci.dciName.isEmpty() && nameMatch.find()) || (!dci.dciDescription.isEmpty() && descriptionMatch.find()))
+                           if (dciInfo.getDcObjectType() != DataCollectionObject.DCO_TYPE_ITEM)
+                              continue;
+
+                           Matcher matcher = null;
+                           boolean match = false;
+
+                           if (!dci.dciName.isEmpty())
                            {
-                              ChartDciConfig instance = new ChartDciConfig(dci, (!dci.dciName.isEmpty() && nameMatch.find()) ? nameMatch : descriptionMatch, dciInfo);
+                              matcher = namePattern.matcher(dciInfo.getName());
+                              match = matcher.find();
+                           }
+                           if (!match && !dci.dciDescription.isEmpty())
+                           {
+                              matcher = descriptionPattern.matcher(dciInfo.getDescription());
+                              match = matcher.find();
+                           }
+                           if (!match && !dci.dciTag.isEmpty())
+                           {
+                              matcher = tagPattern.matcher(dciInfo.getUserTag());
+                              match = matcher.find();
+                           }
+
+                           if (match)
+                           {
+                              ChartDciConfig instance = new ChartDciConfig(dci, matcher, dciInfo);
                               runtimeDciList.add(instance);
                               if (!dci.multiMatch)
                                  break;
@@ -187,7 +209,8 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
                      for(DciValue dciInfo : nodeDciList)
                      {
                         if ((!dci.dciName.isEmpty() && dciInfo.getName().equalsIgnoreCase(dci.dciName)) ||
-                            (!dci.dciDescription.isEmpty() && dciInfo.getDescription().equalsIgnoreCase(dci.dciDescription)))
+                            (!dci.dciDescription.isEmpty() && dciInfo.getDescription().equalsIgnoreCase(dci.dciDescription)) ||
+                            (!dci.dciTag.isEmpty() && dciInfo.getUserTag().equalsIgnoreCase(dci.dciTag)))
                         {
                            runtimeDciList.add(new ChartDciConfig(dci, dciInfo));
                            if (!dci.multiMatch)

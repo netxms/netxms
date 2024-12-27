@@ -6214,8 +6214,8 @@ public class NXCSession
       long fieldId = NXCPCodes.VID_DCI_LIST_BASE;
       for(int i = 0; i < size; i++)
       {
-         result.put(response.getFieldAsInt64(fieldId), new DciInfo(response.getFieldAsString(fieldId + 1), response.getFieldAsString(fieldId + 2)));
-         fieldId += 3;
+         result.put(response.getFieldAsInt64(fieldId), new DciInfo(response.getFieldAsString(fieldId + 1), response.getFieldAsString(fieldId + 2), response.getFieldAsString(fieldId + 3)));
+         fieldId += 4;
       }
       return result;
    }

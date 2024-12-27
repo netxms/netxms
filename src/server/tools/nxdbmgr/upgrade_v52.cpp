@@ -24,15 +24,28 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 52.3 to 52.4
+ */
+static bool H_UpgradeFromV3()
+{
+   CHK_EXEC(DBResizeColumn(g_dbHandle, L"items", L"system_tag", 63, true));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, L"dc_tables", L"system_tag", 63, true));
+   CHK_EXEC(SQLQuery(L"ALTER TABLE items ADD user_tag varchar(63)"));
+   CHK_EXEC(SQLQuery(L"ALTER TABLE dc_tables ADD user_tag varchar(63)"));
+   CHK_EXEC(SetMinorSchemaVersion(4));
+   return true;
+}
+
+/**
  * Upgrade from 52.2 to 52.3
  */
 static bool H_UpgradeFromV2()
 {
    if (GetSchemaLevelForMajorVersion(51) < 24)
    {
-      CHK_EXEC(CreateConfigParam(_T("Objects.Nodes.ConfigurationPoll.AlwaysCheckSNMP"),
-               _T("1"),
-               _T("Always check possible SNMP credentials during configuration poll, even if node is marked as unreachable via SNMP."),
+      CHK_EXEC(CreateConfigParam(L"Objects.Nodes.ConfigurationPoll.AlwaysCheckSNMP",
+               L"1",
+               L"Always check possible SNMP credentials during configuration poll, even if node is marked as unreachable via SNMP.",
                nullptr, 'B', true, false, false, false));
       CHK_EXEC(SetSchemaLevelForMajorVersion(51, 24));
    }
@@ -47,9 +60,9 @@ static bool H_UpgradeFromV1()
 {
    if (GetSchemaLevelForMajorVersion(51) < 23)
    {
-      CHK_EXEC(CreateConfigParam(_T("Client.MinVersion"),
-            _T(""),
-            _T("Minimal client version allowed for connection to this server."),
+      CHK_EXEC(CreateConfigParam(L"Client.MinVersion",
+            L"",
+            L"Minimal client version allowed for connection to this server.",
             nullptr, 'S', true, false, false, false));
       CHK_EXEC(SetSchemaLevelForMajorVersion(51, 23));
    }
@@ -62,8 +75,8 @@ static bool H_UpgradeFromV1()
  */
 static bool H_UpgradeFromV0()
 {
-   CHK_EXEC(SQLQuery(_T("INSERT INTO script_library (guid,script_id,script_name,script_code) ")
-         _T("VALUES ('b322c142-fdd5-433f-a820-05b2aa3daa39',27,'Hook::RegisterForConfigurationBackup','/* Available global variables:\r\n *  $node - node to be tested (object of ''Node'' class)\r\n *\r\n * Expected return value:\r\n *  true/false - boolean - whether this node should be registered for configuration backup\r\n */\r\nreturn $node.isSNMP;\r\n')")));
+   CHK_EXEC(SQLQuery(L"INSERT INTO script_library (guid,script_id,script_name,script_code) "
+         L"VALUES ('b322c142-fdd5-433f-a820-05b2aa3daa39',27,'Hook::RegisterForConfigurationBackup','/* Available global variables:\r\n *  $node - node to be tested (object of ''Node'' class)\r\n *\r\n * Expected return value:\r\n *  true/false - boolean - whether this node should be registered for configuration backup\r\n */\r\nreturn $node.isSNMP;\r\n')"));
 
    CHK_EXEC(SetMinorSchemaVersion(1));
    return true;
@@ -79,6 +92,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 3,  52, 4,  H_UpgradeFromV3  },
    { 2,  52, 3,  H_UpgradeFromV2  },
    { 1,  52, 2,  H_UpgradeFromV1  },
    { 0,  52, 1,  H_UpgradeFromV0  },
@@ -103,10 +117,10 @@ bool MajorSchemaUpgrade_V52()
             break;
       if (s_dbUpgradeMap[i].upgradeProc == nullptr)
       {
-         _tprintf(_T("Unable to find upgrade procedure for version 51.%d\n"), minor);
+         WriteToTerminalEx(L"Unable to find upgrade procedure for version 51.%d\n", minor);
          return false;
       }
-      _tprintf(_T("Upgrading from version 52.%d to %d.%d\n"), minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);
+      WriteToTerminalEx(L"Upgrading from version 52.%d to %d.%d\n", minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);
       DBBegin(g_dbHandle);
       if (s_dbUpgradeMap[i].upgradeProc())
       {
@@ -116,7 +130,7 @@ bool MajorSchemaUpgrade_V52()
       }
       else
       {
-         _tprintf(_T("Rolling back last stage due to upgrade errors...\n"));
+         WriteToTerminal(L"Rolling back last stage due to upgrade errors...\n");
          DBRollback(g_dbHandle);
          return false;
       }

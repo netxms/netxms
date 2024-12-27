@@ -93,6 +93,7 @@ public abstract class DataCollectionObject
 	protected String name;
 	protected String description;
 	protected String systemTag;
+   protected String userTag;
 	protected String perfTabSettings;
 	protected int snmpPort;
    protected SnmpVersion snmpVersion;
@@ -134,6 +135,7 @@ public abstract class DataCollectionObject
 		name = msg.getFieldAsString(NXCPCodes.VID_NAME);
 		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
 		systemTag = msg.getFieldAsString(NXCPCodes.VID_SYSTEM_TAG);
+      userTag = msg.getFieldAsString(NXCPCodes.VID_USER_TAG);
 		perfTabSettings = msg.getFieldAsString(NXCPCodes.VID_PERFTAB_SETTINGS);
 		snmpPort = msg.getFieldAsInt32(NXCPCodes.VID_SNMP_PORT);
       snmpVersion = msg.isFieldPresent(NXCPCodes.VID_SNMP_VERSION)
@@ -190,6 +192,7 @@ public abstract class DataCollectionObject
 		name = "";
 		description = "";
 		systemTag = "";
+      userTag = "";
 		snmpPort = 0;
       snmpVersion = SnmpVersion.DEFAULT;
 		schedules = new ArrayList<String>(0);
@@ -255,6 +258,7 @@ public abstract class DataCollectionObject
 	   name = src.name;
 	   description = src.description;
 	   systemTag = src.systemTag;
+      userTag = src.userTag;
 	   perfTabSettings = src.perfTabSettings;
 	   snmpPort = src.snmpPort;
       snmpVersion = src.snmpVersion;
@@ -287,6 +291,7 @@ public abstract class DataCollectionObject
 		msg.setField(NXCPCodes.VID_NAME, name);
 		msg.setField(NXCPCodes.VID_DESCRIPTION, description);
 		msg.setField(NXCPCodes.VID_SYSTEM_TAG, systemTag);
+      msg.setField(NXCPCodes.VID_USER_TAG, userTag);
       msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
 		msg.setField(NXCPCodes.VID_TRANSFORMATION_SCRIPT, transformationScript);
 		msg.setFieldInt32(NXCPCodes.VID_RESOURCE_ID, (int)resourceId);
@@ -616,6 +621,26 @@ public abstract class DataCollectionObject
 	{
 		this.systemTag = systemTag;
 	}
+
+   /**
+    * Get user-assigned tag.
+    * 
+    * @return User-assigned tag of this DCI
+    */
+   public String getUserTag()
+   {
+      return userTag;
+   }
+
+   /**
+    * Set user-assigned tag.
+    * 
+    * @param userTag New user-assigned tag for DCI
+    */
+   public void setUserTag(String userTag)
+   {
+      this.userTag = userTag;
+   }
 
 	/**
 	 * @return the perfTabSettings

@@ -105,11 +105,12 @@ public class DataCollectionView extends BaseDataCollectionView
    public static final int DC_COLUMN_DATATYPE = 5;
    public static final int DC_COLUMN_INTERVAL = 6;
    public static final int DC_COLUMN_RETENTION = 7;
-   public static final int DC_COLUMN_STATUS = 8;
-   public static final int DC_COLUMN_THRESHOLD = 9;
-   public static final int DC_COLUMN_TEMPLATE = 10;
-   public static final int DC_COLUMN_RELATEDOBJ = 11;
-   public static final int DC_COLUMN_STATUSCALC = 12;
+   public static final int DC_COLUMN_TAG = 8;
+   public static final int DC_COLUMN_STATUS = 9;
+   public static final int DC_COLUMN_THRESHOLD = 10;
+   public static final int DC_COLUMN_TEMPLATE = 11;
+   public static final int DC_COLUMN_RELATEDOBJ = 12;
+   public static final int DC_COLUMN_STATUSCALC = 13;
 
    private boolean editMode = false;
    private Composite parent;
@@ -207,8 +208,10 @@ public class DataCollectionView extends BaseDataCollectionView
       final PreferenceStore ds = PreferenceStore.getInstance();
 
       parent.setLayout(new FillLayout());
-      final String[] names = { i18n.tr("ID"), i18n.tr("Display name"), i18n.tr("Origin"), i18n.tr("Metric"), i18n.tr("Units"),i18n.tr("Data Type"), i18n.tr("Polling Interval"), i18n.tr("Retention Time"), i18n.tr("Status"), i18n.tr("Thresholds"), i18n.tr("Template"), i18n.tr("Related Object"), i18n.tr("Is status calculation") };
-      final int[] widths = { 60, 250, 150, 200, 90, 90, 90, 90, 100, 200, 150, 150, 90 };
+      final String[] names = { i18n.tr("ID"), i18n.tr("Display name"), i18n.tr("Origin"), i18n.tr("Metric"), i18n.tr("Units"),
+            i18n.tr("Data Type"), i18n.tr("Polling Interval"), i18n.tr("Retention Time"), i18n.tr("Tag"), i18n.tr("Status"),
+            i18n.tr("Thresholds"), i18n.tr("Template"), i18n.tr("Related Object"), i18n.tr("Is status calculation") };
+      final int[] widths = { 60, 250, 150, 200, 90, 90, 90, 90, 120, 100, 200, 150, 150, 90 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new DciLabelProvider());

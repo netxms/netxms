@@ -3,7 +3,6 @@ package org.netxms.nxmc.modules.datacollection.api;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -15,6 +14,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.datacollection.ChartDciConfig;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.objects.AbstractNode;
@@ -44,9 +44,9 @@ public class GraphTemplateCache
    public GraphTemplateCache(NXCSession session)
    {
       this.session = session;
-      
+
       reload();
-      
+
       session.addListener(new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
@@ -136,14 +136,7 @@ public class GraphTemplateCache
    public GraphDefinition[] getGraphTemplates()
    {
       GraphDefinition[] graphs = templateList.toArray(new GraphDefinition[templateList.size()]);
-      Arrays.sort(graphs, new Comparator<GraphDefinition>() {
-         @Override
-         public int compare(GraphDefinition arg0, GraphDefinition arg1)
-         {
-            return arg0.getName().replace("&", "").compareToIgnoreCase(arg1.getName().replace("&", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-         }
-      });
-      
+      Arrays.sort(graphs, (gd1, gd2) -> gd1.getName().replace("&", "").compareToIgnoreCase(gd2.getName().replace("&", "")));
       return graphs;
    }
 
@@ -172,14 +165,34 @@ public class GraphTemplateCache
          {
             Pattern namePattern = Pattern.compile(dci.dciName);
             Pattern descriptionPattern = Pattern.compile(dci.dciDescription);
-            for(int j = 0; j < dciList.length; j++)
+            Pattern tagPattern = Pattern.compile(dci.dciTag);
+            for(DciValue dciInfo : dciList)
             {
-               Matcher nameMatch = namePattern.matcher(dciList[j].getName());
-               Matcher descriptionMatch = descriptionPattern.matcher(dciList[j].getDescription());
-               if ((!dci.dciName.isEmpty() && nameMatch.find()) ||
-                   (!dci.dciDescription.isEmpty() && descriptionMatch.find()))
+               if (dciInfo.getDcObjectType() != DataCollectionObject.DCO_TYPE_ITEM)
+                  continue;
+
+               Matcher matcher = null;
+               boolean match = false;
+
+               if (!dci.dciName.isEmpty())
                {
-                  chartMetrics.add(new ChartDciConfig(dci, (!dci.dciName.isEmpty() && nameMatch.find()) ? nameMatch : descriptionMatch, dciList[j]));
+                  matcher = namePattern.matcher(dciInfo.getName());
+                  match = matcher.find();
+               }
+               if (!match && !dci.dciDescription.isEmpty())
+               {
+                  matcher = descriptionPattern.matcher(dciInfo.getDescription());
+                  match = matcher.find();
+               }
+               if (!match && !dci.dciTag.isEmpty())
+               {
+                  matcher = tagPattern.matcher(dciInfo.getUserTag());
+                  match = matcher.find();
+               }
+
+               if (match)
+               {
+                  chartMetrics.add(new ChartDciConfig(dci, matcher, dciInfo));
                   if (!dci.multiMatch)
                      break;
                }
@@ -187,38 +200,35 @@ public class GraphTemplateCache
          }
          else
          {
-            for(int j = 0; j < dciList.length; j++)
+            for(DciValue dciInfo : dciList)
             {
-               if ((!dci.dciName.isEmpty() && dciList[j].getName().equalsIgnoreCase(dci.dciName)) ||
-                   (!dci.dciDescription.isEmpty() && dciList[j].getDescription().equalsIgnoreCase(dci.dciDescription)))
+               if (dciInfo.getDcObjectType() != DataCollectionObject.DCO_TYPE_ITEM)
+                  continue;
+
+               if ((!dci.dciName.isEmpty() && dciInfo.getName().equalsIgnoreCase(dci.dciName)) ||
+                   (!dci.dciDescription.isEmpty() && dciInfo.getDescription().equalsIgnoreCase(dci.dciDescription)) ||
+                   (!dci.dciTag.isEmpty() && dciInfo.getUserTag().equalsIgnoreCase(dci.dciTag)))
                {
-                  chartMetrics.add(new ChartDciConfig(dci, dciList[j]));
+                  chartMetrics.add(new ChartDciConfig(dci, dciInfo));
                   if (!dci.multiMatch)
                      break;
                }
             }            
          }
       }
+
       Display display = viewPlacement.getWindow().getShell().getDisplay();
       if (!chartMetrics.isEmpty())
       {
-         display.syncExec(new Runnable() {
-            @Override
-            public void run()
-            {
-               graphDefinition.setDciList(chartMetrics.toArray(new ChartDciConfig[chartMetrics.size()]));
-               showPredefinedGraph(graphDefinition, node, contextId, viewPlacement);               
-            }
+         display.syncExec(() -> {
+            graphDefinition.setDciList(chartMetrics.toArray(new ChartDciConfig[chartMetrics.size()]));
+            showPredefinedGraph(graphDefinition, node, contextId, viewPlacement);
          });
       }
       else
       {
-         display.syncExec(new Runnable() {
-            @Override
-            public void run()
-            {
-               MessageDialogHelper.openError(viewPlacement.getWindow().getShell(), "Error", "None of template DCI were found on a node.");
-            }
+         display.syncExec(() -> {
+            MessageDialogHelper.openError(viewPlacement.getWindow().getShell(), "Error", "None of template DCI were found on a node.");
          });
       }
    }

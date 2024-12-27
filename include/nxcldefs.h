@@ -40,6 +40,7 @@
 #define MAX_USER_FULLNAME           128
 #define MAX_USER_DESCR              256
 #define MAX_ITEM_NAME               1024
+#define MAX_DCI_TAG_LENGTH          64
 #define MAX_INSTANCE_LEN            1024
 #define MAX_STRING_VALUE            256
 #define MAX_USERVAR_NAME_LENGTH     64

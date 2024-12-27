@@ -968,7 +968,7 @@ private:
 
    void finalizeFileTransferToAgent(shared_ptr<AgentConnection> conn, uint32_t requestId);
    void finalizeConfigurationImport(const Config& config, uint32_t flags, NXCPMessage *response);
-   uint32_t resolveDCIName(uint32_t nodeId, uint32_t dciId, TCHAR *name, TCHAR *description);
+   uint32_t resolveDCIName(uint32_t nodeId, uint32_t dciId, WCHAR *name, WCHAR *description, WCHAR *tag);
 
 public:
    ClientSession(SOCKET hSocket, const InetAddress& addr);

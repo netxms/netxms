@@ -280,16 +280,15 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedS
    bool useStartupDelay = ConfigReadBoolean(_T("DataCollection.StartupDelay"), false);
 
 	DB_STATEMENT hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_DC_ITEMS,
-	           _T("SELECT item_id,name,source,datatype,polling_interval,retention_time,")
-              _T("status,delta_calculation,transformation,template_id,description,")
-              _T("instance,template_item_id,flags,resource_id,")
-              _T("proxy_node,multiplier,units_name,")
-	           _T("perftab_settings,system_tag,snmp_port,snmp_raw_value_type,")
-				  _T("instd_method,instd_data,instd_filter,samples,comments,guid,npe_name,")
-				  _T("instance_retention_time,grace_period_start,related_object,")
-				  _T("polling_schedule_type,retention_type,polling_interval_src,retention_time_src,")
-				  _T("snmp_version,state_flags,all_rearmed_event,transformed_datatype ")
-				  _T("FROM items WHERE node_id=?"));
+        L"SELECT item_id,name,source,datatype,polling_interval,retention_time,"
+        L"status,delta_calculation,transformation,template_id,description,"
+        L"instance,template_item_id,flags,resource_id,proxy_node,multiplier,units_name,"
+        L"perftab_settings,system_tag,snmp_port,snmp_raw_value_type,instd_method,instd_data,"
+        L"instd_filter,samples,comments,guid,npe_name,instance_retention_time,"
+        L"grace_period_start,related_object,polling_schedule_type,retention_type,"
+        L"polling_interval_src,retention_time_src,snmp_version,state_flags,all_rearmed_event,"
+        L"transformed_datatype,user_tag "
+        L"FROM items WHERE node_id=?");
 	if (hStmt != nullptr)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -304,13 +303,13 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedS
 	}
 
 	hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_DC_TABLES,
-	           _T("SELECT item_id,template_id,template_item_id,name,")
-				  _T("description,flags,source,snmp_port,polling_interval,retention_time,")
-              _T("status,system_tag,resource_id,proxy_node,perftab_settings,")
-              _T("transformation_script,comments,guid,instd_method,instd_data,")
-              _T("instd_filter,instance,instance_retention_time,grace_period_start,")
-              _T("related_object,polling_schedule_type,retention_type,polling_interval_src,")
-              _T("retention_time_src,snmp_version,state_flags FROM dc_tables WHERE node_id=?"));
+        L"SELECT item_id,template_id,template_item_id,name,"
+        L"description,flags,source,snmp_port,polling_interval,retention_time,"
+        L"status,system_tag,resource_id,proxy_node,perftab_settings,"
+        L"transformation_script,comments,guid,instd_method,instd_data,"
+        L"instd_filter,instance,instance_retention_time,grace_period_start,"
+        L"related_object,polling_schedule_type,retention_type,polling_interval_src,"
+        L"retention_time_src,snmp_version,state_flags,user_tag FROM dc_tables WHERE node_id=?");
 	if (hStmt != nullptr)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -466,7 +465,7 @@ void DataCollectionOwner::deleteDCObject(DCObject *object)
    }
    else
    {
-      nxlog_debug_tag(_T("obj.dc"), 7, _T("DataCollectionOwner::DeleteItem: destruction of DCO %u delayed"), object->getId());
+      nxlog_debug_tag(_T("obj.dc"), 7, _T("DataCollectionOwner::deleteDCObject: destruction of DCO %u delayed"), object->getId());
    }
 }
 
@@ -691,7 +690,35 @@ void DataCollectionOwner::sendItemsToClient(ClientSession *session, uint32_t req
 }
 
 /**
- * Get item by it's id
+ * Get data collection object that match given filter
+ */
+shared_ptr<DCObject> DataCollectionOwner::getDCObjectByFilter(std::function<bool (DCObject*)> filter, uint32_t userId, bool lock) const
+{
+   shared_ptr<DCObject> object;
+
+   if (lock)
+      readLockDciAccess();
+
+   for(int i = 0; i < m_dcObjects.size(); i++)
+   {
+      DCObject *curr = m_dcObjects.get(i);
+      if (filter(curr))
+      {
+         if (curr->hasAccess(userId))
+            object = m_dcObjects.getShared(i);
+         else
+            nxlog_debug_tag(_T("obj.dc"), 6, _T("DataCollectionOwner::getDCObjectByFilter: denied access to DCObject %u for user %u"), curr->getId(), userId);
+         break;
+      }
+   }
+
+   if (lock)
+      unlockDciAccess();
+   return object;
+}
+
+/**
+ * Get item by its id
  */
 shared_ptr<DCObject> DataCollectionOwner::getDCObjectById(uint32_t itemId, uint32_t userId, bool lock) const
 {
@@ -723,118 +750,86 @@ shared_ptr<DCObject> DataCollectionOwner::getDCObjectById(uint32_t itemId, uint3
  */
 shared_ptr<DCObject> DataCollectionOwner::getDCObjectByTemplateId(uint32_t tmplItemId, uint32_t userId) const
 {
-   shared_ptr<DCObject> object;
-
-   readLockDciAccess();
-   // Check if that item exists
-   for(int i = 0; i < m_dcObjects.size(); i++)
-	{
-      DCObject *curr = m_dcObjects.get(i);
-      if (curr->getTemplateItemId() == tmplItemId)
-		{
-         if (curr->hasAccess(userId))
-            object = m_dcObjects.getShared(i);
-         else
-            nxlog_debug_tag(_T("obj.dc"), 6, _T("DataCollectionOwner::getDCObjectByTemplateId: denied access to DCObject %u for user %u"), curr->getId(), userId);
-         break;
-		}
-	}
-
-   unlockDciAccess();
-   return object;
+   return getDCObjectByFilter(
+      [tmplItemId] (DCObject *dci) -> bool
+      {
+         return dci->getTemplateItemId() == tmplItemId;
+      }, userId);
 }
 
 /**
- * Get item by it's name (case-insensitive)
+ * Get data collection object by its name (case-insensitive)
  */
-shared_ptr<DCObject> DataCollectionOwner::getDCObjectByName(const TCHAR *name, uint32_t userId) const
+shared_ptr<DCObject> DataCollectionOwner::getDCObjectByName(const WCHAR *name, uint32_t userId) const
 {
-   shared_ptr<DCObject> object;
-
-   readLockDciAccess();
-   // Check if that item exists
-   for(int i = 0; i < m_dcObjects.size(); i++)
-	{
-      DCObject *curr = m_dcObjects.get(i);
-      if (!_tcsicmp(curr->getName(), name))
-		{
-         if (curr->hasAccess(userId))
-            object = m_dcObjects.getShared(i);
-         else
-            nxlog_debug_tag(_T("obj.dc"), 6, _T("DataCollectionOwner::getDCObjectByName: denied access to DCObject %u for user %u"), curr->getId(), userId);
-         break;
-		}
-	}
-   unlockDciAccess();
-   return object;
+   return getDCObjectByFilter(
+      [name] (DCObject *dci) -> bool
+      {
+         return wcsicmp(dci->getName(), name) == 0;
+      }, userId);
 }
 
 /**
- * Get item by it's description (case-insensitive)
+ * Get data collection object by its description (case-insensitive)
  */
-shared_ptr<DCObject> DataCollectionOwner::getDCObjectByDescription(const TCHAR *description, uint32_t userId) const
+shared_ptr<DCObject> DataCollectionOwner::getDCObjectByDescription(const WCHAR *description, uint32_t userId) const
 {
-   shared_ptr<DCObject> object;
+   return getDCObjectByFilter(
+      [description] (DCObject *dci) -> bool
+      {
+         return wcsicmp(dci->getDescription(), description) == 0;
+      }, userId);
+}
 
-   readLockDciAccess();
-   // Check if that item exists
-   for(int i = 0; i < m_dcObjects.size(); i++)
-	{
-      DCObject *curr = m_dcObjects.get(i);
-      if (!_tcsicmp(curr->getDescription(), description))
-		{
-         if (curr->hasAccess(userId))
-            object = m_dcObjects.getShared(i);
-         else
-            nxlog_debug_tag(_T("obj.dc"), 6, _T("DataCollectionOwner::getDCObjectByDescription: denied access to DCObject %u for user %u"), curr->getId(), userId);
-         break;
-		}
-	}
-	unlockDciAccess();
-   return object;
+/**
+ * Get data collection object by its tag (case-insensitive)
+ */
+shared_ptr<DCObject> DataCollectionOwner::getDCObjectByTag(const WCHAR *tag, uint32_t userId) const
+{
+   return getDCObjectByFilter(
+      [tag] (DCObject *dci) -> bool
+      {
+         return wcsicmp(dci->getUserTag(), tag) == 0;
+      }, userId);
+}
+
+/**
+ * Get data collection object by tag pattern (case-insensitive)
+ */
+shared_ptr<DCObject> DataCollectionOwner::getDCObjectByTagPattern(const WCHAR *tagPattern, uint32_t userId) const
+{
+   return getDCObjectByFilter(
+      [tagPattern] (DCObject *dci) -> bool
+      {
+         return MatchStringW(tagPattern, dci->getUserTag(), false);
+      }, userId);
 }
 
 /**
  * Get item by GUID
  */
-shared_ptr<DCObject> DataCollectionOwner::getDCObjectByGUID(const uuid& guid, uint32_t userId, bool lock) const
+shared_ptr<DCObject> DataCollectionOwner::getDCObjectByGUID(uuid guid, uint32_t userId, bool lock) const
 {
-   shared_ptr<DCObject> object;
-
-   if (lock)
-      readLockDciAccess();
-
-   // Check if that item exists
-   for(int i = 0; i < m_dcObjects.size(); i++)
-   {
-      DCObject *curr = m_dcObjects.get(i);
-      if (guid.equals(curr->getGuid()))
+   return getDCObjectByFilter(
+      [guid] (DCObject *dci) -> bool
       {
-         if (curr->hasAccess(userId))
-            object = m_dcObjects.getShared(i);
-         else
-            nxlog_debug_tag(_T("obj.dc"), 6, _T("DataCollectionOwner::getDCObjectByGUID: denied access to DCObject %u for user %u"), curr->getId(), userId);
-         break;
-      }
-   }
-
-   if (lock)
-      unlockDciAccess();
-   return object;
+         return guid.equals(dci->getGuid());
+      }, userId, lock);
 }
 
 /**
- * Get all DC objects with matching name and description
+ * Get all DC objects with matching name, description, and tag
  */
-NXSL_Value *DataCollectionOwner::getAllDCObjectsForNXSL(NXSL_VM *vm, const TCHAR *name, const TCHAR *description, uint32_t userID) const
+NXSL_Value *DataCollectionOwner::getAllDCObjectsForNXSL(NXSL_VM *vm, const WCHAR *name, const WCHAR *description, const WCHAR *tag, uint32_t userID) const
 {
    NXSL_Array *list = new NXSL_Array(vm);
    readLockDciAccess();
    for(int i = 0; i < m_dcObjects.size(); i++)
 	{
 		DCObject *curr = m_dcObjects.get(i);
-      if (((name == NULL) || MatchString(name, curr->getName(), false)) &&
-          ((description == NULL) || MatchString(description, curr->getDescription(), false)) &&
+      if (((name == nullptr) || MatchString(name, curr->getName(), false)) &&
+          ((description == nullptr) || MatchString(description, curr->getDescription(), false)) &&
+          ((tag == nullptr) || MatchString(tag, curr->getUserTag(), false)) &&
           curr->hasAccess(userID))
 		{
          list->set(list->size(), curr->createNXSLObject(vm));

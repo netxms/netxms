@@ -124,14 +124,16 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	}
 
 	/**
-	 * Add single cache entry
-	 * 
-	 * @param nodeId
-	 * @param dciId
-	 * @param name
-	 */
-	public void addCacheEntry(long nodeId, long dciId, String metric, String displayName)
+    * Add single cache entry
+    * 
+    * @param nodeId
+    * @param dciId
+    * @param metric
+    * @param displayName
+    * @param userTag
+    */
+   public void addCacheEntry(long nodeId, long dciId, String metric, String displayName, String userTag)
 	{
-		dciNameCache.put(dciId, new DciInfo(metric, displayName));
+      dciNameCache.put(dciId, new DciInfo(metric, displayName, userTag));
 	}
 }

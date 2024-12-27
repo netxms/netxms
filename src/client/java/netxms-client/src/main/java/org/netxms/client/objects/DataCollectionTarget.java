@@ -72,7 +72,7 @@ public class DataCollectionTarget extends GenericObject
    public DataCollectionTarget(NXCPMessage msg, NXCSession session)
    {
       super(msg, session);
-      
+
       int count = msg.getFieldAsInt32(NXCPCodes.VID_OVERVIEW_DCI_COUNT);
       overviewDciData = new ArrayList<DciValue>(count);
       long fieldId = NXCPCodes.VID_OVERVIEW_DCI_LIST_BASE;

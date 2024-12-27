@@ -289,6 +289,7 @@ protected:
    SharedString m_name;
    SharedString m_description;
    SharedString m_systemTag;
+   SharedString m_userTag;
    time_t m_lastPoll;           // Last poll time
    time_t m_lastValueTimestamp; // Timestamp of last obtained value
    int32_t m_pollingInterval;   // Polling interval in seconds
@@ -388,6 +389,7 @@ public:
    int getStatus() const { return m_status; }
    SharedString getName() const { return GetAttributeWithLock(m_name, m_mutex); }
    SharedString getDescription() const { return GetAttributeWithLock(m_description, m_mutex); }
+   SharedString getUserTag() const { return GetAttributeWithLock(m_userTag, m_mutex); }
 	SharedString getPerfTabSettings() const { return GetAttributeWithLock(m_perfTabSettings, m_mutex); }
 	int32_t getPollingScheduleType() const { return m_pollingScheduleType; }
    int32_t getEffectivePollingInterval() const { return (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? std::max(m_pollingInterval, 1) : m_defaultPollingInterval; }
@@ -883,7 +885,8 @@ private:
    int m_type;
    TCHAR m_name[MAX_ITEM_NAME];
    TCHAR m_description[MAX_DB_STRING];
-   TCHAR m_systemTag[MAX_DB_STRING];
+   TCHAR m_systemTag[MAX_DCI_TAG_LENGTH];
+   TCHAR m_userTag[MAX_DCI_TAG_LENGTH];
    TCHAR m_instanceName[MAX_DB_STRING];
    TCHAR *m_instanceData;
    TCHAR *m_comments;
@@ -916,6 +919,7 @@ public:
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getDescription() const { return m_description; }
    const TCHAR *getSystemTag() const { return m_systemTag; }
+   const TCHAR *getUserTag() const { return m_userTag; }
    const TCHAR *getInstanceName() const { return m_instanceName; }
    const TCHAR *getInstanceData() const { return m_instanceData; }
    const TCHAR *getComments() const { return m_comments; }

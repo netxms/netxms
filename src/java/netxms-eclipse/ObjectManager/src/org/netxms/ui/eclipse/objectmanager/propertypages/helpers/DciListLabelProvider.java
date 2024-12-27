@@ -137,6 +137,6 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	 */
 	public void addCacheEntry(long nodeId, long dciId, String name)
 	{
-		dciNameCache.put(dciId, new DciInfo("", name));
+      dciNameCache.put(dciId, new DciInfo("", name, ""));
 	}
 }

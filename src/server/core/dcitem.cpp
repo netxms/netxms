@@ -80,7 +80,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
  *    instd_method,instd_data,instd_filter,samples,comments,guid,npe_name,
  *    instance_retention_time,grace_period_start,related_object,polling_schedule_type,
  *    retention_type,polling_interval_src,retention_time_src,snmp_version,state_flags,
- *    all_rearmed_event,transformed_datatype
+ *    all_rearmed_event,transformed_datatype,user_tag
  */
 DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
@@ -132,6 +132,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
    m_stateFlags = DBGetFieldUInt32(hResult, row, 37);
    m_allThresholdsRearmEvent = DBGetFieldUInt32(hResult, row, 38);
    m_transformedDataType = (BYTE)DBGetFieldLong(hResult, row, 39);
+   m_userTag = DBGetFieldAsSharedString(hResult, row, 40);
 
    int effectivePollingInterval = getEffectivePollingInterval();
    m_startTime = (useStartupDelay && (effectivePollingInterval >= 10)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
@@ -307,18 +308,18 @@ bool DCItem::loadThresholdsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatement
  */
 bool DCItem::saveToDatabase(DB_HANDLE hdb)
 {
-   static const TCHAR *columns[] = {
-      _T("node_id"), _T("template_id"), _T("name"), _T("source"), _T("datatype"), _T("polling_interval"), _T("retention_time"),
-      _T("status"), _T("delta_calculation"), _T("transformation"), _T("description"), _T("instance"), _T("template_item_id"),
-      _T("flags"), _T("resource_id"), _T("proxy_node"), _T("multiplier"), _T("units_name"),
-      _T("perftab_settings"), _T("system_tag"), _T("snmp_port"), _T("snmp_raw_value_type"), _T("instd_method"), _T("instd_data"),
-      _T("instd_filter"), _T("samples"), _T("comments"), _T("guid"), _T("npe_name"), _T("instance_retention_time"),
-      _T("grace_period_start"), _T("related_object"), _T("polling_interval_src"), _T("retention_time_src"),
-      _T("polling_schedule_type"), _T("retention_type"), _T("snmp_version"), _T("state_flags"), _T("all_rearmed_event"),
-      _T("transformed_datatype"), nullptr
+   static const WCHAR *columns[] = {
+      L"node_id", L"template_id", L"name", L"source", L"datatype", L"polling_interval", L"retention_time",
+      L"status", L"delta_calculation", L"transformation", L"description", L"instance", L"template_item_id",
+      L"flags", L"resource_id", L"proxy_node", L"multiplier", L"units_name",
+      L"perftab_settings", L"system_tag", L"snmp_port", L"snmp_raw_value_type", L"instd_method", L"instd_data",
+      L"instd_filter", L"samples", L"comments", L"guid", L"npe_name", L"instance_retention_time",
+      L"grace_period_start", L"related_object", L"polling_interval_src", L"retention_time_src",
+      L"polling_schedule_type", L"retention_type", L"snmp_version", L"state_flags", L"all_rearmed_event",
+      L"transformed_datatype", L"user_tag", nullptr
    };
 
-	DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("items"), _T("item_id"), m_id, columns);
+	DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"items", L"item_id", m_id, columns);
 	if (hStmt == nullptr)
 		return false;
 
@@ -343,7 +344,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_multiplier));
 	DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_unitName, DB_BIND_STATIC);
 	DBBind(hStmt, 19, DB_SQLTYPE_TEXT, m_perfTabSettings, DB_BIND_STATIC);
-	DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_systemTag, DB_BIND_STATIC, MAX_DB_STRING - 1);
+	DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_systemTag, DB_BIND_STATIC, MAX_DCI_TAG_LENGTH - 1);
 	DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, (INT32)m_snmpPort);
 	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, (INT32)m_snmpRawValueType);
 	DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, (INT32)m_instanceDiscoveryMethod);
@@ -369,7 +370,8 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, m_stateFlags);
    DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_allThresholdsRearmEvent);
    DBBind(hStmt, 40, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_transformedDataType));
-   DBBind(hStmt, 41, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 41, DB_SQLTYPE_VARCHAR, m_userTag, DB_BIND_STATIC, MAX_DCI_TAG_LENGTH - 1);
+   DBBind(hStmt, 42, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -386,7 +388,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 
       if (success)
       {
-         StringBuffer query(_T("DELETE FROM thresholds WHERE item_id="));
+         StringBuffer query(L"DELETE FROM thresholds WHERE item_id=");
          query.append(m_id);
          query.append(_T(" AND threshold_id NOT IN ("));
          for(int i = 0; i < getThresholdCount(); i++)
@@ -401,20 +403,20 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
    }
    else if (success)
    {
-      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM thresholds WHERE item_id=?"));
+      success = ExecuteQueryOnObject(hdb, m_id, L"DELETE FROM thresholds WHERE item_id=?");
    }
 
    // Create record in raw_dci_values if needed
-   if (success && !IsDatabaseRecordExist(hdb, _T("raw_dci_values"), _T("item_id"), m_id))
+   if (success && !IsDatabaseRecordExist(hdb, L"raw_dci_values", L"item_id", m_id))
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time,cache_timestamp,anomaly_detected) VALUES (?,?,?,?,?)"));
+      hStmt = DBPrepare(hdb, L"INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time,cache_timestamp,anomaly_detected) VALUES (?,?,?,?,?)");
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_prevRawValue.getString(), DB_BIND_STATIC, 255);
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int64_t>(m_prevValueTimeStamp));
          DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<int64_t>((m_cacheLoaded  && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0));
-         DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_anomalyDetected ? _T("1") : _T("0"), DB_BIND_STATIC);
+         DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_anomalyDetected ? L"1" : L"0", DB_BIND_STATIC);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
@@ -1740,6 +1742,7 @@ void DCItem::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId, cons
    msg->setField(baseId++, !hasValue());
    msg->setField(baseId++, m_comments);
    msg->setField(baseId++, m_anomalyDetected);
+   msg->setField(baseId++, m_userTag);
 
 	if (m_thresholds != nullptr)
 	{
@@ -2223,7 +2226,9 @@ void DCItem::createExportRecord(TextFileWriter& xml) const
    xml.append(EscapeStringForXML2(m_retentionTimeSrc));
    xml.append(_T("</retention>\n\t\t\t\t\t<systemTag>"));
    xml.append(EscapeStringForXML2(m_systemTag));
-   xml.append(_T("</systemTag>\n\t\t\t\t\t<delta>"));
+   xml.append(_T("</systemTag>\n\t\t\t\t\t<userTag>"));
+   xml.append(EscapeStringForXML2(m_userTag));
+   xml.append(_T("</userTag>\n\t\t\t\t\t<delta>"));
    xml.append(static_cast<int32_t>(m_deltaCalculation));
    xml.append(_T("</delta>\n\t\t\t\t\t<flags>"));
    xml.append(m_flags);

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,18 +60,18 @@ public class ConditionDciListLabelProvider extends LabelProvider implements ITab
 		session = Registry.getSession();
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -113,12 +113,8 @@ public class ConditionDciListLabelProvider extends LabelProvider implements ITab
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
 				final Map<Long, DciInfo> names = session.dciIdsToNames(dciList);
-				getDisplay().asyncExec(new Runnable() {
-					@Override
-					public void run()
-					{
-						dciNameCache = names;
-					}
+            getDisplay().asyncExec(() -> {
+               dciNameCache = names;
 				});
 			}
 
@@ -139,6 +135,6 @@ public class ConditionDciListLabelProvider extends LabelProvider implements ITab
 	 */
 	public void addCacheEntry(long nodeId, long dciId, String name)
 	{
-		dciNameCache.put(dciId, new DciInfo("", name));
+      dciNameCache.put(dciId, new DciInfo("", name, ""));
 	}
 }

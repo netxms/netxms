@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,45 +30,56 @@ import org.netxms.nxmc.modules.datacollection.views.TemplateGraphView;
  */
 public class TemplateGraphLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
+      ChartDciConfig[] configs;
 		switch(columnIndex)
 		{
 			case TemplateGraphView.COLUMN_NAME:
 				return ((GraphDefinition)element).getName();
-			case TemplateGraphView.COLUMN_DCI_NAME:
+			case TemplateGraphView.COLUMN_DCI_NAMES:
 			   StringBuilder names = new StringBuilder();
-			   ChartDciConfig[] configs = ((GraphDefinition)element).getDciList();
+            configs = ((GraphDefinition)element).getDciList();
 			   for(int i = 0; i < configs.length; i++)
 			   {
 			      names.append(configs[i].dciName);
-			      if(i+1 != configs.length)
+               if (i + 1 != configs.length)
 			         names.append(", ");
 			   }
             return names.toString();
-         case TemplateGraphView.COLUMN_DCI_DESCRIPTION:
+         case TemplateGraphView.COLUMN_DCI_DESCRIPTIONS:
             StringBuilder description = new StringBuilder();
-            ChartDciConfig[] config = ((GraphDefinition)element).getDciList();
-            for(int i = 0; i < config.length; i++)
+            configs = ((GraphDefinition)element).getDciList();
+            for(int i = 0; i < configs.length; i++)
             {
-               description.append(config[i].dciDescription);
-               if(i+1 != config.length)
+               description.append(configs[i].dciDescription);
+               if (i + 1 != configs.length)
                   description.append(", ");
             }
             return description.toString();
+         case TemplateGraphView.COLUMN_DCI_TAGS:
+            StringBuilder tags = new StringBuilder();
+            configs = ((GraphDefinition)element).getDciList();
+            for(int i = 0; i < configs.length; i++)
+            {
+               tags.append(configs[i].dciTag);
+               if (i + 1 != configs.length)
+                  tags.append(", ");
+            }
+            return tags.toString();
 		}
 		return null;
 	}

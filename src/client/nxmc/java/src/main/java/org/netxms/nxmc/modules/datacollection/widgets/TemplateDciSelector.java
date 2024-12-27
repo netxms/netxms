@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,12 @@ import org.netxms.nxmc.modules.datacollection.dialogs.SelectDciDialog;
  */
 public class TemplateDciSelector extends AbstractSelector
 {
-   private boolean selectDescription = false;
+   public static enum Field
+   {
+      NAME, DESCRIPTION, TAG
+   }
+
+   private Field field = Field.NAME;
    private boolean noValueObject = false;
 
    /**
@@ -63,7 +68,19 @@ public class TemplateDciSelector extends AbstractSelector
          List<DciValue> dci = dlg.getSelection();
          if (dci != null && dci.size() == 1)
          {
-            String value = selectDescription ? dci.get(0).getDescription() : dci.get(0).getName();
+            String value = "";
+            switch(field)
+            {
+               case DESCRIPTION:
+                  value = dci.get(0).getDescription();
+                  break;
+               case NAME:
+                  value = dci.get(0).getName();
+                  break;
+               case TAG:
+                  value = dci.get(0).getUserTag();
+                  break;
+            }
             if (dci.get(0).isNoValueObject())
             {
                noValueObject = true;
@@ -95,23 +112,13 @@ public class TemplateDciSelector extends AbstractSelector
    }
 
    /**
-    * Check if description will be selected instead of name.
+    * Set field to be used in selection.
     *
-    * @return true if description will be selected instead of name
+    * @param field field to be used in selection
     */
-   public boolean isSelectDescription()
+   public void setField(Field field)
    {
-      return selectDescription;
-   }
-
-   /**
-    * Set if description should be selected instead of name.
-    *
-    * @param selectDescription true if description should be selected instead of name
-    */
-   public void setSelectDescription(boolean selectDescription)
-   {
-      this.selectDescription = selectDescription;
+      this.field = field;
    }
 
    /**

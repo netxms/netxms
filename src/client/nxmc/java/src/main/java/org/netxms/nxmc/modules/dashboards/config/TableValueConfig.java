@@ -44,6 +44,9 @@ public class TableValueConfig extends DashboardElementConfig
    @Element(required = false)
    public String dciDescription;
 
+   @Element(required = false)
+   public String dciTag;
+
 	@Element(required = false)
 	private int refreshRate = 30;
 
@@ -158,6 +161,22 @@ public class TableValueConfig extends DashboardElementConfig
    public void setDciDescription(String dciDescription)
    {
       this.dciDescription = dciDescription;
+   }
+
+   /**
+    * @return the dciTag
+    */
+   public String getDciTag()
+   {
+      return (dciTag != null) ? dciTag : "";
+   }
+
+   /**
+    * @param dciTag the dciTag to set
+    */
+   public void setDciTag(String dciTag)
+   {
+      this.dciTag = dciTag;
    }
 
    /**

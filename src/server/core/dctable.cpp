@@ -61,7 +61,7 @@ DCTable::DCTable(uint32_t id, const TCHAR *name, int source, BYTE scheduleType, 
  *    transformation_script,comments,guid,instd_method,instd_data,
  *    instd_filter,instance,instance_retention_time,grace_period_start,
  *    related_object,polling_schedule_type,retention_type,polling_interval_src,
- *    retention_time_src,snmp_version,state_flags
+ *    retention_time_src,snmp_version,state_flags,user_tag
  */
 DCTable::DCTable(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
@@ -96,6 +96,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hRes
    m_retentionTimeSrc = (m_retentionType == DC_RETENTION_CUSTOM) ? DBGetFieldAsString(hResult, row, 28) : nullptr;
    m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldInt32(hResult, row, 29));
    m_stateFlags = DBGetFieldUInt32(hResult, row, 30);
+   m_userTag = DBGetFieldAsSharedString(hResult, row, 31);
 
    int effectivePollingInterval = getEffectivePollingInterval();
    m_startTime = (useStartupDelay && (effectivePollingInterval >= 10)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
@@ -480,17 +481,17 @@ void DCTable::generateEventsAfterMaintenance()
  */
 bool DCTable::saveToDatabase(DB_HANDLE hdb)
 {
-   static const TCHAR *columns[] = {
-      _T("node_id"), _T("template_id"), _T("template_item_id"), _T("name"), _T("description"), _T("flags"), _T("source"),
-      _T("snmp_port"), _T("polling_interval"), _T("retention_time"), _T("status"), _T("system_tag"), _T("resource_id"),
-      _T("proxy_node"), _T("perftab_settings"), _T("transformation_script"), _T("comments"), _T("guid"),
-      _T("instd_method"), _T("instd_data"), _T("instd_filter"), _T("instance"), _T("instance_retention_time"),
-      _T("grace_period_start"), _T("related_object"), _T("polling_interval_src"), _T("retention_time_src"),
-      _T("polling_schedule_type"), _T("retention_type"), _T("snmp_version"), _T("state_flags"),
+   static const WCHAR *columns[] = {
+      L"node_id", L"template_id", L"template_item_id", L"name", L"description", L"flags", L"source",
+      L"snmp_port", L"polling_interval", L"retention_time", L"status", L"system_tag", L"resource_id",
+      L"proxy_node", L"perftab_settings", L"transformation_script", L"comments", L"guid",
+      L"instd_method", L"instd_data", L"instd_filter", L"instance", L"instance_retention_time",
+      L"grace_period_start", L"related_object", L"polling_interval_src", L"retention_time_src",
+      L"polling_schedule_type", L"retention_type", L"snmp_version", L"state_flags", L"user_tag",
       nullptr
    };
 
-	DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("dc_tables"), _T("item_id"), m_id, columns);
+	DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"dc_tables", L"item_id", m_id, columns);
 	if (hStmt == nullptr)
 		return false;
 
@@ -507,7 +508,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (INT32)m_pollingInterval);
 	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)m_retentionTime);
 	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (INT32)m_status);
-	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_systemTag, DB_BIND_STATIC, MAX_DB_STRING);
+	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_systemTag, DB_BIND_STATIC, MAX_DCI_TAG_LENGTH - 1);
 	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_resourceId);
 	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_sourceNode);
 	DBBind(hStmt, 15, DB_SQLTYPE_TEXT, m_perfTabSettings, DB_BIND_STATIC);
@@ -532,7 +533,8 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, rt, DB_BIND_STATIC);
    DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_snmpVersion);
    DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_stateFlags);
-   DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 32, DB_SQLTYPE_VARCHAR, m_userTag, DB_BIND_STATIC, MAX_DCI_TAG_LENGTH - 1);
+   DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, m_id);
 
 	bool result = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -540,7 +542,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
 	if (result)
 	{
 		// Save column configuration
-		hStmt = DBPrepare(hdb, _T("DELETE FROM dc_table_columns WHERE table_id=?"));
+		hStmt = DBPrepare(hdb, L"DELETE FROM dc_table_columns WHERE table_id=?");
 		if (hStmt != nullptr)
 		{
 			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -554,7 +556,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
 
 		if (result && (m_columns->size() > 0))
 		{
-			hStmt = DBPrepare(hdb, _T("INSERT INTO dc_table_columns (table_id,sequence_number,column_name,snmp_oid,flags,display_name) VALUES (?,?,?,?,?,?)"));
+			hStmt = DBPrepare(hdb, L"INSERT INTO dc_table_columns (table_id,sequence_number,column_name,snmp_oid,flags,display_name) VALUES (?,?,?,?,?,?)");
 			if (hStmt != nullptr)
 			{
 				DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -592,7 +594,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
  */
 bool DCTable::loadThresholds(DB_HANDLE hdb)
 {
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id,activation_event,deactivation_event,sample_count FROM dct_thresholds WHERE table_id=? ORDER BY sequence_number"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT id,activation_event,deactivation_event,sample_count FROM dct_thresholds WHERE table_id=? ORDER BY sequence_number");
    if (hStmt == nullptr)
       return false;
 
@@ -617,7 +619,7 @@ bool DCTable::loadThresholds(DB_HANDLE hdb)
  */
 bool DCTable::saveThresholds(DB_HANDLE hdb)
 {
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM dct_threshold_conditions WHERE threshold_id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"DELETE FROM dct_threshold_conditions WHERE threshold_id=?");
    if (hStmt == nullptr)
       return false;
 
@@ -628,7 +630,7 @@ bool DCTable::saveThresholds(DB_HANDLE hdb)
    }
    DBFreeStatement(hStmt);
 
-   hStmt = DBPrepare(hdb, _T("DELETE FROM dct_threshold_instances WHERE threshold_id=?"));
+   hStmt = DBPrepare(hdb, L"DELETE FROM dct_threshold_instances WHERE threshold_id=?");
    if (hStmt == nullptr)
       return false;
 
@@ -639,7 +641,7 @@ bool DCTable::saveThresholds(DB_HANDLE hdb)
    }
    DBFreeStatement(hStmt);
 
-   hStmt = DBPrepare(hdb, _T("DELETE FROM dct_thresholds WHERE table_id=?"));
+   hStmt = DBPrepare(hdb, L"DELETE FROM dct_thresholds WHERE table_id=?");
    if (hStmt == nullptr)
       return false;
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -797,6 +799,8 @@ void DCTable::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t fieldId, co
    msg->setField(fieldId++, 0);
    msg->setField(fieldId++, !hasValue());
    msg->setField(fieldId++, m_comments);
+   msg->setField(fieldId++, false); // Anomaly detected
+   msg->setField(fieldId++, m_userTag);
 
    if (m_thresholds != nullptr)
    {
@@ -1065,7 +1069,9 @@ void DCTable::createExportRecord(TextFileWriter& xml) const
    xml.append(EscapeStringForXML2(m_retentionTimeSrc));
    xml.append(_T("</retention>\n\t\t\t\t\t<systemTag>"));
    xml.append(EscapeStringForXML2(m_systemTag));
-   xml.append(_T("</systemTag>\n\t\t\t\t\t<flags>"));
+   xml.append(_T("</systemTag>\n\t\t\t\t\t<userTag>"));
+   xml.append(EscapeStringForXML2(m_userTag));
+   xml.append(_T("</userTag>\n\t\t\t\t\t<flags>"));
    xml.append(m_flags);
    xml.append(_T("</flags>\n\t\t\t\t\t<snmpPort>"));
    xml.append(m_snmpPort);

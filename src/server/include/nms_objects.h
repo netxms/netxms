@@ -1951,13 +1951,16 @@ public:
    unique_ptr<IntegerArray<uint32_t>> setItemStatus(const IntegerArray<uint32_t>& dciList, int status, uint32_t userId, bool userChange = false);
    int updateMultipleDCObjects(const NXCPMessage& request, uint32_t userId);
    shared_ptr<DCObject> getDCObjectById(uint32_t itemId, uint32_t userId, bool lock = true) const;
-   shared_ptr<DCObject> getDCObjectByGUID(const uuid& guid, uint32_t userId, bool lock = true) const;
+   shared_ptr<DCObject> getDCObjectByGUID(uuid guid, uint32_t userId, bool lock = true) const;
+   shared_ptr<DCObject> getDCObjectByFilter(std::function<bool (DCObject*)> filter, uint32_t userId = 0, bool lock = true) const;
    shared_ptr<DCObject> getDCObjectByTemplateId(uint32_t tmplItemId, uint32_t userId) const;
-   shared_ptr<DCObject> getDCObjectByName(const TCHAR *name, uint32_t userId) const;
-   shared_ptr<DCObject> getDCObjectByDescription(const TCHAR *description, uint32_t userId) const;
+   shared_ptr<DCObject> getDCObjectByName(const WCHAR *name, uint32_t userId) const;
+   shared_ptr<DCObject> getDCObjectByDescription(const WCHAR *description, uint32_t userId) const;
+   shared_ptr<DCObject> getDCObjectByTag(const WCHAR *tag, uint32_t userId) const;
+   shared_ptr<DCObject> getDCObjectByTagPattern(const WCHAR *tagPattern, uint32_t userId) const;
    unique_ptr<SharedObjectArray<DCObject>> getAllDCObjects() const;
    unique_ptr<SharedObjectArray<DCObject>> getDCObjectsByRegex(const TCHAR *regex, bool searchName, uint32_t userId) const;
-   NXSL_Value *getAllDCObjectsForNXSL(NXSL_VM *vm, const TCHAR *name, const TCHAR *description, uint32_t userId) const;
+   NXSL_Value *getAllDCObjectsForNXSL(NXSL_VM *vm, const WCHAR *name, const WCHAR *description, const WCHAR *tag, uint32_t userId) const;
    void setDCIModificationFlag() { lockProperties(); m_dciListModified = true; unlockProperties(); }
    void sendItemsToClient(ClientSession *session, uint32_t requestId) const;
    virtual HashSet<uint32_t> *getRelatedEventsList() const;

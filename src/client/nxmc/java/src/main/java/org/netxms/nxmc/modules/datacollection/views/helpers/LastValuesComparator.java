@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,6 +81,9 @@ public class LastValuesComparator extends ViewerComparator
             String name1 = (obj1 != null) ? obj1.getObjectName() : "[" + Long.toString(v1.getNodeId()) + "]";
             String name2 = (obj2 != null) ? obj2.getObjectName() : "[" + Long.toString(v2.getNodeId()) + "]";
             result = name1.compareToIgnoreCase(name2);
+            break;
+         case BaseDataCollectionView.LV_COLUMN_TAG:
+            result = v1.getUserTag().compareToIgnoreCase(v2.getUserTag());
             break;
          case BaseDataCollectionView.LV_COLUMN_TIMESTAMP:
             result = v1.getTimestamp().compareTo(v2.getTimestamp());

@@ -25,16 +25,19 @@ public class DciInfo
 {
    public String metric;
    public String displayName;
+   public String userTag;
    
    /**
-    * Constructor 
+    * Constructor
     * 
     * @param name DCI name
-    * @param description DCI description
+    * @param displayName DCI description
+    * @param userTag user-assigned tag
     */
-   public DciInfo(String name, String description)
+   public DciInfo(String name, String displayName, String userTag)
    {
       this.metric = name;
-      this.displayName = description;
+      this.displayName = displayName;
+      this.userTag = userTag;
    }
 }

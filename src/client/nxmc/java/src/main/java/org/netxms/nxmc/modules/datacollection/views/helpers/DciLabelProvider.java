@@ -148,6 +148,8 @@ public class DciLabelProvider extends LabelProvider implements ITableLabelProvid
 			   }
 			case DataCollectionView.DC_COLUMN_STATUS:
 				return statusTexts.get(dci.getStatus());
+         case DataCollectionView.DC_COLUMN_TAG:
+            return dci.getUserTag();
 			case DataCollectionView.DC_COLUMN_THRESHOLD:
 			   StringBuilder thresholds = new StringBuilder();
 			   if((dci instanceof DataCollectionItem))

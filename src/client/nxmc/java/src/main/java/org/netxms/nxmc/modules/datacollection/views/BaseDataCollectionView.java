@@ -23,7 +23,6 @@ import java.util.Iterator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
@@ -104,10 +103,11 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
    public static final int LV_COLUMN_DESCRIPTION = 2;
    public static final int LV_COLUMN_VALUE = 3;
    public static final int LV_COLUMN_TIMESTAMP = 4;
-   public static final int LV_COLUMN_THRESHOLD = 5;
-   public static final int LV_COLUMN_EVENT = 6;
-   public static final int LV_COLUMN_MESSAGE = 7;
-   public static final int LV_COLUMN_COMMENTS = 8;
+   public static final int LV_COLUMN_TAG = 5;
+   public static final int LV_COLUMN_THRESHOLD = 6;
+   public static final int LV_COLUMN_EVENT = 7;
+   public static final int LV_COLUMN_MESSAGE = 8;
+   public static final int LV_COLUMN_COMMENTS = 9;
 
    protected SortableTableViewer viewer;
 
@@ -147,16 +147,8 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
    @Override
    protected void createContent(Composite parent)
    {
-      VisibilityValidator validator = new VisibilityValidator() { 
-         @Override
-         public boolean isVisible()
-         {
-            return BaseDataCollectionView.this.isActive();
-         }
-      };
-
       createActions();
-      createLastValuesViewer(parent, validator);
+      createLastValuesViewer(parent, () -> isActive());
    }
 
    /**
@@ -167,8 +159,8 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
       parent.setLayout(new FillLayout());
 
       // Setup table columns
-      final String[] names = { i18n.tr("Owner"), i18n.tr("ID"), i18n.tr("Display name"), i18n.tr("Value"), i18n.tr("Timestamp"), i18n.tr("Threshold"), i18n.tr("Event"), i18n.tr("Message"), i18n.tr("Comments") };
-      final int[] widths = { 250, 70, 250, 150, 120, 150, 250, 250, 250 };
+      final String[] names = { i18n.tr("Owner"), i18n.tr("ID"), i18n.tr("Display name"), i18n.tr("Value"), i18n.tr("Timestamp"), i18n.tr("Tag"), i18n.tr("Threshold"), i18n.tr("Event"), i18n.tr("Message"), i18n.tr("Comments") };
+      final int[] widths = { 250, 70, 250, 150, 120, 120, 150, 250, 250, 250 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 
       labelProvider = new LastValuesLabelProvider(viewer);
@@ -204,17 +196,10 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
     */
    protected void createContextMenu()
    {
-      // Create menu manager.
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
-         {
-            fillContextMenu(mgr);
-         }
-      });
+      menuMgr.addMenuListener((m) -> fillContextMenu(m));
 
-      // Create menu.
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
       viewer.getControl().setMenu(menu);
    }

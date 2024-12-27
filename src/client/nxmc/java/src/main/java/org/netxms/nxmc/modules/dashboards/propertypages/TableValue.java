@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,6 +48,7 @@ public class TableValue extends DashboardElementPropertyPage
 	private DciSelector dciSelector;
    private TemplateDciSelector dciName;
    private TemplateDciSelector dciDescription;
+   private TemplateDciSelector dciTag;
    private TitleConfigurator title;
 	private Spinner refreshRate;
 
@@ -122,6 +123,7 @@ public class TableValue extends DashboardElementPropertyPage
             boolean isTemplate = (dciSelector.getNodeId() == AbstractObject.CONTEXT);
             dciName.setEnabled(isTemplate);
             dciDescription.setEnabled(isTemplate);
+            dciTag.setEnabled(isTemplate);
          }
       });
 
@@ -138,13 +140,24 @@ public class TableValue extends DashboardElementPropertyPage
       dciDescription = new TemplateDciSelector(dialogArea, SWT.NONE);
       dciDescription.setLabel(i18n.tr("DCI Description"));
       dciDescription.setText(config.getDciDescription());
-      dciDescription.setSelectDescription(true);
+      dciDescription.setField(TemplateDciSelector.Field.DESCRIPTION);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       dciDescription.setLayoutData(gd);
       dciDescription.setEnabled(config.getObjectId() == AbstractObject.CONTEXT);
+
+      dciTag = new TemplateDciSelector(dialogArea, SWT.NONE);
+      dciTag.setLabel(i18n.tr("DCI Tag"));
+      dciTag.setText(config.getDciDescription());
+      dciTag.setField(TemplateDciSelector.Field.DESCRIPTION);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      dciTag.setLayoutData(gd);
+      dciTag.setEnabled(config.getObjectId() == AbstractObject.CONTEXT);
 
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
@@ -167,6 +180,7 @@ public class TableValue extends DashboardElementPropertyPage
 		config.setDciId(dciSelector.getDciId());
       config.setDciName(dciName.getText());
       config.setDciDescription(dciDescription.getText());
+      config.setDciTag(dciTag.getText());
 		config.setRefreshRate(refreshRate.getSelection());
 		return true;
 	}

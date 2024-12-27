@@ -116,6 +116,8 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
             return getEventMessage(dciValue);
          case BaseDataCollectionView.LV_COLUMN_OWNER:
             return session.getObjectNameWithAlias(dciValue.getNodeId());
+         case BaseDataCollectionView.LV_COLUMN_TAG:
+            return dciValue.getUserTag();
          case BaseDataCollectionView.LV_COLUMN_THRESHOLD:
             return formatThreshold(dciValue);
          case BaseDataCollectionView.LV_COLUMN_TIMESTAMP:
