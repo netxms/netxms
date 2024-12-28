@@ -60,20 +60,20 @@ static void Help()
 /**
  * Get server error text
  */
-static const char *GetServerErrorText(uint32_t rcc)
+static const wchar_t *GetServerErrorText(uint32_t rcc)
 {
    switch(rcc)
    {
       case RCC_SUCCESS:
-         return "Success";
+         return L"Success";
       case RCC_ACCESS_DENIED:
-         return "Access denied";
+         return L"Access denied";
       case RCC_NOT_IMPLEMENTED:
-         return "Command not implemented";
+         return L"Command not implemented";
       case RCC_RESOURCE_NOT_AVAILABLE:
-         return "Server initialization is not completed yet";
+         return L"Server initialization is not completed yet";
    }
-   return "Internal error";
+   return L"Internal error";
 }
 
 /**
@@ -91,13 +91,13 @@ static bool SendPassword(const TCHAR *password)
    {
       uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
       if (rcc != 0)
-         printf("ERROR: server error %u (%s)\n", rcc, GetServerErrorText(rcc));
+         WriteToTerminalEx(L"ERROR: server error %u (%s)\n", rcc, GetServerErrorText(rcc));
       delete response;
       success = (rcc == 0);
    }
    else
    {
-      printf("ERROR: no response from server\n");
+      WriteToTerminal(L"ERROR: no response from server\n");
    }
 
    return success;
@@ -116,7 +116,7 @@ static bool Login(const TCHAR *login, const TCHAR *password)
    NXCPMessage *response = RecvMsg();
    if (response == nullptr)
    {
-      printf("Authentication failed (no response from server)\n");
+      WriteToTerminal(L"Authentication failed (no response from server)\n");
       return false;
    }
 
@@ -124,7 +124,7 @@ static bool Login(const TCHAR *login, const TCHAR *password)
    delete response;
    if (rcc != RCC_SUCCESS)
    {
-      printf("Authentication failed (server error %u: %s)\n", rcc, GetServerErrorText(rcc));
+      WriteToTerminalEx(L"Authentication failed (server error %u: %s)\n", rcc, GetServerErrorText(rcc));
       return false;
    }
    return true;
@@ -152,7 +152,7 @@ static bool ExecCommand(const TCHAR *command, const TCHAR *login, const TCHAR *p
       NXCPMessage *response = RecvMsg();
       if (response == nullptr)
       {
-         printf("Connection closed\n");
+         WriteToTerminal(L"Connection closed\n");
          connClosed = true;
          break;
       }
@@ -171,7 +171,7 @@ static bool ExecCommand(const TCHAR *command, const TCHAR *login, const TCHAR *p
       {
          uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
          if (rcc != RCC_SUCCESS)
-            printf("Server error %u (%s)\n", rcc, GetServerErrorText(rcc));
+            WriteToTerminalEx(L"Server error %u (%s)\n", rcc, GetServerErrorText(rcc));
          delete response;
          break;
       }
@@ -263,7 +263,7 @@ static void Shell(const TCHAR *login, const TCHAR *password)
    NXCPMessage *response = RecvMsg();
    if (response == nullptr)
    {
-      printf("Connection closed\n");
+      WriteToTerminal(L"Connection closed\n");
       return;
    }
 
@@ -273,19 +273,19 @@ static void Shell(const TCHAR *login, const TCHAR *password)
    TCHAR loginBuffer[256], passwordBuffer[MAX_PASSWORD];
    if (authenticationRequired && (login == nullptr))
    {
-      printf("Server requires authentication. Please provide login and password.\n\nLogin: ");
+      WriteToTerminal(L"Server requires authentication. Please provide login and password.\n\nLogin: ");
       fflush(stdout);
 
       if (_fgetts(loginBuffer, 255, stdin) == nullptr)
          return;   // Error reading stdin
 
-      TCHAR *nl = _tcschr(loginBuffer, '\n');
+      wchar_t *nl = wcschr(loginBuffer, L'\n');
       if (nl != nullptr)
          *nl = 0;
 
-      if (!ReadPassword(_T("Password: "), passwordBuffer, MAX_PASSWORD))
+      if (!ReadPassword(L"Password: ", passwordBuffer, MAX_PASSWORD))
       {
-         printf("Cannot read password from terminal\n");
+         WriteToTerminal(L"Cannot read password from terminal\n");
          return;
       }
 
@@ -299,8 +299,8 @@ static void Shell(const TCHAR *login, const TCHAR *password)
          return;
    }
 
-   printf("\nNetXMS Server Remote Console V" NETXMS_VERSION_STRING_A " Ready\n"
-          "Enter \"help\" for command list\n\n");
+   WriteToTerminal(L"\nNetXMS Server Remote Console V" NETXMS_VERSION_STRING " Ready\n"
+                   L"Enter \"help\" for command list\n\n");
 
 #if HAVE_LIBEDIT
    HistoryT *h = history_tinit();
@@ -328,7 +328,7 @@ static void Shell(const TCHAR *login, const TCHAR *password)
       if ((line == nullptr) || (numchars == 0))
          break;
 
-      _tcslcpy(command, line, 1024);
+      wcslcpy(command, line, 1024);
 #else
       WriteToTerminal(_T("\x1b[33mnetxmsd:\x1b[0m "));
       fflush(stdout);
@@ -452,11 +452,7 @@ int main(int argc, char *argv[])
          switch(ch)
          {
             case 'c':
-#ifdef UNICODE
                command = WideStringFromMBStringSysLocale(optarg);
-#else
-               command = optarg;
-#endif
                workMode = COMMAND;
                break;
             case 'h':
@@ -469,11 +465,7 @@ int main(int argc, char *argv[])
                workMode = SHELL;
                break;
             case 'p':
-#ifdef UNICODE
                password = WideStringFromMBStringSysLocale(optarg);
-#else
-               password = optarg;
-#endif
                break;
             case 'P':
                password = passwordBuffer;
@@ -482,22 +474,14 @@ int main(int argc, char *argv[])
                useScriptReturnValue = true;
                break;
             case 's':
-#ifdef UNICODE
                command = WideStringFromMBStringSysLocale(optarg);
-#else
-               command = optarg;
-#endif
                workMode = SCRIPT;
                break;
             case 'u':
-#ifdef UNICODE
                loginName = WideStringFromMBStringSysLocale(optarg);
-#else
-               loginName = optarg;
-#endif
                break;
             case 'v':
-               printf("NetXMS Server Local Administration Tool Version " NETXMS_VERSION_STRING_A "\n");
+               WriteToTerminal(L"NetXMS Server Local Administration Tool Version " NETXMS_VERSION_STRING L"\n");
                start = false;
                exitCode = 0;
                break;
@@ -519,9 +503,9 @@ int main(int argc, char *argv[])
          {
             if (password == passwordBuffer)
             {
-               if (!ReadPassword((workMode == DB_PASSWORD) ? _T("Database password: ") : _T("Password: "), passwordBuffer, MAX_PASSWORD))
+               if (!ReadPassword((workMode == DB_PASSWORD) ? L"Database password: " : L"Password: ", passwordBuffer, MAX_PASSWORD))
                {
-                  printf("Cannot read password from terminal\n");
+                  WriteToTerminal(L"Cannot read password from terminal\n");
                   exitCode = 4;
                   goto stop;
                }
@@ -565,11 +549,9 @@ int main(int argc, char *argv[])
    }
 
 stop:
-#ifdef UNICODE
    MemFree(command);
    MemFree(loginName);
    if (password != passwordBuffer)
       MemFree(password);
-#endif
    return exitCode;
 }

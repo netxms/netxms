@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -237,15 +237,10 @@ void GenericAgentPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
    char *content = nullptr;
    if (m_flags & EXPAND_MACRO)
    {
-#ifdef UNICODE
-      WCHAR *tmp = WideStringFromUTF8String(m_content);
+      wchar_t *tmp = WideStringFromUTF8String(m_content);
       StringBuffer expanded = data->node->expandText(tmp);
       content = UTF8StringFromWideString(expanded.cstr());
       MemFree(tmp);
-#else
-      StringBuffer expanded = data->node->expandText(m_content);
-      content = MemCopyString(expanded.cstr());
-#endif
       BYTE newHash[MD5_DIGEST_SIZE];
       if (!data->forceInstall)
       {
@@ -572,12 +567,8 @@ void FileDeliveryPolicy::importAdditionalData(const ConfigEntry *config, ImportC
          int fd = _topen(fullPath.cstr(), O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
          if (fd != -1)
          {
-#ifdef UNICODE
-            char *base64Data = MBStringFromWideString(file->getSubEntryValue(_T("data")));
-#else
-            char *base64Data = MemCopyString(file->getSubEntryValue(_T("data")));
-#endif
-            uLongf fileSize = static_cast<uLongf>(file->getSubEntryValueAsUInt64(_T("size")));
+            char *base64Data = MBStringFromWideString(file->getSubEntryValue(L"data"));
+            uLongf fileSize = static_cast<uLongf>(file->getSubEntryValueAsUInt64(L"size"));
             char* fileContent;
             size_t decodedFileSize;
             base64_decode_alloc(base64Data, strlen(base64Data), &fileContent, &decodedFileSize);

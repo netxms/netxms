@@ -69,33 +69,33 @@ public:
 class ScheduledTaskParameters
 {
 public:
-   TCHAR *m_taskKey;
+   wchar_t *m_taskKey;
    uint32_t m_userId;
    uint32_t m_objectId;
-   TCHAR *m_persistentData;
-   TCHAR *m_comments;
+   wchar_t *m_persistentData;
+   wchar_t *m_comments;
    ScheduledTaskTransientData *m_transientData;
 
-   ScheduledTaskParameters(const TCHAR *taskKey, uint32_t userId, uint32_t objectId, const TCHAR *persistentData = nullptr,
-            ScheduledTaskTransientData *transientData = nullptr, const TCHAR *comments = nullptr)
+   ScheduledTaskParameters(const wchar_t *taskKey, uint32_t userId, uint32_t objectId, const wchar_t *persistentData = nullptr,
+            ScheduledTaskTransientData *transientData = nullptr, const wchar_t *comments = nullptr)
    {
-      m_taskKey = MemCopyString(taskKey);
+      m_taskKey = MemCopyStringW(taskKey);
       m_userId = userId;
       m_objectId = objectId;
-      m_persistentData = MemCopyString(persistentData);
+      m_persistentData = MemCopyStringW(persistentData);
       m_transientData = transientData;
-      m_comments = MemCopyString(comments);
+      m_comments = MemCopyStringW(comments);
    }
 
-   ScheduledTaskParameters(uint32_t userId, uint32_t objectId, const TCHAR *persistentData = nullptr,
-            ScheduledTaskTransientData *transientData = nullptr, const TCHAR *comments = nullptr)
+   ScheduledTaskParameters(uint32_t userId, uint32_t objectId, const wchar_t *persistentData = nullptr,
+            ScheduledTaskTransientData *transientData = nullptr, const wchar_t *comments = nullptr)
    {
       m_taskKey = nullptr;
       m_userId = userId;
       m_objectId = objectId;
-      m_persistentData = MemCopyString(persistentData);
+      m_persistentData = MemCopyStringW(persistentData);
       m_transientData = transientData;
-      m_comments = MemCopyString(comments);
+      m_comments = MemCopyStringW(comments);
    }
 
    ScheduledTaskParameters()
@@ -221,7 +221,7 @@ public:
  */
 void InitializeTaskScheduler();
 void ShutdownTaskScheduler();
-void NXCORE_EXPORTABLE RegisterSchedulerTaskHandler(const TCHAR *id, ScheduledTaskHandler executor, uint64_t accessRight);
+void NXCORE_EXPORTABLE RegisterSchedulerTaskHandler(const wchar_t *id, ScheduledTaskHandler executor, uint64_t accessRight);
 uint32_t NXCORE_EXPORTABLE AddRecurrentScheduledTask(const TCHAR *taskHandlerId, const TCHAR *schedule, const TCHAR *persistentData,
          ScheduledTaskTransientData *transientData, uint32_t owner, uint32_t objectId, uint64_t systemRights,
          const TCHAR *comments = nullptr, const TCHAR *key = nullptr, bool systemTask = false);

@@ -225,8 +225,6 @@ typedef int bool;
 #define USE_BUNDLED_LIBTRE      1
 #define USE_BUNDLED_GETOPT      1
 
-#define SAFE_FGETWS_WITH_POPEN  1
-
 #define FREE_IS_NULL_SAFE       1
 
 #define FS_PATH_SEPARATOR           _T("\\")
@@ -786,7 +784,7 @@ FILE *open_memstream(char **, size_t *);
 
 // Windows compatibility layer for standard C I/O functions
 #if !HAVE_WFOPEN
-FILE LIBNETXMS_EXPORTABLE *wfopen(const WCHAR *_name, const WCHAR *_type);
+FILE LIBNETXMS_EXPORTABLE *wfopen(const wchar_t *_name, const wchar_t *_type);
 #endif
 
 #ifdef __cplusplus
@@ -803,13 +801,12 @@ static inline int _mkdir(const char *pathname, mode_t mode) { return ::mkdir(pat
 static inline int _open(const char *pathname, int flags) { return ::open(pathname, flags); }
 static inline int _open(const char *pathname, int flags, mode_t mode) { return ::open(pathname, flags, mode); }
 static inline int _pclose(FILE *stream) { return ::pclose(stream); }
-static inline FILE *_popen(const char *command, const char *type) { return ::popen(command, type); }
 static inline int _putenv(char *string) { return ::putenv(string); }
 static inline ssize_t _read(int fd, void *buf, size_t count) { return ::read(fd, buf, count); }
 static inline int _remove(const char *pathname) { return ::remove(pathname); }
 static inline char *_strdup(const char *s) { return ::strdup(s); }
 static inline int _unlink(const char *pathname) { return ::unlink(pathname); }
-static inline FILE *_wfopen(const WCHAR *fname, const WCHAR *mode) { return ::wfopen(fname, mode); }
+static inline FILE *_wfopen(const wchar_t *fname, const wchar_t *mode) { return ::wfopen(fname, mode); }
 static inline ssize_t _write(int fd, const void *buf, size_t count) { return ::write(fd, buf, count); }
 
 #else
@@ -825,7 +822,6 @@ static inline ssize_t _write(int fd, const void *buf, size_t count) { return ::w
 #define _mkdir(p, m)       mkdir((p), (m))
 #define _open              open
 #define _pclose(f)         pclose(f)
-#define _popen(c, m)       popen((c), (m))
 #define _putenv(s)         putenv(s)
 #define _read(f, b, l)     read((f), (b), (l))
 #define _remove(f)         remove(f)

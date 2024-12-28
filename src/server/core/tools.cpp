@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,11 +23,11 @@
 #include "nxcore.h"
 
 #ifdef _WIN32
-# include <io.h>
+#include <io.h>
 #else
-# ifdef HAVE_SYS_UTSNAME_H
-#  include <sys/utsname.h>
-# endif
+#ifdef HAVE_SYS_UTSNAME_H
+#include <sys/utsname.h>
+#endif
 #endif
 
 /**
@@ -239,7 +239,7 @@ void EscapeString(StringBuffer &str)
 /**
  * Prepare and execute SQL query with single binding - object ID.
  */
-bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, uint32_t objectId, const TCHAR *query)
+bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, uint32_t objectId, const wchar_t *query)
 {
    DB_STATEMENT hStmt = DBPrepare(hdb, query);
    if (hStmt == nullptr)
@@ -253,7 +253,7 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, uint32_t objectId, co
 /**
  * Prepare and execute SQL query with single binding - object ID.
  */
-bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, const TCHAR *objectId, const TCHAR *query)
+bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, const wchar_t *objectId, const wchar_t *query)
 {
    DB_STATEMENT hStmt = DBPrepare(hdb, query);
    if (hStmt == nullptr)
@@ -267,11 +267,11 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, const TCHAR *objectId
 /**
  * Execute SQL SELECT-type query replacing macro {id} with object ID.
  */
-DB_RESULT NXCORE_EXPORTABLE ExecuteSelectOnObject(DB_HANDLE hdb, uint32_t objectId, const TCHAR *query)
+DB_RESULT NXCORE_EXPORTABLE ExecuteSelectOnObject(DB_HANDLE hdb, uint32_t objectId, const wchar_t *query)
 {
    StringBuffer fullQuery(query);
    TCHAR idText[16];
-   fullQuery.replace(_T("{id}"), IntegerToString(objectId, idText));
+   fullQuery.replace(L"{id}", IntegerToString(objectId, idText));
    return DBSelect(hdb, fullQuery);
 }
 
@@ -280,7 +280,7 @@ DB_RESULT NXCORE_EXPORTABLE ExecuteSelectOnObject(DB_HANDLE hdb, uint32_t object
  */
 static inline int GetAddressFamilyHint()
 {
-   switch(ConfigReadInt(_T("Objects.Nodes.Resolver.AddressFamilyHint"), 0))
+   switch(ConfigReadInt(L"Objects.Nodes.Resolver.AddressFamilyHint", 0))
    {
       case 1:
          return AF_INET;
@@ -294,7 +294,7 @@ static inline int GetAddressFamilyHint()
 /**
  * Resolve host name using zone if needed
  */
-InetAddress NXCORE_EXPORTABLE ResolveHostName(int32_t zoneUIN, const TCHAR *hostname, int afHint)
+InetAddress NXCORE_EXPORTABLE ResolveHostName(int32_t zoneUIN, const wchar_t *hostname, int afHint)
 {
    InetAddress ipAddr = InetAddress::parse(hostname);
    if (ipAddr.isValid())
@@ -310,15 +310,15 @@ InetAddress NXCORE_EXPORTABLE ResolveHostName(int32_t zoneUIN, const TCHAR *host
          shared_ptr<NetObj> proxy = FindObjectById(zone->getProxyNodeId(nullptr), OBJECT_NODE);
          if (proxy != nullptr)
          {
-            TCHAR query[256], buffer[128];
-            _sntprintf(query, 256, _T("Net.Resolver.AddressByName(%s,%d)"), hostname, (af == AF_INET) ? 4 : ((af == AF_INET6) ? 6 : 0));
+            wchar_t query[256], buffer[128];
+            _sntprintf(query, 256, L"Net.Resolver.AddressByName(%s,%d)", hostname, (af == AF_INET) ? 4 : ((af == AF_INET6) ? 6 : 0));
             if (static_cast<Node&>(*proxy).getMetricFromAgent(query, buffer, 128) == ERR_SUCCESS)
             {
                ipAddr = InetAddress::parse(buffer);
             }
             if (!ipAddr.isValid() && (af != AF_UNSPEC))
             {
-               _sntprintf(query, 256, _T("Net.Resolver.AddressByName(%s)"), hostname);
+               _sntprintf(query, 256, L"Net.Resolver.AddressByName(%s)", hostname);
                if (static_cast<Node&>(*proxy).getMetricFromAgent(query, buffer, 128) == ERR_SUCCESS)
                {
                   ipAddr = InetAddress::parse(buffer);
@@ -328,7 +328,7 @@ InetAddress NXCORE_EXPORTABLE ResolveHostName(int32_t zoneUIN, const TCHAR *host
       }
 
       // Resolve address through local resolver as fallback
-      if (!ipAddr.isValid() && ConfigReadBoolean(_T("Objects.Nodes.FallbackToLocalResolver"), false))
+      if (!ipAddr.isValid() && ConfigReadBoolean(L"Objects.Nodes.FallbackToLocalResolver", false))
       {
          ipAddr = InetAddress::resolveHostName(hostname, af);
          if (!ipAddr.isValid() && (af != AF_UNSPEC))
@@ -348,7 +348,7 @@ InetAddress NXCORE_EXPORTABLE ResolveHostName(int32_t zoneUIN, const TCHAR *host
 /**
  * Event name resolver
  */
-bool EventNameResolver(const TCHAR *name, UINT32 *code)
+bool EventNameResolver(const wchar_t *name, uint32_t *code)
 {
    bool success = false;
    shared_ptr<EventTemplate> event = FindEventTemplateByName(name);
@@ -669,13 +669,9 @@ bool ExecuteSQLCommandFile(const TCHAR *filePath, DB_HANDLE hdb)
       // Execute the query
       if (*query != 0)
       {
-#ifdef UNICODE
-         TCHAR *wquery = WideStringFromUTF8String(query);
+         wchar_t *wquery = WideStringFromUTF8String(query);
          DBQuery(hdb, wquery);
          MemFree(wquery);
-#else
-         DBQuery(hdb, query);
-#endif
       }
 
       // Get next query ready
@@ -692,20 +688,20 @@ bool ExecuteSQLCommandFile(const TCHAR *filePath, DB_HANDLE hdb)
 /**
  * Report server configuration error
  */
-void ReportConfigurationError(const TCHAR *subsystem, const TCHAR *tag, const TCHAR *descriptionFormat, ...)
+void ReportConfigurationError(const wchar_t *subsystem, const wchar_t *tag, const wchar_t *descriptionFormat, ...)
 {
    va_list args;
    va_start(args, descriptionFormat);
-   TCHAR description[4096];
+   wchar_t description[4096];
    _vsntprintf(description, 4096, descriptionFormat, args);
    va_end(args);
 
-   nxlog_write_tag(NXLOG_WARNING, _T("config"), _T("%s"), description);
+   nxlog_write_tag(NXLOG_WARNING, L"config", L"%s", description);
 
    EventBuilder(EVENT_CONFIGURATION_ERROR, g_dwMgmtNode)
-         .param(_T("subsystem"), _T("EPP"))
-         .param(_T("tag"), _T("invalid-object-id"))
-         .param(_T("description"), description)
+         .param(L"subsystem", L"EPP")
+         .param(L"tag", L"invalid-object-id")
+         .param(L"description", description)
          .post();
 }
 
@@ -714,13 +710,13 @@ void ReportConfigurationError(const TCHAR *subsystem, const TCHAR *tag, const TC
  */
 String NetworkPathCheckResult::buildDescription() const
 {
-   TCHAR description[1024];
+   wchar_t description[1024];
    switch(reason)
    {
       case NetworkPathFailureReason::INTERFACE_DISABLED:
-         _sntprintf(description, 1024, _T("Interface %s on node %s is disabled"),
-                  GetObjectName(rootCauseInterfaceId, _T("UNKNOWN")),
-                  GetObjectName(rootCauseNodeId, _T("UNKNOWN")));
+         _sntprintf(description, 1024, L"Interface %s on node %s is disabled",
+                  GetObjectName(rootCauseInterfaceId, L"UNKNOWN"),
+                  GetObjectName(rootCauseNodeId, L"UNKNOWN"));
          break;
       case NetworkPathFailureReason::PROXY_AGENT_UNREACHABLE:
          _sntprintf(description, 1024, _T("Agent on proxy node %s is unreachable"), GetObjectName(rootCauseNodeId, _T("UNKNOWN")));

@@ -286,12 +286,12 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strdup(const UCS2CHAR *src);
 #define wchar_to_mb(wstr, wlen, mstr, mlen)   (size_t)WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (wstr), (int)(wlen), (mstr), (int)(mlen), nullptr, nullptr)
 #define mb_to_wchar(mstr, mlen, wstr, wlen)   (size_t)MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (mstr), (int)(mlen), (wstr), (int)(wlen))
 #else
-size_t LIBNETXMS_EXPORTABLE wchar_to_mb(const WCHAR *src, ssize_t srcLen, char *dst, size_t dstLen);
-size_t LIBNETXMS_EXPORTABLE mb_to_wchar(const char *src, ssize_t srcLen, WCHAR *dst, size_t dstLen);
+size_t LIBNETXMS_EXPORTABLE wchar_to_mb(const wchar_t *src, ssize_t srcLen, char *dst, size_t dstLen);
+size_t LIBNETXMS_EXPORTABLE mb_to_wchar(const char *src, ssize_t srcLen, wchar_t *dst, size_t dstLen);
 #endif
 
-size_t LIBNETXMS_EXPORTABLE wchar_to_mbcp(const WCHAR *src, ssize_t srcLen, char *dst, size_t dstLen, const char *codepage);
-size_t LIBNETXMS_EXPORTABLE mbcp_to_wchar(const char *src, ssize_t srcLen, WCHAR *dst, size_t dstLen, const char *codepage);
+size_t LIBNETXMS_EXPORTABLE wchar_to_mbcp(const wchar_t *src, ssize_t srcLen, char *dst, size_t dstLen, const char *codepage);
+size_t LIBNETXMS_EXPORTABLE mbcp_to_wchar(const char *src, ssize_t srcLen, wchar_t *dst, size_t dstLen, const char *codepage);
 
 size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, ssize_t srcLen, UCS4CHAR *dst, size_t dstLen);
 size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, ssize_t srcLen, char *dst, size_t dstLen);
@@ -5658,18 +5658,15 @@ int LIBNETXMS_EXPORTABLE nx_vswscanf(const WCHAR *str, const WCHAR *format, va_l
 #endif	/* _WIN32 */
 
 #ifdef _WITH_ENCRYPTION
-WCHAR LIBNETXMS_EXPORTABLE *ERR_error_string_W(int errorCode, WCHAR *buffer);
+wchar_t LIBNETXMS_EXPORTABLE *ERR_error_string_W(int errorCode, wchar_t *buffer);
 #endif
 
 #if !defined(_WIN32) && !HAVE_WSTAT
-int LIBNETXMS_EXPORTABLE wstat(const WCHAR *_path, struct stat *_sbuf);
+int LIBNETXMS_EXPORTABLE wstat(const wchar_t *_path, struct stat *_sbuf);
 #endif
 
 #if defined(UNICODE) && !defined(_WIN32)
 
-#if !HAVE_WPOPEN
-FILE LIBNETXMS_EXPORTABLE *wpopen(const WCHAR *_command, const WCHAR *_type);
-#endif
 #if HAVE_FOPEN64 && !HAVE_WFOPEN64
 FILE LIBNETXMS_EXPORTABLE *wfopen64(const WCHAR *_name, const WCHAR *_type);
 #endif
@@ -5700,14 +5697,11 @@ int LIBNETXMS_EXPORTABLE wunlink(const WCHAR *_path);
 #if !HAVE_WREMOVE
 int LIBNETXMS_EXPORTABLE wremove(const WCHAR *_path);
 #endif
-#if !HAVE_WSYSTEM
-int LIBNETXMS_EXPORTABLE wsystem(const WCHAR *_cmd);
-#endif
 #if !HAVE_WMKSTEMP
-int LIBNETXMS_EXPORTABLE wmkstemp(WCHAR *_template);
+int LIBNETXMS_EXPORTABLE wmkstemp(wchar_t *_template);
 #endif
 #if !HAVE_WACCESS
-int LIBNETXMS_EXPORTABLE waccess(const WCHAR *_path, int mode);
+int LIBNETXMS_EXPORTABLE waccess(const wchar_t *_path, int mode);
 #endif
 #if !HAVE_WGETENV
 WCHAR LIBNETXMS_EXPORTABLE *wgetenv(const WCHAR *_string);

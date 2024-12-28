@@ -35,13 +35,10 @@ static std::string GetDomainAttribute(NObject *wirelessDomain, const TCHAR *name
    TCHAR buffer[1024];
    if (wirelessDomain->getCustomAttribute(name, buffer, 1024) == nullptr)
       return std::string();
-#ifdef UNICODE
+
    char utf8buffer[1024];
    wchar_to_utf8(buffer, -1, utf8buffer, 1024);
    return std::string(utf8buffer);
-#else
-   return std::string(buffer);
-#endif
 }
 
 /**

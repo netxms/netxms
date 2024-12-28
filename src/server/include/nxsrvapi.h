@@ -1377,17 +1377,17 @@ public:
 struct ServerCommandLineTool
 {
 #ifdef _WIN32
-   TCHAR **argv;
+   wchar_t **argv;
 #else
    char **argv;
 #endif
    int argc;
-   const TCHAR *displayName;
-   const TCHAR *mainHelpText;
+   const wchar_t *displayName;
+   const wchar_t *mainHelpText;
    const char *additionalOptions;
-   bool (*parseAdditionalOptionCb)(const char, const TCHAR*);
+   bool (*parseAdditionalOptionCb)(const char, const wchar_t*);
    bool (*isArgMissingCb)(int);
-   int (*executeCommandCb)(AgentConnection*, int, TCHAR**, int, RSA_KEY);
+   int (*executeCommandCb)(AgentConnection*, int, wchar_t**, int, RSA_KEY);
 };
 
 /**
@@ -1401,7 +1401,7 @@ uint32_t LIBNXSRV_EXPORTABLE AgentErrorToRCC(uint32_t err);
 void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy);
 void LIBNXSRV_EXPORTABLE DisableAgentConnections();
 
-const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(UINT32 code);
+const wchar_t LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(uint32_t code);
 
 /**
  * Variables

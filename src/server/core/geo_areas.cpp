@@ -53,23 +53,23 @@ GeoArea::GeoArea(DB_RESULT hResult, int row) : m_border(64, 64, Ownership::True)
    DBGetField(hResult, row, 1, m_name, 128);
    m_comments = DBGetField(hResult, row, 2, nullptr, 0);
 
-   TCHAR *configuration = DBGetField(hResult, row, 3, nullptr, 0);
-   TCHAR *curr = configuration;
+   wchar_t *configuration = DBGetField(hResult, row, 3, nullptr, 0);
+   wchar_t *curr = configuration;
    while(true)
    {
-      TCHAR *next = _tcschr(curr, _T(';'));
+      wchar_t *next = wcschr(curr, L';');
       if (next != nullptr)
          *next = 0;
 
-      TCHAR *s = _tcschr(curr, _T('/'));
+      wchar_t *s = wcschr(curr, L'/');
       if (s != nullptr)
       {
          *s = 0;
          s++;
 
          TCHAR *eptr1, *eptr2;
-         double lat = _tcstod(curr, &eptr1);
-         double lon = _tcstod(s, &eptr2);
+         double lat = wcstod(curr, &eptr1);
+         double lon = wcstod(s, &eptr2);
          if ((*eptr1 == 0) && (*eptr2 == 0))
          {
             m_border.add(new GeoLocation(GL_MANUAL, lat, lon));
@@ -142,7 +142,7 @@ static SharedPointerIndex<GeoArea> s_geoAreas;
 void LoadGeoAreas()
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,name,comments,configuration FROM geo_areas"));
+   DB_RESULT hResult = DBSelect(hdb, L"SELECT id,name,comments,configuration FROM geo_areas");
    if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
@@ -193,7 +193,7 @@ uint32_t DeleteGeoArea(uint32_t id, bool forceDelete)
    }
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   bool success = ExecuteQueryOnObject(hdb, id, _T("DELETE FROM geo_areas WHERE id=?"));
+   bool success = ExecuteQueryOnObject(hdb, id, L"DELETE FROM geo_areas WHERE id=?");
    DBConnectionPoolReleaseConnection(hdb);
    if (!success)
       return RCC_DB_FAILURE;

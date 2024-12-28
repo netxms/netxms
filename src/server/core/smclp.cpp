@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -56,13 +56,8 @@ bool SMCLP_Connection::connect(const TCHAR *login, const TCHAR *password)
    m_conn = TelnetConnection::createConnection(m_ip, m_port, m_timeout);
    if (m_conn != NULL)
    {
-#ifdef UNICODE
       char *_login = UTF8StringFromWideString(login);
       char *_password = UTF8StringFromWideString(password);
-#else
-      const char *_login = login;
-      const char *_password = password;
-#endif
 
       if (m_conn->waitForText(":", m_timeout))
       {
@@ -77,10 +72,8 @@ bool SMCLP_Connection::connect(const TCHAR *login, const TCHAR *password)
          }
       }
 
-#ifdef UNICODE
       MemFree(_login);
       MemFree(_password);
-#endif
    }
 
    return success;
@@ -105,17 +98,11 @@ void SMCLP_Connection::disconnect()
 TCHAR *SMCLP_Connection::get(const TCHAR *path, const TCHAR *parameter)
 {
    TCHAR *ret = NULL;
-#ifdef UNICODE
    char *_path = UTF8StringFromWideString(path);
-#else
-   const char *_path = path;
-#endif
    char buffer[1024];
    snprintf(buffer, 1024, "show -o format=text %s", _path);
    m_conn->writeLine(buffer);
-#ifdef UNICODE
    free(_path);
-#endif
 
    while (m_conn->readLine(buffer, 1024, m_timeout / 10) > 0)
    {
@@ -124,11 +111,7 @@ TCHAR *SMCLP_Connection::get(const TCHAR *path, const TCHAR *parameter)
          break;
       }
 
-#ifdef UNICODE
       TCHAR *_buffer = WideStringFromUTF8String(buffer);
-#else
-      char *_buffer = buffer;
-#endif
 
       TCHAR *ptr = _tcschr(_buffer, _T('='));
       if (ptr != NULL)
@@ -144,9 +127,7 @@ TCHAR *SMCLP_Connection::get(const TCHAR *path, const TCHAR *parameter)
          }
       }
 
-#ifdef UNICODE
       free(_buffer);
-#endif
    }
 
    return ret;

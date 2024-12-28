@@ -195,7 +195,7 @@ WCHAR LIBNETXMS_EXPORTABLE *wcsncpy(WCHAR *dest, const WCHAR *src, size_t n)
 /**
  * Convert UNICODE string to single-byte string using iconv
  */
-static size_t WideCharToMultiByteIconv(const char *codepage, const WCHAR *src, ssize_t srcLen, char *dst, size_t dstLen)
+static size_t WideCharToMultiByteIconv(const char *codepage, const wchar_t *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
 #if HAVE_ICONV_IGNORE
    char cp[MAX_CODEPAGE_LEN + 16];
@@ -216,7 +216,7 @@ static size_t WideCharToMultiByteIconv(const char *codepage, const WCHAR *src, s
    }
 
    const char *inbuf = (const char *)src;
-   size_t inbytes = ((srcLen == -1) ? wcslen(src) + 1 : srcLen) * sizeof(WCHAR);
+   size_t inbytes = ((srcLen == -1) ? wcslen(src) + 1 : srcLen) * sizeof(wchar_t);
    char *outbuf = dst;
    size_t outbytes = dstLen;
    size_t count = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
@@ -249,7 +249,7 @@ static size_t WideCharToMultiByteIconv(const char *codepage, const WCHAR *src, s
 /**
  * Convert UNICODE string to single-byte string (Windows compatibility layer)
  */
-size_t LIBNETXMS_EXPORTABLE wchar_to_mb(const WCHAR *src, ssize_t srcLen, char *dst, size_t dstLen)
+size_t LIBNETXMS_EXPORTABLE wchar_to_mb(const wchar_t *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
    if (dstLen == 0)
@@ -303,7 +303,7 @@ size_t LIBNETXMS_EXPORTABLE wchar_to_mb(const WCHAR *src, ssize_t srcLen, char *
 /**
  * Convert single-byte to UNICODE string using iconv
  */
-static size_t MultiByteToWideCharIconv(const char *codepage, const char *src, ssize_t srcLen, WCHAR *dst, size_t dstLen)
+static size_t MultiByteToWideCharIconv(const char *codepage, const char *src, ssize_t srcLen, wchar_t *dst, size_t dstLen)
 {
    iconv_t cd = IconvOpen(UNICODE_CODEPAGE_NAME, (codepage != nullptr) ? codepage : g_cpDefault);
    if (cd == (iconv_t)(-1))
@@ -357,7 +357,7 @@ static size_t MultiByteToWideCharIconv(const char *codepage, const char *src, ss
 /**
  * Convert multibyte string to wide character string
  */
-size_t LIBNETXMS_EXPORTABLE mb_to_wchar(const char *src, ssize_t srcLen, WCHAR *dst, size_t dstLen)
+size_t LIBNETXMS_EXPORTABLE mb_to_wchar(const char *src, ssize_t srcLen, wchar_t *dst, size_t dstLen)
 {
    if (dstLen == 0)
       return strlen(src) + 1;
@@ -828,7 +828,7 @@ static int GetCodePageNumber(const char *codepage)
 /**
  * Convert wide character string to multibyte character string using given codepage
  */
-size_t LIBNETXMS_EXPORTABLE wchar_to_mbcp(const WCHAR *src, ssize_t srcLen, char *dst, size_t dstLen, const char *codepage)
+size_t LIBNETXMS_EXPORTABLE wchar_to_mbcp(const wchar_t *src, ssize_t srcLen, char *dst, size_t dstLen, const char *codepage)
 {
    if (codepage == nullptr)
       return wchar_to_mb(src, srcLen, dst, dstLen);
@@ -874,7 +874,7 @@ size_t LIBNETXMS_EXPORTABLE wchar_to_mbcp(const WCHAR *src, ssize_t srcLen, char
 /**
  * Convert multibyte character string to wide character string using given codepage
  */
-size_t LIBNETXMS_EXPORTABLE mbcp_to_wchar(const char *src, ssize_t srcLen, WCHAR *dst, size_t dstLen, const char *codepage)
+size_t LIBNETXMS_EXPORTABLE mbcp_to_wchar(const char *src, ssize_t srcLen, wchar_t *dst, size_t dstLen, const char *codepage)
 {
    if (codepage == nullptr)
       return mb_to_wchar(src, srcLen, dst, dstLen);
@@ -1018,7 +1018,7 @@ size_t LIBNETXMS_EXPORTABLE mbcp_to_utf8(const char *src, ssize_t srcLen, char *
 
 #if !HAVE_WSTAT
 
-int LIBNETXMS_EXPORTABLE wstat(const WCHAR *_path, struct stat *_sbuf)
+int LIBNETXMS_EXPORTABLE wstat(const wchar_t *_path, struct stat *_sbuf)
 {
    char path[MAX_PATH];
    WideCharToMultiByteSysLocale(_path, path, MAX_PATH);
@@ -1029,7 +1029,7 @@ int LIBNETXMS_EXPORTABLE wstat(const WCHAR *_path, struct stat *_sbuf)
 
 #if !HAVE_WFOPEN
 
-FILE LIBNETXMS_EXPORTABLE *wfopen(const WCHAR *_name, const WCHAR *_type)
+FILE LIBNETXMS_EXPORTABLE *wfopen(const wchar_t *_name, const wchar_t *_type)
 {
    char name[MAX_PATH], type[128];
    WideCharToMultiByteSysLocale(_name, name, sizeof(name));
@@ -1071,7 +1071,7 @@ DEFINE_PATH_FUNC(remove)
 
 #if !HAVE_WMKSTEMP
 
-int LIBNETXMS_EXPORTABLE wmkstemp(WCHAR *_path)
+int LIBNETXMS_EXPORTABLE wmkstemp(wchar_t *_path)
 {
    char path[MAX_PATH];
    WideCharToMultiByteSysLocale(_path, path, sizeof(path));
@@ -1081,20 +1081,6 @@ int LIBNETXMS_EXPORTABLE wmkstemp(WCHAR *_path)
       MultiByteToWideCharSysLocale(path, _path, wcslen(_path) + 1);
    }
    return rc;
-}
-
-#endif
-
-#if !HAVE_WPOPEN
-
-FILE LIBNETXMS_EXPORTABLE *wpopen(const WCHAR *_command, const WCHAR *_type)
-{
-   char *command = MBStringFromWideStringSysLocale(_command);
-   char type[64];
-   wchar_to_mb(_type, -1, type, 64);
-   FILE *f = popen(command, type);
-   MemFree(command);
-   return f;
 }
 
 #endif
@@ -1157,21 +1143,9 @@ int LIBNETXMS_EXPORTABLE wrename(const WCHAR *_oldpath, const WCHAR *_newpath)
 
 #endif
 
-#if !HAVE_WSYSTEM
-
-int LIBNETXMS_EXPORTABLE wsystem(const WCHAR *_cmd)
-{
-   char *cmd = MBStringFromWideStringSysLocale(_cmd);
-   int rc = system(cmd);
-   MemFree(cmd);
-   return rc;
-}
-
-#endif
-
 #if !HAVE_WACCESS
 
-int LIBNETXMS_EXPORTABLE waccess(const WCHAR *_path, int mode)
+int LIBNETXMS_EXPORTABLE waccess(const wchar_t *_path, int mode)
 {
    char path[MAX_PATH];
    WideCharToMultiByteSysLocale(_path, path, sizeof(path));
@@ -1571,7 +1545,7 @@ int LIBNETXMS_EXPORTABLE nx_vswscanf(const WCHAR *str, const WCHAR *format, va_l
  * Get OpenSSL error string as UNICODE string
  * Buffer must be at least 256 character long
  */
-WCHAR LIBNETXMS_EXPORTABLE *ERR_error_string_W(int errorCode, WCHAR *buffer)
+wchar_t LIBNETXMS_EXPORTABLE *ERR_error_string_W(int errorCode, wchar_t *buffer)
 {
    char text[256];
    memset(text, 0, sizeof(text));

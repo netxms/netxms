@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2023 Victor Kirhenshtein
+** Copyright (C) 2004-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -47,13 +47,13 @@ static ObjectArray<Module> s_modules(8, 8, Ownership::True);
 /**
  * Load module
  */
-static bool LoadServerModule(const TCHAR *name, bool mandatory, bool quiet)
+static bool LoadServerModule(const wchar_t *name, bool mandatory, bool quiet)
 {
    bool success = false;
 
-   TCHAR fullName[MAX_PATH];
+   wchar_t fullName[MAX_PATH];
 #ifdef _WIN32
-   _tcslcpy(fullName, name, MAX_PATH);
+   wcslcpy(fullName, name, MAX_PATH);
    size_t len = _tcslen(fullName);
    if ((len < 4) || (_tcsicmp(&fullName[len - 4], _T(".nxm")) && _tcsicmp(&fullName[len - 4], _T(".dll"))))
       _tcslcat(fullName, _T(".nxm"), MAX_PATH);
@@ -68,7 +68,7 @@ static bool LoadServerModule(const TCHAR *name, bool mandatory, bool quiet)
    }
    else
    {
-      _tcslcpy(fullName, name, MAX_PATH);
+      wcslcpy(fullName, name, MAX_PATH);
    }
 
    size_t len = _tcslen(fullName);
@@ -76,7 +76,7 @@ static bool LoadServerModule(const TCHAR *name, bool mandatory, bool quiet)
       _tcslcat(fullName, _T(".nxm"), MAX_PATH);
 #endif
 
-   TCHAR errorText[256];
+   wchar_t errorText[256];
    HMODULE hModule = DLOpen(fullName, errorText);
    if (hModule != nullptr)
    {
@@ -85,15 +85,11 @@ static bool LoadServerModule(const TCHAR *name, bool mandatory, bool quiet)
       auto metadata = static_cast<NXMODULE_METADATA*>(DLGetSymbolAddr(hModule, "NXM_metadata", errorText));
       if (metadata != nullptr)
       {
-#ifdef UNICODE
          mb_to_wchar(metadata->name, -1, m->name, MAX_PATH);
-#else
-         _tcslcpy(m->name, metadata->name, MAX_PATH);
-#endif
       }
       else
       {
-         _tcslcpy(m->name, name, MAX_PATH);
+         wcslcpy(m->name, name, MAX_PATH);
       }
       m->CheckDB = (bool (*)())DLGetSymbolAddr(hModule, "NXM_CheckDB", errorText);
       m->CheckDBVersion = (bool (*)())DLGetSymbolAddr(hModule, "NXM_CheckDBVersion", errorText);
@@ -129,9 +125,9 @@ static bool LoadServerModule(const TCHAR *name, bool mandatory, bool quiet)
 /**
  * Load all registered modules
  */
-bool LoadServerModules(TCHAR *moduleLoadList, bool quiet)
+bool LoadServerModules(wchar_t *moduleLoadList, bool quiet)
 {
-   TCHAR *curr, *next, *ptr;
+   wchar_t *curr, *next, *ptr;
    bool success = true;
 
    for(curr = moduleLoadList; curr != nullptr; curr = next)
@@ -156,7 +152,7 @@ bool LoadServerModules(TCHAR *moduleLoadList, bool quiet)
          ptr++;
          Trim(curr);
          Trim(ptr);
-         mandatory = (*ptr == _T('1')) || (*ptr == _T('Y')) || (*ptr == _T('y'));
+         mandatory = (*ptr == L'1') || (*ptr == L'Y') || (*ptr == L'y');
       }
 
       if (!LoadServerModule(curr, mandatory, quiet))
@@ -174,14 +170,14 @@ bool LoadServerModules(TCHAR *moduleLoadList, bool quiet)
 /**
  * Enumerate all tables in all modules
  */
-bool EnumerateModuleTables(bool (*handler)(const TCHAR *, void *), void *userData)
+bool EnumerateModuleTables(bool (*handler)(const wchar_t*, void*), void *userData)
 {
    for(int i = 0; i < s_modules.size(); i++)
    {
       Module *m = s_modules.get(i);
       if (m->GetTables == nullptr)
          continue;
-      const TCHAR * const *tables = m->GetTables();
+      const wchar_t * const *tables = m->GetTables();
       if (tables == nullptr)
          continue;
       for(int j = 0; tables[j] != nullptr; j++)
@@ -196,14 +192,14 @@ bool EnumerateModuleTables(bool (*handler)(const TCHAR *, void *), void *userDat
 /**
  * Enumerate all module schemas
  */
-bool EnumerateModuleSchemas(bool (*handler)(const TCHAR *, void *), void *userData)
+bool EnumerateModuleSchemas(bool (*handler)(const wchar_t*, void*), void *userData)
 {
    for(int i = 0; i < s_modules.size(); i++)
    {
       Module *m = s_modules.get(i);
       if (m->GetSchemaPrefix == nullptr)
          continue;
-      const TCHAR *schema = m->GetSchemaPrefix();
+      const wchar_t *schema = m->GetSchemaPrefix();
       if (schema == nullptr)
          continue;
       if (!handler(schema, userData))

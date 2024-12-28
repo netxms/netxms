@@ -121,13 +121,9 @@ bool ExecSQLBatch(const char *batchFile, bool showOutput)
       next = FindEndOfQuery(query, batch + size);
       if (!IsEmptyQuery((char *)query))
       {
-#ifdef UNICODE
-         WCHAR *wcQuery = WideStringFromMBString(query);
+         wchar_t *wcQuery = WideStringFromMBString(query);
          result = SQLQuery(wcQuery, showOutput);
          MemFree(wcQuery);
-#else
-         result = SQLQuery(query, showOutput);
-#endif
          if (!result)
             next = batch + size;
       }

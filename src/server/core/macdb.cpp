@@ -353,11 +353,7 @@ template<size_t MaxLen, typename T> static bool LoadOUIDatabaseFile(const TCHAR 
       return false;
    }
 
-#ifdef UNICODE
    TCHAR *content = WideStringFromUTF8String(fileContent);
-#else
-   TCHAR *content = MBStringFromUTF8String(fileContent);
-#endif
    MemFree(fileContent);
 
    Table *table = Table::createFromCSV(content, _T(','));

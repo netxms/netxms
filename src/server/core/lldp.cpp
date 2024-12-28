@@ -115,16 +115,8 @@ static void PortLocalInfoHandler(SNMP_Variable *var, SNMP_Transport *transport, 
 	switch(port->localIdSubtype)
 	{
       case 1:  // interfaceAlias
-#ifdef UNICODE
          mbcp_to_wchar((char *)port->localId, port->localIdLen, ifName, 128, "ISO-8859-1");
          ifName[MIN(port->localIdLen, 127)] = 0;
-#else
-         {
-            size_t len = MIN(port->localIdLen, 127);
-            memcpy(ifName, port->localId, port->localIdLen);
-            ifName[len] = 0;
-         }
-#endif
          iface = node.findInterfaceByAlias(ifName);
          break;
 	   case 3:  // macAddress
@@ -144,16 +136,8 @@ static void PortLocalInfoHandler(SNMP_Variable *var, SNMP_Transport *transport, 
 	      }
 	      break;
       case 5:  // interfaceName
-#ifdef UNICODE
          mbcp_to_wchar((char *)port->localId, port->localIdLen, ifName, 128, "ISO-8859-1");
          ifName[MIN(port->localIdLen, 127)] = 0;
-#else
-         {
-            size_t len = MIN(port->localIdLen, 127);
-            memcpy(ifName, port->localId, port->localIdLen);
-            ifName[len] = 0;
-         }
-#endif
          iface = node.findInterfaceByName(ifName);
          if (iface == nullptr)
             iface = node.findInterfaceByAlias(ifName); // some devices may report interface alias as description in LLDP local port list
@@ -305,16 +289,8 @@ static shared_ptr<Interface> FindRemoteInterface(Node *node, uint32_t idSubType,
 			}
 			return shared_ptr<Interface>();
 		case 5:	// Interface name
-#ifdef UNICODE
 			mbcp_to_wchar((char *)id, (int)idLen, ifName, 128, "ISO-8859-1");
 			ifName[MIN(idLen, 127)] = 0;
-#else
-			{
-				size_t len = MIN(idLen, 127);
-				memcpy(ifName, id, len);
-				ifName[len] = 0;
-			}
-#endif
 		   nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("FindRemoteInterface(%s [%u]): ifName=\"%s\""), node->getName(), node->getId(), ifName);
 			ifc = node->findInterfaceByName(ifName);	/* TODO: find by cached ifName value */
 			if (ifc == nullptr)

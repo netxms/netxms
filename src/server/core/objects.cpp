@@ -1229,7 +1229,7 @@ unique_ptr<SharedObjectArray<NetObj>> NXCORE_EXPORTABLE FindObjectsByRegex(const
 /**
  * Get object name by ID
  */
-const TCHAR NXCORE_EXPORTABLE *GetObjectName(uint32_t id, const TCHAR *defaultName)
+const wchar_t NXCORE_EXPORTABLE *GetObjectName(uint32_t id, const wchar_t *defaultName)
 {
 	shared_ptr<NetObj> object = g_idxObjectById.get(id);
    return (object != nullptr) ? object->getName() : defaultName;

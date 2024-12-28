@@ -3304,7 +3304,7 @@ AC_CHECK_SIZEOF(wchar_t,,[
 AC_CHECK_FUNCS([wcslen wcsdup wcsncpy wcstoll wcstoull towupper towlower])
 AC_CHECK_FUNCS([wcslwr wcserror wcserror_r wfopen wfopen64 fputws putws fwide])
 AC_CHECK_FUNCS([wopen wstat waccess wgetenv wrename wunlink wremove wchdir])
-AC_CHECK_FUNCS([wmkdir wrmdir wsystem wmkstemp wpopen wctime wchmod vwscanf])
+AC_CHECK_FUNCS([wmkdir wrmdir wmkstemp wctime wchmod vwscanf])
 AC_CHECK_FUNCS([vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
 AC_CHECK_FUNCS([mbstowcs mbsrtowcs wcsftime wutime wcstok])
 AC_CHECK_FUNCS([wprintf vwprintf swprintf vswprintf fwprintf vfwprintf])
@@ -3372,36 +3372,6 @@ else
 	ac_found_iconv=no
 	CPPFLAGS="$CPPFLAGS -D__DISABLE_ICONV"
 fi
-
-AC_MSG_CHECKING(whether fgetws can be used with popen)
-AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([
-#include <stdio.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#if HAVE_WCHAR_H
-#include <wchar.h>
-#endif
-     ], [[
-    int rc = 1;
-    wchar_t line[4096];
-    FILE *f = popen("echo test", "r");
-    if(f!=NULL)
-    {
-        fgetws(line, 4096, f);
-        pclose(f);
-        rc = 0;
-    }
-	return rc;
-     ]])
-  ],
-  [ AC_MSG_RESULT(yes)
-    AC_DEFINE(SAFE_FGETWS_WITH_POPEN, 1, Define to 1 if fgetws can be used with popen)
-  ],
-  [ AC_MSG_RESULT(no) ],
-  [ AC_MSG_RESULT(no) ]
-)
 
 if test "x$ac_found_iconv" = "xyes"; then
    AC_MSG_CHECKING(whether iconv supports UCS-2-INTERNAL)

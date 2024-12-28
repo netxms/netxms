@@ -198,22 +198,13 @@ void InfluxDBSender::stop()
  */
 void InfluxDBSender::enqueue(const StringBuffer& data)
 {
-#ifdef UNICODE
    size_t len = wchar_utf8len(data, data.length()) + 2;  // ensure space for new line and trailing zero byte
-#else
-   size_t len = data.length() + 2;
-#endif
 
    lock();
 
    if (m_activeQueue->size + len < m_queueSizeLimit)
    {
-#ifdef UNICODE
       len = wchar_to_utf8(data, data.length(), m_activeQueue->data + m_activeQueue->size, len);
-#else
-      memcpy(m_activeQueue->data + m_activeQueue->size, data, data.length());
-      len = data.length();
-#endif
       m_activeQueue->size += len;
       m_activeQueue->data[m_activeQueue->size++] = '\n';
       m_queuedMessages++;

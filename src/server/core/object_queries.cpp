@@ -406,16 +406,11 @@ static int ObjectQueryComparator(StringList *orderBy, const ObjectQueryResult **
 /**
  * Get metadata entry for given variable
  */
-static inline const TCHAR *GetVariableMetadata(NXSL_VM *vm, const NXSL_Identifier& varName, const TCHAR *suffix)
+static inline const wchar_t *GetVariableMetadata(NXSL_VM *vm, const NXSL_Identifier& varName, const wchar_t *suffix)
 {
-   TCHAR key[256];
-#ifdef UNICODE
+   wchar_t key[256];
    size_t l = utf8_to_wchar(varName.value, -1, key, 256);
    wcslcpy(&key[l - 1], suffix, 256 - l);
-#else
-   strlcpy(key, varName.value, 256);
-   strlcat(key, suffix, 256);
-#endif
    return vm->getMetadataEntry(key);
 }
 
@@ -530,14 +525,10 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
                   }
                   else
                   {
-#ifdef UNICODE
                      char attr[MAX_IDENTIFIER_LENGTH];
                      wchar_to_utf8(fields->get(j), -1, attr, MAX_IDENTIFIER_LENGTH - 1);
                      attr[MAX_IDENTIFIER_LENGTH - 1] = 0;
                      NXSL_Value *av = object->getClass()->getAttr(object, attr);
-#else
-                     NXSL_Value *av = object->getClass()->getAttr(object, fields->get(j));
-#endif
                      if (av != nullptr)
                      {
                         objectData->set(fieldName, av->getValueAsCString());
@@ -560,36 +551,28 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
                      if (name.value[0] == '$')  // Ignore global variables set by system
                         return;
 
-                     const TCHAR *visible = GetVariableMetadata(vm, name, _T(".visible"));
-                     bool hidden = (visible != nullptr) && (!_tcsicmp(visible, _T("false")) || !_tcscmp(visible, _T("0")));
+                     const wchar_t *visible = GetVariableMetadata(vm, name, L".visible");
+                     bool hidden = (visible != nullptr) && (!wcsicmp(visible, L"false") || !wcscmp(visible, L"0"));
                      if (hidden)
                      {
                         if (GetVariableMetadata(vm, name, _T(".order")) == nullptr)
                            return;  // Visibility attribute set to FALSE and not used for ordering
                      }
 
-                     const TCHAR *displayName = hidden ? nullptr : GetVariableMetadata(vm, name, _T(".name"));
+                     const wchar_t *displayName = hidden ? nullptr : GetVariableMetadata(vm, name, L".name");
                      if (displayName != nullptr)
                      {
                         objectData->set(displayName, value->getValueAsCString());
                         if (firstResult)
                         {
-#ifdef UNICODE
-                           WCHAR wname[MAX_IDENTIFIER_LENGTH];
+                           wchar_t wname[MAX_IDENTIFIER_LENGTH];
                            utf8_to_wchar(name.value, -1, wname, MAX_IDENTIFIER_LENGTH);
                            displayNameMapping.set(displayName, wname);
-#else
-                           displayNameMapping.set(displayName, name.value);
-#endif
                         }
                      }
                      else
                      {
-#ifdef UNICODE
                         objectData->setPreallocated(WideStringFromUTF8String(name.value), MemCopyString(value->getValueAsCString()));
-#else
-                        objectData->set(name.value, value->getValueAsCString());
-#endif
                      }
                   });
             }
@@ -615,11 +598,11 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
       StringList *columns = resultSet->get(0)->values->keys();
       for(int i = 0; i < columns->size(); i++)
       {
-         const TCHAR *columnName = columns->get(i);
-         const TCHAR *originalName = displayNameMapping.get(columnName);
-         TCHAR key[256];
+         const wchar_t *columnName = columns->get(i);
+         const wchar_t *originalName = displayNameMapping.get(columnName);
+         wchar_t key[256];
          _sntprintf(key, 256, _T("%s.order"), (originalName != nullptr) ? originalName : columnName);
-         const TCHAR *order = vm->getMetadataEntry(key);
+         const wchar_t *order = vm->getMetadataEntry(key);
          if (order != nullptr)
          {
             if (!_tcsicmp(order, _T("asc")) || !_tcsicmp(order, _T("ascending")))
@@ -628,9 +611,9 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
             }
             else if (!_tcsicmp(order, _T("desc")) || !_tcsicmp(order, _T("descending")))
             {
-               TCHAR c[256];
-               c[0] = _T('-');
-               _tcscpy(&c[1], columnName);
+               wchar_t c[256];
+               c[0] = L'-';
+               wcscpy(&c[1], columnName);
                realOrderBy.add(c);
             }
          }
@@ -647,10 +630,10 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
 
       for(int i = 0; i < columns->size(); i++)
       {
-         TCHAR key[256];
+         wchar_t key[256];
          _sntprintf(key, 256, _T("%s.visible"), columns->get(i));
-         const TCHAR *visible = vm->getMetadataEntry(key);
-         if ((visible != nullptr) && (!_tcscmp(visible, _T("false")) || !_tcscmp(visible, _T("0"))))
+         const wchar_t *visible = vm->getMetadataEntry(key);
+         if ((visible != nullptr) && (!wcscmp(visible, L"false") || !wcscmp(visible, L"0")))
          {
             for(int j = 0; j < resultSet->size(); j++)
                resultSet->get(j)->values->remove(columns->get(i));

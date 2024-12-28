@@ -372,7 +372,7 @@ static bool ExecuteRemoteSshAction(const TCHAR *target, const TCHAR *action)
 }
 
 /**
- * Run external command via system()
+ * Run external command
  */
 static void RunCommand(ServerActionExecutionContext *context)
 {

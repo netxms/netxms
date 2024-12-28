@@ -44,7 +44,7 @@ struct ToolStartupInfo
    uint32_t flags;
    shared_ptr<Node> node;
    ClientSession *session;
-   TCHAR *toolData;
+   wchar_t *toolData;
 
    ~ToolStartupInfo()
    {
@@ -59,7 +59,7 @@ struct ToolStartupInfo
 struct SNMP_ENUM_ARGS
 {
    uint32_t dwNumCols;
-   TCHAR **ppszOidList;
+   wchar_t **ppszOidList;
    int32_t *pnFormatList;
    uint32_t dwFlags;
    shared_ptr<Node> pNode;
@@ -84,7 +84,7 @@ static uint32_t ReturnDBFailure(DB_HANDLE hdb, DB_STATEMENT hStmt)
 bool NXCORE_EXPORTABLE IsTableTool(uint32_t toolId)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT tool_type FROM object_tools WHERE tool_id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT tool_type FROM object_tools WHERE tool_id=?");
    if (hStmt == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
@@ -1780,15 +1780,10 @@ ServerCommandExecutor::~ServerCommandExecutor()
 void ServerCommandExecutor::onOutput(const char *text, size_t length)
 {
    NXCPMessage msg(CMD_COMMAND_OUTPUT, m_requestId);
-#ifdef UNICODE
-   TCHAR *buffer = WideStringFromMBStringSysLocale(text);
+   wchar_t *buffer = WideStringFromMBStringSysLocale(text);
    msg.setField(VID_MESSAGE, buffer);
    m_session->sendMessage(msg);
    MemFree(buffer);
-#else
-   msg.setField(VID_MESSAGE, text);
-   m_session->sendMessage(msg);
-#endif
 }
 
 /**

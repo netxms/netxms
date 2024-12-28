@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2020 Raden Solutions
+** Copyright (C) 2020-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -318,9 +318,8 @@ void InitializeWindowsEventParser()
    s_parserLock.lock();
    LogParser *prev = s_parser;
    s_parser = nullptr;
-#ifdef UNICODE
    char *xml;
-   WCHAR *wxml = ConfigReadCLOB(_T("WindowsEventParser"), _T("<parser></parser>"));
+   wchar_t *wxml = ConfigReadCLOB(_T("WindowsEventParser"), _T("<parser></parser>"));
    if (wxml != nullptr)
    {
       xml = UTF8StringFromWideString(wxml);
@@ -330,9 +329,6 @@ void InitializeWindowsEventParser()
    {
       xml = nullptr;
    }
-#else
-   char *xml = ConfigReadCLOB("WindowsEventParser", "<parser></parser>");
-#endif
    if (xml != nullptr)
    {
       TCHAR parseError[256];

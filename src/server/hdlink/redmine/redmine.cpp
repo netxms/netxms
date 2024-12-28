@@ -252,7 +252,6 @@ uint32_t RedmineLink::openIssue(const TCHAR *description, TCHAR *hdref)
    int statusId = ConfigReadInt(_T("Redmine.StatusId"), 1);
    int priorityId = ConfigReadInt(_T("Redmine.PriorityId"), 2);
 
-#ifdef UNICODE
    char *mbdescr = UTF8StringFromWideString(description);
    json_t *requestRoot = json_pack("{s:{s:i, s:i, s:i, s:i, s:s}}",
       "issue",
@@ -262,15 +261,6 @@ uint32_t RedmineLink::openIssue(const TCHAR *description, TCHAR *hdref)
       "priority_id", priorityId,
       "subject", mbdescr);
    MemFree(mbdescr);
-#else
-   json_t *requestRoot = json_pack("{s:{s:i, s:i, s:i, s:i, s:s}}",
-      "issue",
-      "project_id", projectId,
-      "tracker_id", trackerId,
-      "status_id", statusId,
-      "priority_id", priorityId,
-      "subject", description);
-#endif
 
    char *request = json_dumps(requestRoot, 0);
    curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, request);
@@ -364,13 +354,9 @@ uint32_t RedmineLink::getIssueState(const TCHAR *hdref, bool *open)
    strlcat(url, "/issues.json?key=", MAX_PATH);
    strlcat(url, m_apiKey, MAX_PATH);
    strlcat(url, "&issue_id=", MAX_PATH);
-#ifdef UNICODE
    size_t l = strlen(url);
    wchar_to_utf8(hdref, -1, &url[l], MAX_PATH - l - 1);
    url[MAX_PATH - 1] = 0;
-#else
-   strlcat(url, hdre, MAX_PATH);
-#endif
    curl_easy_setopt(m_curl, CURLOPT_URL, url);
 
    uint32_t rcc = RCC_HDLINK_COMM_FAILURE;
@@ -463,13 +449,9 @@ uint32_t RedmineLink::addComment(const TCHAR *hdref, const TCHAR *comment)
  */
 bool RedmineLink::getIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size)
 {
-#ifdef UNICODE
    WCHAR serverUrl[MAX_PATH];
    utf8_to_wchar(m_serverUrl, -1, serverUrl, MAX_PATH);
-   _sntprintf(url, size, _T("%s/issues/%s"), serverUrl, hdref);
-#else
-   _sntprintf(url, size, _T("%s/issues/%s"), m_serverUrl, hdref);
-#endif
+   _sntprintf(url, size, L"%s/issues/%s", serverUrl, hdref);
    return true;
 }
 

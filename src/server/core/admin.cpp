@@ -40,7 +40,7 @@ extern Condition g_dbPasswordReady;
 /**
  * Execute server script
  */
-static uint32_t ExecuteServerScript(const TCHAR *script, const StringList& args, ServerConsole *console, int32_t *result)
+static uint32_t ExecuteServerScript(const wchar_t *script, const StringList& args, ServerConsole *console, int32_t *result)
 {
    uint32_t rcc = RCC_SUCCESS;
    bool libraryLocked = true;
@@ -59,13 +59,9 @@ static uint32_t ExecuteServerScript(const TCHAR *script, const StringList& args,
       {
          NXSL_CompilationDiagnostic diag;
          NXSL_ServerEnv env;
-#ifdef UNICODE
-         WCHAR *wscript = WideStringFromUTF8String(scriptSource);
+         wchar_t *wscript = WideStringFromUTF8String(scriptSource);
          compiledScript = NXSLCompile(wscript, &env, &diag);
          MemFree(wscript);
-#else
-         compiledScript = NXSLCompile(scriptSource, &env, &diag);
-#endif
          MemFree(scriptSource);
          if (compiledScript == nullptr)
          {

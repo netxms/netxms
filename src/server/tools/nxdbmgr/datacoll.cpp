@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,9 +27,9 @@
  */
 struct DCObjectInfo
 {
-   UINT32 id;
-   UINT32 ownerId;
-   UINT32 templateId;
+   uint32_t id;
+   uint32_t ownerId;
+   uint32_t templateId;
    bool isTable;
    int retentionTime;
 };
@@ -37,7 +37,7 @@ struct DCObjectInfo
 /**
  * Data collection objects
  */
-static HashMap<UINT32, DCObjectInfo> s_dcObjects(Ownership::True);
+static HashMap<uint32_t, DCObjectInfo> s_dcObjects(Ownership::True);
 
 /**
  * Load data collection objects
@@ -46,8 +46,8 @@ bool LoadDataCollectionObjects()
 {
    s_dcObjects.clear();
 
-   DB_RESULT hResult = SQLSelect(_T("SELECT item_id,node_id,template_id,retention_time FROM items"));
-   if (hResult == NULL)
+   DB_RESULT hResult = SQLSelect(L"SELECT item_id,node_id,template_id,retention_time FROM items");
+   if (hResult == nullptr)
       return false;
 
    int count = DBGetNumRows(hResult);
@@ -63,8 +63,8 @@ bool LoadDataCollectionObjects()
    }
    DBFreeResult(hResult);
 
-   hResult = SQLSelect(_T("SELECT item_id,node_id,template_id,retention_time FROM dc_tables"));
-   if (hResult == NULL)
+   hResult = SQLSelect(L"SELECT item_id,node_id,template_id,retention_time FROM dc_tables");
+   if (hResult == nullptr)
       return false;
 
    count = DBGetNumRows(hResult);
@@ -86,18 +86,18 @@ bool LoadDataCollectionObjects()
 /**
  * Get storage class for DCI
  */
-const TCHAR *GetDCObjectStorageClass(uint32_t id)
+const wchar_t *GetDCObjectStorageClass(uint32_t id)
 {
    DCObjectInfo *object = s_dcObjects.get(id);
    if ((object == nullptr) || (object->retentionTime == 0))
-      return _T("default");
+      return L"default";
    if (object->retentionTime <= 7)
-      return _T("7");
+      return L"7";
    if (object->retentionTime <= 30)
-      return _T("30");
+      return L"30";
    if (object->retentionTime <= 90)
-      return _T("90");
+      return L"90";
    if (object->retentionTime <= 180)
-      return _T("180");
-   return _T("other");
+      return L"180";
+   return L"other";
 }

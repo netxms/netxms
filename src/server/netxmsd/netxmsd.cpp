@@ -55,45 +55,45 @@ static bool s_generateConfig = false;
 /**
  * Help text
  */
-static TCHAR s_helpText[] =
-         _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG IS_UNICODE_BUILD_STRING _T("\n")
-         _T("Copyright (c) 2003-2024 Raden Solutions\n\n")
-         _T("Usage: netxmsd [<options>]\n\n")
-         _T("Valid options are:\n")
-         _T("   -A <entry>       : Add configuration file entry\n")
-         _T("   -e               : Run database check on startup\n")
-         _T("   -c <file>        : Set non-default configuration file\n")
-         _T("   -C               : Check configuration and exit\n")
-         _T("   -d               : Run as daemon/service\n")
-         _T("   -D <level>       : Set debug level (valid levels are 0..9)\n")
-         _T("   -G               : Generate configuration file and exit\n")
-         _T("   -h               : Display help and exit\n")
+static wchar_t s_helpText[] =
+         L"NetXMS Server Version " NETXMS_VERSION_STRING L" Build " NETXMS_BUILD_TAG L"\n"
+         L"Copyright (c) 2003-2024 Raden Solutions\n\n"
+         L"Usage: netxmsd [<options>]\n\n"
+         L"Valid options are:\n"
+         L"   -A <entry>       : Add configuration file entry\n"
+         L"   -e               : Run database check on startup\n"
+         L"   -c <file>        : Set non-default configuration file\n"
+         L"   -C               : Check configuration and exit\n"
+         L"   -d               : Run as daemon/service\n"
+         L"   -D <level>       : Set debug level (valid levels are 0..9)\n"
+         L"   -G               : Generate configuration file and exit\n"
+         L"   -h               : Display help and exit\n"
 #ifdef _WIN32
-         _T("   -I               : Install Windows service\n")
-         _T("   -L <user>        : Login name for service account\n")
+         L"   -I               : Install Windows service\n"
+         L"   -L <user>        : Login name for service account\n"
 #endif
-         _T("   -l               : Show log file location\n")
+         L"   -l               : Show log file location\n"
 #ifdef _WIN32
-         _T("   -m               : Ignore service start command if service is configured for manual start\n")
-         _T("   -M               : Create service with manual start\n")
-         _T("   -P <passwd>      : Password for service account\n")
+         L"   -m               : Ignore service start command if service is configured for manual start\n"
+         L"   -M               : Create service with manual start\n"
+         L"   -P <passwd>      : Password for service account\n"
 #else
-         _T("   -p <file>        : Path to pid file (default: /var/run/netxmsd.pid)\n")
+         L"   -p <file>        : Path to pid file (default: /var/run/netxmsd.pid)\n"
 #endif
-         _T("   -q               : Disable interactive console\n")
+         L"   -q               : Disable interactive console\n"
 #ifdef _WIN32
-         _T("   -R               : Remove Windows service\n")
-         _T("   -s               : Start Windows service\n")
-         _T("   -S               : Stop Windows service\n")
+         L"   -R               : Remove Windows service\n"
+         L"   -s               : Start Windows service\n"
+         L"   -S               : Stop Windows service\n"
 #else
 #if WITH_SYSTEMD
-         _T("   -S               : Run as systemd daemon\n")
+         L"   -S               : Run as systemd daemon\n"
 #endif
 #endif
-         _T("   -t <tag>:<level> : Set debug level for specific tag\n")
-         _T("   -T               : Enable SQL query trace\n")
-         _T("   -v               : Display version and exit\n")
-         _T("\n");
+         L"   -t <tag>:<level> : Set debug level for specific tag\n"
+         L"   -T               : Enable SQL query trace\n"
+         L"   -v               : Display version and exit\n"
+         L"\n";
 
 #ifdef _WIN32
 
@@ -237,19 +237,11 @@ static bool ParseCommandLine(int argc, char *argv[])
 			case 'A':
 			   if (s_configEntries == nullptr)
 			      s_configEntries = new StringList();
-#ifdef UNICODE
 			   s_configEntries->addPreallocated(WideStringFromMBStringSysLocale(optarg));
-#else
-            s_configEntries->add(optarg);
-#endif
 			   break;
 			case 'c':
-#ifdef UNICODE
 				MultiByteToWideCharSysLocale(optarg, g_szConfigFile, MAX_PATH);
 				g_szConfigFile[MAX_PATH - 1] = 0;
-#else
-				strlcpy(g_szConfigFile, optarg, MAX_PATH);
-#endif
 				break;
 			case 'C':	// Check config
 				g_flags &= ~AF_DAEMON;
@@ -278,12 +270,8 @@ static bool ParseCommandLine(int argc, char *argv[])
             break;
 #ifdef _WIN32
 			case 'L':
-#ifdef UNICODE
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, login, 256);
 				login[255] = 0;
-#else
-				strlcpy(login, optarg, 256);
-#endif
 				useLogin = true;
 				break;
 #endif
@@ -299,12 +287,8 @@ static bool ParseCommandLine(int argc, char *argv[])
             manualStart = true;
             break;
          case 'P':
-#ifdef UNICODE
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, password, 256);
 				password[255] = 0;
-#else
-				strlcpy(password, optarg, 256);
-#endif
 				break;
 			case 'I':	// Install service
             installService = true;
@@ -322,11 +306,7 @@ static bool ParseCommandLine(int argc, char *argv[])
 				CheckServiceConfig();
 				return false;
          case '@':
-#ifdef UNICODE
             MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szDumpDir, MAX_PATH);
-#else
-            strlcpy(g_szDumpDir, optarg, MAX_PATH);
-#endif
             if (g_szDumpDir[_tcslen(g_szDumpDir) - 1] == _T('\\'))
             {
                g_szDumpDir[_tcslen(g_szDumpDir) - 1] = 0;
@@ -337,12 +317,8 @@ static bool ParseCommandLine(int argc, char *argv[])
 				return false;
 #else /* _WIN32 */
          case 'p':   // PID file
-#ifdef UNICODE
             MultiByteToWideCharSysLocale(optarg, g_szPIDFile, MAX_PATH);
             g_szPIDFile[MAX_PATH - 1] = 0;
-#else
-            strlcpy(g_szPIDFile, optarg, MAX_PATH);
-#endif
             break;
 			case 'S':
 				g_flags |= AF_DAEMON | AF_SYSTEMD_DAEMON;
@@ -380,16 +356,12 @@ static bool ParseCommandLine(int argc, char *argv[])
          ptr++;
          strcpy(ptr, "libnxsrv.dll");
       }
-#ifdef UNICODE
       WCHAR wexePath[MAX_PATH], wdllPath[MAX_PATH];
       MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, exePath, -1, wexePath, MAX_PATH);
       wexePath[MAX_PATH - 1] = 0;
       MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, dllPath, -1, wdllPath, MAX_PATH);
       wdllPath[MAX_PATH - 1] = 0;
       InstallService(wexePath, wdllPath, useLogin ? login : NULL, useLogin ? password : NULL, manualStart);
-#else
-      InstallService(exePath, dllPath, useLogin ? login : NULL, useLogin ? password : NULL, manualStart);
-#endif
       return false;
    }
 
@@ -421,7 +393,7 @@ int main(int argc, char* argv[])
 {
    InitNetXMSProcess(false);
 
-#if defined(UNICODE) && HAVE_LIBEDIT && HAVE_FWIDE
+#if HAVE_LIBEDIT && HAVE_FWIDE
    // Try to switch stdout to byte oriented mode
    fwide(stdout, -1);
 #endif
@@ -454,7 +426,7 @@ int main(int argc, char* argv[])
       FindConfigFile();
       WriteToTerminalEx(_T("Using configuration file \"%s\"\n"), g_szConfigFile);
 
-      FILE *fp = _tfopen(g_szConfigFile, _T("w"));
+      FILE *fp = _wfopen(g_szConfigFile, L"w");
       if (fp == nullptr)
       {
          WriteToTerminalEx(_T("Cannot create file \"%s\" (%s)"), g_szConfigFile, _tcserror(errno));
@@ -550,15 +522,10 @@ int main(int argc, char* argv[])
          pathSeparator++;
       else
          pathSeparator = command;
-#ifdef UNICODE
       snprintf(pathSeparator, 128, "nxdbmgr -c \"%S\" -f check", g_szConfigFile);
-      WCHAR *wcmd = WideStringFromMBStringSysLocale(command);
+      wchar_t *wcmd = WideStringFromMBStringSysLocale(command);
       ProcessExecutor executor(wcmd, false);
       MemFree(wcmd);
-#else
-      snprintf(pathSeparator, 128, "nxdbmgr -c \"%s\" -f check", g_szConfigFile);
-      ProcessExecutor executor(command, false);
-#endif
       if (executor.execute())
       {
          executor.waitForCompletion(INFINITE);
@@ -566,7 +533,7 @@ int main(int argc, char* argv[])
       else
       {
          if (IsStandalone())
-            WriteToTerminalEx(_T("ERROR: Failed to execute command \"%hs\"\n"), command);
+            WriteToTerminalEx(L"ERROR: Failed to execute command \"%hs\"\n", command);
       }
    }
 
@@ -603,7 +570,7 @@ int main(int argc, char* argv[])
    }
 
    // Write PID file
-   FILE *fp = _tfopen(g_szPIDFile, _T("w"));
+   FILE *fp = _wfopen(g_szPIDFile, L"w");
    if (fp != nullptr)
    {
       _ftprintf(fp, _T("%u"), getpid());

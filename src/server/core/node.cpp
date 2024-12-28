@@ -1122,11 +1122,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_snmpPort);
          DBBind(hStmt, 4, DB_SQLTYPE_BIGINT, m_capabilities);
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_snmpVersion));
-#ifdef UNICODE
          DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getAuthName()), DB_BIND_DYNAMIC);
-#else
-         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getAuthName(), DB_BIND_STATIC);
-#endif
          DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_agentPort);
          DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, m_agentSecret, DB_BIND_STATIC);
          DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_snmpObjectId.toString(oidText, 256), DB_BIND_STATIC);
@@ -1140,13 +1136,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_icmpProxy);
          DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_requiredPollCount);
          DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_nUseIfXTable);
-#ifdef UNICODE
          DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getAuthPassword()), DB_BIND_DYNAMIC);
          DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getPrivPassword()), DB_BIND_DYNAMIC);
-#else
-         DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getAuthPassword(), DB_BIND_STATIC);
-         DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getPrivPassword(), DB_BIND_STATIC);
-#endif
          DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, snmpMethods);
          DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_sysName, DB_BIND_STATIC, 127);
          DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), DB_BIND_STATIC);

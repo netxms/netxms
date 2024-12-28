@@ -80,9 +80,9 @@ bool CreateTDataTable_preV281(uint32_t objectId);
 
 void ResetSystemAccount();
 
-bool LoadServerModules(TCHAR *moduleLoadList, bool quiet);
-bool EnumerateModuleTables(bool (*handler)(const TCHAR *, void *), void *userData);
-bool EnumerateModuleSchemas(bool (*handler)(const TCHAR *, void *), void *userData);
+bool LoadServerModules(wchar_t *moduleLoadList, bool quiet);
+bool EnumerateModuleTables(bool (*handler)(const wchar_t*, void*), void *userData);
+bool EnumerateModuleSchemas(bool (*handler)(const wchar_t*, void*), void *userData);
 bool UpgradeModuleSchemas();
 bool CheckModuleSchemas();
 bool CheckModuleSchemaVersions();
@@ -92,7 +92,7 @@ bool IsTimestampColumn(const TCHAR *table, const char *name);
 bool IsTimestampConversionNeeded(const TCHAR* table);
 
 bool LoadDataCollectionObjects();
-const TCHAR *GetDCObjectStorageClass(uint32_t id);
+const wchar_t *GetDCObjectStorageClass(uint32_t id);
 
 /**
  * Global variables

@@ -30,34 +30,34 @@
 /**
  * Texts for ISC error codes
  */
-const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(UINT32 code)
+const wchar_t LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(uint32_t code)
 {
-   static const TCHAR *errorText[] =
+   static const wchar_t *errorText[] =
 	{
-		_T("Success"),
-		_T("Unknown service"),
-		_T("Request out of state"),
-		_T("Service disabled"),
-		_T("Encryption required"),
-		_T("Connection broken"),
-		_T("Already connected"),
-		_T("Socket error"),
-		_T("Connect failed"),
-		_T("Invalid or incompatible NXCP version"),
-		_T("Request timed out"),
-		_T("Command or function not implemented"),
-		_T("No suitable ciphers found"),
-		_T("Invalid public key"),
-		_T("Invalid session key"),
-		_T("Internal error"),
-		_T("Session setup failed"),
-		_T("Object not found"),
-		_T("Failed to post event")
+		L"Success",
+		L"Unknown service",
+		L"Request out of state",
+		L"Service disabled",
+		L"Encryption required",
+		L"Connection broken",
+		L"Already connected",
+		L"Socket error",
+		L"Connect failed",
+		L"Invalid or incompatible NXCP version",
+		L"Request timed out",
+		L"Command or function not implemented",
+		L"No suitable ciphers found",
+		L"Invalid public key",
+		L"Invalid session key",
+		L"Internal error",
+		L"Session setup failed",
+		L"Object not found",
+		L"Failed to post event"
 	};
 
 	if (code <= ISC_ERR_POST_EVENT_FAILED)
 		return errorText[code];
-   return _T("Unknown error code");
+   return L"Unknown error code";
 }
 
 /**

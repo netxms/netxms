@@ -327,13 +327,9 @@ static int CASValidate(const char *ticket, char *loginName)
    {
       if (element_body(str, "cas:proxy", 1, parsebuf, sizeof(parsebuf)) != nullptr)
       {
-#ifdef UNICODE
-         WCHAR wproxy[MAX_DNS_NAME];
+         wchar_t wproxy[MAX_DNS_NAME];
          utf8_to_wchar(parsebuf, -1, wproxy, MAX_DNS_NAME);
          if (!s_proxies.contains(wproxy))
-#else
-         if (!s_proxies.contains(parsebuf))
-#endif
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS: proxy %hs is not in allowed proxies list"), parsebuf);
             SET_RET_AND_GOTO_END(CAS_BAD_PROXY);
@@ -362,11 +358,10 @@ end:
 /**
  * Authenticate user via CAS
  */
-bool CASAuthenticate(const char *ticket, TCHAR *loginName)
+bool CASAuthenticate(const char *ticket, wchar_t *loginName)
 {
    bool success = false;
    s_lock.lock();
-#ifdef UNICODE
    char mbLogin[MAX_USER_NAME];
    int rc = CASValidate(ticket, mbLogin);
    if (rc == CAS_SUCCESS)
@@ -374,13 +369,6 @@ bool CASAuthenticate(const char *ticket, TCHAR *loginName)
       mb_to_wchar(mbLogin, -1, loginName, MAX_USER_NAME);
       success = true;
    }
-#else
-   int rc = CASValidate(ticket, loginName);
-   if (rc == CAS_SUCCESS)
-   {
-      success = true;
-   }
-#endif
    else
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS: ticket %hs validation failed, error %d"), ticket, rc);

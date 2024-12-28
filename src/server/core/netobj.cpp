@@ -137,9 +137,9 @@ const char *NetObj::getObjectClassNameA() const
 /**
  * Get class name for given class ID
  */
-const WCHAR *NetObj::getObjectClassNameW(int objectClass)
+const wchar_t *NetObj::getObjectClassNameW(int objectClass)
 {
-   return ((objectClass >= 0) && (objectClass < static_cast<int>(sizeof(s_classNameW) / sizeof(const WCHAR*)))) ? s_classNameW[objectClass] : L"Custom";
+   return ((objectClass >= 0) && (objectClass < static_cast<int>(sizeof(s_classNameW) / sizeof(const wchar_t*)))) ? s_classNameW[objectClass] : L"Custom";
 }
 
 /**
@@ -153,11 +153,11 @@ const char *NetObj::getObjectClassNameA(int objectClass)
 /**
  * Get object class ID by name
  */
-int NetObj::getObjectClassByNameW(const WCHAR *name)
+int NetObj::getObjectClassByNameW(const wchar_t *name)
 {
    if (name == nullptr)
       return OBJECT_GENERIC;
-   for(int i = 0; i < static_cast<int>(sizeof(s_classNameW) / sizeof(const WCHAR*)); i++)
+   for(int i = 0; i < static_cast<int>(sizeof(s_classNameW) / sizeof(const wchar_t*)); i++)
       if (!wcsicmp(name, s_classNameW[i]))
          return i;
    return OBJECT_GENERIC;
@@ -1458,13 +1458,8 @@ uint32_t NetObj::modifyFromMessageInternal(const NXCPMessage& msg)
       // Cleanup
       for(int i = 0; m_name[i] != 0; i++)
       {
-#ifdef UNICODE
          if (m_name[i] < 0x20)
             m_name[i] = L' ';
-#else
-         if (reinterpret_cast<BYTE*>(m_name)[i] < 0x20)
-            m_name[i] = ' ';
-#endif
       }
    }
 
@@ -1744,14 +1739,14 @@ bool NetObj::setMgmtStatus(bool isManaged)
  * Send message to client, who requests poll, if any
  * This method is used by Node and Interface class objects
  */
-void NetObj::sendPollerMsg(const TCHAR *format, ...)
+void NetObj::sendPollerMsg(const wchar_t *format, ...)
 {
    if (m_pollRequestor == nullptr)
       return;
 
    va_list args;
    va_start(args, format);
-   TCHAR buffer[1024];
+   wchar_t buffer[1024];
    _vsntprintf(buffer, 1024, format, args);
    va_end(args);
    m_pollRequestor->sendPollerMsg(m_pollRequestId, buffer);
@@ -2754,13 +2749,9 @@ json_t *NetObj::toJson()
       m_moduleData->forEach(
          [moduleData] (const TCHAR *key, const ModuleData *value) -> EnumerationCallbackResult
          {
-#ifdef UNICODE
             char mbname[128];
             wchar_to_utf8(key, -1, mbname, 128);
             json_object_set_new(moduleData, mbname, value->toJson());
-#else
-            json_object_set_new(moduleData, key, value->toJson());
-#endif
             return _CONTINUE;
          });
       json_object_set_new(root, "moduleData", moduleData);
@@ -3210,12 +3201,8 @@ void NetObj::expandScriptMacro(TCHAR *name, const Alarm *alarm, const Event *eve
       *s = 0;
       s++;
       Trim(s);
-#ifdef UNICODE
       wchar_to_utf8(s, -1, entryPoint, MAX_IDENTIFIER_LENGTH);
       entryPoint[MAX_IDENTIFIER_LENGTH - 1] = 0;
-#else
-      strlcpy(entryPoint, s, MAX_IDENTIFIER_LENGTH);
-#endif
    }
    else
    {

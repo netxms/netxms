@@ -160,12 +160,12 @@ private:
    uint32_t login(bool isSync);
    void compareGroupList();
    void compareUserLists();
-   TCHAR *getAttrValue(LDAPMessage *entry, const char *attr, int index = 0);
-   TCHAR *getIdAttrValue(LDAPMessage *entry, const char *attr);
+   wchar_t *getAttrValue(LDAPMessage *entry, const char *attr, int index = 0);
+   wchar_t *getIdAttrValue(LDAPMessage *entry, const char *attr);
    void prepareStringForInit(LDAP_CHAR *connectionLine);
    int readInPages(LDAP_CHAR *base);
    void fillLists(LDAPMessage *searchResult);
-   TCHAR *dnFromMessage(LDAPMessage *entry);
+   wchar_t *dnFromMessage(LDAPMessage *entry);
    void updateMembers(StringSet *memberList, const char *firstAttr, LDAPMessage *firstEntry, const LDAP_CHAR *dn);
 
    static String getErrorString(int code);
@@ -178,7 +178,7 @@ public:
 #endif // WITH_LDAP
 
    void syncUsers();
-   uint32_t ldapUserLogin(const TCHAR *name, const TCHAR *password);
+   uint32_t ldapUserLogin(const wchar_t *name, const wchar_t *password);
 };
 
 /**
@@ -400,9 +400,9 @@ public:
    const TCHAR *getPhoneNumber() const { return CHECK_NULL_EX(m_phoneNumber); }
    const TCHAR *getEmail() const { return CHECK_NULL_EX(m_email); }
 
-   bool validatePassword(const TCHAR *password);
+   bool validatePassword(const wchar_t *password);
    void decreaseGraceLogins() { if (m_graceLogins > 0) m_graceLogins--; m_flags |= UF_MODIFIED; }
-   void setPassword(const TCHAR *password, bool clearChangePasswdFlag);
+   void setPassword(const wchar_t *password, bool clearChangePasswdFlag);
    void increaseAuthFailures();
    void resetAuthFailures() { m_authFailures = 0; m_flags |= UF_MODIFIED; }
    void updateLastLogin() { m_lastLogin = time(nullptr); m_flags |= UF_MODIFIED; }
@@ -465,8 +465,8 @@ uint32_t NXCORE_EXPORTABLE AuthenticateUser(const TCHAR *login, const TCHAR *pas
          BYTE *pChallenge, uint32_t *pdwId, uint64_t *pdwSystemRights, bool *pbChangePasswd, bool *pbIntruderLockout,
          bool *closeOtherSessions, bool ssoAuth, uint32_t *graceLogins);
 
-uint32_t NXCORE_EXPORTABLE ValidateUserPassword(uint32_t userId, const TCHAR *login, const TCHAR *password, bool *isValid);
-uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword);
+uint32_t NXCORE_EXPORTABLE ValidateUserPassword(uint32_t userId, const wchar_t *login, const wchar_t *password, bool *isValid);
+uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const wchar_t *newPassword, const wchar_t *oldPassword, bool changeOwnPassword);
 uint64_t NXCORE_EXPORTABLE GetEffectiveSystemRights(uint32_t userId);
 String NXCORE_EXPORTABLE GetEffectiveUIAccessRules(uint32_t userId);
 bool NXCORE_EXPORTABLE CheckUserMembership(uint32_t userId, uint32_t groupId);
@@ -519,6 +519,6 @@ template<typename C> static inline void EnumerateUserDbObjectAttributes(uint32_t
  * CAS API
  */
 void CASReadSettings();
-bool CASAuthenticate(const char *ticket, TCHAR *loginName);
+bool CASAuthenticate(const char *ticket, wchar_t *loginName);
 
 #endif   /* _nms_users_h_ */

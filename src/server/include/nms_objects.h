@@ -66,9 +66,9 @@ extern int16_t g_defaultAgentCacheMode;
 /**
  * Utility functions used by inline methods
  */
-bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, uint32_t objectId, const TCHAR *query);
-bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, const TCHAR *objectId, const TCHAR *query);
-DB_RESULT NXCORE_EXPORTABLE ExecuteSelectOnObject(DB_HANDLE hdb, uint32_t objectId, const TCHAR *query);
+bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, uint32_t objectId, const wchar_t *query);
+bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, const wchar_t *objectId, const wchar_t *query);
+DB_RESULT NXCORE_EXPORTABLE ExecuteSelectOnObject(DB_HANDLE hdb, uint32_t objectId, const wchar_t *query);
 
 /**
  * Constants
@@ -129,8 +129,8 @@ struct WebServiceCallResult
    bool success;
    uint32_t agentErrorCode;
    uint32_t httpResponseCode;
-   TCHAR errorMessage[WEBSVC_ERROR_TEXT_MAX_SIZE];
-   TCHAR *document;
+   wchar_t errorMessage[WEBSVC_ERROR_TEXT_MAX_SIZE];
+   wchar_t *document;
 
 public:
    WebServiceCallResult();
@@ -144,8 +144,8 @@ class NXCORE_EXPORTABLE GeoArea
 {
 private:
    uint32_t m_id;
-   TCHAR m_name[128];
-   TCHAR *m_comments;
+   wchar_t m_name[128];
+   wchar_t *m_comments;
    ObjectArray<GeoLocation> m_border;
 
 public:
@@ -158,8 +158,8 @@ public:
    bool containsLocation(const GeoLocation& location) const { return location.isWithinArea(m_border); }
 
    uint32_t getId() const { return m_id; }
-   const TCHAR *getName() const { return m_name; }
-   const TCHAR *getComments() const { return m_comments; }
+   const wchar_t *getName() const { return m_name; }
+   const wchar_t *getComments() const { return m_comments; }
    StringBuffer getBorderAsString() const;
 };
 
@@ -1383,11 +1383,7 @@ public:
    virtual int getObjectClass() const { return OBJECT_GENERIC; }
    virtual const WCHAR *getObjectClassNameW() const;
    virtual const char *getObjectClassNameA() const;
-#ifdef UNICODE
-   const WCHAR *getObjectClassName() const { return getObjectClassNameW(); }
-#else
-   const char *getObjectClassName() const { return getObjectClassNameA(); }
-#endif
+   const wchar_t *getObjectClassName() const { return getObjectClassNameW(); }
 
    virtual int32_t getZoneUIN() const { return 0; }
 
@@ -1530,7 +1526,7 @@ public:
    void setStatusCalculation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
    void setStatusPropagation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
 
-   void sendPollerMsg(const TCHAR *format, ...);
+   void sendPollerMsg(const wchar_t *format, ...);
 
    StringBuffer expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, shared_ptr<DCObjectInfo> dci,
             const TCHAR *userName, const TCHAR *objectName, const TCHAR *instance, const StringMap *inputFields, const StringList *args);
@@ -1549,20 +1545,12 @@ public:
    static void linkObjects(const shared_ptr<NetObj>& parent, const shared_ptr<NetObj>& child);
    static void unlinkObjects(NetObj *parent, NetObj *child);
 
-   static const WCHAR *getObjectClassNameW(int objectClass);
+   static const wchar_t *getObjectClassNameW(int objectClass);
    static const char *getObjectClassNameA(int objectClass);
-#ifdef UNICODE
-   static const WCHAR *getObjectClassName(int objectClass) { return getObjectClassNameW(objectClass); }
-#else
-   static const char *getObjectClassName(int objectClass) { return getObjectClassNameA(objectClass); }
-#endif
-   static int getObjectClassByNameW(const WCHAR *name);
+   static const wchar_t *getObjectClassName(int objectClass) { return getObjectClassNameW(objectClass); }
+   static int getObjectClassByNameW(const wchar_t *name);
    static int getObjectClassByNameA(const char *name);
-#ifdef UNICODE
-   static int getObjectClassByName(const WCHAR *name) { return getObjectClassByNameW(name); }
-#else
-   static int getObjectClassByName(const char *name) { return getObjectClassByNameA(name); }
-#endif
+   static int getObjectClassByName(const wchar_t *name) { return getObjectClassByNameW(name); }
 };
 
 /**
@@ -5531,7 +5519,7 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE MacDbFind(const MacAddress& macAddr);
 const TCHAR *FindVendorByMac(const MacAddress& macAddr);
 void FindVendorByMacList(const NXCPMessage& request, NXCPMessage* response);
 
-const TCHAR NXCORE_EXPORTABLE *GetObjectName(uint32_t id, const TCHAR *defaultName);
+const wchar_t NXCORE_EXPORTABLE *GetObjectName(uint32_t id, const wchar_t *defaultName);
 shared_ptr<Template> NXCORE_EXPORTABLE FindTemplateByName(const TCHAR *pszName);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(int32_t zoneUIN, const InetAddress& ipAddr);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(int32_t zoneUIN, bool allZones, const InetAddress& ipAddr);

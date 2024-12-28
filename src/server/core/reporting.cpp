@@ -395,18 +395,14 @@ void ExecuteReport(const shared_ptr<ScheduledTaskParameters>& parameters)
 
    // Extract report ID from job configuration
    Config jobConfig;
-#ifdef UNICODE
    char *xml = UTF8StringFromWideString(parameters->m_persistentData);
-#else
-   char *xml = UTF8StringFromMBString(parameters->m_persistentData);
-#endif
    jobConfig.loadXmlConfigFromMemory(xml, strlen(xml), nullptr, "job", false);
    MemFree(xml);
-   uuid reportId = jobConfig.getValueAsUUID(_T("/reportId"));
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("Preparing execution of report %s (%s)"), reportId.toString().cstr(), parameters->m_comments);
+   uuid reportId = jobConfig.getValueAsUUID(L"/reportId");
+   nxlog_debug_tag(DEBUG_TAG, 3, L"Preparing execution of report %s (%s)", reportId.toString().cstr(), parameters->m_comments);
 
    // Prepare data view if needed
-   TCHAR viewName[MAX_OBJECT_NAME] = _T("");
+   wchar_t viewName[MAX_OBJECT_NAME] = L"";
    if (IsDataViewRequired(reportId) && PrepareReportingDataView(parameters->m_userId, viewName))
       request.setField(VID_VIEW_NAME, viewName);
    else
@@ -423,12 +419,12 @@ void ExecuteReport(const shared_ptr<ScheduledTaskParameters>& parameters)
          uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
          if (rcc == RCC_SUCCESS)
          {
-            nxlog_debug_tag(DEBUG_TAG, 3, _T("Scheduled report \"%s\" execution started (job ID %s)"),
+            nxlog_debug_tag(DEBUG_TAG, 3, L"Scheduled report \"%s\" execution started (job ID %s)",
                      parameters->m_comments, response->getFieldAsGUID(VID_TASK_ID).toString().cstr());
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 3, _T("Cannot execute report \"%s\" (reporting server error %u)"), parameters->m_comments, rcc);
+            nxlog_debug_tag(DEBUG_TAG, 3, L"Cannot execute report \"%s\" (reporting server error %u)", parameters->m_comments, rcc);
          }
          delete response;
       }

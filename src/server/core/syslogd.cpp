@@ -277,14 +277,10 @@ static shared_ptr<Node> FindNodeByHostname(const char *hostName, int32_t zoneUIN
 
    if (node == nullptr)
 	{
-#ifdef UNICODE
-		WCHAR wname[MAX_OBJECT_NAME];
+      wchar_t wname[MAX_OBJECT_NAME];
 		mb_to_wchar(hostName, -1, wname, MAX_OBJECT_NAME);
 		wname[MAX_OBJECT_NAME - 1] = 0;
 		node = static_pointer_cast<Node>(FindObjectByName(wname, OBJECT_NODE));
-#else
-		node = static_pointer_cast<Node>(FindObjectByName(hostName, OBJECT_NODE));
-#endif
    }
    return node;
 }
@@ -331,12 +327,8 @@ bool SyslogMessage::bindToNode()
       m_zoneUIN = m_node->getZoneUIN();
       if (m_hostName[0] == 0)
 		{
-#ifdef UNICODE
 			wchar_to_mb(m_node->getName(), -1, m_hostName, MAX_SYSLOG_HOSTNAME_LEN);
 			m_hostName[MAX_SYSLOG_HOSTNAME_LEN - 1] = 0;
-#else
-         strlcpy(m_hostName, m_node->getName(), MAX_SYSLOG_HOSTNAME_LEN);
-#endif
       }
    }
    else
@@ -395,13 +387,8 @@ static void SyslogWriterThread()
          DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, msg->getSeverity());
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, msg->getNodeId());
          DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, msg->getZoneUIN());
-#ifdef UNICODE
          DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, WideStringFromMBString(msg->getHostName()), DB_BIND_DYNAMIC);
          DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, WideStringFromMBString(msg->getTag()), DB_BIND_DYNAMIC);
-#else
-         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, msg->getHostName(), DB_BIND_STATIC);
-         DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, msg->getTag(), DB_BIND_STATIC);
-#endif
          DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, msg->getMessage(), DB_BIND_STATIC);
 
          if (!DBExecute(hStmt))
@@ -461,13 +448,9 @@ static void ProcessSyslogMessage(SyslogMessage *msg)
 		s_parserLock.lock();
 		if (((msg->getNodeId() != 0) || s_parseUnknownSources) && (s_parser != nullptr))
 		{
-#ifdef UNICODE
-			WCHAR wtag[MAX_SYSLOG_TAG_LEN];
+		   wchar_t wtag[MAX_SYSLOG_TAG_LEN];
 			mbcp_to_wchar(msg->getTag(), -1, wtag, MAX_SYSLOG_TAG_LEN, codepage);
 			s_parser->matchEvent(wtag, msg->getFacility(), 1 << msg->getSeverity(), msg->getMessage(), nullptr, 0, msg->getNodeId(), 0, ipAddr, &writeToDatabase);
-#else
-			s_parser->matchEvent(msg->getTag(), msg->getFacility(), 1 << msg->getSeverity(), msg->getMessage(), nullptr, 0, msg->getNodeId(), 0, ipAddr, &writeToDatabase);
-#endif
 		}
 		s_parserLock.unlock();
 
@@ -561,9 +544,8 @@ static void CreateParserFromConfig()
 	LockGuard lockGuard(s_parserLock);
 	LogParser *prev = s_parser;
 	s_parser = nullptr;
-#ifdef UNICODE
    char *xml;
-	WCHAR *wxml = ConfigReadCLOB(_T("SyslogParser"), _T("<parser></parser>"));
+   wchar_t *wxml = ConfigReadCLOB(_T("SyslogParser"), _T("<parser></parser>"));
 	if (wxml != nullptr)
 	{
 		xml = UTF8StringFromWideString(wxml);
@@ -573,12 +555,9 @@ static void CreateParserFromConfig()
 	{
 		xml = nullptr;
 	}
-#else
-	char *xml = ConfigReadCLOB("SyslogParser", "<parser></parser>");
-#endif
 	if (xml != nullptr)
 	{
-		TCHAR parseError[256];
+	   wchar_t parseError[256];
 		ObjectArray<LogParser> *parsers = LogParser::createFromXml(xml, -1, parseError, 256, EventNameResolver);
 		if ((parsers != nullptr) && (parsers->size() > 0))
 		{
@@ -586,11 +565,11 @@ static void CreateParserFromConfig()
 			s_parser->setCallback(SyslogParserCallback);
 			if (prev != nullptr)
 			   s_parser->restoreCounters(prev);
-			nxlog_debug_tag(DEBUG_TAG, 3, _T("Syslog parser successfully created from config"));
+			nxlog_debug_tag(DEBUG_TAG, 3, L"Syslog parser successfully created from config");
 		}
 		else
 		{
-			nxlog_write(NXLOG_ERROR, _T("Cannot initialize syslog parser (%s)"), parseError);
+			nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Cannot initialize syslog parser (%s)", parseError);
 		}
 		MemFree(xml);
 		delete parsers;
@@ -617,7 +596,7 @@ static void SyslogReceiver()
 #endif
    {
       TCHAR buffer[1024];
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to create socket for syslog receiver (%s)"), GetLastSocketErrorText(buffer, 1024));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Unable to create socket for syslog receiver (%s)", GetLastSocketErrorText(buffer, 1024));
       return;
    }
 

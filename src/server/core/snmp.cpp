@@ -493,11 +493,7 @@ restart_check:
 
       for(int i = 0; (i < communities->size()) && !IsShutdownInProgress(); i++)
       {
-#ifdef UNICODE
          char *community = MBStringFromWideString(communities->get(i));
-#else
-         const char *community = communities->get(i);
-#endif
          if ((originalContext == nullptr) ||
              (originalContext->getSecurityModel() == SNMP_SECURITY_MODEL_USM) ||
              strcmp(community, originalContext->getCommunity()))
@@ -505,21 +501,17 @@ restart_check:
             nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckCommSettings(%s): trying version %d community '%hs'"),
                      ipAddrText, pTransport->getSnmpVersion(), community);
             pTransport->setSecurityContext(new SNMP_SecurityContext(community));
-#ifdef UNICODE
             MemFree(community);
-#endif
             if (SnmpTestRequest(pTransport, testOids, separateRequests))
             {
                *version = pTransport->getSnmpVersion();
                goto success;
             }
          }
-#ifdef UNICODE
          else
          {
             MemFree(community);
          }
-#endif
       }
 
       if ((pTransport->getSnmpVersion() == SNMP_VERSION_2C) && !IsShutdownInProgress() && !(initialDiscovery && (g_flags & AF_DISABLE_SNMP_V1_PROBE)))
@@ -582,15 +574,10 @@ MibCompilerExecutor::~MibCompilerExecutor()
 void MibCompilerExecutor::onOutput(const char *text, size_t length)
 {
    NXCPMessage msg(CMD_COMMAND_OUTPUT, m_requestId);
-#ifdef UNICODE
-   TCHAR *buffer = WideStringFromMBStringSysLocale(text);
+   wchar_t *buffer = WideStringFromMBStringSysLocale(text);
    msg.setField(VID_MESSAGE, buffer);
    m_session->sendMessage(msg);
    MemFree(buffer);
-#else
-   msg.setField(VID_MESSAGE, text);
-   m_session->sendMessage(msg);
-#endif
 }
 
 /**

@@ -209,8 +209,8 @@ NXCORE_EXPORTABLE_VAR(ThreadPool *g_mainThreadPool) = nullptr;
 int16_t g_defaultAgentCacheMode = AGENT_CACHE_OFF;
 InetAddressList g_peerNodeAddrList;
 Condition g_dbPasswordReady(true);
-TCHAR g_startupSqlScriptPath[MAX_PATH] = _T("");
-TCHAR g_dbSessionSetupSqlScriptPath[MAX_PATH] = _T("");
+wchar_t g_startupSqlScriptPath[MAX_PATH] = L"";
+wchar_t g_dbSessionSetupSqlScriptPath[MAX_PATH] = L"";
 char g_snmpCodepage[16] = "";
 
 /**
@@ -1694,23 +1694,23 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
          el_source(el, nullptr);
 #endif
 
-		   WriteToTerminal(_T("\nNetXMS Server V") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG IS_UNICODE_BUILD_STRING _T(" Ready\n")
-				             _T("Enter \"\x1b[1mhelp\x1b[0m\" for command list or \"\x1b[1mdown\x1b[0m\" for server shutdown\n")
-				             _T("System Console\n\n"));
+		   WriteToTerminal(L"\nNetXMS Server V" NETXMS_VERSION_STRING L" Build " NETXMS_BUILD_TAG L" Ready\n"
+				             L"Enter \"\x1b[1mhelp\x1b[0m\" for command list or \"\x1b[1mdown\x1b[0m\" for server shutdown\n"
+				             L"System Console\n\n");
 
-         TCHAR command[256];
+		   wchar_t command[256];
          LocalTerminalConsole ctx;
 		   while(true)
 		   {
 #if HAVE_LIBEDIT
             int numchars;
-            const TCHAR *line = el_tgets(el, &numchars);
+            const wchar_t *line = el_tgets(el, &numchars);
             if ((line == nullptr) || (numchars == 0))
                break;
 
-            _tcslcpy(command, line, 256);
+            wcslcpy(command, line, 256);
 #else
-			   WriteToTerminal(_T("\x1b[33mnetxmsd:\x1b[0m "));
+			   WriteToTerminal(L"\x1b[33mnetxmsd:\x1b[0m ");
 			   fflush(stdout);
 			   if (_fgetts(command, 255, stdin) == nullptr)
 				   break;   // Error reading stdin
@@ -1778,7 +1778,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 			   else
 			   {
 #if !HAVE_LIBEDIT
-			      WriteToTerminal(_T("\n"));
+			      WriteToTerminal(L"\n");
 #endif
 			   }
 		   }

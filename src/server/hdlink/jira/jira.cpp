@@ -384,12 +384,8 @@ uint32_t JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
             json_t *key = json_object_get(root, "key");
             if (json_is_string(key))
             {
-#ifdef UNICODE
                utf8_to_wchar(json_string_value(key), -1, hdref, MAX_HELPDESK_REF_LEN);
                hdref[MAX_HELPDESK_REF_LEN - 1] = 0;
-#else
-               strlcpy(hdref, json_string_value(key), MAX_HELPDESK_REF_LEN);
-#endif
                rcc = RCC_SUCCESS;
                nxlog_debug_tag(JIRA_DEBUG_TAG, 4, _T("Created new issue in Jira with reference \"%s\""), hdref);
             }
@@ -452,12 +448,8 @@ uint32_t JiraLink::addComment(const TCHAR *hdref, const TCHAR *comment)
    char url[MAX_PATH];
    ConfigReadStrUTF8(_T("Jira.ServerURL"), url, MAX_PATH, "https://jira.atlassian.com");
    strlcat(url, "/rest/api/2/issue/", MAX_PATH);
-#ifdef UNICODE
    size_t l = strlen(url);
    wchar_to_utf8(hdref, -1, &url[l], MAX_PATH - l);
-#else
-   strlcat(url, hdref, MAX_PATH);
-#endif
    strlcat(url, "/comment", MAX_PATH);
    curl_easy_setopt(m_curl, CURLOPT_URL, url);
 

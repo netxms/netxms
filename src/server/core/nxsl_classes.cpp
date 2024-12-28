@@ -1018,14 +1018,10 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const NXSL_Identifie
    }
    else if (object != nullptr)   // Object can be null if attribute scan is running
    {
-#ifdef UNICODE
-      WCHAR wattr[MAX_IDENTIFIER_LENGTH];
+      wchar_t wattr[MAX_IDENTIFIER_LENGTH];
       utf8_to_wchar(attr.value, -1, wattr, MAX_IDENTIFIER_LENGTH);
       wattr[MAX_IDENTIFIER_LENGTH - 1] = 0;
       value = object->getCustomAttributeForNXSL(vm, wattr);
-#else
-      value = object->getCustomAttributeForNXSL(vm, attr.value);
-#endif
    }
    return value;
 }
@@ -1035,7 +1031,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const NXSL_Identifie
  */
 NXSL_SubnetClass::NXSL_SubnetClass() : NXSL_NetObjClass()
 {
-   setName(_T("Subnet"));
+   setName(L"Subnet");
 }
 
 /**
@@ -1253,14 +1249,10 @@ NXSL_Value *NXSL_AssetPropertiesClass::getAttr(NXSL_Object *_object, const NXSL_
    auto asset = SharedObjectFromData<Asset>(_object);
    if (asset != nullptr)   // Object can be null if attribute scan is running
    {
-#ifdef UNICODE
-      WCHAR wattr[MAX_IDENTIFIER_LENGTH];
+      wchar_t wattr[MAX_IDENTIFIER_LENGTH];
       utf8_to_wchar(attr.value, -1, wattr, MAX_IDENTIFIER_LENGTH);
       wattr[MAX_IDENTIFIER_LENGTH - 1] = 0;
       value = asset->getPropertyValueForNXSL(vm, wattr);
-#else
-      value = object->getValueForNXSL(vm, attr.value);
-#endif
    }
    else if (attr.value[0] == '?')
    {
@@ -1500,12 +1492,8 @@ static int BaseWebServiceRequestWithData(WebServiceHandle *websvc, int argc, NXS
    {
       json_t *json = static_cast<json_t*>(argv[0]->getValueAsObject()->getData());
       char *tmp = json_dumps(json, JSON_INDENT(3));
-#ifdef UNICODE
       data = WideStringFromUTF8String(tmp);
       MemFree(tmp);
-#else
-      data = tmp;
-#endif
    }
    else if (argv[0]->isString())
    {
@@ -4835,14 +4823,10 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
       // Try to find named parameter with given name
       if (value == nullptr)
       {
-#ifdef UNICODE
-         WCHAR wattr[MAX_IDENTIFIER_LENGTH];
+         wchar_t wattr[MAX_IDENTIFIER_LENGTH];
          utf8_to_wchar(attr.value, -1, wattr, MAX_IDENTIFIER_LENGTH);
          wattr[MAX_IDENTIFIER_LENGTH - 1] = 0;
          const TCHAR *s = event->getNamedParameter(wattr);
-#else
-         const TCHAR *s = event->getNamedParameter(attr.value);
-#endif
          if (s != nullptr)
          {
             value = vm->createValue(s);
@@ -4901,14 +4885,10 @@ bool NXSL_EventClass::setAttr(NXSL_Object *object, const NXSL_Identifier& attr, 
       }
       if (!success)
       {
-#ifdef UNICODE
-         WCHAR wattr[MAX_IDENTIFIER_LENGTH];
+         wchar_t wattr[MAX_IDENTIFIER_LENGTH];
          utf8_to_wchar(attr.value, -1, wattr, MAX_IDENTIFIER_LENGTH);
          wattr[MAX_IDENTIFIER_LENGTH - 1] = 0;
          event->setNamedParameter(wattr, value->getValueAsCString());
-#else
-         event->setNamedParameter(attr.value, value->getValueAsCString());
-#endif
       }
    }
    return true;

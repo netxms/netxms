@@ -384,10 +384,10 @@ bool ScheduledTask::canAccess(uint32_t userId, uint64_t systemAccess) const
 /**
  * Function that adds to list task handler function
  */
-void NXCORE_EXPORTABLE RegisterSchedulerTaskHandler(const TCHAR *id, ScheduledTaskHandler handler, uint64_t accessRight)
+void NXCORE_EXPORTABLE RegisterSchedulerTaskHandler(const wchar_t *id, ScheduledTaskHandler handler, uint64_t accessRight)
 {
    s_callbacks.set(id, new SchedulerCallback(handler, accessRight));
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("Registered scheduler task %s"), id);
+   nxlog_debug_tag(DEBUG_TAG, 6, L"Registered scheduler task %s", id);
 }
 
 /**

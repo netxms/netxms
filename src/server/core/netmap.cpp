@@ -548,16 +548,12 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prep
 				uint32_t id = DBGetFieldULong(hResult, i, 0);
 				uint32_t flags = DBGetFieldULong(hResult, i, 3);
 				Config *config = new Config();
-				TCHAR *data = DBGetField(hResult, i, 2, nullptr, 0);
+				wchar_t *data = DBGetField(hResult, i, 2, nullptr, 0);
 				if (data != nullptr)
 				{
-#ifdef UNICODE
 					char *utf8data = UTF8StringFromWideString(data);
 					config->loadXmlConfigFromMemory(utf8data, (int)strlen(utf8data), _T("<database>"), "element");
 					MemFree(utf8data);
-#else
-					config->loadXmlConfigFromMemory(data, (int)strlen(data), _T("<database>"), "element");
-#endif
 					MemFree(data);
 					switch(DBGetFieldLong(hResult, i, 1))
 					{

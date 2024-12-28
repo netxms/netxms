@@ -1,6 +1,6 @@
 /*
 ** nxget - command line tool used to retrieve parameters from NetXMS agent
-** Copyright (C) 2004-2023 Raden Solutions
+** Copyright (C) 2004-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -86,7 +86,7 @@ static int GetList(AgentConnection *conn, const TCHAR *listName)
 /**
  * Get table value
  */
-static int GetTable(AgentConnection *conn, const TCHAR *tableName)
+static int GetTable(AgentConnection *conn, const wchar_t *tableName)
 {
    Table *table;
    uint32_t rcc = conn->getTable(tableName, &table);
@@ -110,9 +110,9 @@ static int GetTable(AgentConnection *conn, const TCHAR *tableName)
 /**
  * Get single parameter
  */
-static int Get(AgentConnection *conn, const TCHAR *metric)
+static int Get(AgentConnection *conn, const wchar_t *metric)
 {
-   TCHAR buffer[1024];
+   wchar_t buffer[1024];
    uint32_t rcc = conn->getParameter(metric, buffer, 1024);
    if (rcc == ERR_SUCCESS)
    {
@@ -361,7 +361,7 @@ static int GetSystemTime(AgentConnection *conn)
 /**
  * Parser for nxget specific options
  */
-static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
+static bool ParseAdditionalOptionCb(const char ch, const wchar_t *optarg)
 {
    int i;
    bool start = true;
@@ -518,7 +518,7 @@ static bool IsArgMissingCb(int currentCount)
 /**
  * Execute command callback
  */
-static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int optind, RSA_KEY serverKey)
+static int ExecuteCommandCb(AgentConnection *conn, int argc, wchar_t **argv, int optind, RSA_KEY serverKey)
 {
    int exitCode = 3, pos;
 
@@ -549,7 +549,7 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int o
             exitCode = ListParameters(conn);
             break;
          case Operation::GET_SCREENSHOT:
-            exitCode = GetScreenshot(conn, (argc > optind + 2) ? argv[optind + 2] : _T("Console"), argv[optind + 1]);
+            exitCode = GetScreenshot(conn, (argc > optind + 2) ? argv[optind + 2] : L"Console", argv[optind + 1]);
             break;
          case Operation::GET_SYSTEM_TIME:
             exitCode = GetSystemTime(conn);
@@ -574,7 +574,7 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int o
  * Startup
  */
 #ifdef _WIN32
-int _tmain(int argc, TCHAR *argv[])
+int wmain(int argc, wchar_t *argv[])
 #else
 int main(int argc, char *argv[])
 #endif
@@ -582,29 +582,29 @@ int main(int argc, char *argv[])
    ServerCommandLineTool tool;
    tool.argc = argc;
    tool.argv = argv;
-   tool.displayName = _T("Agent Query Tool");
-   tool.mainHelpText = _T("Usage: nxget [<options>] <host> [<parameter> [<parameter> ...]]\n")
-                       _T("Tool specific options are:\n")
-                       _T("   -b           : Batch mode - get all parameters listed on command line.\n")
-                       _T("   -C           : Get agent's configuration file\n")
-                       _T("   -d delimiter : Print table content as delimited text.\n")
-                       _T("   -E           : Take screenshot. First parameter is file name, second (optional) is session name.\n")
-                       _T("   -f           : Do not try lists and tables if requested metric does not exist.\n")
-                       _T("   -F           : Get information about given file set. Each parameter is separate file name.\n")
-                       _T("   -i seconds   : Get specified parameter(s) continuously with given interval.\n")
-                       _T("   -I           : Get list of supported parameters.\n")
-                       _T("   -l           : Requested parameter is a list.\n")
-                       _T("   -n           : Show parameter's name in result.\n")
-                       _T("   -N addr      : Check state of network service at given address.\n")
-                       _T("   -o proto     : Protocol number to be used for service check.\n")
-                       _T("   -P port      : Network service port (to be used wth -N option).\n")
-                       _T("   -r string    : Service check request string.\n")
-                       _T("   -R string    : Service check expected response string.\n")
-                       _T("   -t type      : Set type of service to be checked.\n")
-                       _T("                  Possible types are: custom, ssh, pop3, smtp, ftp, http, https, telnet.\n")
-                       _T("   -T           : Requested parameter is a table.\n")
-                       _T("   -U           : Get list of active user sessions.\n")
-                       _T("   -Y           : Read remote system time.\n");
+   tool.displayName = L"Agent Query Tool";
+   tool.mainHelpText = L"Usage: nxget [<options>] <host> [<parameter> [<parameter> ...]]\n"
+                       L"Tool specific options are:\n"
+                       L"   -b           : Batch mode - get all parameters listed on command line.\n"
+                       L"   -C           : Get agent's configuration file\n"
+                       L"   -d delimiter : Print table content as delimited text.\n"
+                       L"   -E           : Take screenshot. First parameter is file name, second (optional) is session name.\n"
+                       L"   -f           : Do not try lists and tables if requested metric does not exist.\n"
+                       L"   -F           : Get information about given file set. Each parameter is separate file name.\n"
+                       L"   -i seconds   : Get specified parameter(s) continuously with given interval.\n"
+                       L"   -I           : Get list of supported parameters.\n"
+                       L"   -l           : Requested parameter is a list.\n"
+                       L"   -n           : Show parameter's name in result.\n"
+                       L"   -N addr      : Check state of network service at given address.\n"
+                       L"   -o proto     : Protocol number to be used for service check.\n"
+                       L"   -P port      : Network service port (to be used wth -N option).\n"
+                       L"   -r string    : Service check request string.\n"
+                       L"   -R string    : Service check expected response string.\n"
+                       L"   -t type      : Set type of service to be checked.\n"
+                       L"                  Possible types are: custom, ssh, pop3, smtp, ftp, http, https, telnet.\n"
+                       L"   -T           : Requested parameter is a table.\n"
+                       L"   -U           : Get list of active user sessions.\n"
+                       L"   -Y           : Read remote system time.\n";
    tool.additionalOptions = "bCd:EfFi:IlnN:o:P:r:R:t:TUY";
    tool.executeCommandCb = &ExecuteCommandCb;
    tool.parseAdditionalOptionCb = &ParseAdditionalOptionCb;

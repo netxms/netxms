@@ -45,28 +45,27 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
 {
    InitNetXMSProcess(true);
 
-   TCHAR keyFile[MAX_PATH];
+   wchar_t keyFile[MAX_PATH];
    GetNetXMSDirectory(nxDirData, keyFile);
-   _tcslcat(keyFile, DFILE_KEYS, MAX_PATH);
+   wcslcat(keyFile, DFILE_KEYS, MAX_PATH);
 
-   TCHAR *eptr;
+   wchar_t *eptr;
    bool start = true, useProxy = false;
    int i, ch, iExitCode = 3;
    int iEncryptionPolicy = ENCRYPTION_PREFERRED;
    uint16_t agentPort = AGENT_LISTEN_PORT, proxyPort = AGENT_LISTEN_PORT;
-   TCHAR *secret = nullptr;
+   wchar_t *secret = nullptr;
    uint32_t dwTimeout = 5000, dwConnTimeout = 30000, dwError;
-   TCHAR szProxy[MAX_OBJECT_NAME] = _T("");
-   TCHAR *proxySecret = nullptr;
+   wchar_t szProxy[MAX_OBJECT_NAME] = L"";
+   wchar_t *proxySecret = nullptr;
    RSA_KEY serverKey = nullptr;
 
-#if defined(UNICODE) && !defined(_WIN32)
-   WCHAR **wargv = MemAllocArray<WCHAR*>(tool->argc);
+#ifndef _WIN32
+   wchar_t **wargv = MemAllocArray<wchar_t*>(tool->argc);
    for (i = 0; i < tool->argc; i++)
       wargv[i] = WideStringFromMBStringSysLocale(tool->argv[i]);
-#define _targv wargv
 #else
-#define _targv tool->argv
+#define wargv tool->argv
 #endif
 
    // Parse command line
@@ -74,39 +73,37 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
    char options[128] = "D:e:hK:O:p:s:S:vw:W:X:";
    strlcat(options, tool->additionalOptions, 128);
 
-   while ((ch = _tgetopt(tool->argc, _targv, options)) != -1)
+   while ((ch = getoptW(tool->argc, wargv, options)) != -1)
    {
       switch(ch)
       {
          case 'h':   // Display help and exit
-            _tprintf(_T("%s\n")
-                     _T("Common options:\n")
-                     _T("   -D level     : Set debug level (0..9 or off, default is off).\n")
-                     _T("   -e policy    : Set encryption policy. Possible values are:\n")
-                     _T("                    0 = Encryption disabled;\n")
-                     _T("                    1 = Encrypt connection only if agent requires encryption;\n")
-                     _T("                    2 = Encrypt connection if agent supports encryption;\n")
-                     _T("                    3 = Force encrypted connection;\n")
-                     _T("                  Default value is 1.\n")
-                     _T("   -h           : Display help and exit.\n")
-                     _T("   -K file      : Specify server's key file\n")
-                     _T("                  (default is %s).\n")
-                     _T("   -O port      : Proxy agent's port number. Default is %d.\n")
-                     _T("   -p port      : Agent's port number. Default is %d.\n")
-                     _T("   -s secret    : Shared secret for agent authentication.\n")
-                     _T("   -S secret    : Shared secret for proxy agent authentication.\n")
-                     _T("   -v           : Display version and exit.\n")
-                     _T("   -w seconds   : Set command timeout (default is 5 seconds).\n")
-                     _T("   -W seconds   : Set connection timeout (default is 30 seconds).\n")
-                     _T("   -X addr      : Use proxy agent at given address.\n")
-                     _T("\n"),
-                     tool->mainHelpText,
-                     keyFile,
-                     agentPort, agentPort);
+            WriteToTerminalEx(L"%s\n"
+               L"Common options:\n"
+               L"   -D level     : Set debug level (0..9 or off, default is off).\n"
+               L"   -e policy    : Set encryption policy. Possible values are:\n"
+               L"                    0 = Encryption disabled;\n"
+               L"                    1 = Encrypt connection only if agent requires encryption;\n"
+               L"                    2 = Encrypt connection if agent supports encryption;\n"
+               L"                    3 = Force encrypted connection;\n"
+               L"                  Default value is 1.\n"
+               L"   -h           : Display help and exit.\n"
+               L"   -K file      : Specify server's key file\n"
+               L"                  (default is %s).\n"
+               L"   -O port      : Proxy agent's port number. Default is %d.\n"
+               L"   -p port      : Agent's port number. Default is %d.\n"
+               L"   -s secret    : Shared secret for agent authentication.\n"
+               L"   -S secret    : Shared secret for proxy agent authentication.\n"
+               L"   -v           : Display version and exit.\n"
+               L"   -w seconds   : Set command timeout (default is 5 seconds).\n"
+               L"   -W seconds   : Set connection timeout (default is 30 seconds).\n"
+               L"   -X addr      : Use proxy agent at given address.\n"
+               L"\n",
+               tool->mainHelpText, keyFile, agentPort, agentPort);
             start = false;
             break;
          case 'D':   // debug level
-            if (!_tcsicmp(_toptarg, _T("off")))
+            if (!wcsicmp(optargW, L"off"))
             {
                nxlog_set_debug_writer(nullptr);
                nxlog_set_debug_level(0);
@@ -122,7 +119,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
             i = _tcstol(_toptarg, &eptr, 0);
             if ((*eptr != 0) || (i < 0) || (i > 65535))
             {
-               _tprintf(_T("Invalid port number \"%s\"\n"), _toptarg);
+               WriteToTerminalEx(L"Invalid port number \"%s\"\n", optargW);
                start = false;
             }
             else
@@ -134,20 +131,20 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
             }
             break;
          case 's':   // Shared secret
-            secret = MemCopyString(_toptarg);
+            secret = MemCopyStringW(optargW);
             break;
          case 'S':   // Shared secret for proxy agent
-            proxySecret = MemCopyString(_toptarg);
+            proxySecret = MemCopyStringW(optargW);
             break;
          case 'v':   // Print version and exit
-            _tprintf(_T("NetXMS %s Version ") NETXMS_VERSION_STRING _T("\n"), tool->displayName);
+            WriteToTerminalEx(L"NetXMS %s Version " NETXMS_VERSION_STRING L"\n", tool->displayName);
             start = false;
             break;
          case 'w':   // Command timeout
-            i = _tcstol(_toptarg, &eptr, 0);
+            i = _tcstol(optargW, &eptr, 0);
             if ((*eptr != 0) || (i < 1) || (i > 120))
             {
-               _tprintf(_T("Invalid timeout \"%s\"\n"), _toptarg);
+               WriteToTerminalEx(L"Invalid timeout \"%s\"\n", optargW);
                start = false;
             }
             else
@@ -156,10 +153,10 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
             }
             break;
          case 'W':   // Connection timeout
-            i = _tcstol(_toptarg, &eptr, 0);
+            i = wcstol(optargW, &eptr, 0);
             if ((*eptr != 0) || (i < 1) || (i > 120))
             {
-               _tprintf(_T("Invalid timeout \"%s\"\n"), _toptarg);
+               WriteToTerminalEx(L"Invalid timeout \"%s\"\n", optargW);
                start = false;
             }
             else
@@ -168,26 +165,26 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
             }
             break;
          case 'e':
-            iEncryptionPolicy = _tcstol(_toptarg, nullptr, 0);
+            iEncryptionPolicy = wcstol(optargW, nullptr, 0);
             if ((iEncryptionPolicy < 0) ||
                 (iEncryptionPolicy > 3))
             {
-               _tprintf(_T("ERROR: Invalid encryption policy %d\n"), iEncryptionPolicy);
+               WriteToTerminalEx(L"Invalid encryption policy %d\n", iEncryptionPolicy);
                start = false;
             }
             break;
          case 'K':
-            _tcslcpy(keyFile, _toptarg, MAX_PATH);
+            wcslcpy(keyFile, optargW, MAX_PATH);
             break;
          case 'X':   // Use proxy
-            _tcslcpy(szProxy, _toptarg, MAX_OBJECT_NAME);
+            wcslcpy(szProxy, optargW, MAX_OBJECT_NAME);
             useProxy = true;
             break;
          case '?':
             start = false;
             break;
          default:
-            start = tool->parseAdditionalOptionCb(ch, _toptarg);
+            start = tool->parseAdditionalOptionCb(ch, optargW);
             break;
       }
    }
@@ -197,7 +194,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
    {
       if (tool->isArgMissingCb(tool->argc - _toptind))
       {
-         _tprintf(_T("Required argument(s) missing.\nRun with -h option to get complete command line syntax.\n"));
+         WriteToTerminalEx(L"Required argument(s) missing.\nRun with -h option to get complete command line syntax.\n");
          start = false;
       }
 
@@ -212,7 +209,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
                serverKey = RSAGenerateKey(2048);
                if (serverKey == nullptr)
                {
-                  _tprintf(_T("Cannot load server RSA key from \"%s\" or generate new key\n"), keyFile);
+                  WriteToTerminalEx(L"Cannot load server RSA key from \"%s\" or generate new key\n", keyFile);
                   if (iEncryptionPolicy == ENCRYPTION_REQUIRED)
                      start = false;
                }
@@ -220,7 +217,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
          }
          else
          {
-            _tprintf(_T("Error initializing cryptography module\n"));
+            WriteToTerminal(L"Error initializing cryptography module\n");
             if (iEncryptionPolicy == ENCRYPTION_REQUIRED)
                start = false;
          }
@@ -234,11 +231,11 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
          WSADATA wsaData;
          WSAStartup(2, &wsaData);
 #endif
-         InetAddress addr = InetAddress::resolveHostName(_targv[_toptind]);
+         InetAddress addr = InetAddress::resolveHostName(wargv[optindW]);
          InetAddress proxyAddr = useProxy ? InetAddress::resolveHostName(szProxy) : InetAddress();
          if (!addr.isValid())
          {
-            _ftprintf(stderr, _T("Invalid host name or address \"%s\"\n"), _targv[_toptind]);
+            _ftprintf(stderr, _T("Invalid host name or address \"%s\"\n"), wargv[optindW]);
          }
          else if (useProxy && !proxyAddr.isValid())
          {
@@ -254,7 +251,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
                conn->setProxy(proxyAddr, proxyPort, proxySecret);
             if (conn->connect(serverKey, &dwError))
             {
-               iExitCode = tool->executeCommandCb(conn.get(), tool->argc, _targv, _toptind, serverKey);
+               iExitCode = tool->executeCommandCb(conn.get(), tool->argc, wargv, optindW, serverKey);
             }
             else
             {
@@ -265,7 +262,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
       }
    }
 
-#if defined(UNICODE) && !defined(_WIN32)
+#ifndef _WIN32
    for(i = 0; i < tool->argc; i++)
       MemFree(wargv[i]);
    MemFree(wargv);

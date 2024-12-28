@@ -46,11 +46,7 @@ class ProjectComponent
    ProjectComponent(int64_t id, const char *name)
    {
       m_id = id;
-#ifdef UNICODE
       m_name = WideStringFromUTF8String(CHECK_NULL_EX_A(name));
-#else
-      m_name = MemCopyStringA(CHECK_NULL_EX(name));
-#endif
    }
 
    ~ProjectComponent()

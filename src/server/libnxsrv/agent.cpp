@@ -491,12 +491,8 @@ AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const T
    m_port = port;
    if ((secret != nullptr) && (*secret != 0))
    {
-#ifdef UNICODE
 		wchar_to_utf8(secret, -1, m_secret, MAX_SECRET_LENGTH);
 		m_secret[MAX_SECRET_LENGTH - 1] = 0;
-#else
-      strlcpy(m_secret, secret, MAX_SECRET_LENGTH);
-#endif
       DecryptPasswordA("netxms", m_secret, m_secret, MAX_SECRET_LENGTH);
    }
    else
@@ -888,12 +884,8 @@ void AgentConnection::setSharedSecret(const TCHAR *secret)
 {
    if ((secret != nullptr) && (*secret != 0))
    {
-#ifdef UNICODE
       wchar_to_utf8(secret, -1, m_secret, MAX_SECRET_LENGTH);
       m_secret[MAX_SECRET_LENGTH - 1] = 0;
-#else
-      strlcpy(m_secret, secret, MAX_SECRET_LENGTH);
-#endif
       DecryptPasswordA("netxms", m_secret, m_secret, MAX_SECRET_LENGTH);
    }
    else
@@ -2442,11 +2434,7 @@ uint32_t AgentConnection::readConfigFile(TCHAR **content, size_t *sizeptr)
                   utf8Text[i] = ' ';
             utf8Text[size] = 0;
 
-#ifdef UNICODE
             *content = WideStringFromUTF8String((char *)utf8Text);
-#else
-            *content = MBStringFromUTF8String((char *)utf8Text);
-#endif
             MemFree(utf8Text);
             *sizeptr = _tcslen(*content);
          }
@@ -2479,13 +2467,9 @@ uint32_t AgentConnection::writeConfigFile(const TCHAR *content)
 
    msg.setCode(CMD_WRITE_AGENT_CONFIG_FILE);
    msg.setId(requestId);
-#ifdef UNICODE
    char *utf8content = UTF8StringFromWideString(content);
    msg.setField(VID_CONFIG_FILE, (BYTE *)utf8content, strlen(utf8content));
    MemFree(utf8content);
-#else
-   msg.setField(VID_CONFIG_FILE, (const BYTE *)content, strlen(content));
-#endif
 
    uint32_t rcc;
    if (sendMessage(&msg))
@@ -2592,12 +2576,8 @@ void AgentConnection::setProxy(const InetAddress& addr, uint16_t port, const TCH
    m_proxyPort = port;
    if ((secret != nullptr) && (*secret != 0))
    {
-#ifdef UNICODE
       wchar_to_utf8(secret, -1, m_proxySecret, MAX_SECRET_LENGTH);
       m_proxySecret[MAX_SECRET_LENGTH - 1] = 0;
-#else
-      strlcpy(m_proxySecret, secret, MAX_SECRET_LENGTH);
-#endif
       DecryptPasswordA("netxms", m_proxySecret, m_proxySecret, MAX_SECRET_LENGTH);
    }
    else

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -462,15 +462,11 @@ void StopSNMPAgent()
 /**
  * Process configuration changes related to SNMP agent
  */
-void OnSNMPAgentConfigurationChange(const TCHAR *name, const TCHAR *value)
+void OnSNMPAgentConfigurationChange(const wchar_t *name, const wchar_t *value)
 {
-   if (!_tcscmp(name, _T("SNMP.Agent.Community")))
+   if (!wcscmp(name, L"SNMP.Agent.Community"))
    {
-#ifdef UNICODE
       memset(s_community, 0, sizeof(s_community));
       wchar_to_utf8(value, -1, s_community, sizeof(s_community) - 1);
-#else
-      _strlcpy(s_community, value, sizeof(s_community));
-#endif
    }
 }

@@ -427,13 +427,13 @@ static void ShowTasks(ServerConsole *console)
  * Process command entered from command line in standalone mode
  * Return CMD_EXIT_CLOSE_SESSION if command was "exit" and CMD_EXIT_SHUTDOWN if command was "down"
  */
-int ProcessConsoleCommand(const TCHAR *command, ServerConsole *console)
+int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
 {
    int exitCode = CMD_EXIT_CONTINUE;
 
    // Get command
-   TCHAR szBuffer[256];
-   const TCHAR *pArg = ExtractWord(command, szBuffer);
+   wchar_t szBuffer[256];
+   const wchar_t *pArg = ExtractWord(command, szBuffer);
 
    if (IsCommand(_T("AT"), szBuffer, 2))
    {
@@ -1516,10 +1516,10 @@ int ProcessConsoleCommand(const TCHAR *command, ServerConsole *console)
       }
       else if (IsCommand(_T("VERSION"), szBuffer, 2))
       {
-         ConsolePrintf(console,_T("NetXMS Server Version %s Build %s %s\n"), NETXMS_VERSION_STRING, NETXMS_BUILD_TAG, IS_UNICODE_BUILD_STRING);
+         ConsolePrintf(console, L"NetXMS Server Version %s Build %s\n", NETXMS_VERSION_STRING, NETXMS_BUILD_TAG);
          String ciphers = NXCPGetSupportedCiphersAsText();
-         ConsolePrintf(console,_T("NXCP: %d.%d.%d.%d (%s)\n"), NXCP_VERSION, CLIENT_PROTOCOL_VERSION_BASE, CLIENT_PROTOCOL_VERSION_MOBILE, CLIENT_PROTOCOL_VERSION_FULL,ciphers.isEmpty() ? _T("NO ENCRYPTION") : ciphers.cstr());
-         ConsolePrintf(console,_T("Built with: %hs\n"), CPP_COMPILER_VERSION);
+         ConsolePrintf(console, L"NXCP: %d.%d.%d.%d (%s)\n", NXCP_VERSION, CLIENT_PROTOCOL_VERSION_BASE, CLIENT_PROTOCOL_VERSION_MOBILE, CLIENT_PROTOCOL_VERSION_FULL,ciphers.isEmpty() ? L"NO ENCRYPTION" : ciphers.cstr());
+         ConsolePrintf(console, L"Built with: %hs\n", CPP_COMPILER_VERSION);
       }
       else if (IsCommand(_T("VLANS"), szBuffer, 2))
       {
@@ -1611,22 +1611,18 @@ int ProcessConsoleCommand(const TCHAR *command, ServerConsole *console)
          {
             NXSL_CompilationDiagnostic diag;
             NXSL_ServerEnv env;
-#ifdef UNICODE
-            WCHAR *wscript = WideStringFromUTF8String(script);
+            wchar_t *wscript = WideStringFromUTF8String(script);
             compiledScript = NXSLCompile(wscript, &env, &diag);
             MemFree(wscript);
-#else
-            compiledScript = NXSLCompile(script, &env, &diag);
-#endif
             MemFree(script);
             if (compiledScript == nullptr)
             {
-               ConsolePrintf(console, _T("ERROR: Script compilation error: %s\n\n"), diag.errorText.cstr());
+               ConsolePrintf(console, L"ERROR: Script compilation error: %s\n\n", diag.errorText.cstr());
             }
          }
          else
          {
-            ConsolePrintf(console, _T("ERROR: Script \"%s\" not found\n\n"), szBuffer);
+            ConsolePrintf(console, L"ERROR: Script \"%s\" not found\n\n", szBuffer);
          }
       }
 

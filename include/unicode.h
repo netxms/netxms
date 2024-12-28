@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -146,7 +146,6 @@
 #define _vstscanf nx_vswscanf
 #define _tfopen   wfopen
 #define _tfopen64 wfopen64
-#define _tpopen   wpopen
 #define _fgetts   fgetws
 #define _fputts   fputws
 #define _fputtc   fputwc
@@ -203,7 +202,6 @@
 #define _tutime   wutime
 #define _tcserror wcserror
 #define _tcserror_r wcserror_r
-#define _tsystem  wsystem
 #define _topendir wopendir
 #define _treaddir wreaddir
 #define _tclosedir wclosedir
@@ -246,7 +244,6 @@
 #define _vstscanf vsscanf
 #define _tfopen   fopen
 #define _tfopen64 fopen64
-#define _tpopen   popen
 #define _fgetts   fgets
 #define _fputts   fputs
 #define _fputtc   fputc
@@ -295,7 +292,6 @@
 #define _tutime   utime
 #define _tcserror strerror
 #define _tcserror_r strerror_r
-#define _tsystem  system
 #define _topendir opendir
 #define _treaddir readdir
 #define _tclosedir closedir

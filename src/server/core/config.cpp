@@ -58,18 +58,18 @@ char s_internalCACertificatePassword[MAX_PASSWORD] = "";
 void UpdateAlarmExpirationTimes();
 void WakeupActiveDiscoveryThread();
 
-void OnSNMPAgentConfigurationChange(const TCHAR *name, const TCHAR *value);
+void OnSNMPAgentConfigurationChange(const wchar_t *name, const wchar_t *value);
 
 /**
  * Database connection parameters
  */
-TCHAR g_szDbDriver[MAX_PATH] = _T("");
-TCHAR g_szDbDrvParams[MAX_PATH] = _T("");
-TCHAR g_szDbServer[MAX_PATH] = _T("127.0.0.1");
-TCHAR g_szDbLogin[MAX_DB_LOGIN] = _T("netxms");
-TCHAR g_szDbPassword[MAX_PASSWORD] = _T("");
-TCHAR g_szDbName[MAX_DB_NAME] = _T("netxms_db");
-TCHAR g_szDbSchema[MAX_DB_NAME] = _T("");
+wchar_t g_szDbDriver[MAX_PATH] = L"";
+wchar_t g_szDbDrvParams[MAX_PATH] = L"";
+wchar_t g_szDbServer[MAX_PATH] = L"127.0.0.1";
+wchar_t g_szDbLogin[MAX_DB_LOGIN] = L"netxms";
+wchar_t g_szDbPassword[MAX_PASSWORD] = L"";
+wchar_t g_szDbName[MAX_DB_NAME] = L"netxms_db";
+wchar_t g_szDbSchema[MAX_DB_NAME] = L"";
 
 /**
  * Debug level from config
@@ -884,11 +884,9 @@ TCHAR NXCORE_EXPORTABLE *ConfigReadStr(const TCHAR *variable, const TCHAR *defau
 /**
  * Read multibyte string from configuration table
  */
-#ifdef UNICODE
-
-bool NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *variable, char *buffer, size_t size, const char *defaultValue)
+bool NXCORE_EXPORTABLE ConfigReadStrA(const wchar_t *variable, char *buffer, size_t size, const char *defaultValue)
 {
-	WCHAR wcBuffer[MAX_DB_STRING];
+   wchar_t wcBuffer[MAX_DB_STRING];
    bool rc = ConfigReadStr(variable, wcBuffer, MAX_DB_STRING, nullptr);
 	if (rc)
 	{
@@ -903,12 +901,10 @@ bool NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *variable, char *buffer, size_
 	return rc;
 }
 
-#endif
-
 /**
  * Read string value from configuration table as UTF8 string
  */
-bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *variable, char *buffer, size_t size, const char *defaultValue)
+bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const wchar_t *variable, char *buffer, size_t size, const char *defaultValue)
 {
    if (defaultValue != nullptr)
       strlcpy(buffer, defaultValue, size);
@@ -953,7 +949,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *variable, char *buffer, si
 /**
  * Read string value from configuration table as UTF8 string. Returns dynamically allocated string.
  */
-char NXCORE_EXPORTABLE *ConfigReadStrUTF8(const TCHAR *variable, const char *defaultValue)
+char NXCORE_EXPORTABLE *ConfigReadStrUTF8(const wchar_t *variable, const char *defaultValue)
 {
    char buffer[MAX_CONFIG_VALUE * 3];
    bool success = ConfigReadStrUTF8(variable, buffer, sizeof(buffer), nullptr);
@@ -963,9 +959,9 @@ char NXCORE_EXPORTABLE *ConfigReadStrUTF8(const TCHAR *variable, const char *def
 /**
  * Read boolean value from configuration table
  */
-bool NXCORE_EXPORTABLE ConfigReadBoolean(const TCHAR *variable, bool defaultValue)
+bool NXCORE_EXPORTABLE ConfigReadBoolean(const wchar_t *variable, bool defaultValue)
 {
-   TCHAR buffer[64];
+   wchar_t buffer[64];
    if (!ConfigReadStr(variable, buffer, 64, nullptr))
       return defaultValue;
    if (!_tcsicmp(buffer, _T("true")))

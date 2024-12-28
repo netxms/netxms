@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -109,13 +109,8 @@ ModbusOperationStatus ModbusDirectTransport::readDeviceIdentification(ModbusDevi
             }
             if (objectValue != nullptr)
             {
-#ifdef UNICODE
                size_t chars = mb_to_wchar(reinterpret_cast<char*>(curr + 2), objectLength, objectValue, 256);
                objectValue[chars] = 0;
-#else
-               memcpy(objectValue, curr + 2, objectLength);
-               objectValue[objectLength] = 0;
-#endif
             }
 
             curr += objectLength + 2;

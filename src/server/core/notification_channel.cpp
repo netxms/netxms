@@ -23,25 +23,25 @@
 #include "nxcore.h"
 #include <ncdrv.h>
 
-#define DEBUG_TAG _T("nc")
-#define NC_THREAD_KEY _T("NotificationChannel")
+#define DEBUG_TAG L"nc"
+#define NC_THREAD_KEY L"NotificationChannel"
 
 /**
  * Class to store in queued notification message
  */
 class NotificationMessage
 {
-   TCHAR *m_recipient;
-   TCHAR *m_subject;
-   TCHAR *m_body;
+   wchar_t *m_recipient;
+   wchar_t *m_subject;
+   wchar_t *m_body;
 
 public:
-   NotificationMessage(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body);
+   NotificationMessage(const wchar_t *recipient, const wchar_t *subject, const wchar_t *body);
    ~NotificationMessage();
 
-   const TCHAR *getRecipient() const { return m_recipient; }
-   const TCHAR *getSubject() const { return m_subject; }
-   const TCHAR *getBody() const { return m_body; }
+   const wchar_t *getRecipient() const { return m_recipient; }
+   const wchar_t *getSubject() const { return m_subject; }
+   const wchar_t *getBody() const { return m_body; }
 };
 
 /**
@@ -50,22 +50,22 @@ public:
 class NCDriverServerStorageManager : public NCDriverStorageManager
 {
 private:
-   TCHAR m_channelName[MAX_OBJECT_NAME];
+   wchar_t m_channelName[MAX_OBJECT_NAME];
 
 public:
-   NCDriverServerStorageManager(const TCHAR *channelName) : NCDriverStorageManager() { _tcslcpy(m_channelName, channelName, MAX_OBJECT_NAME); }
+   NCDriverServerStorageManager(const wchar_t *channelName) : NCDriverStorageManager() { wcslcpy(m_channelName, channelName, MAX_OBJECT_NAME); }
    virtual ~NCDriverServerStorageManager() { }
 
-   virtual TCHAR *get(const TCHAR *key) override;
+   virtual wchar_t *get(const TCHAR *key) override;
    virtual StringMap *getAll() override;
-   virtual void set(const TCHAR *key, const TCHAR *value) override;
-   virtual void clear(const TCHAR *key) override;
+   virtual void set(const wchar_t *key, const wchar_t *value) override;
+   virtual void clear(const wchar_t *key) override;
 };
 
 /**
  * Get value for given key
  */
-TCHAR *NCDriverServerStorageManager::get(const TCHAR *key)
+TCHAR *NCDriverServerStorageManager::get(const wchar_t *key)
 {
    TCHAR *value = nullptr;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -94,8 +94,8 @@ StringMap *NCDriverServerStorageManager::getAll()
 {
    StringMap *values = new StringMap();
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT entry_name,entry_value FROM nc_persistent_storage WHERE channel_name=?"));
-   if (hStmt != NULL)
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT entry_name,entry_value FROM nc_persistent_storage WHERE channel_name=?");
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_channelName, DB_BIND_STATIC);
       DB_RESULT hResult = DBSelectPrepared(hStmt);
@@ -104,8 +104,8 @@ StringMap *NCDriverServerStorageManager::getAll()
          int count = DBGetNumRows(hResult);
          for(int i = 0; i < count; i++)
          {
-            TCHAR *key = DBGetField(hResult, i, 0, nullptr, 0);
-            TCHAR *value = DBGetField(hResult, i, 1, nullptr, 0);
+            wchar_t *key = DBGetField(hResult, i, 0, nullptr, 0);
+            wchar_t *value = DBGetField(hResult, i, 1, nullptr, 0);
             if ((key != nullptr) && (value != nullptr))
             {
                values->setPreallocated(key, value);
@@ -127,7 +127,7 @@ StringMap *NCDriverServerStorageManager::getAll()
 /**
  * Set value for given key
  */
-void NCDriverServerStorageManager::set(const TCHAR *key, const TCHAR *value)
+void NCDriverServerStorageManager::set(const wchar_t *key, const wchar_t *value)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT entry_name FROM nc_persistent_storage WHERE channel_name=? AND entry_name=?"));
@@ -163,7 +163,7 @@ void NCDriverServerStorageManager::set(const TCHAR *key, const TCHAR *value)
 /**
  * Delete given key
  */
-void NCDriverServerStorageManager::clear(const TCHAR *key)
+void NCDriverServerStorageManager::clear(const wchar_t *key)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM nc_persistent_storage WHERE channel_name=? AND entry_name=?"));
@@ -283,11 +283,11 @@ int64_t GetLastNotificationId()
 /**
  * Notification message constructor
  */
-NotificationMessage::NotificationMessage(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+NotificationMessage::NotificationMessage(const wchar_t *recipient, const wchar_t *subject, const wchar_t *body)
 {
-   m_recipient = MemCopyString(recipient);
-   m_subject = MemCopyString(subject);
-   m_body = MemCopyString(body);
+   m_recipient = MemCopyStringW(recipient);
+   m_subject = MemCopyStringW(subject);
+   m_body = MemCopyStringW(body);
 }
 
 /**
@@ -925,32 +925,28 @@ static void LoadDriver(const TCHAR *file)
             NCDriverDescriptor *ncDriverDescriptor = new NCDriverDescriptor();
             ncDriverDescriptor->instanceFactory = InstanceFactory;
             ncDriverDescriptor->confTemplate = GetConfigTemplate();
-#ifdef UNICODE
             TCHAR *tmp = WideStringFromMBString(*name);
             _tcslcpy(ncDriverDescriptor->name, tmp, MAX_OBJECT_NAME);
             MemFree(tmp);
-#else
-            _tcslcpy(ncDriverDescriptor->name, *name, MAX_OBJECT_NAME);
-#endif
             s_driverList.set(ncDriverDescriptor->name, ncDriverDescriptor);
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Notification channel driver %s loaded successfully"), ncDriverDescriptor->name);
+            nxlog_debug_tag(DEBUG_TAG, 4, L"Notification channel driver %s loaded successfully", ncDriverDescriptor->name);
          }
          else
          {
-            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Notification channel driver \"%s\" cannot be loaded because of API version mismatch (driver: %d; server: %d)"),
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Notification channel driver \"%s\" cannot be loaded because of API version mismatch (driver: %d; server: %d)",
                      file, *apiVersion, NCDRV_API_VERSION);
             DLClose(hModule);
          }
       }
       else
       {
-         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to find entry point in notification channel driver \"%s\""), file);
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Unable to find entry point in notification channel driver \"%s\"", file);
          DLClose(hModule);
       }
    }
    else
    {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to load module \"%s\" (%s)"), file, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Unable to load module \"%s\" (%s)", file, errorText);
    }
 }
 
@@ -959,35 +955,35 @@ static void LoadDriver(const TCHAR *file)
  */
 void LoadNotificationChannelDrivers()
 {
-   TCHAR path[MAX_PATH];
-   _tcscpy(path, g_netxmsdLibDir);
-   _tcscat(path, LDIR_NCD);
+   wchar_t path[MAX_PATH];
+   wcscpy(path, g_netxmsdLibDir);
+   wcscat(path, LDIR_NCD);
 
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Loading notification channel drivers from %s"), path);
+   nxlog_debug_tag(DEBUG_TAG, 1, L"Loading notification channel drivers from %s", path);
 #ifdef _WIN32
    SetDllDirectory(path);
 #endif
-   _TDIR *dir = _topendir(path);
+   DIRW *dir = wopendir(path);
    if (dir != nullptr)
    {
-      _tcscat(path, FS_PATH_SEPARATOR);
-      size_t insPos = _tcslen(path);
+      wcscat(path, FS_PATH_SEPARATOR);
+      size_t insPos = wcslen(path);
 
-      struct _tdirent *f;
-      while((f = _treaddir(dir)) != nullptr)
+      dirent_w *f;
+      while((f = wreaddir(dir)) != nullptr)
       {
-         if (MatchString(_T("*.ncd"), f->d_name, false))
+         if (MatchStringW(L"*.ncd", f->d_name, false))
          {
-            _tcscpy(&path[insPos], f->d_name);
+            wcscpy(&path[insPos], f->d_name);
             LoadDriver(path);
          }
       }
-      _tclosedir(dir);
+      wclosedir(dir);
    }
 #ifdef _WIN32
    SetDllDirectory(nullptr);
 #endif
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("%d notification channel drivers loaded"), s_driverList.size());
+   nxlog_debug_tag(DEBUG_TAG, 1, L"%d notification channel drivers loaded", s_driverList.size());
 }
 
 /**
@@ -1027,10 +1023,10 @@ void LoadNotificationChannels()
    int numberOfAddedDrivers = 0;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   int64_t id = ConfigReadInt64(_T("LastNotificationId"), 0);
+   int64_t id = ConfigReadInt64(L"LastNotificationId", 0);
    if (id > s_notificationId)
       s_notificationId = id;
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(id) FROM notification_log"));
+   DB_RESULT hResult = DBSelect(hdb, L"SELECT max(id) FROM notification_log");
    if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -1044,9 +1040,9 @@ void LoadNotificationChannels()
       int numRows = DBGetNumRows(hResult);
       for (int i = 0; i < numRows; i++)
       {
-         TCHAR name[MAX_OBJECT_NAME];
-         TCHAR driverName[MAX_OBJECT_NAME];
-         TCHAR description[MAX_NC_DESCRIPTION];
+         wchar_t name[MAX_OBJECT_NAME];
+         wchar_t driverName[MAX_OBJECT_NAME];
+         wchar_t description[MAX_NC_DESCRIPTION];
          DBGetField(hResult, i, 0, name, MAX_OBJECT_NAME);
          DBGetField(hResult, i, 1, driverName, MAX_OBJECT_NAME);
          DBGetField(hResult, i, 2, description, MAX_NC_DESCRIPTION);
@@ -1056,11 +1052,11 @@ void LoadNotificationChannels()
          s_channelList.set(name, nc);
          s_channelListLock.unlock();
          numberOfAddedDrivers++;
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Notification channel %s successfully created"), name);
+         nxlog_debug_tag(DEBUG_TAG, 4, L"Notification channel %s successfully created", name);
       }
       DBFreeResult(hResult);
    }
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("%d notification channels added"), numberOfAddedDrivers);
+   nxlog_debug_tag(DEBUG_TAG, 1, L"%d notification channels added", numberOfAddedDrivers);
 
    s_healthCheckThread = ThreadCreateEx(CheckNotificationDriversHealth);
 

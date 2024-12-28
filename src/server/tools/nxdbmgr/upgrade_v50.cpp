@@ -507,14 +507,9 @@ static bool H_UpgradeFromV32()
                _tprintf(_T("Failed to load XML. Ignore dashboard %d element %d\n"), DBGetFieldULong(result, i, 0), DBGetFieldULong(result, i, 1));
             }
 
-            TCHAR *tmp;
             pugi::xml_node node = xml.select_node("/element/script").node();
             const char *source = node.text().as_string();
-#ifdef UNICODE
-            tmp = WideStringFromUTF8String(source);
-#else
-            tmp = MBStringFromUTF8String(source);
-#endif
+            wchar_t *tmp = WideStringFromUTF8String(source);
             StringBuffer updatedScript = NXSLConvertToV5(tmp);
             MemFree(tmp);
 
@@ -568,14 +563,9 @@ static bool H_UpgradeFromV32()
                _tprintf(_T("Failed to load XML. Ignore dashboard %d element %d\n"), DBGetFieldULong(result, i, 0), DBGetFieldULong(result, i, 1));
             }
 
-            TCHAR *tmp;
             pugi::xml_node node = xml.select_node("/element/query").node();
             const char *source = node.text().as_string();
-#ifdef UNICODE
-            tmp = WideStringFromUTF8String(source);
-#else
-            tmp = MBStringFromUTF8String(source);
-#endif
+            wchar_t *tmp = WideStringFromUTF8String(source);
             StringBuffer updatedScript = NXSLConvertToV5(tmp);
             MemFree(tmp);
 
@@ -1192,13 +1182,9 @@ static bool H_UpgradeFromV6()
          TCHAR *data = DBGetField(result, i, 0, nullptr, 0);
          if (data != nullptr)
          {
-#ifdef UNICODE
             char *utf8data = UTF8StringFromWideString(data);
             config.loadXmlConfigFromMemory(utf8data, (int)strlen(utf8data), _T("<database>"), "element");
             MemFree(utf8data);
-#else
-            config.loadXmlConfigFromMemory(data, (int)strlen(data), _T("<database>"), "element");
-#endif
             MemFree(data);
             if (config.getValueAsInt(_T("type"), 1) == 2)
             {

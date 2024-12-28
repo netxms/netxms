@@ -251,12 +251,12 @@ public:
    int64_t getNamedParameterAsInt64(const TCHAR *name, int64_t defaultValue = 0) const { return getParameterAsInt64(m_parameterNames.indexOfIgnoreCase(name), defaultValue); }
    uint64_t getNamedParameterAsUInt64(const TCHAR *name, uint64_t defaultValue = 0) const { return getParameterAsUInt64(m_parameterNames.indexOfIgnoreCase(name), defaultValue); }
 
-	void addParameter(const TCHAR *name, const TCHAR *value);
-	void setNamedParameter(const TCHAR *name, const TCHAR *value);
-	void setParameter(int index, const TCHAR *name, const TCHAR *value);
+	void addParameter(const wchar_t *name, const wchar_t *value);
+	void setNamedParameter(const wchar_t *name, const wchar_t *value);
+	void setParameter(int index, const wchar_t *name, const wchar_t *value);
 
-   const TCHAR *getCustomMessage() const { return CHECK_NULL_EX(m_customMessage); }
-   void setCustomMessage(const TCHAR *message) { MemFree(m_customMessage); m_customMessage = MemCopyString(message); }
+   const wchar_t *getCustomMessage() const { return CHECK_NULL_EX(m_customMessage); }
+   void setCustomMessage(const wchar_t *message) { MemFree(m_customMessage); m_customMessage = MemCopyString(message); }
 
    json_t *toJson();
    static Event *createFromJson(json_t *json);
@@ -825,12 +825,12 @@ StructArray<EventProcessingThreadStats> *GetEventProcessingThreadStats();
 bool EventNameFromCode(uint32_t eventCode, TCHAR *buffer);
 uint32_t NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, uint32_t defaultValue = 0);
 shared_ptr<EventTemplate> FindEventTemplateByCode(uint32_t code);
-shared_ptr<EventTemplate> FindEventTemplateByName(const TCHAR *name);
+shared_ptr<EventTemplate> FindEventTemplateByName(const wchar_t *name);
 
 void NXCORE_EXPORTABLE ResendEvents(ObjectQueue<Event> *queue);
 
-const TCHAR NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps);
-const TCHAR NXCORE_EXPORTABLE *GetAPStateAsText(AccessPointState state);
+const wchar_t NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps);
+const wchar_t NXCORE_EXPORTABLE *GetAPStateAsText(AccessPointState state);
 
 /**
  * Global variables

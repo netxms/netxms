@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2023 Victor Kirhenshtein
+** Copyright (C) 2004-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1193,12 +1193,12 @@ void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, const Str
       }
 	}
 
-	if (!GetYesNo(_T("Source:\n%s\n\nTarget:\n%s\n\nOptions:\n%s\n\nConfirm database migration?"), sourceConfFields, destConfFields, options.cstr()))
+	if (!GetYesNo(L"Source:\n%s\n\nTarget:\n%s\n\nOptions:\n%s\n\nConfirm database migration?", sourceConfFields, destConfFields, options.cstr()))
 	   return;
 
    DecryptPassword(s_dbLogin, s_dbPassword, s_dbPassword, MAX_PASSWORD);
    bool success = ImportOrMigrateDatabase(excludedTables, includedTables, ignoreDataMigrationErrors);
-	_tprintf(success ? _T("Database migration complete.\n") : _T("Database migration failed.\n"));
+   WriteToTerminal(success ? L"Database migration completed.\n" : L"Database migration failed.\n");
 }
 
 /**
@@ -1206,13 +1206,9 @@ void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, const Str
  */
 void ImportDatabase(const char *file, const StringList& excludedTables, const StringList& includedTables, bool ignoreDataMigrationErrors)
 {
-   _tcscpy(s_dbDriver, _T("sqlite.ddr"));
-#ifdef UNICODE
+   wcscpy(s_dbDriver, L"sqlite.ddr");
    MultiByteToWideCharSysLocale(file, s_dbName, MAX_DB_NAME);
-#else
-   strlcpy(s_dbName, file, MAX_DB_NAME);
-#endif
    s_import = true;
    bool success = ImportOrMigrateDatabase(excludedTables, includedTables, ignoreDataMigrationErrors);
-   _tprintf(success ? _T("Database import complete.\n") : _T("Database import failed.\n"));
+   WriteToTerminal(success ? L"Database import completed.\n" : L"Database import failed.\n");
 }

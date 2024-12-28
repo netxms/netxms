@@ -68,7 +68,6 @@ static void SendSyslogRecord(const TCHAR *text)
 #endif
 
    char *mbText = nullptr;
-#ifdef UNICODE
    if (ConfigReadBoolean(_T("AuditLog.External.UseUTF8"), false))
    {
       mbText = UTF8StringFromWideString(text);
@@ -77,12 +76,6 @@ static void SendSyslogRecord(const TCHAR *text)
    {
       mbText = MBStringFromWideString(text);
    }
-#else
-   if (ConfigReadBoolean(_T("AuditLog.External.UseUTF8"), false))
-   {
-      mbText = UTF8StringFromMBString(text);
-   }
-#endif
    char message[1025];
    snprintf(message, 1025, "<%d>%s %2d %02d:%02d:%02d %s %s %s", (s_auditFacility << 3) + s_auditSeverity, month[now->tm_mon],
          now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, s_localHostName, s_auditTag,
@@ -351,15 +344,11 @@ void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool is
 {
    char *js1 = (oldValue != nullptr) ? json_dumps(oldValue, JSON_SORT_KEYS | JSON_INDENT(3)) : MemCopyStringA("");
    char *js2 = (newValue != nullptr) ? json_dumps(newValue, JSON_SORT_KEYS | JSON_INDENT(3)) : MemCopyStringA("");
-#ifdef UNICODE
    WCHAR *js1w = WideStringFromUTF8String(js1);
    WCHAR *js2w = WideStringFromUTF8String(js2);
    WriteAuditLogWithValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, js1w, js2w, 'J', format, args);
    MemFree(js1w);
    MemFree(js2w);
-#else
-   WriteAuditLogWithValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, js1, js2, 'J', format, args);
-#endif
    MemFree(js1);
    MemFree(js2);
 }

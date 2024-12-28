@@ -994,7 +994,7 @@ public:
       return sendMessage(*msg);
    }
    void sendRawMessage(NXCP_MESSAGE *msg);
-   void sendPollerMsg(uint32_t requestIf, const TCHAR *text);
+   void sendPollerMsg(uint32_t requestIf, const wchar_t *text);
 	bool sendFile(const TCHAR *file, uint32_t requestId, off64_t offset, bool allowCompression = true);
 
    virtual void writeAuditLog(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *format, ...) const override;
@@ -1270,19 +1270,15 @@ void ConfigPreLoad();
 bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *variable, TCHAR *buffer, size_t size, const TCHAR *defaultValue);
 TCHAR NXCORE_EXPORTABLE *ConfigReadStr(const TCHAR *variable, const TCHAR *defaultValue);
 bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE hdb, const TCHAR *variable, TCHAR *buffer, size_t size, const TCHAR *defaultValue);
-#ifdef UNICODE
-bool NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *variable, char *buffer, size_t size, const char *defaultValue);
-#else
-#define ConfigReadStrA ConfigReadStr
-#endif
-bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *variable, char *buffer, size_t size, const char *defaultValue);
-char NXCORE_EXPORTABLE *ConfigReadStrUTF8(const TCHAR *variable, const char *defaultValue);
+bool NXCORE_EXPORTABLE ConfigReadStrA(const wchar_t *variable, char *buffer, size_t size, const char *defaultValue);
+bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const wchar_t *variable, char *buffer, size_t size, const char *defaultValue);
+char NXCORE_EXPORTABLE *ConfigReadStrUTF8(const wchar_t *variable, const char *defaultValue);
 int32_t NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *variable, int32_t defaultValue);
 int32_t NXCORE_EXPORTABLE ConfigReadIntEx(DB_HANDLE hdb, const TCHAR *variable, int32_t defaultValue);
 uint32_t NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *variable, uint32_t defaultValue);
 int64_t NXCORE_EXPORTABLE ConfigReadInt64(const TCHAR *variable, int64_t defaultValue);
 uint64_t NXCORE_EXPORTABLE ConfigReadUInt64(const TCHAR *variable, uint64_t defaultValue);
-bool NXCORE_EXPORTABLE ConfigReadBoolean(const TCHAR *variable, bool defaultValue);
+bool NXCORE_EXPORTABLE ConfigReadBoolean(const wchar_t *variable, bool defaultValue);
 bool NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *variable, int *buffer, size_t size, int defaultElementValue);
 bool NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *variable, const TCHAR *value, bool create, bool isVisible = true, bool needRestart = false);
 bool NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *variable, int32_t value, bool create, bool isVisible = true, bool needRestart = false);
@@ -1313,7 +1309,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *);
 void NXCORE_EXPORTABLE ShutdownDatabase();
 void NXCORE_EXPORTABLE InitiateShutdown(ShutdownReason reason);
 
-int ProcessConsoleCommand(const TCHAR *command, ServerConsole *console);
+int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console);
 
 void SaveObjects(DB_HANDLE hdb, uint32_t watchdogId, bool saveRuntimeData);
 
@@ -1412,8 +1408,8 @@ void NXCORE_EXPORTABLE CloseOtherSessions(uint32_t userId, session_id_t thisSess
 void GetSysInfoStr(TCHAR *buffer, int nMaxSize);
 InetAddress GetLocalIpAddr();
 
-InetAddress NXCORE_EXPORTABLE ResolveHostName(int32_t zoneUIN, const TCHAR *hostname, int afHint = AF_UNSPEC);
-bool EventNameResolver(const TCHAR *name, UINT32 *code);
+InetAddress NXCORE_EXPORTABLE ResolveHostName(int32_t zoneUIN, const wchar_t *hostname, int afHint = AF_UNSPEC);
+bool EventNameResolver(const wchar_t *name, uint32_t *code);
 
 bool NXCORE_EXPORTABLE SendMagicPacket(const InetAddress& ipAddr, const MacAddress& macAddr, int count);
 StringList NXCORE_EXPORTABLE *SplitCommandLine(const TCHAR *command);
@@ -1491,7 +1487,7 @@ void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool is
          session_id_t sessionId, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, va_list args);
 
 uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log);
-void ReportConfigurationError(const TCHAR *subsystem, const TCHAR *tag, const TCHAR *descriptionFormat, ...);
+void ReportConfigurationError(const wchar_t *subsystem, const wchar_t *tag, const wchar_t *descriptionFormat, ...);
 
 X509 *CertificateFromLoginMessage(const NXCPMessage& msg);
 bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challenge, const BYTE *signature,
@@ -1694,13 +1690,13 @@ extern uint32_t g_pollsBetweenPrimaryIpUpdate;
 extern PrimaryIPUpdateMode g_primaryIpUpdateMode;
 extern char g_snmpCodepage[16];
 
-extern TCHAR g_szDbDriver[];
-extern TCHAR g_szDbDrvParams[];
-extern TCHAR g_szDbServer[];
-extern TCHAR g_szDbLogin[];
-extern TCHAR g_szDbPassword[];
-extern TCHAR g_szDbName[];
-extern TCHAR g_szDbSchema[];
+extern wchar_t g_szDbDriver[];
+extern wchar_t g_szDbDrvParams[];
+extern wchar_t g_szDbServer[];
+extern wchar_t g_szDbLogin[];
+extern wchar_t g_szDbPassword[];
+extern wchar_t g_szDbName[];
+extern wchar_t g_szDbSchema[];
 extern DB_DRIVER g_dbDriver;
 extern VolatileCounter64 g_idataWriteRequests;
 extern uint64_t g_rawDataWriteRequests;
@@ -1713,8 +1709,8 @@ extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_mainThreadPool);
 extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_clientThreadPool);
 extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_mobileThreadPool);
 
-extern TCHAR g_startupSqlScriptPath[];
-extern TCHAR g_dbSessionSetupSqlScriptPath[];
+extern wchar_t g_startupSqlScriptPath[];
+extern wchar_t g_dbSessionSetupSqlScriptPath[];
 
 #endif   /* MODULE_NXDBMGR_EXTENSION */
 

@@ -47,6 +47,17 @@ int F_system(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	*ppResult = vm->createValue((LONG)_tsystem(argv[0]->getValueAsCString()));
-	return 0;
+   ProcessExecutor executor(argv[0]->getValueAsCString());
+   int32_t exitCode;
+   if (executor.execute())
+   {
+      executor.waitForCompletion(INFINITE);
+      exitCode = executor.getExitCode();
+   }
+   else
+   {
+      exitCode = 127;
+   }
+   *ppResult = vm->createValue(exitCode);
+   return 0;
 }

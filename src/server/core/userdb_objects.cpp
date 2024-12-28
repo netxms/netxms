@@ -40,15 +40,11 @@ static int CompareUserId(const void *e1, const void *e2)
 /**
  * Generate hash for password
  */
-static void CalculatePasswordHash(const TCHAR *password, PasswordHashType type, PasswordHash *ph, const BYTE *salt = nullptr)
+static void CalculatePasswordHash(const wchar_t *password, PasswordHashType type, PasswordHash *ph, const BYTE *salt = nullptr)
 {
-#ifdef UNICODE
 	char mbPassword[1024];
 	wchar_to_utf8(password, -1, mbPassword, 1024);
 	mbPassword[1023] = 0;
-#else
-   const char *mbPassword = password;
-#endif
 
    BYTE buffer[1024];
 
@@ -749,7 +745,7 @@ bool User::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Validate user's password
  */
-bool User::validatePassword(const TCHAR *password)
+bool User::validatePassword(const wchar_t *password)
 {
    if (m_password.hashType == PWD_HASH_DISABLED)
       return false;
@@ -768,9 +764,8 @@ bool User::validatePassword(const TCHAR *password)
 
 /**
  * Set user's password
- * For non-UNICODE build, password must be UTF-8 encoded
  */
-void User::setPassword(const TCHAR *password, bool clearChangePasswdFlag)
+void User::setPassword(const wchar_t *password, bool clearChangePasswdFlag)
 {
    CalculatePasswordHash(password, PWD_HASH_SHA256, &m_password);
    m_graceLogins = ConfigReadInt(_T("Server.Security.GraceLoginCount"), 5);;

@@ -25,7 +25,7 @@
 #include <nxcore_discovery.h>
 #include <ethernet_ip.h>
 
-#define DEBUG_TAG_DISCOVERY      _T("poll.discovery")
+#define DEBUG_TAG_DISCOVERY      L"poll.discovery"
 
 /**
  * Thread pool
@@ -35,13 +35,13 @@ ThreadPool *g_discoveryThreadPool = nullptr;
 /**
  * Discovery source type names
  */
-static const TCHAR *s_discoveredAddrSourceTypeAsText[] = {
-   _T("ARP Cache"),
-   _T("Routing Table"),
-   _T("Agent Registration"),
-   _T("SNMP Trap"),
-   _T("Syslog"),
-   _T("Active Discovery"),
+static const wchar_t *s_discoveredAddrSourceTypeAsText[] = {
+   L"ARP Cache",
+   L"Routing Table",
+   L"Agent Registration",
+   L"SNMP Trap",
+   L"Syslog",
+   L"Active Discovery",
 };
 
 /**
@@ -134,7 +134,7 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
          {
             TCHAR parameter[128], buffer[64];
 
-            _sntprintf(parameter, 128, _T("Icmp.Ping(%s)"), ipAddr.toString(buffer));
+            _sntprintf(parameter, 128, L"Icmp.Ping(%s)", ipAddr.toString(buffer));
             if (conn->getParameter(parameter, buffer, 64) == ERR_SUCCESS)
             {
                TCHAR *eptr;
@@ -268,8 +268,8 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
    }
    else
    {
-      TCHAR ipAddrText[64];
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("HostIsReachable(%s): all SNMP probes disabled"), ipAddr.toString(ipAddrText));
+      wchar_t ipAddrText[64];
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, L"HostIsReachable(%s): all SNMP probes disabled", ipAddr.toString(ipAddrText));
    }
 
    if (reachable && !fullCheck)
@@ -285,8 +285,8 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
    }
    else
    {
-      TCHAR ipAddrText[64];
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("HostIsReachable(%s): SSH connection probe disabled"), ipAddr.toString(ipAddrText));
+      wchar_t ipAddrText[64];
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, L"HostIsReachable(%s): SSH connection probe disabled", ipAddr.toString(ipAddrText));
    }
 
    return reachable;
@@ -297,18 +297,18 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
  */
 static bool DuplicatesCheck(DiscoveredAddress *address)
 {
-   TCHAR ipAddrText[64];
+   wchar_t ipAddrText[64];
    address->ipAddr.toString(ipAddrText);
 
    if (address->macAddr.isBroadcast())
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("DuplicatesCheck(%s): broadcast MAC address"), ipAddrText);
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, L"DuplicatesCheck(%s): broadcast MAC address", ipAddrText);
       return false;  // Broadcast MAC
    }
 
    if (FindNodeByIP(address->zoneUIN, address->ipAddr) != nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("DuplicatesCheck(%s): node already exist in database"), ipAddrText);
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, L"DuplicatesCheck(%s): node already exist in database", ipAddrText);
       return false;  // Node already exist in database
    }
 
@@ -1380,12 +1380,8 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
                uint16_t port = ports.get(i);
                for(int j = 0; (j < communities->size()) && !IsShutdownInProgress(); j++)
                {
-#ifdef UNICODE
                   char community[256];
                   wchar_to_mb(communities->get(j), -1, community, 256);
-#else
-                  const char *community = communities->get(j);
-#endif
                   ScanAddressRangeSNMP(from, blockEndAddr, port, SNMP_VERSION_1, community, callback, console, nullptr);
                   ScanAddressRangeSNMP(from, blockEndAddr, port, SNMP_VERSION_2C, community, callback, console, nullptr);
                }

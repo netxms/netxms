@@ -444,7 +444,7 @@ stop_search:
       switch(ch)
       {
          case 'h':   // Display help and exit
-			   _tprintf(_T("NetXMS Database Manager Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG IS_UNICODE_BUILD_STRING _T("\n\n"));
+			   _tprintf(_T("NetXMS Database Manager Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG _T("\n\n"));
             _tprintf(_T("Usage: nxdbmgr [<options>] <command> [<options>]\n")
                      _T("Valid commands are:\n")
                      _T("   background-convert   : Convert collected data to TimescaleDB format in background\n")
@@ -503,26 +503,18 @@ stop_search:
                      _T("        action, alarm, asset, audit, certificate, event, maintenance, notification, snmptrap, syslog, winevent\n")
                      _T("   * Use -Z all to exclude all logs\n")
                      _T("\n"), configFile);
-            bStart = FALSE;
+            bStart = false;
             break;
          case 'v':   // Print version and exit
-			   _tprintf(_T("NetXMS Database Manager Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG IS_UNICODE_BUILD_STRING _T("\n\n"));
-            bStart = FALSE;
+			   WriteToTerminal(L"NetXMS Database Manager Version " NETXMS_VERSION_STRING L" Build " NETXMS_BUILD_TAG L"\n\n");
+            bStart = false;
             break;
          case 'c':
-#ifdef UNICODE
 	         MultiByteToWideCharSysLocale(optarg, configFile, MAX_PATH);
 				configFile[MAX_PATH - 1] = 0;
-#else
-            strlcpy(configFile, optarg, MAX_PATH);
-#endif
             break;
          case 'C':
-#ifdef UNICODE
             dbaLogin = WideStringFromMBStringSysLocale(optarg);
-#else
-            dbaLogin = MemCopyStringA(optarg);
-#endif
             dbaPassword = _tcschr(dbaLogin, _T('/'));
             if (dbaPassword != nullptr)
             {
@@ -546,12 +538,8 @@ stop_search:
             SetDBMgrForcedConfirmationMode(true);
             break;
          case 'F':
-#ifdef UNICODE
             MultiByteToWideCharSysLocale(optarg, fallbackSyntax, 32);
 				fallbackSyntax[31] = 0;
-#else
-            strlcpy(fallbackSyntax, optarg, 32);
-#endif
             break;
 			case 'G':
 			   SetDBMgrGUIMode(true);
@@ -619,12 +607,12 @@ stop_search:
       return 1;
 
 	if (!bQuiet)
-		_tprintf(_T("NetXMS Database Manager Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG IS_UNICODE_BUILD_STRING _T("\n\n"));
+		WriteToTerminal(L"NetXMS Database Manager Version " NETXMS_VERSION_STRING L" Build " NETXMS_BUILD_TAG L"\n\n");
 
    // Check parameter correctness
    if (argc - optind == 0)
    {
-      _tprintf(_T("Command missing. Type nxdbmgr -h for command line syntax.\n"));
+      WriteToTerminal(L"Command missing. Type nxdbmgr -h for command line syntax.\n");
       PAUSE;
       return 1;
    }
@@ -670,7 +658,7 @@ stop_search:
 	// Read and decrypt password
 	if (!_tcscmp(s_dbPassword, _T("?")))
    {
-	   if (!ReadPassword(_T("Database password: "), s_dbPassword, MAX_PASSWORD))
+	   if (!ReadPassword(L"Database password: ", s_dbPassword, MAX_PASSWORD))
 	   {
 	      _tprintf(_T("Cannot read password from terminal\n"));
          PAUSE;
@@ -767,11 +755,7 @@ stop_search:
             }
             else
             {
-#ifdef UNICODE
                wchar_to_ASCII(fallbackSyntax, -1, driver, sizeof(driver));
-#else
-               strcpy(driver, fallbackSyntax);
-#endif
             }
          }
          else if (!strcmp(driver, "mariadb"))
@@ -784,17 +768,13 @@ stop_search:
          initFile.appendMBString(driver);
          initFile.append(_T(".sql"));
 
-#ifdef UNICODE
          char *initFileMB = MBStringFromWideStringSysLocale(initFile);
          exitCode = InitDatabase(initFileMB);
          MemFree(initFileMB);
-#else
-         exitCode = InitDatabase(initFile);
-#endif
       }
       else if (strchr(argv[optind + 1], FS_PATH_SEPARATOR_CHAR_A) == nullptr)
       {
-         TCHAR shareDir[MAX_PATH];
+         wchar_t shareDir[MAX_PATH];
          GetNetXMSDirectory(nxDirShare, shareDir);
 
          StringBuffer initFile = shareDir;
@@ -802,13 +782,9 @@ stop_search:
          initFile.appendMBString(argv[optind + 1]);
          initFile.append(_T(".sql"));
 
-#ifdef UNICODE
          char *initFileMB = MBStringFromWideStringSysLocale(initFile);
          exitCode = InitDatabase(initFileMB);
          MemFree(initFileMB);
-#else
-         exitCode = InitDatabase(initFile);
-#endif
       }
       else
       {
@@ -892,44 +868,25 @@ stop_search:
       }
       else if (!strcmp(argv[optind], "migrate"))
 		{
-#ifdef UNICODE
-			WCHAR *sourceConfig = WideStringFromMBStringSysLocale(argv[optind + 1]);
-#else
-			char *sourceConfig = argv[optind + 1];
-#endif
-			TCHAR destConfFields[2048];
+         wchar_t *sourceConfig = WideStringFromMBStringSysLocale(argv[optind + 1]);
+         wchar_t destConfFields[2048];
 			_sntprintf(destConfFields, 2048, _T("\tDriver: %s\n\tDB Name: %s\n\tDB Server: %s\n\tDB Login: %s"), s_dbDriver, s_dbName, s_dbServer, s_dbLogin);
          MigrateDatabase(sourceConfig, destConfFields, excludedTables, includedTables, ignoreDataMigrationErrors);
-#ifdef UNICODE
          MemFree(sourceConfig);
-#endif
 		}
       else if (!strcmp(argv[optind], "get"))
 		{
-#ifdef UNICODE
-			WCHAR *var = WideStringFromMBStringSysLocale(argv[optind + 1]);
-#else
-			char *var = argv[optind + 1];
-#endif
+         wchar_t *var = WideStringFromMBStringSysLocale(argv[optind + 1]);
 			PrintConfig(var);
-#ifdef UNICODE
 			MemFree(var);
-#endif
 		}
       else if (!strcmp(argv[optind], "set"))
 		{
-#ifdef UNICODE
-			WCHAR *var = WideStringFromMBStringSysLocale(argv[optind + 1]);
-			WCHAR *value = WideStringFromMBStringSysLocale(argv[optind + 2]);
-#else
-			char *var = argv[optind + 1];
-			char *value = argv[optind + 2];
-#endif
+         wchar_t *var = WideStringFromMBStringSysLocale(argv[optind + 1]);
+         wchar_t *value = WideStringFromMBStringSysLocale(argv[optind + 2]);
 			CreateConfigParam(var, value, true, false, replaceValue);
-#ifdef UNICODE
 			MemFree(var);
 			MemFree(value);
-#endif
 		}
       else if (!strcmp(argv[optind], "reset-system-account"))
       {

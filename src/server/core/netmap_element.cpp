@@ -386,11 +386,7 @@ void NetworkMapDCIElement::updateDciList(CountingHashSet<uint32_t> *dciSet, bool
 {
    nxlog_debug_tag(_T("netmap"), 7, _T("NetworkMapDCIElement::updateDciList(%u): element configuration: %s"), m_id, m_config.cstr());
    pugi::xml_document xml;
-#ifdef UNICODE
    char *xmlSource = UTF8StringFromWideString(m_config);
-#else
-   char *xmlSource = UTF8StringFromMBString(m_config);
-#endif
    if (xml.load_string(xmlSource))
    {
       for (pugi::xpath_node element : xml.select_nodes(getDciXPath()))

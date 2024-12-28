@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -482,15 +482,8 @@ static void ParallelEventProcessor()
          now = event->getTimestamp(); // Get current time from event, it should be (almost) current
 
          StringBuffer key = event->expandText(queueSelector, nullptr);
-#ifdef UNICODE
          char keyBytes[128];
          size_t keyLen = wchar_to_utf8(key.cstr(), key.length(), keyBytes, 128);
-#else
-         char *keyBytes = key.getBuffer();
-         size_t keyLen = key.length();
-         if (keyLen > 128)
-            keyLen = 128;
-#endif
 
          EventQueueBinding *qb;
          HASH_FIND(hh, queueBindings, keyBytes, keyLen, qb);

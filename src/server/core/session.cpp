@@ -2225,12 +2225,8 @@ void ClientSession::sendServerInfo(const NXCPMessage& request)
 uint32_t ClientSession::authenticateUserByPassword(const NXCPMessage& request, LoginInfo *loginInfo)
 {
    request.getFieldAsString(VID_LOGIN_NAME, loginInfo->loginName, MAX_USER_NAME);
-   TCHAR password[1024];
-#ifdef UNICODE
+   wchar_t password[1024];
    request.getFieldAsString(VID_PASSWORD, password, 256);
-#else
-   request.getFieldAsUtf8String(VID_PASSWORD, password, 1024);
-#endif
    uint32_t rcc = AuthenticateUser(loginInfo->loginName, password, 0, nullptr, nullptr, &m_userId, &m_systemAccessRights, &loginInfo->changePassword,
          &loginInfo->intruderLockout, &loginInfo->closeOtherSessions, false, &loginInfo->graceLogins);
    SecureZeroMemory(password, sizeof(password));
@@ -4196,13 +4192,8 @@ void ClientSession::validatePassword(const NXCPMessage& request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-#ifdef UNICODE
-   TCHAR password[256];
+   wchar_t password[256];
    request.getFieldAsString(VID_PASSWORD, password, 256);
-#else
-   char password[256];
-   request.getFieldAsUtf8String(VID_PASSWORD, password, 256);
-#endif
 
    bool isValid = false;
    msg.setField(VID_RCC, ValidateUserPassword(m_userId, m_loginName, password, &isValid));
@@ -4223,16 +4214,10 @@ void ClientSession::setPassword(const NXCPMessage& request)
    uint32_t userId = request.getFieldAsUInt32(VID_USER_ID);
    if ((m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS) || (userId == m_userId))     // User can change password for itself
    {
-      TCHAR newPassword[1024], oldPassword[1024];
-#ifdef UNICODE
+      wchar_t newPassword[1024], oldPassword[1024];
       request.getFieldAsString(VID_PASSWORD, newPassword, 256);
 		if (request.isFieldExist(VID_OLD_PASSWORD))
 			request.getFieldAsString(VID_OLD_PASSWORD, oldPassword, 256);
-#else
-      request.getFieldAsUtf8String(VID_PASSWORD, newPassword, 1024);
-		if (request.isFieldExist(VID_OLD_PASSWORD))
-			request.getFieldAsUtf8String(VID_OLD_PASSWORD, oldPassword, 1024);
-#endif
 		else
 			oldPassword[0] = 0;
 
@@ -4245,7 +4230,7 @@ void ClientSession::setPassword(const NXCPMessage& request)
       if (rcc == RCC_SUCCESS)
       {
          TCHAR userName[MAX_USER_NAME];
-         WriteAuditLog(AUDIT_SECURITY, TRUE, m_userId, m_workstation, m_id, 0, _T("Changed password for user %s"), ResolveUserId(userId, userName, true));
+         writeAuditLog(AUDIT_SECURITY, true, 0, L"Changed password for user %s", ResolveUserId(userId, userName, true));
       }
    }
    else
@@ -7472,7 +7457,7 @@ void ClientSession::forcedObjectPoll(const NXCPMessage& request)
 /**
  * Send message from poller to client
  */
-void ClientSession::sendPollerMsg(uint32_t requestId, const TCHAR *text)
+void ClientSession::sendPollerMsg(uint32_t requestId, const wchar_t *text)
 {
    NXCPMessage msg(CMD_POLLING_INFO, requestId);
    msg.setField(VID_RCC, RCC_OPERATION_IN_PROGRESS);

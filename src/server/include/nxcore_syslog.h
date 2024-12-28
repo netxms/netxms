@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ private:
    char m_hostName[MAX_SYSLOG_HOSTNAME_LEN];
    char m_tag[MAX_SYSLOG_TAG_LEN];
    char *m_rawMessage;
-   TCHAR *m_message;
+   wchar_t *m_message;
    InetAddress m_sourceAddress;
    char *m_rawData;
    size_t m_rawDataLen;
@@ -82,9 +82,7 @@ public:
    ~SyslogMessage()
    {
       MemFree(m_rawData);
-#ifdef UNICODE
       MemFree(m_message);
-#endif
    }
 
    bool parse();
@@ -93,13 +91,9 @@ public:
 
    void convertRawMessage(const char *codepage)
    {
-#ifdef UNICODE
       size_t len = strlen(m_rawMessage) + 1;
       m_message = MemAllocStringW(len);
       mbcp_to_wchar(m_rawMessage, -1, m_message, len, codepage);
-#else
-      m_message = m_rawMessage;
-#endif
    }
 
    void fillNXCPMessage(NXCPMessage *msg) const;

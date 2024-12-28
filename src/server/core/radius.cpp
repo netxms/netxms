@@ -915,13 +915,9 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
    TCHAR dictionaryFile[MAX_PATH];
    GetNetXMSDirectory(nxDirShare, dictionaryFile);
    _tcscat(dictionaryFile, SFILE_RADDICT);
-#ifdef UNICODE
    char dictionaryFileUTF8[MAX_PATH];
    WideCharToMultiByte(CP_UTF8, 0, dictionaryFile, -1, dictionaryFileUTF8, MAX_PATH, NULL, NULL);
    if (rc_read_dictionary(rh, dictionaryFileUTF8) != 0)
-#else
-   if (rc_read_dictionary(rh, dictionaryFile) != 0)
-#endif
       return ERROR_RC;  // rc_read_dictionary will destroy rh on failure
 
    char connectString[1024];
@@ -1044,18 +1040,13 @@ static bool IsTimeout(int result)
 /**
  * Authenticate user via RADIUS
  */
-bool RadiusAuth(const TCHAR *login, const TCHAR *passwd)
+bool RadiusAuth(const wchar_t *login, const wchar_t *passwd)
 {
 	static bool useSecondary = false;
 
 	char server[256], rlogin[256], rpasswd[256];
-#ifdef UNICODE
 	wchar_to_utf8(login, -1, rlogin, 256);
 	wchar_to_utf8(passwd, -1, rpasswd, 256);
-#else
-	mb_to_utf8(login, -1, rlogin, 256);
-   mb_to_utf8(passwd, -1, rpasswd, 256);
-#endif
    rlogin[255] = 0;
    rpasswd[255] = 0;
    int result = DoRadiusAuth(rlogin, rpasswd, useSecondary, server);

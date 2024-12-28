@@ -59,11 +59,7 @@ public:
    WCHAR *toStringW(WCHAR *buffer) const;
    TCHAR *toString(TCHAR *buffer) const
    {
-#ifdef UNICODE
       return toStringW(buffer);
-#else
-      return toStringA(buffer);
-#endif
    }
    String toString() const
    {
@@ -75,11 +71,7 @@ public:
    static UserAuthenticationToken parseA(const char *s);
    static UserAuthenticationToken parse(const TCHAR *s)
    {
-#ifdef UNICODE
       return parseW(s);
-#else
-      return parseA(s);
-#endif
    }
 };
 

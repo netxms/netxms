@@ -44,7 +44,7 @@
 /**
  * Externals
  */
-bool RadiusAuth(const TCHAR *pszLogin, const TCHAR *pszPasswd);
+bool RadiusAuth(const wchar_t *login, const wchar_t *passwd);
 
 /**
  * Static data
@@ -402,9 +402,8 @@ void SaveUsers(DB_HANDLE hdb, uint32_t watchdogId)
  * Checks if provided login name and password are correct, and returns RCC_SUCCESS
  * on success and appropriate RCC otherwise. On success authentication, user's ID is stored
  * int pdwId. If password authentication is used, dwSigLen should be set to zero.
- * For non-UNICODE build, password must be UTF-8 encoded. If user already authenticated by
- * SSO server, ssoAuth must be set to true. Password expiration, change flag and grace
- * count ignored for SSO logins.
+ * If user already authenticated by SSO server, ssoAuth must be set to true. Password expiration,
+ * change flag and grace count ignored for SSO logins.
  */
 uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigLen, void *pCert,
          BYTE *pChallenge, uint32_t *pdwId, uint64_t *pdwSystemRights, bool *pbChangePasswd, bool *pbIntruderLockout,
@@ -1504,9 +1503,8 @@ static bool CheckPasswordComplexity(const TCHAR *password)
 
 /**
  * Set user's password
- * For non-UNICODE build, passwords must be UTF-8 encoded
  */
-uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword)
+uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const wchar_t *newPassword, const wchar_t *oldPassword, bool changeOwnPassword)
 {
 	if (id & GROUP_FLAG)
 		return RCC_INVALID_USER_ID;
@@ -1531,7 +1529,7 @@ uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const TCHAR *newPassword
       }
 
       // Check password length
-      int minLength = (user->getMinMasswordLength() == -1) ? ConfigReadInt(_T("Server.Security.MinPasswordLength"), 0) : user->getMinMasswordLength();
+      int minLength = (user->getMinMasswordLength() == -1) ? ConfigReadInt(L"Server.Security.MinPasswordLength", 0) : user->getMinMasswordLength();
       if ((int)_tcslen(newPassword) < minLength)
       {
          rcc = RCC_WEAK_PASSWORD;
@@ -1567,13 +1565,9 @@ uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const TCHAR *newPassword
          if (ph != nullptr)
          {
             BYTE newPasswdHash[SHA1_DIGEST_SIZE];
-#ifdef UNICODE
             char *mb = UTF8StringFromWideString(newPassword);
             CalculateSHA1Hash((BYTE *)mb, strlen(mb), newPasswdHash);
             MemFree(mb);
-#else
-            CalculateSHA1Hash((BYTE *)newPassword, strlen(newPassword), newPasswdHash);
-#endif
 
             int phLen = (int)_tcslen(ph) / (SHA1_DIGEST_SIZE * 2);
             if (phLen > passwordHistoryLength)
@@ -1632,7 +1626,7 @@ finish:
 /**
  * Validate user's password
  */
-uint32_t NXCORE_EXPORTABLE ValidateUserPassword(uint32_t userId, const TCHAR *login, const TCHAR *password, bool *isValid)
+uint32_t NXCORE_EXPORTABLE ValidateUserPassword(uint32_t userId, const wchar_t *login, const wchar_t *password, bool *isValid)
 {
 	if (userId & GROUP_FLAG)
 		return RCC_INVALID_USER_ID;

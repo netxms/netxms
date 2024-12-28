@@ -387,17 +387,13 @@ static void PrintDeviceInformation(NetworkDeviceDriver *driver, SNMP_Transport *
  */
 static void LoadDriver(const char *driver, const char *host, SNMP_Version snmpVersion, int snmpPort, const char *community, const shared_ptr<AgentConnection>& agentConnection)
 {
-   TCHAR errorText[1024];
-#ifdef UNICODE
-   WCHAR *wdriver = WideStringFromMBString(driver);
+   wchar_t errorText[1024];
+   wchar_t *wdriver = WideStringFromMBString(driver);
    HMODULE hModule = DLOpen(wdriver, errorText);
-   free(wdriver);
-#else
-   HMODULE hModule = DLOpen(driver, errorText);
-#endif
+   MemFree(wdriver);
    if (hModule == nullptr)
    {
-      _tprintf(_T("Cannot load driver: %s\n"), errorText);
+      WriteToTerminalEx(L"Cannot load driver: %s\n", errorText);
       return;
    }
 
@@ -468,8 +464,8 @@ int main(int argc, char *argv[])
    SNMP_Version snmpVersion = SNMP_VERSION_2C;
    int snmpPort = 161;
    const char *community = "public";
-   TCHAR *agentAddress = nullptr;
-   TCHAR *agentSecret = nullptr;
+   wchar_t *agentAddress = nullptr;
+   wchar_t *agentSecret = nullptr;
    uint32_t timeout = 2000;
 
    InitNetXMSProcess(true);
@@ -483,11 +479,7 @@ int main(int argc, char *argv[])
       switch(ch)
       {
          case 'a':   // proxy agent
-#ifdef UNICODE
             agentAddress = WideStringFromMBStringSysLocale(optarg);
-#else
-            agentAddress = MemCopyStringA(optarg);
-#endif
             break;
          case 'A':   // Show access points
             s_showAccessPoints = true;
@@ -499,11 +491,7 @@ int main(int argc, char *argv[])
             s_showInterfaces = true;
             break;
          case 'n':
-#ifdef UNICODE
             s_driverName = WideStringFromMBStringSysLocale(optarg);
-#else
-            s_driverName = MemCopyStringA(optarg);
-#endif
             break;
          case 'p':   // Port number
             snmpPort = strtol(optarg, &eptr, 0);
@@ -517,11 +505,7 @@ int main(int argc, char *argv[])
             s_showRadioInterfaces = true;
             break;
          case 's':   // agent secret
-#ifdef UNICODE
             agentSecret = WideStringFromMBStringSysLocale(optarg);
-#else
-            agentSecret = MemCopyStringA(optarg);
-#endif
             break;
          case 't':   // timeout
             timeout = strtoul(optarg, nullptr, 10);

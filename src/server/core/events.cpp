@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -331,37 +331,19 @@ Event *Event::createFromJson(json_t *json)
    event->m_originTimestamp = originTimestamp;
    if (name != nullptr)
    {
-#ifdef UNICODE
       utf8_to_wchar(name, -1, event->m_name, MAX_EVENT_NAME);
-#else
-      utf8_to_mb(name, -1, event->m_name, MAX_EVENT_NAME);
-#endif
    }
-#ifdef UNICODE
    event->m_messageText = WideStringFromUTF8String(message);
-#else
-   event->m_messageText = MBStringFromUTF8String(message);
-#endif
    if (lastAlarmKey != nullptr)
    {
-#ifdef UNICODE
       WCHAR s[MAX_DB_STRING];
       utf8_to_wchar(lastAlarmKey, -1, s, MAX_DB_STRING);
-#else
-      char s[MAX_DB_STRING];
-      utf8_to_mb(lastAlarmKey, -1, s, MAX_DB_STRING);
-#endif
       event->m_lastAlarmKey = s;
    }
    if (lastAlarmMessage != nullptr)
    {
-#ifdef UNICODE
       WCHAR s[MAX_EVENT_MSG_LENGTH];
       utf8_to_wchar(lastAlarmMessage, -1, s, MAX_EVENT_MSG_LENGTH);
-#else
-      char s[MAX_EVENT_MSG_LENGTH];
-      utf8_to_mb(lastAlarmMessage, -1, s, MAX_EVENT_MSG_LENGTH);
-#endif
       event->m_lastAlarmMessage = s;
    }
    if (tags != nullptr)
@@ -374,21 +356,13 @@ Event *Event::createFromJson(json_t *json)
             json_t *e = json_array_get(tags, i);
             if (json_is_string(e))
             {
-#ifdef UNICODE
                event->m_tags.addPreallocated(WideStringFromUTF8String(json_string_value(e)));
-#else
-               event->m_tags.addPreallocated(MBStringFromUTF8String(json_string_value(e)));
-#endif
             }
          }
       }
       else if (json_is_string(tags))
       {
-#ifdef UNICODE
          event->m_tags.addPreallocated(WideStringFromUTF8String(json_string_value(tags)));
-#else
-         event->m_tags.addPreallocated(MBStringFromUTF8String(json_string_value(tags)));
-#endif
       }
    }
 
@@ -403,13 +377,8 @@ Event *Event::createFromJson(json_t *json)
          name = value = nullptr;
          if (json_unpack(p, "{s:s, s:s}", "name", &name, "value", &value) != -1)
          {
-#ifdef UNICODE
             event->m_parameters.addPreallocated(WideStringFromUTF8String(CHECK_NULL_EX_A(value)));
             event->m_parameterNames.addPreallocated(WideStringFromUTF8String(CHECK_NULL_EX_A(name)));
-#else
-            event->m_parameters.addPreallocated(MBStringFromUTF8String(CHECK_NULL_EX_A(value)));
-            event->m_parameterNames.addPreallocated(MBStringFromUTF8String(CHECK_NULL_EX_A(name)));
-#endif
          }
          else
          {
@@ -462,7 +431,7 @@ void Event::setSource(uint32_t sourceId)
  */
 void Event::initFromTemplate(const EventTemplate *eventTemplate)
 {
-   _tcscpy(m_name, eventTemplate->getName());
+   wcscpy(m_name, eventTemplate->getName());
    m_timestamp = time(nullptr);
    m_id = InterlockedIncrement64(&s_eventId);
    m_code = eventTemplate->getCode();
@@ -509,7 +478,7 @@ StringBuffer Event::expandText(const TCHAR *textTemplate, const Alarm *alarm) co
 /**
  * Add new parameter to event
  */
-void Event::addParameter(const TCHAR *name, const TCHAR *value)
+void Event::addParameter(const wchar_t *name, const wchar_t *value)
 {
 	m_parameters.add(value);
 	m_parameterNames.add(name);
@@ -518,7 +487,7 @@ void Event::addParameter(const TCHAR *name, const TCHAR *value)
 /**
  * Set value of named parameter
  */
-void Event::setNamedParameter(const TCHAR *name, const TCHAR *value)
+void Event::setNamedParameter(const wchar_t *name, const wchar_t *value)
 {
    if ((name == nullptr) || (name[0] == 0))
       return;
@@ -542,7 +511,7 @@ void Event::setNamedParameter(const TCHAR *name, const TCHAR *value)
  * @param name parameter name (can be nullptr)
  * @param value new value
  */
-void Event::setParameter(int index, const TCHAR *name, const TCHAR *value)
+void Event::setParameter(int index, const wchar_t *name, const wchar_t *value)
 {
    if (index < 0)
       return;
@@ -976,7 +945,7 @@ shared_ptr<EventTemplate> FindEventTemplateByCode(uint32_t code)
 /**
  * Find event template by name - suitable for external call
  */
-shared_ptr<EventTemplate> FindEventTemplateByName(const TCHAR *name)
+shared_ptr<EventTemplate> FindEventTemplateByName(const wchar_t *name)
 {
    s_eventTemplatesLock.readLock();
    shared_ptr<EventTemplate> e = s_eventNameIndex.getShared(name);
@@ -997,28 +966,28 @@ uint32_t NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, uint32_t default
 /**
  * Get status as text
  */
-const TCHAR NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps)
+const wchar_t NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps)
 {
-   static const TCHAR *statusText[] = { _T("NORMAL"), _T("WARNING"), _T("MINOR"), _T("MAJOR"), _T("CRITICAL"), _T("UNKNOWN"), _T("UNMANAGED"), _T("DISABLED"), _T("TESTING") };
-   static const TCHAR *statusTextSmall[] = { _T("Normal"), _T("Warning"), _T("Minor"), _T("Major"), _T("Critical"), _T("Unknown"), _T("Unmanaged"), _T("Disabled"), _T("Testing") };
+   static const wchar_t *statusText[] = { L"NORMAL", L"WARNING", L"MINOR", L"MAJOR", L"CRITICAL", L"UNKNOWN", L"UNMANAGED", L"DISABLED", L"TESTING" };
+   static const wchar_t *statusTextSmall[] = { L"Normal", L"Warning", L"Minor", L"Major", L"Critical", L"Unknown", L"Unmanaged", L"Disabled", L"Testing" };
 
    if (allCaps)
    {
-      return ((status >= STATUS_NORMAL) && (status <= STATUS_TESTING)) ? statusText[status] : _T("INTERNAL ERROR");
+      return ((status >= STATUS_NORMAL) && (status <= STATUS_TESTING)) ? statusText[status] : L"INTERNAL ERROR";
    }
    else
    {
-      return ((status >= STATUS_NORMAL) && (status <= STATUS_TESTING)) ? statusTextSmall[status] : _T("INTERNAL ERROR");
+      return ((status >= STATUS_NORMAL) && (status <= STATUS_TESTING)) ? statusTextSmall[status] : L"INTERNAL ERROR";
    }
 }
 
 /**
  * Get access point state as text
  */
-const TCHAR NXCORE_EXPORTABLE *GetAPStateAsText(AccessPointState state)
+const wchar_t NXCORE_EXPORTABLE *GetAPStateAsText(AccessPointState state)
 {
-   static const TCHAR *stateText[] = { _T("UP"), _T("UNPROVISIONED"), _T("DOWN"), _T("UNKNOWN") };
-   return ((state >= AP_UP) && (state <= AP_UNKNOWN)) ? stateText[state] : _T("INTERNAL ERROR");
+   static const wchar_t *stateText[] = { L"UP", L"UNPROVISIONED", L"DOWN", L"UNKNOWN" };
+   return ((state >= AP_UP) && (state <= AP_UNKNOWN)) ? stateText[state] : L"INTERNAL ERROR";
 }
 
 /**
@@ -1038,7 +1007,7 @@ static void SendEventDBChangeNotification(ClientSession *session, NXCPMessage *m
  */
 uint32_t UpdateEventTemplate(const NXCPMessage& request, NXCPMessage *response, json_t **oldValue, json_t **newValue)
 {
-   TCHAR name[MAX_EVENT_NAME] = _T("");
+   wchar_t name[MAX_EVENT_NAME] = L"";
    request.getFieldAsString(VID_NAME, name, MAX_EVENT_NAME);
    if (!IsValidObjectName(name, TRUE))
       return RCC_INVALID_OBJECT_NAME;
@@ -1113,7 +1082,7 @@ uint32_t DeleteEventTemplate(uint32_t eventCode)
    auto e = s_eventTemplates.get(eventCode);
    if (e != nullptr)
    {
-      rcc = ExecuteQueryOnObject(hdb, eventCode, _T("DELETE FROM event_cfg WHERE event_code=?")) ? RCC_SUCCESS : RCC_DB_FAILURE;
+      rcc = ExecuteQueryOnObject(hdb, eventCode, L"DELETE FROM event_cfg WHERE event_code=?") ? RCC_SUCCESS : RCC_DB_FAILURE;
    }
    else
    {

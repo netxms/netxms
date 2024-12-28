@@ -43,16 +43,12 @@ class ProjectComponent
 {
 public:
    int64_t m_id;
-   TCHAR *m_name;
+   wchar_t *m_name;
 
    ProjectComponent(int64_t id, const char *name)
    {
       m_id = id;
-#ifdef UNICODE
       m_name = WideStringFromUTF8String(CHECK_NULL_EX_A(name));
-#else
-      m_name = MemCopyString(CHECK_NULL_EX(name));
-#endif
    }
 
    ~ProjectComponent()

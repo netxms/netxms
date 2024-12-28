@@ -330,11 +330,7 @@ void MobileDeviceSession::login(const NXCPMessage& request)
 		switch(nAuthType)
 		{
 			case NETXMS_AUTH_TYPE_PASSWORD:
-#ifdef UNICODE
 				request.getFieldAsString(VID_PASSWORD, szPassword, 256);
-#else
-				request.getFieldAsUtf8String(VID_PASSWORD, szPassword, 1024);
-#endif
 				dwResult = AuthenticateUser(szLogin, szPassword, 0, nullptr, nullptr, &m_userId,
 													 &userRights, &changePasswd, &intruderLockout,
 													 &closeOtherSessions, false, &graceLogins);

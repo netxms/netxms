@@ -437,16 +437,12 @@ void ReloadCertificates()
    auto it = g_crlList.begin();
    while(it.hasNext())
    {
-      const TCHAR *location = it.next();
-      if (!_tcsncmp(location, _T("http://"), 7) || !_tcsncmp(location, _T("https://"), 8))
+      const wchar_t *location = it.next();
+      if (!wcsncmp(location, L"http://", 7) || !wcsncmp(location, L"https://", 8))
       {
-#ifdef UNICODE
          char *url = UTF8StringFromWideString(location);
          AddRemoteCRL(url, true);
          MemFree(url);
-#else
-         AddRemoteCRL(location, true);
-#endif
       }
       else
       {
@@ -468,8 +464,8 @@ void ReloadCertificates()
 	}
 	else
 	{
-	   TCHAR buffer[256];
-		nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot initialize certificate store (%s)"), _ERR_error_tstring(ERR_get_error(), buffer));
+	   wchar_t buffer[256];
+		nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Cannot initialize certificate store (%s)", ERR_error_string_W(ERR_get_error(), buffer));
 	}
 
 	s_certificateStoreLock.unlock();

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -225,33 +225,19 @@ static InterfaceList *SysGetLocalIfList()
             dwSize = 256;
             if (imp_HrLanConnectionNameFromGuidOrPath(NULL, wGUID, wName, &dwSize) == 0)
             {
-#ifdef UNICODE
 					wcslcpy(szAdapterName, wName, MAX_OBJECT_NAME);
-#else
-               WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                                   wName, dwSize, szAdapterName, MAX_OBJECT_NAME, NULL, NULL);
-               szAdapterName[MAX_OBJECT_NAME - 1] = 0;
-#endif
             }
             else
             {
-#ifdef UNICODE
 					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, szAdapterName, MAX_OBJECT_NAME);
                szAdapterName[MAX_OBJECT_NAME - 1] = 0;
-#else
-               strlcpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
-#endif
             }
          }
          else
          {
             // We don't have a GUID resolving function, use GUID as name
-#ifdef UNICODE
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, szAdapterName, MAX_OBJECT_NAME);
             szAdapterName[MAX_OBJECT_NAME - 1] = 0;
-#else
-            strlcpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
-#endif
          }
 
          BinToStr(pInfo->Address, pInfo->AddressLength, szMacAddr);

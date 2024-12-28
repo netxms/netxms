@@ -118,17 +118,17 @@ NXSL_Value *NXSL_LDAPObjectClass::getAttr(NXSL_Object *object, const NXSL_Identi
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("type"))
    {
-      const TCHAR *type;
+      const wchar_t *type;
       switch(ldapObject->m_type)
       {
          case LDAP_ObjectType::GROUP:
-            type = _T("group");
+            type = L"group";
             break;
          case LDAP_ObjectType::USER:
-            type = _T("user");
+            type = L"user";
             break;
          default:
-            type = _T("other");
+            type = L"other";
             break;
       }
       value = vm->createValue(type);
@@ -139,7 +139,7 @@ NXSL_Value *NXSL_LDAPObjectClass::getAttr(NXSL_Object *object, const NXSL_Identi
 /**
  * Change LDAP object attribute from NXSL value
  */
-static inline void ChangeAttribute(TCHAR **attr, NXSL_Value *value)
+static inline void ChangeAttribute(wchar_t **attr, NXSL_Value *value)
 {
    MemFree(*attr);
    *attr = value->isString() ? MemCopyString(value->getValueAsCString()) : nullptr;
@@ -611,18 +611,14 @@ int LDAPConnection::readInPages(LDAP_CHAR *base)
 /**
  * Get DN from LDAP message
  */
-TCHAR *LDAPConnection::dnFromMessage(LDAPMessage *entry)
+wchar_t *LDAPConnection::dnFromMessage(LDAPMessage *entry)
 {
 #ifdef _WIN32
-   TCHAR *_dn = ldap_get_dn(m_ldapConn, entry);
-   TCHAR *dn = MemCopyString(_dn);
+   wchar_t *_dn = ldap_get_dn(m_ldapConn, entry);
+   wchar_t *dn = MemCopyString(_dn);
 #else
    char *_dn = ldap_get_dn(m_ldapConn, entry);
-#ifdef UNICODE
-   WCHAR *dn = WideStringFromUTF8String(_dn);
-#else
-   char *dn = MBStringFromUTF8String(_dn);
-#endif
+   wchar_t *dn = WideStringFromUTF8String(_dn);
 #endif
    ldap_memfree(_dn);
    return dn;
@@ -646,13 +642,13 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult)
    for (LDAPMessage *entry = ldap_first_entry(m_ldapConn, searchResult); entry != nullptr; entry = ldap_next_entry(m_ldapConn, entry))
    {
       LDAP_Object *ldapObject = new LDAP_Object();
-      TCHAR *dn = dnFromMessage(entry);
+      wchar_t *dn = dnFromMessage(entry);
       nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::fillLists(): Found DN: %s"), dn);
 
       StringBuffer objectClasses;
-      TCHAR *value;
+      wchar_t *value;
       int i;
-      for(i = 0, value = getAttrValue(entry, "objectClass", i); value != NULL; value = getAttrValue(entry, "objectClass", ++i))
+      for(i = 0, value = getAttrValue(entry, "objectClass", i); value != nullptr; value = getAttrValue(entry, "objectClass", ++i))
       {
          if (!objectClasses.isEmpty())
             objectClasses.append(_T(","));
@@ -730,7 +726,7 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult)
          {
             nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::fillLists(): found member attribute %hs"), attribute);
             nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::fillLists(): there are more members, than can be provided in one request"));
-#if !defined(_WIN32) && defined(UNICODE)
+#ifndef _WIN32
             char *tmpDn = UTF8StringFromWideString(dn);
             updateMembers(&ldapObject->m_memberList, attribute, entry, tmpDn);
             MemFree(tmpDn);
@@ -796,17 +792,13 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult)
 /**
  * Get attribute's value
  */
-TCHAR *LDAPConnection::getAttrValue(LDAPMessage *entry, const char *attr, int index)
+wchar_t *LDAPConnection::getAttrValue(LDAPMessage *entry, const char *attr, int index)
 {
-   TCHAR *result = nullptr;
+   wchar_t *result = nullptr;
    berval **values = ldap_get_values_lenA(m_ldapConn, entry, (char *)attr);   // cast needed for Windows LDAP library
    if (static_cast<int>(ldap_count_values_len(values)) > index)
    {
-#ifdef UNICODE
       result = WideStringFromUTF8String(values[index]->bv_val);
-#else
-      result = MBStringFromUTF8String(values[index]->bv_val);
-#endif /* UNICODE */
    }
    ldap_value_free_len(values);
    return result;
@@ -815,7 +807,7 @@ TCHAR *LDAPConnection::getAttrValue(LDAPMessage *entry, const char *attr, int in
 /**
  * Get attribute's value
  */
-TCHAR *LDAPConnection::getIdAttrValue(LDAPMessage *entry, const char *attr)
+wchar_t *LDAPConnection::getIdAttrValue(LDAPMessage *entry, const char *attr)
 {
    BYTE hash[SHA256_DIGEST_SIZE];
    BYTE tmp[1024];
@@ -835,7 +827,7 @@ TCHAR *LDAPConnection::getIdAttrValue(LDAPMessage *entry, const char *attr)
       return MemCopyString(_T(""));
 
    CalculateSHA256Hash(tmp, pos, hash);
-   TCHAR *result = MemAllocString(SHA256_DIGEST_SIZE * 2 + 1);
+   wchar_t *result = MemAllocStringW(SHA256_DIGEST_SIZE * 2 + 1);
    BinToStr(hash, SHA256_DIGEST_SIZE, result);
    return result;
 }
@@ -881,7 +873,7 @@ void LDAPConnection::updateMembers(StringSet *memberList, const char *firstAttr,
 
    // add received members
    int i = 0;
-   TCHAR *value = getAttrValue(firstEntry, firstAttr, i);
+   wchar_t *value = getAttrValue(firstEntry, firstAttr, i);
    while(value != nullptr)
    {
       nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::updateMembers(): member = %s"), value);
@@ -987,14 +979,14 @@ void LDAPConnection::compareUserLists()
 void LDAPConnection::compareGroupList()
 {
    m_groupDnEntryList->forEach(
-      [] (const TCHAR *key, const void *value) -> EnumerationCallbackResult
+      [] (const wchar_t *key, const void *value) -> EnumerationCallbackResult
       {
          UpdateLDAPGroup(key, static_cast<const LDAP_Object*>(value));
          return _CONTINUE;
       });
    RemoveDeletedLDAPEntries(m_groupDnEntryList, m_groupIdEntryList, m_action, false);
    m_groupDnEntryList->forEach(
-      [] (const TCHAR *key, const void *value) -> EnumerationCallbackResult
+      [] (const wchar_t *key, const void *value) -> EnumerationCallbackResult
       {
          SyncLDAPGroupMembers(key, static_cast<const LDAP_Object*>(value));
          return _CONTINUE;
@@ -1005,24 +997,19 @@ void LDAPConnection::compareGroupList()
  * Converts given parameters to correct encoding, login to ldap and close connection.
  * This function should be used to check connection. As name should be given user dn.
  */
-uint32_t LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
+uint32_t LDAPConnection::ldapUserLogin(const wchar_t *name, const wchar_t *password)
 {
    open();
    uint32_t result;
-#ifdef UNICODE
 #ifdef _WIN32
-   _tcslcpy(m_userDN, name, MAX_CONFIG_VALUE);
-   _tcslcpy(m_userPassword, password, MAX_PASSWORD);
+   wcslcpy(m_userDN, name, MAX_CONFIG_VALUE);
+   wcslcpy(m_userPassword, password, MAX_PASSWORD);
 #else
    wchar_to_utf8(name, -1, m_userDN, MAX_CONFIG_VALUE);
    m_userDN[MAX_CONFIG_VALUE - 1] = 0;
    wchar_to_utf8(password, -1, m_userPassword, MAX_PASSWORD);
    m_userPassword[MAX_PASSWORD - 1] = 0;
 #endif
-#else
-   strlcpy(m_userDN, name, MAX_CONFIG_VALUE);
-   strlcpy(m_userPassword, password, MAX_PASSWORD);
-#endif // UNICODE
    result = login(false);
    close();
    return result;
@@ -1155,17 +1142,9 @@ LDAPConnection::LDAPConnection()
 #ifdef _WIN32
    _tcslcpy(m_userPassword, tmpPwd, MAX_PASSWORD);
 #else
-
-#ifdef UNICODE
    char *utf8Password = UTF8StringFromWideString(tmpPwd);
    strlcpy(m_userPassword, utf8Password, MAX_PASSWORD);
    MemFree(utf8Password);
-#else
-   char *utf8Password = UTF8StringFromMBString(tmpPwd);
-   strlcpy(m_userPassword, utf8Password, MAX_PASSWORD);
-   MemFree(utf8Password);
-#endif // UNICODE
-
 #endif //win32
    m_ldapUserLoginNameAttr = ConfigReadStrUTF8(_T("LDAP.Mapping.UserName"), "");
    m_ldapGroupLoginNameAttr = ConfigReadStrUTF8(_T("LDAP.Mapping.GroupName"), "");
@@ -1211,15 +1190,9 @@ String LDAPConnection::getErrorString(int ldap_error)
 #ifdef _WIN32
   return String(ldap_err2string(ldap_error));
 #else
-#ifdef UNICODE
   WCHAR *wcs = WideStringFromUTF8String(ldap_err2string(ldap_error));
   String s(wcs);
   MemFree(wcs);
-#else
-  char *mbcs = MBStringFromUTF8String(ldap_err2string(ldap_error));
-  String s(mbcs);
-  MemFree(mbcs);
-#endif
   return s;
 #endif
 }

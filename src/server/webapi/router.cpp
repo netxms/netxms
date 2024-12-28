@@ -23,6 +23,9 @@
 #include "webapi.h"
 #include <nms_users.h>
 
+/**
+ * Route
+ */
 struct Route
 {
    char *path;
@@ -131,18 +134,11 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
          {
             if (r->path[0] == ':')
             {
-#ifdef UNICODE
-               WCHAR key[256], value[256];
+               wchar_t key[256], value[256];
                utf8_to_wchar(&r->path[1], -1, key, 256);
                size_t chars = utf8_to_wchar(p, l, value, 255);
                value[chars] = 0;
                placeholderValues.set(key, value);
-#else
-               char *value = MemAllocStringA(l + 1);
-               memcpy(value, p, l);
-               value[l] = 0;
-               placeholderValues.setPreallocated(MemCopyStringA(&r->path[1]), value);
-#endif
                break;
             }
          }
@@ -182,11 +178,11 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
    // Check authentication
    UserAuthenticationToken token;
    uint32_t userId = INVALID_UID;
-   TCHAR loginName[MAX_USER_NAME];
+   wchar_t loginName[MAX_USER_NAME];
    uint64_t systemAccessRights;
    if (curr->auth)
    {
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Selected route requires authentication"));
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Selected route requires authentication");
 
       char encodedToken[64] = "";
       MHD_get_connection_values(connection, MHD_HEADER_KIND,
@@ -201,7 +197,7 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
          }, encodedToken);
       if (encodedToken[0] == 0)
       {
-         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Authentication token not provided in request"));
+         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Authentication token not provided in request");
          *responseCode = 401;  // Unauthorized
          return nullptr;
       }
@@ -209,14 +205,14 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
       token = UserAuthenticationToken::parseA(encodedToken);
       if (token.isNull())
       {
-         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Authentication token \"%hs\" provided in request has invalid format"), encodedToken);
+         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Authentication token \"%hs\" provided in request has invalid format", encodedToken);
          *responseCode = 401;  // Unauthorized
          return nullptr;
       }
 
       if (!ValidateAuthenticationToken(token, &userId, AUTH_TOKEN_VALIDITY_TIME))
       {
-         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Authentication token \"%hs\" provided in request is invalid or expired"), encodedToken);
+         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Authentication token \"%hs\" provided in request is invalid or expired", encodedToken);
          *responseCode = 401;  // Unauthorized
          return nullptr;
       }
@@ -224,12 +220,12 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
       uint32_t rcc;
       if (!ValidateUserId(userId, loginName, &systemAccessRights, &rcc))
       {
-         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Authentication token \"%hs\" provided in request is valid but associated login is not (RCC=%u)"), encodedToken);
+         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Authentication token \"%hs\" provided in request is valid but associated login is not (RCC=%u)", encodedToken);
          *responseCode = 403;  // Forbidden
          return nullptr;
       }
 
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Authentication token provided in request successfully passed validation (userId=%u)"), userId);
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Authentication token provided in request successfully passed validation (userId=%u)", userId);
    }
 
    return new Context(connection, path, methodId, handler, token, userId, loginName, systemAccessRights, placeholderValues);

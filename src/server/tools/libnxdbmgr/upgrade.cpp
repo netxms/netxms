@@ -115,11 +115,11 @@ bool LIBNXDBMGR_EXPORTABLE CreateTable(const TCHAR *pszQuery)
 /**
  * Check if configuration variable exist
  */
-static bool IsConfigurationVariableExist(const TCHAR *name)
+static bool IsConfigurationVariableExist(const wchar_t *name)
 {
    bool found = false;
-   TCHAR query[256];
-   _sntprintf(query, 256, _T("SELECT var_value FROM config WHERE var_name='%s'"), name);
+   wchar_t query[256];
+   _sntprintf(query, 256, L"SELECT var_value FROM config WHERE var_name='%s'", name);
    DB_RESULT hResult = DBSelect(g_dbHandle, query);
    if (hResult != 0)
    {
@@ -132,10 +132,10 @@ static bool IsConfigurationVariableExist(const TCHAR *name)
 /**
  * Create configuration parameter if it doesn't exist (unless forceUpdate set to true)
  */
-bool LIBNXDBMGR_EXPORTABLE CreateConfigParam(const TCHAR *name, const TCHAR *value, const TCHAR *description, const TCHAR *units, char dataType, bool isVisible, bool needRestart, bool isPublic, bool forceUpdate)
+bool LIBNXDBMGR_EXPORTABLE CreateConfigParam(const wchar_t *name, const wchar_t *value, const wchar_t *description, const wchar_t *units, char dataType, bool isVisible, bool needRestart, bool isPublic, bool forceUpdate)
 {
    bool success = true;
-   TCHAR szQuery[3024];
+   wchar_t szQuery[3024];
    if (!IsConfigurationVariableExist(name))
    {
       int32_t major, minor;
@@ -175,13 +175,13 @@ bool LIBNXDBMGR_EXPORTABLE CreateConfigParam(const TCHAR *name, const TCHAR *val
 /**
  * Create configuration parameter if it doesn't exist (unless forceUpdate set to true)
  */
-bool LIBNXDBMGR_EXPORTABLE CreateConfigParam(const TCHAR *name, const TCHAR *value, bool isVisible, bool needRestart, bool forceUpdate)
+bool LIBNXDBMGR_EXPORTABLE CreateConfigParam(const wchar_t *name, const wchar_t *value, bool isVisible, bool needRestart, bool forceUpdate)
 {
    bool success = true;
-   TCHAR szQuery[3024];
+   wchar_t szQuery[3024];
    if (!IsConfigurationVariableExist(name))
    {
-      INT32 major, minor;
+      int32_t major, minor;
       if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
          return false;
       if ((major > 0) || (minor >= 454))

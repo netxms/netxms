@@ -85,8 +85,8 @@ bool LIBNXDBMGR_EXPORTABLE GenerateGUID(const TCHAR *table, const TCHAR *idColum
 
 bool LIBNXDBMGR_EXPORTABLE CreateTable(const TCHAR *pszQuery);
 
-bool LIBNXDBMGR_EXPORTABLE CreateConfigParam(const TCHAR *name, const TCHAR *value, const TCHAR *description, const TCHAR *units, char dataType, bool isVisible, bool needRestart, bool isPublic, bool forceUpdate = false);
-bool LIBNXDBMGR_EXPORTABLE CreateConfigParam(const TCHAR *name, const TCHAR *value, bool isVisible, bool needRestart, bool forceUpdate = false);
+bool LIBNXDBMGR_EXPORTABLE CreateConfigParam(const wchar_t *name, const wchar_t *value, const wchar_t *description, const wchar_t *units, char dataType, bool isVisible, bool needRestart, bool isPublic, bool forceUpdate = false);
+bool LIBNXDBMGR_EXPORTABLE CreateConfigParam(const wchar_t *name, const wchar_t *value, bool isVisible, bool needRestart, bool forceUpdate = false);
 
 bool LIBNXDBMGR_EXPORTABLE ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHAR *idColumn2, const TCHAR *column, bool isStringId);
 bool LIBNXDBMGR_EXPORTABLE ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHAR *column);

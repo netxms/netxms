@@ -1,6 +1,6 @@
 /*
 ** nxminfo - NetXMS module info tool
-** Copyright (C) 2016-2022 Raden Solutions
+** Copyright (C) 2016-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ struct NXMODULE_METADATA_V1
 /**
  * Check if entry point is present
  */
-#define CHECK_ENTRY_POINT(p) _tprintf(_T("   %-20hs : %s\n"), p, (DLGetSymbolAddr(handle, p, NULL) != NULL) ? _T("yes") : _T("no"))
+#define CHECK_ENTRY_POINT(p) WriteToTerminalEx(L"   %-20hs : %s\n", p, (DLGetSymbolAddr(handle, p, nullptr) != nullptr) ? L"yes" : L"no")
 
 /**
  * Entry point
@@ -54,22 +54,18 @@ int main(int argc, char *argv[])
 {
    InitNetXMSProcess(true);
 
-   _tprintf(_T("NetXMS Module Info Tool Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG IS_UNICODE_BUILD_STRING _T("\n\n"));
+   WriteToTerminal(L"NetXMS Module Info Tool Version " NETXMS_VERSION_STRING L" Build " NETXMS_BUILD_TAG L"\n\n");
    if (argc != 2)
    {
-      _tprintf(_T("Usage: nxminfo <module>\n"));
+      WriteToTerminal(L"Usage: nxminfo <module>\n");
       return 1;
    }
 
-#ifdef UNICODE
-   WCHAR *fname = WideStringFromMBStringSysLocale(argv[1]);
-#else
-   char *fname = argv[1];
-#endif
+   wchar_t *fname = WideStringFromMBStringSysLocale(argv[1]);
 
    TCHAR modname[MAX_PATH];
 #if !defined(_WIN32)
-   if (_tcschr(fname, _T('/')) == nullptr)
+   if (wcschr(fname, L'/') == nullptr)
    {
       // Assume that module name without path given
       // Try to load it from pkglibdir
@@ -79,34 +75,34 @@ int main(int argc, char *argv[])
    }
    else
    {
-      _tcslcpy(modname, fname, MAX_PATH);
+      wcslcpy(modname, fname, MAX_PATH);
    }
 #else
-   _tcslcpy(modname, fname, MAX_PATH);
+   wcslcpy(modname, fname, MAX_PATH);
 #endif
 
-   size_t len = _tcslen(modname);
-   if ((len < 4) || (_tcsicmp(&modname[len - 4], _T(".nxm")) && _tcsicmp(&modname[len - _tcslen(SHLIB_SUFFIX)], SHLIB_SUFFIX)))
-      _tcslcat(modname, _T(".nxm"), MAX_PATH);
+   size_t len = wcslen(modname);
+   if ((len < 4) || (wcsicmp(&modname[len - 4], L".nxm") && wcsicmp(&modname[len - wcslen(SHLIB_SUFFIX)], SHLIB_SUFFIX)))
+      wcslcat(modname, L".nxm", MAX_PATH);
 
-   TCHAR errorText[1024];
+   wchar_t errorText[1024];
    HMODULE handle = DLOpen(modname, errorText);
    if (handle == nullptr)
    {
-      _tprintf(_T("Cannot load module (%s)\n"), errorText);
+      WriteToTerminalEx(L"Cannot load module (%s)\n", errorText);
       return 2;
    }
 
    auto metadata = static_cast<NXMODULE_METADATA*>(DLGetSymbolAddr(handle, "NXM_metadata", errorText));
    if (metadata == nullptr)
    {
-      _tprintf(_T("Cannot locate module metadata (%s)\n"), errorText);
+      WriteToTerminalEx(L"Cannot locate module metadata (%s)\n", errorText);
       return 3;
    }
 
    if (sizeof(NXMODULE_METADATA) != metadata->size)
    {
-      _tprintf(_T("WARNING: module metadata size is different from what is expected by server (%d/%d)\n\n"), metadata->size, (int)sizeof(NXMODULE_METADATA));
+      WriteToTerminalEx(L"WARNING: module metadata size is different from what is expected by server (%d/%d)\n\n", metadata->size, (int)sizeof(NXMODULE_METADATA));
    }
 
    NXMODULE_METADATA module;
@@ -118,17 +114,17 @@ int main(int argc, char *argv[])
       memcpy(module.name, ((NXMODULE_METADATA_V1 *)metadata)->name, std::min(static_cast<size_t>(metadata->size) - 8, sizeof(NXMODULE_METADATA) - 24));
    }
 
-   _tprintf(_T("Module:         %s\n"), modname);
-   _tprintf(_T("Name:           %hs\n"), module.name);
-   _tprintf(_T("Vendor:         %hs\n"), module.vendor);
-   _tprintf(_T("Version:        %hs\n"), module.moduleVersion);
-   _tprintf(_T("Build tag:      %hs\n"), module.moduleBuildTag);
-   _tprintf(_T("Core version:   %hs\n"), module.coreVersion);
-   _tprintf(_T("Core build tag: %hs\n"), module.coreBuildTag);
-   _tprintf(_T("Compiler:       %hs\n"), module.compiler);
-   _tprintf(_T("UNICODE build:  %s\n"), module.unicode ? _T("yes") : _T("no"));
+   WriteToTerminalEx(L"Module:         %s\n", modname);
+   WriteToTerminalEx(L"Name:           %hs\n", module.name);
+   WriteToTerminalEx(L"Vendor:         %hs\n", module.vendor);
+   WriteToTerminalEx(L"Version:        %hs\n", module.moduleVersion);
+   WriteToTerminalEx(L"Build tag:      %hs\n", module.moduleBuildTag);
+   WriteToTerminalEx(L"Core version:   %hs\n", module.coreVersion);
+   WriteToTerminalEx(L"Core build tag: %hs\n", module.coreBuildTag);
+   WriteToTerminalEx(L"Compiler:       %hs\n", module.compiler);
+   WriteToTerminalEx(L"UNICODE build:  %s\n", module.unicode ? L"yes" : L"no");
 
-   _tprintf(_T("\nEntry points:\n"));
+   WriteToTerminal(L"\nEntry points:\n");
    CHECK_ENTRY_POINT("NXM_Register");
    CHECK_ENTRY_POINT("NXM_CheckDB");
    CHECK_ENTRY_POINT("NXM_CheckDBVersion");
@@ -137,8 +133,6 @@ int main(int argc, char *argv[])
    CHECK_ENTRY_POINT("NXM_GetSchemaPrefix");
 
    DLClose(handle);
-#ifdef UNICODE
    MemFree(fname);
-#endif
    return 0;
 }

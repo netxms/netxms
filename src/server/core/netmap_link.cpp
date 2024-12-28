@@ -289,11 +289,7 @@ void NetworkMapLink::updateDciList(CountingHashSet<uint32_t>& dciSet, bool addIt
    if (m_config == nullptr)
       return;
    pugi::xml_document xml;
-#ifdef UNICODE
    char *xmlSource = UTF8StringFromWideString(m_config);
-#else
-   char *xmlSource = MemCopyStringA(config);
-#endif
    if (!xml.load_string(xmlSource))
    {
       nxlog_debug_tag(_T("netmap"), 4, _T("NetworkMapLink::getDciList(%d): Failed to load XML"), m_id);
@@ -321,11 +317,7 @@ void NetworkMapLink::updateColorSourceObjectList(CountingHashSet<uint32_t>& obje
       return;
 
    pugi::xml_document xml;
-#ifdef UNICODE
    char *xmlSource = UTF8StringFromWideString(m_config);
-#else
-   char *xmlSource = MemCopyStringA(config);
-#endif
    if (!xml.load_string(xmlSource))
    {
       nxlog_debug_tag(_T("netmap"), 4, _T("NetworkMapLink::updateColorSourceObjectList(%d): Failed to load XML"), m_id);
@@ -352,11 +344,7 @@ Config *NetworkMapLinkNXSLContainer::getConfigInstance()
    if (m_config == nullptr)
    {
       m_config = new Config();
-#ifdef UNICODE
       char *xml = UTF8StringFromWideString(m_link->getConfig());
-#else
-      char *xml = UTF8StringFromMBString(m_link->getConfig());
-#endif
       if (!m_config->loadXmlConfigFromMemory(xml, strlen(xml), nullptr, "config", false))
       {
          static const char *defaultConfig =

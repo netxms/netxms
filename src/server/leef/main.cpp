@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2024 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -72,15 +72,11 @@ static bool InitModule(Config *config)
    GetConfigurationValueAsUTF8String(*config, _T("/LEEF/ProductVersion"), g_leefProductVersion, sizeof(g_leefProductVersion));
    GetConfigurationValueAsUTF8String(*config, _T("/LEEF/Vendor"), g_leefVendor, sizeof(g_leefVendor));
 
-#ifdef UNICODE
-   TCHAR buffer[256];
+   wchar_t buffer[256];
    GetLocalHostName(buffer, 256, true);
    wchar_to_utf8(buffer, -1, g_leefHostname, 256);
-#else
-   GetLocalHostName(g_leefHostname, 256, true);
-#endif
 
-   const TCHAR *separatorDefinition = config->getValue(_T("/LEEF/Separator"));
+   const wchar_t *separatorDefinition = config->getValue(L"/LEEF/Separator");
    if (separatorDefinition != nullptr)
    {
       if (*separatorDefinition == _T('x'))
