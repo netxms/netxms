@@ -68,8 +68,14 @@ static const wchar_t *GetServerErrorText(uint32_t rcc)
          return L"Success";
       case RCC_ACCESS_DENIED:
          return L"Access denied";
+      case RCC_INVALID_SCRIPT_NAME:
+         return L"Invalid script name";
       case RCC_NOT_IMPLEMENTED:
          return L"Command not implemented";
+      case RCC_NXSL_COMPILATION_ERROR:
+         return L"Script compilation error";
+      case RCC_NXSL_EXECUTION_ERROR:
+         return L"Script execution error";
       case RCC_RESOURCE_NOT_AVAILABLE:
          return L"Server initialization is not completed yet";
    }
@@ -106,7 +112,7 @@ static bool SendPassword(const TCHAR *password)
 /**
  * Login to the server
  */
-static bool Login(const TCHAR *login, const TCHAR *password)
+static bool Login(const wchar_t *login, const wchar_t *password)
 {
    NXCPMessage msg(CMD_LOGIN, g_requestId++);
    msg.setField(VID_LOGIN_NAME, login);
@@ -133,7 +139,7 @@ static bool Login(const TCHAR *login, const TCHAR *password)
 /**
  * Execute command
  */
-static bool ExecCommand(const TCHAR *command, const TCHAR *login, const TCHAR *password)
+static bool ExecCommand(const wchar_t *command, const wchar_t *login, const wchar_t *password)
 {
    bool connClosed = false;
 
@@ -185,7 +191,7 @@ static bool ExecCommand(const TCHAR *command, const TCHAR *login, const TCHAR *p
 /**
  * Execute script
  */
-static int ExecScript(const TCHAR *script, const TCHAR *login, const TCHAR *password, bool useReturnValue)
+static int ExecScript(const wchar_t *script, const wchar_t *login, const wchar_t *password, bool useReturnValue)
 {
    if (login != nullptr)
    {
@@ -203,7 +209,7 @@ static int ExecScript(const TCHAR *script, const TCHAR *login, const TCHAR *pass
       NXCPMessage *response = RecvMsg();
       if (response == nullptr)
       {
-         printf("Connection closed\n");
+         WriteToTerminal(L"Connection closed\n");
          rcc = RCC_COMM_FAILURE;
          break;
       }
@@ -211,7 +217,7 @@ static int ExecScript(const TCHAR *script, const TCHAR *login, const TCHAR *pass
       uint16_t code = response->getCode();
       if (code == CMD_ADM_MESSAGE)
       {
-         TCHAR *text = response->getFieldAsString(VID_MESSAGE);
+         wchar_t *text = response->getFieldAsString(VID_MESSAGE);
          if (text != nullptr)
          {
             WriteToTerminal(text);
@@ -228,7 +234,7 @@ static int ExecScript(const TCHAR *script, const TCHAR *login, const TCHAR *pass
          }
          else
          {
-            printf("Server error %u (%s)\n", rcc, GetServerErrorText(rcc));
+            WriteToTerminalEx(L"Server error %u (%s)\n", rcc, GetServerErrorText(rcc));
          }
          delete response;
          break;
@@ -246,8 +252,7 @@ static int ExecScript(const TCHAR *script, const TCHAR *login, const TCHAR *pass
  */
 static wchar_t *Prompt(EditLine *el)
 {
-   //static TCHAR prompt[] = _T("\1\x1b[33mnetxmsd:\x1b[0m\1 ");
-   static TCHAR prompt[] = _T("netxmsd: ");
+   static wchar_t prompt[] = L"netxmsd: ";
    return prompt;
 }
 
@@ -256,7 +261,7 @@ static wchar_t *Prompt(EditLine *el)
 /**
  * Interactive mode loop
  */
-static void Shell(const TCHAR *login, const TCHAR *password)
+static void Shell(const wchar_t *login, const wchar_t *password)
 {
    NXCPMessage msg(CMD_GET_SERVER_INFO, g_requestId++);
    SendMsg(msg);
@@ -270,13 +275,13 @@ static void Shell(const TCHAR *login, const TCHAR *password)
    bool authenticationRequired = response->getFieldAsBoolean(VID_AUTH_TYPE);
    delete response;
 
-   TCHAR loginBuffer[256], passwordBuffer[MAX_PASSWORD];
+   wchar_t loginBuffer[256], passwordBuffer[MAX_PASSWORD];
    if (authenticationRequired && (login == nullptr))
    {
       WriteToTerminal(L"Server requires authentication. Please provide login and password.\n\nLogin: ");
       fflush(stdout);
 
-      if (_fgetts(loginBuffer, 255, stdin) == nullptr)
+      if (fgetws(loginBuffer, 255, stdin) == nullptr)
          return;   // Error reading stdin
 
       wchar_t *nl = wcschr(loginBuffer, L'\n');
@@ -319,12 +324,12 @@ static void Shell(const TCHAR *login, const TCHAR *password)
    el_source(el, nullptr);
 #endif
 
-   TCHAR command[1024];
+   wchar_t command[1024];
    while(true)
    {
 #if HAVE_LIBEDIT
       int numchars;
-      const TCHAR *line = el_tgets(el, &numchars);
+      const wchar_t *line = el_wgets(el, &numchars);
       if ((line == nullptr) || (numchars == 0))
          break;
 
@@ -337,7 +342,7 @@ static void Shell(const TCHAR *login, const TCHAR *password)
          break;   // Error reading stdin
 #endif
 
-      Trim(command);
+      TrimW(command);
       if (command[0] == '!')
       {
 #if HAVE_LIBEDIT
@@ -376,8 +381,8 @@ static void Shell(const TCHAR *login, const TCHAR *password)
          if (rc >= 0)
          {
             line = p.str;
-            _tcslcpy(command, p.str, 256);
-            Trim(command);
+            wcslcpy(command, p.str, 256);
+            TrimW(command);
             WriteToTerminal(line);
          }
          else
@@ -432,10 +437,15 @@ int main(int argc, char *argv[])
    bool start = true;
    bool useScriptReturnValue = false;
    WorkMode workMode = UNDEFINED;
-   TCHAR *command = nullptr, *password = nullptr, *loginName = nullptr;
-   TCHAR passwordBuffer[MAX_PASSWORD];
+   wchar_t *command = nullptr, *password = nullptr, *loginName = nullptr;
+   wchar_t passwordBuffer[MAX_PASSWORD];
 
    InitNetXMSProcess(true);
+
+#if HAVE_LIBEDIT && HAVE_FWIDE
+   // Try to switch stdout to byte oriented mode
+   fwide(stdout, -1);
+#endif
 
 #ifdef _WIN32
    WSADATA wsaData;
