@@ -9,7 +9,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 bin_PROGRAMS = nxscript
-nxscript_SOURCES = nxscript.cpp
+nxscript_SOURCES = nxscript.cpp system.cpp
 nxscript_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
 nxscript_LDFLAGS = -I@top_srcdir@/include @EXEC_LDFLAGS@
 nxscript_LDADD = ../libnetxms/libnetxms.la ../libnxsl/libnxsl.la @EXEC_LIBS@

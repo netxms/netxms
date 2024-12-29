@@ -29,31 +29,52 @@
 
 NETXMS_EXECUTABLE_HEADER(nxscript)
 
-class NXSL_TestEnv : public NXSL_Environment
+int F_SetCurrentDirectory(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_GetCurrentDirectory(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_Execute(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+
+/**
+ * Additional NXSL functions for OS-level operations
+ */
+static NXSL_ExtFunction s_nxslSystemFunctions[] =
+{
+   { "Execute", F_Execute, 1 },
+   { "GetCurrentDirectory", F_GetCurrentDirectory, 0 },
+   { "SetCurrentDirectory", F_SetCurrentDirectory , 1 }
+};
+static NXSL_ExtModule s_nxslSystemModule = { "OS", sizeof(s_nxslSystemFunctions) / sizeof(NXSL_ExtFunction), s_nxslSystemFunctions };
+
+/**
+ * Environment for external scripts
+ */
+class NXSL_ExternalScriptEnv : public NXSL_Environment
 {
 public:
+   NXSL_ExternalScriptEnv() : NXSL_Environment()
+   {
+      registerIOFunctions();
+      registerModuleSet(1, &s_nxslSystemModule);
+   }
+
    virtual void configureVM(NXSL_VM *vm) override;
    virtual void trace(int level, const TCHAR *text) override;
 };
 
-void NXSL_TestEnv::configureVM(NXSL_VM *vm)
+/**
+ * Configure VM
+ */
+void NXSL_ExternalScriptEnv::configureVM(NXSL_VM *vm)
 {
    NXSL_Environment::configureVM(vm);
    vm->setGlobalVariable("$nxscript", vm->createValue(NETXMS_VERSION_STRING));
 }
 
-void NXSL_TestEnv::trace(int level, const TCHAR *text)
-{
-   _tprintf(_T("[%d] %s\n"), level, CHECK_NULL(text));
-}
-
 /**
- * Print metadata entry
+ * Trace output
  */
-static EnumerationCallbackResult PrintMetadataEntry(const TCHAR *key, const void *value, void *context)
+void NXSL_ExternalScriptEnv::trace(int level, const TCHAR *text)
 {
-   _tprintf(_T("   %s = %s\n"), key, static_cast<const TCHAR*>(value));
-   return _CONTINUE;
+   WriteToTerminalEx(_T("\x1b[30;1m[%d] %s\x1b[0m\n"), level, CHECK_NULL(text));
 }
 
 /**
@@ -110,8 +131,7 @@ int main(int argc, char *argv[])
             showMetadata = true;
             break;
          case 'o':
-				strncpy(outFile, optarg, MAX_PATH - 1);
-            outFile[MAX_PATH - 1] = 0;
+				strlcpy(outFile, optarg, MAX_PATH);
             break;
 			case 'r':
 				printResult = true;
@@ -210,7 +230,7 @@ int main(int argc, char *argv[])
       }
 
 	   NXSL_CompilationDiagnostic diag;
-	   NXSL_TestEnv env;
+	   NXSL_ExternalScriptEnv env;
 		pScript = NXSLCompile(source, &env, &diag);
 		MemFree(source);
 
@@ -222,23 +242,28 @@ int main(int argc, char *argv[])
 	if (pScript != nullptr)
 	{
 	   if (showMemoryUsage)
-	      _tprintf(_T("Compiled object memory usage: %u KBytes\n\n"), static_cast<uint32_t>(pScript->getMemoryUsage() / 1024));
+	      WriteToTerminalEx(_T("Compiled object memory usage: %u KBytes\n\n"), static_cast<uint32_t>(pScript->getMemoryUsage() / 1024));
 
       if (showMetadata)
       {
-         _tprintf(_T("Program metadata:\n"));
-         pScript->getMetadata().forEach(PrintMetadataEntry, nullptr);
-         _tprintf(_T("\n"));
+         WriteToTerminal(_T("Program metadata:\n"));
+         pScript->getMetadata().forEach(
+            [] (const TCHAR *key, const void *value) -> EnumerationCallbackResult
+            {
+               WriteToTerminalEx(_T("   %s = %s\n"), key, static_cast<const TCHAR*>(value));
+               return _CONTINUE;
+            });
+         WriteToTerminal(_T("\n"));
       }
 
       if (showRequiredModules)
       {
-         _tprintf(_T("Required modules:\n"));
+         WriteToTerminal(_T("Required modules:\n"));
          StringList *modules = pScript->getRequiredModules(true);
          for(int i = 0; i < modules->size(); i++)
-            _tprintf(_T("   %s\n"), modules->get(i));
+            WriteToTerminalEx(_T("   %s\n"), modules->get(i));
          delete modules;
-         _tprintf(_T("\n"));
+         WriteToTerminal(_T("\n"));
       }
 
       if (outFile[0] != 0)
@@ -253,14 +278,14 @@ int main(int argc, char *argv[])
          }
          else
          {
-            _tprintf(_T("ERROR: cannot open output file \"%hs\": %s\n"), outFile, _tcserror(errno));
+            WriteToTerminalEx(_T("ERROR: cannot open output file \"%hs\": %s\n"), outFile, _tcserror(errno));
             rc = 1;
          }
       }
 
       if (!compileOnly)
       {
-		   pEnv = new NXSL_TestEnv;
+		   pEnv = new NXSL_ExternalScriptEnv;
 		   pEnv->registerIOFunctions();
 
          // Create VM

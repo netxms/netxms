@@ -1,3 +1,6 @@
+!! NOTE !!
+nxinstall.exe is removed and its functionality moved to nxscript.exe
+
 ************
 * Tracing
 
@@ -13,7 +16,7 @@ Trace level can be set by -t command line option. Default is 0.
 Returns 1 (true) if file is accessible
 
 
-2. chdir(path)
+2. chdir(path) -> replaced by OS::SetCurrentDirectory
 
 Change current directory.
 
@@ -71,7 +74,7 @@ Rename file or directory (calls libc rename).
 Remove directory (calls libc rmdir).
 
 
-13. system(command)
+13. system(command) -> replaced by OS::Execute
 
 Executes external command by calling libc system.
 

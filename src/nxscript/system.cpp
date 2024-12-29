@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
-** NXSL-based installer tool collection
-** Copyright (C) 2005-2011 Victor Kirhenshtein
+** NetXMS Scripting Host
+** Copyright (C) 2005-2024 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,20 +21,43 @@
 **
 **/
 
-#include "nxinstall.h"
+#include "nxscript.h"
+#include <nxproc.h>
 
 /**
  * Change current directory
  * Parameters:
  *   1) path
  */
-int F_chdir(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_SetCurrentDirectory(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	*ppResult = vm->createValue((LONG)_tchdir(argv[0]->getValueAsCString()));
+	*result = vm->createValue((LONG)_tchdir(argv[0]->getValueAsCString()));
 	return 0;
+}
+
+/**
+ * Get current directory
+ */
+int F_GetCurrentDirectory(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+#ifdef _WIN32
+   TCHAR path[MAX_PATH];
+   if (GetCurrentDirectory(MAX_PATH, path) > 0)
+      *result = vm->createValue(path);
+   else
+      *result = vm->createValue();
+#else
+   char path[MAX_PATH];
+   if (getcwd(path, MAX_PATH) != nullptr)
+      *result = vm->createValue(path);
+   else
+      *result = vm->createValue();
+#endif
+
+   return 0;
 }
 
 /**
@@ -42,7 +65,7 @@ int F_chdir(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
  * Parameters:
  *   1) command
  */
-int F_system(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_Execute(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
@@ -58,6 +81,6 @@ int F_system(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
    {
       exitCode = 127;
    }
-   *ppResult = vm->createValue(exitCode);
+   *result = vm->createValue(exitCode);
    return 0;
 }
