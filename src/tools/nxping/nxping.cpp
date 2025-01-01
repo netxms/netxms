@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
       switch(ch)
       {
          case 'h':   // Display help and exit
-            printf("Usage: nxgenguid [<options>] <address> ...\n"
+            printf("Usage: nxping [<options>] <address> ...\n"
                    "Valid options are:\n"
                    "   -h           : Display help and exit.\n"
                    "   -c count     : Set number of packets to be sent (default is 10).\n"
