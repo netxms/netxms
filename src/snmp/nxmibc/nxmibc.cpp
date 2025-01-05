@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS MIB compiler
-** Copyright (C) 2005-2024 Victor Kirhenshtein
+** Copyright (C) 2005-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -242,7 +242,7 @@ int main(int argc, char *argv[])
          case 'h':   // Display help and exit
             WriteToTerminal(
                _T("NetXMS MIB Compiler  Version ") NETXMS_VERSION_STRING _T(" (") NETXMS_BUILD_TAG _T(")\n")
-               _T("Copyright (c) 2005-2024 Raden Solutions\n\n"));
+               _T("Copyright (c) 2005-2025 Raden Solutions\n\n"));
             Help();
             break;
          case 'd':
@@ -286,7 +286,7 @@ int main(int argc, char *argv[])
    {
       WriteToTerminal(
          _T("NetXMS MIB Compiler  Version ") NETXMS_VERSION_STRING _T(" (") NETXMS_BUILD_TAG _T(")\n")
-         _T("Copyright (c) 2005-2024 Raden Solutions\n\n"));
+         _T("Copyright (c) 2005-2025 Raden Solutions\n\n"));
    }
 
    if (scanDir)
