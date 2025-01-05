@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -144,7 +144,7 @@ public class LoginDialog extends Dialog
       footer.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
 
       Label copyright = new Label(footer, SWT.LEFT);
-      copyright.setText("Copyright \u00a9 2013-2024 Raden Solutions");
+      copyright.setText("Copyright \u00a9 2013-2025 Raden Solutions");
       copyright.setLayoutData(new GridData(SWT.LEFT, SWT.BOTTOM, true, false));
 
       Label version = new Label(footer, SWT.RIGHT);

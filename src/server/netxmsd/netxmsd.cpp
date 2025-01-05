@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server startup module
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ static bool s_generateConfig = false;
  */
 static TCHAR s_helpText[] =
          _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG IS_UNICODE_BUILD_STRING _T("\n")
-         _T("Copyright (c) 2003-2024 Raden Solutions\n\n")
+         _T("Copyright (c) 2003-2025 Raden Solutions\n\n")
          _T("Usage: netxmsd [<options>]\n\n")
          _T("Valid options are:\n")
          _T("   -A <entry>       : Add configuration file entry\n")

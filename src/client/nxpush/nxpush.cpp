@@ -1,6 +1,6 @@
 /* 
 ** nxpush - command line tool used to push DCI values to NetXMS server
-** Copyright (C) 2006-2024 Alex Kirhenshtein
+** Copyright (C) 2006-2025 Alex Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -389,7 +389,7 @@ static void usage(char *argv0)
 {
 	_tprintf(
       _T("NetXMS PUSH  Version ") NETXMS_VERSION_STRING _T("\n")
-      _T("Copyright (c) 2006-2024 Raden Solutions\n\n")
+      _T("Copyright (c) 2006-2025 Raden Solutions\n\n")
       _T("Usage: %hs [OPTIONS] [server] [@batch_file] [values]\n")
       _T("  \n")
       _T("Options:\n")
