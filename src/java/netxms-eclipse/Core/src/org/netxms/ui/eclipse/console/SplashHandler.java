@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -98,7 +98,7 @@ public class SplashHandler extends BasicSplashHandler
       final Color versionColor = new Color(Display.getCurrent(), textColor);
 		final Font versionFont = new Font(Display.getCurrent(), "Verdana", 9, SWT.NONE); //$NON-NLS-1$
 		final String versionText = Messages.get().SplashHandler_Version + VersionInfo.version();
-      final String copyrightText = "\u00A9 2003-2024 Raden Solutions"; //$NON-NLS-1$
+      final String copyrightText = "\u00A9 2003-2025 Raden Solutions"; //$NON-NLS-1$
       final Composite content = getContent();
 		content.addPaintListener(new PaintListener() {
 			@Override
