@@ -2017,6 +2017,7 @@ CREATE TABLE network_maps
   link_styling_script SQL_TEXT null,
   width integer not null,
   height integer not null,
+  display_priority integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

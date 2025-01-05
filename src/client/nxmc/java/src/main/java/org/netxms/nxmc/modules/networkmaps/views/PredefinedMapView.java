@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -122,7 +122,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    private Map<Long, Boolean> readOnlyFlagsCache = new HashMap<>();
    private Set<NetworkMapElement> movedElementList = new HashSet<>();
    private Set<NetworkMapLink> changedLinkList = new HashSet<>();
-   private MapObjectSyncer mapObjectSyncer = MapObjectSyncer.getInstance();
+   private MapObjectSyncer mapObjectSyncer = null;
    private int mapWidth;
    private int mapHeight;
    private int updateWarningId = 0;
@@ -138,11 +138,11 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    /**
     * Create new map view with ID extended by given sub ID. Intended for use by subclasses implementing ad-hoc views.
     * 
-    * @param subId extension for base ID
+    * @param id view ID
     */
-   protected PredefinedMapView(String subId)
+   protected PredefinedMapView(String id)
    {
-      super(LocalizationHelper.getI18n(PredefinedMapView.class).tr("Map"), ResourceManager.getImageDescriptor("icons/object-views/netmap.png"), "objects.predefined-map." + subId);
+      super(LocalizationHelper.getI18n(PredefinedMapView.class).tr("Map"), ResourceManager.getImageDescriptor("icons/object-views/netmap.png"), id);
    }
 
    /**
@@ -207,24 +207,20 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
             protected void run(IProgressMonitor monitor) throws Exception
             {
                final Boolean readOnly = ((object.getEffectiveRights() & UserAccessRights.OBJECT_ACCESS_MODIFY) == 0);
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     readOnlyFlagsCache.put(object.getObjectId(), readOnly);
-                     PredefinedMapView.this.readOnly = readOnly;
-                     reconfigureViewer();
-                     updateToolBar();
-                     updateMenu();
-                     syncObjects();
-                  }
+               runInUIThread(() -> {
+                  readOnlyFlagsCache.put(object.getObjectId(), readOnly);
+                  PredefinedMapView.this.readOnly = readOnly;
+                  reconfigureViewer();
+                  updateToolBar();
+                  updateMenu();
+                  syncObjects();
                });
             }
 
             @Override
             protected String getErrorMessage()
             {
-               return "Cannot get effective rights for map";
+               return i18n.tr("Cannot get effective rights for map");
             }
          };
          job.setUser(false);
@@ -242,7 +238,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    {
       if (viewer.isRefreshBlocked())
          return;
-      
+
       saveObjectPositions();
       super.onObjectUpdate(object);
       reconfigureViewer((NetworkMap)object);
@@ -384,6 +380,9 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	@Override
 	public void setupMapControl()
 	{
+      if (mapObjectSyncer == null)
+         mapObjectSyncer = MapObjectSyncer.getInstance();
+
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)
@@ -516,7 +515,8 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	      return;
       final Set<Long> mapObjectIds = new HashSet<Long>(mapPage.getObjectIds());
       mapObjectIds.addAll(mapPage.getAllLinkStatusObjects());
-      mapObjectSyncer.removeObjects(mapPage.getMapObjectId(), mapObjectIds);
+      if (mapObjectSyncer != null)
+         mapObjectSyncer.removeObjects(mapPage.getMapObjectId(), mapObjectIds);
 	}
 
    /**
@@ -938,13 +938,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          protected void run(IProgressMonitor monitor) throws Exception
 			{
 				session.modifyObject(md);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						viewer.setInput(mapPage);
-					}
-				});
+            runInUIThread(() -> viewer.setInput(mapPage));
 			}
 
 			@Override
@@ -1010,7 +1004,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       mapObjectSyncer = null;
 		super.dispose();
 	}
-	
+
 	/**
 	 * Update existing element or show message if failed
 	 * 

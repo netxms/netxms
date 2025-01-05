@@ -18,6 +18,8 @@
  */
 package org.netxms.nxmc.modules.networkmaps.views;
 
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.Memento;
@@ -28,14 +30,14 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Ad-hoc map view
+ * Predefined map view for maps displayed in object context
  */
-public class AdHocPredefinedMapView extends PredefinedMapView
+public class ContextPredefinedMapView extends PredefinedMapView
 {
-   private final I18n i18n = LocalizationHelper.getI18n(AdHocPredefinedMapView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ContextPredefinedMapView.class);
 
-   private long contextObjectId;
    private NetworkMap map;
+   private SessionListener clientListener;
 
    /**
     * Create ad-hoc map view.
@@ -43,17 +45,16 @@ public class AdHocPredefinedMapView extends PredefinedMapView
     * @param contextObjectId ID of object that is context for this view
     * @param chassis chassis object to be shown
     */
-   public AdHocPredefinedMapView(long contextObjectId, NetworkMap map)
+   public ContextPredefinedMapView(NetworkMap map)
    {
-      super("objects.predefined-map." + Long.toString(map.getObjectId()));
-      this.contextObjectId = contextObjectId;
+      super("objects.context.network-map." + Long.toString(map.getObjectId()));
       this.map = map;
    }
 
    /**
     * Constructor for cloning
     */
-   protected AdHocPredefinedMapView()
+   protected ContextPredefinedMapView()
    {
       super();
       objectMoveLocked = false;
@@ -66,12 +67,36 @@ public class AdHocPredefinedMapView extends PredefinedMapView
    @Override
    public View cloneView()
    {
-      AdHocPredefinedMapView view = (AdHocPredefinedMapView)super.cloneView();
-      view.contextObjectId = contextObjectId;
+      ContextPredefinedMapView view = (ContextPredefinedMapView)super.cloneView();
       view.map = map;
       return view;
    }
-   
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#postContentCreate()
+    */
+   @Override
+   protected void postContentCreate()
+   {
+      super.postContentCreate();
+      clientListener = new SessionListener() {
+         @Override
+         public void notificationHandler(SessionNotification n)
+         {
+            if (n.getCode() == SessionNotification.OBJECT_CHANGED && map.getObjectId() == n.getSubCode())
+            {
+               getViewArea().getDisplay().asyncExec(() -> {
+                  map = (NetworkMap)n.getObject();
+                  setName(map.getObjectName());
+                  ContextPredefinedMapView.super.onObjectUpdate(map);
+               });
+            }
+         }
+      };
+
+      session.addListener(clientListener);
+   }
+
    /**
     * @see org.netxms.nxmc.modules.networkmaps.views.PredefinedMapView#saveZoom(org.netxms.client.objects.AbstractObject)
     */
@@ -90,14 +115,14 @@ public class AdHocPredefinedMapView extends PredefinedMapView
       final PreferenceStore settings = PreferenceStore.getInstance();
       viewer.zoomTo(settings.getAsDouble(getBaseId() + ".zoom", 1.0));
    }
-   
+
    /**
     * @see org.netxms.nxmc.modules.networkmaps.views.PredefinedMapView#isValidForContext(java.lang.Object)
     */
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && (context instanceof AbstractObject) && (((AbstractObject)context).getObjectId() == contextObjectId);
+      return (context != null) && (context instanceof AbstractObject) && ((AbstractObject)context).hasNetworkMap(map.getObjectId());
    }
 
    /**
@@ -106,16 +131,7 @@ public class AdHocPredefinedMapView extends PredefinedMapView
    @Override
    public int getPriority()
    {
-      return DEFAULT_PRIORITY;
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#isCloseable()
-    */
-   @Override
-   public boolean isCloseable()
-   {
-      return true;
+      return (map.getDisplayPriority() > 0) ? map.getDisplayPriority() : DEFAULT_PRIORITY;
    }
 
    /**
@@ -124,18 +140,7 @@ public class AdHocPredefinedMapView extends PredefinedMapView
    @Override
    public String getName()
    {
-      return super.getName() + " - " + map.getObjectName();
-   }
-
-   /**
-    * Get current context
-    *
-    * @return current context
-    */
-   @Override
-   protected Object getContext()
-   {
-      return map;
+      return map.getObjectName();
    }
 
    /**
@@ -144,11 +149,6 @@ public class AdHocPredefinedMapView extends PredefinedMapView
    @Override
    protected void onObjectUpdate(AbstractObject object)
    {
-      if (object.getObjectId() == map.getObjectId())
-      {
-         map = (NetworkMap)object;
-         super.onObjectUpdate(object);         
-      }
    }
 
    /**
@@ -167,18 +167,19 @@ public class AdHocPredefinedMapView extends PredefinedMapView
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      // Ignore context object change 
    }
 
    /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isRelatedObject(long)
+    * Get current context
+    *
+    * @return current context
     */
    @Override
-   protected boolean isRelatedObject(long objectId)
+   protected Object getContext()
    {
-      return map.getObjectId() == objectId;
+      return map;
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.ViewWithContext#contextChanged(java.lang.Object, java.lang.Object)
     */
@@ -195,7 +196,6 @@ public class AdHocPredefinedMapView extends PredefinedMapView
    public void saveState(Memento memento)
    {
       super.saveState(memento);
-      memento.set("contextObjectId", contextObjectId);
       memento.set("map", map.getObjectId());
    }
 
@@ -207,9 +207,8 @@ public class AdHocPredefinedMapView extends PredefinedMapView
    public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
       super.restoreState(memento);
-      contextObjectId = memento.getAsLong("contextObjectId", 0);    
       map = session.findObjectById(memento.getAsLong("map", 0), NetworkMap.class);  
       if (map == null)
-         throw(new ViewNotRestoredException(i18n.tr("Invalid map id")));
+         throw (new ViewNotRestoredException(i18n.tr("Invalid map ID")));
    }
 }

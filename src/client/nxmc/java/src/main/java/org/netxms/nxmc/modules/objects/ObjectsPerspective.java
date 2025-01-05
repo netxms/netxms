@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,8 +26,6 @@ import java.util.Set;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.resource.JFaceResources;
-import org.eclipse.jface.util.IPropertyChangeListener;
-import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -66,6 +64,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.EntireNetwork;
+import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
@@ -101,6 +100,7 @@ import org.netxms.nxmc.modules.datacollection.views.PolicyListView;
 import org.netxms.nxmc.modules.datacollection.views.SummaryDataCollectionView;
 import org.netxms.nxmc.modules.datacollection.views.ThresholdSummaryView;
 import org.netxms.nxmc.modules.filemanager.views.AgentFileManager;
+import org.netxms.nxmc.modules.networkmaps.views.ContextPredefinedMapView;
 import org.netxms.nxmc.modules.networkmaps.views.PredefinedMapView;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
@@ -417,14 +417,10 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       gd = new GridData(SWT.RIGHT, SWT.CENTER, false, false);
       expandButton.setLayoutData(gd);
 
-      PreferenceStore.getInstance().addPropertyChangeListener(new IPropertyChangeListener() {
-         @Override
-         public void propertyChange(PropertyChangeEvent event)
+      PreferenceStore.getInstance().addPropertyChangeListener((event) -> {
+         if (event.getProperty().equals("ObjectPerspective.showObjectDetails"))
          {
-            if (event.getProperty().equals("ObjectPerspective.showObjectDetails"))
-            {
-               showObjectDetails(Boolean.parseBoolean((String)event.getNewValue()));
-            }
+            showObjectDetails(Boolean.parseBoolean((String)event.getNewValue()));
          }
       });
 
@@ -441,7 +437,6 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    {
       Menu menu = new Menu(perspectiveToolBar);
       menu.addMenuListener(new MenuListener() {
-         
          @Override
          public void menuShown(MenuEvent e)
          {
@@ -453,7 +448,6 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          {
          }
       });
-      
       return menu;
    }
 
@@ -563,7 +557,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
 
          updateObjectToolBar(object);
          updateObjectMenuBar(object);
-         updateContextDashboards(object);
+         updateContextDashboardsAndMaps(object);
       }
       else
       {
@@ -785,11 +779,11 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    }
 
    /**
-    * Update context dashboard views after object selection change.
+    * Update context dashboard and map views after object selection change.
     *
     * @param object selected object
     */
-   private void updateContextDashboards(AbstractObject object)
+   private void updateContextDashboardsAndMaps(AbstractObject object)
    {
       if (!((object instanceof DataCollectionTarget) || (object instanceof Container) || (object instanceof Rack) || (object instanceof EntireNetwork) || (object instanceof ServiceRoot) ||
             (object instanceof Subnet) || (object instanceof Zone) || (object instanceof Condition)))
@@ -799,15 +793,31 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       {
          if ((((Dashboard)d).getFlags() & Dashboard.SHOW_AS_OBJECT_VIEW) == 0)
          {
-            String viewId = "ContextDashboard." + d.getObjectId();
+            String viewId = "objects.context.dashboard." + d.getObjectId();
             removeMainView(viewId);
             continue;
          }
 
-         String viewId = "ContextDashboard." + d.getObjectId();
+         String viewId = "objects.context.dashboard." + d.getObjectId();
          if (findMainView(viewId) == null)
          {
             addMainView(new ContextDashboardView((Dashboard)d));
+         }
+      }
+
+      for(AbstractObject m : object.getNetworkMaps(true))
+      {
+         if ((((NetworkMap)m).getFlags() & NetworkMap.MF_SHOW_AS_OBJECT_VIEW) == 0)
+         {
+            String viewId = "objects.context.network-map." + m.getObjectId();
+            removeMainView(viewId);
+            continue;
+         }
+
+         String viewId = "objects.context.network-map." + m.getObjectId();
+         if (findMainView(viewId) == null)
+         {
+            addMainView(new ContextPredefinedMapView((NetworkMap)m));
          }
       }
    }

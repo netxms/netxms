@@ -68,7 +68,7 @@ public class MapObjectFilter extends ObjectPropertyPage
    @Override
    public String getId()
    {
-      return "mapObjectFilter";
+      return "map-object-filter";
    }
 
    /**

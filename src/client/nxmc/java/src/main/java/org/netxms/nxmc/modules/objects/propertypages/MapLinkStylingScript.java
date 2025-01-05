@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,22 +39,22 @@ import org.xnap.commons.i18n.I18n;
 /**
  * "Link Styling Script" property page
  */
-public class MapObjectLinkStylingScript extends ObjectPropertyPage
+public class MapLinkStylingScript extends ObjectPropertyPage
 {
-   private I18n i18n = LocalizationHelper.getI18n(MapObjectLinkStylingScript.class);
-   
+   private I18n i18n = LocalizationHelper.getI18n(MapLinkStylingScript.class);
+
    private NetworkMap map;
 	private ScriptEditor linkStylingScriptSource;
 	private String initialLinkStylingScript;
-   
+
    /**
     * Constructor 
     * 
     * @param object object to show properties for
     */
-   public MapObjectLinkStylingScript(AbstractObject object)
+   public MapLinkStylingScript(AbstractObject object)
    {
-      super(LocalizationHelper.getI18n(MapObjectLinkStylingScript.class).tr("Link Styling Script"), object);
+      super(LocalizationHelper.getI18n(MapLinkStylingScript.class).tr("Link Styling Script"), object);
    }
 
    /**
@@ -63,7 +63,7 @@ public class MapObjectLinkStylingScript extends ObjectPropertyPage
    @Override
    public String getId()
    {
-      return "mapObjectLinkStylingScript";
+      return "map-link-styling-script";
    }
 
    /**
@@ -72,7 +72,7 @@ public class MapObjectLinkStylingScript extends ObjectPropertyPage
    @Override
    public boolean isVisible()
    {
-      return (object instanceof NetworkMap);
+      return object instanceof NetworkMap;
    }
 
    /**
@@ -82,11 +82,11 @@ public class MapObjectLinkStylingScript extends ObjectPropertyPage
 	protected Control createContents(Composite parent)
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
       map = (NetworkMap)object;
 
       initialLinkStylingScript = map.getLinkStylingScript();
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
@@ -149,7 +149,7 @@ public class MapObjectLinkStylingScript extends ObjectPropertyPage
 				{
                runInUIThread(() -> {
                   initialLinkStylingScript = linkStylingScript;
-                  MapObjectLinkStylingScript.this.setValid(true);
+                  MapLinkStylingScript.this.setValid(true);
 					});
 				}
 			}

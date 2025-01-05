@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ import org.xnap.commons.i18n.I18n;
 public class ContextDashboardView extends AbstractDashboardView
 {
    private final I18n i18n = LocalizationHelper.getI18n(ContextDashboardView.class);
-   
+
    private Dashboard dashboard;
    private SessionListener clientListener;
 
@@ -47,7 +47,7 @@ public class ContextDashboardView extends AbstractDashboardView
     */
    public ContextDashboardView(Dashboard dashboard)
    {
-      super(dashboard.getObjectName(), ResourceManager.getImageDescriptor("icons/object-views/dashboard.png"), "ContextDashboard." + dashboard.getObjectId());
+      super(dashboard.getObjectName(), ResourceManager.getImageDescriptor("icons/object-views/dashboard.png"), "objects.context.dashboard." + dashboard.getObjectId());
       this.dashboard = dashboard;
    }
 

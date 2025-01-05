@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ bool NetworkMapGroup::showThresholdSummary() const
 /**
  * Network map object default constructor
  */
-NetworkMap::NetworkMap() : super(), Pollable(this, Pollable::MAP_UPDATE), DelegateObject(this)
+NetworkMap::NetworkMap() : super(), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND | Pollable::MAP_UPDATE), DelegateObject(this)
 {
 	m_mapType = NETMAP_USER_DEFINED;
 	m_discoveryRadius = 0;
@@ -72,13 +72,14 @@ NetworkMap::NetworkMap() : super(), Pollable(this, Pollable::MAP_UPDATE), Delega
    m_linkStylingScriptSource = nullptr;
    m_linkStylingScript = nullptr;
    m_updateFailed = false;
+   m_displayPriority = 0;
 }
 
 /**
  * Network map object default constructor
  */
-NetworkMap::NetworkMap(const NetworkMap &src) : super(), Pollable(this, Pollable::MAP_UPDATE), DelegateObject(this, src),
-         m_seedObjects(src.m_seedObjects), m_mapContent(src.m_mapContent), m_deletedObjects(src.m_deletedObjects)
+NetworkMap::NetworkMap(const NetworkMap &src) : super(), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND | Pollable::MAP_UPDATE),
+         DelegateObject(this, src), m_seedObjects(src.m_seedObjects), m_mapContent(src.m_mapContent), m_deletedObjects(src.m_deletedObjects)
 
 {
    m_mapType = src.m_mapType;
@@ -107,14 +108,15 @@ NetworkMap::NetworkMap(const NetworkMap &src) : super(), Pollable(this, Pollable
    setLinkStylingScript(src.m_linkStylingScriptSource);
    m_isHidden = true;
    m_updateFailed = false;
+   m_displayPriority = src.m_displayPriority;
    setCreationTime();
 }
 
 /**
  * Create network map object from user session
  */
-NetworkMap::NetworkMap(int type, const IntegerArray<uint32_t>& seeds) : super(), Pollable(this, Pollable::MAP_UPDATE),
-         DelegateObject(this), m_seedObjects(seeds)
+NetworkMap::NetworkMap(int type, const IntegerArray<uint32_t>& seeds) : super(), AutoBindTarget(this),
+         Pollable(this, Pollable::AUTOBIND | Pollable::MAP_UPDATE), DelegateObject(this), m_seedObjects(seeds)
 {
 	m_mapType = type;
 	if (type == MAP_INTERNAL_COMMUNICATION_TOPOLOGY)
@@ -144,6 +146,7 @@ NetworkMap::NetworkMap(int type, const IntegerArray<uint32_t>& seeds) : super(),
    m_linkStylingScript = nullptr;
    m_updateFailed = false;
    m_isHidden = true;
+   m_displayPriority = 0;
    setCreationTime();
 }
 
@@ -287,16 +290,16 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
    bool success = super::saveToDatabase(hdb);
 
    if (success && (m_modified & MODIFY_OTHER))
+      success = AutoBindTarget::saveToDatabase(hdb);
+
+   if (success && (m_modified & MODIFY_OTHER))
    {
-      DB_STATEMENT hStmt;
-      if (IsDatabaseRecordExist(hdb, _T("network_maps"), _T("id"), m_id))
-      {
-         hStmt = DBPrepare(hdb, _T("UPDATE network_maps SET map_type=?,layout=?,radius=?,background=?,bg_latitude=?,bg_longitude=?,bg_zoom=?,link_color=?,link_routing=?,link_width=?,link_style=?,bg_color=?,object_display_mode=?,filter=?,link_styling_script=?,width=?,height=? WHERE id=?"));
-      }
-      else
-      {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO network_maps (map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,link_width,link_style,bg_color,object_display_mode,filter,link_styling_script,width,height,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
-      }
+      static const wchar_t *columns[] = {
+         L"map_type", L"layout", L"radius", L"background", L"bg_latitude", L"bg_longitude", L"bg_zoom",
+         L"link_color", L"link_routing", L"link_width", L"link_style", L"bg_color", L"object_display_mode",
+         L"filter", L"link_styling_script", L"width", L"height", L"display_priority", nullptr
+      };
+      DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("network_maps"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
       {
          lockProperties();
@@ -318,7 +321,8 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 15, DB_SQLTYPE_TEXT, m_linkStylingScriptSource, DB_BIND_STATIC);
          DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_width);
          DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_height);
-         DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_displayPriority);
+         DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -334,12 +338,12 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
    // Save elements
    if (success && (m_modified & MODIFY_MAP_CONTENT))
    {
-      success = executeQueryOnObject(hdb, _T("DELETE FROM network_map_elements WHERE map_id=?"));
+      success = executeQueryOnObject(hdb, L"DELETE FROM network_map_elements WHERE map_id=?");
 
       lockProperties();
       if (success && !m_mapContent.m_elements.isEmpty())
       {
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_elements (map_id,element_id,element_type,element_data,flags) VALUES (?,?,?,?,?)"));
+         DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO network_map_elements (map_id,element_id,element_type,element_data,flags) VALUES (?,?,?,?,?)");
          if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -347,7 +351,7 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
             {
                NetworkMapElement *e = m_mapContent.m_elements.get(i);
                Config *config = new Config();
-               config->setTopLevelTag(_T("element"));
+               config->setTopLevelTag(L"element");
                e->updateConfig(config);
 
                DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, e->getId());
@@ -369,14 +373,14 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
 
       // Save links
       if (success)
-         success = executeQueryOnObject(hdb, _T("DELETE FROM network_map_links WHERE map_id=?"));
+         success = executeQueryOnObject(hdb, L"DELETE FROM network_map_links WHERE map_id=?");
 
       lockProperties();
       if (success && !m_mapContent.m_links.isEmpty())
       {
          DB_STATEMENT hStmt = DBPrepare(hdb,
-                  _T("INSERT INTO network_map_links (map_id,link_id,element1,interface1,element2,interface2,link_type,link_name,connector_name1,connector_name2,element_data,flags,color_source,color,color_provider) ")
-                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"), m_mapContent.m_links.size() > 1);
+                  L"INSERT INTO network_map_links (map_id,link_id,element1,interface1,element2,interface2,link_type,link_name,connector_name1,connector_name2,element_data,flags,color_source,color,color_provider) "
+                  L"VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", m_mapContent.m_links.size() > 1);
          if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -412,12 +416,12 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
 	// Save seed nodes
    if (success && (m_modified & MODIFY_OTHER))
    {
-      success = executeQueryOnObject(hdb, _T("DELETE FROM network_map_seed_nodes WHERE map_id=?"));
+      success = executeQueryOnObject(hdb, L"DELETE FROM network_map_seed_nodes WHERE map_id=?");
 
       lockProperties();
       if (success && !m_seedObjects.isEmpty())
       {
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_seed_nodes (map_id,seed_node_id) VALUES (?,?)"), m_seedObjects.size() > 1);
+         DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO network_map_seed_nodes (map_id,seed_node_id) VALUES (?,?)", m_seedObjects.size() > 1);
          if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -439,12 +443,12 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
    // Save deleted nodes location
    if (success && (m_modified & MODIFY_MAP_CONTENT))
    {
-      success = executeQueryOnObject(hdb, _T("DELETE FROM network_map_deleted_nodes WHERE map_id=?"));
+      success = executeQueryOnObject(hdb, L"DELETE FROM network_map_deleted_nodes WHERE map_id=?");
 
       lockProperties();
       if (success && !m_seedObjects.isEmpty())
       {
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_deleted_nodes (map_id,object_id,element_index,position_x,position_y) VALUES (?,?,?,?,?)"), m_deletedObjects.size() > 1);
+         DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO network_map_deleted_nodes (map_id,object_id,element_index,position_x,position_y) VALUES (?,?,?,?,?)", m_deletedObjects.size() > 1);
          if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -477,15 +481,17 @@ bool NetworkMap::deleteFromDatabase(DB_HANDLE hdb)
 {
    bool success = super::deleteFromDatabase(hdb);
    if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM network_maps WHERE id=?"));
+      success = executeQueryOnObject(hdb, L"DELETE FROM network_maps WHERE id=?");
    if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM network_map_elements WHERE map_id=?"));
+      success = executeQueryOnObject(hdb, L"DELETE FROM network_map_elements WHERE map_id=?");
    if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM network_map_links WHERE map_id=?"));
+      success = executeQueryOnObject(hdb, L"DELETE FROM network_map_links WHERE map_id=?");
    if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM network_map_seed_nodes WHERE map_id=?"));
+      success = executeQueryOnObject(hdb, L"DELETE FROM network_map_seed_nodes WHERE map_id=?");
    if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM network_map_deleted_nodes WHERE map_id=?"));
+      success = executeQueryOnObject(hdb, L"DELETE FROM network_map_deleted_nodes WHERE map_id=?");
+   if (success)
+      success = AutoBindTarget::deleteFromDatabase(hdb);
    return success;
 }
 
@@ -499,13 +505,17 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prep
    if (!loadCommonProperties(hdb, preparedStatements))
       return false;
 
+   if (!AutoBindTarget::loadFromDatabase(hdb, id))
+      return false;
+
+   if (!Pollable::loadFromDatabase(hdb, id))
+      return false;
+
    if (!m_isDeleted)
    {
 	   loadACLFromDB(hdb, preparedStatements);
 
-		TCHAR query[256];
-		_sntprintf(query, 256, _T("SELECT map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,link_width,link_style,bg_color,object_display_mode,filter,link_styling_script,width,height FROM network_maps WHERE id=%d"), id);
-		DB_RESULT hResult = DBSelect(hdb, query);
+		DB_RESULT hResult = executeSelectOnObject(hdb, L"SELECT map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,link_width,link_style,bg_color,object_display_mode,filter,link_styling_script,width,height,display_priority FROM network_maps WHERE id={id}");
 		if (hResult == nullptr)
 			return false;
 
@@ -531,14 +541,14 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prep
       setLinkStylingScript(script);
       MemFree(script);
 
-      m_width = DBGetFieldLong(hResult, 0, 15);
-      m_height = DBGetFieldLong(hResult, 0, 16);
+      m_width = DBGetFieldInt32(hResult, 0, 15);
+      m_height = DBGetFieldInt32(hResult, 0, 16);
+      m_displayPriority = DBGetFieldInt32(hResult, 0, 17);
 
       DBFreeResult(hResult);
 
 	   // Load elements
-      _sntprintf(query, 256, _T("SELECT element_id,element_type,element_data,flags FROM network_map_elements WHERE map_id=%u"), m_id);
-      hResult = DBSelect(hdb, query);
+      hResult = executeSelectOnObject(hdb, L"SELECT element_id,element_type,element_data,flags FROM network_map_elements WHERE map_id={id}");
       if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
@@ -552,7 +562,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prep
 				if (data != nullptr)
 				{
 					char *utf8data = UTF8StringFromWideString(data);
-					config->loadXmlConfigFromMemory(utf8data, (int)strlen(utf8data), _T("<database>"), "element");
+					config->loadXmlConfigFromMemory(utf8data, (int)strlen(utf8data), L"<database>", "element");
 					MemFree(utf8data);
 					MemFree(data);
 					switch(DBGetFieldLong(hResult, i, 1))
@@ -593,8 +603,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prep
       }
 
 		// Load links
-      _sntprintf(query, 256, _T("SELECT link_id,element1,interface1,element2,interface2,link_type,link_name,connector_name1,connector_name2,element_data,flags,color_source,color,color_provider FROM network_map_links WHERE map_id=%u"), m_id);
-      hResult = DBSelect(hdb, query);
+      hResult = executeSelectOnObject(hdb, L"SELECT link_id,element1,interface1,element2,interface2,link_type,link_name,connector_name1,connector_name2,element_data,flags,color_source,color,color_provider FROM network_map_links WHERE map_id={id}");
       if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
@@ -626,7 +635,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prep
       }
 
       // Load seed nodes
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT seed_node_id FROM network_map_seed_nodes WHERE map_id=?"));
+      DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT seed_node_id FROM network_map_seed_nodes WHERE map_id=?");
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -644,7 +653,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prep
       DBFreeStatement(hStmt);
 
       // Load deleted nodes positions
-      hStmt = DBPrepare(hdb, _T("SELECT object_id,position_x,position_y FROM network_map_deleted_nodes WHERE map_id=? ORDER BY element_index"));
+      hStmt = DBPrepare(hdb, L"SELECT object_id,position_x,position_y FROM network_map_deleted_nodes WHERE map_id=? ORDER BY element_index");
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -695,6 +704,7 @@ void NetworkMap::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_FILTER, CHECK_NULL_EX(m_filterSource));
    msg->setField(VID_LINK_STYLING_SCRIPT, CHECK_NULL_EX(m_linkStylingScriptSource));
    msg->setField(VID_UPDATE_FAILED, m_updateFailed);
+   msg->setField(VID_DISPLAY_PRIORITY, m_displayPriority);
 
 	msg->setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(m_mapContent.m_elements.size()));
 	uint32_t fieldId = VID_ELEMENT_LIST_BASE;
@@ -714,10 +724,26 @@ void NetworkMap::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 }
 
 /**
+ * Fill NXCP message with object's data - stage 2
+ * Object's properties are not locked when this method is called. Should be
+ * used only to fill data where properties lock is not enough (like data
+ * collection configuration).
+ */
+void NetworkMap::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
+{
+   AutoBindTarget::fillMessage(msg);
+}
+
+/**
  * Update network map object from NXCP message
  */
 uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 {
+   AutoBindTarget::modifyFromMessage(msg);
+
+   if (msg.isFieldExist(VID_DISPLAY_PRIORITY))
+      m_displayPriority = msg.getFieldAsInt32(VID_DISPLAY_PRIORITY);
+
 	if (msg.isFieldExist(VID_MAP_TYPE))
 		m_mapType = msg.getFieldAsUInt16(VID_MAP_TYPE);
 
@@ -1711,6 +1737,78 @@ void NetworkMap::onObjectDelete(const NetObj& object)
 }
 
 /**
+ * Perform automatic assignment to objects
+ */
+void NetworkMap::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+{
+   poller->setStatus(_T("wait for lock"));
+   pollerLock(autobind);
+
+   if (IsShutdownInProgress())
+   {
+      pollerUnlock();
+      return;
+   }
+
+   m_pollRequestor = session;
+   m_pollRequestId = rqId;
+   nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Starting autobind poll of network map %s [%u]"), m_name, m_id);
+   poller->setStatus(_T("checking objects"));
+
+   if (!isAutoBindEnabled())
+   {
+      sendPollerMsg(L"Automatic object binding is disabled\r\n");
+      nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of network map %s [%u])"), m_name, m_id);
+      pollerUnlock();
+      return;
+   }
+
+   NXSL_VM *cachedFilterVM = nullptr;
+   unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(
+      [] (NetObj *object, void *context) -> bool
+      {
+         if (object->isDataCollectionTarget())
+            return true;
+         int objectClass = object->getObjectClass();
+         return (objectClass == OBJECT_NETWORK) || (objectClass == OBJECT_SERVICEROOT) || (objectClass == OBJECT_SUBNET) || (objectClass == OBJECT_ZONE) || (objectClass == OBJECT_CONDITION) || (objectClass == OBJECT_CONTAINER) || (objectClass == OBJECT_COLLECTOR) || (objectClass == OBJECT_RACK);
+      }, nullptr);
+
+   for (int i = 0; i < objects->size(); i++)
+   {
+      shared_ptr<NetObj> object = objects->getShared(i);
+
+      AutoBindDecision decision = isApplicable(&cachedFilterVM, object, this);
+      if ((decision == AutoBindDecision_Ignore) || ((decision == AutoBindDecision_Unbind) && !isAutoUnbindEnabled()))
+         continue;   // Decision cannot affect checks
+
+      if (decision == AutoBindDecision_Bind)
+      {
+         if (object->addDashboard(m_id))
+         {
+            StringBuffer cn(object->getObjectClassName());
+            cn.toLowercase();
+            sendPollerMsg(_T("   Adding to %s %s\r\n"), cn.cstr(), object->getName());
+            nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("NetworkMap::autobindPoll(): adding network map \"%s\" [%u] to %s \"%s\" [%u]"), m_name, m_id, cn.cstr(), object->getName(), object->getId());
+         }
+      }
+      else if (decision == AutoBindDecision_Unbind)
+      {
+         if (object->removeDashboard(m_id))
+         {
+            StringBuffer cn(object->getObjectClassName());
+            cn.toLowercase();
+            nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("NetworkMap::autobindPoll(): removing network map \"%s\" [%u] from %s \"%s\" [%u]"), m_name, m_id, cn.cstr(), object->getName(), object->getId());
+            sendPollerMsg(_T("   Removing from %s %s\r\n"), cn.cstr(), object->getName());
+         }
+      }
+   }
+   delete cachedFilterVM;
+
+   pollerUnlock();
+   nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of network map %s [%u])"), m_name, m_id);
+}
+
+/**
  * Create NXSL object for this object
  */
 NXSL_Value *NetworkMap::createNXSLObject(NXSL_VM *vm)
@@ -1759,6 +1857,7 @@ void NetworkMap::clone(const TCHAR *name, const TCHAR *alias)
 json_t *NetworkMap::toJson()
 {
    json_t *root = super::toJson();
+   AutoBindTarget::toJson(root);
 
    lockProperties();
 
@@ -1783,6 +1882,7 @@ json_t *NetworkMap::toJson()
    json_object_set_new(root, "linkScript", json_string_t(m_linkStylingScriptSource));
    json_object_set_new(root, "width", json_integer(m_width));
    json_object_set_new(root, "height", json_integer(m_height));
+   json_object_set_new(root, "displayPriority", json_integer(m_displayPriority));
 
    unlockProperties();
    return root;

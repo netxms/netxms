@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Common defines for client library and server
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -1182,19 +1182,20 @@ enum AggregationFunction
 /**
  * Network map flags
  */
-#define MF_SHOW_STATUS_ICON      0x00000001
-#define MF_SHOW_STATUS_FRAME     0x00000002
-#define MF_SHOW_STATUS_BKGND     0x00000004
-#define MF_SHOW_END_NODES        0x00000008
-#define MF_CALCULATE_STATUS      0x00000010
-#define MF_FILTER_OBJECTS        0x00000020
-#define MF_SHOW_LINK_DIRECTION   0x00000040
-#define MF_USE_L1_TOPOLOGY       0x00000080
-#define MF_CENTER_BKGND_IMAGE    0x00000100
+#define MF_SHOW_STATUS_ICON        0x00000001
+#define MF_SHOW_STATUS_FRAME       0x00000002
+#define MF_SHOW_STATUS_BKGND       0x00000004
+#define MF_SHOW_END_NODES          0x00000008
+#define MF_CALCULATE_STATUS        0x00000010
+#define MF_FILTER_OBJECTS          0x00000020
+#define MF_SHOW_LINK_DIRECTION     0x00000040
+#define MF_USE_L1_TOPOLOGY         0x00000080
+#define MF_CENTER_BKGND_IMAGE      0x00000100
 #define MF_TRANSLUCENT_LABEL_BKGND 0x00000200
-#define MF_DONT_UPDATE_LINK_TEXT 0x00000400
-#define MF_FIT_BKGND_IMAGE       0x00000800
-
+#define MF_DONT_UPDATE_LINK_TEXT   0x00000400
+#define MF_FIT_BKGND_IMAGE         0x00000800
+#define MF_FIT_TO_SCREEN           0x00001000
+#define MF_SHOW_AS_OBJECT_VIEW     0x00002000
 
 /**
  * Network map layouts
@@ -1206,11 +1207,9 @@ enum AggregationFunction
 #define MAP_LAYOUT_VTREE		   3
 #define MAP_LAYOUT_SPARSE_VTREE  4
 
-
-//
-// Deployment manager status codes
-//
-
+/**
+ * Deployment manager status codes
+ */
 #define DEPLOYMENT_STATUS_PENDING      0
 #define DEPLOYMENT_STATUS_TRANSFER     1
 #define DEPLOYMENT_STATUS_INSTALLATION 2

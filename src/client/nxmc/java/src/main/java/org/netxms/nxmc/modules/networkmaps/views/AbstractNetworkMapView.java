@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,8 +45,6 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -224,7 +222,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	{
 		FillLayout layout = new FillLayout();
 		parent.setLayout(layout);
-		
+
       viewer = new ExtendedGraphViewer(parent, SWT.NONE, this, new FigureChangeCallback() {         
          @Override
          public void onMove(NetworkMapElement element)
@@ -303,22 +301,18 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		};
 		viewer.addPostSelectionChangedListener(listener);
 
-		viewer.addDoubleClickListener(new IDoubleClickListener() {
-			@Override
-			public void doubleClick(DoubleClickEvent event)
-			{
-				int selectionType = analyzeSelection(currentSelection);
-				if (selectionType == SELECTION_EMPTY)
-				   return;
+      viewer.addDoubleClickListener((e) -> {
+         int selectionType = analyzeSelection(currentSelection);
+         if (selectionType == SELECTION_EMPTY)
+            return;
 
-				if (selectionType == SELECTION_OBJECTS)
-				{
-					doubleClickHandlers.handleDoubleClick((AbstractObject)currentSelection.getFirstElement());
-				}
-				else if (selectionType == SELECTION_LINKS && objectMoveLocked)
-				{
-				   showLinkLineChart();
-				}
+         if (selectionType == SELECTION_OBJECTS)
+         {
+            doubleClickHandlers.handleDoubleClick((AbstractObject)currentSelection.getFirstElement());
+         }
+         else if (selectionType == SELECTION_LINKS && objectMoveLocked)
+			{
+            showLinkLineChart();
 			}
 		});
 
@@ -355,7 +349,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		doubleClickHandlers = new ObjectDoubleClickHandlerRegistry(this);
 		setupMapControl();
 	}
-   
+
    /**
     * Update map size
     * 
@@ -415,15 +409,11 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	 */
 	protected void replaceMapPage(final NetworkMapPage page, Display display)
 	{
-		display.asyncExec(new Runnable() {
-			@Override
-			public void run()
-			{
-			   NetworkMapPage oldMapPage = mapPage;
-				mapPage = page;
-				refreshDciRequestList(oldMapPage);
-				viewer.setInput(mapPage);
-			}
+      display.asyncExec(() -> {
+         NetworkMapPage oldMapPage = mapPage;
+         mapPage = page;
+         refreshDciRequestList(oldMapPage);
+         viewer.setInput(mapPage);
 		});
 	}
 

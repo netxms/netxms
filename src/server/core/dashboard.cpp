@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -115,11 +115,8 @@ bool Dashboard::saveToDatabase(DB_HANDLE hdb)
 
    if (success && (m_modified & MODIFY_OTHER))
    {
-      DB_STATEMENT hStmt;
-      if (IsDatabaseRecordExist(hdb, _T("dashboards"), _T("id"), m_id))
-         hStmt = DBPrepare(hdb, _T("UPDATE dashboards SET num_columns=?,display_priority=? WHERE id=?"));
-      else
-         hStmt = DBPrepare(hdb, _T("INSERT INTO dashboards (num_columns,display_priority,id) VALUES (?,?,?)"));
+      static const wchar_t *columns[] = { L"num_columns", L"display_priority", nullptr };
+      DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"dashboards", L"id", m_id, columns);
       if (hStmt != nullptr)
       {
          lockProperties();
@@ -137,11 +134,11 @@ bool Dashboard::saveToDatabase(DB_HANDLE hdb)
 
       if (success)
       {
-         success = executeQueryOnObject(hdb, _T("DELETE FROM dashboard_elements WHERE dashboard_id=?"));
+         success = executeQueryOnObject(hdb, L"DELETE FROM dashboard_elements WHERE dashboard_id=?");
          lockProperties();
          if (success && !m_elements.isEmpty())
          {
-            hStmt = DBPrepare(hdb, _T("INSERT INTO dashboard_elements (dashboard_id,element_id,element_type,element_data,layout_data) VALUES (?,?,?,?,?)"));
+            hStmt = DBPrepare(hdb, L"INSERT INTO dashboard_elements (dashboard_id,element_id,element_type,element_data,layout_data) VALUES (?,?,?,?,?)");
             if (hStmt != nullptr)
             {
                DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -174,9 +171,9 @@ bool Dashboard::deleteFromDatabase(DB_HANDLE hdb)
 {
    bool success = super::deleteFromDatabase(hdb);
    if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM dashboards WHERE id=?"));
+      success = executeQueryOnObject(hdb, L"DELETE FROM dashboards WHERE id=?");
    if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM dashboard_elements WHERE dashboard_id=?"));
+      success = executeQueryOnObject(hdb, L"DELETE FROM dashboard_elements WHERE dashboard_id=?");
    if (success)
       success = AutoBindTarget::deleteFromDatabase(hdb);
    return success;

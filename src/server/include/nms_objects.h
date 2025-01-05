@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1312,10 +1312,10 @@ protected:
    PostalAddress m_postalAddress;
    ClientSession *m_pollRequestor;
    uint32_t m_pollRequestId;
-   IntegerArray<uint32_t> m_dashboards; // Dashboards associated with this object
-   ObjectArray<ObjectUrl> m_urls;  // URLs associated with this object
-   uint32_t m_primaryZoneProxyId;     // ID of assigned primary zone proxy node
-   uint32_t m_backupZoneProxyId;      // ID of assigned backup zone proxy node
+   IntegerArray<uint32_t> m_dashboards; // Dashboards and network maps associated with this object
+   ObjectArray<ObjectUrl> m_urls;       // URLs associated with this object
+   uint32_t m_primaryZoneProxyId;       // ID of assigned primary zone proxy node
+   uint32_t m_backupZoneProxyId;        // ID of assigned backup zone proxy node
    uint32_t m_assetId;  // ID of linked asset object
 
    AccessList m_accessList;
@@ -1615,15 +1615,15 @@ class NXCORE_EXPORTABLE Pollable
 {
 public:
    static constexpr uint32_t NONE               = 0;
-   static constexpr uint32_t STATUS             = 0x001;
-   static constexpr uint32_t CONFIGURATION      = 0x002;
-   static constexpr uint32_t INSTANCE_DISCOVERY = 0x004;
-   static constexpr uint32_t TOPOLOGY           = 0x008;
-   static constexpr uint32_t ROUTING_TABLE      = 0x010;
-   static constexpr uint32_t DISCOVERY          = 0x020;
-   static constexpr uint32_t ICMP               = 0x040;
-   static constexpr uint32_t AUTOBIND           = 0x080;
-   static constexpr uint32_t MAP_UPDATE         = 0x100;
+   static constexpr uint32_t STATUS             = 0x0001;
+   static constexpr uint32_t CONFIGURATION      = 0x0002;
+   static constexpr uint32_t INSTANCE_DISCOVERY = 0x0004;
+   static constexpr uint32_t TOPOLOGY           = 0x0008;
+   static constexpr uint32_t ROUTING_TABLE      = 0x0010;
+   static constexpr uint32_t DISCOVERY          = 0x0020;
+   static constexpr uint32_t ICMP               = 0x0040;
+   static constexpr uint32_t AUTOBIND           = 0x0080;
+   static constexpr uint32_t MAP_UPDATE         = 0x0100;
 
 protected:
    NetObj *m_this;
@@ -4620,7 +4620,7 @@ struct NXCORE_EXPORTABLE NetworkMapContent
 /**
  * Network map object
  */
-class NXCORE_EXPORTABLE NetworkMap : public NetObj, public Pollable, public DelegateObject
+class NXCORE_EXPORTABLE NetworkMap : public NetObj, public AutoBindTarget, public Pollable, public DelegateObject
 {
 protected:
    typedef NetObj super;
@@ -4651,11 +4651,14 @@ protected:
    NetworkMapContent m_mapContent;
    StructArray<NetworkMapObjectLocation> m_deletedObjects;
    bool m_updateFailed;
+   int m_displayPriority;
 
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
+   virtual void fillMessageUnlocked(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void mapUpdatePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+   virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
 
    bool buildTopologyGraph(NetworkMapObjectList *graph, int mapType);
    bool buildTopologyGraphFromSeed(const shared_ptr<Node>& seed, NetworkMapObjectList *graph, int mapType);
@@ -4986,7 +4989,7 @@ template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<DashboardElement>;
 /**
  * Dashboard object
  */
-class NXCORE_EXPORTABLE Dashboard : public AbstractContainer, AutoBindTarget, Pollable, DelegateObject
+class NXCORE_EXPORTABLE Dashboard : public AbstractContainer, public AutoBindTarget, public Pollable, public DelegateObject
 {
 protected:
    typedef AbstractContainer super;
@@ -5001,6 +5004,7 @@ protected:
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+
    void updateObjectAndDciList(DashboardElement *e);
 
 public:

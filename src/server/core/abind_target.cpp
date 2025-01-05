@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -78,7 +78,7 @@ void AutoBindTarget::setAutoBindFilter(int filterNumber, const TCHAR *filter)
    if (filter != nullptr)
    {
       m_autoBindFilterSources[filterNumber] = MemCopyString(filter);
-      m_autoBindFilters[filterNumber] = CompileServerScript(filter, SCRIPT_CONTEXT_AUTOBIND, m_this, 0, _T("AutoBind::%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), filterNumber);
+      m_autoBindFilters[filterNumber] = CompileServerScript(filter, SCRIPT_CONTEXT_AUTOBIND, m_this, 0, L"AutoBind::%s::%s::%d", m_this->getObjectClassName(), m_this->getName(), filterNumber);
    }
    else
    {
@@ -135,7 +135,7 @@ void AutoBindTarget::fillMessage(NXCPMessage *msg) const
 bool AutoBindTarget::loadFromDatabase(DB_HANDLE hdb, uint32_t objectId)
 {
    bool success = false;
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT bind_filter_1,bind_filter_2,flags FROM auto_bind_target WHERE object_id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT bind_filter_1,bind_filter_2,flags FROM auto_bind_target WHERE object_id=?");
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, objectId);
@@ -167,15 +167,8 @@ bool AutoBindTarget::saveToDatabase(DB_HANDLE hdb)
 {
    bool success = false;
 
-   DB_STATEMENT hStmt;
-   if (IsDatabaseRecordExist(hdb, _T("auto_bind_target"), _T("object_id"), m_this->getId()))
-   {
-      hStmt = DBPrepare(hdb, _T("UPDATE auto_bind_target SET bind_filter_1=?,bind_filter_2=?,flags=? WHERE object_id=?"));
-   }
-   else
-   {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO auto_bind_target (bind_filter_1,bind_filter_2,flags,object_id) VALUES (?,?,?,?)"));
-   }
+   static const wchar_t *columns[] = { L"bind_filter_1", L"bind_filter_2", L"flags", nullptr };
+   DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"auto_bind_target", L"object_id", m_this->getId(), columns);
    if (hStmt != nullptr)
    {
       internalLock();
@@ -196,7 +189,7 @@ bool AutoBindTarget::saveToDatabase(DB_HANDLE hdb)
  */
 bool AutoBindTarget::deleteFromDatabase(DB_HANDLE hdb)
 {
-   return ExecuteQueryOnObject(hdb, m_this->getId(), _T("DELETE FROM auto_bind_target WHERE object_id=?"));
+   return ExecuteQueryOnObject(hdb, m_this->getId(), L"DELETE FROM auto_bind_target WHERE object_id=?");
 }
 
 /**
@@ -226,7 +219,7 @@ AutoBindDecision AutoBindTarget::isApplicable(NXSL_VM **cachedFilterVM, const sh
          }
          else
          {
-            ReportScriptError(SCRIPT_CONTEXT_AUTOBIND, m_this, 0, _T("Script load error"), _T("AutoBind::%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), filterNumber);
+            ReportScriptError(SCRIPT_CONTEXT_AUTOBIND, m_this, 0, L"Script load error", L"AutoBind::%s::%s::%d", m_this->getObjectClassName(), m_this->getName(), filterNumber);
          }
       }
       internalUnlock();
@@ -246,9 +239,14 @@ AutoBindDecision AutoBindTarget::isApplicable(NXSL_VM **cachedFilterVM, const sh
       return result;
 
    filter->setGlobalVariable("$container", m_this->createNXSLObject(filter));
-   filter->setGlobalVariable("$dashboard", m_this->createNXSLObject(filter));
-   filter->setGlobalVariable("$service", m_this->createNXSLObject(filter));
-   filter->setGlobalVariable("$template", m_this->createNXSLObject(filter));
+   if (m_this->getObjectClass() == OBJECT_DASHBOARD)
+      filter->setGlobalVariable("$dashboard", m_this->createNXSLObject(filter));
+   if (m_this->getObjectClass() == OBJECT_NETWORKMAP)
+      filter->setGlobalVariable("$map", m_this->createNXSLObject(filter));
+   if (m_this->getObjectClass() == OBJECT_BUSINESSSERVICE)
+      filter->setGlobalVariable("$service", m_this->createNXSLObject(filter));
+   if (m_this->getObjectClass() == OBJECT_TEMPLATE)
+      filter->setGlobalVariable("$template", m_this->createNXSLObject(filter));
    if (dci != nullptr)
       filter->setGlobalVariable("$dci", dci->createNXSLObject(filter));
    else
@@ -262,7 +260,7 @@ AutoBindDecision AutoBindTarget::isApplicable(NXSL_VM **cachedFilterVM, const sh
    }
    else
    {
-      ReportScriptError(SCRIPT_CONTEXT_AUTOBIND, m_this, dci != nullptr ? dci->getId() : 0, filter->getErrorText(), _T("AutoBind::%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), filterNumber);
+      ReportScriptError(SCRIPT_CONTEXT_AUTOBIND, m_this, dci != nullptr ? dci->getId() : 0, filter->getErrorText(), L"AutoBind::%s::%s::%d", m_this->getObjectClassName(), m_this->getName(), filterNumber);
    }
    return result;
 }
@@ -321,11 +319,11 @@ void AutoBindTarget::updateFromImport(const ConfigEntry& config, bool defaultAut
 {
    for(int i = 0; i < MAX_AUTOBIND_TARGET_FILTERS; i++)
    {
-      TCHAR entryName[32];
+      wchar_t entryName[32];
       if (i == 0)
-         _tcscpy(entryName, _T("filter"));
+         wcscpy(entryName, L"filter");
       else
-         _sntprintf(entryName, 32, _T("filter%d"), i + 1);
+         _sntprintf(entryName, 32, L"filter%d", i + 1);
       ConfigEntry *filter = config.findEntry(entryName);
       if (filter != nullptr)
       {
@@ -336,7 +334,7 @@ void AutoBindTarget::updateFromImport(const ConfigEntry& config, bool defaultAut
             StringBuffer output = NXSLConvertToV5(filter->getValue());
             setAutoBindFilter(i, output);
          }
-         setAutoBindMode(i, filter->getAttributeAsBoolean(_T("autoBind"), defaultAutoBindFlag), filter->getAttributeAsBoolean(_T("autoUnbind")));
+         setAutoBindMode(i, filter->getAttributeAsBoolean(L"autoBind", defaultAutoBindFlag), filter->getAttributeAsBoolean(L"autoUnbind"));
       }
       else
       {

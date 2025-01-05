@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package org.netxms.nxmc.modules.objects.propertypages;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -27,8 +28,8 @@ import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -44,6 +45,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.EntireNetwork;
+import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
@@ -60,7 +62,7 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * "Dashboards" property page for NetXMS objects
+ * "Dashboards and Maps" property page for NetXMS objects
  */
 public class Dashboards extends ObjectPropertyPage
 {
@@ -81,7 +83,7 @@ public class Dashboards extends ObjectPropertyPage
     */
    public Dashboards(AbstractObject object)
    {
-      super(LocalizationHelper.getI18n(Dashboards.class).tr("Dashboards"), object);
+      super(LocalizationHelper.getI18n(Dashboards.class).tr("Dashboards and Maps"), object);
    }
 
    /**
@@ -117,7 +119,7 @@ public class Dashboards extends ObjectPropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { i18n.tr("Dashboard") };
+      final String[] columnNames = { i18n.tr("Dashboard / Map") };
       final int[] columnWidths = { 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -126,6 +128,8 @@ public class Dashboards extends ObjectPropertyPage
 
       for(AbstractObject d : object.getDashboards(false))
    		dashboards.put(d.getObjectId(), d);
+      for(AbstractObject m : object.getNetworkMaps(false))
+         dashboards.put(m.getObjectId(), m);
       viewer.setInput(dashboards.values().toArray());
 
       GridData gridData = new GridData();
@@ -135,7 +139,7 @@ public class Dashboards extends ObjectPropertyPage
       gridData.grabExcessHorizontalSpace = true;
       gridData.heightHint = 0;
       viewer.getControl().setLayoutData(gridData);
-      
+
       Composite buttons = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
@@ -148,21 +152,18 @@ public class Dashboards extends ObjectPropertyPage
 
       addButton = new Button(buttons, SWT.PUSH);
       addButton.setText(i18n.tr("&Add..."));
-      addButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      addButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), ObjectSelectionDialog.createDashboardSelectionFilter());
+            ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), ObjectSelectionDialog.createDashboardAndNetworkMapSelectionFilter());
 				dlg.showFilterToolTip(false);
 				if (dlg.open() == Window.OK)
 				{
-					AbstractObject[] d = dlg.getSelectedObjects(Dashboard.class);
+               Set<Class<? extends AbstractObject>> classFilter = new HashSet<>();
+               classFilter.add(Dashboard.class);
+               classFilter.add(NetworkMap.class);
+               AbstractObject[] d = dlg.getSelectedObjects(classFilter);
 			      for(int i = 0; i < d.length; i++)
 			      	dashboards.put(d[i].getObjectId(), d[i]);
 			      viewer.setInput(dashboards.values().toArray());
@@ -176,18 +177,12 @@ public class Dashboards extends ObjectPropertyPage
 		
       deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText(i18n.tr("&Delete"));
-      deleteButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      deleteButton.addSelectionListener(new SelectionAdapter() {
 			@SuppressWarnings("unchecked")
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+            IStructuredSelection selection = viewer.getStructuredSelection();
 				Iterator<AbstractObject> it = selection.iterator();
 				if (it.hasNext())
 				{

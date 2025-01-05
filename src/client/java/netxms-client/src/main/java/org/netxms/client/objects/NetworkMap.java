@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,12 +37,13 @@ import org.netxms.client.maps.MapType;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapElement;
+import org.netxms.client.objects.interfaces.AutoBindObject;
 import org.netxms.client.objects.interfaces.PollingTarget;
 
 /**
  * Network map object
  */
-public class NetworkMap extends GenericObject implements PollingTarget
+public class NetworkMap extends GenericObject implements AutoBindObject, PollingTarget
 {
 	public static final UUID GEOMAP_BACKGROUND = UUID.fromString("ffffffff-ffff-ffff-ffff-ffffffffffff"); 
 
@@ -59,6 +60,7 @@ public class NetworkMap extends GenericObject implements PollingTarget
    public static final int MF_DONT_UPDATE_LINK_TEXT   = 0x000400;
    public static final int MF_FIT_BKGND_IMAGE         = 0x000800;
    public static final int MF_FIT_TO_SCREEN           = 0x001000;
+   public final static int MF_SHOW_AS_OBJECT_VIEW     = 0x002000;
 
    public static final int MF_BKGND_IMAGE_FLAGS       = 0x000900;
 
@@ -82,6 +84,9 @@ public class NetworkMap extends GenericObject implements PollingTarget
 	private List<NetworkMapElement> elements;
 	private List<NetworkMapLink> links;
    private boolean updateFailed;
+   private int autoBindFlags;
+   private String autoBindFilter;
+   private int displayPriority; // For maps shown in object context
 
 	/**
     * Create from NXCP message.
@@ -110,6 +115,9 @@ public class NetworkMap extends GenericObject implements PollingTarget
 		filter = msg.getFieldAsString(NXCPCodes.VID_FILTER);
       linkStylingScript = msg.getFieldAsString(NXCPCodes.VID_LINK_STYLING_SCRIPT);
       updateFailed = msg.getFieldAsBoolean(NXCPCodes.VID_UPDATE_FAILED);
+      autoBindFilter = msg.getFieldAsString(NXCPCodes.VID_AUTOBIND_FILTER);
+      autoBindFlags = msg.getFieldAsInt32(NXCPCodes.VID_AUTOBIND_FLAGS);
+      displayPriority = msg.getFieldAsInt32(NXCPCodes.VID_DISPLAY_PRIORITY);
 
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
 		elements = new ArrayList<NetworkMapElement>(count);
@@ -446,6 +454,16 @@ public class NetworkMap extends GenericObject implements PollingTarget
    }
 
    /**
+    * Get map's display priority if it should be shown as object view.
+    *
+    * @return map's display priority
+    */
+   public int getDisplayPriority()
+   {
+      return displayPriority;
+   }
+
+   /**
     * Check if last map update failed.
     *
     * @return true if last map update failed
@@ -561,5 +579,41 @@ public class NetworkMap extends GenericObject implements PollingTarget
    public PollState[] getPollStates()
    {
       return pollStates;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.AutoBindObject#isAutoBindEnabled()
+    */
+   @Override
+   public boolean isAutoBindEnabled()
+   {
+      return (autoBindFlags & OBJECT_BIND_FLAG) != 0;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.AutoBindObject#isAutoUnbindEnabled()
+    */
+   @Override
+   public boolean isAutoUnbindEnabled()
+   {
+      return (autoBindFlags & OBJECT_UNBIND_FLAG) != 0;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.AutoBindObject#getAutoBindFilter()
+    */
+   @Override
+   public String getAutoBindFilter()
+   {
+      return autoBindFilter;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.AutoBindObject#getAutoBindFlags()
+    */
+   @Override
+   public int getAutoBindFlags()
+   {
+      return autoBindFlags;
    }
 }

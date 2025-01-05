@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,11 +61,11 @@ public class Dashboard extends GenericObject implements AutoBindObject, PollingT
 
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
 		elements = new ArrayList<DashboardElement>(count);
-		long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+		long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
 		for(int i = 0; i < count; i++)
 		{
-			elements.add(new DashboardElement(msg, varId, i));
-			varId += 10;
+			elements.add(new DashboardElement(msg, fieldId, i));
+			fieldId += 10;
 		}
 	}
 

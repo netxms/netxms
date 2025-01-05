@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ public class MapAppearance extends ObjectPropertyPage
    @Override
    public String getId()
    {
-      return "mapAppearance";
+      return "map-appearance";
    }
 
    /**

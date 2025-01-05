@@ -28,7 +28,7 @@ import org.eclipse.swt.widgets.Control;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
@@ -37,14 +37,13 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * "Object Context" property page for dashboard object
+ * "Object Context" property page for network map object
  */
-public class DashboardObjectContext extends ObjectPropertyPage
+public class MapObjectContext extends ObjectPropertyPage
 {
-   private I18n i18n = LocalizationHelper.getI18n(DashboardObjectContext.class);
+   private I18n i18n = LocalizationHelper.getI18n(MapObjectContext.class);
 
-   private Dashboard dashboard;
-   private Button checkboxShowContextSelector;
+   private NetworkMap map;
    private Button checkboxShowAsObjectView;
    private LabeledSpinner displayPriority;
 
@@ -53,9 +52,9 @@ public class DashboardObjectContext extends ObjectPropertyPage
     *
     * @param object object to edit
     */
-   public DashboardObjectContext(AbstractObject object)
+   public MapObjectContext(AbstractObject object)
    {
-      super(LocalizationHelper.getI18n(DashboardObjectContext.class).tr("Object Context"), object);
+      super(LocalizationHelper.getI18n(MapObjectContext.class).tr("Object Context"), object);
    }
 
    /**
@@ -64,7 +63,7 @@ public class DashboardObjectContext extends ObjectPropertyPage
    @Override
    public String getId()
    {
-      return "dashboard-object-context";
+      return "map-object-context";
    }
 
    /**
@@ -73,7 +72,7 @@ public class DashboardObjectContext extends ObjectPropertyPage
    @Override
    public boolean isVisible()
    {
-      return object instanceof Dashboard;
+      return object instanceof NetworkMap;
    }
 
    /**
@@ -93,7 +92,7 @@ public class DashboardObjectContext extends ObjectPropertyPage
 	{
       Composite dialogArea = new Composite(parent, SWT.NONE);
 		
-      dashboard = (Dashboard)object;
+      map = (NetworkMap)object;
 
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -101,20 +100,15 @@ public class DashboardObjectContext extends ObjectPropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
 
-      checkboxShowContextSelector = new Button(dialogArea, SWT.CHECK);
-      checkboxShowContextSelector.setText(i18n.tr("Show &context selector in dashboard perspective"));
-      checkboxShowContextSelector.setSelection((dashboard.getFlags() & Dashboard.SHOW_CONTEXT_SELECTOR) != 0);
-      checkboxShowContextSelector.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false));
-
       checkboxShowAsObjectView = new Button(dialogArea, SWT.CHECK);
-      checkboxShowAsObjectView.setText(i18n.tr("&Automatically show this dashboard in object context"));
-      checkboxShowAsObjectView.setSelection((dashboard.getFlags() & Dashboard.SHOW_AS_OBJECT_VIEW) != 0);
+      checkboxShowAsObjectView.setText(i18n.tr("&Automatically show this map in object context"));
+      checkboxShowAsObjectView.setSelection((map.getFlags() & NetworkMap.MF_SHOW_AS_OBJECT_VIEW) != 0);
       checkboxShowAsObjectView.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false));
 
       displayPriority = new LabeledSpinner(dialogArea, SWT.NONE);
       displayPriority.setLabel(i18n.tr("Display priority (1-65535, 0 for automatic)"));
       displayPriority.setRange(0, 65535);
-      displayPriority.setSelection(dashboard.getDisplayPriority());
+      displayPriority.setSelection(map.getDisplayPriority());
       displayPriority.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false));
 
 		return dialogArea;
@@ -130,17 +124,15 @@ public class DashboardObjectContext extends ObjectPropertyPage
 			setValid(false);
 
       int flags = 0;
-      if (checkboxShowContextSelector.getSelection())
-         flags |= Dashboard.SHOW_CONTEXT_SELECTOR;
       if (checkboxShowAsObjectView.getSelection())
-         flags |= Dashboard.SHOW_AS_OBJECT_VIEW;
+         flags |= NetworkMap.MF_SHOW_AS_OBJECT_VIEW;
 
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-      md.setObjectFlags(flags, Dashboard.SHOW_CONTEXT_SELECTOR | Dashboard.SHOW_AS_OBJECT_VIEW);
+      md.setObjectFlags(flags, NetworkMap.MF_SHOW_AS_OBJECT_VIEW);
       md.setDisplayPriority(displayPriority.getSelection());
 
       final NXCSession session = Registry.getSession();
-      new Job(i18n.tr("Updating dashboard object context configuration"), null, messageArea) {
+      new Job(i18n.tr("Updating network map object context configuration"), null, messageArea) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -151,13 +143,13 @@ public class DashboardObjectContext extends ObjectPropertyPage
 			protected void jobFinalize()
 			{
 				if (isApply)
-               runInUIThread(() -> DashboardObjectContext.this.setValid(true));
+               runInUIThread(() -> MapObjectContext.this.setValid(true));
 			}
 
 			@Override
 			protected String getErrorMessage()
 			{
-            return i18n.tr("Cannot update dashboard object context configuration");
+            return i18n.tr("Cannot update network map object context configuration");
 			}
 		}.start();
 

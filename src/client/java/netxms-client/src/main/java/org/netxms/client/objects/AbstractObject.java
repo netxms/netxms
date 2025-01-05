@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -886,18 +886,40 @@ public abstract class AbstractObject
     */
    public List<AbstractObject> getDashboards(boolean accessibleOnly)
    {
-      return session.findMultipleObjects(dashboards, !accessibleOnly);
+      return session.findMultipleObjects(dashboards, Dashboard.class, !accessibleOnly);
    }
 
    /**
-    * Check if this object has dashboard with give ID in its dashboarsd list
+    * Get list of associated network maps
+    * 
+    * @param accessibleOnly if set to true, only accessible network maps will be returned
+    * @return list of the network map objects
+    */
+   public List<AbstractObject> getNetworkMaps(boolean accessibleOnly)
+   {
+      return session.findMultipleObjects(dashboards, NetworkMap.class, !accessibleOnly);
+   }
+
+   /**
+    * Check if this object has dashboard with given ID in its dashboard/map list
     *
     * @param dashboardId dashboard ID to check
-    * @return true if provided dashboard ID is in object's dashboard list
+    * @return true if provided dashboard ID is in object's dashboard/map list
     */
    public boolean hasDashboard(long dashboardId)
    {
       return dashboards.contains(dashboardId);
+   }
+
+   /**
+    * Check if this object has network map with given ID in its dashboard/map list
+    *
+    * @param mapId network map object ID to check
+    * @return true if provided network map object ID is in object's dashboard/map list
+    */
+   public boolean hasNetworkMap(long mapId)
+   {
+      return dashboards.contains(mapId);
    }
 
 	/**

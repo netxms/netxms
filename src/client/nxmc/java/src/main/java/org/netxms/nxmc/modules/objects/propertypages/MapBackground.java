@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -77,7 +77,6 @@ public class MapBackground extends ObjectPropertyPage
 	private ColorSelector backgroundColor;
 	private boolean disableGeolocationBackground;
 
-	
 	/**
 	 * Constructor 
 	 * 
@@ -94,7 +93,7 @@ public class MapBackground extends ObjectPropertyPage
    @Override
    public String getId()
    {
-      return "mapBackground";
+      return "map-background";
    }
 
    /**

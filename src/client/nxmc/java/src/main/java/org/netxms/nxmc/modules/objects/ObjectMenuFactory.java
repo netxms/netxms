@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -74,6 +74,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.views.AdHocDashboardView;
 import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
 import org.netxms.nxmc.modules.datacollection.api.GraphTemplateCache;
+import org.netxms.nxmc.modules.networkmaps.views.AdHocPredefinedMapView;
 import org.netxms.nxmc.modules.objects.views.ObjectPollerView;
 import org.netxms.nxmc.modules.objecttools.ObjectToolExecutor;
 import org.netxms.nxmc.modules.objecttools.ObjectToolsCache;
@@ -142,6 +143,7 @@ public final class ObjectMenuFactory
       }
       else if (object instanceof NetworkMap)
       {
+         addPollMenuItem(menu, object, contextId, ObjectPollType.AUTOBIND, viewPlacement);
          addPollMenuItem(menu, object, contextId, ObjectPollType.MAP_UPDATE, viewPlacement);
       }
       else if (object instanceof Sensor)
@@ -278,7 +280,7 @@ public final class ObjectMenuFactory
    }
 
    /**
-    * Create tools menu for given selection of objects
+    * Create dashboard menu for given selection of objects
     *
     * @param selection selection of objects
     * @param parentMenu parent menu
@@ -291,15 +293,8 @@ public final class ObjectMenuFactory
          return null;
 
       final AbstractObject object = (AbstractObject)selection.getFirstElement();
-      if (!(object instanceof Condition) &&
-          !(object instanceof Container) &&
-          !(object instanceof DataCollectionTarget) &&
-          !(object instanceof EntireNetwork) &&
-          !(object instanceof Rack) &&
-          !(object instanceof ServiceRoot) && 
-          !(object instanceof Subnet) &&
-          !(object instanceof WirelessDomain) &&
-          !(object instanceof Zone))
+      if (!(object instanceof Condition) && !(object instanceof Container) && !(object instanceof DataCollectionTarget) && !(object instanceof EntireNetwork) && !(object instanceof Rack) &&
+            !(object instanceof ServiceRoot) && !(object instanceof Subnet) && !(object instanceof WirelessDomain) && !(object instanceof Zone))
          return null;
 
       final Menu dashboardsMenu = (parentMenu != null) ? new Menu(parentMenu) : new Menu(parentControl);
@@ -331,6 +326,65 @@ public final class ObjectMenuFactory
       }
 
       return dashboardsMenu;
+   }
+
+   /**
+    * Create map menu for given selection of objects
+    *
+    * @param selection selection of objects
+    * @param parentMenu parent menu
+    * @param viewPlacement view placement (can be used for displaying messages and selecting perspective for new views)
+    * @return newly constructed menu
+    */
+   public static Menu createMapsMenu(IStructuredSelection selection, long contextId, Menu parentMenu, Control parentControl, final ViewPlacement viewPlacement)
+   {
+      if (selection.size() > 1)
+         return null;
+
+      final AbstractObject object = (AbstractObject)selection.getFirstElement();
+      if (!(object instanceof Condition) &&
+          !(object instanceof Container) &&
+          !(object instanceof DataCollectionTarget) &&
+          !(object instanceof EntireNetwork) &&
+          !(object instanceof Rack) &&
+          !(object instanceof ServiceRoot) && 
+          !(object instanceof Subnet) &&
+          !(object instanceof WirelessDomain) &&
+          !(object instanceof Zone))
+         return null;
+
+      final Menu mapsMenu = (parentMenu != null) ? new Menu(parentMenu) : new Menu(parentControl);
+
+      List<AbstractObject> maps = object.getNetworkMaps(true);
+      if (maps.isEmpty())
+         return null;
+
+      // If context ID is not set that menas we are in context of selected object
+      final long effectiveContextId = (contextId == 0) ? object.getObjectId() : contextId;
+
+      Collections.sort(maps, (o1, o2) -> o1.getObjectName().compareToIgnoreCase(o2.getObjectName()));
+
+      for(AbstractObject m : maps)
+      {
+         final MenuItem item = new MenuItem(mapsMenu, SWT.PUSH);
+         item.setText(m.getObjectName());
+         item.setData(m.getObjectId());
+         item.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               viewPlacement.openView(new AdHocPredefinedMapView(effectiveContextId, (NetworkMap)m));
+            }
+         });
+      }
+
+      if (mapsMenu.getItemCount() == 0)
+      {
+         mapsMenu.dispose();
+         return null;
+      }
+
+      return mapsMenu;
    }
 
    /**

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,8 +58,9 @@ import org.netxms.nxmc.modules.objects.propertypages.LocationControl;
 import org.netxms.nxmc.modules.objects.propertypages.MQTT;
 import org.netxms.nxmc.modules.objects.propertypages.MapAppearance;
 import org.netxms.nxmc.modules.objects.propertypages.MapBackground;
+import org.netxms.nxmc.modules.objects.propertypages.MapObjectContext;
 import org.netxms.nxmc.modules.objects.propertypages.MapObjectFilter;
-import org.netxms.nxmc.modules.objects.propertypages.MapObjectLinkStylingScript;
+import org.netxms.nxmc.modules.objects.propertypages.MapLinkStylingScript;
 import org.netxms.nxmc.modules.objects.propertypages.MapOptions;
 import org.netxms.nxmc.modules.objects.propertypages.MapSeedNodes;
 import org.netxms.nxmc.modules.objects.propertypages.Modbus;
@@ -122,10 +123,11 @@ public class ObjectPropertiesManager
       pageClasses.add(Location.class);
       pageClasses.add(LocationControl.class);
       pageClasses.add(MapAppearance.class);
-      pageClasses.add(MapOptions.class);
       pageClasses.add(MapBackground.class);
+      pageClasses.add(MapLinkStylingScript.class);
+      pageClasses.add(MapObjectContext.class);
       pageClasses.add(MapObjectFilter.class);
-      pageClasses.add(MapObjectLinkStylingScript.class);
+      pageClasses.add(MapOptions.class);
       pageClasses.add(MapSeedNodes.class);
       pageClasses.add(Modbus.class);
       pageClasses.add(MQTT.class);

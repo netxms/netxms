@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2022-2024 Raden Solutions
+** Copyright (C) 2022-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,18 @@
 
 #include "nxdbmgr.h"
 #include <nxevent.h>
+
+/**
+ * Upgrade from 52.4 to 52.5
+ */
+static bool H_UpgradeFromV4()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE network_maps ADD display_priority integer")));
+   CHK_EXEC(SQLQuery(_T("UPDATE network_maps SET display_priority=0")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("network_maps"), _T("display_priority")));
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
 
 /**
  * Upgrade from 52.3 to 52.4
@@ -92,6 +104,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 4,  52, 5,  H_UpgradeFromV4  },
    { 3,  52, 4,  H_UpgradeFromV3  },
    { 2,  52, 3,  H_UpgradeFromV2  },
    { 1,  52, 2,  H_UpgradeFromV1  },

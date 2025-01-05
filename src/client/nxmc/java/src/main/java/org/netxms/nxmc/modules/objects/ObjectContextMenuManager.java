@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -742,25 +742,29 @@ public class ObjectContextMenuManager extends MenuManager
          add(new MenuContributionItem(i18n.tr("P&oll"), pollsMenu));
       }
 
-      final Menu graphTemplatesMenu = ObjectMenuFactory.createGraphTemplatesMenu(selection, contextId, getMenu(), null, new ViewPlacement(view));
-      if (graphTemplatesMenu != null)
-      {
-         add(new Separator());
-         add(new MenuContributionItem(i18n.tr("&Graphs"), graphTemplatesMenu));
-      }
-
+      add(new Separator());
       final Menu summaryTableMenu = ObjectMenuFactory.createSummaryTableMenu(selection, contextId, getMenu(), null, new ViewPlacement(view));
       if (summaryTableMenu != null)
       {
-         add(new Separator());
          add(new MenuContributionItem(i18n.tr("S&ummary tables"), summaryTableMenu));
+      }
+
+      final Menu graphTemplatesMenu = ObjectMenuFactory.createGraphTemplatesMenu(selection, contextId, getMenu(), null, new ViewPlacement(view));
+      if (graphTemplatesMenu != null)
+      {
+         add(new MenuContributionItem(i18n.tr("&Graphs"), graphTemplatesMenu));
       }
 
       final Menu dashboardsMenu = ObjectMenuFactory.createDashboardsMenu(selection, contextId, getMenu(), null, new ViewPlacement(view));
       if (dashboardsMenu != null)
       {
-         add(new Separator());
          add(new MenuContributionItem(i18n.tr("&Dashboards"), dashboardsMenu));
+      }
+
+      final Menu mapsMenu = ObjectMenuFactory.createMapsMenu(selection, contextId, getMenu(), null, new ViewPlacement(view));
+      if (mapsMenu != null)
+      {
+         add(new MenuContributionItem(i18n.tr("Network &maps"), mapsMenu));
       }
 
       if (actionCloneNetworkMap.isValidForSelection(selection))

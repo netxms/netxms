@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -197,8 +197,8 @@ bool Cluster::saveToDatabase(DB_HANDLE hdb)
 
    if (success && (m_modified & MODIFY_OTHER))
    {
-      static const TCHAR *columns[] = { _T("cluster_type"), _T("zone_guid"), nullptr };
-      DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("clusters"), _T("id"), m_id, columns);
+      static const wchar_t *columns[] = { L"cluster_type", L"zone_guid", nullptr };
+      DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"clusters", L"id", m_id, columns);
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_clusterType);
@@ -216,10 +216,10 @@ bool Cluster::saveToDatabase(DB_HANDLE hdb)
    if (success && (m_modified & MODIFY_RELATIONS))
    {
 		// Save cluster members list
-      success = executeQueryOnObject(hdb, _T("DELETE FROM cluster_members WHERE cluster_id=?"));
+      success = executeQueryOnObject(hdb, L"DELETE FROM cluster_members WHERE cluster_id=?");
       if (success)
       {
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO cluster_members (cluster_id,node_id) VALUES (?,?)"));
+         DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO cluster_members (cluster_id,node_id) VALUES (?,?)");
          if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
