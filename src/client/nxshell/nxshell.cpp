@@ -83,34 +83,28 @@ static int StartApp(int argc, char *argv[])
       snprintf(buffer, 256, "-Dnetxms.login=%s", s_optUser);
       vmOptions.addMBString(buffer);
 
-      if (s_optPassword == nullptr)
+      if (s_optPassword != nullptr)
       {
-         TCHAR prompt[256], passwordBuffer[256];
-         _sntprintf(prompt, 256, _T("%hs@%hs password: "), s_optUser, s_optHost);
-         if (ReadPassword(prompt, passwordBuffer, 256))
-         {
-#ifdef UNICODE
-            s_optPassword = MBStringFromWideString(passwordBuffer);
-#else
-            s_optPassword = MemCopyStringA(passwordBuffer);
-#endif
-         }
-         else
-         {
-            s_optPassword = "";
-         }
+         char clearPassword[128];
+         DecryptPasswordA(s_optUser, s_optPassword, clearPassword, 128);
+         snprintf(buffer, 256, "-Dnetxms.password=%s", clearPassword);
+         vmOptions.addMBString(buffer);
       }
-
-      char clearPassword[128];
-      DecryptPasswordA(s_optUser, s_optPassword, clearPassword, 128);
-      snprintf(buffer, 256, "-Dnetxms.password=%s", clearPassword);
-      vmOptions.addMBString(buffer);
    }
 
    if (s_optPropertiesFile != nullptr)
    {
       snprintf(buffer, 256, "-Dnxshell.properties=%s", s_optPropertiesFile);
       vmOptions.addMBString(buffer);
+      if (access(s_optPropertiesFile, R_OK) != 0)
+      {
+         WriteToTerminalEx(_T("WARNING: property file \"%hs\" cannot be accessed (%s)\n"), s_optPropertiesFile, _tcserror(errno));
+      }
+   }
+
+   if (isatty(fileno(stdin)) && isatty(fileno(stdout)))
+   {
+      vmOptions.addMBString("-Dnxshell.interactive=true");
    }
 
    int debugLevel = nxlog_get_debug_level();
