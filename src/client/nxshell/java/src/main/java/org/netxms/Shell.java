@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,7 +78,13 @@ public class Shell
    {
       initJython(args);
 
-      readCredentials((args.length == 0) && isInteractive());
+      if (!isInteractive())
+      {
+         PySystemState systemState = Py.getSystemState();
+         systemState.ps1 = systemState.ps2 = Py.EmptyString;
+      }
+
+      readCredentials();
 
       final NXCSession session = connect();
 
@@ -103,7 +109,7 @@ public class Shell
    /**
     * @param interactive
     */
-   private void readCredentials(boolean interactive)
+   private void readCredentials()
    {
       optServer = configuration.getProperty("netxms.server");
       optPort = configuration.getProperty("netxms.port");
@@ -111,7 +117,7 @@ public class Shell
       optPassword = configuration.getProperty("netxms.password");
       optToken = configuration.getProperty("netxms.token");
 
-      if (interactive)
+      if (isInteractive())
       {
          final Console console = System.console();
          if (optServer == null)
@@ -234,15 +240,11 @@ public class Shell
    /**
     * @return
     */
-   protected boolean isInteractive()
+   private boolean isInteractive()
    {
-      PySystemState systemState = Py.getSystemState();
-      boolean interactive = ((PyFile)Py.defaultSystemState.stdin).isatty();
-      if (!interactive)
-      {
-         systemState.ps1 = systemState.ps2 = Py.EmptyString;
-      }
-      return interactive;
+      if (System.getProperties().getProperty("nxshell.interactive") != null)
+         return true;
+      return ((PyFile)Py.defaultSystemState.stdin).isatty();
    }
 
    /**
