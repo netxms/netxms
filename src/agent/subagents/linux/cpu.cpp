@@ -37,12 +37,12 @@ static Mutex s_cpuUsageMutex(MutexType::FAST);
 static void CpuUsageCollectorThread()
 {
    nxlog_debug_tag(DEBUG_TAG, 3, _T("CPU usage collector thread started"));
-   while(!AgentSleepAndCheckForShutdown(1000))
+   do
    {
       s_cpuUsageMutex.lock();
       s_collector.collect();
       s_cpuUsageMutex.unlock();
-   }
+   } while(!AgentSleepAndCheckForShutdown(1000));
    nxlog_debug_tag(DEBUG_TAG, 3, _T("CPU usage collector thread stopped"));
 }
 
