@@ -155,7 +155,7 @@ static int CheckService(AgentConnection *pConn, int serviceType, const InetAddre
  */
 static int ListParameters(AgentConnection *pConn)
 {
-   static const TCHAR *DataType[] = { _T("INT"), _T("UINT"), _T("INT64"), _T("UINT64"), _T("STRING"), _T("FLOAT"), _T("UNKNOWN") };
+   static const TCHAR *dataType[] = { _T("INT"), _T("UINT"), _T("INT64"), _T("UINT64"), _T("STRING"), _T("FLOAT"), _T("NULL"), _T("COUNTER32"), _T("COUNTER64"), _T("UNKNOWN") };
 
    ObjectArray<AgentParameterDefinition> *paramList;
    ObjectArray<AgentTableDefinition> *tableList;
@@ -166,7 +166,7 @@ static int ListParameters(AgentConnection *pConn)
       {
 			AgentParameterDefinition *p = paramList->get(i);
          WriteToTerminalEx(_T("%s %s \"%s\"\n"), p->getName(),
-            DataType[(p->getDataType() < 6) && (p->getDataType() >= 0) ? p->getDataType() : 6],
+            dataType[(p->getDataType() < 9) && (p->getDataType() >= 0) ? p->getDataType() : 9],
             p->getDescription());
       }
       delete paramList;
