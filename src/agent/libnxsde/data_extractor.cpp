@@ -369,7 +369,7 @@ void StructuredDataParser::getParamsFromText(StringList *params, NXCPMessage *re
  */
 uint32_t StructuredDataParser::getParamsFromText(const TCHAR *pattern, TCHAR *buffer, size_t size)
 {
-   StringList *dataLines = String::split(m_content.text, _tcslen(m_content.text), _T("\n"));
+   unique_ptr<StringList> dataLines = unique_ptr<StringList>(String::split(m_content.text, _tcslen(m_content.text), _T("\n")));
    nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataParser::getParamsFromText(%s): using pattern \"%s\""), m_source, pattern);
 
    const char *eptr;
@@ -378,7 +378,6 @@ uint32_t StructuredDataParser::getParamsFromText(const TCHAR *pattern, TCHAR *bu
    if (compiledPattern == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("StructuredDataParser::getParamsFromText(%s): \"%s\" pattern compilation failure: %hs at offset %d"), m_source, pattern, eptr, eoffset);
-      delete dataLines;
       return SYSINFO_RC_UNSUPPORTED;
    }
 
@@ -404,7 +403,6 @@ uint32_t StructuredDataParser::getParamsFromText(const TCHAR *pattern, TCHAR *bu
    }
 
    _pcre_free_t(compiledPattern);
-   delete dataLines;
    return rc;
 }
 
@@ -433,7 +431,6 @@ uint32_t StructuredDataParser::getParams(StringList *params, NXCPMessage *respon
          break;
       default:
          nxlog_debug_tag(DEBUG_TAG, 4, _T("StructuredDataParser::getParams(%s): no data available"), m_source);
-         result = SYSINFO_RC_ERROR;
          break;
    }
    return result;
@@ -531,7 +528,7 @@ uint32_t StructuredDataParser::getListFromText(const TCHAR *pattern, StringList 
                memcpy(matchedString, &dataLine[fields[2]], (captureSize) * sizeof(TCHAR));
                matchedString[captureSize] = 0;
                nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataParser::getListFromText(%s): data match: \"%s\""), m_source, matchedString);
-               resultList->add(matchedString);
+               resultList->addPreallocated(matchedString);
             }
          }
       }
@@ -552,35 +549,64 @@ uint32_t StructuredDataParser::getListFromText(const TCHAR *pattern, StringList 
  * Get list from cached data
  * If path is empty: "/" will be used for XML and JSOn types and "(*)" will be used for text type
  */
-uint32_t StructuredDataParser::getList(const TCHAR *path, NXCPMessage *response)
+uint32_t StructuredDataParser::getListInternal(const TCHAR *path, StringList *result)
 {
-   uint32_t result = ERR_SUCCESS;
-   StringList list;
+   uint32_t rc = ERR_SUCCESS;
    const TCHAR *correctPath = (path[0] != 0) ? path : ((m_type == DocumentType::TEXT) ? _T("(.*)") : _T("/"));
    switch(m_type)
    {
       case DocumentType::XML:
          nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataParser::getList(%s): get list from XML"), m_source);
-         getListFromXML(correctPath, &list);
+         getListFromXML(correctPath, result);
          break;
       case DocumentType::JSON:
          nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataParser::getList(%s): get list from JSON"), m_source);
-         getListFromJSON(correctPath, &list);
+         getListFromJSON(correctPath, result);
 #ifndef HAVE_LIBJQ
          result = ERR_FUNCTION_NOT_SUPPORTED;
 #endif
          break;
       case DocumentType::TEXT:
          nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataParser::getList(%s): get list from TEXT"), m_source);
-         result = getListFromText(correctPath, &list);
+         rc = getListFromText(correctPath, result);
          break;
       default:
          nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataParser::getList(%s): unsupported document type"), m_source);
-         result = ERR_NOT_IMPLEMENTED;
+         rc = ERR_NOT_IMPLEMENTED;
          break;
    }
+   return rc;
+}
+
+/**
+ * Get list from cached data
+ * If path is empty: "/" will be used for XML and JSOn types and "(*)" will be used for text type
+ */
+uint32_t StructuredDataParser::getList(const TCHAR *path, NXCPMessage *response)
+{
+   StringList list;
+   uint32_t result = getListInternal(path, &list);
    list.fillMessage(response, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
    return result;
+}
+
+/**
+ * Get list from cached data
+ * If path is empty: "/" will be used for XML and JSOn types and "(*)" will be used for text type
+ */
+uint32_t StructuredDataParser::getList(const TCHAR *path, StringList *result)
+{
+   uint32_t rc = getListInternal(path, result);
+   switch (rc)
+   {
+      case ERR_SUCCESS:
+         return SYSINFO_RC_SUCCESS;
+      case ERR_FUNCTION_NOT_SUPPORTED:
+         return SYSINFO_RC_NO_SUCH_INSTANCE;
+      case ERR_NOT_IMPLEMENTED:
+      default:
+         return SYSINFO_RC_ERROR;
+   }
 }
 
 uint32_t StructuredDataParser::updateContent(const char *text, uint32_t size, bool forcePlainTextParser, const TCHAR *id)

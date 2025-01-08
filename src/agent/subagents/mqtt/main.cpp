@@ -66,15 +66,16 @@ static LONG H_BrokersTable(const TCHAR *param, const TCHAR *arg, Table *value, A
 /**
  * Add brokers and parameters from config
  */
-static void RegisterBrokers(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Config *config)
+static void RegisterBrokers(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, StructArray<NETXMS_SUBAGENT_LIST> *lists, Config *config)
 {
    int initialParameterCount = parameters->size();
+   int initialListCount = lists->size();
    unique_ptr<ObjectArray<ConfigEntry>> brokers = config->getSubEntries(_T("/MQTT/Brokers"), _T("*"));
    if (brokers != nullptr)
    {
       for(int i = 0; i < brokers->size(); i++)
       {
-         MqttBroker *b = MqttBroker::createFromConfig(brokers->get(i), parameters);
+         MqttBroker *b = MqttBroker::createFromConfig(brokers->get(i), parameters, lists);
          if (b != nullptr)
          {
             s_brokers.add(b);
@@ -85,7 +86,7 @@ static void RegisterBrokers(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Conf
          }
       }
    }
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("%d MQTT parameters added from configuration"), parameters->size() - initialParameterCount);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("%d MQTT parameters and %d MQTT lists added from configuration"), parameters->size() - initialParameterCount, lists->size() - initialListCount);
 }
 
 /**
@@ -205,10 +206,14 @@ DECLARE_SUBAGENT_ENTRY_POINT(MQTT)
    p->dataType = DCI_DT_STRING;
    p->handler = H_TopicValue;
 
-   RegisterBrokers(&parameters, config);
+   StructArray<NETXMS_SUBAGENT_LIST> lists;
+
+   RegisterBrokers(&parameters, &lists, config);
 
    s_info.numParameters = parameters.size();
    s_info.parameters = MemCopyArray(parameters.getBuffer(), parameters.size());
+   s_info.numLists = lists.size();
+   s_info.lists = MemCopyArray(lists.getBuffer(), lists.size());
 
 	*ppInfo = &s_info;
 	return true;

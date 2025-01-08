@@ -12,4 +12,4 @@ if USE_LIBJQ
 libnxsde_la_LIBADD += -ljq
 endif
 
-EXTRA_DIST = libnxasde.h 
+EXTRA_DIST = libnxsde.h 

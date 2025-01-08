@@ -30,6 +30,7 @@ Topic::Topic(const TCHAR *pattern, const TCHAR *event)
    m_lastValue[0] = 0;
    m_timestamp = 0;
    m_parameters = nullptr;
+   m_lists = nullptr;
    m_dataParser = nullptr;
    m_parseAsText = false;
 }
@@ -45,6 +46,7 @@ Topic::Topic(const char *pattern)
    m_lastValue[0] = 0;
    m_timestamp = 0;
    m_parameters = nullptr;
+   m_lists = nullptr;
    m_dataParser = nullptr;
    m_parseAsText = false;
 }
@@ -60,6 +62,7 @@ Topic::Topic(const TCHAR *pattern, const TCHAR *name, bool parseAsText)
    m_lastValue[0] = 0;
    m_timestamp = 0;
    m_parameters = nullptr;
+   m_lists = nullptr;
    m_dataParser = new StructuredDataParser(pattern);
    m_parseAsText = parseAsText;
    _tcsncpy(m_genericParamName, name, MAX_PARAM_NAME);
@@ -75,6 +78,7 @@ Topic::~Topic()
    MemFree(m_event);
    delete m_dataParser;
    delete m_parameters;
+   delete m_lists;
 }
 
 /**
@@ -147,18 +151,37 @@ LONG Topic::retrieveData(const TCHAR *metricName, TCHAR *buffer, size_t bufferLe
    const TCHAR *query = m_parameters->get(metricName);
    if (query != nullptr)
    {
-      TCHAR result[MAX_RESULT_LENGTH];
-      rc = m_dataParser->getParams(query, result, MAX_RESULT_LENGTH);
-      if (rc == SYSINFO_RC_SUCCESS)
-      {
-         _tcslcpy(buffer, result, MAX_RESULT_LENGTH);
-      }
+      rc = m_dataParser->getParams(query, buffer, MAX_RESULT_LENGTH);
    }
    else if (MatchString(m_genericParamName, metricName, false))
    {
       TCHAR query[1024];
       AgentGetParameterArg(metricName, 1, query, 1024);
       rc = m_dataParser->getParams(query, buffer, MAX_RESULT_LENGTH);
+   }
+
+   m_mutex.unlock();
+   return rc;
+}
+
+/**
+ * Get topic data as structured list data
+ */
+LONG Topic::retrieveListData(const TCHAR *metricName, StringList *buffer)
+{
+   LONG rc = SYSINFO_RC_UNKNOWN;
+   m_mutex.lock();
+
+   const TCHAR *query = m_lists->get(metricName);
+   if (query != nullptr)
+   {
+      rc = m_dataParser->getList(query, buffer);
+   }
+   else if (MatchString(m_genericParamName, metricName, false))
+   {
+      TCHAR query[1024];
+      AgentGetParameterArg(metricName, 1, query, 1024);
+      rc = m_dataParser->getList(query, buffer);
    }
 
    m_mutex.unlock();

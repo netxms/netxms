@@ -102,6 +102,8 @@ protected:
    void getListFromJSON(const TCHAR *path, StringList *result);
    uint32_t getListFromText(const TCHAR *pattern, StringList *result);
 
+   uint32_t getListInternal(const TCHAR *path, StringList *result);
+
 public:
    StructuredDataParser(const TCHAR *debugTag);
    virtual ~StructuredDataParser()
@@ -112,6 +114,7 @@ public:
    uint32_t getParams(StringList *params, NXCPMessage *response);
    uint32_t getParams(const TCHAR *query, TCHAR *buffer, size_t size);
    uint32_t getList(const TCHAR *path, NXCPMessage *response);
+   uint32_t getList(const TCHAR *path, StringList *result);
    const char *getResponseData() const { return m_responseData; }
    bool isDataExpired(uint32_t retentionTime) { return (time(nullptr) - m_lastRequestTime) >= retentionTime; }
    uint32_t updateContent(const char *text, uint32_t size, bool forcePlainTextParser, const TCHAR *id);

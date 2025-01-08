@@ -637,6 +637,7 @@ static LONG H_ListOfLists(const TCHAR *cmd, const TCHAR *arg, StringList *value,
 {
    for(int i = 0; i < s_lists.size(); i++)
       value->add(s_lists.get(i)->name);
+   ListListsFromExtProviders(value);
    ListListsFromExtSubagents(value);
    return SYSINFO_RC_SUCCESS;
 }
@@ -1001,8 +1002,31 @@ bool AddExternalStructuredDataProvider(ConfigEntry *config)
       }
    }
 
+   StringObjectMap<StructuredExtractorParameterDefinition> *listDefenitions = new StringObjectMap<StructuredExtractorParameterDefinition>(Ownership::True);
+   const ConfigEntry *listRoot = config->findEntry(_T("Lists"));
+   if (listRoot != nullptr)
+   {
+      unique_ptr<ObjectArray<ConfigEntry>> metrics = listRoot->getSubEntries(_T("*"));
+      for(int i = 0; i < metrics->size(); i++)
+      {
+         ConfigEntry *e = metrics->get(i);
+         String name = e->getName();
+         if (name.endsWith(_T(".description")))
+         {
+            continue;
+         }
+
+         TCHAR tmp[512];
+         _tcscpy(tmp, name);
+         _tcscat(tmp, _T(".description"));
+         const TCHAR *description = metricRoot->getSubEntryValue(tmp, 0 , _T(""));
+
+         listDefenitions->set(e->getName(), new StructuredExtractorParameterDefinition(e->getValue(), description, DCI_DT_STRING));
+      }
+   }
+
    AddStructuredMetricProvider(config->getName(), command,
-      metricDefenitions,
+      metricDefenitions, listDefenitions,
       config->getSubEntryValueAsBoolean(_T("forcePlainTextParser"), false),
       config->getSubEntryValueAsUInt(_T("PollingInterval"), 0, 60),
       config->getSubEntryValueAsUInt(_T("Timeout"), 0, 0),
@@ -1193,6 +1217,41 @@ uint32_t GetListValue(const TCHAR *param, StringList *value, AbstractCommSession
       }
 	}
 
+   if (errorCode == ERR_UNKNOWN_METRIC)
+   {
+      LONG rc = GetListValueFromExtProvider(param, value);
+      switch(rc)
+      {
+         case SYSINFO_RC_SUCCESS:
+            errorCode = ERR_SUCCESS;
+            InterlockedIncrement(&s_processedRequests);
+            break;
+         case SYSINFO_RC_ACCESS_DENIED:
+            errorCode = ERR_ACCESS_DENIED;
+            InterlockedIncrement(&s_failedRequests);
+            break;
+         case SYSINFO_RC_ERROR:
+            errorCode = ERR_INTERNAL_ERROR;
+            InterlockedIncrement(&s_failedRequests);
+            break;
+         case SYSINFO_RC_NO_SUCH_INSTANCE:
+            errorCode = ERR_NO_SUCH_INSTANCE;
+            InterlockedIncrement(&s_failedRequests);
+            break;
+         case SYSINFO_RC_UNSUPPORTED:
+            errorCode = ERR_UNSUPPORTED_METRIC;
+            InterlockedIncrement(&s_unsupportedRequests);
+            break;
+         case SYSINFO_RC_UNKNOWN:
+            break;
+         default:
+            nxlog_write(NXLOG_ERROR, _T("Internal error: unexpected return code %d in GetListValueFromExtProvider(\"%s\")"), rc, param);
+            errorCode = ERR_INTERNAL_ERROR;
+            InterlockedIncrement(&s_failedRequests);
+            break;
+      }
+   }
+
 	if (errorCode == ERR_UNKNOWN_METRIC)
    {
 		errorCode = GetListValueFromExtSubagent(param, value);
@@ -1367,6 +1426,7 @@ void GetParameterList(NXCPMessage *msg)
    {
       msg->setField(fieldId++, s_lists.get(i)->name);
    }
+   ListListsFromExtProviders(msg, &fieldId, &count);
 	ListListsFromExtSubagents(msg, &fieldId, &count);
    msg->setField(VID_NUM_ENUMS, count);
 
