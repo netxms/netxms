@@ -36,11 +36,19 @@ static LONG H_TopicData(const TCHAR *name, const TCHAR *arg, TCHAR *result, Abst
 }
 
 /**
- * Topic parameter handler
+ * Topic structured parameter handler
  */
 static LONG H_TopicStructuredData(const TCHAR *name, const TCHAR *arg, TCHAR *result, AbstractCommSession *session)
 {
    return ((Topic*)arg)->retrieveData(name, result, MAX_RESULT_LENGTH);
+}
+
+/**
+ * Topic structured list handler
+ */
+static LONG H_TopicStructuredListData(const TCHAR *name, const TCHAR *arg, StringList *result, AbstractCommSession *session)
+{
+   return ((Topic*)arg)->retrieveListData(name, result);
 }
 
 /**
@@ -90,7 +98,7 @@ MqttBroker::~MqttBroker()
 /**
  * Create broker object from configuration
  */
-MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<NETXMS_SUBAGENT_PARAM> *parameters)
+MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<NETXMS_SUBAGENT_PARAM> *parameters, StructArray<NETXMS_SUBAGENT_LIST> *lists)
 {
    MqttBroker *broker = new MqttBroker(uuid::generate(), config->getName());
    if (broker->m_handle == nullptr)
@@ -206,6 +214,52 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
             }
          }
          t->setExtractors(metricDefenitions);
+
+         NETXMS_SUBAGENT_LIST l;
+         memset(&l, 0, sizeof(NETXMS_SUBAGENT_LIST));
+         _tcslcpy(l.name, t->getGenericParameterName(), MAX_PARAM_NAME);
+         l.arg = (const TCHAR *)t;
+         l.handler = H_TopicStructuredListData;
+         if (description != nullptr)
+            _tcslcpy(l.description, description, MAX_DB_STRING);
+         else
+            _sntprintf(l.description, MAX_DB_STRING, _T("MQTT topic %s"), topic);
+         lists->add(&l);
+
+         StringMap *listDefenitions = new StringMap();
+         metricRoot = extractor->findEntry(_T("Lists"));
+         if (metricRoot != nullptr)
+         {
+            unique_ptr<ObjectArray<ConfigEntry>> metrics = metricRoot->getSubEntries(_T("*"));
+            for(int i = 0; i < metrics->size(); i++)
+            {
+               ConfigEntry *e = metrics->get(i);
+               String name = e->getName();
+               if (name.endsWith(_T(".description")))
+               {
+                  continue;
+               }
+
+               TCHAR tmp[512];
+               _tcscpy(tmp, name);
+               _tcscat(tmp, _T(".description"));
+               const TCHAR *description = metricRoot->getSubEntryValue(tmp, 0 , _T(""));
+
+               listDefenitions->set(e->getName(), e->getValue());
+
+               NETXMS_SUBAGENT_LIST l;
+               memset(&l, 0, sizeof(NETXMS_SUBAGENT_LIST));
+               _tcslcpy(l.name, e->getName(), MAX_PARAM_NAME);
+               l.arg = (const TCHAR *)t;
+               l.handler = H_TopicStructuredListData;
+               if (description != nullptr)
+                  _tcslcpy(l.description, description, MAX_DB_STRING);
+               else
+                  _sntprintf(l.description, MAX_DB_STRING, _T("MQTT topic %s"), topic);
+               lists->add(&l);
+            }
+         }
+         t->setListExtractors(listDefenitions);
       }
    }
 

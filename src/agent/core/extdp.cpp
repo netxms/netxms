@@ -55,10 +55,13 @@ public:
 
    virtual void listParameters(NXCPMessage *msg, uint32_t *baseId, uint32_t *count) { }
    virtual void listParameters(StringList *list) { }
+   virtual void listLists(NXCPMessage *msg, uint32_t *baseId, uint32_t *count) { }
+   virtual void listLists(StringList *list) { }
    virtual void listTables(NXCPMessage *msg, uint32_t *baseId, uint32_t *count) { }
    virtual void listTables(StringList *list) { }
 
    virtual LONG getValue(const TCHAR *name, TCHAR *buffer) { return SYSINFO_RC_UNKNOWN; }
+   virtual LONG getList(const TCHAR *name, StringList *value) { return SYSINFO_RC_UNKNOWN; }
    virtual LONG getTableValue(const TCHAR *name, Table *table) { return SYSINFO_RC_UNKNOWN; }
 
    void init();
@@ -390,6 +393,7 @@ protected:
    TCHAR m_genericParamName[MAX_PARAM_NAME];
    String m_description;
    StringObjectMap<StructuredExtractorParameterDefinition> *m_parameters;
+   StringObjectMap<StructuredExtractorParameterDefinition> *m_lists;
    StructuredDataParser m_data;
    bool m_forcePlainTextParser;
 
@@ -397,23 +401,33 @@ protected:
    virtual void processPollResults() override;
 
 public:
-   StructuredMetricProvider(const TCHAR *name, const TCHAR *command, StringObjectMap<StructuredExtractorParameterDefinition> *metricDefenitions, bool forcePlainTextParser, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description);
+   StructuredMetricProvider(const TCHAR *name, const TCHAR *command,
+      StringObjectMap<StructuredExtractorParameterDefinition> *metricDefenitions,
+      StringObjectMap<StructuredExtractorParameterDefinition> *listDefinitions,
+      bool forcePlainTextParser, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description);
    virtual ~StructuredMetricProvider();
 
    virtual void listParameters(NXCPMessage *msg, uint32_t *baseId, uint32_t *count) override;
    virtual void listParameters(StringList *list) override;
+   virtual void listLists(NXCPMessage *msg, uint32_t *baseId, uint32_t *count) override;
+   virtual void listLists(StringList *list) override;
 
    virtual LONG getValue(const TCHAR *name, TCHAR *buffer) override;
+   virtual LONG getList(const TCHAR *name, StringList *value) override;
 };
 
 /**
  * Constructor
  */
-StructuredMetricProvider::StructuredMetricProvider(const TCHAR *name, const TCHAR *command, StringObjectMap<StructuredExtractorParameterDefinition> *metricDefenitions, bool forcePlainTextParser, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description) :
+StructuredMetricProvider::StructuredMetricProvider(const TCHAR *name, const TCHAR *command,
+                                             StringObjectMap<StructuredExtractorParameterDefinition> *metricDefenitions,
+                                             StringObjectMap<StructuredExtractorParameterDefinition> *listDefinitions,
+                                             bool forcePlainTextParser, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description) :
          ExternalDataProvider(command, pollingInterval, timeout), m_name(name), m_description(description), m_data(name)
 {
    m_forcePlainTextParser = forcePlainTextParser;
    m_parameters = metricDefenitions;
+   m_lists = listDefinitions;
    _tcslcpy(m_genericParamName, name, MAX_PARAM_NAME);
    _tcslcat(m_genericParamName, _T("(*)"), MAX_PARAM_NAME);
 }
@@ -424,6 +438,7 @@ StructuredMetricProvider::StructuredMetricProvider(const TCHAR *name, const TCHA
 StructuredMetricProvider::~StructuredMetricProvider()
 {
    delete m_parameters;
+   delete m_lists;
 }
 
 /**
@@ -458,18 +473,37 @@ LONG StructuredMetricProvider::getValue(const TCHAR *name, TCHAR *buffer)
    StructuredExtractorParameterDefinition *defenition = m_parameters->get(name);
    if (defenition != nullptr)
    {
-      TCHAR result[MAX_RESULT_LENGTH];
-      rc = m_data.getParams(defenition->query, result, MAX_RESULT_LENGTH);
-      if (rc == SYSINFO_RC_SUCCESS)
-      {
-         _tcslcpy(buffer, result, MAX_RESULT_LENGTH);
-      }
+      rc = m_data.getMetric(defenition->query, buffer, MAX_RESULT_LENGTH);
    }
    else if (MatchString(m_genericParamName, name, false))
    {
       TCHAR query[1024];
       AgentGetParameterArg(name, 1, query, 1024);
-      rc = m_data.getParams(query, buffer, MAX_RESULT_LENGTH);
+      rc = m_data.getMetric(query, buffer, MAX_RESULT_LENGTH);
+   }
+
+   unlock();
+   return rc;
+}
+
+/**
+ * Get list's value
+ */
+LONG StructuredMetricProvider::getList(const TCHAR *name, StringList *value)
+{
+   lock();
+
+   LONG rc = SYSINFO_RC_UNKNOWN;
+   StructuredExtractorParameterDefinition *defenition = m_lists->get(name);
+   if (defenition != nullptr)
+   {
+      rc = m_data.getList(defenition->query, value);
+   }
+   else if (MatchString(m_genericParamName, name, false))
+   {
+      TCHAR query[1024];
+      AgentGetParameterArg(name, 1, query, 1024);
+      rc = m_data.getList(query, value);
    }
 
    unlock();
@@ -506,13 +540,38 @@ void StructuredMetricProvider::listParameters(NXCPMessage *msg, uint32_t *baseId
 void StructuredMetricProvider::listParameters(StringList *list)
 {
    lock();
-   m_parameters->forEach(
-      [list](const TCHAR *key, StructuredExtractorParameterDefinition *value)
-      {
-         list->add(key);
-         return _CONTINUE;
-      });
+   list->addAll(m_parameters->keys());
+   list->add(m_genericParamName);
+   unlock();
+}
 
+/**
+ * List available lists
+ */
+void StructuredMetricProvider::listLists(NXCPMessage *msg, uint32_t *baseId, uint32_t *count)
+{
+   lock();
+   m_lists->forEach(
+      [msg, baseId, count](const TCHAR *key, void *value)
+      {
+         msg->setField((*baseId)++, key);
+         (*count)++;
+         return _CONTINUE;
+
+      });
+   unlock();
+
+   msg->setField((*baseId)++, m_genericParamName);
+   (*count)++;
+}
+
+/**
+ * List available lists
+ */
+void StructuredMetricProvider::listLists(StringList *list)
+{
+   lock();
+   list->addAll(m_lists->keys());
    list->add(m_genericParamName);
    unlock();
 }
@@ -601,9 +660,9 @@ void AddTableProvider(const TCHAR *name, ExternalTableDefinition *definition, ui
 /**
  * Add new external table provider
  */
-void AddStructuredMetricProvider(const TCHAR *name, const TCHAR *command, StringObjectMap<StructuredExtractorParameterDefinition> *metricDefenitions, bool forcePlainTextParser, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description)
+void AddStructuredMetricProvider(const TCHAR *name, const TCHAR *command, StringObjectMap<StructuredExtractorParameterDefinition> *metricDefenitions, StringObjectMap<StructuredExtractorParameterDefinition> *listDefinitions, bool forcePlainTextParser, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description)
 {
-   s_providers.add(new StructuredMetricProvider(name, command, metricDefenitions, forcePlainTextParser, pollingInterval, timeout, description));
+   s_providers.add(new StructuredMetricProvider(name, command, metricDefenitions, listDefinitions, forcePlainTextParser, pollingInterval, timeout, description));
 }
 
 /**
@@ -622,6 +681,24 @@ LONG GetParameterValueFromExtProvider(const TCHAR *name, TCHAR *buffer)
 			break;
 	}
 	return rc;
+}
+
+/**
+ * Get list from provider
+ *
+ * @return SYSINFO_RC_SUCCESS or SYSINFO_RC_UNSUPPORTED
+ */
+LONG GetListValueFromExtProvider(const TCHAR *name, StringList *buffer)
+{
+   LONG rc = SYSINFO_RC_UNKNOWN;
+   for(int i = 0; i < s_providers.size(); i++)
+   {
+      ExternalDataProvider *p = s_providers.get(i);
+      rc = p->getList(name, buffer);
+      if (rc != SYSINFO_RC_UNKNOWN)
+         break;
+   }
+   return rc;
 }
 
 /**
@@ -662,6 +739,28 @@ void ListParametersFromExtProviders(StringList *list)
 	{
 		s_providers.get(i)->listParameters(list);
 	}
+}
+
+/**
+ * Add lists from external providers to NXCP message
+ */
+void ListListsFromExtProviders(NXCPMessage *msg, uint32_t *baseId, uint32_t *count)
+{
+   for(int i = 0; i < s_providers.size(); i++)
+   {
+      s_providers.get(i)->listLists(msg, baseId, count);
+   }
+}
+
+/**
+ * Add lists from external providers to string list
+ */
+void ListListsFromExtProviders(StringList *list)
+{
+   for(int i = 0; i < s_providers.size(); i++)
+   {
+      s_providers.get(i)->listLists(list);
+   }
 }
 
 /**

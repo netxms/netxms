@@ -58,6 +58,9 @@ public:
    uint32_t query(const TCHAR *url, uint16_t requestMethod, const char *requestData, const char *userName, const char *password,
          WebServiceAuthType authType, struct curl_slist *headers, bool verifyPeer, bool verifyHost, bool followLocation, bool forcePlainTextParser, uint32_t requestTimeout);
 
+   uint32_t getMetricSet(StringList *params, NXCPMessage *response);
+   uint32_t getList(const TCHAR *path, NXCPMessage *response);
+
    void lock() { m_mutex.lock(); }
    void unlock() { m_mutex.unlock(); }
 };
@@ -104,6 +107,58 @@ static long CurlAuthType(WebServiceAuthType authType)
       default:
          return CURLAUTH_ANY;
    }
+}
+
+/**
+ * Get parameters from cached data
+ */
+uint32_t WebServiceRequest::getMetricSet(StringList *params, NXCPMessage *response)
+{
+   uint32_t result = ERR_SUCCESS;
+   switch(m_type)
+   {
+      case DocumentType::XML:
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataParser::getParams(%s): get parameter from XML"), m_source);
+         getParamsFromXML(params, response);
+         break;
+      case DocumentType::JSON:
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataParser::getParams(%s): get parameter from JSON"), m_source);
+         getParamsFromJSON(params, response);
+#ifndef HAVE_LIBJQ
+         result = ERR_FUNCTION_NOT_SUPPORTED;
+#endif
+         break;
+      case DocumentType::TEXT:
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataParser::getParams(%s): get parameter from Text"), m_source);
+         getParamsFromText(params, response);
+         break;
+      default:
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("StructuredDataParser::getParams(%s): no data available"), m_source);
+         break;
+   }
+   return result;
+}
+
+/**
+ * Get list from cached data
+ */
+uint32_t WebServiceRequest::getList(const TCHAR *path, NXCPMessage *response)
+{
+   StringList list;
+   uint32_t rc = StructuredDataParser::getList(path, &list);
+   switch (rc)
+   {
+      case SYSINFO_RC_UNSUPPORTED:
+         rc = ERR_NOT_IMPLEMENTED;
+         break;
+      case SYSINFO_RC_SUCCESS:
+      default:
+         rc = ERR_SUCCESS;
+         break;
+   }
+
+   list.fillMessage(response, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
+   return rc;
 }
 
 /**
@@ -361,7 +416,7 @@ void QueryWebService(NXCPMessage* request, shared_ptr<AbstractCommSession> sessi
          case WebServiceRequestType::PARAMETER:
          {
             StringList params(*request, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);
-            result = serviceRequest->getParams(&params, &response);
+            result = serviceRequest->getMetricSet(&params, &response);
             break;
          }
          case WebServiceRequestType::LIST:

@@ -44,6 +44,7 @@ private:
    TCHAR *m_event;
    TCHAR m_genericParamName[MAX_PARAM_NAME];
    StringMap *m_parameters;
+   StringMap *m_lists;
    StructuredDataParser *m_dataParser;
    bool m_parseAsText;
    Mutex m_mutex;
@@ -59,10 +60,12 @@ public:
    const TCHAR *getGenericParameterName() { return m_genericParamName; }
 
    void setExtractors(StringMap *parameters) { m_parameters = parameters; }
+   void setListExtractors(StringMap *lists) { m_lists = lists; }
 
    void processMessage(const char *topic, const char *msg);
    bool retrieveData(TCHAR *buffer, size_t bufferLen);
    LONG retrieveData(const TCHAR *metricName, TCHAR *buffer, size_t bufferLen);
+   LONG retrieveListData(const TCHAR *metricName, StringList *buffer);
 };
 
 /**
@@ -108,7 +111,7 @@ public:
 
    LONG getTopicData(const char *topicName, TCHAR *value, bool enableAutoRegistration);
 
-   static MqttBroker *createFromConfig(const ConfigEntry *e, StructArray<NETXMS_SUBAGENT_PARAM> *parameters);
+   static MqttBroker *createFromConfig(const ConfigEntry *e, StructArray<NETXMS_SUBAGENT_PARAM> *parameters, StructArray<NETXMS_SUBAGENT_LIST> *lists);
    static MqttBroker *createFromMessage(const NXCPMessage *msg);
 };
 

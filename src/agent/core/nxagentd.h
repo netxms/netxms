@@ -811,11 +811,15 @@ void StartBackgroundMetricCollection();
 int GetExternalDataProviderCount();
 int GetBackgroundMetricCount();
 bool AddMetricProvider(const TCHAR *line);
+void AddStructuredMetricProvider(const TCHAR *name, const TCHAR *command, StringObjectMap<StructuredExtractorParameterDefinition> *metricDefenitions,
+   StringObjectMap<StructuredExtractorParameterDefinition> *listDefinitions, bool forcePlainTextParser, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description);
 LONG GetParameterValueFromExtProvider(const TCHAR *name, TCHAR *buffer);
 void ListParametersFromExtProviders(NXCPMessage *msg, uint32_t *baseId, uint32_t *count);
 void ListParametersFromExtProviders(StringList *list);
+LONG GetListValueFromExtProvider(const TCHAR *name, StringList *buffer);
+void ListListsFromExtProviders(NXCPMessage *msg, uint32_t *baseId, uint32_t *count);
+void ListListsFromExtProviders(StringList *list);
 void AddTableProvider(const TCHAR *name, ExternalTableDefinition *definition, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description);
-void AddStructuredMetricProvider(const TCHAR *name, const TCHAR *command, StringObjectMap<StructuredExtractorParameterDefinition> *metricDefenitions, bool forcePlainTextParser, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description);
 LONG GetTableValueFromExtProvider(const TCHAR *name, Table *table);
 void ListTablesFromExtProviders(NXCPMessage *msg, uint32_t *baseId, uint32_t *count);
 void ListTablesFromExtProviders(StringList *list);
