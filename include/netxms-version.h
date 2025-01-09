@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -30,7 +30,7 @@
  */
 #define NETXMS_VERSION_MAJOR        5
 #define NETXMS_VERSION_MINOR        1
-#define NETXMS_VERSION_RELEASE      2
+#define NETXMS_VERSION_RELEASE      3
 
 #ifdef UNICODE
 #define IS_UNICODE_BUILD_STRING     _T(" (UNICODE)")
