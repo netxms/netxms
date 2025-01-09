@@ -37,6 +37,7 @@ import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.MeasurementUnit;
