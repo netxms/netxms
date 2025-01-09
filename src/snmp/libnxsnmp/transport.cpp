@@ -455,16 +455,16 @@ retry_wait:
          return 0;
    }
 
-	struct sockaddr *senderAddr = (sender != nullptr) ? sender : (struct sockaddr *)&srcAddrBuffer;
+	struct sockaddr *senderAddr = (sender != nullptr) ? sender : &srcAddrBuffer.sa;
    socklen_t srcAddrLenBuffer = (addrSize != nullptr) ? *addrSize : sizeof(srcAddrBuffer);
    int rc = recvfrom(m_hSocket, (char*)m_buffer, (m_buffer == m_localBuffer) ? sizeof(m_localBuffer) : SNMP_DEFAULT_MSG_MAX_SIZE, 0, senderAddr, &srcAddrLenBuffer);
 
-	// Validate sender's address if socket is connected
-	if ((rc >= 0) && m_connected)
+	if (rc >= 0)
 	{
-		// Packet from wrong address, ignore it
-      if (!SocketAddressEquals(senderAddr, (struct sockaddr *)&m_peerAddr))
+	   // Validate sender's address if socket is connected
+	   if (m_connected && !SocketAddressEquals(senderAddr, &m_peerAddr.sa))
 		{
+         // Packet from wrong address, ignore it
 			goto retry_wait;
 		}
       m_bytesInBuffer = rc;
@@ -563,7 +563,7 @@ int SNMP_UDPTransport::sendMessage(SNMP_PDU *pdu, uint32_t timeout)
    size_t size = pdu->encode(&buffer, m_securityContext);
    if (size != 0)
    {
-      bytes = sendto(m_hSocket, (char *)buffer, (int)size, 0, (struct sockaddr *)&m_peerAddr, SA_LEN((struct sockaddr *)&m_peerAddr));
+      bytes = sendto(m_hSocket, (char *)buffer, (int)size, 0, &m_peerAddr.sa, SA_LEN(&m_peerAddr.sa));
       MemFree(buffer);
    }
    return bytes;
@@ -574,7 +574,7 @@ int SNMP_UDPTransport::sendMessage(SNMP_PDU *pdu, uint32_t timeout)
  */
 InetAddress SNMP_UDPTransport::getPeerIpAddress()
 {
-   return InetAddress::createFromSockaddr((struct sockaddr *)&m_peerAddr);
+   return InetAddress::createFromSockaddr(&m_peerAddr.sa);
 }
 
 /**
