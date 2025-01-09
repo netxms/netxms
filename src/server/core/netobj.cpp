@@ -3048,8 +3048,9 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                      TCHAR *v = nullptr;
                      if (instance != nullptr)
                      {
-                        TCHAR tmp[128];
-                        _sntprintf(tmp, 128, _T("%s::%s"), buffer, instance);
+                        TCHAR tmp[256];
+                        _sntprintf(tmp, 256, _T("%s::%s"), buffer, instance);
+                        tmp[255] = 0;
                         v = getCustomAttributeCopy(tmp);
                      }
                      else if (loadEvent())
@@ -3058,8 +3059,9 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                         int index = names->indexOfIgnoreCase(_T("instance"));
                         if (index != -1)
                         {
-                           TCHAR tmp[128];
-                           _sntprintf(tmp, 128, _T("%s::%s"), buffer, event->getParameter(index));
+                           TCHAR tmp[256];
+                           _sntprintf(tmp, 256, _T("%s::%s"), buffer, event->getParameter(index));
+                           tmp[255] = 0;
                            v = getCustomAttributeCopy(tmp);
                         }
                      }
