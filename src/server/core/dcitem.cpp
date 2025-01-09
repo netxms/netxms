@@ -1220,6 +1220,8 @@ bool DCItem::transform(ItemValue &value, time_t elapsedTime)
                {
                   // discontinuity: counter reset or wrap around
                   uint32_t delta = value.getUInt32() - m_prevRawValue.getUInt32();  // unsigned math
+                  nxlog_debug_tag(DEBUG_TAG_DC_TRANSFORM, 6, _T("32-bit counter reset or rollover detected; DCI=\"%s\" [%u]; node=\"%s\" [%u]; new value=%u old value=%u delta=%u prev delta=%u"),
+                            m_description.cstr(), m_id, getOwnerName(), getOwnerId(), value.getUInt32(), m_prevRawValue.getUInt32(), delta, static_cast<uint32_t>(m_prevDeltaValue));
                   if (delta > static_cast<uint32_t>(m_prevDeltaValue))
                   {
                      // Value (probably) too big, return error
@@ -1251,6 +1253,8 @@ bool DCItem::transform(ItemValue &value, time_t elapsedTime)
                {
                   // discontinuity: counter reset or wrap around
                   uint64_t delta = value.getUInt64() - m_prevRawValue.getUInt64();  // unsigned math
+                  nxlog_debug_tag(DEBUG_TAG_DC_TRANSFORM, 6, _T("64-bit counter reset or rollover detected; DCI=\"%s\" [%u]; node=\"%s\" [%u]; new value=") UINT64_FMT _T(" old value=") UINT64_FMT _T(" delta=") UINT64_FMT _T(" prev delta=") UINT64_FMT,
+                            m_description.cstr(), m_id, getOwnerName(), getOwnerId(), value.getUInt64(), m_prevRawValue.getUInt64(), delta, m_prevDeltaValue);
                   if (delta > m_prevDeltaValue)
                   {
                      // Value (probably) too big, return error
