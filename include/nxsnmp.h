@@ -1095,6 +1095,12 @@ public:
    uint32_t createUDPTransport(const TCHAR *hostName, uint16_t port = SNMP_DEFAULT_PORT);
    uint32_t createUDPTransport(const InetAddress& hostAddr, uint16_t port = SNMP_DEFAULT_PORT);
    bool isConnected() const { return m_connected; }
+
+   void expandBuffer()
+   {
+      if (m_buffer == m_localBuffer)
+         m_buffer = static_cast<BYTE*>(MemAlloc(SNMP_DEFAULT_MSG_MAX_SIZE));
+   }
 };
 
 struct SNMP_SnapshotIndexEntry;

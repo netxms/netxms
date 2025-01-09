@@ -464,9 +464,10 @@ static SNMP_Transport *CreateTransport(SOCKET hSocket)
    if (hSocket == INVALID_SOCKET)
       return nullptr;
 
-   SNMP_Transport *t = new SNMP_UDPTransport(hSocket);
+   auto t = new SNMP_UDPTransport(hSocket);
    t->enableEngineIdAutoupdate(true);
    t->setPeerUpdatedOnRecv(true);
+   t->expandBuffer();
    return t;
 }
 
@@ -706,6 +707,7 @@ static void ReceiverThread()
          }
          else
          {
+            nxlog_debug_tag(DEBUG_TAG, 8, _T("SNMPTrapReceiver: error reading PDU from socket (rc=%d, errno=%d, errtext=\"%s\")"), bytes, errno, _tcserror(errno));
             // Sleep on error
             ThreadSleepMs(100);
          }

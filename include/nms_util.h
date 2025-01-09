@@ -4540,6 +4540,7 @@ static inline json_t *json_object_get_by_path_w(json_t *root, const WCHAR *path)
  */
 union SockAddrBuffer
 {
+   struct sockaddr sa;
    struct sockaddr_in sa4;
 #ifdef WITH_IPV6
    struct sockaddr_in6 sa6;
