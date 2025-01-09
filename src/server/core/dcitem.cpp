@@ -1283,6 +1283,9 @@ bool DCItem::transform(ItemValue &value, time_t elapsedTime)
          break;
    }
 
+   if (!success)
+      return false;
+
    if (m_transformationScript != nullptr)
    {
       ScriptVMHandle vm = CreateServerScriptVM(m_transformationScript.get(), m_owner.lock(), createDescriptorInternal());
