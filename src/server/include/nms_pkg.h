@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -74,7 +74,7 @@ struct PackageDeploymentTask
  * Package functions
  */
 bool IsPackageInstalled(const TCHAR *name, const TCHAR *version, const TCHAR *platform);
-bool IsPackageFileExist(const TCHAR *fileName);
+bool IsDuplicatePackageFileName(const TCHAR *fileName);
 bool IsValidPackageId(uint32_t packageId);
 PackageDeploymentTask *CreatePackageDeploymentTask(uint32_t packageId, ClientSession *session, uint32_t requestId, uint32_t *rcc);
 uint32_t UninstallPackage(uint32_t packageId);
