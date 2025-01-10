@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -7806,7 +7806,7 @@ void ClientSession::installPackage(const NXCPMessage& request)
          if (!IsPackageInstalled(packageName, packageVersion, platform))
          {
             // Check for duplicate file name
-            if (!IsPackageFileExist(cleanFileName))
+            if (!IsDuplicatePackageFileName(cleanFileName))
             {
                TCHAR fullFileName[MAX_PATH];
                _tcscpy(fullFileName, g_netxmsdDataDir);
@@ -7834,25 +7834,30 @@ void ClientSession::installPackage(const NXCPMessage& request)
 
                   // Create record in database
                   fInfo->updatePackageDBInfo(description, packageName, packageVersion, packageType, platform, cleanFileName, command);
+                  writeAuditLog(AUDIT_SYSCFG, true, 0, _T("New agent package \"%s\" [%u] version \"%s\" for platform \"%s\" installed"), packageName, packageId, packageVersion, platform);
                }
                else
                {
+                  debugPrintf(5, _T("Cannot install agent package file \"%s\" (I/O error)"), cleanFileName);
                   delete fInfo;
                   response.setField(VID_RCC, RCC_IO_ERROR);
                }
             }
             else
             {
+               debugPrintf(5, _T("Cannot install agent package file \"%s\" (same file name already used by another package)"), cleanFileName);
                response.setField(VID_RCC, RCC_PACKAGE_FILE_EXIST);
             }
          }
          else
          {
+            debugPrintf(5, _T("Cannot install agent package file \"%s\" (pakage with same metadata already installed)"), cleanFileName);
             response.setField(VID_RCC, RCC_DUPLICATE_PACKAGE);
          }
       }
       else
       {
+         debugPrintf(5, _T("Cannot install agent package file \"%s\" (unacceptable file name)"), cleanFileName);
          response.setField(VID_RCC, RCC_INVALID_OBJECT_NAME);
       }
    }
@@ -7860,6 +7865,7 @@ void ClientSession::installPackage(const NXCPMessage& request)
    {
       // Current user has no rights for package management
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on agent package installation"));
    }
 
    sendMessage(response);
@@ -7904,6 +7910,9 @@ void ClientSession::updatePackageMetadata(const NXCPMessage& request)
                DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, packageId);
                success = DBExecute(hStmt);
                DBFreeStatement(hStmt);
+
+               if (success)
+                  writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Agent package \"%s\" [%u] version \"%s\" for platform \"%s\" updated"), packageName, packageId, packageVersion, platform);
             }
             DBConnectionPoolReleaseConnection(hdb);
             msg.setField(VID_RCC, success ? RCC_SUCCESS : RCC_DB_FAILURE);
@@ -7922,6 +7931,7 @@ void ClientSession::updatePackageMetadata(const NXCPMessage& request)
    {
       // Current user has no rights for package management
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on agent package metadata update"));
    }
 
    sendMessage(msg);
@@ -7936,13 +7946,19 @@ void ClientSession::removePackage(const NXCPMessage& request)
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_PACKAGES)
    {
-      uint32_t pkgId = request.getFieldAsUInt32(VID_PACKAGE_ID);
-      response.setField(VID_RCC, UninstallPackage(pkgId));
+      uint32_t packageId = request.getFieldAsUInt32(VID_PACKAGE_ID);
+      uint32_t rcc = UninstallPackage(packageId);
+      if (rcc == RCC_SUCCESS)
+      {
+         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Agent package [%u] removed"), packageId);
+      }
+      response.setField(VID_RCC, rcc);
    }
    else
    {
       // Current user has no rights for package management
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on agent package removal"));
    }
 
    sendMessage(response);

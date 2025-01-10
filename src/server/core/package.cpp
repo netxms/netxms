@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -62,11 +62,14 @@ bool IsValidPackageId(uint32_t packageId)
 }
 
 /**
- * Check if package file with given name exist
+ * Check if package file with given name already used by another package
  */
-bool IsPackageFileExist(const TCHAR *fileName)
+bool IsDuplicatePackageFileName(const TCHAR *fileName)
 {
-   return (_taccess(StringBuffer(g_netxmsdDataDir).append(DDIR_PACKAGES).append(FS_PATH_SEPARATOR).append(fileName), F_OK) == 0);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   bool result = IsDatabaseRecordExist(hdb, _T("agent_pkg"), _T("pkg_file"), fileName);
+   DBConnectionPoolReleaseConnection(hdb);
+   return result;
 }
 
 /**
@@ -142,7 +145,7 @@ uint32_t UninstallPackage(uint32_t packageId)
          filePath.append(DDIR_PACKAGES);
          filePath.append(FS_PATH_SEPARATOR);
          filePath.append(fileName);
-         if ((_taccess(fileName, F_OK) == -1) || (_tunlink(fileName) == 0))
+         if ((_taccess(filePath, F_OK) == -1) || (_tremove(filePath) == 0))
          {
             // Delete record from database
             ExecuteQueryOnObject(hdb, packageId, _T("DELETE FROM agent_pkg WHERE pkg_id=?"));
