@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@
 #define LC_ACTION_CODE        14
 #define LC_ATM_TXN_CODE       15
 #define LC_ASSET_OPERATION    16
+#define LC_DEPLOYMENT_STATUS  17
 
 /**
  * Column filter types
@@ -76,8 +77,8 @@
  */
 struct LOG_COLUMN
 {
-	const TCHAR *name;
-	const TCHAR *description;
+	const wchar_t *name;
+	const wchar_t *description;
 	int type;
 	uint32_t flags;
 };
@@ -87,10 +88,10 @@ struct LOG_COLUMN
  */
 struct NXCORE_LOG
 {
-	const TCHAR *name;
-	const TCHAR *table;
-	const TCHAR *idColumn;
-	const TCHAR *relatedObjectIdColumn;
+	const wchar_t *name;
+	const wchar_t *table;
+	const wchar_t *idColumn;
+	const wchar_t *relatedObjectIdColumn;
 	uint64_t requiredAccess;
 	LOG_COLUMN columns[32];
 };
@@ -100,7 +101,7 @@ struct NXCORE_LOG
  */
 struct OrderingColumn
 {
-	TCHAR name[MAX_COLUMN_NAME_LEN];
+   wchar_t name[MAX_COLUMN_NAME_LEN];
 	bool descending;
 };
 
@@ -114,7 +115,7 @@ class ColumnFilter
 private:
    int m_varCount;   // Number of variables read from NXCP message during construction
    int m_type;
-   TCHAR *m_column;
+   wchar_t *m_column;
    uint32_t m_columnFlags;
    bool m_negated;
 	union t_ColumnFilterValue
@@ -135,7 +136,7 @@ private:
 	} m_value;
 
 public:
-	ColumnFilter(const NXCPMessage& msg, const TCHAR *column, uint32_t baseId, LogHandle *log);
+	ColumnFilter(const NXCPMessage& msg, const wchar_t *column, uint32_t baseId, LogHandle *log);
 	~ColumnFilter();
 
 	int getVariableCount() const { return m_varCount; }
@@ -211,7 +212,7 @@ public:
 };
 
 // API functions
-int32_t OpenLog(const TCHAR *name, ClientSession *session, uint32_t *rcc);
+int32_t OpenLog(const wchar_t *name, ClientSession *session, uint32_t *rcc);
 uint32_t CloseLog(ClientSession *session, int32_t logHandle);
 void CloseAllLogsForSession(session_id_t sessionId);
 shared_ptr<LogHandle> AcquireLogHandleObject(ClientSession *session, int32_t logHandle);

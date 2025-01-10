@@ -376,7 +376,7 @@ void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, u
 /**
  * Check channel subscription
  */
-bool ClientSession::isSubscribedTo(const TCHAR *channel) const
+bool ClientSession::isSubscribedTo(const wchar_t *channel) const
 {
    m_subscriptionLock.lock();
    bool subscribed = m_subscriptions.contains(channel);
@@ -514,7 +514,7 @@ MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
    {
       if ((msg->getCode() == CMD_SESSION_KEY) && (msg->getId() == m_encryptionRqId))
       {
-         debugPrintf(6, _T("Received message CMD_SESSION_KEY"));
+         debugPrintf(6, L"Received message CMD_SESSION_KEY");
          NXCPEncryptionContext *encryptionContext = nullptr;
          m_encryptionResult = SetupEncryptionContext(msg, &encryptionContext, nullptr, g_serverKey, NXCP_VERSION);
          m_encryptionContext = shared_ptr<NXCPEncryptionContext>(encryptionContext);
@@ -525,7 +525,7 @@ MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
       }
       else if (msg->getCode() == CMD_KEEPALIVE)
       {
-         debugPrintf(6, _T("Received message CMD_KEEPALIVE"));
+         debugPrintf(6, L"Received message CMD_KEEPALIVE");
          respondToKeepalive(msg->getId());
          delete msg;
       }
@@ -533,8 +533,8 @@ MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
                (msg->getCode() == CMD_EPP_RECORD) || (msg->getCode() == CMD_OPEN_EPP) || (msg->getCode() == CMD_SAVE_EPP) || (msg->getCode() == CMD_CLOSE_EPP))
       {
          incRefCount();
-         TCHAR key[64];
-         _sntprintf(key, 64, _T("CLSE-%d"), m_id);
+         wchar_t key[64] = L"CLSE-";
+         IntegerToString(m_id, &key[5]);
          ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::processRequest, msg);
       }
       else
@@ -593,9 +593,9 @@ void ClientSession::finalize()
  */
 void ClientSession::finalizeFileTransferToAgent(shared_ptr<AgentConnection> conn, uint32_t requestId)
 {
-   debugPrintf(6, _T("Waiting for final file transfer confirmation from agent for request ID %u"), requestId);
+   debugPrintf(6, L"Waiting for final file transfer confirmation from agent for request ID %u", requestId);
    uint32_t rcc = conn->waitForRCC(requestId, 60000); // Wait up to 60 seconds for final confirmation
-   debugPrintf(6, _T("File transfer request %u: %s"), requestId, AgentErrorCodeToText(rcc));
+   debugPrintf(6, L"File transfer request %u: %s", requestId, AgentErrorCodeToText(rcc));
 
    // Send final confirmation to client
    NXCPMessage response(CMD_REQUEST_COMPLETED, requestId);
@@ -1288,6 +1288,12 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_DEPLOY_PACKAGE:
          deployPackage(*request);
+         break;
+      case CMD_GET_PACKAGE_DEPLOYMENT_JOBS:
+         getPackageDeploymentJobs(*request);
+         break;
+      case CMD_CANCEL_PACKAGE_DEPLOYMENT_JOB:
+         cancelPackageDeploymentJob(*request);
          break;
       case CMD_GET_PARAMETER_LIST:
          getParametersList(*request);
@@ -7965,66 +7971,24 @@ void ClientSession::removePackage(const NXCPMessage& request)
 }
 
 /**
- * Get list of parameters supported by given node
- */
-void ClientSession::getParametersList(const NXCPMessage& request)
-{
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
-
-   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
-   if (object != nullptr)
-   {
-      int origin = request.isFieldExist(VID_DCI_SOURCE_TYPE) ? request.getFieldAsInt16(VID_DCI_SOURCE_TYPE) : DS_NATIVE_AGENT;
-      switch(object->getObjectClass())
-      {
-         case OBJECT_NODE:
-            msg.setField(VID_RCC, RCC_SUCCESS);
-				static_cast<Node&>(*object).writeParamListToMessage(&msg, origin, request.getFieldAsUInt16(VID_FLAGS));
-            break;
-         case OBJECT_CLUSTER:
-         case OBJECT_TEMPLATE:
-            msg.setField(VID_RCC, RCC_SUCCESS);
-            WriteFullParamListToMessage(&msg, origin, request.getFieldAsUInt16(VID_FLAGS));
-            break;
-         case OBJECT_CHASSIS:
-            if (static_cast<Chassis&>(*object).getControllerId() != 0)
-            {
-               shared_ptr<NetObj> controller = FindObjectById(static_cast<Chassis&>(*object).getControllerId(), OBJECT_NODE);
-               if (controller != nullptr)
-                  static_cast<Node&>(*controller).writeParamListToMessage(&msg, origin, request.getFieldAsUInt16(VID_FLAGS));
-            }
-            break;
-         default:
-            msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
-            break;
-      }
-   }
-   else
-   {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-   }
-
-   // Send response
-   sendMessage(&msg);
-}
-
-/**
  * Deplay package to node(s)
  */
 void ClientSession::deployPackage(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   PackageDeploymentTask *task = nullptr;
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_PACKAGES)
    {
       // Get package ID
       uint32_t packageId = request.getFieldAsUInt32(VID_PACKAGE_ID);
-      uint32_t rcc;
-      task = CreatePackageDeploymentTask(packageId, this, request.getId(), &rcc);
-      if (task != nullptr)
+
+      SharedObjectArray<Node> nodeList;
+
+      PackageDetails package;
+      uint32_t rcc = GetPackageDetails(packageId, &package);
+      if (rcc == RCC_SUCCESS)
       {
-         // Create list of nodes to be upgraded
+         // Create list of nodes for deployment
          IntegerArray<uint32_t> objectList;
          request.getFieldAsInt32Array(VID_OBJECT_LIST, &objectList);
          for(int i = 0; i < objectList.size(); i++)
@@ -8037,18 +8001,26 @@ void ClientSession::deployPackage(const NXCPMessage& request)
                   if (object->getObjectClass() == OBJECT_NODE)
                   {
                      // Check if this node already in the list
-                     int j;
-                     for(j = 0; j < task->nodeList.size(); j++)
-                        if (task->nodeList.get(j)->getId() == objectList.get(i))
-                           break;
-                     if (j == task->nodeList.size())
+                     if (object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY | OBJECT_ACCESS_CONTROL | OBJECT_ACCESS_UPLOAD))
                      {
-                        task->nodeList.add(static_pointer_cast<Node>(object));
+                        int j;
+                        for(j = 0; j < nodeList.size(); j++)
+                           if (nodeList.get(j)->getId() == objectList.get(i))
+                              break;
+                        if (j == nodeList.size())
+                        {
+                           nodeList.add(static_pointer_cast<Node>(object));
+                        }
+                     }
+                     else
+                     {
+                        rcc = RCC_ACCESS_DENIED;
+                        break;
                      }
                   }
                   else
                   {
-                     object->addChildNodesToList(&task->nodeList, m_userId);
+                     object->addChildNodesToList(&nodeList, m_userId);
                   }
                }
                else
@@ -8065,11 +8037,27 @@ void ClientSession::deployPackage(const NXCPMessage& request)
          }
       }
 
-      response.setField(VID_RCC, rcc);
-      if (rcc != RCC_SUCCESS)
+      if ((rcc == RCC_SUCCESS) && !nodeList.isEmpty())
       {
-         delete_and_null(task);
+         time_t now = time(nullptr);
+         for(int i = 0; i < nodeList.size(); i++)
+         {
+            Node *node = nodeList.get(i);
+            auto job = make_shared<PackageDeploymentJob>(node->getId(), m_userId, now, package);
+            if (job->createDatabaseRecord())
+            {
+               debugPrintf(5, _T("Scheduled deployment of package [%u] on node \"%s\" [%u]"), packageId, node->getName(), node->getId());
+               RegisterPackageDeploymentJob(job);
+            }
+            else
+            {
+               debugPrintf(5, _T("Cannot create database record for deployment job [%u] on node \"%s\" [%u]"), job->getId(), node->getName(), node->getId());
+               rcc = RCC_DB_FAILURE;
+            }
+         }
       }
+
+      response.setField(VID_RCC, rcc);
    }
    else
    {
@@ -8077,13 +8065,77 @@ void ClientSession::deployPackage(const NXCPMessage& request)
    }
 
    sendMessage(response);
+}
 
-   // Start deployment thread
-   if (task != nullptr)
+/**
+ * Get package deployment jobs
+ */
+void ClientSession::getPackageDeploymentJobs(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   GetPackageDeploymentJobs(&response, m_userId);
+   response.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(response);
+}
+
+/**
+ * Cancel package deployment job
+ */
+void ClientSession::cancelPackageDeploymentJob(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t jobId = request.getFieldAsUInt32(VID_JOB_ID);
+   uint32_t nodeId;
+   uint32_t rcc = CancelPackageDeploymentJob(jobId, m_userId, &nodeId);
+   if (rcc == RCC_SUCCESS)
+      writeAuditLog(AUDIT_OBJECTS, true, nodeId, L"Scheduled package deployment job [%u] cancelled", jobId);
+   else if (rcc == RCC_ACCESS_DENIED)
+      writeAuditLog(AUDIT_OBJECTS, false, nodeId, L"Access denied on cancelling scheduled package deployment job [%u]", jobId);
+   response.setField(VID_RCC, rcc);
+   sendMessage(response);
+}
+
+/**
+ * Get list of parameters supported by given node
+ */
+void ClientSession::getParametersList(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
    {
-      incRefCount();
-      ThreadCreate(DeploymentManager, task);
+      int origin = request.isFieldExist(VID_DCI_SOURCE_TYPE) ? request.getFieldAsInt16(VID_DCI_SOURCE_TYPE) : DS_NATIVE_AGENT;
+      switch(object->getObjectClass())
+      {
+         case OBJECT_NODE:
+            response.setField(VID_RCC, RCC_SUCCESS);
+            static_cast<Node&>(*object).writeParamListToMessage(&response, origin, request.getFieldAsUInt16(VID_FLAGS));
+            break;
+         case OBJECT_CLUSTER:
+         case OBJECT_TEMPLATE:
+            response.setField(VID_RCC, RCC_SUCCESS);
+            WriteFullParamListToMessage(&response, origin, request.getFieldAsUInt16(VID_FLAGS));
+            break;
+         case OBJECT_CHASSIS:
+            if (static_cast<Chassis&>(*object).getControllerId() != 0)
+            {
+               shared_ptr<NetObj> controller = FindObjectById(static_cast<Chassis&>(*object).getControllerId(), OBJECT_NODE);
+               if (controller != nullptr)
+                  static_cast<Node&>(*controller).writeParamListToMessage(&response, origin, request.getFieldAsUInt16(VID_FLAGS));
+            }
+            break;
+         default:
+            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            break;
+      }
    }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
 }
 
 /**

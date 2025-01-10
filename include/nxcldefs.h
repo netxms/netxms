@@ -1208,29 +1208,19 @@ enum AggregationFunction
 #define MAP_LAYOUT_SPARSE_VTREE  4
 
 /**
- * Deployment manager status codes
- */
-#define DEPLOYMENT_STATUS_PENDING      0
-#define DEPLOYMENT_STATUS_TRANSFER     1
-#define DEPLOYMENT_STATUS_INSTALLATION 2
-#define DEPLOYMENT_STATUS_COMPLETED    3
-#define DEPLOYMENT_STATUS_FAILED       4
-#define DEPLOYMENT_STATUS_INITIALIZE   5
-#define DEPLOYMENT_STATUS_FINISHED     255
-
-/**
  * Core subscription channels
  */
-#define NXC_CHANNEL_AGENT_TUNNELS   _T("Core.AgentTunnels")
-#define NXC_CHANNEL_ALARMS          _T("Core.Alarms")
-#define NXC_CHANNEL_AUDIT_LOG       _T("Core.Audit")
-#define NXC_CHANNEL_DC_THRESHOLDS   _T("Core.DC.Thresholds")
-#define NXC_CHANNEL_EVENTS          _T("Core.Events")
-#define NXC_CHANNEL_GEO_AREAS       _T("Core.GeoAreas")
-#define NXC_CHANNEL_OBJECTS         _T("Core.Objects")
-#define NXC_CHANNEL_SNMP_TRAPS      _T("Core.SNMP.Traps")
-#define NXC_CHANNEL_SYSLOG          _T("Core.Syslog")
-#define NXC_CHANNEL_USERDB          _T("Core.UserDB")
+#define NXC_CHANNEL_AGENT_TUNNELS   L"Core.AgentTunnels"
+#define NXC_CHANNEL_ALARMS          L"Core.Alarms"
+#define NXC_CHANNEL_AUDIT_LOG       L"Core.Audit"
+#define NXC_CHANNEL_DC_THRESHOLDS   L"Core.DC.Thresholds"
+#define NXC_CHANNEL_EVENTS          L"Core.Events"
+#define NXC_CHANNEL_GEO_AREAS       L"Core.GeoAreas"
+#define NXC_CHANNEL_OBJECTS         L"Core.Objects"
+#define NXC_CHANNEL_PACKAGE_JOBS    L"Core.PackageJobs"
+#define NXC_CHANNEL_SNMP_TRAPS      L"Core.SNMP.Traps"
+#define NXC_CHANNEL_SYSLOG          L"Core.Syslog"
+#define NXC_CHANNEL_USERDB          L"Core.UserDB"
 
 /**
  * Node creation flags

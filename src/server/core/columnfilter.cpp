@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,11 +26,11 @@
 /**
  * Create column filter object from NXCP message
  */
-ColumnFilter::ColumnFilter(const NXCPMessage& msg, const TCHAR *column, uint32_t baseId, LogHandle *log)
+ColumnFilter::ColumnFilter(const NXCPMessage& msg, const wchar_t *column, uint32_t baseId, LogHandle *log)
 {
 	uint32_t fieldId;
 
-	m_column = MemCopyString(column);
+	m_column = MemCopyStringW(column);
 	const LOG_COLUMN *cd = log->getColumnDefinition(m_column);
 	m_columnFlags = (cd != nullptr) ? cd->flags : 0;
 

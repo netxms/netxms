@@ -187,7 +187,7 @@ import org.netxms.client.objecttools.ObjectContextBase;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.client.objecttools.ObjectToolFolder;
-import org.netxms.client.packages.PackageDeploymentListener;
+import org.netxms.client.packages.PackageDeploymentJob;
 import org.netxms.client.packages.PackageInfo;
 import org.netxms.client.reporting.ReportDefinition;
 import org.netxms.client.reporting.ReportRenderFormat;
@@ -243,6 +243,7 @@ public class NXCSession
    public static final String CHANNEL_GEO_AREAS = "Core.GeoAreas";
    public static final String CHANNEL_EVENTS = "Core.Events";
    public static final String CHANNEL_OBJECTS = "Core.Objects";
+   public static final String CHANNEL_PACKAGE_JOBS = "Core.PackageJobs";
    public static final String CHANNEL_SNMP_TRAPS = "Core.SNMP.Traps";
    public static final String CHANNEL_SYSLOG = "Core.Syslog";
    public static final String CHANNEL_USERDB = "Core.UserDB";
@@ -770,6 +771,10 @@ public class NXCSession
                      {
                         assetManagementSchema.remove(attrName);
                      }
+                     break;
+                  case NXCPCodes.CMD_PACKAGE_DEPLOYMENT_JOB_UPDATE:
+                     sendNotification(new SessionNotification(SessionNotification.PACKAGE_DEPLOYMENT_JOB_CHANGED, msg.getFieldAsInt64(NXCPCodes.VID_ELEMENT_LIST_BASE),
+                           new PackageDeploymentJob(msg, NXCPCodes.VID_ELEMENT_LIST_BASE)));
                      break;
                   default:
                      // Check subscriptions
@@ -11051,9 +11056,9 @@ public class NXCSession
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_FOLDER_CONTENT);
       msg.setField(NXCPCodes.VID_FILE_NAME, fullPath);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
-      msg.setFieldInt16(NXCPCodes.VID_ROOT, file == null ? 1 : 0);
-      msg.setFieldInt16(NXCPCodes.VID_ALLOW_MULTIPART, 1);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, objectId);
+      msg.setField(NXCPCodes.VID_ROOT, file == null);
+      msg.setField(NXCPCodes.VID_ALLOW_MULTIPART, true);
       sendMessage(msg);
 
       List<AgentFile> files = new ArrayList<AgentFile>(64);
@@ -11091,7 +11096,7 @@ public class NXCSession
 
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_FOLDER_SIZE);
       msg.setField(NXCPCodes.VID_FILE_NAME, file.getFullName());
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)(file.getNodeId()));
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, file.getNodeId());
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return new AgentFileInfo(file.getName(), response.getFieldAsInt64(NXCPCodes.VID_FILE_COUNT),
@@ -11111,7 +11116,7 @@ public class NXCSession
    public long uploadFileToAgent(long nodeId, String serverFileName, String remoteFileName) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPLOAD_FILE_TO_AGENT);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, serverFileName);
       if (remoteFileName != null)
          msg.setField(NXCPCodes.VID_DESTINATION_FILE_NAME, remoteFileName);
@@ -11298,7 +11303,7 @@ public class NXCSession
    public void createFolderOnAgent(long nodeId, String folder) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_CREATE_FOLDER);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, folder);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
@@ -11372,12 +11377,12 @@ public class NXCSession
          Map<String, String> inputValues, long maxFileSize, boolean follow, ProgressListener listener) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_FILE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, remoteFileName);
-      msg.setFieldInt32(NXCPCodes.VID_FILE_SIZE_LIMIT, (int)maxFileSize);
+      msg.setFieldUInt32(NXCPCodes.VID_FILE_SIZE_LIMIT, maxFileSize);
       msg.setField(NXCPCodes.VID_FILE_FOLLOW, follow);
       msg.setField(NXCPCodes.VID_EXPAND_STRING, expandMacros);
-      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
+      msg.setFieldUInt32(NXCPCodes.VID_ALARM_ID, alarmId);
       if (inputValues != null)
       {
          msg.setFieldInt32(NXCPCodes.VID_INPUT_FIELD_COUNT, inputValues.size());
@@ -11462,7 +11467,7 @@ public class NXCSession
    public AgentFileFingerprint getAgentFileFingerprint(long nodeId, String remoteFileName) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_GET_FILE_FINGERPRINT);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, remoteFileName);
       sendMessage(msg);
       return new AgentFileFingerprint(waitForRCC(msg.getMessageId()));
@@ -11527,7 +11532,7 @@ public class NXCSession
    public void deleteAgentFile(long nodeId, String fileName) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_DELETE_FILE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, fileName);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
@@ -11546,7 +11551,7 @@ public class NXCSession
    public void renameAgentFile(long nodeId, String oldName, String newFileName, boolean overwrite) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_RENAME_FILE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, oldName);
       msg.setField(NXCPCodes.VID_NEW_FILE_NAME, newFileName);
       msg.setField(NXCPCodes.VID_OVERWRITE, overwrite);
@@ -11567,7 +11572,7 @@ public class NXCSession
    public void moveAgentFile(long nodeId, String oldName, String newFileName, boolean overwrite) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_MOVE_FILE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, oldName);
       msg.setField(NXCPCodes.VID_NEW_FILE_NAME, newFileName);
       msg.setField(NXCPCodes.VID_OVERWRITE, overwrite);
@@ -11588,7 +11593,7 @@ public class NXCSession
    public void copyAgentFile(long nodeId, String oldName, String newFileName, boolean overwrite) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_COPY_FILE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, oldName);
       msg.setField(NXCPCodes.VID_NEW_FILE_NAME, newFileName);
       msg.setField(NXCPCodes.VID_OVERWRITE, overwrite);
@@ -11696,7 +11701,7 @@ public class NXCSession
    public void snmpWalk(long nodeId, String rootOid, SnmpWalkListener listener) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_START_SNMP_WALK);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       msg.setField(NXCPCodes.VID_SNMP_OID, rootOid);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
@@ -11705,13 +11710,13 @@ public class NXCSession
          final NXCPMessage response = waitForMessage(NXCPCodes.CMD_SNMP_WALK_DATA, msg.getMessageId());
          final int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_VARIABLES);
          final List<SnmpValue> data = new ArrayList<SnmpValue>(count);
-         long varId = NXCPCodes.VID_SNMP_WALKER_DATA_BASE;
+         long fieldId = NXCPCodes.VID_SNMP_WALKER_DATA_BASE;
          for(int i = 0; i < count; i++)
          {
-            final String name = response.getFieldAsString(varId++);
-            final int type = response.getFieldAsInt32(varId++);
-            final String value = response.getFieldAsString(varId++);
-            final byte[] rawValue = response.getFieldAsBinary(varId++);
+            final String name = response.getFieldAsString(fieldId++);
+            final int type = response.getFieldAsInt32(fieldId++);
+            final String value = response.getFieldAsString(fieldId++);
+            final byte[] rawValue = response.getFieldAsBinary(fieldId++);
             data.add(new SnmpValue(name, type, value, rawValue, nodeId));
          }
          listener.onSnmpWalkData(nodeId, data);
@@ -11731,7 +11736,7 @@ public class NXCSession
    public List<VlanInfo> getVlans(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_VLANS);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_VLANS);
@@ -11833,8 +11838,8 @@ public class NXCSession
    public NetworkPath getNetworkPath(long node1, long node2) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_NETWORK_PATH);
-      msg.setFieldInt32(NXCPCodes.VID_SOURCE_OBJECT_ID, (int)node1);
-      msg.setFieldInt32(NXCPCodes.VID_DESTINATION_OBJECT_ID, (int)node2);
+      msg.setFieldUInt32(NXCPCodes.VID_SOURCE_OBJECT_ID, node1);
+      msg.setFieldUInt32(NXCPCodes.VID_DESTINATION_OBJECT_ID, node2);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return new NetworkPath(response);
@@ -11851,7 +11856,7 @@ public class NXCSession
    public List<Route> getRoutingTable(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ROUTING_TABLE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
@@ -11877,7 +11882,7 @@ public class NXCSession
    public List<ArpCacheEntry> getArpCache(long nodeId, boolean forceRead) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ARP_CACHE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       msg.setField(NXCPCodes.VID_FORCE_RELOAD, forceRead);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -11903,7 +11908,7 @@ public class NXCSession
    public OSPFInfo getOSPFInfo(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_OSPF_DATA);
-      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_NODE_ID, nodeId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return new OSPFInfo(response);
@@ -11920,7 +11925,7 @@ public class NXCSession
    public List<FdbEntry> getSwitchForwardingDatabase(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SWITCH_FDB);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
@@ -11945,7 +11950,7 @@ public class NXCSession
    public List<WirelessStation> getWirelessStations(long objectId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_WIRELESS_STATIONS);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, objectId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
@@ -11970,8 +11975,8 @@ public class NXCSession
    public void addWirelessDomainController(long wirelessDomainId, long nodeId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_WIRELESS_DOMAIN_CNTRL);
-      msg.setFieldInt32(NXCPCodes.VID_DOMAIN_ID, (int)wirelessDomainId);
-      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_DOMAIN_ID, wirelessDomainId);
+      msg.setFieldUInt32(NXCPCodes.VID_NODE_ID, nodeId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -12076,48 +12081,46 @@ public class NXCSession
     * Deploy agent packages onto given nodes
     *
     * @param packageId package ID
-    * @param nodeList  list of nodes
-    * @param listener  deployment progress listener (may be null)
-    * @throws IOException  if socket or file I/O error occurs
+    * @param nodeList list of nodes
+    * @throws IOException if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void deployPackage(long packageId, Long[] nodeList, PackageDeploymentListener listener) throws IOException, NXCException
+   public void deployPackage(long packageId, Collection<Long> nodeList) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DEPLOY_PACKAGE);
-      msg.setFieldInt32(NXCPCodes.VID_PACKAGE_ID, (int)packageId);
-      msg.setFieldInt32(NXCPCodes.VID_NUM_OBJECTS, nodeList.length);
+      msg.setFieldUInt32(NXCPCodes.VID_PACKAGE_ID, packageId);
+      msg.setFieldInt32(NXCPCodes.VID_NUM_OBJECTS, nodeList.size());
       msg.setField(NXCPCodes.VID_OBJECT_LIST, nodeList);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
+   }
 
-      if (listener != null)
-         listener.deploymentStarted();
+   /**
+    * Get list of package deployment jobs
+    *
+    * @return list of package deployment jobs
+    * @throws IOException if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<PackageDeploymentJob> getPackageDeploymentJobs() throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PACKAGE_DEPLOYMENT_JOBS);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<PackageDeploymentJob> jobs = new ArrayList<>(count);
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++, fieldId += 50)
+         jobs.add(new PackageDeploymentJob(response, fieldId));
+      return jobs;
+   }
 
-      while(true)
-      {
-         final NXCPMessage response = waitForMessage(NXCPCodes.CMD_INSTALLER_INFO, msg.getMessageId(), 600000);
-         final int status = response.getFieldAsInt32(NXCPCodes.VID_DEPLOYMENT_STATUS);
-         if (status == PackageDeploymentListener.FINISHED)
-            break;
-
-         if (listener != null)
-         {
-            // Workaround for server bug: versions prior to 1.1.8 can send
-            // irrelevant message texts for statuses other then FAILED
-            if (status == PackageDeploymentListener.FAILED)
-            {
-               listener.statusUpdate(response.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID), status,
-                     response.getFieldAsString(NXCPCodes.VID_ERROR_MESSAGE));
-            }
-            else
-            {
-               listener.statusUpdate(response.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID), status, "");
-            }
-         }
-      }
-
-      if (listener != null)
-         listener.deploymentComplete();
+   public void cancelPackageDeploymentJob(long jobId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CANCEL_PACKAGE_DEPLOYMENT_JOB);
+      msg.setFieldUInt32(NXCPCodes.VID_JOB_ID, jobId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
    }
 
    /**

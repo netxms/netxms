@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ public class TunnelListComparator extends ViewerComparator
       AgentTunnel t1 = (AgentTunnel)e1;
       AgentTunnel t2 = (AgentTunnel)e2;
       int result;
-      switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
+      switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
       {
          case TunnelManager.COL_AGENT_ID:
             result = t1.getAgentId().compareTo(t2.getAgentId());
@@ -57,7 +57,7 @@ public class TunnelListComparator extends ViewerComparator
             result = (t1.getCertificateExpirationTime() != null) ? 
                   ((t2.getCertificateExpirationTime() != null) ? 
                         t1.getCertificateExpirationTime().compareTo(t2.getCertificateExpirationTime()) : 1) :
-                           ((t2 == null) ? 0 : -1);
+                           ((t2.getCertificateExpirationTime() == null) ? 0 : -1);
             break;
          case TunnelManager.COL_CHANNELS:
             result = t1.getActiveChannelCount() - t2.getActiveChannelCount();
@@ -106,7 +106,7 @@ public class TunnelListComparator extends ViewerComparator
             result = (t1.getConnectionTime() != null) ? 
                   ((t2.getConnectionTime() != null) ? 
                         t1.getConnectionTime().compareTo(t2.getConnectionTime()) : 1) :
-                           ((t2 == null) ? 0 : -1);
+                           ((t2.getConnectionTime() == null) ? 0 : -1);
             break;
          default:
             result = 0;

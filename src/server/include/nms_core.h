@@ -68,38 +68,39 @@
 /**
  * Unique identifier group codes
  */
-#define IDG_NETWORK_OBJECT    0
-#define IDG_EVENT             1
-#define IDG_ITEM              2
-#define IDG_SNMP_TRAP         3
-#define IDG_ACTION            4
-#define IDG_THRESHOLD         5
-#define IDG_USER              6
-#define IDG_USER_GROUP        7
-#define IDG_ALARM             8
-#define IDG_ALARM_NOTE        9
-#define IDG_PACKAGE           10
+#define IDG_NETWORK_OBJECT          0
+#define IDG_EVENT                   1
+#define IDG_ITEM                    2
+#define IDG_SNMP_TRAP               3
+#define IDG_ACTION                  4
+#define IDG_THRESHOLD               5
+#define IDG_USER                    6
+#define IDG_USER_GROUP              7
+#define IDG_ALARM                   8
+#define IDG_ALARM_NOTE              9
+#define IDG_PACKAGE                 10
 #define IDG_BUSINESS_SERVICE_TICKET 11
-#define IDG_OBJECT_TOOL       12
-#define IDG_SCRIPT            13
-#define IDG_AGENT_CONFIG      14
-#define IDG_GRAPH             15
-#define IDG_AUTHTOKEN         16
-#define IDG_MAPPING_TABLE     17
-#define IDG_DCI_SUMMARY_TABLE 18
-#define IDG_SCHEDULED_TASK    19
-#define IDG_ALARM_CATEGORY    20
-#define IDG_UA_MESSAGE        21
-#define IDG_RACK_ELEMENT      22
-#define IDG_PHYSICAL_LINK     23
-#define IDG_WEBSVC_DEFINITION 24
-#define IDG_OBJECT_CATEGORY   25
-#define IDG_GEO_AREA          26
-#define IDG_SSH_KEY           27
-#define IDG_OBJECT_QUERY      28
-#define IDG_BUSINESS_SERVICE_CHECK 29
+#define IDG_OBJECT_TOOL             12
+#define IDG_SCRIPT                  13
+#define IDG_AGENT_CONFIG            14
+#define IDG_GRAPH                   15
+#define IDG_AUTHTOKEN               16
+#define IDG_MAPPING_TABLE           17
+#define IDG_DCI_SUMMARY_TABLE       18
+#define IDG_SCHEDULED_TASK          19
+#define IDG_ALARM_CATEGORY          20
+#define IDG_UA_MESSAGE              21
+#define IDG_RACK_ELEMENT            22
+#define IDG_PHYSICAL_LINK           23
+#define IDG_WEBSVC_DEFINITION       24
+#define IDG_OBJECT_CATEGORY         25
+#define IDG_GEO_AREA                26
+#define IDG_SSH_KEY                 27
+#define IDG_OBJECT_QUERY            28
+#define IDG_BUSINESS_SERVICE_CHECK  29
 #define IDG_BUSINESS_SERVICE_RECORD 30
-#define IDG_MAINTENANCE_JOURNAL 31
+#define IDG_MAINTENANCE_JOURNAL     31
+#define IDG_PACKAGE_DEPLOYMENT_JOB  32
 
 /**** ID functions *****/
 bool InitIdTable();
@@ -564,10 +565,10 @@ private:
 	Mutex m_mutexSendActions;
 	Mutex m_mutexSendAuditLog;
 	InetAddress m_clientAddr;
-   TCHAR m_webServerAddress[64];  // IP address or name of web server for web sessions
-   TCHAR m_sessionName[MAX_SESSION_NAME];   // String in form login_name@host
-   TCHAR m_clientInfo[96];    // Client app info string
-   TCHAR m_language[8];       // Client's desired language
+	wchar_t m_webServerAddress[64];  // IP address or name of web server for web sessions
+	wchar_t m_sessionName[MAX_SESSION_NAME];   // String in form login_name@host
+	wchar_t m_clientInfo[96];    // Client app info string
+	wchar_t m_language[8];       // Client's desired language
    time_t m_loginTime;
    SynchronizedCountingHashSet<uint32_t> m_openDataCollectionConfigurations; // List of nodes with DCI lists open
    uint32_t m_dwNumRecordsToUpload; // Number of records to be uploaded
@@ -735,6 +736,8 @@ private:
    void updatePackageMetadata(const NXCPMessage& request);
    void removePackage(const NXCPMessage& request);
    void deployPackage(const NXCPMessage& request);
+   void getPackageDeploymentJobs(const NXCPMessage& request);
+   void cancelPackageDeploymentJob(const NXCPMessage& request);
    void getParametersList(const NXCPMessage& request);
    void getUserVariable(const NXCPMessage& request);
    void setUserVariable(const NXCPMessage& request);
@@ -1006,9 +1009,9 @@ public:
 
    void setSocketPoller(BackgroundSocketPollerHandle *p) { m_socketPoller = p; }
 
-   const TCHAR *getSessionName() const { return m_sessionName; }
-   const TCHAR *getClientInfo() const { return m_clientInfo; }
-   const TCHAR *getWebServerAddress() const { return m_webServerAddress; }
+   const wchar_t *getSessionName() const { return m_sessionName; }
+   const wchar_t *getClientInfo() const { return m_clientInfo; }
+   const wchar_t *getWebServerAddress() const { return m_webServerAddress; }
    uint32_t getFlags() const { return static_cast<uint32_t>(m_flags); }
    bool isAuthenticated() const { return (m_flags & CSF_AUTHENTICATED) != 0; }
    bool isTerminated() const { return (m_flags & (CSF_TERMINATED | CSF_TERMINATE_REQUESTED)) != 0; }
@@ -1017,7 +1020,7 @@ public:
    int getCipher() const { return (m_encryptionContext == nullptr) ? -1 : m_encryptionContext->getCipher(); }
 	int getClientType() const { return m_clientType; }
    time_t getLoginTime() const { return m_loginTime; }
-   bool isSubscribedTo(const TCHAR *channel) const;
+   bool isSubscribedTo(const wchar_t *channel) const;
    bool isDataCollectionConfigurationOpen(uint32_t objectId) const { return m_openDataCollectionConfigurations.contains(objectId); }
 
    void runHousekeeper();
@@ -1386,8 +1389,9 @@ template <typename C> static inline void EnumerateClientSessions(void (*callback
 }
 void NXCORE_EXPORTABLE EnumerateClientSessions(std::function<void(ClientSession*)> callback);
 
-void NXCORE_EXPORTABLE NotifyClientSessions(uint32_t code, uint32_t data, const TCHAR *channel = nullptr);
-void NXCORE_EXPORTABLE NotifyClientSessions(const NXCPMessage& msg, const TCHAR *channel = nullptr);
+void NXCORE_EXPORTABLE NotifyClientSessions(const NXCPMessage& msg, std::function<bool (ClientSession*)> filter);
+void NXCORE_EXPORTABLE NotifyClientSessions(const NXCPMessage& msg, const wchar_t *channel = nullptr);
+void NXCORE_EXPORTABLE NotifyClientSessions(uint32_t code, uint32_t data, const wchar_t *channel = nullptr);
 void NXCORE_EXPORTABLE NotifyClientSession(session_id_t sessionId, uint32_t code, uint32_t data);
 void NXCORE_EXPORTABLE NotifyClientSession(session_id_t sessionId, NXCPMessage *data);
 void NXCORE_EXPORTABLE NotifyClientsOnGraphUpdate(const NXCPMessage& msg, uint32_t graphId);

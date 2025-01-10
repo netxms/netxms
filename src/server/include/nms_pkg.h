@@ -16,68 +16,125 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nms_pkg.h
-**
+** File: nms_pkg.h
 **/
 
 #ifndef _nms_pkg_h_
 #define _nms_pkg_h_
 
 /**
- * Package deployment task
+ * Package deployment status
  */
-struct PackageDeploymentTask
+enum PackageDeploymentStatus
 {
-	SharedObjectArray<Node> nodeList;
-   ClientSession *session;
-   uint32_t requestId;
-   uint32_t userId;
-   uint32_t packageId;
-   ObjectQueue<Node> queue;  // Used internally by deployment manager
-   TCHAR *platform;
-   TCHAR *packageFile;
-   TCHAR packageType[16];
-   TCHAR version[32];
-   TCHAR *command;
-
-   PackageDeploymentTask(ClientSession *_session, uint32_t _requestId, uint32_t _packageId,
-            const TCHAR *_platform, const TCHAR *_packageFile, const TCHAR *_packageType, const TCHAR *_version, const TCHAR *_command)
-   {
-      session = _session;
-      requestId = _requestId;
-      userId = (session != nullptr) ? session->getUserId() : 0;
-      packageId = _packageId;
-      platform = MemCopyString(_platform);
-      packageFile = MemCopyString(_packageFile);
-      _tcslcpy(packageType, _packageType, 16);
-      _tcslcpy(version, _version, 32);
-      command = MemCopyString(_command);
-   }
-
-   ~PackageDeploymentTask()
-   {
-      if (session != nullptr)
-         session->decRefCount();
-      MemFree(platform);
-      MemFree(packageFile);
-      MemFree(command);
-   }
-
-   void sendMessage(const NXCPMessage& msg)
-   {
-      if (session != nullptr)
-         session->sendMessage(msg);
-   }
+   PKG_JOB_SCHEDULED = 0,
+   PKG_JOB_PENDING = 1,
+   PKG_JOB_INITIALIZING = 2,
+   PKG_JOB_FILE_TRANSFER_RUNNING = 3,
+   PKG_JOB_INSTALLATION_RUNNING = 4,
+   PKG_JOB_WAITING_FOR_AGENT = 5,
+   PKG_JOB_COMPLETED = 6,
+   PKG_JOB_FAILED = 7,
+   PKG_JOB_CANCELLED = 8
 };
+
+/**
+ * Package details
+ */
+struct PackageDetails
+{
+   uint32_t id;
+   wchar_t type[16];
+   wchar_t name[MAX_OBJECT_NAME];
+   wchar_t version[32];
+   wchar_t platform[MAX_PLATFORM_NAME_LEN];
+   wchar_t packageFile[256];
+   wchar_t command[256];
+   wchar_t description[256];
+};
+
+/**
+ * Package deployment job
+ */
+class NXCORE_EXPORTABLE PackageDeploymentJob
+{
+private:
+   uint32_t m_id;
+   uint32_t m_nodeId;
+   uint32_t m_userId;
+   PackageDeploymentStatus m_status;
+   time_t m_creationTime;
+   time_t m_executionTime;
+   time_t m_completionTime;
+   uint32_t m_packageId;
+   wchar_t m_packageType[16];
+   wchar_t m_packageName[MAX_OBJECT_NAME];
+   wchar_t m_platform[MAX_PLATFORM_NAME_LEN];
+   wchar_t m_version[32];
+   String m_packageFile;
+   String m_command;
+   String m_description;
+   wchar_t m_errorMessage[256];
+
+   void setCompletedStatus(PackageDeploymentStatus status, const wchar_t *errorMessage = nullptr);
+   void markAsFailed(const wchar_t *errorMessage)
+   {
+      setCompletedStatus(PKG_JOB_FAILED, errorMessage);
+   }
+
+   void notifyClients() const;
+
+public:
+   PackageDeploymentJob(uint32_t nodeId, uint32_t userId, time_t executionTime, const PackageDetails& package) : m_packageFile(package.packageFile), m_command(package.command), m_description(package.description)
+   {
+      m_id = CreateUniqueId(IDG_PACKAGE_DEPLOYMENT_JOB);
+      m_nodeId = nodeId;
+      m_userId = userId;
+      m_status = PKG_JOB_SCHEDULED;
+      m_creationTime = time(nullptr);
+      m_executionTime = executionTime;
+      m_completionTime = 0;
+      m_packageId = package.id;
+      wcslcpy(m_packageType, package.type, 16);
+      wcslcpy(m_packageName, package.name, MAX_OBJECT_NAME);
+      wcslcpy(m_platform, package.platform, MAX_PLATFORM_NAME_LEN);
+      wcslcpy(m_version, package.version, 32);
+      m_errorMessage[0] = 0;
+   }
+   PackageDeploymentJob(DB_RESULT hResult, int row);
+
+   uint32_t getId() const { return m_id; }
+   uint32_t getNodeId() const { return m_nodeId; }
+   uint32_t getUserId() const { return m_userId; }
+   time_t getExecutionTime() const { return m_executionTime; }
+   time_t getCompletionTime() const { return m_completionTime; }
+   PackageDeploymentStatus getStatus() const { return m_status; }
+   uint32_t getPackageId() const { return m_packageId; }
+   const wchar_t *getPackageFile() const { return m_packageFile.cstr(); }
+   const wchar_t *getVersion() const { return m_version; }
+
+   void setStatus(PackageDeploymentStatus status);
+   void execute();
+
+   bool createDatabaseRecord();
+
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
+};
+
+/**
+ * Job management functions
+ */
+void NXCORE_EXPORTABLE RegisterPackageDeploymentJob(const shared_ptr<PackageDeploymentJob>& job);
+void GetPackageDeploymentJobs(NXCPMessage *msg, uint32_t userId);
+uint32_t CancelPackageDeploymentJob(uint32_t jobId, uint32_t userId, uint32_t *nodeId);
 
 /**
  * Package functions
  */
-bool IsPackageInstalled(const TCHAR *name, const TCHAR *version, const TCHAR *platform);
-bool IsDuplicatePackageFileName(const TCHAR *fileName);
+bool IsPackageInstalled(const wchar_t *name, const wchar_t *version, const wchar_t *platform);
+bool IsDuplicatePackageFileName(const wchar_t *fileName);
 bool IsValidPackageId(uint32_t packageId);
-PackageDeploymentTask *CreatePackageDeploymentTask(uint32_t packageId, ClientSession *session, uint32_t requestId, uint32_t *rcc);
+uint32_t GetPackageDetails(uint32_t packageId, PackageDetails *details);
 uint32_t UninstallPackage(uint32_t packageId);
-void DeploymentManager(PackageDeploymentTask *task);
 
 #endif   /* _nms_pkg_h_ */

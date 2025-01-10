@@ -317,7 +317,7 @@ typedef struct
 #define CMD_WRITE_AGENT_CONFIG_FILE       0x0075
 #define CMD_GET_PARAMETER_LIST            0x0076
 #define CMD_DEPLOY_PACKAGE                0x0077
-#define CMD_INSTALLER_INFO                0x0078
+#define CMD_PACKAGE_DEPLOYMENT_JOB_UPDATE 0x0078
 #define CMD_GET_DATA_COLLECTION_SUMMARY   0x0079
 #define CMD_REQUEST_AUTH_TOKEN            0x007A
 #define CMD_SET_USER_VARIABLE             0x007B
@@ -664,6 +664,8 @@ typedef struct
 #define CMD_EXECUTE_DASBOARD_SCRIPT       0x01D0
 #define CMD_UPDATE_PEER_INTERFACE         0x01D1
 #define CMD_CLEAR_PEER_INTERFACE          0x01D2
+#define CMD_GET_PACKAGE_DEPLOYMENT_JOBS   0x01D3
+#define CMD_CANCEL_PACKAGE_DEPLOYMENT_JOB 0x01D4
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1535,6 +1537,7 @@ typedef struct
 #define VID_TIME_SYNC_ALLOWED       ((uint32_t)857)
 #define VID_JDBC_OPTIONS            ((uint32_t)858)
 #define VID_LAST_BACKUP_JOB_STATUS  ((uint32_t)859)
+#define VID_JOB_ID                  ((uint32_t)860)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

@@ -1683,10 +1683,66 @@ CREATE TABLE agent_pkg
   version varchar(31) null,
   platform varchar(63) null,
   pkg_file varchar(255) null,
-  description varchar(255) null,
   command varchar(255) null,
+  description varchar(255) null,
   PRIMARY KEY(pkg_id)
 ) TABLE_TYPE;
+
+/**
+ * Package deployment jobs
+ */
+CREATE TABLE package_deployment_jobs
+(
+  id integer not null,
+  pkg_id integer not null,
+  node_id integer not null,
+  user_id integer not null,
+  creation_time integer not null,
+  execution_time integer not null,
+  completion_time integer not null,
+  status integer not null,
+  failure_reason varchar(255) null,
+  PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * Package deployment log
+ */
+CREATE TABLE package_deployment_log
+(
+  job_id integer not null,
+#ifdef DB_TSDB
+  execution_time timestamptz not null,
+  completion_time timestamptz not null,
+#else
+  execution_time integer not null,
+  completion_time integer not null,
+#endif
+  node_id integer not null,
+  user_id integer not null,
+  status integer not null,
+  failure_reason varchar(255) null,
+  pkg_id integer not null,
+  pkg_type varchar(15) null,
+  pkg_name varchar(63) not null,
+  version varchar(31) null,
+  platform varchar(63) null,
+  pkg_file varchar(255) null,
+  command varchar(255) null,
+  description varchar(255) null,
+#ifdef DB_TSDB
+  PRIMARY KEY(job_id,execution_time)
+#else
+  PRIMARY KEY(job_id)
+#endif
+) TABLE_TYPE;
+
+CREATE INDEX idx_pkglog_exec_time ON package_deployment_log(execution_time);
+CREATE INDEX idx_pkglog_node ON package_deployment_log(node_id);
+
+#ifdef DB_TSDB
+SELECT create_hypertable('package_deployment_log', 'execution_time', chunk_time_interval => interval '86400 seconds');
+#endif
 
 /*
 ** Object tools

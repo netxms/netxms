@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2022 Raden Solutions
+ * Copyright (C) 2022-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ import org.xnap.commons.i18n.I18n;
 public class UserAgentNotificationView extends ConfigurationView implements SessionListener
 {
    private final I18n i18n = LocalizationHelper.getI18n(UserAgentNotificationView.class);
-   private static final String ID = "UserAgentNotifications";
+   private static final String ID = "configuration.ua-notifications";
 
    public static final int COL_ID = 0;
    public static final int COL_OBJECTS = 1;

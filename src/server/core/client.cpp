@@ -513,39 +513,51 @@ void NotifyClientsOnThresholdChange(UINT32 objectId, UINT32 dciId, UINT32 thresh
 }
 
 /**
- * Send notification message to all active user sessions with given subscription
+ * Notify client sessions that match filter
  */
-void NXCORE_EXPORTABLE NotifyClientSessions(const NXCPMessage& msg, const TCHAR *channel)
+void NXCORE_EXPORTABLE NotifyClientSessions(const NXCPMessage& msg, std::function<bool (ClientSession*)> filter)
 {
    s_sessionListLock.readLock();
-   auto it = s_sessions.begin();
-   while(it.hasNext())
+   if (s_sessions.size() > 0)
    {
-      ClientSession *session = it.next();
-      if (session->isAuthenticated() && !session->isTerminated() && ((channel == nullptr) || session->isSubscribedTo(channel)))
+      auto it = s_sessions.begin();
+      while(it.hasNext())
       {
-         session->postMessage(msg);
+         ClientSession *session = it.next();
+         if (session->isAuthenticated() && !session->isTerminated() && filter(session))
+         {
+            session->postMessage(msg);
+         }
       }
    }
    s_sessionListLock.unlock();
 }
 
 /**
+ * Send notification message to all active user sessions with given subscription
+ */
+void NXCORE_EXPORTABLE NotifyClientSessions(const NXCPMessage& msg, const wchar_t *channel)
+{
+   NotifyClientSessions(msg,
+      [channel] (ClientSession *session) -> bool
+      {
+         return (channel == nullptr) || session->isSubscribedTo(channel);
+      });
+}
+
+/**
  * Send notification to all active user sessions
  */
-void NXCORE_EXPORTABLE NotifyClientSessions(uint32_t code, uint32_t data, const TCHAR *channel)
+void NXCORE_EXPORTABLE NotifyClientSessions(uint32_t code, uint32_t data, const wchar_t *channel)
 {
-   s_sessionListLock.readLock();
-   auto it = s_sessions.begin();
-   while(it.hasNext())
-   {
-      ClientSession *session = it.next();
-      if (session->isAuthenticated() && !session->isTerminated() && ((channel == nullptr) || session->isSubscribedTo(channel)))
+   NXCPMessage msg(CMD_NOTIFY, 0);
+   msg.setField(VID_NOTIFICATION_CODE, code);
+   msg.setField(VID_NOTIFICATION_DATA, data);
+   NotifyClientSessions(msg,
+      [channel] (ClientSession *session) -> bool
       {
-         session->notify(code, data);
-      }
-   }
-   s_sessionListLock.unlock();
+         return (channel == nullptr) || session->isSubscribedTo(channel);
+      });
 }
 
 /**

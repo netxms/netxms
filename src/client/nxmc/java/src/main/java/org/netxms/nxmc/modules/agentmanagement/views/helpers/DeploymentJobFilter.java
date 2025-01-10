@@ -18,20 +18,22 @@
  */
 package org.netxms.nxmc.modules.agentmanagement.views.helpers;
 
+import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.client.AgentTunnel;
+import org.netxms.client.packages.PackageDeploymentJob;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
+import org.netxms.nxmc.modules.agentmanagement.views.DeploymentJobManager;
 
 /**
- * Filter for tunnel manager view
+ * Filter for deployment job manager view
  */
-public class TunnelManagerFilter extends ViewerFilter implements AbstractViewerFilter
+public class DeploymentJobFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private String filterString = null;
-   private boolean hideNonProxy = false;
-   private boolean hideNonUA = false;
+   private boolean hideInactive = false;
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -39,45 +41,34 @@ public class TunnelManagerFilter extends ViewerFilter implements AbstractViewerF
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      AgentTunnel t = (AgentTunnel)element;
+      PackageDeploymentJob job = (PackageDeploymentJob)element;
       
-      if (hideNonUA && !t.isUserAgentInstalled())
-         return false;
-
-      if (hideNonProxy && !t.isAgentProxy() && !t.isSnmpProxy() && !t.isSnmpTrapProxy() && !t.isSyslogProxy())
+      if (hideInactive && !job.isActive())
          return false;
       
       if ((filterString == null) || (filterString.isEmpty()))
          return true;
       
-      if (t.getAgentVersion().toLowerCase().contains(filterString))
+      if (job.getPackageName().toLowerCase().contains(filterString))
          return true;
 
-      if (t.isBound() ? Integer.toString(t.getActiveChannelCount()).toLowerCase().contains(filterString) : false)
-         return true;
-      
-      if (Integer.toString(t.getId()).toLowerCase().contains(filterString))
-         return true;
-      
-      if (t.getAddress().getHostAddress().toLowerCase().contains(filterString))
-         return true;
-      
-      if (t.isBound() ? Registry.getSession().getObjectName(t.getNodeId()).toLowerCase().contains(filterString) : false)
-         return true;
-      
-      if (t.getPlatformName().toLowerCase().contains(filterString))
-         return true;
-      
-      if (t.isBound() ? "bound".contains(filterString) : "unbound".contains(filterString))
-         return true;
-      
-      if (t.getSystemInformation().toLowerCase().contains(filterString))
-         return true;
-      
-      if (t.getSystemName().toLowerCase().contains(filterString))
+      if (job.getPackageFile().toLowerCase().contains(filterString))
          return true;
 
-      if (t.getHardwareIdAsText().toLowerCase().contains(filterString))
+      if (job.getDescription().toLowerCase().contains(filterString))
+         return true;
+      
+      if (Registry.getSession().getObjectName(job.getNodeId()).toLowerCase().contains(filterString))
+         return true;
+
+      if (job.getPlatform().toLowerCase().contains(filterString))
+         return true;
+
+      if (job.getErrorMessage().toLowerCase().contains(filterString))
+         return true;
+      
+      String status = ((ITableLabelProvider)((TableViewer)viewer).getLabelProvider()).getColumnText(job, DeploymentJobManager.COL_STATUS);
+      if (status.toLowerCase().contains(filterString))
          return true;
 
       return false;
@@ -94,22 +85,12 @@ public class TunnelManagerFilter extends ViewerFilter implements AbstractViewerF
    }
 
    /**
-    * Show/hide tunnels without proxy function
+    * Show/hide inactive jobs
     * 
-    * @param hide true to hide tunnels without proxy function
+    * @param hide true to hide inactive jobs
     */
-   public void setHideNonProxy(boolean hide)
+   public void setHideInactive(boolean hide)
    {
-      this.hideNonProxy = hide;
-   }
-
-   /**
-    * Show/hide tunnels without user agent
-    * 
-    * @param hide true to hide tunnels without user agent
-    */
-   public void setHideNonUA(boolean hide)
-   {
-      this.hideNonUA = hide;
+      this.hideInactive = hide;
    }
 }

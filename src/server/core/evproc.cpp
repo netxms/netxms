@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 #include "nxcore.h"
 #include <uthash.h>
 
-#define DEBUG_TAG _T("event.proc")
+#define DEBUG_TAG L"event.proc"
 
 #define MAX_DB_QUERY_FAILED_EVENTS     30
 
@@ -51,15 +51,15 @@ static void EventStormDetector()
 {
    ThreadSetName("EvtStormDetect");
 
-	if (!ConfigReadBoolean(_T("EventStorm.EnableDetection"), false))
+	if (!ConfigReadBoolean(L"EventStorm.EnableDetection", false))
 	{
 		// Event storm detection is off
 	   nxlog_debug_tag(DEBUG_TAG, 1, _T("Event storm detector thread stopped because event storm detection is off"));
 		return;
 	}
 
-	uint64_t eventsPerSecond = ConfigReadInt(_T("EventStorm.EventsPerSecond"), 100);
-	int duration = ConfigReadInt(_T("EventStorm.Duration"), 15);
+	uint64_t eventsPerSecond = ConfigReadInt(L"EventStorm.EventsPerSecond", 100);
+	int duration = ConfigReadInt(L"EventStorm.Duration", 15);
 
 	int actualDuration = 0;
 	uint64_t prevEvents = g_totalEventsProcessed;
@@ -74,11 +74,11 @@ static void EventStormDetector()
 			if (actualDuration >= duration)
 			{
 			   InterlockedOr64(&g_flags, AF_EVENT_STORM_DETECTED);
-				nxlog_debug_tag(DEBUG_TAG, 2, _T("Event storm detected: threshold=") INT64_FMT _T(" eventsPerSecond=") INT64_FMT, eventsPerSecond, numEvents);
+				nxlog_debug_tag(DEBUG_TAG, 2, L"Event storm detected: threshold=" INT64_FMT L" eventsPerSecond=" INT64_FMT, eventsPerSecond, numEvents);
             EventBuilder(EVENT_EVENT_STORM_DETECTED, g_dwMgmtNode)
-               .param(_T("eps"), numEvents)
-               .param(_T("duration"), duration)
-               .param(_T("threshold"), eventsPerSecond)
+               .param(L"eps", numEvents)
+               .param(L"duration", duration)
+               .param(L"threshold", eventsPerSecond)
                .post();
 			}
 		}
@@ -86,15 +86,15 @@ static void EventStormDetector()
 		{
 			actualDuration = 0;
 			InterlockedAnd64(&g_flags, ~AF_EVENT_STORM_DETECTED);
-		   nxlog_debug_tag(DEBUG_TAG, 2, _T("Event storm condition cleared"));
+		   nxlog_debug_tag(DEBUG_TAG, 2, L"Event storm condition cleared");
          EventBuilder(EVENT_EVENT_STORM_ENDED, g_dwMgmtNode)
-            .param(_T("eps"), numEvents)
-            .param(_T("duration"), duration)
-            .param(_T("threshold"), eventsPerSecond)
+            .param(L"eps", numEvents)
+            .param(L"duration", duration)
+            .param(L"threshold", eventsPerSecond)
             .post();
 		}
 	}
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Event storm detector thread stopped"));
+   nxlog_debug_tag(DEBUG_TAG, 1, L"Event storm detector thread stopped");
 }
 
 /**
@@ -126,7 +126,7 @@ static bool IsEventWriteAllowed(Event *event)
       if (s_dbQueryFailedTimestampPos == MAX_DB_QUERY_FAILED_EVENTS)
          s_dbQueryFailedTimestampPos = 0;
       if (!allow)
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("EventLogger: event %s with ID ") UINT64_FMT _T(" dropped by rate limiter"), event->getName(), event->getId());
+         nxlog_debug_tag(DEBUG_TAG, 5, L"EventLogger: event %s with ID " UINT64_FMT L" dropped by rate limiter", event->getName(), event->getId());
       return allow;
    }
    return true;
@@ -139,9 +139,9 @@ static inline void WriteEvent(DB_STATEMENT hStmt, Event *event)
 {
    DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, event->getId());
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, event->getCode());
-   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<UINT32>(event->getTimestamp()));
-   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<INT32>(event->getOrigin()));
-   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<UINT32>(event->getOriginTimestamp()));
+   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(event->getTimestamp()));
+   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<int32_t>(event->getOrigin()));
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(event->getOriginTimestamp()));
    DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, event->getSourceId());
    DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, event->getZoneUIN());
    DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, event->getDciId());
@@ -177,53 +177,53 @@ static void EventLogger()
 		int syntaxId = DBGetSyntax(hdb);
 		if (syntaxId == DB_SYNTAX_SQLITE)
 		{ 
-         StringBuffer query = _T("INSERT INTO event_log (event_id,event_code,event_timestamp,event_source,zone_uin,origin,")
-                        _T("origin_timestamp,dci_id,event_severity,event_message,root_event_id,event_tags,raw_data) VALUES (");
+         StringBuffer query(L"INSERT INTO event_log (event_id,event_code,event_timestamp,event_source,zone_uin,origin,"
+                            L"origin_timestamp,dci_id,event_severity,event_message,root_event_id,event_tags,raw_data) VALUES (");
          query.append(event->getId());
-         query.append(_T(','));
+         query.append(L',');
          query.append(event->getCode());
-         query.append(_T(','));
-         query.append((UINT32)event->getTimestamp());
-         query.append(_T(','));
+         query.append(L',');
+         query.append(static_cast<int64_t>(event->getTimestamp()));
+         query.append(L',');
          query.append(event->getSourceId());
-         query.append(_T(','));
+         query.append(L',');
          query.append(event->getZoneUIN());
-         query.append(_T(','));
+         query.append(L',');
          query.append(static_cast<int32_t>(event->getOrigin()));
-         query.append(_T(','));
-         query.append(static_cast<uint32_t>(event->getOriginTimestamp()));
-         query.append(_T(','));
+         query.append(L',');
+         query.append(static_cast<int64_t>(event->getOriginTimestamp()));
+         query.append(L',');
          query.append(event->getDciId());
-         query.append(_T(','));
+         query.append(L',');
          query.append(event->getSeverity());
-         query.append(_T(','));
+         query.append(L',');
          query.append(DBPrepareString(hdb, event->getMessage(), MAX_EVENT_MSG_LENGTH));
-         query.append(_T(','));
+         query.append(L',');
          query.append(event->getRootId());
-         query.append(_T(','));
+         query.append(L',');
          query.append(DBPrepareString(hdb, event->getTagsAsList(), 2000));
-         query.append(_T(','));
+         query.append(L',');
          json_t *json = event->toJson();
          char *jsonText = json_dumps(json, JSON_COMPACT);
          query.append(DBPrepareStringUTF8(hdb, jsonText));
          MemFree(jsonText);
          json_decref(json);
-         query.append(_T(')'));
+         query.append(L')');
 
          DBQuery(hdb, query);
-         nxlog_debug_tag(DEBUG_TAG, 8, _T("EventLogger: DBQuery: id=%d,code=%d"), (int)event->getId(), (int)event->getCode());
+         nxlog_debug_tag(DEBUG_TAG, 8, L"EventLogger: DBQuery: id=" UINT64_FMT L",code=%u", event->getId(), event->getCode());
 			delete event;
 		}
 		else
 		{
 			DB_STATEMENT hStmt = DBPrepare(hdb,
 			         (g_dbSyntax == DB_SYNTAX_TSDB) ?
-                        _T("INSERT INTO event_log (event_id,event_code,event_timestamp,origin,")
-                        _T("origin_timestamp,event_source,zone_uin,dci_id,event_severity,event_message,root_event_id,event_tags,raw_data) ")
-                        _T("VALUES (?,?,to_timestamp(?),?,?,?,?,?,?,?,?,?,?)") :
-                        _T("INSERT INTO event_log (event_id,event_code,event_timestamp,origin,")
-                        _T("origin_timestamp,event_source,zone_uin,dci_id,event_severity,event_message,root_event_id,event_tags,raw_data) ")
-                        _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"), true);
+                        L"INSERT INTO event_log (event_id,event_code,event_timestamp,origin,"
+                        L"origin_timestamp,event_source,zone_uin,dci_id,event_severity,event_message,root_event_id,event_tags,raw_data) "
+                        L"VALUES (?,?,to_timestamp(?),?,?,?,?,?,?,?,?,?,?)" :
+                        L"INSERT INTO event_log (event_id,event_code,event_timestamp,origin,"
+                        L"origin_timestamp,event_source,zone_uin,dci_id,event_severity,event_message,root_event_id,event_tags,raw_data) "
+                        L"VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)", true);
 			if (hStmt != nullptr)
 			{
 			   WriteEvent(hStmt, event);
@@ -592,7 +592,7 @@ static void ParallelEventProcessor()
 	s_loggerQueue.put(INVALID_POINTER_VALUE);
 	ThreadJoin(s_threadStormDetector);
 	ThreadJoin(s_threadLogger);
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Event processing thread stopped"));
+   nxlog_debug_tag(DEBUG_TAG, 1, L"Event processing thread stopped");
 }
 
 /**

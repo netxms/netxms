@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,11 @@
 #include "nxcore.h"
 
 #define DEBUG_TAG _T("housekeeper")
+
+/**
+ * Remove expired jobs
+ */
+void RemoveExpiredPackageDeploymentJobs(DB_HANDLE hdb);
 
 /**
  * Housekeeper wakeup condition
@@ -424,6 +429,8 @@ static void HouseKeeper()
          break;
       if (!DeleteExpiredLogRecords(_T("certificate action log"), _T("certificate_action_log"), _T("operation_timestamp"), _T("CertificateActionLog.RetentionTime"), hdb, cycleStartTime))
          break;
+      if (!DeleteExpiredLogRecords(_T("package deployment log"), _T("package_deployment_log"), _T("execution_time"), _T("PackageDeployment.LogRetentionTime"), hdb, cycleStartTime))
+         break;
 
 		// Remove outdated audit log records
 		int32_t retentionTime = ConfigReadULong(_T("AuditLog.RetentionTime"), 90);
@@ -549,6 +556,9 @@ static void HouseKeeper()
 	      objects->get(i)->saveRuntimeData(hdb);
 	   }
 
+	   // Delete old completed package deployment jobs
+	   RemoveExpiredPackageDeploymentJobs(hdb);
+
 		DBConnectionPoolReleaseConnection(hdb);
 
 		// Validate template DCIs
@@ -561,7 +571,7 @@ static void HouseKeeper()
             return _CONTINUE;
 		   });
 
-	   //Validate scripts in script library
+	   // Validate scripts in script library
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Validate server NXSL scripts"));
 	   ValidateScripts();
 

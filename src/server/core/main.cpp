@@ -132,6 +132,9 @@ void InitCurrencyList();
 void LoadOUIDatabase();
 void LoadAssetManagementSchema();
 
+void StartPackageDeploymentManager();
+void StopPackageDeploymentManager();
+
 /**
  * Syslog server control
  */
@@ -1390,6 +1393,8 @@ retry_db_lock:
    InitMobileDeviceListeners();
    s_mobileDeviceListenerThread = ThreadCreateEx(MobileDeviceListenerThread);
 
+   StartPackageDeploymentManager();
+
    // Validate scripts in script library
    ValidateScripts();
 
@@ -1435,6 +1440,8 @@ void NXCORE_EXPORTABLE Shutdown()
    }
 
    ThreadJoin(s_statCollectorThread);
+
+   StopPackageDeploymentManager();
 
    StopHouseKeeper();
    ShutdownTaskScheduler();

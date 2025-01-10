@@ -65,11 +65,9 @@ import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.helpers.MenuContributionItem;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.agentmanagement.PackageDeployment;
 import org.netxms.nxmc.modules.agentmanagement.SendUserAgentNotificationAction;
 import org.netxms.nxmc.modules.agentmanagement.dialogs.PackageSelectionDialog;
 import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigurationEditor;
-import org.netxms.nxmc.modules.agentmanagement.views.PackageDeploymentMonitor;
 import org.netxms.nxmc.modules.assetmanagement.LinkAssetToObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.LinkObjectToAssetAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkAssetFromObjectAction;
@@ -1065,28 +1063,21 @@ public class ObjectContextMenuManager extends MenuManager
          }
       }
 
-      PackageDeploymentMonitor monitor = new PackageDeploymentMonitor();  
-      monitor.setPackageId(dialog.getSelectedPackageId());
-      monitor.setApplicableObjects(objects);       
-      PackageDeployment deployment = new PackageDeployment(monitor);
-      monitor.setPackageDeploymentListener(deployment);
-      view.openView(monitor);
-
       final NXCSession session = Registry.getSession();
-      Job job = new Job(i18n.tr("Deploy agent package"), monitor) {
+      Job job = new Job(i18n.tr("Starting agent package deployment"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.deployPackage(dialog.getSelectedPackageId(), objects.toArray(new Long[objects.size()]), deployment);
+            session.deployPackage(dialog.getSelectedPackageId(), objects);
+            runInUIThread(() -> view.addMessage(MessageArea.SUCCESS, i18n.tr("Package deployment started")));
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
             return i18n.tr("Cannot start package deployment");
          }
       };
-      job.setUser(false);
       job.start();
    }
 

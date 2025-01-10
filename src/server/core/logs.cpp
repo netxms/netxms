@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,157 +28,177 @@
  */
 static NXCORE_LOG s_logs[] =
 {
-	{ _T("AlarmLog"), _T("alarms"), _T("alarm_id"), _T("source_object_id"), SYSTEM_ACCESS_VIEW_EVENT_LOG,
+	{ L"AlarmLog", L"alarms", L"alarm_id", L"source_object_id", SYSTEM_ACCESS_VIEW_EVENT_LOG,
 		{
-			{ _T("alarm_id"), _T("Alarm ID"), LC_INTEGER, 0 },
-			{ _T("alarm_state"), _T("State"), LC_ALARM_STATE, 0 },
-			{ _T("hd_state"), _T("Helpdesk State"), LC_ALARM_HD_STATE, 0 },
-			{ _T("source_object_id"), _T("Source"), LC_OBJECT_ID, 0 },
-         { _T("zone_uin"), _T("Zone"), LC_ZONE_UIN, 0 },
-         { _T("dci_id"), _T("DCI"), LC_INTEGER, 0 },
-			{ _T("current_severity"), _T("Severity"), LC_SEVERITY, 0 },
-			{ _T("original_severity"), _T("Original Severity"), LC_SEVERITY, 0 },
-			{ _T("source_event_code"), _T("Event"), LC_EVENT_CODE, 0 },
-			{ _T("message"), _T("Message"), LC_TEXT, 0 },
-			{ _T("repeat_count"), _T("Repeat Count"), LC_INTEGER, 0 },
-			{ _T("creation_time"), _T("Created"), LC_TIMESTAMP, 0 },
-			{ _T("last_change_time"), _T("Last Changed"), LC_TIMESTAMP, 0 },
-			{ _T("ack_by"), _T("Ack by"), LC_USER_ID, 0 },
-			{ _T("resolved_by"), _T("Resolved by"), LC_USER_ID, 0 },
-			{ _T("term_by"), _T("Terminated by"), LC_USER_ID, 0 },
-         { _T("rule_guid"), _T("Rule"), LC_TEXT, 0 },
-         { _T("rule_description"), _T("Rule Description"), LC_TEXT, 0 },
-			{ _T("alarm_key"), _T("Key"), LC_TEXT, 0 },
-         { _T("event_tags"), _T("Event Tags"), LC_TEXT, 0 },
+			{ L"alarm_id", L"Alarm ID", LC_INTEGER, 0 },
+			{ L"alarm_state", L"State", LC_ALARM_STATE, 0 },
+			{ L"hd_state", L"Helpdesk State", LC_ALARM_HD_STATE, 0 },
+			{ L"source_object_id", L"Source", LC_OBJECT_ID, 0 },
+         { L"zone_uin", L"Zone", LC_ZONE_UIN, 0 },
+         { L"dci_id", L"DCI", LC_INTEGER, 0 },
+			{ L"current_severity", L"Severity", LC_SEVERITY, 0 },
+			{ L"original_severity", L"Original Severity", LC_SEVERITY, 0 },
+			{ L"source_event_code", L"Event", LC_EVENT_CODE, 0 },
+			{ L"message", L"Message", LC_TEXT, 0 },
+			{ L"repeat_count", L"Repeat Count", LC_INTEGER, 0 },
+			{ L"creation_time", L"Created", LC_TIMESTAMP, 0 },
+			{ L"last_change_time", L"Last Changed", LC_TIMESTAMP, 0 },
+			{ L"ack_by", L"Ack by", LC_USER_ID, 0 },
+			{ L"resolved_by", L"Resolved by", LC_USER_ID, 0 },
+			{ L"term_by", L"Terminated by", LC_USER_ID, 0 },
+         { L"rule_guid", L"Rule", LC_TEXT, 0 },
+         { L"rule_description", L"Rule Description", LC_TEXT, 0 },
+			{ L"alarm_key", L"Key", LC_TEXT, 0 },
+         { L"event_tags", L"Event Tags", LC_TEXT, 0 },
 			{ nullptr, nullptr, 0, 0 }
 		}
 	},
-   { _T("AssetChangeLog"), _T("asset_change_log"), _T("record_id"), _T("asset_id"), SYSTEM_ACCESS_VIEW_ASSET_CHANGE_LOG,
+   { L"AssetChangeLog", L"asset_change_log", L"record_id", L"asset_id", SYSTEM_ACCESS_VIEW_ASSET_CHANGE_LOG,
       {
-         { _T("record_id"), _T("Record ID"), LC_INTEGER, LCF_RECORD_ID },
-         { _T("operation_timestamp"), _T("Timestamp"), LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
-         { _T("asset_id"), _T("Asset"), LC_OBJECT_ID, 0 },
-         { _T("attribute_name"), _T("Attribute name"), LC_TEXT, 0 },
-         { _T("operation"), _T("Operation"), LC_ASSET_OPERATION, 0 },
-         { _T("old_value"), _T("Old value"), LC_TEXT, 0 },
-         { _T("new_value"), _T("New value"), LC_TEXT, 0 },
-         { _T("user_id"), _T("User"), LC_USER_ID, 0 },
-         { _T("linked_object_id"), _T("Linked object"), LC_OBJECT_ID, 0 },
+         { L"record_id", L"Record ID", LC_INTEGER, LCF_RECORD_ID },
+         { L"operation_timestamp", L"Timestamp", LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
+         { L"asset_id", L"Asset", LC_OBJECT_ID, 0 },
+         { L"attribute_name", L"Attribute name", LC_TEXT, 0 },
+         { L"operation", L"Operation", LC_ASSET_OPERATION, 0 },
+         { L"old_value", L"Old value", LC_TEXT, 0 },
+         { L"new_value", L"New value", LC_TEXT, 0 },
+         { L"user_id", L"User", LC_USER_ID, 0 },
+         { L"linked_object_id", L"Linked object", LC_OBJECT_ID, 0 },
          { nullptr, nullptr, 0, 0 }
       }
    },
-	{ _T("AuditLog"), _T("audit_log"), _T("record_id"), _T("object_id"), SYSTEM_ACCESS_VIEW_AUDIT_LOG,
+	{ L"AuditLog", L"audit_log", L"record_id", L"object_id", SYSTEM_ACCESS_VIEW_AUDIT_LOG,
 		{
-			{ _T("record_id"), _T("Record ID"), LC_INTEGER, LCF_RECORD_ID },
-			{ _T("timestamp"), _T("Timestamp"), LC_TIMESTAMP, 0 },
-			{ _T("subsystem"), _T("Subsystem"), LC_TEXT, 0 },
-         { _T("object_id"), _T("Object"), LC_OBJECT_ID, 0 },
-			{ _T("user_id"), _T("User"), LC_USER_ID, 0 },
-         { _T("session_id"), _T("Session"), LC_INTEGER, 0 },
-			{ _T("workstation"), _T("Workstation"), LC_TEXT, 0 },
-			{ _T("message"), _T("Message"), LC_TEXT, 0 },
-         { _T("old_value"), _T("Old value"), LC_TEXT_DETAILS, 0 },
-         { _T("new_value"), _T("New value"), LC_TEXT_DETAILS, 0 },
-         { _T("value_type"), _T("Value type"), LC_TEXT_DETAILS, 0 },
-         { _T("hmac"), _T("HMAC"), LC_TEXT_DETAILS, 0 },
+			{ L"record_id", L"Record ID", LC_INTEGER, LCF_RECORD_ID },
+			{ L"timestamp", L"Timestamp", LC_TIMESTAMP, 0 },
+			{ L"subsystem", L"Subsystem", LC_TEXT, 0 },
+         { L"object_id", L"Object", LC_OBJECT_ID, 0 },
+			{ L"user_id", L"User", LC_USER_ID, 0 },
+         { L"session_id", L"Session", LC_INTEGER, 0 },
+			{ L"workstation", L"Workstation", LC_TEXT, 0 },
+			{ L"message", L"Message", LC_TEXT, 0 },
+         { L"old_value", L"Old value", LC_TEXT_DETAILS, 0 },
+         { L"new_value", L"New value", LC_TEXT_DETAILS, 0 },
+         { L"value_type", L"Value type", LC_TEXT_DETAILS, 0 },
+         { L"hmac", L"HMAC", LC_TEXT_DETAILS, 0 },
 			{ nullptr, nullptr, 0, 0 }
 		}
 	},
-	{ _T("EventLog"), _T("event_log"), _T("event_id"), _T("event_source"), SYSTEM_ACCESS_VIEW_EVENT_LOG,
+	{ L"EventLog", L"event_log", L"event_id", L"event_source", SYSTEM_ACCESS_VIEW_EVENT_LOG,
 		{
-         { _T("event_id"), _T("ID"), LC_INTEGER, 0 },
-			{ _T("event_timestamp"), _T("Time"), LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
-         { _T("origin_timestamp"), _T("Origin time"), LC_TIMESTAMP, 0 },
-         { _T("origin"), _T("Origin"), LC_EVENT_ORIGIN, 0 },
-			{ _T("event_source"), _T("Source"), LC_OBJECT_ID, 0 },
-         { _T("zone_uin"), _T("Zone"), LC_ZONE_UIN, 0 },
-         { _T("dci_id"), _T("DCI"), LC_INTEGER, 0 },
-			{ _T("event_code"), _T("Event"), LC_EVENT_CODE, 0 },
-			{ _T("event_severity"), _T("Severity"), LC_SEVERITY, 0 },
-			{ _T("event_message"), _T("Message"), LC_TEXT, 0 },
-			{ _T("event_tags"), _T("Event tags"), LC_TEXT, 0 },
-         { _T("root_event_id"), _T("Root ID"), LC_INTEGER, 0 },
-         { _T("raw_data"), _T("Raw data"), LC_JSON_DETAILS, 0 },
+         { L"event_id", L"ID", LC_INTEGER, 0 },
+			{ L"event_timestamp", L"Time", LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
+         { L"origin_timestamp", L"Origin time", LC_TIMESTAMP, 0 },
+         { L"origin", L"Origin", LC_EVENT_ORIGIN, 0 },
+			{ L"event_source", L"Source", LC_OBJECT_ID, 0 },
+         { L"zone_uin", L"Zone", LC_ZONE_UIN, 0 },
+         { L"dci_id", L"DCI", LC_INTEGER, 0 },
+			{ L"event_code", L"Event", LC_EVENT_CODE, 0 },
+			{ L"event_severity", L"Severity", LC_SEVERITY, 0 },
+			{ L"event_message", L"Message", LC_TEXT, 0 },
+			{ L"event_tags", L"Event tags", LC_TEXT, 0 },
+         { L"root_event_id", L"Root ID", LC_INTEGER, 0 },
+         { L"raw_data", L"Raw data", LC_JSON_DETAILS, 0 },
 			{ nullptr, nullptr, 0, 0 }
 		}
 	},
-   { _T("MaintenanceJournal"), _T("maintenance_journal"), _T("record_id"), _T("object_id"), 0,
+   { L"MaintenanceJournal", L"maintenance_journal", L"record_id", L"object_id", 0,
       {
-         { _T("record_id"), _T("Record ID"), LC_INTEGER, LCF_RECORD_ID },
-         { _T("object_id"), _T("Object"), LC_OBJECT_ID, 0 },
-         { _T("author"), _T("Author"), LC_USER_ID, 0 },
-         { _T("last_edited_by"), _T("Last edited dy"), LC_USER_ID, 0 },
-         { _T("description"), _T("Description"), LC_TEXT, 0 },
-         { _T("creation_time"), _T("Creation time"), LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
-         { _T("modification_time"), _T("Modification time"), LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
+         { L"record_id", L"Record ID", LC_INTEGER, LCF_RECORD_ID },
+         { L"object_id", L"Object", LC_OBJECT_ID, 0 },
+         { L"author", L"Author", LC_USER_ID, 0 },
+         { L"last_edited_by", L"Last edited dy", LC_USER_ID, 0 },
+         { L"description", L"Description", LC_TEXT, 0 },
+         { L"creation_time", L"Creation time", LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
+         { L"modification_time", L"Modification time", LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
          { nullptr, nullptr, 0, 0 }
       }
    },
-   { _T("NotificationLog"), _T("notification_log"), _T("id"), nullptr, SYSTEM_ACCESS_VIEW_EVENT_LOG,
+   { L"NotificationLog", L"notification_log", L"id", nullptr, SYSTEM_ACCESS_VIEW_EVENT_LOG,
       {
-         { _T("id"), _T("ID"), LC_INTEGER, LCF_RECORD_ID },
-         { _T("notification_timestamp"), _T("Timestamp"), LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
-         { _T("notification_channel"), _T("Channel"), LC_TEXT, 0 },
-         { _T("recipient"), _T("Recipient"), LC_TEXT, 0 },
-         { _T("subject"), _T("Subject"), LC_TEXT, 0 },
-         { _T("message"), _T("Message"), LC_TEXT, 0 },
-         { _T("success"), _T("Status"), LC_COMPLETION_STATUS, LCF_CHAR_COLUMN },
+         { L"id", L"ID", LC_INTEGER, LCF_RECORD_ID },
+         { L"notification_timestamp", L"Timestamp", LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
+         { L"notification_channel", L"Channel", LC_TEXT, 0 },
+         { L"recipient", L"Recipient", LC_TEXT, 0 },
+         { L"subject", L"Subject", LC_TEXT, 0 },
+         { L"message", L"Message", LC_TEXT, 0 },
+         { L"success", L"Status", LC_COMPLETION_STATUS, LCF_CHAR_COLUMN },
          { nullptr, nullptr, 0, 0 }
       }
    },
-   { _T("ServerActionExecutionLog"), _T("server_action_execution_log"), _T("id"), nullptr, SYSTEM_ACCESS_VIEW_EVENT_LOG,
+   { L"PackageDeploymentLog", L"package_deployment_log", L"record_id", nullptr, SYSTEM_ACCESS_MANAGE_PACKAGES,
       {
-         { _T("id"), _T("ID"), LC_INTEGER, LCF_RECORD_ID },
-         { _T("action_timestamp"), _T("Timestamp"), LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
-         { _T("action_id"), _T("Action ID"), LC_INTEGER, 0 },
-         { _T("action_name"), _T("Action name"), LC_TEXT, 0 },
-         { _T("channel_name"), _T("Channel name"), LC_TEXT, 0 },
-         { _T("recipient"), _T("Recipient"), LC_TEXT, 0 },
-         { _T("subject"), _T("Subject"), LC_TEXT, 0 },
-         { _T("action_data"), _T("Action data"), LC_TEXT, 0 },
-         { _T("event_id"), _T("Event ID"), LC_INTEGER, 0 },
-         { _T("event_code"), _T("Event"), LC_EVENT_CODE, 0 },
-         { _T("success"), _T("Status"), LC_COMPLETION_STATUS, LCF_CHAR_COLUMN },
+         { L"record_id", L"ID", LC_INTEGER, LCF_RECORD_ID },
+         { L"execution_time", L"Execution time", LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
+         { L"completion_time", L"Completion time", LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
+         { L"node_id", L"Node", LC_OBJECT_ID, 0 },
+         { L"user_id", L"Node", LC_USER_ID, 0 },
+         { L"status", L"Status", LC_DEPLOYMENT_STATUS, 0 },
+         { L"failure_reason", L"Failure reason", LC_TEXT, 0 },
+         { L"pkg_id", L"Package ID", LC_INTEGER, 0 },
+         { L"pkg_type", L"Package type", LC_TEXT, 0 },
+         { L"pkg_name", L"Package name", LC_TEXT, 0 },
+         { L"version", L"Package version", LC_TEXT, 0 },
+         { L"platform", L"Platform", LC_TEXT, 0 },
+         { L"pkg_file", L"Package file", LC_TEXT, 0 },
+         { L"command", L"Command", LC_TEXT, 0 },
+         { L"description", L"Package description", LC_TEXT, 0 },
          { nullptr, nullptr, 0, 0 }
       }
    },
-	{ _T("SnmpTrapLog"), _T("snmp_trap_log"), _T("trap_id"), _T("object_id"), SYSTEM_ACCESS_VIEW_TRAP_LOG,
+   { L"ServerActionExecutionLog", L"server_action_execution_log", L"id", nullptr, SYSTEM_ACCESS_VIEW_EVENT_LOG,
+      {
+         { L"id", L"ID", LC_INTEGER, LCF_RECORD_ID },
+         { L"action_timestamp", L"Timestamp", LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
+         { L"action_id", L"Action ID", LC_INTEGER, 0 },
+         { L"action_name", L"Action name", LC_TEXT, 0 },
+         { L"channel_name", L"Channel name", LC_TEXT, 0 },
+         { L"recipient", L"Recipient", LC_TEXT, 0 },
+         { L"subject", L"Subject", LC_TEXT, 0 },
+         { L"action_data", L"Action data", LC_TEXT, 0 },
+         { L"event_id", L"Event ID", LC_INTEGER, 0 },
+         { L"event_code", L"Event", LC_EVENT_CODE, 0 },
+         { L"success", L"Status", LC_COMPLETION_STATUS, LCF_CHAR_COLUMN },
+         { nullptr, nullptr, 0, 0 }
+      }
+   },
+	{ L"SnmpTrapLog", L"snmp_trap_log", L"trap_id", L"object_id", SYSTEM_ACCESS_VIEW_TRAP_LOG,
 		{
-			{ _T("trap_timestamp"), _T("Time"), LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
-			{ _T("ip_addr"), _T("Source IP"), LC_TEXT, 0 },
-			{ _T("object_id"), _T("Object"), LC_OBJECT_ID, 0 },
-         { _T("zone_uin"), _T("Zone"), LC_ZONE_UIN, 0 },
-			{ _T("trap_oid"), _T("Trap OID"), LC_TEXT, 0 },
-			{ _T("trap_varlist"), _T("Varbinds"), LC_TEXT, 0 },
+			{ L"trap_timestamp", L"Time", LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
+			{ L"ip_addr", L"Source IP", LC_TEXT, 0 },
+			{ L"object_id", L"Object", LC_OBJECT_ID, 0 },
+         { L"zone_uin", L"Zone", LC_ZONE_UIN, 0 },
+			{ L"trap_oid", L"Trap OID", LC_TEXT, 0 },
+			{ L"trap_varlist", L"Varbinds", LC_TEXT, 0 },
 			{ nullptr, nullptr, 0, 0 }
 		}
 	},
-	{ _T("syslog"), _T("syslog"), _T("msg_id"), _T("source_object_id"), SYSTEM_ACCESS_VIEW_SYSLOG,
+	{ L"syslog", L"syslog", L"msg_id", L"source_object_id", SYSTEM_ACCESS_VIEW_SYSLOG,
 		{
-			{ _T("msg_timestamp"), _T("Time"), LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
-			{ _T("source_object_id"), _T("Source"), LC_OBJECT_ID, 0 },
-         { _T("zone_uin"), _T("Zone"), LC_ZONE_UIN, 0 },
-			{ _T("facility"), _T("Facility"), LC_INTEGER, 0 },
-			{ _T("severity"), _T("Severity"), LC_INTEGER, 0 },
-			{ _T("hostname"), _T("Host"), LC_TEXT, 0 },
-			{ _T("msg_tag"), _T("Tag"), LC_TEXT, 0 },
-			{ _T("msg_text"), _T("Text"), LC_TEXT, 0 },
+			{ L"msg_timestamp", L"Time", LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
+			{ L"source_object_id", L"Source", LC_OBJECT_ID, 0 },
+         { L"zone_uin", L"Zone", LC_ZONE_UIN, 0 },
+			{ L"facility", L"Facility", LC_INTEGER, 0 },
+			{ L"severity", L"Severity", LC_INTEGER, 0 },
+			{ L"hostname", L"Host", LC_TEXT, 0 },
+			{ L"msg_tag", L"Tag", LC_TEXT, 0 },
+			{ L"msg_text", L"Text", LC_TEXT, 0 },
          { nullptr, nullptr, 0, 0 }
 		}
 	},
-   { _T("WindowsEventLog"), _T("win_event_log"), _T("id"), _T("node_id"), SYSTEM_ACCESS_VIEW_SYSLOG,
+   { L"WindowsEventLog", L"win_event_log", L"id", L"node_id", SYSTEM_ACCESS_VIEW_SYSLOG,
       {
-         { _T("id"), _T("ID"), LC_INTEGER, LCF_RECORD_ID },
-         { _T("event_timestamp"), _T("Time"), LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
-         { _T("origin_timestamp"), _T("Origin time"), LC_TIMESTAMP, 0 },
-         { _T("node_id"), _T("Source"), LC_OBJECT_ID, 0 },
-         { _T("zone_uin"), _T("Zone"), LC_ZONE_UIN, 0 },
-         { _T("log_name"), _T("Log name"), LC_TEXT, 0 },
-         { _T("event_source"), _T("Event source"), LC_TEXT, 0 },
-         { _T("event_severity"), _T("Event severity"), LC_INTEGER, 0 },
-         { _T("event_code"), _T("Event code"), LC_INTEGER, 0 },
-         { _T("message"), _T("Message"), LC_TEXT, 0 },
-         { _T("raw_data"), _T("Raw data"), LC_TEXT_DETAILS, 0 },
+         { L"id", L"ID", LC_INTEGER, LCF_RECORD_ID },
+         { L"event_timestamp", L"Time", LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
+         { L"origin_timestamp", L"Origin time", LC_TIMESTAMP, 0 },
+         { L"node_id", L"Source", LC_OBJECT_ID, 0 },
+         { L"zone_uin", L"Zone", LC_ZONE_UIN, 0 },
+         { L"log_name", L"Log name", LC_TEXT, 0 },
+         { L"event_source", L"Event source", LC_TEXT, 0 },
+         { L"event_severity", L"Event severity", LC_INTEGER, 0 },
+         { L"event_code", L"Event code", LC_INTEGER, 0 },
+         { L"message", L"Message", LC_TEXT, 0 },
+         { L"raw_data", L"Raw data", LC_TEXT_DETAILS, 0 },
          { nullptr, nullptr, 0, 0 }
       }
    },
@@ -225,7 +245,7 @@ static int32_t RegisterLogHandle(const shared_ptr<LogHandle>& handle, ClientSess
 	r->id = s_handleId++;
 	s_regListMutex.unlock();
 
-   nxlog_debug_tag(DEBUG_TAG_LOGS, 6, _T("RegisterLogHandle: handle object %p registered as %d"), handle.get(), r->id);
+   nxlog_debug_tag(DEBUG_TAG_LOGS, 6, L"RegisterLogHandle: handle object %p registered as %d", handle.get(), r->id);
 	return r->id;
 }
 
@@ -234,11 +254,11 @@ static int32_t RegisterLogHandle(const shared_ptr<LogHandle>& handle, ClientSess
  *
  * @return log handle on success, -1 on error, -2 if log not found
  */
-static int32_t OpenLogInternal(NXCORE_LOG *logs, const TCHAR *name, ClientSession *session, uint32_t *rcc)
+static int32_t OpenLogInternal(NXCORE_LOG *logs, const wchar_t *name, ClientSession *session, uint32_t *rcc)
 {
 	for(int i = 0; logs[i].name != nullptr; i++)
 	{
-		if (!_tcsicmp(name, logs[i].name))
+		if (!wcsicmp(name, logs[i].name))
 		{
 			if (session->checkSystemAccessRights(logs[i].requiredAccess))
 			{
@@ -258,7 +278,7 @@ static int32_t OpenLogInternal(NXCORE_LOG *logs, const TCHAR *name, ClientSessio
 /**
  * Open log by name
  */
-int32_t OpenLog(const TCHAR *name, ClientSession *session, uint32_t *rcc)
+int32_t OpenLog(const wchar_t *name, ClientSession *session, uint32_t *rcc)
 {
    int32_t rc = OpenLogInternal(s_logs, name, session, rcc);
    if (rc != -2)
@@ -282,7 +302,7 @@ int32_t OpenLog(const TCHAR *name, ClientSession *session, uint32_t *rcc)
 uint32_t CloseLog(ClientSession *session, int32_t logHandle)
 {
    uint32_t rcc = RCC_INVALID_LOG_HANDLE;
-   nxlog_debug_tag(DEBUG_TAG_LOGS, 6, _T("CloseLog: close request from session %d for handle %d"), session->getId(), logHandle);
+   nxlog_debug_tag(DEBUG_TAG_LOGS, 6, L"CloseLog: close request from session %d for handle %d", session->getId(), logHandle);
 	s_regListMutex.lock();
 	for(LogHandleRegistration *r = s_regList; r->next != nullptr; r = r->next)
 	{
@@ -304,7 +324,7 @@ uint32_t CloseLog(ClientSession *session, int32_t logHandle)
  */
 void CloseAllLogsForSession(session_id_t sessionId)
 {
-   nxlog_debug_tag(DEBUG_TAG_LOGS, 6, _T("Closing all logs for session %d"), sessionId);
+   nxlog_debug_tag(DEBUG_TAG_LOGS, 6, L"Closing all logs for session %d", sessionId);
    s_regListMutex.lock();
    for(LogHandleRegistration *r = s_regList; r->next != nullptr; r = r->next)
    {
@@ -328,7 +348,7 @@ shared_ptr<LogHandle> AcquireLogHandleObject(ClientSession *session, int32_t log
 {
 	shared_ptr<LogHandle> object;
 
-   nxlog_debug_tag(DEBUG_TAG_LOGS, 6, _T("AcquireLogHandleObject: request from session %d for handle %d"), session->getId(), logHandle);
+   nxlog_debug_tag(DEBUG_TAG_LOGS, 6, L"AcquireLogHandleObject: request from session %d for handle %d", session->getId(), logHandle);
 	s_regListMutex.lock();
    for(LogHandleRegistration *r = s_regList->next; r != nullptr; r = r->next)
    {

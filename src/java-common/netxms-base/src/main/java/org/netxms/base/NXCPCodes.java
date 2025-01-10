@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -143,7 +143,7 @@ public class NXCPCodes
    public static final int CMD_WRITE_AGENT_CONFIG_FILE = 0x0075;
 	public static final int CMD_GET_PARAMETER_LIST = 0x0076;
 	public static final int CMD_DEPLOY_PACKAGE = 0x0077;
-	public static final int CMD_INSTALLER_INFO = 0x0078;
+   public static final int CMD_PACKAGE_DEPLOYMENT_JOB_UPDATE = 0x0078;
 	public static final int CMD_GET_DATA_COLLECTION_SUMMARY = 0x0079;
    public static final int CMD_REQUEST_AUTH_TOKEN = 0x007A;
 	public static final int CMD_SET_USER_VARIABLE = 0x007B;
@@ -274,8 +274,8 @@ public class NXCPCodes
 	public static final int CMD_CLOSE_CONSOLE = 0x00F8;
 	public static final int CMD_GET_SELECTED_OBJECTS = 0x00F9;
 	public static final int CMD_GET_VLANS = 0x00FA;
-   // public static final int CMD_HOLD_JOB = 0x00FB;
-   // public static final int CMD_UNHOLD_JOB = 0x00FC;
+   public static final int CMD_GET_SYSTEM_TIME = 0x00FB;
+   public static final int CMD_SET_SYSTEM_TIME = 0x00FC;
 	public static final int CMD_CHANGE_ZONE = 0x00FD;
 	public static final int CMD_GET_AGENT_FILE = 0x00FE;
 	public static final int CMD_GET_FILE_DETAILS = 0x00FF;
@@ -485,6 +485,8 @@ public class NXCPCodes
    public static final int CMD_EXECUTE_DASBOARD_SCRIPT = 0x01D0;
    public static final int CMD_UPDATE_PEER_INTERFACE = 0x01D1;
    public static final int CMD_CLEAR_PEER_INTERFACE = 0x01D2;
+   public static final int CMD_GET_PACKAGE_DEPLOYMENT_JOBS = 0x01D3;
+   public static final int CMD_CANCEL_PACKAGE_DEPLOYMENT_JOB = 0x01D4;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1352,6 +1354,7 @@ public class NXCPCodes
    public static final long VID_TIME_SYNC_ALLOWED = 857;
    public static final long VID_JDBC_OPTIONS = 858;
    public static final long VID_LAST_BACKUP_JOB_STATUS = 859;
+   public static final long VID_JOB_ID = 860;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

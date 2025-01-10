@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ void LoadLastEventId(DB_HANDLE hdb);
 /**
  * Constants
  */
-#define NUMBER_OF_GROUPS   32
+#define NUMBER_OF_GROUPS   33
 
 /**
  * Static data
@@ -53,7 +53,8 @@ static uint32_t s_freeIdTable[NUMBER_OF_GROUPS] =
       1, 1, 1, 1,
       1, 1, 1, 1,
       1, 1, 1, 1,
-      1, 1, 1, 1
+      1, 1, 1, 1,
+      1
    };
 static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
    {
@@ -64,7 +65,8 @@ static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
       0x7FFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
+      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
+      0xFFFFFFFE
    };
 static const TCHAR *s_groupNames[NUMBER_OF_GROUPS] =
 {
@@ -99,7 +101,8 @@ static const TCHAR *s_groupNames[NUMBER_OF_GROUPS] =
    _T("Object Queries"),
    _T("Business Service Checks"),
    _T("Business Service Downtime Records"),
-   _T("Maintenance journal")
+   _T("Maintenance journal"),
+   _T("Package Deployment Jobs")
 };
 
 /**
@@ -421,13 +424,25 @@ bool InitIdTable()
    }
 
    // Get first available authentication token id
-  hResult = DBSelect(hdb, _T("SELECT max(id) FROM auth_tokens"));
-  if (hResult != nullptr)
-  {
-     if (DBGetNumRows(hResult) > 0)
-        s_freeIdTable[IDG_AUTHTOKEN] = std::max(s_freeIdTable[IDG_AUTHTOKEN], DBGetFieldULong(hResult, 0, 0) + 1);
-     DBFreeResult(hResult);
-  }
+   hResult = DBSelect(hdb, _T("SELECT max(id) FROM auth_tokens"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_freeIdTable[IDG_AUTHTOKEN] = std::max(s_freeIdTable[IDG_AUTHTOKEN], DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available package deployment job id
+   id = ConfigReadULong(_T("FirstFreeDeploymentJobId"), s_freeIdTable[IDG_PACKAGE_DEPLOYMENT_JOB]);
+   if (id > s_freeIdTable[IDG_PACKAGE_DEPLOYMENT_JOB])
+      s_freeIdTable[IDG_PACKAGE_DEPLOYMENT_JOB] = id;
+   hResult = DBSelect(hdb, _T("SELECT max(id) FROM package_deployment_jobs"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_freeIdTable[IDG_PACKAGE_DEPLOYMENT_JOB] = std::max(s_freeIdTable[IDG_PACKAGE_DEPLOYMENT_JOB], DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
 
    LoadLastEventId(hdb);
 
@@ -465,10 +480,12 @@ void SaveCurrentFreeId()
    uint32_t objectId = s_freeIdTable[IDG_NETWORK_OBJECT];
    uint32_t dciId = s_freeIdTable[IDG_ITEM];
    uint32_t alarmId = s_freeIdTable[IDG_ALARM];
+   uint32_t deploymentJobId = s_freeIdTable[IDG_PACKAGE_DEPLOYMENT_JOB];
    s_mutexTableAccess.unlock();
    ConfigWriteULong(_T("FirstFreeObjectId"), objectId, true, false, true);
    ConfigWriteULong(_T("FirstFreeDCIId"), dciId, true, false, true);
    ConfigWriteULong(_T("FirstFreeAlarmId"), alarmId, true, false, true);
+   ConfigWriteULong(_T("FirstFreeDeploymentJobId"), deploymentJobId, true, false, true);
    ConfigWriteInt(_T("LastAuditRecordId"), GetLastAuditRecordId(), true, false, true);
    ConfigWriteInt64(_T("LastEventId"), GetLastEventId(), true, false, true);
    ConfigWriteInt64(_T("LastSNMPTrapId"), GetLastSnmpTrapId(), true, false, true);

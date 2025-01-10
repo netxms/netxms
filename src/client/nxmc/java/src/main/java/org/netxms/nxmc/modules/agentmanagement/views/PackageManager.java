@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -85,7 +85,7 @@ public class PackageManager extends ConfigurationView
     */
    public PackageManager()
    {
-      super(LocalizationHelper.getI18n(PackageManager.class).tr("Packages"), ResourceManager.getImageDescriptor("icons/config-views/package-manager.png"), "PackageManager", true);
+      super(LocalizationHelper.getI18n(PackageManager.class).tr("Packages"), ResourceManager.getImageDescriptor("icons/config-views/package-manager.png"), "configuration.package-manager", true);
    }
 
    /**

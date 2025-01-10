@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -226,21 +226,21 @@ public class DataSourceEditDlg extends Dialog
       checkShowThresholds.setSelection(dci.showThresholds);
 
       checkInvertValues = new Button(optionsGroup, SWT.CHECK);
-      checkInvertValues.setText(i18n.tr("Invert values"));
+      checkInvertValues.setText(i18n.tr("&Invert values"));
       checkInvertValues.setSelection(dci.invertValues);
 
       checkRawValues = new Button(optionsGroup, SWT.CHECK);
-      checkRawValues.setText(i18n.tr("Raw values"));
+      checkRawValues.setText(i18n.tr("&Raw values"));
       checkRawValues.setSelection(dci.useRawValues);
 
       if (isTemplate)
       {
          checkMultipeMatch = new Button(optionsGroup, SWT.CHECK);
-         checkMultipeMatch.setText(i18n.tr("Multiple match"));
+         checkMultipeMatch.setText(i18n.tr("&Multiple match"));
          checkMultipeMatch.setSelection(dci.multiMatch);
          
          checkRegexpMatch = new Button(optionsGroup, SWT.CHECK);
-         checkRegexpMatch.setText(i18n.tr("Use regular expression for metric and display name"));
+         checkRegexpMatch.setText(i18n.tr("Use regular &expressions for DCI matching"));
          checkRegexpMatch.setSelection(isNew ? false : dci.regexMatch);
       }
 

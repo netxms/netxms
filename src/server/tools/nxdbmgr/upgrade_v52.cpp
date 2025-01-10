@@ -24,13 +24,98 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 52.5 to 52.6
+ */
+static bool H_UpgradeFromV5()
+{
+   CHK_EXEC(CreateTable(
+         L"CREATE TABLE package_deployment_jobs ("
+         L"   id integer not null,"
+         L"   pkg_id integer not null,"
+         L"   node_id integer not null,"
+         L"   user_id integer not null,"
+         L"   creation_time integer not null,"
+         L"   execution_time integer not null,"
+         L"   completion_time integer not null,"
+         L"   status integer not null,"
+         L"   failure_reason varchar(255) null,"
+         L"   PRIMARY KEY(id))"));
+
+   if (g_dbSyntax == DB_SYNTAX_TSDB)
+   {
+      CHK_EXEC(CreateTable(
+            L"CREATE TABLE package_deployment_log ("
+            L"   job_id integer not null,"
+            L"   execution_time timestamptz not null,"
+            L"   completion_time timestamptz not null,"
+            L"   node_id integer not null,"
+            L"   user_id integer not null,"
+            L"   status integer not null,"
+            L"   failure_reason varchar(255) null,"
+            L"   pkg_id integer not null,"
+            L"   pkg_type varchar(15) null,"
+            L"   pkg_name varchar(63) null,"
+            L"   version varchar(31) null,"
+            L"   platform varchar(63) null,"
+            L"   pkg_file varchar(255) null,"
+            L"   command varchar(255) null,"
+            L"   description varchar(255) null,"
+            L"   PRIMARY KEY(job_id,execution_time))"));
+   }
+   else
+   {
+      CHK_EXEC(CreateTable(
+            L"CREATE TABLE package_deployment_log ("
+            L"   job_id integer not null,"
+            L"   execution_time integer not null,"
+            L"   completion_time integer not null,"
+            L"   node_id integer not null,"
+            L"   user_id integer not null,"
+            L"   status integer not null,"
+            L"   failure_reason varchar(255) null,"
+            L"   pkg_id integer not null,"
+            L"   pkg_type varchar(15) null,"
+            L"   pkg_name varchar(63) null,"
+            L"   version varchar(31) null,"
+            L"   platform varchar(63) null,"
+            L"   pkg_file varchar(255) null,"
+            L"   command varchar(255) null,"
+            L"   description varchar(255) null,"
+            L"   PRIMARY KEY(job_id))"));
+      CHK_EXEC(SQLQuery(L"SELECT create_hypertable('package_deployment_log', 'execution_time', chunk_time_interval => interval '86400 seconds')"));
+   }
+
+   CHK_EXEC(SQLQuery(L"CREATE INDEX idx_pkglog_exec_time ON package_deployment_log(execution_time)"));
+   CHK_EXEC(SQLQuery(L"CREATE INDEX idx_pkglog_node ON package_deployment_log(node_id)"));
+
+   CHK_EXEC(SQLQuery(L"DELETE FROM config WHERE var_name='Agent.Upgrade.NumberOfThreads'"));
+   CHK_EXEC(SQLQuery(L"UPDATE config SET description='Retention time in days for logged SNMP traps. All SNMP trap records older than specified will be deleted by housekeeping process.' WHERE var_name='SNMP.Traps.LogRetentionTime'"));
+
+   CHK_EXEC(CreateConfigParam(L"PackageDeployment.JobRetentionTime",
+            L"7",
+            L"Retention time in days for completed package deployment jobs. All completed jobs older than specified will be deleted by housekeeping process.",
+            L"days", 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"PackageDeployment.LogRetentionTime",
+            L"90",
+            L"Retention time in days for package deployment log. All records older than specified will be deleted by housekeeping process.",
+            L"days", 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"PackageDeployment.MaxThreads",
+            L"25",
+            L"Maximum number of threads used for package deployment.",
+            L"threads", 'I', true, true, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
+
+/**
  * Upgrade from 52.4 to 52.5
  */
 static bool H_UpgradeFromV4()
 {
-   CHK_EXEC(SQLQuery(_T("ALTER TABLE network_maps ADD display_priority integer")));
-   CHK_EXEC(SQLQuery(_T("UPDATE network_maps SET display_priority=0")));
-   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("network_maps"), _T("display_priority")));
+   CHK_EXEC(SQLQuery(L"ALTER TABLE network_maps ADD display_priority integer"));
+   CHK_EXEC(SQLQuery(L"UPDATE network_maps SET display_priority=0"));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"network_maps", L"display_priority"));
    CHK_EXEC(SetMinorSchemaVersion(5));
    return true;
 }
@@ -104,6 +189,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 5,  52, 6,  H_UpgradeFromV5  },
    { 4,  52, 5,  H_UpgradeFromV4  },
    { 3,  52, 4,  H_UpgradeFromV3  },
    { 2,  52, 3,  H_UpgradeFromV2  },
