@@ -1,6 +1,6 @@
 /*
  ** File management subagent
- ** Copyright (C) 2014-2023 Raden Solutions
+ ** Copyright (C) 2014-2025 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -644,43 +644,38 @@ static bool Delete(const TCHAR *name)
 /**
  * Get folder information
  */
-static void GetFolderInfo(const TCHAR *folder, UINT64 *fileCount, UINT64 *folderSize)
+static void GetFolderInfo(const TCHAR *folder, uint64_t *fileCount, uint64_t *folderSize)
 {
    _TDIR *dir = _topendir(folder);
-   if (dir != NULL)
+   if (dir == nullptr)
+      return;
+
+   struct _tdirent *d;
+   while((d = _treaddir(dir)) != nullptr)
    {
+      if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
+         continue;
+
+      TCHAR fullName[MAX_PATH];
+      _tcslcpy(fullName, folder, MAX_PATH);
+      _tcslcat(fullName, FS_PATH_SEPARATOR, MAX_PATH);
+      _tcslcat(fullName, d->d_name, MAX_PATH);
+
       NX_STAT_STRUCT st;
-      struct _tdirent *d;
-      while((d = _treaddir(dir)) != NULL)
+      if (CALL_STAT(fullName, &st) == 0)
       {
-         if (sizeof(folder) >= MAX_PATH)
-            return;
-
-         if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
+         if (S_ISDIR(st.st_mode))
          {
-            continue;
+            GetFolderInfo(fullName, fileCount, folderSize);
          }
-
-         TCHAR fullName[MAX_PATH];
-         _tcscpy(fullName, folder);
-         _tcscat(fullName, FS_PATH_SEPARATOR);
-         _tcscat(fullName, d->d_name);
-
-         if (CALL_STAT(fullName, &st) == 0)
+         else
          {
-            if (S_ISDIR(st.st_mode))
-            {
-               GetFolderInfo(fullName, fileCount, folderSize);
-            }
-            else
-            {
-               *folderSize += st.st_size;
-               (*fileCount)++;
-            }
+            *folderSize += st.st_size;
+            (*fileCount)++;
          }
       }
-      _tclosedir(dir);
    }
+   _tclosedir(dir);
 }
 
 /**
@@ -702,7 +697,7 @@ static void CH_GetFolderSize(NXCPMessage *request, NXCPMessage *response, Abstra
    TCHAR *fullPath;
    if (CheckFullPath(directory, &fullPath, false))
    {
-      UINT64 fileCount = 0, fileSize = 0;
+      uint64_t fileCount = 0, fileSize = 0;
       GetFolderInfo(fullPath, &fileCount, &fileSize);
       response->setField(VID_RCC, ERR_SUCCESS);
       response->setField(VID_FOLDER_SIZE, fileSize);
