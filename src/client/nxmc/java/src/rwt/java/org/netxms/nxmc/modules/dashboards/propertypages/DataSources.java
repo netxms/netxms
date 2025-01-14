@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -322,22 +322,23 @@ public class DataSources extends DashboardElementPropertyPage
       }
    }
 
-	/**
-	 * Edit selected item
-	 */
-	private void editItem()
-	{
+   /**
+    * Edit selected item
+    */
+   private void editItem()
+   {
       IStructuredSelection selection = viewer.getStructuredSelection();
-		ChartDciConfig dci = (ChartDciConfig)selection.getFirstElement();
-		if (dci == null)
-			return;
+      ChartDciConfig dci = (ChartDciConfig)selection.getFirstElement();
+      if (dci == null)
+         return;
 
       DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, false, dci.getDciId() == 0);
-		if (dlg.open() == Window.OK)
-		{
-			viewer.update(dci, null);
-		}
-	}
+      if (dlg.open() == Window.OK)
+      {
+         labelProvider.resolveDciNames(dciList);
+         viewer.update(dci, null);
+      }
+   }
 
 	/**
 	 * Delete selected item(s)
@@ -367,7 +368,7 @@ public class DataSources extends DashboardElementPropertyPage
 			}
 		}
 	}
-	
+
 	/**
 	 * Move selected item down
 	 */
