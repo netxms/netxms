@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -5326,6 +5326,10 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const NXSL_Identifier& a
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("type"))
    {
 		value = vm->createValue((LONG)dci->getType());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("userTag"))
+   {
+      value = vm->createValue(dci->getUserTag());
    }
    return value;
 }
