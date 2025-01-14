@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -483,6 +483,7 @@ struct PolicyChangeNotification
 #define DCIDESC_SYSTEM_HANDLECOUNT                   _T("Total number of handles")
 #define DCIDESC_SYSTEM_HARDWAREID                    _T("Hardware ID")
 #define DCIDESC_SYSTEM_HOSTNAME                      _T("Host name")
+#define DCIDESC_SYSTEM_IS_RESTART_PENDING            _T("Check if system restart is pending")
 #define DCIDESC_SYSTEM_IS_VIRTUAL                    _T("Virtual system indicator")
 #define DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE     _T("Available physical memory")
 #define DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE_PCT _T("Percentage of available physical memory")

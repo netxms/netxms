@@ -1,6 +1,6 @@
 /* 
 ** Windows 2000+ NetXMS subagent
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1373,5 +1373,35 @@ LONG H_WindowsFirewallCurrentProfile(const TCHAR *cmd, const TCHAR *arg, TCHAR *
    fwPolicy->Release();
    CoUninitialize();
    ret_string(value, sb);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Check if system restart is pending
+ */
+LONG H_SystemIsRestartPending(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   HKEY hKey;
+   if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Session Manager", 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+   {
+      TCHAR buffer[1024];
+      nxlog_debug_tag(DEBUG_TAG, 5, L"H_SystemIsRestartPending: Cannot open registry key (%s)", GetSystemErrorText(GetLastError(), buffer, 1024));
+      return SYSINFO_RC_ERROR;
+   }
+
+   BYTE buffer[1024];
+   DWORD size = sizeof(buffer);
+   LSTATUS status = RegQueryValueExW(hKey, L"PendingFileRenameOperations", nullptr, nullptr, buffer, &size);
+   if ((status == ERROR_SUCCESS) || (status == ERROR_MORE_DATA))
+   {
+      nxlog_debug_tag(L"restart", 1, L"status=%d size=%d", (int)status, (int)size);
+      ret_boolean(value, size > 2);
+   }
+   else
+   {
+      ret_boolean(value, false);
+   }
+
+   RegCloseKey(hKey);
    return SYSINFO_RC_SUCCESS;
 }
