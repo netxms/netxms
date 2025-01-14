@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ uint32_t RemoveUserAgentNotification(uint64_t serverId, NXCPMessage *request);
 uint32_t UpdateUserAgentNotifications(uint64_t serverId, NXCPMessage *request);
 void RegisterSessionForNotifications(const shared_ptr<CommSession>& session);
 void SetLocalSystemTime(int64_t newTime);
+uint32_t InstallSoftwarePackage(CommSession *session, const char *packageType, const TCHAR *packageFile, const TCHAR *command);
 
 extern VolatileCounter g_authenticationFailures;
 
@@ -1149,28 +1150,6 @@ uint32_t CommSession::upgrade(NXCPMessage *request)
 }
 
 /**
- * Process executor for package installer
- */
-class PackageInstallerProcessExecutor : public ProcessExecutor
-{
-private:
-   CommSession *m_session;
-
-protected:
-   virtual void onOutput(const char *text, size_t length) override
-   {
-      m_session->debugPrintf(4, _T("Installer output: %hs"), text);
-   }
-
-public:
-   PackageInstallerProcessExecutor(const TCHAR *command, CommSession *session) : ProcessExecutor(command)
-   {
-      m_session = session;
-      m_sendOutput = true;
-   }
-};
-
-/**
  * Install package previously uploaded to the file store
  */
 uint32_t CommSession::installPackage(NXCPMessage *request)
@@ -1191,121 +1170,7 @@ uint32_t CommSession::installPackage(NXCPMessage *request)
 
    TCHAR command[MAX_PATH] = _T("");
    request->getFieldAsString(VID_COMMAND, command, MAX_PATH);
-
-   const TCHAR *workingDirectory = nullptr;
-   StringBuffer commandLine;
-   if (!stricmp(packageType, "executable"))
-   {
-      if (command[0] != 0)
-      {
-         commandLine.append(command);
-         commandLine.replace(_T("${file}"), fullPath);
-      }
-      else
-      {
-         commandLine.append(_T("\""));
-         commandLine.append(fullPath);
-         commandLine.append(_T("\""));
-      }
-   }
-#ifdef _WIN32
-   else if (!stricmp(packageType, "msi"))
-   {
-      commandLine.append(_T("msiexec.exe /i \""));
-      commandLine.append(fullPath);
-      commandLine.append(_T("\" /qn"));
-      if (command[0] != 0)
-      {
-         commandLine.append(_T(" "));
-         commandLine.append(command);
-      }
-   }
-   else if (!stricmp(packageType, "msp"))
-   {
-      commandLine.append(_T("msiexec.exe /p \""));
-      commandLine.append(fullPath);
-      commandLine.append(_T("\" /qn"));
-      if (command[0] != 0)
-      {
-         commandLine.append(_T(" "));
-         commandLine.append(command);
-      }
-      commandLine.append(_T(" REINSTALLMODE=\"ecmus\" REINSTALL=\"ALL\""));
-   }
-   else if (!stricmp(packageType, "msu"))
-   {
-      commandLine.append(_T("wusa.exe \""));
-      commandLine.append(fullPath);
-      commandLine.append(_T("\" /quiet"));
-      if (command[0] != 0)
-      {
-         commandLine.append(_T(" "));
-         commandLine.append(command);
-      }
-   }
-#else
-   else if (!stricmp(packageType, "deb"))
-   {
-      commandLine.append(_T("/usr/bin/dpkg -i"));
-      if (command[0] != 0)
-      {
-         commandLine.append(_T(" "));
-         commandLine.append(command);
-      }
-      commandLine.append(_T(" '"));
-      commandLine.append(fullPath);
-      commandLine.append(_T("'"));
-   }
-   else if (!stricmp(packageType, "rpm"))
-   {
-      commandLine.append(_T("/usr/bin/rpm -i"));
-      if (command[0] != 0)
-      {
-         commandLine.append(_T(" "));
-         commandLine.append(command);
-      }
-      commandLine.append(_T(" '"));
-      commandLine.append(fullPath);
-      commandLine.append(_T("'"));
-   }
-   else if (!stricmp(packageType, "tgz"))
-   {
-      commandLine.append(_T("tar"));
-      if (command[0] != 0)
-      {
-         workingDirectory = command;
-      }
-      commandLine.append(_T(" zxf '"));
-      commandLine.append(fullPath);
-      commandLine.append(_T("'"));
-   }
-#endif
-   else if (!stricmp(packageType, "zip"))
-   {
-      commandLine.append(_T("unzip"));
-      commandLine.append(_T(" '"));
-      commandLine.append(fullPath);
-      commandLine.append(_T("'"));
-      if (command[0] != 0)
-      {
-         commandLine.append(_T(" -d '"));
-         commandLine.append(command);
-         commandLine.append(_T("'"));
-      }
-   }
-
-   writeLog(NXLOG_INFO, _T("Starting package installation using command line %s"), commandLine.cstr());
-   PackageInstallerProcessExecutor executor(commandLine, this);
-   if (workingDirectory != nullptr)
-      executor.setWorkingDirectory(workingDirectory);
-
-   if (!executor.execute())
-   {
-      writeLog(NXLOG_INFO, _T("Package installer execution failed"));
-      return ERR_EXEC_FAILED;
-   }
-
-   return executor.waitForCompletion(600000) ? ERR_SUCCESS : ERR_REQUEST_TIMEOUT; // FIXME: what timeout to use?
+   return InstallSoftwarePackage(this, packageType, fullPath, command);
 }
 
 /**

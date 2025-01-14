@@ -2,8 +2,8 @@ bin_PROGRAMS = nxagentd
 nxagentd_SOURCES = actions.cpp appagent.cpp bkgnd_metrics.cpp certinfo.cpp comm.cpp \
 		   config.cpp ctrl.cpp datacoll.cpp dcsnmp.cpp dbupgrade.cpp event.cpp exec.cpp \
 		   extagent.cpp extdp.cpp filemon.cpp hddinfo.cpp localdb.cpp master.cpp \
-		   metrics.cpp modbus.cpp nproc.cpp nxagentd.cpp policy.cpp problems.cpp \
-		   proxy.cpp push.cpp register.cpp sa.cpp session.cpp snmpproxy.cpp \
+		   metrics.cpp modbus.cpp nproc.cpp nxagentd.cpp package.cpp policy.cpp \
+		   problems.cpp proxy.cpp push.cpp register.cpp sa.cpp session.cpp snmpproxy.cpp \
                    snmptrapproxy.cpp static_subagents.cpp subagent.cpp \
                    sysinfo.cpp syslog.cpp systemd.cpp tcpproxy.cpp tftp.cpp \
                    tools.cpp tunnel.cpp watchdog.cpp websvc.cpp

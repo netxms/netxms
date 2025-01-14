@@ -1,6 +1,6 @@
 /*
 ** Windows platform subagent
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -75,6 +75,7 @@ LONG H_StorageDeviceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, 
 LONG H_StorageDeviceSize(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_StorageDeviceTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_SystemArchitecture(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_SystemIsRestartPending(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SystemProductInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SystemVersionInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -88,6 +89,7 @@ LONG H_WindowsFirewallCurrentProfile(const TCHAR *cmd, const TCHAR *arg, TCHAR *
 LONG H_WindowsFirewallProfileState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_WindowsFirewallState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_WindowStations(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+
 
 void StartCPUStatCollector();
 void StopCPUStatCollector();
@@ -379,6 +381,8 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
    { _T("System.IO.DiskTime(*)"), H_IoStats, (const TCHAR *)IOSTAT_IO_TIME, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKTIME_EX },
    { _T("System.IO.DiskWriteTime"), H_IoStatsTotal, (const TCHAR *)IOSTAT_IO_WRITE_TIME, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKWRITETIME },
    { _T("System.IO.DiskWriteTime(*)"), H_IoStats, (const TCHAR *)IOSTAT_IO_WRITE_TIME, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKWRITETIME_EX },
+
+   { _T("System.IsRestartPending"), H_SystemIsRestartPending, nullptr, DCI_DT_INT, DCIDESC_SYSTEM_IS_RESTART_PENDING },
 
    { _T("System.Memory.Physical.Available"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_AVAIL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE },
    { _T("System.Memory.Physical.AvailablePerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_AVAIL_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE_PCT },
