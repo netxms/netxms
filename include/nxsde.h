@@ -29,7 +29,7 @@
 #define LIBNXSDE_EXPORTABLE __IMPORT
 #endif
 
-#ifdef HAVE_LIBJQ
+#if HAVE_LIBJQ
 extern "C" {
 #include <jq.h>
 }
@@ -61,7 +61,7 @@ protected:
    time_t m_lastRequestTime;
    DocumentType m_type;
    char *m_responseData;
-   const TCHAR *m_source;
+   TCHAR m_source[16];
    union
    {
       pugi::xml_document *xml;
@@ -101,7 +101,7 @@ protected:
    uint32_t getListFromText(const TCHAR *pattern, StringList *result);
 
 public:
-   StructuredDataExtractor(const TCHAR *debugTag);
+   StructuredDataExtractor(const TCHAR *source);
    virtual ~StructuredDataExtractor()
    {
       deleteContent();

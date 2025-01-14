@@ -42,11 +42,12 @@ char *RemoveNewLines(char* str)
 /**
  * Constructor
  */
-StructuredDataExtractor::StructuredDataExtractor(const TCHAR *debugTag) : m_source(debugTag)
+StructuredDataExtractor::StructuredDataExtractor(const TCHAR *source)
 {
    m_lastRequestTime = 0;
    m_type = DocumentType::NONE;
    m_responseData = nullptr;
+   _tcslcpy(m_source, source, 16);
 }
 
 /**
@@ -332,6 +333,9 @@ void StructuredDataExtractor::getMetricsFromJSON(StringList *params, NXCPMessage
    //do nothing
 }
 
+/**
+ * Default implementation for build without libjq
+ */
 uint32_t StructuredDataExtractor::getMetricFromJSON(const TCHAR *param, char *buffer, size_t size)
 {
    return SYSINFO_RC_UNSUPPORTED;
