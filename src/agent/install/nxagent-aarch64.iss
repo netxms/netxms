@@ -17,6 +17,7 @@ Source: "..\..\..\ARM64\release\libnxagent.dll"; DestDir: "{app}\bin"; Flags: ig
 Source: "..\..\..\ARM64\release\libnxdb.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\ARM64\release\libnxjava.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\ARM64\release\libnxlp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\ARM64\release\libnxsde.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\ARM64\release\libnxsnmp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\ARM64\release\appagent.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\ARM64\release\nxagentd.exe"; DestDir: "{app}\bin"; BeforeInstall: RenameOldFile; Flags: ignoreversion signonce

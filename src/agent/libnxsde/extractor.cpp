@@ -1,6 +1,6 @@
 /*
 ** NetXMS structured data extractor
-** Copyright (C) 2020-2024 Raden Solutions
+** Copyright (C) 2020-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: websvc.cpp
+** File: extractor.cpp
 **
 **/
 
@@ -42,7 +42,7 @@ char *RemoveNewLines(char* str)
 /**
  * Constructor
  */
-StructuredDataParser::StructuredDataParser(const TCHAR *debugTag) : m_source(debugTag)
+StructuredDataExtractor::StructuredDataExtractor(const TCHAR *debugTag) : m_source(debugTag)
 {
    m_lastRequestTime = 0;
    m_type = DocumentType::NONE;
@@ -52,7 +52,7 @@ StructuredDataParser::StructuredDataParser(const TCHAR *debugTag) : m_source(deb
 /**
  * Get parameters from XML cached data
  */
-void StructuredDataParser::getParamsFromXML(StringList *params, NXCPMessage *response)
+void StructuredDataExtractor::getMetricsFromXML(StringList *params, NXCPMessage *response)
 {
    uint32_t fieldId = VID_PARAM_LIST_BASE;
    int resultCount = 0;
@@ -60,7 +60,7 @@ void StructuredDataParser::getParamsFromXML(StringList *params, NXCPMessage *res
    {
       const TCHAR *metric = params->get(i);
       char result[MAX_RESULT_LENGTH];
-      if (getParamsFromXML(metric, result, MAX_RESULT_LENGTH) == SYSINFO_RC_SUCCESS)
+      if (getMetricFromXML(metric, result, MAX_RESULT_LENGTH) == SYSINFO_RC_SUCCESS)
       {
          response->setField(fieldId++, metric);
          response->setFieldFromUtf8String(fieldId++, result);
@@ -74,10 +74,10 @@ void StructuredDataParser::getParamsFromXML(StringList *params, NXCPMessage *res
 /**
  * Get parameter form XML type of document
  */
-uint32_t StructuredDataParser::getParamsFromXML(const TCHAR *query, char *buffer, size_t size)
+uint32_t StructuredDataExtractor::getMetricFromXML(const TCHAR *query, char *buffer, size_t size)
 {
    char xpath[1024];
-   nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataParser::getParamsFromXML(%s): get parameter \"%s\""), m_source, query);
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataExtractor::getMetricFromXML(%s): get parameter \"%s\""), m_source, query);
    tchar_to_utf8(query, -1, xpath, 1024);
    pugi::xpath_node node = m_content.xml->select_node(xpath);
    uint32_t rc = SYSINFO_RC_NO_SUCH_INSTANCE;
@@ -91,7 +91,7 @@ uint32_t StructuredDataParser::getParamsFromXML(const TCHAR *query, char *buffer
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataParser::getParamsFromXML(%s): cannot execute select_node() for parameter \"%s\""), m_source, query);
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataExtractor::getMetricFromXML(%s): cannot execute select_node() for parameter \"%s\""), m_source, query);
    }
    return rc;
 }
@@ -103,9 +103,10 @@ uint32_t StructuredDataParser::getParamsFromXML(const TCHAR *query, char *buffer
  */
 void JqMessageCallback(void *data, jv error)
 {
-   char *msg = MemCopyStringA(jv_string_value(error));
+   const char *text = jv_string_value(error);
+   size_t len = strlen(text);
+   Buffer<char, 1024> msg(text, len + 1);
    nxlog_debug_tag(DEBUG_TAG, 6, _T("%s: %hs"), data, RemoveNewLines(msg));
-   MemFree(msg);
    jv_free(error);
 }
 
@@ -144,7 +145,7 @@ String ConvertRequestToJqFormat(const TCHAR *originalValue)
 /**
  * Get parameters from JSON cached data
  */
-void StructuredDataParser::getParamsFromJSON(StringList *params, NXCPMessage *response)
+void StructuredDataExtractor::getMetricsFromJSON(StringList *params, NXCPMessage *response)
 {
    uint32_t fieldId = VID_PARAM_LIST_BASE;
    int resultCount = 0;
@@ -152,7 +153,7 @@ void StructuredDataParser::getParamsFromJSON(StringList *params, NXCPMessage *re
    {
       String param = ConvertRequestToJqFormat(params->get(i));
       char result[MAX_RESULT_LENGTH];
-      if (getParamsFromJSON(param, result, MAX_RESULT_LENGTH) == SYSINFO_RC_SUCCESS)
+      if (getMetricFromJSON(param, result, MAX_RESULT_LENGTH) == SYSINFO_RC_SUCCESS)
       {
          response->setField(fieldId++, params->get(i));
          response->setFieldFromUtf8String(fieldId++, result);
@@ -166,17 +167,13 @@ void StructuredDataParser::getParamsFromJSON(StringList *params, NXCPMessage *re
 /**
  * Get parameter form JSOn type of document
  */
-uint32_t StructuredDataParser::getParamsFromJSON(const TCHAR *param, char *buffer, size_t size)
+uint32_t StructuredDataExtractor::getMetricFromJSON(const TCHAR *param, char *buffer, size_t size)
 {
    jq_state *jqState = jq_init();
-   jq_set_error_cb(jqState, JqMessageCallback, const_cast<TCHAR *>(_T("StructuredDataParser::getParamsFromJSON()")));
+   jq_set_error_cb(jqState, JqMessageCallback, const_cast<TCHAR *>(_T("StructuredDataExtractor::getParamsFromJSON()")));
    uint32_t rc = SYSINFO_RC_NO_SUCH_INSTANCE;
 
-#ifdef UNICODE
-    char *program = UTF8StringFromWideString(param);
-#else
-    char *program = MemCopyStringA(param);
-#endif
+    char *program = UTF8StringFromTString(param);
     if (jv_is_valid(m_content.jvData) && jq_compile(jqState, program))
     {
        jq_start(jqState, jv_copy(m_content.jvData), 0);
@@ -186,23 +183,23 @@ uint32_t StructuredDataParser::getParamsFromJSON(const TCHAR *param, char *buffe
           if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 7)
           {
              jv resultAsText = jv_dump_string(jv_copy(result), 0);
-             nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataParser::getParamsFromJSON(%s): request query: %hs"), m_source, program);
-             nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataParser::getParamsFromJSON(%s): result kind: %d"), m_source, jv_get_kind(result));
-             nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataParser::getParamsFromJSON(%s): result: %hs"), m_source, jv_string_value(resultAsText));
+             nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataExtractor::getMetricFromJSON(%s): request query: %hs"), m_source, program);
+             nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataExtractor::getMetricFromJSON(%s): result kind: %d"), m_source, jv_get_kind(result));
+             nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataExtractor::getMetricFromJSON(%s): result: %hs"), m_source, jv_string_value(resultAsText));
              jv_free(resultAsText);
           }
 
           switch(jv_get_kind(result))
           {
              case JV_KIND_STRING:
-                strncpy(buffer, jv_string_value(result), size);
+                strlcpy(buffer, jv_string_value(result), size);
                 rc = SYSINFO_RC_SUCCESS;
                 break;
-             case JV_KIND_NULL://Valid request - nothing found
+             case JV_KIND_NULL: // Valid request - nothing found
                 break;
              default:
                 jv jvValueAsString = jv_dump_string(jv_copy(result), 0);
-                strncpy(buffer, jv_string_value(jvValueAsString), size);
+                strlcpy(buffer, jv_string_value(jvValueAsString), size);
                 jv_free(jvValueAsString);
                 rc = SYSINFO_RC_SUCCESS;
                 break;
@@ -226,10 +223,10 @@ static void GetStringFromJvArrayElement(jv jvResult, StringList *resultList, con
          resultList->addUTF8String(jv_string_value(jvResult));
          break;
       case JV_KIND_ARRAY: //do nothing for array in array
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("StructuredDataParser::getListFromJSON(%s): skip array as element of array"), source);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("StructuredDataExtractor::getListFromJSON(%s): skip array as element of array"), source);
          break;
       case JV_KIND_NULL://Valid request - nothing found
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("StructuredDataParser::getListFromJSON(%s): array element is empty"), source);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("StructuredDataExtractor::getListFromJSON(%s): array element is empty"), source);
          break;
       case JV_KIND_OBJECT:
          jv_object_foreach(jvResult, key, val)
@@ -250,12 +247,12 @@ static void GetStringFromJvArrayElement(jv jvResult, StringList *resultList, con
 /**
  * Get list from JSON cached data
  */
-uint32_t StructuredDataParser::getListFromJSON(const TCHAR *path, StringList *resultList)
+uint32_t StructuredDataExtractor::getListFromJSON(const TCHAR *path, StringList *resultList)
 {
    uint32_t rc = SYSINFO_RC_NO_SUCH_INSTANCE;
-   nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataParser::getListFromJSON(%s): Get child object list for JSON path \"%s\""), m_source, path);
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataExtractor::getListFromJSON(%s): Get child object list for JSON path \"%s\""), m_source, path);
    jq_state *jqState = jq_init();
-   jq_set_error_cb(jqState, JqMessageCallback, const_cast<TCHAR *>(_T("StructuredDataParser::getListFromJSON()")));
+   jq_set_error_cb(jqState, JqMessageCallback, const_cast<TCHAR *>(_T("StructuredDataExtractor::getListFromJSON()")));
    String param = ConvertRequestToJqFormat(path);
    char *programm;
 #ifdef UNICODE
@@ -272,9 +269,9 @@ uint32_t StructuredDataParser::getListFromJSON(const TCHAR *path, StringList *re
          if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 8)
          {
             jv resultAsText = jv_dump_string(jv_copy(result), 0);
-            nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataParser::getListFromJSON(%s): request query: %hs"), m_source, programm);
-            nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataParser::getListFromJSON(%s): result kind: %d"), m_source, jv_get_kind(result));
-            nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataParser::getListFromJSON(%s): result: %hs"), m_source, jv_string_value(resultAsText));
+            nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataExtractor::getListFromJSON(%s): request query: %hs"), m_source, programm);
+            nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataExtractor::getListFromJSON(%s): result kind: %d"), m_source, jv_get_kind(result));
+            nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataExtractor::getListFromJSON(%s): result: %hs"), m_source, jv_string_value(resultAsText));
             jv_free(resultAsText);
          }
 
@@ -305,13 +302,13 @@ uint32_t StructuredDataParser::getListFromJSON(const TCHAR *path, StringList *re
                break;
             }
             case JV_KIND_NULL://Valid request - nothing found
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("StructuredDataParser::getListFromJSON(%s): for \"%hs\" request result is empty"), m_source, programm);
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("StructuredDataExtractor::getListFromJSON(%s): for \"%hs\" request result is empty"), m_source, programm);
                break;
             default://Valid request - nothing found
                if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 7)
                {
                   jv jvValueAsString = jv_dump_string(jv_copy(result), 0);
-                  nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataParser::getListFromJSON(%s): invalid object: \"%s\", type: %d"), m_source, jv_string_value(jvValueAsString), jv_get_kind(result));
+                  nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataExtractor::getListFromJSON(%s): invalid object: \"%s\", type: %d"), m_source, jv_string_value(jvValueAsString), jv_get_kind(result));
                }
                break;
          }
@@ -330,15 +327,20 @@ uint32_t StructuredDataParser::getListFromJSON(const TCHAR *path, StringList *re
 /**
  * Default implementation for build without libjq
  */
-void StructuredDataParser::getParamsFromJSON(StringList *params, NXCPMessage *response)
+void StructuredDataExtractor::getMetricsFromJSON(StringList *params, NXCPMessage *response)
 {
    //do nothing
+}
+
+uint32_t StructuredDataExtractor::getMetricFromJSON(const TCHAR *param, char *buffer, size_t size)
+{
+   return SYSINFO_RC_UNSUPPORTED;
 }
 
 /**
  * Get list from JSON cached data
  */
-void StructuredDataParser::getListFromJSON(const TCHAR *path, StringList *result)
+void StructuredDataExtractor::getListFromJSON(const TCHAR *path, StringList *result)
 {
    //do nothing
 }
@@ -346,9 +348,9 @@ void StructuredDataParser::getListFromJSON(const TCHAR *path, StringList *result
 #endif
 
 /**
- * Get parameters from Text cached data
+ * Get multiple metrics from text document
  */
-void StructuredDataParser::getParamsFromText(StringList *params, NXCPMessage *response)
+void StructuredDataExtractor::getMetricsFromText(StringList *params, NXCPMessage *response)
 {
    uint32_t fieldId = VID_PARAM_LIST_BASE;
    int resultCount = 0;
@@ -356,7 +358,7 @@ void StructuredDataParser::getParamsFromText(StringList *params, NXCPMessage *re
    {
       const TCHAR *pattern = params->get(i);
       TCHAR result[MAX_RESULT_LENGTH];
-      if (getParamsFromText(pattern, result, MAX_RESULT_LENGTH) == SYSINFO_RC_SUCCESS)
+      if (getMetricFromText(pattern, result, MAX_RESULT_LENGTH) == SYSINFO_RC_SUCCESS)
       {
          response->setField(fieldId++, pattern);
          response->setField(fieldId++, result);
@@ -368,19 +370,19 @@ void StructuredDataParser::getParamsFromText(StringList *params, NXCPMessage *re
 }
 
 /**
- * Get parameter form text type of document
+ * Get single metric from text document
  */
-uint32_t StructuredDataParser::getParamsFromText(const TCHAR *pattern, TCHAR *buffer, size_t size)
+uint32_t StructuredDataExtractor::getMetricFromText(const TCHAR *pattern, TCHAR *buffer, size_t size)
 {
    unique_ptr<StringList> dataLines(String::split(m_content.text, _tcslen(m_content.text), _T("\n")));
-   nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataParser::getParamsFromText(%s): using pattern \"%s\""), m_source, pattern);
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataExtractor::getParamsFromText(%s): using pattern \"%s\""), m_source, pattern);
 
    const char *eptr;
    int eoffset;
    PCRE *compiledPattern = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pattern), PCRE_COMMON_FLAGS, &eptr, &eoffset, nullptr);
    if (compiledPattern == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("StructuredDataParser::getParamsFromText(%s): \"%s\" pattern compilation failure: %hs at offset %d"), m_source, pattern, eptr, eoffset);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("StructuredDataExtractor::getMetricFromText(%s): \"%s\" pattern compilation failure: %hs at offset %d"), m_source, pattern, eptr, eoffset);
       return SYSINFO_RC_UNSUPPORTED;
    }
 
@@ -388,7 +390,7 @@ uint32_t StructuredDataParser::getParamsFromText(const TCHAR *pattern, TCHAR *bu
    for (int j = 0; j < dataLines->size(); j++)
    {
       const TCHAR *dataLine = dataLines->get(j);
-      nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataParser::getParamsFromText(%s): checking data line \"%s\""), m_source, dataLine);
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataExtractor::getMetricFromText(%s): checking data line \"%s\""), m_source, dataLine);
       int fields[30];
       int result = _pcre_exec_t(compiledPattern, nullptr, reinterpret_cast<const PCRE_TCHAR*>(dataLine), static_cast<int>(_tcslen(dataLine)), 0, 0, fields, 30);
       if (result >= 0)
@@ -398,7 +400,7 @@ uint32_t StructuredDataParser::getParamsFromText(const TCHAR *pattern, TCHAR *bu
             size_t minSize = MIN((fields[3] - fields[2]), size);
             _tcsncpy(buffer, &dataLine[fields[2]], minSize);
             buffer[minSize] = 0;
-            nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataParser::getParamsFromText(%s): data match: \"%s\""), m_source, buffer);
+            nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataExtractor::getMetricFromText(%s): data match: \"%s\""), m_source, buffer);
             rc = SYSINFO_RC_SUCCESS;
          }
          break;
@@ -412,39 +414,39 @@ uint32_t StructuredDataParser::getParamsFromText(const TCHAR *pattern, TCHAR *bu
 /**
  * Get parameters from cached data
  */
-uint32_t StructuredDataParser::getMetric(const TCHAR *query, TCHAR *buffer, size_t size)
+uint32_t StructuredDataExtractor::getMetric(const TCHAR *query, TCHAR *buffer, size_t size)
 {
    uint32_t rc = SYSINFO_RC_ERROR;
    switch(m_type)
    {
       case DocumentType::XML:
       {
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataParser::getParams(%s): get parameter from XML"), m_source);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataExtractor::getMetric(%s): get metric from XML"), m_source);
          Buffer<char, 256> tmp(size);
-         rc = getParamsFromXML(query, tmp, size);
+         rc = getMetricFromXML(query, tmp, size);
          utf8_to_tchar(tmp, -1, buffer, size);
          break;
       }
       case DocumentType::JSON:
       {
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataParser::getParams(%s): get parameter from JSON"), m_source);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataExtractor::getMetric(%s): get metric from JSON"), m_source);
 #ifndef HAVE_LIBJQ
          rc = SYSINFO_RC_UNSUPPORTED;
 #else
          Buffer<char, 256> tmp(size);
-         rc = getParamsFromJSON(query, tmp, size);
+         rc = getMetricFromJSON(query, tmp, size);
          utf8_to_tchar(tmp, -1, buffer, size);
 #endif
          break;
       }
       case DocumentType::TEXT:
       {
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataParser::getParams(%s): get parameter from Text"), m_source);
-         rc = getParamsFromText(query, buffer, size);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataExtractor::getMetric(%s): get metric from text document"), m_source);
+         rc = getMetricFromText(query, buffer, size);
          break;
       }
       default:
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("StructuredDataParser::getParams(%s): no data available"), m_source);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("StructuredDataExtractor::getMetric(%s): no data available"), m_source);
          break;
    }
    return rc;
@@ -453,9 +455,9 @@ uint32_t StructuredDataParser::getMetric(const TCHAR *query, TCHAR *buffer, size
 /**
  * Get list from XML cached data
  */
-void StructuredDataParser::getListFromXML(const TCHAR *path, StringList *result)
+void StructuredDataExtractor::getListFromXML(const TCHAR *path, StringList *result)
 {
-   nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataParser::getListFromXML(%s): Get child tag list for path \"%s\""), m_source, path);
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataExtractor::getListFromXML(%s): Get child tag list for path \"%s\""), m_source, path);
 
    char xpath[1024];
    tchar_to_utf8(path, -1, xpath, 1024);
@@ -472,11 +474,11 @@ void StructuredDataParser::getListFromXML(const TCHAR *path, StringList *result)
 /**
  * Get list from Text cached data
  */
-uint32_t StructuredDataParser::getListFromText(const TCHAR *pattern, StringList *resultList)
+uint32_t StructuredDataExtractor::getListFromText(const TCHAR *pattern, StringList *resultList)
 {
    uint32_t retVal = SYSINFO_RC_SUCCESS;
    StringList *dataLines = String::split(m_content.text, _tcslen(m_content.text), _T("\n"));
-   nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataParser::getListFromText(%s): get list of matched lines for pattern \"%s\""), m_source, pattern);
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataExtractor::getListFromText(%s): get list of matched lines for pattern \"%s\""), m_source, pattern);
 
    const char *eptr;
    int eoffset;
@@ -487,7 +489,7 @@ uint32_t StructuredDataParser::getListFromText(const TCHAR *pattern, StringList 
       for (int j = 0; j < dataLines->size(); j++)
       {
          const TCHAR *dataLine = dataLines->get(j);
-         nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataParser::getListFromText(%s): checking data line \"%s\""), m_source, dataLine);
+         nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataExtractor::getListFromText(%s): checking data line \"%s\""), m_source, dataLine);
          int fields[30];
          int result = _pcre_exec_t(compiledPattern, nullptr, reinterpret_cast<const PCRE_TCHAR*>(dataLine), static_cast<int>(_tcslen(dataLine)), 0, 0, fields, 30);
          if (result >= 0)
@@ -499,7 +501,7 @@ uint32_t StructuredDataParser::getListFromText(const TCHAR *pattern, StringList 
                matchedString = MemAllocString(captureSize + 1);
                memcpy(matchedString, &dataLine[fields[2]], (captureSize) * sizeof(TCHAR));
                matchedString[captureSize] = 0;
-               nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataParser::getListFromText(%s): data match: \"%s\""), m_source, matchedString);
+               nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataExtractor::getListFromText(%s): data match: \"%s\""), m_source, matchedString);
                resultList->addPreallocated(matchedString);
             }
          }
@@ -507,7 +509,7 @@ uint32_t StructuredDataParser::getListFromText(const TCHAR *pattern, StringList 
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("StructuredDataParser::getListFromText(%s): \"%s\" pattern compilation failure: %hs at offset %d"), m_source, pattern, eptr, eoffset);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("StructuredDataExtractor::getListFromText(%s): \"%s\" pattern compilation failure: %hs at offset %d"), m_source, pattern, eptr, eoffset);
       retVal = SYSINFO_RC_UNSUPPORTED;
    }
 
@@ -521,29 +523,29 @@ uint32_t StructuredDataParser::getListFromText(const TCHAR *pattern, StringList 
  * Get list from cached data
  * If path is empty: "/" will be used for XML and JSOn types and "(*)" will be used for text type
  */
-uint32_t StructuredDataParser::getList(const TCHAR *path, StringList *result)
+uint32_t StructuredDataExtractor::getList(const TCHAR *path, StringList *result)
 {
    uint32_t rc = SYSINFO_RC_SUCCESS;
    const TCHAR *correctPath = (path[0] != 0) ? path : ((m_type == DocumentType::TEXT) ? _T("(.*)") : _T("/"));
    switch(m_type)
    {
       case DocumentType::XML:
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataParser::getList(%s): get list from XML"), m_source);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataExtractor::getList(%s): get list from XML"), m_source);
          getListFromXML(correctPath, result);
          break;
       case DocumentType::JSON:
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataParser::getList(%s): get list from JSON"), m_source);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataExtractor::getList(%s): get list from JSON"), m_source);
          rc = getListFromJSON(correctPath, result);
 #ifndef HAVE_LIBJQ
          result = SYSINFO_RC_UNSUPPORTED;
 #endif
          break;
       case DocumentType::TEXT:
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataParser::getList(%s): get list from TEXT"), m_source);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataExtractor::getList(%s): get list from TEXT"), m_source);
          rc = getListFromText(correctPath, result);
          break;
       default:
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataParser::getList(%s): unsupported document type"), m_source);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataExtractor::getList(%s): unsupported document type"), m_source);
          rc = SYSINFO_RC_NO_SUCH_INSTANCE;
          break;
    }
@@ -553,7 +555,7 @@ uint32_t StructuredDataParser::getList(const TCHAR *path, StringList *result)
 /**
  * Update cached content
  */
-uint32_t StructuredDataParser::updateContent(const char *text, uint32_t size, bool forcePlainTextParser, const TCHAR *id)
+uint32_t StructuredDataExtractor::updateContent(const char *text, size_t size, bool forcePlainTextParser, const TCHAR *id)
 {
    deleteContent();
    uint32_t rcc = ERR_SUCCESS;
@@ -564,7 +566,7 @@ uint32_t StructuredDataParser::updateContent(const char *text, uint32_t size, bo
       if (!m_content.xml->load_buffer(text, size))
       {
          rcc = ERR_MALFORMED_RESPONSE;
-         nxlog_debug_tag(DEBUG_TAG, 1, _T("StructuredDataParser::updateContent(%s, %s): Failed to load XML"), m_source, id);
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("StructuredDataExtractor::updateContent(%s, %s): Failed to load XML"), m_source, id);
       }
    }
    else if (!forcePlainTextParser && ((*text == '{') || (*text == '[')))
@@ -577,13 +579,13 @@ uint32_t StructuredDataParser::updateContent(const char *text, uint32_t size, bo
          rcc = ERR_MALFORMED_RESPONSE;
          jv error = jv_invalid_get_msg(jv_copy(m_content.jvData));
          char *msg = MemCopyStringA(jv_string_value(error));
-         nxlog_debug_tag(DEBUG_TAG, 1, _T("StructuredDataParser::updateContent(%s, %s): JSON document parsing error (%hs)"), m_source, id, RemoveNewLines(msg));
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("StructuredDataExtractor::updateContent(%s, %s): JSON document parsing error (%hs)"), m_source, id, RemoveNewLines(msg));
          MemFree(msg);
 
       }
 #else
       rcc = ERR_FUNCTION_NOT_SUPPORTED;
-      nxlog_debug_tag(DEBUG_TAG, 1, _T("StructuredDataParser::updateContent(%s, %s): JSON document parsing error (agent was built without libjq support)"), m_source, id);
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("StructuredDataExtractor::updateContent(%s, %s): JSON document parsing error (agent was built without libjq support)"), m_source, id);
 #endif
    }
    else
@@ -596,7 +598,7 @@ uint32_t StructuredDataParser::updateContent(const char *text, uint32_t size, bo
 #endif
    }
    m_lastRequestTime = time(nullptr);
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("StructuredDataParser::updateContent(%s, %s): response data type=%d, length=%u"), m_source, id, static_cast<int>(m_type), static_cast<unsigned int>(size));
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("StructuredDataExtractor::updateContent(%s, %s): response data type=%d, length=%u"), m_source, id, static_cast<int>(m_type), static_cast<unsigned int>(size));
    if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 8)
    {
 #ifdef UNICODE
@@ -607,7 +609,7 @@ uint32_t StructuredDataParser::updateContent(const char *text, uint32_t size, bo
       for(TCHAR *s = responseText; *s != 0; s++)
          if (*s < ' ')
             *s = ' ';
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("StructuredDataParser::updateContent(%s, %s): response data: %s"), m_source, id, responseText);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("StructuredDataExtractor::updateContent(%s, %s): response data: %s"), m_source, id, responseText);
       MemFree(responseText);
    }
    return rcc;

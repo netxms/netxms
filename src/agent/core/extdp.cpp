@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -394,7 +394,7 @@ protected:
    String m_description;
    StringObjectMap<StructuredExtractorParameterDefinition> *m_parameters;
    StringObjectMap<StructuredExtractorParameterDefinition> *m_lists;
-   StructuredDataParser m_data;
+   StructuredDataExtractor m_dataExtractor;
    bool m_forcePlainTextParser;
 
    virtual ProcessExecutor *createExecutor() override;
@@ -423,7 +423,7 @@ StructuredMetricProvider::StructuredMetricProvider(const TCHAR *name, const TCHA
                                              StringObjectMap<StructuredExtractorParameterDefinition> *metricDefenitions,
                                              StringObjectMap<StructuredExtractorParameterDefinition> *listDefinitions,
                                              bool forcePlainTextParser, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description) :
-         ExternalDataProvider(command, pollingInterval, timeout), m_name(name), m_description(description), m_data(name)
+         ExternalDataProvider(command, pollingInterval, timeout), m_name(name), m_description(description), m_dataExtractor(name)
 {
    m_forcePlainTextParser = forcePlainTextParser;
    m_parameters = metricDefenitions;
@@ -456,7 +456,7 @@ void StructuredMetricProvider::processPollResults()
 {
    lock();
    OutputCapturingProcessExecutor *ex = static_cast<OutputCapturingProcessExecutor*>(m_executor);
-   m_data.updateContent(ex->getOutput(), ex->getOutputSize(), m_forcePlainTextParser, m_command);
+   m_dataExtractor.updateContent(ex->getOutput(), ex->getOutputSize(), m_forcePlainTextParser, m_command);
    ex->clearOutput();
    unlock();
 }
@@ -473,13 +473,13 @@ LONG StructuredMetricProvider::getValue(const TCHAR *name, TCHAR *buffer)
    StructuredExtractorParameterDefinition *defenition = m_parameters->get(name);
    if (defenition != nullptr)
    {
-      rc = m_data.getMetric(defenition->query, buffer, MAX_RESULT_LENGTH);
+      rc = m_dataExtractor.getMetric(defenition->query, buffer, MAX_RESULT_LENGTH);
    }
    else if (MatchString(m_genericParamName, name, false))
    {
       TCHAR query[1024];
       AgentGetParameterArg(name, 1, query, 1024);
-      rc = m_data.getMetric(query, buffer, MAX_RESULT_LENGTH);
+      rc = m_dataExtractor.getMetric(query, buffer, MAX_RESULT_LENGTH);
    }
 
    unlock();
@@ -497,13 +497,13 @@ LONG StructuredMetricProvider::getList(const TCHAR *name, StringList *value)
    StructuredExtractorParameterDefinition *defenition = m_lists->get(name);
    if (defenition != nullptr)
    {
-      rc = m_data.getList(defenition->query, value);
+      rc = m_dataExtractor.getList(defenition->query, value);
    }
    else if (MatchString(m_genericParamName, name, false))
    {
       TCHAR query[1024];
       AgentGetParameterArg(name, 1, query, 1024);
-      rc = m_data.getList(query, value);
+      rc = m_dataExtractor.getList(query, value);
    }
 
    unlock();

@@ -511,6 +511,9 @@
       <Project>{811f41fe-131d-491a-9184-fbe687068d34}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\libnxsde\libnxsde.vcxproj">
+      <Project>{86d0233b-300a-584c-9c54-1ca84faeb108}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,6 +1,6 @@
 /*
 ** NetXMS Tuxedo subagent
-** Copyright (C) 2014-2020 Raden Solutions
+** Copyright (C) 2014-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ private:
    TCHAR m_genericParamName[MAX_PARAM_NAME];
    StringMap *m_parameters;
    StringMap *m_lists;
-   StructuredDataParser *m_dataParser;
+   StructuredDataExtractor *m_dataExtractor;
    bool m_parseAsText;
    Mutex m_mutex;
 

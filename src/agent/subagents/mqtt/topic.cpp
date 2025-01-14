@@ -1,6 +1,6 @@
 /*
  ** MQTT subagent
- ** Copyright (C) 2017-2022 Raden Solutions
+ ** Copyright (C) 2017-2025 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ Topic::Topic(const TCHAR *pattern, const TCHAR *event)
    m_timestamp = 0;
    m_parameters = nullptr;
    m_lists = nullptr;
-   m_dataParser = nullptr;
+   m_dataExtractor = nullptr;
    m_parseAsText = false;
 }
 
@@ -47,7 +47,7 @@ Topic::Topic(const char *pattern)
    m_timestamp = 0;
    m_parameters = nullptr;
    m_lists = nullptr;
-   m_dataParser = nullptr;
+   m_dataExtractor = nullptr;
    m_parseAsText = false;
 }
 
@@ -63,7 +63,7 @@ Topic::Topic(const TCHAR *pattern, const TCHAR *name, bool parseAsText)
    m_timestamp = 0;
    m_parameters = nullptr;
    m_lists = nullptr;
-   m_dataParser = new StructuredDataParser(pattern);
+   m_dataExtractor = new StructuredDataExtractor(pattern);
    m_parseAsText = parseAsText;
    _tcsncpy(m_genericParamName, name, MAX_PARAM_NAME);
    _tcsncat(m_genericParamName, _T("(*)"), MAX_PARAM_NAME);
@@ -76,7 +76,7 @@ Topic::~Topic()
 {
    MemFree(m_pattern);
    MemFree(m_event);
-   delete m_dataParser;
+   delete m_dataExtractor;
    delete m_parameters;
    delete m_lists;
 }
@@ -102,7 +102,7 @@ void Topic::processMessage(const char *topic, const char *msg)
       strlcpy(m_lastName, topic, MAX_DB_STRING);
       strlcpy(m_lastValue, msg, MAX_RESULT_LENGTH);
       m_timestamp = time(nullptr);
-      if (m_dataParser != nullptr)
+      if (m_dataExtractor != nullptr)
       {
          TCHAR buffer[512];
 #ifdef UNICODE
@@ -111,7 +111,7 @@ void Topic::processMessage(const char *topic, const char *msg)
 #else
          strlcpy(buffer, topic, 512);
 #endif
-         m_dataParser->updateContent(msg, strlen(msg), m_parseAsText, buffer);
+         m_dataExtractor->updateContent(msg, strlen(msg), m_parseAsText, buffer);
       }
       m_mutex.unlock();
    }
@@ -151,13 +151,13 @@ LONG Topic::retrieveData(const TCHAR *metricName, TCHAR *buffer, size_t bufferLe
    const TCHAR *query = m_parameters->get(metricName);
    if (query != nullptr)
    {
-      rc = m_dataParser->getMetric(query, buffer, MAX_RESULT_LENGTH);
+      rc = m_dataExtractor->getMetric(query, buffer, MAX_RESULT_LENGTH);
    }
    else if (MatchString(m_genericParamName, metricName, false))
    {
       TCHAR query[1024];
       AgentGetParameterArg(metricName, 1, query, 1024);
-      rc = m_dataParser->getMetric(query, buffer, MAX_RESULT_LENGTH);
+      rc = m_dataExtractor->getMetric(query, buffer, MAX_RESULT_LENGTH);
    }
 
    return rc;
@@ -174,13 +174,13 @@ LONG Topic::retrieveListData(const TCHAR *metricName, StringList *buffer)
    const TCHAR *query = m_lists->get(metricName);
    if (query != nullptr)
    {
-      rc = m_dataParser->getList(query, buffer);
+      rc = m_dataExtractor->getList(query, buffer);
    }
    else if (MatchString(m_genericParamName, metricName, false))
    {
       TCHAR query[1024];
       AgentGetParameterArg(metricName, 1, query, 1024);
-      rc = m_dataParser->getList(query, buffer);
+      rc = m_dataExtractor->getList(query, buffer);
    }
 
    return rc;
