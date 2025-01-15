@@ -7,11 +7,18 @@ if [ ! -r configure.ac ]; then
 fi
 
 OS=`uname -s`
-if [ "$OS" = "SunOS" ]; then
-        SED="gsed"
-else
-        SED="sed"
-fi
+case "$OS" in
+	AIX)
+		SED="/opt/freeware/bin/sed"
+		;;
+	SunOS)
+		SED="gsed"
+		;;
+	*)
+		SED="sed"
+		;;
+
+esac
 
 set -e
 
