@@ -3942,6 +3942,9 @@ if test $? = 0; then
 	LD_RUN_PATH="${JDK_LOCATION}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
 	LDFLAGS="$LDFLAGS -L${JDK_LOCATION}/lib"
 	CPPFLAGS="$CPPFLAGS -I${JDK_LOCATION}/include"
+	if test -d "${JDK_LOCATION}/include/aix"; then
+		CPPFLAGS="$CPPFLAGS -I${JDK_LOCATION}/include/aix"
+	fi
 	if test -d "${JDK_LOCATION}/include/darwin"; then
 		CPPFLAGS="$CPPFLAGS -I${JDK_LOCATION}/include/darwin"
 	fi
