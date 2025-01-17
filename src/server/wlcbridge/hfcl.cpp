@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2023-2024 Raden Solutions
+** Copyright (C) 2023-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 #define DEBUG_TAG WLCBRIDGE_DEBUG_TAG _T(".hfcl")
 
 #define MAX_AUTH_TOKEN_SIZE   512
+#define MAX_READER_BATCH_SIZE 64
 
 /**
  * Get custom attribute from domain object as UTF-8 sting
@@ -146,7 +147,7 @@ static bool Login(const char *baseUrl, const char *login, const char *password, 
 /**
  * Read JSON document from controller
  */
-static json_t *ReadJsonFromController(const char *baseUrl, const char *endpoint, const char *token)
+static json_t *ReadJsonFromController(const char *baseUrl, const char *endpoint, const char *token, const char *requestData = nullptr)
 {
    ByteStream responseData(32768);
    responseData.setAllocationStep(32768);
@@ -161,6 +162,11 @@ static json_t *ReadJsonFromController(const char *baseUrl, const char *endpoint,
    headers = curl_slist_append(headers, "Content-Type: application/json");
    headers = curl_slist_append(headers, token);
    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+   if (requestData != nullptr)
+   {
+      curl_easy_setopt(curl, CURLOPT_POSTFIELDS, requestData);
+   }
 
    bool success = true;
 
@@ -222,10 +228,13 @@ static json_t *ReadJsonFromController(const char *baseUrl, const char *endpoint,
 /**
  * Do request from controller
  */
-static json_t *DoRequest(NObject *wirelessDomain, const char *endpoint)
+static json_t *DoRequest(NObject *wirelessDomain, const char *endpoint, const char *requestData = nullptr)
 {
    if (IsShutdownInProgress())
       return nullptr;
+
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("Sending request to controller for domain %s [%u]: endpoint=%hs, data=%hs"),
+      wirelessDomain->getName(), wirelessDomain->getId(), endpoint, CHECK_NULL_A(requestData));
 
    std::string baseUrl = GetDomainAttribute(wirelessDomain, _T("hfcl.base-url"));
    if (baseUrl.length() == 0)
@@ -247,7 +256,7 @@ static json_t *DoRequest(NObject *wirelessDomain, const char *endpoint)
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Login to controller at %hs successful"), baseUrl.c_str());
    }
 
-   json_t *response = ReadJsonFromController(baseUrl.c_str(), endpoint, token);
+   json_t *response = ReadJsonFromController(baseUrl.c_str(), endpoint, token, requestData);
    if (response == nullptr)
       return nullptr;
 
@@ -268,7 +277,7 @@ static json_t *DoRequest(NObject *wirelessDomain, const char *endpoint)
    wirelessDomain->setCustomAttribute(_T("$hfcl.token"), SharedString(token, "ASCII"), StateChange::CLEAR);
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Login to controller at %hs successful"), baseUrl.c_str());
 
-   response = ReadJsonFromController(baseUrl.c_str(), endpoint, token);
+   response = ReadJsonFromController(baseUrl.c_str(), endpoint, token, requestData);
    if (response == nullptr)
       return nullptr;
 
@@ -291,6 +300,11 @@ static HashMap<SerialNumber, AccessPointCacheEntry> s_apDataCache(Ownership::Tru
    {
       s_apMemPool.destroy(static_cast<AccessPointCacheEntry*>(e));
    });
+static HashMap<SerialNumber, AccessPointCacheEntry> s_apDetailsCache(Ownership::True,
+   [] (void *e, HashMapBase *hashMap) -> void
+   {
+      s_apMemPool.destroy(static_cast<AccessPointCacheEntry*>(e));
+   });
 static HashMap<SerialNumber, AccessPointCacheEntry> s_apStateCache(Ownership::True,
    [] (void *e, HashMapBase *hashMap) -> void
    {
@@ -300,7 +314,122 @@ static volatile bool s_stateReadInProgress = false;
 static Mutex s_apCacheLock(MutexType::FAST);
 
 /**
- * Get access point data from cache or bridge process. Assumes lock on s_apCacheLock.
+ * Data reader request
+ */
+struct DataReaderRequest
+{
+   SerialNumber serial;
+   json_t *data;
+   volatile bool completed;
+};
+
+/**
+ * Data reader object
+ */
+struct DataReader
+{
+   THREAD thread;
+   ObjectQueue<DataReaderRequest> queue;
+   NObject *wirelessDomain;
+
+   DataReader(NObject *wd)
+   {
+      thread = ThreadCreate(this, &DataReader::workerThread);
+      wirelessDomain = wd;
+   }
+
+   ~DataReader()
+   {
+      queue.put(INVALID_POINTER_VALUE);
+      ThreadJoin(thread);
+   }
+
+   void workerThread();
+};
+
+/**
+ * Data reader thread
+ */
+void DataReader::workerThread()
+{
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("HFCL data reader for domain %s [%u] started"), wirelessDomain->getName(), wirelessDomain->getId());
+
+   DataReaderRequest *requests[MAX_READER_BATCH_SIZE];
+   while(true)
+   {
+      DataReaderRequest *rq = queue.getOrBlock();
+      if (rq == INVALID_POINTER_VALUE)
+         break;
+
+      requests[0] = rq;
+      int count = 1;
+      while(count < MAX_READER_BATCH_SIZE)
+      {
+         rq = queue.getOrBlock(1000);
+         if ((rq == nullptr) || (rq == INVALID_POINTER_VALUE))
+            break;
+         requests[count++] = rq;
+      }
+
+      if (rq == INVALID_POINTER_VALUE)
+      {
+         for(int i = 0; i < count; i++)
+            requests[i]->completed = true;
+         break;
+      }
+
+      std::string request("{\"serial_nos\": [");
+      for(int i = 0; i < count; i++)
+      {
+         request.append((i > 0) ? ",\"": "\"");
+         request.append(requests[i]->serial);
+         request.append("\"");
+      }
+      request.append("]}");
+
+      json_t *response = DoRequest(wirelessDomain, "devices/get-ap-data/", request.c_str());
+      if (response != nullptr)
+      {
+         json_t *data = json_object_get(response, "data");
+         if (json_is_array(data))
+         {
+            size_t i;
+            json_t *ap;
+            json_array_foreach(data, i, ap)
+            {
+               void *it = json_object_iter(ap);
+               if (it == nullptr)
+                  continue;
+
+               const char *key = json_object_iter_key(it);
+               for(int i = 0; i < count; i++)
+               {
+                  if (!strcmp(key, requests[i]->serial))
+                  {
+                     requests[i]->data = json_incref(json_object_iter_value(it));
+                     break;
+                  }
+               }
+            }
+         }
+      }
+      json_decref(response);
+
+      for(int i = 0; i < count; i++)
+         requests[i]->completed = true;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("HFCL data reader for domain %s [%u] stopped"), wirelessDomain->getName(), wirelessDomain->getId());
+}
+
+/**
+ * Active data readers
+ */
+static HashMap<uint32_t, DataReader> s_dataReaders(Ownership::True);
+static ObjectMemoryPool<DataReaderRequest> s_dataReaderMemPool;
+
+/**
+ * Get access point data from cache or controller. Assumes lock on s_apCacheLock.
  */
 static json_t *ReadAccessPointData(NObject *wirelessDomain, const char *serial)
 {
@@ -309,16 +438,84 @@ static json_t *ReadAccessPointData(NObject *wirelessDomain, const char *serial)
    strlcpy(key, serial, sizeof(key));
 
    AccessPointCacheEntry *ce = s_apDataCache.get(key);
-   if ((ce != nullptr) && (ce->timestamp >= time(nullptr) - 10))
+   if ((ce != nullptr) && (ce->timestamp >= time(nullptr) - 30))
       return ce->data;
 
    if (ce == nullptr)
    {
       ce = s_apMemPool.create();
       s_apDataCache.set(key, ce);
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("ReadAccessPointData(%s [%u]): added cache entry for AP %hs"), wirelessDomain->getName(), wirelessDomain->getId(), serial);
    }
 
-   // Make sure that only one thread sends request to bridge process
+   // Make sure that only one thread sends request to the controller
+   if (!ce->processing)
+   {
+      ce->processing = true;
+
+      DataReader *reader = s_dataReaders.get(wirelessDomain->getId());
+      if (reader == nullptr)
+      {
+         reader = new DataReader(wirelessDomain);
+         s_dataReaders.set(wirelessDomain->getId(), reader);
+      }
+
+      DataReaderRequest *request = s_dataReaderMemPool.allocate();
+      memcpy(&request->serial, &key, sizeof(SerialNumber));
+      request->data = nullptr;
+      request->completed = false;
+      reader->queue.put(request);
+
+      // Wait for other thread to complete request
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("ReadAccessPointData(%hs): waiting for controller response"), serial);
+      do
+      {
+         s_apCacheLock.unlock();
+         ThreadSleepMs(200);
+         s_apCacheLock.lock();
+      } while(!request->completed);
+
+      json_decref(ce->data);
+      ce->data = request->data;
+      ce->timestamp = time(nullptr);
+      ce->processing = false;
+
+      s_dataReaderMemPool.free(request);
+   }
+   else
+   {
+      // Wait for other thread to complete request
+      do
+      {
+         s_apCacheLock.unlock();
+         ThreadSleepMs(200);
+         s_apCacheLock.lock();
+      } while(ce->processing);
+   }
+
+   return ce->data;
+}
+
+/**
+ * Get access point detailed information from cache or bridge process. Assumes lock on s_apCacheLock.
+ */
+static json_t *ReadAccessPointDetails(NObject *wirelessDomain, const char *serial)
+{
+   SerialNumber key;
+   memset(key, 0, sizeof(key));
+   strlcpy(key, serial, sizeof(key));
+
+   AccessPointCacheEntry *ce = s_apDetailsCache.get(key);
+   if ((ce != nullptr) && (ce->timestamp >= time(nullptr) - 10))
+      return ce->data;
+
+   if (ce == nullptr)
+   {
+      ce = s_apMemPool.create();
+      s_apDetailsCache.set(key, ce);
+   }
+
+   // Make sure that only one thread sends request to the controller
    if (!ce->processing)
    {
       ce->processing = true;
@@ -376,7 +573,7 @@ static void GetAccessPointRadios(NObject *wirelessDomain, const char *apSerial, 
 {
    LockGuard lockGuard(s_apCacheLock);
 
-   json_t *data = ReadAccessPointData(wirelessDomain, apSerial);
+   json_t *data = ReadAccessPointDetails(wirelessDomain, apSerial);
    if (data == nullptr)
       return;
 
@@ -437,6 +634,8 @@ static ObjectArray<AccessPointInfo> *GetAccessPoints(NObject *wirelessDomain)
    json_t *list = json_object_get(response, "results");
    if (json_is_array(list))
    {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("GetAccessPoints(%s): %d access point entries"), wirelessDomain->getName(), static_cast<int>(json_array_size(list)));
+
       size_t i;
       json_t *element;
       json_array_foreach(list, i, element)
@@ -447,7 +646,7 @@ static ObjectArray<AccessPointInfo> *GetAccessPoints(NObject *wirelessDomain)
          String model(json_object_get_string_utf8(element, "ap_model", ""), "utf8");
          String serial(json_object_get_string_utf8(element, "serial_no", ""), "utf8");
 
-         AccessPointInfo *ap = new AccessPointInfo(i, macAddress, ipAddress, GetStateFromJson(element), !name.isEmpty() ? name : serial, _T("HFCL"), model, serial);
+         AccessPointInfo *ap = new AccessPointInfo(static_cast<uint32_t>(i), macAddress, ipAddress, GetStateFromJson(element), !name.isEmpty() ? name : serial, _T("HFCL"), model, serial);
          GetAccessPointRadios(wirelessDomain, json_object_get_string_utf8(element, "serial_no", ""), ap);
          accessPoints->add(ap);
       }
@@ -476,7 +675,7 @@ static json_t *ReadAccessPointState(NObject *wirelessDomain, const char *serial)
       s_apStateCache.set(key, ce);
    }
 
-   // Make sure that only one thread sends request to bridge process
+   // Make sure that only one thread sends request to the controller
    if (!s_stateReadInProgress)
    {
       bool updated = false;
