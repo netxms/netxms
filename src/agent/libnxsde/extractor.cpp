@@ -224,10 +224,10 @@ static void GetStringFromJvArrayElement(jv jvResult, StringList *resultList, con
          resultList->addUTF8String(jv_string_value(jvResult));
          break;
       case JV_KIND_ARRAY: //do nothing for array in array
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("StructuredDataExtractor::getListFromJSON(%s): skip array as element of array"), source);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("GetStringFromJvArrayElement(%s): skip array as element of array"), source);
          break;
       case JV_KIND_NULL://Valid request - nothing found
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("StructuredDataExtractor::getListFromJSON(%s): array element is empty"), source);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("GetStringFromJvArrayElement(%s): array element is empty"), source);
          break;
       case JV_KIND_OBJECT:
          jv_object_foreach(jvResult, key, val)
@@ -344,9 +344,9 @@ uint32_t StructuredDataExtractor::getMetricFromJSON(const TCHAR *param, char *bu
 /**
  * Get list from JSON cached data
  */
-void StructuredDataExtractor::getListFromJSON(const TCHAR *path, StringList *result)
+uint32_t StructuredDataExtractor::getListFromJSON(const TCHAR *path, StringList *result)
 {
-   //do nothing
+   return SYSINFO_RC_UNSUPPORTED;
 }
 
 #endif
