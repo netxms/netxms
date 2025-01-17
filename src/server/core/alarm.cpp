@@ -2081,7 +2081,7 @@ void GetAlarmStats(NXCPMessage *msg)
    memset(counters, 0, sizeof(counters));
 
    s_alarmList.lock();
-   msg->setField(VID_NUM_ALARMS, s_alarmList.size());
+   msg->setField(VID_NUM_ALARMS, static_cast<uint32_t>(s_alarmList.size()));
    s_alarmList.forEach(
       [&counters] (Alarm *alarm) -> EnumerationCallbackResult
       {
