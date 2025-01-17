@@ -540,9 +540,6 @@ uint32_t StructuredDataExtractor::getList(const TCHAR *path, StringList *result)
       case DocumentType::JSON:
          nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataExtractor::getList(%s): get list from JSON"), m_source);
          rc = getListFromJSON(correctPath, result);
-#ifndef HAVE_LIBJQ
-         result = SYSINFO_RC_UNSUPPORTED;
-#endif
          break;
       case DocumentType::TEXT:
          nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataExtractor::getList(%s): get list from TEXT"), m_source);
