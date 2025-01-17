@@ -334,7 +334,7 @@ struct DataReader
 
    DataReader(NObject *wd)
    {
-      thread = ThreadCreate(this, &DataReader::workerThread);
+      thread = ThreadCreateEx(this, &DataReader::workerThread);
       wirelessDomain = wd;
    }
 
