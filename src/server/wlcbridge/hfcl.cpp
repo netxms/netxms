@@ -903,3 +903,13 @@ WirelessControllerBridge g_hfclBridge =
    GetAccessPointMetric,
    GetAccessPointWirelessStations
 };
+
+/**
+ * Stop background threads
+ */
+void StopHFCLBackgroundThreads()
+{
+   s_apCacheLock.lock();
+   s_dataReaders.clear();
+   s_apCacheLock.unlock();
+}

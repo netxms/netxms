@@ -34,6 +34,8 @@ DEFINE_MODULE_METADATA("WLCBRIDGE", "Raden Solutions", NETXMS_VERSION_STRING_A, 
 extern WirelessControllerBridge g_hfclBridge;
 extern WirelessControllerBridge g_ruckusBridge;
 
+void StopHFCLBackgroundThreads();
+
 /**
  * Get wireless controller bridge interface
  */
@@ -47,6 +49,14 @@ static WirelessControllerBridge *GetWLCBridgeInterface(const TCHAR *bridgeName)
 }
 
 /**
+ * Server shutdown handler
+ */
+static void ProcessServerShutdown()
+{
+   StopHFCLBackgroundThreads();
+}
+
+/**
  * Module entry point
  */
 extern "C" bool __EXPORT NXM_Register(NXMODULE *module, Config *config)
@@ -54,6 +64,7 @@ extern "C" bool __EXPORT NXM_Register(NXMODULE *module, Config *config)
    module->dwSize = sizeof(NXMODULE);
    _tcscpy(module->szName, _T("WLCBRIDGE"));
    module->pfGetWLCBridgeInterface = GetWLCBridgeInterface;
+   module->pfShutdown = ProcessServerShutdown;
    return true;
 }
 
