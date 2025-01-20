@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -149,6 +149,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
    {
       createActions();
       createLastValuesViewer(parent, () -> isActive());
+      updateActionStates();
    }
 
    /**
@@ -265,7 +266,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
     */
    protected void createActions()
    {
-      actionExportToCsv = new ExportToCsvAction(this, viewer, true); 
+      actionExportToCsv = new ExportToCsvAction(this, viewer, true);
       actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
 
       actionUseMultipliers = new Action(i18n.tr("Use &multipliers"), Action.AS_CHECK_BOX) {
@@ -275,7 +276,6 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
             setUseMultipliers(actionUseMultipliers.isChecked());
          }
       };
-      actionUseMultipliers.setChecked(areMultipliersUsed());
       addKeyBinding("M1+M3+M", actionUseMultipliers);
 
       actionShowErrors = new Action(i18n.tr("Show collection &errors"), Action.AS_CHECK_BOX) {
@@ -285,7 +285,6 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
             setShowErrors(actionShowErrors.isChecked());
          }
       };
-      actionShowErrors.setChecked(isShowErrors());
       addKeyBinding("M1+M3+E", actionShowErrors);
 
       actionShowUnsupported = new Action(i18n.tr("Show &unsupported"), Action.AS_CHECK_BOX) {
@@ -295,7 +294,6 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
             setShowUnsupported(actionShowUnsupported.isChecked());
          }
       };
-      actionShowUnsupported.setChecked(isShowUnsupported());
       addKeyBinding("M1+M3+U", actionShowUnsupported);
 
       actionShowHidden = new Action(i18n.tr("Show &hidden"), Action.AS_CHECK_BOX) {
@@ -305,7 +303,6 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
             setShowHidden(actionShowHidden.isChecked());
          }
       };
-      actionShowHidden.setChecked(isShowHidden());
       addKeyBinding("M1+M3+H", actionShowHidden);
 
       actionShowDisabled = new Action(i18n.tr("Show disabled"), Action.AS_CHECK_BOX) {
@@ -315,7 +312,6 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
             setShowDisabled(actionShowDisabled.isChecked());
          }
       };
-      actionShowDisabled.setChecked(isShowDisabled());      
       addKeyBinding("M1+M3+D", actionShowDisabled);
       
       actionCopyToClipboard = new CopyTableRowsAction(this, true);
@@ -361,6 +357,18 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
             clearCollectedData();
          }
       };
+   }
+
+   /**
+    * Updated action states based on current configuration
+    */
+   protected void updateActionStates()
+   {
+      actionUseMultipliers.setChecked(areMultipliersUsed());
+      actionShowErrors.setChecked(isShowErrors());
+      actionShowUnsupported.setChecked(isShowUnsupported());
+      actionShowHidden.setChecked(isShowHidden());
+      actionShowDisabled.setChecked(isShowDisabled());
    }
 
    /**
