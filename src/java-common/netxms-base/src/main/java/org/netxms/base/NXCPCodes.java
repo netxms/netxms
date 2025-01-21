@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -274,8 +274,8 @@ public class NXCPCodes
 	public static final int CMD_CLOSE_CONSOLE = 0x00F8;
 	public static final int CMD_GET_SELECTED_OBJECTS = 0x00F9;
 	public static final int CMD_GET_VLANS = 0x00FA;
-   // public static final int CMD_HOLD_JOB = 0x00FB;
-   // public static final int CMD_UNHOLD_JOB = 0x00FC;
+   public static final int CMD_GET_SYSTEM_TIME = 0x00FB;
+   public static final int CMD_SET_SYSTEM_TIME = 0x00FC;
 	public static final int CMD_CHANGE_ZONE = 0x00FD;
 	public static final int CMD_GET_AGENT_FILE = 0x00FE;
 	public static final int CMD_GET_FILE_DETAILS = 0x00FF;

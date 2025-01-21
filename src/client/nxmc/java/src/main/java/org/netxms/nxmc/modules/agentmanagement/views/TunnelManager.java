@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
@@ -31,8 +30,6 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.AgentTunnel;
@@ -67,7 +64,7 @@ public class TunnelManager extends ConfigurationView implements SessionListener
    private static final Logger logger = LoggerFactory.getLogger(TunnelManager.class);
    private final I18n i18n = LocalizationHelper.getI18n(TunnelManager.class);
    public static final String ID = "TunnelManager";
-   
+
    public static final int COL_ID = 0;
    public static final int COL_STATE = 1;
    public static final int COL_NODE = 2;
@@ -127,23 +124,17 @@ public class TunnelManager extends ConfigurationView implements SessionListener
       filter = new TunnelManagerFilter();
       viewer.addFilter(filter);
       setFilterClient(viewer, filter);
-      
+
       WidgetHelper.restoreTableViewerSettings(viewer, ID);
-      viewer.getTable().addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            WidgetHelper.saveTableViewerSettings(viewer, ID);
-         }
-      });
-      
+      viewer.getTable().addDisposeListener((e) -> WidgetHelper.saveTableViewerSettings(viewer, ID));
+
       createActions();
       createPopupMenu();
-      
+
       refresh();
 
       session.addListener(this);
-      new Job("Subscribing to tunnel change notifications", this) {
+      new Job(i18n.tr("Subscribing to tunnel change notifications"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -153,7 +144,7 @@ public class TunnelManager extends ConfigurationView implements SessionListener
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot subscribe to tunnel change notifications";
+            return i18n.tr("Cannot subscribe to tunnel change notifications");
          }
       }.start();
    }
@@ -174,7 +165,7 @@ public class TunnelManager extends ConfigurationView implements SessionListener
    public void dispose()
    {
       session.removeListener(this);
-      new Job("Unsubscribing from tunnel change notifications", null) {
+      new Job(i18n.tr("Unsubscribing from tunnel change notifications"), null) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -202,23 +193,23 @@ public class TunnelManager extends ConfigurationView implements SessionListener
     */
    private void createActions()
    {      
-      actionCreateNode = new Action("&Create node and bind...") {
+      actionCreateNode = new Action(i18n.tr("&Create node and bind...")) {
          @Override
          public void run()
          {
             createNode();
          }
       };
-      
-      actionBind = new Action("&Bind to...") {
+
+      actionBind = new Action(i18n.tr("&Bind to...")) {
          @Override
          public void run()
          {
             bindTunnel();
          }
       };
-      
-      actionUnbind = new Action("&Unbind") {
+
+      actionUnbind = new Action(i18n.tr("&Unbind")) {
          @Override
          public void run()
          {
@@ -253,12 +244,7 @@ public class TunnelManager extends ConfigurationView implements SessionListener
       // Create menu manager
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
-         {
-            fillContextMenu(mgr);
-         }
-      });
+      menuMgr.addMenuListener((m) -> fillContextMenu(m));
 
       // Create menu
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
@@ -271,7 +257,7 @@ public class TunnelManager extends ConfigurationView implements SessionListener
     */
    protected void fillContextMenu(IMenuManager manager)
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if ((selection.size() == 1) && !((AgentTunnel)selection.getFirstElement()).isBound())
       {
          manager.add(actionBind);
@@ -314,15 +300,11 @@ public class TunnelManager extends ConfigurationView implements SessionListener
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final List<AgentTunnel> tunnelList = session.getAgentTunnels();
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  tunnels.clear();
-                  for(AgentTunnel t : tunnelList)
-                     tunnels.put(t.getId(), t);
-                  viewer.setInput(tunnels.values());
-               }
+            runInUIThread(() -> {
+               tunnels.clear();
+               for(AgentTunnel t : tunnelList)
+                  tunnels.put(t.getId(), t);
+               viewer.setInput(tunnels.values());
             });
          }
 
@@ -408,7 +390,7 @@ public class TunnelManager extends ConfigurationView implements SessionListener
     */
    private void bindTunnel()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
 
@@ -495,25 +477,17 @@ public class TunnelManager extends ConfigurationView implements SessionListener
    {
       if (n.getCode() == SessionNotification.AGENT_TUNNEL_OPEN)
       {
-         getDisplay().asyncExec(new Runnable() {
-            @Override
-            public void run()
-            {
-               AgentTunnel t = (AgentTunnel)n.getObject();
-               tunnels.put(t.getId(), t);
-               viewer.refresh();
-            }
+         getDisplay().asyncExec(() -> {
+            AgentTunnel t = (AgentTunnel)n.getObject();
+            tunnels.put(t.getId(), t);
+            viewer.refresh();
          });
       }
       else if (n.getCode() == SessionNotification.AGENT_TUNNEL_CLOSED)
       {
-         getDisplay().asyncExec(new Runnable() {
-            @Override
-            public void run()
-            {
-               tunnels.remove((int)n.getSubCode());
-               viewer.refresh();
-            }
+         getDisplay().asyncExec(() -> {
+            tunnels.remove((int)n.getSubCode());
+            viewer.refresh();
          });
       }
    }

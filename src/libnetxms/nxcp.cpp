@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -506,7 +506,10 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_ENABLE_ANONYMOUS_ACCESS"),
       _T("CMD_ADD_WIRELESS_DOMAIN_CNTRL"),
       _T("CMD_PROGRESS_REPORT"),
-      _T("CMD_COMPILE_MIB_FILES")
+      _T("CMD_COMPILE_MIB_FILES"),
+      _T("CMD_EXECUTE_DASBOARD_SCRIPT"),
+      _T("CMD_UPDATE_PEER_INTERFACE"),
+      _T("CMD_CLEAR_PEER_INTERFACE")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -519,7 +522,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_COMPILE_MIB_FILES))
+   if ((code >= CMD_LOGIN) && (code <= CMD_CLEAR_PEER_INTERFACE))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }
