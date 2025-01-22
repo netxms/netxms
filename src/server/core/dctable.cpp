@@ -339,7 +339,10 @@ bool DCTable::processNewValue(time_t timestamp, const shared_ptr<Table>& value, 
 bool DCTable::transform(const shared_ptr<Table>& value)
 {
    if (m_transformationScript == nullptr)
-      return true;
+   {
+      // Return error if transformation script is present but cannot be compiled
+      return m_transformationScriptSource.isNull() || IsBlankString(m_transformationScriptSource);
+   }
 
    bool success = false;
    ScriptVMHandle vm = CreateServerScriptVM(m_transformationScript.get(), m_owner.lock(), createDescriptorInternal());

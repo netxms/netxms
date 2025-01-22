@@ -1113,6 +1113,9 @@ static inline void ConvertValue(ItemValue& value, int destinationDataType, int s
  */
 bool DCItem::transform(ItemValue &value, time_t elapsedTime)
 {
+   if ((m_transformationScript == nullptr) && !m_transformationScriptSource.isNull() && !IsBlankString(m_transformationScriptSource))
+      return false;  // Transformation script present but cannot be compiled
+
    bool success = true;
 
    switch(m_deltaCalculation)
