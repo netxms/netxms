@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -84,9 +84,7 @@ bool RecalculateDCIValues(DataCollectionTarget *object, DCItem *dci, BackgroundT
          for(int i = 0; i < count; i++)
          {
             time_t timestamp = static_cast<time_t>(DBGetFieldInt64(hResult, i, 0));
-            TCHAR data[MAX_RESULT_LENGTH];
-            DBGetField(hResult, i, 1, data, MAX_RESULT_LENGTH);
-            ItemValue value(data, timestamp);
+            ItemValue value(hResult, i, 1, timestamp, false);
             dci->recalculateValue(value);
 
             int index = 1;

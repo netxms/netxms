@@ -93,14 +93,14 @@ private:
    int64_t m_int64;
    uint64_t m_uint64;
    time_t m_timestamp;
-   TCHAR m_string[MAX_DB_STRING];
+   wchar_t m_string[MAX_DB_STRING];
 
    void parseStringValue(bool parseSuffix);
 
 public:
    ItemValue();
-   ItemValue(const TCHAR *value, time_t timestamp);
-   ItemValue(DB_RESULT hResult, int row, int column, bool parseSuffix);
+   ItemValue(const wchar_t *value, time_t timestamp, bool parseSuffix);
+   ItemValue(DB_RESULT hResult, int row, int column, time_t timestamp, bool parseSuffix);
    ItemValue(const ItemValue& src) = default;
 
    void setTimeStamp(time_t timestamp) { m_timestamp = timestamp; }
@@ -111,7 +111,7 @@ public:
    int64_t getInt64() const { return m_int64; }
    uint64_t getUInt64() const { return m_uint64; }
    double getDouble() const { return m_double; }
-   const TCHAR *getString() const { return m_string; }
+   const wchar_t *getString() const { return m_string; }
 
    void set(const TCHAR *stringValue, bool parseSuffix = false);
    void set(double value, const TCHAR *stringValue = nullptr);

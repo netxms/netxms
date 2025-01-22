@@ -115,7 +115,7 @@ Threshold::Threshold(const Threshold& src, bool shadowCopy) : m_value(src.m_valu
  *        repeat_interval,current_severity,last_event_timestamp,match_count,
  *        state_before_maint,last_checked_value,last_event_message,is_disabled FROM thresholds
  */
-Threshold::Threshold(DB_RESULT hResult, int row, DCItem *relatedItem) : m_value(hResult, row, 1, true)
+Threshold::Threshold(DB_RESULT hResult, int row, DCItem *relatedItem) : m_value(hResult, row, 1, 0, true)
 {
    TCHAR textBuffer[MAX_EVENT_MSG_LENGTH];
 
@@ -348,7 +348,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    else if (m_function == F_SCRIPT)
    {
       tvalue = m_expandValue ?
-               ItemValue(target->expandText(m_value.getString(), nullptr, nullptr, dci->createDescriptor(), nullptr, nullptr, dci->getInstanceName(), nullptr, nullptr), m_value.getTimeStamp()) :
+               ItemValue(target->expandText(m_value.getString(), nullptr, nullptr, dci->createDescriptor(), nullptr, nullptr, dci->getInstanceName(), nullptr, nullptr), m_value.getTimeStamp(), true) :
                m_value;
       if ((m_script != nullptr) && !m_script->isEmpty())
       {
@@ -396,7 +396,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    else
    {
       tvalue = m_expandValue ?
-               ItemValue(target->expandText(m_value.getString(), nullptr, nullptr, dci->createDescriptor(), nullptr, nullptr, dci->getInstanceName(), nullptr, nullptr), m_value.getTimeStamp()) :
+               ItemValue(target->expandText(m_value.getString(), nullptr, nullptr, dci->createDescriptor(), nullptr, nullptr, dci->getInstanceName(), nullptr, nullptr), m_value.getTimeStamp(), true) :
                m_value;
       switch(m_operation)
       {
@@ -667,7 +667,7 @@ void Threshold::fillMessage(NXCPMessage *msg, uint32_t baseId, DCItem *dci) cons
    msg->setField(fieldId++, CHECK_NULL_EX(m_scriptSource));
    msg->setField(fieldId++, static_cast<uint32_t>(m_repeatInterval));
    ItemValue tvalue = m_expandValue ?
-                  ItemValue(dci->getOwner()->expandText(m_value.getString(), nullptr, nullptr, dci->createDescriptor(), nullptr, nullptr, dci->getInstanceName(), nullptr, nullptr), m_value.getTimeStamp()) :
+                  ItemValue(dci->getOwner()->expandText(m_value.getString(), nullptr, nullptr, dci->createDescriptor(), nullptr, nullptr, dci->getInstanceName(), nullptr, nullptr), m_value.getTimeStamp(), false) :
                   m_value;
    msg->setField(fieldId++, tvalue.getString());
    msg->setField(fieldId++, m_isReached);

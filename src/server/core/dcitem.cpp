@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -727,7 +727,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
    }
 
    // Create new ItemValue object and transform it as needed
-   pValue = new ItemValue(originalValue, tmTimeStamp);
+   pValue = new ItemValue(originalValue, tmTimeStamp, false);
    if (m_prevValueTimeStamp == 0)
       m_prevRawValue = *pValue;  // Delta should be zero for first poll
    rawValue = *pValue;
@@ -1501,7 +1501,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad)
          // will not read data from database, fill cache with empty values
          m_ppValueCache = MemReallocArray(m_ppValueCache, m_requiredCacheSize);
          for(uint32_t i = m_cacheSize; i < m_requiredCacheSize; i++)
-            m_ppValueCache[i] = new ItemValue(_T(""), 1);
+            m_ppValueCache[i] = new ItemValue(_T(""), 1, false);
          nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 7, _T("Cache load skipped for parameter %s [%u]"), m_name.cstr(), m_id);
          m_cacheSize = m_requiredCacheSize;
          m_cacheLoaded = true;
@@ -1647,11 +1647,11 @@ void DCItem::reloadCache(bool forceReload)
             if (moreData)
             {
                DBGetField(hResult, 0, szBuffer, MAX_DB_STRING);
-               m_ppValueCache[i] = new ItemValue(szBuffer, DBGetFieldULong(hResult, 1));
+               m_ppValueCache[i] = new ItemValue(szBuffer, DBGetFieldULong(hResult, 1), false);
             }
             else
             {
-               m_ppValueCache[i] = new ItemValue(_T(""), 1);   // Empty value
+               m_ppValueCache[i] = new ItemValue(L"", 1, false);   // Empty value
             }
          }
 
@@ -1661,7 +1661,7 @@ void DCItem::reloadCache(bool forceReload)
             nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 8, _T("DCItem::reloadCache(dci=\"%s\", node=%s [%d]): %d values missing in DB"),
                      m_name.cstr(), getOwnerName(), m_ownerId, m_requiredCacheSize - i);
             for(; i < m_requiredCacheSize; i++)
-               m_ppValueCache[i] = new ItemValue(_T(""), 1);
+               m_ppValueCache[i] = new ItemValue(L"", 1, false);
          }
          DBFreeResult(hResult);
       }
@@ -1669,7 +1669,7 @@ void DCItem::reloadCache(bool forceReload)
       {
          // Error reading data from database, fill cache with empty values
          for(uint32_t i = 0; i < m_requiredCacheSize; i++)
-            m_ppValueCache[i] = new ItemValue(_T(""), 1);
+            m_ppValueCache[i] = new ItemValue(L"", 1, false);
       }
 
       m_cacheSize = m_requiredCacheSize;

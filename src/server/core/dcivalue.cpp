@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,23 +36,21 @@ ItemValue::ItemValue()
 /**
  * Construct value object from string value
  */
-ItemValue::ItemValue(const TCHAR *value, time_t timestamp)
+ItemValue::ItemValue(const wchar_t *value, time_t timestamp, bool parseSuffix)
 {
-   _tcslcpy(m_string, value, MAX_DB_STRING);
-   m_int64 = _tcstoll(m_string, nullptr, 0);
-   m_uint64 = _tcstoull(m_string, nullptr, 0);
-   m_double = _tcstod(m_string, nullptr);
+   wcslcpy(m_string, value, MAX_DB_STRING);
+   parseStringValue(parseSuffix);
    m_timestamp = (timestamp == 0) ? time(nullptr) : timestamp;
 }
 
 /**
  * Construct value object from database field
  */
-ItemValue::ItemValue(DB_RESULT hResult, int row, int column, bool parseSuffix)
+ItemValue::ItemValue(DB_RESULT hResult, int row, int column, time_t timestamp, bool parseSuffix)
 {
    DBGetField(hResult, row, column, m_string, MAX_DB_STRING);
    parseStringValue(parseSuffix);
-   m_timestamp = time(nullptr);
+   m_timestamp = (timestamp == 0) ? time(nullptr) : timestamp;
 }
 
 /**
@@ -60,8 +58,8 @@ ItemValue::ItemValue(DB_RESULT hResult, int row, int column, bool parseSuffix)
  */
 void ItemValue::parseStringValue(bool parseSuffix)
 {
-   TCHAR *eptr;
-   m_double = _tcstod(m_string, &eptr);
+   wchar_t *eptr;
+   m_double = wcstod(m_string, &eptr);
    if (parseSuffix)
    {
       while(*eptr == ' ')
@@ -94,14 +92,14 @@ void ItemValue::parseStringValue(bool parseSuffix)
       }
       else
       {
-         m_int64 = _tcstoll(m_string, nullptr, 0);
-         m_uint64 = _tcstoull(m_string, nullptr, 0);
+         m_int64 = wcstoll(m_string, nullptr, 0);
+         m_uint64 = wcstoull(m_string, nullptr, 0);
       }
    }
    else
    {
-      m_int64 = _tcstoll(m_string, nullptr, 0);
-      m_uint64 = _tcstoull(m_string, nullptr, 0);
+      m_int64 = wcstoll(m_string, nullptr, 0);
+      m_uint64 = wcstoull(m_string, nullptr, 0);
    }
 }
 
