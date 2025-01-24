@@ -2,6 +2,7 @@
 
 @skipnames = (
 	"Queue::getOrBlock",
+	"SQueueBase::getOrBlock",
 	"__1cFQdDueueKgetOrBlock6MI_pv_",
 	"ConditionWait",
 	"__1cNConditionWait6FpnSnetxms_condition_t_I_b_",

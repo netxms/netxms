@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -8970,6 +8970,15 @@ void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_PATH_CHECK_REASON, static_cast<int16_t>(m_pathCheckResult.reason));
    msg->setField(VID_PATH_CHECK_NODE_ID, m_pathCheckResult.rootCauseNodeId);
    msg->setField(VID_PATH_CHECK_INTERFACE_ID, m_pathCheckResult.rootCauseInterfaceId);
+}
+
+/**
+ * Fill NXCP message with object's data - property lock is not held
+ */
+void Node::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
+{
+   super::fillMessageUnlocked(msg, userId);
+   msg->setField(VID_MAC_ADDR, getPrimaryMacAddress());
 
    int networkServiceCount = 0;
    int vpnCount = 0;
@@ -8985,15 +8994,6 @@ void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    unlockChildList();
    msg->setField(VID_NETWORK_SERVICE_COUNT, networkServiceCount);
    msg->setField(VID_VPN_CONNECTOR_COUNT, vpnCount);
-}
-
-/**
- * Fill NXCP message with object's data - property lock is not held
- */
-void Node::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
-{
-   super::fillMessageUnlocked(msg, userId);
-   msg->setField(VID_MAC_ADDR, getPrimaryMacAddress());
 }
 
 /**
