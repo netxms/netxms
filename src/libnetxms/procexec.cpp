@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -359,6 +359,221 @@ bool ProcessExecutor::executeWithoutOutput()
    return true;
 }
 
+#else
+
+/**
+ * Arguments for process entry
+ */
+struct ProcessEntryArgs
+{
+   char *cmdline;
+   bool shellExec;
+   int pipe[2];
+   const char *workingDirectory;
+   int *execError;
+#ifdef __linux__
+   sigset_t oldmask;
+#endif
+};
+
+/**
+ * Entry for cloned process
+ */
+static int ProcessEntry(void *argsp)
+{
+   ProcessEntryArgs *args = static_cast<ProcessEntryArgs*>(argsp);
+
+   setpgid(0, 0); // new process group
+   close(args->pipe[0]);
+   dup2(args->pipe[1], STDOUT_FILENO);
+   dup2(args->pipe[1], STDERR_FILENO);
+   close(args->pipe[1]);
+   int fd = open("/dev/null", O_RDONLY);
+   if (fd != -1)
+   {
+      dup2(fd, STDIN_FILENO);
+      close(fd);
+   }
+   else
+   {
+      close(STDIN_FILENO);
+   }
+   if (args->workingDirectory != nullptr)
+   {
+      if (chdir(args->workingDirectory) != 0)
+      {
+         *args->execError = errno;
+         char errorMessage[MAX_PATH + 256];
+         snprintf(errorMessage, sizeof(errorMessage), "Cannot change working directory to \"%s\" (%s)\n", args->workingDirectory, strerror(errno));
+         write(STDERR_FILENO, errorMessage, strlen(errorMessage));
+         _exit(127);
+      }
+   }
+
+#ifdef __linux__
+   pthread_sigmask(SIG_SETMASK, &args->oldmask, nullptr);
+#endif
+
+   if (args->shellExec)
+   {
+      execl("/bin/sh", "/bin/sh", "-c", args->cmdline, nullptr);
+   }
+   else
+   {
+      char *argv[256];
+      if (args->cmdline[0] == '[')
+      {
+         int index = 0;
+         bool squotes = false, dquotes = false;
+         char *start = nullptr;
+         for(char *p = args->cmdline + 1; *p != 0; p++)
+         {
+            if (!squotes && !dquotes)
+            {
+               if (*p == ']')
+               {
+                  argv[index++] = start;
+                  break;
+               }
+               if (*p == ',')
+               {
+                  argv[index++] = start;
+                  start = nullptr;
+               }
+               else if (*p == '\'')
+               {
+                  squotes = true;
+                  start = p + 1;
+               }
+               else if (*p == '"')
+               {
+                  dquotes = true;
+                  start = p + 1;
+               }
+               continue;
+            }
+
+            if (squotes && (*p == '\''))
+            {
+               if (*(p + 1) != '\'')
+               {
+                  *p = 0;
+                  squotes = false;
+               }
+               else
+               {
+                  memmove(p, p + 1, strlen(p));
+               }
+            }
+            else if (dquotes && (*p == '"'))
+            {
+               if (*(p + 1) != '"')
+               {
+                  *p = 0;
+                  dquotes = false;
+               }
+               else
+               {
+                  memmove(p, p + 1, strlen(p));
+               }
+            }
+         }
+         argv[index] = nullptr;
+      }
+      else
+      {
+         argv[0] = args->cmdline;
+
+         int index = 1;
+         bool squotes = false, dquotes = false;
+         for(char *p = args->cmdline; *p != 0;)
+         {
+            if ((*p == ' ') && !squotes && !dquotes)
+            {
+               *p = 0;
+               p++;
+               while(*p == ' ')
+                  p++;
+               argv[index++] = p;
+            }
+            else if ((*p == '\'') && !dquotes)
+            {
+               squotes = !squotes;
+               memmove(p, p + 1, strlen(p));
+            }
+            else if ((*p == '"') && !squotes)
+            {
+               dquotes = !dquotes;
+               memmove(p, p + 1, strlen(p));
+            }
+            else if ((*p == '\\') && !squotes)
+            {
+               // Follow shell convention for backslash:
+               // A backslash preserves the literal meaning of the following character, with the exception of ⟨newline⟩.
+               // Enclosing characters within double quotes preserves the literal meaning of all characters except dollarsign ($), backquote (`), and backslash (\).
+               // The backslash inside double quotes is historically weird, and serves to quote only the following characters:
+               //          $ ` " \ <newline>.
+               // Otherwise it remains literal.
+               if (!dquotes || ((*(p + 1) == '"') || (*(p + 1) == '\\') || (*(p + 1) == '`') || (*(p + 1) == '$')))
+               {
+                  memmove(p, p + 1, strlen(p));
+                  p++;
+               }
+            }
+            else
+            {
+               p++;
+            }
+         }
+         argv[index] = nullptr;
+      }
+      execv(argv[0], argv);
+   }
+
+   // exec failed
+   *args->execError = errno;
+   char errorMessage[1024];
+   snprintf(errorMessage, 1024, "Cannot start process (%s)\n", strerror(errno));
+   write(STDERR_FILENO, errorMessage, strlen(errorMessage));
+   _exit(127);
+}
+
+/**
+ * Spawn new process
+ */
+static pid_t spawn(char *cmdline, bool shellExec, int *pipe, const char *workingDirectory, int *execError)
+{
+   ProcessEntryArgs args;
+   args.cmdline = cmdline;
+   args.shellExec = shellExec;
+   memcpy(args.pipe, pipe, sizeof(int) * 2);
+   args.workingDirectory = workingDirectory;
+   args.execError = execError;
+
+#ifdef __linux__
+   int cs;
+   pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
+
+   sigset_t set;
+   sigfillset(&set);
+   pthread_sigmask(SIG_BLOCK, &set, &args.oldmask);
+
+   char stack[4096];
+   pid_t pid = clone(ProcessEntry, stack + sizeof(stack), CLONE_VM | CLONE_VFORK | SIGCHLD, &args);
+
+   pthread_sigmask(SIG_SETMASK, &args.oldmask, nullptr);
+   pthread_setcancelstate(cs, 0);
+
+#else
+   pid_t pid = fork();
+   if (pid != 0)
+      return pid;
+   ProcessEntry(&args);
+#endif
+
+   return pid;
+}
+
 #endif   /* _WIN32 */
 
 /**
@@ -392,184 +607,28 @@ bool ProcessExecutor::execute()
 
 #else /* UNIX implementation */
 
-   int fd;
-
    if (pipe(m_pipe) == -1)
    {
-      nxlog_debug_tag_object(DEBUG_TAG, m_id, 4, _T("ProcessExecutor::execute(): pipe() call failed (%s)"), _tcserror(errno));
+      nxlog_debug_tag_object(DEBUG_TAG, m_id, 4, _T("ProcessExecutor::execute(): pipe() call for process \"%s\" failed (%s)"), m_cmd, _tcserror(errno));
       return false;
    }
 
    m_initLock.lock();
 
-   m_pid = fork();
-   switch(m_pid)
+#ifdef UNICODE
+   char *cmdline = MBStringFromWideStringSysLocale(m_cmd);
+#else
+   char *cmdline = MemCopyStringA(m_cmd);
+#endif
+   int execError = 0;
+   m_pid = spawn(cmdline, m_shellExec, m_pipe, m_workingDirectory, &execError);
+   MemFree(cmdline);
+
+   if (m_pid != -1)
    {
-      case -1: // error
-         nxlog_debug_tag_object(DEBUG_TAG, m_id, 4, _T("ProcessExecutor::execute(): fork() call failed (%s)"), _tcserror(errno));
-         close(m_pipe[0]);
-         close(m_pipe[1]);
-         break;
-      case 0: // child
-         setpgid(0, 0); // new process group
-         close(m_pipe[0]);
-         dup2(m_pipe[1], STDOUT_FILENO);
-         dup2(m_pipe[1], STDERR_FILENO);
-         close(m_pipe[1]);
-         fd = open("/dev/null", O_RDONLY);
-         if (fd != -1)
-         {
-            dup2(fd, STDIN_FILENO);
-            close(fd);
-         }
-         else
-         {
-            close(STDIN_FILENO);
-         }
-         if (m_workingDirectory != nullptr)
-         {
-            if (chdir(m_workingDirectory) != 0)
-            {
-               char errorMessage[MAX_PATH + 256];
-               snprintf(errorMessage, sizeof(errorMessage), "Cannot change working directory to \"%s\" (%s)\n", m_workingDirectory, strerror(errno));
-               write(STDERR_FILENO, errorMessage, strlen(errorMessage));
-               _exit(127);
-            }
-         }
-         if (m_shellExec)
-         {
-#ifdef UNICODE
-            execl("/bin/sh", "/bin/sh", "-c", MBStringFromWideStringSysLocale(m_cmd), nullptr);
-#else
-            execl("/bin/sh", "/bin/sh", "-c", m_cmd, nullptr);
-#endif
-         }
-         else
-         {
-#ifdef UNICODE
-            char *tmp = MBStringFromWideStringSysLocale(m_cmd);
-#else
-            char *tmp = m_cmd;
-#endif
-            char *argv[256];
-            if (tmp[0] == '[')
-            {
-               int index = 0;
-               bool squotes = false, dquotes = false;
-               char *start = nullptr;
-               for(char *p = tmp + 1; *p != 0; p++)
-               {
-                  if (!squotes && !dquotes)
-                  {
-                     if (*p == ']')
-                     {
-                        argv[index++] = start;
-                        break;
-                     }
-                     if (*p == ',')
-                     {
-                        argv[index++] = start;
-                        start = nullptr;
-                     }
-                     else if (*p == '\'')
-                     {
-                        squotes = true;
-                        start = p + 1;
-                     }
-                     else if (*p == '"')
-                     {
-                        dquotes = true;
-                        start = p + 1;
-                     }
-                     continue;
-                  }
- 
-                  if (squotes && (*p == '\''))
-                  {
-                     if (*(p + 1) != '\'')
-                     {
-                        *p = 0;
-                        squotes = false;
-                     }
-                     else
-                     {
-                        memmove(p, p + 1, strlen(p));
-                     }
-                  }
-                  else if (dquotes && (*p == '"'))
-                  {
-                     if (*(p + 1) != '"')
-                     {
-                        *p = 0;
-                        dquotes = false;
-                     }
-                     else
-                     {
-                        memmove(p, p + 1, strlen(p));
-                     }
-                  }
-               }
-               argv[index] = nullptr;
-            }
-            else
-            {
-               argv[0] = tmp;
-
-               int index = 1;
-               bool squotes = false, dquotes = false;
-               for(char *p = tmp; *p != 0;)
-               {
-                  if ((*p == ' ') && !squotes && !dquotes)
-                  {
-                     *p = 0;
-                     p++;
-                     while(*p == ' ')
-                        p++;
-                     argv[index++] = p;
-                  }
-                  else if ((*p == '\'') && !dquotes)
-                  {
-                     squotes = !squotes;
-                     memmove(p, p + 1, strlen(p));
-                  }
-                  else if ((*p == '"') && !squotes)
-                  {
-                     dquotes = !dquotes;
-                     memmove(p, p + 1, strlen(p));
-                  }
-                  else if ((*p == '\\') && !squotes)
-                  {
-                     // Follow shell convention for backslash:
-                     // A backslash preserves the literal meaning of the following character, with the exception of ⟨newline⟩.
-                     // Enclosing characters within double quotes preserves the literal meaning of all characters except dollarsign ($), backquote (`), and backslash (\).
-                     // The backslash inside double quotes is historically weird, and serves to quote only the following characters:
-                     //          $ ` " \ <newline>.
-                     // Otherwise it remains literal.
-                     if (!dquotes || ((*(p + 1) == '"') || (*(p + 1) == '\\') || (*(p + 1) == '`') || (*(p + 1) == '$')))
-                     {
-                        memmove(p, p + 1, strlen(p));
-                        p++;
-                     }
-                  }
-                  else
-                  {
-                     p++;
-                  }
-               }
-               argv[index] = nullptr;
-            }
-            execv(argv[0], argv);
-         }
-
-         // exec failed
-         char errorMessage[1024];
-         snprintf(errorMessage, 1024, "Cannot start process (%s)\n", strerror(errno));
-         write(STDERR_FILENO, errorMessage, strlen(errorMessage));
-         _exit(127);
-         break;
-
-      default: // parent
-         close(m_pipe[1]);
+      close(m_pipe[1]);
+      if (execError == 0)
+      {
          nxlog_debug_tag_object(DEBUG_TAG, m_id, 5, _T("ProcessExecutor::execute(): process \"%s\" started (PID=%u)"), m_cmd, m_pid);
          if (m_sendOutput)
          {
@@ -596,10 +655,23 @@ bool ProcessExecutor::execute()
             waitpid(m_pid, nullptr, 0);
             m_pid = 0;
          }
-         break;
+      }
+      else
+      {
+         nxlog_debug_tag_object(DEBUG_TAG, m_id, 4, _T("ProcessExecutor::execute(): spawn() call for process \"%s\" failed (%s)"), m_cmd, _tcserror(execError));
+         close(m_pipe[0]);
+         waitpid(m_pid, nullptr, 0);
+         m_pid = 0;
+      }
+   }
+   else
+   {
+      nxlog_debug_tag_object(DEBUG_TAG, m_id, 4, _T("ProcessExecutor::execute(): fork() call for process \"%s\" failed (%s)"), m_cmd, _tcserror(errno));
+      close(m_pipe[0]);
+      close(m_pipe[1]);
    }
 
-#endif
+#endif   /* _WIN32 */
 
    m_started = true;
    m_running = success;
