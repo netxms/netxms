@@ -1,0 +1,93 @@
+$object->setCustomAttribute("NetworkMapScript", 0);
+
+$link.setColorConfig(MapLinkColorSource::Default);
+assert(MapLinkColorSource::Default == $link.colorSource);
+$link.setColorConfig(MapLinkColorSource::ObjectStatus, [33943, 34388]);
+assert(MapLinkColorSource::ObjectStatus == $link.colorSource);
+assert($link.colorObjects.size == 2);
+assert(($link.colorObjects[0] == 34388 && $link.colorObjects[1] == 33943) ||  ($link.colorObjects[1] == 34388 && $link.colorObjects[0] == 33943));
+assert(!$link.useActiveThresholds);
+$link.setColorConfig(MapLinkColorSource::ObjectStatus, [33943, 34388], true); 
+assert(MapLinkColorSource::ObjectStatus == $link.colorSource);
+assert($link.colorObjects.size == 2);
+assert(($link.colorObjects[0] == 34388 && $link.colorObjects[1] == 33943) ||  ($link.colorObjects[1] == 34388 && $link.colorObjects[0] == 33943));
+assert($link.useActiveThresholds);
+$link.setColorConfig(MapLinkColorSource::ObjectStatus, [], true, true); 
+assert(MapLinkColorSource::ObjectStatus == $link.colorSource);
+assert($link.colorObjects.size == 0);
+assert($link.useActiveThresholds);
+$link.setColorConfig(MapLinkColorSource::ObjectStatus, [100, 33943, 34388], true); 
+assert(MapLinkColorSource::ObjectStatus == $link.colorSource);
+assert($link.colorObjects.size == 3);
+assert(($link.colorObjects[0] == 34388 || $link.colorObjects[1] == 34388 || $link.colorObjects[2] == 34388) && 
+      ($link.colorObjects[0] == 33943 || $link.colorObjects[1] == 33943 || $link.colorObjects[2] == 33943) &&
+      ($link.colorObjects[0] == 100 || $link.colorObjects[1] == 100 || $link.colorObjects[2] == 100));
+assert($link.useActiveThresholds);
+$link.setColorConfig(MapLinkColorSource::ObjectStatus, [33943], false, true); 
+assert(MapLinkColorSource::ObjectStatus == $link.colorSource);
+assert($link.colorObjects.size == 1);
+assert($link.colorObjects[0] == 33943);
+assert(!$link.useActiveThresholds);
+assert($link.useInterfaceUtilization);
+$link.setColorConfig(MapLinkColorSource::CustomColor, "#FF00FF");
+assert(MapLinkColorSource::CustomColor == $link.colorSource);
+assert("fuchsia" == $link.color);
+$link.setColorConfig(MapLinkColorSource::Script, "Script name");
+assert(MapLinkColorSource::Script == $link.colorSource);
+assert("Script name" == $link.colorScriptName);
+
+$link.setRoutingAlgorithm(2);
+assert($link.routing, 2);
+$link.setRoutingAlgorithm(1);
+assert($link.routing, 1);
+
+dci = FindAllDCIs($link.object1, "*")[0]?.id;
+$link.updateDataSource(GetDCIObject($link.object1, dci));
+
+$link.clearDataSource();
+assert($link.dataSource.size == 0);
+
+dci1 = FindAllDCIs($link.object1, "*")[0]?.id;
+if (dci1 != 0)
+   $link.updateDataSource(GetDCIObject($link.object1, dci1), dci1 .. ": %{u,m}s");
+
+dci2 = FindAllDCIs($link.object2, "*")[0]?.id;
+if (dci2 != 0)
+   $link.updateDataSource(GetDCIObject($link.object2, dci2), dci2 .. ": %{u,m}s");
+
+assert($link.dataSource.size == 2);
+assert(($link.dataSource[0].dciId == dci1 && $link.dataSource[1].dciId == dci2) || 
+      ($link.dataSource[1].dciId == dci1 && $link.dataSource[0].dciId == dci2));
+
+assert(($link.dataSource[0].objectId == $link.objectId1 && $link.dataSource[1].objectId == $link.objectId2) || 
+      ($link.dataSource[1].objectId == $link.objectId1 && $link.dataSource[0].objectId == $link.objectId2));
+assert(($link.dataSource[0].format == dci1 .. ": %{u,m}s" && $link.dataSource[1].format == dci2 .. ": %{u,m}s") || 
+      ($link.dataSource[1].format == dci1 .. ": %{u,m}s" && $link.dataSource[0].format == dci2 .. ": %{u,m}s"));
+dciLeft = $link.dataSource[1].dciId;
+
+$link.removeDataSource(0);
+assert($link.dataSource.size == 1);
+assert($link.dataSource[0].dciId == dciLeft);
+
+$link.clearDataSource();
+assert($link.dataSource.size == 0);
+
+
+$link.setColorConfig(5);
+assert($link.colorSource == 5);
+$link.setColorConfig(7);
+assert($link.colorSource == 5);
+
+
+$link.setStyle(1);
+assert($link.style == 1);
+$link.setStyle(2);
+assert($link.style == 2);
+
+$link.setWidth(3);
+assert($link.width == 3);
+$link.setWidth(5);
+assert($link.width == 5);
+
+$object->setCustomAttribute("NetworkMapScript", 1);
+

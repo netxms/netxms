@@ -209,12 +209,12 @@ protected:
 
 public:
 	NetworkMapElement(uint32_t id, uint32_t flags = 0);
-	NetworkMapElement(uint32_t id, Config *config, uint32_t flags = 0);
+	NetworkMapElement(uint32_t id, json_t *config, uint32_t flags = 0);
 	NetworkMapElement(const NXCPMessage& msg, uint32_t baseId);
 	virtual ~NetworkMapElement();
 
    virtual void updateInternalFields(NetworkMapElement *e);
-	virtual void updateConfig(Config *config);
+	virtual void updateConfig(json_t *config);
 	virtual void fillMessage(NXCPMessage *msg, uint32_t baseId);
 	virtual json_t *toJson() const;
    virtual NetworkMapElement *clone() const;
@@ -242,11 +242,11 @@ protected:
 
 public:
 	NetworkMapObject(uint32_t id, uint32_t objectId, uint32_t flags = 0);
-	NetworkMapObject(uint32_t id, Config *config, uint32_t flags = 0);
+	NetworkMapObject(uint32_t id, json_t *config, uint32_t flags = 0);
 	NetworkMapObject(const NXCPMessage& msg, uint32_t baseId);
 	virtual ~NetworkMapObject();
 
-	virtual void updateConfig(Config *config) override;
+	virtual void updateConfig(json_t *config) override;
 	virtual void fillMessage(NXCPMessage *msg, uint32_t baseId) override;
    virtual json_t *toJson() const override;
    virtual NetworkMapElement *clone() const override;
@@ -270,11 +270,11 @@ protected:
 
 public:
 	NetworkMapDecoration(uint32_t id, LONG decorationType, uint32_t flags = 0);
-	NetworkMapDecoration(uint32_t id, Config *config, uint32_t flags = 0);
+	NetworkMapDecoration(uint32_t id, json_t *config, uint32_t flags = 0);
 	NetworkMapDecoration(const NXCPMessage& msg, uint32_t baseId);
 	virtual ~NetworkMapDecoration();
 
-	virtual void updateConfig(Config *config) override;
+	virtual void updateConfig(json_t *config) override;
 	virtual void fillMessage(NXCPMessage *msg, uint32_t baseId) override;
    virtual json_t *toJson() const override;
    virtual NetworkMapElement *clone() const override;
@@ -298,11 +298,11 @@ protected:
    NetworkMapTextBox(const NetworkMapTextBox& src);
 
 public:
-   NetworkMapTextBox(uint32_t id, Config *config, uint32_t flags);
+   NetworkMapTextBox(uint32_t id, json_t *config, uint32_t flags);
    NetworkMapTextBox(const NXCPMessage& msg, uint32_t baseId);
    virtual ~NetworkMapTextBox();
 
-   virtual void updateConfig(Config *config) override;
+   virtual void updateConfig(json_t *config) override;
    virtual void fillMessage(NXCPMessage *msg, uint32_t baseId) override;
    virtual json_t *toJson() const override;
    virtual NetworkMapElement *clone() const override;
@@ -320,14 +320,12 @@ protected:
 
    NetworkMapDCIElement(const NetworkMapDCIElement& src) : NetworkMapElement(src), m_config(src.m_config) {}
 
-   virtual const char *getDciXPath() const = 0;
-
 public:
-   NetworkMapDCIElement(uint32_t id, Config *config, uint32_t flags) : NetworkMapElement(id, config, flags), m_config(config->getValue(_T("/DCIList"), _T(""))) {}
+   NetworkMapDCIElement(uint32_t id, json_t *config, uint32_t flags) : NetworkMapElement(id, config, flags), m_config(json_object_get_string_utf8(config, "DCIList", ""), "utf8") {}
    NetworkMapDCIElement(const NXCPMessage& msg, uint32_t baseId) : NetworkMapElement(msg, baseId), m_config(msg.getFieldAsString(baseId + 10), -1, Ownership::True) {}
    virtual ~NetworkMapDCIElement() = default;
 
-   virtual void updateConfig(Config *config) override;
+   virtual void updateConfig(json_t *config) override;
    virtual void fillMessage(NXCPMessage *msg, uint32_t baseId) override;
    virtual json_t *toJson() const override;
 
@@ -343,10 +341,8 @@ class NetworkMapDCIContainer : public NetworkMapDCIElement
 protected:
 	NetworkMapDCIContainer(const NetworkMapDCIContainer& src) : NetworkMapDCIElement(src) {}
 
-   virtual const char *getDciXPath() const override;
-
 public:
-	NetworkMapDCIContainer(uint32_t id, Config *config, uint32_t flags) : NetworkMapDCIElement(id, config, flags) {}
+	NetworkMapDCIContainer(uint32_t id, json_t *config, uint32_t flags) : NetworkMapDCIElement(id, config, flags) {}
 	NetworkMapDCIContainer(const NXCPMessage& msg, uint32_t baseId) : NetworkMapDCIElement(msg, baseId) {}
 	virtual ~NetworkMapDCIContainer() = default;
 
@@ -361,10 +357,9 @@ class NetworkMapDCIImage : public NetworkMapDCIElement
 protected:
    NetworkMapDCIImage(const NetworkMapDCIImage& src) : NetworkMapDCIElement(src) {}
 
-   virtual const char *getDciXPath() const override;
 
 public:
-   NetworkMapDCIImage(uint32_t id, Config *config, uint32_t flags = 0) : NetworkMapDCIElement(id, config, flags) {}
+   NetworkMapDCIImage(uint32_t id, json_t *config, uint32_t flags = 0) : NetworkMapDCIElement(id, config, flags) {}
    NetworkMapDCIImage(const NXCPMessage& msg, uint32_t baseId) : NetworkMapDCIElement(msg, baseId) {}
    virtual ~NetworkMapDCIImage() = default;
 
@@ -417,7 +412,7 @@ protected:
 	MapLinkColorSource m_colorSource;
 	uint32_t m_color;
 	TCHAR *m_colorProvider;
-	TCHAR *m_config;
+	char *m_config;
 
 public:
 	NetworkMapLink(uint32_t id, uint32_t e1, uint32_t e2, int type);
@@ -444,7 +439,7 @@ public:
 	MapLinkColorSource getColorSource() const { return m_colorSource; }
 	uint32_t getColor() const { return m_color; }
    const TCHAR *getColorProvider() const { return CHECK_NULL_EX(m_colorProvider); }
-   const TCHAR *getConfig() const { return CHECK_NULL_EX(m_config); }
+   const char *getConfig() const { return CHECK_NULL_EX_A(m_config); }
    void updateDciList(CountingHashSet<uint32_t>& dciSet, bool addItems) const;
    void updateColorSourceObjectList(CountingHashSet<uint32_t>& dciSet, bool addItems) const;
 
@@ -504,10 +499,10 @@ public:
       MemFree(m_colorProvider);
       m_colorProvider = MemCopyString(colorProvider);
    }
-	void setConfig(const TCHAR *config)
+	void setConfig(char *config)
 	{
 	   MemFree(m_config);
-	   m_config = MemCopyString(config);
+	   m_config = config;
 	}
 	void moveConfig(NetworkMapLink *other);
 
@@ -528,9 +523,9 @@ class NetworkMapLinkNXSLContainer
 protected:
    NetworkMapLink *m_link;
    bool m_modified;
-   Config *m_config;
+   json_t *m_config;
 
-   Config *getConfigInstance();
+   json_t *getConfigInstance();
 
 public:
    NetworkMapLinkNXSLContainer(const NetworkMapLink &link)
@@ -543,7 +538,7 @@ public:
    ~NetworkMapLinkNXSLContainer()
    {
       delete m_link;
-      delete m_config;
+      json_decref(m_config);
    }
 
    NetworkMapLink *get() { return m_link; }
@@ -555,10 +550,11 @@ public:
    }
 
    NXSL_Value *getColorObjects(NXSL_VM *vm);
-   bool isUsingActiveThresholds() { return getConfigInstance()->getValueAsBoolean(_T("/useActiveThresholds"), false); }
-   uint32_t getRouting() { return getConfigInstance()->getValueAsUInt(_T("/routing"), 0); }
-   uint32_t getWidth() { return getConfigInstance()->getValueAsUInt(_T("/width"), 0); }
-   uint32_t getStyle() { return getConfigInstance()->getValueAsUInt(_T("/style"), 0); }
+   bool isUsingActiveThresholds() { return json_object_get_boolean(getConfigInstance(), "useActiveThresholds", false); }
+   bool useInterfaceUtilization() { return json_object_get_boolean(getConfigInstance(), "useInterfaceUtilization", false); }
+   uint32_t getRouting() { return json_object_get_int32(getConfigInstance(), "routing", 0); }
+   uint32_t getWidth() { return json_object_get_int32(getConfigInstance(), "width", 0); }
+   uint32_t getStyle() { return json_object_get_int32(getConfigInstance(), "style", 0); }
    NXSL_Value *getDataSource(NXSL_VM *vm);
    void updateConfig();
 
@@ -589,7 +585,7 @@ private:
    String m_format;
 
 public:
-   LinkDataSouce(ConfigEntry *config);
+   LinkDataSouce(json_t *config);
 
    uint32_t getNodeId() const { return m_nodeId; }
    uint32_t getDciId() const { return m_dciId; }

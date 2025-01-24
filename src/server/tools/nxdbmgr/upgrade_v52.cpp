@@ -24,6 +24,17 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 52.6 to 52.7
+ */
+static bool H_UpgradeFromV6()
+{
+   CHK_EXEC(ConvertXmlToJson(L"network_map_links", L"map_id", L"link_id", L"element_data", "config"));
+   CHK_EXEC(ConvertXmlToJson(L"network_map_elements", L"map_id", L"element_id", L"element_data", "element"));
+   CHK_EXEC(SetMinorSchemaVersion(7));
+   return true;
+}
+
+/**
  * Upgrade from 52.5 to 52.6
  */
 static bool H_UpgradeFromV5()
@@ -189,6 +200,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 6,  52, 7,  H_UpgradeFromV6  },
    { 5,  52, 6,  H_UpgradeFromV5  },
    { 4,  52, 5,  H_UpgradeFromV4  },
    { 3,  52, 4,  H_UpgradeFromV3  },

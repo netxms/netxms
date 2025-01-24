@@ -1,10 +1,11 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Server Library
+** Copyright (C) 2003-2025 Reden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
-** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
+** it under the terms of the GNU Lesser General Public License as published by
+** the Free Software Foundation; either version 3 of the License, or
 ** (at your option) any later version.
 **
 ** This program is distributed in the hope that it will be useful,
@@ -12,21 +13,23 @@
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
 **
-** You should have received a copy of the GNU General Public License
+** You should have received a copy of the GNU Lesser General Public License
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: netxmsdb.h
+** File: xml_to_json.h
 **
 **/
 
-#ifndef _netxmsdb_h
-#define _netxmsdb_h
 
-#define DB_LEGACY_SCHEMA_VERSION       700
-#define DB_SCHEMA_VERSION_MAJOR        52
-#define DB_SCHEMA_VERSION_MINOR        7
+#ifndef _xml_to_json_h_
+#define _xml_to_json_h_
 
-#define DB_SCHEMA_VERSION_V52_MINOR    DB_SCHEMA_VERSION_MINOR
+#include <nxsrvapi.h>
+#include <pugixml.h>
+#include <jansson.h>
 
-#endif
+json_t LIBNXSRV_EXPORTABLE *XmlNodeToJson(const pugi::xml_node &node);
+
+
+#endif   /* _xml_to_json_h_ */

@@ -18,25 +18,17 @@
  */
 package org.netxms.client.maps.configs;
 
-import java.io.StringWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
 import org.netxms.base.Glob;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.xml.XMLTools;
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementArray;
-import org.simpleframework.xml.Root;
-import org.simpleframework.xml.Serializer;
 
 /**
  * Base class for DCI image configuration 
  */
-@Root(name = "dciImageConfiguration") public class DCIImageConfiguration
+public class DCIImageConfiguration
 {
    public static final int OP_LE       = 0;
    public static final int OP_LE_EQ    = 1;
@@ -47,28 +39,9 @@ import org.simpleframework.xml.Serializer;
    public static final int OP_LIKE     = 6;
    public static final int OP_NOTLIKE  = 7;
 
-   @ElementArray(required = true) 
    private DCIImageRule[] dciRuleList = new DCIImageRule[0];
-
-   @Element(required = true)
    private SingleDciConfig dci = new SingleDciConfig();
-
-   @Element(required = true)
    private UUID defaultImage = null;
-
-   /**
-    * Create XML from configuration.
-    *
-    * @return XML document
-    * @throws Exception if the schema for the object is not valid
-    */
-   public String createXml() throws Exception
-   {
-      Serializer serializer = XMLTools.createSerializer();
-      Writer writer = new StringWriter();
-      serializer.write(this, writer);
-      return writer.toString();
-   }
 
    /**
     * @return the dciRuleList

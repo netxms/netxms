@@ -1196,6 +1196,7 @@ public:
    String right(size_t len) const { return substring((m_length > len) ? m_length - len : 0, static_cast<ssize_t>(len)); }
 
    StringList *split(const TCHAR *separator) const { return String::split(m_buffer, m_length, separator); }
+   StringList *split(const TCHAR *separator, bool trim) const { return String::split(m_buffer, m_length, separator, trim); }
    static StringList *split(TCHAR *str, const TCHAR *separator, bool trim = false) { return String::split(str, _tcslen(str), separator, trim); }
    static StringList *split(TCHAR *str, size_t len, const TCHAR *separator, bool trim = false);
 
@@ -4505,6 +4506,14 @@ static inline uint32_t json_object_get_uint32(json_t *object, const char *tag, u
 static inline bool json_object_get_boolean(json_t *object, const char *tag, bool defval = false)
 {
    json_t *value = json_object_get(object, tag);
+   if (json_is_string(value))
+   {
+      const char *val = json_string_value(value);
+      if (!stricmp(val, "true"))
+         return true;
+      if (!stricmp(val, "false"))
+         return false;
+   }
    return json_is_boolean(value) ? json_boolean_value(value) : (json_is_integer(value) ? (json_integer_value(value) != 0) : defval);
 }
 
@@ -4534,6 +4543,16 @@ static inline json_t *json_object_get_by_path_w(json_t *root, const WCHAR *path)
 #else
 #define json_object_get_by_path json_object_get_by_path_a
 #endif
+
+/**
+ * Update json object with new object
+ */
+static inline int json_object_update_new(json_t *object, json_t *other)
+{
+    int ret = json_object_update(object, other);
+    json_decref(other);
+    return ret;
+}
 
 /**
  * sockaddr buffer

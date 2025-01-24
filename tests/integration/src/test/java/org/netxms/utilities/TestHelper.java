@@ -32,12 +32,15 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.PollState;
 import org.netxms.client.ProtocolVersion;
 import org.netxms.client.Script;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.ObjectPollType;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
+import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciSummaryTable;
 import org.netxms.client.datacollection.DciSummaryTableColumn;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.GenericObject;
@@ -375,5 +378,29 @@ public class TestHelper
          user = (User)session.findUserDBObjectById(uid, null);
       }
       return user;
+   }
+
+   public static long findOrCreateDCI(NXCSession session, AbstractObject node, String description) throws IOException, NXCException
+   {
+      DciValue[] list = session.getLastValues(node.getObjectId());
+
+      for(int i = 0; i < list.length; i++)
+      {
+         if (list[i].getDescription().equalsIgnoreCase(description))
+            return list[i].getId();
+      }
+      
+      DataCollectionConfiguration dcc;
+      dcc = session.openDataCollectionConfiguration(node.getObjectId());      
+
+      final DataCollectionItem dci = new DataCollectionItem(dcc, 0);
+
+      dci.setOrigin(DataOrigin.INTERNAL);
+      dci.setDescription(description);
+      dci.setName("Status");
+
+      long id = dcc.modifyObject(dci);
+      dcc.close();
+      return id;
    }
 }

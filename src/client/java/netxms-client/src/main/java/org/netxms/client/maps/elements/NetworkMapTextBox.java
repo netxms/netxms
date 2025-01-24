@@ -20,7 +20,7 @@ package org.netxms.client.maps.elements;
 
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.maps.configs.TextBoxConfig;
-import org.netxms.client.xml.XMLTools;
+import com.google.gson.Gson;
 
 /**
  * Network map element representing a text box
@@ -44,10 +44,10 @@ public class NetworkMapTextBox extends NetworkMapElement
    protected NetworkMapTextBox(NXCPMessage msg, long baseId)
    {
       super(msg, baseId);
-      String xmlConfig = msg.getFieldAsString(baseId + 10);
+      String json = msg.getFieldAsString(baseId + 10);
       try
       {
-         TextBoxConfig config = XMLTools.createFromXml(TextBoxConfig.class, xmlConfig);
+         TextBoxConfig config = new Gson().fromJson(json, TextBoxConfig.class);
          text = config.getText();
          backgroundColor = config.getBackgroundColor();
          textColor = config.getTextColor();
@@ -101,16 +101,7 @@ public class NetworkMapTextBox extends NetworkMapElement
       config.setBorderRequired(borderRequired);
       config.setFontSize(fontSize);
       config.setDrillDownObjectId(drillDownObjectId);
-      String xmlConfig;
-      try
-      {
-         xmlConfig = config.createXml();
-      }
-      catch (Exception e)
-      {
-         xmlConfig = "";
-      }
-      msg.setField(baseId + 10, xmlConfig);
+      msg.setFieldJson(baseId + 10, config);
    }
 
    /**

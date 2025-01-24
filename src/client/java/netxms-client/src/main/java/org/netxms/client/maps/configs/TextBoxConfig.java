@@ -18,53 +18,18 @@
  */
 package org.netxms.client.maps.configs;
 
-import java.io.StringWriter;
-import java.io.Writer;
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Root;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
-
 /**
  * Text box element config
  */
-@Root(name="textBoxConfig")
 public class TextBoxConfig
 {
-   @Element(required=false)
    private String text;
-   
-   @Element(required=false)
    private int backgroundColor;
-   
-   @Element(required=false)
    private int textColor;
-   
-   @Element(required=false)
    private int borderColor;
-   
-   @Element(required=false)
    private int fontSize;
-
-   @Element(required=false)
    private long drillDownObjectId;
-   
-   @Element(required=false)
    private boolean borderRequired;
-   
-   /**
-    * Create XML from configuration
-    * 
-    * @return XML document
-    * @throws Exception if the schema for the object is not valid
-    */
-   public String createXml() throws Exception
-   {
-      Serializer serializer = new Persister();
-      Writer writer = new StringWriter();
-      serializer.write(this, writer);
-      return writer.toString();
-   }
    
    public String getText()
    {

@@ -55,12 +55,12 @@ NetworkMapElement::NetworkMapElement(const NetworkMapElement &src)
 /**
  * Generic element config constructor
  */
-NetworkMapElement::NetworkMapElement(uint32_t id, Config *config, uint32_t flags)
+NetworkMapElement::NetworkMapElement(uint32_t id, json_t *config, uint32_t flags)
 {
 	m_id = id;
-	m_type = config->getValueAsInt(_T("/type"), MAP_ELEMENT_GENERIC);
-	m_posX = config->getValueAsInt(_T("/posX"), 0);
-	m_posY = config->getValueAsInt(_T("/posY"), 0);
+	m_type = json_object_get_int32(config, "type", MAP_ELEMENT_GENERIC);
+	m_posX = json_object_get_int32(config, "posX", 0);
+	m_posY = json_object_get_int32(config, "posY", 0);
 	m_flags = flags;
 }
 
@@ -86,11 +86,11 @@ NetworkMapElement::~NetworkMapElement()
 /**
  * Update element's persistent configuration
  */
-void NetworkMapElement::updateConfig(Config *config)
+void NetworkMapElement::updateConfig(json_t *config)
 {
-	config->setValue(_T("/type"), m_type);
-	config->setValue(_T("/posX"), m_posX);
-	config->setValue(_T("/posY"), m_posY);
+   json_object_set_new(config, "type", json_integer(m_type));
+   json_object_set_new(config, "posX", json_integer(m_posX));
+   json_object_set_new(config, "posY", json_integer(m_posY));
 }
 
 /**
@@ -172,11 +172,11 @@ NetworkMapObject::NetworkMapObject(const NetworkMapObject &src) : NetworkMapElem
 /**
  * Object element config constructor
  */
-NetworkMapObject::NetworkMapObject(uint32_t id, Config *config, uint32_t flags) : NetworkMapElement(id, config, flags)
+NetworkMapObject::NetworkMapObject(uint32_t id, json_t *config, uint32_t flags) : NetworkMapElement(id, config, flags)
 {
-	m_objectId = config->getValueAsUInt(_T("/objectId"), 0);
-	m_width = config->getValueAsUInt(_T("/width"), 100);
-   m_height = config->getValueAsUInt(_T("/height"), 100);
+   m_objectId = json_object_get_uint32(config, "objectId", 0);
+   m_width = json_object_get_uint32(config, "width", 100);
+   m_height = json_object_get_uint32(config, "height", 100);
 }
 
 /**
@@ -199,12 +199,12 @@ NetworkMapObject::~NetworkMapObject()
 /**
  * Update element's persistent configuration
  */
-void NetworkMapObject::updateConfig(Config *config)
+void NetworkMapObject::updateConfig(json_t *config)
 {
 	NetworkMapElement::updateConfig(config);
-	config->setValue(_T("/objectId"), m_objectId);
-	config->setValue(_T("/width"), m_width);
-   config->setValue(_T("/height"), m_height);
+   json_object_set_new(config, "objectId", json_integer(m_objectId));
+   json_object_set_new(config, "width", json_integer(m_width));
+   json_object_set_new(config, "height", json_integer(m_height));
 }
 
 /**
@@ -270,13 +270,13 @@ NetworkMapDecoration::NetworkMapDecoration(const NetworkMapDecoration &src) : Ne
 /**
  * Decoration element config constructor
  */
-NetworkMapDecoration::NetworkMapDecoration(uint32_t id, Config *config, uint32_t flags) : NetworkMapElement(id, config, flags)
+NetworkMapDecoration::NetworkMapDecoration(uint32_t id, json_t *config, uint32_t flags) : NetworkMapElement(id, config, flags)
 {
-	m_decorationType = config->getValueAsInt(_T("/decorationType"), 0);
-	m_color = config->getValueAsUInt(_T("/color"), 0);
-	m_title = MemCopyString(config->getValue(_T("/title"), _T("")));
-	m_width = config->getValueAsInt(_T("/width"), 0);
-	m_height = config->getValueAsInt(_T("/height"), 0);
+   m_decorationType = json_object_get_uint32(config, "decorationType", 0);
+   m_color = json_object_get_uint32(config, "color", 0);
+   m_title = json_object_get_string_w(config, "title", L"");
+   m_width = json_object_get_uint32(config, "width", 0);
+   m_height = json_object_get_uint32(config, "height", 0);
 }
 
 /**
@@ -302,14 +302,15 @@ NetworkMapDecoration::~NetworkMapDecoration()
 /**
  * Update decoration element's persistent configuration
  */
-void NetworkMapDecoration::updateConfig(Config *config)
+void NetworkMapDecoration::updateConfig(json_t *config)
 {
 	NetworkMapElement::updateConfig(config);
-	config->setValue(_T("/decorationType"), m_decorationType);
-	config->setValue(_T("/color"), m_color);
-	config->setValue(_T("/title"), CHECK_NULL_EX(m_title));
-	config->setValue(_T("/width"), m_width);
-	config->setValue(_T("/height"), m_height);
+
+   json_object_set_new(config, "decorationType", json_integer(m_decorationType));
+   json_object_set_new(config, "color", json_integer(m_color));
+   json_object_set_new(config, "title", json_string_w(CHECK_NULL_EX(m_title)));
+   json_object_set_new(config, "width", json_integer(m_width));
+   json_object_set_new(config, "height", json_integer(m_height));
 }
 
 /**
@@ -354,10 +355,11 @@ NetworkMapElement *NetworkMapDecoration::clone() const
 /**
  * Update container's persistent configuration
  */
-void NetworkMapDCIElement::updateConfig(Config *config)
+void NetworkMapDCIElement::updateConfig(json_t *config)
 {
    NetworkMapElement::updateConfig(config);
-   config->setValue(_T("/DCIList"), m_config);
+
+   json_object_set_new(config, "DCIList", json_string_w(m_config));
 }
 
 /**
@@ -385,24 +387,48 @@ json_t *NetworkMapDCIElement::toJson() const
 void NetworkMapDCIElement::updateDciList(CountingHashSet<uint32_t> *dciSet, bool addItems) const
 {
    nxlog_debug_tag(_T("netmap"), 7, _T("NetworkMapDCIElement::updateDciList(%u): element configuration: %s"), m_id, m_config.cstr());
-   pugi::xml_document xml;
+
    char *xmlSource = UTF8StringFromWideString(m_config);
-   if (xml.load_string(xmlSource))
+   json_error_t error;
+   json_t *json = json_loads(xmlSource, 0, &error);
+   if (json != nullptr)
    {
-      for (pugi::xpath_node element : xml.select_nodes(getDciXPath()))
+      json_t *dciList = json_object_get(json, "dciList");
+      if (dciList != nullptr && json_is_array(dciList))
       {
-         uint32_t id = strtoul(element.attribute().value(), nullptr, 10);
+         size_t i;
+         json_t *m;
+         json_array_foreach(dciList, i, m)
+         {
+            uint32_t id = json_object_get_uint32(m, "dciId", 0);
+            nxlog_debug_tag(_T("netmap"), 7, _T("NetworkMapDCIElement::updateDciList(%u): found DCI ID %u"), m_id, id);
+            if (addItems)
+               dciSet->put(id);
+            else
+               dciSet->remove(id);
+         }
+
+         dciList = json_object_get(json, "dci");
+      }
+      else
+      {
+         json_t *dci = json_object_get(json, "dci");
+         uint32_t id = json_object_get_uint32(dci, "dciId", 0);
          nxlog_debug_tag(_T("netmap"), 7, _T("NetworkMapDCIElement::updateDciList(%u): found DCI ID %u"), m_id, id);
          if (addItems)
             dciSet->put(id);
          else
             dciSet->remove(id);
+
       }
+
+      //dciRuleList/dciId
    }
    else
    {
-      nxlog_debug_tag(_T("netmap"), 6, _T("NetworkMapDCIElement::updateDciList(%u): Failed to load XML"), m_id);
+      nxlog_debug_tag(_T("netmap"), 6, _T("NetworkMapDCIElement::updateDciList(%u): Failed to load JSON"), m_id);
    }
+   json_decref(json);
    MemFree(xmlSource);
 }
 
@@ -415,27 +441,11 @@ NetworkMapElement *NetworkMapDCIContainer::clone() const
 }
 
 /**
- * Get DCI XPath for container element
- */
-const char *NetworkMapDCIContainer::getDciXPath() const
-{
-   return "/config/dciList/dci/@dciId";
-}
-
-/**
  * Clone DCI image element
  */
 NetworkMapElement *NetworkMapDCIImage::clone() const
 {
    return new NetworkMapDCIImage(*this);
-}
-
-/**
- * Get DCI XPath for image element
- */
-const char *NetworkMapDCIImage::getDciXPath() const
-{
-   return "/dciImageConfiguration/dci/@dciId";
 }
 
 
@@ -454,9 +464,9 @@ NetworkMapTextBox::NetworkMapTextBox(const NetworkMapTextBox &src) : NetworkMapE
 /**
  * Text Box config constructor
  */
-NetworkMapTextBox::NetworkMapTextBox(uint32_t id, Config *config, uint32_t flags) : NetworkMapElement(id, config, flags)
+NetworkMapTextBox::NetworkMapTextBox(uint32_t id, json_t *config, uint32_t flags) : NetworkMapElement(id, config, flags)
 {
-   m_config = MemCopyString(config->getValue(_T("/TextBox"), _T("")));
+   m_config = json_object_get_string_w(config, "TextBox", L"");
 }
 
 /**
@@ -478,10 +488,10 @@ NetworkMapTextBox::~NetworkMapTextBox()
 /**
  * Update image's persistent configuration
  */
-void NetworkMapTextBox::updateConfig(Config *config)
+void NetworkMapTextBox::updateConfig(json_t *config)
 {
    NetworkMapElement::updateConfig(config);
-   config->setValue(_T("/TextBox"), m_config);
+   json_object_set_new(config, "TextBox", json_string_t(m_config));
 }
 
 /**

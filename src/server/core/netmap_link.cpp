@@ -82,7 +82,7 @@ NetworkMapLink::NetworkMapLink(const NXCPMessage& msg, uint32_t baseId)
    m_colorSource = static_cast<MapLinkColorSource>(msg.getFieldAsInt16(baseId + 8));
    m_color = msg.getFieldAsUInt32(baseId + 9);
    m_colorProvider = msg.getFieldAsString(baseId + 10);
-   m_config = msg.getFieldAsString(baseId + 11);
+   m_config = msg.getFieldAsUtf8String(baseId + 11);
    m_interface1 = msg.getFieldAsUInt32(baseId + 12);
    m_interface2 = msg.getFieldAsUInt32(baseId + 13);
 }
@@ -104,7 +104,7 @@ NetworkMapLink::NetworkMapLink(const NetworkMapLink& src)
    m_colorSource = src.m_colorSource;
    m_color = src.m_color;
    m_colorProvider = MemCopyString(src.m_colorProvider);
-   m_config = MemCopyString(src.m_config);
+   m_config = MemCopyStringA(src.m_config);
    m_flags = src.m_flags;
 }
 
@@ -181,59 +181,46 @@ bool NetworkMapLink::update(const ObjLink& src, bool updateNames)
       modified = true;
    }
 
-   char *data = nullptr;
-   pugi::xml_document xml;
+   json_t *json;
    if ((m_config == nullptr) || (*m_config == 0))
    {
-      xml.append_child("config");
-      xml.child("config").append_child("routing").append_child(pugi::node_pcdata).set_value("0");
-      xml.child("config").append_child("dciList").append_attribute("lenght").set_value("0");
+      json = json_object();
+      json_object_set_new(json, "dciList", json_array());
    }
    else
    {
-      data = UTF8StringFromTString(m_config);
-      if (!xml.load_buffer(data, strlen(data)))
+      json_error_t error;
+      json = json_loads(m_config, 0, &error);
+      if (json == nullptr)
       {
-         nxlog_debug_tag(_T("netmap"), 6, _T("NetworkMapLink::update(%u): Failed to load XML"), m_id);
-
-         xml.append_child("config");
-         xml.child("config").append_child("routing").append_child(pugi::node_pcdata).set_value("0");
-         xml.child("config").append_child("dciList").append_attribute("lenght").set_value("0");
+         nxlog_debug_tag(_T("netmap"), 6, _T("NetworkMapLink::update(%u): Failed to load JSON"), m_id);
+         json = json_object();
+         json_object_set_new(json, "routing", json_integer(0));
+         json_object_set_new(json, "dciList", json_array());
       }
    }
 
-   if (src.type == LINK_TYPE_VPN)
+   bool configModified = false;
+   if (src.type == LINK_TYPE_VPN && json_object_get_uint32(json, "style", 0) != 3)
    {
-      if (xml.child("config").child("style"))
-      {
-         xml.child("config").child("style").last_child().set_value("3");
-      }
-      else
-      {
-         xml.child("config").append_child("style").append_child(pugi::node_pcdata).set_value("3");
-      }
+      json_object_set_new(json, "style", json_integer(3));
+      configModified = true;
    }
 
-   pugi::xml_node node = xml.child("config").child("objectStatusList");
-   if (node)
+   json_t *statusList = json_object_get(json, "objectStatusList");
+   if (json_array_size(statusList) != 0)
    {
-      xml.child("config").child("objectStatusList").remove_children();
-   }
-   else
-   {
-      xml.child("config").append_child("objectStatusList").append_attribute("class").set_value("java.util.ArrayList");
-
+      json_array_clear(statusList);
+      configModified = true;
    }
 
-   xml_string_writer writer;
-   xml.print(writer);
-
-   if (_tcscmp(CHECK_NULL_EX(m_config), writer.result))
+   if (configModified)
    {
-      setConfig(writer.result);
+      char *s = json_dumps(json, JSON_COMPACT);
+      setConfig(s);
       modified = true;
    }
-   MemFree(data);
+   json_decref(json);
 
    return modified;
 }
@@ -254,7 +241,7 @@ void NetworkMapLink::fillMessage(NXCPMessage *msg, uint32_t baseId) const
    msg->setField(baseId + 8, static_cast<int16_t>(m_colorSource));
    msg->setField(baseId + 9, m_color);
    msg->setField(baseId + 10, getColorProvider());
-   msg->setField(baseId + 11, m_config);
+   msg->setFieldFromUtf8String(baseId + 11, m_config);
    msg->setField(baseId + 12, m_interface1);
    msg->setField(baseId + 13, m_interface2);
 }
@@ -277,7 +264,7 @@ json_t *NetworkMapLink::toJson() const
    json_object_set_new(root, "colorSource", json_integer(static_cast<int32_t>(m_colorSource)));
    json_object_set_new(root, "color", json_integer(m_color));
    json_object_set_new(root, "colorProvider", json_string_t(m_colorProvider));
-   json_object_set_new(root, "config", json_string_t(m_config));
+   json_object_set_new(root, "config", json_string(m_config));
    return root;
 }
 
@@ -288,24 +275,26 @@ void NetworkMapLink::updateDciList(CountingHashSet<uint32_t>& dciSet, bool addIt
 {
    if (m_config == nullptr)
       return;
-   pugi::xml_document xml;
-   char *xmlSource = UTF8StringFromWideString(m_config);
-   if (!xml.load_string(xmlSource))
+   nxlog_debug_tag(_T("netmap"), 7, _T("NetworkMapLink::getDciList(%u): link configuration: %hs"), m_id, m_config);
+   json_error_t error;
+   json_t *json = json_loads(m_config, 0, &error);
+   if (json == nullptr)
    {
-      nxlog_debug_tag(_T("netmap"), 4, _T("NetworkMapLink::getDciList(%d): Failed to load XML"), m_id);
-      MemFree(xmlSource);
+      nxlog_debug_tag(_T("netmap"), 6, _T("NetworkMapLink::getDciList(%d): Failed to load json (%hs)"), m_id, error.text);
       return;
    }
-   pugi::xml_node dciList = xml.child("config").child("dciList");
-   for (pugi::xml_node element : dciList)
+   void *it = json_object_iter(json_object_get(json, "dciList"));
+   while(it != nullptr)
    {
-      uint32_t id = element.attribute("dciId").as_uint();
+      json_t *value = json_object_iter_value(it);
+      uint32_t id = json_object_get_uint32(value, "dciId", 0);
       if (addItems)
          dciSet.put(id);
       else
          dciSet.remove(id);
+      it = json_object_iter_next(json, it);
    }
-   MemFree(xmlSource);
+   json_decref(json);
 }
 
 /**
@@ -317,45 +306,48 @@ void NetworkMapLink::updateColorSourceObjectList(CountingHashSet<uint32_t>& obje
       return;
 
    pugi::xml_document xml;
-   char *xmlSource = UTF8StringFromWideString(m_config);
-   if (!xml.load_string(xmlSource))
+   json_error_t error;
+   json_t *json = json_loads(m_config, 0, &error);
+   if (json == nullptr)
    {
-      nxlog_debug_tag(_T("netmap"), 4, _T("NetworkMapLink::updateColorSourceObjectList(%d): Failed to load XML"), m_id);
-      MemFree(xmlSource);
+      nxlog_debug_tag(_T("netmap"), 6, _T("NetworkMapLink::updateColorSourceObjectList(%d): Failed to load json (%hs)"), m_id, error.text);
       return;
    }
-   pugi::xml_node objectList = xml.child("config").child("objectStatusList");
-   for (pugi::xml_node element : objectList)
+
+   json_t *array = json_object_get(json, "objectStatusList");
+   if (json_is_array(array))
    {
-      const char *v = element.child_value();
-      if (addItems)
-         objectSet.put(strtol(v, nullptr, 0));
-      else
-         objectSet.remove(strtol(v, nullptr, 0));
+      size_t i;
+      json_t *m;
+      json_array_foreach(array, i, m)
+      {
+         uint32_t id = json_integer_value(m);
+         if (addItems)
+            objectSet.put(id);
+         else
+            objectSet.remove(id);
+      }
    }
-   MemFree(xmlSource);
+   json_decref(json);
 }
 
 /**
  * Get config instance or create one
  */
-Config *NetworkMapLinkNXSLContainer::getConfigInstance()
+json_t *NetworkMapLinkNXSLContainer::getConfigInstance()
 {
    if (m_config == nullptr)
    {
-      m_config = new Config();
-      char *xml = UTF8StringFromWideString(m_link->getConfig());
-      if (!m_config->loadXmlConfigFromMemory(xml, strlen(xml), nullptr, "config", false))
+      json_error_t error;
+      m_config = json_loads(m_link->getConfig(), 0, &error);
+      if (m_config == nullptr)
       {
-         static const char *defaultConfig =
-               "<config>\n" \
-               "   <routing>0</routing>\n" \
-               "   <dciList length=\"0\"/>\n" \
-               "   <objectStatusList class=\"java.util.ArrayList\"/>\n"
-               "</config>";
-         m_config->loadXmlConfigFromMemory(defaultConfig, strlen(defaultConfig), nullptr, "config", false);
+         nxlog_debug_tag(_T("netmap"), 6, _T("Cannot parse response JSON"));
+         m_config = json_object();
+         json_object_set_new(m_config, "routing", json_integer(0));
+         json_object_set_new(m_config, "dciList", json_array());
+         json_object_set_new(m_config, "objectStatusList", json_array());
       }
-      MemFree(xml);
    }
    return m_config;
 }
@@ -365,12 +357,17 @@ Config *NetworkMapLinkNXSLContainer::getConfigInstance()
  */
 NXSL_Value *NetworkMapLinkNXSLContainer::getColorObjects(NXSL_VM *vm)
 {
-   Config *config = getConfigInstance();
+   json_t *config = getConfigInstance();
    NXSL_Array *array = new NXSL_Array(vm);
-   unique_ptr<ObjectArray<ConfigEntry>> entries = config->getSubEntries(_T("/objectStatusList"), _T("*"));
-   for(int i = 0; entries != nullptr && i < entries->size(); i++)
+   json_t *elements = json_object_get(config, "objectStatusList");
+   if (json_is_array(elements))
    {
-      array->append(vm->createValue(entries->get(i)->getValueAsUInt()));
+      size_t i;
+      json_t *m;
+      json_array_foreach(elements, i, m)
+      {
+         array->append(vm->createValue(static_cast<uint32_t>(json_integer_value(m))));
+      }
    }
    return vm->createValue(array);
 }
@@ -380,14 +377,19 @@ NXSL_Value *NetworkMapLinkNXSLContainer::getColorObjects(NXSL_VM *vm)
  */
 NXSL_Value *NetworkMapLinkNXSLContainer::getDataSource(NXSL_VM *vm)
 {
-   Config *config = getConfigInstance();
    NXSL_Array *array = new NXSL_Array(vm);
-   unique_ptr<ObjectArray<ConfigEntry>> entries = config->getSubEntries(_T("/dciList"), _T("*"));
-   for(int i = 0; entries != nullptr && i < entries->size(); i++)
+   json_t *dciList = json_object_get(getConfigInstance(), "dciList");
+   if (json_is_array(dciList))
    {
-      LinkDataSouce *dataSolurce = new LinkDataSouce(entries->get(i));
-      array->append(vm->createValue(vm->createObject(&g_nxslLinkDataSourceClass, dataSolurce)));
+      size_t i;
+      json_t *m;
+      json_array_foreach(dciList, i, m)
+      {
+         LinkDataSouce *dataSolurce = new LinkDataSouce(m);
+         array->append(vm->createValue(vm->createObject(&g_nxslLinkDataSourceClass, dataSolurce)));
+      }
    }
+
    return vm->createValue(array);
 }
 
@@ -399,44 +401,37 @@ NXSL_Value *NetworkMapLinkNXSLContainer::getDataSource(NXSL_VM *vm)
  */
 void NetworkMapLinkNXSLContainer::updateDataSource(const shared_ptr<DCObjectInfo> &dci, const TCHAR *format)
 {
-   Config *config = getConfigInstance();
-   unique_ptr<ObjectArray<ConfigEntry>> entries = config->getSubEntries(_T("/dciList"), _T("*"));
-   if (entries != nullptr)
+   json_t *dciList = json_object_get(getConfigInstance(), "dciList");
+   if (!json_is_array(dciList))
    {
-      for(int i = 0; i < entries->size(); i++)
+      dciList = json_array();
+      json_object_set_new(getConfigInstance(), "dciList", dciList);
+   }
+
+   size_t i;
+   json_t *m;
+   json_array_foreach(dciList, i, m)
+   {
+      LinkDataSouce dataSource(m);
+      if (dataSource.getDciId() == dci->getId())
       {
-         ConfigEntry *e = entries->get(i);
-         LinkDataSouce dataSource(e);
-         if (dataSource.getDciId() == dci->getId())
+         if (!dataSource.getFormat().equals(format))
          {
-            if (!dataSource.getFormat().equals(format))
-            {
-               ConfigEntry *fe = e->findOrCreateEntry(_T("formatString"));
-               fe->setValue(format);
-               setModified();
-            }
-            return;
+            json_t *formatString = json_object_get(m, "formatString");
+            json_object_update_new(formatString, json_string_t(format));
+            setModified();
          }
+         return;
       }
    }
 
    // DCI not found, add new entry
-   ConfigEntry *dciList = config->getOrCreateEntry(_T("/dciList"));
-   uint32_t currLen = dciList->getAttributeAsInt(_T("length"), 0);
-   dciList->setAttribute(_T("length"), ++currLen);
-   auto newDciEntry = new ConfigEntry(_T("dci"), dciList, config, _T("<memory>"), 0, 0);  // will add to parent
-   newDciEntry->setAttribute(_T("nodeId"), dci->getOwnerId());
-   newDciEntry->setAttribute(_T("dciId"), dci->getId());
-   ConfigEntry *newEntry = newDciEntry->findOrCreateEntry(_T("type"));
-   newEntry->setValue(_T("1"));
-   newEntry = newDciEntry->findOrCreateEntry(_T("name"));
-   newEntry->setValue(_T(""));
-   newEntry = newDciEntry->findOrCreateEntry(_T("instance"));
-   newEntry->setValue(_T(""));
-   newEntry = newDciEntry->findOrCreateEntry(_T("column"));
-   newEntry->setValue(_T(""));
-   newEntry = newDciEntry->findOrCreateEntry(_T("formatString"));
-   newEntry->setValue(format);
+   json_t *dciElement = json_object();
+   json_object_set_new(dciElement, "nodeId", json_integer(dci->getOwnerId()));
+   json_object_set_new(dciElement, "dciId", json_integer(dci->getId()));
+   json_object_set_new(dciElement, "type", json_integer(1));
+   json_object_set_new(dciElement, "formatString", json_string_t(format));
+   json_array_append_new(dciList, dciElement);
    setModified();
 }
 
@@ -445,21 +440,8 @@ void NetworkMapLinkNXSLContainer::updateDataSource(const shared_ptr<DCObjectInfo
  */
 void NetworkMapLinkNXSLContainer::clearDataSource()
 {
-   Config *config = getConfigInstance();
-   unique_ptr<ObjectArray<ConfigEntry>> entries = config->getSubEntries(_T("/dciList"), _T("*"));
-   if ((entries != nullptr) && !entries->isEmpty())
-   {
-      ConfigEntry *entry = config->getEntry(_T("/dciList"));
-      if (entry != nullptr)
-      {
-         ConfigEntry *parent = entry->getParent();
-         parent->unlinkEntry(entry);
-         delete entry;
-      }
-      entry = config->getOrCreateEntry(_T("/dciList"));
-      entry->setAttribute(_T("length"), 0);
-      setModified();
-   }
+   json_t *dciList = json_object_get(getConfigInstance(), "dciList");
+   json_array_clear(dciList);
 }
 
 /**
@@ -469,28 +451,8 @@ void NetworkMapLinkNXSLContainer::clearDataSource()
  */
 void NetworkMapLinkNXSLContainer::removeDataSource(uint32_t index)
 {
-   Config *config = getConfigInstance();
-   unique_ptr<ObjectArray<ConfigEntry>> entries = config->getSubEntries(_T("/dciList"), _T("*"));
-   if ((entries != nullptr) && (static_cast<uint32_t>(entries->size()) > index))
-   {
-      ConfigEntry *dciList = config->getEntry(_T("/dciList"));
-      if (dciList == nullptr)
-      {
-         dciList = config->getOrCreateEntry(_T("/dciList"));
-         dciList->setAttribute(_T("length"), 0);
-      }
-      else
-      {
-         uint32_t currLen = dciList->getAttributeAsInt(_T("length"), 0);
-         if (currLen > 0)
-         {
-            dciList->setAttribute(_T("length"), --currLen);
-            config->getEntry(_T("/dciList"))->unlinkEntry(entries->get(index));
-         }
-         delete entries->get(index);
-      }
-      setModified();
-   }
+   json_t *dciList = json_object_get(getConfigInstance(), "dciList");
+   json_array_remove(dciList, index);
 }
 
 /**
@@ -503,10 +465,11 @@ void NetworkMapLinkNXSLContainer::setRoutingAlgorithm(uint32_t algorithm)
    if (algorithm > 3)
       return;
 
-   Config *config = getConfigInstance();
-   if (config->getValueAsUInt(_T("/routing"), 0) != algorithm)
+   json_t *config = getConfigInstance();
+
+   if (json_object_get_uint32(config, "routing", 0) != algorithm)
    {
-      config->setValue(_T("/routing"), algorithm);
+      json_object_set_new(config, "routing", json_integer(algorithm));
       setModified();
    }
 }
@@ -518,10 +481,10 @@ void NetworkMapLinkNXSLContainer::setRoutingAlgorithm(uint32_t algorithm)
  */
 void NetworkMapLinkNXSLContainer::setWidth(uint32_t width)
 {
-   Config *config = getConfigInstance();
-   if (config->getValueAsUInt(_T("/width"), 0) != width)
+   json_t *config = getConfigInstance();
+   if (json_object_get_uint32(config, "width", 0) != width)
    {
-      config->setValue(_T("/width"), width);
+      json_object_set_new(config, "width", json_integer(width));
       setModified();
    }
 }
@@ -536,10 +499,10 @@ void NetworkMapLinkNXSLContainer::setStyle(uint32_t style)
    if (style > ((uint32_t)MapLinkStyle::DashDotDot))
       return;
 
-   Config *config = getConfigInstance();
-   if (config->getValueAsUInt(_T("/style"), 0) != style)
+   json_t *config = getConfigInstance();
+   if (json_object_get_uint32(config, "style", 0) != style)
    {
-      config->setValue(_T("/style"), style);
+      json_object_set_new(config, "style", json_integer(style));
       setModified();
    }
 }
@@ -571,12 +534,19 @@ void NetworkMapLinkNXSLContainer::setColorSourceToObjectStatus(const IntegerArra
       setModified();
    }
 
-   Config *config = getConfigInstance();
-   unique_ptr<ObjectArray<ConfigEntry>> entryListToRemove = config->getSubEntries(_T("/objectStatusList"), _T("*"));
-   for(int i = 0; entryListToRemove != nullptr && i < entryListToRemove->size(); i++)
+   json_t *config = getConfigInstance();
+   json_t *elements = json_object_get(config, "objectStatusList");
+   if (!json_is_array(elements))
    {
-      const TCHAR* value = entryListToRemove->get(i)->getValue();
-      uint32_t id = (value != nullptr) ? _tcstoul(value, nullptr, 0) : 0;
+      elements =  json_array();
+      json_object_set_new(config, "objectStatusList", elements);
+   }
+
+   size_t i;
+   json_t *m;
+   json_array_foreach(elements, i, m)
+   {
+      uint32_t id = json_integer_value(m);
       bool found = false;
       for (int j = 0; j < objects.size(); j++)
       {
@@ -588,50 +558,44 @@ void NetworkMapLinkNXSLContainer::setColorSourceToObjectStatus(const IntegerArra
       }
       if (!found)
       {
-         ConfigEntry *parent = entryListToRemove->get(i)->getParent();
-         if (parent == nullptr)  // root entry
-            return;
-
-         parent->unlinkEntry(entryListToRemove->get(i));
-         delete entryListToRemove->get(i);
+         json_array_remove(elements, i);
+         i--;
          setModified();
       }
    }
 
-   unique_ptr<ObjectArray<ConfigEntry>> entryListToAdd = config->getSubEntries(_T("/objectStatusList"), _T("*"));
    for (int j = 0; j < objects.size(); j++)
    {
       bool found = false;
-      for(int i = 0; entryListToAdd != nullptr && i < entryListToAdd->size(); i++)
+
+      size_t i;
+      json_t *m;
+      json_array_foreach(elements, i, m)
       {
-         const TCHAR* value = entryListToAdd->get(i)->getValue();
-         uint32_t id = (value != nullptr) ? _tcstoul(value, nullptr, 0) : 0;
+         uint32_t id = json_integer_value(m);
          if (id == objects.get(j))
          {
             found = true;
             break;
          }
       }
+
       if (!found)
       {
-         ConfigEntry *parent = config->getOrCreateEntry(_T("/objectStatusList"));
-         ConfigEntry *newConfigEntry = new ConfigEntry(_T("long"), parent, config, _T("<memory>"), 0, 0);
-         TCHAR buffer[64];
-         IntegerToString(objects.get(j), buffer);
-         newConfigEntry->setValue(buffer);
+         json_array_append_new(elements, json_integer(objects.get(j)));
          setModified();
       }
    }
 
-   if (config->getValueAsBoolean(_T("/useActiveThresholds"), false) != useThresholds)
+   if (json_object_get_boolean(config, "useActiveThresholds", false) != useThresholds)
    {
-      config->setValue(_T("/useActiveThresholds"), useThresholds ? _T("true") : _T("false"));
+      json_object_set_new(config, "useActiveThresholds", json_boolean(useThresholds));
       setModified();
    }
 
-   if (config->getValueAsBoolean(_T("/useInterfaceUtilization"), false) != useLinkUtilization)
+   if (json_object_get_boolean(config, "useInterfaceUtilization", false) != useLinkUtilization)
    {
-      config->setValue(_T("/useInterfaceUtilization"), useLinkUtilization ? _T("true") : _T("false"));
+      json_object_set_new(config, "useInterfaceUtilization", json_boolean(useLinkUtilization));
       setModified();
    }
 }
@@ -684,15 +648,16 @@ void NetworkMapLinkNXSLContainer::updateConfig()
 {
    if (m_config != nullptr)
    {
-      m_link->setConfig(m_config->createXml());
+      char *s = json_dumps(m_config, JSON_COMPACT);
+      m_link->setConfig(s);
    }
 }
 
 /**
  * Link data source constructor
  */
-LinkDataSouce::LinkDataSouce(ConfigEntry *config) : m_format(config->getSubEntryValue(_T("formatString")))
+LinkDataSouce::LinkDataSouce(json_t *config) : m_format(json_object_get_string_utf8(config, "formatString", ""), "utf8")
 {
-   m_nodeId = config->getAttributeAsUInt(_T("nodeId"));
-   m_dciId = config->getAttributeAsUInt(_T("dciId"));
+   m_nodeId = json_object_get_uint32(config, "nodeId", 0);
+   m_dciId = json_object_get_uint32(config, "dciId", 0);
 }

@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.zip.CRC32;
+import com.google.gson.Gson;
 import com.jcraft.jzlib.Deflater;
 import com.jcraft.jzlib.DeflaterOutputStream;
 import com.jcraft.jzlib.InflaterInputStream;
@@ -561,6 +562,18 @@ public class NXCPMessage
       if (value == null)
          return;
       setField(fieldId, value.getValue());      
+   }
+
+   /**
+    * Set field of UTF8-STRING type
+    * 
+    * @param fieldId field ID
+    * @param value string value
+    */
+   public void setFieldJson(final long fieldId, final Object value)
+   {
+      String json = new Gson().toJson(value);
+      setField(new NXCPMessageField(fieldId, json));
    }
    
 	/**

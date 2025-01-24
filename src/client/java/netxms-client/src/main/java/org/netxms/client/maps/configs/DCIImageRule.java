@@ -21,29 +21,19 @@ package org.netxms.client.maps.configs;
 import java.util.UUID;
 import org.netxms.base.NXCommon;
 import org.netxms.client.datacollection.DataCollectionObject;
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Root;
 
 /**
  * DCI information for map line
  */
-@Root(name="rule")
 public class DCIImageRule
 {	
 	public static final int ITEM = DataCollectionObject.DCO_TYPE_ITEM;
 	public static final int TABLE = DataCollectionObject.DCO_TYPE_TABLE;
 	
 	
-	@Element(required=true)
 	private int comparisonType;
-
-	@Element(required=true)
 	private UUID image;
-
-	@Element(required=true)
 	private String compareValue;
-	
-	@Element(required=false)
 	private String comment;
 	
 	/**

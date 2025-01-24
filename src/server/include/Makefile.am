@@ -46,4 +46,5 @@ serverinclude_HEADERS = \
 	nxmodule.h \
 	nxsrvapi.h \
 	pdsdrv.h \
-	server_console.h
+	server_console.h \
+	xml_to_json.h

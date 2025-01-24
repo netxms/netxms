@@ -23,9 +23,7 @@ import java.util.List;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.maps.configs.LinkConfig;
 import org.netxms.client.maps.configs.SingleDciConfig;
-import org.netxms.client.xml.XMLTools;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.google.gson.Gson;
 
 /**
  * Represents link between two elements on map.
@@ -61,8 +59,6 @@ public class NetworkMapLink
    public static final int COLOR_SOURCE_SCRIPT = 3;
    public static final int COLOR_SOURCE_LINK_UTILIZATION = 4;
    public static final int COLOR_SOURCE_INTERFACE_STATUS = 5;
-
-   private static Logger logger = LoggerFactory.getLogger(NetworkMapLink.class);
 
    private long id;
    private String name;
@@ -167,16 +163,14 @@ public class NetworkMapLink
       interfaceId1 = msg.getFieldAsInt64(baseId + 12);
       interfaceId2 = msg.getFieldAsInt64(baseId + 13);
 
-      String xml = msg.getFieldAsString(baseId + 11);
+      String json = msg.getFieldAsString(baseId + 11);
       try
       {
-         config = ((xml != null) && !xml.isEmpty()) ? XMLTools.createFromXml(LinkConfig.class, xml) : new LinkConfig();
+         config = ((json != null) && !json.isEmpty()) ? new Gson().fromJson(json, LinkConfig.class) : new LinkConfig();
       }
       catch(Exception e)
       {
-         logger.warn("Cannot create NetworkMapLink object from XML document", e);
-         logger.debug("Source XML: " + xml);
-         config = new LinkConfig();
+         config =  new LinkConfig();
       }
    }
 
@@ -188,16 +182,6 @@ public class NetworkMapLink
     */
    public void fillMessage(NXCPMessage msg, long baseId)
    {
-      String xml = "";
-      try
-      {
-         xml = config.createXml();
-      }
-      catch(Exception e)
-      {
-         logger.warn("Cannot create XML from LinkConfig object (" + config.toString() + ")", e);
-      }
-
       msg.setFieldInt32(baseId, (int)id);
       msg.setField(baseId + 1, name);
       msg.setFieldInt16(baseId + 2, type);
@@ -209,7 +193,7 @@ public class NetworkMapLink
       msg.setFieldInt16(baseId + 8, colorSource);
       msg.setFieldInt32(baseId + 9, color);
       msg.setField(baseId + 10, colorProvider);
-      msg.setField(baseId + 11, xml);
+      msg.setFieldJson(baseId + 11, config);
       msg.setFieldInt32(baseId + 12, (int)interfaceId1);
       msg.setFieldInt32(baseId + 13, (int)interfaceId2);
    }
