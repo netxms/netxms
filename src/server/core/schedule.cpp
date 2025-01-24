@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -82,10 +82,9 @@ ScheduledTaskTransientData::~ScheduledTaskTransientData()
  */
 ScheduledTask::ScheduledTask(uint32_t id, const TCHAR *taskHandlerId, const TCHAR *schedule,
          shared_ptr<ScheduledTaskParameters> parameters, bool systemTask) :
-         m_taskHandlerId(taskHandlerId), m_schedule(schedule)
+         m_taskHandlerId(taskHandlerId), m_schedule(schedule), m_parameters(parameters)
 {
    m_id = id;
-   m_parameters = parameters;
    m_scheduledExecutionTime = TIMESTAMP_NEVER;
    m_lastExecutionTime = TIMESTAMP_NEVER;
    m_recurrent = true;
@@ -97,10 +96,9 @@ ScheduledTask::ScheduledTask(uint32_t id, const TCHAR *taskHandlerId, const TCHA
  */
 ScheduledTask::ScheduledTask(uint32_t id, const TCHAR *taskHandlerId, time_t executionTime,
          shared_ptr<ScheduledTaskParameters> parameters, bool systemTask) :
-         m_taskHandlerId(taskHandlerId)
+         m_taskHandlerId(taskHandlerId), m_parameters(parameters)
 {
    m_id = id;
-   m_parameters = parameters;
    m_scheduledExecutionTime = executionTime;
    m_lastExecutionTime = TIMESTAMP_NEVER;
    m_recurrent = false;
@@ -129,13 +127,6 @@ ScheduledTask::ScheduledTask(DB_RESULT hResult, int row)
    DBGetField(hResult, row, 9, comments, 256);
    DBGetField(hResult, row, 10, key, 256);
    m_parameters = make_shared<ScheduledTaskParameters>(key, userId, objectId, persistentData, nullptr, comments);
-}
-
-/**
- * Destructor
- */
-ScheduledTask::~ScheduledTask()
-{
 }
 
 /**
@@ -173,7 +164,7 @@ void ScheduledTask::update(const TCHAR *taskHandlerId, time_t nextExecution,
    lock();
 
    m_taskHandlerId = CHECK_NULL_EX(taskHandlerId);
-   m_schedule = _T("");
+   m_schedule = L"";
    m_parameters = parameters;
    m_scheduledExecutionTime = nextExecution;
    m_recurrent = false;

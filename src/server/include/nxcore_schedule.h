@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Core
-** Copyright (C) 2015-2021 Victor Kirhenshtein
+** Copyright (C) 2015-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -142,7 +142,6 @@ public:
    ScheduledTask(uint32_t id, const TCHAR *taskHandlerId, const TCHAR *schedule, shared_ptr<ScheduledTaskParameters> parameters, bool systemTask);
    ScheduledTask(uint32_t id, const TCHAR *taskHandlerId, time_t executionTime, shared_ptr<ScheduledTaskParameters> parameters, bool systemTask);
    ScheduledTask(DB_RESULT hResult, int row);
-   ~ScheduledTask();
 
    uint32_t getId() const { return m_id; }
    SharedString getTaskHandlerId() const { return GetAttributeWithLock(m_taskHandlerId, m_mutex); }
