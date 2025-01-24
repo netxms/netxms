@@ -350,17 +350,16 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
             for(int i = 0; success && (i < m_mapContent.m_elements.size()); i++)
             {
                NetworkMapElement *e = m_mapContent.m_elements.get(i);
-               Config *config = new Config();
-               config->setTopLevelTag(L"element");
+               json_t *config = json_object();
                e->updateConfig(config);
 
                DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, e->getId());
                DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, e->getType());
-               DBBind(hStmt, 4, DB_SQLTYPE_TEXT, config->createXml(), DB_BIND_TRANSIENT);
+               DBBind(hStmt, 4, DB_SQLTYPE_TEXT, config, DB_BIND_TRANSIENT);
                DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, e->getFlags());
 
                success = DBExecute(hStmt);
-               delete config;
+               json_decref(config);
             }
             DBFreeStatement(hStmt);
          }
@@ -396,7 +395,7 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
                DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, l->getName(), DB_BIND_STATIC);
                DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, l->getConnector1Name(), DB_BIND_STATIC);
                DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, l->getConnector2Name(), DB_BIND_STATIC);
-               DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, l->getConfig(), DB_BIND_STATIC);
+               DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, l->getConfig(), DB_BIND_STATIC);
                DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, l->getFlags());
                DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, static_cast<int32_t>(l->getColorSource()));
                DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, l->getColor());
@@ -557,44 +556,45 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prep
 				NetworkMapElement *e;
 				uint32_t id = DBGetFieldULong(hResult, i, 0);
 				uint32_t flags = DBGetFieldULong(hResult, i, 3);
-				Config *config = new Config();
-				wchar_t *data = DBGetField(hResult, i, 2, nullptr, 0);
+				char *data = DBGetFieldUTF8(hResult, i, 2, nullptr, 0);
 				if (data != nullptr)
 				{
-					char *utf8data = UTF8StringFromWideString(data);
-					config->loadXmlConfigFromMemory(utf8data, (int)strlen(utf8data), L"<database>", "element");
-					MemFree(utf8data);
-					MemFree(data);
+		         json_error_t error;
+					json_t *json = json_loads(data, 0, &error);
+					if (json == nullptr)
+					   json = json_object();
+
 					switch(DBGetFieldLong(hResult, i, 1))
 					{
 						case MAP_ELEMENT_OBJECT:
-							e = new NetworkMapObject(id, config, flags);
+							e = new NetworkMapObject(id, json, flags);
 			            m_objectSet.put(static_cast<NetworkMapObject *>(e)->getObjectId());
 							break;
 						case MAP_ELEMENT_DECORATION:
-							e = new NetworkMapDecoration(id, config, flags);
+							e = new NetworkMapDecoration(id, json, flags);
 							break;
                   case MAP_ELEMENT_DCI_CONTAINER:
-                     e = new NetworkMapDCIContainer(id, config, flags);
+                     e = new NetworkMapDCIContainer(id, json, flags);
                      static_cast<NetworkMapDCIContainer*>(e)->updateDciList(&m_dciSet, true);
                      break;
                   case MAP_ELEMENT_DCI_IMAGE:
-                     e = new NetworkMapDCIImage(id, config, flags);
+                     e = new NetworkMapDCIImage(id, json, flags);
                      static_cast<NetworkMapDCIImage*>(e)->updateDciList(&m_dciSet, true);
                      break;
                   case MAP_ELEMENT_TEXT_BOX:
-                     e = new NetworkMapTextBox(id, config, flags);
+                     e = new NetworkMapTextBox(id, json, flags);
                      break;
 						default:		// Unknown type, create generic element
-							e = new NetworkMapElement(id, config, flags);
+							e = new NetworkMapElement(id, json, flags);
 							break;
 					}
+					json_decref(json);
+					MemFree(data);
 				}
 				else
 				{
 					e = new NetworkMapElement(id, flags);
 				}
-				delete config;
 				m_mapContent.m_elements.add(e);
 				if (m_nextElementId <= e->getId())
 					m_nextElementId = e->getId() + 1;
@@ -618,7 +618,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prep
 				l->setName(DBGetField(hResult, i, 6, buffer, 256));
 				l->setConnector1Name(DBGetField(hResult, i, 7, buffer, 256));
 				l->setConnector2Name(DBGetField(hResult, i, 8, buffer, 256));
-				l->setConfig(DBGetField(hResult, i, 9, buffer, 4096));
+				l->setConfig(DBGetFieldUTF8(hResult, i, 9, nullptr, 0));
 				l->setFlags(DBGetFieldUInt32(hResult, i, 10));
             l->setColorSource(static_cast<MapLinkColorSource>(DBGetFieldInt32(hResult, i, 11)));
             l->setColor(DBGetFieldUInt32(hResult, i, 12));

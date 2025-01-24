@@ -23,6 +23,208 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+#include <pugixml.h>
+#include <jansson.h>
+#include <string>
+
+/**
+ * Convert string to int if applicable
+ */
+static void ConvertValueXmlToJson(json_t *object, const char *name, const char *text)
+{
+   char *eptr;
+   int32_t val = strtol(text, &eptr, 10);
+   if (*eptr == 0 && strlen(text) > 0)
+   {
+      json_object_set_new(object, name, json_integer(val));
+   }
+   else
+   {
+      json_object_set_new(object, name, json_string(text));
+   }
+}
+
+/**
+ * Function to convert an XML node to a JSON object
+ */
+static json_t* XmlNodeToJson(const pugi::xml_node &node)
+{
+   json_t *jsonObject = json_object();
+
+   for (pugi::xml_node child : node.children())
+   {
+      std::string childName = child.name();
+
+      if (childName.empty() || child.first_child().empty())
+      {
+         continue;
+      }
+
+      //special processing of exceptional elements
+      if (!strcmp(childName.c_str(), "TextBox") || !strcmp(childName.c_str(), "DCIList"))
+      {
+         pugi::xml_document xmlDoc;
+         if (!xmlDoc.load_buffer(child.child_value(), strlen(child.child_value())))
+         {
+            json_object_set_new(jsonObject, child.name(), json_string(child.child_value()));
+            continue; //ignore if failed to parse
+         }
+
+         pugi::xml_node xml = xmlDoc.first_child();
+         if (!strcmp(childName.c_str(), "DCIList"))
+         {
+            if ((xml.child("config") != nullptr))
+            {
+               xml = xml.child("config");
+            }
+            if ((xml.child("dciImageConfiguration") != nullptr))
+            {
+               xml = xml.child("dciImageConfiguration");
+            }
+         }
+         json_t *converted = XmlNodeToJson(xml);
+         char *jsonText = json_dumps(converted, JSON_COMPACT);
+         json_object_set_new(jsonObject, child.name(), json_string(jsonText));
+         MemFree(jsonText);
+         json_decref(converted);
+      }
+      else if ((child.attribute("length") != nullptr) || child.attribute("lenght") != nullptr)
+      {
+         if (strlen(child.child_value()) > 0)
+         {
+            String s(child.child_value(), "utf8");
+            unique_ptr<StringList> values(s.split(_T(","), true));
+            IntegerArray<int32_t> arr;
+            for (int i = 0; i < values->size(); i++)
+            {
+               TCHAR *eptr;
+               int32_t val = _tcstol(values->get(i), &eptr, 10);
+               if (*eptr == 0)
+               {
+                  arr.add(val);
+               }
+            }
+            json_object_set_new(jsonObject, child.name(), arr.toJson());
+         }
+         else
+         {
+            json_t *array = json_array();
+            for (pugi::xml_node grandChild : child.children())
+            {
+               json_array_append_new(array, XmlNodeToJson(grandChild));
+            }
+            json_object_set_new(jsonObject, childName.c_str(), array);
+         }
+      }
+      else if (child.attribute("class") != nullptr)
+      {
+         json_t *array = json_array();
+         for (pugi::xml_node grandChild : child.children())
+         {
+            if (!strcmp(grandChild.name(), "long"))
+            {
+               const char *text = grandChild.child_value();
+
+               char *eptr;
+               int32_t val = strtol(text, &eptr, 10);
+               if (*eptr == 0 && strlen(text) > 0)
+               {
+                  json_array_append_new(array, json_integer(val));
+               }
+            }
+            else
+               json_array_append_new(array, XmlNodeToJson(grandChild));
+         }
+         json_object_set_new(jsonObject, childName.c_str(), array);
+      }
+      else if (child.first_child() == child.last_child())
+      {
+         ConvertValueXmlToJson(jsonObject, childName.c_str(), child.child_value());
+      }
+      else
+      {
+         json_t *object = XmlNodeToJson(child);
+         for (pugi::xml_attribute attr : child.attributes())
+         {
+            if (strcmp(attr.name(), "class") == 0)
+               continue;
+
+            ConvertValueXmlToJson(object, attr.name(), attr.value());
+         }
+         json_object_set_new(jsonObject, childName.c_str(), object);
+      }
+   }
+
+   for (pugi::xml_attribute attr : node.attributes())
+   {
+      ConvertValueXmlToJson(jsonObject, attr.name(), attr.value());
+   }
+
+   return jsonObject;
+}
+
+/**
+ * Convert network map XML configuration to JSON
+ */
+static bool ConvertXmlToJson(const TCHAR *reqest, const TCHAR *update, const char *topElement)
+{
+   DB_RESULT hResult = SQLSelect(reqest);
+     if (hResult != nullptr)
+     {
+        int count = DBGetNumRows(hResult);
+        DB_STATEMENT hStmt = DBPrepare(g_dbHandle, update, count > 1);
+        if (hStmt != nullptr)
+        {
+           for (int i = 0; i < count; i++)
+           {
+              char *xmlText = DBGetFieldUTF8(hResult, i, 2, nullptr, 0);
+              pugi::xml_document xml;
+              if (!xml.load_buffer(xmlText, strlen(xmlText)))
+              {
+                 MemFree(xmlText);
+                 continue; //ignore filed
+              }
+
+              json_t *result = XmlNodeToJson(xml.child(topElement));
+              char *jsonText = json_dumps(result, JSON_COMPACT);
+              MemFree(jsonText);
+
+              MemFree(xmlText);
+
+              DBBind(hStmt, 1, DB_SQLTYPE_TEXT, result, DB_BIND_DYNAMIC);
+              DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
+              DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 1));
+              if (!SQLExecute(hStmt) && !g_ignoreErrors)
+              {
+                 DBFreeResult(hResult);
+                 DBFreeStatement(hStmt);
+                 return false;
+              }
+           }
+           DBFreeStatement(hStmt);
+        }
+        else if (!g_ignoreErrors)
+        {
+           DBFreeResult(hResult);
+           return false;
+        }
+
+        DBFreeResult(hResult);
+     }
+     return true;
+}
+
+/**
+ * Upgrade from 52.6 to 52.7
+ */
+static bool H_UpgradeFromV6()
+{
+   CHK_EXEC(ConvertXmlToJson(L"SELECT map_id,link_id,element_data FROM network_map_links", L"UPDATE network_map_links SET element_data=? WHERE map_id=? AND link_id=?", "config"));
+   CHK_EXEC(ConvertXmlToJson(L"SELECT map_id,element_id,element_data FROM network_map_elements", L"UPDATE network_map_elements SET element_data=? WHERE map_id=? AND element_id=?", "element"));
+   CHK_EXEC(SetMinorSchemaVersion(7));
+   return true;
+}
+
 /**
  * Upgrade from 52.5 to 52.6
  */
@@ -189,6 +391,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 6,  52, 7,  H_UpgradeFromV6  },
    { 5,  52, 6,  H_UpgradeFromV5  },
    { 4,  52, 5,  H_UpgradeFromV4  },
    { 3,  52, 4,  H_UpgradeFromV3  },

@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.zip.CRC32;
+import com.google.gson.Gson;
 import com.jcraft.jzlib.Deflater;
 import com.jcraft.jzlib.DeflaterOutputStream;
 import com.jcraft.jzlib.InflaterInputStream;
@@ -65,6 +66,7 @@ public class NXCPMessage
 	private long timestamp;
 	private byte[] binaryData = null;
 	private long controlData = 0;
+	private Gson gson = new Gson();
 
    /**
      * Create new message with given code and ID 0.
@@ -561,6 +563,18 @@ public class NXCPMessage
       if (value == null)
          return;
       setField(fieldId, value.getValue());      
+   }
+
+   /**
+    * Set field of UTF8-STRING type
+    * 
+    * @param fieldId field ID
+    * @param value string value
+    */
+   public void setFieldJson(final long fieldId, final Object value)
+   {
+      String json = gson.toJson(value);
+      setField(new NXCPMessageField(fieldId, json));
    }
    
 	/**

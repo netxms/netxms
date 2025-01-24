@@ -7101,6 +7101,17 @@ NXSL_Value *NXSL_NetworkMapLinkClass::getAttr(NXSL_Object *object, const NXSL_Id
          value = vm->createValue();
       }
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("useInterfaceUtilization"))
+   {
+      if (link->get()->getColorSource() == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_OBJECT_STATUS)
+      {
+         value = vm->createValue(link->useInterfaceUtilization());
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("width"))
    {
       value = vm->createValue(link->getWidth());

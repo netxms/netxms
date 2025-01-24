@@ -22,40 +22,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.netxms.client.maps.NetworkMapLink;
-import org.netxms.client.xml.XMLTools;
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementArray;
-import org.simpleframework.xml.ElementList;
-import org.simpleframework.xml.Root;
 
-@Root(name = "config", strict = false)
 public class LinkConfig
 {
-   @ElementArray(required = false)
    private SingleDciConfig[] dciList;
-
-   @ElementList(required = false)
    private List<Long> objectStatusList = new ArrayList<Long>();
-
-   @Element(required = false)
    private int routing;
-
-   @Element(required = false)
    private long[] bendPoints;
-
-   @Element(required = false)
    private boolean useActiveThresholds;
-
-   @Element(required = false)
    private boolean useInterfaceUtilization;
-
-   @Element(required = false)
    private int labelPosition = 50;
-
-   @Element(required = false)
-   private int style = 0;
-
-   @Element(required = false)
+   private int style = 0;   
    private int width = 0;
 
    /**
@@ -89,17 +66,6 @@ public class LinkConfig
       this.useActiveThresholds = useActiveThresholds;
       this.useInterfaceUtilization = useInterfaceUtilization;
    }   
-
-   /**
-    * Create XML from configuration.
-    * 
-    * @return XML document
-    * @throws Exception if the schema for the object is not valid
-    */
-   public String createXml() throws Exception
-   {
-      return XMLTools.serialize(this);
-   }
 
    /**
     * @return the objectStatusList

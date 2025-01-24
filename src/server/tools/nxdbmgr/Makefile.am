@@ -26,6 +26,11 @@ nxdbmgr_LDADD += ../../../sqlite/libnxsqlite.la
 else
 nxdbmgr_LDADD += -lsqlite3
 endif
+if USE_INTERNAL_JANSSON
+nxdbmgr_LDADD += @top_srcdir@/src/jansson/libnxjansson.la
+else
+nxdbmgr_LDADD += -ljansson
+endif
 
 tables.cpp: @top_srcdir@/sql/schema.in
 	@top_srcdir@/tools/create_table_list.pl @top_srcdir@/sql/schema.in > tables.cpp

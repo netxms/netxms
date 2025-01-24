@@ -23,38 +23,21 @@ import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.interfaces.NodeItemPair;
-import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Root;
 
 /**
  * DCI information for map line
  */
-@Root(name="dci")
 public class SingleDciConfig implements NodeItemPair
 {	
 	public static final int ITEM = DataCollectionObject.DCO_TYPE_ITEM;
 	public static final int TABLE = DataCollectionObject.DCO_TYPE_TABLE;
 
-	@Attribute
 	public long nodeId;
-
-	@Attribute
 	public long dciId;
-
-	@Element(required=false)
 	public int type;
-
-	@Element(required=false)
 	public String name;
-
-	@Element(required=false)
 	public String instance;
-
-	@Element(required=false)
 	public String column;
-
-   @Element(required=false)
    public String formatString;
 
 	/**

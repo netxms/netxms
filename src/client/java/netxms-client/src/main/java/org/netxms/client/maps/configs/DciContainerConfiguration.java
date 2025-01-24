@@ -18,42 +18,16 @@
  */
 package org.netxms.client.maps.configs;
 
-import org.netxms.client.xml.XMLTools;
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementArray;
-import org.simpleframework.xml.Root;
-
 /**
  * Base class for all DCI configuration for line
  */
-@Root(name="config")
 public class DciContainerConfiguration
 {
-   @ElementArray(required = true)
    private SingleDciConfig[] dciList = new SingleDciConfig[0];
-
-   @Element(required=false)
    private int backgroundColor;
-   
-   @Element(required=false)
    private int textColor;
-   
-   @Element(required=false)
    private int borderColor;
-   
-   @Element(required=false)
    private boolean borderRequired;
-
-   /**
-    * Create XML from configuration.
-    * 
-    * @return XML document
-    * @throws Exception if the schema for the object is not valid
-    */
-   public String createXml() throws Exception
-   {
-      return XMLTools.serialize(this);
-   }
 
 	/**
 	 * @return the dciList

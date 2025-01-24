@@ -23,7 +23,7 @@ import java.util.List;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.maps.configs.DciContainerConfiguration;
 import org.netxms.client.maps.configs.SingleDciConfig;
-import org.netxms.client.xml.XMLTools;
+import com.google.gson.Gson;
 
 /**
  * Network map element representing NetXMS DCI container.
@@ -45,10 +45,10 @@ public class NetworkMapDCIContainer extends NetworkMapElement
 	protected NetworkMapDCIContainer(NXCPMessage msg, long baseId)
 	{
 		super(msg, baseId);
-      String xml = msg.getFieldAsString(baseId + 10);
+      String json = msg.getFieldAsString(baseId + 10);
 		try
       {
-         DciContainerConfiguration config = XMLTools.createFromXml(DciContainerConfiguration.class, xml);
+         DciContainerConfiguration config = new Gson().fromJson(json, DciContainerConfiguration.class);
 		   backgroundColor = config.getBackgroundColor();
 		   textColor = config.getTextColor();
 		   borderColor = config.getBorderColor();
@@ -94,14 +94,7 @@ public class NetworkMapDCIContainer extends NetworkMapElement
       config.setTextColor(textColor);
       config.setBorderColor(borderColor);
       config.setBorderRequired(borderRequired);
-      try
-      {
-         msg.setField(baseId + 10, config.createXml());
-      }
-      catch(Exception e)
-      {
-         msg.setField(baseId + 10, "");
-      }
+      msg.setFieldJson(baseId + 10, config);
    }
 
 	/**

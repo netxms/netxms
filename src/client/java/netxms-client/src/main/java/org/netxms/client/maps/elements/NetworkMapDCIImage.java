@@ -20,7 +20,7 @@ package org.netxms.client.maps.elements;
 
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.maps.configs.DCIImageConfiguration;
-import org.netxms.client.xml.XMLTools;
+import com.google.gson.Gson;
 
 /**
  * Network map element representing NetXMS DCI container
@@ -39,10 +39,10 @@ public class NetworkMapDCIImage  extends NetworkMapElement
 	protected NetworkMapDCIImage(NXCPMessage msg, long baseId)
 	{
 		super(msg, baseId);
-      String xml = msg.getFieldAsString(baseId + 10);
+      String json = msg.getFieldAsString(baseId + 10);
 		try
       {
-         config = XMLTools.createFromXml(DCIImageConfiguration.class, xml);
+         config = new Gson().fromJson(json, DCIImageConfiguration.class);
       }
       catch(Exception e)
       { 
@@ -69,15 +69,7 @@ public class NetworkMapDCIImage  extends NetworkMapElement
 	public void fillMessage(NXCPMessage msg, long baseId)
 	{
 		super.fillMessage(msg, baseId);
-
-		try
-      {
-         msg.setField(baseId + 10, config.createXml());
-      }
-      catch(Exception e)
-      {
-         msg.setField(baseId + 10, "");
-      }
+      msg.setFieldJson(baseId + 10, config);
 	}
 
    /**
