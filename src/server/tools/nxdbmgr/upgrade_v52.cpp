@@ -61,6 +61,7 @@ static bool H_UpgradeFromV5()
             L"   command varchar(255) null,"
             L"   description varchar(255) null,"
             L"   PRIMARY KEY(job_id,execution_time))"));
+      CHK_EXEC(SQLQuery(L"SELECT create_hypertable('package_deployment_log', 'execution_time', chunk_time_interval => interval '86400 seconds')"));
    }
    else
    {
@@ -82,7 +83,6 @@ static bool H_UpgradeFromV5()
             L"   command varchar(255) null,"
             L"   description varchar(255) null,"
             L"   PRIMARY KEY(job_id))"));
-      CHK_EXEC(SQLQuery(L"SELECT create_hypertable('package_deployment_log', 'execution_time', chunk_time_interval => interval '86400 seconds')"));
    }
 
    CHK_EXEC(SQLQuery(L"CREATE INDEX idx_pkglog_exec_time ON package_deployment_log(execution_time)"));
