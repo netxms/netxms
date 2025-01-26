@@ -3495,18 +3495,25 @@ int LIBNETXMS_EXPORTABLE GetSleepTime(int hour, int minute, int second)
  */
 time_t LIBNETXMS_EXPORTABLE ParseDateTimeA(const char *text, time_t defaultValue)
 {
-	int len = (int)strlen(text);
+	size_t len = strlen(text);
 	if ((len != 12) && (len != 14))
 		return defaultValue;
 
 	struct tm t;
 	char buffer[16], *curr;
 
-	strncpy(buffer, text, 16);
+	memcpy(buffer, text, len + 1);
 	curr = &buffer[len - 2];
 
 	memset(&t, 0, sizeof(struct tm));
 	t.tm_isdst = -1;
+
+	// Disable incorrect warning, probably caused by gcc bug 106757
+	// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=106757
+#if __GNUC__ == 13
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
 
 	t.tm_sec = strtol(curr, nullptr, 10);
 	*curr = 0;
@@ -3537,6 +3544,10 @@ time_t LIBNETXMS_EXPORTABLE ParseDateTimeA(const char *text, time_t defaultValue
 		curr -= 4;
 		t.tm_year = strtol(curr, nullptr, 10) - 1900;
 	}
+
+#if __GNUC__ == 13
+#pragma GCC diagnostic pop
+#endif
 
 	return mktime(&t);
 }
