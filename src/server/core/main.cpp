@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -85,6 +85,7 @@ void InitMobileDeviceListeners();
 void InitCertificates();
 bool LoadServerCertificate(RSA_KEY *serverKey);
 bool LoadInternalCACertificate();
+void CleanupServerCertificates();
 void LoadAuthenticationTokens();
 void InitUsers();
 void CleanupUsers();
@@ -625,23 +626,23 @@ static bool InitCryptography()
    }
    else
    {
-      TCHAR szKeyFile[MAX_PATH];
-      _tcscpy(szKeyFile, g_netxmsdDataDir);
-      _tcscat(szKeyFile, DFILE_KEYS);
-      g_serverKey = RSALoadKey(szKeyFile);
+      wchar_t keyFile[MAX_PATH];
+      wcscpy(keyFile, g_netxmsdDataDir);
+      wcscat(keyFile, DFILE_KEYS);
+      g_serverKey = RSALoadKey(keyFile);
       if (g_serverKey == nullptr)
       {
          nxlog_debug_tag(_T("crypto"), 1, _T("Generating RSA key pair..."));
          g_serverKey = RSAGenerateKey(NETXMS_RSA_KEYLEN);
          if (g_serverKey != nullptr)
          {
-            if (RSASaveKey(g_serverKey, szKeyFile))
+            if (RSASaveKey(g_serverKey, keyFile))
             {
                success = true;
             }
             else
             {
-               nxlog_write_tag(NXLOG_ERROR, _T("crypto"), _T("Cannot save server key to file \"%s\""), szKeyFile);
+               nxlog_write_tag(NXLOG_ERROR, _T("crypto"), _T("Cannot save server key to file \"%s\""), keyFile);
             }
          }
          else
@@ -666,7 +667,7 @@ static bool InitCryptography()
 /**
  * Check if process with given PID exists and is a NetXMS server process
  */
-static bool IsNetxmsdProcess(UINT32 pid)
+static bool IsNetxmsdProcess(uint32_t pid)
 {
 #ifdef _WIN32
    bool result = false;
@@ -697,9 +698,9 @@ static bool IsNetxmsdProcess(UINT32 pid)
  */
 static bool PeerNodeIsRunning(const InetAddress& addr)
 {
-   TCHAR keyFile[MAX_PATH];
-   _tcscpy(keyFile, g_netxmsdDataDir);
-   _tcscat(keyFile, DFILE_KEYS);
+   wchar_t keyFile[MAX_PATH];
+   wcscpy(keyFile, g_netxmsdDataDir);
+   wcscat(keyFile, DFILE_KEYS);
    RSA_KEY key = RSALoadKey(keyFile);
 
    shared_ptr<AgentConnection> ac = make_shared<AgentConnection>(addr);
@@ -1516,6 +1517,7 @@ void NXCORE_EXPORTABLE Shutdown()
 	nxlog_close();
 
    RSAFree(g_serverKey);
+   CleanupServerCertificates();
 
 	// Remove PID file
 #ifndef _WIN32
