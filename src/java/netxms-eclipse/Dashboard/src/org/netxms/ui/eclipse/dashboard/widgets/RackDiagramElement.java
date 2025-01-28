@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -101,7 +101,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
       {
          Color backgroundColor = ThemeEngine.getBackgroundColor("Rack");
 
-         scroller = new ScrolledComposite(getContentArea(), SWT.H_SCROLL);
+         scroller = new ScrolledComposite(getContentArea(), SWT.H_SCROLL | SWT.V_SCROLL);
 
          rackArea = new Composite(scroller, SWT.NONE) {
             @Override
@@ -109,7 +109,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
             {
                if ((rackFrontWidget != null) && (rackRearWidget != null))
                {
-                  Point s = rackFrontWidget.computeSize(wHint, hHint, changed);
+                  Point s = rackFrontWidget.computeSize((wHint != SWT.DEFAULT) ? wHint / 2 : wHint, hHint, changed);
                   return new Point(s.x * 2, s.y);
                }
                else if (rackFrontWidget != null)
@@ -131,23 +131,23 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
             @Override
             public void controlResized(ControlEvent e)
             {               
-               int height = rackArea.getSize().y;
+               Point rackAreaSize = rackArea.getSize();
 
                if ((rackFrontWidget != null) && (rackRearWidget != null))
                {
-                  Point size = rackFrontWidget.computeSize(SWT.DEFAULT, height, true);
+                  Point size = rackFrontWidget.computeSize(rackAreaSize.x / 2, rackAreaSize.y, true);
                   rackFrontWidget.setSize(size);
                   rackRearWidget.setSize(size);
                   rackRearWidget.setLocation(size.x, 0);
                }
                else if (rackFrontWidget != null)
                {
-                  Point size = rackFrontWidget.computeSize(SWT.DEFAULT, height, true);
+                  Point size = rackFrontWidget.computeSize(rackAreaSize.x, rackAreaSize.y, true);
                   rackFrontWidget.setSize(size);
                }
                else if (rackRearWidget != null)
                {
-                  Point size = rackRearWidget.computeSize(SWT.DEFAULT, height, true);
+                  Point size = rackRearWidget.computeSize(rackAreaSize.x, rackAreaSize.y, true);
                   rackRearWidget.setSize(size);
                }
             }
@@ -162,10 +162,12 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
          scroller.setExpandHorizontal(true);
          scroller.setExpandVertical(true);
          WidgetHelper.setScrollBarIncrement(scroller, SWT.HORIZONTAL, 20);
+         WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
          scroller.addControlListener(new ControlAdapter() {
             public void controlResized(ControlEvent e)
             {
-               scroller.setMinSize(rackArea.computeSize(SWT.DEFAULT, scroller.getSize().y));
+               Point scrollerSize = scroller.getSize();
+               scroller.setMinSize(rackArea.computeSize(scrollerSize.x, scrollerSize.y));
             }
          });
       }

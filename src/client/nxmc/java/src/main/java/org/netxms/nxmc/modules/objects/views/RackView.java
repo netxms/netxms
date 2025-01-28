@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -101,16 +101,16 @@ public class RackView extends ObjectView implements ISelectionProvider
    @Override
    protected void createContent(Composite parent)
    {
-      scroller = new ScrolledComposite(parent, SWT.H_SCROLL);
+      scroller = new ScrolledComposite(parent, SWT.H_SCROLL | SWT.V_SCROLL);
 
       content = new Composite(scroller, SWT.NONE) {
          @Override
          public Point computeSize(int wHint, int hHint, boolean changed)
          {
-            if ((rackFrontWidget == null) || (rackRearWidget == null) || (hHint == SWT.DEFAULT))
+            if ((rackFrontWidget == null) || (rackRearWidget == null))
                return super.computeSize(wHint, hHint, changed);
 
-            Point s = rackFrontWidget.computeSize(wHint, hHint, changed);
+            Point s = rackFrontWidget.computeSize((wHint != SWT.DEFAULT) ? wHint / 2 : wHint, hHint, changed);
             return new Point(s.x * 2, s.y);
          }
       };
@@ -129,10 +129,12 @@ public class RackView extends ObjectView implements ISelectionProvider
       scroller.setExpandHorizontal(true);
       scroller.setExpandVertical(true);
       WidgetHelper.setScrollBarIncrement(scroller, SWT.HORIZONTAL, 20);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
       scroller.addControlListener(new ControlAdapter() {
          public void controlResized(ControlEvent e)
          {
-            scroller.setMinSize(content.computeSize(SWT.DEFAULT, scroller.getSize().y));
+            Point size = scroller.getSize();
+            scroller.setMinSize(content.computeSize(size.x, size.y));
          }
       });
    }
@@ -142,8 +144,8 @@ public class RackView extends ObjectView implements ISelectionProvider
     */
    protected void updateRackWidgetsSize()
    {
-      int height = content.getSize().y;
-      Point size = rackFrontWidget.computeSize(SWT.DEFAULT, height, true);
+      Point scrollerSize = scroller.getSize();
+      Point size = rackFrontWidget.computeSize(scrollerSize.x / 2, scrollerSize.y, true);
       rackFrontWidget.setSize(size);
       rackRearWidget.setSize(size);
       rackRearWidget.setLocation(size.x, 0);
@@ -192,14 +194,10 @@ public class RackView extends ObjectView implements ISelectionProvider
 
       if (rack != null)
       {
-         ElementSelectionListener listener = new ElementSelectionListener() {
-            @Override
-            public void objectSelected(Object object)
-            {
-               selection = (object != null) ? new StructuredSelection(object) : new StructuredSelection();
-               for(ISelectionChangedListener listener : selectionListeners)
-                  listener.selectionChanged(new SelectionChangedEvent(RackView.this, selection));
-            }
+         ElementSelectionListener listener = (object) -> {
+            selection = (object != null) ? new StructuredSelection(object) : new StructuredSelection();
+            for(ISelectionChangedListener l : selectionListeners)
+               l.selectionChanged(new SelectionChangedEvent(RackView.this, selection));
          };
 
          rackFrontWidget = new RackWidget(content, SWT.NONE, rack, RackOrientation.FRONT, this);
@@ -208,7 +206,8 @@ public class RackView extends ObjectView implements ISelectionProvider
          rackRearWidget = new RackWidget(content, SWT.NONE, rack, RackOrientation.REAR, this);
          rackRearWidget.addSelectionListener(listener);
 
-         scroller.setMinSize(content.computeSize(SWT.DEFAULT, scroller.getSize().y));
+         Point scrollerSize = scroller.getSize();
+         scroller.setMinSize(content.computeSize(scrollerSize.x, scrollerSize.y));
          updateRackWidgetsSize();
          createPopupMenu();
       }

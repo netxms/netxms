@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -77,8 +77,8 @@ public class RackView extends ViewPart implements ISelectionProvider
          throw new PartInitException("Rack object not found");
       setPartName(String.format("Rack - %s", rack.getObjectName()));
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -90,8 +90,8 @@ public class RackView extends ViewPart implements ISelectionProvider
          {
             if ((rackFrontWidget == null) || (rackRearWidget == null) || (hHint == SWT.DEFAULT))
                return super.computeSize(wHint, hHint, changed);
-            
-            Point s = rackFrontWidget.computeSize(wHint, hHint, changed);
+
+            Point s = rackFrontWidget.computeSize((wHint != SWT.DEFAULT) ? wHint / 2 : wHint, hHint, changed);
             return new Point(s.x * 2, s.y);
          }
       };
@@ -105,7 +105,7 @@ public class RackView extends ViewPart implements ISelectionProvider
          {
             if ((rackFrontWidget == null) || (rackRearWidget == null))
                return;
-            
+
             int height = rackArea.getSize().y;
             Point size = rackFrontWidget.computeSize(SWT.DEFAULT, height, true);
             rackFrontWidget.setSize(size);
@@ -125,7 +125,7 @@ public class RackView extends ViewPart implements ISelectionProvider
       };
       rackFrontWidget.addSelectionListener(listener);
       rackRearWidget.addSelectionListener(listener);
-      
+
       getSite().setSelectionProvider(this);
       createPopupMenu();
    }
@@ -156,17 +156,17 @@ public class RackView extends ViewPart implements ISelectionProvider
       // Create menu.
       Menu menu = menuMgr.createContextMenu(rackFrontWidget);
       rackFrontWidget.setMenu(menu);
-      
+
       menu = menuMgr.createContextMenu(rackRearWidget);
       rackRearWidget.setMenu(menu);
 
       // Register menu for extension.
       getSite().registerContextMenu(menuMgr, this);
    }
-   
+
    /**
     * Fill port context menu
-    * 
+    *
     * @param manager
     */
    private void fillContextMenu(IMenuManager manager)
@@ -175,7 +175,7 @@ public class RackView extends ViewPart implements ISelectionProvider
          ObjectContextMenu.fill(manager, getSite(), this);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
     */
    @Override

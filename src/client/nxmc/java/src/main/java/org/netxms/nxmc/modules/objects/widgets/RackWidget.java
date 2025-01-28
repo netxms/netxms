@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,14 +61,18 @@ import org.netxms.nxmc.tools.WidgetHelper;
 public class RackWidget extends Canvas implements PaintListener, ImageUpdateListener, MouseListener, MouseTrackListener
 {
    private static final double UNIT_WH_RATIO = 10.85;
-   private static final int BORDER_WIDTH_RATIO = 15;
+   private static final int BORDER_WIDTH_RATIO = 16;
    private static final int FULL_UNIT_WIDTH = 482;
    private static final int FULL_UNIT_HEIGHT = 45;
+   private static final int MIN_UNIT_WIDTH = 120;
+   private static final int MIN_UNIT_HEIGHT = 11;
    private static final int MARGIN_HEIGHT = 10;
    private static final int MARGIN_WIDTH = 5;
    private static final int UNIT_NUMBER_WIDTH = 30;
    private static final int TITLE_HEIGHT = 20;
    private static final int MAX_BORDER_WIDTH = 30;
+   private static final int MIN_BORDER_WIDTH = 3;
+   private static final int MIN_WIDTH = MIN_UNIT_WIDTH + MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH + MIN_BORDER_WIDTH * 2 + MIN_BORDER_WIDTH / 2;
    private static final String[] FONT_NAMES = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" };
    private static final String[] SIDE_LABELS = { "Front", "Back" };
 
@@ -164,15 +168,34 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
       // Calculate bounding box for rack picture
       Rectangle rect = getClientArea();
       rect.x += MARGIN_WIDTH + UNIT_NUMBER_WIDTH;
+      rect.width -= MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH;
       rect.y += MARGIN_HEIGHT + MARGIN_HEIGHT / 2 + TITLE_HEIGHT;
       rect.height -= MARGIN_HEIGHT * 2 + MARGIN_HEIGHT / 2 + TITLE_HEIGHT;
 
+      // Calculate ideal size and adjust bounding box if needed
+      Point idealSize = new Point(FULL_UNIT_WIDTH + MAX_BORDER_WIDTH * 3, FULL_UNIT_HEIGHT * rack.getHeight() + MAX_BORDER_WIDTH * 2);
+      if (rect.width > idealSize.x)
+         rect.width = idealSize.x;
+      if (rect.height > idealSize.y)
+         rect.height = idealSize.y;
+
+      double wRatio = (double)rect.width / (double)idealSize.x;
+      double hRatio = (double)rect.height / (double)idealSize.y;
+      if (wRatio > hRatio)
+      {
+         rect.width -= (int)(idealSize.x * hRatio);
+      }
+      else if (wRatio < hRatio)
+      {
+         rect.height = (int)(idealSize.y * wRatio);
+      }
+
       // Estimated unit width/height and calculate border width
-      double unitHeight = (double)rect.height / (double)rack.getHeight();
+      double unitHeight = Math.min((double)rect.height / (double)rack.getHeight(), FULL_UNIT_HEIGHT);
       int unitWidth = (int)(unitHeight * UNIT_WH_RATIO);
       int borderWidth = unitWidth / BORDER_WIDTH_RATIO;
-      if (borderWidth < 3)
-         borderWidth = 3;
+      if (borderWidth < MIN_BORDER_WIDTH)
+         borderWidth = MIN_BORDER_WIDTH;
       else if (borderWidth > MAX_BORDER_WIDTH)
          borderWidth = MAX_BORDER_WIDTH;
       rect.height -= borderWidth + borderWidth / 2;
@@ -427,26 +450,65 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
    @Override
    public Point computeSize(int wHint, int hHint, boolean changed)
    {
-      if (hHint == SWT.DEFAULT && wHint == SWT.DEFAULT)
-         return new Point(10, 10);
+      Point idealSize = new Point(FULL_UNIT_WIDTH + MAX_BORDER_WIDTH * 2 + MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH + MAX_BORDER_WIDTH / 2,
+            FULL_UNIT_HEIGHT * rack.getHeight() + MAX_BORDER_WIDTH * 2 + MARGIN_HEIGHT * 2 + MARGIN_HEIGHT / 2 + TITLE_HEIGHT);
+
+      if ((wHint == SWT.DEFAULT && hHint == SWT.DEFAULT) || (wHint >= idealSize.x && hHint >= idealSize.y))
+         return idealSize;
 
       if (hHint == SWT.DEFAULT)
       {
-         int borderWidth = FULL_UNIT_WIDTH / BORDER_WIDTH_RATIO;
-         return new Point(FULL_UNIT_WIDTH + MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH + borderWidth * 2 + borderWidth / 2,
-               rack.getHeight() * FULL_UNIT_HEIGHT + MARGIN_HEIGHT * 2 + borderWidth * 2 + MARGIN_HEIGHT / 2 + TITLE_HEIGHT);
+         if (wHint >= idealSize.x)
+            return idealSize;
+
+         // Roughly estimate unit width
+         int unitWidth = wHint - (MAX_BORDER_WIDTH * 2 + MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH + MAX_BORDER_WIDTH / 2);
+         if (unitWidth < MIN_UNIT_WIDTH)
+         {
+            unitWidth = MIN_UNIT_WIDTH;
+            wHint = MIN_UNIT_WIDTH + MIN_BORDER_WIDTH * 2 + MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH + MIN_BORDER_WIDTH / 2;
+         }
+
+         double unitHeight = (double)unitWidth / UNIT_WH_RATIO;
+         unitWidth = (int)(unitHeight * UNIT_WH_RATIO);
+         int borderWidth = unitWidth / BORDER_WIDTH_RATIO;
+         if (borderWidth < MIN_BORDER_WIDTH)
+            borderWidth = MIN_BORDER_WIDTH;
+
+         unitWidth = (int)((double)(hHint - ((borderWidth + 1) / 2) * 2 - MARGIN_HEIGHT * 2) / (double)rack.getHeight() * UNIT_WH_RATIO);
+
+         return new Point(unitWidth + MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH + borderWidth * 2 + borderWidth / 2,
+               (int)(rack.getHeight() * unitHeight) + MARGIN_HEIGHT * 2 + borderWidth * 2 + MARGIN_HEIGHT / 2 + TITLE_HEIGHT);
       }
 
-      double unitHeight = (double)hHint / (double)rack.getHeight();
+      double unitHeight = (double)(hHint - MAX_BORDER_WIDTH * 2 - MARGIN_HEIGHT * 2 - MARGIN_HEIGHT / 2 - TITLE_HEIGHT) / (double)rack.getHeight();
+      if (unitHeight < MIN_UNIT_HEIGHT)
+      {
+         int extraH = MARGIN_HEIGHT * 2 + MIN_BORDER_WIDTH * 2 + MARGIN_HEIGHT / 2 + TITLE_HEIGHT;
+         hHint = rack.getHeight() * MIN_UNIT_HEIGHT + extraH;
+         unitHeight = MIN_UNIT_HEIGHT;
+      }
+      else if (unitHeight > FULL_UNIT_HEIGHT)
+      {
+         int extraH = MARGIN_HEIGHT * 2 + MAX_BORDER_WIDTH * 2 + MARGIN_HEIGHT / 2 + TITLE_HEIGHT;
+         hHint = rack.getHeight() * FULL_UNIT_HEIGHT + extraH;
+         unitHeight = FULL_UNIT_HEIGHT;
+      }
+
       int unitWidth = (int)(unitHeight * UNIT_WH_RATIO);
       int borderWidth = unitWidth / BORDER_WIDTH_RATIO;
-      if (borderWidth < 3)
-         borderWidth = 3;
+      if (borderWidth < MIN_BORDER_WIDTH)
+         borderWidth = MIN_BORDER_WIDTH;
       else if (borderWidth > MAX_BORDER_WIDTH)
          borderWidth = MAX_BORDER_WIDTH;
 
-      unitWidth = (int)((double)(hHint - ((borderWidth + 1) / 2) * 2 - MARGIN_HEIGHT * 2) / (double)rack.getHeight() * UNIT_WH_RATIO);
-      return new Point(unitWidth + MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH + borderWidth * 2 + borderWidth / 2, hHint);
+      unitWidth = (int)((double)(hHint - ((borderWidth + 1) / 2) * 2 - MARGIN_HEIGHT * 2 - MARGIN_HEIGHT / 2 - TITLE_HEIGHT) / (double)rack.getHeight() * UNIT_WH_RATIO);
+      int width = unitWidth + MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH + borderWidth * 2 + borderWidth / 2;
+
+      if ((wHint == SWT.DEFAULT) || (width <= wHint))
+         return new Point(width, hHint);
+
+      return new Point(Math.max(MIN_WIDTH, wHint), hHint);
    }
 
    /**
