@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,10 +42,9 @@ public class MultiConnectionAnchor extends ChopboxAnchor
       this.link = link;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.draw2d.ChopboxAnchor#getLocation(org.eclipse.draw2d.geometry.Point)
     */
-   @SuppressWarnings("deprecation")
    @Override
    public Point getLocation(Point reference)
    {
@@ -91,6 +90,6 @@ public class MultiConnectionAnchor extends ChopboxAnchor
       centerX = dx + xOffset;
       centerY = dy + yOffset;
 
-      return new Point(Math.round(centerX), Math.round(centerY));
+      return new Point((int)Math.round(centerX), (int)Math.round(centerY));
    }
 }

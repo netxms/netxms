@@ -4,13 +4,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
-import org.eclipse.ui.commands.ActionHandler;
+import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.texteditor.FindReplaceAction;
 import org.netxms.ui.eclipse.console.Activator;
 
-@SuppressWarnings("deprecation")
 public class NXFindAndReplaceAction
 {
    public static FindReplaceAction getFindReplaceAction(ViewPart wp)

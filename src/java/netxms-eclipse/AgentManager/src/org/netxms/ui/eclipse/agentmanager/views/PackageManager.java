@@ -45,14 +45,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.packages.PackageDeploymentListener;
 import org.netxms.client.packages.PackageInfo;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.agentmanager.Activator;
@@ -538,70 +534,14 @@ public class PackageManager extends ViewPart
 		}
 
       final NXCSession session = ConsoleSharedData.getSession();
-		ConsoleJob job = new ConsoleJob(Messages.get().PackageManager_DeployAgentPackage, null, Activator.PLUGIN_ID, null) {
+      ConsoleJob job = new ConsoleJob(Messages.get().PackageManager_DeployAgentPackage, null, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				session.deployPackage(pkg.getId(), objects.toArray(new Long[objects.size()]), new PackageDeploymentListener() {
-					private PackageDeploymentMonitor monitor = null;
-					
-					@Override
-					public void statusUpdate(long nodeId, int status, String message)
-					{
-						if (monitor != null)
-							monitor.viewStatusUpdate(nodeId, status, message);
-					}
-					
-					@Override
-					public void deploymentStarted()
-					{
-						final Object sync = new Object();
-						synchronized(sync)
-						{
-							runInUIThread(new Runnable() {
-								@Override
-								public void run()
-								{
-									try
-									{
-										monitor = (PackageDeploymentMonitor)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(PackageDeploymentMonitor.ID, toString(), IWorkbenchPage.VIEW_ACTIVATE);
-										monitor.setPackageId(pkg.getId());
-									}
-									catch(PartInitException e)
-									{
-										MessageDialogHelper.openError(getSite().getShell(), Messages.get().PackageManager_Error, Messages.get().PackageManager_ErrorOpenView + e.getLocalizedMessage());
-									}
-									synchronized(sync)
-									{
-										sync.notify();
-									}
-								}
-							});
-
-							try
-							{
-								sync.wait();
-							}
-							catch(InterruptedException e)
-							{
-							}
-						}
-					}
-
-					@Override
-					public void deploymentComplete()
-					{
-						runInUIThread(new Runnable() {
-							@Override
-							public void run()
-							{
-								MessageDialogHelper.openInformation(getSite().getShell(), Messages.get().PackageManager_Information, Messages.get().PackageManager_PkgDepCompleted);
-							}
-						});
-					}
-				});
+            session.deployPackage(pkg.getId(), objects);
+            runInUIThread(() -> MessageDialogHelper.openInformation(getSite().getShell(), "Package Deployment", "Package deployomet initiated successfully."));
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{

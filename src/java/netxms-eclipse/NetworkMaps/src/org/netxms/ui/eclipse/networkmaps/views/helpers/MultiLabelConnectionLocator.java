@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,10 +40,9 @@ public class MultiLabelConnectionLocator extends ConnectionLocator
       this.link = link;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.draw2d.ConnectionLocator#getLocation(org.eclipse.draw2d.geometry.PointList)
     */
-   @SuppressWarnings("deprecation")
    @Override
    protected Point getLocation(PointList points)
    {      
@@ -89,6 +88,6 @@ public class MultiLabelConnectionLocator extends ConnectionLocator
          y = points.getFirstPoint().preciseY() + dividedLength * Math.sin(theta);
       }
       
-      return new Point(x, y);
+      return new Point((int)x, (int)y);
    }
 }
