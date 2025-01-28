@@ -68,14 +68,14 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
    private static final int BORDER_WIDTH_RATIO = 16;
    private static final int FULL_UNIT_WIDTH = 482;
    private static final int FULL_UNIT_HEIGHT = 45;
-   private static final int MIN_UNIT_WIDTH = 120;
-   private static final int MIN_UNIT_HEIGHT = 11;
+   private static final int MIN_UNIT_WIDTH = 241;
+   private static final int MIN_UNIT_HEIGHT = 22;
    private static final int MARGIN_HEIGHT = 10;
    private static final int MARGIN_WIDTH = 5;
    private static final int UNIT_NUMBER_WIDTH = 30;
    private static final int TITLE_HEIGHT = 20;
    private static final int MAX_BORDER_WIDTH = 30;
-   private static final int MIN_BORDER_WIDTH = 3;
+   private static final int MIN_BORDER_WIDTH = 15;
    private static final int MIN_WIDTH = MIN_UNIT_WIDTH + MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH + MIN_BORDER_WIDTH * 2 + MIN_BORDER_WIDTH / 2;
    private static final String[] FONT_NAMES = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
    private static final String[] SIDE_LABELS = { "Front", "Back" };
@@ -488,6 +488,8 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
       }
 
       double unitHeight = (double)(hHint - MAX_BORDER_WIDTH * 2 - MARGIN_HEIGHT * 2 - MARGIN_HEIGHT / 2 - TITLE_HEIGHT) / (double)rack.getHeight();
+      if (unitHeight <= MIN_UNIT_HEIGHT) // correct unit height
+         unitHeight = (double)(hHint - MIN_BORDER_WIDTH * 2 - MARGIN_HEIGHT * 2 - MARGIN_HEIGHT / 2 - TITLE_HEIGHT) / (double)rack.getHeight();
       if (unitHeight < MIN_UNIT_HEIGHT)
       {
          int extraH = MARGIN_HEIGHT * 2 + MIN_BORDER_WIDTH * 2 + MARGIN_HEIGHT / 2 + TITLE_HEIGHT;
