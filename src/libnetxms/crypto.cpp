@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -143,21 +143,15 @@ RSA_KEY LIBNETXMS_EXPORTABLE RSAKeyFromData(const BYTE *data, size_t size, bool 
    EVP_PKEY *key = d2i_PublicKey(EVP_PKEY_RSA, nullptr, (const BYTE **)&bp, (int)size);
    if ((key != nullptr) && withPrivate)
    {
-      if (d2i_PrivateKey(EVP_PKEY_RSA, &key, (const BYTE **)&bp, (int)(size - CAST_FROM_POINTER((bp - data), size_t))) == nullptr)
-      {
-         EVP_PKEY_free(key);
-         key = nullptr;
-      }
+      EVP_PKEY_free(key);
+      key = d2i_PrivateKey(EVP_PKEY_RSA, nullptr, (const BYTE **)&bp, (int)(size - CAST_FROM_POINTER((bp - data), size_t)));
    }
 #else
    RSA *key = d2i_RSAPublicKey(nullptr, (const BYTE **)&bp, (int)size);
    if ((key != nullptr) && withPrivate)
    {
-      if (d2i_RSAPrivateKey(&key, (const BYTE **)&bp, (int)(size - CAST_FROM_POINTER((bp - data), size_t))) == nullptr)
-      {
-         RSA_free(key);
-         key = nullptr;
-      }
+      RSA_free(key);
+      key = d2i_RSAPrivateKey(nullptr, (const BYTE **)&bp, (int)(size - CAST_FROM_POINTER((bp - data), size_t)));
    }
 #endif
    return key;

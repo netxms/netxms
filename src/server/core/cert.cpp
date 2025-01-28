@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2007-2024 Raden Solutions
+** Copyright (C) 2007-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -596,6 +596,17 @@ bool LoadServerCertificate(RSA_KEY *serverKey)
 bool LoadInternalCACertificate()
 {
    return LoadCertificate(nullptr, g_internalCACertificatePath, g_internalCACertificateKeyPath, g_internalCACertificatePassword, &s_internalCACertificate, &s_internalCACertificateKey, _T("Internal CA"));
+}
+
+/**
+ * Cleanup server certificates
+ */
+void CleanupServerCertificates()
+{
+   if (s_serverCertificate != nullptr)
+      X509_free(s_serverCertificate);
+   if (s_serverCertificateKey != nullptr)
+      EVP_PKEY_free(s_serverCertificateKey);
 }
 
 #if HAVE_X509_STORE_SET_VERIFY_CB
