@@ -1748,7 +1748,7 @@ uint32_t AgentConnection::getRemoteSystemTime(int64_t *remoteTime, int32_t *offs
       uint32_t rtt = static_cast<uint32_t>(now - sendTime);
       *remoteTime = response->getFieldAsInt64(VID_TIMESTAMP);
       if (offset != nullptr)
-         *offset = *remoteTime - (now - rtt / 2);
+         *offset = static_cast<int32_t>(*remoteTime - (now - rtt / 2));
       if (roundtripTime != nullptr)
          *roundtripTime = rtt;
       if (allowSync != nullptr)
