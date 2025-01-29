@@ -96,13 +96,13 @@ static int StartApp(int argc, char *argv[])
    {
       snprintf(buffer, 256, "-Dnxshell.properties=%s", s_optPropertiesFile);
       vmOptions.addMBString(buffer);
-      if (access(s_optPropertiesFile, R_OK) != 0)
+      if (_access(s_optPropertiesFile, R_OK) != 0)
       {
          WriteToTerminalEx(_T("WARNING: property file \"%hs\" cannot be accessed (%s)\n"), s_optPropertiesFile, _tcserror(errno));
       }
    }
 
-   if (isatty(fileno(stdin)) && isatty(fileno(stdout)))
+   if (_isatty(fileno(stdin)) && _isatty(fileno(stdout)))
    {
       vmOptions.addMBString("-Dnxshell.interactive=true");
    }
