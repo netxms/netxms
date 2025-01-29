@@ -196,7 +196,17 @@ void PythonInterpreter::logExecutionError(const TCHAR *format)
    PyErr_Fetch(&type, &value, &traceback);
    PyObject *text = (value != NULL) ? PyObject_Str(value) : NULL;
 #ifdef UNICODE
-   nxlog_debug_tag(DEBUG_TAG, 6, format, (text != NULL) ? PyUnicode_AsUnicode(text) : L"error text not provided");
+   if (text != nullptr)
+   {
+      wchar_t buffer[1024];
+      Py_ssize_t s = PyUnicode_AsWideChar(text, buffer, 1023);
+      buffer[s] = 0;
+      nxlog_debug_tag(DEBUG_TAG, 6, format, buffer);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, format, L"error text not provided");
+   }
 #else
    nxlog_debug_tag(DEBUG_TAG, 6, format, (text != NULL) ? PyUnicode_AsUTF8(text) : "error text not provided");
 #endif

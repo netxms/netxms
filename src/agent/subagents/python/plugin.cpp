@@ -214,7 +214,7 @@ INT32 PythonPlugin::parameterHandler(const TCHAR *id, const TCHAR *name, TCHAR *
    INT32 rc;
    if (PyUnicode_Check(result))
    {
-      ret_string(value, PyUnicode_AsUnicode(result));
+      ret_utf8string(value, PyUnicode_AsUTF8(result));
       rc = SYSINFO_RC_SUCCESS;
    }
    else if (PyLong_Check(result))
@@ -254,7 +254,7 @@ static void AddListElement(StringList *list, PyObject *element)
 {
    if (PyUnicode_Check(element))
    {
-      list->add(PyUnicode_AsUnicode(element));
+      list->addUTF8String(PyUnicode_AsUTF8(element));
    }
    else if (PyLong_Check(element))
    {
