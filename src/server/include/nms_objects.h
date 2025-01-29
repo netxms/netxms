@@ -26,7 +26,6 @@
 #include <nms_agent.h>
 #include <nms_topo.h>
 #include <geolocation.h>
-#include <jansson.h>
 #include <math.h>
 #include <gauge_helpers.h>
 #include "auth-token.h"

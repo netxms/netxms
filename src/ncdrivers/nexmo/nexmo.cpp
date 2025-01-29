@@ -24,7 +24,6 @@
 #include <ncdrv.h>
 #include <nms_util.h>
 #include <nxlibcurl.h>
-#include <jansson.h>
 
 #define DEBUG_TAG _T("ncd.nexmo")
 

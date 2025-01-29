@@ -2517,6 +2517,10 @@ fi
 if test "x$HAVE_JANSSON" = "xno"; then
 	MODULES="jansson $MODULES"
 	AC_DEFINE(BUNDLED_LIBJANSSON,1,Define to 1 if bundled libjansson is used)
+else
+   AC_CHECK_DECLS([json_object_update_new],,,[
+#include <jansson.h>   
+   ])
 fi
 
 if test "x$DISABLE_LMSENSORS" = "xno" -a "x$DIST_BUILD" != "xyes"; then
@@ -4812,6 +4816,7 @@ AC_CONFIG_FILES([
 	doc/internal/Makefile
 	images/Makefile
 	include/Makefile
+	include/jansson/Makefile
 	include/msvc/Makefile
 	m4/Makefile
 	manpages/Makefile

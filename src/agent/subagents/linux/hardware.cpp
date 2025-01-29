@@ -22,7 +22,6 @@
 
 #include "linux_subagent.h"
 #include <net/if.h>
-#include <jansson.h>
 
 /**
  * Executes lshw command with given options

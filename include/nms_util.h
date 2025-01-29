@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -28,7 +28,12 @@
 #include <nms_cscp.h>
 #include <nms_threads.h>
 #include <time.h>
+
+#if BUNDLED_LIBJANSSON
+#include <jansson/jansson.h>
+#else
 #include <jansson.h>
+#endif
 
 // JSON_EMBED was added in jansson 2.10 - ignore it for older version
 #ifndef JSON_EMBED
@@ -4505,6 +4510,14 @@ static inline uint32_t json_object_get_uint32(json_t *object, const char *tag, u
 static inline bool json_object_get_boolean(json_t *object, const char *tag, bool defval = false)
 {
    json_t *value = json_object_get(object, tag);
+   if (json_is_string(value))
+   {
+      const char *val = json_string_value(value);
+      if (!stricmp(val, "true"))
+         return true;
+      if (!stricmp(val, "false"))
+         return false;
+   }
    return json_is_boolean(value) ? json_boolean_value(value) : (json_is_integer(value) ? (json_integer_value(value) != 0) : defval);
 }
 
@@ -4534,6 +4547,20 @@ static inline json_t *json_object_get_by_path_w(json_t *root, const WCHAR *path)
 #else
 #define json_object_get_by_path json_object_get_by_path_a
 #endif
+
+#if !HAVE_DECL_JSON_OBJECT_UPDATE_NEW
+
+/**
+ * Update json object with new object
+ */
+static inline int json_object_update_new(json_t *object, json_t *other)
+{
+    int ret = json_object_update(object, other);
+    json_decref(other);
+    return ret;
+}
+
+#endif /* HAVE_DECL_JSON_OBJECT_UPDATE_NEW */
 
 /**
  * sockaddr buffer

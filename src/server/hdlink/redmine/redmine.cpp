@@ -21,7 +21,6 @@
 **/
 
 #include "redmine.h"
-#include <jansson.h>
 #include <nxlibcurl.h>
 #include <netxms-version.h>
 

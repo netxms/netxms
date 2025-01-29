@@ -25,7 +25,6 @@
 #include <nms_util.h>
 #include <netxms-version.h>
 #include <nxlibcurl.h>
-#include <jansson.h>
 
 #define DEBUG_TAG _T("ncd.twilio")
 

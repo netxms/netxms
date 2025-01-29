@@ -24,7 +24,6 @@
 #define _nms_events_h_
 
 #include <nxevent.h>
-#include <jansson.h>
 
 #include <nxcore_schedule.h>
 
