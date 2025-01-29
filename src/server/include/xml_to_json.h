@@ -27,7 +27,6 @@
 
 #include <nxsrvapi.h>
 #include <pugixml.h>
-#include <jansson.h>
 
 json_t LIBNXSRV_EXPORTABLE *XmlNodeToJson(const pugi::xml_node &node);
 
