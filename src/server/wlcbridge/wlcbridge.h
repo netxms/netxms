@@ -28,7 +28,6 @@
 #include <nms_core.h>
 #include <nxmodule.h>
 #include <nxlibcurl.h>
-#include <jansson.h>
 
 #define WLCBRIDGE_DEBUG_TAG   _T("wlcbridge")
 

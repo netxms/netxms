@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "jansson.h"
+#include "jansson/jansson.h"
 #include "jansson_private.h"
 
 /* C89 allows these to be macros */

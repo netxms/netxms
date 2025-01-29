@@ -19,7 +19,7 @@
 #include <unistd.h>
 #endif
 
-#include "jansson.h"
+#include "jansson/jansson.h"
 #include "strbuffer.h"
 #include "utf.h"
 

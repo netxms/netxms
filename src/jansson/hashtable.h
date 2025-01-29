@@ -9,7 +9,7 @@
 #define HASHTABLE_H
 
 #include <stdlib.h>
-#include "jansson.h"
+#include "jansson/jansson.h"
 
 struct hashtable_list {
     struct hashtable_list *prev;

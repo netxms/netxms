@@ -19,8 +19,6 @@ include_HEADERS = \
 	geolocation.h \
 	ieee8021x.h \
 	interface_types.h \
-	jansson.h \
-	jansson_config.h \
 	netxmsdb.h \
 	netxms_getopt.h \
 	netxms_isc.h \
@@ -74,4 +72,4 @@ include_HEADERS = \
 	winmutex.h \
 	winrwlock.h
 
-SUBDIRS = msvc
+SUBDIRS = jansson msvc

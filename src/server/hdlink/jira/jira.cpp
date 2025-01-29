@@ -21,7 +21,6 @@
 **/
 
 #include "jira.h"
-#include <jansson.h>
 #include <netxms-version.h>
 
 // workaround for older cURL versions

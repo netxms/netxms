@@ -22,7 +22,7 @@
 #include <stdint.h>
 #endif
 
-#include "jansson.h"
+#include "jansson/jansson.h"
 #include "hashtable.h"
 #include "jansson_private.h"
 #include "utf.h"

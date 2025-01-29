@@ -28,7 +28,12 @@
 #include <nms_cscp.h>
 #include <nms_threads.h>
 #include <time.h>
+
+#if BUNDLED_LIBJANSSON
+#include <jansson/jansson.h>
+#else
 #include <jansson.h>
+#endif
 
 // JSON_EMBED was added in jansson 2.10 - ignore it for older version
 #ifndef JSON_EMBED
@@ -4544,6 +4549,8 @@ static inline json_t *json_object_get_by_path_w(json_t *root, const WCHAR *path)
 #define json_object_get_by_path json_object_get_by_path_a
 #endif
 
+#if !HAVE_DECL_JSON_OBJECT_UPDATE_NEW
+
 /**
  * Update json object with new object
  */
@@ -4553,6 +4560,8 @@ static inline int json_object_update_new(json_t *object, json_t *other)
     json_decref(other);
     return ret;
 }
+
+#endif /* HAVE_DECL_JSON_OBJECT_UPDATE_NEW */
 
 /**
  * sockaddr buffer
