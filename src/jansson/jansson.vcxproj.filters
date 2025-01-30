@@ -53,12 +53,6 @@
     <ClInclude Include="hashtable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\jansson.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\jansson_config.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="jansson_private.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -69,6 +63,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="utf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\jansson\jansson.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\jansson\jansson_config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

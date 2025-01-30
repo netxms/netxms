@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -222,6 +222,7 @@ typedef int bool;
 #define WITH_MODBUS             1
 #define HAVE_MODBUS_H           1
 
+#define BUNDLED_LIBJANSSON      1
 #define USE_BUNDLED_LIBTRE      1
 #define USE_BUNDLED_GETOPT      1
 

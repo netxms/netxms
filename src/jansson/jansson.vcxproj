@@ -378,8 +378,8 @@
     <ClCompile Include="value.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\jansson.h" />
-    <ClInclude Include="..\..\include\jansson_config.h" />
+    <ClInclude Include="..\..\include\jansson\jansson.h" />
+    <ClInclude Include="..\..\include\jansson\jansson_config.h" />
     <ClInclude Include="hashtable.h" />
     <ClInclude Include="jansson_private.h" />
     <ClInclude Include="lookup3.h" />
