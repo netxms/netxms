@@ -28,6 +28,8 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
@@ -35,9 +37,9 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.NXCSession;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.UIElementFilter;
 import org.netxms.nxmc.base.UIElementFilter.ElementType;
 import org.netxms.nxmc.base.views.helpers.NavigationHistory;
@@ -360,9 +362,45 @@ public abstract class Perspective
       }
 
       if (verticalSplitter != null)
-         verticalSplitter.setWeights(new int[] { 25, 75 });
+      {
+         long savedWeights = PreferenceStore.getInstance().getAsLong("Perspective.verticalSplitter." + getId(), 0);
+         if (savedWeights != 0)
+            verticalSplitter.setWeights(new int[] { (int)(savedWeights & 0xFFFFFFFFL), (int)(savedWeights >> 32) });
+         else
+            verticalSplitter.setWeights(new int[] { 25, 75 });
+      }
       if (horizontalSpliter != null)
-         horizontalSpliter.setWeights(new int[] { 80, 20 });
+      {
+         long savedWeights = PreferenceStore.getInstance().getAsLong("Perspective.horizontalSpliter." + getId(), 0);
+         if (savedWeights != 0)
+            horizontalSpliter.setWeights(new int[] { (int)(savedWeights & 0xFFFFFFFFL), (int)(savedWeights >> 32) });
+         else
+            horizontalSpliter.setWeights(new int[] { 80, 20 });
+      }
+
+      if ((horizontalSpliter != null) || (verticalSplitter != null))
+      {
+         final Runnable saveSplitterWeights = () -> {
+            PreferenceStore ps = PreferenceStore.getInstance();
+            if (verticalSplitter != null)
+            {
+               int weights[] = verticalSplitter.getWeights();
+               ps.set("Perspective.verticalSplitter." + getId(), (long)weights[0] | ((long)weights[1] << 32));
+            }
+            if (horizontalSpliter != null)
+            {
+               int weights[] = horizontalSpliter.getWeights();
+               ps.set("Perspective.horizontalSpliter." + getId(), (long)weights[0] | ((long)weights[1] << 32));
+            }
+         };
+         mainAreaHolder.addControlListener(new ControlAdapter() {
+            @Override
+            public void controlResized(ControlEvent e)
+            {
+               mainAreaHolder.getDisplay().timerExec(1000, saveSplitterWeights);
+            }
+         });
+      }
 
       configureViews();
       Memento m = PreferenceStore.getInstance().getAsMemento(PreferenceStore.serverProperty(getId()));
