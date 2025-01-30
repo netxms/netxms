@@ -26,16 +26,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -106,23 +101,13 @@ public class PackageManager extends ConfigurationView
 		createActions();
 		createPopupMenu();
 
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent event)
-			{
-            IStructuredSelection selection = viewer.getStructuredSelection();
-            actionEditMetadata.setEnabled(selection.size() == 1);
-				actionRemove.setEnabled(selection.size() > 0);
-			}
+      viewer.addSelectionChangedListener((event) -> {
+         IStructuredSelection selection = viewer.getStructuredSelection();
+         actionEditMetadata.setEnabled(selection.size() == 1);
+         actionRemove.setEnabled(selection.size() > 0);
 		});
 		
-      viewer.addDoubleClickListener(new IDoubleClickListener() {
-         @Override
-         public void doubleClick(DoubleClickEvent event)
-         {
-            editPackageMetadata();
-         }
-      });
+      viewer.addDoubleClickListener((event) -> editPackageMetadata());
 
 		refresh();
 	}
@@ -174,12 +159,7 @@ public class PackageManager extends ConfigurationView
 		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			public void menuAboutToShow(IMenuManager mgr)
-			{
-				fillContextMenu(mgr);
-			}
-		});
+      menuMgr.addMenuListener((m) -> fillContextMenu(m));
 
 		// Create menu.
 		Menu menu = menuMgr.createContextMenu(viewer.getControl());
@@ -227,13 +207,9 @@ public class PackageManager extends ConfigurationView
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
 				final List<PackageInfo> list = session.getInstalledPackages();
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						packageList = list;
-						viewer.setInput(list.toArray());
-					}
+            runInUIThread(() -> {
+               packageList = list;
+               viewer.setInput(list.toArray());
 				});
 			}
 
@@ -340,20 +316,20 @@ public class PackageManager extends ConfigurationView
             }
             else if (packageFileName.endsWith(".exe"))
             {
-               Pattern pattern = Pattern.compile("^nxagent-([0-9]+\\.[0-9]+\\.[0-9]+(-rc[0-9.]+|\\.[0-9]+)?)(-x64)?\\.exe$", Pattern.CASE_INSENSITIVE);
+               Pattern pattern = Pattern.compile("^nxagent-([0-9]+\\.[0-9]+\\.[0-9]+(-rc[0-9.]+|\\.[0-9]+)?)(-x64|-x86|-aarch64)?\\.exe$", Pattern.CASE_INSENSITIVE);
                Matcher matcher = pattern.matcher(name);
                if (matcher.matches())
                {
-                  packageInfo = new PackageInfo("nxagent", "NetXMS Agent for Windows", name, "agent-installer", "windows-" + ((matcher.group(3) == null) ? "i386" : "x64"), matcher.group(1), "");
+                  packageInfo = new PackageInfo("nxagent", "NetXMS Agent for Windows", name, "agent-installer", windowsPlatformNameFromSuffix(matcher.group(3)), matcher.group(1), "");
                   showMetadataDialog = false;
                }
                else
                {
-                  pattern = Pattern.compile("^nxagent-atm-([0-9]+\\.[0-9]+\\.[0-9]+(-rc[0-9.]+|\\.[0-9]+)?)(-x64)?\\.exe$", Pattern.CASE_INSENSITIVE);
+                  pattern = Pattern.compile("^nxagent-atm-([0-9]+\\.[0-9]+\\.[0-9]+(-rc[0-9.]+|\\.[0-9]+)?)(-x64|-x86|-aarch64)?\\.exe$", Pattern.CASE_INSENSITIVE);
                   matcher = pattern.matcher(name);
                   if (matcher.matches())
                   {
-                     packageInfo = new PackageInfo("nxagent-atm", "NetXMS Agent for ATM", name, "agent-installer", "windows-" + ((matcher.group(3) == null) ? "i386" : "x64"), matcher.group(1), "");
+                     packageInfo = new PackageInfo("nxagent-atm", "NetXMS Agent for ATM", name, "agent-installer", windowsPlatformNameFromSuffix(matcher.group(3)), matcher.group(1), "");
                      showMetadataDialog = false;
                   }
                   else
@@ -415,13 +391,9 @@ public class PackageManager extends ConfigurationView
                   }
                });
                packageInfo.setId(id);
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     packageList.add(packageInfo);
-                     viewer.setInput(packageList.toArray());
-                  }
+               runInUIThread(() -> {
+                  packageList.add(packageInfo);
+                  viewer.setInput(packageList.toArray());
                });
             }
 
@@ -437,6 +409,21 @@ public class PackageManager extends ConfigurationView
          MessageDialogHelper.openError(getWindow().getShell(), i18n.tr("Error"), i18n.tr("Cannot open package information file: ") + e.getLocalizedMessage());
 		}
 	}
+
+   /**
+    * Derive platform name for Windows agent from installer's suffix.
+    *
+    * @param suffix installers suffix
+    * @return platform name
+    */
+   private static String windowsPlatformNameFromSuffix(String suffix)
+   {
+      if ((suffix == null) || suffix.equalsIgnoreCase("-x86"))
+         return "windows-i386";
+      if (suffix.equalsIgnoreCase("-aarch64"))
+         return "windows-aarch64";
+      return "windows-x64";
+   }
 
 	/**
 	 * Remove selected package(s)
@@ -463,13 +450,9 @@ public class PackageManager extends ConfigurationView
 			@Override
 			protected void jobFinalize()
 			{
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						packageList.removeAll(removedPackages);
-						viewer.setInput(packageList.toArray());
-					}
+            runInUIThread(() -> {
+               packageList.removeAll(removedPackages);
+               viewer.setInput(packageList.toArray());
 				});
 			}
 
@@ -501,13 +484,7 @@ public class PackageManager extends ConfigurationView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             session.updatePackageMetadata(packageInfo);
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  viewer.update(packageInfo, null);
-               }
-            });
+            runInUIThread(() -> viewer.update(packageInfo, null));
          }
 
          @Override
