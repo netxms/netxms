@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2021-2024 Raden Solutions
+** Copyright (C) 2021-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -337,7 +337,7 @@ TwoFactorAuthenticationToken* MessageAuthMethod::prepareChallenge(uint32_t userI
    TCHAR userName[MAX_USER_NAME];
    TCHAR *recipient = MemCopyString(binding->getValue(_T("/MethodBinding/Recipient"), ResolveUserId(userId, userName, true)));
    const TCHAR *subject = binding->getValue(_T("/MethodBinding/Subject"), _T("NetXMS two-factor authentication code"));
-   SendNotification(m_channelName, recipient, subject, challengeStr);
+   SendNotification(m_channelName, recipient, subject, challengeStr, 0, 0, uuid::NULL_UUID);
    MemFree(recipient);
 
    return new MessageToken(m_methodName, challenge);

@@ -1348,6 +1348,9 @@ CREATE TABLE notification_log
   recipient varchar(2000) null,
   subject varchar(2000) null,
   message varchar(2000) null,
+  event_code integer null,
+  event_id SQL_INT64 null,
+  rule_id varchar(36) null,
   success char(1) not null,
 #ifdef DB_TSDB
   PRIMARY KEY(id,notification_timestamp)

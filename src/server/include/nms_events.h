@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -507,13 +507,15 @@ class ActionExecutionTransientData : public ScheduledTaskTransientData
 private:
    Event *m_event;
    Alarm *m_alarm;
+   uuid m_ruleId;
 
 public:
-   ActionExecutionTransientData(const Event *e, const Alarm *a);
+   ActionExecutionTransientData(const Event *e, const Alarm *a, const uuid& ruleId);
    virtual ~ActionExecutionTransientData();
 
    const Event *getEvent() const { return m_event; }
    const Alarm *getAlarm() const { return m_alarm; }
+   const uuid& getRuleId() const { return m_ruleId; }
 };
 
 /**

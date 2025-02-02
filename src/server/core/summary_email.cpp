@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -145,5 +145,5 @@ void SendAlarmSummaryEmail(const shared_ptr<ScheduledTaskParameters>& parameters
    TCHAR channelName[MAX_OBJECT_NAME];
    ConfigReadStr(_T("DefaultNotificationChannel.SMTP.Html"), channelName, MAX_OBJECT_NAME, _T("SMTP-HTML"));
    ConfigReadStr(_T("Alarms.SummaryEmail.Recipients"), s_recipients, MAX_CONFIG_VALUE, _T(""));
-   SendNotification(channelName, s_recipients, subject, summary);
+   SendNotification(channelName, s_recipients, subject, summary, 0, 0, uuid::NULL_UUID);
 }

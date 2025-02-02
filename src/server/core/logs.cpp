@@ -122,6 +122,9 @@ static NXCORE_LOG s_logs[] =
          { L"recipient", L"Recipient", LC_TEXT, 0 },
          { L"subject", L"Subject", LC_TEXT, 0 },
          { L"message", L"Message", LC_TEXT, 0 },
+         { L"event_code", L"Event", LC_EVENT_CODE, 0 },
+         { L"event_id", L"Event ID", LC_INTEGER, 0 },
+         { L"rule_id", L"Rule ID", LC_TEXT, 0 },
          { L"success", L"Status", LC_COMPLETION_STATUS, LCF_CHAR_COLUMN },
          { nullptr, nullptr, 0, 0 }
       }

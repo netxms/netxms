@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,21 +30,28 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.TableRow;
 import org.netxms.client.log.Log;
 import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.logviewer.views.helpers.LogLabelProvider;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Dialog for displaying event log record details
  */
 public class NotificationLogRecordDetailsDialog extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(NotificationLogRecordDetailsDialog.class);
+
    private TableRow record;
    private Log logHandle;
    private LabeledText timestamp;
    private LabeledText status;
    private LabeledText channel;
    private LabeledText recipient;
-   private LabeledText subject;   
+   private LabeledText subject;
+   private LabeledText eventCode;
+   private LabeledText eventId;
+   private LabeledText ruleId;
    private LabeledText message;
    private LogLabelProvider labelProvider;
 
@@ -69,7 +76,7 @@ public class NotificationLogRecordDetailsDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Notification");
+      newShell.setText(i18n.tr("Notification"));
    }
 
    /**
@@ -87,7 +94,7 @@ public class NotificationLogRecordDetailsDialog extends Dialog
    @Override
    protected void createButtonsForButtonBar(Composite parent)
    {
-      createButton(parent, IDialogConstants.OK_ID, "Close", true);
+      createButton(parent, IDialogConstants.OK_ID, i18n.tr("Close"), true);
    }
 
    /**
@@ -104,9 +111,9 @@ public class NotificationLogRecordDetailsDialog extends Dialog
       layout.numColumns = 3;
       layout.makeColumnsEqualWidth = true;
       dialogArea.setLayout(layout);
-      
+
       timestamp = new LabeledText(dialogArea, SWT.NONE);
-      timestamp.setLabel("Timestamp");
+      timestamp.setLabel(i18n.tr("Timestamp"));
       timestamp.setText(labelProvider.getColumnText(record, logHandle.getColumnIndex("notification_timestamp")));
       timestamp.setEditable(false);
       GridData gd = new GridData();
@@ -115,7 +122,7 @@ public class NotificationLogRecordDetailsDialog extends Dialog
       timestamp.setLayoutData(gd); 
 
       channel = new LabeledText(dialogArea, SWT.NONE);     
-      channel.setLabel("Channel");
+      channel.setLabel(i18n.tr("Channel"));
       channel.setText(labelProvider.getColumnText(record, logHandle.getColumnIndex("notification_channel")));
       channel.setEditable(false);
       gd = new GridData();
@@ -124,7 +131,7 @@ public class NotificationLogRecordDetailsDialog extends Dialog
       channel.setLayoutData(gd);
 
       status = new LabeledText(dialogArea, SWT.NONE);     
-      status.setLabel("Status");
+      status.setLabel(i18n.tr("Status"));
       status.setText(labelProvider.getColumnText(record, logHandle.getColumnIndex("success")));
       status.setEditable(false);
       gd = new GridData();
@@ -133,7 +140,7 @@ public class NotificationLogRecordDetailsDialog extends Dialog
       status.setLayoutData(gd);
 
       recipient = new LabeledText(dialogArea, SWT.NONE);     
-      recipient.setLabel("Recipient");
+      recipient.setLabel(i18n.tr("Recipient"));
       recipient.setText(labelProvider.getColumnText(record, logHandle.getColumnIndex("recipient")));
       recipient.setEditable(false);
       gd = new GridData();
@@ -143,7 +150,7 @@ public class NotificationLogRecordDetailsDialog extends Dialog
       recipient.setLayoutData(gd);
 
       subject = new LabeledText(dialogArea, SWT.NONE);     
-      subject.setLabel("Subject");
+      subject.setLabel(i18n.tr("Subject"));
       subject.setText(labelProvider.getColumnText(record, logHandle.getColumnIndex("subject")));
       subject.setEditable(false);
       gd = new GridData();
@@ -152,8 +159,37 @@ public class NotificationLogRecordDetailsDialog extends Dialog
       gd.horizontalSpan = 3;
       subject.setLayoutData(gd);
 
+      eventCode = new LabeledText(dialogArea, SWT.NONE);
+      eventCode.setLabel(i18n.tr("Event type"));
+      eventCode.setText(labelProvider.getColumnText(record, logHandle.getColumnIndex("event_code")));
+      eventCode.setEditable(false);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      eventCode.setLayoutData(gd);
+
+      eventId = new LabeledText(dialogArea, SWT.NONE);
+      eventId.setLabel(i18n.tr("Event ID"));
+      eventId.setText(labelProvider.getColumnText(record, logHandle.getColumnIndex("event_id")));
+      eventId.setEditable(false);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      eventId.setLayoutData(gd);
+
+      ruleId = new LabeledText(dialogArea, SWT.NONE);
+      ruleId.setLabel(i18n.tr("Rule ID"));
+      ruleId.setText(labelProvider.getColumnText(record, logHandle.getColumnIndex("rule_id")));
+      ruleId.setEditable(false);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 3;
+      ruleId.setLayoutData(gd);
+
       message = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
-      message.setLabel("Message");
+      message.setLabel(i18n.tr("Message"));
       message.setFont(JFaceResources.getTextFont());
       message.setText(labelProvider.getColumnText(record, logHandle.getColumnIndex("message")));
       message.setEditable(false);

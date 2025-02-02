@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ class ImportContext;
 //
 bool LoadActions();
 void CleanupActions();
-void ExecuteAction(uint32_t actionId, const Event& event, const Alarm *alarm);
+void ExecuteAction(uint32_t actionId, const Event& event, const Alarm *alarm, const uuid& ruleId);
 uint32_t CreateAction(const TCHAR *name, uint32_t *id);
 uint32_t DeleteAction(uint32_t actionId);
 uint32_t ModifyActionFromMessage(const NXCPMessage& msg);

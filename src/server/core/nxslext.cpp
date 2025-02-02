@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -2026,7 +2026,7 @@ static int F_SendMail(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
       else
          ConfigReadStr(_T("DefaultNotificationChannel.SMTP.Text"), channelName, MAX_OBJECT_NAME, _T("SMTP-Text"));
 
-      SendNotification(channelName, rcpts.getBuffer(), subj, text);
+      SendNotification(channelName, rcpts.getBuffer(), subj, text, 0, 0, uuid::NULL_UUID);
 	}
 	else
 	{
@@ -2061,7 +2061,7 @@ static int F_SendNotification(int argc, NXSL_Value **argv, NXSL_Value **result, 
    if (!rcpts.isEmpty())
    {
       nxlog_debug_tag(_T("nxsl.sendntfy"), 3, _T("Sending notification using channel %s to %s: \"%s\""), channelName, rcpts.cstr(), text);
-      SendNotification(channelName, rcpts.getBuffer(), subj, text);
+      SendNotification(channelName, rcpts.getBuffer(), subj, text, 0, 0, uuid::NULL_UUID);
    }
    else
    {

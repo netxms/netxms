@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2019-2024 Raden Solutions
+** Copyright (C) 2019-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,14 +34,20 @@ class NotificationMessage
    wchar_t *m_recipient;
    wchar_t *m_subject;
    wchar_t *m_body;
+   uint32_t m_eventCode;
+   uint64_t m_eventId;
+   uuid m_ruleId;
 
 public:
-   NotificationMessage(const wchar_t *recipient, const wchar_t *subject, const wchar_t *body);
+   NotificationMessage(const wchar_t *recipient, const wchar_t *subject, const wchar_t *body, uint32_t eventCode, uint64_t eventId, const uuid& ruleId);
    ~NotificationMessage();
 
    const wchar_t *getRecipient() const { return m_recipient; }
    const wchar_t *getSubject() const { return m_subject; }
    const wchar_t *getBody() const { return m_body; }
+   uint32_t getEventCode() const { return m_eventCode; }
+   uint64_t getEventId() const { return m_eventId; }
+   const uuid& getRuleId() const { return m_ruleId; }
 };
 
 /**
@@ -194,15 +200,15 @@ class NotificationChannel
 {
 private:
    NCDriver *m_driver;
-   TCHAR m_name[MAX_OBJECT_NAME];
-   TCHAR m_description[MAX_NC_DESCRIPTION];
+   wchar_t m_name[MAX_OBJECT_NAME];
+   wchar_t m_description[MAX_NC_DESCRIPTION];
    Mutex m_driverLock;
    THREAD m_workerThread;
    ObjectQueue<NotificationMessage> m_notificationQueue;
-   TCHAR m_driverName[MAX_OBJECT_NAME];
+   wchar_t m_driverName[MAX_OBJECT_NAME];
    char *m_configuration;
    const NCConfigurationTemplate *m_confTemplate;
-   TCHAR m_errorMessage[MAX_NC_ERROR_MESSAGE];
+   wchar_t m_errorMessage[MAX_NC_ERROR_MESSAGE];
    NCDriverServerStorageManager *m_storageManager;
    NCSendStatus m_sendStatus;
    bool m_healthCheckStatus;
@@ -210,12 +216,12 @@ private:
    uint32_t m_messageCount;
    uint32_t m_failureCount;
 
-   void setError(const TCHAR *message)
+   void setError(const wchar_t *message)
    {
       if (m_sendStatus != NCSendStatus::FAILED || _tcscmp(m_errorMessage, message) != 0)
       {
          m_sendStatus = NCSendStatus::FAILED;
-         _tcslcpy(m_errorMessage, message, MAX_NC_ERROR_MESSAGE);
+         wcslcpy(m_errorMessage, message, MAX_NC_ERROR_MESSAGE);
          NotifyClientSessions(NX_NOTIFY_NC_CHANNEL_CHANGED, 0);
       }
    }
@@ -231,21 +237,21 @@ private:
    }
 
    void workerThread();
-   void writeNotificationLog(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, bool success);
+   void writeNotificationLog(const NotificationMessage& notification, bool success);
 
 public:
-   NotificationChannel(NCDriver *driver, NCDriverServerStorageManager *storageManager, const TCHAR *name,
-            const TCHAR *description, const TCHAR *driverName, char *config, const NCConfigurationTemplate *confTemplate, const TCHAR *errorMessage);
+   NotificationChannel(NCDriver *driver, NCDriverServerStorageManager *storageManager, const wchar_t *name,
+            const wchar_t *description, const wchar_t *driverName, char *config, const NCConfigurationTemplate *confTemplate, const wchar_t *errorMessage);
    ~NotificationChannel();
 
-   void send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body);
+   void send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, uint32_t eventCode, uint64_t eventId, const uuid& ruleId);
    void fillMessage(NXCPMessage *msg, uint32_t base);
    const TCHAR *getName() const { return m_name; }
    const char *getConfiguration() const { return m_configuration; }
    void getStatus(NotificationChannelStatus *status);
 
    void update(const TCHAR *description, const TCHAR *driverName, const char *config);
-   void updateName(const TCHAR *newName) { _tcslcpy(m_name, newName, MAX_OBJECT_NAME); }
+   void updateName(const wchar_t *newName) { wcslcpy(m_name, newName, MAX_OBJECT_NAME); }
    void saveToDatabase();
    void checkHealth();
 };
@@ -283,11 +289,14 @@ int64_t GetLastNotificationId()
 /**
  * Notification message constructor
  */
-NotificationMessage::NotificationMessage(const wchar_t *recipient, const wchar_t *subject, const wchar_t *body)
+NotificationMessage::NotificationMessage(const wchar_t *recipient, const wchar_t *subject, const wchar_t *body,
+      uint32_t eventCode, uint64_t eventId, const uuid& ruleId) : m_ruleId(ruleId)
 {
    m_recipient = MemCopyStringW(recipient);
    m_subject = MemCopyStringW(subject);
    m_body = MemCopyStringW(body);
+   m_eventCode = eventCode;
+   m_eventId = eventId;
 }
 
 /**
@@ -303,18 +312,18 @@ NotificationMessage::~NotificationMessage()
 /**
  * Notification channel constructor
  */
-NotificationChannel::NotificationChannel(NCDriver *driver, NCDriverServerStorageManager *storageManager, const TCHAR *name,
-      const TCHAR *description, const TCHAR *driverName, char *config, const NCConfigurationTemplate *confTemplate, const TCHAR *errorMessage) :
+NotificationChannel::NotificationChannel(NCDriver *driver, NCDriverServerStorageManager *storageManager, const wchar_t *name,
+      const wchar_t *description, const wchar_t *driverName, char *config, const NCConfigurationTemplate *confTemplate, const wchar_t *errorMessage) :
             m_driverLock(MutexType::FAST), m_notificationQueue(64, Ownership::True)
 {
    m_driver = driver;
    m_storageManager = storageManager;
    m_confTemplate = confTemplate;
-   _tcslcpy(m_name, name, MAX_OBJECT_NAME);
-   _tcslcpy(m_description, description, MAX_NC_DESCRIPTION);
-   _tcslcpy(m_driverName, driverName, MAX_OBJECT_NAME);
+   wcslcpy(m_name, name, MAX_OBJECT_NAME);
+   wcslcpy(m_description, description, MAX_NC_DESCRIPTION);
+   wcslcpy(m_driverName, driverName, MAX_OBJECT_NAME);
    m_configuration = config;
-   _tcslcpy(m_errorMessage, errorMessage, MAX_NC_ERROR_MESSAGE);
+   wcslcpy(m_errorMessage, errorMessage, MAX_NC_ERROR_MESSAGE);
    m_sendStatus = NCSendStatus::UNKNOWN;
    m_healthCheckStatus = false;
    m_lastMessageTime = 0;
@@ -410,7 +419,7 @@ void NotificationChannel::workerThread()
 
          if ((result <= 0) || (retryCount <= 0))
          {
-            writeNotificationLog(notification->getRecipient(), notification->getSubject(), notification->getBody(), result == 0);
+            writeNotificationLog(*notification, result == 0);
             break;
          }
       }
@@ -446,14 +455,14 @@ void NotificationChannel::checkHealth()
 /**
  * Public method to send notification. It adds notification to the queue.
  */
-void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, uint32_t eventCode, uint64_t eventId, const uuid& ruleId)
 {
    if (((m_confTemplate == nullptr) || m_confTemplate->needRecipient) && ((recipient == nullptr) || IsBlankString(recipient)))
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Driver for channel %s requires recipient, but message has no recipient (message dropped)"), m_name);
       return;
    }
-   m_notificationQueue.put(new NotificationMessage(recipient, subject, body));
+   m_notificationQueue.put(new NotificationMessage(recipient, subject, body, eventCode, eventId, ruleId));
 }
 
 /**
@@ -564,23 +573,26 @@ void NotificationChannel::saveToDatabase()
 /**
  * Save notification log to database
  */
-void NotificationChannel::writeNotificationLog(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, bool success)
+void NotificationChannel::writeNotificationLog(const NotificationMessage& notification, bool success)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    DB_STATEMENT hStmt = DBPrepare(hdb,
          (g_dbSyntax == DB_SYNTAX_TSDB) ?
-            _T("INSERT INTO notification_log (id,notification_timestamp,notification_channel,recipient,subject,message,success) VALUES (?,to_timestamp(?),?,?,?,?,?)") :
-            _T("INSERT INTO notification_log (id,notification_timestamp,notification_channel,recipient,subject,message,success) VALUES (?,?,?,?,?,?,?)"));
+            _T("INSERT INTO notification_log (id,notification_timestamp,notification_channel,recipient,subject,message,event_code,event_id,rule_id,success) VAevent_code,event_id,rule_id,LUES (?,to_timestamp(?),?,?,?,?,?,?,?,?)") :
+            _T("INSERT INTO notification_log (id,notification_timestamp,notification_channel,recipient,subject,message,event_code,event_id,rule_id,success) VALUES (?,?,?,?,?,?,?,?,?,?)"));
    if (hStmt != nullptr)
    {
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, InterlockedIncrement64(&s_notificationId));
+      DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, InterlockedIncrement64(&s_notificationId));
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (uint32_t)time(nullptr));
       DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
-      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, recipient, DB_BIND_STATIC, 2000);
-      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, subject, DB_BIND_STATIC, 2000);
-      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, body, DB_BIND_STATIC, 2000);
-      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, success ? 1 : 0);
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, notification.getRecipient(), DB_BIND_STATIC, 2000);
+      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, notification.getSubject(), DB_BIND_STATIC, 2000);
+      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, notification.getBody(), DB_BIND_STATIC, 2000);
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, notification.getEventCode());
+      DBBind(hStmt, 8, DB_SQLTYPE_BIGINT, notification.getEventId());
+      DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, notification.getRuleId());
+      DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, success ? 1 : 0);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -869,7 +881,7 @@ char *GetNotificationChannelConfiguration(const TCHAR *name)
 /**
  * Send notification
  */
-void SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject, const TCHAR *message)
+void SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject, const TCHAR *message, uint32_t eventCode, uint64_t eventId, const uuid& ruleId)
 {
    s_channelListLock.lock();
    NotificationChannel *nc = s_channelList.get(name);
@@ -885,13 +897,13 @@ void SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject,
                *next = 0;
             Trim(curr);
             nxlog_debug_tag(DEBUG_TAG, 5, _T("SendNotification: sending message to \"%s\" via channel \"%s\""), curr, name);
-            nc->send(curr, subject, message);
+            nc->send(curr, subject, message, eventCode, eventId, ruleId);
             curr = next + 1;
          } while(next != nullptr);
       }
       else
       {
-         nc->send(recipient, subject, message);
+         nc->send(recipient, subject, message, eventCode, eventId, ruleId);
       }
    }
    else

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -895,27 +895,29 @@ bool EPRule::processEvent(Event *event) const
             uint64_t timerDelay = _tcstoul(event->expandText(a->timerDelay, alarm).cstr(), nullptr, 10);
             if (timerDelay == 0)
             {
-               ExecuteAction(a->actionId, *event, alarm);
+               ExecuteAction(a->actionId, *event, alarm, m_guid);
             }
             else
             {
-               TCHAR parameters[64], comments[256];
-               _sntprintf(parameters, 64, _T("action=%u;event=") UINT64_FMT _T(";alarm=%u"), a->actionId, event->getId(), (alarm != nullptr) ? alarm->getAlarmId() : 0);
-               _sntprintf(comments, 256, _T("Delayed action execution for event %s"), event->getName());
+               wchar_t parameters[128], comments[256];
+               _sntprintf(parameters, 128, L"action=%u;event=" UINT64_FMT L";alarm=%u;rule=%s", a->actionId, event->getId(),
+                     (alarm != nullptr) ? alarm->getAlarmId() : 0, m_guid.toString().cstr());
+               _sntprintf(comments, 256, L"Delayed action execution for event %s", event->getName());
                String key = ((a->timerKey != nullptr) && (*a->timerKey != 0)) ? event->expandText(a->timerKey, alarm) : String();
-               AddOneTimeScheduledTask(_T("Execute.Action"), time(nullptr) + timerDelay, parameters,
-                        new ActionExecutionTransientData(event, alarm), 0, event->getSourceId(), SYSTEM_ACCESS_FULL,
+               AddOneTimeScheduledTask(L"Execute.Action", time(nullptr) + timerDelay, parameters,
+                        new ActionExecutionTransientData(event, alarm, m_guid), 0, event->getSourceId(), SYSTEM_ACCESS_FULL,
                         comments, key.isEmpty() ? nullptr : key.cstr(), true);
             }
 
             uint64_t snoozeTime = _tcstoul(event->expandText(a->snoozeTime, alarm).cstr(), nullptr, 10);
-            if (snoozeTime != 0 && a->blockingTimerKey != nullptr && a->blockingTimerKey[0] != 0)
+            if ((snoozeTime != 0) && (a->blockingTimerKey != nullptr) && (a->blockingTimerKey[0] != 0))
             {
-               TCHAR parameters[64], comments[256];
-               _sntprintf(parameters, 64, _T("action=%u;event=") UINT64_FMT _T(";alarm=%u"), a->actionId, event->getId(), (alarm != nullptr) ? alarm->getAlarmId() : 0);
-               _sntprintf(comments, 256, _T("Snooze action execution for event %s"), event->getName());
+               wchar_t parameters[128], comments[256];
+               _sntprintf(parameters, 128, L"action=%u;event=" UINT64_FMT L";alarm=%u;rule=%s", a->actionId, event->getId(),
+                     (alarm != nullptr) ? alarm->getAlarmId() : 0, m_guid.toString().cstr());
+               _sntprintf(comments, 256, L"Snooze action execution for event %s", event->getName());
                String key = ((a->blockingTimerKey != nullptr) && (*a->blockingTimerKey != 0)) ? event->expandText(a->blockingTimerKey, alarm) : String();
-               AddOneTimeScheduledTask(_T("Dummy"), time(nullptr) + snoozeTime, parameters,
+               AddOneTimeScheduledTask(L"Dummy", time(nullptr) + snoozeTime, parameters,
                         nullptr, 0, event->getSourceId(), SYSTEM_ACCESS_FULL, comments, key.isEmpty() ? nullptr : key.cstr(), true);
             }
          }

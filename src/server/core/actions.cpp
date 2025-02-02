@@ -531,7 +531,7 @@ static bool ExecuteActionScript(const TCHAR *script, const Event *event)
 /**
  * Execute action on specific event
  */
-void ExecuteAction(uint32_t actionId, const Event& event, const Alarm *alarm)
+void ExecuteAction(uint32_t actionId, const Event& event, const Alarm *alarm, const uuid& ruleId)
 {
    static const TCHAR *actionType[] = { _T("EXEC"), _T("REMOTE"), _T("SEND EMAIL"), _T("SEND NOTIFICATION"), _T("FORWARD EVENT"), _T("NXSL SCRIPT"), _T("XMPP MESSAGE"), _T("SSH") };
 
@@ -541,11 +541,13 @@ void ExecuteAction(uint32_t actionId, const Event& event, const Alarm *alarm)
 
    if (action->isDisabled)
    {
-      nxlog_debug_tag(DEBUG_TAG, 3, _T("Action \"%s\" [%u] is disabled and will not be executed"), action->name, actionId);
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Action \"%s\" [%u] triggered by rule %s is disabled and will not be executed"),
+            action->name, actionId, ruleId.toString().cstr());
       return;
    }
 
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing action \"%s\" [%u] of type %s"), action->name, actionId, actionType[static_cast<int>(action->type)]);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing action \"%s\" [%u] of type %s triggered by rule %s"),
+         action->name, actionId, actionType[static_cast<int>(action->type)], ruleId.toString().cstr());
 
    ServerActionExecutionContext *context = new ServerActionExecutionContext(action, event, alarm);
 
@@ -569,7 +571,7 @@ void ExecuteAction(uint32_t actionId, const Event& event, const Alarm *alarm)
                nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending notification using channel %s: \"%s\""), action->channelName, context->data.cstr());
             else
                nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending notification using channel %s to %s: \"%s\""), action->channelName, context->recipient.cstr(), context->data.cstr());
-            SendNotification(action->channelName, context->recipient.getBuffer(), context->subject, context->data);
+            SendNotification(action->channelName, context->recipient.getBuffer(), context->subject, context->data, event.getCode(), event.getId(), ruleId);
          }
          else
          {
@@ -975,20 +977,22 @@ void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameter
    Alarm *restoredAlarm = nullptr;
    const Event *event;
    const Alarm *alarm;
+   uuid ruleId;
    if (parameters->m_transientData != nullptr)
    {
       event = static_cast<ActionExecutionTransientData*>(parameters->m_transientData)->getEvent();
       alarm = static_cast<ActionExecutionTransientData*>(parameters->m_transientData)->getAlarm();
+      ruleId = static_cast<ActionExecutionTransientData*>(parameters->m_transientData)->getRuleId();
    }
    else
    {
-      uint64_t eventId = ExtractNamedOptionValueAsUInt64(parameters->m_persistentData, _T("event"), 0);
+      uint64_t eventId = ExtractNamedOptionValueAsUInt64W(parameters->m_persistentData, L"event", 0);
       if (eventId != 0)
       {
          restoredEvent = LoadEventFromDatabase(eventId);
       }
 
-      uint32_t alarmId = ExtractNamedOptionValueAsUInt(parameters->m_persistentData, _T("alarm"), 0);
+      uint32_t alarmId = ExtractNamedOptionValueAsUIntW(parameters->m_persistentData, L"alarm", 0);
       if (alarmId != 0)
       {
          restoredAlarm = FindAlarmById(alarmId);
@@ -998,13 +1002,14 @@ void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameter
 
       event = restoredEvent;
       alarm = restoredAlarm;
+      ruleId = ExtractNamedOptionValueAsGUIDW(parameters->m_persistentData, L"rule", uuid::NULL_UUID);
    }
 
    if (event != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Executing scheduled action [%u] for event %s on node [%u]"),
                actionId, event->getName(), parameters->m_objectId);
-      ExecuteAction(actionId, *event, alarm);
+      ExecuteAction(actionId, *event, alarm, ruleId);
    }
    else
    {
@@ -1018,7 +1023,7 @@ void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameter
 /**
  * Constructor for scheduled action execution transient data
  */
-ActionExecutionTransientData::ActionExecutionTransientData(const Event *e, const Alarm *a)
+ActionExecutionTransientData::ActionExecutionTransientData(const Event *e, const Alarm *a, const uuid& ruleId) : m_ruleId(ruleId)
 {
    m_event = new Event(*e);
    m_alarm = (a != nullptr) ? new Alarm(a, false) : nullptr;

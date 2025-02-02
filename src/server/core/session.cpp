@@ -11058,7 +11058,7 @@ void ClientSession::sendNotification(const NXCPMessage& request)
 	      TCHAR *phone = request.getFieldAsString(VID_RCPT_ADDR);
 	      TCHAR *subject = request.getFieldAsString(VID_EMAIL_SUBJECT);
 	      TCHAR *message = request.getFieldAsString(VID_MESSAGE);
-	      SendNotification(channelName, phone, subject, message);
+	      SendNotification(channelName, phone, subject, message, 0, 0, uuid::NULL_UUID);
 	      response.setField(VID_RCC, RCC_SUCCESS);
 	      MemFree(phone);
 	      MemFree(subject);
