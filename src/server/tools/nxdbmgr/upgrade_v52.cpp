@@ -24,15 +24,53 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 52.8 to 52.9
+ */
+static bool H_UpgradeFromV8()
+{
+   if (GetSchemaLevelForMajorVersion(51) < 24)
+   {
+      CHK_EXEC(SQLQuery(L"ALTER TABLE licenses ADD guid varchar(36)"));
+
+      DB_RESULT hResult = SQLSelect(L"SELECT id FROM licenses");
+      if (hResult != nullptr)
+      {
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
+         {
+            int32_t id = htonl(DBGetFieldInt32(hResult, i, 0));
+            uint8_t guid[UUID_LENGTH];
+            memset(guid, 0, sizeof(uuid_t) - sizeof(int32_t));
+            memcpy(&guid[UUID_LENGTH - sizeof(int32_t)], &id, sizeof(int32_t));
+
+            wchar_t query[128];
+            _sntprintf(query, 128, L"UPDATE licenses SET guid='%s' WHERE id=%d", uuid(guid).toString().cstr(), ntohl(id));
+            CHK_EXEC(SQLQuery(query));
+         }
+         DBFreeResult(hResult);
+      }
+      else if (!g_ignoreErrors)
+      {
+         return false;
+      }
+
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"licenses", L"guid"));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(51, 25));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(9));
+   return true;
+}
+
+/**
  * Upgrade from 52.7 to 52.8
  */
 static bool H_UpgradeFromV7()
 {
-   static const TCHAR *batch =
-      _T("ALTER TABLE notification_log ADD event_code integer\n")
-      _T("ALTER TABLE notification_log ADD event_id $SQL:INT64\n")
-      _T("ALTER TABLE notification_log ADD rule_id varchar(36)\n")
-      _T("<END>");
+   static const wchar_t *batch =
+      L"ALTER TABLE notification_log ADD event_code integer\n"
+      L"ALTER TABLE notification_log ADD event_id $SQL:INT64\n"
+      L"ALTER TABLE notification_log ADD rule_id varchar(36)\n"
+      L"<END>";
    CHK_EXEC(SQLBatch(batch));
    CHK_EXEC(SetMinorSchemaVersion(8));
    return true;
@@ -215,6 +253,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 8,  52, 9,  H_UpgradeFromV8  },
    { 7,  52, 8,  H_UpgradeFromV7  },
    { 6,  52, 7,  H_UpgradeFromV6  },
    { 5,  52, 6,  H_UpgradeFromV5  },

@@ -2318,6 +2318,7 @@ CREATE TABLE persons
 CREATE TABLE licenses
 (
   id integer not null,
+  guid varchar(36) not null,
   content varchar(2000) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
