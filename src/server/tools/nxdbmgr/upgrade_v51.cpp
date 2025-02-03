@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2022-2024 Raden Solutions
+** Copyright (C) 2022-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,40 @@
 
 #include "nxdbmgr.h"
 #include <nxevent.h>
+
+/**
+ * Upgrade from 51.24 to 51.25
+ */
+static bool H_UpgradeFromV24()
+{
+   CHK_EXEC(SQLQuery(L"ALTER TABLE licenses ADD guid varchar(36)"));
+
+   DB_RESULT hResult = SQLSelect(L"SELECT id FROM licenses");
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         int32_t id = htonl(DBGetFieldInt32(hResult, i, 0));
+         uint8_t guid[UUID_LENGTH];
+         memset(guid, 0, sizeof(uuid_t) - sizeof(int32_t));
+         memcpy(&guid[UUID_LENGTH - sizeof(int32_t)], &id, sizeof(int32_t));
+
+         wchar_t query[128];
+         _sntprintf(query, 128, L"UPDATE licenses SET guid='%s' WHERE id=%d", uuid(guid).toString().cstr(), ntohl(id));
+         CHK_EXEC(SQLQuery(query));
+      }
+      DBFreeResult(hResult);
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"licenses", L"guid"));
+   CHK_EXEC(SetMinorSchemaVersion(25));
+   return true;
+}
 
 /**
  * Upgrade from 51.23 to 51.24
@@ -525,6 +559,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 24, 52, 25, H_UpgradeFromV24 },
    { 23, 52, 24, H_UpgradeFromV23 },
    { 22, 52, 23, H_UpgradeFromV22 },
    { 21, 51, 22, H_UpgradeFromV21 },

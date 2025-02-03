@@ -4496,7 +4496,7 @@ static inline int32_t json_object_get_int32(json_t *object, const char *tag, int
 }
 
 /**
- * Get integer value from object
+ * Get unsigned integer value from object
  */
 static inline uint32_t json_object_get_uint32(json_t *object, const char *tag, uint32_t defval = 0)
 {
@@ -4520,6 +4520,11 @@ static inline bool json_object_get_boolean(json_t *object, const char *tag, bool
    }
    return json_is_boolean(value) ? json_boolean_value(value) : (json_is_integer(value) ? (json_integer_value(value) != 0) : defval);
 }
+
+/**
+ * Get UUID value from object
+ */
+uuid LIBNETXMS_EXPORTABLE json_object_get_uuid(json_t *object, const char *tag);
 
 /**
  * Get time value from object

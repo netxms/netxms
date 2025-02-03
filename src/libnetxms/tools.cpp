@@ -3931,6 +3931,15 @@ time_t LIBNETXMS_EXPORTABLE json_object_get_time(json_t *object, const char *tag
 }
 
 /**
+ * Get JSON object property as UUID
+ */
+uuid LIBNETXMS_EXPORTABLE json_object_get_uuid(json_t *object, const char *tag)
+{
+   json_t *value = json_object_get(object, tag);
+   return json_is_string(value) ? uuid::parseA(json_string_value(value)) : uuid::NULL_UUID;
+}
+
+/**
  * Get element from object by path (separated by /)
  */
 json_t LIBNETXMS_EXPORTABLE *json_object_get_by_path_a(json_t *root, const char *path)
