@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -52,19 +52,27 @@ struct DateTime
       if (utc)
       {
 #if HAVE_GMTIME_R
-         gmtime_r(&timestamp, &data);
+         if (gmtime_r(&timestamp, &data) == nullptr)
+            memset(&data, 0, sizeof(struct tm));
 #else
          struct tm *p = gmtime(&timestamp);
-         memcpy(&data, p, sizeof(struct tm));
+         if (p != nullptr)
+            memcpy(&data, p, sizeof(struct tm));
+         else
+            memset(&data, 0, sizeof(struct tm));
 #endif
       }
       else
       {
 #if HAVE_LOCALTIME_R
-         localtime_r(&timestamp, &data);
+         if (localtime_r(&timestamp, &data) == nullptr)
+            memset(&data, 0, sizeof(struct tm));
 #else
          struct tm *p = localtime(&timestamp);
-         memcpy(&data, p, sizeof(struct tm));
+         if (p != nullptr)
+            memcpy(&data, p, sizeof(struct tm));
+         else
+            memset(&data, 0, sizeof(struct tm));
 #endif
       }
    }
@@ -296,19 +304,27 @@ int F_DateTime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    if (dt->utc)
    {
 #if HAVE_GMTIME_R
-      gmtime_r(&dt->timestamp, &dt->data);
+      if (gmtime_r(&dt->timestamp, &dt->data) == nullptr)
+         memset(&dt->data, 0, sizeof(struct tm));
 #else
       struct tm *p = gmtime(&dt->timestamp);
-      memcpy(&dt->data, p, sizeof(struct tm));
+      if (p != nullptr)
+         memcpy(&dt->data, p, sizeof(struct tm));
+      else
+         memset(&dt->data, 0, sizeof(struct tm));
 #endif
    }
    else
    {
 #if HAVE_LOCALTIME_R
-      localtime_r(&dt->timestamp, &dt->data);
+      if (localtime_r(&dt->timestamp, &dt->data) == nullptr)
+         memset(&dt->data, 0, sizeof(struct tm));
 #else
       struct tm *p = localtime(&dt->timestamp);
-      memcpy(&dt->data, p, sizeof(struct tm));
+      if (p != nullptr)
+         memcpy(&dt->data, p, sizeof(struct tm));
+      else
+         memset(&dt->data, 0, sizeof(struct tm));
 #endif
    }
 
@@ -370,10 +386,14 @@ int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    dt->timestamp = t;
    dt->valid = true;
 #if HAVE_LOCALTIME_R
-   localtime_r(&t, &dt->data);
+   if (localtime_r(&t, &dt->data) == nullptr)
+      memset(&dt->data, 0, sizeof(struct tm));
 #else
    struct tm *p = localtime(&t);
-   memcpy(&dt->data, p, sizeof(struct tm));
+   if (p != nullptr)
+      memcpy(&dt->data, p, sizeof(struct tm));
+   else
+      memset(&dt->data, 0, sizeof(struct tm));
 #endif
    *result = vm->createValue(vm->createObject(&g_nxslDateTimeClass, dt));
    return NXSL_ERR_SUCCESS;
@@ -407,10 +427,14 @@ int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    dt->valid = true;
    dt->utc = true;
 #if HAVE_GMTIME_R
-   gmtime_r(&t, &dt->data);
+   if (gmtime_r(&t, &dt->data) == nullptr)
+      memset(&dt->data, 0, sizeof(struct tm));
 #else
    struct tm *p = gmtime(&t);
-   memcpy(&dt->data, p, sizeof(struct tm));
+   if (p != nullptr)
+      memcpy(&dt->data, p, sizeof(struct tm));
+   else
+      memset(&dt->data, 0, sizeof(struct tm));
 #endif
    *result = vm->createValue(vm->createObject(&g_nxslDateTimeClass, dt));
    return NXSL_ERR_SUCCESS;
@@ -468,9 +492,15 @@ int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 #else
    struct tm *ptm = useLocalTime ? localtime(&tTime) : gmtime(&tTime);
 #endif
-   TCHAR buffer[512];
-   _tcsftime(buffer, 512, argv[0]->getValueAsCString(), ptm);
-   *result = vm->createValue(buffer);
-
+   if (ptm != nullptr)
+   {
+      TCHAR buffer[512];
+      _tcsftime(buffer, 512, argv[0]->getValueAsCString(), ptm);
+      *result = vm->createValue(buffer);
+   }
+   else
+   {
+      *result = vm->createValue();
+   }
    return NXSL_ERR_SUCCESS;
 }
