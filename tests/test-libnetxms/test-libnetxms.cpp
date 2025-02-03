@@ -3092,8 +3092,12 @@ int main(int argc, char *argv[])
    if (debug)
       nxlog_set_debug_level(9);
 
+   // Older sanitizer versions seems to trigger false positive after vfork
+#if defined(__linux__) && (!WITH_ADDRESS_SANITIZER || (__GNUC__ > 8))
    TestProcessExecutor(argv[0]);
    TestSubProcess(argv[0], debug);
+#endif
+
    TestThreadPool();
    TestThreadPoolDelayedExecution();
    TestThreadCountAndMaxWaitTime();
