@@ -27,7 +27,7 @@ Require-Bundle: org.netxms.ui.base;bundle-version="5.2.0",
  org.netxms.ui.eclipse.nxsl;bundle-version="5.2.0",
  org.netxms.ui.eclipse.topology;bundle-version="5.2.0",
  org.slf4j.api;bundle-version="1.7.30",
- com.google.gson;bundle-version="2.11.0"
+ com.google.gson;bundle-version="2.10.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.dashboard.api,

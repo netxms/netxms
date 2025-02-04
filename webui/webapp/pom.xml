@@ -62,9 +62,9 @@
             <layout>p2</layout>
         </repository>
         <repository>
-          <id>Orbit R20211213173813</id>
+          <id>Orbit R20230531010532</id>
           <layout>p2</layout>
-          <url>https://download.eclipse.org/tools/orbit/downloads/drops/R20211213173813/repository</url>
+          <url>https://download.eclipse.org/tools/orbit/downloads/drops/R20230531010532/repository</url>
         </repository>
         <repository>
             <id>Babel Language Pack</id>

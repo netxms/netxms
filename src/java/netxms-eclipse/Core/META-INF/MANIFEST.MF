@@ -18,7 +18,7 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.201.100",
  org.eclipse.core.expressions;bundle-version="3.8.200",
  org.eclipse.swt;bundle-version="3.121.0",
  org.slf4j.api;bundle-version="1.7.30",
- com.google.gson;bundle-version="2.11.0"
+ com.google.gson;bundle-version="2.10.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
