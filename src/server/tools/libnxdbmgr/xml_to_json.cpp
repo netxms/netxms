@@ -30,55 +30,54 @@
 bool LIBNXDBMGR_EXPORTABLE ConvertXmlToJson(const TCHAR *table, const TCHAR *idColumn1, const TCHAR *idColumn2, const TCHAR *dataColumn, const char *topElement)
 {
    TCHAR reqest[512];
-   _sntprintf(reqest, 512, _T("SELECT %s,%s%s%s FROM %s"),
-      dataColumn, idColumn1, (idColumn1 != nullptr) ? L"," : L"", CHECK_NULL(idColumn2), table);
+   _sntprintf(reqest, 512, _T("SELECT %s,%s%s%s FROM %s"), dataColumn, idColumn1, (idColumn1 != nullptr) ? L"," : L"", CHECK_NULL(idColumn2), table);
 
    TCHAR update[512];
-   _sntprintf(update, 512, _T("UPDATE %s SET %s=? WHERE %s=?%s%s%s"),
-      table, dataColumn, idColumn1, idColumn1 != nullptr ? L" AND " : L"", CHECK_NULL(idColumn2), idColumn1 != nullptr ? L"=?": L"");
+   _sntprintf(update, 512, _T("UPDATE %s SET %s=? WHERE %s=?%s%s%s"), table, dataColumn, idColumn1, idColumn1 != nullptr ? L" AND " : L"", CHECK_NULL(idColumn2), idColumn1 != nullptr ? L"=?" : L"");
 
    DB_RESULT hResult = SQLSelect(reqest);
-     if (hResult != nullptr)
-     {
-        int count = DBGetNumRows(hResult);
-        DB_STATEMENT hStmt = DBPrepare(g_dbHandle, update, count > 1);
-        if (hStmt != nullptr)
-        {
-           for (int i = 0; i < count; i++)
-           {
-              char *xmlText = DBGetFieldUTF8(hResult, i, 2, nullptr, 0);
-              pugi::xml_document xml;
-              if (!xml.load_buffer(xmlText, strlen(xmlText)))
-              {
-                 MemFree(xmlText);
-                 continue; //ignore filed
-              }
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      DB_STATEMENT hStmt = DBPrepare(g_dbHandle, update, count > 1);
+      if (hStmt != nullptr)
+      {
+         for (int i = 0; i < count; i++)
+         {
+            char *xmlText = DBGetFieldUTF8(hResult, i, 0, nullptr, 0);
+            pugi::xml_document xml;
+            if (!xml.load_buffer(xmlText, strlen(xmlText)))
+            {
+               MemFree(xmlText);
+               continue; //ignore filed
+            }
 
-              json_t *result = XmlNodeToJson(xml.child(topElement));
-              char *jsonText = json_dumps(result, JSON_COMPACT);
-              MemFree(jsonText);
+            json_t *result = XmlNodeToJson(xml.child(topElement));
+            MemFree(xmlText);
 
-              MemFree(xmlText);
+            DBBind(hStmt, 1, DB_SQLTYPE_TEXT, result, DB_BIND_DYNAMIC);
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 1));
+            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 2));
+            if (!SQLExecute(hStmt) && !g_ignoreErrors)
+            {
+               DBFreeResult(hResult);
+               DBFreeStatement(hStmt);
+               return false;
+            }
+         }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         DBFreeResult(hResult);
+         return false;
+      }
 
-              DBBind(hStmt, 1, DB_SQLTYPE_TEXT, result, DB_BIND_DYNAMIC);
-              DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
-              DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 1));
-              if (!SQLExecute(hStmt) && !g_ignoreErrors)
-              {
-                 DBFreeResult(hResult);
-                 DBFreeStatement(hStmt);
-                 return false;
-              }
-           }
-           DBFreeStatement(hStmt);
-        }
-        else if (!g_ignoreErrors)
-        {
-           DBFreeResult(hResult);
-           return false;
-        }
-
-        DBFreeResult(hResult);
-     }
-     return true;
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      return false;
+   }
+   return true;
 }
