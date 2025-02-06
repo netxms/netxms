@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 52.9 to 52.10
+ */
+static bool H_UpgradeFromV9()
+{
+   static const wchar_t *batch =
+      L"ALTER TABLE nodes ADD expected_capabilities $SQL:INT64\n"
+      L"UPDATE nodes SET expected_capabilities=0\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"nodes", L"expected_capabilities"));
+   CHK_EXEC(SetMinorSchemaVersion(10));
+   return true;
+}
+
+/**
  * Upgrade from 52.8 to 52.9
  */
 static bool H_UpgradeFromV8()
@@ -253,6 +268,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 9,  52, 10, H_UpgradeFromV9  },
    { 8,  52, 9,  H_UpgradeFromV8  },
    { 7,  52, 8,  H_UpgradeFromV7  },
    { 6,  52, 7,  H_UpgradeFromV6  },

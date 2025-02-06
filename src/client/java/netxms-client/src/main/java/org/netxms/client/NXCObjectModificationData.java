@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -197,6 +197,7 @@ public class NXCObjectModificationData
    private Integer displayPriority;
    private Integer mapWidth;
    private Integer mapHeight;
+   private Long expectedCapabilities;
 
    /**
     * Constructor for creating modification data for given object
@@ -2456,5 +2457,21 @@ public class NXCObjectModificationData
    public Integer getMapHeight()
    {
       return mapHeight;
+   }
+
+   /**
+    * @return the expectedCapabilities
+    */
+   public Long getExpectedCapabilities()
+   {
+      return expectedCapabilities;
+   }
+
+   /**
+    * @param expectedCapabilities the expectedCapabilities to set
+    */
+   public void setExpectedCapabilities(Long expectedCapabilities)
+   {
+      this.expectedCapabilities = expectedCapabilities;
    }
 }

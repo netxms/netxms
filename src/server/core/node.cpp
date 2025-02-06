@@ -131,6 +131,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_subType[0] = 0;
    m_hypervisorType[0] = 0;
    m_capabilities = 0;
+   m_expectedCapabilities = 0;
    m_zoneUIN = 0;
    m_agentPort = AGENT_LISTEN_PORT;
    m_agentCacheMode = AGENT_CACHE_DEFAULT;
@@ -252,6 +253,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_subType[0] = 0;
    m_hypervisorType[0] = 0;
    m_capabilities = 0;
+   m_expectedCapabilities = 0;
    m_flags = flags;
    m_zoneUIN = newNodeData->zoneUIN;
    m_agentPort = newNodeData->agentPort;
@@ -438,7 +440,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
       _T("cip_status,cip_state,eip_proxy,eip_port,hardware_id,cip_vendor_code,agent_cert_mapping_method,")
       _T("agent_cert_mapping_data,snmp_engine_id,ssh_port,ssh_key_id,syslog_codepage,snmp_codepage,ospf_router_id,")
       _T("mqtt_proxy,modbus_proxy,modbus_tcp_port,modbus_unit_id,snmp_context_engine_id,vnc_password,vnc_port,")
-      _T("vnc_proxy,path_check_reason,path_check_node_id,path_check_iface_id FROM nodes WHERE id=?"));
+      _T("vnc_proxy,path_check_reason,path_check_node_id,path_check_iface_id,expecetd_capabilities FROM nodes WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -625,6 +627,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
       m_pathCheckResult.rootCauseNodeId = DBGetFieldUInt32(hResult, 0, 87);
       m_pathCheckResult.rootCauseInterfaceId = DBGetFieldUInt32(hResult, 0, 88);
    }
+   m_expectedCapabilities = DBGetFieldUInt64(hResult, 0, 89);
 
    DBFreeResult(hResult);
 
@@ -1059,7 +1062,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
 
    if (success && (m_modified & MODIFY_NODE_PROPERTIES))
    {
-      static const TCHAR *columns[] = {
+      static const wchar_t *columns[] = {
          _T("primary_ip"), _T("primary_name"), _T("snmp_port"), _T("capabilities"), _T("snmp_version"), _T("community"),
          _T("agent_port"), _T("secret"), _T("snmp_oid"), _T("uname"), _T("agent_version"), _T("platform_name"),
          _T("poller_node_id"), _T("zone_guid"), _T("proxy_node"), _T("snmp_proxy"),
@@ -1076,10 +1079,10 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          _T("agent_cert_mapping_method"), _T("agent_cert_mapping_data"), _T("snmp_engine_id"), _T("snmp_context_engine_id"),
          _T("syslog_codepage"), _T("snmp_codepage"), _T("ospf_router_id"), _T("mqtt_proxy"), _T("modbus_proxy"), _T("modbus_tcp_port"),
          _T("modbus_unit_id"), _T("vnc_password"), _T("vnc_port"), _T("vnc_proxy"), _T("path_check_reason"), _T("path_check_node_id"),
-         _T("path_check_iface_id"), nullptr
+         _T("path_check_iface_id"), L"expected_capabilities", nullptr
       };
 
-      DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("nodes"), _T("id"), m_id, columns);
+      DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"nodes", L"id", m_id, columns);
       if (hStmt != nullptr)
       {
          lockProperties();
@@ -1217,7 +1220,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 87, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_pathCheckResult.reason));
          DBBind(hStmt, 88, DB_SQLTYPE_INTEGER, m_pathCheckResult.rootCauseNodeId);
          DBBind(hStmt, 89, DB_SQLTYPE_INTEGER, m_pathCheckResult.rootCauseInterfaceId);
-         DBBind(hStmt, 90, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 90, DB_SQLTYPE_BIGINT, m_expectedCapabilities);
+         DBBind(hStmt, 91, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -1368,7 +1372,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
    {
       lockProperties();
 
-      success = executeQueryOnObject(hdb, _T("DELETE FROM icmp_statistics WHERE object_id=?"));
+      success = executeQueryOnObject(hdb, L"DELETE FROM icmp_statistics WHERE object_id=?");
       if (success && isIcmpStatCollectionEnabled() && (m_icmpStatCollectors != nullptr) && !m_icmpStatCollectors->isEmpty())
       {
          success = (m_icmpStatCollectors->forEach(
@@ -1379,11 +1383,11 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
       }
 
       if (success)
-         success = executeQueryOnObject(hdb, _T("DELETE FROM icmp_target_address_list WHERE node_id=?"));
+         success = executeQueryOnObject(hdb, L"DELETE FROM icmp_target_address_list WHERE node_id=?");
 
       if (success && !m_icmpTargets.isEmpty())
       {
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO icmp_target_address_list (node_id,ip_addr) VALUES (?,?)"), m_icmpTargets.size() > 1);
+         DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO icmp_target_address_list (node_id,ip_addr) VALUES (?,?)", m_icmpTargets.size() > 1);
          if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -1715,12 +1719,12 @@ InterfaceList *Node::getInterfaceList()
             useIfXTable = (m_nUseIfXTable == IFXTABLE_ENABLED);
          }
 
-         nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::getInterfaceList(node=%s [%u]): calling driver (useIfXTable=%s)"),
+         nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, L"Node::getInterfaceList(node=%s [%u]): calling driver (useIfXTable=%s)",
                   m_name, m_id, BooleanToString(useIfXTable));
          ifList = m_driver->getInterfaces(snmpTransport, this, m_driverData, useIfXTable);
          if (ifList != nullptr)
          {
-            if (ConfigReadBoolean(_T("Objects.Interfaces.IgnoreIfNotPresent"), false))
+            if (ConfigReadBoolean(L"Objects.Interfaces.IgnoreIfNotPresent", false))
             {
                uint32_t oid[11] = { 1, 3, 6, 1, 2, 1, 2, 2, 1, 8, 0 };
                for(int i = 0; i < ifList->size(); i++)
@@ -2761,7 +2765,8 @@ restart_status_poll:
             nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): SNMP agent unreachable (poll count %d of %d)"), m_name, m_pollCountSNMP, requiredPolls);
             if (m_state & NSF_SNMP_UNREACHABLE)
             {
-               if ((now > m_failTimeSNMP + capabilityExpirationTime) && (!(m_state & DCSF_UNREACHABLE)) && (now > m_recoveryTime + capabilityExpirationGracePeriod))
+               if (!(m_expectedCapabilities & NC_IS_SNMP) && (now > m_failTimeSNMP + capabilityExpirationTime) &&
+                   !(m_state & DCSF_UNREACHABLE) && (now > m_recoveryTime + capabilityExpirationGracePeriod))
                {
                   m_capabilities &= ~NC_IS_SNMP;
                   m_state &= ~NSF_SNMP_UNREACHABLE;
@@ -2829,7 +2834,8 @@ restart_status_poll:
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): SSH unreachable"), m_name);
          if (m_state & NSF_SSH_UNREACHABLE)
          {
-            if ((now > m_failTimeSSH + capabilityExpirationTime) && !(m_state & DCSF_UNREACHABLE) && (now > m_recoveryTime + capabilityExpirationGracePeriod))
+            if (!(m_expectedCapabilities & NC_IS_SSH) && (now > m_failTimeSSH + capabilityExpirationTime) &&
+                !(m_state & DCSF_UNREACHABLE) && (now > m_recoveryTime + capabilityExpirationGracePeriod))
             {
                m_capabilities &= ~NC_IS_SSH;
                m_state &= ~NSF_AGENT_UNREACHABLE;
@@ -2905,7 +2911,8 @@ restart_status_poll:
          sendPollerMsg(POLLER_ERROR _T("Cannot connect to NetXMS agent (%s)\r\n"), AgentErrorCodeToText(error));
          if (m_state & NSF_AGENT_UNREACHABLE)
          {
-            if ((now > m_failTimeAgent + capabilityExpirationTime) && !(m_state & DCSF_UNREACHABLE) && (now > m_recoveryTime + capabilityExpirationGracePeriod))
+            if (!(m_expectedCapabilities & NC_IS_NATIVE_AGENT) && (now > m_failTimeAgent + capabilityExpirationTime) &&
+                !(m_state & DCSF_UNREACHABLE) && (now > m_recoveryTime + capabilityExpirationGracePeriod))
             {
                m_capabilities &= ~NC_IS_NATIVE_AGENT;
                m_state &= ~NSF_AGENT_UNREACHABLE;
@@ -3007,7 +3014,8 @@ restart_status_poll:
          sendPollerMsg(POLLER_ERROR _T("Cannot connect to device via EtherNet/IP (%s)\r\n"), reason.cstr());
          if (m_state & NSF_ETHERNET_IP_UNREACHABLE)
          {
-            if ((now > m_failTimeEtherNetIP + capabilityExpirationTime) && !(m_state & DCSF_UNREACHABLE) && (now > m_recoveryTime + capabilityExpirationGracePeriod))
+            if (!(m_expectedCapabilities & NC_IS_ETHERNET_IP) && (now > m_failTimeEtherNetIP + capabilityExpirationTime) &&
+                !(m_state & DCSF_UNREACHABLE) && (now > m_recoveryTime + capabilityExpirationGracePeriod))
             {
                m_capabilities &= ~NC_IS_ETHERNET_IP;
                m_state &= ~NSF_ETHERNET_IP_UNREACHABLE;
@@ -3078,7 +3086,8 @@ restart_status_poll:
          sendPollerMsg(POLLER_ERROR _T("Cannot connect to device via Modbus TCP (%s)\r\n"), GetModbusStatusText(status));
          if (m_state & NSF_MODBUS_UNREACHABLE)
          {
-            if ((now > m_failTimeModbus + capabilityExpirationTime) && !(m_state & DCSF_UNREACHABLE) && (now > m_recoveryTime + capabilityExpirationGracePeriod))
+            if (!(m_expectedCapabilities & NC_IS_MODBUS_TCP) && (now > m_failTimeModbus + capabilityExpirationTime) &&
+                !(m_state & DCSF_UNREACHABLE) && (now > m_recoveryTime + capabilityExpirationGracePeriod))
             {
                m_capabilities &= ~NC_IS_MODBUS_TCP;
                m_state &= ~NSF_MODBUS_UNREACHABLE;
@@ -4528,7 +4537,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
    {
       sendPollerMsg(POLLER_WARNING _T("Capability reset\r\n"));
       lockProperties();
-      m_capabilities &= NC_IS_LOCAL_MGMT; // reset all except "local management" flag
+      m_capabilities &= (NC_IS_LOCAL_MGMT | m_expectedCapabilities); // reset all except "local management" flag and expected
       m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PASSED;
       m_snmpObjectId = SNMP_ObjectId();
       m_platformName[0] = 0;
@@ -8814,6 +8823,7 @@ void Node::fillMessageLockedEssential(NXCPMessage *msg, uint32_t userId)
 
    msg->setField(VID_STATE_FLAGS, m_state);
    msg->setField(VID_CAPABILITIES, m_capabilities);
+   msg->setField(VID_EXPECTED_CAPABILITIES, m_expectedCapabilities);
    msg->setField(VID_IP_ADDRESS, m_ipAddress);
    msg->setField(VID_PRODUCT_NAME, m_productName);
    msg->setField(VID_VENDOR, m_vendor);
@@ -9149,6 +9159,10 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg)
       }
       m_pollerNode = nodeId;
    }
+
+   // Change expected capabilities
+   if (msg.isFieldExist(VID_EXPECTED_CAPABILITIES))
+      m_expectedCapabilities = msg.getFieldAsUInt64(VID_EXPECTED_CAPABILITIES);
 
    // Change listen port of native agent
    if (msg.isFieldExist(VID_AGENT_PORT))

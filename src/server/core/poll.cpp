@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -160,7 +160,7 @@ static void CreateManagementNode(const InetAddress& addr)
 {
 	NewNodeData newNodeData(addr);
 	auto node = make_shared<Node>(&newNodeData, 0);
-	node->setCapabilities(NC_IS_LOCAL_MGMT);
+	node->setLocalMgmtFlag();
    NetObjInsert(node, true, false);
    TCHAR buffer[256];
 	node->setName(GetLocalHostName(buffer, 256, false));

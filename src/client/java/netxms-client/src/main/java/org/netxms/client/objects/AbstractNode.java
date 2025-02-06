@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -133,6 +133,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	protected String primaryName;
 	protected int stateFlags;
    protected long capabilities;
+   protected long expectedCapabilities;
 	protected NodeType nodeType;
 	protected String nodeSubType;
 	protected String hypervisorType;
@@ -253,6 +254,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 		primaryName = msg.getFieldAsString(NXCPCodes.VID_PRIMARY_NAME);
 		stateFlags = msg.getFieldAsInt32(NXCPCodes.VID_STATE_FLAGS);
       capabilities = msg.getFieldAsInt64(NXCPCodes.VID_CAPABILITIES);
+      expectedCapabilities = msg.getFieldAsInt64(NXCPCodes.VID_EXPECTED_CAPABILITIES);
 		nodeType = NodeType.getByValue(msg.getFieldAsInt16(NXCPCodes.VID_NODE_TYPE));
 		nodeSubType = msg.getFieldAsString(NXCPCodes.VID_NODE_SUBTYPE);
       hypervisorType = msg.getFieldAsString(NXCPCodes.VID_HYPERVISOR_TYPE);
@@ -391,11 +393,23 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	}
 
    /**
-    * @return Flags
+    * Get node capabilities. Value is a combination of NC_xxx bit flags.
+    *
+    * @return bit flags indicating node capabilities
     */
    public long getCapabilities()
    {
       return capabilities;
+   }
+
+   /**
+    * Get node expected capabilities. Value is a combination of NC_xxx bit flags.
+    *
+    * @return bit flags indicating node expected capabilities
+    */
+   public long getExpectedCapabilities()
+   {
+      return expectedCapabilities;
    }
 
 	/**

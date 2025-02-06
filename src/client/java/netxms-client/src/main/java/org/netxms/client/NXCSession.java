@@ -7341,6 +7341,11 @@ public class NXCSession
          msg.setFieldInt32(NXCPCodes.VID_DISPLAY_PRIORITY, data.getDisplayPriority());
       }
 
+      if (data.getExpectedCapabilities() != null)
+      {
+         msg.setFieldInt64(NXCPCodes.VID_EXPECTED_CAPABILITIES, data.getExpectedCapabilities());
+      }
+
       modifyCustomObject(data, userData, msg);
 
       sendMessage(msg);

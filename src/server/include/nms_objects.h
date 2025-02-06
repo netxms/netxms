@@ -3428,6 +3428,7 @@ protected:
    CertificateMappingMethod m_agentCertMappingMethod;
    TCHAR *m_agentCertMappingData;
    uint64_t m_capabilities;
+   uint64_t m_expectedCapabilities;
    NodeType m_type;
    TCHAR m_subType[MAX_NODE_SUBTYPE_LENGTH];
    TCHAR m_hypervisorType[MAX_HYPERVISOR_TYPE_LENGTH];
@@ -3718,10 +3719,30 @@ public:
    SharedString getSerialNumber() const { return GetAttributeWithLock(m_serialNumber, m_mutexProperties); }
 
    uint64_t getCapabilities() const { return m_capabilities; }
-   void setCapabilities(uint64_t flag) { lockProperties(); m_capabilities |= flag; setModified(MODIFY_NODE_PROPERTIES); unlockProperties(); }
-   void clearCapabilities(uint64_t flag) { lockProperties(); m_capabilities &= ~flag; setModified(MODIFY_NODE_PROPERTIES); unlockProperties(); }
-   void setLocalMgmtFlag() { setCapabilities(NC_IS_LOCAL_MGMT); }
-   void clearLocalMgmtFlag() { clearCapabilities(NC_IS_LOCAL_MGMT); }
+   void setCapability(uint64_t flag)
+   {
+      lockProperties();
+      m_capabilities |= flag;
+      setModified(MODIFY_NODE_PROPERTIES);
+      unlockProperties();
+   }
+   void clearCapability(uint64_t flag)
+   {
+      lockProperties();
+      m_capabilities &= ~flag;
+      setModified(MODIFY_NODE_PROPERTIES);
+      unlockProperties();
+   }
+   uint64_t getExpectedCapabilities() const { return m_expectedCapabilities; }
+   void setExpectedCapabilities(uint64_t expectedCapabilities)
+   {
+      lockProperties();
+      m_expectedCapabilities = expectedCapabilities;
+      setModified(MODIFY_NODE_PROPERTIES);
+      unlockProperties();
+   }
+   void setLocalMgmtFlag() { setCapability(NC_IS_LOCAL_MGMT); }
+   void clearLocalMgmtFlag() { clearCapability(NC_IS_LOCAL_MGMT); }
 
    void setType(NodeType type, const TCHAR *subType)
    {

@@ -2492,6 +2492,40 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
       NXSL_ENV_CONSTANT("NodeState::ICMPUnreachable", NSF_ICMP_UNREACHABLE);
       NXSL_ENV_CONSTANT("NodeState::SSHUnreachable", NSF_SSH_UNREACHABLE);
       NXSL_ENV_CONSTANT("NodeState::MODBUSUnreachable", NSF_MODBUS_UNREACHABLE);
+
+      // Node capabilities
+      NXSL_ENV_CONSTANT("NodeCapability::Agent", NC_IS_NATIVE_AGENT);
+      NXSL_ENV_CONSTANT("NodeCapability::AgentIfXCounters", NC_HAS_AGENT_IFXCOUNTERS);
+      NXSL_ENV_CONSTANT("NodeCapability::Bridge", NC_IS_BRIDGE);
+      NXSL_ENV_CONSTANT("NodeCapability::CDP", NC_IS_CDP);
+      NXSL_ENV_CONSTANT("NodeCapability::DeviceView", NC_DEVICE_VIEW);
+      NXSL_ENV_CONSTANT("NodeCapability::EmulatedEntityMIB", NC_EMULATED_ENTITY_MIB);
+      NXSL_ENV_CONSTANT("NodeCapability::EntityMIB", NC_HAS_ENTITY_MIB);
+      NXSL_ENV_CONSTANT("NodeCapability::EtherNetIP", NC_IS_ETHERNET_IP);
+      NXSL_ENV_CONSTANT("NodeCapability::FileManager", NC_HAS_FILE_MANAGER);
+      NXSL_ENV_CONSTANT("NodeCapability::IEEE802_1x", NC_IS_8021X);
+      NXSL_ENV_CONSTANT("NodeCapability::IfXTable", NC_HAS_IFXTABLE);
+      NXSL_ENV_CONSTANT("NodeCapability::LocalVNC", NC_IS_LOCAL_VNC);
+      NXSL_ENV_CONSTANT("NodeCapability::LLDP", NC_IS_LLDP);
+      NXSL_ENV_CONSTANT("NodeCapability::LLDPv2", NC_LLDP_V2_MIB);
+      NXSL_ENV_CONSTANT("NodeCapability::ModbusTCP", NC_IS_MODBUS_TCP);
+      NXSL_ENV_CONSTANT("NodeCapability::NDP", NC_IS_NDP);
+      NXSL_ENV_CONSTANT("NodeCapability::OSPF", NC_IS_OSPF);
+      NXSL_ENV_CONSTANT("NodeCapability::Printer", NC_IS_PRINTER);
+      NXSL_ENV_CONSTANT("NodeCapability::ProfiNet", NC_IS_PROFINET);
+      NXSL_ENV_CONSTANT("NodeCapability::RegisteredForBackup", NC_REGISTERED_FOR_BACKUP);
+      NXSL_ENV_CONSTANT("NodeCapability::Router", NC_IS_ROUTER);
+      NXSL_ENV_CONSTANT("NodeCapability::SMCLP", NC_IS_SMCLP);
+      NXSL_ENV_CONSTANT("NodeCapability::SNMP", NC_IS_SNMP);
+      NXSL_ENV_CONSTANT("NodeCapability::SSH", NC_IS_SSH);
+      NXSL_ENV_CONSTANT("NodeCapability::STP", NC_IS_STP);
+      NXSL_ENV_CONSTANT("NodeCapability::UserAgent", NC_HAS_USER_AGENT);
+      NXSL_ENV_CONSTANT("NodeCapability::VLAN", NC_HAS_VLANS);
+      NXSL_ENV_CONSTANT("NodeCapability::VNC", NC_IS_VNC);
+      NXSL_ENV_CONSTANT("NodeCapability::VRRP", NC_IS_VRRP);
+      NXSL_ENV_CONSTANT("NodeCapability::WiFiAccessPoint", NC_IS_WIFI_AP);
+      NXSL_ENV_CONSTANT("NodeCapability::WiFiController", NC_IS_WIFI_CONTROLLER);
+      NXSL_ENV_CONSTANT("NodeCapability::WindowsPDH", NC_HAS_WINPDH);
    }
 
    if (name.value[0] == 'S')

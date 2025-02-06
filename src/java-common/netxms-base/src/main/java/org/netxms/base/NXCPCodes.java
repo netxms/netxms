@@ -1355,6 +1355,7 @@ public class NXCPCodes
    public static final long VID_JDBC_OPTIONS = 858;
    public static final long VID_LAST_BACKUP_JOB_STATUS = 859;
    public static final long VID_JOB_ID = 860;
+   public static final long VID_EXPECTED_CAPABILITIES = 861;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

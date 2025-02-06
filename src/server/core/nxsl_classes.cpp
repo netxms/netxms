@@ -2051,6 +2051,21 @@ NXSL_METHOD_DEFINITION(Node, readWebServiceList)
 }
 
 /**
+ * Node::setExpectedCapabilities(capabilities) method
+ */
+NXSL_METHOD_DEFINITION(Node, setExpectedCapabilities)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   uint64_t capabilities = argv[0]->getValueAsUInt64();
+   capabilities &= NC_IS_NATIVE_AGENT | NC_IS_SNMP | NC_IS_ETHERNET_IP | NC_IS_MODBUS_TCP | NC_IS_SSH;
+   static_cast<shared_ptr<Node>*>(object->getData())->get()->setExpectedCapabilities(capabilities);
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
  * Node::setIfXTableUsageMode(mode) method
  */
 NXSL_METHOD_DEFINITION(Node, setIfXTableUsageMode)
@@ -2105,6 +2120,7 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, readInternalTable, 1);
    NXSL_REGISTER_METHOD(Node, readWebServiceList, 1);
    NXSL_REGISTER_METHOD(Node, readWebServiceParameter, 1);
+   NXSL_REGISTER_METHOD(Node, setExpectedCapabilities, 1);
    NXSL_REGISTER_METHOD(Node, setIfXTableUsageMode, 1);
 }
 
@@ -2289,6 +2305,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
       {
          value = vm->createValue();
       }
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("expectedCapabilities"))
+   {
+      value = vm->createValue(node->getExpectedCapabilities());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("flags"))
    {

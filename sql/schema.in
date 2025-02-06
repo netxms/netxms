@@ -461,6 +461,7 @@ CREATE TABLE nodes
   port_numbering_scheme integer not null,
   agent_comp_mode char(1) not null, // compression mode for agent
   capabilities SQL_INT64 not null,
+  expected_capabilities SQL_INT64 not null,
   fail_time_snmp integer not null,
   fail_time_agent integer not null,
   fail_time_ssh integer not null,
