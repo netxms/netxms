@@ -801,7 +801,6 @@ static inline int _mkdir(const char *pathname, mode_t mode) { return ::mkdir(pat
 static inline int _open(const char *pathname, int flags) { return ::open(pathname, flags); }
 static inline int _open(const char *pathname, int flags, mode_t mode) { return ::open(pathname, flags, mode); }
 static inline int _pclose(FILE *stream) { return ::pclose(stream); }
-static inline FILE *_popen(const char *command, const char *type) { return ::popen(command, type); }
 static inline int _putenv(char *string) { return ::putenv(string); }
 static inline ssize_t _read(int fd, void *buf, size_t count) { return ::read(fd, buf, count); }
 static inline char *_strdup(const char *s) { return ::strdup(s); }
@@ -819,7 +818,6 @@ static inline ssize_t _write(int fd, const void *buf, size_t count) { return ::w
 #define _mkdir(p, m)       mkdir((p), (m))
 #define _open              open
 #define _pclose(f)         pclose(f)
-#define _popen(c, m)       popen((c), (m))
 #define _putenv(s)         putenv(s)
 #define _read(f, b, l)     read((f), (b), (l))
 #define _write(f, b, l)    write((f), (b), (l))

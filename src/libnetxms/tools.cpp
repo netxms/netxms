@@ -42,7 +42,7 @@
 #include <pwd.h>
 #endif
 
-#if !defined(_WIN32) && !defined(UNDER_CE)
+#if !defined(_WIN32)
 #include <sys/time.h>
 #include <signal.h>
 #endif
@@ -874,32 +874,26 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 			memcpy(command, &temp[i], len * sizeof(TCHAR));
 			command[len] = 0;
 
-			FILE *p = _tpopen(command, _T("r"));
-			if (p != nullptr)
+			OutputCapturingProcessExecutor executor(command);
+			if (executor.execute() && executor.waitForCompletion(5000))
 			{
 				char result[1024];
-				int rc = (int)fread(result, 1, 1023, p);
-				_pclose(p);
+				strlcpy(result, executor.getOutput(), 1024);
+            char *lf = strchr(result, '\r');
+            if (lf != nullptr)
+               *lf = 0;
 
-				if (rc > 0)
-				{
-					result[rc] = 0;
-               char *lf = strchr(result, '\r');
-               if (lf != NULL)
-                  *lf = 0;
+            lf = strchr(result, '\n');
+            if (lf != nullptr)
+               *lf = 0;
 
-					lf = strchr(result, '\n');
-					if (lf != NULL)
-						*lf = 0;
-
-					len = (int)std::min(strlen(result), bufSize - outpos - 1);
+            len = (int)std::min(strlen(result), bufSize - outpos - 1);
 #ifdef UNICODE
-					len = mb_to_wchar(result, len, &buffer[outpos], len + 1);
+            len = mb_to_wchar(result, len, &buffer[outpos], len + 1);
 #else
-					memcpy(&buffer[outpos], result, len);
+            memcpy(&buffer[outpos], result, len);
 #endif
-					outpos += len;
-				}
+            outpos += len;
 			}
 
 			i = j;
