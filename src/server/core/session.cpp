@@ -13221,7 +13221,7 @@ void ClientSession::deleteFile(const NXCPMessage& request)
       _tcslcat(fullPath, FS_PATH_SEPARATOR, MAX_PATH);
       _tcslcat(fullPath, GetCleanFileName(fileName), MAX_PATH);
 
-      if (_tunlink(fullPath) == 0)
+      if (_tremove(fullPath) == 0)
       {
          NotifyClientSessions(NX_NOTIFY_FILE_LIST_CHANGED, isMibFile ? 1 : 0);
          response.setField(VID_RCC, RCC_SUCCESS);

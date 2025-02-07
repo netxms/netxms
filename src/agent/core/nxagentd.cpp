@@ -2047,7 +2047,6 @@ int main(int argc, char *argv[])
    ProcessExecutor *crashServer = nullptr;
    google_breakpad::ExceptionHandler *exceptionHandler = nullptr;
 #else
-   TCHAR *pszEnv;
 	int uid = 0, gid = 0;
 #endif
 
@@ -2064,13 +2063,13 @@ int main(int argc, char *argv[])
       RegCloseKey(hKey);
    }
 #else
-   pszEnv = _tgetenv(_T("NXAGENTD_CONFIG"));
-   if (pszEnv != NULL)
-      _tcslcpy(g_szConfigFile, pszEnv, MAX_PATH);
+   MutableString env = GetEnvironmentVariableEx(_T("NXAGENTD_CONFIG"));
+   if (!env.isEmpty())
+      _tcslcpy(g_szConfigFile, env, MAX_PATH);
 
-	pszEnv = _tgetenv(_T("NXAGENTD_CONFIG_D"));
-   if (pszEnv != NULL)
-      _tcslcpy(g_szConfigIncludeDir, pszEnv, MAX_PATH);
+	env = GetEnvironmentVariableEx(_T("NXAGENTD_CONFIG_D"));
+   if (!env.isEmpty())
+      _tcslcpy(g_szConfigIncludeDir, env, MAX_PATH);
 #endif
 
 #if defined(_WIN32) || HAVE_DECL_GETOPT_LONG

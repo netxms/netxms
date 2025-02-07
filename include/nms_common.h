@@ -784,14 +784,11 @@ FILE *open_memstream(char **, size_t *);
 #endif
 
 // Windows compatibility layer for standard C I/O functions
-#if !HAVE_WFOPEN
-FILE LIBNETXMS_EXPORTABLE *wfopen(const wchar_t *_name, const wchar_t *_type);
-#endif
+FILE LIBNETXMS_EXPORTABLE *_wfopen(const wchar_t *_name, const wchar_t *_type);
 
 #ifdef __cplusplus
 
 static inline int _access(const char *pathname, int mode) { return ::access(pathname, mode); }
-static inline int _chdir(const char *path) { return ::chdir(path);  }
 static inline int _close(int fd) { return ::close(fd); }
 static inline int _fileno(FILE *stream) { return fileno(stream); }
 static inline char *_getcwd(char *buffer, size_t size) { return ::getcwd(buffer, size); }
@@ -807,13 +804,11 @@ static inline ssize_t _read(int fd, void *buf, size_t count) { return ::read(fd,
 static inline int _remove(const char *pathname) { return ::remove(pathname); }
 static inline char *_strdup(const char *s) { return ::strdup(s); }
 static inline int _unlink(const char *pathname) { return ::unlink(pathname); }
-static inline FILE *_wfopen(const wchar_t *fname, const wchar_t *mode) { return ::wfopen(fname, mode); }
 static inline ssize_t _write(int fd, const void *buf, size_t count) { return ::write(fd, buf, count); }
 
 #else
 
 #define _access(p, m)      access((p), (m))
-#define _chdir(p)          chdir(p)
 #define _close(f)          close(f)
 #define _fileno(f)         fileno(f)
 #define _getcwd(b, s)      getcwd((b), (s))
@@ -827,7 +822,6 @@ static inline ssize_t _write(int fd, const void *buf, size_t count) { return ::w
 #define _read(f, b, l)     read((f), (b), (l))
 #define _remove(f)         remove(f)
 #define _unlink(f)         unlink(f)
-#define _wfopen(f, m)      wfopen((f), (m))
 #define _write(f, b, l)    write((f), (b), (l))
 
 #endif

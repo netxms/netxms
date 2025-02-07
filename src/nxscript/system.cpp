@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Host
-** Copyright (C) 2005-2024 Victor Kirhenshtein
+** Copyright (C) 2005-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,14 +28,19 @@
  * Change current directory
  * Parameters:
  *   1) path
+ * Returns true on success, false otherwise
  */
 int F_SetCurrentDirectory(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-	if (!argv[0]->isString())
-		return NXSL_ERR_NOT_STRING;
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
 
-	*result = vm->createValue((LONG)_tchdir(argv[0]->getValueAsCString()));
-	return 0;
+#ifdef _WIN32
+   *result = vm->createValue(SetCurrentDirectory(argv[0]->getValueAsCString()) ? true : false);
+#else
+   *result = vm->createValue(chdir(argv[0]->getValueAsMBString()) == 0);
+#endif
+   return 0;
 }
 
 /**

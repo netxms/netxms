@@ -1,6 +1,6 @@
 /* 
 ** NetXMS client proxy
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -312,8 +312,6 @@ int main(int argc, char *argv[])
    DWORD dwSize;
    ProcessExecutor *crashServer = nullptr;
    google_breakpad::ExceptionHandler *exceptionHandler = nullptr;
-#else
-   TCHAR *pszEnv;
 #endif
 
    InitNetXMSProcess(false);
@@ -336,9 +334,9 @@ int main(int argc, char *argv[])
       RegCloseKey(hKey);
    }
 #else
-   pszEnv = _tgetenv(_T("NXCPROXY_CONFIG"));
-   if (pszEnv != NULL)
-      _tcslcpy(g_configFile, pszEnv, MAX_PATH);
+   String env = GetEnvironmentVariableEx(_T("NXCPROXY_CONFIG"));
+   if (!env.isEmpty())
+      _tcslcpy(g_configFile, env, MAX_PATH);
 #endif
 
    // Parse command line

@@ -5463,7 +5463,7 @@ static inline int64_t GetMonotonicClockTime()
 #endif
 }
 
-uint64_t LIBNETXMS_EXPORTABLE FileSizeW(const WCHAR *pszFileName);
+uint64_t LIBNETXMS_EXPORTABLE FileSizeW(const wchar_t *pszFileName);
 uint64_t LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName);
 #ifdef UNICODE
 #define FileSize FileSizeW
@@ -5593,7 +5593,7 @@ bool LIBNETXMS_EXPORTABLE MatchSchedule(const TCHAR *schedule, bool *withSeconds
 BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(const TCHAR *pszName, BOOL bExtendedChars = FALSE);
 BOOL LIBNETXMS_EXPORTABLE IsValidScriptName(const TCHAR *pszName);
 /* deprecated */ void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, const TCHAR *pszSubStr, const TCHAR *pszReplace);
-const TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(const TCHAR *pszFileName);
+const TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(const TCHAR *fileName);
 void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer, int nBufSize);
 
 uint32_t LIBNETXMS_EXPORTABLE CalculateCRC32(const BYTE *data, size_t size, uint32_t crc);
@@ -5695,65 +5695,21 @@ int LIBNETXMS_EXPORTABLE nx_vswscanf(const WCHAR *str, const WCHAR *format, va_l
 wchar_t LIBNETXMS_EXPORTABLE *ERR_error_string_W(int errorCode, wchar_t *buffer);
 #endif
 
-#if !defined(_WIN32) && !HAVE_WSTAT
-int LIBNETXMS_EXPORTABLE wstat(const wchar_t *_path, struct stat *_sbuf);
-#endif
-
 #if defined(UNICODE) && !defined(_WIN32)
 
-#if HAVE_FOPEN64 && !HAVE_WFOPEN64
-FILE LIBNETXMS_EXPORTABLE *wfopen64(const WCHAR *_name, const WCHAR *_type);
-#endif
-#if !HAVE_WOPEN
-int LIBNETXMS_EXPORTABLE wopen(const WCHAR *, int, ...);
-#endif
-#if !HAVE_WCHMOD
-int LIBNETXMS_EXPORTABLE wchmod(const WCHAR *_name, int mode);
-#endif
-#if !HAVE_WCHDIR
-int LIBNETXMS_EXPORTABLE wchdir(const WCHAR *_path);
-#endif
-#if !HAVE_WMKDIR
-int LIBNETXMS_EXPORTABLE wmkdir(const WCHAR *_path, int mode);
-#endif
-#if !HAVE_WUTIME
-int LIBNETXMS_EXPORTABLE wutime(const WCHAR *_path, struct utimbuf *buf);
-#endif
-#if !HAVE_WRMDIR
-int LIBNETXMS_EXPORTABLE wrmdir(const WCHAR *_path);
-#endif
-#if !HAVE_WRENAME
-int LIBNETXMS_EXPORTABLE wrename(const WCHAR *_oldpath, const WCHAR *_newpath);
-#endif
-#if !HAVE_WUNLINK
-int LIBNETXMS_EXPORTABLE wunlink(const WCHAR *_path);
-#endif
-#if !HAVE_WREMOVE
-int LIBNETXMS_EXPORTABLE wremove(const WCHAR *_path);
-#endif
-#if !HAVE_WMKSTEMP
-int LIBNETXMS_EXPORTABLE wmkstemp(wchar_t *_template);
-#endif
-#if !HAVE_WACCESS
-int LIBNETXMS_EXPORTABLE waccess(const wchar_t *_path, int mode);
-#endif
-#if !HAVE_WGETENV
-WCHAR LIBNETXMS_EXPORTABLE *wgetenv(const WCHAR *_string);
-#endif
-#if !HAVE_WCTIME
-WCHAR LIBNETXMS_EXPORTABLE *wctime(const time_t *timep);
-#endif
-#if !HAVE_PUTWS
-int LIBNETXMS_EXPORTABLE putws(const WCHAR *s);
-#endif
-#if !HAVE_WCSERROR
-WCHAR LIBNETXMS_EXPORTABLE *wcserror(int errnum);
-#endif
-#if !HAVE_WCSERROR_R && HAVE_STRERROR_R
+int LIBNETXMS_EXPORTABLE _wopen(const wchar_t *_name, int flags, ...);
+int LIBNETXMS_EXPORTABLE _wchmod(const wchar_t *_name, int mode);
+int LIBNETXMS_EXPORTABLE _wmkdir(const wchar_t *_path, int mode);
+int LIBNETXMS_EXPORTABLE _wrmdir(const wchar_t *_path);
+int LIBNETXMS_EXPORTABLE _wrename(const wchar_t *_oldpath, const wchar_t *_newpath);
+int LIBNETXMS_EXPORTABLE _wremove(const wchar_t *_path);
+int LIBNETXMS_EXPORTABLE _waccess(const wchar_t *_path, int mode);
+wchar_t LIBNETXMS_EXPORTABLE *_wcserror(int errnum);
+#if HAVE_STRERROR_R
 #if HAVE_POSIX_STRERROR_R
-int LIBNETXMS_EXPORTABLE wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen);
+int LIBNETXMS_EXPORTABLE wcserror_r(int errnum, wchar_t *strerrbuf, size_t buflen);
 #else
-WCHAR LIBNETXMS_EXPORTABLE *wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen);
+wchar_t LIBNETXMS_EXPORTABLE *wcserror_r(int errnum, wchar_t *strerrbuf, size_t buflen);
 #endif
 #endif
 
@@ -5943,16 +5899,6 @@ static inline bool IsOutputToTerminal()
 }
 
 bool LIBNETXMS_EXPORTABLE ReadPassword(const TCHAR *prompt, TCHAR *buffer, size_t bufferSize);
-
-#ifdef _WIN32
-int LIBNETXMS_EXPORTABLE mkstemp(char *tmpl);
-int LIBNETXMS_EXPORTABLE wmkstemp(WCHAR *tmpl);
-#ifdef UNICODE
-#define _tmkstemp wmkstemp
-#else
-#define _tmkstemp mkstemp
-#endif
-#endif
 
 #if !HAVE_STRPTIME
 char LIBNETXMS_EXPORTABLE *strptime(const char *buf, const char *fmt, struct tm *_tm);

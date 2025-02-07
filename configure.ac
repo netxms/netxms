@@ -2800,7 +2800,7 @@ AC_CHECK_FUNCS([gettimeofday memmem strcspn strrchr strlwr strtok_r strtoll strt
 AC_CHECK_FUNCS([strlcpy strlcat strcasestr setlocale strerror_r toupper])
 AC_CHECK_FUNCS([tolower if_nametoindex daemon mmap scandir uname poll])
 AC_CHECK_FUNCS([usleep nanosleep gmtime_r localtime_r stat64 fstat64 lstat64])
-AC_CHECK_FUNCS([fopen64 strptime timegm gethostbyname2_r getaddrinfo rand_r])
+AC_CHECK_FUNCS([strptime timegm gethostbyname2_r getaddrinfo rand_r])
 AC_CHECK_FUNCS([isatty malloc_info malloc_trim utime tzset])
 AC_CHECK_FUNCS([getpwnam getpwuid getpwuid_r getgrnam getgrgid getgrgid_r])
 AC_CHECK_FUNCS([getpeereid sched_yield getpid localeconv])
@@ -3306,13 +3306,10 @@ AC_CHECK_SIZEOF(wchar_t,,[
 #endif
 ])
 AC_CHECK_FUNCS([wcslen wcsdup wcsncpy wcstoll wcstoull towupper towlower])
-AC_CHECK_FUNCS([wcslwr wcserror wcserror_r wfopen wfopen64 fputws putws fwide])
-AC_CHECK_FUNCS([wopen wstat waccess wgetenv wrename wunlink wremove wchdir])
-AC_CHECK_FUNCS([wmkdir wrmdir wmkstemp wctime wchmod vwscanf])
+AC_CHECK_FUNCS([wcslwr fputws putws fwide vwscanf wcstok wcslcpy wcslcat])
 AC_CHECK_FUNCS([vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
-AC_CHECK_FUNCS([mbstowcs mbsrtowcs wcsftime wutime wcstok])
+AC_CHECK_FUNCS([mbstowcs mbsrtowcs wcsftime wcscasestr])
 AC_CHECK_FUNCS([wprintf vwprintf swprintf vswprintf fwprintf vfwprintf])
-AC_CHECK_FUNCS([wcslcpy wcslcat wcscasestr])
 
 AC_CHECK_DECLS([putws, towupper, towlower],,,[
 #if HAVE_WCHAR_H

@@ -158,7 +158,8 @@ int CreateConfig(bool forceCreate, const char *masterServers, const char *logFil
       return 2;   // Open error
 
    time_t currTime = time(nullptr);
-   _ftprintf(fp, _T("#\n# NetXMS agent configuration file\n# Created by agent installer at %s#\n\n"), _tctime(&currTime));
+   TCHAR timeText[32];
+   _ftprintf(fp, _T("#\n# NetXMS agent configuration file\n# Created by agent installer at %s#\n\n"), FormatTimestamp(currTime, timeText));
    if (*masterServers == _T('~'))
    {
       // Setup agent-server tunnel(s)
