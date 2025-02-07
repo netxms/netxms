@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,37 +18,42 @@
  */
 package org.netxms.base;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for message wait queue
  */
-public class NXCPMsgWaitQueueTest extends TestCase
+public class NXCPMsgWaitQueueTest
 {
+   @Test
 	public void testWaitForMessage()
 	{
 		final NXCPMsgWaitQueue mwq = new NXCPMsgWaitQueue(5000, 10000);
-		
+
 		mwq.putMessage(new NXCPMessage(10, 1L));
 		mwq.putMessage(new NXCPMessage(10, 2L));
 		mwq.putMessage(new NXCPMessage(10, 3L));
-		
+
 		final NXCPMessage msg = mwq.waitForMessage(10, 2L);
-		assertEquals(true, msg != null);
+      assertNotNull(msg);
 		assertEquals(10, msg.getMessageCode());
 		assertEquals(2, msg.getMessageId());
-		
+
 		mwq.shutdown();
 	}
 
+   @Test
 	public void testHousekeeper()
 	{
 		final NXCPMsgWaitQueue mwq = new NXCPMsgWaitQueue(5000, 5000);
-		
+
 		mwq.putMessage(new NXCPMessage(10, 1L));
 		mwq.putMessage(new NXCPMessage(10, 2L));
 		mwq.putMessage(new NXCPMessage(10, 3L));
-		
+
 		// Sleep for 8 seconds - housekeeper should remove message from queue
 		try
 		{
@@ -57,10 +62,10 @@ public class NXCPMsgWaitQueueTest extends TestCase
 		catch(InterruptedException e)
 		{
 		}
-		
+
 		final NXCPMessage msg = mwq.waitForMessage(10, 2L);
-		assertEquals(true, msg == null);
-		
+      assertNull(msg);
+
 		mwq.shutdown();
 	}
 }

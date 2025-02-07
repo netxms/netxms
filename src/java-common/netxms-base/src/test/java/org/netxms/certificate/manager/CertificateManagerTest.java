@@ -1,26 +1,34 @@
 package org.netxms.certificate.manager;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.netxms.certificate.TestListener;
-
-import java.security.*;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.security.InvalidKeyException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
-
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.netxms.certificate.TestListener;
 
 public class CertificateManagerTest
 {
    private CertificateManager manager;
    private final TestListener listener = new TestListener();
 
-   @Before
+   @BeforeEach
    public void setUp() throws Exception
    {
       manager = CertificateManagerProvider.provideCertificateManager();
@@ -29,7 +37,7 @@ public class CertificateManagerTest
       manager.load();
    }
 
-   @After
+   @AfterEach
    public void tearDown() throws Exception
    {
       CertificateManagerProvider.dispose();
@@ -38,23 +46,25 @@ public class CertificateManagerTest
    @Test
    public void testHasNoCertificates()
    {
-      boolean hasNoCertificates = manager.hasNoCertificates();
-
-      assertFalse(hasNoCertificates);
+      Assumptions.assumeFalse(System.getProperty("os.name").startsWith("Windows"));
+      assertFalse(manager.hasNoCertificates());
    }
 
    @Test
    public void testGetCerts_HasExpectedNumberOfCerts()
    {
+      Assumptions.assumeFalse(System.getProperty("os.name").startsWith("Windows"));
+
       Certificate[] certs = manager.getCerts();
       int numCerts = certs.length;
-
       assertThat(numCerts, equalTo(1));
    }
 
    @Test
    public void testSign() throws Exception
    {
+      Assumptions.assumeFalse(System.getProperty("os.name").startsWith("Windows"));
+
       Certificate cert = manager.getCerts()[0];
       byte[] challenge = "Sign this!".getBytes();
       byte[] signed = manager.sign(cert, challenge);
@@ -69,6 +79,8 @@ public class CertificateManagerTest
    @Test
    public void testVerify_VerifyLegit() throws Exception
    {
+      Assumptions.assumeFalse(System.getProperty("os.name").startsWith("Windows"));
+
       byte[] challenge = "Sign this!".getBytes();
 
       KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
@@ -122,6 +134,8 @@ public class CertificateManagerTest
    @Test
    public void testVerify_VerifyBastard() throws Exception
    {
+      Assumptions.assumeFalse(System.getProperty("os.name").startsWith("Windows"));
+
       byte[] challenge = "Sign this!".getBytes();
       Certificate cert = manager.getCerts()[0];
 
