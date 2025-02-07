@@ -33,7 +33,6 @@ public class CertificateManagerProviderTest
    public void testProvideCertificateManager_SameInstance()
    {
       CertificateManager mgr2 = CertificateManagerProvider.provideCertificateManager();
-
       assertThat(manager, equalTo(mgr2));
    }
 }
