@@ -49,7 +49,7 @@ void CheckDatabase();
 bool CreateDatabase(const char *driver, const TCHAR *dbName, const TCHAR *dbLogin, const TCHAR *dbPassword);
 int InitDatabase(const char *initFile);
 bool ClearDatabase(bool preMigration);
-void ExportDatabase(char *file, const StringList& excludedTables, const StringList& includedTables);
+void ExportDatabase(const char *file, const StringList& excludedTables, const StringList& includedTables);
 void ImportDatabase(const char *file, const StringList& excludedTables, const StringList& includedTables, bool ignoreDataMigrationErrors);
 bool ConvertDatabase();
 bool ConvertDataTables();

@@ -801,9 +801,7 @@ static inline int _open(const char *pathname, int flags, mode_t mode) { return :
 static inline int _pclose(FILE *stream) { return ::pclose(stream); }
 static inline int _putenv(char *string) { return ::putenv(string); }
 static inline ssize_t _read(int fd, void *buf, size_t count) { return ::read(fd, buf, count); }
-static inline int _remove(const char *pathname) { return ::remove(pathname); }
 static inline char *_strdup(const char *s) { return ::strdup(s); }
-static inline int _unlink(const char *pathname) { return ::unlink(pathname); }
 static inline ssize_t _write(int fd, const void *buf, size_t count) { return ::write(fd, buf, count); }
 
 #else
@@ -820,8 +818,6 @@ static inline ssize_t _write(int fd, const void *buf, size_t count) { return ::w
 #define _pclose(f)         pclose(f)
 #define _putenv(s)         putenv(s)
 #define _read(f, b, l)     read((f), (b), (l))
-#define _remove(f)         remove(f)
-#define _unlink(f)         unlink(f)
 #define _write(f, b, l)    write((f), (b), (l))
 
 #endif

@@ -273,7 +273,9 @@ static void WriteInfoFile(const TCHAR *fileName, const ClientInfo *clientInfo, c
    }
 
    TCHAR timeText[32];
-   _ftprintf(fp, _T("%s CRASH DUMP\n%s\n"), processName, FormatTimestamp(now, timeText));
+   struct tm* ltm = localtime(&now);
+   _tcsftime(timeText, 32, _T("%Y-%m-%d %H:%M:%S %Z"), ltm);
+   _ftprintf(fp, _T("%s CRASH DUMP\n%s\n"), processName, timeText);
    EXCEPTION_POINTERS *exceptionPointersRef = nullptr;
    if (clientInfo->GetClientExceptionInfo(&exceptionPointersRef))
    {

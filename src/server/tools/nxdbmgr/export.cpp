@@ -513,13 +513,13 @@ static bool ExportPerfData(sqlite3 *db, const StringList& excludedTables)
 /**
  * Export database
  */
-void ExportDatabase(char *file, const StringList& excludedTables, const StringList& includedTables)
+void ExportDatabase(const char *file, const StringList& excludedTables, const StringList& includedTables)
 {
    if (!ValidateDatabase())
       return;
 
 	// Create new SQLite database
-	_remove(file);
+	remove(file);
    sqlite3 *db;
 	if (sqlite3_open(file, &db) != SQLITE_OK)
 	{
