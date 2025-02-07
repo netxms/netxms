@@ -1,18 +1,17 @@
 package org.netxms.certificate;
 
-import org.junit.Before;
-import org.junit.Test;
-
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.KeyStore;
 import java.security.Signature;
 import java.security.cert.Certificate;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class KeyStoreTest
 {
@@ -23,7 +22,7 @@ public class KeyStoreTest
    private Certificate cert;
    private KeyStore.PrivateKeyEntry pkEntry;
 
-   @Before
+   @BeforeEach
    public void setUp() throws Exception
    {
       keyStore = KeyStore.getInstance("PKCS12");
@@ -40,8 +39,7 @@ public class KeyStoreTest
       }
 
       cert = keyStore.getCertificate("John Doe");
-      pkEntry = (KeyStore.PrivateKeyEntry) keyStore
-         .getEntry("John Doe", new KeyStore.PasswordProtection(password.toCharArray()));
+      pkEntry = (KeyStore.PrivateKeyEntry)keyStore.getEntry("John Doe", new KeyStore.PasswordProtection(password.toCharArray()));
    }
 
    @Test
@@ -79,20 +77,22 @@ public class KeyStoreTest
       assertTrue(verifier.verify(signedChallenge));
    }
 
-   @Test(expected = IOException.class)
+   @Test
    public void testKeyStore_ThrowsIOExcepitonOnEmptyPassword() throws Exception
    {
-      keyStore = KeyStore.getInstance("PKCS12");
+      Assertions.assertThrows(IOException.class, () -> {
+         keyStore = KeyStore.getInstance("PKCS12");
 
-      FileInputStream fis = new FileInputStream(location);
+         FileInputStream fis = new FileInputStream(location);
 
-      try
-      {
-         keyStore.load(fis, new char[0]);
-      }
-      finally
-      {
-         fis.close();
-      }
+         try
+         {
+            keyStore.load(fis, new char[0]);
+         }
+         finally
+         {
+            fis.close();
+         }
+      });
    }
 }

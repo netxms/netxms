@@ -1,9 +1,7 @@
 package org.netxms.certificate;
 
-import org.junit.Ignore;
 import org.netxms.certificate.manager.CertificateManagerRequestListener;
 
-@Ignore
 public class TestListener implements CertificateManagerRequestListener
 {
    @Override
