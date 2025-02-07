@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,16 @@
  */
 package org.netxms.base;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.net.InetAddress;
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for InetAddressEx class
  */
-public class InetAddressExTest extends TestCase
+public class InetAddressExTest
 {
+   @Test
    public void testInetAddressEx() throws Exception
    {
       InetAddressEx a = new InetAddressEx(InetAddress.getByName("192.168.10.15"), InetAddress.getByName("255.255.255.0"));

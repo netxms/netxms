@@ -18,23 +18,25 @@
  */
 package org.netxms.base;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.util.Arrays;
+import org.junit.jupiter.api.Test;
 import com.jcraft.jzlib.Deflater;
 import com.jcraft.jzlib.DeflaterOutputStream;
 import com.jcraft.jzlib.InflaterInputStream;
 import com.jcraft.jzlib.JZlib;
-import junit.framework.TestCase;
 
 /**
  * Tests for bundled ZLib implementation
  */
-public class ZlibTest extends TestCase
+public class ZlibTest
 {
    private static final String TEXT = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
    
+   @Test
    public void testCompression() throws Exception
    {
       ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();

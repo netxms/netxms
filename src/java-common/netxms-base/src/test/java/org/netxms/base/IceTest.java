@@ -18,17 +18,20 @@
  */
 package org.netxms.base;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.Arrays;
 import java.util.Random;
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for ICE encryption algorithm
  */
-public class IceTest extends TestCase
+public class IceTest
 {
    private static final byte[] TEST_DATA = "lorem ipsum".getBytes();
    
+   @Test
    public void testIce()
    {
       byte[] key = new byte[16];
@@ -44,6 +47,6 @@ public class IceTest extends TestCase
    {
       String encrypted = EncryptedPassword.encrypt("admin", "SomePassword");
       String decrypted = EncryptedPassword.decrypt("admin", encrypted);
-      assertEquals(decrypted, "SomePassword");
+      assertEquals("SomePassword", decrypted);
    }
 }

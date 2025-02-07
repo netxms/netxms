@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2024 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,23 +18,26 @@
  */
 package org.netxms.base;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test password encryption/decryption
  */
-public class PasswordEncryptionTest extends TestCase
+public class PasswordEncryptionTest
 {
    private static final String LOGIN = "user1";
    private static final String PASSWORD = "alphaChannel12";
    
+   @Test
    public void testPasswordEncryption() throws Exception
    {
       String encrypted = EncryptedPassword.encrypt(LOGIN, PASSWORD);
       assertNotNull(encrypted);
       String decrypted = EncryptedPassword.decrypt(LOGIN, encrypted);
-      assertEquals(decrypted, PASSWORD);
+      assertEquals(PASSWORD, decrypted);
       decrypted = EncryptedPassword.decrypt(LOGIN, PASSWORD);
-      assertEquals(decrypted, PASSWORD);
+      assertEquals(PASSWORD, decrypted);
    }
 }
