@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2017-2022 Raden Solutions
+** Copyright (C) 2017-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -176,6 +176,6 @@ void DownloadFileInfo::close(bool success)
    else
    {
       // Remove received file part in case of failure
-      _tunlink(tempFileName);
+      _tremove(tempFileName);
    }
 }

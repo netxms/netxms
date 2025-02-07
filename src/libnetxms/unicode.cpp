@@ -1011,25 +1011,14 @@ size_t LIBNETXMS_EXPORTABLE mbcp_to_utf8(const char *src, ssize_t srcLen, char *
 #endif
 }
 
-/**
- * UNIX UNICODE specific wrapper functions
- */
+/*** UNIX UNICODE specific wrapper functions ***/
+
 #if !defined(_WIN32)
 
-#if !HAVE_WSTAT
-
-int LIBNETXMS_EXPORTABLE wstat(const WCHAR *_path, struct stat *_sbuf)
-{
-   char path[MAX_PATH];
-   WideCharToMultiByteSysLocale(_path, path, MAX_PATH);
-   return stat(path, _sbuf);
-}
-
-#endif /* !HAVE_WSTAT */
-
-#if !HAVE_WFOPEN
-
-FILE LIBNETXMS_EXPORTABLE *wfopen(const WCHAR *_name, const WCHAR *_type)
+/**
+ * Wide char version of fopen (Windows compatibility layer)
+ */
+FILE LIBNETXMS_EXPORTABLE *_wfopen(const wchar_t *_name, const wchar_t *_type)
 {
    char name[MAX_PATH], type[128];
    WideCharToMultiByteSysLocale(_name, name, sizeof(name));
@@ -1037,83 +1026,26 @@ FILE LIBNETXMS_EXPORTABLE *wfopen(const WCHAR *_name, const WCHAR *_type)
    return fopen(name, type);
 }
 
-#endif   /* !HAVE_WFOPEN */
-
 #if defined(UNICODE)
 
 /**
  * Wide character version of some libc functions
  */
-
 #define DEFINE_PATH_FUNC(func) \
-int LIBNETXMS_EXPORTABLE w##func(const WCHAR *_path) \
+int LIBNETXMS_EXPORTABLE _w##func(const WCHAR *_path) \
 { \
 	char path[MAX_PATH]; \
 	WideCharToMultiByteSysLocale(_path, path, sizeof(path)); \
 	return func(path); \
 }
 
-#if !HAVE_WCHDIR
-DEFINE_PATH_FUNC(chdir)
-#endif
-
-#if !HAVE_WRMDIR
 DEFINE_PATH_FUNC(rmdir)
-#endif
-
-#if !HAVE_WUNLINK
-DEFINE_PATH_FUNC(unlink)
-#endif
-
-#if !HAVE_WREMOVE
 DEFINE_PATH_FUNC(remove)
-#endif
 
-#if !HAVE_WMKSTEMP
-
-int LIBNETXMS_EXPORTABLE wmkstemp(WCHAR *_path)
-{
-   char path[MAX_PATH];
-   WideCharToMultiByteSysLocale(_path, path, sizeof(path));
-   int rc = mkstemp(path);
-   if (rc != -1)
-   {
-      MultiByteToWideCharSysLocale(path, _path, wcslen(_path) + 1);
-   }
-   return rc;
-}
-
-#endif
-
-#if !HAVE_WPOPEN
-
-FILE LIBNETXMS_EXPORTABLE *wpopen(const WCHAR *_command, const WCHAR *_type)
-{
-   char *command = MBStringFromWideStringSysLocale(_command);
-   char type[64];
-   wchar_to_mb(_type, -1, type, 64);
-   FILE *f = popen(command, type);
-   MemFree(command);
-   return f;
-}
-
-#endif
-
-#if HAVE_FOPEN64 && !HAVE_WFOPEN64
-
-FILE LIBNETXMS_EXPORTABLE *wfopen64(const WCHAR *_name, const WCHAR *_type)
-{
-   char name[MAX_PATH], type[128];
-   WideCharToMultiByteSysLocale(_name, name, sizeof(name));
-   WideCharToMultiByteSysLocale(_type, type, sizeof(type));
-   return fopen64(name, type);
-}
-
-#endif
-
-#if !HAVE_WOPEN
-
-int LIBNETXMS_EXPORTABLE wopen(const WCHAR *_name, int flags, ...)
+/**
+ * Wide char version of open (Windows compatibility layer)
+ */
+int LIBNETXMS_EXPORTABLE _wopen(const wchar_t *_name, int flags, ...)
 {
    char name[MAX_PATH];
    WideCharToMultiByteSysLocale(_name, name, sizeof(name));
@@ -1132,22 +1064,20 @@ int LIBNETXMS_EXPORTABLE wopen(const WCHAR *_name, int flags, ...)
    return rc;
 }
 
-#endif
-
-#if !HAVE_WCHMOD
-
-int LIBNETXMS_EXPORTABLE wchmod(const WCHAR *_path, int mode)
+/**
+ * Wide char version of chmod (Windows compatibility layer)
+ */
+int LIBNETXMS_EXPORTABLE _wchmod(const wchar_t *_path, int mode)
 {
    char path[MAX_PATH];
    WideCharToMultiByteSysLocale(_path, path, sizeof(path));
    return chmod(path, mode);
 }
 
-#endif
-
-#if !HAVE_WRENAME
-
-int LIBNETXMS_EXPORTABLE wrename(const WCHAR *_oldpath, const WCHAR *_newpath)
+/**
+ * Wide char version of chmod (Windows compatibility layer)
+ */
+int LIBNETXMS_EXPORTABLE _wrename(const wchar_t *_oldpath, const wchar_t *_newpath)
 {
    char oldpath[MAX_PATH], newpath[MAX_PATH];
    WideCharToMultiByteSysLocale(_oldpath, oldpath, sizeof(oldpath));
@@ -1155,102 +1085,32 @@ int LIBNETXMS_EXPORTABLE wrename(const WCHAR *_oldpath, const WCHAR *_newpath)
    return rename(oldpath, newpath);
 }
 
-#endif
-
-#if !HAVE_WSYSTEM
-
-int LIBNETXMS_EXPORTABLE wsystem(const WCHAR *_cmd)
-{
-   char *cmd = MBStringFromWideStringSysLocale(_cmd);
-   int rc = system(cmd);
-   MemFree(cmd);
-   return rc;
-}
-
-#endif
-
-#if !HAVE_WACCESS
-
-int LIBNETXMS_EXPORTABLE waccess(const WCHAR *_path, int mode)
+/**
+ * Wide char version of access (Windows compatibility layer)
+ */
+int LIBNETXMS_EXPORTABLE _waccess(const wchar_t *_path, int mode)
 {
    char path[MAX_PATH];
    WideCharToMultiByteSysLocale(_path, path, sizeof(path));
    return access(path, mode);
 }
 
-#endif
-
-#if !HAVE_WMKDIR
-
-int LIBNETXMS_EXPORTABLE wmkdir(const WCHAR *_path, int mode)
+/**
+ * Wide char version of mkdir (Windows compatibility layer)
+ */
+int LIBNETXMS_EXPORTABLE _wmkdir(const wchar_t *_path, int mode)
 {
    char path[MAX_PATH];
    WideCharToMultiByteSysLocale(_path, path, sizeof(path));
    return mkdir(path, mode);
 }
 
-#endif
-
-#if !HAVE_WUTIME
-
-int LIBNETXMS_EXPORTABLE wutime(const WCHAR *_path, utimbuf *buf)
+/**
+ * Wide char version of strerror (Windows compatibility layer)
+ */
+wchar_t LIBNETXMS_EXPORTABLE *_wcserror(int errnum)
 {
-   char path[MAX_PATH];
-   WideCharToMultiByteSysLocale(_path, path, sizeof(path));
-   return utime(path, buf);
-}
-
-#endif
-
-#if !HAVE_WGETENV
-
-WCHAR LIBNETXMS_EXPORTABLE *wgetenv(const WCHAR *_string)
-{
-   static WCHAR value[8192];
-
-   char name[256];
-   WideCharToMultiByteSysLocale(_string, name, sizeof(name));
-   char *p = getenv(name);
-   if (p == nullptr)
-      return nullptr;
-
-   MultiByteToWideCharSysLocale(p, value, 8192);
-   return value;
-}
-
-#endif
-
-#if !HAVE_WCTIME
-
-WCHAR LIBNETXMS_EXPORTABLE *wctime(const time_t *timep)
-{
-   static WCHAR value[256];
-   MultiByteToWideCharSysLocale(ctime(timep), value, 256);
-   return value;
-}
-
-#endif /* HAVE_WCTIME */
-
-#if !HAVE_PUTWS
-
-int LIBNETXMS_EXPORTABLE putws(const WCHAR *s)
-{
-#if HAVE_FPUTWS
-   fputws(s, stdout);
-   putwc(L'\n', stdout);
-#else
-   printf("%S\n", s);
-#endif /* HAVE_FPUTWS */
-   return 1;
-}
-
-#endif /* !HAVE_PUTWS */
-
-#if !HAVE_WCSERROR && (HAVE_STRERROR || HAVE_DECL_STRERROR)
-
-WCHAR LIBNETXMS_EXPORTABLE *wcserror(int errnum)
-{
-   static thread_local WCHAR value[256];
+   static thread_local wchar_t value[256];
 #if HAVE_STRERROR_R
    char buffer[256];
 #if HAVE_POSIX_STRERROR_R
@@ -1265,14 +1125,12 @@ WCHAR LIBNETXMS_EXPORTABLE *wcserror(int errnum)
    return value;
 }
 
-#endif /* !HAVE_WCSERROR && HAVE_STRERROR */
-
-#if !HAVE_WCSERROR_R && HAVE_STRERROR_R
+#if HAVE_STRERROR_R
 
 #if HAVE_POSIX_STRERROR_R
-int LIBNETXMS_EXPORTABLE wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen)
+int LIBNETXMS_EXPORTABLE wcserror_r(int errnum, wchar_t *strerrbuf, size_t buflen)
 #else
-WCHAR LIBNETXMS_EXPORTABLE *wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen)
+wchar_t LIBNETXMS_EXPORTABLE *wcserror_r(int errnum, wchar_t *strerrbuf, size_t buflen)
 #endif /* HAVE_POSIX_STRERROR_R */
 {
 #if HAVE_POSIX_STRERROR_R

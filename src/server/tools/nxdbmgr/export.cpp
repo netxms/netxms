@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2024 Victor Kirhenshtein
+** Copyright (C) 2004-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -513,13 +513,13 @@ static bool ExportPerfData(sqlite3 *db, const StringList& excludedTables)
 /**
  * Export database
  */
-void ExportDatabase(char *file, const StringList& excludedTables, const StringList& includedTables)
+void ExportDatabase(const char *file, const StringList& excludedTables, const StringList& includedTables)
 {
    if (!ValidateDatabase())
       return;
 
 	// Create new SQLite database
-	_unlink(file);
+	remove(file);
    sqlite3 *db;
 	if (sqlite3_open(file, &db) != SQLITE_OK)
 	{

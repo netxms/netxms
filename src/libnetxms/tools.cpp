@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -1063,13 +1063,23 @@ bool SetLastModificationTime(TCHAR *fileName, time_t lastModDate)
 {
    bool success = false;
 #ifdef _WIN32
-   struct _utimbuf ut;
+   struct __utimbuf64 ut;
 #else
    struct utimbuf ut;
 #endif // _WIN32
    ut.actime = lastModDate;
    ut.modtime = lastModDate;
-   success = _tutime(fileName, &ut) == 0;
+#ifdef _WIN32
+   success = _wutime64(fileName, &ut) == 0;
+#else
+#ifdef UNICODE
+   char mbname[MAX_PATH];
+   WideCharToMultiByteSysLocale(fileName, mbname, MAX_PATH);
+   success = utime(mbname, &ut) == 0;
+#else
+   success = utime(fileName, &ut) == 0;
+#endif
+#endif
    return success;
 }
 
@@ -1569,64 +1579,58 @@ void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, const TCHAR *pszSubStr,
 /**
  * Get size of file in bytes
  */
-uint64_t LIBNETXMS_EXPORTABLE FileSizeW(const WCHAR *pszFileName)
+uint64_t LIBNETXMS_EXPORTABLE FileSizeW(const wchar_t *fileName)
 {
-#ifdef _WIN32
-   HANDLE hFind;
+#if defined(_WIN32)
    WIN32_FIND_DATAW fd;
-#else
-   struct stat fileInfo;
-#endif
-
-#ifdef _WIN32
-   hFind = FindFirstFileW(pszFileName, &fd);
+   HANDLE hFind = FindFirstFileW(fileName, &fd);
    if (hFind == INVALID_HANDLE_VALUE)
       return 0;
    FindClose(hFind);
-
    return (unsigned __int64)fd.nFileSizeLow + ((unsigned __int64)fd.nFileSizeHigh << 32);
 #else
-   if (wstat(pszFileName, &fileInfo) == -1)
+   NX_STAT_STRUCT st;
+#ifdef UNICODE
+   if (CALL_STAT_FOLLOW_SYMLINK(fileName, &st) != 0)
       return 0;
-
-   return static_cast<uint64_t>(fileInfo.st_size);
+#else
+   wchar_t wname[MAX_PATH];
+   WideCharToMultiByteSysLocale(fileName, wname, MAX_PATH);
+   if (CALL_STAT_FOLLOW_SYMLINK(wname, &st) != 0)
+      return 0;
+#endif
+   return static_cast<uint64_t>(st.st_size);
 #endif
 }
 
 /**
  * Get size of file in bytes
  */
-uint64_t LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName)
+uint64_t LIBNETXMS_EXPORTABLE FileSizeA(const char *fileName)
 {
 #ifdef _WIN32
-   HANDLE hFind;
    WIN32_FIND_DATAA fd;
-#else
-   struct stat fileInfo;
-#endif
-
-#ifdef _WIN32
-   hFind = FindFirstFileA(pszFileName, &fd);
+   HANDLE hFind = FindFirstFileA(fileName, &fd);
    if (hFind == INVALID_HANDLE_VALUE)
       return 0;
    FindClose(hFind);
 
    return (unsigned __int64)fd.nFileSizeLow + ((unsigned __int64)fd.nFileSizeHigh << 32);
 #else
-   if (stat(pszFileName, &fileInfo) == -1)
+   NX_STAT_STRUCT st;
+   if (CALL_STAT_FOLLOW_SYMLINK_A(fileName, &st) != 0)
       return 0;
-
-   return static_cast<uint64_t>(fileInfo.st_size);
+   return static_cast<uint64_t>(st.st_size);
 #endif
 }
 
 /**
  * Get pointer to clean file name (without path specification)
  */
-const TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(const TCHAR *pszFileName)
+const TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(const TCHAR *fileName)
 {
-   const TCHAR *ptr = pszFileName + _tcslen(pszFileName);
-   while((ptr >= pszFileName) && (*ptr != _T('/')) && (*ptr != _T('\\')) && (*ptr != _T(':')))
+   const TCHAR *ptr = fileName + _tcslen(fileName);
+   while((ptr >= fileName) && (*ptr != _T('/')) && (*ptr != _T('\\')) && (*ptr != _T(':')))
       ptr--;
    return (ptr + 1);
 }
@@ -3386,29 +3390,6 @@ void LIBNETXMS_EXPORTABLE WriteToTerminalEx(const TCHAR *format, ...)
 	WriteToTerminal(buffer);
 }
 
-/**
- * mkstemp() implementation for Windows
- */
-#ifdef _WIN32
-
-int LIBNETXMS_EXPORTABLE mkstemp(char *tmpl)
-{
-	char *name = _mktemp(tmpl);
-	if (name == nullptr)
-		return -1;
-	return _open(name, O_RDWR | O_BINARY | O_CREAT | O_EXCL| _O_SHORT_LIVED, _S_IREAD | _S_IWRITE);
-}
-
-int LIBNETXMS_EXPORTABLE wmkstemp(WCHAR *tmpl)
-{
-	WCHAR *name = _wmktemp(tmpl);
-	if (name == nullptr)
-		return -1;
-	return _wopen(name, O_RDWR | O_BINARY | O_CREAT | O_EXCL| _O_SHORT_LIVED, _S_IREAD | _S_IWRITE);
-}
-
-#endif
-
 #if !HAVE_STRLWR && !defined(_WIN32)
 
 /**
@@ -4690,15 +4671,31 @@ BOOL LIBNETXMS_EXPORTABLE SetEnvironmentVariable(const TCHAR *var, const TCHAR *
  */
 DWORD LIBNETXMS_EXPORTABLE GetEnvironmentVariable(const TCHAR *var, TCHAR *buffer, DWORD size)
 {
-   const TCHAR *v = _tgetenv(var);
+#ifdef UNICODE
+   char mbvar[256];
+   WideCharToMultiByteSysLocale(var, mbvar, 256);
+   const char *v = getenv(mbvar);
    if (v != nullptr)
-      _tcslcpy(buffer, v, size);
+   {
+      MultiByteToWideCharSysLocale(v, buffer, size);
+      buffer[size - 1] = 0;
+   }
+   else
+   {
+      buffer[0] = 0;
+   }
+   return wcslen(buffer);
+#else
+   const char *v = getenv(var);
+   if (v != nullptr)
+      strlcpy(buffer, v, size);
    else
       buffer[0] = 0;
-   return _tcslen(buffer);
+   return strlen(buffer);
+#endif
 }
 
-#endif
+#endif   /* not _WIN32 */
 
 /**
  * Get environment variable as string object. Returns empty
@@ -4718,8 +4715,23 @@ String LIBNETXMS_EXPORTABLE GetEnvironmentVariableEx(const TCHAR *var)
    MemFree(mbuffer);
    return value;
 #else
-   const TCHAR *value = _tgetenv(var);
-   return (value != nullptr) ? String(value) : String();
+#ifdef UNICODE
+   char mbvar[256];
+   WideCharToMultiByteSysLocale(var, mbvar, 256);
+   const char *value = getenv(mbvar);
+#else
+   const char *value = getenv(var);
+#endif
+   if (value == nullptr)
+      return String();
+#ifdef UNICODE
+   size_t len = strlen(value) + 1;
+   Buffer<wchar_t, 1024> wvalue(len);
+   MultiByteToWideCharSysLocale(value, wvalue, len);
+   return String(wvalue);
+#else
+   return String(value);
+#endif
 #endif
 }
 

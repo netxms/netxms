@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -144,9 +144,7 @@
 #define _vtscanf nx_vwscanf
 #define _vftscanf nx_vfwscanf
 #define _vstscanf nx_vswscanf
-#define _tfopen   wfopen
-#define _tfopen64 wfopen64
-#define _tpopen   wpopen
+#define _tfopen   _wfopen
 #define _fgetts   fgetws
 #define _fputts   fputws
 #define _fputtc   fputwc
@@ -176,19 +174,16 @@
 #define _tcstok_r wcstok
 #define _totupper towupper
 #define _totlower towlower
-#define _topen    wopen
-#define _taccess  waccess
-#define _tstat    wstat
-#define _tchmod   wchmod
-#define _tunlink  wunlink
-#define _trename  wrename
-#define _tremove  wremove
+#define _topen    _wopen
+#define _taccess  _waccess
+#define _tchmod   _wchmod
+#define _trename  _wrename
+#define _tremove  _wremove
 #if HAVE_WCSFTIME && WORKING_WCSFTIME
 #define _tcsftime wcsftime
 #else
 #define _tcsftime nx_wcsftime
 #endif
-#define _tctime   wctime
 #define _istspace iswspace
 #define _istdigit iswdigit
 #define _istxdigit iswxdigit
@@ -196,18 +191,14 @@
 #define _istalnum iswalnum
 #define _istupper iswupper
 #define _istprint iswprint
-#define _tgetenv  wgetenv
-#define _tmkdir   wmkdir
-#define _tchdir   wchdir
-#define _trmdir   wrmdir
-#define _tutime   wutime
-#define _tcserror wcserror
+#define _tmkdir   _wmkdir
+#define _trmdir   _wrmdir
+#define _tcserror _wcserror
 #define _tcserror_r wcserror_r
 #define _tsystem  wsystem
 #define _topendir wopendir
 #define _treaddir wreaddir
 #define _tclosedir wclosedir
-#define _tmkstemp wmkstemp
 #define _ERR_error_tstring ERR_error_string_W
 
 #define _TDIR     DIRW
@@ -245,8 +236,6 @@
 #define _vftscanf vfscanf
 #define _vstscanf vsscanf
 #define _tfopen   fopen
-#define _tfopen64 fopen64
-#define _tpopen   popen
 #define _fgetts   fgets
 #define _fputts   fputs
 #define _fputtc   fputc
@@ -274,13 +263,10 @@
 #define _totlower tolower
 #define _topen    _open
 #define _taccess  _access
-#define _tstat    stat
 #define _tchmod   chmod
-#define _tunlink  unlink
 #define _trename  rename
 #define _tremove  remove
 #define _tcsftime strftime
-#define _tctime   ctime
 #define _istspace isspace
 #define _istdigit isdigit
 #define _istxdigit isxdigit
@@ -288,18 +274,14 @@
 #define _istalnum isalnum
 #define _istupper isupper
 #define _istprint isprint
-#define _tgetenv  getenv
 #define _tmkdir   mkdir
-#define _tchdir   chdir
 #define _trmdir   rmdir
-#define _tutime   utime
 #define _tcserror strerror
 #define _tcserror_r strerror_r
 #define _tsystem  system
 #define _topendir opendir
 #define _treaddir readdir
 #define _tclosedir closedir
-#define _tmkstemp mkstemp
 #define _ERR_error_tstring ERR_error_string
 
 #define _TDIR     DIR
