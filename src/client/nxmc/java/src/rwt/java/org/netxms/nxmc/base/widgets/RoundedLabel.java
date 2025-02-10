@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -70,7 +70,7 @@ public class RoundedLabel extends Composite
     */
    public void setLabelBackground(Color color)
    {
-      label.setBackground(color);
+      label.setBackground((color != null) ? color : getParent().getBackground());
       label.setForeground(ColorConverter.isDarkColor((color != null) ? color : label.getBackground()) ? labelLightColor : labelDarkColor);
    }
 

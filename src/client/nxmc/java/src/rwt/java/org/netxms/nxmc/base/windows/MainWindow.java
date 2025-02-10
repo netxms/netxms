@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -125,6 +125,7 @@ public class MainWindow extends Window implements MessageAreaHolder
    private boolean showServerClock;
    private Composite serverClockArea;
    private ServerClock serverClock;
+   private RoundedLabel objectsOutOfSyncIndicator;
    private HeaderButton userMenuButton;
    private UserMenuManager userMenuManager;
    private HeaderButton helpMenuButton;
@@ -161,8 +162,11 @@ public class MainWindow extends Window implements MessageAreaHolder
    {
       super.configureShell(shell);
 
-      NXCSession session = Registry.getSession();
+      final NXCSession session = Registry.getSession();
       shell.setText(String.format(i18n.tr("%s - %s"), BrandingManager.getClientProductName(), session.getUserName() + "@" + session.getServerAddress()));
+
+      final SessionListener sessionListener = (n) -> processSessionNotification(n);
+      session.addListener(sessionListener);
 
       shell.setMaximized(true);
       shell.setFullScreen(true);
@@ -184,6 +188,7 @@ public class MainWindow extends Window implements MessageAreaHolder
             savePinArea(ps, PinLocation.BOTTOM, bottomPinArea);
             savePinArea(ps, PinLocation.LEFT, leftPinArea);
             savePinArea(ps, PinLocation.RIGHT, rightPinArea);
+            session.removeListener(sessionListener);
          }
       });
    }
@@ -289,7 +294,8 @@ public class MainWindow extends Window implements MessageAreaHolder
       layout = new GridLayout();
       layout.marginWidth = 5;
       layout.marginHeight = 5;
-      layout.numColumns = 14;
+      layout.horizontalSpacing = 5;
+      layout.numColumns = 15;
       headerArea.setLayout(layout);
 
       Label appLogo = new Label(headerArea, SWT.CENTER);
@@ -308,6 +314,11 @@ public class MainWindow extends Window implements MessageAreaHolder
       Label filler = new Label(headerArea, SWT.CENTER);
       filler.setBackground(headerBackgroundColor);
       filler.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+
+      objectsOutOfSyncIndicator = new RoundedLabel(headerArea);
+      objectsOutOfSyncIndicator.setData(RWT.CUSTOM_VARIANT, "MainWindowHeaderNormal");
+      objectsOutOfSyncIndicator.setLabelForeground(null, headerForegroundColor);
+      objectsOutOfSyncIndicator.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
 
       serverClockArea = new Composite(headerArea, SWT.NONE);
       serverClockArea.setBackground(headerBackgroundColor);
@@ -352,38 +363,22 @@ public class MainWindow extends Window implements MessageAreaHolder
 
       new Spacer(headerArea, 32);
 
-      new HeaderButton(headerArea, "icons/main-window/preferences.png", i18n.tr("Client preferences"), new Runnable() {
-         @Override
-         public void run()
-         {
-            showPreferences();
-         }
-      });
+      new HeaderButton(headerArea, "icons/main-window/preferences.png", i18n.tr("Client preferences"), () -> showPreferences());
 
       helpMenuButton = new HeaderButton(headerArea, "icons/main-window/help.png", 
-            BrandingManager.isExtendedHelpMenuEnabled() ? i18n.tr("Help") : i18n.tr("Open user manual"), new Runnable() {
-         @Override
-         public void run()
-         {
-            if (BrandingManager.isExtendedHelpMenuEnabled())
-            {
-               Rectangle bounds = helpMenuButton.getBounds();
-               showMenu(helpMenuManager, headerArea.toDisplay(new Point(bounds.x, bounds.y + bounds.height + 2)));
-            }
-            else
-            {
-               ExternalWebBrowser.open(BrandingManager.getAdministratorGuideURL());
-            }
-         }
-      });
+            BrandingManager.isExtendedHelpMenuEnabled() ? i18n.tr("Help") : i18n.tr("Open user manual"), () -> {
+               if (BrandingManager.isExtendedHelpMenuEnabled())
+               {
+                  Rectangle bounds = helpMenuButton.getBounds();
+                  showMenu(helpMenuManager, headerArea.toDisplay(new Point(bounds.x, bounds.y + bounds.height + 2)));
+               }
+               else
+               {
+                  ExternalWebBrowser.open(BrandingManager.getAdministratorGuideURL());
+               }
+            });
 
-      new HeaderButton(headerArea, "icons/main-window/about.png", i18n.tr("About NetXMS Management Client"), new Runnable() {
-         @Override
-         public void run()
-         {
-            BrandingManager.createAboutDialog(getShell()).open();
-         }
-      });
+      new HeaderButton(headerArea, "icons/main-window/about.png", i18n.tr("About NetXMS Management Client"), () -> BrandingManager.createAboutDialog(getShell()).open());
 
       new Spacer(headerArea, 8);
 
@@ -502,10 +497,10 @@ public class MainWindow extends Window implements MessageAreaHolder
                pinView(v, location);
             }
          }
-         catch(Exception e)
+         catch (Exception e)
          {
             pinView(new NonRestorableView(e, v != null ? v.getFullName() : id), location);
-            logger.error("Cannot instantiate saved view", e);
+            logger.error("Cannot restore pinned view", e);
          }
       }     
    }
@@ -760,6 +755,8 @@ public class MainWindow extends Window implements MessageAreaHolder
       }
       else if (!showServerClock && (serverClock != null))
       {
+         for(Control c : serverClockArea.getChildren())
+            c.dispose();
          serverClock.dispose();
          serverClock = null;
          headerArea.layout(true);
@@ -771,16 +768,12 @@ public class MainWindow extends Window implements MessageAreaHolder
     */
    private void createServerClockWidget()
    {
+      new Spacer(serverClockArea, 27); // 32 - layout horizontal spacing
+
       serverClock = new ServerClock(serverClockArea, SWT.NONE);
       serverClock.setBackground(serverClockArea.getBackground());
       serverClock.setForeground(ThemeEngine.getForegroundColor("Window.Header"));
-      serverClock.setDisplayFormatChangeListener(new Runnable() {
-         @Override
-         public void run()
-         {
-            headerArea.layout();
-         }
-      });
+      serverClock.setDisplayFormatChangeListener(() -> headerArea.layout());
    }
 
    /**
@@ -856,6 +849,31 @@ public class MainWindow extends Window implements MessageAreaHolder
       {
          if (p instanceof ObjectsPerspective && ((ObjectsPerspective)p).showObject(object, dciId))
             break;
+      }
+   }
+
+   /**
+    * Process session notification.
+    *
+    * @param n notification
+    */
+   private void processSessionNotification(SessionNotification n)
+   {
+      if (n.getCode() == SessionNotification.OBJECTS_OUT_OF_SYNC)
+      {
+         getShell().getDisplay().asyncExec(() -> {
+            objectsOutOfSyncIndicator.setText(i18n.tr("OBJECTS OUT OF SYNC"));
+            objectsOutOfSyncIndicator.setLabelBackground(StatusDisplayInfo.getStatusBackgroundColor(Severity.MINOR));
+            headerArea.layout(true);
+         });
+      }
+      else if (n.getCode() == SessionNotification.OBJECTS_IN_SYNC)
+      {
+         getShell().getDisplay().asyncExec(() -> {
+            objectsOutOfSyncIndicator.setText("");
+            objectsOutOfSyncIndicator.setLabelBackground(null);
+            headerArea.layout(true);
+         });
       }
    }
 

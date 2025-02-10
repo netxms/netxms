@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -99,8 +99,8 @@ static void ShowNodeOSPFData(ServerConsole *console, const Node& node)
       return;
    }
 
-   TCHAR idText[16], addrText[MAX_IP_ADDR_TEXT_LEN];
-   console->printf(_T("OSPF router ID: \x1b[1m%s\x1b[0m\n\n"), IpToStr(node.getOSPFRouterId(), idText));
+   wchar_t idText[16], addrText[MAX_IP_ADDR_TEXT_LEN];
+   console->printf(L"OSPF router ID: \x1b[1m%s\x1b[0m\n\n", IpToStr(node.getOSPFRouterId(), idText));
 
    console->print(_T("\x1b[32;1mAREAS\x1b[0m\n\n"));
    StructArray<OSPFArea> areas = node.getOSPFAreas();
@@ -173,7 +173,7 @@ static void PrintArpCache(CONSOLE_CTX console, const Node& node, const ArpCache&
    ConsolePrintf(console, _T("\x1b[1mIP address\x1b[0m      | \x1b[1mMAC address\x1b[0m       | \x1b[1mIfIndex\x1b[0m | \x1b[1mInterface\x1b[0m\n"));
    ConsolePrintf(console, _T("----------------+-------------------+---------+----------------------\n"));
 
-   TCHAR ipAddrStr[64], macAddrStr[64];
+   wchar_t ipAddrStr[64], macAddrStr[64];
    for(int i = 0; i < arpCache.size(); i++)
    {
       const ArpEntry *e = arpCache.get(i);
@@ -189,7 +189,7 @@ static void PrintArpCache(CONSOLE_CTX console, const Node& node, const ArpCache&
  */
 static void DumpIndexCallbackByInetAddr(const InetAddress& addr, NetObj *object, void *context)
 {
-   TCHAR buffer[64];
+   wchar_t buffer[64];
    static_cast<ServerConsole*>(context)->printf(_T("%-40s [%7u] %s [%d]\n"),
             addr.toString(buffer), object->getId(), object->getName(), (int)object->getId());
 }
@@ -227,7 +227,7 @@ static void DumpIndex(ServerConsole *console, ObjectIndex *index)
    index->forEach(
       [console] (NetObj *object) -> EnumerationCallbackResult
       {
-         console->printf(_T("%08X %p %s\n"), object->getId(), object, object->getName());
+         console->printf(L"%08X %p %s\n", object->getId(), object, object->getName());
          return _CONTINUE;
       });
 }
@@ -243,9 +243,9 @@ static int CompareDebugTags(const DebugTagInfo **t1, const DebugTagInfo **t2)
 /**
  * Callback for address scan
  */
-static void PrintScanCallback(const InetAddress& addr, int32_t zoneUIN, const Node *proxy, uint32_t rtt, const TCHAR *proto, ServerConsole *console, void *context)
+static void PrintScanCallback(const InetAddress& addr, int32_t zoneUIN, const Node *proxy, uint32_t rtt, const wchar_t *proto, ServerConsole *console, void *context)
 {
-   TCHAR ipAddrText[64];
+   wchar_t ipAddrText[64];
    if (proxy != nullptr)
    {
       console->printf(_T("   Reply from %s to %s probe via proxy %s [%u]\n"), addr.toString(ipAddrText), proto, proxy->getName(), proxy->getId());
@@ -259,9 +259,9 @@ static void PrintScanCallback(const InetAddress& addr, int32_t zoneUIN, const No
 /**
  * Poll command processing
  */
-static void ProcessPollCommand(const TCHAR *pArg, TCHAR *szBuffer, CONSOLE_CTX console)
+static void ProcessPollCommand(const wchar_t *arg, wchar_t *szBuffer, CONSOLE_CTX console)
 {
-   pArg = ExtractWord(pArg, szBuffer);
+   arg = ExtractWord(arg, szBuffer);
    if (szBuffer[0] != 0)
    {
       int pollType = 0;
@@ -296,7 +296,7 @@ static void ProcessPollCommand(const TCHAR *pArg, TCHAR *szBuffer, CONSOLE_CTX c
 
       if (pollType > 0)
       {
-         ExtractWord(pArg, szBuffer);
+         ExtractWord(arg, szBuffer);
          uint32_t id = _tcstoul(szBuffer, nullptr, 0);
          if (id != 0)
          {
@@ -674,6 +674,45 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
             else
             {
                ConsoleWrite(console, _T("Invalid session ID\n"));
+            }
+         }
+         else
+         {
+            ConsoleWrite(console, _T("Invalid session ID\n"));
+         }
+      }
+      else
+      {
+         ConsoleWrite(console, _T("Session ID missing\n"));
+      }
+   }
+   else if (IsCommand(_T("NOTIFY"), szBuffer, 3))
+   {
+      pArg = ExtractWord(pArg, szBuffer);
+      if (szBuffer[0] != 0)
+      {
+         TCHAR *eptr;
+         session_id_t id = wcstol(szBuffer, &eptr, 10);
+         if (*eptr == 0)
+         {
+            pArg = ExtractWord(pArg, szBuffer);
+            uint32_t code = wcstoul(szBuffer, &eptr, 0);
+            if (*eptr == 0)
+            {
+               ExtractWord(pArg, szBuffer);
+               uint32_t data = (szBuffer[0] != 0) ? wcstoul(szBuffer, &eptr, 0) : 0;
+               if (*eptr == 0)
+               {
+                  NotifyClientSession(id, code, data);
+               }
+               else
+               {
+                  ConsoleWrite(console, _T("Invalid notification data\n"));
+               }
+            }
+            else
+            {
+               ConsoleWrite(console, _T("Invalid notification code\n"));
             }
          }
          else
@@ -1854,6 +1893,7 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
             _T("   ldapsync                          - Synchronize ldap users with local user database\n")
             _T("   log <text>                        - Write given text to server log file\n")
             _T("   logmark                           - Write marker ******* MARK ******* to server log file\n")
+            _T("   notify <session> <code> [<data>]  - Send notification message to client session\n")
             _T("   ping <address>                    - Send ICMP echo request to given IP address\n")
             _T("   poll <type> <node>                - Initiate node poll\n")
             _T("   raise <exception>                 - Raise exception\n")

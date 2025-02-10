@@ -67,6 +67,9 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
+import org.netxms.client.constants.Severity;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.BrandingManager;
 import org.netxms.nxmc.Memento;
@@ -101,6 +104,7 @@ import org.netxms.nxmc.modules.networkmaps.preferencepage.GeneralMapPreferences;
 import org.netxms.nxmc.modules.objects.ObjectsPerspective;
 import org.netxms.nxmc.modules.objects.preferencepages.ObjectsPreferences;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.ExternalWebBrowser;
@@ -135,6 +139,7 @@ public class MainWindow extends Window implements MessageAreaHolder
    private boolean showServerClock;
    private Composite serverClockArea;
    private ServerClock serverClock;
+   private RoundedLabel objectsOutOfSyncIndicator;
    private HeaderButton userMenuButton;
    private UserMenuManager userMenuManager;
    private HeaderButton helpMenuButton;
@@ -166,8 +171,11 @@ public class MainWindow extends Window implements MessageAreaHolder
    {
       super.configureShell(shell);
 
-      NXCSession session = Registry.getSession();
+      final NXCSession session = Registry.getSession();
       shell.setText(String.format(i18n.tr("%s - %s"), BrandingManager.getClientProductName(), session.getUserName() + "@" + session.getServerAddress()));
+
+      final SessionListener sessionListener = (n) -> processSessionNotification(n);
+      session.addListener(sessionListener);
 
       PreferenceStore ps = PreferenceStore.getInstance();
       shell.setSize(ps.getAsPoint("MainWindow.Size", 600, 400));
@@ -195,6 +203,7 @@ public class MainWindow extends Window implements MessageAreaHolder
             savePinArea(ps, PinLocation.LEFT, leftPinArea);
             savePinArea(ps, PinLocation.RIGHT, rightPinArea);
             savePopOutViews(ps);
+            session.removeListener(sessionListener);
          }
       });
 
@@ -325,7 +334,8 @@ public class MainWindow extends Window implements MessageAreaHolder
       layout = new GridLayout();
       layout.marginWidth = 5;
       layout.marginHeight = 5;
-      layout.numColumns = 14;
+      layout.horizontalSpacing = 5;
+      layout.numColumns = 15;
       headerArea.setLayout(layout);
 
       Label appLogo = new Label(headerArea, SWT.CENTER);
@@ -344,6 +354,11 @@ public class MainWindow extends Window implements MessageAreaHolder
       Label filler = new Label(headerArea, SWT.CENTER);
       filler.setBackground(headerBackgroundColor);
       filler.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+
+      objectsOutOfSyncIndicator = new RoundedLabel(headerArea);
+      objectsOutOfSyncIndicator.setLabelForeground(null, headerForegroundColor);
+      objectsOutOfSyncIndicator.setFont(headerFont);
+      objectsOutOfSyncIndicator.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
 
       serverClockArea = new Composite(headerArea, SWT.NONE);
       serverClockArea.setBackground(headerBackgroundColor);
@@ -388,38 +403,22 @@ public class MainWindow extends Window implements MessageAreaHolder
 
       new Spacer(headerArea, 32);
 
-      new HeaderButton(headerArea, "icons/main-window/preferences.png", i18n.tr("Client preferences"), new Runnable() {
-         @Override
-         public void run()
-         {
-            showPreferences();
-         }
-      });
+      new HeaderButton(headerArea, "icons/main-window/preferences.png", i18n.tr("Client preferences"), () -> showPreferences());
 
       helpMenuButton = new HeaderButton(headerArea, "icons/main-window/help.png", 
-            BrandingManager.isExtendedHelpMenuEnabled() ? i18n.tr("Help") : i18n.tr("Open user manual"), new Runnable() {
-         @Override
-         public void run()
-         {
-            if (BrandingManager.isExtendedHelpMenuEnabled())
-            {
-               Rectangle bounds = helpMenuButton.getBounds();
-               showMenu(helpMenuManager, headerArea.toDisplay(new Point(bounds.x, bounds.y + bounds.height + 2)));
-            }
-            else
-            {
-               ExternalWebBrowser.open(BrandingManager.getAdministratorGuideURL());
-            }
-         }
-      });
+            BrandingManager.isExtendedHelpMenuEnabled() ? i18n.tr("Help") : i18n.tr("Open user manual"), () -> {
+               if (BrandingManager.isExtendedHelpMenuEnabled())
+               {
+                  Rectangle bounds = helpMenuButton.getBounds();
+                  showMenu(helpMenuManager, headerArea.toDisplay(new Point(bounds.x, bounds.y + bounds.height + 2)));
+               }
+               else
+               {
+                  ExternalWebBrowser.open(BrandingManager.getAdministratorGuideURL());
+               }
+            });
 
-      new HeaderButton(headerArea, "icons/main-window/about.png", i18n.tr("About NetXMS Management Client"), new Runnable() {
-         @Override
-         public void run()
-         {
-            BrandingManager.createAboutDialog(getShell()).open();
-         }
-      });
+      new HeaderButton(headerArea, "icons/main-window/about.png", i18n.tr("About NetXMS Management Client"), () -> BrandingManager.createAboutDialog(getShell()).open());
 
       new Spacer(headerArea, 8);
 
@@ -498,7 +497,7 @@ public class MainWindow extends Window implements MessageAreaHolder
 
       switchToPerspective("pinboard");
       PreferenceStore ps = PreferenceStore.getInstance();
-      switchToPerspective(PreferenceStore.getInstance().getAsString(PreferenceStore.serverProperty("MainWindow.CurrentPerspective", session)));
+      switchToPerspective(ps.getAsString(PreferenceStore.serverProperty("MainWindow.CurrentPerspective", session)));
       restorePinArea(ps, PinLocation.BOTTOM);
       restorePinArea(ps, PinLocation.LEFT);
       restorePinArea(ps, PinLocation.RIGHT);
@@ -557,8 +556,8 @@ public class MainWindow extends Window implements MessageAreaHolder
          }
          catch (Exception e)
          {
-            pinView(new NonRestorableView(e, v.getFullName() != null ? v.getFullName() : id), location);
-            logger.error("Cannot instantiate saved pop out view", e);
+            pinView(new NonRestorableView(e, v != null ? v.getFullName() : id), location);
+            logger.error("Cannot restore pinned view", e);
          }
       }     
    }
@@ -817,6 +816,8 @@ public class MainWindow extends Window implements MessageAreaHolder
       }
       else if (!showServerClock && (serverClock != null))
       {
+         for(Control c : serverClockArea.getChildren())
+            c.dispose();
          serverClock.dispose();
          serverClock = null;
          headerArea.layout(true);
@@ -828,17 +829,13 @@ public class MainWindow extends Window implements MessageAreaHolder
     */
    private void createServerClockWidget()
    {
+      new Spacer(serverClockArea, 27); // 32 - layout horizontal spacing
+
       serverClock = new ServerClock(serverClockArea, SWT.NONE);
       serverClock.setBackground(serverClockArea.getBackground());
       serverClock.setForeground(ThemeEngine.getForegroundColor("Window.Header"));
       serverClock.setFont(headerFontBold);
-      serverClock.setDisplayFormatChangeListener(new Runnable() {
-         @Override
-         public void run()
-         {
-            headerArea.layout();
-         }
-      });
+      serverClock.setDisplayFormatChangeListener(() -> headerArea.layout());
    }
 
    /**
@@ -914,6 +911,31 @@ public class MainWindow extends Window implements MessageAreaHolder
       {
          if (p instanceof ObjectsPerspective && ((ObjectsPerspective)p).showObject(object, dciId))
             break;
+      }
+   }
+
+   /**
+    * Process session notification.
+    *
+    * @param n notification
+    */
+   private void processSessionNotification(SessionNotification n)
+   {
+      if (n.getCode() == SessionNotification.OBJECTS_OUT_OF_SYNC)
+      {
+         getShell().getDisplay().asyncExec(() -> {
+            objectsOutOfSyncIndicator.setText(i18n.tr("OBJECTS OUT OF SYNC"));
+            objectsOutOfSyncIndicator.setLabelBackground(StatusDisplayInfo.getStatusBackgroundColor(Severity.MINOR));
+            headerArea.layout(true);
+         });
+      }
+      else if (n.getCode() == SessionNotification.OBJECTS_IN_SYNC)
+      {
+         getShell().getDisplay().asyncExec(() -> {
+            objectsOutOfSyncIndicator.setText("");
+            objectsOutOfSyncIndicator.setLabelBackground(null);
+            headerArea.layout(true);
+         });
       }
    }
 
