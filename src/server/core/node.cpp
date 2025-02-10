@@ -440,7 +440,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
       _T("cip_status,cip_state,eip_proxy,eip_port,hardware_id,cip_vendor_code,agent_cert_mapping_method,")
       _T("agent_cert_mapping_data,snmp_engine_id,ssh_port,ssh_key_id,syslog_codepage,snmp_codepage,ospf_router_id,")
       _T("mqtt_proxy,modbus_proxy,modbus_tcp_port,modbus_unit_id,snmp_context_engine_id,vnc_password,vnc_port,")
-      _T("vnc_proxy,path_check_reason,path_check_node_id,path_check_iface_id,expecetd_capabilities FROM nodes WHERE id=?"));
+      _T("vnc_proxy,path_check_reason,path_check_node_id,path_check_iface_id,expected_capabilities FROM nodes WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
