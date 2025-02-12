@@ -1,3 +1,4 @@
+org.netxms.nxmc.modules.snmp.MibExplorerToolDescriptor
 org.netxms.nxmc.modules.tools.FindByIpAddressDescriptor
 org.netxms.nxmc.modules.tools.FindByMacAddressDescriptor
 org.netxms.nxmc.modules.tools.ObjectFinderDescriptor
