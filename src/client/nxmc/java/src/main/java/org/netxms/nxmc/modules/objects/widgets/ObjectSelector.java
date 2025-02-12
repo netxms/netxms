@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,6 @@ package org.netxms.nxmc.modules.objects.widgets;
 import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.jface.window.Window;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
@@ -62,13 +60,7 @@ public class ObjectSelector extends AbstractSelector
       super(parent, style, configurator);
       setText(emptySelectionName);
       objectClassSet.add(Node.class);
-      addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            labelProvider.dispose();
-         }
-      });
+      addDisposeListener((e) -> labelProvider.dispose());
    }
 
    /**

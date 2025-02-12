@@ -1166,7 +1166,7 @@ public class ObjectContextMenuManager extends MenuManager
    {
       AbstractObject object = getObjectFromSelection();
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
-      view.openView(new MibExplorer(object.getObjectId(), contextId));
+      view.openView(new MibExplorer(object.getObjectId(), contextId, false));
    }
 
    /**

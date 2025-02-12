@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
@@ -42,6 +41,7 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
@@ -58,9 +58,12 @@ import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.actions.CreateSnmpDci;
+import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.views.AdHocObjectView;
+import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.netxms.nxmc.modules.snmp.helpers.SnmpValueLabelProvider;
 import org.netxms.nxmc.modules.snmp.shared.MibCache;
 import org.netxms.nxmc.modules.snmp.views.helpers.SnmpWalkFilter;
@@ -108,15 +111,19 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 	private CreateSnmpDci actionCreateSnmpDci;
 	private Composite resultArea;
 	private SnmpWalkFilter filter;
+   private boolean toolView;
 
    /**
-    * Create agent configuration editor for given node.
+    * Create MIB explorer for given node.
     *
-    * @param node node object
+    * @param objectId node object ID
+    * @param context context for the view
     */
-   public MibExplorer(long objectId, long context)
+   public MibExplorer(long objectId, long context, boolean toolView)
    {
-      super(LocalizationHelper.getI18n(MibExplorer.class).tr("MIB Explorer"), ResourceManager.getImageDescriptor("icons/object-views/mibexplorer.gif"), "objects.mib-explorer", objectId, context, false);
+      super(LocalizationHelper.getI18n(MibExplorer.class).tr("MIB Explorer"), ResourceManager.getImageDescriptor("icons/object-views/mibexplorer.gif"),
+            toolView ? "tools.mib-explorer" : "objects.mib-explorer", objectId, context, false);
+      this.toolView = toolView;
    }  
 
    /**
@@ -126,7 +133,18 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
     */
    protected MibExplorer()
    {
-      this(0, 0);
+      this(0, 0, false);
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.AdHocObjectView#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      MibExplorer view = (MibExplorer)super.cloneView();
+      view.toolView = toolView;
+      return view;
    }
 
    /**
@@ -160,9 +178,29 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 		layout.verticalSpacing = 0;
 		parent.setLayout(layout);
 
+      if (toolView)
+      {
+         Group selectorArea = new Group(parent, SWT.NONE);
+         selectorArea.setText(i18n.tr("Context"));
+         selectorArea.setLayout(new GridLayout());
+         selectorArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+
+         ObjectSelector objectSelector = new ObjectSelector(selectorArea, SWT.NONE, new SelectorConfigurator().setShowClearButton(true).setShowLabel(false));
+         objectSelector.setClassFilter(ObjectSelectionDialog.createNodeSelectionFilter(false));
+         objectSelector.setObjectClass(Node.class);
+         objectSelector.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+         objectSelector.addModifyListener((e) -> {
+            AbstractObject object = objectSelector.getObject();
+            setObjectId((object != null) ? object.getObjectId() : 0);
+            setContext(object);
+         });
+      }
+
 		SashForm splitter = new SashForm(parent, SWT.VERTICAL);
 		splitter.setLayout(new FillLayout());
-		splitter.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
+      gd.verticalIndent = toolView ? 3 : 0;
+      splitter.setLayoutData(gd);
 
 		SashForm mibViewSplitter = new SashForm(splitter, SWT.HORIZONTAL);
 		mibViewSplitter.setLayout(new FillLayout());
@@ -475,12 +513,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 	{
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			public void menuAboutToShow(IMenuManager mgr)
-			{
-				fillTreeContextMenu(mgr);
-			}
-		});
+      menuMgr.addMenuListener((m) -> fillTreeContextMenu(m));
 
       Menu menu = menuMgr.createContextMenu(mibBrowser.getTreeControl());
       mibBrowser.getTreeControl().setMenu(menu);
@@ -506,12 +539,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 	{
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			public void menuAboutToShow(IMenuManager mgr)
-			{
-				fillResultsContextMenu(mgr);
-			}
-		});
+      menuMgr.addMenuListener((m) -> fillResultsContextMenu(m));
 
 		Menu menu = menuMgr.createContextMenu(viewer.getTable());
 		viewer.getTable().setMenu(menu);
@@ -606,13 +634,9 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 			@Override
 			protected void jobFinalize()
 			{
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						walkActive = false;
-                  actionWalk.setEnabled(getObject() != null);
-					}
+            runInUIThread(() -> {
+               walkActive = false;
+               actionWalk.setEnabled(getObject() != null);
 				});
 			}
 		};
@@ -647,6 +671,15 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 			}
 		});
 	}
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#getFullName()
+    */
+   @Override
+   public String getFullName()
+   {
+      return toolView ? getName() : super.getFullName();
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)

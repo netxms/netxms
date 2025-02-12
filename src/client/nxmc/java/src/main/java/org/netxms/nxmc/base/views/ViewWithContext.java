@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -109,7 +109,7 @@ public abstract class ViewWithContext extends View
     * Set context
     * 
     * @param context context new context
-    * @param update if update should be callled
+    * @param update if update should be called
     */
    protected void setContext(Object context, boolean update)
    {

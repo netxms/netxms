@@ -100,6 +100,16 @@ public abstract class AdHocObjectView extends ObjectView
    }
 
    /**
+    * Set object ID this view operates on.
+    *
+    * @param objectId new object ID
+    */
+   protected void setObjectId(long objectId)
+   {
+      this.objectId = objectId;
+   }
+
+   /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#getObjectName()
     */
    @Override

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 package org.netxms.nxmc.base.views;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.ServiceLoader;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -50,13 +49,7 @@ public class ToolsPerspective extends Perspective
          logger.debug("Adding tools element " + e.getName());
          elements.add(e);
       }
-      elements.sort(new Comparator<ToolDescriptor>() {
-         @Override
-         public int compare(ToolDescriptor e1, ToolDescriptor e2)
-         {
-            return e1.getName().compareToIgnoreCase(e2.getName());
-         }
-      });
+      elements.sort((e1, e2) -> e1.getName().compareToIgnoreCase(e2.getName()));
    }
 
    /**

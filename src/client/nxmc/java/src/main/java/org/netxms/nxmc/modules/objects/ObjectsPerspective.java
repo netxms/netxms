@@ -650,7 +650,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
 
       if ((object instanceof Node) && ((Node)object).hasSnmpAgent())
       {
-         addObjectToolBarItem(i18n.tr("&MIB Explorer"), imageOpenMibExplorer, () -> addMainView(new MibExplorer(object.getObjectId(), object.getObjectId()), true, false));
+         addObjectToolBarItem(i18n.tr("&MIB Explorer"), imageOpenMibExplorer, () -> addMainView(new MibExplorer(object.getObjectId(), object.getObjectId(), false), true, false));
       }
 
       for(ObjectAction<?> a : actionContributions)
