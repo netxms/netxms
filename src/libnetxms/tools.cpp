@@ -1588,9 +1588,9 @@ uint64_t LIBNETXMS_EXPORTABLE FileSizeW(const wchar_t *fileName)
    if (CALL_STAT_FOLLOW_SYMLINK(fileName, &st) != 0)
       return 0;
 #else
-   wchar_t wname[MAX_PATH];
-   WideCharToMultiByteSysLocale(fileName, wname, MAX_PATH);
-   if (CALL_STAT_FOLLOW_SYMLINK(wname, &st) != 0)
+   char mbname[MAX_PATH];
+   WideCharToMultiByteSysLocale(fileName, mbname, MAX_PATH);
+   if (CALL_STAT_FOLLOW_SYMLINK(mbname, &st) != 0)
       return 0;
 #endif
    return static_cast<uint64_t>(st.st_size);
