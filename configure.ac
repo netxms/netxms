@@ -1811,7 +1811,7 @@ int func(std::nullptr_t p)
 	AC_LANG_POP([C++])
 fi
 
-if test "x$CXX" = "xCC" ; then
+if test "x$CXX" = "xCC" -o "x$CXX" = "xCC -std=c++11" ; then
 	SQLFLAGS="-Qn"
 	CPPFLAGS="$CPPFLAGS -mt"
 	CXXFLAGS="$CXXFLAGS -erroff=badargtype2w,wbadinit,wbadlkginit"
@@ -2476,7 +2476,9 @@ if test "x$FORCE_INTERNAL_JANSSON" = "xyes"; then
 else
 	HAVE_JANSSON=yes
 	AC_CHECK_HEADER(jansson.h,,HAVE_JANSSON=no)
-	AC_CHECK_LIB(jansson, json_object, [ HAVE_JANSSON=yes ], [ HAVE_JANSSON=no ])
+	if test "x$HAVE_JANSSON" = "xyes"; then
+		AC_CHECK_LIB(jansson, json_object, [ HAVE_JANSSON=yes ], [ HAVE_JANSSON=no ])
+	fi
 fi
 if test "x$HAVE_JANSSON" = "xno"; then
 	MODULES="jansson $MODULES"
@@ -4573,7 +4575,7 @@ AM_CONDITIONAL([XMPP_SUPPORT], [test "x$XMPP_SUPPORT" = "xyes"])
 #--------------------------------------------------------------------
 
 COMPILER_VERSION=""
-if test "$CXX" = "CC"; then
+if test "$CXX" = "CC" -o "$CXX" = "CC -std=c++11" ; then
 	v=`$CXX -V 2>&1 | head -1`
 	if test $? = 0; then
 		COMPILER_VERSION="$v"
