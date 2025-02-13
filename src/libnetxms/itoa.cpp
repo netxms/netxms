@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** NetXMS Foundation Library
- ** Copyright (C) 2003-2022 Raden Solutions
+ ** Copyright (C) 2003-2025 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -28,20 +28,21 @@
  */
 template<typename _Ti, typename _Ta> static inline _Ta *SignedIntegerToString(_Ti value, _Ta *str, int base)
 {
-   _Ta *p = str;
+   _Ta buffer[64];
+   _Ta *p = str, *t = buffer;
    if (value < 0)
    {
       *p++ = '-';
-      value = -value;
+      _Ti rem = -(value % base);
+      *t++ = static_cast<_Ta>((rem < 10) ? (rem + '0') : (rem - 10 + 'a'));
+      value /= -base;   // This will negate resulting value
    }
 
-   _Ta buffer[64];
-   _Ta *t = buffer;
    do
    {
       _Ti rem = value % base;
       *t++ = static_cast<_Ta>((rem < 10) ? (rem + '0') : (rem - 10 + 'a'));
-      value = value / base;
+      value /= base;
    } while(value > 0);
 
    t--;
@@ -56,9 +57,8 @@ template<typename _Ti, typename _Ta> static inline _Ta *SignedIntegerToString(_T
  */
 template<typename _Ti, typename _Ta> static inline _Ta *UnsignedIntegerToString(_Ti value, _Ta *str, int base)
 {
-   _Ta *p = str;
    _Ta buffer[64];
-   _Ta *t = buffer;
+   _Ta *p = str, *t = buffer;
    do
    {
       _Ti rem = value % base;
