@@ -1328,9 +1328,9 @@ static void TestIntegerToString()
    AssertEquals(IntegerToString(2147483647, wbuffer, 10), L"2147483647");
    AssertEquals(IntegerToString(2147483647, wbuffer, 16), L"7fffffff");
    AssertEquals(IntegerToString(-2147483647, wbuffer, 10), L"-2147483647");
-   AssertEquals(IntegerToString(-2147483648, wbuffer, 10), L"-2147483648");
+   AssertEquals(IntegerToString(static_cast<int32_t>(0x80000000), wbuffer, 10), L"-2147483648");
    AssertEquals(IntegerToString(-2147483647, wbuffer, 16), L"-7fffffff");
-   AssertEquals(IntegerToString(-2147483648, wbuffer, 16), L"-80000000");
+   AssertEquals(IntegerToString(static_cast<int32_t>(0x80000000), wbuffer, 16), L"-80000000");
    AssertEquals(IntegerToString(0555, wbuffer, 8), L"555");
    AssertEquals(IntegerToString(0xFA48, wbuffer, 16), L"fa48");
    AssertEquals(IntegerToString(_ULL(0xF0F1F20102030405), wbuffer, 16), L"f0f1f20102030405");
