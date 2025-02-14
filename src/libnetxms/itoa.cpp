@@ -28,6 +28,13 @@
  */
 template<typename _Ti, typename _Ta> static inline _Ta *SignedIntegerToString(_Ti value, _Ta *str, int base)
 {
+   if (value == 0)
+   {
+      str[0] = '0';
+      str[1] = 0;
+      return str;
+   }
+
    _Ta buffer[64];
    _Ta *p = str, *t = buffer;
    if (value < 0)
@@ -38,12 +45,12 @@ template<typename _Ti, typename _Ta> static inline _Ta *SignedIntegerToString(_T
       value /= -base;   // This will negate resulting value
    }
 
-   do
+   while(value > 0)
    {
       _Ti rem = value % base;
       *t++ = static_cast<_Ta>((rem < 10) ? (rem + '0') : (rem - 10 + 'a'));
       value /= base;
-   } while(value > 0);
+   }
 
    t--;
    while(t >= buffer)
