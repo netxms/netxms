@@ -61,6 +61,7 @@ public class NetworkMap extends GenericObject implements AutoBindObject, Polling
    public static final int MF_FIT_BKGND_IMAGE         = 0x000800;
    public static final int MF_FIT_TO_SCREEN           = 0x001000;
    public final static int MF_SHOW_AS_OBJECT_VIEW     = 0x002000;
+   public final static int MF_SHOW_TRAFFIC             = 0x004000;
 
    public static final int MF_BKGND_IMAGE_FLAGS       = 0x000900;
 

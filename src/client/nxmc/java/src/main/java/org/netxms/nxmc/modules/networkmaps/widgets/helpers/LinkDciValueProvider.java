@@ -29,10 +29,12 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.TimeFormatter;
+import org.netxms.client.maps.LinkDataLocation;
 import org.netxms.client.maps.MapDCIInstance;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
-import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.client.maps.configs.MapLinkDataSource;
+import org.netxms.client.maps.configs.MapDataSource;
 import org.netxms.nxmc.DisposableSingleton;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.DateFormatFactory;
@@ -237,21 +239,25 @@ public class LinkDciValueProvider implements DisposableSingleton
     * @param link
     * @return
     */
-   public String getDciDataAsString(NetworkMapLink link)
+   public String getDciDataAsString(NetworkMapLink link, LinkDataLocation location)
    {
       if (!link.hasDciData())
          return "";
 
-      SingleDciConfig[] dciList =  link.getDciList();
+      MapLinkDataSource[] dciList =  link.getDciList();
       TimeFormatter timeFormatter = DateFormatFactory.getTimeFormatter();
       StringBuilder sb = new StringBuilder();
-      for(int i = 0; i < dciList.length;)
+      for(int i = 0; i < dciList.length; i++)
       {
-         DciValue v = getDciLastValue(dciList[i].dciId);
+         if (dciList[i].getLocation() != location)
+            continue;
+
+         if (!sb.isEmpty())
+            sb.append('\n');
+         
+         DciValue v = getDciLastValue(dciList[i].getDciId());
          if (v != null)
             sb.append(v.format(dciList[i].getFormatString(), timeFormatter));
-         if (++i != dciList.length)
-            sb.append('\n');
       }
       return sb.toString();
    }
@@ -260,13 +266,13 @@ public class LinkDciValueProvider implements DisposableSingleton
     * @param dciList
     * @return
     */
-   public String getDciDataAsString(List<SingleDciConfig> dciList)
+   public String getDciDataAsString(List<MapDataSource> dciList)
    {
       TimeFormatter timeFormatter = DateFormatFactory.getTimeFormatter();
       StringBuilder sb = new StringBuilder();
       for(int i = 0; i < dciList.size();)
       {
-         DciValue v = getDciLastValue(dciList.get(i).dciId); 
+         DciValue v = getDciLastValue(dciList.get(i).getDciId()); 
          if (v != null)
             sb.append(v.format(dciList.get(i).getFormatString(), timeFormatter));
          if (++i != dciList.size())
@@ -279,12 +285,12 @@ public class LinkDciValueProvider implements DisposableSingleton
     * @param dciList
     * @return
     */
-   public List<DciValue> getDciData(List<SingleDciConfig> dciList)
+   public List<DciValue> getDciData(List<? extends MapDataSource> dciList)
    {
       List<DciValue> result = new ArrayList<DciValue>();
       for(int i = 0; i < dciList.size();i++)
       {
-         DciValue value = getDciLastValue(dciList.get(i).dciId);
+         DciValue value = getDciLastValue(dciList.get(i).getDciId());
          if (value != null)
             result.add(value); 
       }
@@ -295,8 +301,8 @@ public class LinkDciValueProvider implements DisposableSingleton
     * @param dci
     * @return
     */
-   public DciValue getLastDciData(SingleDciConfig dci)
+   public DciValue getLastDciData(MapDataSource dci)
    {
-      return getDciLastValue(dci.dciId); 
+      return getDciLastValue(dci.getDciId()); 
    }
 }

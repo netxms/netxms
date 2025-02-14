@@ -41,7 +41,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.client.maps.configs.MapDataSource;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
@@ -60,7 +60,7 @@ public class DCIContainerDataSources extends PropertyPage
    public static final int COLUMN_POSITION = 0;
    public static final int COLUMN_NODE = 1;
    public static final int COLUMN_METRIC = 2;
-   public static final int COLUMN_LABEL = 3;
+   public static final int COLUMN_FORMAT = 3;
 
    private I18n i18n = LocalizationHelper.getI18n(DCIContainerDataSources.class);
    private DciListLabelProvider labelProvider;
@@ -71,7 +71,7 @@ public class DCIContainerDataSources extends PropertyPage
    private Button upButton;
    private Button downButton;
    private NetworkMapDCIContainer container;
-   private List<SingleDciConfig> dciList = null;
+   private List<MapDataSource> dciList = null;
 
    /**
     * Create new page for given DCI container.
@@ -93,7 +93,7 @@ public class DCIContainerDataSources extends PropertyPage
       dciList = container.getDciAsList();
       Composite dialogArea = new Composite(parent, SWT.NONE);
 
-      labelProvider = new DciListLabelProvider(dciList);
+      labelProvider = new DciListLabelProvider(dciList, null);
       labelProvider.resolveDciNames(dciList);
 
       GridLayout layout = new GridLayout();
@@ -103,7 +103,7 @@ public class DCIContainerDataSources extends PropertyPage
       layout.numColumns = 2;
       dialogArea.setLayout(layout);
 
-      final String[] columnNames = { i18n.tr("Position"), i18n.tr("Node"), i18n.tr("Metric"), i18n.tr("Name") };
+      final String[] columnNames = { i18n.tr("Position"), i18n.tr("Node"), i18n.tr("Metric"), i18n.tr("Format") };
       final int[] columnWidths = { 40, 130, 200, 150 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -275,12 +275,12 @@ public class DCIContainerDataSources extends PropertyPage
       if (dlg.open() == Window.OK)
       {
          List<DciValue> selection = dlg.getSelection();
-         List<SingleDciConfig> select = new ArrayList<SingleDciConfig>();
+         List<MapDataSource> select = new ArrayList<MapDataSource>();
          for(DciValue item : selection)
          {
-            SingleDciConfig dci = new SingleDciConfig(item);
+            MapDataSource dci = new MapDataSource(item);
             select.add(dci);
-            labelProvider.addCacheEntry(dci.getNodeId(), dci.dciId, dci.name);
+            labelProvider.addCacheEntry(dci.getNodeId(), dci.getDciId(), "");
 
             dciList.add(dci);
             
@@ -296,11 +296,11 @@ public class DCIContainerDataSources extends PropertyPage
    private void editItem()
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      SingleDciConfig dci = (SingleDciConfig)selection.getFirstElement();
+      MapDataSource dci = (MapDataSource)selection.getFirstElement();
       if (dci == null)
          return;
 
-      DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci);
+      DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, null);
       if (dlg.open() == Window.OK)
       {
          viewer.update(dci, null);
@@ -362,7 +362,7 @@ public class DCIContainerDataSources extends PropertyPage
    @Override
    protected boolean applyChanges(final boolean isApply)
    {
-      container.setObjectDCIArray(dciList.toArray(new SingleDciConfig[dciList.size()]));      
+      container.setObjectDCIArray(dciList.toArray(new MapDataSource[dciList.size()]));      
       return true;
    }
 }

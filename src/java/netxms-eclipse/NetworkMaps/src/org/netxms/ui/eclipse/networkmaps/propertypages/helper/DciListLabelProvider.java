@@ -28,12 +28,12 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciInfo;
+import org.netxms.client.maps.configs.MapDataSource;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.propertypages.LinkDataSources;
-import org.netxms.client.maps.configs.SingleDciConfig;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -43,12 +43,12 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 {
 	private NXCSession session;
 	private Map<Long, DciInfo> dciNameCache = new HashMap<Long, DciInfo>();
-	private List<SingleDciConfig> elementList;
+	private List<? extends MapDataSource> elementList;
 	
 	/**
 	 * Constructor for DciListLabelProvider class
 	 */
-	public DciListLabelProvider(List<SingleDciConfig> elementList)
+	public DciListLabelProvider(List<? extends MapDataSource> elementList)
 	{
 		this.elementList = elementList;
 		session = (NXCSession)ConsoleSharedData.getSession();
@@ -69,7 +69,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-	   SingleDciConfig dci = (SingleDciConfig)element;
+	   MapDataSource dci = (MapDataSource)element;
 		switch(columnIndex)
 		{
 			case LinkDataSources.COLUMN_POSITION:
@@ -78,10 +78,8 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 				AbstractObject object = session.findObjectById(dci.getNodeId());
 				return (object != null) ? object.getObjectName() : ("[" + Long.toString(dci.getNodeId()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case LinkDataSources.COLUMN_METRIC:
-				String name = dciNameCache.get(dci.dciId).displayName;
+				String name = dciNameCache.get(dci.getDciId()).displayName;
 				return (name != null) ? name : Messages.get().DciListLabelProvider_Unresolved;
-			case LinkDataSources.COLUMN_LABEL:
-				return dci.name;
 		}
 		return null;
 	}
@@ -91,7 +89,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	 * 
 	 * @param dciList
 	 */
-	public void resolveDciNames(final Collection<SingleDciConfig> dciList)
+	public void resolveDciNames(final Collection<? extends MapDataSource> dciList)
 	{
 		new ConsoleJob(Messages.get().DciListLabelProvider_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override

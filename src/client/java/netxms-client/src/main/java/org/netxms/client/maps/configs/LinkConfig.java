@@ -25,7 +25,7 @@ import org.netxms.client.maps.NetworkMapLink;
 
 public class LinkConfig
 {
-   private SingleDciConfig[] dciList;
+   private MapLinkDataSource[] dciList;
    private List<Long> objectStatusList = new ArrayList<Long>();
    private int routing;
    private long[] bendPoints;
@@ -57,7 +57,7 @@ public class LinkConfig
     * @param useActiveThresholds true to use active DCI thresholds for status calculation
     * @param isLocked true if link is locked
     */
-   public LinkConfig(SingleDciConfig[] dciList, List<Long> objectStatusList, int routing, long[] bendPoints, boolean useActiveThresholds, boolean useInterfaceUtilization, boolean isLocked)
+   public LinkConfig(MapLinkDataSource[] dciList, List<Long> objectStatusList, int routing, long[] bendPoints, boolean useActiveThresholds, boolean useInterfaceUtilization, boolean isLocked)
    {
       this.dciList = dciList;
       this.objectStatusList = objectStatusList;
@@ -86,7 +86,7 @@ public class LinkConfig
    /**
     * @return the dciList
     */
-   public SingleDciConfig[] getDciList()
+   public MapLinkDataSource[] getDciList()
    {
       return dciList;
    }
@@ -94,7 +94,7 @@ public class LinkConfig
    /**
     * @param dciList the dciList to set
     */
-   public void setDciList(SingleDciConfig[] dciList)
+   public void setDciList(MapLinkDataSource[] dciList)
    {
       this.dciList = dciList;
    }

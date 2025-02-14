@@ -40,7 +40,7 @@ public class DCIImageConfiguration
    public static final int OP_NOTLIKE  = 7;
 
    private DCIImageRule[] dciRuleList = new DCIImageRule[0];
-   private SingleDciConfig dci = new SingleDciConfig();
+   private MapImageDataSource dci = new MapImageDataSource();
    private UUID defaultImage = null;
 
    /**
@@ -78,7 +78,7 @@ public class DCIImageConfiguration
    /**
     * @return the dci
     */
-   public SingleDciConfig getDci()
+   public MapImageDataSource getDci()
    {
       return dci;
    }
@@ -86,7 +86,7 @@ public class DCIImageConfiguration
    /**
     * @param dci the dci to set
     */
-   public void setDci(SingleDciConfig dci)
+   public void setDci(MapImageDataSource dci)
    {
       this.dci = dci;
    }

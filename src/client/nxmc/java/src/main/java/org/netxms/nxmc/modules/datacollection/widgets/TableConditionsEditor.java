@@ -103,7 +103,6 @@ public class TableConditionsEditor extends Composite
 	 */
 	public void setConditions(List<List<TableCondition>> conditions)
 	{
-	   System.out.println(conditions.size());
 		for(List<TableCondition> g : conditions)
 		{
 			addGroup(addColumnLink, g);

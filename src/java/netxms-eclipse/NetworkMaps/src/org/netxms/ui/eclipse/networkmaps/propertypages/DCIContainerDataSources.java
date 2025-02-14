@@ -42,7 +42,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.client.maps.configs.MapDataSource;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectDciDialog;
 import org.netxms.ui.eclipse.networkmaps.Messages;
@@ -69,7 +69,7 @@ public class DCIContainerDataSources extends PropertyPage
    private Button upButton;
    private Button downButton;
    private NetworkMapDCIContainer container;
-   private List<SingleDciConfig> dciList = null;
+   private List<MapDataSource> dciList = null;
 
    /*
     * (non-Javadoc)
@@ -267,12 +267,12 @@ public class DCIContainerDataSources extends PropertyPage
       if (dlg.open() == Window.OK)
       {
          List<DciValue> selection = dlg.getSelection();
-         List<SingleDciConfig> select = new ArrayList<SingleDciConfig>();
+         List<MapDataSource> select = new ArrayList<MapDataSource>();
          for(DciValue item : selection)
          {
-            SingleDciConfig dci = new SingleDciConfig(item);
+            MapDataSource dci = new MapDataSource(item);
             select.add(dci);
-            labelProvider.addCacheEntry(dci.getNodeId(), dci.dciId, dci.name);
+            labelProvider.addCacheEntry(dci.getNodeId(), dci.getDciId(), "");
 
             dciList.add(dci);
             
@@ -288,7 +288,7 @@ public class DCIContainerDataSources extends PropertyPage
    private void editItem()
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      SingleDciConfig dci = (SingleDciConfig)selection.getFirstElement();
+      MapDataSource dci = (MapDataSource)selection.getFirstElement();
       if (dci == null)
          return;
 
@@ -355,7 +355,7 @@ public class DCIContainerDataSources extends PropertyPage
     */
    private boolean applyChanges(final boolean isApply)
    {
-      container.setObjectDCIArray(dciList.toArray(new SingleDciConfig[dciList.size()]));      
+      container.setObjectDCIArray(dciList.toArray(new MapDataSource[dciList.size()]));      
       return true;
    }
 

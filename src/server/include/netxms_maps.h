@@ -191,7 +191,8 @@ template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<NetworkMapObjectList>;
 /**
  * Possible flag values for NetworMapElements
  */
-#define AUTO_GENERATED           1
+#define AUTO_GENERATED           0x1
+#define EXCLUDE_FROM_AUTO_UPDATE  0x2
 
 /**
  * Generic map element
@@ -436,6 +437,7 @@ public:
 	int getType() const { return m_type; }
 	uint32_t getFlags() const { return m_flags; }
 	bool checkFlagSet(uint32_t flag) const { return (m_flags & flag) != 0; }
+	bool isExcludeFromAutoUpdate() { return (m_flags & EXCLUDE_FROM_AUTO_UPDATE) != 0; }
 	MapLinkColorSource getColorSource() const { return m_colorSource; }
 	uint32_t getColor() const { return m_color; }
    const TCHAR *getColorProvider() const { return CHECK_NULL_EX(m_colorProvider); }
@@ -514,11 +516,125 @@ public:
 	}
 };
 
+
 /**
- * Network map link NXSL container
- * Provides fields to NXSL and updates fields form NXSL
+ * Link data shource location
  */
-class NetworkMapLinkNXSLContainer
+enum class LinkDataLocation
+{
+   CENTER = 0,
+   OBJECT1 = 1,
+   OBJECT2 = 2
+};
+
+#define LINK_DATA_LOCATION_CENTER "CENTER"
+#define LINK_DATA_LOCATION_OBJECT1 "OBJECT1"
+#define LINK_DATA_LOCATION_OBJECT2 "OBJECT2"
+
+/**
+ * Convert network map link data location to string
+ */
+static inline const char *LinkLocationToString(LinkDataLocation l)
+{
+   switch (l)
+   {
+      case LinkDataLocation::CENTER:
+         return LINK_DATA_LOCATION_CENTER;
+      case LinkDataLocation::OBJECT1:
+         return LINK_DATA_LOCATION_OBJECT1;
+      case LinkDataLocation::OBJECT2:
+         return LINK_DATA_LOCATION_OBJECT2;
+   }
+   return LINK_DATA_LOCATION_CENTER;
+}
+
+/**
+ * Convert network map link data location string to enum
+ */
+static inline LinkDataLocation LinkLocationFromString(const char *location)
+{
+   if (!stricmp(location, LINK_DATA_LOCATION_CENTER))
+   {
+      return LinkDataLocation::CENTER;
+   }
+   if (!stricmp(location, LINK_DATA_LOCATION_OBJECT1))
+   {
+      return LinkDataLocation::OBJECT1;
+   }
+   if (!stricmp(location, LINK_DATA_LOCATION_OBJECT2))
+   {
+      return LinkDataLocation::OBJECT2;
+   }
+   return LinkDataLocation::CENTER;
+}
+
+/**
+ * Convert network map link data location int to enum
+ */
+static inline LinkDataLocation LinkLocationFromInt(uint32_t location)
+{
+   switch (location)
+   {
+      case 0:
+         return LinkDataLocation::CENTER;
+      case 1:
+         return LinkDataLocation::OBJECT1;
+      case 2:
+         return LinkDataLocation::OBJECT2;
+   }
+   return LinkDataLocation::CENTER;
+}
+
+/**
+ * Convert network map link data location int to enum
+ */
+static inline uint32_t IntFromLinkLocation(LinkDataLocation location)
+{
+   switch (location)
+   {
+      case LinkDataLocation::CENTER:
+         return 0;
+      case LinkDataLocation::OBJECT1:
+         return 1;
+      case LinkDataLocation::OBJECT2:
+         return 2;
+   }
+   return 0;
+}
+
+/**
+ * Link data shource provider
+ * Used also for NXSL
+ */
+class LinkDataSouce
+{
+private:
+   uint32_t m_nodeId;
+   uint32_t m_dciId;
+   String m_format;
+   String m_name;
+   bool m_system;
+   LinkDataLocation m_location;
+
+
+public:
+   LinkDataSouce(json_t *config);
+
+   uint32_t getNodeId() const { return m_nodeId; }
+   uint32_t getDciId() const { return m_dciId; }
+   const String& getName() const { return m_name; }
+   const String& getFormat() const { return m_format; }
+   LinkDataLocation getLocation() const { return m_location; }
+
+   bool isSystem() const { return m_system; }
+};
+
+/**
+ * Network map link container
+ * Provides fields and updates fields
+ * Used also for NXSL
+ */
+class NetworkMapLinkContainer
 {
 protected:
    NetworkMapLink *m_link;
@@ -528,14 +644,14 @@ protected:
    json_t *getConfigInstance();
 
 public:
-   NetworkMapLinkNXSLContainer(const NetworkMapLink &link)
+   NetworkMapLinkContainer(const NetworkMapLink &link)
    {
      m_link = new NetworkMapLink(link);
      m_modified = false;
      m_config = nullptr;
    }
 
-   ~NetworkMapLinkNXSLContainer()
+   ~NetworkMapLinkContainer()
    {
       delete m_link;
       json_decref(m_config);
@@ -556,10 +672,14 @@ public:
    uint32_t getWidth() { return json_object_get_int32(getConfigInstance(), "width", 0); }
    uint32_t getStyle() { return json_object_get_int32(getConfigInstance(), "style", 0); }
    NXSL_Value *getDataSource(NXSL_VM *vm);
+   unique_ptr<ObjectArray<LinkDataSouce>> getDataSource();
    void updateConfig();
 
-   void updateDataSource(const shared_ptr<DCObjectInfo> &dci, const TCHAR *format);
+   void updateDataSource(const shared_ptr<DCObjectInfo> &dci, const wchar_t *format, LinkDataLocation location);
+   void addSystemDataSource(const shared_ptr<DCObjectInfo> &dci, const wchar_t *format, LinkDataLocation location);
+   void updateDataSourceLocation(const shared_ptr<DCObjectInfo> &dci, LinkDataLocation location);
    void clearDataSource();
+   void clearSystemDataSource();
    void removeDataSource(uint32_t index);
    void setRoutingAlgorithm(uint32_t algorithm);
    void setWidth(uint32_t width);
@@ -572,24 +692,6 @@ public:
 
    void setModified() { m_modified = true; }
    bool isModified() const { return m_modified; }
-};
-
-/**
- * NXSL link data shource provider
- */
-class LinkDataSouce
-{
-private:
-   uint32_t m_nodeId;
-   uint32_t m_dciId;
-   String m_format;
-
-public:
-   LinkDataSouce(json_t *config);
-
-   uint32_t getNodeId() const { return m_nodeId; }
-   uint32_t getDciId() const { return m_dciId; }
-   const String& getFormat() const { return m_format; }
 };
 
 #endif

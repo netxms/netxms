@@ -149,6 +149,9 @@ public:
  */
 bool NetworkMapLink::update(const ObjLink& src, bool updateNames)
 {
+   if (isExcludeFromAutoUpdate())
+      return false;
+
    bool modified = false;
 
    if (m_interface1 != src.iface1)
@@ -334,7 +337,7 @@ void NetworkMapLink::updateColorSourceObjectList(CountingHashSet<uint32_t>& obje
 /**
  * Get config instance or create one
  */
-json_t *NetworkMapLinkNXSLContainer::getConfigInstance()
+json_t *NetworkMapLinkContainer::getConfigInstance()
 {
    if (m_config == nullptr)
    {
@@ -355,7 +358,7 @@ json_t *NetworkMapLinkNXSLContainer::getConfigInstance()
 /**
  * Get color objects array
  */
-NXSL_Value *NetworkMapLinkNXSLContainer::getColorObjects(NXSL_VM *vm)
+NXSL_Value *NetworkMapLinkContainer::getColorObjects(NXSL_VM *vm)
 {
    json_t *config = getConfigInstance();
    NXSL_Array *array = new NXSL_Array(vm);
@@ -375,7 +378,7 @@ NXSL_Value *NetworkMapLinkNXSLContainer::getColorObjects(NXSL_VM *vm)
 /**
  * Get link data source array
  */
-NXSL_Value *NetworkMapLinkNXSLContainer::getDataSource(NXSL_VM *vm)
+NXSL_Value *NetworkMapLinkContainer::getDataSource(NXSL_VM *vm)
 {
    NXSL_Array *array = new NXSL_Array(vm);
    json_t *dciList = json_object_get(getConfigInstance(), "dciList");
@@ -394,12 +397,102 @@ NXSL_Value *NetworkMapLinkNXSLContainer::getDataSource(NXSL_VM *vm)
 }
 
 /**
+ * Get link data source array
+ */
+unique_ptr<ObjectArray<LinkDataSouce>> NetworkMapLinkContainer::getDataSource()
+{
+   unique_ptr<ObjectArray<LinkDataSouce>> array(new ObjectArray<LinkDataSouce>(0, 8, Ownership::True));
+   json_t *dciList = json_object_get(getConfigInstance(), "dciList");
+   if (json_is_array(dciList))
+   {
+      size_t i;
+      json_t *m;
+      json_array_foreach(dciList, i, m)
+      {
+         array->add(new LinkDataSouce(m));
+      }
+   }
+
+   return array;
+}
+
+/**
+ * Update data source location on link
+ *
+ * @param dci to change location
+ * @param location new location
+ */
+void NetworkMapLinkContainer::updateDataSourceLocation(const shared_ptr<DCObjectInfo> &dci, LinkDataLocation location)
+{
+   json_t *dciList = json_object_get(getConfigInstance(), "dciList");
+   if (!json_is_array(dciList))
+   {
+      return;
+   }
+
+   size_t i;
+   json_t *m;
+   json_array_foreach(dciList, i, m)
+   {
+      LinkDataSouce dataSource(m);
+      if (dataSource.getDciId() == dci->getId())
+      {
+         json_object_set_new(m, "location", json_string(LinkLocationToString(location)));
+         setModified();
+         break;
+      }
+   }
+}
+
+
+/**
+ * Add new system data source entry alphabetically sorted
+ *
+ * @param dci dci to add
+ * @param format format that should be used to display data
+ * @param location data location on the link
+ */
+void NetworkMapLinkContainer::addSystemDataSource(const shared_ptr<DCObjectInfo> &dci, const wchar_t *format, LinkDataLocation location)
+{
+   json_t *dciList = json_object_get(getConfigInstance(), "dciList");
+   if (!json_is_array(dciList))
+   {
+      dciList = json_array();
+      json_object_set_new(getConfigInstance(), "dciList", dciList);
+   }
+
+   size_t i;
+   json_t *m;
+   json_array_foreach(dciList, i, m)
+   {
+      LinkDataSouce dataSource(m);
+      if (dataSource.isSystem())
+      {
+         if (wcscmp(format, dataSource.getFormat()) < 0)
+            break;
+      }
+   }
+
+   json_t *dciElement = json_object();
+   json_object_set_new(dciElement, "nodeId", json_integer(dci->getOwnerId()));
+   json_object_set_new(dciElement, "dciId", json_integer(dci->getId()));
+   json_object_set_new(dciElement, "type", json_integer(1));
+   json_object_set_new(dciElement, "location", json_string(LinkLocationToString(location)));
+   json_object_set_new(dciElement, "system", json_boolean(true));
+   json_object_set_new(dciElement, "formatString", json_string_t(format));
+   json_array_insert_new(dciList, i, dciElement);
+   setModified();
+}
+
+
+/**
  * Update existing or add new data source entry
  *
  * @param dci dci to add
  * @param format format that should be used to display data
+ * @param location data location on the link
  */
-void NetworkMapLinkNXSLContainer::updateDataSource(const shared_ptr<DCObjectInfo> &dci, const TCHAR *format)
+void NetworkMapLinkContainer::updateDataSource(const shared_ptr<DCObjectInfo> &dci, const wchar_t *format, LinkDataLocation location)
 {
    json_t *dciList = json_object_get(getConfigInstance(), "dciList");
    if (!json_is_array(dciList))
@@ -421,6 +514,17 @@ void NetworkMapLinkNXSLContainer::updateDataSource(const shared_ptr<DCObjectInfo
             json_object_update_new(formatString, json_string_t(format));
             setModified();
          }
+         if (dataSource.getLocation() != location)
+         {
+            json_object_set_new(m, "location", json_string(LinkLocationToString(location)));
+
+            setModified();
+         }
+         if (dataSource.isSystem())
+         {
+            json_object_set_new(m, "system", json_boolean(false));
+            setModified();
+         }
          return;
       }
    }
@@ -430,6 +534,8 @@ void NetworkMapLinkNXSLContainer::updateDataSource(const shared_ptr<DCObjectInfo
    json_object_set_new(dciElement, "nodeId", json_integer(dci->getOwnerId()));
    json_object_set_new(dciElement, "dciId", json_integer(dci->getId()));
    json_object_set_new(dciElement, "type", json_integer(1));
+   json_object_set_new(dciElement, "location", json_string(LinkLocationToString(location)));
+   json_object_set_new(dciElement, "system", json_boolean(false));
    json_object_set_new(dciElement, "formatString", json_string_t(format));
    json_array_append_new(dciList, dciElement);
    setModified();
@@ -438,10 +544,11 @@ void NetworkMapLinkNXSLContainer::updateDataSource(const shared_ptr<DCObjectInfo
 /**
  * Clear data shource list
  */
-void NetworkMapLinkNXSLContainer::clearDataSource()
+void NetworkMapLinkContainer::clearDataSource()
 {
    json_t *dciList = json_object_get(getConfigInstance(), "dciList");
-   json_array_clear(dciList);
+   if ((json_array_size(dciList) > 0) && (json_array_clear(dciList) == 0))
+      setModified();
 }
 
 /**
@@ -449,10 +556,37 @@ void NetworkMapLinkNXSLContainer::clearDataSource()
  *
  * @param index index of data source to remove
  */
-void NetworkMapLinkNXSLContainer::removeDataSource(uint32_t index)
+void NetworkMapLinkContainer::removeDataSource(uint32_t index)
 {
    json_t *dciList = json_object_get(getConfigInstance(), "dciList");
-   json_array_remove(dciList, index);
+   if (json_array_remove(dciList, index) == 0)
+      setModified();
+}
+
+/**
+ * Remove data source from list by index
+ *
+ * @param index index of data source to remove
+ */
+void NetworkMapLinkContainer::clearSystemDataSource()
+{
+   bool modified = false;
+   json_t *dciList = json_object_get(getConfigInstance(), "dciList");
+   size_t i;
+   json_t *m;
+   json_array_foreach(dciList, i, m)
+   {
+      LinkDataSouce dataSource(m);
+      if (dataSource.isSystem())
+      {
+         json_array_remove(dciList, i);
+         i--;
+         modified = true;
+      }
+   }
+
+   if (modified)
+      setModified();
 }
 
 /**
@@ -460,7 +594,7 @@ void NetworkMapLinkNXSLContainer::removeDataSource(uint32_t index)
  *
  * @param algorithm new algorithm should be between 0 and 3, other values are ignored
  */
-void NetworkMapLinkNXSLContainer::setRoutingAlgorithm(uint32_t algorithm)
+void NetworkMapLinkContainer::setRoutingAlgorithm(uint32_t algorithm)
 {
    if (algorithm > 3)
       return;
@@ -479,7 +613,7 @@ void NetworkMapLinkNXSLContainer::setRoutingAlgorithm(uint32_t algorithm)
  *
  * @param width new width should be bigger or equals to 0
  */
-void NetworkMapLinkNXSLContainer::setWidth(uint32_t width)
+void NetworkMapLinkContainer::setWidth(uint32_t width)
 {
    json_t *config = getConfigInstance();
    if (json_object_get_uint32(config, "width", 0) != width)
@@ -494,7 +628,7 @@ void NetworkMapLinkNXSLContainer::setWidth(uint32_t width)
  *
  * @param style new style should be between 0 and 5, other values are ignored
  */
-void NetworkMapLinkNXSLContainer::setStyle(uint32_t style)
+void NetworkMapLinkContainer::setStyle(uint32_t style)
 {
    if (style > ((uint32_t)MapLinkStyle::DashDotDot))
       return;
@@ -510,7 +644,7 @@ void NetworkMapLinkNXSLContainer::setStyle(uint32_t style)
 /**
  * Set color source to specific value
  */
-void NetworkMapLinkNXSLContainer::setColorSource(MapLinkColorSource source)
+void NetworkMapLinkContainer::setColorSource(MapLinkColorSource source)
 {
    if (m_link->getColorSource() != source)
    {
@@ -526,7 +660,7 @@ void NetworkMapLinkNXSLContainer::setColorSource(MapLinkColorSource source)
  * @param useThresholds true if active thresholds should be used for color calculation
  * @param useLinkUtilization true if interface utilization should be used for color calculation
  */
-void NetworkMapLinkNXSLContainer::setColorSourceToObjectStatus(const IntegerArray<uint32_t>& objects, bool useThresholds, bool useLinkUtilization)
+void NetworkMapLinkContainer::setColorSourceToObjectStatus(const IntegerArray<uint32_t>& objects, bool useThresholds, bool useLinkUtilization)
 {
    if (m_link->getColorSource() != MapLinkColorSource::MAP_LINK_COLOR_SOURCE_OBJECT_STATUS)
    {
@@ -605,7 +739,7 @@ void NetworkMapLinkNXSLContainer::setColorSourceToObjectStatus(const IntegerArra
  *
  * @param scriptName new name of the script
  */
-void NetworkMapLinkNXSLContainer::setColorSourceToScript(const TCHAR *scriptName)
+void NetworkMapLinkContainer::setColorSourceToScript(const TCHAR *scriptName)
 {
    if (m_link->getColorSource() != MapLinkColorSource::MAP_LINK_COLOR_SOURCE_SCRIPT)
    {
@@ -626,7 +760,7 @@ void NetworkMapLinkNXSLContainer::setColorSourceToScript(const TCHAR *scriptName
  *
  * @param newColor new color Java formatted
  */
-void NetworkMapLinkNXSLContainer::setColorSourceToCustomColor(uint32_t newColor)
+void NetworkMapLinkContainer::setColorSourceToCustomColor(uint32_t newColor)
 {
    if (m_link->getColorSource() != MapLinkColorSource::MAP_LINK_COLOR_SOURCE_CUSTOM_COLOR)
    {
@@ -644,7 +778,7 @@ void NetworkMapLinkNXSLContainer::setColorSourceToCustomColor(uint32_t newColor)
 /**
  * Update link config form this current class modified config
  */
-void NetworkMapLinkNXSLContainer::updateConfig()
+void NetworkMapLinkContainer::updateConfig()
 {
    if (m_config != nullptr)
    {
@@ -656,8 +790,10 @@ void NetworkMapLinkNXSLContainer::updateConfig()
 /**
  * Link data source constructor
  */
-LinkDataSouce::LinkDataSouce(json_t *config) : m_format(json_object_get_string_utf8(config, "formatString", ""), "utf8")
+LinkDataSouce::LinkDataSouce(json_t *config) : m_format(json_object_get_string_utf8(config, "formatString", ""), "utf8"), m_name(json_object_get_string_utf8(config, "name", ""), "utf8")
 {
    m_nodeId = json_object_get_uint32(config, "nodeId", 0);
    m_dciId = json_object_get_uint32(config, "dciId", 0);
+   m_system = json_object_get_boolean(config, "system", false);
+   m_location = LinkLocationFromString(json_object_get_string_utf8(config, "location", ""));
 }

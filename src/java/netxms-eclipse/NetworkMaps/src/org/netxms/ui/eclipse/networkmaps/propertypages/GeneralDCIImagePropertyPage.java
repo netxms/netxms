@@ -27,7 +27,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.base.NXCommon;
 import org.netxms.client.maps.configs.DCIImageConfiguration;
-import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.client.maps.configs.MapImageDataSource;
 import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.ui.eclipse.datacollection.widgets.DciSelector;
 import org.netxms.ui.eclipse.imagelibrary.widgets.ImageSelector;
@@ -53,7 +53,7 @@ public class GeneralDCIImagePropertyPage extends PropertyPage
    {
       container = (NetworkMapDCIImage)getElement().getAdapter(NetworkMapDCIImage.class);
       config = container.getImageOptions();
-      SingleDciConfig dciConf = config.getDci();
+      MapImageDataSource dciConf = config.getDci();
 
       Composite dialogArea = new Composite(parent, SWT.NONE);
 
@@ -125,9 +125,9 @@ public class GeneralDCIImagePropertyPage extends PropertyPage
          return false;
       }
       
-      SingleDciConfig dciConf = config.getDci();
+      MapImageDataSource dciConf = config.getDci();
       if(dciConf == null)
-         dciConf = new SingleDciConfig();      
+         dciConf = new MapImageDataSource();      
       
       dciConf.setDciId(dci.getDciId());
       dciConf.setNodeId(dci.getNodeId());

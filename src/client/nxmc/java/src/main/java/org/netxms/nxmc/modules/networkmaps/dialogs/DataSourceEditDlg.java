@@ -26,10 +26,16 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.client.NXCSession;
+import org.netxms.client.maps.LinkDataLocation;
+import org.netxms.client.maps.configs.MapLinkDataSource;
+import org.netxms.client.maps.configs.MapDataSource;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.widgets.LabeledCombo;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.widgets.DciSelector;
+import org.netxms.nxmc.modules.networkmaps.views.helpers.LinkEditor;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -39,21 +45,23 @@ import org.xnap.commons.i18n.I18n;
 public class DataSourceEditDlg extends Dialog
 {
    private I18n i18n = LocalizationHelper.getI18n(DataSourceEditDlg.class);
-	private SingleDciConfig dci;
+	private MapDataSource dci;
 	private DciSelector dciSelector;
-	private LabeledText name;
+   private LabeledCombo locationSelector;
 	private LabeledText instance;
 	private LabeledText dataColumn;
 	private LabeledText formatString;
+   private LinkEditor linkEditor;
 	
 	/**
 	 * @param parentShell
 	 * @param dci
 	 */
-	public DataSourceEditDlg(Shell parentShell, SingleDciConfig dci)
+	public DataSourceEditDlg(Shell parentShell, MapDataSource dci, LinkEditor linkEditor)
 	{
 		super(parentShell);
 		this.dci = dci;
+		this.linkEditor = linkEditor;
 	}
 
    /**
@@ -82,34 +90,25 @@ public class DataSourceEditDlg extends Dialog
 		
       dciSelector = new DciSelector(dialogArea, SWT.NONE);
       dciSelector.setLabel(i18n.tr("Data collection item"));
-		dciSelector.setDciId(dci.getNodeId(), dci.dciId);
-		dciSelector.setDcObjectType(dci.type);
+		dciSelector.setDciId(dci.getNodeId(), dci.getDciId());
+		dciSelector.setDcObjectType(dci.getType());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 400;
 		gd.horizontalSpan = 2;
 		dciSelector.setLayoutData(gd);
-		
-		name = new LabeledText(dialogArea, SWT.NONE);
-      name.setLabel(i18n.tr("Name"));
-		name.setText(dci.name);
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
-		name.setLayoutData(gd);
       
 		formatString = new LabeledText(dialogArea, SWT.NONE);
       formatString.setLabel(i18n.tr("Format string"));
-		formatString.setText(dci.formatString);
+		formatString.setText(dci.getFormatString());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       formatString.setLayoutData(gd);
       
-		if (dci.type == SingleDciConfig.TABLE)
+		if (dci.getType() == MapDataSource.TABLE)
 		{
 			Group tableGroup = new Group(dialogArea, SWT.NONE);
          tableGroup.setText(i18n.tr("Table cell"));
@@ -138,6 +137,22 @@ public class DataSourceEditDlg extends Dialog
 			gd.grabExcessHorizontalSpace = true;
 			instance.setLayoutData(gd);
 		}
+
+		if (dci instanceof MapLinkDataSource)
+		{
+		   NXCSession session = Registry.getSession();
+		   
+   		locationSelector = new LabeledCombo(dialogArea, SWT.NONE);
+   		locationSelector.setLabel(i18n.tr("Position on the link"));
+         locationSelector.add(i18n.tr("Center"));
+   		locationSelector.add(session.getObjectNameWithAlias(linkEditor.getElement1()));
+   		locationSelector.add(session.getObjectNameWithAlias(linkEditor.getElement2()));
+   		locationSelector.select(((MapLinkDataSource)dci).getLocation().getValue());
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         locationSelector.setLayoutData(gd);
+		}
 		
 		return dialogArea;
 	}
@@ -148,15 +163,29 @@ public class DataSourceEditDlg extends Dialog
 	@Override
 	protected void okPressed()
 	{
+	   if ((dci instanceof MapLinkDataSource))
+	   {
+   	   if ((dci.getNodeId() != dciSelector.getNodeId()) || (dci.getDciId() != dciSelector.getDciId()) ||
+   	         !dci.getFormatString().equals(formatString.getText()) ||
+   	         ((dci.getType() == MapDataSource.TABLE) && (!dci.getColumn().equals(dataColumn.getText().trim()) || !dci.getInstance().equals(instance.getText()))) ||
+   	         ((MapLinkDataSource)dci).getLocation() != LinkDataLocation.getByValue(locationSelector.getSelectionIndex()))
+   	   {
+   	      ((MapLinkDataSource)dci).setSystem(false);
+   	   }
+	   }
+	   
 		dci.setNodeId(dciSelector.getNodeId());
-		dci.dciId = dciSelector.getDciId();
-		dci.name = name.getText();
-		dci.formatString = formatString.getText();
-		if (dci.type == SingleDciConfig.TABLE)
+		dci.setDciId(dciSelector.getDciId());
+		dci.setFormatString(formatString.getText());
+		if (dci.getType() == MapDataSource.TABLE)
 		{
-			dci.column = dataColumn.getText().trim();
-			dci.instance = instance.getText();
-		}		
+			dci.setColumn(dataColumn.getText().trim());
+			dci.setInstance(instance.getText());
+		}	
+      if (dci instanceof MapLinkDataSource)
+      {
+         ((MapLinkDataSource)dci).setLocation(LinkDataLocation.getByValue(locationSelector.getSelectionIndex()));
+      }
 		super.okPressed();
 	}
 }

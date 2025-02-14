@@ -406,6 +406,7 @@ public:
    uint32_t getErrorCount() const { return m_errorCount; }
 	uint16_t getSnmpPort() const { return m_snmpPort; }
    SNMP_Version getSnmpVersion() const { return m_snmpVersion; }
+   SharedString getSystemTag() const { return m_systemTag; }
    bool isShowOnObjectTooltip() const { return (m_flags & DCF_SHOW_ON_OBJECT_TOOLTIP) ? true : false; }
    bool isShowInObjectOverview() const { return (m_flags & DCF_SHOW_IN_OBJECT_OVERVIEW) ? true : false; }
    bool isAggregateOnCluster() const { return (m_flags & DCF_AGGREGATE_ON_CLUSTER) ? true : false; }

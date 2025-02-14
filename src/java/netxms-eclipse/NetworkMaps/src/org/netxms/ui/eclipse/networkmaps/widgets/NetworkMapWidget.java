@@ -53,7 +53,7 @@ import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.configs.DCIImageConfiguration;
-import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.client.maps.configs.MapDataSource;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
 import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.client.maps.elements.NetworkMapElement;
@@ -462,15 +462,15 @@ public class NetworkMapWidget extends Composite
       {
          if(item.hasDciData())
          {
-            for (SingleDciConfig value :item.getDciAsList())
+            for (MapDataSource value :item.getDciAsList())
             {
-               if(value.type == SingleDciConfig.ITEM)
+               if(value.getType() == MapDataSource.ITEM)
                {
-                  dciValueProvider.addDci(value.getNodeId(), value.dciId, mapPage);
+                  dciValueProvider.addDci(value.getNodeId(), value.getDciId(), mapPage);
                }
                else
                {
-                  dciValueProvider.addDci(value.getNodeId(), value.dciId, value.column, value.instance, mapPage);
+                  dciValueProvider.addDci(value.getNodeId(), value.getDciId(), value.getColumn(), value.getInstance(), mapPage);
                }
             }
          }
@@ -483,15 +483,15 @@ public class NetworkMapWidget extends Composite
             NetworkMapDCIContainer item = (NetworkMapDCIContainer)element;
             if(item.hasDciData())
             {
-               for (SingleDciConfig value : item.getObjectDCIArray())
+               for (MapDataSource value : item.getObjectDCIArray())
                {
-                  if(value.type == SingleDciConfig.ITEM)
+                  if(value.getType() == MapDataSource.ITEM)
                   {
-                     dciValueProvider.addDci(value.getNodeId(), value.dciId, mapPage);
+                     dciValueProvider.addDci(value.getNodeId(), value.getDciId(), mapPage);
                   }
                   else
                   {
-                     dciValueProvider.addDci(value.getNodeId(), value.dciId, value.column, value.instance, mapPage);
+                     dciValueProvider.addDci(value.getNodeId(), value.getDciId(), value.getColumn(), value.getInstance(), mapPage);
                   }
                }
             }
@@ -501,14 +501,14 @@ public class NetworkMapWidget extends Composite
          {
             NetworkMapDCIImage item = (NetworkMapDCIImage)element;
             DCIImageConfiguration config = item.getImageOptions();
-            SingleDciConfig value = config.getDci();
-            if(value.type == SingleDciConfig.ITEM)
+            MapDataSource value = config.getDci();
+            if(value.getType() == MapDataSource.ITEM)
             {
-               dciValueProvider.addDci(value.getNodeId(), value.dciId, mapPage);
+               dciValueProvider.addDci(value.getNodeId(), value.getDciId(), mapPage);
             }
             else
             {
-               dciValueProvider.addDci(value.getNodeId(), value.dciId, value.column, value.instance, mapPage);
+               dciValueProvider.addDci(value.getNodeId(), value.getDciId(), value.getColumn(), value.getInstance(), mapPage);
             }
          }
       }

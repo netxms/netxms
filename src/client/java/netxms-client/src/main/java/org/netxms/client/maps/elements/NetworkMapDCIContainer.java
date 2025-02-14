@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.maps.configs.DciContainerConfiguration;
-import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.client.maps.configs.MapDataSource;
 import com.google.gson.Gson;
 
 /**
@@ -34,7 +34,7 @@ public class NetworkMapDCIContainer extends NetworkMapElement
    private int textColor;
    private int borderColor;
    private boolean borderRequired;
-	private SingleDciConfig[] dciArray;
+	private MapDataSource[] dciArray;
 
 	/**
 	 * Create DCI container from NXCP message.
@@ -112,7 +112,7 @@ public class NetworkMapDCIContainer extends NetworkMapElement
 	 *
 	 * @return DCI list for this container
 	 */
-	public SingleDciConfig[] getObjectDCIArray()
+	public MapDataSource[] getObjectDCIArray()
 	{
 		return dciArray;
 	}
@@ -122,7 +122,7 @@ public class NetworkMapDCIContainer extends NetworkMapElement
 	 *
 	 * @param dciArray DCI list for this container
 	 */
-	public void setObjectDCIArray(SingleDciConfig[] dciArray)
+	public void setObjectDCIArray(MapDataSource[] dciArray)
 	{
 	   this.dciArray = dciArray;
 	}
@@ -132,12 +132,12 @@ public class NetworkMapDCIContainer extends NetworkMapElement
     * 
     * @return configured DCIs as list
     */
-   public List<SingleDciConfig> getDciAsList()
+   public List<MapDataSource> getDciAsList()
    {
-      List<SingleDciConfig> dciList = new ArrayList<SingleDciConfig>();
+      List<MapDataSource> dciList = new ArrayList<MapDataSource>();
       if(hasDciData())
       {
-         for(SingleDciConfig dci : dciArray)
+         for(MapDataSource dci : dciArray)
             dciList.add(dci);
       }
       return dciList;

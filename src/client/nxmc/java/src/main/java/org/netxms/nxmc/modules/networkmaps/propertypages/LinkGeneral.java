@@ -23,12 +23,15 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.Spinner;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Interface;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.LabeledCombo;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.base.widgets.LabeledText;
@@ -54,6 +57,7 @@ public class LinkGeneral extends LinkPropertyPage
    private LabeledSpinner spinerLineWidth;
 	private Spinner spinnerLabelPositon;
 	private Scale scaleLabelPositon;
+   private Button checkExcludeFromAutomaticUpdate;
 
    /**
     * Create new page.
@@ -74,21 +78,60 @@ public class LinkGeneral extends LinkPropertyPage
       Composite dialogArea = (Composite)super.createContents(parent);
 
       name = new LabeledText(dialogArea, SWT.NONE);
-      name.setLabel(i18n.tr("Name"));
+      name.setLabel(i18n.tr("Label"));
       name.setText(linkEditor.getName());
       GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 2;
+      gd.horizontalSpan = 3;
 		name.setLayoutData(gd);
 
+      final Group labelPositionGroup = new Group(dialogArea, SWT.NONE);
+      labelPositionGroup.setText(i18n.tr("Label position"));
+      labelPositionGroup.setLayout(new GridLayout(2, false));
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 3;
+      labelPositionGroup.setLayoutData(gd);
+
+      scaleLabelPositon = new Scale(labelPositionGroup, SWT.HORIZONTAL);
+      scaleLabelPositon.setMinimum(0);
+      scaleLabelPositon.setMaximum(100);
+      scaleLabelPositon.setSelection(linkEditor.getLabelPosition());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      scaleLabelPositon.setLayoutData(gd);
+      scaleLabelPositon.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            spinnerLabelPositon.setSelection(scaleLabelPositon.getSelection());
+         }
+      });
+
+      spinnerLabelPositon = new Spinner(labelPositionGroup, SWT.NONE);
+      spinnerLabelPositon.setMinimum(0);
+      spinnerLabelPositon.setMaximum(100);
+      spinnerLabelPositon.setSelection(linkEditor.getLabelPosition());
+      spinnerLabelPositon.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            scaleLabelPositon.setSelection(spinnerLabelPositon.getSelection());
+         }
+      });
+      
+      NXCSession session = Registry.getSession();
+
       Group connectorGroup1 = new Group(dialogArea, SWT.BORDER);
-      connectorGroup1.setText(i18n.tr("Connector 1"));
+      connectorGroup1.setText(i18n.tr("Connector 1 \u2013 {0}", session.getObjectNameWithAlias(linkEditor.getElement1())));
       connectorGroup1.setLayout(new GridLayout());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 2;
+      gd.horizontalSpan = 3;
       connectorGroup1.setLayoutData(gd);
 
       connector1 = new LabeledText(connectorGroup1, SWT.NONE);
@@ -103,12 +146,12 @@ public class LinkGeneral extends LinkPropertyPage
       interface1.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       Group connectorGroup2 = new Group(dialogArea, SWT.BORDER);
-      connectorGroup2.setText(i18n.tr("Connector 2"));
+      connectorGroup2.setText(i18n.tr("Connector 2 \u2013 {0}", session.getObjectNameWithAlias(linkEditor.getElement2())));
       connectorGroup2.setLayout(new GridLayout());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 2;
+      gd.horizontalSpan = 3;
       connectorGroup2.setLayoutData(gd);
 
       connector2 = new LabeledText(connectorGroup2, SWT.NONE);
@@ -153,42 +196,23 @@ public class LinkGeneral extends LinkPropertyPage
       spinerLineWidth.setRange(0, 100);
       spinerLineWidth.setSelection(linkEditor.getLineWidth());
 
-      final Group labelPositionGroup = new Group(dialogArea, SWT.NONE);
-      labelPositionGroup.setText(i18n.tr("Label position"));
-      labelPositionGroup.setLayout(new GridLayout(2, false));
+      final Group optionsGroup = new Group(dialogArea, SWT.NONE);
+      optionsGroup.setText(i18n.tr("Options"));
+      optionsGroup.setLayout(new GridLayout());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 2;
-      labelPositionGroup.setLayoutData(gd);
+      gd.horizontalSpan = 3;
+      optionsGroup.setLayoutData(gd);
 
-      scaleLabelPositon = new Scale(labelPositionGroup, SWT.HORIZONTAL);
-      scaleLabelPositon.setMinimum(0);
-      scaleLabelPositon.setMaximum(100);
-      scaleLabelPositon.setSelection(linkEditor.getLabelPosition());
+      checkExcludeFromAutomaticUpdate = new Button(optionsGroup, SWT.CHECK);
+      checkExcludeFromAutomaticUpdate.setText("Exclude from automatic updates");
+      checkExcludeFromAutomaticUpdate.setSelection(linkEditor.isExcludeFromAutomaticUpdates());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      scaleLabelPositon.setLayoutData(gd);
-      scaleLabelPositon.addSelectionListener(new SelectionAdapter() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            spinnerLabelPositon.setSelection(scaleLabelPositon.getSelection());
-         }
-      });
-
-      spinnerLabelPositon = new Spinner(labelPositionGroup, SWT.NONE);
-      spinnerLabelPositon.setMinimum(0);
-      spinnerLabelPositon.setMaximum(100);
-      spinnerLabelPositon.setSelection(linkEditor.getLabelPosition());
-      spinnerLabelPositon.addSelectionListener(new SelectionAdapter() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            scaleLabelPositon.setSelection(spinnerLabelPositon.getSelection());
-         }
-      });
+      gd.horizontalSpan = 3;
+      checkExcludeFromAutomaticUpdate.setLayoutData(gd);
 
 		return dialogArea;
 	}
@@ -199,7 +223,7 @@ public class LinkGeneral extends LinkPropertyPage
    @Override
    protected void setupLayout(GridLayout layout)
    {
-      layout.numColumns = 2;
+      layout.numColumns = 3;
    }
 
    /**
@@ -217,7 +241,8 @@ public class LinkGeneral extends LinkPropertyPage
       linkEditor.setLineStyle(comboLinkStyle.getSelectionIndex());
       linkEditor.setLineWidth(spinerLineWidth.getSelection());
       linkEditor.setLabelPosition(spinnerLabelPositon.getSelection());
+      linkEditor.setExcludeFromAutomaticUpdates(checkExcludeFromAutomaticUpdate.getSelection());
       linkEditor.setModified();
 		return true;
-	}
+	} 
 }

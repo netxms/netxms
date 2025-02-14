@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.networkmaps.views.helpers;
 import java.util.List;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
-import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.client.maps.configs.MapLinkDataSource;
 
 /**
  * Utility class for editing map links 
@@ -39,7 +39,7 @@ public class LinkEditor
 	private List<Long> statusObjects;
 	private int routingAlgorithm;
 	private boolean modified = false;
-	private List<SingleDciConfig> dciList;
+	private List<MapLinkDataSource> dciList;
 	private boolean useActiveThresholds;
 	
 	/**
@@ -84,7 +84,7 @@ public class LinkEditor
 		long[] bp = currentLink.getBendPoints();
 		mapPage.removeLink(link.getId());
       link = new NetworkMapLink(link.getId(), name, type, currentLink.getElement1(), currentLink.getInterfaceId1(), currentLink.getElement2(), currentLink.getInterfaceId2(), connectorName1,
-            connectorName2, (dciList != null) ? dciList.toArray(new SingleDciConfig[dciList.size()]) : new SingleDciConfig[0], currentLink.getFlags());
+            connectorName2, (dciList != null) ? dciList.toArray(new MapLinkDataSource[dciList.size()]) : new MapLinkDataSource[0], currentLink.getFlags());
 		link.setColor(color);
 		link.setColorSource(colorSource);
       link.setColorProvider(colorProvider);
@@ -276,7 +276,7 @@ public class LinkEditor
    /**
     * @return the config
     */
-   public List<SingleDciConfig> getDciList()
+   public List<MapLinkDataSource> getDciList()
    {
       return dciList;
    }
@@ -284,7 +284,7 @@ public class LinkEditor
    /**
     * @param config the config to set
     */
-   public void setDciList(List<SingleDciConfig> dciList)
+   public void setDciList(List<MapLinkDataSource> dciList)
    {
       this.dciList = dciList;
    }

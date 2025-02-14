@@ -26,8 +26,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.client.maps.configs.MapDataSource;
 import org.netxms.ui.eclipse.datacollection.widgets.DciSelector;
-import org.netxms.client.maps.configs.SingleDciConfig;
 import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -37,7 +37,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class DataSourceEditDlg extends Dialog
 {
-	private SingleDciConfig dci;
+	private MapDataSource dci;
 	private DciSelector dciSelector;
 	private LabeledText name;
 	private LabeledText instance;
@@ -48,7 +48,7 @@ public class DataSourceEditDlg extends Dialog
 	 * @param parentShell
 	 * @param dci
 	 */
-	public DataSourceEditDlg(Shell parentShell, SingleDciConfig dci)
+	public DataSourceEditDlg(Shell parentShell, MapDataSource dci)
 	{
 		super(parentShell);
 		this.dci = dci;
@@ -80,34 +80,25 @@ public class DataSourceEditDlg extends Dialog
 		
       dciSelector = new DciSelector(dialogArea, SWT.NONE);
 		dciSelector.setLabel(Messages.get().DataSourceEditDlg_DCI);
-		dciSelector.setDciId(dci.getNodeId(), dci.dciId);
-		dciSelector.setDcObjectType(dci.type);
+		dciSelector.setDciId(dci.getNodeId(), dci.getDciId());
+		dciSelector.setDcObjectType(dci.getType());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 400;
 		gd.horizontalSpan = 2;
 		dciSelector.setLayoutData(gd);
-		
-		name = new LabeledText(dialogArea, SWT.NONE);
-		name.setLabel(Messages.get().DataSourceEditDlg_Name);
-		name.setText(dci.name);
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
-		name.setLayoutData(gd);
       
 		formatString = new LabeledText(dialogArea, SWT.NONE);
 		formatString.setLabel(Messages.get().DataSourceEditDlg_FormatString);
-		formatString.setText(dci.formatString);
+		formatString.setText(dci.getFormatString());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       formatString.setLayoutData(gd);
       
-		if (dci.type == SingleDciConfig.TABLE)
+		if (dci.getType() == MapDataSource.TABLE)
 		{
 			Group tableGroup = new Group(dialogArea, SWT.NONE);
 			tableGroup.setText(Messages.get().DataSourceEditDlg_TableCell);
@@ -147,13 +138,12 @@ public class DataSourceEditDlg extends Dialog
 	protected void okPressed()
 	{
 		dci.setNodeId(dciSelector.getNodeId());
-		dci.dciId = dciSelector.getDciId();
-		dci.name = name.getText();
-		dci.formatString = formatString.getText();
-		if (dci.type == SingleDciConfig.TABLE)
+		dci.setDciId(dciSelector.getDciId());
+		dci.setFormatString(formatString.getText());
+		if (dci.getType() == MapDataSource.TABLE)
 		{
-			dci.column = dataColumn.getText().trim();
-			dci.instance = instance.getText();
+			dci.setColumn(dataColumn.getText().trim());
+			dci.setInstance(instance.getText());
 		}		
 		super.okPressed();
 	}

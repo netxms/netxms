@@ -23,7 +23,7 @@ package org.netxms.client.maps.configs;
  */
 public class DciContainerConfiguration
 {
-   private SingleDciConfig[] dciList = new SingleDciConfig[0];
+   private MapDataSource[] dciList = new MapDataSource[0];
    private int backgroundColor;
    private int textColor;
    private int borderColor;
@@ -32,7 +32,7 @@ public class DciContainerConfiguration
 	/**
 	 * @return the dciList
 	 */
-	public SingleDciConfig[] getDciList()
+	public MapDataSource[] getDciList()
 	{
 		return dciList;
 	}
@@ -40,7 +40,7 @@ public class DciContainerConfiguration
 	/**
 	 * @param dciList the dciList to set
 	 */
-	public void setDciList(SingleDciConfig[] dciList)
+	public void setDciList(MapDataSource[] dciList)
 	{
 		this.dciList = dciList;
 	}

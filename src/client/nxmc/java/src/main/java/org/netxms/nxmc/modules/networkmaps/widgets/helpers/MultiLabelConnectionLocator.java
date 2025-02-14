@@ -22,11 +22,13 @@ import org.eclipse.draw2d.Connection;
 import org.eclipse.draw2d.ConnectionLocator;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.PointList;
+import org.netxms.client.maps.LinkDataLocation;
 import org.netxms.client.maps.NetworkMapLink;
 
 public class MultiLabelConnectionLocator extends ConnectionLocator
 {   
    private NetworkMapLink link;
+   private LinkDataLocation labelLocation;
 
    /**
     * Constructor for MultiLabelConnectionLocator instance
@@ -34,10 +36,11 @@ public class MultiLabelConnectionLocator extends ConnectionLocator
     * @param connection
     * @param linkPosition
     */
-   public MultiLabelConnectionLocator(Connection connection, NetworkMapLink link)
+   public MultiLabelConnectionLocator(Connection connection, NetworkMapLink link, LinkDataLocation labelLocation)
    {
       super(connection);
       this.link = link;
+      this.labelLocation = labelLocation;
    }
 
    /* (non-Javadoc)
@@ -47,51 +50,78 @@ public class MultiLabelConnectionLocator extends ConnectionLocator
    @Override
    protected Point getLocation(PointList points)
    {      
-      double adj = Math.abs((points.getLastPoint().preciseX() - points.getFirstPoint().preciseX()));
-      double opp = Math.abs((points.getLastPoint().preciseY() - points.getFirstPoint().preciseY()));
+      double firstObjectX = points.getFirstPoint().preciseX();
+      double firstObjectY = points.getFirstPoint().preciseY();
+      double secondObjectX = points.getLastPoint().preciseX();
+      double secondObjectY = points.getLastPoint().preciseY();
+      
+      double adj = Math.abs((secondObjectX - firstObjectX));
+      double opp = Math.abs((secondObjectY - firstObjectY));
       double theta = Math.atan(opp/adj);
       double length = Math.sqrt(Math.pow(adj, 2) + Math.pow(opp, 2));
       
       double x;
       double y;
-      double dividedLength;
+      double locationLenght;
+      
+      /*
+       * Link length is divided to 11 segments
+       *    1 segment from each side is left for interface label    
+       *    labels and DCIs location is spread in their parts of the link (3 segment for each part) 
+       *    (x)|object1(3x)|center(3x)|object2(3x)|(x)   
+       */
+      double sectionLenght = length / 11;
+      double elementPart = sectionLenght * 3;
+      
       if (link.getDuplicateCount() != 0)
-         dividedLength = (length / (link.getDuplicateCount() + 2)) * (link.getPosition() + 1);
-      else
-         dividedLength = length / 100 * link.getConfig().getLabelPosition();
-         
-      if ((points.getFirstPoint().preciseX() > points.getLastPoint().preciseX()) &&
-          (points.getFirstPoint().preciseY() > points.getLastPoint().preciseY()) ||
-         ((points.getFirstPoint().preciseX() > points.getLastPoint().preciseX()) &&
-          (points.getFirstPoint().preciseY() == points.getLastPoint().preciseY())))
       {
-         x = points.getLastPoint().preciseX() + dividedLength * Math.cos(theta);
-         y = points.getLastPoint().preciseY() + dividedLength * Math.sin(theta);
-      }
-      else if (((points.getFirstPoint().preciseX() > points.getLastPoint().preciseX()) &&
-               (points.getFirstPoint().preciseY() < points.getLastPoint().preciseY())) ||
-              ((points.getFirstPoint().preciseX() == points.getLastPoint().preciseX()) &&
-               (points.getFirstPoint().preciseY() < points.getLastPoint().preciseY())))
-      {
-         x = points.getFirstPoint().preciseX() - (length - dividedLength) * Math.cos(-theta);
-         y = points.getFirstPoint().preciseY() - (length - dividedLength) * Math.sin(-theta);
-      }
-      else if ((points.getFirstPoint().preciseX() < points.getLastPoint().preciseX()) &&
-               (points.getFirstPoint().preciseY() > points.getLastPoint().preciseY()))
-      {
-         x = points.getLastPoint().preciseX() - (length - dividedLength) * Math.cos(-theta);
-         y = points.getLastPoint().preciseY() - (length - dividedLength) * Math.sin(-theta);
-      }
-      else if ((points.getFirstPoint().preciseX() == points.getLastPoint().preciseX()) &&
-               (points.getFirstPoint().preciseY() > points.getLastPoint().preciseY()))
-      {
-         x = points.getLastPoint().preciseX() + (length - dividedLength) * Math.cos(theta);
-         y = points.getLastPoint().preciseY() + (length - dividedLength) * Math.sin(theta);
+         if (link.isDirectionInverted())
+         {
+            locationLenght = (elementPart / (link.getDuplicateCount() + 2)) * ((link.getDuplicateCount() + 2) - (link.getPosition() + 1));
+         }
+         else
+         {
+            locationLenght = (elementPart / (link.getDuplicateCount() + 2)) * (link.getPosition() + 1);            
+         }
       }
       else
       {
-         x = points.getFirstPoint().preciseX() + dividedLength * Math.cos(theta);
-         y = points.getFirstPoint().preciseY() + dividedLength * Math.sin(theta);
+         locationLenght = elementPart / 100 * link.getConfig().getLabelPosition();
+      }
+
+      if (labelLocation == LinkDataLocation.OBJECT1)
+      {
+         locationLenght += sectionLenght * 1;
+      }      
+      if (labelLocation == LinkDataLocation.CENTER)
+      {
+         locationLenght += sectionLenght * (1 + 3);         
+      }      
+      if (labelLocation == LinkDataLocation.OBJECT2)
+      {
+         locationLenght += sectionLenght * (1 + 3 + 3);
+      }
+
+      //X grows from left to right and y from up to down    
+      if ((firstObjectX >= secondObjectX) && (firstObjectY >= secondObjectY)) //Second object in 270 to 360 degrees IV
+      {
+         x = firstObjectX - locationLenght * Math.cos(theta);
+         y = firstObjectY - locationLenght * Math.sin(theta);
+      }
+      else if ((firstObjectX >= secondObjectX) && (firstObjectY < secondObjectY))  //Second object in >0 to 90 degrees I
+      {
+         x = firstObjectX - locationLenght * Math.cos(-theta);
+         y = firstObjectY - locationLenght * Math.sin(-theta);
+      }
+      else if ((firstObjectX < secondObjectX) && (firstObjectY > secondObjectY))  //Second object in >180 to <270 degrees II
+      {
+         x = firstObjectX + locationLenght * Math.cos(-theta);
+         y = firstObjectY + locationLenght * Math.sin(-theta);
+      }
+      else //Second object in >90 to 180 degrees II
+      {
+         x = firstObjectX + locationLenght * Math.cos(theta);
+         y = firstObjectY + locationLenght * Math.sin(theta);
       }
       
       return new Point(x, y);

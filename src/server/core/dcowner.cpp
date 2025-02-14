@@ -1151,6 +1151,29 @@ unique_ptr<SharedObjectArray<DCObject>> DataCollectionOwner::getDCObjectsByRegex
    return result;
 }
 
+
+SharedObjectArray<DCObject> DataCollectionOwner::getDCObjectsByFilter(std::function<bool (DCObject*)> filter, uint32_t userId) const
+{
+   auto result = SharedObjectArray<DCObject>(m_dcObjects.size());
+   readLockDciAccess();
+
+   for(int i = 0; i < m_dcObjects.size(); i++)
+   {
+      DCObject *curr = m_dcObjects.get(i);
+      if (filter(curr))
+      {
+         if (curr->hasAccess(userId))
+            result.add(m_dcObjects.getShared(i));
+         else
+            nxlog_debug_tag(_T("obj.dc"), 6, _T("DataCollectionOwner::getDCObjectByFilter: denied access to DCObject %u for user %u"), curr->getId(), userId);
+      }
+   }
+
+   unlockDciAccess();
+   return result;
+
+}
+
 /**
  * Get all data collection objects
  */

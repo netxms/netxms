@@ -42,7 +42,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.client.maps.configs.MapLinkDataSource;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectDciDialog;
 import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.dialogs.DataSourceEditDlg;
@@ -59,7 +59,6 @@ public class LinkDataSources extends PropertyPage
    public static final int COLUMN_POSITION = 0;
    public static final int COLUMN_NODE = 1;
    public static final int COLUMN_METRIC = 2;
-   public static final int COLUMN_LABEL = 3;
 
    private DciListLabelProvider labelProvider;
    private SortableTableViewer viewer;
@@ -69,7 +68,7 @@ public class LinkDataSources extends PropertyPage
    private Button upButton;
    private Button downButton;
    private LinkEditor link;
-   private List<SingleDciConfig> dciList = null;
+   private List<MapLinkDataSource> dciList = null;
 
    /*
     * (non-Javadoc)
@@ -94,8 +93,8 @@ public class LinkDataSources extends PropertyPage
       layout.numColumns = 2;
       dialogArea.setLayout(layout);
 
-      final String[] columnNames = { Messages.get().LinkDataSources_ColPos, Messages.get().LinkDataSources_ColNode, Messages.get().LinkDataSources_ColParameter, Messages.get().LinkDataSources_ColName };
-      final int[] columnWidths = { 40, 130, 200, 150 };
+      final String[] columnNames = { Messages.get().LinkDataSources_ColPos, Messages.get().LinkDataSources_ColNode, Messages.get().LinkDataSources_ColParameter };
+      final int[] columnWidths = { 40, 130, 200 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI
             | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -267,12 +266,12 @@ public class LinkDataSources extends PropertyPage
       if (dlg.open() == Window.OK)
       {
          List<DciValue> selection = dlg.getSelection();
-         List<SingleDciConfig> select = new ArrayList<SingleDciConfig>();
+         List<MapLinkDataSource> select = new ArrayList<MapLinkDataSource>();
          for(DciValue item : selection)
          {
-            SingleDciConfig dci = new SingleDciConfig(item);
+            MapLinkDataSource dci = new MapLinkDataSource(item);
             select.add(dci);
-            labelProvider.addCacheEntry(dci.getNodeId(), dci.dciId, dci.name);
+            labelProvider.addCacheEntry(dci.getNodeId(), dci.getDciId(), "");
 
             dciList.add(dci);
             
@@ -288,7 +287,7 @@ public class LinkDataSources extends PropertyPage
    private void editItem()
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      SingleDciConfig dci = (SingleDciConfig)selection.getFirstElement();
+      MapLinkDataSource dci = (MapLinkDataSource)selection.getFirstElement();
       if (dci == null)
          return;
 

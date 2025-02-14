@@ -2206,6 +2206,12 @@ public:
 
    int add(shared_ptr<T> element) { return m_data.add(new(m_pool.allocate()) shared_ptr<T>(element)); }
    int add(T *element) { return m_data.add(new(m_pool.allocate()) shared_ptr<T>(element)); }
+   void addAll(const SharedObjectArray& src)
+   {
+      for(int i = 0; i < src.m_data.size(); i++)
+         add(*static_cast<shared_ptr<T>*>(src.m_data.get(i)));
+   }
+
    T *get(int index) const
    {
       auto p = static_cast<shared_ptr<T>*>(m_data.get(index));

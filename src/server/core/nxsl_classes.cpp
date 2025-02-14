@@ -6725,7 +6725,7 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, setName)
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   auto link = static_cast<NetworkMapLinkContainer*>(object->getData());
    if (_tcscmp(link->get()->getName(), argv[0]->getValueAsCString()))
    {
       link->get()->setName(argv[0]->getValueAsCString());
@@ -6742,7 +6742,7 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, setConnectorName1)
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   auto link = static_cast<NetworkMapLinkContainer*>(object->getData());
    if (_tcscmp(link->get()->getConnector1Name(), argv[0]->getValueAsCString()))
    {
       link->get()->setConnector1Name(argv[0]->getValueAsCString());
@@ -6759,7 +6759,7 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, setConnectorName2)
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   auto link = static_cast<NetworkMapLinkContainer*>(object->getData());
    if (_tcscmp(link->get()->getConnector2Name(), argv[0]->getValueAsCString()))
    {
       link->get()->setConnector2Name(argv[0]->getValueAsCString());
@@ -6780,7 +6780,7 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, setInterface1)
       argv[0]->getValueAsUInt32() :
       static_cast<shared_ptr<NetObj>*>(argv[0]->getValueAsObject()->getData())->get()->getId();
 
-   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   auto link = static_cast<NetworkMapLinkContainer*>(object->getData());
    if (link->get()->getInterface1() != ifaceId)
    {
       link->get()->setInterface1(ifaceId);
@@ -6801,7 +6801,7 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, setInterface2)
       argv[0]->getValueAsUInt32() :
       static_cast<shared_ptr<NetObj>*>(argv[0]->getValueAsObject()->getData())->get()->getId();
 
-   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   auto link = static_cast<NetworkMapLinkContainer*>(object->getData());
    if (link->get()->getInterface2() != ifaceId)
    {
       link->get()->setInterface2(ifaceId);
@@ -6822,7 +6822,7 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, setColorConfig)
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   auto link = static_cast<NetworkMapLinkContainer*>(object->getData());
 
    MapLinkColorSource source = static_cast<MapLinkColorSource>(argv[0]->getValueAsUInt32());
    if (source == MapLinkColorSource::MAP_LINK_COLOR_SOURCE_OBJECT_STATUS)
@@ -6913,7 +6913,7 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, setRoutingAlgorithm)
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   auto link = static_cast<NetworkMapLinkContainer*>(object->getData());
    link->setRoutingAlgorithm(argv[0]->getValueAsUInt32());
    return 0;
 }
@@ -6926,7 +6926,7 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, setWidth)
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   auto link = static_cast<NetworkMapLinkContainer*>(object->getData());
    link->setWidth(argv[0]->getValueAsUInt32());
    return 0;
 }
@@ -6939,17 +6939,17 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, setStyle)
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   auto link = static_cast<NetworkMapLinkContainer*>(object->getData());
    link->setStyle(argv[0]->getValueAsUInt32());
    return 0;
 }
 
 /**
- * NetworkMapLink::updateDataSource(dci, format) method
+ * NetworkMapLink::updateDataSource(dci, format, location) method
  */
 NXSL_METHOD_DEFINITION(NetworkMapLink, updateDataSource)
 {
-   if (argc < 1 || argc > 2)
+   if (argc < 1 || argc > 3)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
    if (!argv[0]->isObject(g_nxslDciClass.getName()))
@@ -6958,10 +6958,14 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, updateDataSource)
    if ((argc > 1) && !argv[1]->isString() && !argv[1]->isNull())
       return NXSL_ERR_NOT_STRING;
 
-   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   if ((argc > 2) && !argv[2]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   auto link = static_cast<NetworkMapLinkContainer*>(object->getData());
 
    const shared_ptr<DCObjectInfo> dci = *static_cast<shared_ptr<DCObjectInfo>*>(argv[0]->getValueAsObject()->getData());
-   link->updateDataSource(dci, (argc > 1) ? argv[1]->getValueAsCString() : _T(""));
+   LinkDataLocation location = LinkLocationFromInt((argc > 2) ? argv[2]->getValueAsUInt32() : 0);
+   link->updateDataSource(dci, (argc > 1) ? argv[1]->getValueAsCString() : _T(""), location);
 
    return 0;
 }
@@ -6971,7 +6975,7 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, updateDataSource)
  */
 NXSL_METHOD_DEFINITION(NetworkMapLink, clearDataSource)
 {
-   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   auto link = static_cast<NetworkMapLinkContainer*>(object->getData());
    link->clearDataSource();
    return 0;
 }
@@ -6984,7 +6988,7 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, removeDataSource)
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   auto link = static_cast<NetworkMapLinkContainer*>(object->getData());
    link->removeDataSource(argv[0]->getValueAsUInt32());
    return 0;
 }
@@ -7020,7 +7024,7 @@ NXSL_Value *NXSL_NetworkMapLinkClass::getAttr(NXSL_Object *object, const NXSL_Id
       return value;
 
    NXSL_VM *vm = object->vm();
-   auto link = static_cast<NetworkMapLinkNXSLContainer*>(object->getData());
+   auto link = static_cast<NetworkMapLinkContainer*>(object->getData());
 
    if (NXSL_COMPARE_ATTRIBUTE_NAME("connectorName1"))
    {
@@ -7176,6 +7180,10 @@ NXSL_Value *NXSL_LinkDataSourceClass::getAttr(NXSL_Object *object, const NXSL_Id
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("format"))
    {
       value = vm->createValue(linkDataSource->getFormat());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("location"))
+   {
+      value = vm->createValue(IntFromLinkLocation(linkDataSource->getLocation()));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("object"))
    {

@@ -41,7 +41,7 @@ import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
-import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.client.maps.configs.MapDataSource;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
@@ -218,13 +218,13 @@ public class StatusIndicatorElement extends ElementWidget
                final DciValue[] dciValues;
                if (requireDataCollection)
                {
-                  List<SingleDciConfig> dciList = new ArrayList<>();
+                  List<MapDataSource> dciList = new ArrayList<>();
                   for(int i = 0; i < config.getElements().length; i++)
                   {
                      StatusIndicatorElementConfig e = config.getElements()[i];
                      if (((e.getType() == StatusIndicatorConfig.ELEMENT_TYPE_DCI) || (e.getType() == StatusIndicatorConfig.ELEMENT_TYPE_DCI_TEMPLATE)) && (e.getDciId() != 0))
                      {
-                        dciList.add(new SingleDciConfig(e.getObjectId(), e.getDciId()));
+                        dciList.add(new MapDataSource(e.getObjectId(), e.getDciId()));
                      }
                   }
                   dciValues = !dciList.isEmpty() ? session.getLastValues(dciList) : null;
