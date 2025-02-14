@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -1519,7 +1519,15 @@ public:
    bool run(int argc, NXSL_Value **argv, NXSL_VariableSystem **globals = nullptr,
             NXSL_VariableSystem **expressionVariables = nullptr,
             NXSL_VariableSystem *pConstants = nullptr, const char *entryPoint = nullptr);
-   bool run() { ObjectRefArray<NXSL_Value> args(1, 1); return run(args); }
+   bool run()
+   {
+      ObjectRefArray<NXSL_Value> args(1, 1);
+      return run(args);
+   }
+   bool run(const ObjectRefArray<NXSL_Value>& args, const char *entryPoint)
+   {
+      return run(args, nullptr, nullptr, nullptr, entryPoint);
+   }
    void stop() { m_stopFlag = true; }
    void setInstructionTraceFile(FILE *fp) { m_instructionTraceFile = fp; }
 

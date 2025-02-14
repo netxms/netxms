@@ -875,6 +875,36 @@ bool ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args
 }
 
 /**
+ * Extract entry point separated by dot or slash from script name.
+ * Will update "name" argument to have only script name and place entry point
+ * into "entryPoint". Will set "entryPoint" to empty string if entry point
+ * is not part of script name.
+ */
+void NXCORE_EXPORTABLE ExtractScriptEntryPoint(wchar_t *name, char *entryPoint)
+{
+   wchar_t *s = name;
+   while(*s != 0)
+   {
+      if ((*s == L'.') || (*s == L'/'))
+         break;
+      s++;
+   }
+   if (*s != 0)
+   {
+      *s = 0;
+      s++;
+      TrimW(s);
+      wchar_to_utf8(s, -1, entryPoint, MAX_IDENTIFIER_LENGTH);
+      entryPoint[MAX_IDENTIFIER_LENGTH - 1] = 0;
+   }
+   else
+   {
+      entryPoint[0] = 0;
+   }
+   TrimW(name);
+}
+
+/**
  * Execute server startup scripts
  */
 void ExecuteStartupScripts()

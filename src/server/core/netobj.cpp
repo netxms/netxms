@@ -3178,16 +3178,19 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
 /**
  * Expand script macro (intended to be called from expandText)
  */
-void NetObj::expandScriptMacro(TCHAR *name, const Alarm *alarm, const Event *event, const shared_ptr<DCObjectInfo>& dci, StringBuffer *output)
+void NetObj::expandScriptMacro(const wchar_t *scriptName, const Alarm *alarm, const Event *event, const shared_ptr<DCObjectInfo>& dci, StringBuffer *output)
 {
+   wchar_t name[256];
+   wcslcpy(name, scriptName, 256);
+
    // Arguments can be provided as script_name(arg1, arg2, ... argN)
-   TCHAR *p = _tcschr(name, _T('('));
+   wchar_t *p = wcschr(name, L'(');
    if (p != nullptr)
    {
-      size_t l = _tcslen(name) - 1;
-      if (name[l] != _T(')'))
+      size_t l = wcslen(name) - 1;
+      if (name[l] != L')')
       {
-         nxlog_debug_tag(_T("obj.macro"), 6, _T("NetObj::ExpandText(%s [%u], %s): missing closing parenthesis in macro \"%%[%s]\""), m_name, m_id, (event != nullptr) ? event->getName() : _T("<no event>"), name);
+         nxlog_debug_tag(L"obj.macro", 6, L"NetObj::ExpandText(%s [%u], %s): missing closing parenthesis in macro \"%%[%s]\"", m_name, m_id, (event != nullptr) ? event->getName() : L"<no event>", name);
          return;
       }
       name[l] = 0;
@@ -3195,22 +3198,9 @@ void NetObj::expandScriptMacro(TCHAR *name, const Alarm *alarm, const Event *eve
       Trim(name);
    }
 
-   // Entry point can be given in form script/entry_point
+   // Entry point can be given in form script.entry_point or script/entry_point
    char entryPoint[MAX_IDENTIFIER_LENGTH];
-   TCHAR *s = _tcschr(name, _T('/'));
-   if (s != nullptr)
-   {
-      *s = 0;
-      s++;
-      Trim(s);
-      wchar_to_utf8(s, -1, entryPoint, MAX_IDENTIFIER_LENGTH);
-      entryPoint[MAX_IDENTIFIER_LENGTH - 1] = 0;
-   }
-   else
-   {
-      entryPoint[0] = 0;
-   }
-   Trim(name);
+   ExtractScriptEntryPoint(name, entryPoint);
 
    shared_ptr<DCObjectInfo> effectiveDCI(dci);
    if ((effectiveDCI == nullptr) && (event != nullptr) && (event->getDciId() != 0) && isDataCollectionTarget())
@@ -3219,7 +3209,7 @@ void NetObj::expandScriptMacro(TCHAR *name, const Alarm *alarm, const Event *eve
       if (dcObject != nullptr)
          effectiveDCI = dcObject->createDescriptor();
       else
-         nxlog_debug_tag(_T("obj.macro"), 5, _T("DCI ID is set to %u for event %s [") UINT64_FMT _T("] but no such DCI exists"), event->getDciId(), event->getName(), event->getId());
+         nxlog_debug_tag(L"obj.macro", 5, L"DCI ID is set to %u for event %s [" UINT64_FMT L"] but no such DCI exists", event->getDciId(), event->getName(), event->getId());
    }
    NXSL_VM *vm = CreateServerScriptVM(name, self(), effectiveDCI);
    if (vm != nullptr)
@@ -3236,30 +3226,28 @@ void NetObj::expandScriptMacro(TCHAR *name, const Alarm *alarm, const Event *eve
       ObjectRefArray<NXSL_Value> args(16, 16);
       if ((p == nullptr) || ParseValueList(vm, &p, args, true))
       {
-         if (vm->run(args, nullptr, nullptr, nullptr, (entryPoint[0] != 0) ? entryPoint : nullptr))
+         if (vm->run(args, (entryPoint[0] != 0) ? entryPoint : nullptr))
          {
             NXSL_Value *result = vm->getResult();
             const TCHAR *temp = result->getValueAsCString();
             if (temp != nullptr)
             {
                output->append(temp);
-               nxlog_debug_tag(_T("obj.macro"), 6, _T("NetObj::ExpandText(%s [%u], %s): Script \"%s\" executed successfully"), m_name, m_id, (event != nullptr) ? event->getName() : _T("<no event>"), name);
+               nxlog_debug_tag(L"obj.macro", 6, L"NetObj::ExpandText(%s [%u], %s): Script \"%s\" executed successfully",
+                  m_name, m_id, (event != nullptr) ? event->getName() : L"<no event>", name);
             }
          }
          else
          {
-            nxlog_debug_tag(_T("obj.macro"), 6, _T("NetObj::ExpandText(%s [%u], %s): Script \"%s\" execution error (%s)"),
-                  m_name, m_id, (event != nullptr) ? event->getName() : _T("<no event>"), name, vm->getErrorText());
+            nxlog_debug_tag(L"obj.macro", 6, L"NetObj::ExpandText(%s [%u], %s): Script \"%s\" execution error (%s)",
+                  m_name, m_id, (event != nullptr) ? event->getName() : L"<no event>", name, vm->getErrorText());
             ReportScriptError(SCRIPT_CONTEXT_OBJECT, this, 0, vm->getErrorText(), name);
          }
       }
       else
       {
-         if (p != nullptr)
-            *p = _T('(');
-         if (s != nullptr)
-            *s = _T('/');
-         nxlog_debug_tag(_T("obj.macro"), 6, _T("NetObj::ExpandText(%s [%u], %s): cannot parse argument list in macro \"%%[%s]\""), m_name, m_id, (event != nullptr) ? event->getName() : _T("<no event>"), name);
+         nxlog_debug_tag(_T("obj.macro"), 6, _T("NetObj::ExpandText(%s [%u], %s): cannot parse argument list in macro \"%%[%s]\""),
+            m_name, m_id, (event != nullptr) ? event->getName() : _T("<no event>"), scriptName);
       }
       delete vm;
    }

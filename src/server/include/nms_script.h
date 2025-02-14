@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -657,6 +657,14 @@ NXSL_Program NXCORE_EXPORTABLE *CompileServerScript(const TCHAR *source, const T
  * Report script error
  */
 void NXCORE_EXPORTABLE ReportScriptError(const TCHAR *context, const NetObj *object, uint32_t dciId, const TCHAR *errorText, const TCHAR *nameFormat, ...);
+
+/**
+ * Extract entry point separated by dot or slash from script name.
+ * Will update "name" argument to have only script name and place entry point
+ * into "entryPoint". Will set "entryPoint" to empty string if entry point
+ * is not part of script name.
+ */
+void NXCORE_EXPORTABLE ExtractScriptEntryPoint(wchar_t *name, char *entryPoint);
 
 class ImportContext;
 

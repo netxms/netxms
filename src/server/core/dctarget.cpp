@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1234,20 +1234,24 @@ DataCollectionError DataCollectionTarget::getInternalMetric(const TCHAR *name, T
  */
 DataCollectionTarget::ScriptExecutionResult DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo)
 {
-   TCHAR name[256];
-   _tcslcpy(name, param, 256);
-   Trim(name);
+   wchar_t name[256];
+   wcslcpy(name, param, 256);
+   TrimW(name);
 
    // Can be in form parameter(arg1, arg2, ... argN)
-   TCHAR *p = _tcschr(name, _T('('));
+   wchar_t *p = wcschr(name, L'(');
    if (p != nullptr)
    {
-      size_t l = _tcslen(name) - 1;
-      if (name[l] != _T(')'))
+      size_t l = wcslen(name) - 1;
+      if (name[l] != L')')
          return { nullptr, false };  // Interpret argument parsing error as load failure
       name[l] = 0;
       *p = 0;
    }
+
+   // Entry point can be given in form script.entry_point or script/entry_point
+   char entryPoint[MAX_IDENTIFIER_LENGTH];
+   ExtractScriptEntryPoint(name, entryPoint);
 
    NXSL_VM *vm = CreateServerScriptVM(name, self(), dciInfo);
    bool loaded = (vm != nullptr);
@@ -1266,7 +1270,7 @@ DataCollectionTarget::ScriptExecutionResult DataCollectionTarget::runDataCollect
       {
          vm->setGlobalVariable("$targetObject", targetObject->createNXSLObject(vm));
       }
-      if (!vm->run(args))
+      if (!vm->run(args, (entryPoint[0] != 0) ? entryPoint : nullptr))
       {
          if (vm->getErrorCode() == NXSL_ERR_EXECUTION_ABORTED)
          {
