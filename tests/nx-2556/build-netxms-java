@@ -1,0 +1,18 @@
+#!/bin/bash
+set -euo pipefail
+
+MY_DIR=$(dirname "$(readlink -f "$0")" )
+
+if ! [[ -f config.log ]]; then
+   ./init-source-tree
+   CFLAGS='-ggdb3 -O0' \
+   CXXFLAGS='-ggdb3 -O0' \
+      STRIP=true \
+      ./configure --with-clang --with-server --with-sqlite --with-tests --with-agent --with-client --enable-debug --with-sdk --with-client --with-jdk=/usr/lib/jvm/default-java --enable-sanitizer
+fi
+make -j"$(nproc)"
+make -j"$(nproc)" install
+
+for x in src/{java-common/netxms-base,client/java/netxms-client,mobile-agent/java}/pom.xml; do
+   mvn -f "$x" clean install -DskipTests -Dmaven.javadoc.skip=true
+done

@@ -1,0 +1,15 @@
+#!/bin/bash
+set -euo pipefail
+
+MY_DIR=$(dirname "$(readlink -f "$0")" )
+
+if ! [[ -f config.log ]]; then
+   ./init-source-tree
+   CFLAGS='-ggdb3 -O0' \
+      CXXFLAGS='-ggdb3 -O0' \
+      STRIP=true \
+      ./configure --with-clang --with-server --with-sqlite --with-tests --with-agent --with-client --enable-debug
+fi
+#make clean
+make -j"$(nproc)"
+make -j"$(nproc)" install
