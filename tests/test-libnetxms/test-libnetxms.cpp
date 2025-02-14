@@ -1278,18 +1278,38 @@ static void TestIntegerToString()
    AssertEquals(IntegerToString(127, buffer, 10), "127");
    AssertEquals(IntegerToString(0, buffer, 10), "0");
    AssertEquals(IntegerToString(-3, buffer, 10), "-3");
+   AssertEquals(IntegerToString(-128, buffer, 10), "-128");
+   AssertEquals(IntegerToString(2147483647, buffer, 10), "2147483647");
+   AssertEquals(IntegerToString(2147483647, buffer, 16), "7fffffff");
+   AssertEquals(IntegerToString(-2147483647, buffer, 10), "-2147483647");
+   AssertEquals(IntegerToString(static_cast<int32_t>(0x80000000), buffer, 10), "-2147483648");
+   AssertEquals(IntegerToString(-2147483647, buffer, 16), "-7fffffff");
+   AssertEquals(IntegerToString(static_cast<int32_t>(0x80000000), buffer, 16), "-80000000");
    AssertEquals(IntegerToString(0555, buffer, 8), "555");
    AssertEquals(IntegerToString(0xFA48, buffer, 16), "fa48");
    AssertEquals(IntegerToString(_ULL(0xF0F1F20102030405), buffer, 16), "f0f1f20102030405");
+   AssertEquals(IntegerToString(_LL(9223372036854775807), buffer, 10), "9223372036854775807");
+   AssertEquals(IntegerToString(_LL(-9223372036854775807), buffer, 10), "-9223372036854775807");
+   AssertEquals(IntegerToString(static_cast<int64_t>(_ULL(0x8000000000000000)), buffer, 10), "-9223372036854775808");
    EndTest();
 
    StartTest(_T("IntegerToString (Unicode)"));
    AssertEquals(IntegerToString(127, wbuffer, 10), L"127");
    AssertEquals(IntegerToString(0, wbuffer, 10), L"0");
    AssertEquals(IntegerToString(-3, wbuffer, 10), L"-3");
+   AssertEquals(IntegerToString(-128, wbuffer, 10), L"-128");
+   AssertEquals(IntegerToString(2147483647, wbuffer, 10), L"2147483647");
+   AssertEquals(IntegerToString(2147483647, wbuffer, 16), L"7fffffff");
+   AssertEquals(IntegerToString(-2147483647, wbuffer, 10), L"-2147483647");
+   AssertEquals(IntegerToString(-2147483648, wbuffer, 10), L"-2147483648");
+   AssertEquals(IntegerToString(-2147483647, wbuffer, 16), L"-7fffffff");
+   AssertEquals(IntegerToString(-2147483648, wbuffer, 16), L"-80000000");
    AssertEquals(IntegerToString(0555, wbuffer, 8), L"555");
    AssertEquals(IntegerToString(0xFA48, wbuffer, 16), L"fa48");
    AssertEquals(IntegerToString(_ULL(0xF0F1F20102030405), wbuffer, 16), L"f0f1f20102030405");
+   AssertEquals(IntegerToString(_LL(9223372036854775807), wbuffer, 10), L"9223372036854775807");
+   AssertEquals(IntegerToString(_LL(-9223372036854775807), wbuffer, 10), L"-9223372036854775807");
+   AssertEquals(IntegerToString(static_cast<int64_t>(_ULL(0x8000000000000000)), wbuffer, 10), L"-9223372036854775808");
    EndTest();
 }
 
