@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -427,21 +427,21 @@ void StartSNMPAgent()
 
    // Setup MIB tree
    s_mib.add(new SingleValueMIBSubTree(SNMP_ObjectId::parse(_T(".1.3.6.1.2.1.1.1")),
-      [] (const SNMP_ObjectId& oid)
+      [] (const SNMP_ObjectId& oid) -> SNMP_Variable*
       {
          auto v = new SNMP_Variable(oid);
          v->setValueFromString(ASN_OCTET_STRING, _T("NetXMS Server ") NETXMS_VERSION_STRING);
          return v;
       }));
    s_mib.add(new SingleValueMIBSubTree(SNMP_ObjectId::parse(_T(".1.3.6.1.2.1.1.2")),
-      [] (const SNMP_ObjectId& oid)
+      [] (const SNMP_ObjectId& oid) -> SNMP_Variable*
       {
          auto v = new SNMP_Variable(oid);
          v->setValueFromObjectId(ASN_OBJECT_ID, s_agentObjectId);
          return v;
       }));
    s_mib.add(new SingleValueMIBSubTree(SNMP_ObjectId::parse(_T(".1.3.6.1.2.1.1.3")),
-      [] (const SNMP_ObjectId& oid)
+      [] (const SNMP_ObjectId& oid) -> SNMP_Variable*
       {
          auto v = new SNMP_Variable(oid);
          v->setValueFromUInt32(ASN_TIMETICKS, static_cast<uint32_t>(time(nullptr) - g_serverStartTime) * 10);
