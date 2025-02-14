@@ -130,7 +130,7 @@ import org.netxms.client.log.Log;
 import org.netxms.client.maps.MapDCIInstance;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
-import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.client.maps.configs.MapDataSource;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.market.Repository;
@@ -5654,12 +5654,12 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DciValue[] getLastValues(List<SingleDciConfig> dciConfig) throws IOException, NXCException
+   public DciValue[] getLastValues(List<? extends MapDataSource> dciConfig) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCI_VALUES);
       long base = NXCPCodes.VID_DCI_VALUES_BASE;
       msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, dciConfig.size());
-      for(SingleDciConfig c : dciConfig)
+      for(MapDataSource c : dciConfig)
       {
          c.fillMessage(msg, base);
          base += 10;
@@ -5700,12 +5700,12 @@ public class NXCSession
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<Threshold> getActiveThresholds(List<SingleDciConfig> dciConfig) throws IOException, NXCException
+   public List<Threshold> getActiveThresholds(List<MapDataSource> dciConfig) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ACTIVE_THRESHOLDS);
       long base = NXCPCodes.VID_DCI_VALUES_BASE;
       msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, dciConfig.size());
-      for(SingleDciConfig c : dciConfig)
+      for(MapDataSource c : dciConfig)
       {
          c.fillMessage(msg, base);
          base += 10;

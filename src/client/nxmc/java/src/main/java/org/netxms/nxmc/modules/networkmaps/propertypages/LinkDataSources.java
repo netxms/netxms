@@ -41,7 +41,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.client.maps.configs.MapLinkDataSource;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectDciDialog;
@@ -61,7 +61,9 @@ public class LinkDataSources extends LinkPropertyPage
    public static final int COLUMN_POSITION = 0;
    public static final int COLUMN_NODE = 1;
    public static final int COLUMN_METRIC = 2;
-   public static final int COLUMN_LABEL = 3;
+   public static final int COLUMN_FORMAT = 3;
+   public static final int COLUMN_LOCATION = 4;
+   public static final int COLUMN_SOURCE = 5;
 
    private DciListLabelProvider labelProvider;
    private SortableTableViewer viewer;
@@ -70,7 +72,7 @@ public class LinkDataSources extends LinkPropertyPage
    private Button deleteButton;
    private Button upButton;
    private Button downButton;
-   private List<SingleDciConfig> dciList = null;
+   private List<MapLinkDataSource> dciList = null;
 
    /**
     * Create new page for given link editor.
@@ -92,11 +94,11 @@ public class LinkDataSources extends LinkPropertyPage
 
       dciList = linkEditor.getDciList();
 
-      labelProvider = new DciListLabelProvider(dciList);
+      labelProvider = new DciListLabelProvider(dciList, linkEditor);
       labelProvider.resolveDciNames(dciList);
 
-      final String[] columnNames = { i18n.tr("Position"), i18n.tr("Node"), i18n.tr("Metric"), i18n.tr("Name") };
-      final int[] columnWidths = { 40, 130, 200, 150 };
+      final String[] columnNames = { i18n.tr("Position"), i18n.tr("Node"), i18n.tr("Metric"), i18n.tr("Format"), i18n.tr("Location"), i18n.tr("Source") };
+      final int[] columnWidths = { 40, 130, 200, 150, 100, 100 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI
             | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -277,12 +279,12 @@ public class LinkDataSources extends LinkPropertyPage
       if (dlg.open() == Window.OK)
       {
          List<DciValue> selection = dlg.getSelection();
-         List<SingleDciConfig> select = new ArrayList<SingleDciConfig>();
+         List<MapLinkDataSource> select = new ArrayList<MapLinkDataSource>();
          for(DciValue item : selection)
          {
-            SingleDciConfig dci = new SingleDciConfig(item);
+            MapLinkDataSource dci = new MapLinkDataSource(item);
             select.add(dci);
-            labelProvider.addCacheEntry(dci.getNodeId(), dci.dciId, dci.name);
+            labelProvider.addCacheEntry(dci.getNodeId(), dci.getDciId(), "");
 
             dciList.add(dci);
             
@@ -298,11 +300,11 @@ public class LinkDataSources extends LinkPropertyPage
    private void editItem()
    {
       final IStructuredSelection selection = viewer.getStructuredSelection();
-      SingleDciConfig dci = (SingleDciConfig)selection.getFirstElement();
+      MapLinkDataSource dci = (MapLinkDataSource)selection.getFirstElement();
       if (dci == null)
          return;
 
-      DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci);
+      DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, linkEditor);
       if (dlg.open() == Window.OK)
       {
          viewer.update(dci, null);

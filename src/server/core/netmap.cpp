@@ -1439,13 +1439,119 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
    nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s): updateObjects completed"), m_name);
 }
 
+static SharedObjectArray<DCObject> CollectDcis(shared_ptr<Node> node, uint32_t interfaceId)
+{
+   bool inTraffic = false;
+   bool outTraffic = false;
+   SharedObjectArray<DCObject> dcis = node->getDCObjectsByFilter([interfaceId, &inTraffic, &outTraffic] (DCObject *obj)
+      {
+         String tag = obj->getSystemTag();
+         if (inTraffic && outTraffic)
+            return false;
+         if (!inTraffic && (obj->getType() == DCO_TYPE_ITEM) && (obj->getRelatedObject() == interfaceId) &&
+                  tag.startsWith(L"iface-inbound-") && !tag.endsWith(L"-util"))
+         {
+            inTraffic = true;
+            return true;
+         }
+
+         if (!outTraffic && (obj->getType() == DCO_TYPE_ITEM) && (obj->getRelatedObject() == interfaceId) &&
+                  tag.startsWith(L"iface-outbound-") && !tag.endsWith(L"-util"))
+         {
+            outTraffic = true;
+            return true;
+         }
+         return false;
+      });
+   return dcis;
+}
+
+/**
+ * Update links with DCI information
+ */
+void NetworkMap::updateLinkDataSource(NetworkMapLinkContainer *linkContainer)
+{
+   shared_ptr<Interface> interface1 = static_pointer_cast<Interface>(FindObjectById(linkContainer->get()->getInterface1() , OBJECT_INTERFACE));
+   shared_ptr<Interface> interface2 = static_pointer_cast<Interface>(FindObjectById(linkContainer->get()->getInterface2() , OBJECT_INTERFACE));
+   shared_ptr<Node> node1 = (interface1 != nullptr) ? interface1->getParentNode() : nullptr;
+   shared_ptr<Node> node2 = (interface2 != nullptr) ? interface2->getParentNode() : nullptr;
+   if (isShowTraffic() && ((node1 != nullptr) || (node2 != nullptr)))
+   {
+      SharedObjectArray<DCObject> dcis;
+      if (node1 != nullptr)
+         dcis.addAll(CollectDcis(node1, interface1->getId()));
+      if (node2 != nullptr)
+         dcis.addAll(CollectDcis(node2, interface2->getId()));
+
+      unique_ptr<ObjectArray<LinkDataSouce>> linkDataSource = linkContainer->getDataSource();
+      for (int i = 0, j = 0; i < linkDataSource->size(); i++, j++)
+      {
+         LinkDataSouce *lds = linkDataSource->get(i);
+         if (!lds->isSystem())
+            continue;
+         bool found = false;
+         for (const shared_ptr<DCObject> &dci : dcis)
+         {
+            if (lds->getDciId() == dci->getId())
+            {
+               found = true;
+               LinkDataLocation loc = (dci->getRelatedObject() == linkContainer->get()->getInterface1()) ? LinkDataLocation::OBJECT1 : LinkDataLocation::OBJECT2;
+               if (lds->getLocation() != loc)
+               {
+                  linkContainer->updateDataSourceLocation(dci->createDescriptor(), loc);
+               }
+            }
+         }
+         if (!found)
+         {
+            linkContainer->removeDataSource(j);
+            j--;
+         }
+      }
+
+      for (const shared_ptr<DCObject> &dci : dcis)
+      {
+         bool found = false;
+         for (const LinkDataSouce *lds : *linkDataSource)
+         {
+            if (lds->getDciId() == dci->getId())
+            {
+               //Location already checked and updated in previous cycle
+               found = true;
+               break;
+            }
+         }
+         if (!found)
+         {
+            String tag = dci->getSystemTag();
+            wchar_t format[128];
+            _sntprintf(format, 128, L"%s: %s", tag.startsWith(L"iface-inbound-") ? L"RX" : L"TX", L" %{u,m}s");
+            LinkDataLocation loc = (dci->getRelatedObject() == linkContainer->get()->getInterface1()) ? LinkDataLocation::OBJECT1 : LinkDataLocation::OBJECT2;
+            linkContainer->addSystemDataSource(dci->createDescriptor(), format, loc);
+         }
+      }
+   }
+   else
+   {
+      unique_ptr<ObjectArray<LinkDataSouce>> linkDataSource = linkContainer->getDataSource();
+      for (int i = 0; i < linkDataSource->size(); i++)
+      {
+         LinkDataSouce *lds = linkDataSource->get(i);
+         if (lds->isSystem())
+         {
+            linkContainer->clearSystemDataSource();
+         }
+      }
+   }
+}
+
 /**
  * Update links that have computed attributes (color, text, etc.)
  */
 void NetworkMap::updateLinks()
 {
    ObjectArray<NetworkMapLink> colorUpdateList(0, 128, Ownership::True);
-   ObjectArray<NetworkMapLinkNXSLContainer> stylingUpdateList(0, 128, Ownership::True);
+   ObjectArray<NetworkMapLinkContainer> stylingUpdateList(0, 128, Ownership::True);
 
    lockProperties();
    for(int i = 0; i < m_mapContent.m_links.size(); i++)
@@ -1458,10 +1564,11 @@ void NetworkMap::updateLinks()
          temp->setConnectedElements(m_mapContent.objectIdFromElementId(link->getElement1()), m_mapContent.objectIdFromElementId(link->getElement2()));
          colorUpdateList.add(temp);
       }
-      if (m_linkStylingScript != nullptr)
+
+      if (!link->isExcludeFromAutoUpdate())
       {
          // Replace element IDs with actual object IDs in temporary link object
-         auto temp = new NetworkMapLinkNXSLContainer(*link);
+         auto temp = new NetworkMapLinkContainer(*link);
          temp->get()->setConnectedElements(m_mapContent.objectIdFromElementId(link->getElement1()), m_mapContent.objectIdFromElementId(link->getElement2()));
          stylingUpdateList.add(temp);
       }
@@ -1543,10 +1650,16 @@ void NetworkMap::updateLinks()
       delete vm;
    }
 
+   for(int i = 0; i < stylingUpdateList.size(); i++)
+   {
+      NetworkMapLinkContainer *lc = stylingUpdateList.get(i);
+      updateLinkDataSource(lc);
+   }
+
    lockProperties();
    for(int i = 0; i < stylingUpdateList.size(); i++)
    {
-      NetworkMapLinkNXSLContainer *linkUpdate = stylingUpdateList.get(i);
+      NetworkMapLinkContainer *linkUpdate = stylingUpdateList.get(i);
       for(int j = 0; j < m_mapContent.m_links.size(); j++)
       {
          NetworkMapLink *link = m_mapContent.m_links.get(j);
@@ -1554,7 +1667,7 @@ void NetworkMap::updateLinks()
          {
             if (linkUpdate->isModified())
             {
-               nxlog_debug_tag(DEBUG_TAG_NETMAP, 7, _T("NetworkMap::updateLinks(%s [%u]): link %u [%u -- %u] is modified by styling script"), m_name, m_id, link->getId(), link->getElement1(), link->getElement2());
+               nxlog_debug_tag(DEBUG_TAG_NETMAP, 7, _T("NetworkMap::updateLinks(%s [%u]): link %u [%u -- %u] is modified by styling script or by system"), m_name, m_id, link->getId(), link->getElement1(), link->getElement2());
 
                linkUpdate->updateConfig();
                linkUpdate->get()->setConnectedElements(link->getElement1(), link->getElement2());

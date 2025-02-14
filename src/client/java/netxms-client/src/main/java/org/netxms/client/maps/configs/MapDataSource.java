@@ -27,28 +27,26 @@ import org.netxms.client.objects.interfaces.NodeItemPair;
 /**
  * DCI information for map line
  */
-public class SingleDciConfig implements NodeItemPair
+public class MapDataSource implements NodeItemPair
 {	
 	public static final int ITEM = DataCollectionObject.DCO_TYPE_ITEM;
 	public static final int TABLE = DataCollectionObject.DCO_TYPE_TABLE;
 
-	public long nodeId;
-	public long dciId;
-	public int type;
-	public String name;
-	public String instance;
-	public String column;
-   public String formatString;
+	protected long nodeId;
+	protected long dciId;
+	protected int type;
+	protected String instance;
+	protected String column;
+	protected String formatString;
 
 	/**
 	 * Default constructor
 	 */
-	public SingleDciConfig()
+	public MapDataSource()
 	{
 		nodeId = 0;
 		dciId = 0;
 		setType(ITEM);
-      name = "";
       setInstance("");
       setColumn("");
       setFormatString("");
@@ -59,12 +57,11 @@ public class SingleDciConfig implements NodeItemPair
 	 * 
 	 * @param src source object
 	 */
-	public SingleDciConfig(SingleDciConfig src)
+	public MapDataSource(MapDataSource src)
 	{
 		this.nodeId = src.nodeId;
 		this.dciId = src.dciId;
 		this.setType(src.getType());
-		this.name = src.name;
 		this.formatString = src.formatString;
 		this.setInstance(src.getInstance());
 		this.setColumn(src.getColumn());
@@ -75,12 +72,11 @@ public class SingleDciConfig implements NodeItemPair
 	 * 
 	 * @param dci source DciValue object
 	 */
-	public SingleDciConfig(DciValue dci)
+	public MapDataSource(DciValue dci)
 	{
 		nodeId = dci.getNodeId();
 		dciId = dci.getId();
 		setType(dci.getDcObjectType());
-		name = dci.getDescription();
 		formatString = "";
       setInstance("");
       setColumn("");
@@ -92,12 +88,11 @@ public class SingleDciConfig implements NodeItemPair
     * @param nodeId node ID
     * @param dciId DCI ID
     */
-   public SingleDciConfig(long nodeId, long dciId)
+   public MapDataSource(long nodeId, long dciId)
    {
       this.nodeId = nodeId;
       this.dciId = dciId;
       setType(ITEM);
-      name = "";
       setInstance("");
       setColumn("");
       setFormatString("");
@@ -121,16 +116,6 @@ public class SingleDciConfig implements NodeItemPair
 	      msg.setField(baseId++, column);
 	      msg.setField(baseId++, instance);
 	   }
-	}
-
-	/**
-	 * Get DCI name. Always returns non-empty string.
-	 * 
-	 * @return DCI name
-	 */
-	public String getName()
-	{
-		return ((name != null) && !name.isEmpty()) ? name : ("[" + Long.toString(dciId) + "]");
 	}
 
    /**
@@ -215,14 +200,6 @@ public class SingleDciConfig implements NodeItemPair
    public void setDciId(long dciId)
    {
       this.dciId = dciId;
-   }
-
-   /**
-    * @param name the name to set
-    */
-   public void setName(String name)
-   {
-      this.name = name;
    }
 
    /**

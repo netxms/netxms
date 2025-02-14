@@ -53,11 +53,19 @@ if (dci1 != 0)
 
 dci2 = FindAllDCIs($link.object2, "*")[0]?.id;
 if (dci2 != 0)
-   $link.updateDataSource(GetDCIObject($link.object2, dci2), dci2 .. ": %{u,m}s");
+   $link.updateDataSource(GetDCIObject($link.object2, dci2), dci2 .. ": %{u,m}s",  MapLinkStyle::Center);
 
 assert($link.dataSource.size == 2);
 assert(($link.dataSource[0].dciId == dci1 && $link.dataSource[1].dciId == dci2) || 
       ($link.dataSource[1].dciId == dci1 && $link.dataSource[0].dciId == dci2));
+assert($link.dataSource[0].location == MapLinkStyle::Center);
+assert($link.dataSource[1].location == MapLinkStyle::Center);
+
+$link.updateDataSource(GetDCIObject($link.object1, dci1), dci1 .. ": %{u,m}s",  MapLinkStyle::Object2);
+$link.updateDataSource(GetDCIObject($link.object2, dci2), dci2 .. ": %{u,m}s",  MapLinkStyle::Object2);
+
+assert($link.dataSource[0].location == MapLinkStyle::Object2);
+assert($link.dataSource[1].location == MapLinkStyle::Object2);
 
 assert(($link.dataSource[0].objectId == $link.objectId1 && $link.dataSource[1].objectId == $link.objectId2) || 
       ($link.dataSource[1].objectId == $link.objectId1 && $link.dataSource[0].objectId == $link.objectId2));

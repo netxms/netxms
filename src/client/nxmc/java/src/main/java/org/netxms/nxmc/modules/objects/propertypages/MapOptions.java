@@ -54,13 +54,15 @@ public class MapOptions extends ObjectPropertyPage
 {
    private final I18n i18n = LocalizationHelper.getI18n(MapOptions.class);
    private static final int FLAG_MASK = (NetworkMap.MF_SHOW_END_NODES | NetworkMap.MF_SHOW_STATUS_ICON | NetworkMap.MF_SHOW_STATUS_FRAME | NetworkMap.MF_SHOW_STATUS_BKGND |
-         NetworkMap.MF_CALCULATE_STATUS | NetworkMap.MF_SHOW_LINK_DIRECTION | NetworkMap.MF_TRANSLUCENT_LABEL_BKGND | NetworkMap.MF_USE_L1_TOPOLOGY | NetworkMap.MF_DONT_UPDATE_LINK_TEXT);
+         NetworkMap.MF_CALCULATE_STATUS | NetworkMap.MF_SHOW_LINK_DIRECTION | NetworkMap.MF_TRANSLUCENT_LABEL_BKGND | NetworkMap.MF_USE_L1_TOPOLOGY | 
+         NetworkMap.MF_DONT_UPDATE_LINK_TEXT | NetworkMap.MF_SHOW_TRAFFIC);
 
    private NetworkMap map;
 	private Button checkShowStatusIcon;
 	private Button checkShowStatusFrame;
    private Button checkShowStatusBkgnd;
    private Button checkShowLinkDirection;
+   private Button checkShowTraffic;
    private Button checkTranslucentLabelBkgnd;
    private Button checkUseL1Topology;
    private Button checkDontUpdateLinkText;
@@ -123,7 +125,7 @@ public class MapOptions extends ObjectPropertyPage
 
 		/**** object display ****/
 		Group objectDisplayGroup = new Group(dialogArea, SWT.NONE);
-		objectDisplayGroup.setText(i18n.tr("Default display options"));
+		objectDisplayGroup.setText(i18n.tr("Object display options"));
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -155,17 +157,13 @@ public class MapOptions extends ObjectPropertyPage
       checkShowStatusBkgnd.setText(i18n.tr("Show status &background"));
       checkShowStatusBkgnd.setSelection((map.getFlags() & NetworkMap.MF_SHOW_STATUS_BKGND) != 0);
 
-      checkShowLinkDirection = new Button(objectDisplayGroup, SWT.CHECK);
-      checkShowLinkDirection.setText("Show link direction");
-      checkShowLinkDirection.setSelection((map.getFlags() & NetworkMap.MF_SHOW_LINK_DIRECTION) != 0);
-
       checkTranslucentLabelBkgnd = new Button(objectDisplayGroup, SWT.CHECK);
       checkTranslucentLabelBkgnd.setText(i18n.tr("Translucent label background"));
       checkTranslucentLabelBkgnd.setSelection(map.isTranslucentLabelBackground());
 
 		/**** default link appearance ****/
 		Group linkGroup = new Group(dialogArea, SWT.NONE);
-		linkGroup.setText(i18n.tr("Default connection options"));
+		linkGroup.setText(i18n.tr("Default link options"));
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -226,7 +224,7 @@ public class MapOptions extends ObjectPropertyPage
       spinerLineWidth = new LabeledSpinner(linkGroup, SWT.NONE);
       spinerLineWidth.setLabel(i18n.tr("Line width (0 for client default)"));
       spinerLineWidth.setRange(0, 100);
-      spinerLineWidth.setSelection(map.getDefaultLinkWidth());
+      spinerLineWidth.setSelection(map.getDefaultLinkWidth());    
 
 		/**** topology options ****/
       if (map.getMapType() != MapType.CUSTOM)
@@ -236,7 +234,6 @@ public class MapOptions extends ObjectPropertyPage
 	      gd = new GridData();
 	      gd.grabExcessHorizontalSpace = true;
 	      gd.horizontalAlignment = SWT.FILL;
-	      gd.horizontalSpan = 2;
 	      topoGroup.setLayoutData(gd);
 	      layout = new GridLayout();
 	      topoGroup.setLayout(layout);
@@ -248,11 +245,7 @@ public class MapOptions extends ObjectPropertyPage
          checkUseL1Topology = new Button(topoGroup, SWT.CHECK);
          checkUseL1Topology.setText(i18n.tr("Use &physical link information"));
          checkUseL1Topology.setSelection((map.getFlags() & NetworkMap.MF_USE_L1_TOPOLOGY) != 0);
-
-         checkDontUpdateLinkText = new Button(topoGroup, SWT.CHECK);
-         checkDontUpdateLinkText.setText(i18n.tr("Disable link &texts update"));
-         checkDontUpdateLinkText.setSelection(map.isDontUpdateLinkText());
-
+         
          checkCustomRadius = new Button(topoGroup, SWT.CHECK);
          checkCustomRadius.setText(i18n.tr("Custom discovery &radius"));
          checkCustomRadius.setSelection(map.getDiscoveryRadius() > 0);
@@ -268,6 +261,29 @@ public class MapOptions extends ObjectPropertyPage
          topologyRadius.setSelection(map.getDiscoveryRadius());
          topologyRadius.setEnabled(map.getDiscoveryRadius() > 0);
       }      
+      
+      /**** Link options ****/
+      Group linkDisplayGroup = new Group(dialogArea, SWT.NONE);
+      linkDisplayGroup.setText(i18n.tr("Link options"));
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.FILL;
+      linkDisplayGroup.setLayoutData(gd);
+      layout = new GridLayout();
+      linkDisplayGroup.setLayout(layout);
+
+      checkShowLinkDirection = new Button(linkDisplayGroup, SWT.CHECK);
+      checkShowLinkDirection.setText("Show link direction");
+      checkShowLinkDirection.setSelection((map.getFlags() & NetworkMap.MF_SHOW_LINK_DIRECTION) != 0);
+
+      checkShowTraffic = new Button(linkDisplayGroup, SWT.CHECK);
+      checkShowTraffic.setText("Display traffic data");
+      checkShowTraffic.setSelection((map.getFlags() & NetworkMap.MF_SHOW_TRAFFIC) != 0);
+
+      checkDontUpdateLinkText = new Button(linkDisplayGroup, SWT.CHECK);
+      checkDontUpdateLinkText.setText(i18n.tr("Disable link &texts update"));
+      checkDontUpdateLinkText.setSelection(map.isDontUpdateLinkText());
 
 		/**** advanced options ****/
 		Group advGroup = new Group(dialogArea, SWT.NONE);
@@ -316,6 +332,8 @@ public class MapOptions extends ObjectPropertyPage
          flags |= NetworkMap.MF_USE_L1_TOPOLOGY;
       if ((checkDontUpdateLinkText != null) && checkDontUpdateLinkText.getSelection())
          flags |= NetworkMap.MF_DONT_UPDATE_LINK_TEXT;
+      if (checkShowTraffic.getSelection())
+         flags |= NetworkMap.MF_SHOW_TRAFFIC;
       md.setObjectFlags(flags, FLAG_MASK);
 
 		md.setMapObjectDisplayMode(MapObjectDisplayMode.getByValue(objectDisplayMode.getSelectionIndex()));

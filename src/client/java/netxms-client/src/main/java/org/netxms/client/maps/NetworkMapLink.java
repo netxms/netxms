@@ -22,7 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.maps.configs.LinkConfig;
-import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.client.maps.configs.MapLinkDataSource;
+import org.netxms.client.maps.configs.MapDataSource;
 import com.google.gson.Gson;
 
 /**
@@ -31,7 +32,8 @@ import com.google.gson.Gson;
 public class NetworkMapLink
 {
    //Link flags
-   public static final int AUTO_GENERATED = 1;
+   public static final int AUTO_GENERATED = 0x1;
+   public static final int EXCLUDE_FROM_AUTO_UPDATE = 0x2; 
 
    // Link types
    public static final int NORMAL = 0;
@@ -76,6 +78,8 @@ public class NetworkMapLink
    private int flags;
    private int duplicateCount = 0;
    private int position = 0;
+   private long commonFirstElement = 0;
+   private boolean directionInverted = false;
 
    /**
     * Create link object from scratch.
@@ -93,7 +97,7 @@ public class NetworkMapLink
     * @param flags link flags
     */
    public NetworkMapLink(long id, String name, int type, long element1, long interfaceId1, long element2, long interfaceId2, String connectorName1, String connectorName2,
-         SingleDciConfig[] dciList, int flags)
+         MapLinkDataSource[] dciList, int flags)
    {
       this.id = id;
       this.name = name;
@@ -440,14 +444,6 @@ public class NetworkMapLink
    }
 
    /**
-    * @param flags the flags to set
-    */
-   public void setFlags(int flags)
-   {
-      this.flags = flags;
-   }
-
-   /**
     * Check if this link was generated automatically.
     *
     * @return true if this link was generated automatically
@@ -458,11 +454,35 @@ public class NetworkMapLink
    }
 
    /**
+    * Check if this link is excluded from automatic update
+    *
+    * @return true if this link should be excluded from auto update
+    */
+   public boolean isExcludedFromAutomaticUpdate()
+   {
+      return (flags & EXCLUDE_FROM_AUTO_UPDATE) != 0;
+   }
+
+   /**
+    * Set if this link is excluded from automatic DCI data update
+    * 
+    * @param exclude if it is excluded
+    */
+   public void setExcludedFromAutomaticUpdate(boolean exclude)
+   {
+      if (exclude)
+         flags |= EXCLUDE_FROM_AUTO_UPDATE;
+      else
+         flags &= ~EXCLUDE_FROM_AUTO_UPDATE;
+   }
+
+
+   /**
     * @return returns if DCI list is not empty
     */
    public boolean hasDciData()
    {
-      SingleDciConfig[] dciList = config.getDciList();
+      MapDataSource[] dciList = config.getDciList();
       if (dciList != null && dciList.length > 0)
          return true;
       return false;
@@ -471,7 +491,7 @@ public class NetworkMapLink
    /**
     * @return returns the DCI list if not empty or null
     */
-   public SingleDciConfig[] getDciList()
+   public MapLinkDataSource[] getDciList()
    {
       if (hasDciData())
       {
@@ -488,13 +508,13 @@ public class NetworkMapLink
     * 
     * @return copy of DCIs configured on this link as list
     */
-   public List<SingleDciConfig> getDciAsList()
+   public List<MapLinkDataSource> getDciAsList()
    {
-      List<SingleDciConfig> dciList = new ArrayList<SingleDciConfig>();
+      List<MapLinkDataSource> dciList = new ArrayList<MapLinkDataSource>();
       if (hasDciData())
       {
-         for(SingleDciConfig dci : getDciList())
-            dciList.add(new SingleDciConfig(dci));
+         for(MapLinkDataSource dci : getDciList())
+            dciList.add(new MapLinkDataSource(dci));
       }
       return dciList;
    }
@@ -603,6 +623,36 @@ public class NetworkMapLink
    public void setInterfaceId2(long interfaceId2)
    {
       this.interfaceId2 = interfaceId2;
+   }
+
+   /**
+    * Get common first element - used to check if links are inverted to each other
+    * 
+    * @return common first element
+    */
+   public long getCommonFirstElement()
+   {
+      return commonFirstElement == 0 ? element1 : commonFirstElement;
+   }
+
+   /**
+    * Update common first element and set inverted flag 
+    * @param commonFirstElement
+    */
+   public void setCommonFirstElement(long commonFirstElement)
+   {
+      this.commonFirstElement = commonFirstElement;
+      directionInverted  = commonFirstElement != element1;
+   }
+
+   /**
+    * If link direction is inverted to other links
+    * 
+    * @return
+    */
+   public boolean isDirectionInverted()
+   {
+      return directionInverted;
    }
 
    /**

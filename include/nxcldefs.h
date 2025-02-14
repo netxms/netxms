@@ -1196,6 +1196,7 @@ enum AggregationFunction
 #define MF_FIT_BKGND_IMAGE         0x00000800
 #define MF_FIT_TO_SCREEN           0x00001000
 #define MF_SHOW_AS_OBJECT_VIEW     0x00002000
+#define MF_SHOW_TRAFFIC            0x00004000
 
 /**
  * Network map layouts

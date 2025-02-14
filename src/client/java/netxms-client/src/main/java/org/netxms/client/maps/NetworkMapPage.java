@@ -107,6 +107,7 @@ public class NetworkMapPage
 	          (l.getId() != link.getId()))
 	      {
 	         l.updatePosition();
+	         link.setCommonFirstElement(l.getCommonFirstElement());
 	         link.setDuplicateCount(l.getDuplicateCount());
 	      }
 	   }

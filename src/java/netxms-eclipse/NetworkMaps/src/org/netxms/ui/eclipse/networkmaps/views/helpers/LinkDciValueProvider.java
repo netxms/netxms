@@ -31,7 +31,7 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.maps.MapDCIInstance;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
-import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.client.maps.configs.MapDataSource;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -235,11 +235,11 @@ public class LinkDciValueProvider
       if (!link.hasDciData())
          return ""; //$NON-NLS-1$
 
-      SingleDciConfig[] dciList =  link.getDciList();
+      MapDataSource[] dciList =  link.getDciList();
       StringBuilder sb = new StringBuilder();
       for(int i = 0; i < dciList.length;)
       {
-         DciValue v = getDciLastValue(dciList[i].dciId);
+         DciValue v = getDciLastValue(dciList[i].getDciId());
          if (v != null)
             sb.append(v.format(dciList[i].getFormatString(), RegionalSettings.TIME_FORMATTER));
          if (++i != dciList.length)
@@ -252,12 +252,12 @@ public class LinkDciValueProvider
     * @param dciList
     * @return
     */
-   public String getDciDataAsString(List<SingleDciConfig> dciList)
+   public String getDciDataAsString(List<MapDataSource> dciList)
    {
       StringBuilder sb = new StringBuilder();
       for(int i = 0; i < dciList.size();)
       {
-         DciValue v = getDciLastValue(dciList.get(i).dciId); 
+         DciValue v = getDciLastValue(dciList.get(i).getDciId()); 
          if (v != null)
             sb.append(v.format(dciList.get(i).getFormatString(), RegionalSettings.TIME_FORMATTER));
          if (++i != dciList.size())
@@ -270,12 +270,12 @@ public class LinkDciValueProvider
     * @param dciList
     * @return
     */
-   public List<DciValue> getDciData(List<SingleDciConfig> dciList)
+   public List<DciValue> getDciData(List<? extends MapDataSource> dciList)
    {
       List<DciValue> result = new ArrayList<DciValue>();
       for(int i = 0; i < dciList.size();i++)
       {
-         result.add(getDciLastValue(dciList.get(i).dciId)); 
+         result.add(getDciLastValue(dciList.get(i).getDciId())); 
       }
       return result;
    }
@@ -284,8 +284,8 @@ public class LinkDciValueProvider
     * @param dci
     * @return
     */
-   public DciValue getLastDciData(SingleDciConfig dci)
+   public DciValue getLastDciData(MapDataSource dci)
    {
-      return getDciLastValue(dci.dciId); 
+      return getDciLastValue(dci.getDciId()); 
    }
 }

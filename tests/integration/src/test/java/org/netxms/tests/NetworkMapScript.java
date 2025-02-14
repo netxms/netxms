@@ -41,7 +41,7 @@ public class NetworkMapScript extends AbstractSessionTest
       AbstractObject secondObject = session.findObjectByName(TEST_NODE);      
       TestHelper.findOrCreateDCI(session, secondObject, TEST_DCI_DESCRIPTION);
 
-      AbstractObject netMap = session.findObjectByName(TEST_DCI_DESCRIPTION);
+      AbstractObject netMap = session.findObjectByName(TEST_MAP_NAME);
       if (netMap != null)
       {
          session.deleteObject(netMap.getObjectId());

@@ -21,7 +21,8 @@ package org.netxms.nxmc.modules.networkmaps.views.helpers;
 import java.util.List;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
-import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.client.maps.configs.MapLinkDataSource;
+import org.netxms.client.maps.elements.NetworkMapObject;
 
 /**
  * Utility class for editing map links 
@@ -31,6 +32,8 @@ public class LinkEditor
 	private NetworkMapLink link;
 	private String name;
 	private int type;
+   private long element1;
+   private long element2;
    private long interfaceId1;
    private long interfaceId2;
 	private String connectorName1;
@@ -41,11 +44,12 @@ public class LinkEditor
 	private List<Long> statusObjects;
 	private int routingAlgorithm;
 	private boolean modified = false;
-	private List<SingleDciConfig> dciList;
+	private List<MapLinkDataSource> dciList;
 	private boolean useActiveThresholds;
    private boolean useInterfaceUtilization;
 	private int labelPosition;
 	private boolean disableLinkTextAutoUpdate;
+   private boolean excludeFromAutomaticUpdates;
 	private int lineStyle;
 	private int lineWidth;
 
@@ -60,6 +64,8 @@ public class LinkEditor
 		type = link.getType();
       interfaceId1 = link.getInterfaceId1();
       interfaceId2 = link.getInterfaceId2();
+      element1 = ((NetworkMapObject)mapPage.getElement(link.getElement1(), NetworkMapObject.class)).getObjectId();
+      element2 = ((NetworkMapObject)mapPage.getElement(link.getElement2(), NetworkMapObject.class)).getObjectId();
 		connectorName1 = link.getConnectorName1();
 		connectorName2 = link.getConnectorName2();
 		color = link.getColor();
@@ -74,6 +80,7 @@ public class LinkEditor
 		lineStyle = link.getConfig().getStyle();
 		lineWidth = link.getConfig().getWidth();
 		this.disableLinkTextAutoUpdate = disableLinkTextAutoUpdate;
+		excludeFromAutomaticUpdates = link.isExcludedFromAutomaticUpdate();
 	}
 
 	/**
@@ -98,7 +105,7 @@ public class LinkEditor
 		long[] bp = currentLink.getBendPoints();
 		mapPage.removeLink(link.getId());
       link = new NetworkMapLink(link.getId(), name, type, currentLink.getElement1(), interfaceId1, currentLink.getElement2(), interfaceId2, connectorName1,
-            connectorName2, (dciList != null) ? dciList.toArray(new SingleDciConfig[dciList.size()]) : new SingleDciConfig[0], currentLink.getFlags());
+            connectorName2, (dciList != null) ? dciList.toArray(new MapLinkDataSource[dciList.size()]) : new MapLinkDataSource[0], currentLink.getFlags());
 		link.setColor(color);
 		link.setColorSource(colorSource);
       link.setColorProvider(colorProvider);
@@ -110,6 +117,7 @@ public class LinkEditor
 		link.getConfig().setLabelPosition(labelPosition);
 		link.getConfig().setStyle(lineStyle);
       link.getConfig().setWidth(lineWidth);
+      link.setExcludedFromAutomaticUpdate(excludeFromAutomaticUpdates);
 		mapPage.addLink(link);
 		modified = true;
 		return true;
@@ -326,7 +334,7 @@ public class LinkEditor
    /**
     * @return the config
     */
-   public List<SingleDciConfig> getDciList()
+   public List<MapLinkDataSource> getDciList()
    {
       return dciList;
    }
@@ -334,7 +342,7 @@ public class LinkEditor
    /**
     * @param config the config to set
     */
-   public void setDciList(List<SingleDciConfig> dciList)
+   public void setDciList(List<MapLinkDataSource> dciList)
    {
       this.dciList = dciList;
    }
@@ -435,5 +443,35 @@ public class LinkEditor
    public void setLineWidth(int lineWidth)
    {
       this.lineWidth = lineWidth;
+   }
+
+   public boolean isExcludeFromAutomaticUpdates()
+   {
+      return excludeFromAutomaticUpdates;
+   }
+
+   public void setExcludeFromAutomaticUpdates(boolean excludeFromAutomaticUpdates)
+   {
+      this.excludeFromAutomaticUpdates = excludeFromAutomaticUpdates;
+   }
+
+   /**
+    * Get element 1 object id
+    * 
+    * @return object id of element 1
+    */
+   public long getElement1()
+   {
+      return element1;
+   }
+
+   /**
+    * Get element 2 object id
+    * 
+    * @return object id of element 2
+    */
+   public long getElement2()
+   {
+      return element2;
    }
 }

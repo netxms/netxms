@@ -1947,6 +1947,7 @@ public:
    shared_ptr<DCObject> getDCObjectByTagPattern(const WCHAR *tagPattern, uint32_t userId) const;
    unique_ptr<SharedObjectArray<DCObject>> getAllDCObjects() const;
    unique_ptr<SharedObjectArray<DCObject>> getDCObjectsByRegex(const TCHAR *regex, bool searchName, uint32_t userId) const;
+   SharedObjectArray<DCObject> getDCObjectsByFilter(std::function<bool (DCObject*)> filter, uint32_t userId = 0) const;
    NXSL_Value *getAllDCObjectsForNXSL(NXSL_VM *vm, const WCHAR *name, const WCHAR *description, const WCHAR *tag, uint32_t userId) const;
    void setDCIModificationFlag() { lockProperties(); m_dciListModified = true; unlockProperties(); }
    void sendItemsToClient(ClientSession *session, uint32_t requestId) const;
@@ -4647,6 +4648,8 @@ struct NXCORE_EXPORTABLE NetworkMapContent
    uint32_t elementIdFromObjectId(uint32_t eid) const;
 };
 
+class NetworkMapLinkContainer;
+
 /**
  * Network map object
  */
@@ -4698,6 +4701,7 @@ protected:
 
    void setFilter(const TCHAR *filter);
    void setLinkStylingScript(const TCHAR *script);
+   void updateLinkDataSource(NetworkMapLinkContainer *linkContainer);
 
 public:
    NetworkMap();
@@ -4737,6 +4741,7 @@ public:
    int32_t getWidth() const { return m_width; }
    int32_t getHeight() const { return m_height; }
    bool isUpdateFailed() const { return m_updateFailed; }
+   bool isShowTraffic() const { return (m_flags & MF_SHOW_TRAFFIC) > 0; }
 
    NXSL_Array *getSeedObjectsForNXSL(NXSL_VM *vm) const;
 

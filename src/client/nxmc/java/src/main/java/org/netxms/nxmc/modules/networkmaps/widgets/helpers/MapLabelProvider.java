@@ -30,8 +30,8 @@ import org.eclipse.draw2d.ConnectionRouter;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.ManhattanConnectionRouter;
+import org.eclipse.draw2d.PolygonDecoration;
 import org.eclipse.draw2d.PolylineConnection;
-import org.eclipse.draw2d.PolylineDecoration;
 import org.eclipse.draw2d.PositionConstants;
 import org.eclipse.gef4.zest.core.viewers.IFigureProvider;
 import org.eclipse.gef4.zest.core.viewers.ISelfStyleProvider;
@@ -50,6 +50,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.maps.LinkDataLocation;
 import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
@@ -86,71 +87,70 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
    private static final Color COLOR_SNMP_PROXY = new Color(Display.getDefault(), new RGB(255, 255, 0));
    private static final Color COLOR_SSH_PROXY = new Color(Display.getDefault(), new RGB(0, 255, 255));
    private static final Color COLOR_ZONE_PROXY = new Color(Display.getDefault(), new RGB(255, 0, 255));
-   private static final Color[] COLOR_LINK_UTILIZATION = {
-      new Color(Display.getDefault(), new RGB(192, 192, 192)), // 0%
-      new Color(Display.getDefault(), new RGB(118, 48, 250)), // 1-9%
-      new Color(Display.getDefault(), new RGB(0, 57, 250)), // 10-24%
-      new Color(Display.getDefault(), new RGB(25, 188, 252)), // 25-39%
-      new Color(Display.getDefault(), new RGB(64, 233, 45)), // 40-54%
-      new Color(Display.getDefault(), new RGB(241, 233, 48)), // 55-69%
-      new Color(Display.getDefault(), new RGB(254, 180, 39)), // 70-84%
-      new Color(Display.getDefault(), new RGB(249, 0, 16)), // 85-100%
+   private static final Color[] COLOR_LINK_UTILIZATION = { new Color(Display.getDefault(), new RGB(192, 192, 192)), // 0%
+         new Color(Display.getDefault(), new RGB(118, 48, 250)), // 1-9%
+         new Color(Display.getDefault(), new RGB(0, 57, 250)), // 10-24%
+         new Color(Display.getDefault(), new RGB(25, 188, 252)), // 25-39%
+         new Color(Display.getDefault(), new RGB(64, 233, 45)), // 40-54%
+         new Color(Display.getDefault(), new RGB(241, 233, 48)), // 55-69%
+         new Color(Display.getDefault(), new RGB(254, 180, 39)), // 70-84%
+         new Color(Display.getDefault(), new RGB(249, 0, 16)), // 85-100%
    };
    private static final int[] LINK_UTILIZATION_THRESHOLDS = { 10, 100, 250, 400, 550, 700, 850, 1000 };
 
-	private NXCSession session;
-	private ExtendedGraphViewer viewer;
-	private Image[] statusImages;
-	private Image imgNetMap;
-	private Image imgNodeGeneric;
-	private Image imgNodeWindows;
-	private Image imgNodeOSX;
-	private Image imgNodeLinux;
-	private Image imgNodeFreeBSD;
-	private Image imgNodeSwitch;
-	private Image imgNodeRouter;
-	private Image imgNodePrinter;
-	private Image imgSubnet;
-	private Image imgService;
-   private Image imgCircuit;	
-	private Image imgCluster;
+   private NXCSession session;
+   private ExtendedGraphViewer viewer;
+   private Image[] statusImages;
+   private Image imgNetMap;
+   private Image imgNodeGeneric;
+   private Image imgNodeWindows;
+   private Image imgNodeOSX;
+   private Image imgNodeLinux;
+   private Image imgNodeFreeBSD;
+   private Image imgNodeSwitch;
+   private Image imgNodeRouter;
+   private Image imgNodePrinter;
+   private Image imgSubnet;
+   private Image imgService;
+   private Image imgCircuit;
+   private Image imgCluster;
    private Image imgWirelessDomain;
-	private Image imgAccessPoint;
+   private Image imgAccessPoint;
    private Image imgInterface;
-	private Image imgOther;
-	private Image imgUnknown;
-	private Font[] fontLabel;
-	private Font[] fontTitle;
+   private Image imgOther;
+   private Image imgUnknown;
+   private Font[] fontLabel;
+   private Font[] fontTitle;
    private boolean showStatusIcons = false;
    private boolean showStatusBackground = true;
    private boolean showStatusFrame = false;
    private boolean showLinkDirection = false;
    private boolean translucentLabelBackground = true;
-	private boolean enableLongObjectName = false;
-	private boolean connectionLabelsVisible = true;
-	private boolean connectionsVisible = true;
-	private MapObjectDisplayMode objectFigureType = MapObjectDisplayMode.ICON;
-	private ColorCache colors;
-	private Color defaultLinkColor = null;
-	private int defaultLinkStyle = SWT.LINE_SOLID;
+   private boolean enableLongObjectName = false;
+   private boolean connectionLabelsVisible = true;
+   private boolean connectionsVisible = true;
+   private MapObjectDisplayMode objectFigureType = MapObjectDisplayMode.ICON;
+   private ColorCache colors;
+   private Color defaultLinkColor = null;
+   private int defaultLinkStyle = SWT.LINE_SOLID;
    private int defaultLinkWidth;
-	private ManhattanConnectionRouter manhattanRouter = new ManhattanConnectionRouter();
-	private BendpointConnectionRouter bendpointRouter = new BendpointConnectionRouter();
-	private LinkDciValueProvider dciValueProvider;
+   private ManhattanConnectionRouter manhattanRouter = new ManhattanConnectionRouter();
+   private BendpointConnectionRouter bendpointRouter = new BendpointConnectionRouter();
+   private LinkDciValueProvider dciValueProvider;
    private DecoratingObjectLabelProvider objectLabelProvider;
    private long mapId = 0;
-	
-	/**
-	 * Create map label provider
-	 */
-	public MapLabelProvider(ExtendedGraphViewer viewer)
-	{
-		this.viewer = viewer;
+
+   /**
+    * Create map label provider
+    */
+   public MapLabelProvider(ExtendedGraphViewer viewer)
+   {
+      this.viewer = viewer;
       session = Registry.getSession();
 
-		statusImages = new Image[9];
-		for(int i = 0; i < statusImages.length; i++)
-			statusImages[i] = StatusDisplayInfo.getStatusImageDescriptor(i).createImage();
+      statusImages = new Image[9];
+      for(int i = 0; i < statusImages.length; i++)
+         statusImages[i] = StatusDisplayInfo.getStatusImageDescriptor(i).createImage();
 
       imgNetMap = ResourceManager.getImage("icons/netmap/objects/netmap.png");
       imgNodeGeneric = ResourceManager.getImage("icons/netmap/objects/node.png");
@@ -171,22 +171,22 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       imgOther = ResourceManager.getImage("icons/netmap/objects/other.png");
       imgUnknown = ResourceManager.getImage("icons/netmap/objects/unknown.png");
 
-		final Display display = viewer.getControl().getDisplay();
-		fontLabel = new Font[ExtendedGraphViewer.zoomLevels.length];
-		fontTitle = new Font[ExtendedGraphViewer.zoomLevels.length];
-		for (int i = 0; i < ExtendedGraphViewer.zoomLevels.length; i++)
-		{
-		   if (ExtendedGraphViewer.zoomLevels[i] < 1)
-		   {
-   		   fontLabel[i] = new Font(display, "Verdana", (int) Math.round(7 / ExtendedGraphViewer.zoomLevels[i]), SWT.NORMAL); //$NON-NLS-1$
-   		   fontTitle[i] = new Font(display, "Verdana", (int) Math.round(10 / ExtendedGraphViewer.zoomLevels[i]), SWT.NORMAL); //$NON-NLS-1$
-		   }
-		   else
-		   {
-		      fontLabel[i] = new Font(display, "Verdana", 7, SWT.NORMAL); //$NON-NLS-1$
+      final Display display = viewer.getControl().getDisplay();
+      fontLabel = new Font[ExtendedGraphViewer.zoomLevels.length];
+      fontTitle = new Font[ExtendedGraphViewer.zoomLevels.length];
+      for(int i = 0; i < ExtendedGraphViewer.zoomLevels.length; i++)
+      {
+         if (ExtendedGraphViewer.zoomLevels[i] < 1)
+         {
+            fontLabel[i] = new Font(display, "Verdana", (int)Math.round(7 / ExtendedGraphViewer.zoomLevels[i]), SWT.NORMAL); //$NON-NLS-1$
+            fontTitle[i] = new Font(display, "Verdana", (int)Math.round(10 / ExtendedGraphViewer.zoomLevels[i]), SWT.NORMAL); //$NON-NLS-1$
+         }
+         else
+         {
+            fontLabel[i] = new Font(display, "Verdana", 7, SWT.NORMAL); //$NON-NLS-1$
             fontTitle[i] = new Font(display, "Verdana", 10, SWT.NORMAL); //$NON-NLS-1$
-		   }
-		}
+         }
+      }
 
       PreferenceStore settings = PreferenceStore.getInstance();
       showStatusIcons = settings.getAsBoolean("NetMap.ShowStatusIcon", false);
@@ -197,264 +197,264 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       translucentLabelBackground = settings.getAsBoolean("NetMap.TranslucentLabelBkgnd", true);
       defaultLinkWidth = settings.getAsInteger("NetMap.DefaultLinkWidth", 5);
 
-		colors = new ColorCache();
-		dciValueProvider = LinkDciValueProvider.getInstance();
+      colors = new ColorCache();
+      dciValueProvider = LinkDciValueProvider.getInstance();
       objectLabelProvider = new DecoratingObjectLabelProvider();
-	}
+   }
 
    /**
     * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
     */
-	@Override
-	public String getText(Object element)
-	{
-		if (element instanceof NetworkMapObject)
-		{
+   @Override
+   public String getText(Object element)
+   {
+      if (element instanceof NetworkMapObject)
+      {
          AbstractObject object = session.findObjectById(((NetworkMapObject)element).getObjectId(), true);
          return (object != null) ? object.getNameOnMap() : null;
-		}
-		return null;
-	}
+      }
+      return null;
+   }
 
    /**
     * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
     */
-	@Override
-	public Image getImage(Object element)
-	{
-		if (element instanceof NetworkMapObject)
-		{
+   @Override
+   public Image getImage(Object element)
+   {
+      if (element instanceof NetworkMapObject)
+      {
          AbstractObject object = session.findObjectById(((NetworkMapObject)element).getObjectId(), true);
-			if (object != null)
-			{
-				// First, check if object has custom map image set
-				final UUID objectImageGuid = object.getMapImage();
+         if (object != null)
+         {
+            // First, check if object has custom map image set
+            final UUID objectImageGuid = object.getMapImage();
             if ((objectImageGuid != null) && !objectImageGuid.equals(NXCommon.EMPTY_GUID))
-				{
-               return ImageProvider.getInstance().getImage(objectImageGuid, () -> { viewer.refresh(element); });
-				}
+            {
+               return ImageProvider.getInstance().getImage(objectImageGuid, () -> {
+                  viewer.refresh(element);
+               });
+            }
 
-				// Try registered network map image providers
-				Image img = MapImageProvidersManager.getInstance().getMapImage(object);
-				if (img != null)
-					return img;
+            // Try registered network map image providers
+            Image img = MapImageProvidersManager.getInstance().getMapImage(object);
+            if (img != null)
+               return img;
 
-				// Use built-in image as last resort
-				switch(object.getObjectClass())
-				{
-					case AbstractObject.OBJECT_NODE:
-						if ((((Node)object).getCapabilities() & Node.NC_IS_BRIDGE) != 0)
-							return imgNodeSwitch;
-						if ((((Node)object).getCapabilities() & Node.NC_IS_ROUTER) != 0)
-							return imgNodeRouter;
-						if ((((Node)object).getCapabilities() & Node.NC_IS_PRINTER) != 0)
-							return imgNodePrinter;
+            // Use built-in image as last resort
+            switch(object.getObjectClass())
+            {
+               case AbstractObject.OBJECT_NODE:
+                  if ((((Node)object).getCapabilities() & Node.NC_IS_BRIDGE) != 0)
+                     return imgNodeSwitch;
+                  if ((((Node)object).getCapabilities() & Node.NC_IS_ROUTER) != 0)
+                     return imgNodeRouter;
+                  if ((((Node)object).getCapabilities() & Node.NC_IS_PRINTER) != 0)
+                     return imgNodePrinter;
                   if (((Node)object).getPlatformName().startsWith("windows"))
-							return imgNodeWindows;
+                     return imgNodeWindows;
                   if (((Node)object).getPlatformName().startsWith("Linux"))
-							return imgNodeLinux;
+                     return imgNodeLinux;
                   if (((Node)object).getPlatformName().startsWith("FreeBSD"))
-							return imgNodeFreeBSD;
-						return imgNodeGeneric;
-					case AbstractObject.OBJECT_SUBNET:
-						return imgSubnet;
+                     return imgNodeFreeBSD;
+                  return imgNodeGeneric;
+               case AbstractObject.OBJECT_SUBNET:
+                  return imgSubnet;
                case AbstractObject.OBJECT_CIRCUIT:
                   return imgCircuit;
                case AbstractObject.OBJECT_COLLECTOR:
-					case AbstractObject.OBJECT_CONTAINER:
-						return imgService;
-					case AbstractObject.OBJECT_CLUSTER:
-						return imgCluster;
-					case AbstractObject.OBJECT_ACCESSPOINT:
-						return imgAccessPoint;
-					case AbstractObject.OBJECT_NETWORKMAP:
-						return imgNetMap;
-					case AbstractObject.OBJECT_INTERFACE:
-					   return imgInterface;
+               case AbstractObject.OBJECT_CONTAINER:
+                  return imgService;
+               case AbstractObject.OBJECT_CLUSTER:
+                  return imgCluster;
+               case AbstractObject.OBJECT_ACCESSPOINT:
+                  return imgAccessPoint;
+               case AbstractObject.OBJECT_NETWORKMAP:
+                  return imgNetMap;
+               case AbstractObject.OBJECT_INTERFACE:
+                  return imgInterface;
                case AbstractObject.OBJECT_WIRELESSDOMAIN:
                   return imgWirelessDomain;
-					default:
-						return imgOther;
-				}
-			}
-			else
-			{
-				return imgUnknown;
-			}
-		}
-		return null;
-	}
+               default:
+                  return imgOther;
+            }
+         }
+         else
+         {
+            return imgUnknown;
+         }
+      }
+      return null;
+   }
 
    /**
     * @see org.eclipse.gef4.zest.core.viewers.IFigureProvider#getFigure(java.lang.Object)
     */
-	@Override
-	public IFigure getFigure(Object element)
-	{
-		if (element instanceof NetworkMapObject)
-		{
-			switch(objectFigureType)
-			{
+   @Override
+   public IFigure getFigure(Object element)
+   {
+      if (element instanceof NetworkMapObject)
+      {
+         switch(objectFigureType)
+         {
             case LARGE_LABEL:
                return new ObjectFigureLargeLabel((NetworkMapObject)element, this);
-				case SMALL_LABEL:
-					return new ObjectFigureSmallLabel((NetworkMapObject)element, this);
-				case ICON:
-					return new ObjectFigureIcon((NetworkMapObject)element, this);
-				case STATUS:
-               return new ObjectStatusIcon((NetworkMapObject)element, this);		
-				case FLOOR_PLAN:
-				   return new ObjectFloorPlan((NetworkMapObject)element, this);
-				default:
-					return null;
-			}
-		}
-		if (element instanceof NetworkMapDecoration)
-		{
-			return new DecorationFigure((NetworkMapDecoration)element, this, viewer);
-		}
-		if (element instanceof NetworkMapDCIContainer)
+            case SMALL_LABEL:
+               return new ObjectFigureSmallLabel((NetworkMapObject)element, this);
+            case ICON:
+               return new ObjectFigureIcon((NetworkMapObject)element, this);
+            case STATUS:
+               return new ObjectStatusIcon((NetworkMapObject)element, this);
+            case FLOOR_PLAN:
+               return new ObjectFloorPlan((NetworkMapObject)element, this);
+            default:
+               return null;
+         }
+      }
+      if (element instanceof NetworkMapDecoration)
+      {
+         return new DecorationFigure((NetworkMapDecoration)element, this, viewer);
+      }
+      if (element instanceof NetworkMapDCIContainer)
       {
          return new DCIContainerFigure((NetworkMapDCIContainer)element, this, viewer);
       }
-		if (element instanceof NetworkMapDCIImage)
+      if (element instanceof NetworkMapDCIImage)
       {
          return new DCIImageFigure((NetworkMapDCIImage)element, this, viewer);
       }
-		if (element instanceof NetworkMapTextBox)
-		{
-		   return new TextBoxFigure((NetworkMapTextBox)element, this, viewer);
-		}
-		return null;
-	}
+      if (element instanceof NetworkMapTextBox)
+      {
+         return new TextBoxFigure((NetworkMapTextBox)element, this, viewer);
+      }
+      return null;
+   }
 
-	/**
-	 * Get status image for given NetXMS object
-	 * 
-	 * @param object
-	 * @return
-	 */
-	public Image getStatusImage(AbstractObject object)
-	{
-		Image image = MapImageProvidersManager.getInstance().getStatusIcon(object.getStatus());
-		if (image == null)
-		{
-			try
-			{
-				image = statusImages[object.getStatus().getValue()];
-			}
-			catch(IndexOutOfBoundsException e)
-			{
-			}
-		}
-		return image;
-	}
+   /**
+    * Get status image for given NetXMS object
+    * 
+    * @param object
+    * @return
+    */
+   public Image getStatusImage(AbstractObject object)
+   {
+      Image image = MapImageProvidersManager.getInstance().getStatusIcon(object.getStatus());
+      if (image == null)
+      {
+         try
+         {
+            image = statusImages[object.getStatus().getValue()];
+         }
+         catch(IndexOutOfBoundsException e)
+         {
+         }
+      }
+      return image;
+   }
 
    /**
     * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
     */
-	@Override
-	public void dispose()
-	{
-		for(int i = 0; i < statusImages.length; i++)
-			statusImages[i].dispose();
+   @Override
+   public void dispose()
+   {
+      for(int i = 0; i < statusImages.length; i++)
+         statusImages[i].dispose();
 
-		imgNetMap.dispose();
-		imgNodeGeneric.dispose();
-		imgNodeWindows.dispose();
-		imgNodeLinux.dispose();
-		imgNodeOSX.dispose();
-		imgNodeFreeBSD.dispose();
-		imgNodeSwitch.dispose();
-		imgNodeRouter.dispose();
-		imgNodePrinter.dispose();
-		imgSubnet.dispose();
-		imgService.dispose();
+      imgNetMap.dispose();
+      imgNodeGeneric.dispose();
+      imgNodeWindows.dispose();
+      imgNodeLinux.dispose();
+      imgNodeOSX.dispose();
+      imgNodeFreeBSD.dispose();
+      imgNodeSwitch.dispose();
+      imgNodeRouter.dispose();
+      imgNodePrinter.dispose();
+      imgSubnet.dispose();
+      imgService.dispose();
       imgCircuit.dispose();
-		imgCluster.dispose();
-		imgAccessPoint.dispose();
-		imgInterface.dispose();
-		imgOther.dispose();
-		imgUnknown.dispose();
+      imgCluster.dispose();
+      imgAccessPoint.dispose();
+      imgInterface.dispose();
+      imgOther.dispose();
+      imgUnknown.dispose();
 
-      for (int i = 0; i < ExtendedGraphViewer.zoomLevels.length; i++)
+      for(int i = 0; i < ExtendedGraphViewer.zoomLevels.length; i++)
       {
-   		fontLabel[i].dispose();
-   		fontTitle[i].dispose();
+         fontLabel[i].dispose();
+         fontTitle[i].dispose();
       }
 
-		colors.dispose();
+      colors.dispose();
 
       objectLabelProvider.dispose();
 
-		super.dispose();
-	}
+      super.dispose();
+   }
 
-	/**
-	 * @return the font
-	 */
-	public Font getLabelFont()
-	{
-		return fontLabel[viewer.getCurrentZoomIndex()];
-	}
+   /**
+    * @return the font
+    */
+   public Font getLabelFont()
+   {
+      return fontLabel[viewer.getCurrentZoomIndex()];
+   }
 
-	/**
-	 * @return the font
-	 */
-	public Font getTitleFont()
-	{
-		return fontTitle[viewer.getCurrentZoomIndex()];
-	}
+   /**
+    * @return the font
+    */
+   public Font getTitleFont()
+   {
+      return fontTitle[viewer.getCurrentZoomIndex()];
+   }
 
-	/**
-	 * @return the showStatusIcons
-	 */
-	public boolean isShowStatusIcons()
-	{
-		return showStatusIcons;
-	}
+   /**
+    * @return the showStatusIcons
+    */
+   public boolean isShowStatusIcons()
+   {
+      return showStatusIcons;
+   }
 
-	/**
-	 * @param showStatusIcons
-	 *           the showStatusIcons to set
-	 */
-	public void setShowStatusIcons(boolean showStatusIcons)
-	{
-		this.showStatusIcons = showStatusIcons;
-	}
+   /**
+    * @param showStatusIcons the showStatusIcons to set
+    */
+   public void setShowStatusIcons(boolean showStatusIcons)
+   {
+      this.showStatusIcons = showStatusIcons;
+   }
 
-	/**
-	 * @return the showStatusBackground
-	 */
-	public boolean isShowStatusBackground()
-	{
-		return showStatusBackground;
-	}
+   /**
+    * @return the showStatusBackground
+    */
+   public boolean isShowStatusBackground()
+   {
+      return showStatusBackground;
+   }
 
-	/**
-	 * @param showStatusBackground
-	 *           the showStatusBackground to set
-	 */
-	public void setShowStatusBackground(boolean showStatusBackground)
-	{
-		this.showStatusBackground = showStatusBackground;
-	}
-	
-	/**
-	 * @return show link direction
-	 */
-	public boolean isShowLinkDirection()
-	{
-	   return showLinkDirection;
-	}
-	
-	/**
-	 * @param showLinkDirection
-	 */
-	public void setShowLinkDirection(boolean showLinkDirection)
-	{
-	   this.showLinkDirection = showLinkDirection;
-	}
+   /**
+    * @param showStatusBackground the showStatusBackground to set
+    */
+   public void setShowStatusBackground(boolean showStatusBackground)
+   {
+      this.showStatusBackground = showStatusBackground;
+   }
+
+   /**
+    * @return show link direction
+    */
+   public boolean isShowLinkDirection()
+   {
+      return showLinkDirection;
+   }
+
+   /**
+    * @param showLinkDirection
+    */
+   public void setShowLinkDirection(boolean showLinkDirection)
+   {
+      this.showLinkDirection = showLinkDirection;
+   }
 
    /**
     * @return translucentLabelBkgnd
@@ -477,18 +477,17 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       mapId = objectId;
    }
 
-	/**
-	 * Check if given element selected in the viewer
-	 * 
-	 * @param object
-	 *           Object to test
-	 * @return true if given object is selected
-	 */
-	public boolean isElementSelected(NetworkMapElement element)
-	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		return (selection != null) ? selection.toList().contains(element) : false;
-	}
+   /**
+    * Check if given element selected in the viewer
+    * 
+    * @param object Object to test
+    * @return true if given object is selected
+    */
+   public boolean isElementSelected(NetworkMapElement element)
+   {
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      return (selection != null) ? selection.toList().contains(element) : false;
+   }
 
    /**
     * @see org.eclipse.gef4.zest.core.viewers.ISelfStyleProvider#selfStyleConnection(java.lang.Object,
@@ -500,6 +499,26 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       connection.setVisible(connectionsVisible);
 
 		NetworkMapLink link = (NetworkMapLink)connection.getData();      
+
+      switch(link.getRouting())
+      {
+         case NetworkMapLink.ROUTING_DIRECT:
+            connection.setRouter(ConnectionRouter.NULL);
+            break;
+         case NetworkMapLink.ROUTING_MANHATTAN:
+            connection.setRouter(manhattanRouter);
+            break;
+         case NetworkMapLink.ROUTING_BENDPOINTS:
+            connection.setRouter(bendpointRouter);
+            connection.setData("ROUTER", bendpointRouter);
+            Object bp = getConnectionPoints(link);
+            bendpointRouter.setConstraint(connection.getConnectionFigure(), bp);
+            connection.getConnectionFigure().setRoutingConstraint(bp);
+            break;
+         default:
+            connection.setRouter(null);
+            break;
+      }
 
 		if (link.getConfig().getStyle() == 0 || link.getConfig().getStyle() > 5) 
 		{
@@ -532,9 +551,23 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
             connection.getConnectionFigure().add(label, targetEndpointLocator);
          }
 		}
+      
+      if (link.getConfig().getWidth() == 0) 
+      {
+         connection.setLineWidth(defaultLinkWidth); 
+      }
+      else
+      {
+         connection.setLineWidth(link.getConfig().getWidth());
+      }  
 
 		if (showLinkDirection)
-		   ((PolylineConnection)connection.getConnectionFigure()).setSourceDecoration(new PolylineDecoration());
+		{
+		   PolygonDecoration decoration = new PolygonDecoration();
+		   double scale = connection.getLineWidth() * 0.9 + 2;
+		   decoration.setScale(scale * 2.3, scale);
+         ((PolylineConnection)connection.getConnectionFigure()).setTargetDecoration(decoration);
+		}
 
 		IFigure owner = ((PolylineConnection)connection.getConnectionFigure()).getTargetAnchor().getOwner();
       ((PolylineConnection)connection.getConnectionFigure()).setTargetAnchor(new MultiConnectionAnchor(owner, link)); 
@@ -673,29 +706,42 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 
       if ((hasName || hasDciData) && connectionLabelsVisible)
       {
-         ConnectionLocator nameLocator;
+         ConnectionLocator nameLocatorCenter;
+         ConnectionLocator nameLocatorObject1;
+         ConnectionLocator nameLocatorObject2;
          if (link.getRouting() == NetworkMapLink.ROUTING_BENDPOINTS && link.getBendPoints() != null && link.getBendPoints().length > 0)
          {
-            nameLocator = new ConnectionLocator(connection.getConnectionFigure());
-            nameLocator.setRelativePosition(PositionConstants.CENTER);
+            nameLocatorCenter = new ConnectionLocator(connection.getConnectionFigure());
+            nameLocatorCenter.setRelativePosition(PositionConstants.CENTER);
+            nameLocatorObject1 = new ConnectionLocator(connection.getConnectionFigure(), ConnectionLocator.SOURCE);
+            nameLocatorObject2 = new ConnectionLocator(connection.getConnectionFigure(), ConnectionLocator.TARGET);
+            //TODO: 
          }
          else
          {
-            nameLocator = new MultiLabelConnectionLocator(connection.getConnectionFigure(), link);
+            nameLocatorCenter = new MultiLabelConnectionLocator(connection.getConnectionFigure(), link, LinkDataLocation.CENTER);
+            nameLocatorObject1 = new MultiLabelConnectionLocator(connection.getConnectionFigure(), link, LinkDataLocation.OBJECT1);
+            nameLocatorObject2 = new MultiLabelConnectionLocator(connection.getConnectionFigure(), link, LinkDataLocation.OBJECT2);
          }
+         
 
          String labelString = "";
+         String labelObj1String = "";
+         String labelObj2String = "";
          if (hasName)
             labelString += link.getName();
          
-         if (hasName && hasDciData)
-            labelString += "\n";
-         
          if (hasDciData)
          {
-            labelString += dciValueProvider.getDciDataAsString(link);
+            String label = dciValueProvider.getDciDataAsString(link, LinkDataLocation.CENTER);
+            if (hasName && !label.isEmpty())
+               labelString += "\n";
+            labelString += label;
+            
+            labelObj1String = dciValueProvider.getDciDataAsString(link, LinkDataLocation.OBJECT1);
+            labelObj2String = dciValueProvider.getDciDataAsString(link, LinkDataLocation.OBJECT2);
          }
-
+         
          final Label label;
          if (link.getType() == NetworkMapLink.AGENT_TUNEL || 
              link.getType() == NetworkMapLink.AGENT_PROXY ||
@@ -706,38 +752,14 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
             label = new ConnectorLabel(labelString, this, connection.getLineColor());
          else            
             label = new ConnectorLabel(labelString, this);
-
-         connection.getConnectionFigure().add(label, nameLocator);
+         
+         if (!labelString.isEmpty())
+            connection.getConnectionFigure().add(label, nameLocatorCenter);
+         if (!labelObj1String.isEmpty())
+            connection.getConnectionFigure().add( new ConnectorLabel(labelObj1String, this), nameLocatorObject1);
+         if (!labelObj2String.isEmpty())
+            connection.getConnectionFigure().add( new ConnectorLabel(labelObj2String, this), nameLocatorObject2);
       }
-
-		switch(link.getRouting())
-		{
-			case NetworkMapLink.ROUTING_DIRECT:
-				connection.setRouter(ConnectionRouter.NULL);
-				break;
-			case NetworkMapLink.ROUTING_MANHATTAN:
-				connection.setRouter(manhattanRouter);
-				break;
-			case NetworkMapLink.ROUTING_BENDPOINTS:
-				connection.setRouter(bendpointRouter);
-            connection.setData("ROUTER", bendpointRouter);
-				Object bp = getConnectionPoints(link);
-				bendpointRouter.setConstraint(connection.getConnectionFigure(), bp);
-				connection.getConnectionFigure().setRoutingConstraint(bp);
-				break;
-			default:
-				connection.setRouter(null);
-				break;
-		}
-		 
-      if (link.getConfig().getWidth() == 0) 
-      {
-         connection.setLineWidth(defaultLinkWidth); 
-      }
-      else
-      {
-         connection.setLineWidth(link.getConfig().getWidth());
-      }  
 	}
 
    /**
@@ -748,57 +770,56 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
     * @return name for connector or null
     */
    private String getConnectorName(NetworkMapLink link, boolean second)
-	{
+   {
       String name = second ? link.getConnectorName2() : link.getConnectorName1();
       if ((name != null) && !name.isBlank())
          return name;
 
       long interfaceId = second ? link.getInterfaceId2() : link.getInterfaceId1();
       return (interfaceId > 0) ? session.getObjectName(interfaceId) : null;
-	}
+   }
 
-	/**
-	 * @param link
-	 * @return
-	 */
-	private List<Bendpoint> getConnectionPoints(NetworkMapLink link)
-	{
-		long[] points = link.getBendPoints();
-		if (points != null)
-		{
-			List<Bendpoint> list = new ArrayList<Bendpoint>(points.length / 2); 
-			for(int i = 0; i < points.length; i += 2)
-			{
-				if (points[i] == 0x7FFFFFFF)
-					break;
-				list.add(new AbsoluteBendpoint((int)points[i], (int)points[i + 1]));
-			}
-			return list;
-		}
-		else
-		{
-			return new ArrayList<Bendpoint>(0);
-		}
-	}
+   /**
+    * @param link
+    * @return
+    */
+   private List<Bendpoint> getConnectionPoints(NetworkMapLink link)
+   {
+      long[] points = link.getBendPoints();
+      if (points != null)
+      {
+         List<Bendpoint> list = new ArrayList<Bendpoint>(points.length / 2);
+         for(int i = 0; i < points.length; i += 2)
+         {
+            if (points[i] == 0x7FFFFFFF)
+               break;
+            list.add(new AbsoluteBendpoint((int)points[i], (int)points[i + 1]));
+         }
+         return list;
+      }
+      else
+      {
+         return new ArrayList<Bendpoint>(0);
+      }
+   }
 
-	/**
-	 * @return the showStatusFrame
-	 */
-	public boolean isShowStatusFrame()
-	{
-		return showStatusFrame;
-	}
+   /**
+    * @return the showStatusFrame
+    */
+   public boolean isShowStatusFrame()
+   {
+      return showStatusFrame;
+   }
 
-	/**
-	 * @param showStatusFrame
-	 *           the showStatusFrame to set
-	 */
-	public void setShowStatusFrame(boolean showStatusFrame)
-	{
-		this.showStatusFrame = showStatusFrame;
-	}
+   /**
+    * @param showStatusFrame the showStatusFrame to set
+    */
+   public void setShowStatusFrame(boolean showStatusFrame)
+   {
+      this.showStatusFrame = showStatusFrame;
+   }
 
-	/**
+   /**
     * @return the defaultLinkStyle
     */
    public int geDefaultLinkStyle()
@@ -834,73 +855,74 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
    }
 
    /**
-	 * @param object
-	 * @return
-	 */
-	public Image getSmallIcon(Object object)
-	{
+    * @param object
+    * @return
+    */
+   public Image getSmallIcon(Object object)
+   {
       return objectLabelProvider.getImage(object);
-	}
+   }
 
-	/**
-	 * @return the objectFigureType
-	 */
-	public MapObjectDisplayMode getObjectFigureType()
-	{
-		return objectFigureType;
-	}
+   /**
+    * @return the objectFigureType
+    */
+   public MapObjectDisplayMode getObjectFigureType()
+   {
+      return objectFigureType;
+   }
 
-	/**
-	 * @param objectFigureType the objectFigureType to set
-	 */
-	public void setObjectFigureType(MapObjectDisplayMode objectFigureType)
-	{
-		this.objectFigureType = objectFigureType;
-	}
+   /**
+    * @param objectFigureType the objectFigureType to set
+    */
+   public void setObjectFigureType(MapObjectDisplayMode objectFigureType)
+   {
+      this.objectFigureType = objectFigureType;
+   }
 
-	/**
-	 * @return the colors
-	 */
-	protected ColorCache getColors()
-	{
-		return colors;
-	}
+   /**
+    * @return the colors
+    */
+   protected ColorCache getColors()
+   {
+      return colors;
+   }
 
-	/**
-	 * @see org.eclipse.gef4.zest.core.viewers.ISelfStyleProvider#selfStyleNode(java.lang.Object, org.eclipse.gef4.zest.core.widgets.GraphNode)
-	 */
-	@Override
-	public void selfStyleNode(Object element, GraphNode node)
-	{
+   /**
+    * @see org.eclipse.gef4.zest.core.viewers.ISelfStyleProvider#selfStyleNode(java.lang.Object,
+    *      org.eclipse.gef4.zest.core.widgets.GraphNode)
+    */
+   @Override
+   public void selfStyleNode(Object element, GraphNode node)
+   {
       node.setTooltip(new ObjectTooltip((NetworkMapObject)element, mapId, this));
-	}
+   }
 
-	/**
-	 * @return the defaultLinkColor
-	 */
-	public final Color getDefaultLinkColor()
-	{
-		return defaultLinkColor;
-	}
+   /**
+    * @return the defaultLinkColor
+    */
+   public final Color getDefaultLinkColor()
+   {
+      return defaultLinkColor;
+   }
 
-	/**
-	 * @param defaultLinkColor the defaultLinkColor to set
-	 */
-	public final void setDefaultLinkColor(Color defaultLinkColor)
-	{
-		this.defaultLinkColor = defaultLinkColor;
-	}
+   /**
+    * @param defaultLinkColor the defaultLinkColor to set
+    */
+   public final void setDefaultLinkColor(Color defaultLinkColor)
+   {
+      this.defaultLinkColor = defaultLinkColor;
+   }
 
-	/**
-	 * Get cached last DCI values for given node
-	 * 
-	 * @param nodeId
-	 * @return cached last values or null
-	 */
-	public DciValue[] getNodeLastValues(long nodeId)
-	{
-		return ((MapContentProvider)viewer.getContentProvider()).getNodeLastValues(nodeId);
-	}
+   /**
+    * Get cached last DCI values for given node
+    * 
+    * @param nodeId
+    * @return cached last values or null
+    */
+   public DciValue[] getNodeLastValues(long nodeId)
+   {
+      return ((MapContentProvider)viewer.getContentProvider()).getNodeLastValues(nodeId);
+   }
 
    /**
     * Check if long object names are enabled.

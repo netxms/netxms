@@ -23,35 +23,45 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciInfo;
-import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.client.maps.configs.MapDataSource;
+import org.netxms.client.maps.configs.MapLinkDataSource;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.networkmaps.propertypages.LinkDataSources;
+import org.netxms.nxmc.modules.networkmaps.views.helpers.LinkEditor;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.xnap.commons.i18n.I18n;
 
 /**
  * Label provider for DCI list on property page for map link
  */
-public class DciListLabelProvider extends LabelProvider implements ITableLabelProvider
+public class DciListLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
+   private final Color systemElementColor = ThemeEngine.getForegroundColor("List.DisabledItem");
+   
    private I18n i18n = LocalizationHelper.getI18n(DciListLabelProvider.class);
    private NXCSession session = Registry.getSession();
 	private Map<Long, DciInfo> dciNameCache = new HashMap<Long, DciInfo>();
-	private List<SingleDciConfig> elementList;
+	private List<? extends MapDataSource> elementList;
+   private LinkEditor linkEditor;
 	
 	/**
 	 * Constructor for DciListLabelProvider class
+	 * @param linkEditor 
 	 */
-	public DciListLabelProvider(List<SingleDciConfig> elementList)
+	public DciListLabelProvider(List<? extends MapDataSource> elementList, LinkEditor linkEditor)
 	{
 		this.elementList = elementList;
+		this.linkEditor = linkEditor;
 	}
 
    /**
@@ -69,7 +79,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-	   SingleDciConfig dci = (SingleDciConfig)element;
+	   MapDataSource dci = (MapDataSource)element;
 		switch(columnIndex)
 		{
 			case LinkDataSources.COLUMN_POSITION:
@@ -78,10 +88,22 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 				AbstractObject object = session.findObjectById(dci.getNodeId());
 				return (object != null) ? object.getObjectName() : ("[" + Long.toString(dci.getNodeId()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case LinkDataSources.COLUMN_METRIC:
-				String name = dciNameCache.get(dci.dciId).displayName;
-            return (name != null) ? name : i18n.tr("Unresolved DCI name");
-			case LinkDataSources.COLUMN_LABEL:
-				return dci.name;
+            return (dciNameCache.get(dci.getDciId()) != null && dciNameCache.get(dci.getDciId()).displayName != null) ? 
+                  dciNameCache.get(dci.getDciId()).displayName : i18n.tr("Unresolved DCI name");
+         case LinkDataSources.COLUMN_FORMAT:
+            return dci.getFormatString();
+         case LinkDataSources.COLUMN_LOCATION:
+            switch(((MapLinkDataSource)dci).getLocation())
+            {
+               case CENTER:
+                  return i18n.tr("Center");
+               case OBJECT1:
+                  return session.getObjectNameWithAlias(linkEditor.getElement1());
+               case OBJECT2:
+                  return session.getObjectNameWithAlias(linkEditor.getElement2());
+            }
+         case LinkDataSources.COLUMN_SOURCE:
+            return ((MapLinkDataSource)dci).isSystem() ? i18n.tr("System") : i18n.tr("User");
 		}
 		return null;
 	}
@@ -91,7 +113,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	 * 
 	 * @param dciList
 	 */
-	public void resolveDciNames(final Collection<SingleDciConfig> dciList)
+	public void resolveDciNames(final Collection<? extends MapDataSource> dciList)
 	{
       new Job(i18n.tr("Resolve DCI names"), null) {
 			@Override
@@ -126,4 +148,22 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	{
       dciNameCache.put(dciId, new DciInfo("", name, ""));
 	}
+
+   @Override
+   public Color getForeground(Object element)
+   {
+      MapDataSource dci = (MapDataSource)element;
+      if ((dci instanceof MapLinkDataSource)  && ((MapLinkDataSource)dci).isSystem())
+         return systemElementColor;
+      return null;
+   }
+   
+   /**
+    * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
+    */
+   @Override
+   public Color getBackground(Object element)
+   {
+      return null;
+   }
 }
