@@ -22,8 +22,6 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -97,13 +95,7 @@ public class AboutDialog extends Dialog
       gd.verticalAlignment = SWT.TOP;
       gd.grabExcessVerticalSpace = true;
       logo.setLayoutData(gd);
-      logo.addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            image.dispose();
-         }
-      });
+      logo.addDisposeListener((e) -> image.dispose());
 
       Composite textArea = new Composite(dialogArea, SWT.NONE);
       gd = new GridData();
@@ -145,12 +137,20 @@ public class AboutDialog extends Dialog
       sb.append(session.getServerBuild());
       sb.append(")\nServer ID: ");
       sb.append(Long.toHexString(session.getServerId()));
-      sb.append("\nJava version: ");
-      sb.append(System.getProperty("java.version"));
-      sb.append("\nJVM: ");
-      sb.append(System.getProperty("java.vm.name"));
-      sb.append(' ');
-      sb.append(System.getProperty("java.vm.version"));
+      if (!Registry.IS_WEB_CLIENT)
+      {
+         sb.append("\nJava version: ");
+         sb.append(System.getProperty("java.version"));
+         sb.append("\nJVM: ");
+         sb.append(System.getProperty("java.vm.name"));
+         sb.append(' ');
+         sb.append(System.getProperty("java.vm.version"));
+         sb.append("\nOperating system: ");
+         sb.append(System.getProperty("os.name"));
+         sb.append(" (");
+         sb.append(System.getProperty("os.version"));
+         sb.append(')');
+      }
       detailsText.setText(sb.toString());
 
       Label separator = new Label(dialogArea, SWT.HORIZONTAL | SWT.SEPARATOR);
