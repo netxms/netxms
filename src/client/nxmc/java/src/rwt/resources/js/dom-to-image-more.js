@@ -951,10 +951,8 @@
                                 cssRules.push.bind(cssRules)
                             );
                         } catch (e) {
-                            console.error(
-                                `domtoimage: Error while reading CSS rules from ${sheet.href}`,
-                                e.toString()
-                            );
+                            console.error(`domtoimage: Error while reading CSS rules from ${sheet.href}`);
+                            console.error(e);
                         }
                     }
                 });
