@@ -380,6 +380,5 @@ unique_ptr<SharedObjectArray<NetObj>> AutoBindTarget::getObjectsForAutoBind(cons
    filterData.processCollectors = ConfigReadBoolean(StringBuffer(_T("Objects.Collectors.")).append(configurationSuffix), false);
    filterData.processMobileDevices = ConfigReadBoolean(StringBuffer(_T("Objects.MobileDevices.")).append(configurationSuffix), false);
    filterData.processSensors = ConfigReadBoolean(StringBuffer(_T("Objects.Sensors.")).append(configurationSuffix), false);
-   filterData.processSensors = ConfigReadBoolean(StringBuffer(_T("Objects.Collectors.")).append(configurationSuffix), false);
    return g_idxObjectById.getObjects(AutoBindObjectFilter, &filterData);
 }
