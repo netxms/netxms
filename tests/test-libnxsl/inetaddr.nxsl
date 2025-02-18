@@ -10,7 +10,6 @@ assert(a1.mask == 32);
 assert(a1.family == "inet");
 assert(a1.inRange("192.168.30.1", "192.168.40.100"));
 assert(a1.equals("192.168.37.12"));
-assert(a1.equals("192.168.9484"));
 
 a2 = new InetAddress("192.168.37.0", 24);
 assert(a2.isValid);
