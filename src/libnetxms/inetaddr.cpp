@@ -503,7 +503,7 @@ InetAddress InetAddress::parse(const char *str)
 #else
    // Check for IPv4 address
    struct in_addr addr4;
-   if (inet_aton(str, &addr4))
+   if (inet_pton(AF_INET, str, &addr4))
    {
       return InetAddress(ntohl(addr4.s_addr));
    }
