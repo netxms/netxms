@@ -129,10 +129,11 @@ shared_ptr<AuthenticationTokenDescriptor> NXCORE_EXPORTABLE IssueAuthenticationT
 
    auto descriptor = make_shared<AuthenticationTokenDescriptor>(userId, validFor, persistent, description);
    s_tokens.set(descriptor->hash, descriptor);
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("New %s authentication token issued for user %s [%u]"), persistent ? _T("persistent") : _T("ephemeral"), userName, userId);
 
    if (persistent)
    {
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("New persistent authentication token issued for user %s [%u]"), userName, userId);
+
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO auth_tokens (id,user_id,issuing_time,expiration_time,description,token_data) VALUES (?,?,?,?,?,?)"));
       if (hStmt != nullptr)
@@ -148,6 +149,10 @@ shared_ptr<AuthenticationTokenDescriptor> NXCORE_EXPORTABLE IssueAuthenticationT
          DBFreeStatement(hStmt);
       }
       DBConnectionPoolReleaseConnection(hdb);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("New ephemeral authentication token issued for user %s [%u]"), userName, userId);
    }
 
    return descriptor;
