@@ -1291,6 +1291,14 @@ static void TestInetAddress()
    a.toString(text);
    AssertEquals(text, _T("2001:47c::df33:16a"));
    EndTest();
+
+   StartTest(_T("InetAddress - parse invalid string"));
+   AssertFalse(InetAddress::parse("").isValid());
+   AssertFalse(InetAddress::parse("some random text").isValid());
+   AssertFalse(InetAddress::parse("10.20.30.40.50").isValid());
+   AssertFalse(InetAddress::parse("10.240.1.312").isValid());
+   AssertFalse(InetAddress::parse("100 - Broad St").isValid());
+   EndTest();
 }
 
 /**
