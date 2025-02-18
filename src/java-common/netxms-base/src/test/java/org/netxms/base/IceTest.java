@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 public class IceTest
 {
    private static final byte[] TEST_DATA = "lorem ipsum".getBytes();
-   
+
    @Test
    public void testIce()
    {
@@ -42,7 +42,8 @@ public class IceTest
       byte[] decrypted = Arrays.copyOf(IceCrypto.decrypt(encrypted, key), TEST_DATA.length);
       assertTrue(Arrays.equals(decrypted, TEST_DATA));
    }
-   
+
+   @Test
    public void testEncryptedPasswords() throws Exception
    {
       String encrypted = EncryptedPassword.encrypt("admin", "SomePassword");

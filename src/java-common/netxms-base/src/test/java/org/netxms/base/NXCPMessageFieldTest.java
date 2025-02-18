@@ -23,6 +23,7 @@ public class NXCPMessageFieldTest
       assertEquals("Sample String", variable.getAsString());
 	}
 
+   @Test
 	public void testStringUtf8EncodingAndDecoding() throws Exception
 	{
 		final NXCPMessageField var1 = new NXCPMessageField(1, "Sample String");
@@ -36,6 +37,7 @@ public class NXCPMessageFieldTest
 		assertEquals("Sample String", var2.getAsString());
 	}
 
+   @Test
    public void testStringUcs2EncodingAndDecoding() throws Exception
    {
       final NXCPMessageField var1 = new NXCPMessageField(1, "Sample String", true);
@@ -50,6 +52,7 @@ public class NXCPMessageFieldTest
    }
 
 	// Int32 variables
+   @Test
 	public void testInt32Construction()
 	{
 		final NXCPMessageField variable = new NXCPMessageField(1, NXCPMessageField.TYPE_INTEGER, 17L);
@@ -59,6 +62,7 @@ public class NXCPMessageFieldTest
 		assertEquals(17, variable.getAsInteger().intValue());
 	}
 
+   @Test
 	public void testInt32EncodingAndDecoding() throws Exception
 	{
 		final NXCPMessageField var1 = new NXCPMessageField(1, NXCPMessageField.TYPE_INTEGER, 17L);
@@ -71,6 +75,7 @@ public class NXCPMessageFieldTest
 		assertEquals(17, var2.getAsInteger().intValue());
 	}
 
+   @Test
 	public void testInt32SignEncodingAndDecoding() throws Exception
 	{
 		final NXCPMessageField var1 = new NXCPMessageField(1, NXCPMessageField.TYPE_INTEGER, 0xFFFFFFFFL);
@@ -88,6 +93,7 @@ public class NXCPMessageFieldTest
 	// Int64 variables
 	//
 	
+   @Test
 	public void testInt64Construction()
 	{
 		final NXCPMessageField variable = new NXCPMessageField(1, NXCPMessageField.TYPE_INT64, 123456789L);
@@ -97,6 +103,7 @@ public class NXCPMessageFieldTest
 		assertEquals(123456789L, variable.getAsInteger().longValue());
 	}
 
+   @Test
 	public void testInt64EncodingAndDecoding() throws Exception
 	{
 		final NXCPMessageField var1 = new NXCPMessageField(1, NXCPMessageField.TYPE_INT64, 123456789L);
@@ -114,6 +121,7 @@ public class NXCPMessageFieldTest
 	// Binary variables
 	//
 	
+   @Test
 	public void testBinaryConstruction()
 	{
 		final byte[] byteArray = { 0x10, 0x20, 0x30 };
@@ -124,6 +132,7 @@ public class NXCPMessageFieldTest
 		assertEquals(byteArray, variable.getAsBinary());
 	}
 
+   @Test
 	public void testBinaryEncodingAndDecoding() throws Exception
 	{
 		final byte[] byteArray = { 0x10, 0x20, 0x30, 0x40, 0x50 };
@@ -141,6 +150,7 @@ public class NXCPMessageFieldTest
 	/**
 	 * Test getAsInetAddress()
 	 */	
+   @Test
 	public void testGetAsInetAddress() throws Exception
 	{
 		final NXCPMessageField v1 = new NXCPMessageField(1, NXCPMessageField.TYPE_INTEGER, 0x0A000102L);
@@ -159,6 +169,7 @@ public class NXCPMessageFieldTest
 	/**
 	 * Test set variable from InetAddress
 	 */
+   @Test
 	public void testSetAsInetAddress() throws Exception
 	{
 		final InetAddress addr = InetAddress.getByName("217.4.172.12");
@@ -172,6 +183,7 @@ public class NXCPMessageFieldTest
 	/**
 	 * Passing UUIDs in variables
 	 */
+   @Test
 	public void testUUIDConstruction() throws Exception
 	{
 		final String uuidName = "13f2cac0-eadf-11b1-9163-e3f1397b9128";
@@ -182,6 +194,7 @@ public class NXCPMessageFieldTest
 		assertEquals(uuidName, variable.getAsUUID().toString());
 	}
 	
+   @Test
 	public void testUUIDEncodingAndDecoding() throws Exception
 	{
 		final String uuidName = "13f2cac0-eadf-11b1-9163-e3f1397b9128";
