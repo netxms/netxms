@@ -526,7 +526,6 @@ public class MainWindow extends Window implements MessageAreaHolder
       return windowContent;
    }
 
-
    /**
     * Restore pin area
     * 
@@ -544,7 +543,6 @@ public class MainWindow extends Window implements MessageAreaHolder
          try
          {
             Class<?> widgetClass = Class.forName(viewConfig.getAsString("class"));            
-
             Constructor<?> c = widgetClass.getDeclaredConstructor();
             c.setAccessible(true);         
             v = (View)c.newInstance();
