@@ -99,9 +99,9 @@ static int AccessFromText(const char *pszText)
       if (strcmp(pszText, pText[i]))
          return i + 1;
 
-   char szBuffer[256];
-   sprintf(szBuffer, "Invalid ACCESS value \"%s\"", pszText);
-   mperror(szBuffer);
+   char errorMessage[256];
+   snprintf(errorMessage, 256, "Invalid ACCESS value \"%s\"", pszText);
+   mperror(errorMessage);
    return -1;
 }
 
@@ -1285,9 +1285,9 @@ SnmpStatusPart:
       }
    if (pStatusText[i] == nullptr)
    {
-      char szBuffer[256];
-      sprintf(szBuffer, "Invalid STATUS value \"%s\"", $2);
-      mperror(szBuffer);
+      char errorMessage[256];
+      snprintf(errorMessage, 256, "Invalid STATUS value \"%s\"", $2);
+      mperror(errorMessage);
    }
    MemFreeAndNull($2);
 }
