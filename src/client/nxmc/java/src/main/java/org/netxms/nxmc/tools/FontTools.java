@@ -155,7 +155,7 @@ public class FontTools
     */
    public static Font createFont(String[] names, int heightAdjustment, int style)
    {
-      return createFont(names, JFaceResources.getDefaultFont(), 0, style);
+      return createFont(names, JFaceResources.getDefaultFont(), heightAdjustment, style);
    }
 
    /**
