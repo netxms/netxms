@@ -38,7 +38,7 @@ Sensor::Sensor() : super(Pollable::STATUS | Pollable::CONFIGURATION)
 /**
  * Constructor with all fields for Sensor class
  */
-Sensor::Sensor(const TCHAR *name, const NXCPMessage& request) : super(name, Pollable::STATUS | Pollable::CONFIGURATION)
+Sensor::Sensor(const wchar_t *name, const NXCPMessage& request) : super(name, Pollable::STATUS | Pollable::CONFIGURATION)
 {
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PENDING;
    m_flags = request.getFieldAsUInt32(VID_SENSOR_FLAGS);
@@ -50,6 +50,18 @@ Sensor::Sensor(const TCHAR *name, const NXCPMessage& request) : super(name, Poll
 	m_deviceAddress = request.getFieldAsSharedString(VID_DEVICE_ADDRESS);
 	m_gatewayNodeId = request.getFieldAsUInt32(VID_GATEWAY_NODE);
    m_modbusUnitId = request.getFieldAsUInt16(VID_MODBUS_UNIT_ID);
+   m_capabilities = 0;
+   m_status = STATUS_NORMAL;
+}
+
+/**
+ * Constructor for creating sensor object from scratch
+ */
+Sensor::Sensor(const wchar_t *name, SensorDeviceClass deviceClass, uint32_t gatewayNodeId, uint16_t modbusUnitId) : super(name, Pollable::STATUS | Pollable::CONFIGURATION)
+{
+   m_gatewayNodeId = gatewayNodeId;
+   m_deviceClass = deviceClass;
+   m_modbusUnitId = modbusUnitId;
    m_capabilities = 0;
    m_status = STATUS_NORMAL;
 }

@@ -2530,6 +2530,20 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
 
    if (name.value[0] == 'S')
    {
+      // Sensor device classes
+      NXSL_ENV_CONSTANT("SensorDeviceClass::Other", SENSOR_OTHER);
+      NXSL_ENV_CONSTANT("SensorDeviceClass::UPS", SENSOR_UPS);
+      NXSL_ENV_CONSTANT("SensorDeviceClass::WaterMeter", SENSOR_WATER_METER);
+      NXSL_ENV_CONSTANT("SensorDeviceClass::ElectricityMeter", SENSOR_ELECTRICITY_METER);
+      NXSL_ENV_CONSTANT("SensorDeviceClass::Temperature", SENSOR_TEMPERATURE);
+      NXSL_ENV_CONSTANT("SensorDeviceClass::Humidity", SENSOR_HUMIDITY);
+      NXSL_ENV_CONSTANT("SensorDeviceClass::TemperatureAndHumidity", SENSOR_TEMPERATURE_HUMIDITY);
+      NXSL_ENV_CONSTANT("SensorDeviceClass::CO2", SENSOR_CO2);
+      NXSL_ENV_CONSTANT("SensorDeviceClass::PowerSupply", SENSOR_POWER_SUPPLY);
+      NXSL_ENV_CONSTANT("SensorDeviceClass::Current", SENSOR_CURRENT);
+      NXSL_ENV_CONSTANT("SensorDeviceClass::WaterLeak", SENSOR_WATER_LEAK);
+      NXSL_ENV_CONSTANT("SensorDeviceClass::Smoke", SENSOR_SMOKE);
+
       // Sensor state flags
       NXSL_ENV_CONSTANT("SensorState::Unreachable", DCSF_UNREACHABLE);
       NXSL_ENV_CONSTANT("SensorState::NetworkPathProblem", DCSF_NETWORK_PATH_PROBLEM);

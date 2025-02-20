@@ -3870,7 +3870,41 @@ static int CreateNodeImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL
    {
       *result = vm->createValue();
    }
-   return 0;
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * Create sensor object - common method implementation
+ * Arguments: name, [deviceClass], [gateway], [modbusUnitId]
+ */
+static int CreateSensorImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if ((argc < 1) || (argc > 4))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   shared_ptr<NetObj> thisObject = *static_cast<shared_ptr<NetObj>*>(object->getData());
+
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   if ((argc > 1) && !argv[1]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   if ((argc > 2) && !argv[2]->isNull() && !argv[2]->isObject(L"Node"))
+      return NXSL_ERR_NOT_OBJECT;
+
+   if ((argc > 3) && !argv[3]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   uint32_t gatewayId = ((argc > 2) && !argv[2]->isNull()) ? static_cast<shared_ptr<NetObj>*>(argv[2]->getValueAsObject()->getData())->get()->getId() : 0;
+   SensorDeviceClass deviceClass = (argc > 1) ? SensorDeviceClassFromInt(argv[1]->getValueAsInt32()) : SENSOR_OTHER;
+
+   shared_ptr<Sensor> sensor = make_shared<Sensor>(argv[0]->getValueAsCString(), deviceClass, gatewayId, static_cast<uint16_t>((argc > 3) ? argv[3]->getValueAsUInt32() : 255));
+   NetObjInsert(sensor, true, false);
+   NetObj::linkObjects(thisObject, sensor);
+   sensor->unhide();
+   *result = sensor->createNXSLObject(vm);
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -3895,6 +3929,14 @@ NXSL_METHOD_DEFINITION(Container, createContainer)
 NXSL_METHOD_DEFINITION(Container, createNode)
 {
    return CreateNodeImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * Container::createSensor() method
+ */
+NXSL_METHOD_DEFINITION(Container, createSensor)
+{
+   return CreateSensorImpl(object, argc, argv, result, vm);
 }
 
 /**
@@ -3930,6 +3972,7 @@ NXSL_ContainerClass::NXSL_ContainerClass() : NXSL_NetObjClass()
    NXSL_REGISTER_METHOD(Container, createCollector, 1);
    NXSL_REGISTER_METHOD(Container, createContainer, 1);
    NXSL_REGISTER_METHOD(Container, createNode, -1);
+   NXSL_REGISTER_METHOD(Container, createSensor, -1);
    NXSL_REGISTER_METHOD(Container, setAutoBindMode, 2);
    NXSL_REGISTER_METHOD(Container, setAutoBindScript, 1);
 }
@@ -3986,6 +4029,14 @@ NXSL_METHOD_DEFINITION(Collector, createNode)
 }
 
 /**
+ * Collector::createSensor() method
+ */
+NXSL_METHOD_DEFINITION(Collector, createSensor)
+{
+   return CreateSensorImpl(object, argc, argv, result, vm);
+}
+
+/**
  * Collector::setAutoBindMode() method
  */
 NXSL_METHOD_DEFINITION(Collector, setAutoBindMode)
@@ -4018,6 +4069,7 @@ NXSL_CollectorClass::NXSL_CollectorClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Collector, createCollector, 1);
    NXSL_REGISTER_METHOD(Collector, createContainer, 1);
    NXSL_REGISTER_METHOD(Collector, createNode, -1);
+   NXSL_REGISTER_METHOD(Collector, createSensor, -1);
    NXSL_REGISTER_METHOD(Collector, setAutoBindMode, 2);
    NXSL_REGISTER_METHOD(Collector, setAutoBindScript, 1);
 }
@@ -4113,6 +4165,14 @@ NXSL_METHOD_DEFINITION(ServiceRoot, createNode)
 }
 
 /**
+ * ServiceRoot::createSensor() method
+ */
+NXSL_METHOD_DEFINITION(ServiceRoot, createSensor)
+{
+   return CreateSensorImpl(object, argc, argv, result, vm);
+}
+
+/**
  * NXSL class "ServiceRoot" constructor
  */
 NXSL_ServiceRootClass::NXSL_ServiceRootClass() : NXSL_NetObjClass()
@@ -4122,6 +4182,7 @@ NXSL_ServiceRootClass::NXSL_ServiceRootClass() : NXSL_NetObjClass()
    NXSL_REGISTER_METHOD(ServiceRoot, createCollector, 1);
    NXSL_REGISTER_METHOD(ServiceRoot, createContainer, 1);
    NXSL_REGISTER_METHOD(ServiceRoot, createNode, -1);
+   NXSL_REGISTER_METHOD(ServiceRoot, createSensor, -1);
 }
 
 /**

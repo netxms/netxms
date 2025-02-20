@@ -3086,8 +3086,17 @@ enum SensorDeviceClass
    SENSOR_POWER_SUPPLY = 8,
    SENSOR_CURRENT = 9,
    SENSOR_WATER_LEAK = 10,
-   SENSOR_SMOKE = 11
+   SENSOR_SMOKE = 11,
+   SENSOR_MAX_DEVICE_CLASS
 };
+
+/**
+ * Convert integer to valid sensor device class value
+ */
+static inline SensorDeviceClass SensorDeviceClassFromInt(int n)
+{
+   return ((n >= 0) && (n < SENSOR_MAX_DEVICE_CLASS)) ? static_cast<SensorDeviceClass>(n) : SENSOR_OTHER;
+}
 
 /**
  * Mobile device class
@@ -3122,7 +3131,8 @@ protected:
 
 public:
    Sensor();
-   Sensor(const TCHAR *name, const NXCPMessage& request);
+   Sensor(const wchar_t *name, const NXCPMessage& request);
+   Sensor(const wchar_t *name, SensorDeviceClass deviceClass, uint32_t gatewayNodeId, uint16_t modbusUnitId);
    virtual ~Sensor();
 
    shared_ptr<Sensor> self() { return static_pointer_cast<Sensor>(NObject::self()); }
