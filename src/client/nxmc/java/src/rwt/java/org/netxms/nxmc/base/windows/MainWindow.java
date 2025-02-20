@@ -60,6 +60,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
+import org.netxms.base.VersionInfo;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -87,6 +88,7 @@ import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.base.widgets.RoundedLabel;
 import org.netxms.nxmc.base.widgets.ServerClock;
+import org.netxms.nxmc.base.widgets.WelcomePage;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.preferencepages.AlarmPreferences;
@@ -116,6 +118,7 @@ public class MainWindow extends Window implements MessageAreaHolder
    private ToolBar mainMenu;
    private Composite headerArea;
    private MessageArea messageArea;
+   private Composite mainArea;
    private Composite perspectiveArea;
    private List<Perspective> perspectives;
    private Perspective currentPerspective;
@@ -231,6 +234,7 @@ public class MainWindow extends Window implements MessageAreaHolder
                }
                postOpenRunnables.clear();
                postOpenRunnables = null;
+               showWelcomePage();
             }
          }
 
@@ -257,6 +261,23 @@ public class MainWindow extends Window implements MessageAreaHolder
    }
 
    /**
+    * Show welcome page if not hidden
+    */
+   private void showWelcomePage()
+   {
+      PreferenceStore ps = PreferenceStore.getInstance();
+      if (ps.getAsBoolean("WelcomePage.Disabled", false))
+         return;
+      String v = ps.getAsString("WelcomePage.LastDisplayedVersion");
+      if (VersionInfo.baseVersion().equals(v))
+         return;
+
+      WelcomePage welcomePage = new WelcomePage(mainArea, SWT.NONE);
+      welcomePage.setSize(mainArea.getSize());
+      welcomePage.moveAbove(null);
+   }
+
+   /**
     * @see org.eclipse.jface.window.Window#getLayout()
     */
    @Override
@@ -277,12 +298,11 @@ public class MainWindow extends Window implements MessageAreaHolder
 
       windowContent = new Composite(parent, SWT.NONE);
 
-      GridLayout layout = new GridLayout();
-      layout.marginWidth = 0;
-      layout.marginHeight = 0;
-      layout.verticalSpacing = 0;
-      layout.numColumns = verticalLayout ? 2 : 1;
-      windowContent.setLayout(layout);
+      GridLayout windowContentLayout = new GridLayout();
+      windowContentLayout.marginWidth = 0;
+      windowContentLayout.marginHeight = 0;
+      windowContentLayout.verticalSpacing = 0;
+      windowContent.setLayout(windowContentLayout);
 
       // Header
       Color headerBackgroundColor = new Color(parent.getDisplay(), BrandingManager.getAppHeaderBackground());
@@ -293,9 +313,8 @@ public class MainWindow extends Window implements MessageAreaHolder
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      gd.horizontalSpan = verticalLayout ? 2 : 1;
       headerArea.setLayoutData(gd);
-      layout = new GridLayout();
+      GridLayout layout = new GridLayout();
       layout.marginWidth = 5;
       layout.marginHeight = 5;
       layout.horizontalSpacing = 5;
@@ -386,8 +405,27 @@ public class MainWindow extends Window implements MessageAreaHolder
 
       new Spacer(headerArea, 8);
 
+      mainArea = new Composite(windowContent, SWT.NONE);
+      mainArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      mainArea.addControlListener(new ControlAdapter() {
+         @Override
+         public void controlResized(ControlEvent e)
+         {
+            for(Control c : mainArea.getChildren())
+               c.setSize(mainArea.getSize());
+         }
+      });
+
+      final Composite mainAreaInner = new Composite(mainArea, SWT.NONE);
+      layout = new GridLayout();
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      layout.verticalSpacing = 0;
+      layout.numColumns = verticalLayout ? 2 : 1;
+      mainAreaInner.setLayout(layout);
+
       // Perspective switcher
-      Composite menuArea = new Composite(windowContent, SWT.NONE);
+      Composite menuArea = new Composite(mainAreaInner, SWT.NONE);
       layout = new GridLayout();
       layout.marginWidth = 0;
       layout.marginHeight = 0;
@@ -422,13 +460,13 @@ public class MainWindow extends Window implements MessageAreaHolder
       }
       mainMenu.setLayoutData(gd);
 
-      messageArea = new MessageArea(windowContent, SWT.NONE);
+      messageArea = new MessageArea(mainAreaInner, SWT.NONE);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       messageArea.setLayoutData(gd);
 
-      horizontalSplitArea = new SashForm(windowContent, SWT.HORIZONTAL);
+      horizontalSplitArea = new SashForm(mainAreaInner, SWT.HORIZONTAL);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
@@ -465,14 +503,13 @@ public class MainWindow extends Window implements MessageAreaHolder
       restorePinArea(ps, PinLocation.BOTTOM);
       restorePinArea(ps, PinLocation.LEFT);
       restorePinArea(ps, PinLocation.RIGHT);
-      
+
       String motd = session.getMessageOfTheDay();
       if ((motd != null) && !motd.isEmpty())
          addMessage(MessageArea.INFORMATION, session.getMessageOfTheDay());
 
       return windowContent;
    }
-
 
    /**
     * Restore pin area
@@ -491,7 +528,6 @@ public class MainWindow extends Window implements MessageAreaHolder
          try
          {
             Class<?> widgetClass = Class.forName(viewConfig.getAsString("class"));            
-
             Constructor<?> c = widgetClass.getDeclaredConstructor();
             c.setAccessible(true);         
             v = (View)c.newInstance();

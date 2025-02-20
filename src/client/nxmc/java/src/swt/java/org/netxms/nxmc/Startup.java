@@ -35,7 +35,6 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.util.ISafeRunnableRunner;
 import org.eclipse.jface.util.SafeRunnable;
 import org.eclipse.jface.window.Window;
-import org.eclipse.jface.window.Window.IExceptionHandler;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.internal.DPIUtil;
@@ -152,13 +151,7 @@ public class Startup
       StatusDisplayInfo.init(display);
       ObjectIcons.init(display);
 
-      Window.setExceptionHandler(new IExceptionHandler() {
-         @Override
-         public void handleException(Throwable t)
-         {
-            logger.error("Unhandled event loop exception", t);
-         }
-      });
+      Window.setExceptionHandler((t) -> logger.error("Unhandled event loop exception", t));
       SafeRunnable.setRunner(new ISafeRunnableRunner() {
          @Override
          public void run(ISafeRunnable code)
