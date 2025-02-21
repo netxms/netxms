@@ -70,32 +70,61 @@ void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize)
 /**
  * Get IP address for local machine
  */
-InetAddress GetLocalIpAddr()
+InetAddress GetLocalIPAddress()
 {
    InetAddress addr;
-   InterfaceList *pIfList = GetLocalInterfaceList();
-   if (pIfList != nullptr)
+   InterfaceList *ifList = GetLocalInterfaceList();
+   if (ifList == nullptr)
+      return addr;
+
+   // Find first interface with IP address
+   for(int i = 0; i < ifList->size(); i++)
    {
-      // Find first interface with IP address
-      for(int i = 0; i < pIfList->size(); i++)
+      InterfaceInfo *iface = ifList->get(i);
+      if (iface->type == IFTYPE_SOFTWARE_LOOPBACK)
+         continue;
+      for(int j = 0; j < iface->ipAddrList.size(); j++)
       {
-         InterfaceInfo *iface = pIfList->get(i);
-         if (iface->type == IFTYPE_SOFTWARE_LOOPBACK)
-            continue;
-         for(int j = 0; j < iface->ipAddrList.size(); j++)
+         const InetAddress& a = iface->ipAddrList.get(j);
+         if (a.isValidUnicast())
          {
-            const InetAddress& a = iface->ipAddrList.get(j);
-            if (a.isValidUnicast())
-            {
-               addr = a;
-               goto stop;
-            }
+            addr = a;
+            goto stop;
          }
       }
-stop:
-      delete pIfList;
    }
+stop:
+   delete ifList;
    return addr;
+}
+
+/**
+ * Check if given IP address is a local IP address
+ */
+bool IsLocalIPAddress(const InetAddress& addr)
+{
+   InterfaceList *ifList = GetLocalInterfaceList();
+   if (ifList == nullptr)
+      return false;
+
+   bool found = false;
+   for(int i = 0; i < ifList->size(); i++)
+   {
+      InterfaceInfo *iface = ifList->get(i);
+      if (iface->type == IFTYPE_SOFTWARE_LOOPBACK)
+         continue;
+      for(int j = 0; j < iface->ipAddrList.size(); j++)
+      {
+         if (addr.equals(iface->ipAddrList.get(j)))
+         {
+            found = true;
+            goto stop;
+         }
+      }
+   }
+stop:
+   delete ifList;
+   return found;
 }
 
 /**
