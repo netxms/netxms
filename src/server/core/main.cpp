@@ -1068,7 +1068,7 @@ retry_db_lock:
       if (addr.isValidUnicast())     // Database already locked by another server instance
       {
          // Check for lock from crashed/terminated local process
-         if (GetLocalIpAddr().equals(addr))
+         if (IsLocalIPAddress(addr))
          {
             uint32_t pid = ConfigReadULong(_T("DBLockPID"), 0);
 				if (!IsNetxmsdProcess(pid) || (pid == GetCurrentProcessId()))
@@ -1087,8 +1087,7 @@ retry_db_lock:
                goto retry_db_lock;
 			   }
 			}
-			nxlog_write_tag(NXLOG_ERROR, _T("db.lock"), _T("Database is already locked by another NetXMS server instance (IP address: %s, machine info: %s)"),
-			         (const TCHAR *)addr.toString(), buffer);
+			nxlog_write_tag(NXLOG_ERROR, _T("db.lock"), _T("Database is already locked by another NetXMS server instance (IP address: %s, machine info: %s)"), addr.toString().cstr(), buffer);
 		}
       else if (!_tcsncmp(buffer, _T("NXDBMGR"), 7))
       {
