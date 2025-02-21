@@ -1410,7 +1410,8 @@ bool NXCORE_EXPORTABLE KillClientSession(session_id_t id);
 void NXCORE_EXPORTABLE CloseOtherSessions(uint32_t userId, session_id_t thisSession);
 
 void GetSysInfoStr(TCHAR *buffer, int nMaxSize);
-InetAddress GetLocalIpAddr();
+InetAddress GetLocalIPAddress();
+bool IsLocalIPAddress(const InetAddress& addr);
 
 InetAddress NXCORE_EXPORTABLE ResolveHostName(int32_t zoneUIN, const wchar_t *hostname, int afHint = AF_UNSPEC);
 bool EventNameResolver(const wchar_t *name, uint32_t *code);

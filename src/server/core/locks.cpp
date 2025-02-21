@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ bool LockDatabase(InetAddress *lockAddr, TCHAR *lockInfo)
 	nxlog_debug_tag(_T("db.lock"), 6, _T("DBLockStatus=\"%s\""), buffer);
    if (!_tcscmp(buffer, _T("UNLOCKED")))
    {
-      GetLocalIpAddr().toString(buffer);
+      GetLocalIPAddress().toString(buffer);
       ConfigWriteStr(_T("DBLockStatus"), buffer, true, false);
       GetSysInfoStr(buffer, sizeof(buffer));
       ConfigWriteStr(_T("DBLockInfo"), buffer, true, false);
