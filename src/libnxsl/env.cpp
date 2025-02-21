@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -44,6 +44,7 @@ int F_mktime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ord(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_print(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_println(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_range(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_replace(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_right(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_rindex(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -152,6 +153,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "__new@JsonArray", F_JsonArray, -1 },
    { "__new@JsonObject", F_JsonObject, -1 },
    { "__new@MacAddress", F_MacAddress, -1 },
+   { "__new@Range", F_range, -1 },
    { "__new@Table", F_Table, 0 },
 	{ "_exit", F_exit, -1 },
    { "abs", F_MathAbs, 1, true },
@@ -179,6 +181,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "print", F_print, -1 },
    { "println", F_println, -1 },
    { "random", F_MathRandom, 2, true },
+   { "range", F_range, -1 },
    { "replace", F_replace, 3, true },
    { "right", F_right, -1, true },
    { "rindex", F_rindex, -1, true },

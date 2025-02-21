@@ -872,7 +872,7 @@ ArrayElement:
 ;
 
 HashMapInitializer:
-	'%' '{' 
+	'%' '{'
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_NEW_HASHMAP);
 }

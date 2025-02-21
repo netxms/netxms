@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -55,9 +55,24 @@ int NXSL_Iterator::createIterator(NXSL_VM *vm, NXSL_Stack *stack)
 			rc = NXSL_ERR_NOT_STRING;
 		}
 	}
+	else if (value->isObject() && value->getValueAsObject()->isIterable())
+	{
+	   NXSL_Value *object = value;
+      value = (NXSL_Value *)stack->pop();
+      if (value->isString())
+      {
+         NXSL_Iterator *it = new NXSL_Iterator(vm, value->getValueAsMBString(), object);
+         stack->push(vm->createValue(it));
+      }
+      else
+      {
+         vm->destroyValue(object);
+         rc = NXSL_ERR_NOT_STRING;
+      }
+	}
 	else
 	{
-		rc = NXSL_ERR_NOT_ARRAY;
+		rc = NXSL_ERR_NOT_ITERABLE;
 	}
 	vm->destroyValue(value);
 
@@ -65,13 +80,27 @@ int NXSL_Iterator::createIterator(NXSL_VM *vm, NXSL_Stack *stack)
 }
 
 /**
- * Constructor
+ * Constructor for array iterator
  */
 NXSL_Iterator::NXSL_Iterator(NXSL_VM *vm, const NXSL_Identifier& variable, NXSL_Array *array) : NXSL_RuntimeObject(vm), m_variable(variable)
 {
 	m_array = array;
 	m_refCount = 0;
 	m_position = -1;
+	m_object = nullptr;
+	m_currValue = nullptr;
+}
+
+/**
+ * Constructor for object iterator
+ */
+NXSL_Iterator::NXSL_Iterator(NXSL_VM *vm, const NXSL_Identifier& variable, NXSL_Value *object) : NXSL_RuntimeObject(vm), m_variable(variable)
+{
+   m_array = nullptr;
+   m_refCount = 0;
+   m_position = -1;
+   m_object = object;
+   m_currValue = nullptr;
 }
 
 /**
@@ -79,9 +108,14 @@ NXSL_Iterator::NXSL_Iterator(NXSL_VM *vm, const NXSL_Identifier& variable, NXSL_
  */
 NXSL_Iterator::~NXSL_Iterator()
 {
-	m_array->decHandleCount();
-	if (m_array->isUnused())
-		delete m_array;
+   if (m_array != nullptr)
+   {
+      m_array->decHandleCount();
+      if (m_array->isUnused())
+         delete m_array;
+   }
+   m_vm->destroyValue(m_object);
+   m_vm->destroyValue(m_currValue);
 }
 
 /**
@@ -89,6 +123,13 @@ NXSL_Iterator::~NXSL_Iterator()
  */
 NXSL_Value *NXSL_Iterator::next()
 {
-	m_position++;
-	return m_array->getByPosition(m_position);
+   if (m_array != nullptr)
+   {
+      m_position++;
+      return m_array->getByPosition(m_position);
+   }
+   NXSL_Value *nextValue = m_object->getValueAsObject()->getNext(m_currValue);
+   m_vm->destroyValue(m_currValue);
+   m_currValue = nextValue;
+   return m_currValue;
 }

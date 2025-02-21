@@ -371,6 +371,7 @@ private:
 
 protected:
    HashMap<NXSL_Identifier, NXSL_ExtMethod> *m_methods;
+   bool m_iterable;
 
    void setName(const TCHAR *name);
    const StringList& getClassHierarchy() const { return m_classHierarchy; }
@@ -408,8 +409,11 @@ public:
 
 	virtual void toString(StringBuffer *sb, NXSL_Object *object);
 
+   virtual NXSL_Value *getNext(NXSL_Object *object, NXSL_Value *curr);
+
    const TCHAR *getName() const { return m_name; }
    bool instanceOf(const TCHAR *name) const { return !_tcscmp(name, m_name) || m_classHierarchy.contains(name); }
+   bool isIterable() const { return m_iterable; }
 
    void scanAttributes();
 };
@@ -446,7 +450,9 @@ private:
 public:
    NXSL_Class *getClass() { return m_class; }
 	void *getData() { return m_data->data; }
-	bool isConstant() { return m_data->constant; }
+	bool isConstant() const { return m_data->constant; }
+	bool isIterable() const { return m_class->isIterable(); }
+   NXSL_Value *getNext(NXSL_Value *curr) { return m_class->getNext(this, curr); }
 };
 
 /**
@@ -580,7 +586,7 @@ public:
 };
 
 /**
- * Iterator for arrays
+ * Iterator for arrays and iterable objects
  */
 class LIBNXSL_EXPORTABLE NXSL_Iterator : public NXSL_RuntimeObject
 {
@@ -589,9 +595,12 @@ private:
 	NXSL_Identifier m_variable;
 	NXSL_Array *m_array;
 	int m_position;
+   NXSL_Value *m_object;
+   NXSL_Value *m_currValue;
 
 public:
 	NXSL_Iterator(NXSL_VM *vm, const NXSL_Identifier& variable, NXSL_Array *array);
+   NXSL_Iterator(NXSL_VM *vm, const NXSL_Identifier& variable, NXSL_Value *object);
 	~NXSL_Iterator();
 
 	const NXSL_Identifier& getVariableName() { return m_variable; }
@@ -1765,6 +1774,20 @@ public:
    NXSL_MetaClass();
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+};
+
+/**
+ * NXSL "Range" class
+ */
+class LIBNXSL_EXPORTABLE NXSL_RangeClass : public NXSL_Class
+{
+public:
+   NXSL_RangeClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+   virtual void toString(StringBuffer *sb, NXSL_Object *object) override;
+   virtual NXSL_Value *getNext(NXSL_Object *object, NXSL_Value *currValue) override;
 };
 
 /**

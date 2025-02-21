@@ -1,11 +1,12 @@
 lib_LTLIBRARIES = libnxsl.la
 libnxsl_la_SOURCES = lex.parser.cpp parser.tab.cpp \
-		     array.cpp bytestream.cpp class.cpp compiler.cpp env.cpp file.cpp \
-		     functions.cpp geolocation.cpp hashmap.cpp inetaddr.cpp \
-		     instruction.cpp io.cpp iterator.cpp json.cpp lexer.cpp \
-		     library.cpp macaddr.cpp math.cpp program.cpp selectors.cpp \
-		     storage.cpp string.cpp table.cpp time.cpp tools.cpp \
-		     value.cpp variable.cpp vm.cpp
+		     array.cpp bytestream.cpp class.cpp compiler.cpp env.cpp \
+		     file.cpp functions.cpp geolocation.cpp hashmap.cpp \
+		     inetaddr.cpp instruction.cpp io.cpp iterator.cpp \
+		     json.cpp lexer.cpp library.cpp macaddr.cpp math.cpp \
+		     program.cpp range.cpp selectors.cpp storage.cpp \
+		     string.cpp table.cpp time.cpp tools.cpp value.cpp \
+		     variable.cpp vm.cpp
 libnxsl_la_CPPFLAGS=-I@top_srcdir@/include -DLIBNXSL_EXPORTS -I@top_srcdir@/build
 libnxsl_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxsl_la_LIBADD = ../libnetxms/libnetxms.la

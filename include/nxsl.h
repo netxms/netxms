@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -84,6 +84,7 @@
 #define NXSL_ERR_INVALID_OC_ARG_COUNT     38
 #define NXSL_ERR_TOO_MANY_NESTED_CALLS    39
 #define NXSL_ERR_TOO_MANY_NESTED_VMS      40
+#define NXSL_ERR_NOT_ITERABLE             41
 
 /**
  * Special return codes for external functions

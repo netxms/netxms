@@ -141,6 +141,15 @@ void NXSL_Class::scanAttributes()
 }
 
 /**
+ * Get next value for iteration
+ * Default implementation always returns null
+ */
+NXSL_Value *NXSL_Class::getNext(NXSL_Object *object, NXSL_Value *currValue)
+{
+   return nullptr;
+}
+
+/**
  * Call method
  * Default implementation calls methods registered with NXSL_REGISTER_METHOD macro.
  */

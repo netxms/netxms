@@ -26,7 +26,7 @@
 /**
  * Constants
  */
-const int MAX_ERROR_NUMBER = 40;
+const int MAX_ERROR_NUMBER = 41;
 const uint32_t CONTROL_STACK_LIMIT = 32768;
 
 /**
@@ -83,7 +83,8 @@ static const TCHAR *s_runtimeErrorMessage[MAX_ERROR_NUMBER] =
    _T("Object constructor not found"),
    _T("Invalid number of object constructor's arguments"),
    _T("Too many nested function calls"),
-   _T("Too many nested NXSL VMs")
+   _T("Too many nested NXSL VMs"),
+   _T("Cannot create iterator on non-iterable value")
 };
 
 /**

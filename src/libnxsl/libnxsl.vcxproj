@@ -442,6 +442,7 @@
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="parser.tab.cpp" />
     <ClCompile Include="program.cpp" />
+    <ClCompile Include="range.cpp" />
     <ClCompile Include="selectors.cpp" />
     <ClCompile Include="storage.cpp" />
     <ClCompile Include="string.cpp" />
