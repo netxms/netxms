@@ -44,6 +44,7 @@ struct Range
    RangeValue start;
    RangeValue end;
    RangeValue step;
+   double margin;
    bool integer;
 };
 
@@ -131,12 +132,12 @@ NXSL_Value *NXSL_RangeClass::getNext(NXSL_Object *object, NXSL_Value *currValue)
    {
       int64_t v = currValue->getValueAsInt64();
       v += range->step.i;
-      return v < range->end.i ? vm->createValue(v) : nullptr;
+      return (range->end.i > 0) ? (v < range->end.i ? vm->createValue(v) : nullptr) : (v > range->end.i ? vm->createValue(v) : nullptr);
    }
 
    double v = currValue->getValueAsReal();
    v += range->step.d;
-   return v < range->end.d ? vm->createValue(v) : nullptr;
+   return (range->end.d > 0) ? (v < range->end.d - range->margin ? vm->createValue(v) : nullptr) : (v > range->end.d + range->margin ? vm->createValue(v) : nullptr);
 }
 
 /**
@@ -165,6 +166,7 @@ int F_range(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
          range.start.d = 0;
          range.end.d = argv[0]->getValueAsReal();
          range.step.d = 1.0;
+         range.margin = 0.00001;
       }
    }
    else
@@ -188,10 +190,12 @@ int F_range(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
             if (!argv[2]->isNumeric())
                return NXSL_ERR_NOT_NUMBER;
             range.step.d = argv[2]->getValueAsReal();
+            range.margin = abs(range.step.d) * 0.00001;
          }
          else
          {
             range.step.d = 1.0;
+            range.margin = 0.00001;
          }
       }
    }

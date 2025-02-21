@@ -1,0 +1,27 @@
+r = range(10);
+assert(classof(r) == "Range");
+assert(r.start == 0);
+assert(r.end == 10);
+assert(r.step == 1);
+
+r = new Range(1, 2, 0.5);
+assert(r.start == 1);
+assert(r.end == 2);
+assert(r.step == 0.5);
+
+count = 0;
+sum = 0;
+for(i : range(10))
+{
+   count++;
+   sum += i;
+}
+assert(count == 10);
+assert(sum == 45);
+
+count = 0;
+for(n : range(1, 0, -0.1))
+   count++;
+assert(count == 10);
+
+return 0;

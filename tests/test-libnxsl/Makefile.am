@@ -26,6 +26,7 @@ nxsltest_DATA = \
 	like.nxsl \
 	macaddr.nxsl \
 	math.nxsl \
+	range.nxsl \
 	regexp.nxsl \
 	strings.nxsl \
 	time.nxsl \

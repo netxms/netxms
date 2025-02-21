@@ -176,6 +176,7 @@ int main(int argc, char *argv[])
    RunTestScript(_T("like.nxsl"));
    RunTestScript(_T("macaddr.nxsl"));
    RunTestScript(_T("math.nxsl"));
+   RunTestScript(_T("range.nxsl"));
    RunTestScript(_T("regexp.nxsl"));
    RunTestScript(_T("strings.nxsl"));
    RunTestScript(_T("time.nxsl"));
