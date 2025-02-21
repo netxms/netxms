@@ -49,7 +49,7 @@ TOTPToken::TOTPToken(const TCHAR* methodName, const BYTE* secret, const TCHAR *u
       char issuer[256] = "NetXMS (";
       ConfigReadStrUTF8(_T("Server.Name"), &issuer[8], 240, "");
       if (issuer[8] == 0)
-         GetLocalIpAddr().toStringA(&issuer[8]);
+         GetLocalIPAddress().toStringA(&issuer[8]);
       strcat(issuer, ")");
 
       char urlEncodedIssuer[1024];
