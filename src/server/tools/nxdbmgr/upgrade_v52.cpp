@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 52.10 to 52.11
+ */
+static bool H_UpgradeFromV10()
+{
+   CHK_EXEC(CreateConfigParam(L"RADIUS.NASIdentifier",
+            L"",
+            L"Value for NAS-Identifier attribute in RADIUS reuest (will not be sent if empty).",
+            nullptr, 'S', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"RADIUS.ServiceType",
+            L"8",
+            L"Value for Service-Type attribute in RADIUS request. Value of 0 will exclude service type from request attributes.",
+            nullptr, 'I', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(11));
+   return true;
+}
+
+/**
  * Upgrade from 52.9 to 52.10
  */
 static bool H_UpgradeFromV9()
@@ -268,6 +285,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 10, 52, 11, H_UpgradeFromV10 },
    { 9,  52, 10, H_UpgradeFromV9  },
    { 8,  52, 9,  H_UpgradeFromV8  },
    { 7,  52, 8,  H_UpgradeFromV7  },

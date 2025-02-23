@@ -686,7 +686,16 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
    auth->id = (BYTE)(GetCurrentProcessId() & 255);
 
 	// Create attribute chain
-	req = NULL;
+	req = nullptr;
+
+	// Service type
+	uint32_t serviceType = ConfigReadInt(L"RADIUS.ServiceType", 8);
+   if (serviceType != 0)
+   {
+      vp = paircreate(PW_SERVICE_TYPE, PW_TYPE_INTEGER, "Service-Type");
+      vp->lvalue = serviceType;
+      pairadd(&req, vp);
+   }
 
 	// User name
 	vp = paircreate(PW_USER_NAME, PW_TYPE_STRING, "User-Name");
@@ -786,6 +795,16 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Unknown RADIUS authentication method %hs"), authMethod);
 		pairfree(req);
 		return 11;
+   }
+
+   char nasIdentifier[128];
+   ConfigReadStrA(L"RADIUS.NASIdentifier", nasIdentifier, 128, "");
+   if (nasIdentifier[0] != 0)
+   {
+      vp = paircreate(PW_NAS_IDENTIFIER, PW_TYPE_STRING, "NAS-Identifier");
+      strncpy(vp->strvalue, nasIdentifier, AUTH_STRING_LEN);
+      vp->length = std::min((int)strlen(nasIdentifier), AUTH_STRING_LEN);
+      pairadd(&req, vp);
    }
 
 	// Resolve hostname.
@@ -933,8 +952,9 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 
    VALUE_PAIR *request = NULL;
    PAIR_ADD(PW_USER_NAME, login);
-   UINT32 service = PW_AUTHENTICATE_ONLY;
-   PAIR_ADD(PW_SERVICE_TYPE, &service);
+   uint32_t serviceType = ConfigReadInt(L"RADIUS.ServiceType", PW_AUTHENTICATE_ONLY);
+   if (serviceType != 0)
+      PAIR_ADD(PW_SERVICE_TYPE, &serviceType);
 
    char authMethod[16];
    ConfigReadStrA(_T("RADIUS.AuthMethod"), authMethod, 16, "PAP");
@@ -1011,8 +1031,15 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
       return ERROR_RC;
    }
 
-   VALUE_PAIR *response = NULL;
-   int result = rc_auth(rh, 0, request, &response, NULL);
+   char nasIdentifier[128];
+   ConfigReadStrA(L"RADIUS.NASIdentifier", nasIdentifier, 128, "");
+   if (nasIdentifier[0] != 0)
+   {
+      PAIR_ADD(PW_NAS_IDENTIFIER, nasIdentifier);
+   }
+
+   VALUE_PAIR *response = nullptr;
+   int result = rc_auth(rh, 0, request, &response, nullptr);
    rc_destroy(rh);
    rc_avpair_free(request);
    rc_avpair_free(response);
