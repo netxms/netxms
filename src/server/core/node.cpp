@@ -2297,7 +2297,7 @@ shared_ptr<Interface> Node::createNewInterface(InterfaceInfo *info, bool manuall
                }
 
                // Create new subnet object
-               if (addr.getHostBits() > 0)
+               if (addr.getHostBits() > 1)
                {
                   if (AdjustSubnetBaseAddress(addr, m_zoneUIN))
                   {
@@ -11626,13 +11626,13 @@ void Node::checkSubnetBinding()
    unlockChildList();
 
    // Check if we have subnet bindings for all interfaces
-   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Checking subnet bindings for node %s [%d]"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Checking subnet bindings for node %s [%u]"), m_name, m_id);
    for(int i = 0; i < addrList.size(); i++)
    {
       InetAddress addr = addrList.get(i);
 
       TCHAR buffer[64];
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::checkSubnetBinding(%s [%d]): checking address %s/%d"), m_name, m_id, addr.toString(buffer), addr.getMaskBits());
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::checkSubnetBinding(%s [%u]): checking address %s/%d"), m_name, m_id, addr.toString(buffer), addr.getMaskBits());
 
       shared_ptr<Interface> iface = findInterfaceByIP(addr);
       if (iface == nullptr)
@@ -11687,8 +11687,8 @@ void Node::checkSubnetBinding()
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Missing subnet for address %s/%d on interface %s [%u]"),
             addr.toString(buffer), addr.getMaskBits(), iface->getName(), iface->getIfIndex());
 
-         // Ignore mask 255.255.255.255 - some point-to-point interfaces can have such mask
-         if (addr.getHostBits() > 0)
+         // Ignore masks 255.255.255.255 and 255.255.255.254 - some point-to-point interfaces can have such mask
+         if (addr.getHostBits() > 1)
          {
             if (addr.getMaskBits() > 0)
             {
@@ -11724,7 +11724,7 @@ void Node::checkSubnetBinding()
 
    // Some devices may report interface list, but without IP
    // To prevent such nodes from hanging at top of the tree, attempt
-   // to find subnet node primary IP
+   // to find subnet for node's primary IP
    if ((getParentsCount(OBJECT_SUBNET) == 0) && m_ipAddress.isValidUnicast() && !(m_flags & NF_EXTERNAL_GATEWAY) && !addrList.hasAddress(m_ipAddress))
    {
       shared_ptr<Subnet> pSubnet = FindSubnetForNode(m_zoneUIN, m_ipAddress);
@@ -11753,15 +11753,15 @@ void Node::checkSubnetBinding()
    {
       if (getParentList().get(i)->getObjectClass() == OBJECT_SUBNET)
       {
-         Subnet *pSubnet = (Subnet *)getParentList().get(i);
-         if (pSubnet->getIpAddress().contains(m_ipAddress) && !(m_flags & NF_EXTERNAL_GATEWAY))
+         Subnet *subnet = static_cast<Subnet*>(getParentList().get(i));
+         if (subnet->getIpAddress().contains(m_ipAddress) && !(m_flags & NF_EXTERNAL_GATEWAY))
             continue;   // primary IP is in given subnet
 
          int j;
          for(j = 0; j < addrList.size(); j++)
          {
             const InetAddress& addr = addrList.get(j);
-            if (pSubnet->getIpAddress().contains(addr))
+            if (subnet->getIpAddress().contains(addr))
             {
                if ((cluster != nullptr) && cluster->isSyncAddr(addr))
                {
@@ -11773,8 +11773,8 @@ void Node::checkSubnetBinding()
          if (j == addrList.size())
          {
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Node::CheckSubnetBinding(): Subnet %s [%u] is incorrect for node %s [%u]"),
-                  pSubnet->getName(), pSubnet->getId(), m_name, m_id);
-            unlinkList.add(pSubnet);
+                  subnet->getName(), subnet->getId(), m_name, m_id);
+            unlinkList.add(subnet);
          }
       }
    }
