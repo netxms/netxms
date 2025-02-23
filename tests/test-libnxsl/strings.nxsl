@@ -108,7 +108,7 @@ assert(!list1.containsListElement(",", "omega"));
 assert(list2.containsListElement("|", "ab"));
 assert(!list2.containsListElement(",", "ab"));
 
-a = %("dog", "cat", "fox");
+a = [ "dog", "cat", "fox" ];
 assert(ArrayToString(a, ", ") == "dog, cat, fox");
 
 z = SplitString("alpha|beta|gamma", "|");
@@ -119,6 +119,20 @@ assert(z[1] == "beta");
 assert(z[2] == "gamma");
 
 z = "alpha|beta|gamma".split("|");
+assert(typeof(z) == "array");
+assert(z.size == 3);
+assert(z[0] == "alpha");
+assert(z[1] == "beta");
+assert(z[2] == "gamma");
+
+z = "alpha, beta, gamma".split(",");
+assert(typeof(z) == "array");
+assert(z.size == 3);
+assert(z[0] == "alpha");
+assert(z[1] == " beta");
+assert(z[2] == " gamma");
+
+z = "alpha, beta, gamma".split(",", true);
 assert(typeof(z) == "array");
 assert(z.size == 3);
 assert(z[0] == "alpha");
