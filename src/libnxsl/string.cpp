@@ -360,11 +360,14 @@ int SM_right(NXSL_Value* thisString, int argc, NXSL_Value **argv, NXSL_Value **r
  */
 int SM_split(NXSL_Value* thisString, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
+   if ((argc < 1) || (argc > 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
    NXSL_Array *a = new NXSL_Array(vm);
-   String::split(thisString->getValueAsCString(), argv[0]->getValueAsCString(), false,
+   String::split(thisString->getValueAsCString(), argv[0]->getValueAsCString(), (argc > 1) && argv[1]->isTrue(),
       [a, vm] (const String& s)
       {
          a->append(vm->createValue(s));
@@ -520,7 +523,7 @@ static struct
    { NXSL_Identifier("left"), SM_left, -1 },
    { NXSL_Identifier("replace"), SM_replace, 2 },
    { NXSL_Identifier("right"), SM_right, -1 },
-   { NXSL_Identifier("split"), SM_split, 1 },
+   { NXSL_Identifier("split"), SM_split, -1 },
    { NXSL_Identifier("startsWith"), SM_startsWith, 1 },
    { NXSL_Identifier("substring"), SM_substring, -1 },
    { NXSL_Identifier("toLowerCase"), SM_toLowerCase, 0 },
