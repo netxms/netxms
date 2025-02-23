@@ -134,15 +134,38 @@ static void BuildIPTopology(NetworkMapObjectList *topology, const shared_ptr<Nod
    ObjectArray<PeerInfo> peers(0, 64, Ownership::True);
    ProcessParentSubnets(topology, filterProvider, seed, nDepth, peers, includeEndNodes);
 
-   // Process VPN connectors
+   // Process point-to-point interfaces and VPN connectors
    unique_ptr<SharedObjectArray<NetObj>> children = seed->getChildren();
    for (int i = 0; i < children->size(); i++)
    {
       NetObj *object = children->get(i);
-      if (object->getObjectClass() == OBJECT_VPNCONNECTOR)
+      if (object->getObjectClass() == OBJECT_INTERFACE)
+      {
+         Interface *iface = static_cast<Interface*>(object);
+         if (!iface->isLoopback())
+         {
+            const InetAddressList *ipAddrList = iface->getIpAddressList();
+            for(int j = 0; j < ipAddrList->size(); j++)
+            {
+               InetAddress a = ipAddrList->get(j);
+               if (a.getHostBits() == 1)
+               {
+                  InetAddress peerAddr = a.isSubnetBroadcast() ? a.getSubnetAddress() : a.getSubnetBroadcast();
+                  shared_ptr<Node> node = FindNodeByIP(seed->getZoneUIN(), peerAddr);
+                  if (node != nullptr)
+                  {
+                     shared_ptr<Interface> peerIface = node->findInterfaceByIP(peerAddr);
+                     if (peerIface != nullptr)
+                        peers.add(new PeerInfo(node, iface->self(), peerIface, L""));
+                  }
+               }
+            }
+         }
+      }
+      else if (object->getObjectClass() == OBJECT_VPNCONNECTOR)
       {
          shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(static_cast<VPNConnector*>(object)->getPeerGatewayId(), OBJECT_NODE));
-         if ((node != nullptr) && !topology->isObjectExist(node->getId()))
+         if (node != nullptr)
          {
             peers.add(new PeerInfo(node, object->getName()));
          }
