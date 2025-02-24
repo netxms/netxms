@@ -274,7 +274,6 @@ public class LinkColor extends LinkPropertyPage
    @Override
    protected boolean applyChanges(final boolean isApply)
 	{
-      System.out.println("Source object selected");
 		if (radioColorCustom.getSelection())
 		{
          linkEditor.setColorSource(NetworkMapLink.COLOR_SOURCE_CUSTOM_COLOR);
@@ -282,12 +281,10 @@ public class LinkColor extends LinkPropertyPage
 		}
       else if (radioColorInterface.getSelection())
       {
-         System.out.println("Source object selected");
          linkEditor.setColorSource(NetworkMapLink.COLOR_SOURCE_INTERFACE_STATUS);
       }
 		else if (radioColorObject.getSelection())
 		{
-		   System.out.println("Source object selected");
          linkEditor.setColorSource(NetworkMapLink.COLOR_SOURCE_OBJECT_STATUS);
 		}
       else if (radioColorUtilization.getSelection())

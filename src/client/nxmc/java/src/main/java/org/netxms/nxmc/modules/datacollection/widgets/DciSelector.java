@@ -51,6 +51,7 @@ public class DciSelector extends AbstractSelector
 	private int dcObjectType = -1;
    private int dciObjectType = -1;
 	private String dciName = null;
+   private String dciDescription = null;
 	private boolean fixedNode = false;
 	private boolean allowNoValueObjects = false;
 
@@ -97,12 +98,14 @@ public class DciSelector extends AbstractSelector
 			{
 				setDciId(dci.get(0).getNodeId(), dci.get(0).getId());
 				dciName = dci.get(0).getName();
+            dciDescription = dci.get(0).getDescription();
 				dciObjectType = dci.get(0).getDcObjectType();
 			}
 			else
 			{
 				setDciId(fixedNode ? nodeId : 0, 0);
 				dciName = null;
+				dciDescription = null;
 			}
          fireModifyListeners();
 		}
@@ -116,6 +119,7 @@ public class DciSelector extends AbstractSelector
    {
       setDciId(AbstractObject.CONTEXT, 0);
       dciName = null;
+      dciDescription = null;
       fireModifyListeners();
    }
 
@@ -268,6 +272,14 @@ public class DciSelector extends AbstractSelector
 	{
 		return dciName;
 	}
+
+   /**
+    * @return the dciDescription
+    */
+   public final String getDciDescription()
+   {
+      return dciDescription;
+   }
 	
 	  /**
     * @return the dciName

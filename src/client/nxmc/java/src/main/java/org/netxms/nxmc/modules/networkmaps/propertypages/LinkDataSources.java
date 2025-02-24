@@ -284,7 +284,7 @@ public class LinkDataSources extends LinkPropertyPage
          {
             MapLinkDataSource dci = new MapLinkDataSource(item);
             select.add(dci);
-            labelProvider.addCacheEntry(dci.getNodeId(), dci.getDciId(), "");
+            labelProvider.addCacheEntry(dci.getNodeId(), dci.getDciId(), item.getDescription());
 
             dciList.add(dci);
             
@@ -307,6 +307,7 @@ public class LinkDataSources extends LinkPropertyPage
       DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, linkEditor);
       if (dlg.open() == Window.OK)
       {
+         labelProvider.addCacheEntry(dci.getNodeId(), dci.getDciId(), dlg.getDciDescription());
          viewer.update(dci, null);
       }
    }

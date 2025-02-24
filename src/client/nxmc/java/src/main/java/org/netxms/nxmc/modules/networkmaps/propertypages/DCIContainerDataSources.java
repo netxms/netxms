@@ -280,7 +280,7 @@ public class DCIContainerDataSources extends PropertyPage
          {
             MapDataSource dci = new MapDataSource(item);
             select.add(dci);
-            labelProvider.addCacheEntry(dci.getNodeId(), dci.getDciId(), "");
+            labelProvider.addCacheEntry(dci.getNodeId(), dci.getDciId(), item.getDescription());
 
             dciList.add(dci);
             
@@ -303,6 +303,7 @@ public class DCIContainerDataSources extends PropertyPage
       DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, null);
       if (dlg.open() == Window.OK)
       {
+         labelProvider.addCacheEntry(dci.getNodeId(), dci.getDciId(), dlg.getDciDescription());
          viewer.update(dci, null);
       }
    }

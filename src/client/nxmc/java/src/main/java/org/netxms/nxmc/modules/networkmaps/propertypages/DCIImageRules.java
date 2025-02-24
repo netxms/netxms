@@ -397,6 +397,9 @@ public class DCIImageRules extends PropertyPage
    @Override
    protected boolean applyChanges(final boolean isApply)
    {
+      if (!isControlCreated())
+         return true;
+      
       config.setDciRuleArray(rules.toArray(new DCIImageRule[rules.size()]));
       saveSettings();
       return true;
@@ -408,6 +411,9 @@ public class DCIImageRules extends PropertyPage
    @Override
    public boolean performCancel()
    {
+      if (!isControlCreated())
+         return true;
+      
       saveSettings();
       return true;
    }

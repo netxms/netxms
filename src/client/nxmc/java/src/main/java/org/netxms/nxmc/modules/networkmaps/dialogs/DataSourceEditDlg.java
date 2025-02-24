@@ -52,6 +52,7 @@ public class DataSourceEditDlg extends Dialog
 	private LabeledText dataColumn;
 	private LabeledText formatString;
    private LinkEditor linkEditor;
+   private String dciDescription;
 	
 	/**
 	 * @param parentShell
@@ -176,6 +177,7 @@ public class DataSourceEditDlg extends Dialog
 	   
 		dci.setNodeId(dciSelector.getNodeId());
 		dci.setDciId(dciSelector.getDciId());
+		dciDescription = dciSelector.getDciDescription();
 		dci.setFormatString(formatString.getText());
 		if (dci.getType() == MapDataSource.TABLE)
 		{
@@ -188,4 +190,14 @@ public class DataSourceEditDlg extends Dialog
       }
 		super.okPressed();
 	}
+
+   /**
+    * Get selected DCI name
+    * 
+    * @return DCI name
+    */
+   public String getDciDescription()
+   {
+      return dciDescription;
+   }
 }
