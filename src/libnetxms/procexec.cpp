@@ -361,6 +361,12 @@ bool ProcessExecutor::executeWithoutOutput()
 
 #else
 
+#if defined(__linux__) && !WITH_ADDRESS_SANITIZER
+#define USE_VFORK 1
+#else
+#define USE_VFORK 0
+#endif
+
 /**
  * Arguments for process entry
  */
@@ -371,7 +377,7 @@ struct ProcessEntryArgs
    int pipe[2];
    const char *workingDirectory;
    int *execError;
-#ifdef __linux__
+#if USE_VFORK
    sigset_t oldmask;
 #endif
 };
@@ -403,14 +409,14 @@ static int ProcessEntry(void *argsp)
       if (chdir(args->workingDirectory) != 0)
       {
          *args->execError = errno;
-         char errorMessage[MAX_PATH + 256];
+         char errorMessage[1024];
          snprintf(errorMessage, sizeof(errorMessage), "Cannot change working directory to \"%s\" (%s)\n", args->workingDirectory, strerror(errno));
          write(STDERR_FILENO, errorMessage, strlen(errorMessage));
          _exit(127);
       }
    }
 
-#ifdef __linux__
+#if USE_VFORK
    pthread_sigmask(SIG_SETMASK, &args->oldmask, nullptr);
 #endif
 
@@ -550,7 +556,7 @@ static pid_t spawn(char *cmdline, bool shellExec, int *pipe, const char *working
    args.workingDirectory = workingDirectory;
    args.execError = execError;
 
-#ifdef __linux__
+#if USE_VFORK
    int cs;
    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
 
@@ -718,7 +724,7 @@ void ProcessExecutor::readOutput(ProcessExecutor *executor)
 #ifdef _WIN32  /* Windows implementation */
 
    OVERLAPPED ov;
-	memset(&ov, 0, sizeof(OVERLAPPED));
+   memset(&ov, 0, sizeof(OVERLAPPED));
    ov.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 
    HANDLE pipe = executor->getOutputPipe();
