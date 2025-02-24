@@ -21,6 +21,7 @@
 **/
 
 #include "libnxsl.h"
+#include <math.h>
 
 /**
  * Instance of NXSL_RangeClass
@@ -190,7 +191,7 @@ int F_range(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
             if (!argv[2]->isNumeric())
                return NXSL_ERR_NOT_NUMBER;
             range.step.d = argv[2]->getValueAsReal();
-            range.margin = abs(range.step.d) * 0.00001;
+            range.margin = fabs(range.step.d) * 0.00001;
          }
          else
          {
