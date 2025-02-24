@@ -383,7 +383,7 @@ struct ProcessEntryArgs
 };
 
 /**
- * Entry for cloned process
+ * Entry for cloned process. This function never returns.
  */
 static int ProcessEntry(void *argsp)
 {
@@ -542,6 +542,7 @@ static int ProcessEntry(void *argsp)
    snprintf(errorMessage, 1024, "Cannot start process (%s)\n", strerror(errno));
    write(STDERR_FILENO, errorMessage, strlen(errorMessage));
    _exit(127);
+   return 0; // never reached
 }
 
 /**
