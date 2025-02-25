@@ -39,6 +39,7 @@ import org.netxms.base.annotations.Internal;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.ModuleDataProvider;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ObjectFilter;
 import org.netxms.client.ObjectUrl;
 import org.netxms.client.PollState;
 import org.netxms.client.constants.ObjectStatus;
@@ -941,6 +942,22 @@ public abstract class AbstractObject
       {
          AbstractObject p = session.findObjectById(id);
          if ((p != null) && ((classFilter == null) || classFilter.contains(p.getObjectClass())))
+            return true;
+      }
+      return false;
+   }
+
+   /**
+    * @param classFilter optional class filter for parent objects.
+    *
+    * @return true if object has parents accessible by this session
+    */
+   public boolean hasAccessibleViewParents(Set<Integer> classFilter, ObjectFilter objectFilter)
+   {
+      for(Long id : parents)
+      {
+         AbstractObject p = session.findObjectById(id);
+         if ((p != null) && ((classFilter == null) || classFilter.contains(p.getObjectClass())) && objectFilter.accept(p))
             return true;
       }
       return false;
