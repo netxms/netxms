@@ -46,7 +46,7 @@ public class InfrastructureObjectFilter implements ObjectFilter
             (o.getObjectClass() == AbstractObject.OBJECT_CIRCUIT) || (o.getObjectClass() == AbstractObject.OBJECT_WIRELESSDOMAIN) || 
             (o.getObjectClass() == AbstractObject.OBJECT_CONDITION))
          return true;
-      if (o.getObjectClass() == AbstractObject.OBJECT_INTERFACE)
+      if (o.getObjectClass() == AbstractObject.OBJECT_INTERFACE || o.getObjectClass() == AbstractObject.OBJECT_VPNCONNECTOR || o.getObjectClass() == AbstractObject.OBJECT_NETWORKSERVICE)
          return o.hasAccessibleViewParents(classFilterInfrastructure, this);
       if (o.getObjectClass() == AbstractObject.OBJECT_SUBNET)
          return o.hasAccessibleParents(classFilterInfrastructure);
