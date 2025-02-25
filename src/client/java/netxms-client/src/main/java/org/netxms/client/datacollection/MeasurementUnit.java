@@ -34,7 +34,7 @@ public class MeasurementUnit
    public static final MeasurementUnit BPS_METRIC = new MeasurementUnit("bps");
    public static final MeasurementUnit HZ = new MeasurementUnit("Hz");
 
-   public static final Set<String> UNITS_WITHOUT_MULTIPLIERS = new HashSet<>(Arrays.asList("%", "°C", "°F", "dbm"));
+   public static final Set<String> UNITS_WITHOUT_MULTIPLIERS = new HashSet<>(Arrays.asList("%", "°C", "°F", "dBm", "rpm"));
 
    private String name;
    private boolean binary;
