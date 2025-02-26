@@ -90,6 +90,15 @@ public class NodesView extends ObjectView
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 100;
+   }
+
+   /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
     */
    @Override
