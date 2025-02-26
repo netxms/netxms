@@ -421,7 +421,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 			{
 			   NetworkMapPage oldMapPage = mapPage;
 				mapPage = page;
-				refreshDciRequestList(oldMapPage);
+				refreshDciRequestList(oldMapPage, true);
 				viewer.setInput(mapPage);
 			}
 		});
@@ -1239,7 +1239,16 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 
 		super.dispose();
 	}
-
+ 
+	void fullDciCacheRefresh()
+	{
+	   if (mapPage != null)
+      {
+         dciValueProvider.removeDcis(mapPage);
+         refreshDciRequestList(mapPage, false);
+      }    
+   }
+	
    /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
     */
@@ -1446,7 +1455,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    /**
     * Goes thought all links and tries to add to request list required DCIs.
     */
-   protected void refreshDciRequestList(NetworkMapPage oldMapPage)
+   protected void refreshDciRequestList(NetworkMapPage oldMapPage, boolean removeOldMapDci)
    {
       Collection<NetworkMapLink> linkList = mapPage.getLinks();
       for(NetworkMapLink item : linkList)
@@ -1503,7 +1512,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
             }
          }
       }
-      if (oldMapPage != null && oldMapPage.getMapObjectId() != 0)
+      if (oldMapPage != null && oldMapPage.getMapObjectId() != 0 && removeOldMapDci)
          dciValueProvider.removeDcis(oldMapPage);
    }
 

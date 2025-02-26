@@ -466,7 +466,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          mapPage = new NetworkMapPage("EMPTY");   	      
 	   }
 
-      refreshDciRequestList(oldMapPage);
+      refreshDciRequestList(oldMapPage, true);
 	}
 
 	/**
@@ -1038,6 +1038,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       if (showDCIContainerProperties(dciContainer))
       {
          mapPage.addElement(dciContainer);
+         fullDciCacheRefresh();
          saveMap();
       }
    }
@@ -1056,6 +1057,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       NetworkMapDCIContainer dciContainer = (NetworkMapDCIContainer)selection.getFirstElement();
       if (showDCIContainerProperties(dciContainer) && updateElement(dciContainer))
       {
+         fullDciCacheRefresh();
          saveMap();
       }
    }
@@ -1083,6 +1085,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       NetworkMapDCIImage dciImage = new NetworkMapDCIImage(mapPage.createElementId());
       if (showDCIImageProperties(dciImage))
       {
+         fullDciCacheRefresh();
          mapPage.addElement(dciImage);
          saveMap();
       }
@@ -1102,6 +1105,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       NetworkMapDCIImage dciImage = (NetworkMapDCIImage)selection.getFirstElement();
       if (showDCIImageProperties(dciImage) && updateElement(dciImage))
       {
+         fullDciCacheRefresh();
          saveMap();
       }
    }
@@ -1174,6 +1178,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          }
          if (link.update(mapPage))
          {
+            fullDciCacheRefresh();
             saveMap();
          }
          else
