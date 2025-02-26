@@ -24,6 +24,26 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 52.11 to 52.12
+ */
+static bool H_UpgradeFromV11()
+{
+   static const TCHAR *batch =
+            _T("INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text,remote_port) ")
+               _T("VALUES (24,'d25100e8-923f-4df8-a1cd-715c74c2bfb9','&Info->&Agent->Running &configuration',3,")
+               _T("'Agent Running ConfiguraitonAgent.RunningConfig^(.*)',0,'<objectMenuFilter> <toolOS></toolOS> <toolWorkstationOS></toolWorkstationOS> <toolTemplate></toolTemplate> <toolCustomAttributes></toolCustomAttributes> <snmpOid></snmpOid> <flags>2</flags> </objectMenuFilter>',")
+               _T("'Show agent running configuration','',0)\n")
+            _T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)")
+               _T("VALUES (24,1,'Running configuration','',0,1)\n")
+            _T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (24,1073741824)\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetMinorSchemaVersion(12));
+   return true;
+}
+
+
+/**
  * Upgrade from 52.10 to 52.11
  */
 static bool H_UpgradeFromV10()
@@ -285,6 +305,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 11, 52, 12, H_UpgradeFromV11 },
    { 10, 52, 11, H_UpgradeFromV10 },
    { 9,  52, 10, H_UpgradeFromV9  },
    { 8,  52, 9,  H_UpgradeFromV8  },
