@@ -373,4 +373,12 @@ public class TemplateTargets extends ObjectView
       refresh();
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 100;
+   }
 }

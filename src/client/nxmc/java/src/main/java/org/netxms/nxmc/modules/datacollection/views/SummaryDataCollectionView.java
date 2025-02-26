@@ -89,7 +89,7 @@ public class SummaryDataCollectionView extends BaseDataCollectionView
     */
    public SummaryDataCollectionView()
    {
-      super(LocalizationHelper.getI18n(SummaryDataCollectionView.class).tr("Search Data"), "objects.data-collection-summary", false);
+      super(LocalizationHelper.getI18n(SummaryDataCollectionView.class).tr("Data Collection"), "objects.data-collection-summary", false);
    }
 
    /**

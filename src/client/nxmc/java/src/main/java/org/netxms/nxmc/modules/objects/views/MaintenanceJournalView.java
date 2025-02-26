@@ -102,6 +102,15 @@ public class MaintenanceJournalView extends ObjectView
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 110;
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override

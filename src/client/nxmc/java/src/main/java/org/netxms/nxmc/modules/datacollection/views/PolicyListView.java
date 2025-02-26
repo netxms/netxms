@@ -715,4 +715,12 @@ public class PolicyListView extends ObjectView implements SessionListener
       return (context != null) && (context instanceof Template); 
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 40;
+   }
 }

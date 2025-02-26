@@ -66,6 +66,15 @@ public class StatusMapView extends ObjectView
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 40;
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
 	@Override
