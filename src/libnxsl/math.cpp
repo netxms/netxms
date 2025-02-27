@@ -320,7 +320,7 @@ int F_MathAverage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
    double total = 0;
-   int count;
+   int count = 0;
    for(int i = 0; i < argc; i++)
    {
       if (argv[i]->isArray())
