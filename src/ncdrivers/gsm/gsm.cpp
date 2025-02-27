@@ -63,26 +63,26 @@ static void NormalizeText(char *text)
 /**
  * Read input to OK
  */
-static bool ReadToOK(Serial *serial, char *data = NULL)
+static bool ReadToOK(Serial *serial, char *data = nullptr)
 {
    char buffer[1024];
    memset(buffer, 0, 1024);
    while(true)
    {
       char *mark;
-      int rc = serial->readToMark(buffer, 1024, s_eosMarks, &mark);
+      ssize_t rc = serial->readToMark(buffer, 1024, s_eosMarks, &mark);
       if (rc <= 0)
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("ReadToOK: readToMark returned %d"), rc);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("ReadToOK: readToMark returned %d"), static_cast<int>(rc));
          return false;
       }
       NormalizeText(buffer);
       nxlog_debug_tag(DEBUG_TAG, 5, _T("ReadToOK buffer content: '%hs'"), buffer);
       if (mark != NULL) 
       {
-         if (data != NULL)
+         if (data != nullptr)
          {
-            int len = (int)(mark - buffer);
+            size_t len = static_cast<size_t>(mark - buffer);
             memcpy(data, buffer, len);
             data[len] = 0;
          }

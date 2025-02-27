@@ -324,7 +324,7 @@ void NetworkMapLink::updateColorSourceObjectList(CountingHashSet<uint32_t>& obje
       json_t *m;
       json_array_foreach(array, i, m)
       {
-         uint32_t id = json_integer_value(m);
+         uint32_t id = static_cast<uint32_t>(json_integer_value(m));
          if (addItems)
             objectSet.put(id);
          else
@@ -680,7 +680,7 @@ void NetworkMapLinkContainer::setColorSourceToObjectStatus(const IntegerArray<ui
    json_t *m;
    json_array_foreach(elements, i, m)
    {
-      uint32_t id = json_integer_value(m);
+      uint32_t id = static_cast<uint32_t>(json_integer_value(m));
       bool found = false;
       for (int j = 0; j < objects.size(); j++)
       {
@@ -706,7 +706,7 @@ void NetworkMapLinkContainer::setColorSourceToObjectStatus(const IntegerArray<ui
       json_t *m;
       json_array_foreach(elements, i, m)
       {
-         uint32_t id = json_integer_value(m);
+         uint32_t id = static_cast<uint32_t>(json_integer_value(m));
          if (id == objects.get(j))
          {
             found = true;
