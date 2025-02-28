@@ -24,6 +24,32 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 52.12 to 52.13
+ */
+static bool H_UpgradeFromV12()
+{
+   if (GetSchemaLevelForMajorVersion(51) < 26)
+   {
+      CHK_EXEC(DBDropPrimaryKey(g_dbHandle, L"scheduled_tasks"));
+      CHK_EXEC(DBRenameColumn(g_dbHandle, L"scheduled_tasks", L"id", L"old_id"));
+
+      static const wchar_t *batch =
+         L"ALTER TABLE scheduled_tasks ADD id $SQL:INT64\n"
+         L"UPDATE scheduled_tasks SET id=old_id\n"
+         L"<END>";
+      CHK_EXEC(SQLBatch(batch));
+
+      CHK_EXEC(DBDropColumn(g_dbHandle, L"scheduled_tasks", L"old_id"));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"scheduled_tasks", L"id"));
+      CHK_EXEC(DBAddPrimaryKey(g_dbHandle, L"scheduled_tasks", L"id"));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(51, 26));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(13));
+   return true;
+}
+
+/**
  * Upgrade from 52.11 to 52.12
  */
 static bool H_UpgradeFromV11()
@@ -41,7 +67,6 @@ static bool H_UpgradeFromV11()
    CHK_EXEC(SetMinorSchemaVersion(12));
    return true;
 }
-
 
 /**
  * Upgrade from 52.10 to 52.11
@@ -80,7 +105,7 @@ static bool H_UpgradeFromV9()
  */
 static bool H_UpgradeFromV8()
 {
-   if (GetSchemaLevelForMajorVersion(51) < 24)
+   if (GetSchemaLevelForMajorVersion(51) < 25)
    {
       CHK_EXEC(SQLQuery(L"ALTER TABLE licenses ADD guid varchar(36)"));
 
@@ -305,6 +330,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 12, 52, 13, H_UpgradeFromV12 },
    { 11, 52, 12, H_UpgradeFromV11 },
    { 10, 52, 11, H_UpgradeFromV10 },
    { 9,  52, 10, H_UpgradeFromV9  },

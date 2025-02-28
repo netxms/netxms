@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -266,17 +266,42 @@ void EscapeString(StringBuffer &str)
 }
 
 /**
- * Prepare and execute SQL query with single binding - object ID.
+ * Prepare and execute SQL query with single binding - object ID (common implementation).
  */
-bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, uint32_t objectId, const wchar_t *query)
+template<typename _Ti, int _Tsql>
+static inline bool ExecuteQueryOnObjectImpl(DB_HANDLE hdb, _Ti objectId, const wchar_t *query)
 {
    DB_STATEMENT hStmt = DBPrepare(hdb, query);
    if (hStmt == nullptr)
       return false;
-   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, objectId);
+   DBBind(hStmt, 1, _Tsql, objectId);
    bool success = DBExecute(hStmt);
    DBFreeStatement(hStmt);
    return success;
+}
+
+/**
+ * Prepare and execute SQL query with single binding - object ID.
+ */
+bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, int32_t objectId, const wchar_t *query)
+{
+   return ExecuteQueryOnObjectImpl<int32_t, DB_SQLTYPE_INTEGER>(hdb, objectId, query);
+}
+
+/**
+ * Prepare and execute SQL query with single binding - object ID.
+ */
+bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, uint32_t objectId, const wchar_t *query)
+{
+   return ExecuteQueryOnObjectImpl<uint32_t, DB_SQLTYPE_INTEGER>(hdb, objectId, query);
+}
+
+/**
+ * Prepare and execute SQL query with single binding - object ID.
+ */
+bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, uint64_t objectId, const wchar_t *query)
+{
+   return ExecuteQueryOnObjectImpl<uint64_t, DB_SQLTYPE_BIGINT>(hdb, objectId, query);
 }
 
 /**

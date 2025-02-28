@@ -13560,7 +13560,7 @@ void ClientSession::listMappingTables(const NXCPMessage& request)
 void ClientSession::getMappingTable(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-	response.setField(VID_RCC, GetMappingTable((LONG)request.getFieldAsUInt32(VID_MAPPING_TABLE_ID), &response));
+	response.setField(VID_RCC, GetMappingTable(request.getFieldAsUInt32(VID_MAPPING_TABLE_ID), &response));
    sendMessage(response);
 }
 
@@ -13572,9 +13572,9 @@ void ClientSession::updateMappingTable(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_MAPPING_TBLS)
 	{
-		int32_t id;
+		uint32_t id;
 		response.setField(VID_RCC, UpdateMappingTable(request, &id, this));
-		response.setField(VID_MAPPING_TABLE_ID, (UINT32)id);
+		response.setField(VID_MAPPING_TABLE_ID, id);
 	}
 	else
 	{
@@ -13590,14 +13590,15 @@ void ClientSession::updateMappingTable(const NXCPMessage& request)
 void ClientSession::deleteMappingTable(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t tableId = request.getFieldAsUInt32(VID_MAPPING_TABLE_ID);
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_MAPPING_TBLS)
 	{
-		response.setField(VID_RCC, DeleteMappingTable(request.getFieldAsInt32(VID_MAPPING_TABLE_ID), this));
+		response.setField(VID_RCC, DeleteMappingTable(tableId, this));
 	}
 	else
 	{
 		response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting mapping table [%d]"), request.getFieldAsInt32(VID_MAPPING_TABLE_ID));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting mapping table [%d]"), tableId);
 	}
    sendMessage(response);
 }
@@ -14670,7 +14671,7 @@ void ClientSession::updateScheduledTask(const NXCPMessage& request)
 void ClientSession::removeScheduledTask(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   uint32_t result = DeleteScheduledTask(request.getFieldAsUInt32(VID_SCHEDULED_TASK_ID), m_userId, m_systemAccessRights);
+   uint32_t result = DeleteScheduledTask(request.getFieldAsUInt64(VID_SCHEDULED_TASK_ID), m_userId, m_systemAccessRights);
    response.setField(VID_RCC, result);
    sendMessage(response);
 }

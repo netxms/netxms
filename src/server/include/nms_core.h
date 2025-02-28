@@ -87,20 +87,19 @@
 #define IDG_AUTHTOKEN               16
 #define IDG_MAPPING_TABLE           17
 #define IDG_DCI_SUMMARY_TABLE       18
-#define IDG_SCHEDULED_TASK          19
-#define IDG_ALARM_CATEGORY          20
-#define IDG_UA_MESSAGE              21
-#define IDG_RACK_ELEMENT            22
-#define IDG_PHYSICAL_LINK           23
-#define IDG_WEBSVC_DEFINITION       24
-#define IDG_OBJECT_CATEGORY         25
-#define IDG_GEO_AREA                26
-#define IDG_SSH_KEY                 27
-#define IDG_OBJECT_QUERY            28
-#define IDG_BUSINESS_SERVICE_CHECK  29
-#define IDG_BUSINESS_SERVICE_RECORD 30
-#define IDG_MAINTENANCE_JOURNAL     31
-#define IDG_PACKAGE_DEPLOYMENT_JOB  32
+#define IDG_ALARM_CATEGORY          19
+#define IDG_UA_MESSAGE              20
+#define IDG_RACK_ELEMENT            21
+#define IDG_PHYSICAL_LINK           22
+#define IDG_WEBSVC_DEFINITION       23
+#define IDG_OBJECT_CATEGORY         24
+#define IDG_GEO_AREA                25
+#define IDG_SSH_KEY                 26
+#define IDG_OBJECT_QUERY            27
+#define IDG_BUSINESS_SERVICE_CHECK  28
+#define IDG_BUSINESS_SERVICE_RECORD 29
+#define IDG_MAINTENANCE_JOURNAL     30
+#define IDG_PACKAGE_DEPLOYMENT_JOB  31
 
 /**** ID functions *****/
 bool InitIdTable();

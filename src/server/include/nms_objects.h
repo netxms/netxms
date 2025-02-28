@@ -65,7 +65,9 @@ extern int16_t g_defaultAgentCacheMode;
 /**
  * Utility functions used by inline methods
  */
+bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, int32_t objectId, const wchar_t *query);
 bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, uint32_t objectId, const wchar_t *query);
+bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, uint64_t objectId, const wchar_t *query);
 bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, const wchar_t *objectId, const wchar_t *query);
 DB_RESULT NXCORE_EXPORTABLE ExecuteSelectOnObject(DB_HANDLE hdb, uint32_t objectId, const wchar_t *query);
 

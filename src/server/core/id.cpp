@@ -38,7 +38,7 @@ void LoadLastEventId(DB_HANDLE hdb);
 /**
  * Constants
  */
-#define NUMBER_OF_GROUPS   33
+#define NUMBER_OF_GROUPS   32
 
 /**
  * Static data
@@ -53,8 +53,7 @@ static uint32_t s_freeIdTable[NUMBER_OF_GROUPS] =
       1, 1, 1, 1,
       1, 1, 1, 1,
       1, 1, 1, 1,
-      1, 1, 1, 1,
-      1
+      1, 1, 1, 1
    };
 static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
    {
@@ -65,8 +64,7 @@ static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
       0x7FFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-      0xFFFFFFFE
+      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
    };
 static const TCHAR *s_groupNames[NUMBER_OF_GROUPS] =
 {
@@ -89,7 +87,6 @@ static const TCHAR *s_groupNames[NUMBER_OF_GROUPS] =
    _T("Authentication Tokens"),
    _T("Mapping Tables"),
    _T("DCI Summary Tables"),
-   _T("Scheduled Tasks"),
    _T("Alarm Categories"),
    _T("User Agent Messages"),
    _T("Passive Rack Elements"),
@@ -303,15 +300,6 @@ bool InitIdTable()
    {
       if (DBGetNumRows(hResult) > 0)
          s_freeIdTable[IDG_DCI_SUMMARY_TABLE] = std::max(s_freeIdTable[IDG_DCI_SUMMARY_TABLE], DBGetFieldULong(hResult, 0, 0) + 1);
-      DBFreeResult(hResult);
-   }
-
-   // Get first available scheduled_tasks id
-   hResult = DBSelect(hdb, _T("SELECT max(id) FROM scheduled_tasks"));
-   if (hResult != nullptr)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_SCHEDULED_TASK] = std::max(s_freeIdTable[IDG_SCHEDULED_TASK], DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 

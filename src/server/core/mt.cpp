@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ MappingTable *MappingTable::createFromMessage(const NXCPMessage& msg)
 /**
  * Create mapping table object from database
  */
-MappingTable *MappingTable::createFromDatabase(DB_HANDLE hdb, int32_t id)
+MappingTable *MappingTable::createFromDatabase(DB_HANDLE hdb, uint32_t id)
 {
 	MappingTable *mt = nullptr;
 
@@ -337,7 +337,7 @@ static void NotifyClients(ClientSession *session, std::pair<uint32_t, uint32_t> 
  * @param msg NXCP message with table's data
  * @return RCC
  */
-uint32_t UpdateMappingTable(const NXCPMessage& msg, int32_t *newId, ClientSession *session)
+uint32_t UpdateMappingTable(const NXCPMessage& msg, uint32_t *newId, ClientSession *session)
 {
 	uint32_t rcc;
 	MappingTable *mt = MappingTable::createFromMessage(msg);
@@ -414,7 +414,7 @@ uint32_t UpdateMappingTable(const NXCPMessage& msg, int32_t *newId, ClientSessio
  * @param id mapping table ID
  * @return RCC
  */
-uint32_t DeleteMappingTable(int32_t id, ClientSession *session)
+uint32_t DeleteMappingTable(uint32_t id, ClientSession *session)
 {
    uint32_t rcc = RCC_INVALID_MAPPING_TABLE_ID;
 	s_mappingTablesLock.writeLock();
@@ -429,7 +429,7 @@ uint32_t DeleteMappingTable(int32_t id, ClientSession *session)
 			   session->writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, json, nullptr, _T("Mapping table \"%s\" [%d] deleted"), mt->getName(), id);
 			   json_decref(json);
 
-			   TCHAR username[MAX_USER_NAME];
+			   wchar_t username[MAX_USER_NAME];
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Mapping table \"%s\" [%d] deleted by user %s"), mt->getName(), id, ResolveUserId(session->getUserId(), username, true));
 
 				s_mappingTables.remove(i);
@@ -458,7 +458,7 @@ uint32_t DeleteMappingTable(int32_t id, ClientSession *session)
  * @param msg NXCP message to fill
  * @return RCC
  */
-uint32_t GetMappingTable(int32_t id, NXCPMessage *msg)
+uint32_t GetMappingTable(uint32_t id, NXCPMessage *msg)
 {
    uint32_t rcc = RCC_INVALID_MAPPING_TABLE_ID;
 	s_mappingTablesLock.readLock();
@@ -489,7 +489,7 @@ uint32_t ListMappingTables(NXCPMessage *msg)
 	for(int i = 0; i < s_mappingTables.size(); i++)
 	{
 		MappingTable *mt = s_mappingTables.get(i);
-		msg->setField(fieldId++, (UINT32)mt->getId());
+		msg->setField(fieldId++, mt->getId());
 		msg->setField(fieldId++, mt->getName());
 		msg->setField(fieldId++, mt->getDescription());
 		msg->setField(fieldId++, mt->getFlags());
@@ -513,7 +513,7 @@ int F_map(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 	if (!argv[0]->isString() || !argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	int32_t tableId = (argv[0]->isInteger()) ? argv[0]->getValueAsInt32() : 0;
+	uint32_t tableId = (argv[0]->isInteger()) ? argv[0]->getValueAsUInt32() : 0;
 	const TCHAR *value = nullptr;
 	s_mappingTablesLock.readLock();
 	for(int i = 0; i < s_mappingTables.size(); i++)
@@ -551,7 +551,7 @@ int F_mapList(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    int count;
    TCHAR **strings = SplitString(argv[1]->getValueAsCString(), argv[2]->getValueAsCString()[0], &count);
 
-   int32_t tableId = (argv[0]->isInteger()) ? argv[0]->getValueAsInt32() : 0;
+   uint32_t tableId = (argv[0]->isInteger()) ? argv[0]->getValueAsUInt32() : 0;
    MappingTable *mt = nullptr;
    s_mappingTablesLock.readLock();
    for(int i = 0; i < s_mappingTables.size(); i++)
@@ -602,7 +602,7 @@ int F_GetMappingTableKeys(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   int32_t tableId = (argv[0]->isInteger()) ? argv[0]->getValueAsInt32() : 0;
+   uint32_t tableId = (argv[0]->isInteger()) ? argv[0]->getValueAsUInt32() : 0;
    NXSL_Value *value = nullptr;
    s_mappingTablesLock.readLock();
    for(int i = 0; i < s_mappingTables.size(); i++)

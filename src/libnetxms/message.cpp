@@ -732,7 +732,7 @@ uint64_t NXCPMessage::getFieldAsUInt64(uint32_t fieldId) const
 {
    BYTE type;
    void *value = get(fieldId, 0xFF, &type);
-   if (value == NULL)
+   if (value == nullptr)
       return 0;
 
    switch(type)
@@ -754,7 +754,7 @@ uint64_t NXCPMessage::getFieldAsUInt64(uint32_t fieldId) const
 double NXCPMessage::getFieldAsDouble(uint32_t fieldId) const
 {
    void *value = get(fieldId, NXCP_DT_FLOAT);
-   return (value != NULL) ? *((double *)value) : 0;
+   return (value != nullptr) ? *((double *)value) : 0;
 }
 
 /**
