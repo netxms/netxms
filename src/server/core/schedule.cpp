@@ -34,6 +34,7 @@ static ObjectArray<ScheduledTask> s_completedOneTimeTasks(64, 64, Ownership::Tru
 static Condition s_wakeupCondition(false);
 static Mutex s_recurrentTaskLock;
 static Mutex s_oneTimeTaskLock;
+static VolatileCounter64 s_taskId = 0; // Last used task ID
 
 /**
  * Scheduled task execution pool
@@ -80,7 +81,7 @@ ScheduledTaskTransientData::~ScheduledTaskTransientData()
 /**
  * Create recurrent task object
  */
-ScheduledTask::ScheduledTask(uint32_t id, const TCHAR *taskHandlerId, const TCHAR *schedule,
+ScheduledTask::ScheduledTask(uint64_t id, const TCHAR *taskHandlerId, const TCHAR *schedule,
          shared_ptr<ScheduledTaskParameters> parameters, bool systemTask) :
          m_taskHandlerId(taskHandlerId), m_schedule(schedule), m_parameters(parameters)
 {
@@ -94,7 +95,7 @@ ScheduledTask::ScheduledTask(uint32_t id, const TCHAR *taskHandlerId, const TCHA
 /**
  * Create one-time execution task object
  */
-ScheduledTask::ScheduledTask(uint32_t id, const TCHAR *taskHandlerId, time_t executionTime,
+ScheduledTask::ScheduledTask(uint64_t id, const TCHAR *taskHandlerId, time_t executionTime,
          shared_ptr<ScheduledTaskParameters> parameters, bool systemTask) :
          m_taskHandlerId(taskHandlerId), m_parameters(parameters)
 {
@@ -111,7 +112,7 @@ ScheduledTask::ScheduledTask(uint32_t id, const TCHAR *taskHandlerId, time_t exe
  */
 ScheduledTask::ScheduledTask(DB_RESULT hResult, int row)
 {
-   m_id = DBGetFieldULong(hResult, row, 0);
+   m_id = DBGetFieldUInt64(hResult, row, 0);
    m_taskHandlerId = DBGetFieldAsSharedString(hResult, row, 1);
    m_schedule = DBGetFieldAsSharedString(hResult, row, 2);
    m_scheduledExecutionTime = DBGetFieldULong(hResult, row, 4);
@@ -119,11 +120,11 @@ ScheduledTask::ScheduledTask(DB_RESULT hResult, int row)
    m_flags = DBGetFieldULong(hResult, row, 6);
    m_recurrent = !m_schedule.isEmpty();
 
-   TCHAR persistentData[1024];
+   wchar_t persistentData[1024];
    DBGetField(hResult, row, 3, persistentData, 1024);
    uint32_t userId = DBGetFieldULong(hResult, row, 7);
    uint32_t objectId = DBGetFieldULong(hResult, row, 8);
-   TCHAR key[256], comments[256];
+   wchar_t key[256], comments[256];
    DBGetField(hResult, row, 9, comments, 256);
    DBGetField(hResult, row, 10, key, 256);
    m_parameters = make_shared<ScheduledTaskParameters>(key, userId, objectId, persistentData, nullptr, comments);
@@ -216,7 +217,7 @@ void ScheduledTask::saveToDatabase(bool newObject) const
       DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_parameters->m_objectId);
       DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_parameters->m_comments, DB_BIND_STATIC, 255);
       DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_parameters->m_taskKey, DB_BIND_STATIC, 255);
-      DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_id);
+      DBBind(hStmt, 11, DB_SQLTYPE_BIGINT, m_id);
 
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
@@ -392,7 +393,7 @@ uint32_t NXCORE_EXPORTABLE AddRecurrentScheduledTask(const TCHAR *taskHandlerId,
       return RCC_ACCESS_DENIED;
 
    nxlog_debug_tag(DEBUG_TAG, 7, _T("AddSchedule: Add recurrent task %s, %s, %s"), taskHandlerId, schedule, persistentData);
-   auto task = new ScheduledTask(CreateUniqueId(IDG_SCHEDULED_TASK), taskHandlerId, schedule,
+   auto task = new ScheduledTask(InterlockedIncrement64(&s_taskId), taskHandlerId, schedule,
             make_shared<ScheduledTaskParameters>(key, owner, objectId, persistentData, transientData, comments), systemTask);
 
    s_recurrentTaskLock.lock();
@@ -457,7 +458,7 @@ uint32_t NXCORE_EXPORTABLE AddOneTimeScheduledTask(const TCHAR *taskHandlerId, t
       return RCC_ACCESS_DENIED;
 
    nxlog_debug_tag(DEBUG_TAG, 5, _T("AddOneTimeAction: Add one time schedule %s, %d, %s"), taskHandlerId, nextExecutionTime, persistentData);
-   auto task = new ScheduledTask(CreateUniqueId(IDG_SCHEDULED_TASK), taskHandlerId, nextExecutionTime,
+   auto task = new ScheduledTask(InterlockedIncrement64(&s_taskId), taskHandlerId, nextExecutionTime,
             make_shared<ScheduledTaskParameters>(key, owner, objectId, persistentData, transientData, comments), systemTask);
 
    s_oneTimeTaskLock.lock();
@@ -472,7 +473,7 @@ uint32_t NXCORE_EXPORTABLE AddOneTimeScheduledTask(const TCHAR *taskHandlerId, t
 /**
  * Recurrent scheduled task update
  */
-uint32_t NXCORE_EXPORTABLE UpdateRecurrentScheduledTask(uint32_t id, const TCHAR *taskHandlerId, const TCHAR *schedule, const TCHAR *persistentData,
+uint32_t NXCORE_EXPORTABLE UpdateRecurrentScheduledTask(uint64_t id, const TCHAR *taskHandlerId, const TCHAR *schedule, const TCHAR *persistentData,
          ScheduledTaskTransientData *transientData, const TCHAR *comments, uint32_t owner, uint32_t objectId,
          uint64_t systemAccessRights, bool disabled)
 {
@@ -564,7 +565,7 @@ uint32_t NXCORE_EXPORTABLE UpdateRecurrentScheduledTask(uint32_t id, const TCHAR
 /**
  * One time action update
  */
-uint32_t NXCORE_EXPORTABLE UpdateOneTimeScheduledTask(uint32_t id, const TCHAR *taskHandlerId, time_t nextExecutionTime, const TCHAR *persistentData,
+uint32_t NXCORE_EXPORTABLE UpdateOneTimeScheduledTask(uint64_t id, const TCHAR *taskHandlerId, time_t nextExecutionTime, const TCHAR *persistentData,
          ScheduledTaskTransientData *transientData, const TCHAR *comments, uint32_t owner, uint32_t objectId,
          uint64_t systemAccessRights, bool disabled)
 {
@@ -658,7 +659,7 @@ uint32_t NXCORE_EXPORTABLE UpdateOneTimeScheduledTask(uint32_t id, const TCHAR *
 /**
  * Removes scheduled task from database by id
  */
-static void DeleteScheduledTaskFromDB(uint32_t id)
+static void DeleteScheduledTaskFromDB(uint64_t id)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    ExecuteQueryOnObject(hdb, id, _T("DELETE FROM scheduled_tasks WHERE id=?"));
@@ -669,7 +670,7 @@ static void DeleteScheduledTaskFromDB(uint32_t id)
 /**
  * Removes scheduled task by id
  */
-uint32_t NXCORE_EXPORTABLE DeleteScheduledTask(uint32_t id, uint32_t user, uint64_t systemRights)
+uint32_t NXCORE_EXPORTABLE DeleteScheduledTask(uint64_t id, uint32_t user, uint64_t systemRights)
 {
    uint32_t rcc = RCC_INVALID_OBJECT_ID;
 
@@ -951,7 +952,7 @@ int NXCORE_EXPORTABLE CountScheduledTasksByKey(const TCHAR *taskKey)
 /**
  * Check if scheduled task with given ID is currently running
  */
-bool NXCORE_EXPORTABLE IsScheduledTaskRunning(uint32_t taskId)
+bool NXCORE_EXPORTABLE IsScheduledTaskRunning(uint64_t taskId)
 {
    bool found = false, running = false;
 
@@ -1114,16 +1115,16 @@ uint32_t CreateScheduledTaskFromMsg(const NXCPMessage& request, uint32_t owner, 
  */
 uint32_t UpdateScheduledTaskFromMsg(const NXCPMessage& request,  uint32_t owner, uint64_t systemAccessRights)
 {
-   uint32_t taskId = request.getFieldAsInt32(VID_SCHEDULED_TASK_ID);
-   TCHAR *taskHandler = request.getFieldAsString(VID_TASK_HANDLER);
-   TCHAR *persistentData = request.getFieldAsString(VID_PARAMETER);
-   TCHAR *comments = request.getFieldAsString(VID_COMMENTS);
+   uint64_t taskId = request.getFieldAsUInt64(VID_SCHEDULED_TASK_ID);
+   wchar_t *taskHandler = request.getFieldAsString(VID_TASK_HANDLER);
+   wchar_t *persistentData = request.getFieldAsString(VID_PARAMETER);
+   wchar_t *comments = request.getFieldAsString(VID_COMMENTS);
    uint32_t objectId = request.getFieldAsInt32(VID_OBJECT_ID);
    bool disabled = request.getFieldAsBoolean(VID_TASK_IS_DISABLED);
    uint32_t rcc;
    if (request.isFieldExist(VID_SCHEDULE))
    {
-      TCHAR *schedule = request.getFieldAsString(VID_SCHEDULE);
+      wchar_t *schedule = request.getFieldAsString(VID_SCHEDULE);
       rcc = UpdateRecurrentScheduledTask(taskId, taskHandler, schedule, persistentData, nullptr,
                comments, owner, objectId, systemAccessRights, disabled);
       MemFree(schedule);
@@ -1285,7 +1286,17 @@ void InitializeTaskScheduler()
             ConfigReadInt(_T("ThreadPool.Scheduler.MaxSize"), 64));
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,taskId,schedule,params,execution_time,last_execution_time,flags,owner,object_id,comments,task_key FROM scheduled_tasks"));
+
+   // Get first available scheduled_tasks id
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(id) FROM scheduled_tasks"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_taskId = DBGetFieldInt64(hResult, 0, 0);
+      DBFreeResult(hResult);
+   }
+
+   hResult = DBSelect(hdb, _T("SELECT id,taskId,schedule,params,execution_time,last_execution_time,flags,owner,object_id,comments,task_key FROM scheduled_tasks"));
    if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -174,7 +174,7 @@ bool UpdateAddressListFromMessage(const NXCPMessage& msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   int listType = msg.getFieldAsInt32(VID_ADDR_LIST_TYPE);
+   uint32_t listType = msg.getFieldAsUInt32(VID_ADDR_LIST_TYPE);
 
    DBBegin(hdb);
 
@@ -185,11 +185,11 @@ bool UpdateAddressListFromMessage(const NXCPMessage& msg)
       if (count > 0)
       {
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO address_lists (list_type,addr_type,addr1,addr2,community_id,zone_uin,proxy_id,comments) VALUES (?,?,?,?,?,?,?,?)"), count > 1);
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, listType);
 
-            UINT32 fieldId = VID_ADDR_LIST_BASE;
+            uint32_t fieldId = VID_ADDR_LIST_BASE;
             for(int i = 0; (i < count) && success; i++, fieldId += 10)
             {
                InetAddressListElement e = InetAddressListElement(msg, fieldId);
@@ -238,7 +238,7 @@ ObjectArray<InetAddressListElement> *LoadServerAddressList(int listType)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   TCHAR query[256];
+   wchar_t query[256];
    _sntprintf(query, 256, _T("SELECT addr_type,addr1,addr2,zone_uin,proxy_id,comments FROM address_lists WHERE list_type=%d"), listType);
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult == nullptr)

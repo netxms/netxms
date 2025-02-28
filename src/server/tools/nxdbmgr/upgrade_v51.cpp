@@ -24,6 +24,28 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 51.25 to 51.26
+ */
+static bool H_UpgradeFromV25()
+{
+   CHK_EXEC(DBDropPrimaryKey(g_dbHandle, L"scheduled_tasks"));
+   CHK_EXEC(DBRenameColumn(g_dbHandle, L"scheduled_tasks", L"id", L"old_id"));
+
+   static const wchar_t *batch =
+      L"ALTER TABLE scheduled_tasks ADD id $SQL:INT64\n"
+      L"UPDATE scheduled_tasks SET id=old_id\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(DBDropColumn(g_dbHandle, L"scheduled_tasks", L"old_id"));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"scheduled_tasks", L"id"));
+   CHK_EXEC(DBAddPrimaryKey(g_dbHandle, L"scheduled_tasks", L"id"));
+
+   CHK_EXEC(SetMinorSchemaVersion(26));
+   return true;
+}
+
+/**
  * Upgrade from 51.24 to 51.25
  */
 static bool H_UpgradeFromV24()
@@ -559,6 +581,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 25, 52, 26, H_UpgradeFromV25 },
    { 24, 52, 25, H_UpgradeFromV24 },
    { 23, 52, 24, H_UpgradeFromV23 },
    { 22, 52, 23, H_UpgradeFromV22 },

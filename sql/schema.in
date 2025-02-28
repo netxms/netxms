@@ -2306,7 +2306,7 @@ CREATE TABLE dci_summary_tables
 */
 CREATE TABLE scheduled_tasks
 (
-  id integer not null,
+  id SQL_INT64 not null,
   taskId varchar(255) null,
   schedule varchar(127) null,
   params varchar(1023) null,

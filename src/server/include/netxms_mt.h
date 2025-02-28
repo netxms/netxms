@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -55,7 +55,7 @@ template class NXCORE_TEMPLATE_EXPORTABLE StringObjectMap<MappingTableElement>;
 class NXCORE_EXPORTABLE MappingTable
 {
 private:
-	int32_t m_id;
+	uint32_t m_id;
 	TCHAR *m_name;
 	uint32_t m_flags;
 	TCHAR *m_description;
@@ -67,7 +67,7 @@ public:
 	~MappingTable();
 
 	static MappingTable *createFromMessage(const NXCPMessage& msg);
-	static MappingTable *createFromDatabase(DB_HANDLE hdb, int32_t id);
+	static MappingTable *createFromDatabase(DB_HANDLE hdb, uint32_t id);
 
    void createUniqueId() { m_id = CreateUniqueId(IDG_MAPPING_TABLE); }
 
@@ -82,7 +82,7 @@ public:
 	   return (e != nullptr) ? e->getValue() : nullptr;
 	}
 
-	int32_t getId() const { return m_id; }
+	uint32_t getId() const { return m_id; }
 	const TCHAR *getName() const { return CHECK_NULL(m_name); }
 	const TCHAR *getDescription() const { return CHECK_NULL_EX(m_description); }
 	uint32_t getFlags() const { return m_flags; }
@@ -96,9 +96,9 @@ public:
  * Mapping tables API
  */
 void InitMappingTables();
-uint32_t UpdateMappingTable(const NXCPMessage& msg, int32_t *newId, ClientSession *session);
-uint32_t DeleteMappingTable(int32_t id, ClientSession *session);
-uint32_t GetMappingTable(int32_t id, NXCPMessage *msg);
+uint32_t UpdateMappingTable(const NXCPMessage& msg, uint32_t *newId, ClientSession *session);
+uint32_t DeleteMappingTable(uint32_t id, ClientSession *session);
+uint32_t GetMappingTable(uint32_t id, NXCPMessage *msg);
 uint32_t ListMappingTables(NXCPMessage *msg);
 
 #endif
