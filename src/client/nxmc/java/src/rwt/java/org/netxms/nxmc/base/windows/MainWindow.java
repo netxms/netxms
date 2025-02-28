@@ -60,7 +60,6 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
-import org.netxms.base.VersionInfo;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -268,11 +267,33 @@ public class MainWindow extends Window implements MessageAreaHolder
       PreferenceStore ps = PreferenceStore.getInstance();
       if (ps.getAsBoolean("WelcomePage.Disabled", false))
          return;
+
+      String serverVersion = Registry.getSession().getServerVersion();
+      int dotCount = 0;
+      for(int i = 0; i < serverVersion.length(); i++)
+      {
+         char ch = serverVersion.charAt(i);
+         if (ch == '-')
+         {
+            serverVersion = serverVersion.substring(0, i);
+            break;
+         }
+         if (ch == '.')
+         {
+            dotCount++;
+            if (dotCount == 3)
+            {
+               serverVersion = serverVersion.substring(0, i);
+               break;
+            }
+         }
+      }
+
       String v = ps.getAsString("WelcomePage.LastDisplayedVersion");
-      if (VersionInfo.baseVersion().equals(v))
+      if (serverVersion.equals(v))
          return;
 
-      WelcomePage welcomePage = new WelcomePage(mainArea, SWT.NONE);
+      WelcomePage welcomePage = new WelcomePage(mainArea, SWT.NONE, serverVersion);
       welcomePage.setSize(mainArea.getSize());
       welcomePage.moveAbove(null);
    }

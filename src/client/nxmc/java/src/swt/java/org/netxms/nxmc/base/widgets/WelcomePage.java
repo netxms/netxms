@@ -31,7 +31,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
-import org.netxms.base.VersionInfo;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.ExternalWebBrowser;
@@ -55,10 +54,13 @@ public class WelcomePage extends Composite
    private boolean initialLoad = true;
 
    /**
-    * @param parent
-    * @param style
+    * Create welcome page control.
+    *
+    * @param parent parent composite
+    * @param style style for control
+    * @param serverVersion server version to display information about
     */
-   public WelcomePage(Composite parent, int style)
+   public WelcomePage(Composite parent, int style, final String serverVersion)
    {
       super(parent, style);
 
@@ -75,7 +77,7 @@ public class WelcomePage extends Composite
       header.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       Label title = new Label(header, SWT.NONE);
-      title.setText("Welcome to NetXMS " + VersionInfo.baseVersion());
+      title.setText("Welcome to NetXMS " + serverVersion);
       title.setFont(JFaceResources.getBannerFont());
       title.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
@@ -93,14 +95,14 @@ public class WelcomePage extends Composite
          public void widgetSelected(SelectionEvent e)
          {
             WelcomePage.this.dispose();
-            PreferenceStore.getInstance().set("WelcomePage.LastDisplayedVersion", VersionInfo.baseVersion());
+            PreferenceStore.getInstance().set("WelcomePage.LastDisplayedVersion", serverVersion);
          }
       });
 
       Browser browser = WidgetHelper.createBrowser(this, SWT.NONE, null);
       browser.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-      final String url = "https://netxms.com/release-notes";
+      final String url = "https://netxms.github.io/changelog/" + serverVersion.replace('.', '_') + ".html";
       browser.addLocationListener(new LocationListener() {
          @Override
          public void changing(LocationEvent event)
@@ -115,7 +117,7 @@ public class WelcomePage extends Composite
          @Override
          public void changed(LocationEvent event)
          {
-            if (initialLoad && (browser.getText().indexOf("<title>Release notes</title>") == -1))
+            if (initialLoad && (browser.getText().indexOf("<title>NetXMS Version " + serverVersion) == -1))
             {
                initialLoad = false;
                browser.setText(ERROR_PAGE.replace("{url}", url));
