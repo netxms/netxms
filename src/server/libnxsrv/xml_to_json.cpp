@@ -92,12 +92,12 @@ json_t LIBNXSRV_EXPORTABLE *XmlNodeToJson(const pugi::xml_node &node)
          if (strlen(child.child_value()) > 0)
          {
             String s(child.child_value(), "utf8");
-            unique_ptr<StringList> values(s.split(_T(","), true));
+            StringList values = s.split(_T(","), true);
             IntegerArray<int32_t> arr;
-            for (int i = 0; i < values->size(); i++)
+            for (int i = 0; i < values.size(); i++)
             {
                TCHAR *eptr;
-               int32_t val = _tcstol(values->get(i), &eptr, 10);
+               int32_t val = _tcstol(values.get(i), &eptr, 10);
                if (*eptr == 0)
                {
                   arr.add(val);

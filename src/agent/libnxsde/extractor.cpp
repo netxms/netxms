@@ -378,7 +378,7 @@ void StructuredDataExtractor::getMetricsFromText(StringList *params, NXCPMessage
  */
 uint32_t StructuredDataExtractor::getMetricFromText(const TCHAR *pattern, TCHAR *buffer, size_t size)
 {
-   unique_ptr<StringList> dataLines(String::split(m_content.text, _tcslen(m_content.text), _T("\n")));
+   StringList dataLines = String::split(m_content.text, _tcslen(m_content.text), _T("\n"));
    nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataExtractor::getParamsFromText(%s): using pattern \"%s\""), m_source, pattern);
 
    const char *eptr;
@@ -391,9 +391,9 @@ uint32_t StructuredDataExtractor::getMetricFromText(const TCHAR *pattern, TCHAR 
    }
 
    uint32_t rc = SYSINFO_RC_NO_SUCH_INSTANCE;
-   for (int j = 0; j < dataLines->size(); j++)
+   for (int j = 0; j < dataLines.size(); j++)
    {
-      const TCHAR *dataLine = dataLines->get(j);
+      const TCHAR *dataLine = dataLines.get(j);
       nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataExtractor::getMetricFromText(%s): checking data line \"%s\""), m_source, dataLine);
       int fields[30];
       int result = _pcre_exec_t(compiledPattern, nullptr, reinterpret_cast<const PCRE_TCHAR*>(dataLine), static_cast<int>(_tcslen(dataLine)), 0, 0, fields, 30);
@@ -481,7 +481,7 @@ void StructuredDataExtractor::getListFromXML(const TCHAR *path, StringList *resu
 uint32_t StructuredDataExtractor::getListFromText(const TCHAR *pattern, StringList *resultList)
 {
    uint32_t retVal = SYSINFO_RC_SUCCESS;
-   StringList *dataLines = String::split(m_content.text, _tcslen(m_content.text), _T("\n"));
+   StringList dataLines = String::split(m_content.text, _tcslen(m_content.text), _T("\n"));
    nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataExtractor::getListFromText(%s): get list of matched lines for pattern \"%s\""), m_source, pattern);
 
    const char *eptr;
@@ -490,9 +490,9 @@ uint32_t StructuredDataExtractor::getListFromText(const TCHAR *pattern, StringLi
    if (compiledPattern != nullptr)
    {
       TCHAR *matchedString = nullptr;
-      for (int j = 0; j < dataLines->size(); j++)
+      for (int j = 0; j < dataLines.size(); j++)
       {
-         const TCHAR *dataLine = dataLines->get(j);
+         const TCHAR *dataLine = dataLines.get(j);
          nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataExtractor::getListFromText(%s): checking data line \"%s\""), m_source, dataLine);
          int fields[30];
          int result = _pcre_exec_t(compiledPattern, nullptr, reinterpret_cast<const PCRE_TCHAR*>(dataLine), static_cast<int>(_tcslen(dataLine)), 0, 0, fields, 30);
@@ -518,8 +518,6 @@ uint32_t StructuredDataExtractor::getListFromText(const TCHAR *pattern, StringLi
    }
 
    _pcre_free_t(compiledPattern);
-
-   delete dataLines;
    return retVal;
 }
 

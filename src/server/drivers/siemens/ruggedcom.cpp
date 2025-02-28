@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Drivers for Siemens RuggedCom switches
-** Copyright (C) 2024 Raden Solutions
+** Copyright (C) 2024-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -88,31 +88,30 @@ bool RuggedComDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node
       return false;
    }
 
-   _tcscpy(hwInfo->vendor, _T("Siemens AG"));
+   wcscpy(hwInfo->vendor, L"Siemens AG");
 
-   response->getVariable(0)->getValueAsString(hwInfo->productVersion, sizeof(hwInfo->productVersion) / sizeof(TCHAR));
-   response->getVariable(1)->getValueAsString(hwInfo->serialNumber, sizeof(hwInfo->serialNumber) / sizeof(TCHAR));
+   response->getVariable(0)->getValueAsString(hwInfo->productVersion, sizeof(hwInfo->productVersion) / sizeof(wchar_t));
+   response->getVariable(1)->getValueAsString(hwInfo->serialNumber, sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
 
-   TCHAR *sp = _tcschr(hwInfo->productVersion, _T(' '));
+   wchar_t *sp = wcschr(hwInfo->productVersion, L' ');
    if (sp != nullptr)
       *sp = 0;
    if (hwInfo->productVersion[0] == 'v')
-      memmove(hwInfo->productVersion, &hwInfo->productVersion[1], _tcslen(hwInfo->productVersion) * sizeof(TCHAR));
+      memmove(hwInfo->productVersion, &hwInfo->productVersion[1], wcslen(hwInfo->productVersion) * sizeof(wchar_t));
 
    // Sample sysDescription:
    // Siemens, RUGGEDCOM, RS900G, RS900G-HI-D-2SC25, HW: Version RS900G, FW: Version Main v4.3.7 Boot v4.3.0, S900G-1109-06613
-   TCHAR sysDescription[1024];
+   wchar_t sysDescription[1024];
    response->getVariable(2)->getValueAsString(sysDescription, 1024);
-   StringList *fields = String::split(sysDescription, _T(","), true);
-   if ((fields->size() > 2) && !_tcsicmp(fields->get(0), _T("Siemens")) && !_tcsicmp(fields->get(1), _T("RUGGEDCOM")))
+   StringList fields = String::split(sysDescription, L",", true);
+   if ((fields.size() > 2) && !wcsicmp(fields.get(0), L"Siemens") && !wcsicmp(fields.get(1), L"RUGGEDCOM"))
    {
-      _tcslcpy(hwInfo->productName, fields->get(2), sizeof(hwInfo->productName) / sizeof(TCHAR));
-      if (fields->size() > 3)
+      wcslcpy(hwInfo->productName, fields.get(2), sizeof(hwInfo->productName) / sizeof(wchar_t));
+      if (fields.size() > 3)
       {
-         _tcslcpy(hwInfo->productCode, fields->get(3), sizeof(hwInfo->productCode) / sizeof(TCHAR));
+         wcslcpy(hwInfo->productCode, fields.get(3), sizeof(hwInfo->productCode) / sizeof(wchar_t));
       }
    }
-   delete fields;
 
    delete response;
    return true;

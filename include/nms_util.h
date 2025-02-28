@@ -929,6 +929,11 @@ public:
    MemoryPool(MemoryPool&& src);
 
    /**
+    * Move assignment
+    */
+   MemoryPool& operator=(MemoryPool&& src);
+
+   /**
     * Destroy memory pool (object destructors will not be called)
     */
    ~MemoryPool();
@@ -1132,6 +1137,104 @@ public:
 class uuid;
 
 /**
+ * NXCP message class
+ */
+class NXCPMessage;
+
+/**
+ * String list class
+ */
+class LIBNETXMS_EXPORTABLE StringList
+{
+private:
+   MemoryPool m_pool;
+   int m_count;
+   int m_allocated;
+   TCHAR **m_values;
+
+public:
+   StringList();
+   StringList(const StringList *src);
+   StringList(const StringList &src);
+   StringList(StringList&& src);
+   StringList(const TCHAR *src, const TCHAR *separator);
+   StringList(const NXCPMessage& msg, uint32_t baseId, uint32_t countId);
+   StringList(const NXCPMessage& msg, uint32_t fieldId);
+   StringList(json_t *json);
+
+   StringList& operator=(const StringList& src)
+   {
+      clear();
+      addAll(src);
+      return *this;
+   }
+
+   StringList& operator=(StringList&& src);
+
+   void add(const TCHAR *value);
+   void addPreallocated(TCHAR *value)
+   {
+      add(value);
+      MemFree(value);
+   }
+   void add(int32_t value);
+   void add(uint32_t value);
+   void add(int64_t value);
+   void add(uint64_t value);
+   void add(double value);
+   void replace(int index, const TCHAR *value);
+   void addOrReplace(int index, const TCHAR *value);
+   void addOrReplacePreallocated(int index, TCHAR *value);
+   void addUTF8String(const char *value)
+   {
+#ifdef UNICODE
+      addPreallocated(WideStringFromUTF8String(value));
+#else
+      addPreallocated(MBStringFromUTF8String(value));
+#endif
+   }
+#ifdef UNICODE
+   void addMBString(const char *value);
+#else
+   void addMBString(const char *value) { add(value); }
+#endif
+   void addAll(const StringList *src);
+   void addAll(const StringList& src) { addAll(&src); }
+
+   void insert(int pos, const TCHAR *value);
+#ifdef UNICODE
+   void insertMBString(int pos, const char *value);
+#else
+   void insertMBString(int pos, const char *value) { insert(pos, value); }
+#endif
+   void insertAll(int pos, const StringList *src);
+   void insertAll(int pos, const StringList& src) { insertAll(pos, &src); }
+
+   void addAllFromMessage(const NXCPMessage& msg, uint32_t baseId, uint32_t countId);
+   void addAllFromMessage(const NXCPMessage& msg, uint32_t fieldId);
+
+   void merge(const StringList& src, bool matchCase);
+   void splitAndAdd(const TCHAR *src, const TCHAR *separator);
+
+   void remove(int index);
+   void clear();
+
+   void sort(bool ascending = true, bool caseSensitive = false);
+
+   int size() const { return m_count; }
+   bool isEmpty() const { return m_count == 0; }
+   const TCHAR *get(int index) const { return ((index >=0) && (index < m_count)) ? m_values[index] : nullptr; }
+   int indexOf(const TCHAR *value) const;
+   bool contains(const TCHAR *value) const { return indexOf(value) != -1; }
+   int indexOfIgnoreCase(const TCHAR *value) const;
+   bool containsIgnoreCase(const TCHAR *value) const { return indexOfIgnoreCase(value) != -1; }
+   TCHAR *join(const TCHAR *separator) const;
+
+   void fillMessage(NXCPMessage *msg, uint32_t baseId, uint32_t countId) const;
+   json_t *toJson() const;
+};
+
+/**
  * Size of internal buffer for String class
  */
 #define STRING_INTERNAL_BUFFER_SIZE 64
@@ -1200,10 +1303,10 @@ public:
 	String left(size_t len) const { return substring(0, static_cast<ssize_t>(len)); }
    String right(size_t len) const { return substring((m_length > len) ? m_length - len : 0, static_cast<ssize_t>(len)); }
 
-   StringList *split(const TCHAR *separator) const { return String::split(m_buffer, m_length, separator); }
-   StringList *split(const TCHAR *separator, bool trim) const { return String::split(m_buffer, m_length, separator, trim); }
-   static StringList *split(TCHAR *str, const TCHAR *separator, bool trim = false) { return String::split(str, _tcslen(str), separator, trim); }
-   static StringList *split(TCHAR *str, size_t len, const TCHAR *separator, bool trim = false);
+   StringList split(const TCHAR *separator) const { return String::split(m_buffer, m_length, separator); }
+   StringList split(const TCHAR *separator, bool trim) const { return String::split(m_buffer, m_length, separator, trim); }
+   static StringList split(TCHAR *str, const TCHAR *separator, bool trim = false) { return String::split(str, _tcslen(str), separator, trim); }
+   static StringList split(TCHAR *str, size_t len, const TCHAR *separator, bool trim = false);
 
    void split(const TCHAR *separator, bool trim, std::function<void (const String&)> callback) const
    {
@@ -2393,11 +2496,6 @@ public:
 };
 
 /**
- * NXCP message class
- */
-class NXCPMessage;
-
-/**
  * String map class. Preserves insertion order.
  */
 class LIBNETXMS_EXPORTABLE StringMap : public StringMapBase
@@ -2683,79 +2781,6 @@ public:
 };
 
 template <class T> shared_ptr<T> SharedStringObjectMap<T>::m_null = shared_ptr<T>();
-
-/**
- * String list class
- */
-class LIBNETXMS_EXPORTABLE StringList
-{
-private:
-   MemoryPool m_pool;
-	int m_count;
-	int m_allocated;
-	TCHAR **m_values;
-
-public:
-	StringList();
-	StringList(const StringList *src);
-   StringList(const StringList &src);
-   StringList(StringList&& src);
-	StringList(const TCHAR *src, const TCHAR *separator);
-   StringList(const NXCPMessage& msg, uint32_t baseId, uint32_t countId);
-   StringList(const NXCPMessage& msg, uint32_t fieldId);
-   StringList(json_t *json);
-
-	void add(const TCHAR *value);
-	void addPreallocated(TCHAR *value);
-	void add(int32_t value);
-	void add(uint32_t value);
-	void add(int64_t value);
-	void add(uint64_t value);
-	void add(double value);
-	void replace(int index, const TCHAR *value);
-	void addOrReplace(int index, const TCHAR *value);
-	void addOrReplacePreallocated(int index, TCHAR *value);
-	void addUTF8String(const char *value);
-#ifdef UNICODE
-   void addMBString(const char *value);
-#else
-	void addMBString(const char *value) { add(value); }
-#endif
-   void addAll(const StringList *src);
-   void addAll(const StringList& src) { addAll(&src); }
-
-   void insert(int pos, const TCHAR *value);
-#ifdef UNICODE
-   void insertMBString(int pos, const char *value);
-#else
-   void insertMBString(int pos, const char *value) { insert(pos, value); }
-#endif
-   void insertAll(int pos, const StringList *src);
-   void insertAll(int pos, const StringList& src) { insertAll(pos, &src); }
-
-   void addAllFromMessage(const NXCPMessage& msg, uint32_t baseId, uint32_t countId);
-   void addAllFromMessage(const NXCPMessage& msg, uint32_t fieldId);
-
-   void merge(const StringList& src, bool matchCase);
-   void splitAndAdd(const TCHAR *src, const TCHAR *separator);
-
-   void remove(int index);
-	void clear();
-
-   void sort(bool ascending = true, bool caseSensitive = false);
-
-	int size() const { return m_count; }
-	bool isEmpty() const { return m_count == 0; }
-	const TCHAR *get(int index) const { return ((index >=0) && (index < m_count)) ? m_values[index] : nullptr; }
-	int indexOf(const TCHAR *value) const;
-	bool contains(const TCHAR *value) const { return indexOf(value) != -1; }
-	int indexOfIgnoreCase(const TCHAR *value) const;
-   bool containsIgnoreCase(const TCHAR *value) const { return indexOfIgnoreCase(value) != -1; }
-   TCHAR *join(const TCHAR *separator) const;
-
-   void fillMessage(NXCPMessage *msg, uint32_t baseId, uint32_t countId) const;
-   json_t *toJson() const;
-};
 
 /**
  * Entry of string set

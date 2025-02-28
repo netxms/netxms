@@ -35,6 +35,13 @@ public:
    }
 };
 
+static MemoryPool CreateMemoryPool(TCHAR **s)
+{
+   MemoryPool pool(256);
+   *s = pool.copyString(_T("Move test string"));
+   return pool;
+}
+
 /**
  * Test memory pool
  */
@@ -104,6 +111,9 @@ void TestMemoryPool()
    AssertEquals(s1, _T("Some string #1"));
    AssertEquals(s2, _T("Some string #2"));
    AssertEquals(s3, _T("Some string #3"));
+
+   dpool = CreateMemoryPool(&s1);
+   AssertEquals(s1, _T("Move test string"));
 
    EndTest();
 }

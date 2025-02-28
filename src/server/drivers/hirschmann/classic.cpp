@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Hirschmann Classic OS devices
-** Copyright (C) 2023-2024 Raden Solutions
+** Copyright (C) 2023-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -122,17 +122,17 @@ InterfaceList *HirschmannClassicDriver::getInterfaces(SNMP_Transport *snmp, NObj
 	   if (iface->type != IFTYPE_ETHERNET_CSMACD)
 	      continue;   // Logical interface
 
-      StringList *parts = String::split(iface->name, _T("/"));
-	   if (parts->size() == 3)
+      StringList parts = String::split(iface->name, _T("/"));
+	   if (parts.size() == 3)
 	   {
          TCHAR *eptr;
-         int chassis = _tcstol(parts->get(0), &eptr, 10);
+         int chassis = _tcstol(parts.get(0), &eptr, 10);
          if (*eptr == 0)
          {
-            int module = _tcstol(parts->get(1), &eptr, 10);
+            int module = _tcstol(parts.get(1), &eptr, 10);
             if (*eptr == 0)
             {
-               int port = _tcstol(parts->get(2), &eptr, 10);
+               int port = _tcstol(parts.get(2), &eptr, 10);
                if (*eptr == 0)
                {
                   iface->isPhysicalPort = true;
@@ -143,7 +143,6 @@ InterfaceList *HirschmannClassicDriver::getInterfaces(SNMP_Transport *snmp, NObj
             }
          }
 	   }
-	   delete parts;
 	}
 
 	return ifList;

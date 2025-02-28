@@ -197,14 +197,15 @@ static uint32_t ParseVlanPorts(SNMP_Variable *var, SNMP_Transport *transport, Vl
    TCHAR buffer[1024];
    var->getValueAsString(buffer, 1024);
 
-   StringList *items = String::split(buffer, _T(","));
-   for (int j = 0; j < items->size(); j++)
+   StringList items = String::split(buffer, _T(","));
+   for (int j = 0; j < items.size(); j++)
    {
-      TCHAR *dataLine = MemCopyString(items->get(j));
+      wchar_t dataLine[256];
+      wcslcpy(dataLine, items.get(j), 256);
 
       // Split portion 1/0/1-3 or 1/0/1 to 1-3 or 1
       // We should get 3 elements and need only 3rd items
-      TCHAR *portsSource = _tcschr(dataLine, _T('/'));
+      wchar_t *portsSource = wcschr(dataLine, L'/');
       if (portsSource != nullptr)
       {
          // by now we assume ports in vlan assignmed named as '1/0/XX'
@@ -212,7 +213,7 @@ static uint32_t ParseVlanPorts(SNMP_Variable *var, SNMP_Transport *transport, Vl
          portsSource += 3;
 
          nxlog_debug_tag(DEBUG_TAG_TPLINK, 7, _T("ParseVlanPorts: VLAN: %u; input: \"%s\"; extracted: \"%s\""), vlanId, dataLine, portsSource);
-         TCHAR *separator = _tcschr(portsSource, _T('-'));
+         wchar_t *separator = wcschr(portsSource, L'-');
          if (separator != nullptr)
          {
             *separator = 0;
@@ -237,9 +238,7 @@ static uint32_t ParseVlanPorts(SNMP_Variable *var, SNMP_Transport *transport, Vl
             vlanList->addMemberPort(vlanId, port);
          }
       }
-      MemFree(dataLine);
    }
-   delete items;
 
    return SNMP_ERR_SUCCESS;
 }

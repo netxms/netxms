@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -169,6 +169,22 @@ StringList::StringList(json_t *json)
 }
 
 /**
+ * Move assignment operator
+ */
+StringList& StringList::operator=(StringList&& src)
+{
+   clear();
+   m_pool = std::move(src.m_pool);
+   m_count = src.m_count;
+   m_allocated = src.m_allocated;
+   m_values = src.m_values;
+   src.m_count = 0;
+   src.m_allocated = 0;
+   src.m_values = nullptr;
+   return *this;
+}
+
+/**
  * Clear list
  */
 void StringList::clear()
@@ -180,33 +196,12 @@ void StringList::clear()
 }
 
 /**
- * Add preallocated string to list
- */
-void StringList::addPreallocated(TCHAR *value)
-{
-   add(value);
-   MemFree(value);
-}
-
-/**
  * Add string to list
  */
 void StringList::add(const TCHAR *value)
 {
    CHECK_ALLOCATION;
    m_values[m_count++] = m_pool.copyString(value);
-}
-
-/**
- * Add UTF8 string to list
- */
-void StringList::addUTF8String(const char *value)
-{
-#ifdef UNICODE
-   addPreallocated(WideStringFromUTF8String(value));
-#else
-   addPreallocated(MBStringFromUTF8String(value));
-#endif
 }
 
 #ifdef UNICODE

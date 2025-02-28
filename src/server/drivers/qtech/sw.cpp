@@ -132,16 +132,15 @@ bool QtechSWDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, 
       {
          TCHAR buffer[256];
          v->getValueAsString(buffer, 256);
-         StringList *items = String::split(buffer, _T(" "), true);
-         if (items->size() > 0)
+         StringList items = String::split(buffer, _T(" "), true);
+         if (items.size() > 0)
          {
-            _tcslcpy(hwInfo->productName, items->get(1), 128);
+            _tcslcpy(hwInfo->productName, items.get(1), 128);
          }
          else
          {
             _tcslcpy(hwInfo->productName, _T("QTECH Switch"), 128);
          }
-         delete items;
       }
 
       v = response->getVariable(2);

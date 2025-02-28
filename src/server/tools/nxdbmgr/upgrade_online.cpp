@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2023 Victor Kirhenshtein
+** Copyright (C) 2004-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -72,24 +72,23 @@ void UnregisterOnlineUpgrade(int major, int minor)
    Trim(buffer);
 
    bool changed = false;
-   StringList *upgradeList = String(buffer).split(_T(","));
-   for(int i = 0; i < upgradeList->size(); i++)
+   StringList upgradeList = String(buffer).split(_T(","));
+   for(int i = 0; i < upgradeList.size(); i++)
    {
-      if (!_tcsicmp(upgradeList->get(i), id))
+      if (!_tcsicmp(upgradeList.get(i), id))
       {
          changed = true;
-         upgradeList->remove(i);
+         upgradeList.remove(i);
          break;
       }
    }
 
    if (changed)
    {
-      TCHAR *list = upgradeList->join(_T(","));
+      TCHAR *list = upgradeList.join(_T(","));
       DBMgrMetaDataWriteStr(_T("PendingOnlineUpgrades"), (list[0] != 0) ? list : _T(" ")); // Oracle workaround
       MemFree(list);
    }
-   delete upgradeList;
 }
 
 /**
@@ -536,10 +535,10 @@ void RunPendingOnlineUpgrades()
       return;
    }
 
-   StringList *upgradeList = String(buffer).split(_T(","));
-   for(int i = 0; i < upgradeList->size(); i++)
+   StringList upgradeList = String(buffer).split(_T(","));
+   for(int i = 0; i < upgradeList.size(); i++)
    {
-      uint32_t id = _tcstol(upgradeList->get(i), nullptr, 16);
+      uint32_t id = _tcstol(upgradeList.get(i), nullptr, 16);
       int major = id >> 16;
       int minor = id & 0xFFFF;
       if ((major != 0) || (minor != 0))
@@ -570,5 +569,4 @@ void RunPendingOnlineUpgrades()
          }
       }
    }
-   delete upgradeList;
 }

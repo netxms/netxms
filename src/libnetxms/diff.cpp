@@ -1397,10 +1397,10 @@ int DiffEngine::diff_xIndex(const ObjectArray<Diff> &diffs, int loc)
 
 inline void AppendLines(StringBuffer& out, const String& text, TCHAR prefix)
 {
-   StringList *lines = text.split(_T("\n"));
-   for(int i = 0; i < lines->size(); i++)
+   StringList lines = text.split(_T("\n"));
+   for(int i = 0; i < lines.size(); i++)
    {
-      const TCHAR *l = lines->get(i);
+      const TCHAR *l = lines.get(i);
       if (*l != 0)
       {
          out.append(prefix);
@@ -1408,7 +1408,6 @@ inline void AppendLines(StringBuffer& out, const String& text, TCHAR prefix)
          out.append(_T('\n'));
       }
    }
-   delete lines;
 }
 
 String DiffEngine::diff_generateLineDiff(ObjectArray<Diff> *diffs)
@@ -1522,10 +1521,10 @@ ObjectArray<Diff> *DiffEngine::diff_fromDelta(const String &text1, const String 
 {
    ObjectArray<Diff> *diffs = new ObjectArray<Diff>(64, 64, Ownership::True);
    int pointer = 0;  // Cursor in text1
-   StringList *tokens = delta.split(_T("\t"));
-   for(int i = 0; i < tokens->size(); i++)
+   StringList tokens = delta.split(_T("\t"));
+   for(int i = 0; i < tokens.size(); i++)
    {
-      const TCHAR *token = tokens->get(i);
+      const TCHAR *token = tokens.get(i);
       if (*token == 0)
       {
          // Blank tokens are ok (from a trailing \t).
@@ -1546,7 +1545,6 @@ ObjectArray<Diff> *DiffEngine::diff_fromDelta(const String &text1, const String 
             int n = _tcstol(param, NULL, 10);
             if (n < 0)
             {
-               delete tokens;
                return diffs;
             }
             String text = safeMid(text1, pointer, n);
@@ -1562,11 +1560,9 @@ ObjectArray<Diff> *DiffEngine::diff_fromDelta(const String &text1, const String 
             break;
          }
          default:
-            delete tokens;
             return diffs;
       }
    }
-   delete tokens;
    return diffs;
 }
 

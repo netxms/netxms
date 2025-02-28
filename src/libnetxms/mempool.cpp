@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -45,6 +45,28 @@ MemoryPool::MemoryPool(MemoryPool&& src)
    m_allocated = src.m_allocated;
    src.m_currentRegion = nullptr;
    src.m_allocated = 0;
+}
+
+/**
+ * Move assignment
+ */
+MemoryPool& MemoryPool::operator=(MemoryPool&& src)
+{
+   void *r = m_currentRegion;
+   while(r != nullptr)
+   {
+      void *n = *((void **)r);
+      MemFree(r);
+      r = n;
+   }
+
+   m_headerSize = src.m_headerSize;
+   m_regionSize = src.m_regionSize;
+   m_currentRegion = src.m_currentRegion;
+   m_allocated = src.m_allocated;
+   src.m_currentRegion = nullptr;
+   src.m_allocated = 0;
+   return *this;
 }
 
 /**

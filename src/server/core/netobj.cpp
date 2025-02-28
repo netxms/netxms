@@ -3107,7 +3107,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                      if (buffer[0] == '{' && modifierEnd != nullptr)
                      {
                         *modifierEnd = 0;
-                        list = String::split(buffer + 1, _tcslen(buffer + 1), _T(","), true);
+                        list = new StringList(String::split(buffer + 1, _tcslen(buffer + 1), _T(","), true));
                         memmove(buffer, modifierEnd + 1, sizeof(TCHAR) * (_tcslen(modifierEnd + 1) + 1));
                      }
                      const TCHAR *defaultValue = _T("");

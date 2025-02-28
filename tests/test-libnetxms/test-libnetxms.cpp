@@ -799,13 +799,11 @@ static void TestString()
 
    StartTest(_T("String - split"));
    s = _T("alpha;;beta;gamma;;delta");
-   StringList *list = s.split(_T(";;"));
-   AssertNotNull(list);
-   AssertEquals(list->size(), 3);
-   AssertEquals(list->get(0), _T("alpha"));
-   AssertEquals(list->get(1), _T("beta;gamma"));
-   AssertEquals(list->get(2), _T("delta"));
-   delete list;
+   StringList list = s.split(_T(";;"));
+   AssertEquals(list.size(), 3);
+   AssertEquals(list.get(0), _T("alpha"));
+   AssertEquals(list.get(1), _T("beta;gamma"));
+   AssertEquals(list.get(2), _T("delta"));
    EndTest();
 
    StartTest(_T("String - split with callback"));

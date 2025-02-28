@@ -367,7 +367,7 @@ bool String::endsWith(const String& s) const
  */
 bool String::endsWith(const TCHAR *s) const
 {
-   if (s == NULL)
+   if (s == nullptr)
       return false;
    size_t l = _tcslen(s);
    if (l > m_length)
@@ -380,22 +380,22 @@ bool String::endsWith(const TCHAR *s) const
 /**
  * Split string
  */
-StringList *String::split(TCHAR *str, size_t len, const TCHAR *separator, bool trim)
+StringList String::split(TCHAR *str, size_t len, const TCHAR *separator, bool trim)
 {
-   StringList *result = new StringList();
+   StringList result;
 
    size_t slen = _tcslen(separator);
    if (slen == 0)
    {
       if (trim)
-         result->addPreallocated(Trim(MemCopyString(CHECK_NULL_EX(str))));
+         result.addPreallocated(Trim(MemCopyString(CHECK_NULL_EX(str))));
       else
-         result->add(CHECK_NULL_EX(str));
+         result.add(CHECK_NULL_EX(str));
       return result;
    }
    if (len < slen)
    {
-      result->add(_T(""));
+      result.add(_T(""));
       return result;
    }
 
@@ -406,17 +406,17 @@ StringList *String::split(TCHAR *str, size_t len, const TCHAR *separator, bool t
       if (next == nullptr)
       {
          if (trim)
-            result->addPreallocated(Trim(MemCopyString(curr)));
+            result.addPreallocated(Trim(MemCopyString(curr)));
          else
-            result->add(curr);
+            result.add(curr);
          break;
       }
 
       *next = 0;
       if (trim)
-         result->addPreallocated(Trim(MemCopyString(curr)));
+         result.addPreallocated(Trim(MemCopyString(curr)));
       else
-         result->add(curr);
+         result.add(curr);
       *next = *separator;
       curr = next + slen;
    }

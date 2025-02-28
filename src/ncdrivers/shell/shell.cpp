@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Notification channel driver that writes messages to text file
-** Copyright (C) 2019-2024 Raden Solutions
+** Copyright (C) 2019-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -54,13 +54,12 @@ void OutputLoggingExecutor::onOutput(const char *text, size_t length)
 #else
    buffer = MemCopyStringA(text);
 #endif
-   StringList *outputLines = String::split(buffer, _tcslen(buffer), _T("\n"));
+   StringList outputLines = String::split(buffer, _tcslen(buffer), _T("\n"));
    MemFree(buffer);
-   for (int i = 0; i < outputLines->size(); i++)
+   for (int i = 0; i < outputLines.size(); i++)
    {
-      nxlog_write_tag(5, DEBUG_TAG, _T("Output: %s"), outputLines->get(i));
+      nxlog_write_tag(5, DEBUG_TAG, _T("Output: %s"), outputLines.get(i));
    }
-   delete outputLines;
 }
 
 /**

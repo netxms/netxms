@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -523,19 +523,18 @@ static bool SQLiteAlterTable(DB_HANDLE hdb, SQLileAlterOp operation, const TCHAR
                   if (operation == RENAME_COLUMN)
                   {
                      *s = 0;
-                     StringList *columnList = String::split(p + 12, _tcslen(p + 12), _T(","));
-                     for (int i = 0; i < columnList->size(); i++)
+                     StringList columnList = String::split(p + 12, _tcslen(p + 12), _T(","));
+                     for (int i = 0; i < columnList.size(); i++)
                      {
-                        if (!_tcsicmp(columnList->get(i), column))
+                        if (!_tcsicmp(columnList.get(i), column))
                         {
-                           columnList->replace(i, operationData);
+                           columnList.replace(i, operationData);
                            break;
                         }
                      }
                      createList.append(_T("PRIMARY KEY("));
-                     createList.appendPreallocated(columnList->join(_T(",")));
+                     createList.appendPreallocated(columnList.join(_T(",")));
                      createList.append(_T(')'));
-                     delete columnList;
                   }
                   else
                   {

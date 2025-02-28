@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1485,16 +1485,15 @@ bool LoadObjects()
    g_modificationsLocked = true;
 
    // Load zone selector history
-   TCHAR *uinHistory = ConfigReadCLOB(_T("Objects.Zones.UINHistory"), _T(""));
-   StringList *uinList = String::split(uinHistory, _tcslen(uinHistory), _T(","));
-   for(int i = 0; i < uinList->size(); i++)
+   wchar_t *uinHistory = ConfigReadCLOB(L"Objects.Zones.UINHistory", L"");
+   StringList uinList = String::split(uinHistory, wcslen(uinHistory), L",");
+   for(int i = 0; i < uinList.size(); i++)
    {
-      TCHAR *eptr;
-      int32_t uin = _tcstol(uinList->get(i), &eptr, 10);
+      wchar_t *eptr;
+      int32_t uin = wcstol(uinList.get(i), &eptr, 10);
       if ((uin != 0) && (*eptr == 0))
          s_zoneUinSelectorHistory.put(uin);
    }
-   delete uinList;
    MemFree(uinHistory);
 
    DB_HANDLE mainDB = DBConnectionPoolAcquireConnection();

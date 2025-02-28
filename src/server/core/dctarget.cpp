@@ -1813,9 +1813,9 @@ void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition
             {
                if (tc->m_flags & COLUMN_DEFINITION_MULTIVALUED)
                {
-                  StringList *values = String(static_cast<DCItem*>(object)->getLastValue()).split(tc->m_separator);
-                  tableData->setAt(row, i + offset, values->get(0));
-                  for(int r = 1; r < values->size(); r++)
+                  StringList values = String(static_cast<DCItem*>(object)->getLastValue()).split(tc->m_separator);
+                  tableData->setAt(row, i + offset, values.get(0));
+                  for(int r = 1; r < values.size(); r++)
                   {
                      if (row + r >= tableData->getNumRows())
                      {
@@ -1823,11 +1823,10 @@ void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition
                         tableData->setObjectId(m_id);
                         tableData->setBaseRow(row);
                      }
-                     tableData->setAt(row + r, i + offset, values->get(r));
+                     tableData->setAt(row + r, i + offset, values.get(r));
                      tableData->setStatusAt(row + r, i + offset, static_cast<DCItem*>(object)->getThresholdSeverity());
                      tableData->setCellObjectIdAt(row + r, i + offset, object->getId());
                   }
-                  delete values;
                }
                else
                {
