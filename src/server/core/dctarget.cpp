@@ -2323,10 +2323,15 @@ void DataCollectionTarget::applyTemplates()
 /**
  * Filter for selecting containers from objects
  */
-static bool ContainerSelectionFilter(NetObj *object, void *userData)
+static bool ContainerSelectionFilter(NetObj *object, void *context)
 {
-   return (object->getObjectClass() == OBJECT_CONTAINER) && (object->getObjectClass() == OBJECT_COLLECTOR) &&
-            !object->isDeleted() && ((Container *)object)->isAutoBindEnabled();
+   if (object->isDeleted())
+      return false;
+   if (object->getObjectClass() == OBJECT_CONTAINER)
+      return static_cast<Container*>(object)->isAutoBindEnabled();
+   if (object->getObjectClass() == OBJECT_COLLECTOR)
+      return static_cast<Collector*>(object)->isAutoBindEnabled();
+   return false;
 }
 
 /**
@@ -2341,16 +2346,34 @@ void DataCollectionTarget::updateContainerMembership()
    unique_ptr<SharedObjectArray<NetObj>> containers = g_idxObjectById.getObjects(ContainerSelectionFilter);
    for(int i = 0; i < containers->size(); i++)
    {
-      Container *container = static_cast<Container*>(containers->get(i));
+      NetObj *container = containers->get(i);
+
+      AutoBindTarget *abtInterface;
+      const wchar_t *className;
+      if (container->getObjectClass() == OBJECT_CONTAINER)
+      {
+         abtInterface = static_cast<Container*>(container);
+         className = L"container";
+      }
+      else if (container->getObjectClass() == OBJECT_COLLECTOR)
+      {
+         abtInterface = static_cast<Collector*>(container);
+         className = L"collector";
+      }
+      else
+      {
+         continue;   // Should not happen
+      }
+
       NXSL_VM *cachedFilterVM = nullptr;
-      AutoBindDecision decision = container->isApplicable(&cachedFilterVM, self());
+      AutoBindDecision decision = abtInterface->isApplicable(&cachedFilterVM, self());
       if (decision == AutoBindDecision_Bind)
       {
          if (!container->isDirectChild(m_id))
          {
-            sendPollerMsg(_T("   Binding to container %s\r\n"), container->getName());
-            nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::updateContainerMembership(): binding object %d \"%s\" to container %d \"%s\""),
-                      m_id, m_name, container->getId(), container->getName());
+            sendPollerMsg(_T("   Binding to %s %s\r\n"), className, container->getName());
+            nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::updateContainerMembership(): binding object \"%s\" [%u] to %s \"%s\" [%u]"),
+                      m_name, m_id, className, container->getName(), container->getId());
             linkObjects(container->self(), self());
             EventBuilder(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode)
                .param(_T("nodeId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
@@ -2364,11 +2387,11 @@ void DataCollectionTarget::updateContainerMembership()
       }
       else if (decision == AutoBindDecision_Unbind)
       {
-         if (container->isAutoUnbindEnabled() && container->isDirectChild(m_id))
+         if (abtInterface->isAutoUnbindEnabled() && container->isDirectChild(m_id))
          {
-            sendPollerMsg(_T("   Removing from container %s\r\n"), container->getName());
-            nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::updateContainerMembership(): removing object %d \"%s\" from container %d \"%s\""),
-                      m_id, m_name, container->getId(), container->getName());
+            sendPollerMsg(_T("   Removing from %s %s\r\n"), className, container->getName());
+            nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::updateContainerMembership(): removing object \"%s\" [%u] from %s \"%s\" [%u]"),
+                      m_name, m_id, className, container->getName(), container->getId());
             unlinkObjects(container, this);
             EventBuilder(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode)
                .param(_T("nodeId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
