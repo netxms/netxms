@@ -1,6 +1,6 @@
 /*
 ** Windows Event Log Synchronization NetXMS subagent
-** Copyright (C) 2020 Raden Solutions
+** Copyright (C) 2020-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@
 #include <winevt.h>
 #include <winmeta.h>
 
-#define DEBUG_TAG _T("sa.wineventsync")
+#define DEBUG_TAG _T("wineventsync")
 
 /**
  * Event range
@@ -38,6 +38,17 @@ struct Range
 {
    uint32_t start;
    uint32_t end;
+};
+
+/**
+ * Event filter
+ */
+struct Filter
+{
+   wchar_t *source;
+   Range eventId;
+   uint32_t severity;
+   bool accept;
 };
 
 /**
@@ -56,6 +67,7 @@ private:
    StructArray<Range> m_includedEvents;
    StructArray<Range> m_excludedEvents;
    uint32_t m_severityFilter;
+   StructArray<Filter> m_filters;
 
    void run();
    static DWORD WINAPI subscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID context, EVT_HANDLE event);

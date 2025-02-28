@@ -1,6 +1,6 @@
 /*
 ** Windows Event Log Synchronization NetXMS subagent
-** Copyright (C) 2020 Raden Solutions
+** Copyright (C) 2020-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
