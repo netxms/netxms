@@ -107,7 +107,7 @@ bool ClickHouseSender::buildURL()
    query.append(m_database);
    query.append(_T("."));
    query.append(m_table);
-   query.append(_T(" FORMAT JSONEachRow"));
+   query.append(_T(" FORMAT RawBinary"));
    
    // URL encode the query
    char rawQuery[1024];
@@ -192,8 +192,8 @@ curl_slist* ClickHouseSender::prepareHeaders()
 {
    curl_slist *headers = nullptr;
    
-   // Add content type header for JSON
-   headers = curl_slist_append(headers, "Content-Type: application/json; charset=utf-8");
+   // Add content type header for binary data
+   headers = curl_slist_append(headers, "Content-Type: application/octet-stream");
    
    // Add authentication if needed
    if (!m_user.isEmpty() && !m_password.isEmpty())
@@ -221,7 +221,7 @@ curl_slist* ClickHouseSender::prepareHeaders()
 }
 
 /**
- * Send batch of records to ClickHouse via HTTP
+ * Send batch of records to ClickHouse via HTTP using RawBinary format
  */
 bool ClickHouseSender::sendBatch(const std::vector<MetricRecord>& records)
 {
@@ -233,104 +233,90 @@ bool ClickHouseSender::sendBatch(const std::vector<MetricRecord>& records)
    
    try
    {
-      // Create JSON formatted data
-      StringBuffer jsonData;
-      
+      // Create binary data stream for ClickHouse RawBinary format
+      ByteStream binaryData(records.size() * 1024); // Pre-allocate with rough estimate
+
       // Process each record
       for (const auto& record : records)
       {
-         // Format one record as JSON
-         jsonData.append(_T("{"));
+         // For RawBinary format, we need to write each field according to ClickHouse's binary protocol
          
-         // Add timestamp
-         jsonData.append(_T("\"timestamp\":"));
-         jsonData.append(record.timestamp);
-         jsonData.append(_T(","));
+         // timestamp (UInt32/UInt64)
+         uint64_t timestamp = static_cast<uint64_t>(record.timestamp);
+         binaryData.write(&timestamp, sizeof(timestamp));
          
-         // Add name
-         jsonData.append(_T("\"name\":"));
-         char escapedName[512];
-         jsonData.append(_T("\""));
-         jsonData.appendMBString(record.name.c_str());
-         jsonData.append(_T("\","));
+         // name (String)
+         uint64_t nameLength = record.name.length();
+         binaryData.write(&nameLength, sizeof(nameLength));
+         binaryData.write(record.name.c_str(), nameLength);
          
-         // Add host
-         jsonData.append(_T("\"host\":\""));
-         jsonData.appendMBString(record.host.c_str());
-         jsonData.append(_T("\","));
+         // host (String)
+         uint64_t hostLength = record.host.length();
+         binaryData.write(&hostLength, sizeof(hostLength));
+         binaryData.write(record.host.c_str(), hostLength);
          
-         // Add value
-         jsonData.append(_T("\"value\":\""));
-         jsonData.appendMBString(record.value.c_str());
-         jsonData.append(_T("\","));
+         // value (String)
+         uint64_t valueLength = record.value.length();
+         binaryData.write(&valueLength, sizeof(valueLength));
+         binaryData.write(record.value.c_str(), valueLength);
          
-         // Add instance
-         jsonData.append(_T("\"instance\":\""));
-         jsonData.appendMBString(record.instance.c_str());
-         jsonData.append(_T("\","));
+         // instance (String)
+         uint64_t instanceLength = record.instance.length();
+         binaryData.write(&instanceLength, sizeof(instanceLength));
+         binaryData.write(record.instance.c_str(), instanceLength);
          
-         // Add datasource
-         jsonData.append(_T("\"datasource\":\""));
-         jsonData.appendMBString(record.datasource.c_str());
-         jsonData.append(_T("\","));
+         // datasource (String)
+         uint64_t datasourceLength = record.datasource.length();
+         binaryData.write(&datasourceLength, sizeof(datasourceLength));
+         binaryData.write(record.datasource.c_str(), datasourceLength);
          
-         // Add dataclass
-         jsonData.append(_T("\"dataclass\":\""));
-         jsonData.appendMBString(record.dataclass.c_str());
-         jsonData.append(_T("\","));
+         // dataclass (String)
+         uint64_t dataclassLength = record.dataclass.length();
+         binaryData.write(&dataclassLength, sizeof(dataclassLength));
+         binaryData.write(record.dataclass.c_str(), dataclassLength);
          
-         // Add datatype
-         jsonData.append(_T("\"datatype\":\""));
-         jsonData.appendMBString(record.datatype.c_str());
-         jsonData.append(_T("\","));
+         // datatype (String)
+         uint64_t datatypeLength = record.datatype.length();
+         binaryData.write(&datatypeLength, sizeof(datatypeLength));
+         binaryData.write(record.datatype.c_str(), datatypeLength);
          
-         // Add deltatype
-         jsonData.append(_T("\"deltatype\":\""));
-         jsonData.appendMBString(record.deltatype.c_str());
-         jsonData.append(_T("\","));
+         // deltatype (String)
+         uint64_t deltatypeLength = record.deltatype.length();
+         binaryData.write(&deltatypeLength, sizeof(deltatypeLength));
+         binaryData.write(record.deltatype.c_str(), deltatypeLength);
          
-         // Add relatedobjecttype
-         jsonData.append(_T("\"relatedobjecttype\":\""));
-         jsonData.appendMBString(record.relatedobjecttype.c_str());
-         jsonData.append(_T("\","));
+         // relatedobjecttype (String)
+         uint64_t relatedobjecttypeLength = record.relatedobjecttype.length();
+         binaryData.write(&relatedobjecttypeLength, sizeof(relatedobjecttypeLength));
+         binaryData.write(record.relatedobjecttype.c_str(), relatedobjecttypeLength);
          
-         // Add tags as a JSON object
-         jsonData.append(_T("\"tags\":{"));
-         bool firstTag = true;
+         // tags (Map<String, String>)
+         // First write the size of the map
+         uint64_t tagsCount = record.tags.size();
+         binaryData.write(&tagsCount, sizeof(tagsCount));
+         
+         // Write each key-value pair
          for (const auto& tag : record.tags)
          {
-            if (!firstTag)
-               jsonData.append(_T(","));
+            // Key
+            uint64_t keyLength = tag.first.length();
+            binaryData.write(&keyLength, sizeof(keyLength));
+            binaryData.write(tag.first.c_str(), keyLength);
             
-            jsonData.append(_T("\""));
-            jsonData.appendMBString(tag.first.c_str());
-            jsonData.append(_T("\":\""));
-            jsonData.appendMBString(tag.second.c_str());
-            jsonData.append(_T("\""));
-            
-            firstTag = false;
+            // Value
+            uint64_t valueLength = tag.second.length();
+            binaryData.write(&valueLength, sizeof(valueLength));
+            binaryData.write(tag.second.c_str(), valueLength);
          }
-         jsonData.append(_T("}}"));
-         
-         // Add newline between records
-         jsonData.append(_T("\n"));
-      }
-      
-      // Convert string buffer to UTF-8
-      char *utf8Data = jsonData.getUTF8String();
-      if (utf8Data == nullptr)
-      {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to convert JSON data to UTF-8"));
-         return false;
       }
       
       // Set HTTP headers
       curl_slist *headers = prepareHeaders();
       curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, headers);
       
-      // Set data to send
-      curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, utf8Data);
-      curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, strlen(utf8Data));
+      // Set binary data to send
+      curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, binaryData.buffer());
+      curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, binaryData.size());
       
       // Prepare buffer for response
       ByteStream responseData(4096);
@@ -340,8 +326,8 @@ bool ClickHouseSender::sendBatch(const std::vector<MetricRecord>& records)
       char errorText[CURL_ERROR_SIZE];
       curl_easy_setopt(m_curl, CURLOPT_ERRORBUFFER, errorText);
       
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("Sending batch of %d records to ClickHouse via HTTP"), 
-                     static_cast<int>(records.size()));
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Sending batch of %d records to ClickHouse via HTTP using RawBinary format (%d bytes)"), 
+                     static_cast<int>(records.size()), static_cast<int>(binaryData.size()));
       
       // Perform the request
       bool success;
@@ -380,7 +366,6 @@ bool ClickHouseSender::sendBatch(const std::vector<MetricRecord>& records)
       
       // Cleanup
       curl_slist_free_all(headers);
-      free(utf8Data);
       
       return success;
    }

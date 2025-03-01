@@ -65,7 +65,7 @@ void HTTPSender::buildURL(char *url)
    sb.append(m_database);
    sb.append(_T("&query=INSERT%20INTO%20"));
    sb.append(m_table);
-   sb.append(_T("%20FORMAT%20TSV"));
+   sb.append(_T("%20FORMAT%20RawBinary"));
    
    tchar_to_utf8(sb, -1, url, MAX_URL_LENGTH);
 }
@@ -136,7 +136,7 @@ bool HTTPSender::send(const char *data, size_t size)
 
    curl_slist *headers = nullptr;
    addHeaders(&headers);
-   headers = curl_slist_append(headers, "Content-Type: text/plain; charset=utf-8");
+   headers = curl_slist_append(headers, "Content-Type: application/octet-stream");
    curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, headers);
 
    ByteStream responseData(32768);
