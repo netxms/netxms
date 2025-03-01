@@ -35,6 +35,9 @@ ClickHouseStorageDriver::ClickHouseStorageDriver() : m_senders(0, 16, Ownership:
    m_enableUnsignedType = false;
    m_validateValues = false;
    m_correctValues = false;
+   
+   // Initialize libcurl
+   InitializeLibCURL();
 }
 
 /**

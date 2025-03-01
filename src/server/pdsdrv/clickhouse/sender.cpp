@@ -21,6 +21,7 @@
  **/
 
 #include "clickhouse.h"
+#include <netxms-version.h>
 
 /**
  * Constructor for ClickHouse sender
@@ -36,14 +37,15 @@ ClickHouseSender::ClickHouseSender(const Config& config) :
    m_messageDrops = 0;
    m_bufferFlushThreshold = config.getValueAsUInt(_T("/ClickHouse/BatchSize"), 1000); // Default batch size
    m_maxCacheWaitTime = config.getValueAsUInt(_T("/ClickHouse/MaxCacheWaitTime"), 30000);
-   m_port = static_cast<uint16_t>(config.getValueAsUInt(_T("/ClickHouse/Port"), 9000)); // Default native protocol port
+   m_port = static_cast<uint16_t>(config.getValueAsUInt(_T("/ClickHouse/Port"), 8123)); // Default HTTP protocol port
    m_lastConnect = 0;
    m_bufferSize = 0;
    m_maxBufferSize = config.getValueAsUInt(_T("/ClickHouse/MaxBufferSize"), 10000); // Max records in buffer
    m_batchSize = config.getValueAsUInt(_T("/ClickHouse/BatchSize"), 1000); // How many records to insert at once
+   m_useHttps = config.getValueAsBoolean(_T("/ClickHouse/UseHTTPS"), false);
+   m_curl = nullptr;
+   m_url[0] = 0;
    
-   m_client = nullptr;
-
 #ifdef _WIN32
    InitializeCriticalSectionAndSpinCount(&m_mutex, 4000);
    InitializeConditionVariable(&m_condition);
@@ -65,6 +67,9 @@ ClickHouseSender::ClickHouseSender(const Config& config) :
    // Reserve space for better performance
    m_activeBuffer.reserve(m_maxBufferSize);
    m_backendBuffer.reserve(m_maxBufferSize);
+   
+   // Initialize libcurl
+   InitializeLibCURL();
 }
 
 /**
@@ -73,6 +78,10 @@ ClickHouseSender::ClickHouseSender(const Config& config) :
 ClickHouseSender::~ClickHouseSender()
 {
    stop();
+   
+   if (m_curl != nullptr)
+      curl_easy_cleanup(m_curl);
+   
 #ifdef _WIN32
    DeleteCriticalSection(&m_mutex);
 #else
@@ -82,183 +91,309 @@ ClickHouseSender::~ClickHouseSender()
 }
 
 /**
- * Setup ClickHouse client 
+ * Initialize and build the ClickHouse HTTP URL
  */
-void ClickHouseSender::setupClient()
+bool ClickHouseSender::buildURL()
 {
-   try
+   StringBuffer sb(m_useHttps ? _T("https://") : _T("http://"));
+   sb.append(m_hostname);
+   sb.append(_T(':'));
+   sb.append(m_port);
+   sb.append(_T("/?query="));
+   
+   // Build query for inserting data
+   StringBuffer query;
+   query.append(_T("INSERT INTO "));
+   query.append(m_database);
+   query.append(_T("."));
+   query.append(m_table);
+   query.append(_T(" FORMAT JSONEachRow"));
+   
+   // URL encode the query
+   char rawQuery[1024];
+   wchar_to_utf8(query, -1, rawQuery, sizeof(rawQuery));
+   
+   char *encodedQuery = curl_easy_escape(m_curl, rawQuery, 0);
+   if (encodedQuery != nullptr)
    {
-      clickhouse::ClientOptions options;
-      
-      // Convert String objects to std::string
-      char hostname[256];
-      wchar_to_utf8(m_hostname, -1, hostname, sizeof(hostname));
-      options.SetHost(hostname);
-      
-      options.SetPort(m_port);
-      
-      if (!m_user.isEmpty() && !m_password.isEmpty())
-      {
-         char username[128];
-         char password[256];
-         
-         wchar_to_utf8(m_user, -1, username, sizeof(username));
-         
-         TCHAR decryptedPassword[256];
-         DecryptPassword(m_user, m_password, decryptedPassword, 256);
-         wchar_to_utf8(decryptedPassword, -1, password, sizeof(password));
-         
-         options.SetUser(username);
-         options.SetPassword(password);
-      }
-      
-      char dbname[128];
-      wchar_to_utf8(m_database, -1, dbname, sizeof(dbname));
-      options.SetDefaultDatabase(dbname);
-      
-      // Set maximum number of connections
-      options.SetPingBeforeQuery(true);
-      options.SetCompressionMethod(clickhouse::CompressionMethod::LZ4);
-      options.SetConnectionTimeout(10); // seconds
-      
-      m_client = std::make_unique<clickhouse::Client>(options);
-      
-      nxlog_debug_tag(DEBUG_TAG, 2, _T("Connected to ClickHouse server at %s:%d"), m_hostname.cstr(), m_port);
+      sb.appendMBString(encodedQuery);
+      curl_free(encodedQuery);
    }
-   catch (const std::exception& e)
+   else
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to create ClickHouse client: %hs"), e.what());
-      m_client = nullptr;
+      // Fallback if encoding fails
+      sb.appendMBString(rawQuery);
    }
+   
+   return wchar_to_utf8(sb, -1, m_url, sizeof(m_url)) > 0;
 }
 
 /**
- * Connect to ClickHouse
+ * Initialize cURL handle
  */
-bool ClickHouseSender::connect()
+bool ClickHouseSender::initCurl()
 {
    time_t now = time(nullptr);
-   if ((m_client == nullptr) && (m_lastConnect + 60 > now))
+   if ((m_curl == nullptr) && (m_lastConnect + 60 > now))
    {
       return false;  // Attempt to reconnect not more than once per minute
    }
    
    m_lastConnect = now;
-   setupClient();
-   return m_client != nullptr;
+   
+   if (m_curl != nullptr)
+   {
+      curl_easy_cleanup(m_curl);
+   }
+   
+   m_curl = curl_easy_init();
+   if (m_curl == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
+      return false;
+   }
+   
+   // Build URL for this connection
+   if (!buildURL())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to build ClickHouse URL"));
+      curl_easy_cleanup(m_curl);
+      m_curl = nullptr;
+      return false;
+   }
+   
+   // Common handle setup
+#if HAVE_DECL_CURLOPT_NOSIGNAL
+   curl_easy_setopt(m_curl, CURLOPT_NOSIGNAL, 1L);
+#endif
+
+   curl_easy_setopt(m_curl, CURLOPT_POST, 1L);
+   curl_easy_setopt(m_curl, CURLOPT_HEADER, 0L); // do not include header in data
+   curl_easy_setopt(m_curl, CURLOPT_TIMEOUT, 30L); // 30 second timeout
+   curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
+   curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
+   curl_easy_setopt(m_curl, CURLOPT_USERAGENT, "NetXMS ClickHouse Driver/" NETXMS_VERSION_STRING_A);
+   
+   // Set the URL
+   curl_easy_setopt(m_curl, CURLOPT_URL, m_url);
+   
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Connected to ClickHouse server at %s:%d via HTTP%s"),
+                 m_hostname.cstr(), m_port, m_useHttps ? _T("S") : _T(""));
+   
+   EnableLibCURLUnexpectedEOFWorkaround(m_curl);
+   
+   return true;
 }
 
 /**
- * Send batch of records to ClickHouse
+ * Prepare HTTP headers for ClickHouse request
+ */
+curl_slist* ClickHouseSender::prepareHeaders()
+{
+   curl_slist *headers = nullptr;
+   
+   // Add content type header for JSON
+   headers = curl_slist_append(headers, "Content-Type: application/json; charset=utf-8");
+   
+   // Add authentication if needed
+   if (!m_user.isEmpty() && !m_password.isEmpty())
+   {
+      TCHAR decryptedPassword[256];
+      DecryptPassword(m_user, m_password, decryptedPassword, 256);
+      
+      char auth[1024];
+      char *encodedAuth = static_cast<char*>(MemAlloc(1024));
+      
+      StringBuffer authString = m_user;
+      authString.append(_T(':'));
+      authString.append(decryptedPassword);
+      
+      size_t len = wchar_to_utf8(authString, -1, encodedAuth, 1024);
+      base64_encode((BYTE *)encodedAuth, len, auth, 1024);
+      MemFree(encodedAuth);
+      
+      char header[1100];
+      snprintf(header, 1100, "Authorization: Basic %s", auth);
+      headers = curl_slist_append(headers, header);
+   }
+   
+   return headers;
+}
+
+/**
+ * Send batch of records to ClickHouse via HTTP
  */
 bool ClickHouseSender::sendBatch(const std::vector<MetricRecord>& records)
 {
    if (records.empty())
       return true;
       
-   if (m_client == nullptr && !connect())
+   if (m_curl == nullptr && !initCurl())
       return false;
    
    try
    {
-      // Prepare the block with all columns needed in the metrics table
-      clickhouse::Block block;
+      // Create JSON formatted data
+      StringBuffer jsonData;
       
-      // Initialize columns
-      const size_t numRecords = records.size();
-      
-      // Prepare columns with array values for all records in the batch
-      std::vector<time_t> timestamps;
-      std::vector<std::string> names;
-      std::vector<std::string> hosts;
-      std::vector<std::string> values;
-      std::vector<std::string> instances;
-      std::vector<std::string> datasources;
-      std::vector<std::string> dataclasses;
-      std::vector<std::string> datatypes;
-      std::vector<std::string> deltatypes;
-      std::vector<std::string> relatedobjecttypes;
-      
-      // Reserve space for better performance
-      timestamps.reserve(numRecords);
-      names.reserve(numRecords);
-      hosts.reserve(numRecords);
-      values.reserve(numRecords);
-      instances.reserve(numRecords);
-      datasources.reserve(numRecords);
-      dataclasses.reserve(numRecords);
-      datatypes.reserve(numRecords);
-      deltatypes.reserve(numRecords);
-      relatedobjecttypes.reserve(numRecords);
-      
-      // Fill in the data from our records
+      // Process each record
       for (const auto& record : records)
       {
-         timestamps.push_back(record.timestamp);
-         names.push_back(record.name);
-         hosts.push_back(record.host);
-         values.push_back(record.value);
-         instances.push_back(record.instance);
-         datasources.push_back(record.datasource);
-         dataclasses.push_back(record.dataclass);
-         datatypes.push_back(record.datatype);
-         deltatypes.push_back(record.deltatype);
-         relatedobjecttypes.push_back(record.relatedobjecttype);
-      }
-      
-      // Add the columns to the block
-      block.AppendColumn("timestamp", clickhouse::ColumnDateTime(timestamps));
-      block.AppendColumn("name", clickhouse::ColumnString(names));
-      block.AppendColumn("host", clickhouse::ColumnString(hosts));
-      block.AppendColumn("value", clickhouse::ColumnString(values));
-      block.AppendColumn("instance", clickhouse::ColumnString(instances));
-      block.AppendColumn("datasource", clickhouse::ColumnString(datasources));
-      block.AppendColumn("dataclass", clickhouse::ColumnString(dataclasses));
-      block.AppendColumn("datatype", clickhouse::ColumnString(datatypes));
-      block.AppendColumn("deltatype", clickhouse::ColumnString(deltatypes));
-      block.AppendColumn("relatedobjecttype", clickhouse::ColumnString(relatedobjecttypes));
-      
-      // Handle tags as a JSON column
-      std::vector<std::string> tagsJson;
-      tagsJson.reserve(numRecords);
-      
-      for (const auto& record : records)
-      {
-         std::string json = "{";
-         bool first = true;
+         // Format one record as JSON
+         jsonData.append(_T("{"));
          
+         // Add timestamp
+         jsonData.append(_T("\"timestamp\":"));
+         jsonData.append(record.timestamp);
+         jsonData.append(_T(","));
+         
+         // Add name
+         jsonData.append(_T("\"name\":"));
+         char escapedName[512];
+         jsonData.append(_T("\""));
+         jsonData.appendMBString(record.name.c_str());
+         jsonData.append(_T("\","));
+         
+         // Add host
+         jsonData.append(_T("\"host\":\""));
+         jsonData.appendMBString(record.host.c_str());
+         jsonData.append(_T("\","));
+         
+         // Add value
+         jsonData.append(_T("\"value\":\""));
+         jsonData.appendMBString(record.value.c_str());
+         jsonData.append(_T("\","));
+         
+         // Add instance
+         jsonData.append(_T("\"instance\":\""));
+         jsonData.appendMBString(record.instance.c_str());
+         jsonData.append(_T("\","));
+         
+         // Add datasource
+         jsonData.append(_T("\"datasource\":\""));
+         jsonData.appendMBString(record.datasource.c_str());
+         jsonData.append(_T("\","));
+         
+         // Add dataclass
+         jsonData.append(_T("\"dataclass\":\""));
+         jsonData.appendMBString(record.dataclass.c_str());
+         jsonData.append(_T("\","));
+         
+         // Add datatype
+         jsonData.append(_T("\"datatype\":\""));
+         jsonData.appendMBString(record.datatype.c_str());
+         jsonData.append(_T("\","));
+         
+         // Add deltatype
+         jsonData.append(_T("\"deltatype\":\""));
+         jsonData.appendMBString(record.deltatype.c_str());
+         jsonData.append(_T("\","));
+         
+         // Add relatedobjecttype
+         jsonData.append(_T("\"relatedobjecttype\":\""));
+         jsonData.appendMBString(record.relatedobjecttype.c_str());
+         jsonData.append(_T("\","));
+         
+         // Add tags as a JSON object
+         jsonData.append(_T("\"tags\":{"));
+         bool firstTag = true;
          for (const auto& tag : record.tags)
          {
-            if (!first)
-               json += ",";
+            if (!firstTag)
+               jsonData.append(_T(","));
             
-            json += "\"" + tag.first + "\":\"" + tag.second + "\"";
-            first = false;
+            jsonData.append(_T("\""));
+            jsonData.appendMBString(tag.first.c_str());
+            jsonData.append(_T("\":\""));
+            jsonData.appendMBString(tag.second.c_str());
+            jsonData.append(_T("\""));
+            
+            firstTag = false;
          }
+         jsonData.append(_T("}}"));
          
-         json += "}";
-         tagsJson.push_back(json);
+         // Add newline between records
+         jsonData.append(_T("\n"));
       }
       
-      block.AppendColumn("tags", clickhouse::ColumnString(tagsJson));
+      // Convert string buffer to UTF-8
+      char *utf8Data = jsonData.getUTF8String();
+      if (utf8Data == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to convert JSON data to UTF-8"));
+         return false;
+      }
       
-      // Get table name in UTF-8
-      char tableName[128];
-      wchar_to_utf8(m_table, -1, tableName, sizeof(tableName));
+      // Set HTTP headers
+      curl_slist *headers = prepareHeaders();
+      curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, headers);
       
-      // Insert the batch of data
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("Sending batch of %d records to ClickHouse"), static_cast<int>(numRecords));
-      m_client->Insert(tableName, block);
+      // Set data to send
+      curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, utf8Data);
+      curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, strlen(utf8Data));
       
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("Successfully inserted %d records into ClickHouse"), static_cast<int>(numRecords));
-      return true;
+      // Prepare buffer for response
+      ByteStream responseData(4096);
+      curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &responseData);
+      
+      // Set error buffer
+      char errorText[CURL_ERROR_SIZE];
+      curl_easy_setopt(m_curl, CURLOPT_ERRORBUFFER, errorText);
+      
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Sending batch of %d records to ClickHouse via HTTP"), 
+                     static_cast<int>(records.size()));
+      
+      // Perform the request
+      bool success;
+      if (curl_easy_perform(m_curl) == CURLE_OK)
+      {
+         long responseCode;
+         curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &responseCode);
+         
+         // Process response
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("HTTP response %03ld, %d bytes data"), 
+                       responseCode, static_cast<int>(responseData.size()));
+         
+         if (responseData.size() > 0)
+         {
+            responseData.write('\0');
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("API response: %hs"), responseData.buffer());
+         }
+         
+         // Consider only 2xx codes as success
+         success = (responseCode >= 200) && (responseCode < 300);
+         if (!success)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("HTTP request failed with code %d"), static_cast<int>(responseCode));
+            // Cleanup handle on error to force reconnect
+            curl_easy_cleanup(m_curl);
+            m_curl = nullptr;
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_perform() failed (%hs)"), errorText);
+         curl_easy_cleanup(m_curl);
+         m_curl = nullptr;
+         success = false;
+      }
+      
+      // Cleanup
+      curl_slist_free_all(headers);
+      free(utf8Data);
+      
+      return success;
    }
    catch (const std::exception& e)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to send data to ClickHouse: %hs"), e.what());
       
       // Reset client to force reconnection on next attempt
-      m_client = nullptr;
+      if (m_curl != nullptr)
+      {
+         curl_easy_cleanup(m_curl);
+         m_curl = nullptr;
+      }
       return false;
    }
 }
@@ -388,7 +523,7 @@ void ClickHouseSender::workerThread()
 void ClickHouseSender::start()
 {
    // Try initial connection
-   connect();
+   initCurl();
    m_workerThread = ThreadCreateEx(this, &ClickHouseSender::workerThread);
 }
 
@@ -407,7 +542,11 @@ void ClickHouseSender::stop()
    m_workerThread = INVALID_THREAD_HANDLE;
    
    // Close client connection
-   m_client = nullptr;
+   if (m_curl != nullptr)
+   {
+      curl_easy_cleanup(m_curl);
+      m_curl = nullptr;
+   }
 }
 
 /**

@@ -26,9 +26,9 @@
 #include <nms_core.h>
 #include <pdsdrv.h>
 #include <nxqueue.h>
+#include <nxlibcurl.h>
 #include <vector>
 #include <chrono>
-#include <clickhouse/client.h>
 
 // debug pdsdrv.clickhouse 1-8
 #define DEBUG_TAG _T("pdsdrv.clickhouse")
@@ -52,7 +52,7 @@ struct MetricRecord
 };
 
 /**
- * ClickHouse connection handler
+ * ClickHouse connection handler using REST API
  */
 class ClickHouseSender
 {
@@ -72,7 +72,9 @@ private:
    uint32_t m_maxCacheWaitTime;
    uint32_t m_batchSize;
    
-   std::unique_ptr<clickhouse::Client> m_client;
+   bool m_useHttps;
+   CURL *m_curl;
+   char m_url[4096];
    
 #ifdef _WIN32
    CRITICAL_SECTION m_mutex;
@@ -106,9 +108,10 @@ private:
    }
 
    void workerThread();
-   bool connect();
+   bool buildURL();
    bool sendBatch(const std::vector<MetricRecord>& records);
-   void setupClient();
+   curl_slist* prepareHeaders();
+   bool initCurl();
 
 public:
    ClickHouseSender(const Config& config);

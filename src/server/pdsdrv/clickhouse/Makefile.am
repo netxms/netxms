@@ -4,7 +4,7 @@ pkglib_LTLIBRARIES = clickhouse.la
 clickhouse_la_SOURCES = clickhouse.cpp sender.cpp
 clickhouse_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 clickhouse_la_LDFLAGS = -module -avoid-version
-clickhouse_la_LIBADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libnxsrv.la ../../core/libnxcore.la -lclickhouse-cpp-lib -labsl_flat_hash_map -labsl_synchronization -labsl_raw_hash_set -labsl_hashtablez_sampler -labsl_hash -lLz4 -lcityhash -lcapnproto
+clickhouse_la_LIBADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libnxsrv.la ../../core/libnxcore.la
 
 EXTRA_DIST = \
 	clickhouse.h
