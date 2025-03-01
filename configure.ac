@@ -1024,6 +1024,15 @@ AC_ARG_WITH(dist,
 	NCDRV_MODULES="anysms googlechat kannel mattermost mqtt msteams mymobile nexmo nxagent slack smtp smseagle telegram text2reach twilio websms xmpp"
 	HDLINK_DIRS="jira redmine"
 	PDSDRV_DIRS="influxdb rrdtool"
+	
+AC_CHECK_LIB([clickhouse-cpp-lib], [main], 
+             [AC_DEFINE([HAVE_CLICKHOUSE_CPP], [1], [Define to 1 if you have ClickHouse C++ library])
+              AC_CHECK_LIB([absl_flat_hash_map], [main], 
+              [AC_CHECK_LIB([LZ4], [main], 
+               [PDSDRV_DIRS="clickhouse $PDSDRV_DIRS"],
+               [AC_MSG_WARN([LZ4 library required for ClickHouse driver not found])])],
+              [AC_MSG_WARN([Abseil flat_hash_map library required for ClickHouse driver not found])])],
+             [AC_MSG_WARN([ClickHouse C++ client library not found - ClickHouse driver disabled])])
 	TOP_LEVEL_MODULES="include sql images tests"
 	SERVER_INCLUDE="include"
 	CONTRIB_MODULES="mibs backgrounds music oui templates"
@@ -4850,6 +4859,7 @@ AC_CONFIG_FILES([
 	src/server/nxreportd/Makefile
 	src/server/nxreportd/java/Makefile
 	src/server/pdsdrv/Makefile
+	src/server/pdsdrv/clickhouse/Makefile
 	src/server/pdsdrv/influxdb/Makefile
 	src/server/pdsdrv/rrdtool/Makefile
 	src/server/spe/Makefile
