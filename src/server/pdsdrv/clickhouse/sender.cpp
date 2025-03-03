@@ -441,7 +441,7 @@ void ClickHouseSender::enqueue(MetricRecord record)
 uint32_t ClickHouseSender::getQueueSize()
 {
    lock();
-   uint32_t s = m_activeQueue.size();
+   uint32_t s = static_cast<uint32_t>(m_activeQueue.size());
    unlock();
    return s;
 }

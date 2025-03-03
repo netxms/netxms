@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26730.16
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35707.178 d17.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "subagents", "subagents", "{451F583D-C2DB-4414-870C-7FA0189BE7DD}"
 EndProject
@@ -405,6 +405,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mattermost", "src\ncdrivers\mattermost\mattermost.vcxproj", "{A155FED1-2DA1-CA47-8CA8-1391A7F6A7FE}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libnxsde", "src\agent\libnxsde\libnxsde.vcxproj", "{86D0233B-300A-584C-9C54-1CA84FAEB108}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "clickhouse", "src\server\pdsdrv\clickhouse\clickhouse.vcxproj", "{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -3026,6 +3028,24 @@ Global
 		{86D0233B-300A-584C-9C54-1CA84FAEB108}.Release|Win32.Build.0 = Release|Win32
 		{86D0233B-300A-584C-9C54-1CA84FAEB108}.Release|x64.ActiveCfg = Release|x64
 		{86D0233B-300A-584C-9C54-1CA84FAEB108}.Release|x64.Build.0 = Release|x64
+		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Debug|ARM64.Build.0 = Debug|ARM64
+		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Debug|Win32.Build.0 = Debug|Win32
+		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Debug|x64.ActiveCfg = Debug|x64
+		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Debug|x64.Build.0 = Debug|x64
+		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release - Client Only|ARM64.ActiveCfg = Release - Client Only|ARM64
+		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release - Client Only|ARM64.Build.0 = Release - Client Only|ARM64
+		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release - Client Only|Win32.ActiveCfg = Release - Client Only|Win32
+		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release - Client Only|Win32.Build.0 = Release - Client Only|Win32
+		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release - Client Only|x64.ActiveCfg = Release - Client Only|x64
+		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release - Client Only|x64.Build.0 = Release - Client Only|x64
+		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release|ARM64.ActiveCfg = Release|ARM64
+		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release|ARM64.Build.0 = Release|ARM64
+		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release|Win32.ActiveCfg = Release|Win32
+		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release|Win32.Build.0 = Release|Win32
+		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release|x64.ActiveCfg = Release|x64
+		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -3205,6 +3225,7 @@ Global
 		{102EBE71-5CCD-CE4B-8B8C-2B6287219BC9} = {53997B2A-D94C-428C-816D-938C297A1866}
 		{A155FED1-2DA1-CA47-8CA8-1391A7F6A7FE} = {90D897D2-079F-43BE-BB47-6BBAF2DAAC5D}
 		{86D0233B-300A-584C-9C54-1CA84FAEB108} = {8BC9D64D-347C-41BE-A506-D21C8FB72D56}
+		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B} = {7C6DD495-5A44-4D50-B065-A8CA120272F7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4F6B1F2-1076-4A45-8750-AF6CA13917B3}
