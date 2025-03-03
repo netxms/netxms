@@ -565,8 +565,9 @@ static pid_t spawn(char *cmdline, bool shellExec, int *pipe, const char *working
    sigfillset(&set);
    pthread_sigmask(SIG_BLOCK, &set, &args.oldmask);
 
-   char stack[4096];
-   pid_t pid = clone(ProcessEntry, stack + sizeof(stack), CLONE_VM | CLONE_VFORK | SIGCHLD, &args);
+   char *stack = MemAllocStringA(65536);
+   pid_t pid = clone(ProcessEntry, stack + 65536, CLONE_VM | CLONE_VFORK | SIGCHLD, &args);
+   MemFree(stack);
 
    pthread_sigmask(SIG_SETMASK, &args.oldmask, nullptr);
    pthread_setcancelstate(cs, 0);
