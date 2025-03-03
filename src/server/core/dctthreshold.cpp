@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -410,23 +410,21 @@ DCTableThreshold::DCTableThreshold(const DCTableThreshold *src, bool shadowCopy)
    m_sampleCount = src->m_sampleCount;
    if (shadowCopy)
    {
-      StringList *keys = src->m_instances.keys();
-      for(int i = 0; i < keys->size(); i++)
+      StringList keys = src->m_instances.keys();
+      for(int i = 0; i < keys.size(); i++)
       {
-         const TCHAR *k = keys->get(i);
+         const TCHAR *k = keys.get(i);
          m_instances.set(k, new DCTableThresholdInstance(src->m_instances.get(k)));
       }
-      delete keys;
    }
    if (shadowCopy)
    {
-      StringList *keys = src->m_instancesBeforeMaint.keys();
-      for(int i = 0; i < keys->size(); i++)
+      StringList keys = src->m_instancesBeforeMaint.keys();
+      for(int i = 0; i < keys.size(); i++)
       {
-         const TCHAR *k = keys->get(i);
+         const TCHAR *k = keys.get(i);
          m_instancesBeforeMaint.set(k, new DCTableThresholdInstance(src->m_instancesBeforeMaint.get(k)));
       }
-      delete keys;
    }
 }
 

@@ -638,10 +638,10 @@ ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolGetByName(const TCHAR *name)
 /**
  * Get all thread pool names
  */
-StringList LIBNETXMS_EXPORTABLE *ThreadPoolGetAllPools()
+StringList LIBNETXMS_EXPORTABLE ThreadPoolGetAllPools()
 {
    s_registryLock.lock();
-   StringList *list = s_registry.keys();
+   StringList list = s_registry.keys();
    s_registryLock.unlock();
    return list;
 }

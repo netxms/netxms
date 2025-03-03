@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -113,10 +113,10 @@ json_t *NXSL_Value::toJson()
    {
       json_t *jobject = json_object();
       NXSL_HashMap *m = m_value.hashMapHandle->getObject();
-      unique_ptr<StringList> keys(m->getKeysAsList());
-      for(int i = 0; i < keys->size(); i++)
+      StringList keys = m->getKeysAsList();
+      for(int i = 0; i < keys.size(); i++)
       {
-         const TCHAR *key = keys->get(i);
+         const TCHAR *key = keys.get(i);
          NXSL_Value *v = m->get(key);
 
          char jkey[1024];

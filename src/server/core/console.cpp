@@ -1486,10 +1486,9 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
          ExtractWord(pArg, szBuffer);
          if (*szBuffer == 0)
          {
-            StringList *pools = ThreadPoolGetAllPools();
-            for(int i = 0; i < pools->size(); i++)
-               ShowThreadPool(console, pools->get(i));
-            delete pools;
+            StringList pools = ThreadPoolGetAllPools();
+            for(int i = 0; i < pools.size(); i++)
+               ShowThreadPool(console, pools.get(i));
          }
          else
          {

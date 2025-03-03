@@ -729,9 +729,7 @@ LONG H_ThreadPoolInfo(const TCHAR *metric, const TCHAR *arg, TCHAR *value, Abstr
  */
 LONG H_ThreadPoolList(const TCHAR *metric, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-   StringList *pools = ThreadPoolGetAllPools();
-   value->addAll(pools);
-   delete pools;
+   value->addAll(ThreadPoolGetAllPools());
    return SYSINFO_RC_SUCCESS;
 }
 

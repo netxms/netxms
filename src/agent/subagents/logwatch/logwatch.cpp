@@ -1,6 +1,6 @@
 /*
 ** NetXMS LogWatch subagent
-** Copyright (C) 2008-2023 Raden Solutions
+** Copyright (C) 2008-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -289,9 +289,9 @@ static void ExecuteAction(const TCHAR *action, const StringList& args, void *use
 /**
  * Collect list of matching files from given base directory
  */
-static StringList *CollectMatchingFiles(const TCHAR *basePath, const TCHAR *fileTemplate, bool followSymlinks)
+static StringList CollectMatchingFiles(const TCHAR *basePath, const TCHAR *fileTemplate, bool followSymlinks)
 {
-   StringList *matchingFiles = new StringList();
+   StringList matchingFiles;
 
    TCHAR fname[MAX_PATH];
    ExpandFileName(fileTemplate, fname, MAX_PATH, true);
@@ -313,10 +313,10 @@ static StringList *CollectMatchingFiles(const TCHAR *basePath, const TCHAR *file
          {
 #if defined(_WIN32)
             if (d->d_type == DT_REG)
-               matchingFiles->add(d->d_name);
+               matchingFiles.add(d->d_name);
 #elif HAVE_DIRENT_D_TYPE
             if ((d->d_type == DT_REG) || ((d->d_type == DT_LNK) && followSymlinks))
-               matchingFiles->add(d->d_name);
+               matchingFiles.add(d->d_name);
 #else
             TCHAR path[MAX_PATH];
             _tcscpy(path, basePath);
@@ -341,16 +341,16 @@ static StringList *CollectMatchingFiles(const TCHAR *basePath, const TCHAR *file
  */
 static void UpdateParsersFromTemplate(LogParser *templateParser, StringObjectMap<LogParser> *activeParsers, const TCHAR *basePath, const TCHAR *fileTemplate, bool firstRun)
 {
-   StringList *matchingFiles = CollectMatchingFiles(basePath, fileTemplate, templateParser->isFollowSymlinks());
-   StringList *monitoredFiles = activeParsers->keys();
+   StringList matchingFiles = CollectMatchingFiles(basePath, fileTemplate, templateParser->isFollowSymlinks());
+   StringList monitoredFiles = activeParsers->keys();
 
-   for(int i = 0; i < monitoredFiles->size();)
+   for(int i = 0; i < monitoredFiles.size();)
    {
-      int index = matchingFiles->indexOf(monitoredFiles->get(i));
+      int index = matchingFiles.indexOf(monitoredFiles.get(i));
       if (index != -1)
       {
-         matchingFiles->remove(index);
-         monitoredFiles->remove(i);
+         matchingFiles.remove(index);
+         monitoredFiles.remove(i);
       }
       else
       {
@@ -358,11 +358,11 @@ static void UpdateParsersFromTemplate(LogParser *templateParser, StringObjectMap
       }
    }
 
-   for(int i = 0; i < matchingFiles->size(); i++)
+   for(int i = 0; i < matchingFiles.size(); i++)
    {
       TCHAR path[MAX_PATH];
       _tcscpy(path, basePath);
-      _tcslcat(path, matchingFiles->get(i), MAX_PATH);
+      _tcslcat(path, matchingFiles.get(i), MAX_PATH);
       nxlog_debug_tag(DEBUG_TAG, 3, _T("New match for base path \"%s\" and template \"%s\": \"%s\""), basePath, fileTemplate, path);
 
       LogParser *p = new LogParser(templateParser);
@@ -371,19 +371,16 @@ static void UpdateParsersFromTemplate(LogParser *templateParser, StringObjectMap
       p->setDataPushCallback(AgentPushParameterData);
       p->setActionCallback(ExecuteAction);
       p->setThread(ThreadCreateEx(ParserThreadFile, p, firstRun ? static_cast<off_t>(-1) : static_cast<off_t>(0)));
-      activeParsers->set(matchingFiles->get(i), p);
+      activeParsers->set(matchingFiles.get(i), p);
    }
 
-   for(int i = 0; i < monitoredFiles->size(); i++)
+   for(int i = 0; i < monitoredFiles.size(); i++)
    {
-      nxlog_debug_tag(DEBUG_TAG, 3, _T("File \"%s\" no longer matches template \"%s\" (base path \"%s\")"), monitoredFiles->get(i), fileTemplate, basePath);
-      LogParser *p = activeParsers->unlink(monitoredFiles->get(i));
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("File \"%s\" no longer matches template \"%s\" (base path \"%s\")"), monitoredFiles.get(i), fileTemplate, basePath);
+      LogParser *p = activeParsers->unlink(monitoredFiles.get(i));
       p->stop();
       delete p;
    }
-
-   delete matchingFiles;
-   delete monitoredFiles;
 }
 
 /**

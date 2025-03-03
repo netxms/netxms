@@ -1,10 +1,6 @@
-/*  * For clarity, attributes should more correctly be considered metadata. An attribute is frequently and generally a property of a property.
- * 
- */
-
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -79,37 +75,37 @@ enum class AssetOperation
 class AssetAttribute
 {
 private:
-   TCHAR *m_name;
-   TCHAR *m_displayName;
+   wchar_t *m_name;
+   wchar_t *m_displayName;
    AMDataType m_dataType;
    bool m_isMandatory;
    bool m_isUnique;
    bool m_isHidden;
-   TCHAR *m_autofillScriptSource;
+   wchar_t *m_autofillScriptSource;
    NXSL_Program *m_autofillScript;
    int32_t m_rangeMin;
    int32_t m_rangeMax;
    AMSystemType m_systemType;
    StringMap m_enumValues;
 
-   void setScript(TCHAR *script);
+   void setScript(wchar_t *script);
 
 public:
    AssetAttribute(const NXCPMessage &msg);
    AssetAttribute(DB_RESULT result, int row);
-   AssetAttribute(const TCHAR *name, const ConfigEntry& entry, bool nxslV5);
+   AssetAttribute(const wchar_t *name, const ConfigEntry& entry, bool nxslV5);
    ~AssetAttribute();
 
    void loadEnumValues(DB_RESULT result);
    void fillMessage(NXCPMessage *msg, uint32_t baseId);
-   void updateFromMessage(const NXCPMessage &msg);
+   void updateFromMessage(const NXCPMessage& msg);
    bool saveToDatabase() const;
    bool deleteFromDatabase();
 
    json_t *toJson() const;
    void createExportRecord(TextFileWriter& xml);
 
-   const TCHAR *getName() const { return m_name; }
+   const wchar_t *getName() const { return m_name; }
    AMDataType getDataType() const { return m_dataType; }
    AMSystemType getSystemType() const { return m_systemType; }
    bool isMandatory() const { return m_isMandatory; }
@@ -118,7 +114,7 @@ public:
    int32_t getMinRange() const { return m_rangeMin; }
    int32_t getMaxRange() const { return m_rangeMax; }
    NXSL_Program *getScript() const { return m_autofillScript; }
-   StringList *getEnumValues() const { return (m_dataType == AMDataType::Enum) ? m_enumValues.keys() : nullptr; }
+   StringList *getEnumValues() const { return (m_dataType == AMDataType::Enum) ? new StringList(m_enumValues.keys()) : nullptr; }
 
    const TCHAR *getActualDisplayName() const
    {

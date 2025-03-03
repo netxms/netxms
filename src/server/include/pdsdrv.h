@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -36,9 +36,9 @@
  */
 #define DECLARE_PDSDRV_ENTRY_POINT(name, implClass) \
 extern "C" int __EXPORT pdsdrvAPIVersion; \
-extern "C" const TCHAR __EXPORT *pdsdrvName; \
+extern "C" const wchar_t __EXPORT *pdsdrvName; \
 int __EXPORT pdsdrvAPIVersion = PDSDRV_API_VERSION; \
-const TCHAR __EXPORT *pdsdrvName = name; \
+const wchar_t __EXPORT *pdsdrvName = name; \
 extern "C" PerfDataStorageDriver __EXPORT *pdsdrvCreateInstance() { return new implClass; }
 
 /**
@@ -50,16 +50,16 @@ public:
    PerfDataStorageDriver();
    virtual ~PerfDataStorageDriver();
 
-   virtual const TCHAR *getName();
-   virtual const TCHAR *getVersion();
+   virtual const wchar_t *getName();
+   virtual const wchar_t *getVersion();
 
    virtual bool init(Config *config);
    virtual void shutdown();
 
-   virtual bool saveDCItemValue(DCItem *dcObject, time_t timestamp, const TCHAR *value);
+   virtual bool saveDCItemValue(DCItem *dcObject, time_t timestamp, const wchar_t *value);
    virtual bool saveDCTableValue(DCTable *dcObject, time_t timestamp, Table *value);
 
-   virtual DataCollectionError getInternalMetric(const TCHAR *metric, TCHAR *value);
+   virtual DataCollectionError getInternalMetric(const wchar_t *metric, wchar_t *value);
 };
 
 #endif   /* _pdsdrv_h_ */

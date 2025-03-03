@@ -74,7 +74,7 @@ int64_t GetSyncerRunTime(StatisticType statType);
 /**
  * Get internal metric from performance data storage driver
  */
-DataCollectionError GetPerfDataStorageDriverMetric(const TCHAR *driver, const TCHAR *metric, TCHAR *value);
+DataCollectionError GetPerfDataStorageDriverMetric(const wchar_t *driver, const wchar_t *metric, wchar_t *value);
 
 /**
  * Get attribute via EtherNet/IP
@@ -13277,7 +13277,7 @@ bool Node::getIcmpStatistics(const TCHAR *target, uint32_t *last, uint32_t *min,
 StringList *Node::getIcmpStatCollectors() const
 {
    lockProperties();
-   StringList *collectors = (m_icmpStatCollectors != nullptr) ? m_icmpStatCollectors->keys() : new StringList();
+   StringList *collectors = (m_icmpStatCollectors != nullptr) ? new StringList(m_icmpStatCollectors->keys()) : new StringList();
    unlockProperties();
    return collectors;
 }

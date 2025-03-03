@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -233,9 +233,7 @@ uint64_t GetDCICacheMemoryUsage()
 int F_GetServerQueueNames(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    s_queuesLock.lock();
-   StringList *names = s_queues.keys();
+   *result = vm->createValue(new NXSL_Array(vm, s_queues.keys()));
    s_queuesLock.unlock();
-   *result = vm->createValue(new NXSL_Array(vm, *names));
-   delete names;
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -473,10 +473,10 @@ static uint32_t FindLocalInterfaceOnRemoteNode(Node *thisNode, Node *remoteNode,
    size_t oidPrefixLen = _tcslen(oidPrefix);
 
    uint32_t localIfIndex = 0;
-   StringList *oids = connections->keys();
-   for(int i = 0; i < oids->size(); i++)
+   StringList oids = connections->keys();
+   for(int i = 0; i < oids.size(); i++)
    {
-      const TCHAR *oid = oids->get(i);
+      const TCHAR *oid = oids.get(i);
       if (_tcsncmp(oid, oidPrefix, oidPrefixLen))
          continue;
 
@@ -561,7 +561,6 @@ static uint32_t FindLocalInterfaceOnRemoteNode(Node *thisNode, Node *remoteNode,
          break;
       }
    }
-   delete oids;
    delete connections;
    return localIfIndex;
 }
@@ -810,16 +809,15 @@ static void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs, bool lldpMibVe
    const TCHAR *oidPrefix = lldpMibVersion2 ? _T("1.3.111.2.802.1.1.13.1.4.1.1.6.") : _T("1.0.8802.1.1.2.1.4.1.1.5.");
    size_t oidPrefixLen = _tcslen(oidPrefix);
 
-   StringList *oids = connections->keys();
-   for(int i = 0; i < oids->size(); i++)
+   StringList oids = connections->keys();
+   for(int i = 0; i < oids.size(); i++)
    {
-      const TCHAR *oid = oids->get(i);
+      const TCHAR *oid = oids.get(i);
       if (_tcsncmp(oid, oidPrefix, oidPrefixLen))
          continue;
       SNMP_Variable *var = connections->get(oid);
       ProcessLLDPConnectionEntry(node, *connections, lldpMibVersion2, var, nbs);
    }
-   delete oids;
    delete connections;
 }
 

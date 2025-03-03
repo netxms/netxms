@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** NetXMS Foundation Library
- ** Copyright (C) 2003-2024 Raden Solutions
+ ** Copyright (C) 2003-2025 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -460,6 +460,46 @@ void ByteStream::write(const void *data, size_t size)
 }
 
 /**
+ * Write signed value in LEB128 format
+ */
+void ByteStream::writeSignedLEB128(int64_t n)
+{
+   uint8_t encoded[10];
+   size_t len = 0;
+   bool more;
+   do
+   {
+      uint8_t byte = static_cast<uint8_t>(n & 0x7F);
+      n >>= 7;
+      more = (byte & 0x40) ? (n != -1) : (n != 0);
+      if (more)
+         byte |= 0x80;
+      encoded[len++] = byte;
+   }
+   while (more);
+   write(encoded, len);
+}
+
+/**
+ * Write unsigned value in LEB128 format
+ */
+void ByteStream::writeUnsignedLEB128(uint64_t n)
+{
+   uint8_t encoded[10];
+   size_t len = 0;
+   do
+   {
+      uint8_t byte = static_cast<uint8_t>(n & 0x7F);
+      n >>= 7;
+      if (n != 0)
+         byte |= 0x80;
+      encoded[len++] = byte;
+   }
+   while (n != 0);
+   write(encoded, len);
+}
+
+/**
  * Write UNICODE string as MB/UNICODE string
  * @param str the input string
  * @param codepage encoding of the in-stream string
@@ -550,13 +590,13 @@ size_t ByteStream::writeString(const char* str, ssize_t length, bool prependLeng
    {
       if (length < 0x8000) // if len < 2^15 prepend s with len as 2 bytes (0xxx xxxx)
       {
-         uint16_t tmp = static_cast<uint16_t>(length);
-         write(&tmp, 2);
+         uint16_t n = HostToBigEndian16(static_cast<uint16_t>(length));
+         write(&n, 2);
       }
       else // if len > 2^15 prepend s with len as 4 bytes with higher bit set (1xxx xxxx xxxx xxxx)
       {
-         uint32_t tmp = static_cast<uint32_t>(length) | 0x80000000;
-         write(&tmp, 4);
+         uint32_t n = HostToBigEndian32(static_cast<uint32_t>(length) | 0x80000000);
+         write(&n, 4);
       }
    }
 

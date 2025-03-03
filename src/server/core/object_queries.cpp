@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -342,10 +342,11 @@ static int FilterObject(NXSL_VM *vm, const shared_ptr<NetObj>& object, const sha
       if (vm->getResult()->isHashMap())
       {
          NXSL_HashMap *map = vm->getResult()->getValueAsHashMap();
-         unique_ptr<StringList> keys(map->getKeysAsList());
-         for (int i = 0; i < keys->size(); i++)
+         StringList keys = map->getKeysAsList();
+         for (int i = 0; i < keys.size(); i++)
          {
-            (*globalVariables)->create(keys->get(i), vm->createValue(map->get(keys->get(i))));
+            const wchar_t *k = keys.get(i);
+            (*globalVariables)->create(k, vm->createValue(map->get(k)));
          }
       }
    }
@@ -595,10 +596,10 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
       if (orderBy != nullptr)
          realOrderBy.addAll(orderBy);
 
-      StringList *columns = resultSet->get(0)->values->keys();
-      for(int i = 0; i < columns->size(); i++)
+      StringList columns = resultSet->get(0)->values->keys();
+      for(int i = 0; i < columns.size(); i++)
       {
-         const wchar_t *columnName = columns->get(i);
+         const wchar_t *columnName = columns.get(i);
          const wchar_t *originalName = displayNameMapping.get(columnName);
          wchar_t key[256];
          _sntprintf(key, 256, _T("%s.order"), (originalName != nullptr) ? originalName : columnName);
@@ -628,20 +629,18 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
          resultSet->shrinkTo((int)limit);
       }
 
-      for(int i = 0; i < columns->size(); i++)
+      for(int i = 0; i < columns.size(); i++)
       {
          wchar_t key[256];
-         _sntprintf(key, 256, _T("%s.visible"), columns->get(i));
+         _sntprintf(key, 256, _T("%s.visible"), columns.get(i));
          const wchar_t *visible = vm->getMetadataEntry(key);
          if ((visible != nullptr) && (!wcscmp(visible, L"false") || !wcscmp(visible, L"0")))
          {
             for(int j = 0; j < resultSet->size(); j++)
-               resultSet->get(j)->values->remove(columns->get(i));
+               resultSet->get(j)->values->remove(columns.get(i));
             continue;
          }
       }
-
-      delete columns;
    }
 
    delete vm;

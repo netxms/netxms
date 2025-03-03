@@ -138,6 +138,15 @@ static void TestStringList()
    AssertEquals(mlist.get(1), _T("text2"));
    AssertTrue(!_tcsncmp(mlist.get(2), _T("3.1415"), 6));
    AssertEquals(slist.size(), 0);
+   StringList mlist2;
+   mlist2.add(_T("text-to-delete"));
+   AssertEquals(mlist2.size(), 1);
+   mlist2 = std::move(mlist);
+   AssertEquals(mlist.size(), 0);
+   AssertEquals(mlist2.size(), 3);
+   AssertEquals(mlist2.get(0), _T("text1"));
+   AssertEquals(mlist2.get(1), _T("text2"));
+   AssertTrue(!_tcsncmp(mlist2.get(2), _T("3.1415"), 6));
    EndTest();
 
    StartTest(_T("String list - merge"));
@@ -261,11 +270,9 @@ static void TestStringMap()
    EndTest(GetMonotonicClockTime() - start);
 
    StartTest(_T("String map - keys"));
-   StringList *keys = m->keys();
-   AssertNotNull(keys);
-   AssertEquals(keys->size(), mapSize);
-   AssertTrue(!_tcsncmp(keys->get(mapSize / 20), _T("key-"), 4));
-   delete keys;
+   StringList keys = m->keys();
+   AssertEquals(keys.size(), mapSize);
+   AssertTrue(!_tcsncmp(keys.get(mapSize / 20), _T("key-"), 4));
    EndTest();
 
    StartTest(_T("String map - iterator remove"));
@@ -3005,7 +3012,7 @@ static void TestDebugTags()
 /**
  * Test ShortenFilePathForDisplay
  */
-void TestShortenFilePathForDisplay()
+static void TestShortenFilePathForDisplay()
 {
    static const TCHAR *path = FS_PATH_SEPARATOR _T("usr") FS_PATH_SEPARATOR _T("lib") FS_PATH_SEPARATOR _T("netxms") FS_PATH_SEPARATOR _T("module.so");
 
@@ -3016,6 +3023,87 @@ void TestShortenFilePathForDisplay()
    AssertEquals(ShortenFilePathForDisplay(path, 50), path);
    AssertEquals(ShortenFilePathForDisplay(_T("very_long_file_name"), 10), _T("...le_name"));
    AssertEquals(ShortenFilePathForDisplay(_T("/very_long_file_name"), 10), _T("...le_name"));
+   EndTest();
+}
+
+/**
+ * Test ByteStream class
+ */
+static void TestByteStream()
+{
+   ByteStream bs;
+
+   StartTest(_T("ByteStream: encode/decode"));
+   bs.write(static_cast<BYTE>(0x01));
+   bs.write('x');
+   bs.write("\x10\x20\x30\x40", 4);
+   bs.writeL(static_cast<uint16_t>(0x1234));
+   bs.writeL(static_cast<uint32_t>(0x789ABCDE));
+   bs.writeL(_ULL(0x543210ABCDEF1234));
+   bs.writeB(static_cast<uint16_t>(0x1234));
+   bs.writeB(static_cast<uint32_t>(0x789ABCDE));
+   bs.writeB(_ULL(0x543210ABCDEF1234));
+   bs.writeString("test string", -1, true, false);
+   AssertEquals(bs.size(), 47);
+   bs.seek(0);
+   AssertEquals(bs.readByte(), 0x01);
+   AssertEquals(bs.readByte(), 'x');
+   BYTE data[4];
+   bs.read(data, 4);
+   AssertTrue(!memcmp(data, "\x10\x20\x30\x40", 4));
+   AssertEquals(bs.readUInt16L(), static_cast<uint16_t>(0x1234));
+   AssertEquals(bs.readUInt32L(), static_cast<uint32_t>(0x789ABCDE));
+   AssertEquals(bs.readUInt64L(), _ULL(0x543210ABCDEF1234));
+   AssertEquals(bs.readUInt16B(), static_cast<uint16_t>(0x1234));
+   AssertEquals(bs.readUInt32B(), static_cast<uint32_t>(0x789ABCDE));
+   AssertEquals(bs.readUInt64B(), _ULL(0x543210ABCDEF1234));
+   char *s = bs.readPStringA();
+   AssertNotNull(s);
+   AssertTrue(!strcmp(s, "test string"));
+   MemFree(s);
+   EndTest();
+
+   StartTest(_T("ByteStream: clear"));
+   bs.clear();
+   AssertEquals(bs.size(), 0);
+   EndTest();
+
+   StartTest(_T("ByteStream: write unsigned LEB128"));
+   bs.writeUnsignedLEB128(77);
+   AssertEquals(bs.size(), 1);
+   AssertTrue(!memcmp(bs.buffer(), "\x4d", 1));
+   bs.clear();
+   bs.writeUnsignedLEB128(0x81);
+   AssertEquals(bs.size(), 2);
+   AssertTrue(!memcmp(bs.buffer(), "\x81\x01", 2));
+   bs.clear();
+   bs.writeUnsignedLEB128(624485);
+   AssertEquals(bs.size(), 3);
+   AssertTrue(!memcmp(bs.buffer(), "\xE5\x8E\x26", 3));
+   EndTest();
+
+   bs.clear();
+
+   StartTest(_T("ByteStream: write signed LEB128"));
+   bs.writeSignedLEB128(7);
+   AssertEquals(bs.size(), 1);
+   AssertTrue(!memcmp(bs.buffer(), "\x07", 1));
+   bs.clear();
+   bs.writeSignedLEB128(77);
+   AssertEquals(bs.size(), 2);
+   AssertTrue(!memcmp(bs.buffer(), "\xCd\x00", 2));
+   bs.clear();
+   bs.writeSignedLEB128(0x81);
+   AssertEquals(bs.size(), 2);
+   AssertTrue(!memcmp(bs.buffer(), "\x81\x01", 2));
+   bs.clear();
+   bs.writeSignedLEB128(624485);
+   AssertEquals(bs.size(), 3);
+   AssertTrue(!memcmp(bs.buffer(), "\xE5\x8E\x26", 3));
+   bs.clear();
+   bs.writeSignedLEB128(-123456);
+   AssertEquals(bs.size(), 3);
+   AssertTrue(!memcmp(bs.buffer(), "\xC0\xBB\x78", 3));
    EndTest();
 }
 
@@ -3086,6 +3174,7 @@ int main(int argc, char *argv[])
    TestStringFunctionsW();
    TestStringToBinaryConversions();
    TestBinaryToStringConversions();
+   TestByteStream();
    TestPatternMatching();
    TestShortenFilePathForDisplay();
    TestMessageClass();

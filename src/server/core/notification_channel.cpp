@@ -856,13 +856,12 @@ bool GetNotificationChannelStatus(const TCHAR *name, NotificationChannelStatus *
 void GetNotificationDrivers(NXCPMessage *msg)
 {
    uint32_t base = VID_ELEMENT_LIST_BASE;
-   StringList *keyList = s_driverList.keys();
-   for(int i = 0; i < keyList->size(); i++)
+   StringList driverNames = s_driverList.keys();
+   for(int i = 0; i < driverNames.size(); i++)
    {
-      msg->setField(base, keyList->get(i));
+      msg->setField(base, driverNames.get(i));
       base++;
    }
-   delete keyList;
    msg->setField(VID_DRIVER_COUNT, s_driverList.size());
 }
 

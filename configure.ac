@@ -1023,7 +1023,7 @@ AC_ARG_WITH(dist,
 	AGENT_DIRS="libnxappc libnxtux"
 	NCDRV_MODULES="anysms googlechat kannel mattermost mqtt msteams mymobile nexmo nxagent slack smtp smseagle telegram text2reach twilio websms xmpp"
 	HDLINK_DIRS="jira redmine"
-	PDSDRV_DIRS="influxdb rrdtool"
+	PDSDRV_DIRS="clickhouse influxdb rrdtool"
 	TOP_LEVEL_MODULES="include sql images tests"
 	SERVER_INCLUDE="include"
 	CONTRIB_MODULES="mibs backgrounds music oui templates"
@@ -2439,11 +2439,12 @@ if test "x$DISABLE_CURL" = "xno" -a "x$DIST_BUILD" != "xyes"; then
 	fi
 
 	if test "x$HAVE_LIBCURL" = "xyes"; then
-	   SUBAGENT_DIRS="$SUBAGENT_DIRS bind9 netsvc"
-	   NCDRV_MODULES="$NCDRV_MODULES anysms googlechat kannel mattermost msteams mymobile nexmo slack smtp smseagle telegram text2reach twilio websms"
-	   HDLINK_DIRS="$HDLINK_DIRS redmine"
-	   AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
-   fi
+		SUBAGENT_DIRS="$SUBAGENT_DIRS bind9 netsvc"
+		NCDRV_MODULES="$NCDRV_MODULES anysms googlechat kannel mattermost msteams mymobile nexmo slack smtp smseagle telegram text2reach twilio websms"
+		HDLINK_DIRS="$HDLINK_DIRS redmine"
+		PDSDRV_DIRS="clickhouse $PDSDRV_DIRS"
+		AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
+	fi
 fi
 
 if test "x$DISABLE_SSH" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
@@ -4850,6 +4851,7 @@ AC_CONFIG_FILES([
 	src/server/nxreportd/Makefile
 	src/server/nxreportd/java/Makefile
 	src/server/pdsdrv/Makefile
+	src/server/pdsdrv/clickhouse/Makefile
 	src/server/pdsdrv/influxdb/Makefile
 	src/server/pdsdrv/rrdtool/Makefile
 	src/server/spe/Makefile
@@ -4964,11 +4966,12 @@ if test "x${BUILD_SERVER}" = "xyes"; then
 	else
 		echo "Editline support        : NO"
 	fi
-   if test "x${HAVE_LIBISOTREE}" = "xyes"; then
-      echo "Isolation tree support  : YES"
-   else
-      echo "Isolation tree support  : NO"
-   fi
+	if test "x${HAVE_LIBISOTREE}" = "xyes"; then
+		echo "Isolation tree support  : YES"
+	else
+		echo "Isolation tree support  : NO"
+	fi
+	echo "Fan-out data drivers    : ${PDSDRV_DIRS}"
 	echo "Helpdesk system drivers : ${HDLINK_DIRS}"
 else
 	echo "Build Server            : NO"

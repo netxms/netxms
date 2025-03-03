@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -180,9 +180,7 @@ LONG H_PushValue(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommS
 LONG H_PushValues(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    s_localCacheLock.lock();
-   StringList *keys = s_localCache.keys();
-   value->addAll(keys);
+   value->addAll(s_localCache.keys());
    s_localCacheLock.unlock();
-   delete keys;
    return SYSINFO_RC_SUCCESS;
 }

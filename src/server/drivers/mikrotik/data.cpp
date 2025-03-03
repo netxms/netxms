@@ -1,7 +1,7 @@
 /**
  * NetXMS - Network Management System
  * Driver for Mikrotik devices
- * Copyright (C) 2017-2024 Raden Solutions
+ * Copyright (C) 2017-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -66,14 +66,14 @@ uint32_t MikrotikDriverData::metricInfoWalkCallback(SNMP_Variable *v, SNMP_Trans
 void MikrotikDriverData::registerMetrics(ObjectArray<AgentParameterDefinition> *metrics)
 {
    m_cacheLock.lock();
-   StringList *keyList = m_oidCache.keys();
-   for (int i = 0; i < keyList->size(); i++)
-   {
-      metrics->add(new AgentParameterDefinition(keyList->get(i), keyList->get(i), DCI_DT_UINT));
-   }
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("MikrotikDriverData::registerMetrics: %d metrics registered "), keyList->size());
-   delete keyList;
+   StringList keys = m_oidCache.keys();
    m_cacheLock.unlock();
+   for (int i = 0; i < keys.size(); i++)
+   {
+      const wchar_t *k = keys.get(i);
+      metrics->add(new AgentParameterDefinition(k, k, DCI_DT_UINT));
+   }
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("MikrotikDriverData::registerMetrics: %d metrics registered "), keys.size());
 }
 
 /**

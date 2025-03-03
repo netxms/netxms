@@ -573,7 +573,7 @@ public:
    NXSL_Value *get(const TCHAR *key) const { return m_values->get(key); }
    NXSL_Value *getKeys() const;
    NXSL_Value *getValues() const;
-   StringList *getKeysAsList() const { return m_values->keys(); }
+   StringList getKeysAsList() const { return m_values->keys(); }
    bool contains(const TCHAR *key) const { return m_values->contains(key); }
 
    StringMap *toStringMap() const;

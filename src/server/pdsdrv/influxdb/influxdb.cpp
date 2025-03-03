@@ -2,7 +2,7 @@
  ** NetXMS - Network Management System
  ** Performance Data Storage Driver for InfluxDB
  ** Copyright (C) 2019 Sebastian YEPES FERNANDEZ & Julien DERIVIERE
- ** Copyright (C) 2021-2022 Raden Solutions
+ ** Copyright (C) 2021-2025 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published by
@@ -35,7 +35,7 @@
 /**
  * Driver name
  */
-static const TCHAR *s_driverName = _T("InfluxDB");
+static const wchar_t s_driverName[] = L"InfluxDB";
 
 /**
  * Constructor
@@ -57,7 +57,7 @@ InfluxDBStorageDriver::~InfluxDBStorageDriver()
 /**
  * Get name
  */
-const TCHAR *InfluxDBStorageDriver::getName()
+const wchar_t *InfluxDBStorageDriver::getName()
 {
    return s_driverName;
 }
@@ -67,8 +67,8 @@ const TCHAR *InfluxDBStorageDriver::getName()
  */
 bool InfluxDBStorageDriver::init(Config *config)
 {
-   const TCHAR *protocol = config->getValue(_T("/InfluxDB/Protocol"), _T("udp"));
-   if (_tcsicmp(protocol, _T("udp")) && _tcsicmp(protocol, _T("api-v1")) && _tcsicmp(protocol, _T("api-v2")))
+   const wchar_t *protocol = config->getValue(L"/InfluxDB/Protocol", L"udp");
+   if (wcsicmp(protocol, _T("udp")) && wcsicmp(protocol, _T("api-v1")) && wcsicmp(protocol, _T("api-v2")))
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Invalid protocol specification %s"), protocol);
       return false;
@@ -88,14 +88,14 @@ bool InfluxDBStorageDriver::init(Config *config)
 #endif
    }
 
-   m_enableUnsignedType = config->getValueAsBoolean(_T("/InfluxDB/EnableUnsignedType"), m_enableUnsignedType);
-   nxlog_debug_tag(DEBUG_TAG, 2, _T("Unsigned integer data type is %s"), m_enableUnsignedType ? _T("enabled") : _T("disabled"));
+   m_enableUnsignedType = config->getValueAsBoolean(L"/InfluxDB/EnableUnsignedType", m_enableUnsignedType);
+   nxlog_debug_tag(DEBUG_TAG, 2, L"Unsigned integer data type is %s", m_enableUnsignedType ? L"enabled" : L"disabled");
 
    m_validateValues = config->getValueAsBoolean(_T("/InfluxDB/ValidateValues"), m_validateValues);
-   nxlog_debug_tag(DEBUG_TAG, 2, _T("Value validation is %s"), m_validateValues ? _T("enabled") : _T("disabled"));
+   nxlog_debug_tag(DEBUG_TAG, 2, L"Value validation is %s", m_validateValues ? L"enabled" : L"disabled");
 
    m_correctValues = config->getValueAsBoolean(_T("/InfluxDB/CorrectValues"), m_correctValues);
-   nxlog_debug_tag(DEBUG_TAG, 2, _T("Value correction is %s"), m_correctValues ? _T("enabled") : _T("disabled"));
+   nxlog_debug_tag(DEBUG_TAG, 2, L"Value correction is %s", m_correctValues ? L"enabled" : L"disabled");
 
    int queueCount = config->getValueAsInt(_T("/InfluxDB/Queues"), 1);
    if (queueCount < 1)
@@ -103,14 +103,14 @@ bool InfluxDBStorageDriver::init(Config *config)
    else if (queueCount > 32)
       queueCount = 32;
 
-   nxlog_debug_tag(DEBUG_TAG, 2, _T("Using %d queue%s"), queueCount, queueCount > 1 ? _T("s") : _T(""));
+   nxlog_debug_tag(DEBUG_TAG, 2, L"Using %d queue%s", queueCount, queueCount > 1 ? L"s" : L"");
    for(int i = 0; i < queueCount; i++)
    {
       InfluxDBSender *sender;
-      if (!_tcsicmp(protocol, _T("udp")))
+      if (!wcsicmp(protocol, L"udp"))
          sender = new UDPSender(*config);
 #if HAVE_LIBCURL
-      else if (!_tcsicmp(protocol, _T("api-v1")))
+      else if (!wcsicmp(protocol, L"api-v1"))
          sender = new APIv1Sender(*config);
       else
          sender = new APIv2Sender(*config);
@@ -135,7 +135,7 @@ void InfluxDBStorageDriver::shutdown()
 /**
  * Normalize all the metric and tag names
  */
-static StringBuffer NormalizeString(const TCHAR *src)
+static StringBuffer NormalizeString(const wchar_t *src)
 {
    StringBuffer dst(src);
    dst.toLowercase();
@@ -156,7 +156,7 @@ static StringBuffer NormalizeString(const TCHAR *src)
 /**
  * Find and replace all occurrences of given sub-string
  */
-static void FindAndReplaceAll(StringBuffer *data, const TCHAR *toSearch, const TCHAR *replaceStr)
+static void FindAndReplaceAll(StringBuffer *data, const wchar_t *toSearch, const wchar_t *replaceStr)
 {
    // Get the first occurrence
    ssize_t pos = data->find(toSearch);
@@ -183,27 +183,27 @@ static bool GetTagsFromObject(const NetObj& object, StringBuffer *tags)
    nxlog_debug_tag(DEBUG_TAG, 8, _T("Object: %s - CMA: #%d"), object.getName(), ca->size());
 
    bool ignoreMetric = false;
-   StringList *keys = ca->keys();
-   for (int i = 0; i < keys->size(); i++)
+   StringList keys = ca->keys();
+   for (int i = 0; i < keys.size(); i++)
    {
-      const TCHAR *key = keys->get(i);
-      if (!_tcsnicmp(_T("ignore_influxdb"), key, 15))
+      const wchar_t *key = keys.get(i);
+      if (!wcsicmp(L"pds:ignore", key) || !wcsicmp(L"ignore_influxdb", key))
       {
          ignoreMetric = true;
          break;
       }
 
-      // Only include CA's with the prefix tag_
-      if (!_tcsnicmp(_T("tag_"), key, 4))
+      // Only include CA's with the prefix tag_/tag:
+      if (!wcsnicmp(L"tag:", key, 4) || !wcsnicmp(L"tag_", key, 4))
       {
-         StringBuffer value = NormalizeString(ca->get(keys->get(i)));
+         StringBuffer value = NormalizeString(ca->get(keys.get(i)));
          if (!value.isEmpty())
          {
             StringBuffer name = NormalizeString(&key[4]);
-            nxlog_debug_tag(DEBUG_TAG, 8, _T("Object: %s - CA: K:%s = V:%s"), object.getName(), name.cstr(), value.cstr());
-            tags->append(_T(','));
+            nxlog_debug_tag(DEBUG_TAG, 8, L"Object: %s - CA: K:%s = V:%s", object.getName(), name.cstr(), value.cstr());
+            tags->append(L',');
             tags->append(name);
-            tags->append(_T('='));
+            tags->append(L'=');
             tags->append(value);
          }
          else
@@ -216,7 +216,6 @@ static bool GetTagsFromObject(const NetObj& object, StringBuffer *tags)
          nxlog_debug_tag(DEBUG_TAG, 8, _T("Object: %s - CA: K:%s (Ignored)"), object.getName(), key);
       }
    }
-   delete keys;
    delete ca;
    return ignoreMetric;
 }
@@ -224,7 +223,7 @@ static bool GetTagsFromObject(const NetObj& object, StringBuffer *tags)
 /**
  * Build and queue metric from item DCI's
  */
-bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const TCHAR *value)
+bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const wchar_t *value)
 {
    nxlog_debug_tag(DEBUG_TAG, 8,
             _T("Raw metric: OwnerName:%s DataSource:%i Type:%i Name:%s Description: %s Instance:%s DataType:%i DeltaCalculationMethod:%i RelatedObject:%i Value:%s timestamp:") INT64_FMT,
@@ -235,7 +234,7 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    // Dont't try to send empty values
    if (*value == 0)
    {
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("Metric %s [%u] not sent: empty value"), dci->getName().cstr(), dci->getId());
+      nxlog_debug_tag(DEBUG_TAG, 7, L"Metric %s [%u] not sent: empty value", dci->getName().cstr(), dci->getId());
       return true;
    }
 
@@ -375,7 +374,7 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    // Metric name
    // If it's a MIB or Dummy metric use the Description if not use the Name
    StringBuffer name;
-   if ((dci->getDataSource() == DS_SNMP_AGENT) ||
+   if ((dci->getDataSource() == DS_SNMP_AGENT) || (dci->getDataSource() == DS_MODBUS) ||
        ((dci->getDataSource() == DS_INTERNAL) && !_tcsnicmp(dci->getName(), _T("Dummy"), 5)))
    {
       name = NormalizeString(dci->getDescription());
@@ -394,18 +393,18 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    host.toLowercase();
 
    // Validate value
-   TCHAR correctedValue[64];
+   wchar_t correctedValue[64];
    correctedValue[0] = 0;
    if (m_validateValues && (dci->getTransformedDataType() != DCI_DT_STRING))
    {
-      TCHAR *eptr;
+      wchar_t *eptr;
 
       if (isInteger)
       {
          if (isUnsigned && m_enableUnsignedType)
          {
             errno = 0;
-            uint64_t u = _tcstoull(value, &eptr, 0);
+            uint64_t u = wcstoull(value, &eptr, 0);
             if ((*eptr != 0) || (errno == ERANGE))
             {
                if (!m_correctValues)
@@ -457,13 +456,13 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    StringBuffer instance = NormalizeString(dci->getInstanceName());
    if (instance.isEmpty())
    {
-      instance = _T("none");
+      instance = L"none";
    }
    else
    {
       // Remove instance from the metric name
-      name.replace(instance, _T(""));
-      FindAndReplaceAll(&name, _T("__"), _T("_"));
+      name.replace(instance, L"");
+      FindAndReplaceAll(&name, L"__", L"_");
    }
 
    // Build final metric structure
@@ -508,24 +507,16 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
 }
 
 /**
- * Save table DCI's
- */
-bool InfluxDBStorageDriver::saveDCTableValue(DCTable *dcObject, time_t timestamp, Table *value)
-{
-   return true;
-}
-
-/**
  * Get driver's internal metrics
  */
-DataCollectionError InfluxDBStorageDriver::getInternalMetric(const TCHAR *metric, TCHAR *value)
+DataCollectionError InfluxDBStorageDriver::getInternalMetric(const wchar_t *metric, wchar_t *value)
 {
    DataCollectionError rc = DCE_SUCCESS;
-   if (!_tcsicmp(metric, _T("senders")))
+   if (!wcsicmp(metric, L"senders"))
    {
       ret_int(value, m_senders.size());
    }
-   else if (!_tcsicmp(metric, _T("overflowQueues")))
+   else if (!wcsicmp(metric, L"overflowQueues"))
    {
       uint32_t count = 0;
       for(int i = 0; i < m_senders.size(); i++)
@@ -533,21 +524,21 @@ DataCollectionError InfluxDBStorageDriver::getInternalMetric(const TCHAR *metric
             count++;
       ret_uint(value, count);
    }
-   else if (!_tcsicmp(metric, _T("messageDrops")))
+   else if (!wcsicmp(metric, L"messageDrops"))
    {
       uint64_t count = 0;
       for(int i = 0; i < m_senders.size(); i++)
          count += m_senders.get(i)->getMessageDrops();
       ret_uint64(value, count);
    }
-   else if (!_tcsicmp(metric, _T("queueSize.bytes")))
+   else if (!wcsicmp(metric, L"queueSize.bytes"))
    {
       uint64_t size = 0;
       for(int i = 0; i < m_senders.size(); i++)
          size += m_senders.get(i)->getQueueSizeInBytes();
       ret_uint64(value, size);
    }
-   else if (!_tcsicmp(metric, _T("queueSize.messages")))
+   else if (!wcsicmp(metric, L"queueSize.messages"))
    {
       uint32_t size = 0;
       for(int i = 0; i < m_senders.size(); i++)
@@ -559,7 +550,7 @@ DataCollectionError InfluxDBStorageDriver::getInternalMetric(const TCHAR *metric
       value[0] = 0;
       rc = DCE_NOT_SUPPORTED;
    }
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("getInternalMetric(%s): rc=%d, value=%s"), metric, rc, value);
+   nxlog_debug_tag(DEBUG_TAG, 7, L"getInternalMetric(%s): rc=%d, value=%s", metric, rc, value);
    return rc;
 }
 

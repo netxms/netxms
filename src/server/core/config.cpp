@@ -30,7 +30,7 @@
  */
 extern char g_codePage[];
 extern StringList g_moduleLoadList;
-extern TCHAR *g_pdsLoadList;
+extern wchar_t *g_pdsLoadList;
 extern InetAddressList g_peerNodeAddrList;
 extern StringSet g_trustedCertificates;
 extern StringSet g_crlList;

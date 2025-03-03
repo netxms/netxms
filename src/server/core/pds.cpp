@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 
 #define MAX_PDS_DRIVERS		8
 
-#define DEBUG_TAG _T("pdsdrv")
+#define DEBUG_TAG L"pdsdrv"
 
 /**
  * Server configuration
@@ -36,7 +36,7 @@ extern Config g_serverConfig;
 /**
  * Drivers to load
  */
-TCHAR *g_pdsLoadList = nullptr;
+wchar_t *g_pdsLoadList = nullptr;
 
 /**
  * List of loaded drivers
@@ -61,15 +61,15 @@ PerfDataStorageDriver::~PerfDataStorageDriver()
 /**
  * Get driver's name
  */
-const TCHAR *PerfDataStorageDriver::getName()
+const wchar_t *PerfDataStorageDriver::getName()
 {
-   return _T("GENERIC");
+   return L"GENERIC";
 }
 
 /**
  * Get driver's version
  */
-const TCHAR *PerfDataStorageDriver::getVersion()
+const wchar_t *PerfDataStorageDriver::getVersion()
 {
    return NETXMS_VERSION_STRING;
 }
@@ -92,7 +92,7 @@ void PerfDataStorageDriver::shutdown()
 /**
  * Save DCI value
  */
-bool PerfDataStorageDriver::saveDCItemValue(DCItem *dcObject, time_t timestamp, const TCHAR *value)
+bool PerfDataStorageDriver::saveDCItemValue(DCItem *dcObject, time_t timestamp, const wchar_t *value)
 {
    return false;
 }
@@ -108,7 +108,7 @@ bool PerfDataStorageDriver::saveDCTableValue(DCTable *dcObject, time_t timestamp
 /**
  * Get internal metric
  */
-DataCollectionError PerfDataStorageDriver::getInternalMetric(const TCHAR *metric, TCHAR *value)
+DataCollectionError PerfDataStorageDriver::getInternalMetric(const TCHAR *metric, wchar_t *value)
 {
    return DCE_NOT_SUPPORTED;
 }
@@ -116,7 +116,7 @@ DataCollectionError PerfDataStorageDriver::getInternalMetric(const TCHAR *metric
 /**
  * Storage request
  */
-void PerfDataStorageRequest(DCItem *dci, time_t timestamp, const TCHAR *value)
+void PerfDataStorageRequest(DCItem *dci, time_t timestamp, const wchar_t *value)
 {
    for(int i = 0; i < s_numDrivers; i++)
       s_drivers[i]->saveDCItemValue(dci, timestamp, value);
@@ -136,23 +136,23 @@ void PerfDataStorageRequest(DCTable *dci, time_t timestamp, Table *value)
  *
  * @param file Driver's file name
  */
-static void LoadDriver(const TCHAR *file)
+static void LoadDriver(const wchar_t *file)
 {
-   TCHAR errorText[256], fullName[MAX_PATH];
+   wchar_t errorText[256], fullName[MAX_PATH];
 #ifdef _WIN32
    bool resetDllPath = false;
-	if (_tcschr(file, _T('\\')) == nullptr)
+	if (wcschr(file, L'\\') == nullptr)
 	{
-	   TCHAR path[MAX_PATH];
-	   _tcscpy(path, g_netxmsdLibDir);
-	   _tcscat(path, LDIR_PDSDRV);
+	   wchar_t path[MAX_PATH];
+	   wcscpy(path, g_netxmsdLibDir);
+	   wcscat(path, LDIR_PDSDRV);
    	SetDllDirectory(path);
       resetDllPath = true;
    }
 
-   size_t len = _tcslen(fullName);
-   if ((len < 5) || (_tcsicmp(&fullName[len - 5], _T(".pdsd")) && _tcsicmp(&fullName[len - 4], _T(".dll"))))
-      _tcslcat(fullName, _T(".pdsd"), MAX_PATH);
+   size_t len = wcslen(fullName);
+   if ((len < 5) || (wcsicmp(&fullName[len - 5], L".pdsd") && wcsicmp(&fullName[len - 4], L".dll")))
+      wcslcat(fullName, L".pdsd", MAX_PATH);
 
 	HMODULE hModule = DLOpen(fullName, errorText);
 
@@ -161,20 +161,20 @@ static void LoadDriver(const TCHAR *file)
       SetDllDirectory(nullptr);
    }
 #else
-	if (_tcschr(file, _T('/')) == nullptr)
+	if (wcschr(file, L'/') == nullptr)
 	{
-	   TCHAR libdir[MAX_PATH];
+	   wchar_t libdir[MAX_PATH];
 	   GetNetXMSDirectory(nxDirLib, libdir);
-      _sntprintf(fullName, MAX_PATH, _T("%s/pdsdrv/%s"), libdir, file);
+      _sntprintf(fullName, MAX_PATH, L"%s/pdsdrv/%s", libdir, file);
 	}
 	else
 	{
-		_tcslcpy(fullName, file, MAX_PATH);
+		wcslcpy(fullName, file, MAX_PATH);
 	}
 
-   size_t len = _tcslen(fullName);
-   if ((len < 5) || (_tcsicmp(&fullName[len - 5], _T(".pdsd")) && _tcsicmp(&fullName[len - _tcslen(SHLIB_SUFFIX)], SHLIB_SUFFIX)))
-      _tcslcat(fullName, _T(".pdsd"), MAX_PATH);
+   size_t len = wcslen(fullName);
+   if ((len < 5) || (wcsicmp(&fullName[len - 5], L".pdsd") && wcsicmp(&fullName[len - wcslen(SHLIB_SUFFIX)], SHLIB_SUFFIX)))
+      wcslcat(fullName, L".pdsd", MAX_PATH);
 
    HMODULE hModule = DLOpen(fullName, errorText);
 #endif
@@ -189,34 +189,34 @@ static void LoadDriver(const TCHAR *file)
          if (*apiVersion == PDSDRV_API_VERSION)
          {
             PerfDataStorageDriver *driver = CreateInstance();
-            if ((driver != NULL) && driver->init(&g_serverConfig))
+            if ((driver != nullptr) && driver->init(&g_serverConfig))
             {
                s_drivers[s_numDrivers++] = driver;
-               nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Performance data storage driver %s loaded successfully"), driver->getName());
+               nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Performance data storage driver %s loaded successfully", driver->getName());
             }
             else
             {
                delete driver;
-               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Initialization of performance data storage driver \"%s\" failed"), file);
+               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Initialization of performance data storage driver \"%s\" failed", file);
                DLClose(hModule);
             }
          }
          else
          {
-            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Performance data storage driver \"%s\" cannot be loaded because of API version mismatch (driver: %d; server: %d)"),
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Performance data storage driver \"%s\" cannot be loaded because of API version mismatch (driver: %d; server: %d)",
                      file, *apiVersion, PDSDRV_API_VERSION);
             DLClose(hModule);
          }
       }
       else
       {
-         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to find entry point in performance data storage driver \"%s\""), file);
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Unable to find entry point in performance data storage driver \"%s\"", file);
          DLClose(hModule);
       }
    }
    else
    {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to load performance data storage driver \"%s\" (%s)"), file, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Unable to load performance data storage driver \"%s\" (%s)", file, errorText);
    }
 }
 
@@ -227,8 +227,8 @@ void LoadPerfDataStorageDrivers()
 {
    memset(s_drivers, 0, sizeof(PerfDataStorageDriver *) * MAX_PDS_DRIVERS);
 
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Loading performance data storage drivers"));
-   for(TCHAR *curr = g_pdsLoadList, *next = nullptr; curr != nullptr; curr = next)
+   nxlog_debug_tag(DEBUG_TAG, 1, L"Loading performance data storage drivers");
+   for(wchar_t *curr = g_pdsLoadList, *next = nullptr; curr != nullptr; curr = next)
    {
       next = _tcschr(curr, _T('\n'));
       if (next != nullptr)
@@ -246,7 +246,7 @@ void LoadPerfDataStorageDrivers()
    }
    if (s_numDrivers > 0)
       g_flags |= AF_PERFDATA_STORAGE_DRIVER_LOADED;
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("%d performance data storage drivers loaded"), s_numDrivers);
+   nxlog_debug_tag(DEBUG_TAG, 1, L"%d performance data storage drivers loaded", s_numDrivers);
 }
 
 /**
@@ -256,22 +256,22 @@ void ShutdownPerfDataStorageDrivers()
 {
    for(int i = 0; i < s_numDrivers; i++)
    {
-      nxlog_debug_tag(DEBUG_TAG, 2, _T("Executing shutdown handler for driver %s"), s_drivers[i]->getName());
+      nxlog_debug_tag(DEBUG_TAG, 2, L"Executing shutdown handler for driver %s", s_drivers[i]->getName());
       s_drivers[i]->shutdown();
       delete s_drivers[i];
    }
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("All performance data storage drivers unloaded"));
+   nxlog_debug_tag(DEBUG_TAG, 1, L"All performance data storage drivers unloaded");
 }
 
 /**
  * Get internal metric from performance data storage driver
  */
-DataCollectionError GetPerfDataStorageDriverMetric(const TCHAR *driver, const TCHAR *metric, TCHAR *value)
+DataCollectionError GetPerfDataStorageDriverMetric(const wchar_t *driver, const wchar_t *metric, wchar_t *value)
 {
    DataCollectionError rc = DCE_NO_SUCH_INSTANCE;
    for(int i = 0; i < s_numDrivers; i++)
    {
-      if (!_tcsicmp(s_drivers[i]->getName(), driver))
+      if (!wcsicmp(s_drivers[i]->getName(), driver))
       {
          rc = s_drivers[i]->getInternalMetric(metric, value);
          break;

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -379,13 +379,13 @@ StructArray<KeyValuePair<void>> *StringMapBase::toArray(bool (*filter)(const TCH
 /**
  * Get list of all keys
  */
-StringList *StringMapBase::keys() const
+StringList StringMapBase::keys() const
 {
-   StringList *list = new StringList();
+   StringList list;
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      list->add(m_ignoreCase ? entry->originalKey : entry->key);
+      list.add(m_ignoreCase ? entry->originalKey : entry->key);
    }
    return list;
 }

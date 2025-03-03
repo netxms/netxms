@@ -2,7 +2,7 @@
  ** NetXMS - Network Management System
  ** Performance Data Storage Driver for InfluxDB
  ** Copyright (C) 2019 Sebastian YEPES FERNANDEZ & Julien DERIVIERE
- ** Copyright (C) 2021-2024 Raden Solutions
+ ** Copyright (C) 2021-2025 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published by
@@ -205,12 +205,11 @@ public:
    InfluxDBStorageDriver();
    virtual ~InfluxDBStorageDriver();
 
-   virtual const TCHAR *getName() override;
+   virtual const wchar_t *getName() override;
    virtual bool init(Config *config) override;
    virtual void shutdown() override;
-   virtual bool saveDCItemValue(DCItem *dcObject, time_t timestamp, const TCHAR *value) override;
-   virtual bool saveDCTableValue(DCTable *dcObject, time_t timestamp, Table *value) override;
-   virtual DataCollectionError getInternalMetric(const TCHAR *metric, TCHAR *value) override;
+   virtual bool saveDCItemValue(DCItem *dcObject, time_t timestamp, const wchar_t *value) override;
+   virtual DataCollectionError getInternalMetric(const wchar_t *metric, wchar_t *value) override;
 };
 
 #endif   /* _influxdb_h_ */

@@ -1,6 +1,6 @@
 /*
 ** NetXMS DS18x20 sensor subagent
-** Copyright (C) 2004-2021 Victor Kirhenshtein
+** Copyright (C) 2004-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -71,9 +71,7 @@ static LONG H_SensorTemperature(const TCHAR *param, const TCHAR *arg, TCHAR *val
  */
 static LONG H_SensorNames(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-   StringList *names = s_sensorNames.keys();
-   value->addAll(names);
-   delete names;
+   value->addAll(s_sensorNames.keys());
    return SYSINFO_RC_SUCCESS;
 }
 

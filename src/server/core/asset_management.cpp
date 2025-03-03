@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -66,10 +66,10 @@ AssetAttribute::AssetAttribute(const NXCPMessage &msg) : m_enumValues(msg, VID_A
 /**
  * Create asset attribute from config entry
  */
-AssetAttribute::AssetAttribute(const TCHAR *name, const ConfigEntry& entry, bool nxslV5)
+AssetAttribute::AssetAttribute(const wchar_t *name, const ConfigEntry& entry, bool nxslV5)
 {
-   m_name = MemCopyString(name);
-   m_displayName = MemCopyString(entry.getSubEntryValue(_T("displayName")));
+   m_name = MemCopyStringW(name);
+   m_displayName = MemCopyStringW(entry.getSubEntryValue(_T("displayName")));
    m_dataType = static_cast<AMDataType>(entry.getSubEntryValueAsInt(_T("dataType"), 0 , 0));
    m_isMandatory = entry.getSubEntryValueAsBoolean(_T("mandatory"), 0, false);
    m_isUnique = entry.getSubEntryValueAsBoolean(_T("unique"), 0, false);

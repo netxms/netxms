@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2024 Victor Kirhenshtein
+** Copyright (C) 2004-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1991,13 +1991,13 @@ static BOOL H_UpgradeFromV410(int currVersion, int newVersion)
          {
             // Restore metadata
             SQLQuery(_T("DELETE FROM metadata WHERE var_name LIKE 'TDataTableCreationCommand_%' OR var_name LIKE 'TDataIndexCreationCommand_%'"));
-            StringList *keys = savedMetadata.keys();
-            for(int i = 0; i < keys->size(); i++)
+            StringList keys = savedMetadata.keys();
+            for(int i = 0; i < keys.size(); i++)
             {
                TCHAR query[4096];
                _sntprintf(query, 4096, _T("INSERT INTO metadata (var_name,var_value) VALUES (%s,%s)"),
-                          (const TCHAR *)DBPrepareString(g_dbHandle, keys->get(i)),
-                          (const TCHAR *)DBPrepareString(g_dbHandle, savedMetadata.get(keys->get(i))));
+                          (const TCHAR *)DBPrepareString(g_dbHandle, keys.get(i)),
+                          (const TCHAR *)DBPrepareString(g_dbHandle, savedMetadata.get(keys.get(i))));
                SQLQuery(query);
             }
             return false;

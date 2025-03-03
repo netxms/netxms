@@ -910,7 +910,7 @@ bool LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(const TCHAR *name, ThreadPoolInfo *i
 ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolGetByName(const TCHAR *name);
 int LIBNETXMS_EXPORTABLE ThreadPoolGetSerializedRequestCount(ThreadPool *p, const TCHAR *key);
 uint32_t LIBNETXMS_EXPORTABLE ThreadPoolGetSerializedRequestMaxWaitTime(ThreadPool *p, const TCHAR *key);
-StringList LIBNETXMS_EXPORTABLE *ThreadPoolGetAllPools();
+StringList LIBNETXMS_EXPORTABLE ThreadPoolGetAllPools();
 void LIBNETXMS_EXPORTABLE ThreadPoolSetResizeParameters(int responsiveness, uint32_t waitTimeHWM, uint32_t waitTimeLWM);
 
 /**

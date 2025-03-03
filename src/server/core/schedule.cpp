@@ -1042,17 +1042,16 @@ void GetSchedulerTaskHandlers(NXCPMessage *msg, uint64_t accessRights)
    uint32_t fieldId = VID_CALLBACK_BASE;
    uint32_t count = 0;
 
-   StringList *keyList = s_callbacks.keys();
-   for(int i = 0; i < keyList->size(); i++)
+   StringList keyList = s_callbacks.keys();
+   for(int i = 0; i < keyList.size(); i++)
    {
-      if (accessRights & s_callbacks.get(keyList->get(i))->m_accessRight)
+      if (accessRights & s_callbacks.get(keyList.get(i))->m_accessRight)
       {
-         msg->setField(fieldId, keyList->get(i));
+         msg->setField(fieldId, keyList.get(i));
          count++;
          fieldId++;
       }
    }
-   delete keyList;
    msg->setField(VID_CALLBACK_COUNT, count);
 }
 
