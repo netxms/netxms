@@ -313,7 +313,6 @@ public class EditPaneWidget extends Composite
             @Override
             public void widgetSelected(SelectionEvent e)
             {
-               action.run();
             }
          });
       }

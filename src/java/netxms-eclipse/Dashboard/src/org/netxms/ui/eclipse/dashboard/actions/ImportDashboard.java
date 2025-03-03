@@ -50,10 +50,11 @@ import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
-import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.dialogs.IdMatchingDialog;
@@ -61,12 +62,14 @@ import org.netxms.ui.eclipse.dashboard.dialogs.ImportDashboardDialog;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.DciIdMatchingData;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import com.google.gson.Gson;
 
 /**
  * Create dashboard object
@@ -155,7 +158,8 @@ public class ImportDashboard implements IObjectActionDelegate
 					{
 						Element e = (Element)elements.item(j);
 						DashboardElement de = new DashboardElement(getNodeValueAsInt(e, "type", 0), getNodeValueAsXml(e, "element"), j); //$NON-NLS-1$ //$NON-NLS-2$
-						de.setLayout(getNodeValueAsXml(e, "layout")); //$NON-NLS-1$
+						DashboardElementLayout layout = XMLTools.createFromXml(DashboardElementLayout.class, getNodeValueAsXml(e, "layout")); //$NON-NLS-1$
+						de.setLayout(new Gson().toJson(layout)); 
 						dashboardElements.add(de);
 					}
 				}
@@ -302,7 +306,7 @@ public class ImportDashboard implements IObjectActionDelegate
 		
 		config.remapObjects(objects);
 		config.remapDataCollectionItems(dcis);
-		e.setData(config.createXml());
+		e.setData(config.createJson());
 	}
 
 	/**

@@ -24,6 +24,7 @@ import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
+import com.google.gson.Gson;
 
 /**
  * Configuration for embedded dashboard element
@@ -46,13 +47,21 @@ public class EmbeddedDashboardConfig extends DashboardElementConfig
 	/**
 	 * Create line chart settings object from XML document
 	 * 
-	 * @param xml XML document
+	 * @param data XML or JSON document
 	 * @return deserialized object
 	 * @throws Exception if the object cannot be fully deserialized
 	 */
-	public static EmbeddedDashboardConfig createFromXml(final String xml) throws Exception
+	public static EmbeddedDashboardConfig createFromXmlOrJson(final String data) throws Exception
 	{
-      EmbeddedDashboardConfig config = XMLTools.createFromXml(EmbeddedDashboardConfig.class, xml);
+	   EmbeddedDashboardConfig config;
+      if (data.trim().startsWith("<"))
+      {
+         config = XMLTools.createFromXml(EmbeddedDashboardConfig.class, data);
+      }
+      else
+      {
+         config = new Gson().fromJson(data, EmbeddedDashboardConfig.class);
+      }
 
 		// fix configuration if it was saved in old format
 		if ((config.objectId != 0) && (config.dashboardObjects.length == 0))
@@ -72,6 +81,7 @@ public class EmbeddedDashboardConfig extends DashboardElementConfig
 	{
 		Set<Long> objects = super.getObjects();
 		objects.add(objectId);
+      objects.add(contextObjectId);
 		for(long id : dashboardObjects)
 			objects.add(id);
 		return objects;
@@ -87,6 +97,9 @@ public class EmbeddedDashboardConfig extends DashboardElementConfig
 		ObjectIdMatchingData md = remapData.get(objectId);
 		if (md != null)
 			objectId = md.dstId;
+		md = remapData.get(contextObjectId);
+      if (md != null)
+         contextObjectId = md.dstId;
 		for(int i = 0; i < dashboardObjects.length; i++)
 		{
 			md = remapData.get(dashboardObjects[i]);

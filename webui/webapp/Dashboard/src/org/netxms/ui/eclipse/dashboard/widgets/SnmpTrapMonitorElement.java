@@ -27,12 +27,12 @@ import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.SnmpTrapMonitorConfig;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.widgets.SnmpTrapTraceWidget;
+import com.google.gson.Gson;
 
 /**
  * SNMP trap monitor dashboard element
@@ -56,7 +56,7 @@ public class SnmpTrapMonitorElement extends ElementWidget
 
       try
       {
-         config = XMLTools.createFromXml(SnmpTrapMonitorConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), SnmpTrapMonitorConfig.class);
       }
       catch(Exception e)
       {

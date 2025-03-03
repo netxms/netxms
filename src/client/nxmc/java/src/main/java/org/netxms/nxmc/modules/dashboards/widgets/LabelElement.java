@@ -52,15 +52,15 @@ public class LabelElement extends ElementWidget
 	{
       super(parent, element, view);
 
-		try
-		{
-			config = LabelConfig.createFromXml(element.getData());
-		}
-		catch(Exception e)
-		{
+      try
+      {
+         config = LabelConfig.createFromXmlOrJson(element.getData());
+      }
+      catch(Exception e)
+      {
          logger.error("Cannot parse dashboard element configuration", e);
-			config = new LabelConfig();
-		}
+         config = new LabelConfig();
+      }
 
       // Skip common settings processing
 

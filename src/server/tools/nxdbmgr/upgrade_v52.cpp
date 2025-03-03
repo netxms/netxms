@@ -24,6 +24,17 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 52.13 to 52.14
+ */
+static bool H_UpgradeFromV13()
+{
+   CHK_EXEC(ConvertXmlToJson(L"dashboard_elements", L"dashboard_id", L"element_id", L"element_data"));
+   CHK_EXEC(ConvertXmlToJson(L"dashboard_elements", L"dashboard_id", L"element_id", L"layout_data"));
+   CHK_EXEC(SetMinorSchemaVersion(14));
+   return true;
+}
+
+/**
  * Upgrade from 52.12 to 52.13
  */
 static bool H_UpgradeFromV12()
@@ -158,8 +169,8 @@ static bool H_UpgradeFromV7()
  */
 static bool H_UpgradeFromV6()
 {
-   CHK_EXEC(ConvertXmlToJson(L"network_map_links", L"map_id", L"link_id", L"element_data", "config"));
-   CHK_EXEC(ConvertXmlToJson(L"network_map_elements", L"map_id", L"element_id", L"element_data", "element"));
+   CHK_EXEC(ConvertXmlToJson(L"network_map_links", L"map_id", L"link_id", L"element_data"));
+   CHK_EXEC(ConvertXmlToJson(L"network_map_elements", L"map_id", L"element_id", L"element_data"));
    CHK_EXEC(SetMinorSchemaVersion(7));
    return true;
 }
@@ -330,6 +341,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 13, 52, 14, H_UpgradeFromV13 },
    { 12, 52, 13, H_UpgradeFromV12 },
    { 11, 52, 12, H_UpgradeFromV11 },
    { 10, 52, 11, H_UpgradeFromV10 },

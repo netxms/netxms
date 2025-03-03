@@ -27,12 +27,12 @@ import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.EventMonitorConfig;
 import org.netxms.ui.eclipse.eventmanager.widgets.EventTraceWidget;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import com.google.gson.Gson;
 
 /**
  * Event monitor element widget
@@ -56,7 +56,7 @@ public class EventMonitorElement extends ElementWidget
 
       try
       {
-         config = XMLTools.createFromXml(EventMonitorConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), EventMonitorConfig.class);
       }
       catch(Exception e)
       {

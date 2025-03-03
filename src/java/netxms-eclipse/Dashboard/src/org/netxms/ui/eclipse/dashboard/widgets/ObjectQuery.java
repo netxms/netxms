@@ -43,7 +43,6 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.queries.ObjectQueryResult;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.actions.CopyTableRowsAction;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -58,6 +57,7 @@ import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
+import com.google.gson.Gson;
 
 /**
  * "Object query" dashboard element
@@ -88,7 +88,7 @@ public class ObjectQuery extends ElementWidget
 
       try
       {
-         config = XMLTools.createFromXml(ObjectDetailsConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), ObjectDetailsConfig.class);
       }
       catch(Exception e)
       {

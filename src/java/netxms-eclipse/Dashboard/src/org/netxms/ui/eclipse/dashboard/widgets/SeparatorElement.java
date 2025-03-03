@@ -27,9 +27,9 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.SeparatorConfig;
 import org.netxms.ui.eclipse.tools.ColorConverter;
+import com.google.gson.Gson;
 
 /**
  * Dashboard separator element
@@ -50,7 +50,7 @@ public class SeparatorElement extends ElementWidget
 
 		try
 		{
-         config = XMLTools.createFromXml(SeparatorConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), SeparatorConfig.class);
 		}
 		catch(Exception e)
 		{

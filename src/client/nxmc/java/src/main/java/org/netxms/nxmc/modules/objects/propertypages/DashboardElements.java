@@ -49,7 +49,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
@@ -61,13 +60,15 @@ import org.netxms.nxmc.modules.dashboards.ElementCreationMenuManager;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfigFactory;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementLayout;
-import org.netxms.nxmc.modules.dashboards.dialogs.EditElementXmlDlg;
+import org.netxms.nxmc.modules.dashboards.dialogs.EditElementJsonDlg;
 import org.netxms.nxmc.modules.objects.propertypages.helpers.DashboardElementsLabelProvider;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 /**
  * "Dashboard elements" property page for dashboard objects
@@ -89,7 +90,7 @@ public class DashboardElements extends ObjectPropertyPage
 	private SortableTableViewer viewer;
 	private Button addButton;
 	private Button editButton;
-	private Button editXmlButton;
+	private Button editJsonButton;
    private Button duplicateButton;
 	private Button deleteButton;
 	private Button upButton;
@@ -244,13 +245,13 @@ public class DashboardElements extends ObjectPropertyPage
 			}
 		});
 
-      editXmlButton = new Button(rightButtons, SWT.PUSH);
-      editXmlButton.setText(i18n.tr("Edit &XML..."));
-      editXmlButton.addSelectionListener(new SelectionAdapter() {
+      editJsonButton = new Button(rightButtons, SWT.PUSH);
+      editJsonButton.setText(i18n.tr("Edit &JSON..."));
+      editJsonButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				editElementXml();
+				editElementJson();
 			}
 		});
 
@@ -387,13 +388,14 @@ public class DashboardElements extends ObjectPropertyPage
 		{
 			try
 			{
-            config.setLayout(XMLTools.createFromXml(DashboardElementLayout.class, element.getLayout()));
+	         Gson gson = new Gson();
+	         config.setLayout(gson.fromJson(element.getLayout(), DashboardElementLayout.class));
 
-            if (!DashboardElementPropertiesManager.openElementPropertiesDialog(config, getShell()))
-					return;	// element creation cancelled
+	         if (!DashboardElementPropertiesManager.openElementPropertiesDialog(config, getShell()))
+	            return; // element creation cancelled
 
-				element.setData(config.createXml());
-            element.setLayout(XMLTools.serialize(config.getLayout()));
+	         element.setData(config.createJson());
+	         element.setLayout(gson.toJson(config.getLayout()));
 				viewer.update(element, null);
 			}
 			catch(Exception e)
@@ -409,16 +411,18 @@ public class DashboardElements extends ObjectPropertyPage
 	}
 
 	/**
-	 * Edit selected element's configuration directly as XML
+	 * Edit selected element's configuration directly as Json
 	 */
-	private void editElementXml()
+	private void editElementJson()
 	{
       IStructuredSelection selection = viewer.getStructuredSelection();
 		if (selection.size() != 1)
 			return;
 		
 		DashboardElement element = (DashboardElement)selection.getFirstElement();
-		EditElementXmlDlg dlg = new EditElementXmlDlg(getShell(), element.getData());
+      Gson gson = new GsonBuilder().setPrettyPrinting().create();
+      Object json = gson.fromJson(element.getData(), Object.class);     
+      EditElementJsonDlg dlg = new EditElementJsonDlg(getShell(), gson.toJson(json));
 		if (dlg.open() == Window.OK)
 		{
 			element.setData(dlg.getValue());

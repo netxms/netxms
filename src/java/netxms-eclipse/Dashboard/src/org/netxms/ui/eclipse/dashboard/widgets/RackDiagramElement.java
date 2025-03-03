@@ -44,7 +44,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Rack;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.RackDiagramConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.RackDisplayMode;
@@ -53,6 +52,7 @@ import org.netxms.ui.eclipse.objectview.widgets.RackWidget;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.ElementSelectionListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import com.google.gson.Gson;
 
 /**
  *Rack diagram element for dashboard
@@ -85,7 +85,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
 
       try
       {
-         config = XMLTools.createFromXml(RackDiagramConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), RackDiagramConfig.class);
       }
       catch (Exception e)
       {

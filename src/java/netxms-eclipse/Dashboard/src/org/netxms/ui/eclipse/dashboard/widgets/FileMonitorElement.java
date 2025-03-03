@@ -24,7 +24,6 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.AgentFileData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.FileMonitorConfig;
 import org.netxms.ui.eclipse.filemanager.widgets.DynamicFileViewer;
@@ -32,6 +31,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.google.gson.Gson;
 
 /**
  * File monitor element widget
@@ -57,7 +57,7 @@ public class FileMonitorElement extends ElementWidget
 
       try
       {
-         config = XMLTools.createFromXml(FileMonitorConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), FileMonitorConfig.class);
       }
       catch(Exception e)
       {

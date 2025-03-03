@@ -23,7 +23,6 @@ import org.eclipse.swt.SWT;
 import org.netxms.client.AgentFileData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -33,6 +32,7 @@ import org.netxms.nxmc.modules.filemanager.widgets.DynamicFileViewer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
+import com.google.gson.Gson;
 
 /**
  * File monitor element widget
@@ -57,10 +57,10 @@ public class FileMonitorElement extends ElementWidget
    protected FileMonitorElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
    {
       super(parent, element, view);
-
+      
       try
       {
-         config = XMLTools.createFromXml(FileMonitorConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), FileMonitorConfig.class);
       }
       catch(Exception e)
       {

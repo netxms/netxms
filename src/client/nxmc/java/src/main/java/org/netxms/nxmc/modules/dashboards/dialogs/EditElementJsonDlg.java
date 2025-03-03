@@ -32,23 +32,23 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Dialog for edit element's XML
+ * Dialog for edit element's JSON
  */
-public class EditElementXmlDlg extends Dialog
+public class EditElementJsonDlg extends Dialog
 {
-   private final I18n i18n = LocalizationHelper.getI18n(EditElementXmlDlg.class);
+   private final I18n i18n = LocalizationHelper.getI18n(EditElementJsonDlg.class);
 
 	private String value;
 	private Text text;
 	
 	/**
 	 * @param parentShell
-	 * @param xml
+	 * @param json
 	 */
-	public EditElementXmlDlg(Shell parentShell, String xml)
+	public EditElementJsonDlg(Shell parentShell, String json)
 	{
 		super(parentShell);
-		value = xml;
+		value = json;
 	}
 
    /**
@@ -58,7 +58,7 @@ public class EditElementXmlDlg extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-      newShell.setText(i18n.tr("Edit Element XML"));
+      newShell.setText(i18n.tr("Edit Element JSON"));
 	}
 
    /**
@@ -73,7 +73,7 @@ public class EditElementXmlDlg extends Dialog
 		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
 
 		final Label label = new Label(dialogArea, SWT.NONE);
-      label.setText(i18n.tr("XML configuration"));
+      label.setText(i18n.tr("JSON configuration"));
 
 		text = new Text(dialogArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		GridData gd = new GridData();

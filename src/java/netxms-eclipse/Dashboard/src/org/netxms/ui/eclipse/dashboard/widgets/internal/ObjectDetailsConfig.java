@@ -20,6 +20,9 @@ package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -48,6 +51,29 @@ public class ObjectDetailsConfig extends DashboardElementConfig
 
    @Element(required = false)
    private int recordLimit = 0;
+
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
+    */
+   @Override
+   public Set<Long> getObjects()
+   {
+      Set<Long> objects = super.getObjects();
+      objects.add(rootObjectId);
+      return objects;
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapObjects(java.util.Map)
+    */
+   @Override
+   public void remapObjects(Map<Long, ObjectIdMatchingData> remapData)
+   {
+      super.remapObjects(remapData);
+      ObjectIdMatchingData md = remapData.get(rootObjectId);
+      if (md != null)
+         rootObjectId = md.dstId;
+   }
 
    /**
     * @return the query

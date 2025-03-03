@@ -27,7 +27,7 @@
 /**
  * Convert network map XML configuration to JSON
  */
-bool LIBNXDBMGR_EXPORTABLE ConvertXmlToJson(const TCHAR *table, const TCHAR *idColumn1, const TCHAR *idColumn2, const TCHAR *dataColumn, const char *topElement)
+bool LIBNXDBMGR_EXPORTABLE ConvertXmlToJson(const TCHAR *table, const TCHAR *idColumn1, const TCHAR *idColumn2, const TCHAR *dataColumn)
 {
    TCHAR reqest[512];
    _sntprintf(reqest, 512, _T("SELECT %s,%s%s%s FROM %s"), dataColumn, idColumn1, (idColumn1 != nullptr) ? L"," : L"", CHECK_NULL(idColumn2), table);
@@ -52,7 +52,7 @@ bool LIBNXDBMGR_EXPORTABLE ConvertXmlToJson(const TCHAR *table, const TCHAR *idC
                continue; //ignore filed
             }
 
-            json_t *result = XmlNodeToJson(xml.child(topElement));
+            json_t *result = XmlNodeToJson(xml.first_child());
             MemFree(xmlText);
 
             DBBind(hStmt, 1, DB_SQLTYPE_TEXT, result, DB_BIND_DYNAMIC);

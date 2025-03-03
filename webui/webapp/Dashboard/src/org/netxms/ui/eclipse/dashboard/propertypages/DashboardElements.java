@@ -66,6 +66,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
+import com.google.gson.Gson;
 
 /**
  * "Dashboard elements" property page for dashboard objects
@@ -366,14 +367,15 @@ public class DashboardElements extends PropertyPage
 		{
 			try
 			{
-            config.setLayout(XMLTools.createFromXml(DashboardElementLayout.class, element.getLayout()));
+			   Gson gson = new Gson();
+            config.setLayout(gson.fromJson(element.getLayout(), DashboardElementLayout.class));
 
 				PropertyDialog dlg = PropertyDialog.createDialogOn(getShell(), null, config);
 				if (dlg.open() == Window.CANCEL)
 					return;	// element creation cancelled
 
-				element.setData(config.createXml());
-            element.setLayout(XMLTools.serialize(config.getLayout()));
+				element.setData(config.createJson());
+            element.setLayout(gson.toJson(config.getLayout()));
 				viewer.update(element, null);
 			}
 			catch(Exception e)

@@ -29,7 +29,6 @@ import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Sensor;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.charts.api.ChartColor;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
@@ -38,6 +37,7 @@ import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.google.gson.Gson;
 
 /**
  * Status chart element
@@ -55,16 +55,16 @@ public class ObjectStatusChartElement extends ComparisonChartElement
    public ObjectStatusChartElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
-
-		try
-		{
-         elementConfig = XMLTools.createFromXml(ObjectStatusChartConfig.class, element.getData());
-		}
-		catch(Exception e)
-		{
+      
+      try
+      {
+         elementConfig = new Gson().fromJson(element.getData(), ObjectStatusChartConfig.class);
+      }
+      catch(Exception e)
+      {
          logger.error("Cannot parse dashboard element configuration", e);
-			elementConfig = new ObjectStatusChartConfig();
-		}
+         elementConfig = new ObjectStatusChartConfig();
+      }
 
       processCommonSettings(elementConfig);
 

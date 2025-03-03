@@ -110,7 +110,27 @@ json_t LIBNXSRV_EXPORTABLE *XmlNodeToJson(const pugi::xml_node &node)
             json_t *array = json_array();
             for (pugi::xml_node grandChild : child.children())
             {
-               json_array_append_new(array, XmlNodeToJson(grandChild));
+               if (!strcmp(grandChild.name(), "int") || !strcmp(grandChild.name(), "long"))
+               {
+                  const char *text = grandChild.child_value();
+
+                  char *eptr;
+                  int32_t val = strtol(text, &eptr, 10);
+                  if (*eptr == 0 && strlen(text) > 0)
+                  {
+                     json_array_append_new(array, json_integer(val));
+                  }
+               }
+               else if (!strcmp(grandChild.name(), "string"))
+               {
+                  const char *text = grandChild.child_value();
+                  if (strlen(text) > 0)
+                  {
+                     json_array_append_new(array, json_string(text));
+                  }
+               }
+               else
+                  json_array_append_new(array, XmlNodeToJson(grandChild));
             }
             json_object_set_new(jsonObject, childName.c_str(), array);
          }
@@ -120,7 +140,7 @@ json_t LIBNXSRV_EXPORTABLE *XmlNodeToJson(const pugi::xml_node &node)
          json_t *array = json_array();
          for (pugi::xml_node grandChild : child.children())
          {
-            if (!strcmp(grandChild.name(), "long"))
+            if (!strcmp(grandChild.name(), "int") || !strcmp(grandChild.name(), "long"))
             {
                const char *text = grandChild.child_value();
 
@@ -129,6 +149,14 @@ json_t LIBNXSRV_EXPORTABLE *XmlNodeToJson(const pugi::xml_node &node)
                if (*eptr == 0 && strlen(text) > 0)
                {
                   json_array_append_new(array, json_integer(val));
+               }
+            }
+            else if (!strcmp(grandChild.name(), "string"))
+            {
+               const char *text = grandChild.child_value();
+               if (strlen(text) > 0)
+               {
+                  json_array_append_new(array, json_string(text));
                }
             }
             else

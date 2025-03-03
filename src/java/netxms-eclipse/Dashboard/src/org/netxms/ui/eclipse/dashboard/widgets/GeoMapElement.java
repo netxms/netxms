@@ -21,10 +21,10 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GeoMapConfig;
 import org.netxms.ui.eclipse.osm.widgets.ObjectGeoLocationViewer;
+import com.google.gson.Gson;
 
 /**
  * Geo map element for dashboard
@@ -44,7 +44,7 @@ public class GeoMapElement extends ElementWidget
 
 		try
 		{
-         config = XMLTools.createFromXml(GeoMapConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), GeoMapConfig.class);
 		}
 		catch(Exception e)
 		{

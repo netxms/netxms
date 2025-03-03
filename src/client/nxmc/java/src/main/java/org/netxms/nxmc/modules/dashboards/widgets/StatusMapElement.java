@@ -20,7 +20,6 @@ package org.netxms.nxmc.modules.dashboards.widgets;
 
 import org.eclipse.swt.SWT;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.dashboards.config.StatusMapConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.objects.widgets.AbstractObjectStatusMap;
@@ -28,6 +27,7 @@ import org.netxms.nxmc.modules.objects.widgets.FlatObjectStatusMap;
 import org.netxms.nxmc.modules.objects.widgets.RadialObjectStatusMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.google.gson.Gson;
 
 /**
  * Status map element for dashboard
@@ -50,7 +50,7 @@ public class StatusMapElement extends ElementWidget
 
 		try
 		{
-         config = XMLTools.createFromXml(StatusMapConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), StatusMapConfig.class);
 		}
 		catch(Exception e)
 		{

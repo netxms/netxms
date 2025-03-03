@@ -32,7 +32,6 @@ import org.netxms.client.TimePeriod;
 import org.netxms.client.constants.TimeFrameType;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
@@ -43,6 +42,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.DateBuilder;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
+import com.google.gson.Gson;
 
 /**
  * Availability chart element
@@ -74,7 +74,7 @@ public class AvailabilityChartElement extends ElementWidget
 
 		try
 		{
-         elementConfig = XMLTools.createFromXml(AvailabilityChartConfig.class, element.getData());
+         elementConfig = new Gson().fromJson(element.getData(), AvailabilityChartConfig.class);
 		}
 		catch(Exception e)
 		{

@@ -332,6 +332,7 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
    {
       Set<Long> objects = super.getObjects();
       objects.add(nodeId);
+      objects.add(drillDownObjectId);
       return objects;
    }
 
@@ -345,6 +346,9 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
       ObjectIdMatchingData md = remapData.get(nodeId);
       if (md != null)
          nodeId = md.dstId;
+      md = remapData.get(drillDownObjectId);
+      if (md != null)
+         drillDownObjectId = md.dstId;
    }
 
    /* (non-Javadoc)

@@ -35,7 +35,6 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objecttools.ObjectTool;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectToolsConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectToolsConfig.Tool;
 import org.netxms.ui.eclipse.objects.ObjectContext;
@@ -43,6 +42,7 @@ import org.netxms.ui.eclipse.objecttools.api.ObjectToolExecutor;
 import org.netxms.ui.eclipse.objecttools.api.ObjectToolsCache;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorConverter;
+import com.google.gson.Gson;
 
 /**
  * "Object tools" dashboard element
@@ -62,7 +62,7 @@ public class ObjectTools extends ElementWidget
       
       try
       {
-         config = XMLTools.createFromXml(ObjectToolsConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), ObjectToolsConfig.class);
       }
       catch(Exception e)
       {

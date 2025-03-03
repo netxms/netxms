@@ -56,7 +56,6 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.PortViewConfig;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -66,6 +65,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.topology.widgets.DeviceView;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortSelectionListener;
+import com.google.gson.Gson;
 
 /**
  * Alarm viewer element for dashboard
@@ -98,7 +98,7 @@ public class PortViewElement extends ElementWidget
 
 		try
 		{
-         config = XMLTools.createFromXml(PortViewConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), PortViewConfig.class);
 		}
 		catch(Exception e)
 		{

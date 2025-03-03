@@ -40,7 +40,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Rack;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.dashboards.config.RackDiagramConfig;
 import org.netxms.nxmc.modules.dashboards.config.RackDisplayMode;
@@ -52,6 +51,7 @@ import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.google.gson.Gson;
 
 /**
  *Rack diagram element for dashboard
@@ -80,12 +80,12 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
    protected RackDiagramElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
    {
       super(parent, element, view);
-
+      
       try
       {
-         config = XMLTools.createFromXml(RackDiagramConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), RackDiagramConfig.class);
       }
-      catch (Exception e)
+      catch(Exception e)
       {
          logger.error("Cannot parse dashboard element configuration", e);
          config = new RackDiagramConfig();

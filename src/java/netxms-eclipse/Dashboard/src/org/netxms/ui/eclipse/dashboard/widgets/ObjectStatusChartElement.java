@@ -30,13 +30,13 @@ import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Sensor;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.compatibility.GraphItem;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectStatusChartConfig;
+import com.google.gson.Gson;
 
 /**
  * Status chart element
@@ -55,7 +55,7 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 
 		try
 		{
-         elementConfig = XMLTools.createFromXml(ObjectStatusChartConfig.class, element.getData());
+         elementConfig = new Gson().fromJson(element.getData(), ObjectStatusChartConfig.class);
 		}
 		catch(Exception e)
 		{

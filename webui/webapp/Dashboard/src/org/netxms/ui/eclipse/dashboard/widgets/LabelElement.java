@@ -49,7 +49,7 @@ public class LabelElement extends ElementWidget
 
 		try
 		{
-			config = LabelConfig.createFromXml(element.getData());
+			config = LabelConfig.createFromXmlOrJson(element.getData());
 		}
 		catch(Exception e)
 		{

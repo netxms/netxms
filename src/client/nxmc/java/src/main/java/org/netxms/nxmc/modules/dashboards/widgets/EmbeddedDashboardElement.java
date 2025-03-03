@@ -54,15 +54,15 @@ public class EmbeddedDashboardElement extends ElementWidget
 	{
       super(parent, SWT.NONE, element, view);
 
-		try
-		{
-			config = EmbeddedDashboardConfig.createFromXml(element.getData());
-		}
-		catch(Exception e)
-		{
+      try
+      {
+         config = EmbeddedDashboardConfig.createFromXmlOrJson(element.getData());
+      }
+      catch(Exception e)
+      {
          logger.error("Cannot parse dashboard element configuration", e);
-			config = new EmbeddedDashboardConfig();
-		}
+         config = new EmbeddedDashboardConfig();
+      }
 
       processCommonSettings(config);
 

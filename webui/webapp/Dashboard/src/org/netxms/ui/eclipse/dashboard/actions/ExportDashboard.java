@@ -40,12 +40,15 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.console.DownloadServiceHandler;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import com.google.gson.Gson;
 
 /**
  * Export dashboard configuration
@@ -54,7 +57,7 @@ public class ExportDashboard implements IObjectActionDelegate
 {
 	private Dashboard dashboard = null;
 	private IWorkbenchPart wbPart = null;
-
+	
    /**
     * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
     */
@@ -89,19 +92,32 @@ public class ExportDashboard implements IObjectActionDelegate
       xml.append("</autoBindFilter>\n\t<elements>\n"); //$NON-NLS-1$
 		for(DashboardElement e : dashboard.getElements())
 		{
-			xml.append("\t\t<dashboardElement>\n\t\t\t<type>"); //$NON-NLS-1$
-			xml.append(e.getType());
-			xml.append("</type>\n"); //$NON-NLS-1$
-			xml.append(e.getLayout());
-			xml.append('\n');
-			xml.append(e.getData());
-			xml.append("\n\t\t</dashboardElement>\n"); //$NON-NLS-1$
-
+         Gson gson = new Gson();
+         DashboardElementLayout layout = gson.fromJson(e.getLayout(), DashboardElementLayout.class);
 			DashboardElementConfig config = (DashboardElementConfig)Platform.getAdapterManager().getAdapter(e, DashboardElementConfig.class);
 			if (config != null)
 			{
-				objects.addAll(config.getObjects());
-				items.putAll(config.getDataCollectionItems());
+            try
+            {
+               final StringBuilder element = new StringBuilder();
+               element.append("\t\t<dashboardElement>\n\t\t\t<type>");
+               element.append(e.getType());
+               element.append("</type>\n");
+               element.append(XMLTools.serialize(layout));
+               element.append('\n');
+               element.append(config.createXml()); 
+               element.append("\n\t\t</dashboardElement>\n");
+               
+               objects.addAll(config.getObjects());
+               items.putAll(config.getDataCollectionItems());
+               
+               xml.append(element);
+            }
+            catch(Exception e1)
+            {
+               // TODO add logging of missing element due to error 
+               e1.printStackTrace();
+            }   
 			}
 		}
 		xml.append("\t</elements>\n"); //$NON-NLS-1$

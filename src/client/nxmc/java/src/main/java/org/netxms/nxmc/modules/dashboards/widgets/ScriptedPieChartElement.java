@@ -21,13 +21,13 @@ package org.netxms.nxmc.modules.dashboards.widgets;
 import org.eclipse.swt.SWT;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.ScriptedPieChartConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.google.gson.Gson;
 
 /**
  * Pie chart element
@@ -46,16 +46,16 @@ public class ScriptedPieChartElement extends ScriptedComparisonChartElement
    public ScriptedPieChartElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
-
-		try
-		{
-         elementConfig = XMLTools.createFromXml(ScriptedPieChartConfig.class, element.getData());
-		}
-		catch(Exception e)
-		{
+      
+      try
+      {
+         elementConfig = new Gson().fromJson(element.getData(), ScriptedPieChartConfig.class);
+      }
+      catch(Exception e)
+      {
          logger.error("Cannot parse dashboard element configuration", e);
          elementConfig = new ScriptedPieChartConfig();
-		}
+      }
 
       processCommonSettings(elementConfig);
 

@@ -23,10 +23,10 @@ import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DciSummaryTableConfig;
 import org.netxms.ui.eclipse.datacollection.widgets.SummaryTableWidget;
+import com.google.gson.Gson;
 
 /**
  * DCI summary table element for dashboard
@@ -46,7 +46,7 @@ public class DciSummaryTableElement extends ElementWidget
 
 		try
 		{
-         config = XMLTools.createFromXml(DciSummaryTableConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), DciSummaryTableConfig.class);
 		}
 		catch(Exception e)
 		{

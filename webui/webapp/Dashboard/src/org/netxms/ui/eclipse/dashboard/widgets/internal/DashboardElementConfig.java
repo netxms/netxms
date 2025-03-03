@@ -27,6 +27,7 @@ import org.netxms.ui.eclipse.dashboard.dialogs.helpers.DciIdMatchingData;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
+import com.google.gson.Gson;
 
 /**
  * Abstract base class for all dashboard element configs
@@ -56,11 +57,21 @@ public class DashboardElementConfig
 	 * 
 	 * @return XML document
 	 * @throws Exception if the schema for the object is not valid
-	 */
+    */
 	public String createXml() throws Exception
 	{
       return XMLTools.serialize(this);
 	}
+
+   /**
+    * Create Json form object
+    * 
+    * @return json string
+    */
+   public String createJson()
+   {
+      return new Gson().toJson(this);
+   }
 
 	/**
 	 * @return the layout

@@ -52,7 +52,6 @@ import org.netxms.client.maps.configs.MapDataSource;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusIndicatorConfig;
@@ -62,6 +61,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
+import com.google.gson.Gson;
 
 /**
  * Status indicator
@@ -87,7 +87,7 @@ public class StatusIndicatorElement extends ElementWidget
 
 		try
 		{
-         config = XMLTools.createFromXml(StatusIndicatorConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), StatusIndicatorConfig.class);
 		}
 		catch(final Exception e)
 		{

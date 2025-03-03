@@ -37,7 +37,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.base.widgets.DashboardComposite;
 import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.MessageArea;
@@ -49,6 +48,7 @@ import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.FontTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.google.gson.Gson;
 
 /**
  * Base class for all dashboard elements
@@ -221,6 +221,16 @@ public class ElementWidget extends DashboardComposite implements ControlListener
    }
 
    /**
+    * Get content area for placing element's widgets.
+    *
+    * @return content area for placing element's widgets
+    */
+   protected Composite getMainArea()
+   {
+      return mainArea;
+   }
+
+   /**
     * Get preferred component height - used when component is not required to fill all available space.
     *
     * @return preferred component height
@@ -304,7 +314,7 @@ public class ElementWidget extends DashboardComposite implements ControlListener
 	{
 		try
 		{
-         layout = XMLTools.createFromXml(DashboardElementLayout.class, xml);
+         layout = new Gson().fromJson(xml, DashboardElementLayout.class);
 		}
 		catch(Exception e)
 		{

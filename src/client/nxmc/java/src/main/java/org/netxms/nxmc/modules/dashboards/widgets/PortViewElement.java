@@ -50,7 +50,6 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -64,6 +63,7 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
+import com.google.gson.Gson;
 
 /**
  * Alarm viewer element for dashboard
@@ -96,16 +96,16 @@ public class PortViewElement extends ElementWidget
       super(parent, element, view);
 
       session = Registry.getSession();
-
-		try
-		{
-         config = XMLTools.createFromXml(PortViewConfig.class, element.getData());
-		}
-		catch(Exception e)
-		{
+      
+      try
+      {
+         config = new Gson().fromJson(element.getData(), PortViewConfig.class);
+      }
+      catch(Exception e)
+      {
          logger.error("Cannot parse dashboard element configuration", e);
-			config = new PortViewConfig();
-		}
+         config = new PortViewConfig();
+      }
 
       processCommonSettings(config);
 

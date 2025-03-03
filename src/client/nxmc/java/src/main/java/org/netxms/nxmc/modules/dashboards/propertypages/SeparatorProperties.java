@@ -117,7 +117,7 @@ public class SeparatorProperties extends DashboardElementPropertyPage
 		areaLayout.marginLeft = 0;
 		areaLayout.marginRight = 0;
 		fgArea.setLayout(areaLayout);
-      new Label(fgArea, SWT.NONE).setText(i18n.tr("Text color:"));
+      new Label(fgArea, SWT.NONE).setText(i18n.tr("Line color:"));
 		foreground = new ColorSelector(fgArea);
 		foreground.setColorValue(ColorConverter.rgbFromInt(config.getForegroundColorAsInt()));
 		

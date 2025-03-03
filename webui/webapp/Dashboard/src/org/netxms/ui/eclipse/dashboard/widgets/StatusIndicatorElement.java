@@ -48,11 +48,10 @@ import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
-import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.client.maps.configs.MapDataSource;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusIndicatorConfig;
@@ -62,6 +61,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
+import com.google.gson.Gson;
 
 /**
  * Status indicator
@@ -87,7 +87,7 @@ public class StatusIndicatorElement extends ElementWidget
 
 		try
 		{
-         config = XMLTools.createFromXml(StatusIndicatorConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), StatusIndicatorConfig.class);
 		}
 		catch(final Exception e)
 		{
@@ -219,13 +219,13 @@ public class StatusIndicatorElement extends ElementWidget
                final DciValue[] dciValues;
                if (requireDataCollection)
                {
-                  List<SingleDciConfig> dciList = new ArrayList<>();
+                  List<MapDataSource> dciList = new ArrayList<>();
                   for(int i = 0; i < config.getElements().length; i++)
                   {
                      StatusIndicatorElementConfig e = config.getElements()[i];
                      if (((e.getType() == StatusIndicatorConfig.ELEMENT_TYPE_DCI) || (e.getType() == StatusIndicatorConfig.ELEMENT_TYPE_DCI_TEMPLATE)) && (e.getDciId() != 0))
                      {
-                        dciList.add(new SingleDciConfig(e.getObjectId(), e.getDciId()));
+                        dciList.add(new MapDataSource(e.getObjectId(), e.getDciId()));
                      }
                   }
                   dciValues = !dciList.isEmpty() ? session.getLastValues(dciList) : null;

@@ -23,6 +23,7 @@ import java.util.Set;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.DciIdMatchingData;
+import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.Root;
@@ -73,6 +74,7 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 	public Set<Long> getObjects()
 	{
 		Set<Long> objects = super.getObjects();
+      objects.add(drillDownObjectId);
 		for(ChartDciConfig dci : dciList)
 			objects.add(dci.nodeId);
 		return objects;
@@ -89,6 +91,18 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 			items.put(dci.dciId, dci.nodeId);
 		return items;
 	}
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapObjects(java.util.Map)
+    */
+   @Override
+   public void remapObjects(Map<Long, ObjectIdMatchingData> remapData)
+   {
+      super.remapObjects(remapData);
+      ObjectIdMatchingData md = remapData.get(drillDownObjectId);
+      if (md != null)
+         drillDownObjectId = md.dstId;
+   }
 
    /**
     * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapDataCollectionItems(java.util.Map)

@@ -22,10 +22,10 @@ import org.eclipse.swt.SWT;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableBarChartConfig;
+import com.google.gson.Gson;
 
 /**
  * Bar chart for tables
@@ -42,7 +42,7 @@ public class TableBarChartElement extends TableComparisonChartElement
 
 		try
 		{
-         config = XMLTools.createFromXml(TableBarChartConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), TableBarChartConfig.class);
 		}
 		catch(Exception e)
 		{

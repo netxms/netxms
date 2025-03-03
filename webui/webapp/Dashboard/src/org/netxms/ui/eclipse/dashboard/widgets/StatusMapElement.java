@@ -21,12 +21,12 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusMapConfig;
 import org.netxms.ui.eclipse.objectview.widgets.AbstractObjectStatusMap;
 import org.netxms.ui.eclipse.objectview.widgets.FlatObjectStatusMap;
 import org.netxms.ui.eclipse.objectview.widgets.RadialObjectStatusMap;
+import com.google.gson.Gson;
 
 /**
  * Status map element for dashboard
@@ -46,7 +46,7 @@ public class StatusMapElement extends ElementWidget
 
 		try
 		{
-         config = XMLTools.createFromXml(StatusMapConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), StatusMapConfig.class);
 		}
 		catch(Exception e)
 		{

@@ -22,8 +22,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.WebPageConfig;
+import com.google.gson.Gson;
 
 /**
  * Embedded web page element for dashboard
@@ -43,7 +43,7 @@ public class WebPageElement extends ElementWidget
 
 		try
 		{
-         config = XMLTools.createFromXml(WebPageConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), WebPageConfig.class);
 		}
 		catch(Exception e)
 		{

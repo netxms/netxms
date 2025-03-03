@@ -22,11 +22,11 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.propertypages.DashboardElements;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
+import com.google.gson.Gson;
 
 /**
  * Label provider for list of dashboard elements
@@ -99,7 +99,7 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
 			case DashboardElements.COLUMN_SPAN:
 				try
 				{
-               DashboardElementLayout layout = XMLTools.createFromXml(DashboardElementLayout.class, de.getLayout());
+               DashboardElementLayout layout = new Gson().fromJson(de.getLayout(), DashboardElementLayout.class);
 					return Integer.toString(layout.horizontalSpan) + " / " + Integer.toString(layout.verticalSpan); //$NON-NLS-1$
 				}
 				catch(Exception e)
@@ -109,7 +109,7 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
 			case DashboardElements.COLUMN_HEIGHT:
 				try
 				{
-               DashboardElementLayout layout = XMLTools.createFromXml(DashboardElementLayout.class, de.getLayout());
+               DashboardElementLayout layout = new Gson().fromJson(de.getLayout(), DashboardElementLayout.class);
 	            if (layout.grabVerticalSpace)
 	               return "Fill";
 
@@ -125,7 +125,7 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
          case DashboardElements.COLUMN_NARROW_SCREEN:
             try
             {
-               DashboardElementLayout layout = XMLTools.createFromXml(DashboardElementLayout.class, de.getLayout());
+               DashboardElementLayout layout = new Gson().fromJson(de.getLayout(), DashboardElementLayout.class);
                if (!layout.showInNarrowScreenMode)
                   return "Hide";
                return Integer.toString(layout.narrowScreenOrder);
@@ -137,7 +137,7 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
          case DashboardElements.COLUMN_TITLE:
             try
             {
-               DashboardElementConfig config = XMLTools.createFromXml(DashboardElementConfig.class, de.getData());
+               DashboardElementConfig config = new Gson().fromJson(de.getData(), DashboardElementConfig.class);
                return config.getTitle();
             }
             catch(Exception e)
