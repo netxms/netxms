@@ -45,12 +45,14 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfigFactory;
+import org.netxms.nxmc.modules.dashboards.config.DashboardElementLayout;
 import org.netxms.nxmc.modules.dashboards.dialogs.IdMatchingDialog;
 import org.netxms.nxmc.modules.dashboards.dialogs.ImportDashboardDialog;
 import org.netxms.nxmc.modules.dashboards.dialogs.helpers.DciIdMatchingData;
@@ -62,6 +64,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xnap.commons.i18n.I18n;
+import com.google.gson.Gson;
 
 /**
  * Create dashboard object
@@ -127,7 +130,8 @@ public class ImportDashboardAction extends ObjectAction<AbstractObject>
 					{
 						Element e = (Element)elements.item(j);
 						DashboardElement de = new DashboardElement(getNodeValueAsInt(e, "type", 0), getNodeValueAsXml(e, "element"), j); //$NON-NLS-1$ //$NON-NLS-2$
-						de.setLayout(getNodeValueAsXml(e, "layout")); //$NON-NLS-1$
+                  DashboardElementLayout layout = XMLTools.createFromXml(DashboardElementLayout.class, getNodeValueAsXml(e, "layout")); //$NON-NLS-1$
+                  de.setLayout(new Gson().toJson(layout)); 
 						dashboardElements.add(de);
 					}
 				}
@@ -268,7 +272,7 @@ public class ImportDashboardAction extends ObjectAction<AbstractObject>
 
 		config.remapObjects(objects);
 		config.remapDataCollectionItems(dcis);
-		e.setData(config.createXml());
+		e.setData(config.createJson());
 	}
 
 	/**

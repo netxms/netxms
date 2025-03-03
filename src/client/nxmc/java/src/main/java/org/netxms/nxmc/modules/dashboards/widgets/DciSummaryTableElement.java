@@ -20,12 +20,12 @@ package org.netxms.nxmc.modules.dashboards.widgets;
 
 import org.eclipse.swt.SWT;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.dashboards.config.DciSummaryTableConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.datacollection.widgets.SummaryTableWidget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.google.gson.Gson;
 
 /**
  * DCI summary table element for dashboard
@@ -44,16 +44,16 @@ public class DciSummaryTableElement extends ElementWidget
    public DciSummaryTableElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
-
-		try
-		{
-         config = XMLTools.createFromXml(DciSummaryTableConfig.class, element.getData());
-		}
-		catch(Exception e)
-		{
+      
+      try
+      {
+         config = new Gson().fromJson(element.getData(), DciSummaryTableConfig.class);
+      }
+      catch(Exception e)
+      {
          logger.error("Cannot parse dashboard element configuration", e);
-			config = new DciSummaryTableConfig();
-		}
+         config = new DciSummaryTableConfig();
+      }
 
       processCommonSettings(config);
 

@@ -62,6 +62,7 @@ public class SharedIcons
    public static ImageDescriptor IMPORT;
    public static ImageDescriptor INFORMATION;
 	public static ImageDescriptor IP_ADDRESS;
+   public static ImageDescriptor JSON;
 	public static ImageDescriptor NAV_BACKWARD;
 	public static ImageDescriptor NAV_FORWARD;
 	public static ImageDescriptor PASTE;
@@ -86,7 +87,7 @@ public class SharedIcons
    public static ImageDescriptor USER;
    public static ImageDescriptor VIEW_MENU;
    public static ImageDescriptor WAITING;
-	public static ImageDescriptor XML;
+   public static ImageDescriptor XML;
 	public static ImageDescriptor ZOOM_IN;
 	public static ImageDescriptor ZOOM_OUT;
 
@@ -126,6 +127,7 @@ public class SharedIcons
    public static Image IMG_IMPORT;
    public static Image IMG_INFORMATION;
 	public static Image IMG_IP_ADDRESS;
+   public static Image IMG_JSON;
 	public static Image IMG_NAV_BACKWARD;
 	public static Image IMG_NAV_FORWARD;
 	public static Image IMG_PASTE;
@@ -150,7 +152,7 @@ public class SharedIcons
    public static Image IMG_USER;
    public static Image IMG_VIEW_MENU;
    public static Image IMG_WAITING;
-	public static Image IMG_XML;
+   public static Image IMG_XML;
 	public static Image IMG_ZOOM_IN;
 	public static Image IMG_ZOOM_OUT;
 
@@ -195,6 +197,7 @@ public class SharedIcons
       IMPORT = ResourceManager.getImageDescriptor("icons/import.png");
       INFORMATION = ResourceManager.getImageDescriptor("icons/information.png");
       IP_ADDRESS = ResourceManager.getImageDescriptor("icons/ipaddr.png");
+      JSON = ResourceManager.getImageDescriptor("icons/json.png");
       NAV_BACKWARD = ResourceManager.getImageDescriptor("icons/backward_nav.png");
       NAV_FORWARD = ResourceManager.getImageDescriptor("icons/forward_nav.png");
       PASTE = ResourceManager.getImageDescriptor("icons/paste.gif");
@@ -259,6 +262,7 @@ public class SharedIcons
       IMG_IMPORT = IMPORT.createImage();
       IMG_INFORMATION = INFORMATION.createImage();
 		IMG_IP_ADDRESS = IP_ADDRESS.createImage();
+      IMG_JSON = JSON.createImage();
 		IMG_NAV_BACKWARD = NAV_BACKWARD.createImage();
 		IMG_NAV_FORWARD = NAV_FORWARD.createImage();
 		IMG_PASTE = PASTE.createImage();
@@ -283,7 +287,7 @@ public class SharedIcons
       IMG_USER = USER.createImage();
       IMG_VIEW_MENU = VIEW_MENU.createImage();
       IMG_WAITING = WAITING.createImage();
-		IMG_XML = XML.createImage();
+      IMG_XML = XML.createImage();
 		IMG_ZOOM_IN = ZOOM_IN.createImage();
 		IMG_ZOOM_OUT = ZOOM_OUT.createImage();
 	}

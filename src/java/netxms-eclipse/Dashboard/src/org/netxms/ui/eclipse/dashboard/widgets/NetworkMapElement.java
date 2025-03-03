@@ -23,10 +23,10 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.NetworkMap;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.NetworkMapConfig;
 import org.netxms.ui.eclipse.networkmaps.widgets.NetworkMapWidget;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import com.google.gson.Gson;
 
 /**
  * Network map element for dashboard
@@ -48,7 +48,7 @@ public class NetworkMapElement extends ElementWidget
 
 		try
 		{
-         config = XMLTools.createFromXml(NetworkMapConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), NetworkMapConfig.class);
 		}
 		catch(Exception e)
 		{

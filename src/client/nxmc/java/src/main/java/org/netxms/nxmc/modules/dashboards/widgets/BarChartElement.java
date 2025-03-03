@@ -22,13 +22,13 @@ import org.eclipse.swt.SWT;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.BarChartConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.google.gson.Gson;
 
 /**
  * Bar chart element
@@ -48,15 +48,15 @@ public class BarChartElement extends ComparisonChartElement
    {
       super(parent, element, view);
 
-		try
-		{
-         elementConfig = XMLTools.createFromXml(BarChartConfig.class, element.getData());
-		}
-		catch(Exception e)
-		{
+      try
+      {
+         elementConfig = new Gson().fromJson(element.getData(), BarChartConfig.class);
+      }
+      catch(Exception e)
+      {
          logger.error("Cannot parse dashboard element configuration", e);
-			elementConfig = new BarChartConfig();
-		}
+         elementConfig = new BarChartConfig();
+      }
 
       processCommonSettings(elementConfig);
 

@@ -36,7 +36,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
@@ -44,6 +43,7 @@ import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.FontTools;
 import org.netxms.ui.eclipse.tools.IntermediateSelectionProvider;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
+import com.google.gson.Gson;
 
 /**
  * Base class for all dashboard elements
@@ -219,11 +219,11 @@ public class ElementWidget extends DashboardComposite implements ControlListener
 	/**
 	 * @param xml
 	 */
-	private void parseLayout(String xml)
+	private void parseLayout(String json)
 	{
 		try
 		{
-         layout = XMLTools.createFromXml(DashboardElementLayout.class, xml);
+         layout = new Gson().fromJson(json, DashboardElementLayout.class);
 		}
 		catch(Exception e)
 		{

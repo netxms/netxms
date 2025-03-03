@@ -38,7 +38,6 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.queries.ObjectQueryResult;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.CopyTableRowsAction;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
@@ -57,6 +56,7 @@ import org.netxms.nxmc.tools.ViewRefreshController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
+import com.google.gson.Gson;
 
 /**
  * "Object query" dashboard element
@@ -87,10 +87,10 @@ public class ObjectQuery extends ElementWidget
    {
       super(parent, element, view);
       session = Registry.getSession();
-
+      
       try
       {
-         config = XMLTools.createFromXml(ObjectDetailsConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), ObjectDetailsConfig.class);
       }
       catch(Exception e)
       {

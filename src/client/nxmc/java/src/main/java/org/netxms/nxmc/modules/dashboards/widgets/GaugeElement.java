@@ -23,7 +23,6 @@ import org.eclipse.swt.graphics.Font;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.charts.api.ChartColor;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.api.GaugeColorMode;
@@ -33,6 +32,7 @@ import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.google.gson.Gson;
 
 /**
  * Dial chart element
@@ -51,16 +51,16 @@ public class GaugeElement extends ComparisonChartElement
    public GaugeElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
-
-		try
-		{
-         elementConfig = XMLTools.createFromXml(GaugeConfig.class, element.getData());
-		}
-		catch(Exception e)
-		{
+      
+      try
+      {
+         elementConfig = new Gson().fromJson(element.getData(), GaugeConfig.class);
+      }
+      catch(Exception e)
+      {
          logger.error("Cannot parse dashboard element configuration", e);
-			elementConfig = new GaugeConfig();
-		}
+         elementConfig = new GaugeConfig();
+      }
 
       processCommonSettings(elementConfig);
 

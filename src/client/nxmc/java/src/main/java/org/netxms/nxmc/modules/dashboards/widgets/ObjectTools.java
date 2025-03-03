@@ -35,7 +35,6 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objecttools.ObjectTool;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.modules.dashboards.config.ObjectToolsConfig;
@@ -47,6 +46,7 @@ import org.netxms.nxmc.modules.objecttools.ObjectToolsCache;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.google.gson.Gson;
 
 /**
  * "Object tools" dashboard element
@@ -68,7 +68,7 @@ public class ObjectTools extends ElementWidget
       
       try
       {
-         config = XMLTools.createFromXml(ObjectToolsConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), ObjectToolsConfig.class);
       }
       catch(Exception e)
       {

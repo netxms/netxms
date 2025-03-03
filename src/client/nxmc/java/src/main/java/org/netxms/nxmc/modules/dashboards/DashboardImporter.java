@@ -261,7 +261,7 @@ public class DashboardImporter
 
 		config.remapObjects(objects);
 		config.remapDataCollectionItems(dcis);
-		e.setData(config.createXml());
+		e.setData(config.createJson());
 	}
 
 	/**

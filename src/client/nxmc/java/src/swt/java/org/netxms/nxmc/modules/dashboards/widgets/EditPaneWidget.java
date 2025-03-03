@@ -64,7 +64,7 @@ public class EditPaneWidget extends Composite
 	private DashboardControl dbc;
 	private DashboardElement element;
 	private Action actionEdit;
-	private Action actionEditXml;
+	private Action actionEditJson;
    private Action actionDuplicate;
 	private Action actionDelete;
    private Action actionMoveLeft;
@@ -135,11 +135,11 @@ public class EditPaneWidget extends Composite
 			}
 		};
 
-      actionEditXml = new Action(i18n.tr("Edit &XML"), SharedIcons.XML) {
+      actionEditJson = new Action(i18n.tr("Edit &JSON"), SharedIcons.JSON) { 
 			@Override
 			public void run()
 			{
-				dbc.editElementXml(element);
+				dbc.editElementJson(element);
 			}
 		};
 
@@ -253,7 +253,7 @@ public class EditPaneWidget extends Composite
       manager.add(actionVSpanDecrease);
       manager.add(new Separator());
       manager.add(actionEdit);
-      manager.add(actionEditXml);
+      manager.add(actionEditJson);
       manager.add(actionDuplicate);
       manager.add(actionDelete);
 	}
@@ -278,7 +278,7 @@ public class EditPaneWidget extends Composite
       new ControlButton(buttonBar, actionVSpanDecrease);
       new Label(buttonBar, SWT.NONE).setText("\u2003");
       new ControlButton(buttonBar, actionEdit);
-      new ControlButton(buttonBar, actionEditXml);
+      new ControlButton(buttonBar, actionEditJson);
       new ControlButton(buttonBar, actionDuplicate);
       new ControlButton(buttonBar, actionDelete);
 

@@ -20,12 +20,12 @@ package org.netxms.nxmc.modules.dashboards.widgets;
 
 import org.eclipse.swt.SWT;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.dashboards.config.WebPageConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.google.gson.Gson;
 
 /**
  * Embedded web page element for dashboard
@@ -47,7 +47,7 @@ public class WebPageElement extends ElementWidget
 
 		try
 		{
-         config = XMLTools.createFromXml(WebPageConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), WebPageConfig.class);
 		}
 		catch(Exception e)
 		{

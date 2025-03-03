@@ -33,12 +33,12 @@ import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.Node;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ServiceComponentsConfig;
 import org.netxms.ui.eclipse.networkmaps.views.ServiceComponents;
 import org.netxms.ui.eclipse.networkmaps.widgets.NetworkMapWidget;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorConverter;
+import com.google.gson.Gson;
 
 /**
  * Service components map element for dashboard
@@ -63,7 +63,7 @@ public class ServiceComponentsElement extends ElementWidget
 
       try
       {
-         config = XMLTools.createFromXml(ServiceComponentsConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), ServiceComponentsConfig.class);
       }
       catch(Exception e)
       {

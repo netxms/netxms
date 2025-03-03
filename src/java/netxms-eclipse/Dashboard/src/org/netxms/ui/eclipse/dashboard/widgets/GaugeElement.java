@@ -26,13 +26,13 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.charts.api.GaugeColorMode;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GaugeConfig;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import com.google.gson.Gson;
 
 /**
  * Dial chart element
@@ -52,7 +52,7 @@ public class GaugeElement extends ComparisonChartElement
 
 		try
 		{
-         elementConfig = XMLTools.createFromXml(GaugeConfig.class, element.getData());
+         elementConfig = new Gson().fromJson(element.getData(), GaugeConfig.class);
 		}
 		catch(Exception e)
 		{

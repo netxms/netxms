@@ -48,7 +48,6 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
@@ -62,6 +61,7 @@ import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView.ChartActionType;
 import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView.HistoricalChartOwner;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
+import com.google.gson.Gson;
 
 /**
  * Line chart element
@@ -92,7 +92,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 
 		try
 		{
-         config = XMLTools.createFromXml(LineChartConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), LineChartConfig.class);
 		}
 		catch(Exception e)
 		{

@@ -28,7 +28,6 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.modules.dashboards.config.TableValueConfig;
@@ -37,6 +36,7 @@ import org.netxms.nxmc.modules.datacollection.widgets.TableValueViewer;
 import org.netxms.nxmc.tools.ViewRefreshController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.google.gson.Gson;
 
 /**
  * "Table value" element for dashboard
@@ -59,7 +59,7 @@ public class TableValueElement extends ElementWidget
 
 		try
 		{
-         config = XMLTools.createFromXml(TableValueConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), TableValueConfig.class);
 		}
 		catch(Exception e)
 		{

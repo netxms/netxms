@@ -24,7 +24,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -34,6 +33,7 @@ import org.netxms.nxmc.modules.events.widgets.SyslogTraceWidget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
+import com.google.gson.Gson;
 
 /**
  * "Syslog monitor" dashboard element
@@ -61,7 +61,7 @@ public class SyslogMonitorElement extends ElementWidget
 
       try
       {
-         config = XMLTools.createFromXml(SyslogMonitorConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), SyslogMonitorConfig.class);
       }
       catch(Exception e)
       {

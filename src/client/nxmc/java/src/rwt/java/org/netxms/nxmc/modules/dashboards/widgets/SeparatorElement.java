@@ -27,7 +27,6 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.dashboards.config.SeparatorConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.tools.ColorConverter;
@@ -55,7 +54,7 @@ public class SeparatorElement extends ElementWidget
 
 		try
 		{
-         config = XMLTools.createFromXml(SeparatorConfig.class, element.getData());
+         config = deserealizeConfiguration(element.getData(), SeparatorConfig.class);
 		}
 		catch(Exception e)
 		{

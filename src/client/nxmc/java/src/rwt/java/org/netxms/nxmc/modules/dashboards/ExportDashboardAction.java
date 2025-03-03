@@ -36,6 +36,7 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.DownloadServiceHandler;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -43,9 +44,13 @@ import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfigFactory;
+import org.netxms.nxmc.modules.dashboards.config.DashboardElementLayout;
 import org.netxms.nxmc.modules.objects.actions.ObjectAction;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
+import com.google.gson.Gson;
 
 /**
  * Export dashboard configuration
@@ -53,6 +58,7 @@ import org.xnap.commons.i18n.I18n;
 public class ExportDashboardAction extends ObjectAction<Dashboard>
 {
    private final I18n i18n = LocalizationHelper.getI18n(ExportDashboardAction.class);
+   private static final Logger logger = LoggerFactory.getLogger(ExportDashboardAction.class);
 
    /**
     * Create action for linking asset to object.
@@ -90,20 +96,32 @@ public class ExportDashboardAction extends ObjectAction<Dashboard>
       xml.append("</autoBindFilter>\n\t<elements>\n");
 		for(DashboardElement e : dashboard.getElements())
 		{
-         xml.append("\t\t<dashboardElement>\n\t\t\t<type>");
-			xml.append(e.getType());
-         xml.append("</type>\n");
-			xml.append(e.getLayout());
-			xml.append('\n');
-			xml.append(e.getData());
-         xml.append("\n\t\t</dashboardElement>\n");
-
-	      DashboardElementConfig config = DashboardElementConfigFactory.create(e);
-			if (config != null)
-			{
-				objects.addAll(config.getObjects());
-				items.putAll(config.getDataCollectionItems());
-			}
+         Gson gson = new Gson();
+         DashboardElementLayout layout = gson.fromJson(e.getLayout(), DashboardElementLayout.class);
+         DashboardElementConfig config = DashboardElementConfigFactory.create(e);
+         if (config != null)
+         {   
+            try
+            {
+               final StringBuilder element = new StringBuilder();
+               element.append("\t\t<dashboardElement>\n\t\t\t<type>");
+               element.append(e.getType());
+               element.append("</type>\n");
+               element.append(XMLTools.serialize(layout));
+               element.append('\n');
+               element.append(config.createXml()); 
+               element.append("\n\t\t</dashboardElement>\n");
+               
+               objects.addAll(config.getObjects());
+               items.putAll(config.getDataCollectionItems());
+               
+               xml.append(element);
+            }
+            catch(Exception e1)
+            {
+               logger.error("Failed to convert dashboard element", e1);
+            }           
+         }
 		}
       xml.append("\t</elements>\n");
 

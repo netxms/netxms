@@ -29,13 +29,13 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableValueConfig;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.widgets.TableValueViewer;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
+import com.google.gson.Gson;
 
 /**
  * "Table value" element for dashboard
@@ -56,7 +56,7 @@ public class TableValueElement extends ElementWidget
 
 		try
 		{
-         config = XMLTools.createFromXml(TableValueConfig.class, element.getData());
+         config = new Gson().fromJson(element.getData(), TableValueConfig.class);
 		}
 		catch(Exception e)
 		{

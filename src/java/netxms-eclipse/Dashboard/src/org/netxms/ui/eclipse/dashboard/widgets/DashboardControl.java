@@ -51,6 +51,7 @@ import org.netxms.ui.eclipse.layout.DashboardLayoutData;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.IntermediateSelectionProvider;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import com.google.gson.Gson;
 
 /**
  * Dashboard rendering control
@@ -367,7 +368,7 @@ public class DashboardControl extends Composite
       el.verticalSpan = vSpan;
       try
       {
-         element.setLayout(XMLTools.serialize(el));
+         element.setLayout(new Gson().toJson(el));
       }
       catch(Exception e)
       {
@@ -400,7 +401,7 @@ public class DashboardControl extends Composite
       el.horizontalSpan = columnCount;
       try
       {
-         element.setLayout(XMLTools.serialize(el));
+         element.setLayout(new Gson().toJson(el));
       }
       catch(Exception e)
       {
@@ -473,14 +474,15 @@ public class DashboardControl extends Composite
 		{
 			try
 			{
-            config.setLayout(XMLTools.createFromXml(DashboardElementLayout.class, element.getLayout()));
+            Gson gson = new Gson();
+            config.setLayout(gson.fromJson(element.getLayout(), DashboardElementLayout.class));
 
-				PropertyDialog dlg = PropertyDialog.createDialogOn(getShell(), null, config);
-				if (dlg.open() == Window.CANCEL)
-					return;	// element creation cancelled
+            PropertyDialog dlg = PropertyDialog.createDialogOn(getShell(), null, config);
+            if (dlg.open() == Window.CANCEL)
+               return;  // element creation cancelled
 
-				element.setData(config.createXml());
-            element.setLayout(XMLTools.serialize(config.getLayout()));
+            element.setData(config.createJson());
+            element.setLayout(gson.toJson(config.getLayout()));
 				recreateElement(element);
 				redoLayout();
 				setModified();
@@ -539,14 +541,15 @@ public class DashboardControl extends Composite
 		{
 			try
 			{
-            config.setLayout(XMLTools.createFromXml(DashboardElementLayout.class, element.getLayout()));
+            Gson gson = new Gson();
+            config.setLayout(gson.fromJson(element.getLayout(), DashboardElementLayout.class));
 
-				PropertyDialog dlg = PropertyDialog.createDialogOn(getShell(), null, config);
-				if (dlg.open() == Window.CANCEL)
-					return;	// element creation cancelled
+            PropertyDialog dlg = PropertyDialog.createDialogOn(getShell(), null, config);
+            if (dlg.open() == Window.CANCEL)
+               return;  // element creation cancelled
 
-				element.setData(config.createXml());
-            element.setLayout(XMLTools.serialize(config.getLayout()));
+            element.setData(config.createJson());
+            element.setLayout(gson.toJson(config.getLayout()));
             element.setIndex(elements.size());
 				elements.add(element);
 				createElementWidget(element);
@@ -612,7 +615,7 @@ public class DashboardControl extends Composite
       {
          try
          {
-            DashboardElementLayout layout = XMLTools.createFromXml(DashboardElementLayout.class, element.getLayout());
+            DashboardElementLayout layout = new Gson().fromJson(element.getLayout(), DashboardElementLayout.class);
             if (layout.horizontalSpan > count)
                count = layout.horizontalSpan;
          }

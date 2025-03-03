@@ -22,13 +22,13 @@ import org.eclipse.swt.SWT;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.NetworkMap;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.dashboards.config.NetworkMapConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.networkmaps.widgets.NetworkMapWidget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.google.gson.Gson;
 
 /**
  * Network map element for dashboard
@@ -50,16 +50,16 @@ public class NetworkMapElement extends ElementWidget
 	{
       super(parent, element, view);
 
-		try
-		{
-         config = XMLTools.createFromXml(NetworkMapConfig.class, element.getData());
-		}
-		catch(Exception e)
-		{
+      try
+      {
+         config = new Gson().fromJson(element.getData(), NetworkMapConfig.class);
+      }
+      catch(Exception e)
+      {
          logger.error("Cannot parse dashboard element configuration", e);
-			config = new NetworkMapConfig();
-		}
-
+         config = new NetworkMapConfig();
+      }
+      
       processCommonSettings(config);
 
       NXCSession session = Registry.getSession();

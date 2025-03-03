@@ -22,6 +22,7 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.xml.XMLTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.google.gson.Gson;
 
 /**
  * Factory for dashboard element configurations.
@@ -38,6 +39,24 @@ public class DashboardElementConfigFactory
     */
    public static DashboardElementConfig create(DashboardElement element)
    {
+      if (element.getData().trim().startsWith("<"))
+      {
+         return createFromXML(element);
+      }
+      else
+      {
+         return createFromJson(element);
+      }      
+   }
+
+   /**
+    * Create configuration object from dashboard element object.
+    *
+    * @param element dashboard element object
+    * @return dashboard element configuration object or null on error
+    */
+   public static DashboardElementConfig createFromXML(DashboardElement element)
+   {
       try
       {
          switch(element.getType())
@@ -52,7 +71,7 @@ public class DashboardElementConfigFactory
             case DashboardElement.CUSTOM:
                return XMLTools.createFromXml(CustomWidgetConfig.class, element.getData());
             case DashboardElement.DASHBOARD:
-               return EmbeddedDashboardConfig.createFromXml(element.getData());
+               return EmbeddedDashboardConfig.createFromXmlOrJson(element.getData());
             case DashboardElement.DCI_SUMMARY_TABLE:
                return XMLTools.createFromXml(DciSummaryTableConfig.class, element.getData());
             case DashboardElement.DIAL_CHART:
@@ -64,7 +83,7 @@ public class DashboardElementConfigFactory
             case DashboardElement.GEO_MAP:
                return XMLTools.createFromXml(GeoMapConfig.class, element.getData());
             case DashboardElement.LABEL:
-               return LabelConfig.createFromXml(element.getData());
+               return LabelConfig.createFromXmlOrJson(element.getData());
             case DashboardElement.LINE_CHART:
                return XMLTools.createFromXml(LineChartConfig.class, element.getData());
             case DashboardElement.NETWORK_MAP:
@@ -106,6 +125,93 @@ public class DashboardElementConfigFactory
                return XMLTools.createFromXml(TableValueConfig.class, element.getData());
             case DashboardElement.WEB_PAGE:
                return XMLTools.createFromXml(WebPageConfig.class, element.getData());
+            default:
+               return null;
+         }
+      }
+      catch(Exception e)
+      {
+         logger.error("Cannot create dashboard element configuration from element object " + element, e);
+         return null;
+      }
+   }
+
+   /**
+    * Create configuration object from dashboard element object.
+    *
+    * @param element dashboard element object
+    * @return dashboard element configuration object or null on error
+    */
+   public static DashboardElementConfig createFromJson(DashboardElement element)
+   {
+      try
+      {
+         switch(element.getType())
+         {
+            case DashboardElement.ALARM_VIEWER:
+               return new Gson().fromJson(element.getData(), AlarmViewerConfig.class);
+            case DashboardElement.AVAILABLITY_CHART:
+               return new Gson().fromJson(element.getData(), AvailabilityChartConfig.class);
+            case DashboardElement.BAR_CHART:
+            case DashboardElement.TUBE_CHART:
+               return new Gson().fromJson(element.getData(), BarChartConfig.class);
+            case DashboardElement.CUSTOM:
+               return new Gson().fromJson(element.getData(), CustomWidgetConfig.class);
+            case DashboardElement.DASHBOARD:
+               return EmbeddedDashboardConfig.createFromXmlOrJson(element.getData());
+            case DashboardElement.DCI_SUMMARY_TABLE:
+               return new Gson().fromJson(element.getData(), DciSummaryTableConfig.class);
+            case DashboardElement.DIAL_CHART:
+               return new Gson().fromJson(element.getData(), GaugeConfig.class);
+            case DashboardElement.EVENT_MONITOR:
+               return new Gson().fromJson(element.getData(), EventMonitorConfig.class);
+            case DashboardElement.FILE_MONITOR:
+               return new Gson().fromJson(element.getData(), FileMonitorConfig.class);
+            case DashboardElement.GEO_MAP:
+               return new Gson().fromJson(element.getData(), GeoMapConfig.class);
+            case DashboardElement.LABEL:
+               return LabelConfig.createFromXmlOrJson(element.getData());
+            case DashboardElement.LINE_CHART:
+               return new Gson().fromJson(element.getData(), LineChartConfig.class);
+            case DashboardElement.NETWORK_MAP:
+               return new Gson().fromJson(element.getData(), NetworkMapConfig.class);
+            case DashboardElement.OBJECT_QUERY:
+               return new Gson().fromJson(element.getData(), ObjectDetailsConfig.class);
+            case DashboardElement.OBJECT_TOOLS:
+               return new Gson().fromJson(element.getData(), ObjectToolsConfig.class);
+            case DashboardElement.PIE_CHART:
+               return new Gson().fromJson(element.getData(), PieChartConfig.class);
+            case DashboardElement.PORT_VIEW:
+               return new Gson().fromJson(element.getData(), PortViewConfig.class);
+            case DashboardElement.RACK_DIAGRAM:
+               return new Gson().fromJson(element.getData(), RackDiagramConfig.class);
+            case DashboardElement.SCRIPTED_BAR_CHART:
+               return new Gson().fromJson(element.getData(), ScriptedBarChartConfig.class);
+            case DashboardElement.SCRIPTED_PIE_CHART:
+               return new Gson().fromJson(element.getData(), ScriptedPieChartConfig.class);
+            case DashboardElement.SEPARATOR:
+               return new Gson().fromJson(element.getData(), SeparatorConfig.class);
+            case DashboardElement.SERVICE_COMPONENTS:
+               return new Gson().fromJson(element.getData(), ServiceComponentsConfig.class);
+            case DashboardElement.SNMP_TRAP_MONITOR:
+               return new Gson().fromJson(element.getData(), SnmpTrapMonitorConfig.class);
+            case DashboardElement.STATUS_CHART:
+               return new Gson().fromJson(element.getData(), ObjectStatusChartConfig.class);
+            case DashboardElement.STATUS_INDICATOR:
+               return new Gson().fromJson(element.getData(), StatusIndicatorConfig.class);
+            case DashboardElement.STATUS_MAP:
+               return new Gson().fromJson(element.getData(), StatusMapConfig.class);
+            case DashboardElement.SYSLOG_MONITOR:
+               return new Gson().fromJson(element.getData(), SyslogMonitorConfig.class);
+            case DashboardElement.TABLE_BAR_CHART:
+            case DashboardElement.TABLE_TUBE_CHART:
+               return new Gson().fromJson(element.getData(), TableBarChartConfig.class);
+            case DashboardElement.TABLE_PIE_CHART:
+               return new Gson().fromJson(element.getData(), TablePieChartConfig.class);
+            case DashboardElement.TABLE_VALUE:
+               return new Gson().fromJson(element.getData(), TableValueConfig.class);
+            case DashboardElement.WEB_PAGE:
+               return new Gson().fromJson(element.getData(), WebPageConfig.class);
             default:
                return null;
          }

@@ -30,7 +30,6 @@ import org.netxms.client.constants.TimeFrameType;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -44,6 +43,7 @@ import org.netxms.nxmc.tools.ViewRefreshController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
+import com.google.gson.Gson;
 
 /**
  * Availability chart element
@@ -78,15 +78,15 @@ public class AvailabilityChartElement extends ElementWidget
          }
       });
 
-		try
-		{
-         elementConfig = XMLTools.createFromXml(AvailabilityChartConfig.class, element.getData());
-		}
-		catch(Exception e)
-		{
+      try
+      {
+         elementConfig = new Gson().fromJson(element.getData(), AvailabilityChartConfig.class);
+      }
+      catch(Exception e)
+      {
          logger.error("Cannot parse dashboard element configuration", e);
          elementConfig = new AvailabilityChartConfig();
-		}
+      }
 
       processCommonSettings(elementConfig);
 

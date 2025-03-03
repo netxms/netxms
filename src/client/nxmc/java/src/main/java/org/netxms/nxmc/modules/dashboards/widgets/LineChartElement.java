@@ -43,7 +43,6 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.RefreshAction;
 import org.netxms.nxmc.base.jobs.Job;
@@ -60,6 +59,7 @@ import org.netxms.nxmc.tools.ViewRefreshController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
+import com.google.gson.Gson;
 
 /**
  * Line chart element
@@ -91,15 +91,15 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
       super(parent, element, view);
       session = Registry.getSession();
       
-		try
-		{
-         config = XMLTools.createFromXml(LineChartConfig.class, element.getData());
-		}
-		catch(Exception e)
-		{
+      try
+      {
+         config = new Gson().fromJson(element.getData(), LineChartConfig.class);
+      }
+      catch(Exception e)
+      {
          logger.error("Cannot parse dashboard element configuration", e);
-			config = new LineChartConfig();
-		}
+         config = new LineChartConfig();
+      }
 
       processCommonSettings(config);
 

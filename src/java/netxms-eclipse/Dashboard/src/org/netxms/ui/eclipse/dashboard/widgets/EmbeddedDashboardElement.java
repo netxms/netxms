@@ -51,7 +51,7 @@ public class EmbeddedDashboardElement extends ElementWidget
 
 		try
 		{
-			config = EmbeddedDashboardConfig.createFromXml(element.getData());
+			config = EmbeddedDashboardConfig.createFromXmlOrJson(element.getData());
 		}
 		catch(Exception e)
 		{

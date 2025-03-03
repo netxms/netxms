@@ -22,12 +22,12 @@ import java.lang.reflect.Constructor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.modules.dashboards.api.CustomDashboardElement;
 import org.netxms.nxmc.modules.dashboards.config.CustomWidgetConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.google.gson.Gson;
 
 /**
  * Dashboard element containing custom widget
@@ -45,15 +45,15 @@ public class CustomWidgetElement extends ElementWidget
       super(parent, SWT.NONE, element, view);
 
 		CustomWidgetConfig config;
-		try
-		{
-         config = XMLTools.createFromXml(CustomWidgetConfig.class, element.getData());
-		}
-		catch(Exception e)
-		{
+      try
+      {
+         config = new Gson().fromJson(element.getData(), CustomWidgetConfig.class);
+      }
+      catch(Exception e)
+      {
          logger.error("Cannot parse dashboard element configuration", e);
-			config = new CustomWidgetConfig();
-		}
+         config = new CustomWidgetConfig();
+      }
 
       processCommonSettings(config);
 

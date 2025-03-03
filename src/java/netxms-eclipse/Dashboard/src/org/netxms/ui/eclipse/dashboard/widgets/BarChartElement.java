@@ -23,10 +23,10 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.xml.XMLTools;
 import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
+import com.google.gson.Gson;
 
 /**
  * Bar chart element
@@ -46,7 +46,7 @@ public class BarChartElement extends ComparisonChartElement
 
 		try
 		{
-         elementConfig = XMLTools.createFromXml(BarChartConfig.class, element.getData());
+         elementConfig = new Gson().fromJson(element.getData(), BarChartConfig.class);
 		}
 		catch(Exception e)
 		{

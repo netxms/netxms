@@ -24,8 +24,8 @@
 #include "netxms-regex.h"
 #include <pugixml.h>
 
-static PCRE *nodeRegexp = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("(?:<(?:nodeId|objectId|baseObjectId|rootObjectId)>(\\d+)<\\/(?:nodeId|objectId|baseObjectId|rootObjectId)>)|nodeId=\"(\\d+)\"")), PCRE_COMMON_FLAGS | PCRE_CASELESS, nullptr, nullptr, nullptr);
-static PCRE *dciRegexp = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("(?:dciId=\"(\\d+)\")|(?:<dciId>(\\d+)<\\/dciId>)")), PCRE_COMMON_FLAGS | PCRE_CASELESS, nullptr, nullptr, nullptr);
+static PCRE *nodeRegexp = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("\"nodeId\": (\d+)")), PCRE_COMMON_FLAGS | PCRE_CASELESS, nullptr, nullptr, nullptr);
+static PCRE *dciRegexp = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("\"dciId\": (\d+)")), PCRE_COMMON_FLAGS | PCRE_CASELESS, nullptr, nullptr, nullptr);
 
 /**
  * Default constructor
@@ -415,17 +415,17 @@ String Dashboard::getElementScript(int index) const
       DashboardElement *e = m_elements.get(index);
       if (e->m_type == 30 || e->m_type == 31 || e->m_type == 6)
       {
-         pugi::xml_document xml;
          char *data = UTF8StringFromTString(e->m_data);
-         if (xml.load_buffer(data, strlen(data)))
+         json_error_t error;
+         json_t *element = json_loads(data, 0, &error);
+         if (element != nullptr)
          {
-            pugi::xml_node node = xml.select_node("/element/script").node();
-            const char *source = node.text().as_string();
+            const char *source = json_object_get_string_utf8(element, "script", "");
             script.appendUtf8String(source);
          }
          else
          {
-            nxlog_debug_tag(_T("dashboard"), 1, _T("Dashboard::getElementScript(%s [%u]): failed to load XML for %d element"), m_name, m_id, index);
+            nxlog_debug_tag(_T("dashboard"), 1, _T("Dashboard::getElementScript(%s [%u]): failed to load XML for %d element (%hs)"), m_name, m_id, index, error.text);
          }
          MemFree(data);
       }
@@ -454,12 +454,12 @@ bool Dashboard::isElementContextObject(int index, uint32_t contextObject) const
       DashboardElement *e = m_elements.get(index);
       if (e->m_type == 30 || e->m_type == 31 || e->m_type == 6)
       {
-         pugi::xml_document xml;
          char *data = UTF8StringFromTString(e->m_data);
-         if (xml.load_buffer(data, strlen(data)))
+         json_error_t error;
+         json_t *element = json_loads(data, 0, &error);
+         if (element != nullptr)
          {
-            pugi::xml_node node = xml.select_node("/element/objectId").node();
-            uint32_t objectId = node.text().as_uint();
+            uint32_t objectId = json_object_get_uint32(element, "objectId", 0);
             isContextObject = (objectId == contextObject);
          }
          else

@@ -81,7 +81,7 @@ final class NXCReceivedFile
 	protected int writeData(final byte[] data, boolean compressedStream)
 	{
 	   int bytes = 0;
-		if (status == OPEN)
+		if (status == OPEN && data.length > 0)
 		{
 			try
 			{

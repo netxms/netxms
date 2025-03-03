@@ -82,7 +82,7 @@ public class DashboardElement
 		this.type = type;
 		this.data = data;
 		this.index = index;
-		layout = "<layout><horizontalSpan>1</horizontalSpan><verticalSpan>1</verticalSpan><horizontalAlignment>0</horizontalAlignment><verticalAlignment>0</verticalAlignment></layout>";
+		layout = "{\"horizontalSpan\":1,\"verticalSpan\":1,\"horizontalAlignment\":0,\"verticalAlignment\":0}";
 	}
 
 	/**

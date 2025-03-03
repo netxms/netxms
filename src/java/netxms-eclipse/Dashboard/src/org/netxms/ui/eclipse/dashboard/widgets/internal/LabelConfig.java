@@ -23,6 +23,7 @@ import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
+import com.google.gson.Gson;
 
 /**
  * Configuration for label
@@ -39,13 +40,21 @@ public class LabelConfig extends DashboardElementConfig
 	/**
 	 * Create label configuration object from XML document
 	 * 
-	 * @param xml XML document
+	 * @param data XML or JSON document
 	 * @return deserialized object
 	 * @throws Exception if the object cannot be fully deserialized
 	 */
-	public static LabelConfig createFromXml(final String xml) throws Exception
+	public static LabelConfig createFromXmlOrJson(final String data) throws Exception
 	{
-      LabelConfig config = XMLTools.createFromXml(LabelConfig.class, xml);
+      LabelConfig config;
+      if (data.trim().startsWith("<"))
+      {
+         config = XMLTools.createFromXml(LabelConfig.class, data);
+      }
+      else
+      {
+         config = new Gson().fromJson(data, LabelConfig.class);
+      }
 
       // Update from old versions
       if ((config.foreground != null) && config.foreground.startsWith("0x"))

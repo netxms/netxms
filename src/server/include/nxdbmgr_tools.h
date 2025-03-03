@@ -110,7 +110,7 @@ bool LIBNXDBMGR_EXPORTABLE DBMgrExecuteQueryOnObject(uint32_t objectId, const TC
 
 TCHAR LIBNXDBMGR_EXPORTABLE *DBMgrGetObjectName(uint32_t objectId, TCHAR *buffer, bool useIdIfMissing = true);
 
-bool LIBNXDBMGR_EXPORTABLE ConvertXmlToJson(const TCHAR *table, const TCHAR *idColumn1, const TCHAR *idColumn2, const TCHAR *dataColumn, const char *topElement);
+bool LIBNXDBMGR_EXPORTABLE ConvertXmlToJson(const TCHAR *table, const TCHAR *idColumn1, const TCHAR *idColumn2, const TCHAR *dataColumn);
 
 // Global variables
 extern bool LIBNXDBMGR_EXPORTABLE g_ignoreErrors;
