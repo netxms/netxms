@@ -306,11 +306,10 @@ static bool ExecuteRemoteAction(const TCHAR *target, const TCHAR *action)
       }
    }
 
-   StringList *args = SplitCommandLine(action);
-   String command(args->get(0));
-   args->remove(0);
-   uint32_t rcc = conn->executeCommand(command, *args);
-   delete args;
+   StringList args = SplitCommandLine(action);
+   String command(args.get(0));
+   args.remove(0);
+   uint32_t rcc = conn->executeCommand(command, args);
 
    return rcc == ERR_SUCCESS;
 }

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2023-2024 Raden Solutions
+** Copyright (C) 2023-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -268,12 +268,12 @@ int H_ObjectExecuteAgentCommand(Context *context)
 
    StringMap inputFields(json_object_get(request, "inputFields"));
 
-   StringList *list = SplitCommandLine(object->expandText(commandLine, alarm, nullptr, shared_ptr<DCObjectInfo>(), context->getLoginName(), nullptr, nullptr, &inputFields, nullptr));
-   TCHAR actionName[MAX_PARAM_NAME];
-   _tcslcpy(actionName, list->get(0), MAX_PARAM_NAME);
-   list->remove(0);
+   StringList args = SplitCommandLine(object->expandText(commandLine, alarm, nullptr, shared_ptr<DCObjectInfo>(), context->getLoginName(), nullptr, nullptr, &inputFields, nullptr));
+   wchar_t actionName[MAX_PARAM_NAME];
+   wcslcpy(actionName, args.get(0), MAX_PARAM_NAME);
+   args.remove(0);
 
-   uint32_t rcc = pConn->executeCommand(actionName, *list);
+   uint32_t rcc = pConn->executeCommand(actionName, args);
    nxlog_debug_tag(DEBUG_TAG_WEBAPI, 4, _T("H_ObjectExecuteAgentCommand: execution completed, RCC=%u"), rcc);
 
    int responseCode;
@@ -288,7 +288,6 @@ int H_ObjectExecuteAgentCommand(Context *context)
       context->setAgentErrorResponse(rcc);
    }
 
-   delete list;
    delete alarm;
    return responseCode;
 }

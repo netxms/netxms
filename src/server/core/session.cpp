@@ -8781,7 +8781,7 @@ void ClientSession::executeAction(const NXCPMessage& request)
             shared_ptr<AgentConnectionEx> pConn = static_cast<Node&>(*object).createAgentConnection();
             if (pConn != nullptr)
             {
-               StringList *list = nullptr;
+               StringList list;
                StringMap inputFields;
                Alarm *alarm = nullptr;
                if (expandString)
@@ -8796,8 +8796,8 @@ void ClientSession::executeAction(const NXCPMessage& request)
                      return;
                   }
                   list = SplitCommandLine(object->expandText(action, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, &inputFields, nullptr));
-                  _tcslcpy(action, list->get(0), MAX_PARAM_NAME);
-                  list->remove(0);
+                  _tcslcpy(action, list.get(0), MAX_PARAM_NAME);
+                  list.remove(0);
                }
                else
                {
@@ -8808,10 +8808,9 @@ void ClientSession::executeAction(const NXCPMessage& request)
                      argc = 64;
                   }
 
-                  list = new StringList();
                   uint32_t fieldId = VID_ACTION_ARG_BASE;
                   for(int i = 0; i < argc; i++)
-                     list->addPreallocated(request.getFieldAsString(fieldId++));
+                     list.addPreallocated(request.getFieldAsString(fieldId++));
                }
 
                uint32_t rcc;
@@ -8819,28 +8818,27 @@ void ClientSession::executeAction(const NXCPMessage& request)
                if (withOutput)
                {
                   ActionExecutionData data(this, request.getId());
-                  rcc = pConn->executeCommand(action, *list, true, ActionExecuteCallback, &data);
+                  rcc = pConn->executeCommand(action, list, true, ActionExecuteCallback, &data);
                }
                else
                {
-                  rcc = pConn->executeCommand(action, *list);
+                  rcc = pConn->executeCommand(action, list);
                }
                debugPrintf(4, _T("executeAction: rcc=%d"), rcc);
 
                if (expandString && (request.getFieldAsInt32(VID_NUM_MASKED_FIELDS) > 0))
                {
-                  delete list;
                   StringList maskedFields(request, VID_MASKED_FIELD_LIST_BASE, VID_NUM_MASKED_FIELDS);
                   for (int i = 0; i < maskedFields.size(); i++)
                   {
                      inputFields.set(maskedFields.get(i), _T("******"));
                   }
                   list = SplitCommandLine(object->expandText(originalActionString, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, &inputFields, nullptr));
-                  list->remove(0);
+                  list.remove(0);
                }
 
                StringBuffer args;
-               args.appendPreallocated(list->join(_T(", ")));
+               args.appendPreallocated(list.join(_T(", ")));
 
                switch(rcc)
                {
@@ -8862,7 +8860,6 @@ void ClientSession::executeAction(const NXCPMessage& request)
                      response.setField(VID_RCC, RCC_COMM_FAILURE);
                      break;
                }
-               delete list;
                delete alarm;
             }
             else

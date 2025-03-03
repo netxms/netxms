@@ -1416,7 +1416,7 @@ InetAddress NXCORE_EXPORTABLE ResolveHostName(int32_t zoneUIN, const wchar_t *ho
 bool EventNameResolver(const wchar_t *name, uint32_t *code);
 
 bool NXCORE_EXPORTABLE SendMagicPacket(const InetAddress& ipAddr, const MacAddress& macAddr, int count);
-StringList NXCORE_EXPORTABLE *SplitCommandLine(const TCHAR *command);
+StringList NXCORE_EXPORTABLE SplitCommandLine(const wchar_t *command);
 
 void SendTrapMappingsToClient(ClientSession *session, uint32_t requestId);
 void CreateTrapMappingMessage(NXCPMessage *msg);

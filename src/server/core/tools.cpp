@@ -130,21 +130,21 @@ stop:
 /**
  *  Splits command line
  */
-StringList NXCORE_EXPORTABLE *SplitCommandLine(const TCHAR *command)
+StringList NXCORE_EXPORTABLE SplitCommandLine(const wchar_t *command)
 {
-   StringList *listOfStrings = new StringList();
+   StringList elements;
    StringBuffer tmp;
    int state = 0;
    int size = (int)_tcslen(command);
    for(int i = 0; i < size; i++)
    {
-      TCHAR c = command[i];
+      wchar_t c = command[i];
       switch(state)
       {
          case 0:
             if (c == _T(' '))
             {
-               listOfStrings->add(tmp);
+               elements.add(tmp);
                tmp.clear();
                state = 3;
             }
@@ -202,9 +202,9 @@ StringList NXCORE_EXPORTABLE *SplitCommandLine(const TCHAR *command)
       }
    }
    if (state != 3)
-      listOfStrings->add(tmp);
+      elements.add(tmp);
 
-   return listOfStrings;
+   return elements;
 }
 
 /**

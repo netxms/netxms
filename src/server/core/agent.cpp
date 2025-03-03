@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1027,11 +1027,10 @@ void ExecuteScheduledAgentCommand(const shared_ptr<ScheduledTaskParameters>& par
          shared_ptr<AgentConnectionEx> conn = node->createAgentConnection();
          if (conn != nullptr)
          {
-            StringList *args = SplitCommandLine(parameters->m_persistentData);
-            String command(args->get(0));
-            args->remove(0);
-            uint32_t rcc = conn->executeCommand(command, *args);
-            delete args;
+            StringList args = SplitCommandLine(parameters->m_persistentData);
+            String command(args.get(0));
+            args.remove(0);
+            uint32_t rcc = conn->executeCommand(command, args);
             nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteScheduledAgentCommand: scheduled command execution on node %s [%u] by user [%u]: %s"),
                node->getName(), node->getId(), parameters->m_userId, AgentErrorCodeToText(rcc));
          }
