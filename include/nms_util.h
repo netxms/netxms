@@ -3816,14 +3816,14 @@ public:
     * @param length number of bytes to read.
     * @return Dynamically allocated multibyte character string in UTF-8 encoding. Must be freed by caller.
     */
-   char* readStrinAsUtf8(const char* codepage, size_t length) { return readStringAsUTF8Core(codepage, length, false, false); }
+   char* readStringAsUtf8(const char* codepage, size_t length) { return readStringAsUTF8Core(codepage, length, false, false); }
 
    /**
     * Read string of the known length.
     * @param length number of bytes to read.
     * @return Dynamically allocated multibyte character string in the same encoding as the stored string has. Must be freed by caller.
     */
-   char* readStrinA(size_t length) { return readStringCore(length, false, false); }
+   char* readStringA(size_t length) { return readStringCore(length, false, false); }
 
    /**
     * Read string prepended with length (Pascal type).
@@ -3923,6 +3923,9 @@ public:
    void writeL(int64_t n) { writeL(static_cast<uint64_t>(n)); }
    void writeL(float n) { n = HostToLittleEndianF(n); write(&n, 4); }
    void writeL(double n) { n = HostToLittleEndianD(n); write(&n, 8); }
+
+   void writeSignedLEB128(int64_t n);
+   void writeUnsignedLEB128(uint64_t n);
 
    size_t writeString(const WCHAR *str, const char *codepage, ssize_t length, bool prependLength, bool nullTerminate);
    size_t writeString(const char *str, ssize_t length, bool prependLength, bool nullTerminate);
