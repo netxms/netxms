@@ -278,7 +278,7 @@ void ScheduledTask::run(SchedulerCallback *callback)
    saveToDatabase(false);
    bool isSystemTask = ((m_flags & SCHEDULED_TASK_SYSTEM) != 0);
    bool recurrent = m_recurrent;
-   uint32_t id = m_id;
+   uint64_t id = m_id;
    unlock();
 
    // After this point task can be deleted from outside because SCHEDULED_TASK_RUNNING flag is cleared
@@ -812,7 +812,7 @@ ScheduledTask NXCORE_EXPORTABLE *FindScheduledTaskByHandlerId(const TCHAR *taskH
 /**
  * Delete scheduled task(s) by task handler id from specific task category
  */
-static void DeleteScheduledTaskByHandlerId(ObjectArray<ScheduledTask> *category, const TCHAR *taskHandlerId, IntegerArray<uint32_t> *deleteList)
+static void DeleteScheduledTaskByHandlerId(ObjectArray<ScheduledTask> *category, const TCHAR *taskHandlerId, IntegerArray<uint64_t> *deleteList)
 {
    for (int i = 0; i < category->size(); i++)
    {
@@ -840,7 +840,7 @@ static void DeleteScheduledTaskByHandlerId(ObjectArray<ScheduledTask> *category,
  */
 bool NXCORE_EXPORTABLE DeleteScheduledTaskByHandlerId(const TCHAR *taskHandlerId)
 {
-   IntegerArray<uint32_t> deleteList;
+   IntegerArray<uint64_t> deleteList;
 
    s_oneTimeTaskLock.lock();
    DeleteScheduledTaskByHandlerId(&s_oneTimeTasks, taskHandlerId, &deleteList);
@@ -862,7 +862,7 @@ bool NXCORE_EXPORTABLE DeleteScheduledTaskByHandlerId(const TCHAR *taskHandlerId
 /**
  * Delete scheduled task(s) by task key from given task category
  */
-static void DeleteScheduledTaskByKey(ObjectArray<ScheduledTask> *category, const TCHAR *taskKey, IntegerArray<uint32_t> *deleteList)
+static void DeleteScheduledTaskByKey(ObjectArray<ScheduledTask> *category, const TCHAR *taskKey, IntegerArray<uint64_t> *deleteList)
 {
    for (int i = 0; i < category->size(); i++)
    {
@@ -890,7 +890,7 @@ static void DeleteScheduledTaskByKey(ObjectArray<ScheduledTask> *category, const
  */
 int NXCORE_EXPORTABLE DeleteScheduledTasksByKey(const TCHAR *taskKey)
 {
-   IntegerArray<uint32_t> deleteList;
+   IntegerArray<uint64_t> deleteList;
 
    s_oneTimeTaskLock.lock();
    DeleteScheduledTaskByKey(&s_oneTimeTasks, taskKey, &deleteList);
