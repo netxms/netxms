@@ -1,6 +1,6 @@
 /*
  ** File management subagent
- ** Copyright (C) 2016-2020 Raden Solutions
+ ** Copyright (C) 2016-2025 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@
 
 #include "vmgr.h"
 
-
 /**
  * --------------------------------
  * Parameter, list, table providers
@@ -32,9 +31,9 @@
  */
 LONG H_GetHostList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-   StringList *keyList = g_connectionList.keys();
-	for(int i = 0; i < keyList->size(); i++)
-		value->add(keyList->get(i));
+   StringList keyList = g_connectionList.keys();
+	for(int i = 0; i < keyList.size(); i++)
+		value->add(keyList.get(i));
 	return SYSINFO_RC_SUCCESS;
 }
 
@@ -282,7 +281,6 @@ LONG H_GetVMInfoAsParam(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue,
 LONG H_GetVMList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    TCHAR name[256];
-
 	if (!AgentGetParameterArg(cmd, 1, name, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
@@ -290,9 +288,9 @@ LONG H_GetVMList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstract
    if (conn == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
-   StringList *keyList = conn->getDomainListAndLock()->keys();
-	for(int i = 0; i < keyList->size(); i++)
-		value->add(keyList->get(i));
+   StringList keyList = conn->getDomainListAndLock()->keys();
+	for(int i = 0; i < keyList.size(); i++)
+		value->add(keyList.get(i));
    conn->unlockDomainList();
 	return SYSINFO_RC_SUCCESS;
 }
