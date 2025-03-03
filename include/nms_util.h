@@ -929,6 +929,11 @@ public:
    MemoryPool(MemoryPool&& src);
 
    /**
+    * Move assignment
+    */
+   MemoryPool& operator=(MemoryPool&& src);
+
+   /**
     * Destroy memory pool (object destructors will not be called)
     */
    ~MemoryPool();
