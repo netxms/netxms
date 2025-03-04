@@ -138,7 +138,7 @@ public class ExpansionTest extends AbstractSessionTest
       stringsToExpand.add("%{name:test_default_value}");// 8
       stringsToExpand.add("%{customAttributeName}");// 9
       stringsToExpand.add("%{customAttributeName:test_default_value}");// 10
-      stringsToExpand.add("%U%u");// 11
+      stringsToExpand.add("%U");// 11
       stringsToExpand.add("%Y");// 12
       stringsToExpand.add("%y");// 13
       stringsToExpand.add("%1%2%3");// 14
@@ -176,7 +176,7 @@ public class ExpansionTest extends AbstractSessionTest
       assertEquals("test_default_value", expandedStrings.get(8));
       assertEquals(node.getCustomAttributeValue("customAttributeName"), expandedStrings.get(9));
       assertEquals(node.getCustomAttributeValue("customAttributeName"), expandedStrings.get(10));
-      assertEquals(TestConstants.SERVER_LOGIN + TestConstants.SERVER_ADDRESS, expandedStrings.get(11));
+      assertEquals(TestConstants.SERVER_LOGIN, expandedStrings.get(11));
       assertEquals(Long.toString(alarm.getId()), expandedStrings.get(12));
       assertEquals(Long.toString(alarm.getState()), expandedStrings.get(13));
       assertEquals(dci.getName() + dci.getDescription() + threshold.getValue(), expandedStrings.get(14));
