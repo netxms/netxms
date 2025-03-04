@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -182,6 +182,7 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
          list.add(new AgentParameter("Server.EventProcessor.Bindings(*)", "Event processor {instance}: active bindings", DataType.UINT32));
          list.add(new AgentParameter("Server.EventProcessor.ProcessedEvents(*)", "Event processor {instance}: total number of processed events", DataType.COUNTER64));
          list.add(new AgentParameter("Server.EventProcessor.QueueSize(*)", "Event processor {instance}: queue size", DataType.UINT32));
+         list.add(new AgentParameter("Server.FileHandleLimit", "File handle limit for server process", DataType.UINT32));
          list.add(new AgentParameter("Server.Heap.Active", "Active server heap memory", DataType.UINT64));
          list.add(new AgentParameter("Server.Heap.Allocated", "Allocated server heap memory", DataType.UINT64));
          list.add(new AgentParameter("Server.Heap.Mapped", "Mapped server heap memory", DataType.UINT64));

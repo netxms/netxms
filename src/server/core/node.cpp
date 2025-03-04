@@ -29,6 +29,10 @@
 #include <ncdrv.h>
 #include <device-backup.h>
 
+#ifndef _WIN32
+#include <sys/resource.h>
+#endif
+
 #define DEBUG_TAG_DC_AGENT_CACHE    _T("dc.agent.cache")
 #define DEBUG_TAG_DC_SNMP           _T("dc.snmp")
 #define DEBUG_TAG_ICMP_POLL         _T("poll.icmp")
@@ -8518,6 +8522,18 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       else if (MatchString(_T("Server.EventProcessor.QueueSize(*)"), name, false))
       {
          rc = GetEventProcessorStatistic(name, 'Q', buffer);
+      }
+      else if (!_tcsicmp(name, _T("Server.FileHandleLimit")))
+      {
+#ifdef _WIN32
+         rc = DCE_NOT_SUPPORTED;
+#else
+         struct rlimit rl;
+         if (getrlimit(RLIMIT_NOFILE, &rl) == 0)
+            IntegerToString(rl.rlim_cur, buffer);
+         else
+            rc = DCE_COLLECTION_ERROR;
+#endif
       }
       else if (!_tcsicmp(name, _T("Server.Heap.Active")))
       {

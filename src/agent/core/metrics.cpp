@@ -23,10 +23,13 @@
 #include "nxagentd.h"
 #include <netxms-version.h>
 
-#if defined(_WIN32)
+#ifdef _WIN32
 #include <intrin.h>
-#elif HAVE_CPUID_H
+#else
+#include <sys/resource.h>
+#if HAVE_CPUID_H
 #include <cpuid.h>
+#endif
 #endif
 
 /**
@@ -269,6 +272,22 @@ static LONG H_FlagValue(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
    return SYSINFO_RC_SUCCESS;
 }
 
+#ifndef _WIN32
+
+/**
+ * Handler for Agent.FileHandleLimit
+ */
+static LONG H_FileHandleLimit(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   struct rlimit rl;
+   if (getrlimit(RLIMIT_NOFILE, &rl) != 0)
+      return SYSINFO_RC_ERROR;
+   ret_uint(value, rl.rlim_cur);
+   return SYSINFO_RC_SUCCESS;
+}
+
+#endif   /* _WIN32 */
+
 #if HAVE_GET_CPUID
 
 /**
@@ -465,6 +484,9 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("Agent.Events.Generated"), H_AgentEventSender, _T("G"), DCI_DT_COUNTER64, DCIDESC_AGENT_EVENTS_GENERATED },
    { _T("Agent.Events.LastTimestamp"), H_AgentEventSender, _T("T"), DCI_DT_UINT64, DCIDESC_AGENT_EVENTS_LAST_TIMESTAMP },
    { _T("Agent.FailedRequests"), H_UIntPtr, (TCHAR *)&s_failedRequests, DCI_DT_COUNTER32, DCIDESC_AGENT_FAILEDREQUESTS },
+#ifndef _WIN32
+   { _T("Agent.FileHandleLimit"), H_FileHandleLimit, nullptr, DCI_DT_UINT, DCIDESC_AGENT_FILEHANDLELIMIT },
+#endif
    { _T("Agent.Heap.Active"), H_AgentHeapActive, nullptr, DCI_DT_UINT64, DCIDESC_AGENT_HEAP_ACTIVE },
    { _T("Agent.Heap.Allocated"), H_AgentHeapAllocated, nullptr, DCI_DT_UINT64, DCIDESC_AGENT_HEAP_ALLOCATED },
    { _T("Agent.Heap.Mapped"), H_AgentHeapMapped, nullptr, DCI_DT_UINT64, DCIDESC_AGENT_HEAP_MAPPED },
