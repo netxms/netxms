@@ -141,11 +141,11 @@ NXSL_Value *NXSL_Array::getByPosition(int position) const
 /**
  * Get all elements as string list
  */
-StringList *NXSL_Array::toStringList() const
+StringList NXSL_Array::toStringList() const
 {
-   auto list = new StringList();
+   StringList list;
    for(int i = 0; i < m_size; i++)
-      list->add(m_data[i].value->getValueAsCString());
+      list.add(m_data[i].value->getValueAsCString());
    return list;
 }
 

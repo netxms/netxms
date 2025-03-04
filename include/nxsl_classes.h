@@ -510,7 +510,7 @@ public:
    int getMinIndex() const { return (m_size > 0) ? m_data[0].index : 0; }
    int getMaxIndex() const { return (m_size > 0) ? m_data[m_size - 1].index : 0; }
 
-   StringList *toStringList() const;
+   StringList toStringList() const;
    void toStringList(StringList *list) const;
    StringSet *toStringSet() const;
    void toStringSet(StringSet *set) const;

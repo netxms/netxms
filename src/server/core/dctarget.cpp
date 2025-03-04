@@ -1607,48 +1607,6 @@ DataCollectionError DataCollectionTarget::getMetricFromScript(const TCHAR *param
 }
 
 /**
- * Get list from library script
- */
-DataCollectionError DataCollectionTarget::getListFromScript(const TCHAR *param, StringList **list, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo)
-{
-   DataCollectionError rc = DCE_NOT_SUPPORTED;
-   ScriptExecutionResult result = runDataCollectionScript(param, targetObject, dciInfo);
-   if (result.vm != nullptr)
-   {
-      rc = DCE_SUCCESS;
-      NXSL_Value *value = result.vm->getResult();
-      if (value->isArray())
-      {
-         *list = value->getValueAsArray()->toStringList();
-      }
-      else if (value->isString())
-      {
-         *list = new StringList;
-         (*list)->add(value->getValueAsCString());
-      }
-      else if (value->isGuid())
-      {
-         rc = NXSLExitCodeToDCE(value->getValueAsGuid(), DCE_COLLECTION_ERROR);
-      }
-      else if (value->isNull())
-      {
-         rc = DCE_COLLECTION_ERROR;
-      }
-      else
-      {
-         *list = new StringList;
-      }
-      delete result.vm;
-   }
-   else if (result.loaded)
-   {
-      rc = DCE_COLLECTION_ERROR;
-   }
-   nxlog_debug(7, _T("DataCollectionTarget(%s)->getListFromScript(%s): rc=%d"), m_name, param, rc);
-   return rc;
-}
-
-/**
  * Get table from NXSL script
  */
 DataCollectionError DataCollectionTarget::getTableFromScript(const TCHAR *param, shared_ptr<Table> *table, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo)
