@@ -182,6 +182,20 @@ static LONG H_SupportedCiphers(const TCHAR *param, const TCHAR *arg, TCHAR *valu
 }
 
 /**
+ * Handler for Agent.AccessLevel
+ */
+static LONG H_AccessLevel(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   if (session->isMasterServer())
+      ret_string(value, _T("full"));
+   else if (session->isControlServer())
+      ret_string(value, _T("control"));
+   else
+      ret_string(value, _T("read"));
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Handler for component statuses based on failure flags
  */
 static LONG H_ComponentStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
@@ -442,6 +456,7 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
 
    { _T("Agent.AcceptedConnections"), H_UIntPtr, (TCHAR *)&g_acceptedConnections, DCI_DT_COUNTER32, DCIDESC_AGENT_ACCEPTEDCONNECTIONS },
    { _T("Agent.AcceptErrors"), H_UIntPtr, (TCHAR *)&g_acceptErrors, DCI_DT_COUNTER32, DCIDESC_AGENT_ACCEPTERRORS },
+   { _T("Agent.AccessLevel"), H_AccessLevel, nullptr, DCI_DT_STRING, DCIDESC_AGENT_ACCESSLEVEL },
    { _T("Agent.ActiveConnections"), H_ActiveConnections, nullptr, DCI_DT_UINT, DCIDESC_AGENT_ACTIVECONNECTIONS },
    { _T("Agent.AuthenticationFailures"), H_UIntPtr, (TCHAR *)&g_authenticationFailures, DCI_DT_COUNTER32, DCIDESC_AGENT_AUTHENTICATIONFAILURES },
    { _T("Agent.ConfigurationLoadStatus"), H_ComponentStatus, _T("C"), DCI_DT_UINT, DCIDESC_AGENT_CONFIG_LOAD_STATUS },

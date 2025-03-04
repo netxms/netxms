@@ -245,6 +245,7 @@ struct PolicyChangeNotification
  */
 #define DCIDESC_AGENT_ACCEPTEDCONNECTIONS            _T("Number of connections accepted by agent")
 #define DCIDESC_AGENT_ACCEPTERRORS                   _T("Number of accept() call errors")
+#define DCIDESC_AGENT_ACCESSLEVEL                    _T("Server's access level on this agent")
 #define DCIDESC_AGENT_ACTIVECONNECTIONS              _T("Number of active connections to agent")
 #define DCIDESC_AGENT_AUTHENTICATIONFAILURES         _T("Number of authentication failures")
 #define DCIDESC_AGENT_CONFIG_LOAD_STATUS             _T("Agent configuration load status")
