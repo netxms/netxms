@@ -53,7 +53,7 @@ static void EncodeColumnName(const wchar_t *name, const char *type, ByteStream& 
 /**
  * Constructor for ClickHouse sender
  */
-ClickHouseSender::ClickHouseSender(const Config& config)
+ClickHouseSender::ClickHouseSender(const Config& config, const StructArray<DataColumn>& dataColumns) : m_dataColumns(dataColumns)
 {
    m_queueFlushThreshold = config.getValueAsUInt(L"/ClickHouse/QueueFlushThreshold", 1000);
    m_maxCacheWaitTime = config.getValueAsUInt(L"/ClickHouse/MaxCacheWaitTime", 30000);
@@ -104,22 +104,30 @@ ClickHouseSender::ClickHouseSender(const Config& config)
    }
 
    // Standard columns
-   m_numStandardColumns = 0;
+   m_numColumns = 0;
    m_standardColumnFlags = 0;
    ByteStream header, types;
-   EncodeColumnName(config.getValue(L"/ClickHouse/Column.Timestamp", L"timestamp"), "DateTime", header, types, &m_numStandardColumns, 0, &m_standardColumnFlags);
-   EncodeColumnName(config.getValue(L"/ClickHouse/Column.Host", L"host"), "String", header, types, &m_numStandardColumns, 0, &m_standardColumnFlags);
-   EncodeColumnName(config.getValue(L"/ClickHouse/Column.Name", L"name"), "String", header, types, &m_numStandardColumns, 0, &m_standardColumnFlags);
-   EncodeColumnName(config.getValue(L"/ClickHouse/Column.IntValue", L"ivalue"), "Int64", header, types, &m_numStandardColumns, COL_IVALUE, &m_standardColumnFlags);
-   EncodeColumnName(config.getValue(L"/ClickHouse/Column.FloatValue", L"fvalue"), "Float64", header, types, &m_numStandardColumns, COL_FVALUE, &m_standardColumnFlags);
-   EncodeColumnName(config.getValue(L"/ClickHouse/Column.Instance ", L"instance"), "String", header, types, &m_numStandardColumns, COL_INSTANCE, &m_standardColumnFlags);
-   EncodeColumnName(config.getValue(L"/ClickHouse/Column.DataType ", L"data_type"), "String", header, types, &m_numStandardColumns, COL_DATA_TYPE, &m_standardColumnFlags);
-   EncodeColumnName(config.getValue(L"/ClickHouse/Column.DataSource", L"data_source"), "String", header, types, &m_numStandardColumns, COL_DATA_SOURCE, &m_standardColumnFlags);
-   EncodeColumnName(config.getValue(L"/ClickHouse/Column.DeltaType", L"delta_type"), "String", header, types, &m_numStandardColumns, COL_DELTA_TYPE, &m_standardColumnFlags);
-   EncodeColumnName(config.getValue(L"/ClickHouse/Column.Tags", L"tags"), "Map(String, String)", header, types, &m_numStandardColumns, COL_TAGS, &m_standardColumnFlags);
+   EncodeColumnName(config.getValue(L"/ClickHouse/Column.Timestamp", L"timestamp"), "DateTime", header, types, &m_numColumns, 0, &m_standardColumnFlags);
+   EncodeColumnName(config.getValue(L"/ClickHouse/Column.Host", L"host"), "String", header, types, &m_numColumns, 0, &m_standardColumnFlags);
+   EncodeColumnName(config.getValue(L"/ClickHouse/Column.Name", L"name"), "String", header, types, &m_numColumns, 0, &m_standardColumnFlags);
+   EncodeColumnName(config.getValue(L"/ClickHouse/Column.IntValue", L"ivalue"), "Int64", header, types, &m_numColumns, COL_IVALUE, &m_standardColumnFlags);
+   EncodeColumnName(config.getValue(L"/ClickHouse/Column.FloatValue", L"fvalue"), "Float64", header, types, &m_numColumns, COL_FVALUE, &m_standardColumnFlags);
+   EncodeColumnName(config.getValue(L"/ClickHouse/Column.Instance", L"instance"), "String", header, types, &m_numColumns, COL_INSTANCE, &m_standardColumnFlags);
+   EncodeColumnName(config.getValue(L"/ClickHouse/Column.DataType", L"data_type"), "String", header, types, &m_numColumns, COL_DATA_TYPE, &m_standardColumnFlags);
+   EncodeColumnName(config.getValue(L"/ClickHouse/Column.DataSource", L"data_source"), "String", header, types, &m_numColumns, COL_DATA_SOURCE, &m_standardColumnFlags);
+   EncodeColumnName(config.getValue(L"/ClickHouse/Column.DeltaType", L"delta_type"), "String", header, types, &m_numColumns, COL_DELTA_TYPE, &m_standardColumnFlags);
+   EncodeColumnName(config.getValue(L"/ClickHouse/Column.Tags", L"tags"), "Map(String, String)", header, types, &m_numColumns, COL_TAGS, &m_standardColumnFlags);
+
+   // User-defined columns
+   for(int i = 0; i < dataColumns.size(); i++)
+   {
+      const DataColumn *dc = dataColumns.get(i);
+      EncodeColumnName(dc->name, dc->typeName, header, types, &m_numColumns, 0, &m_standardColumnFlags);
+   }
+
    header.write(types.buffer(), types.size());
-   m_standardColumnsHeaderSize = header.size();
-   m_standardColumnsHeader = MemCopyBlock(header.buffer(), m_standardColumnsHeaderSize);
+   m_columnsHeaderSize = header.size();
+   m_columnsHeader = MemCopyBlock(header.buffer(), m_columnsHeaderSize);
 
    m_curl = nullptr;
    m_lastConnect = 0;
@@ -159,7 +167,7 @@ ClickHouseSender::~ClickHouseSender()
       curl_easy_cleanup(m_curl);
    curl_slist_free_all(m_headers);
 
-   MemFree(m_standardColumnsHeader);
+   MemFree(m_columnsHeader);
 
 #ifdef _WIN32
    DeleteCriticalSection(&m_mutex);
@@ -223,8 +231,8 @@ bool ClickHouseSender::sendBatch(const std::vector<MetricRecord>& records)
    ByteStream packet(records.size() * 256); // Pre-allocate with rough estimate
 
    // Column names
-   packet.writeUnsignedLEB128(m_numStandardColumns);
-   packet.write(m_standardColumnsHeader, m_standardColumnsHeaderSize);
+   packet.writeUnsignedLEB128(m_numColumns);
+   packet.write(m_columnsHeader, m_columnsHeaderSize);
 
    for (const MetricRecord& record : records)
    {
@@ -254,6 +262,35 @@ bool ClickHouseSender::sendBatch(const std::vector<MetricRecord>& records)
          {
             WriteStringWithLength(packet, tag.first.c_str());
             WriteStringWithLength(packet, tag.second.c_str());
+         }
+      }
+
+      for(int i = 0; i < m_dataColumns.size(); i++)
+      {
+         const DataColumn *dc = m_dataColumns.get(i);
+         switch(dc->type)
+         {
+            case ColumnDataType::Float32:
+               packet.writeL(static_cast<float>(strtof(record.columns[i].c_str(), nullptr)));
+               break;
+            case ColumnDataType::Float64:
+               packet.writeL(strtof(record.columns[i].c_str(), nullptr));
+               break;
+            case ColumnDataType::Int32:
+               packet.writeL(static_cast<int32_t>(strtol(record.columns[i].c_str(), nullptr, 0)));
+               break;
+            case ColumnDataType::Int64:
+               packet.writeL(static_cast<int64_t>(strtoll(record.columns[i].c_str(), nullptr, 0)));
+               break;
+            case ColumnDataType::UInt32:
+               packet.writeL(static_cast<uint32_t>(strtoul(record.columns[i].c_str(), nullptr, 0)));
+               break;
+            case ColumnDataType::UInt64:
+               packet.writeL(static_cast<uint64_t>(strtoull(record.columns[i].c_str(), nullptr, 0)));
+               break;
+            case ColumnDataType::String:
+               WriteStringWithLength(packet, record.columns[i].c_str());
+               break;
          }
       }
    }

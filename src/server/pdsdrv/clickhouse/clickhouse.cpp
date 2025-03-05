@@ -30,8 +30,9 @@ static const wchar_t s_driverName[] = L"ClickHouse";
 /**
  * Constructor
  */
-ClickHouseStorageDriver::ClickHouseStorageDriver() : m_senders(0, 16, Ownership::True)
+ClickHouseStorageDriver::ClickHouseStorageDriver() : m_senders(0, 16, Ownership::True), m_dataColumns(0, MAX_ADDITIONAL_COLUMNS)
 {
+   m_ignoreStringMetrics = true;
    m_enableUnsignedType = true;
    m_validateValues = false;
    m_correctValues = false;
@@ -63,6 +64,9 @@ bool ClickHouseStorageDriver::init(Config *config)
       return false;
    }
 
+   m_ignoreStringMetrics = config->getValueAsBoolean(L"/ClickHouse/IgnoreStringMetics", m_ignoreStringMetrics);
+   nxlog_debug_tag(DEBUG_TAG, 2, L"Values of string metrics are %s", m_ignoreStringMetrics ? L"ignored" : L"processed");
+
    m_enableUnsignedType = config->getValueAsBoolean(L"/ClickHouse/EnableUnsignedType", m_enableUnsignedType);
    nxlog_debug_tag(DEBUG_TAG, 2, L"Unsigned integer data type is %s", m_enableUnsignedType ? L"enabled" : L"disabled");
 
@@ -78,10 +82,77 @@ bool ClickHouseStorageDriver::init(Config *config)
    else if (queueCount > 32)
       queueCount = 32;
 
+   ConfigEntry *columns = config->getEntry(L"/ClickHouse/Column.AdditionalData");
+   if (columns != nullptr)
+   {
+      for(int i = 0; i < columns->getValueCount(); i++)
+      {
+         DataColumn c;
+         const wchar_t *v = columns->getValue(i);
+         const wchar_t *s = wcschr(v, L':');
+         if (s != nullptr)
+         {
+            size_t l = MIN(s - v, MAX_COLUMN_NAME_LEN - 1);
+            memcpy(c.name, v, l * sizeof(wchar_t));
+            c.name[l] = 0;
+
+            s++;
+            if (!wcsicmp(s, L"Int32"))
+            {
+               c.type = ColumnDataType::Int32;
+               strcpy(c.typeName, "Int32");
+            }
+            else if (!wcsicmp(s, L"UInt32"))
+            {
+               c.type = ColumnDataType::UInt32;
+               strcpy(c.typeName, "UInt32");
+            }
+            else if (!wcsicmp(s, L"Int64"))
+            {
+               c.type = ColumnDataType::Int64;
+               strcpy(c.typeName, "Int64");
+            }
+            else if (!wcsicmp(s, L"UInt64"))
+            {
+               c.type = ColumnDataType::UInt64;
+               strcpy(c.typeName, "UInt64");
+            }
+            else if (!wcsicmp(s, L"Float32"))
+            {
+               c.type = ColumnDataType::Float32;
+               strcpy(c.typeName, "Float32");
+            }
+            else if (!wcsicmp(s, L"Float64"))
+            {
+               c.type = ColumnDataType::Float64;
+               strcpy(c.typeName, "Float64");
+            }
+            else if (!wcsicmp(s, L"String"))
+            {
+               c.type = ColumnDataType::String;
+               strcpy(c.typeName, "String");
+            }
+            else
+            {
+               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Invalid data type \"%s\" for data column \"%s\", will use \"String\" instead", s, c.name);
+               c.type = ColumnDataType::String;
+               strcpy(c.typeName, "String");
+            }
+         }
+         else
+         {
+            wcslcpy(c.name, v, MAX_COLUMN_NAME_LEN);
+            c.type = ColumnDataType::String;
+            strcpy(c.typeName, "String");
+         }
+         m_dataColumns.add(c);
+      }
+   }
+
    nxlog_debug_tag(DEBUG_TAG, 2, L"Using %d queue%s", queueCount, queueCount > 1 ? L"s" : L"");
    for(int i = 0; i < queueCount; i++)
    {
-      ClickHouseSender *sender = new ClickHouseSender(*config);
+      ClickHouseSender *sender = new ClickHouseSender(*config, m_dataColumns);
       m_senders.add(sender);
       sender->start();
    }
@@ -102,7 +173,7 @@ void ClickHouseStorageDriver::shutdown()
 /**
  * Parse custom attributes and extract tags
  */
-static bool GetTagsFromObject(const NetObj& object, std::vector<std::pair<std::string, std::string>> *columns, std::vector<std::pair<std::string, std::string>> *tags)
+bool ClickHouseStorageDriver::getTagsFromObject(const NetObj& object, MetricRecord *record)
 {
    StringMap *ca = object.getCustomAttributes();
    if (ca == nullptr)
@@ -128,7 +199,7 @@ static bool GetTagsFromObject(const NetObj& object, std::vector<std::pair<std::s
          if ((value != nullptr) && (value[0] != 0))
          {
             nxlog_debug_tag(DEBUG_TAG, 8, _T("Object %s: adding tag: \"%s\" = \"%s\""), object.getName(), &key[4], value);
-            tags->emplace_back(WideStringToUtf8(&key[4]), WideStringToUtf8(value));
+            record->tags.emplace_back(WideStringToUtf8(&key[4]), WideStringToUtf8(value));
          }
          else
          {
@@ -140,8 +211,24 @@ static bool GetTagsFromObject(const NetObj& object, std::vector<std::pair<std::s
          const wchar_t *value = ca->get(keys.get(i));
          if ((value != nullptr) && (value[0] != 0))
          {
-            nxlog_debug_tag(DEBUG_TAG, 8, _T("Object %s: adding column: \"%s\" = \"%s\""), object.getName(), &key[7], value);
-            columns->emplace_back(WideStringToUtf8(&key[7]), WideStringToUtf8(value));
+            int index = -1;
+            for(int j = 0; j < m_dataColumns.size(); j++)
+            {
+               if (!wcsicmp(m_dataColumns.get(j)->name, &key[7]))
+               {
+                  index = j;
+                  break;
+               }
+            }
+            if (index != -1)
+            {
+               nxlog_debug_tag(DEBUG_TAG, 8, _T("Object %s: adding column: \"%s\" = \"%s\""), object.getName(), &key[7], value);
+               record->columns[index] = WideStringToUtf8(value);
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG, 8, _T("Object: %s - CA: K:%s (Column not defined)"), object.getName(), key);
+            }
          }
          else
          {
@@ -168,6 +255,13 @@ bool ClickHouseStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, con
             dci->getOwnerName(), dci->getDataSource(), dci->getType(), dci->getName().cstr(), dci->getDescription().cstr(),
             dci->getInstanceName().cstr(), dci->getTransformedDataType(), dci->getDeltaCalculationMethod(), dci->getRelatedObject(),
             value, static_cast<int64_t>(timestamp));
+
+   // Don't try to send empty values
+   if ((dci->getTransformedDataType() == DCI_DT_STRING) && m_ignoreStringMetrics)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Metric %s [%u] not sent: string data type is ignored"), dci->getName().cstr(), dci->getId());
+      return true;
+   }
 
    // Don't try to send empty values
    if (*value == 0)
@@ -295,7 +389,7 @@ bool ClickHouseStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, con
    }
 
    // Get custom tags from host
-   if (GetTagsFromObject(static_cast<NetObj&>(*dci->getOwner()), &record.columns, &record.tags))
+   if (getTagsFromObject(static_cast<NetObj&>(*dci->getOwner()), &record))
    {
       nxlog_debug_tag(DEBUG_TAG, 7, L"Metric not sent: ignore flag set on owner object");
       return true;
@@ -305,7 +399,7 @@ bool ClickHouseStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, con
    shared_ptr<NetObj> relatedObject = FindObjectById(dci->getRelatedObject());
    if (relatedObject != nullptr)
    {
-      if (GetTagsFromObject(static_cast<NetObj&>(*relatedObject), &record.columns, &record.tags))
+      if (getTagsFromObject(static_cast<NetObj&>(*relatedObject), &record))
       {
          nxlog_debug_tag(DEBUG_TAG, 7, _T("Metric not sent: ignore flag set on related object %s"), relatedObject->getName());
          return true;

@@ -42,6 +42,40 @@
 #define COL_TAGS           0x40
 
 /**
+ * Maximum number of user-defined columns
+ */
+#define MAX_ADDITIONAL_COLUMNS   16
+
+/**
+ * Max column name length
+ */
+#define MAX_COLUMN_NAME_LEN      48
+
+/**
+ * Supported data types
+ */
+enum class ColumnDataType
+{
+   Int32,
+   Int64,
+   UInt32,
+   UInt64,
+   Float32,
+   Float64,
+   String
+};
+
+/**
+ * User-defined data column
+ */
+struct DataColumn
+{
+   wchar_t name[MAX_COLUMN_NAME_LEN];
+   char typeName[16];
+   ColumnDataType type;
+};
+
+/**
  * Metric record structure
  */
 struct MetricRecord
@@ -54,8 +88,8 @@ struct MetricRecord
    const char *dataSource;
    const char *dataType;
    const char *deltaType;
-   std::vector<std::pair<std::string, std::string>> columns;
    std::vector<std::pair<std::string, std::string>> tags;
+   std::string columns[MAX_ADDITIONAL_COLUMNS];
 };
 
 /**
@@ -71,10 +105,11 @@ private:
    uint32_t m_queueFlushThreshold;
    uint32_t m_maxCacheWaitTime;
    std::string m_url;
-   BYTE *m_standardColumnsHeader;
-   size_t m_standardColumnsHeaderSize;
-   uint32_t m_numStandardColumns;
+   BYTE *m_columnsHeader;
+   size_t m_columnsHeaderSize;
+   uint32_t m_numColumns;
    uint32_t m_standardColumnFlags;
+   const StructArray<DataColumn>& m_dataColumns;
 
    CURL *m_curl;
    curl_slist *m_headers;
@@ -115,7 +150,7 @@ private:
    bool sendBatch(const std::vector<MetricRecord>& records);
 
 public:
-   ClickHouseSender(const Config& config);
+   ClickHouseSender(const Config& config, const StructArray<DataColumn>& dataColumns);
    virtual ~ClickHouseSender();
 
    void start();
@@ -137,9 +172,13 @@ class ClickHouseStorageDriver : public PerfDataStorageDriver
 {
 private:
    ObjectArray<ClickHouseSender> m_senders;
+   bool m_ignoreStringMetrics;
    bool m_enableUnsignedType;
    bool m_validateValues;
    bool m_correctValues;
+   StructArray<DataColumn> m_dataColumns;
+
+   bool getTagsFromObject(const NetObj& object, MetricRecord *record);
 
 public:
    ClickHouseStorageDriver();
