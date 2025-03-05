@@ -33,6 +33,8 @@ import org.netxms.nxmc.tools.ColorConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.Gson;
+
 /**
  * Dashboard separator element
  */
@@ -54,7 +56,7 @@ public class SeparatorElement extends ElementWidget
 
 		try
 		{
-         config = deserealizeConfiguration(element.getData(), SeparatorConfig.class);
+         config = new Gson().fromJson(element.getData(), SeparatorConfig.class);
 		}
 		catch(Exception e)
 		{
