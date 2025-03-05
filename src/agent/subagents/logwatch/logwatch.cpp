@@ -325,7 +325,7 @@ static StringList CollectMatchingFiles(const TCHAR *basePath, const TCHAR *fileT
             if (CALL_STAT(path, &st) == 0)
             {
                if (S_ISREG(st.st_mode) || (followSymlinks && S_ISLNK(st.st_mode)))
-                  matchingFiles->add(d->d_name);
+                  matchingFiles.add(d->d_name);
             }
 #endif
          }
