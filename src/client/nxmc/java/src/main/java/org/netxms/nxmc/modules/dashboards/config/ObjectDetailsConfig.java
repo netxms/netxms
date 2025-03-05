@@ -20,6 +20,9 @@ package org.netxms.nxmc.modules.dashboards.config;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.netxms.nxmc.modules.dashboards.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -48,6 +51,29 @@ public class ObjectDetailsConfig extends DashboardElementConfig
 
    @Element(required = false)
    private int recordLimit = 0;
+
+   /**
+    * @see org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig#getObjects()
+    */
+   @Override
+   public Set<Long> getObjects()
+   {
+      Set<Long> objects = super.getObjects();
+      objects.add(rootObjectId);
+      return objects;
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig#remapObjects(java.util.Map)
+    */
+   @Override
+   public void remapObjects(Map<Long, ObjectIdMatchingData> remapData)
+   {
+      super.remapObjects(remapData);
+      ObjectIdMatchingData md = remapData.get(rootObjectId);
+      if (md != null)
+         rootObjectId = md.dstId;
+   }
 
    /**
     * @return the query

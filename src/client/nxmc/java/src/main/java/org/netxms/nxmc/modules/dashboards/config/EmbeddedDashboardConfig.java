@@ -45,9 +45,9 @@ public class EmbeddedDashboardConfig extends DashboardElementConfig
    private int displayInterval = 60;
 
 	/**
-	 * Dashboard element config object from XML or Json  document
+	 * Create line chart settings object from XML document
 	 * 
-	 * @param data XML or Json  document
+	 * @param data XML or JSON document
 	 * @return deserialized object
 	 * @throws Exception if the object cannot be fully deserialized
 	 */
@@ -82,6 +82,7 @@ public class EmbeddedDashboardConfig extends DashboardElementConfig
 	{
 		Set<Long> objects = super.getObjects();
 		objects.add(objectId);
+      objects.add(contextObjectId);
 		for(long id : dashboardObjects)
 			objects.add(id);
 		return objects;
@@ -97,6 +98,9 @@ public class EmbeddedDashboardConfig extends DashboardElementConfig
 		ObjectIdMatchingData md = remapData.get(objectId);
 		if (md != null)
 			objectId = md.dstId;
+		md = remapData.get(contextObjectId);
+      if (md != null)
+         contextObjectId = md.dstId;
 		for(int i = 0; i < dashboardObjects.length; i++)
 		{
 			md = remapData.get(dashboardObjects[i]);

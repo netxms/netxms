@@ -41,9 +41,9 @@ public class LabelConfig extends DashboardElementConfig
    private String background = null;
 
 	/**
-	 * Create label configuration object from XML or Json document
+	 * Create label configuration object from XML document
 	 * 
-	 * @param data XML or Json document
+	 * @param data XML or JSON document
 	 * @return deserialized object
 	 * @throws Exception if the object cannot be fully deserialized
 	 */

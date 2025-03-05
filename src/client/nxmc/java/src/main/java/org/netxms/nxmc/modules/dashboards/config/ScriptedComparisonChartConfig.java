@@ -18,6 +18,9 @@
  */
 package org.netxms.nxmc.modules.dashboards.config;
 
+import java.util.Map;
+import java.util.Set;
+import org.netxms.nxmc.modules.dashboards.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
@@ -32,6 +35,29 @@ public abstract class ScriptedComparisonChartConfig extends AbstractChartConfig
 
    @Element(required = false)
    private long objectId = 0;
+
+   /**
+    * @see org.netxms.nxmc.modules.dashboards.config.AbstractChartConfig#getObjects()
+    */
+   @Override
+   public Set<Long> getObjects()
+   {
+      Set<Long> objects = super.getObjects();
+      objects.add(objectId);
+      return objects;
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.dashboards.config.AbstractChartConfig#remapObjects(java.util.Map)
+    */
+   @Override
+   public void remapObjects(Map<Long, ObjectIdMatchingData> remapData)
+   {
+      super.remapObjects(remapData);
+      ObjectIdMatchingData md = remapData.get(objectId);
+      if (md != null)
+         objectId = md.dstId;
+   }
 
 	/**
     * @return the script
