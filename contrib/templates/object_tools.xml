@@ -402,6 +402,28 @@
 				</inputField>
 			</inputFields>
 		</objectTool>
+		<objectTool id="18">
+			<name>&amp;Info-&gt;&amp;Agent-&gt;Running &amp;configuration</name>
+			<guid>d25100e8-923f-4df8-a1cd-715c74c2bfb9</guid>
+			<type>3</type>
+			<data>Agent Running ConfiguraitonAgent.RunningConfig^(.*)</data>
+			<description>Show agent running configuration</description>
+			<flags>0</flags>
+			<filter>&lt;objectMenuFilter&gt;&#x0A;   &lt;toolOS&gt;&lt;/toolOS&gt;&#x0A;   &lt;toolWorkstationOS&gt;&lt;/toolWorkstationOS&gt;&#x0A;   &lt;toolTemplate&gt;&lt;/toolTemplate&gt;&#x0A;   &lt;toolCustomAttributes&gt;&lt;/toolCustomAttributes&gt;&#x0A;   &lt;snmpOid&gt;&lt;/snmpOid&gt;&#x0A;   &lt;flags&gt;2&lt;/flags&gt;&#x0A;&lt;/objectMenuFilter&gt;</filter>
+			<confirmation></confirmation>
+			<commandName></commandName>
+			<commandShortName></commandShortName>
+			<image></image>
+			<remotePort>0</remotePort>
+			<columns>
+				<column id="1">
+					<name>Running configuration</name>
+					<oid></oid>
+					<format>0</format>
+					<captureGroup>1</captureGroup>
+				</column>
+			</columns>
+		</objectTool>
 	</objectTools>
 	<dciSummaryTables>
 	</dciSummaryTables>
