@@ -109,8 +109,7 @@ public class EppAlarmTest extends AbstractSessionTest
       EventProcessingPolicyRule testRule2 = TestHelperForEpp.findOrCreateRule(session, policy, ruleEventUpComment, eventTestTemplate2, node);
       testRule2.setAlarmKey(alarmKey);
       testRule2.setAlarmSeverity(Severity.TERMINATE);
-      testRule2.setFlags(testRule2.getFlags() | EventProcessingPolicyRule.GENERATE_ALARM);
-      testRule2.setFlags(testRule2.getFlags() | testRule2.TERMINATE_BY_REGEXP);
+      testRule2.setFlags(testRule2.getFlags() | EventProcessingPolicyRule.GENERATE_ALARM | EventProcessingPolicyRule.TERMINATE_BY_REGEXP);
       session.saveEventProcessingPolicy(policy);
 
       session.sendEvent(0, templateNameEventDown, node.getObjectId(), new String[] {}, null, null, null); // sending event which generated
@@ -136,13 +135,14 @@ public class EppAlarmTest extends AbstractSessionTest
       eventTestTemplate.setSeverity(Severity.CRITICAL); // Changing the alarm severity through the event test template
       session.modifyEventObject(eventTestTemplate);
       session.sendEvent(0, templateNameEventDown, node.getObjectId(), new String[] {}, null, null, null);
+      Thread.sleep(1000);
       alarm = findAlarmByKey(session, alarmKey);
       assertEquals(eventTestTemplate.getSeverity(), alarm.getCurrentSeverity());// checking that alarm severity is Critical
 
       testRule.setAlarmSeverity(Severity.RESOLVE); // changing alarm STATE
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, templateNameEventDown, node.getObjectId(), new String[] {}, null, null, null);
-      Thread.sleep(2000);
+      Thread.sleep(1000);
       alarm = findAlarmByKey(session, alarmKey);
 
       assertEquals(Alarm.STATE_RESOLVED, alarm.getState());// checking that alarm is resolved
