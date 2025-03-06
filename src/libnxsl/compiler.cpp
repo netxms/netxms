@@ -123,9 +123,22 @@ NXSL_Program *NXSL_Compiler::compile(const TCHAR *sourceCode, NXSL_Environment *
 }
 
 /**
+ * Append token head (non-meaningful symbols before token, like spaces) to the output buffer
+ */
+static inline void AppendTokenHead(std::string *output, size_t lastPos, const char *sourceCode, const char *stopText)
+{
+   const char *s = &sourceCode[lastPos];
+   size_t tlen = strlen(stopText);
+   size_t len = 0;
+   while(strncmp(s++, stopText, tlen))
+      len++;
+   output->append(&sourceCode[lastPos], len);
+}
+
+/**
  * Append token tail (non-meaningful symbols after token, like spaces) to the output buffer
  */
-static inline void AppendTokenTail(std::string *output, NXSL_Lexer *lexer, size_t lastPos, const char *sourceCode, TCHAR stopChar)
+static inline void AppendTokenTail(std::string *output, NXSL_Lexer *lexer, size_t lastPos, const char *sourceCode, char stopChar)
 {
    for(size_t i = lexer->getSourcePos() - 1; i >= lastPos; i--)
    {
@@ -137,9 +150,12 @@ static inline void AppendTokenTail(std::string *output, NXSL_Lexer *lexer, size_
    }
 }
 
+/**
+ * Check if string ends in specific caracter
+ */
 inline bool EndsWith(const std::string &str, const char *c)
 {
-   if(str.empty())
+   if (str.empty())
       return false;
    return !str.compare(str.size() - 1, 1, c, 1);
 }
@@ -176,6 +192,7 @@ StringBuffer NXSL_Compiler::convertToV5(const TCHAR *sourceCode)
             }
             else
             {
+               AppendTokenHead(&output, lastPos, m_lexer->getSource(), ".");
                output.append("..");
                AppendTokenTail(&output, m_lexer, lastPos, m_lexer->getSource(), '.');
             }
@@ -183,20 +200,26 @@ StringBuffer NXSL_Compiler::convertToV5(const TCHAR *sourceCode)
          case T_ARROW_REF:
             if (EndsWith(output, "-")) // "-" from "->" may have been read already as lookahead
                output.resize(output.size() - 1);
+            else
+               AppendTokenHead(&output, lastPos, m_lexer->getSource(), "-");
             output.append(".");
             AppendTokenTail(&output, m_lexer, lastPos, m_lexer->getSource(), '>');
             break;
          case T_SUB:
+            AppendTokenHead(&output, lastPos, m_lexer->getSource(), "sub");
             output.append("function");
             AppendTokenTail(&output, m_lexer, lastPos, m_lexer->getSource(), 'b');
             break;
          case T_USE:
+            AppendTokenHead(&output, lastPos, m_lexer->getSource(), "use");
             output.append("import");
             AppendTokenTail(&output, m_lexer, lastPos, m_lexer->getSource(), 'e');
             break;
          case T_V4_ASSIGN_CONCAT:
             if (EndsWith(output, ".")) // "." from ".=" may have been read already as lookahead
                output.resize(output.size() - 1);
+            else
+               AppendTokenHead(&output, lastPos, m_lexer->getSource(), ".=");
             output.append("..=");
             AppendTokenTail(&output, m_lexer, lastPos, m_lexer->getSource(), '=');
             break;
