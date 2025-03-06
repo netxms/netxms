@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35707.178 d17.12
+VisualStudioVersion = 17.12.35707.178
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "subagents", "subagents", "{451F583D-C2DB-4414-870C-7FA0189BE7DD}"
 EndProject
@@ -3031,7 +3031,6 @@ Global
 		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Debug|ARM64.ActiveCfg = Debug|ARM64
 		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Debug|ARM64.Build.0 = Debug|ARM64
 		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Debug|Win32.ActiveCfg = Debug|Win32
-		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Debug|Win32.Build.0 = Debug|Win32
 		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Debug|x64.ActiveCfg = Debug|x64
 		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Debug|x64.Build.0 = Debug|x64
 		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release - Client Only|ARM64.ActiveCfg = Release - Client Only|ARM64
@@ -3039,11 +3038,9 @@ Global
 		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release - Client Only|Win32.ActiveCfg = Release - Client Only|Win32
 		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release - Client Only|Win32.Build.0 = Release - Client Only|Win32
 		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release - Client Only|x64.ActiveCfg = Release - Client Only|x64
-		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release - Client Only|x64.Build.0 = Release - Client Only|x64
 		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release|ARM64.ActiveCfg = Release|ARM64
 		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release|ARM64.Build.0 = Release|ARM64
 		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release|Win32.ActiveCfg = Release|Win32
-		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release|Win32.Build.0 = Release|Win32
 		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release|x64.ActiveCfg = Release|x64
 		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
