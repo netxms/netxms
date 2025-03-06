@@ -5,7 +5,6 @@
    <plugins>
       <plugin id="com.google.gson"/>
       <plugin id="com.ibm.icu"/>
-      <plugin id="javax.servlet"/>
       <plugin id="org.apache.commons.codec"/>
       <plugin id="org.apache.commons.collections4"/>
       <plugin id="org.apache.commons.fileupload"/>
