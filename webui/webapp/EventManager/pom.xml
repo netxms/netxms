@@ -9,6 +9,6 @@
   </parent>
   <groupId>com.netxms.nxmc</groupId>
   <artifactId>org.netxms.ui.eclipse.eventmanager</artifactId>
-  <version>5.0.0</version>
+  <version>5.2.0</version>
   <packaging>eclipse-plugin</packaging>
 </project>
