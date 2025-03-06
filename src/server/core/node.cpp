@@ -8530,7 +8530,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
 #else
          struct rlimit rl;
          if (getrlimit(RLIMIT_NOFILE, &rl) == 0)
-            IntegerToString(rl.rlim_cur, buffer);
+            IntegerToString(static_cast<uint64_t>(rl.rlim_cur), buffer);
          else
             rc = DCE_COLLECTION_ERROR;
 #endif
