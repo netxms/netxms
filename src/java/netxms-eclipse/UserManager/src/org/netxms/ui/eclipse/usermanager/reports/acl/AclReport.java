@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020-2023 Raden Soultions
+ * Copyright (C) 2020-2025 Raden Soultions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -165,6 +165,206 @@ public class AclReport
       cell.setCellValue("Member of");
       cell.setCellStyle(headerStyle);
 
+      cell = headerRow.createCell(UsersSheetCells.ALL_SCHEDULED_TASKS.ordinal());
+      cell.setCellValue("All Scheduled tasks");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.AM_ATTRIBUTE_MANAGE.ordinal());
+      cell.setCellValue("Asset Mgmt Attributes");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.CONFIGURE_TRAPS.ordinal());
+      cell.setCellValue("SNMP Traps");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.DELETE_ALARMS.ordinal());
+      cell.setCellValue("Delete Alarms");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.EDIT_EVENT_DB.ordinal());
+      cell.setCellValue("Event Templates");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.EPP.ordinal());
+      cell.setCellValue("EPP");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.EXTERNAL_INTEGRATION.ordinal());
+      cell.setCellValue("External Integration");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.IMPORT_CONFIGURATION.ordinal());
+      cell.setCellValue("Import Config");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.MANAGE_ACTIONS.ordinal());
+      cell.setCellValue("Manage Actions");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.MANAGE_AGENT_CFG.ordinal());
+      cell.setCellValue("Managet Agent Configs");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.MANAGE_GEO_AREAS.ordinal());
+      cell.setCellValue("Manage Geo Areas");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.MANAGE_IMAGE_LIB.ordinal());
+      cell.setCellValue("Manage Image Library");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.MANAGE_MAPPING_TBLS.ordinal());
+      cell.setCellValue("Manage Mapping Tables");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.MANAGE_OBJECT_QUERIES.ordinal());
+      cell.setCellValue("Manage Object Queries");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.MANAGE_PACKAGES.ordinal());
+      cell.setCellValue("Manage Packages");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.MANAGE_REPOSITORIES.ordinal());
+      cell.setCellValue("Manage Repositories");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.MANAGE_SCRIPTS.ordinal());
+      cell.setCellValue("Manage Scripts");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.MANAGE_SERVER_FILES.ordinal());
+      cell.setCellValue("Manage Server Files");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.MANAGE_SESSIONS.ordinal());
+      cell.setCellValue("Manage Sessions");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.MANAGE_SUMMARY_TBLS.ordinal());
+      cell.setCellValue("Manage Summary Tables");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.MANAGE_TOOLS.ordinal());
+      cell.setCellValue("Manage Tools");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.MANAGE_2FA_METHODS.ordinal());
+      cell.setCellValue("Manage 2FA Methods");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.MANAGE_USERS.ordinal());
+      cell.setCellValue("Manage Users");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.MOBILE_DEVICE_LOGIN.ordinal());
+      cell.setCellValue("Manage Device Login");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.OBJECT_CATEGORIES.ordinal());
+      cell.setCellValue("Object Categories");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.OWN_SCHEDULED_TASKS.ordinal());
+      cell.setCellValue("Own Scheduled Tasks");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.PERSISTENT_STORAGE.ordinal());
+      cell.setCellValue("Persistent Storage");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.READ_SERVER_FILES.ordinal());
+      cell.setCellValue("Read Server Files");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.REGISTER_AGENTS.ordinal());
+      cell.setCellValue("Register Agents");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.REPORTING_SERVER.ordinal());
+      cell.setCellValue("Reporting Server");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.SCHEDULE_FILE_UPLOAD.ordinal());
+      cell.setCellValue("Schedule File Upload");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.SCHEDULE_MAINTENANCE.ordinal());
+      cell.setCellValue("Schedule Maintenance");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.SCHEDULE_SCRIPT.ordinal());
+      cell.setCellValue("Schedule Scripts");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.SEND_NOTIFICATION.ordinal());
+      cell.setCellValue("Send Notifications");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.SERVER_CONFIG.ordinal());
+      cell.setCellValue("Server Config");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.SERVER_CONSOLE.ordinal());
+      cell.setCellValue("Server Console");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.SETUP_TCP_PROXY.ordinal());
+      cell.setCellValue("Setup TCP Proxy");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.SSH_KEY_CONFIGURATION.ordinal());
+      cell.setCellValue("SSH Keys");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.UA_NOTIFICATIONS.ordinal());
+      cell.setCellValue("User Agent Notifications");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.UNLINK_ISSUES.ordinal());
+      cell.setCellValue("Unlink Issues");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.USER_SCHEDULED_TASKS.ordinal());
+      cell.setCellValue("User Scheduled Tasks");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.VIEW_ALL_ALARMS.ordinal());
+      cell.setCellValue("Vikew All Alarms");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.VIEW_ASSET_CHANGE_LOG.ordinal());
+      cell.setCellValue("Asset Change Log");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.VIEW_AUDIT_LOG.ordinal());
+      cell.setCellValue("Audit Log");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.VIEW_EVENT_DB.ordinal());
+      cell.setCellValue("View Event Templates");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.VIEW_EVENT_LOG.ordinal());
+      cell.setCellValue("Event Log");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.VIEW_REPOSITORIES.ordinal());
+      cell.setCellValue("View Repositories");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.VIEW_SYSLOG.ordinal());
+      cell.setCellValue("Syslog");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.VIEW_TRAP_LOG.ordinal());
+      cell.setCellValue("SNMP Trap Log");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(UsersSheetCells.WEB_SERVICE_DEFINITIONS.ordinal());
+      cell.setCellValue("Web Service Definitions");
+      cell.setCellStyle(headerStyle);
+      
       sheet.setColumnWidth(UsersSheetCells.ID.ordinal(), 2048);
       sheet.setColumnWidth(UsersSheetCells.LOGIN.ordinal(), 3072);
       sheet.setColumnWidth(UsersSheetCells.ACTIVE.ordinal(), 2048);
@@ -200,8 +400,71 @@ public class AclReport
             AbstractUserObject group = session.findUserDBObjectById(groupId, null);
             groupRow.createCell(UsersSheetCells.GROUPS.ordinal()).setCellValue(group.getName());
          }
-      });
 
+         createPermissionCell(row, UsersSheetCells.ALL_SCHEDULED_TASKS, UserAccessRights.SYSTEM_ACCESS_ALL_SCHEDULED_TASKS, user);
+         createPermissionCell(row, UsersSheetCells.AM_ATTRIBUTE_MANAGE, UserAccessRights.SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE, user);
+         createPermissionCell(row, UsersSheetCells.CONFIGURE_TRAPS, UserAccessRights.SYSTEM_ACCESS_CONFIGURE_TRAPS, user);
+         createPermissionCell(row, UsersSheetCells.DELETE_ALARMS, UserAccessRights.SYSTEM_ACCESS_DELETE_ALARMS, user);
+         createPermissionCell(row, UsersSheetCells.EDIT_EVENT_DB, UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, user);
+         createPermissionCell(row, UsersSheetCells.EPP, UserAccessRights.SYSTEM_ACCESS_EPP, user);
+         createPermissionCell(row, UsersSheetCells.EXTERNAL_INTEGRATION, UserAccessRights.SYSTEM_ACCESS_EXTERNAL_INTEGRATION, user);
+         createPermissionCell(row, UsersSheetCells.IMPORT_CONFIGURATION, UserAccessRights.SYSTEM_ACCESS_IMPORT_CONFIGURATION, user);
+         createPermissionCell(row, UsersSheetCells.MANAGE_ACTIONS, UserAccessRights.SYSTEM_ACCESS_MANAGE_ACTIONS, user);
+         createPermissionCell(row, UsersSheetCells.MANAGE_AGENT_CFG, UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_CFG, user);
+         createPermissionCell(row, UsersSheetCells.MANAGE_GEO_AREAS, UserAccessRights.SYSTEM_ACCESS_MANAGE_GEO_AREAS, user);
+         createPermissionCell(row, UsersSheetCells.MANAGE_IMAGE_LIB, UserAccessRights.SYSTEM_ACCESS_MANAGE_IMAGE_LIB, user);
+         createPermissionCell(row, UsersSheetCells.MANAGE_MAPPING_TBLS, UserAccessRights.SYSTEM_ACCESS_MANAGE_MAPPING_TBLS, user);
+         createPermissionCell(row, UsersSheetCells.MANAGE_OBJECT_QUERIES, UserAccessRights.SYSTEM_ACCESS_MANAGE_OBJECT_QUERIES, user);
+         createPermissionCell(row, UsersSheetCells.MANAGE_PACKAGES, UserAccessRights.SYSTEM_ACCESS_MANAGE_PACKAGES, user);
+         createPermissionCell(row, UsersSheetCells.MANAGE_REPOSITORIES, UserAccessRights.SYSTEM_ACCESS_MANAGE_REPOSITORIES, user);
+         createPermissionCell(row, UsersSheetCells.MANAGE_SCRIPTS, UserAccessRights.SYSTEM_ACCESS_MANAGE_SCRIPTS, user);
+         createPermissionCell(row, UsersSheetCells.MANAGE_SERVER_FILES, UserAccessRights.SYSTEM_ACCESS_MANAGE_SERVER_FILES, user);
+         createPermissionCell(row, UsersSheetCells.MANAGE_SESSIONS, UserAccessRights.SYSTEM_ACCESS_MANAGE_SESSIONS, user);
+         createPermissionCell(row, UsersSheetCells.MANAGE_SUMMARY_TBLS, UserAccessRights.SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS, user);
+         createPermissionCell(row, UsersSheetCells.MANAGE_TOOLS, UserAccessRights.SYSTEM_ACCESS_MANAGE_TOOLS, user);
+         createPermissionCell(row, UsersSheetCells.MANAGE_2FA_METHODS, UserAccessRights.SYSTEM_ACCESS_MANAGE_2FA_METHODS, user);
+         createPermissionCell(row, UsersSheetCells.MANAGE_USERS, UserAccessRights.SYSTEM_ACCESS_MANAGE_USERS, user);
+         createPermissionCell(row, UsersSheetCells.MOBILE_DEVICE_LOGIN, UserAccessRights.SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN, user);
+         createPermissionCell(row, UsersSheetCells.OBJECT_CATEGORIES, UserAccessRights.SYSTEM_ACCESS_OBJECT_CATEGORIES, user);
+         createPermissionCell(row, UsersSheetCells.OWN_SCHEDULED_TASKS, UserAccessRights.SYSTEM_ACCESS_OWN_SCHEDULED_TASKS, user);
+         createPermissionCell(row, UsersSheetCells.PERSISTENT_STORAGE, UserAccessRights.SYSTEM_ACCESS_PERSISTENT_STORAGE, user);
+         createPermissionCell(row, UsersSheetCells.READ_SERVER_FILES, UserAccessRights.SYSTEM_ACCESS_READ_SERVER_FILES, user);
+         createPermissionCell(row, UsersSheetCells.REGISTER_AGENTS, UserAccessRights.SYSTEM_ACCESS_REGISTER_AGENTS, user);
+         createPermissionCell(row, UsersSheetCells.REPORTING_SERVER, UserAccessRights.SYSTEM_ACCESS_REPORTING_SERVER, user);
+         createPermissionCell(row, UsersSheetCells.SCHEDULE_FILE_UPLOAD, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD, user);
+         createPermissionCell(row, UsersSheetCells.SCHEDULE_MAINTENANCE, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_MAINTENANCE, user);
+         createPermissionCell(row, UsersSheetCells.SCHEDULE_SCRIPT, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_SCRIPT, user);
+         createPermissionCell(row, UsersSheetCells.SEND_NOTIFICATION, UserAccessRights.SYSTEM_ACCESS_SEND_NOTIFICATION, user);
+         createPermissionCell(row, UsersSheetCells.SERVER_CONFIG, UserAccessRights.SYSTEM_ACCESS_SERVER_CONFIG, user);
+         createPermissionCell(row, UsersSheetCells.SERVER_CONSOLE, UserAccessRights.SYSTEM_ACCESS_SERVER_CONSOLE, user);
+         createPermissionCell(row, UsersSheetCells.SETUP_TCP_PROXY, UserAccessRights.SYSTEM_ACCESS_SETUP_TCP_PROXY, user);
+         createPermissionCell(row, UsersSheetCells.SSH_KEY_CONFIGURATION, UserAccessRights.SYSTEM_ACCESS_SSH_KEY_CONFIGURATION, user);
+         createPermissionCell(row, UsersSheetCells.UA_NOTIFICATIONS, UserAccessRights.SYSTEM_ACCESS_UA_NOTIFICATIONS, user);
+         createPermissionCell(row, UsersSheetCells.UNLINK_ISSUES, UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES, user);
+         createPermissionCell(row, UsersSheetCells.USER_SCHEDULED_TASKS, UserAccessRights.SYSTEM_ACCESS_USER_SCHEDULED_TASKS, user);
+         createPermissionCell(row, UsersSheetCells.VIEW_ALL_ALARMS, UserAccessRights.SYSTEM_ACCESS_VIEW_ALL_ALARMS, user);
+         createPermissionCell(row, UsersSheetCells.VIEW_ASSET_CHANGE_LOG, UserAccessRights.SYSTEM_ACCESS_VIEW_ASSET_CHANGE_LOG, user);
+         createPermissionCell(row, UsersSheetCells.VIEW_AUDIT_LOG, UserAccessRights.SYSTEM_ACCESS_VIEW_AUDIT_LOG, user);
+         createPermissionCell(row, UsersSheetCells.VIEW_EVENT_DB, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_DB, user);
+         createPermissionCell(row, UsersSheetCells.VIEW_EVENT_LOG, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_LOG, user);
+         createPermissionCell(row, UsersSheetCells.VIEW_REPOSITORIES, UserAccessRights.SYSTEM_ACCESS_VIEW_REPOSITORIES, user);
+         createPermissionCell(row, UsersSheetCells.VIEW_SYSLOG, UserAccessRights.SYSTEM_ACCESS_VIEW_SYSLOG, user);
+         createPermissionCell(row, UsersSheetCells.VIEW_TRAP_LOG, UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, user);
+         createPermissionCell(row, UsersSheetCells.WEB_SERVICE_DEFINITIONS, UserAccessRights.SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS, user);
+      });
+   }
+
+   /**
+    * Create single cell for system access
+    *
+    * @param row workbook's row
+    * @param cellId cell ID
+    * @param accessBit access bit to test
+    * @param user user or group
+    */
+   private void createPermissionCell(HSSFRow row, UsersSheetCells cellId, long accessBit, AbstractUserObject userObject)
+   {
+      row.createCell(cellId.ordinal()).setCellValue(((userObject.getSystemRights() & accessBit) != 0) ? "YES" : "NO");
    }
 
    /**
@@ -231,6 +494,206 @@ public class AclReport
       cell = headerRow.createCell(GroupsSheetCells.MEMBERS.ordinal());
       cell.setCellStyle(headerStyle);
       cell.setCellValue("Members");
+
+      cell = headerRow.createCell(GroupsSheetCells.ALL_SCHEDULED_TASKS.ordinal());
+      cell.setCellValue("All Scheduled tasks");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.AM_ATTRIBUTE_MANAGE.ordinal());
+      cell.setCellValue("Asset Mgmt Attributes");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.CONFIGURE_TRAPS.ordinal());
+      cell.setCellValue("SNMP Traps");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.DELETE_ALARMS.ordinal());
+      cell.setCellValue("Delete Alarms");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.EDIT_EVENT_DB.ordinal());
+      cell.setCellValue("Event Templates");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.EPP.ordinal());
+      cell.setCellValue("EPP");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.EXTERNAL_INTEGRATION.ordinal());
+      cell.setCellValue("External Integration");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.IMPORT_CONFIGURATION.ordinal());
+      cell.setCellValue("Import Config");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.MANAGE_ACTIONS.ordinal());
+      cell.setCellValue("Manage Actions");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.MANAGE_AGENT_CFG.ordinal());
+      cell.setCellValue("Managet Agent Configs");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.MANAGE_GEO_AREAS.ordinal());
+      cell.setCellValue("Manage Geo Areas");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.MANAGE_IMAGE_LIB.ordinal());
+      cell.setCellValue("Manage Image Library");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.MANAGE_MAPPING_TBLS.ordinal());
+      cell.setCellValue("Manage Mapping Tables");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.MANAGE_OBJECT_QUERIES.ordinal());
+      cell.setCellValue("Manage Object Queries");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.MANAGE_PACKAGES.ordinal());
+      cell.setCellValue("Manage Packages");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.MANAGE_REPOSITORIES.ordinal());
+      cell.setCellValue("Manage Repositories");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.MANAGE_SCRIPTS.ordinal());
+      cell.setCellValue("Manage Scripts");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.MANAGE_SERVER_FILES.ordinal());
+      cell.setCellValue("Manage Server Files");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.MANAGE_SESSIONS.ordinal());
+      cell.setCellValue("Manage Sessions");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.MANAGE_SUMMARY_TBLS.ordinal());
+      cell.setCellValue("Manage Summary Tables");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.MANAGE_TOOLS.ordinal());
+      cell.setCellValue("Manage Tools");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.MANAGE_2FA_METHODS.ordinal());
+      cell.setCellValue("Manage 2FA Methods");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.MANAGE_USERS.ordinal());
+      cell.setCellValue("Manage Users");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.MOBILE_DEVICE_LOGIN.ordinal());
+      cell.setCellValue("Manage Device Login");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.OBJECT_CATEGORIES.ordinal());
+      cell.setCellValue("Object Categories");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.OWN_SCHEDULED_TASKS.ordinal());
+      cell.setCellValue("Own Scheduled Tasks");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.PERSISTENT_STORAGE.ordinal());
+      cell.setCellValue("Persistent Storage");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.READ_SERVER_FILES.ordinal());
+      cell.setCellValue("Read Server Files");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.REGISTER_AGENTS.ordinal());
+      cell.setCellValue("Register Agents");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.REPORTING_SERVER.ordinal());
+      cell.setCellValue("Reporting Server");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.SCHEDULE_FILE_UPLOAD.ordinal());
+      cell.setCellValue("Schedule File Upload");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.SCHEDULE_MAINTENANCE.ordinal());
+      cell.setCellValue("Schedule Maintenance");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.SCHEDULE_SCRIPT.ordinal());
+      cell.setCellValue("Schedule Scripts");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.SEND_NOTIFICATION.ordinal());
+      cell.setCellValue("Send Notifications");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.SERVER_CONFIG.ordinal());
+      cell.setCellValue("Server Config");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.SERVER_CONSOLE.ordinal());
+      cell.setCellValue("Server Console");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.SETUP_TCP_PROXY.ordinal());
+      cell.setCellValue("Setup TCP Proxy");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.SSH_KEY_CONFIGURATION.ordinal());
+      cell.setCellValue("SSH Keys");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.UA_NOTIFICATIONS.ordinal());
+      cell.setCellValue("User Agent Notifications");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.UNLINK_ISSUES.ordinal());
+      cell.setCellValue("Unlink Issues");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.USER_SCHEDULED_TASKS.ordinal());
+      cell.setCellValue("User Scheduled Tasks");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.VIEW_ALL_ALARMS.ordinal());
+      cell.setCellValue("Vikew All Alarms");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.VIEW_ASSET_CHANGE_LOG.ordinal());
+      cell.setCellValue("Asset Change Log");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.VIEW_AUDIT_LOG.ordinal());
+      cell.setCellValue("Audit Log");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.VIEW_EVENT_DB.ordinal());
+      cell.setCellValue("View Event Templates");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.VIEW_EVENT_LOG.ordinal());
+      cell.setCellValue("Event Log");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.VIEW_REPOSITORIES.ordinal());
+      cell.setCellValue("View Repositories");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.VIEW_SYSLOG.ordinal());
+      cell.setCellValue("Syslog");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.VIEW_TRAP_LOG.ordinal());
+      cell.setCellValue("SNMP Trap Log");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(GroupsSheetCells.WEB_SERVICE_DEFINITIONS.ordinal());
+      cell.setCellValue("Web Service Definitions");
+      cell.setCellStyle(headerStyle);
 
       sheet.setColumnWidth(GroupsSheetCells.ID.ordinal(), 3072);
       sheet.setColumnWidth(GroupsSheetCells.NAME.ordinal(), 6144);
@@ -273,7 +736,71 @@ public class AclReport
                memberRow.createCell(GroupsSheetCells.MEMBERS.ordinal()).setCellValue(name);
             }
          }
+
+         createPermissionCell(row, GroupsSheetCells.ALL_SCHEDULED_TASKS, UserAccessRights.SYSTEM_ACCESS_ALL_SCHEDULED_TASKS, group);
+         createPermissionCell(row, GroupsSheetCells.AM_ATTRIBUTE_MANAGE, UserAccessRights.SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE, group);
+         createPermissionCell(row, GroupsSheetCells.CONFIGURE_TRAPS, UserAccessRights.SYSTEM_ACCESS_CONFIGURE_TRAPS, group);
+         createPermissionCell(row, GroupsSheetCells.DELETE_ALARMS, UserAccessRights.SYSTEM_ACCESS_DELETE_ALARMS, group);
+         createPermissionCell(row, GroupsSheetCells.EDIT_EVENT_DB, UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, group);
+         createPermissionCell(row, GroupsSheetCells.EPP, UserAccessRights.SYSTEM_ACCESS_EPP, group);
+         createPermissionCell(row, GroupsSheetCells.EXTERNAL_INTEGRATION, UserAccessRights.SYSTEM_ACCESS_EXTERNAL_INTEGRATION, group);
+         createPermissionCell(row, GroupsSheetCells.IMPORT_CONFIGURATION, UserAccessRights.SYSTEM_ACCESS_IMPORT_CONFIGURATION, group);
+         createPermissionCell(row, GroupsSheetCells.MANAGE_ACTIONS, UserAccessRights.SYSTEM_ACCESS_MANAGE_ACTIONS, group);
+         createPermissionCell(row, GroupsSheetCells.MANAGE_AGENT_CFG, UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_CFG, group);
+         createPermissionCell(row, GroupsSheetCells.MANAGE_GEO_AREAS, UserAccessRights.SYSTEM_ACCESS_MANAGE_GEO_AREAS, group);
+         createPermissionCell(row, GroupsSheetCells.MANAGE_IMAGE_LIB, UserAccessRights.SYSTEM_ACCESS_MANAGE_IMAGE_LIB, group);
+         createPermissionCell(row, GroupsSheetCells.MANAGE_MAPPING_TBLS, UserAccessRights.SYSTEM_ACCESS_MANAGE_MAPPING_TBLS, group);
+         createPermissionCell(row, GroupsSheetCells.MANAGE_OBJECT_QUERIES, UserAccessRights.SYSTEM_ACCESS_MANAGE_OBJECT_QUERIES, group);
+         createPermissionCell(row, GroupsSheetCells.MANAGE_PACKAGES, UserAccessRights.SYSTEM_ACCESS_MANAGE_PACKAGES, group);
+         createPermissionCell(row, GroupsSheetCells.MANAGE_REPOSITORIES, UserAccessRights.SYSTEM_ACCESS_MANAGE_REPOSITORIES, group);
+         createPermissionCell(row, GroupsSheetCells.MANAGE_SCRIPTS, UserAccessRights.SYSTEM_ACCESS_MANAGE_SCRIPTS, group);
+         createPermissionCell(row, GroupsSheetCells.MANAGE_SERVER_FILES, UserAccessRights.SYSTEM_ACCESS_MANAGE_SERVER_FILES, group);
+         createPermissionCell(row, GroupsSheetCells.MANAGE_SESSIONS, UserAccessRights.SYSTEM_ACCESS_MANAGE_SESSIONS, group);
+         createPermissionCell(row, GroupsSheetCells.MANAGE_SUMMARY_TBLS, UserAccessRights.SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS, group);
+         createPermissionCell(row, GroupsSheetCells.MANAGE_TOOLS, UserAccessRights.SYSTEM_ACCESS_MANAGE_TOOLS, group);
+         createPermissionCell(row, GroupsSheetCells.MANAGE_2FA_METHODS, UserAccessRights.SYSTEM_ACCESS_MANAGE_2FA_METHODS, group);
+         createPermissionCell(row, GroupsSheetCells.MANAGE_USERS, UserAccessRights.SYSTEM_ACCESS_MANAGE_USERS, group);
+         createPermissionCell(row, GroupsSheetCells.MOBILE_DEVICE_LOGIN, UserAccessRights.SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN, group);
+         createPermissionCell(row, GroupsSheetCells.OBJECT_CATEGORIES, UserAccessRights.SYSTEM_ACCESS_OBJECT_CATEGORIES, group);
+         createPermissionCell(row, GroupsSheetCells.OWN_SCHEDULED_TASKS, UserAccessRights.SYSTEM_ACCESS_OWN_SCHEDULED_TASKS, group);
+         createPermissionCell(row, GroupsSheetCells.PERSISTENT_STORAGE, UserAccessRights.SYSTEM_ACCESS_PERSISTENT_STORAGE, group);
+         createPermissionCell(row, GroupsSheetCells.READ_SERVER_FILES, UserAccessRights.SYSTEM_ACCESS_READ_SERVER_FILES, group);
+         createPermissionCell(row, GroupsSheetCells.REGISTER_AGENTS, UserAccessRights.SYSTEM_ACCESS_REGISTER_AGENTS, group);
+         createPermissionCell(row, GroupsSheetCells.REPORTING_SERVER, UserAccessRights.SYSTEM_ACCESS_REPORTING_SERVER, group);
+         createPermissionCell(row, GroupsSheetCells.SCHEDULE_FILE_UPLOAD, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD, group);
+         createPermissionCell(row, GroupsSheetCells.SCHEDULE_MAINTENANCE, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_MAINTENANCE, group);
+         createPermissionCell(row, GroupsSheetCells.SCHEDULE_SCRIPT, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_SCRIPT, group);
+         createPermissionCell(row, GroupsSheetCells.SEND_NOTIFICATION, UserAccessRights.SYSTEM_ACCESS_SEND_NOTIFICATION, group);
+         createPermissionCell(row, GroupsSheetCells.SERVER_CONFIG, UserAccessRights.SYSTEM_ACCESS_SERVER_CONFIG, group);
+         createPermissionCell(row, GroupsSheetCells.SERVER_CONSOLE, UserAccessRights.SYSTEM_ACCESS_SERVER_CONSOLE, group);
+         createPermissionCell(row, GroupsSheetCells.SETUP_TCP_PROXY, UserAccessRights.SYSTEM_ACCESS_SETUP_TCP_PROXY, group);
+         createPermissionCell(row, GroupsSheetCells.SSH_KEY_CONFIGURATION, UserAccessRights.SYSTEM_ACCESS_SSH_KEY_CONFIGURATION, group);
+         createPermissionCell(row, GroupsSheetCells.UA_NOTIFICATIONS, UserAccessRights.SYSTEM_ACCESS_UA_NOTIFICATIONS, group);
+         createPermissionCell(row, GroupsSheetCells.UNLINK_ISSUES, UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES, group);
+         createPermissionCell(row, GroupsSheetCells.USER_SCHEDULED_TASKS, UserAccessRights.SYSTEM_ACCESS_USER_SCHEDULED_TASKS, group);
+         createPermissionCell(row, GroupsSheetCells.VIEW_ALL_ALARMS, UserAccessRights.SYSTEM_ACCESS_VIEW_ALL_ALARMS, group);
+         createPermissionCell(row, GroupsSheetCells.VIEW_ASSET_CHANGE_LOG, UserAccessRights.SYSTEM_ACCESS_VIEW_ASSET_CHANGE_LOG, group);
+         createPermissionCell(row, GroupsSheetCells.VIEW_AUDIT_LOG, UserAccessRights.SYSTEM_ACCESS_VIEW_AUDIT_LOG, group);
+         createPermissionCell(row, GroupsSheetCells.VIEW_EVENT_DB, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_DB, group);
+         createPermissionCell(row, GroupsSheetCells.VIEW_EVENT_LOG, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_LOG, group);
+         createPermissionCell(row, GroupsSheetCells.VIEW_REPOSITORIES, UserAccessRights.SYSTEM_ACCESS_VIEW_REPOSITORIES, group);
+         createPermissionCell(row, GroupsSheetCells.VIEW_SYSLOG, UserAccessRights.SYSTEM_ACCESS_VIEW_SYSLOG, group);
+         createPermissionCell(row, GroupsSheetCells.VIEW_TRAP_LOG, UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, group);
+         createPermissionCell(row, GroupsSheetCells.WEB_SERVICE_DEFINITIONS, UserAccessRights.SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS, group);
       });
+   }
+
+   /**
+    * Create single cell for system access
+    *
+    * @param row workbook's row
+    * @param cellId cell ID
+    * @param accessBit access bit to test
+    * @param user user or group
+    */
+   private void createPermissionCell(HSSFRow row, GroupsSheetCells cellId, long accessBit, AbstractUserObject userObject)
+   {
+      row.createCell(cellId.ordinal()).setCellValue(((userObject.getSystemRights() & accessBit) != 0) ? "YES" : "NO");
    }
 
    /**
@@ -309,6 +836,14 @@ public class AclReport
       cell.setCellStyle(headerStyle);
       cell.setCellValue("Modify");
 
+      cell = headerRow.createCell(PermissionsSheetCells.EDIT_COMMENTS.ordinal());
+      cell.setCellStyle(headerStyle);
+      cell.setCellValue("Edit Comments");
+
+      cell = headerRow.createCell(PermissionsSheetCells.EDIT_RESP_USERS.ordinal());
+      cell.setCellStyle(headerStyle);
+      cell.setCellValue("Edit Responsible Users");
+
       cell = headerRow.createCell(PermissionsSheetCells.DELETE.ordinal());
       cell.setCellStyle(headerStyle);
       cell.setCellValue("Delete");
@@ -320,6 +855,10 @@ public class AclReport
       cell = headerRow.createCell(PermissionsSheetCells.MAINTENANCE.ordinal());
       cell.setCellStyle(headerStyle);
       cell.setCellValue("Enter/Leave Maintenance");
+
+      cell = headerRow.createCell(PermissionsSheetCells.CONFIGURE_AGENT.ordinal());
+      cell.setCellStyle(headerStyle);
+      cell.setCellValue("Configure Agent");
 
       cell = headerRow.createCell(PermissionsSheetCells.READ_AGENT.ordinal());
       cell.setCellStyle(headerStyle);
@@ -391,12 +930,15 @@ public class AclReport
          row.createCell(PermissionsSheetCells.OBJECT_NAME.ordinal()).setCellValue(element.name);
          row.createCell(PermissionsSheetCells.USER_OR_GROUP_NAME.ordinal()).setCellValue(element.userName);
          row.createCell(PermissionsSheetCells.INHERIT_ACCESS.ordinal()).setCellValue(element.inheritAccessRights ? "YES" : "NO");
-         
+
          createPermissionCell(row, PermissionsSheetCells.READ, UserAccessRights.OBJECT_ACCESS_READ, element);
          createPermissionCell(row, PermissionsSheetCells.MODIFY, UserAccessRights.OBJECT_ACCESS_MODIFY, element);
+         createPermissionCell(row, PermissionsSheetCells.EDIT_COMMENTS, UserAccessRights.OBJECT_ACCESS_EDIT_COMMENTS, element);
+         createPermissionCell(row, PermissionsSheetCells.EDIT_RESP_USERS, UserAccessRights.OBJECT_ACCESS_EDIT_RESP_USERS, element);
          createPermissionCell(row, PermissionsSheetCells.DELETE, UserAccessRights.OBJECT_ACCESS_DELETE, element);
          createPermissionCell(row, PermissionsSheetCells.CONTROL, UserAccessRights.OBJECT_ACCESS_CONTROL, element);
          createPermissionCell(row, PermissionsSheetCells.MAINTENANCE, UserAccessRights.OBJECT_ACCESS_MAINTENANCE, element);
+         createPermissionCell(row, PermissionsSheetCells.CONFIGURE_AGENT, UserAccessRights.OBJECT_ACCESS_CONFIGURE_AGENT, element);
          createPermissionCell(row, PermissionsSheetCells.READ_AGENT, UserAccessRights.OBJECT_ACCESS_READ_AGENT, element);
          createPermissionCell(row, PermissionsSheetCells.READ_SNMP, UserAccessRights.OBJECT_ACCESS_READ_SNMP, element);
          createPermissionCell(row, PermissionsSheetCells.TAKE_SCREENSHOT, UserAccessRights.OBJECT_ACCESS_SCREENSHOT, element);
