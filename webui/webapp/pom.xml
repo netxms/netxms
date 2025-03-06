@@ -46,10 +46,10 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>  
-        <tycho.version>2.7.5</tycho.version>
+        <tycho.version>3.0.5</tycho.version>
         <tycho.groupid>org.eclipse.tycho</tycho.groupid>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <war.filename>nxmc</war.filename>
         <assembly.version>2.4</assembly.version>
         <replacer.version>1.4.1</replacer.version>
