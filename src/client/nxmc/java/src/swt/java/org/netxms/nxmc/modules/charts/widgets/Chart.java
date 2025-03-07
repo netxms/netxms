@@ -29,6 +29,8 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
@@ -39,8 +41,10 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.client.TimePeriod;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.Severity;
+import org.netxms.client.constants.TimeFrameType;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
@@ -50,6 +54,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.widgets.RangeSlider;
 import org.netxms.nxmc.modules.charts.api.ChartColor;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
@@ -74,6 +79,7 @@ public class Chart extends Composite
    private ChartLegend legend;
    private Composite plotAreaComposite;
    private PlotArea plotArea;
+   private RangeSlider rangeSlider;
    private boolean mouseDown = false;
    private Set<IDoubleClickListener> doubleClickListeners = new HashSet<IDoubleClickListener>();
    private MenuManager menuManager = null;
@@ -253,6 +259,8 @@ public class Chart extends Composite
    {
       if (plotAreaComposite != null)
          plotAreaComposite.dispose();
+      if (rangeSlider != null)
+         rangeSlider.dispose();
       if (title != null)
          title.dispose();
       if (legend != null)
@@ -278,6 +286,7 @@ public class Chart extends Composite
          if (configuration.isLegendVisible() && ((configuration.getLegendPosition() == ChartConfiguration.POSITION_LEFT) || (configuration.getLegendPosition() == ChartConfiguration.POSITION_TOP)))
             createLegend();
          createPlotArea();
+         createRangeSelector();
          if (configuration.isLegendVisible() && ((configuration.getLegendPosition() == ChartConfiguration.POSITION_RIGHT) || (configuration.getLegendPosition() == ChartConfiguration.POSITION_BOTTOM)))
             createLegend();
       }
@@ -285,6 +294,7 @@ public class Chart extends Composite
       {
          plotAreaComposite = null;
          plotArea = null;
+         rangeSlider = null;
          title = null;
          legend = null;
       }
@@ -399,6 +409,37 @@ public class Chart extends Composite
          for(Control c : plotAreaComposite.getChildren())
             c.setMenu(menu);
       }
+   }
+
+   /**
+    * Create range selector
+    */
+   private void createRangeSelector()
+   {
+      if (type != ChartType.LINE)
+      {
+         rangeSlider = null;
+         return;
+      }
+
+      rangeSlider = new RangeSlider(this, SWT.HORIZONTAL | SWT.SMOOTH);
+      rangeSlider.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      rangeSlider.setBackground(getBackground());
+
+      final int fullRange = 30 * 86400;
+      rangeSlider.setExtrema(0, fullRange);
+      rangeSlider.setSelection(fullRange - 86400, fullRange);
+      rangeSlider.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            int[] selection = rangeSlider.getSelection();
+            selection[0] -= fullRange;
+            selection[1] -= fullRange;
+            configuration.setTimePeriod(new TimePeriod(TimeFrameType.FIXED, 0, null, new Date(System.currentTimeMillis() + selection[0]), new Date(System.currentTimeMillis() + selection[1])));
+            refresh();
+         }
+      });
    }
 
    /**
