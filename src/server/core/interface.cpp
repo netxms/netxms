@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -772,6 +772,18 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
             .param(_T("newSpeed"), speed)
             .param(_T("newSpeedText"), FormatNumber(static_cast<double>(speed), false, 0, -3, _T("bps")))
             .post();
+      }
+      unlockParentList();
+   }
+
+   if (m_status != oldStatus)
+   {
+      readLockParentList();
+      for(int i = 0; i < getParentList().size(); i++)
+      {
+         NetObj *p = getParentList().get(i);
+         if (p->getObjectClass() != OBJECT_NODE)
+            p->calculateCompoundStatus();
       }
       unlockParentList();
    }
