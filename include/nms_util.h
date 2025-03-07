@@ -3937,6 +3937,7 @@ public:
    void write(const void *data, size_t size);
    void write(char c) { write(&c, 1); }
    void write(BYTE b) { write(&b, 1); }
+   void write(int8_t c) { write(&c, 1); }
 
    void writeB(uint16_t n) { n = HostToBigEndian16(n); write(&n, 2); }
    void writeB(int16_t n) { writeB(static_cast<uint16_t>(n)); }

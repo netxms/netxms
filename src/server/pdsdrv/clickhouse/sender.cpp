@@ -276,11 +276,23 @@ bool ClickHouseSender::sendBatch(const std::vector<MetricRecord>& records)
             case ColumnDataType::Float64:
                packet.writeL(strtof(record.columns[i].c_str(), nullptr));
                break;
+            case ColumnDataType::Int8:
+               packet.write(static_cast<int8_t>(strtol(record.columns[i].c_str(), nullptr, 0)));
+               break;
+            case ColumnDataType::Int16:
+               packet.writeL(static_cast<int16_t>(strtol(record.columns[i].c_str(), nullptr, 0)));
+               break;
             case ColumnDataType::Int32:
                packet.writeL(static_cast<int32_t>(strtol(record.columns[i].c_str(), nullptr, 0)));
                break;
             case ColumnDataType::Int64:
                packet.writeL(static_cast<int64_t>(strtoll(record.columns[i].c_str(), nullptr, 0)));
+               break;
+            case ColumnDataType::UInt8:
+               packet.write(static_cast<uint8_t>(strtoul(record.columns[i].c_str(), nullptr, 0)));
+               break;
+            case ColumnDataType::UInt16:
+               packet.writeL(static_cast<uint16_t>(strtoul(record.columns[i].c_str(), nullptr, 0)));
                break;
             case ColumnDataType::UInt32:
                packet.writeL(static_cast<uint32_t>(strtoul(record.columns[i].c_str(), nullptr, 0)));

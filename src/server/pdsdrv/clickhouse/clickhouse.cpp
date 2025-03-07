@@ -97,7 +97,27 @@ bool ClickHouseStorageDriver::init(Config *config)
             c.name[l] = 0;
 
             s++;
-            if (!wcsicmp(s, L"Int32"))
+            if (!wcsicmp(s, L"Int8"))
+            {
+               c.type = ColumnDataType::Int8;
+               strcpy(c.typeName, "Int8");
+            }
+            else if (!wcsicmp(s, L"UInt8"))
+            {
+               c.type = ColumnDataType::UInt8;
+               strcpy(c.typeName, "UInt8");
+            }
+            else if (!wcsicmp(s, L"Int16"))
+            {
+               c.type = ColumnDataType::Int16;
+               strcpy(c.typeName, "Int16");
+            }
+            else if (!wcsicmp(s, L"UInt16"))
+            {
+               c.type = ColumnDataType::UInt16;
+               strcpy(c.typeName, "UInt16");
+            }
+            else if (!wcsicmp(s, L"Int32"))
             {
                c.type = ColumnDataType::Int32;
                strcpy(c.typeName, "Int32");
