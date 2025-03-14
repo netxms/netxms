@@ -1,0 +1,3 @@
+BasedOnStyle: Microsoft
+IndentWidth: 3
+AlignConsecutiveMacros: true
