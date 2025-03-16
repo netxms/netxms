@@ -963,6 +963,7 @@ private:
    void processEventProcessingPolicyRecord(const NXCPMessage& request);
    void updatePeerInterface(const NXCPMessage& request);
    void clearPeerInterface(const NXCPMessage& request);
+   void queryAiAssistant(const NXCPMessage& request);
 
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);

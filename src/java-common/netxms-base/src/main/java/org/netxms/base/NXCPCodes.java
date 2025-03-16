@@ -487,6 +487,7 @@ public class NXCPCodes
    public static final int CMD_CLEAR_PEER_INTERFACE = 0x01D2;
    public static final int CMD_GET_PACKAGE_DEPLOYMENT_JOBS = 0x01D3;
    public static final int CMD_CANCEL_PACKAGE_DEPLOYMENT_JOB = 0x01D4;
+   public static final int CMD_QUERY_AI_ASSISTANT = 0x01D5;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

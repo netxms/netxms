@@ -511,7 +511,8 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_UPDATE_PEER_INTERFACE"),
       _T("CMD_CLEAR_PEER_INTERFACE"),
       _T("CMD_GET_PACKAGE_DEPLOYMENT_JOBS"),
-      _T("CMD_CANCEL_PACKAGE_DEPLOYMENT_JOB")
+      _T("CMD_CANCEL_PACKAGE_DEPLOYMENT_JOB"),
+      _T("CMD_QUERY_AI_ASSISTANT")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -524,7 +525,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_CANCEL_PACKAGE_DEPLOYMENT_JOB))
+   if ((code >= CMD_LOGIN) && (code <= CMD_QUERY_AI_ASSISTANT))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

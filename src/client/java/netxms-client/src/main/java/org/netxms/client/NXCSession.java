@@ -15017,4 +15017,20 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
+
+   /**
+    * Send query to AI assistant.
+    * 
+    * @param prompt user prompt
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public String queryAiAssistant(String prompt) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_AI_ASSISTANT);
+      msg.setField(NXCPCodes.VID_MESSAGE, prompt);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId(), commandTimeout * 10);   // LLM response can take significant amount of time
+      return response.getFieldAsString(NXCPCodes.VID_MESSAGE);
+   }
 }

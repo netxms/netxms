@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,36 +38,36 @@ StructArray<NXMODULE> g_moduleList(0, 8);
 /**
  * Load module
  */
-static bool LoadNetXMSModule(const TCHAR *name)
+static bool LoadNetXMSModule(const wchar_t *name)
 {
 	bool success = false;
 
-   TCHAR fullName[MAX_PATH];
+	wchar_t fullName[MAX_PATH];
 #ifdef _WIN32
-   _tcslcpy(fullName, name, MAX_PATH);
-   size_t len = _tcslen(fullName);
-   if ((len < 4) || (_tcsicmp(&fullName[len - 4], _T(".nxm")) && _tcsicmp(&fullName[len - 4], _T(".dll"))))
-      _tcslcat(fullName, _T(".nxm"), MAX_PATH);
+   wcslcpy(fullName, name, MAX_PATH);
+   size_t len = wcslen(fullName);
+   if ((len < 4) || (wcsicmp(&fullName[len - 4], L".nxm") && wcsicmp(&fullName[len - 4], L".dll")))
+      wcslcat(fullName, L".nxm", MAX_PATH);
 #else
-   if (_tcschr(name, _T('/')) == nullptr)
+   if (wcschr(name, L'/') == nullptr)
    {
       // Assume that module name without path given
       // Try to load it from pkglibdir
-      TCHAR libdir[MAX_PATH];
+      wchar_t libdir[MAX_PATH];
       GetNetXMSDirectory(nxDirLib, libdir);
-      _sntprintf(fullName, MAX_PATH, _T("%s/%s"), libdir, name);
+      _sntprintf(fullName, MAX_PATH, L"%s/%s", libdir, name);
    }
    else
    {
-      _tcslcpy(fullName, name, MAX_PATH);
+      wcslcpy(fullName, name, MAX_PATH);
    }
 
-   size_t len = _tcslen(fullName);
-   if ((len < 4) || (_tcsicmp(&fullName[len - 4], _T(".nxm")) && _tcsicmp(&fullName[len - _tcslen(SHLIB_SUFFIX)], SHLIB_SUFFIX)))
-      _tcslcat(fullName, _T(".nxm"), MAX_PATH);
+   size_t len = wcslen(fullName);
+   if ((len < 4) || (wcsicmp(&fullName[len - 4], L".nxm") && wcsicmp(&fullName[len - wcslen(SHLIB_SUFFIX)], SHLIB_SUFFIX)))
+      wcslcat(fullName, L".nxm", MAX_PATH);
 #endif
 
-   TCHAR errorText[256];
+   wchar_t errorText[256];
    HMODULE hModule = DLOpen(fullName, errorText);
    if (hModule != nullptr)
    {
@@ -86,30 +86,30 @@ static bool LoadNetXMSModule(const TCHAR *name)
                   module.hModule = hModule;
                   module.metadata = static_cast<NXMODULE_METADATA*>(DLGetSymbolAddr(hModule, "NXM_metadata", errorText));
                   g_moduleList.add(module);
-                  nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Server module %s loaded successfully"), module.szName);
+                  nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Server module %s loaded successfully", module.szName);
                   success = true;
                }
                else
                {
-                  nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Initialization of server module \"%s\" failed"), name);
+                  nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Initialization of server module \"%s\" failed", name);
                   DLClose(hModule);
                }
             }
             else
             {
-               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Module \"%s\" has invalid magic number - probably it was compiled for different NetXMS server version"), name);
+               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Module \"%s\" has invalid magic number - probably it was compiled for different NetXMS server version", name);
                DLClose(hModule);
             }
          }
          else
          {
-            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Registartion of server module \"%s\" failed"), name);
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Registration of server module \"%s\" failed", name);
             DLClose(hModule);
          }
       }
       else
       {
-         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to find entry point in server module \"%s\""), name);
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Unable to find entry point in server module \"%s\"", name);
          DLClose(hModule);
       }
    }
@@ -128,9 +128,9 @@ bool LoadNetXMSModules()
    bool success = true;
 	for(int i = 0; i < g_moduleLoadList.size(); i++)
    {
-	   TCHAR *curr = MemCopyString(g_moduleLoadList.get(i));
-		Trim(curr);
-		if (*curr == 0)
+      wchar_t *curr = MemCopyStringW(g_moduleLoadList.get(i));
+      TrimW(curr);
+      if (*curr == 0)
 		{
 		   MemFree(curr);
 			continue;
@@ -139,14 +139,14 @@ bool LoadNetXMSModules()
 		bool mandatory = true;
 
 		// Check for "mandatory" option
-		TCHAR *options = _tcschr(curr, _T(','));
+		wchar_t *options = wcschr(curr, L',');
 		if (options != nullptr)
 		{
 			*options = 0;
 			options++;
-			Trim(curr);
-			Trim(options);
-			if ((*options == _T('0')) || (*options == _T('N')) || (*options == _T('n')))
+			TrimW(curr);
+			TrimW(options);
+			if ((*options == L'0') || (*options == L'N') || (*options == L'n'))
 			   mandatory = false;
 		}
 

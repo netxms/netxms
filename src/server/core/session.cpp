@@ -216,8 +216,8 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downlo
 	m_clientAddr.toString(m_workstation);
    m_webServerAddress[0] = 0;
    m_loginName[0] = 0;
-   _tcscpy(m_sessionName, _T("<not logged in>"));
-	_tcscpy(m_clientInfo, _T("n/a"));
+   wcscpy(m_sessionName, L"<not logged in>");
+	wcscpy(m_clientInfo, L"n/a");
    m_userId = INVALID_INDEX;
    m_systemAccessRights = 0;
    m_ppEPPRuleList = nullptr;
@@ -2007,6 +2007,9 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_CLOSE_EPP:
          closeEventProcessingPolicy(*request);
+         break;
+      case CMD_QUERY_AI_ASSISTANT:
+         queryAiAssistant(*request);
          break;
       default:
          if ((code >> 8) == 0x11)
@@ -17866,5 +17869,40 @@ void ClientSession::clearPeerInterface(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
+   sendMessage(response);
+}
+
+/**
+ * Query AI assistant
+ */
+void ClientSession::queryAiAssistant(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   char *prompt = nullptr, *answer = nullptr;
+   bool moduleFound = false;
+   ENUMERATE_MODULES(pfProcessRequestToAiAssistant)
+   {
+      moduleFound = true;
+      if (prompt == nullptr)
+      {
+         prompt = request.getFieldAsUtf8String(VID_MESSAGE);
+         if (prompt == nullptr)
+            break;
+      }
+      answer = CURRENT_MODULE.pfProcessRequestToAiAssistant(prompt, m_userId);
+      if (answer != nullptr)
+         break;
+   }
+   if (answer != nullptr)
+   {
+      response.setField(VID_RCC, RCC_SUCCESS);
+      response.setFieldFromUtf8String(VID_MESSAGE, answer);
+      MemFree(answer);
+   }
+   else
+   {
+      response.setField(VID_RCC, moduleFound ? RCC_SYSTEM_FAILURE : RCC_NOT_IMPLEMENTED);
+   }
+   MemFree(prompt);
    sendMessage(response);
 }

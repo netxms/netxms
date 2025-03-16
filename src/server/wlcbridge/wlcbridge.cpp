@@ -39,7 +39,7 @@ void StopHFCLBackgroundThreads();
 /**
  * Get wireless controller bridge interface
  */
-static WirelessControllerBridge *GetWLCBridgeInterface(const TCHAR *bridgeName)
+static WirelessControllerBridge *GetWLCBridgeInterface(const wchar_t *bridgeName)
 {
    if (!_tcsicmp(bridgeName, _T("HFCL")))
       return &g_hfclBridge;
