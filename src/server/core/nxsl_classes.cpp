@@ -1703,7 +1703,7 @@ NXSL_METHOD_DEFINITION(Node, enableSnmp)
 /**
  * enableSsh(enabled) method
  */
-NXSL_METHOD_DEFINITION(Node, enableSsh) // TODO DIMA add to docks
+NXSL_METHOD_DEFINITION(Node, enableSsh)
 {
    return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_SSH, true);
 }
@@ -1714,6 +1714,14 @@ NXSL_METHOD_DEFINITION(Node, enableSsh) // TODO DIMA add to docks
 NXSL_METHOD_DEFINITION(Node, enableTopologyPolling)
 {
    return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_TOPOLOGY_POLL, true);
+}
+
+/**
+ * enableSsh(enabled) method
+ */
+NXSL_METHOD_DEFINITION(Node, enableVnc)
+{
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_VNC, true);
 }
 
 /**
@@ -2101,8 +2109,9 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, enableRoutingTablePolling, 1);
    NXSL_REGISTER_METHOD(Node, enableSnmp, 1);
    NXSL_REGISTER_METHOD(Node, enableSsh, 1);
-   NXSL_REGISTER_METHOD(Node, enableWinPerfCountersCache, 1);
    NXSL_REGISTER_METHOD(Node, enableTopologyPolling, 1);
+   NXSL_REGISTER_METHOD(Node, enableVnc, 1);
+   NXSL_REGISTER_METHOD(Node, enableWinPerfCountersCache, 1);
    NXSL_REGISTER_METHOD(Node, executeAgentCommand, -1);
    NXSL_REGISTER_METHOD(Node, executeAgentCommandWithOutput, -1);
    NXSL_REGISTER_METHOD(Node, executeSSHCommand, 1);
