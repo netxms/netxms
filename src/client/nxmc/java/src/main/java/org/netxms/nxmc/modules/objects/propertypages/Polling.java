@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -182,6 +182,7 @@ public class Polling extends ObjectPropertyPage
    		addFlag(optionsGroup, AbstractNode.NF_DISABLE_SNMP, i18n.tr("Disable usage of &SNMP for all polls"));
    		addFlag(optionsGroup, AbstractNode.NF_DISABLE_ICMP, i18n.tr("Disable usage of &ICMP pings for status polling"));
          addFlag(optionsGroup, AbstractNode.NF_DISABLE_SSH, i18n.tr("Disable SS&H usage for all polls"));
+         addFlag(optionsGroup, AbstractNode.NF_DISABLE_VNC, i18n.tr("Disable &VNC detection"));
 		}
       if (pollingTarget.canUseEtherNetIP())
       {
