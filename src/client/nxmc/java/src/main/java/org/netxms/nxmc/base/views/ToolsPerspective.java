@@ -78,7 +78,7 @@ public class ToolsPerspective extends Perspective
       {
          View view = e.createView();
          addMainView(view);
-         logger.debug("Added monitor perspective view \"" + view.getName() + "\"");
+         logger.debug("Added tools perspective view \"" + view.getName() + "\"");
       }
    }
 }

@@ -27,30 +27,26 @@
 #endif
 
 /**
- * Show server statistics
+ * Get total number of DCIs
  */
-void ShowServerStats(CONSOLE_CTX console)
+static int GetDciCount()
 {
-	int dciCount = 0;
-	g_idxObjectById.forEach(
-	   [&dciCount] (NetObj *object) -> EnumerationCallbackResult
-	   {
+   int dciCount = 0;
+   g_idxObjectById.forEach(
+      [&dciCount] (NetObj *object) -> EnumerationCallbackResult
+      {
          if (object->isDataCollectionTarget())
             dciCount += static_cast<DataCollectionTarget*>(object)->getItemCount();
          return _CONTINUE;
-	   });
+      });
+   return dciCount;
+}
 
-	uint32_t s = static_cast<uint32_t>(time(nullptr) - g_serverStartTime);
-	uint32_t d = s / 86400;
-   s -= d * 86400;
-   uint32_t h = s / 3600;
-   s -= h * 3600;
-   uint32_t m = s / 60;
-   s -= m * 60;
-
-   TCHAR uptime[128];
-   _sntprintf(uptime, 128, _T("%u days, %2u:%02u:%02u"), d, h, m, s);
-
+/**
+ * Get total number of interfaces
+ */
+static int GetInterfaceCount()
+{
    int ifCount = 0;
    g_idxObjectById.forEach(
       [&ifCount] (NetObj *object) -> EnumerationCallbackResult
@@ -59,6 +55,52 @@ void ShowServerStats(CONSOLE_CTX console)
             ifCount++;
          return _CONTINUE;
       });
+   return ifCount;
+}
+
+/**
+ * Get server statistics as JSON document
+ */
+json_t NXCORE_EXPORTABLE *GetServerStats()
+{
+   uint32_t s = static_cast<uint32_t>(time(nullptr) - g_serverStartTime);
+   uint32_t d = s / 86400;
+   s -= d * 86400;
+   uint32_t h = s / 3600;
+   s -= h * 3600;
+   uint32_t m = s / 60;
+   s -= m * 60;
+
+   char uptime[128];
+   snprintf(uptime, 128, "%u days, %2u:%02u:%02u", d, h, m, s);
+
+   json_t *stats = json_object();
+   json_object_set_new(stats, "total_object_count", json_integer(g_idxObjectById.size()));
+   json_object_set_new(stats, "node_object_count", json_integer(g_idxNodeById.size()));
+   json_object_set_new(stats, "interface_object_count", json_integer(GetInterfaceCount()));
+   json_object_set_new(stats, "access_point_object_count", json_integer(g_idxAccessPointById.size()));
+   json_object_set_new(stats, "sensor_object_count", json_integer(g_idxSensorById.size()));
+   json_object_set_new(stats, "metric_count", json_integer(GetDciCount()));
+   json_object_set_new(stats, "alarm_count", json_integer(GetAlarmCount()));
+   json_object_set_new(stats, "uptime", json_string(uptime));
+   return stats;
+}
+
+/**
+ * Show server statistics
+ */
+void ShowServerStats(CONSOLE_CTX console)
+{
+	uint32_t s = static_cast<uint32_t>(time(nullptr) - g_serverStartTime);
+	uint32_t d = s / 86400;
+   s -= d * 86400;
+   uint32_t h = s / 3600;
+   s -= h * 3600;
+   uint32_t m = s / 60;
+   s -= m * 60;
+
+   wchar_t uptime[128];
+   _sntprintf(uptime, 128, L"%u days, %2u:%02u:%02u", d, h, m, s);
 
    ConsolePrintf(console,
       _T("Objects............: %d\n")
@@ -70,7 +112,7 @@ void ShowServerStats(CONSOLE_CTX console)
       _T("Active alarms......: %u\n")
       _T("Uptime.............: %s\n")
       _T("\n"),
-      g_idxObjectById.size(), g_idxNodeById.size(), ifCount, g_idxAccessPointById.size(), g_idxSensorById.size(), dciCount, GetAlarmCount(), uptime);
+      g_idxObjectById.size(), g_idxNodeById.size(), GetInterfaceCount(), g_idxAccessPointById.size(), g_idxSensorById.size(), GetDciCount(), GetAlarmCount(), uptime);
 }
 
 /**

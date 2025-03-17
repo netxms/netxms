@@ -1512,6 +1512,8 @@ bool IsServerCertificateLoaded();
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *);
 #endif   /* not _WIN32 */
 
+json_t NXCORE_EXPORTABLE *GetServerStats();
+
 void DumpClientSessions(ServerConsole *console);
 void DumpMobileDeviceSessions(CONSOLE_CTX console);
 void ShowServerStats(CONSOLE_CTX console);

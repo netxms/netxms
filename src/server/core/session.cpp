@@ -2649,6 +2649,14 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
       ConfigReadStr(_T("Server.MessageOfTheDay"), buffer, 1024, _T(""));
       response->setField(VID_MESSAGE_OF_THE_DAY, buffer);
 
+      bool aiAssistantAvailable = false;
+      ENUMERATE_MODULES(pfProcessRequestToAiAssistant)
+      {
+         aiAssistantAvailable = true;
+         break;
+      }
+      response->setField(VID_AI_ASSISTANT_AVAILABLE, aiAssistantAvailable);
+
       debugPrintf(3, _T("User %s authenticated (language=%s clientInfo=\"%s\")"), m_sessionName, m_language, m_clientInfo);
       writeAuditLog(AUDIT_SECURITY, true, 0, _T("User \"%s\" logged in (language: %s; client info: %s)"), m_loginInfo->loginName, m_language, m_clientInfo);
 

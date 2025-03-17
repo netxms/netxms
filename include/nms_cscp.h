@@ -1540,6 +1540,7 @@ typedef struct
 #define VID_LAST_BACKUP_JOB_STATUS  ((uint32_t)859)
 #define VID_JOB_ID                  ((uint32_t)860)
 #define VID_EXPECTED_CAPABILITIES   ((uint32_t)861)
+#define VID_AI_ASSISTANT_AVAILABLE  ((uint32_t)862)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)
