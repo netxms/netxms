@@ -1097,9 +1097,9 @@ TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer)
 }
 
 /**
- * Get local system time zone.
+ * Get local system time zone. Returns pointer to buffer for convenience.
  */
-void LIBNETXMS_EXPORTABLE GetSystemTimeZone(TCHAR *buffer, size_t size, bool withName, bool forceFullOffset)
+TCHAR LIBNETXMS_EXPORTABLE *GetSystemTimeZone(TCHAR *buffer, size_t size, bool withName, bool forceFullOffset)
 {
 #if defined(_WIN32)
    TIME_ZONE_INFORMATION tz;
@@ -1226,6 +1226,8 @@ void LIBNETXMS_EXPORTABLE GetSystemTimeZone(TCHAR *buffer, size_t size, bool wit
          _sntprintf(buffer, size, _T("%c%02d"), (gmtOffset >= 0) ? _T('+') : _T('-'), abs(gmtOffset));
    }
 #endif   /* _WIN32 */
+
+   return buffer;
 }
 
 /**
