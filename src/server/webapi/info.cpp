@@ -58,8 +58,7 @@ int H_ServerInfo(Context *context)
    ConfigReadStr(_T("Server.MessageOfTheDay"), buffer, MAX_CONFIG_VALUE, _T(""));
    json_object_set_new(response, "messageOfTheDay", json_string_t(buffer));
 
-   GetSystemTimeZone(buffer, MAX_CONFIG_VALUE);
-   json_object_set_new(response, "tz", json_string_t(buffer));
+   json_object_set_new(response, "tz", json_string_t(GetSystemTimeZone(buffer, MAX_CONFIG_VALUE)));
 
    json_t *options = json_object();
    json_object_set_new(options, "zoningEnabled", json_boolean((g_flags & AF_ENABLE_ZONING) != 0));
