@@ -879,6 +879,8 @@ bool NXCORE_EXPORTABLE Initialize()
 	nxlog_set_debug_writer(nullptr);
 
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Starting NetXMS server version ") NETXMS_VERSION_STRING _T(" build tag ") NETXMS_BUILD_TAG);
+   TCHAR timezone[32];
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("System time zone is %s"), GetSystemTimeZone(timezone, 32));
    nxlog_write_tag(NXLOG_INFO, _T("logger"), _T("Debug level set to %d"), nxlog_get_debug_level());
    nxlog_write_tag(NXLOG_INFO, _T("config"), _T("Main configuration file: %s"), g_szConfigFile);
    nxlog_write_tag(NXLOG_INFO, _T("config"), _T("Configuration tree:"));

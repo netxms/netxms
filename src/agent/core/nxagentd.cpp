@@ -1035,6 +1035,8 @@ BOOL Initialize()
       }
    }
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Core agent version ") NETXMS_VERSION_STRING _T(" (build tag ") NETXMS_BUILD_TAG _T(")"));
+   TCHAR timezone[32];
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("System time zone is %s"), GetSystemTimeZone(timezone, 32));
    nxlog_write_tag(NXLOG_INFO, _T("config"), _T("Additional configuration files was loaded from %s"), g_szConfigIncludeDir);
    nxlog_write_tag(NXLOG_INFO, _T("logger"), _T("Debug level set to %d"), s_debugLevel);
 
