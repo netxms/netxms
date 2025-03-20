@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2023-2024 Raden Solutions
+** Copyright (C) 2023-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -182,8 +182,8 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
    // Check authentication
    UserAuthenticationToken token;
    uint32_t userId = INVALID_UID;
-   TCHAR loginName[MAX_USER_NAME];
-   uint64_t systemAccessRights;
+   wchar_t loginName[MAX_USER_NAME] = L"";
+   uint64_t systemAccessRights = 0;
    if (curr->auth)
    {
       nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Selected route requires authentication"));
