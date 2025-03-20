@@ -228,5 +228,5 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
       nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Authentication token provided in request successfully passed validation (userId=%u)", userId);
    }
 
-   return new Context(connection, path, methodId, handler, token, userId, loginName, systemAccessRights, placeholderValues);
+   return new Context(connection, path, methodId, handler, token, userId, loginName, systemAccessRights, std::move(placeholderValues));
 }

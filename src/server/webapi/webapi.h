@@ -174,8 +174,8 @@ private:
 
 public:
    Context(MHD_Connection *connection, const char *path, Method method, RouteHandler handler, const UserAuthenticationToken& token, uint32_t userId,
-      const TCHAR *userName, uint64_t systemAccessRights, const StringMap& placeholderValues)
-      : m_path(path), m_requestData(0), m_responseData(0), m_token(token), m_placeholderValues(placeholderValues)
+      const TCHAR *userName, uint64_t systemAccessRights, StringMap&& placeholderValues)
+      : m_path(path), m_requestData(0), m_responseData(0), m_token(token), m_placeholderValues(std::move(placeholderValues))
    {
       m_connection = connection;
       m_method = method;
