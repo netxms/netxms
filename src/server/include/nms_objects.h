@@ -218,6 +218,16 @@ template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<AgentConnectionEx>;
 #endif
 
 /**
+ * Proxy selection method
+ */
+enum class ProxySelection
+{
+   PRIMARY = 0,   // Force primary proxy selection
+   BACKUP = 1,    // Force backup proxy selection
+   AVAILABLE = 2  // Select any available proxy
+};
+
+/**
  * Auto bind/apply decisions
  */
 enum AutoBindDecision
@@ -3989,10 +3999,10 @@ public:
 
    ModbusTransport *createModbusTransport();
 
-   uint32_t getEffectiveSnmpProxy(bool backup = false);
-   uint32_t getEffectiveEtherNetIPProxy(bool backup = false);
+   uint32_t getEffectiveSnmpProxy(ProxySelection proxySelection = ProxySelection::AVAILABLE);
+   uint32_t getEffectiveEtherNetIPProxy(ProxySelection proxySelection = ProxySelection::AVAILABLE);
    uint32_t getEffectiveMqttProxy();
-   uint32_t getEffectiveModbusProxy(bool backup = false);
+   uint32_t getEffectiveModbusProxy(ProxySelection proxySelection = ProxySelection::AVAILABLE);
    uint32_t getEffectiveSshProxy();
    uint32_t getEffectiveVncProxy();
    uint32_t getEffectiveIcmpProxy();
@@ -4468,6 +4478,7 @@ public:
    int32_t getUIN() const { return m_uin; }
 
    uint32_t getProxyNodeId(NetObj *object, bool backup = false);
+   uint32_t getAvailableProxyNodeId(NetObj *object);
    bool isProxyNode(uint32_t nodeId) const { return m_proxyNodes.contains(nodeId); }
    uint32_t getProxyNodeAssignments(uint32_t nodeId) const;
    bool isProxyNodeAvailable(uint32_t nodeId) const;

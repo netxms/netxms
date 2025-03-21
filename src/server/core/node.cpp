@@ -3740,7 +3740,7 @@ NetworkPathCheckResult Node::checkNetworkPathLayer2(uint32_t requestId, bool sec
       shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
       if ((zone != nullptr) && !zone->isProxyNode(m_id))
       {
-         NetworkPathCheckResult result = checkNetworkPathElement(zone->getProxyNodeId(this), _T("zone proxy"), true, false, requestId, secondPass);
+         NetworkPathCheckResult result = checkNetworkPathElement(zone->getAvailableProxyNodeId(this), _T("zone proxy"), true, false, requestId, secondPass);
          if (result.rootCauseFound)
             return result;
       }
@@ -10375,7 +10375,7 @@ bool Node::setAgentProxy(AgentConnectionEx *conn)
       shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
       if ((zone != nullptr) && !zone->isProxyNode(m_id))
       {
-         proxyNode = zone->getProxyNodeId(this);
+         proxyNode = zone->getAvailableProxyNodeId(this);
       }
    }
 
@@ -10506,16 +10506,18 @@ shared_ptr<WirelessDomain> Node::getWirelessDomain() const
 /**
  * Generic function for calculating effective proxy node ID
  */
-static uint32_t GetEffectiveProtocolProxy(Node *node, uint32_t configuredProxy, uint32_t zoneUIN, bool backup = false, uint32_t defaultProxy = 0)
+static uint32_t GetEffectiveProtocolProxy(Node *node, uint32_t configuredProxy, uint32_t zoneUIN, ProxySelection proxySelection = ProxySelection::AVAILABLE, uint32_t defaultProxy = 0)
 {
-   uint32_t effectiveProxy = backup ? 0 : configuredProxy;
+   uint32_t effectiveProxy = (proxySelection == ProxySelection::BACKUP) ? 0 : configuredProxy;
    if (IsZoningEnabled() && (effectiveProxy == 0) && (zoneUIN != 0))
    {
       // Use zone default proxy if set
       shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
       if (zone != nullptr)
       {
-         effectiveProxy = zone->isProxyNode(node->getId()) ? node->getId() : zone->getProxyNodeId(node, backup);
+         effectiveProxy = zone->isProxyNode(node->getId()) ? node->getId() :
+            ((proxySelection == ProxySelection::AVAILABLE) ? zone->getAvailableProxyNodeId(node) :
+                zone->getProxyNodeId(node, proxySelection == ProxySelection::BACKUP));
       }
    }
    return (effectiveProxy != 0) ? effectiveProxy : defaultProxy;
@@ -10524,17 +10526,17 @@ static uint32_t GetEffectiveProtocolProxy(Node *node, uint32_t configuredProxy, 
 /**
  * Get effective SNMP proxy for this node
  */
-uint32_t Node::getEffectiveSnmpProxy(bool backup)
+uint32_t Node::getEffectiveSnmpProxy(ProxySelection proxySelection)
 {
-   return GetEffectiveProtocolProxy(this, m_snmpProxy, m_zoneUIN, backup);
+   return GetEffectiveProtocolProxy(this, m_snmpProxy, m_zoneUIN, proxySelection);
 }
 
 /**
  * Get effective EtherNet/IP proxy for this node
  */
-uint32_t Node::getEffectiveEtherNetIPProxy(bool backup)
+uint32_t Node::getEffectiveEtherNetIPProxy(ProxySelection proxySelection)
 {
-   return GetEffectiveProtocolProxy(this, m_eipProxy, m_zoneUIN, backup);
+   return GetEffectiveProtocolProxy(this, m_eipProxy, m_zoneUIN, proxySelection);
 }
 
 /**
@@ -10542,15 +10544,15 @@ uint32_t Node::getEffectiveEtherNetIPProxy(bool backup)
  */
 uint32_t Node::getEffectiveMqttProxy()
 {
-   return GetEffectiveProtocolProxy(this, m_mqttProxy, m_zoneUIN, false, g_dwMgmtNode);
+   return GetEffectiveProtocolProxy(this, m_mqttProxy, m_zoneUIN, ProxySelection::AVAILABLE, g_dwMgmtNode);
 }
 
 /**
  * Get effective MODBUS proxy for this node
  */
-uint32_t Node::getEffectiveModbusProxy(bool backup)
+uint32_t Node::getEffectiveModbusProxy(ProxySelection proxySelection)
 {
-   return GetEffectiveProtocolProxy(this, m_modbusProxy, m_zoneUIN, backup);
+   return GetEffectiveProtocolProxy(this, m_modbusProxy, m_zoneUIN, proxySelection);
 }
 
 /**
@@ -10558,7 +10560,7 @@ uint32_t Node::getEffectiveModbusProxy(bool backup)
  */
 uint32_t Node::getEffectiveSshProxy()
 {
-   return GetEffectiveProtocolProxy(this, m_sshProxy, m_zoneUIN, false, g_dwMgmtNode);
+   return GetEffectiveProtocolProxy(this, m_sshProxy, m_zoneUIN, ProxySelection::AVAILABLE, g_dwMgmtNode);
 }
 
 /**
@@ -10566,7 +10568,7 @@ uint32_t Node::getEffectiveSshProxy()
  */
 uint32_t Node::getEffectiveVncProxy()
 {
-   return GetEffectiveProtocolProxy(this, m_vncProxy, m_zoneUIN, false, g_dwMgmtNode);
+   return GetEffectiveProtocolProxy(this, m_vncProxy, m_zoneUIN, ProxySelection::AVAILABLE, g_dwMgmtNode);
 }
 
 /**
@@ -10574,7 +10576,7 @@ uint32_t Node::getEffectiveVncProxy()
  */
 uint32_t Node::getEffectiveTcpProxy()
 {
-   return GetEffectiveProtocolProxy(this, 0, m_zoneUIN, false, g_dwMgmtNode);
+   return GetEffectiveProtocolProxy(this, 0, m_zoneUIN, ProxySelection::AVAILABLE, g_dwMgmtNode);
 }
 
 /**
@@ -10597,7 +10599,7 @@ uint32_t Node::getEffectiveAgentProxy()
       shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
       if ((zone != nullptr) && !zone->isProxyNode(m_id))
       {
-         agentProxy = zone->getProxyNodeId(this);
+         agentProxy = zone->getAvailableProxyNodeId(this);
       }
    }
    return agentProxy;
@@ -12626,10 +12628,10 @@ void Node::onDataCollectionChange()
 
    scheduleDataCollectionSyncWithAgent();
 
-   updateProxyDataCollectionConfiguration(getEffectiveSnmpProxy(false), _T("SNMP"));
-   updateProxyDataCollectionConfiguration(getEffectiveSnmpProxy(true), _T("backup SNMP"));
-   updateProxyDataCollectionConfiguration(getEffectiveModbusProxy(false), _T("Modbus"));
-   updateProxyDataCollectionConfiguration(getEffectiveModbusProxy(true), _T("backup Modbus"));
+   updateProxyDataCollectionConfiguration(getEffectiveSnmpProxy(ProxySelection::PRIMARY), _T("SNMP"));
+   updateProxyDataCollectionConfiguration(getEffectiveSnmpProxy(ProxySelection::BACKUP), _T("backup SNMP"));
+   updateProxyDataCollectionConfiguration(getEffectiveModbusProxy(ProxySelection::PRIMARY), _T("Modbus"));
+   updateProxyDataCollectionConfiguration(getEffectiveModbusProxy(ProxySelection::BACKUP), _T("backup Modbus"));
 }
 
 /**
@@ -12778,14 +12780,14 @@ void Node::collectProxyInfo(ProxyInfo *info)
    if ((m_status == STATUS_UNMANAGED) || (m_state & DCSF_UNREACHABLE))
       return;
 
-   uint32_t primarySnmpProxy = getEffectiveSnmpProxy(false);
+   uint32_t primarySnmpProxy = getEffectiveSnmpProxy(ProxySelection::PRIMARY);
    bool snmpProxy = (primarySnmpProxy == info->proxyId);
-   bool backupSnmpProxy = (getEffectiveSnmpProxy(true) == info->proxyId);
+   bool backupSnmpProxy = (getEffectiveSnmpProxy(ProxySelection::BACKUP) == info->proxyId);
    bool isTarget = false;
 
-   uint32_t primaryModbusProxy = getEffectiveModbusProxy(false);
+   uint32_t primaryModbusProxy = getEffectiveModbusProxy(ProxySelection::PRIMARY);
    bool modbusProxy = (primaryModbusProxy == info->proxyId);
-   bool backupModbusProxy = (getEffectiveModbusProxy(true) == info->proxyId);
+   bool backupModbusProxy = (getEffectiveModbusProxy(ProxySelection::BACKUP) == info->proxyId);
 
    nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 5, _T("Node::collectProxyInfo(%s [%u]): proxyId=%u snmp=%s backup-snmp=%s modbus=%s backup-modbus=%s"),
       m_name, m_id, info->proxyId, BooleanToString(snmpProxy), BooleanToString(backupSnmpProxy), BooleanToString(modbusProxy), BooleanToString(backupModbusProxy));

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -482,6 +482,26 @@ uint32_t Zone::getProxyNodeId(NetObj *object, bool backup)
 }
 
 /**
+ * Get available proxy for given object (will use backup proxy if primary is not available)
+ */
+uint32_t Zone::getAvailableProxyNodeId(NetObj *object)
+{
+   if (object == nullptr)
+      return 0;
+
+   uint32_t assignedProxyId = object->getAssignedZoneProxyId(false);
+   if (assignedProxyId == 0)
+      return getProxyNodeId(object, false);  // No proxy assigned yet
+
+   if (isProxyNodeAvailable(assignedProxyId))
+      return assignedProxyId;
+
+   uint32_t backupProxyId = getProxyNodeId(object, true);
+   // If backup not available, still return primary proxy ID for better event correlation
+   return (backupProxyId != 0) ? backupProxyId : assignedProxyId;
+}
+
+/**
  * Get number of assignments for given proxy node
  */
 uint32_t Zone::getProxyNodeAssignments(uint32_t nodeId) const
@@ -628,14 +648,6 @@ static int CompareNodesByProxyLoad(const NetObj& n1, const NetObj& n2)
 }
 
 /**
- * Callback for updating node backup proxy
- */
-static void UpdateNodeBackupProxy(void *node)
-{
-   static_cast<Node*>(node)->getEffectiveSnmpProxy(true);
-}
-
-/**
  * Migrate proxy load
  */
 void Zone::migrateProxyLoad(ZoneProxy *source, ZoneProxy *target)
@@ -665,7 +677,13 @@ void Zone::migrateProxyLoad(ZoneProxy *source, ZoneProxy *target)
                   m_name, m_uin, n->getName(), n->getId());
          n->setAssignedZoneProxyId(0, true);
          InterlockedDecrement(&target->assignments);
-         ThreadPoolExecute(g_mainThreadPool, UpdateNodeBackupProxy, n);
+         shared_ptr<NetObj> node = nodes->getShared(i);
+         ThreadPoolExecute(g_mainThreadPool,
+            [node] () -> void
+            {
+               // The following call will force update of backup proxy for node
+               static_cast<Node&>(*node).getEffectiveSnmpProxy(ProxySelection::BACKUP);
+            });
       }
       loadFactor -= n->getProxyLoadFactor();
    }

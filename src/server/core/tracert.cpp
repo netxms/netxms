@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -153,7 +153,7 @@ shared_ptr<NetworkPath> TraceRoute(const shared_ptr<Node>& src, const shared_ptr
       shared_ptr<Zone> zone = FindZoneByUIN(dest->getZoneUIN());
       if ((zone != nullptr) && !zone->isProxyNode(dest->getId()))
       {
-         uint32_t proxyId = zone->getProxyNodeId(dest.get(), false);
+         uint32_t proxyId = zone->getAvailableProxyNodeId(dest.get());
          shared_ptr<Node> proxy = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
          if (proxy != nullptr)
          {

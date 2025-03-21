@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -355,9 +355,9 @@ void Chassis::collectProxyInfo(ProxyInfo *info)
       return;
    }
 
-   uint32_t primarySnmpProxy = controller->getEffectiveSnmpProxy(false);
+   uint32_t primarySnmpProxy = controller->getEffectiveSnmpProxy(ProxySelection::PRIMARY);
    bool snmpProxy = (primarySnmpProxy == info->proxyId);
-   bool backupSnmpProxy = (controller->getEffectiveSnmpProxy(true) == info->proxyId);
+   bool backupSnmpProxy = (controller->getEffectiveSnmpProxy(ProxySelection::BACKUP) == info->proxyId);
    bool isTarget = false;
 
    readLockDciAccess();

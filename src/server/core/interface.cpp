@@ -805,7 +805,7 @@ void Interface::icmpStatusPoll(uint32_t rqId, uint32_t nodeIcmpProxy, Cluster *c
 		shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
 		if (zone != nullptr)
 		{
-			icmpProxy = zone->getProxyNodeId(getParentNode().get());
+			icmpProxy = zone->getAvailableProxyNodeId(getParentNode().get());
 		}
 	}
 

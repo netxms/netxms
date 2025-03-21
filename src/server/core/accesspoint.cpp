@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -542,7 +542,7 @@ void AccessPoint::statusPollFromController(ClientSession *session, uint32_t requ
             shared_ptr<Zone> zone = FindZoneByUIN(controller->getZoneUIN());
             if (zone != nullptr)
             {
-               icmpProxy = zone->getProxyNodeId(this);
+               icmpProxy = zone->getAvailableProxyNodeId(this);
             }
          }
 

@@ -2833,7 +2833,7 @@ uint32_t DataCollectionTarget::getEffectiveWebServiceProxy()
       shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
       if (zone != nullptr)
       {
-         webServiceProxy = zone->isProxyNode(m_id) ? m_id : zone->getProxyNodeId(this);
+         webServiceProxy = zone->isProxyNode(m_id) ? m_id : zone->getAvailableProxyNodeId(this);
       }
    }
    return (webServiceProxy != 0) ? webServiceProxy : g_dwMgmtNode;
