@@ -1,6 +1,6 @@
 /*
 ** NetXMS SSH subagent
-** Copyright (C) 2021-2022 Raden Solutions
+** Copyright (C) 2021-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@
 
 static SharedStringObjectMap<KeyPair> s_keyList;
 static Mutex s_mutex;
-
 
 /**
  * Constructor for key pair
@@ -64,6 +63,9 @@ KeyPair::~KeyPair()
  */
 shared_ptr<KeyPair> GetSshKey(AbstractCommSession *session, uint32_t id)
 {
+   if (id == 0)
+      return shared_ptr<KeyPair>();
+
    TCHAR dataKey[64];
    _sntprintf(dataKey, 64, UINT64X_FMT(_T("016")) _T("_%d"), session->getServerId(), id);
    nxlog_debug_tag(DEBUG_TAG, 9, _T("GetSshKey(%d): find key"), id);
@@ -93,13 +95,13 @@ shared_ptr<KeyPair> GetSshKey(AbstractCommSession *session, uint32_t id)
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("GetSshKey: failed to load keys with %d id (%d)"), id, rcc);
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("GetSshKey: failed to load keys with ID %u (RCC = %u)"), id, rcc);
          }
          delete response;
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("GetSshKey: failed to load keys with %d id "), id);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("GetSshKey: failed to load keys with ID %u"), id);
       }
    }
 
