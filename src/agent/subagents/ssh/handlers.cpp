@@ -59,8 +59,7 @@ LONG H_SSHConnection(const TCHAR* param, const TCHAR* arg, TCHAR* value, Abstrac
    {
       TCHAR* end;
       uint32_t id = _tcstoul(keyId, &end, 0);
-      if (id != 0)
-         keys = GetSshKey(session, id);
+      keys = GetSshKey(session, id);
    }
 
    SSHSession* ssh = AcquireSession(addr, port, login, password, keys);
@@ -118,8 +117,7 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
    {
       TCHAR *end;
       uint32_t id = _tcstoul(keyId, &end, 0);
-      if (id != 0)
-         keys = GetSshKey(session, id);
+      keys = GetSshKey(session, id);
    }
 
    LONG rc = SYSINFO_RC_ERROR;

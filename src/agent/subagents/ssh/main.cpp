@@ -119,7 +119,7 @@ static bool SubagentInit(Config *config)
    nxlog_debug_tag(DEBUG_TAG, 2, _T("Using libssh version %hs"), version);
    const char *eptr;
    int eoffset;
-   pcre *re = pcre_compile("^([0-9]+)\\.([0-9]+)\\.([0-9]+)(/.*)?", PCRE_COMMON_FLAGS_A, &eptr, &eoffset, nullptr);
+   pcre *re = pcre_compile("^([0-9]+)\\.([0-9]+)\\.([0-9]+)(\\/.*)?", PCRE_COMMON_FLAGS_A, &eptr, &eoffset, nullptr);
    if (re != nullptr)
    {
       int pmatch[30];
