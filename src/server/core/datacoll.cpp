@@ -138,7 +138,7 @@ static void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, TCHAR
          case DS_SMCLP:
             if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
-	            *error = static_cast<Node*>(dcTarget)->getMetricFromSMCLP(dci.getName(), buffer, MAX_RESULT_LENGTH);
+	            *error = static_cast<Node*>(dcTarget)->getMetricFromSmclp(dci.getName(), buffer, MAX_RESULT_LENGTH);
             }
             else
             {
@@ -564,6 +564,7 @@ static EnumerationCallbackResult UpdateTableList(NetObj *object, void *data)
 
 	return _CONTINUE;
 }
+
 
 /**
  * Write full (from all nodes) agent parameters list to NXCP message

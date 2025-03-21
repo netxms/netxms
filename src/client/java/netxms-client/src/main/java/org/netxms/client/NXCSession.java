@@ -9584,6 +9584,28 @@ public class NXCSession
    }
 
    /**
+    * Get list of SM-CLP properties supported on given node.
+    *
+    * @param nodeId Node ID
+    * @return List of SM-CLP properties supported on given node
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<String> getSmclpSupportedProperties(long nodeId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SMCLP_PROPERTIES);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      List<String> list;
+      if (response.isFieldPresent(NXCPCodes.VID_PROPERTIES))
+         list = response.getStringListFromField(NXCPCodes.VID_PROPERTIES);
+      else
+         list = new ArrayList<String>();
+      return list;
+   }
+
+   /**
     * Get list of parameters supported by agent running on given node.
     *
     * @param nodeId Node ID

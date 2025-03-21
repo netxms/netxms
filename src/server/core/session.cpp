@@ -1996,6 +1996,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_CLEAR_PEER_INTERFACE:
          clearPeerInterface(*request);
          break;
+      case CMD_GET_SMCLP_PROPERTIES:
+         getSmclpProperties(*request);
+         break;
       case CMD_EPP_RECORD:
          processEventProcessingPolicyRecord(*request);
          break;
@@ -17912,5 +17915,54 @@ void ClientSession::queryAiAssistant(const NXCPMessage& request)
       response.setField(VID_RCC, moduleFound ? RCC_SYSTEM_FAILURE : RCC_NOT_IMPLEMENTED);
    }
    MemFree(prompt);
+   sendMessage(response);
+}
+
+/**
+ * Get list of SM-CLP parameters supported by given node
+ */
+void ClientSession::getSmclpProperties(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
+   {
+      StringList list;
+      switch(object->getObjectClass())
+      {
+         case OBJECT_NODE:
+            response.setField(VID_RCC, RCC_SUCCESS);
+            static_cast<Node&>(*object).getSmclpProperties(&list);
+            break;
+         case OBJECT_CLUSTER:
+         case OBJECT_TEMPLATE:
+            response.setField(VID_RCC, RCC_SUCCESS);
+            g_idxNodeById.forEach(
+               [&list] (NetObj *object)
+               {
+                  static_cast<Node&>(*object).getSmclpProperties(&list);
+                  return _CONTINUE;
+               });
+            break;
+         case OBJECT_CHASSIS:
+            if (static_cast<Chassis&>(*object).getControllerId() != 0)
+            {
+               shared_ptr<NetObj> controller = FindObjectById(static_cast<Chassis&>(*object).getControllerId(), OBJECT_NODE);
+               if (controller != nullptr)
+                  static_cast<Node&>(*controller).getSmclpProperties(&list);
+            }
+            break;
+         default:
+            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            break;
+      }
+      response.setField(VID_PROPERTIES, list);
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
    sendMessage(response);
 }

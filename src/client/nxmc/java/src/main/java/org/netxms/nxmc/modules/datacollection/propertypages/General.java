@@ -56,6 +56,7 @@ import org.netxms.nxmc.modules.datacollection.dialogs.IParameterSelectionDialog;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectAgentParamDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectInternalParamDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectParameterScriptDialog;
+import org.netxms.nxmc.modules.datacollection.dialogs.SelectSmclpDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectSnmpParamDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectWebServiceDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.WinPerfCounterSelectionDialog;
@@ -470,7 +471,8 @@ public class General extends AbstractDCIPropertyPage
 		      (dataOrigin == DataOrigin.WINPERF) || 
 		      (dataOrigin == DataOrigin.WEB_SERVICE) || 
             (dataOrigin == DataOrigin.DEVICE_DRIVER) || 
-		      (dataOrigin == DataOrigin.SCRIPT));
+		      (dataOrigin == DataOrigin.SCRIPT) ||
+		      (dataOrigin == DataOrigin.SMCLP));
 	}
 
    /**
@@ -683,6 +685,13 @@ public class General extends AbstractDCIPropertyPage
             case WEB_SERVICE:
                if (!isTable)
                   dlg = new SelectWebServiceDlg(getShell(), false);
+               break;
+            case SMCLP:
+               if (!isTable)
+                  if (sourceNode.getObjectId() != 0)
+                     dlg = new SelectSmclpDlg(getShell(), sourceNode.getObjectId());
+                  else
+                     dlg = new SelectSmclpDlg(getShell(), dco.getNodeId());
                break;
             default:
                dlg = null;

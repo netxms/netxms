@@ -3241,6 +3241,7 @@ enum ProxyType
    WEB_SERVICE_PROXY,
    MODBUS_PROXY,
    ICMP_PROXY,
+   SMCLP_PROXY,
    MAX_PROXY_TYPE
 };
 
@@ -3499,6 +3500,7 @@ protected:
    ObjectArray<AgentParameterDefinition> *m_agentParameters; // List of metrics supported by agent
    ObjectArray<AgentTableDefinition> *m_agentTables; // List of supported tables
    ObjectArray<AgentParameterDefinition> *m_driverParameters; // List of metrics supported by driver
+   StringList *m_smclpProperties; // List of metrics supported by SM-CLP
    time_t m_failTimeAgent;
    time_t m_failTimeSNMP;
    time_t m_failTimeSSH;
@@ -3514,13 +3516,11 @@ protected:
    time_t m_agentRestartTime;
    NetworkPathCheckResult m_pathCheckResult;
    Mutex m_agentMutex;
-   Mutex m_smclpMutex;
    Mutex m_routingTableMutex;
    Mutex m_topologyMutex;
    shared_ptr<AgentConnectionEx> m_agentConnection;
    ProxyAgentConnection *m_proxyConnections;
    VolatileCounter m_pendingDataConfigurationSync;
-   SMCLP_Connection *m_smclpConnection;
    uint64_t m_lastAgentTrapId;        // ID of last received agent trap
    uint64_t m_lastAgentPushRequestId; // ID of last received agent push request
    uint32_t m_lastSNMPTrapId;
@@ -3621,9 +3621,6 @@ protected:
    void agentLock() { m_agentMutex.lock(); }
    void agentUnlock() { m_agentMutex.unlock(); }
 
-   void smclpLock() { m_smclpMutex.lock(); }
-   void smclpUnlock() { m_smclpMutex.unlock(); }
-
    void routingTableLock() { m_routingTableMutex.lock(); }
    void routingTableUnlock() { m_routingTableMutex.unlock(); }
 
@@ -3649,6 +3646,7 @@ protected:
    bool confPollAgent();
    bool confPollSnmp();
    bool confPollSsh();
+   bool confPollSmclp();
    bool confPollVnc();
    bool confPollEthernetIP();
    bool confPollModbus();
@@ -3677,6 +3675,8 @@ protected:
    DuplicateCheckResult checkForDuplicates(shared_ptr<Node> *duplicate, TCHAR *reason, size_t size);
    bool isDuplicateOf(Node *node, TCHAR *reason, size_t size);
    void reconcileWithDuplicateNode(Node *node);
+   bool getDataFromSmclp(const wchar_t *parameters, StringBuffer *output);
+   StringList *getAvailableMetricFromSmclp();
 
    bool connectToAgent(UINT32 *error = nullptr, UINT32 *socketError = nullptr, bool *newConnection = nullptr, bool forceConnect = false);
    void setLastAgentCommTime() { m_lastAgentCommTime = time(nullptr); }
@@ -3952,8 +3952,6 @@ public:
    bool checkWindowsEventId(uint64_t id);
    bool checkAgentPushRequestId(uint64_t id);
 
-   bool connectToSMCLP();
-
    virtual uint32_t getMetricForClient(int origin, uint32_t userId, const TCHAR *name, TCHAR *buffer, size_t size) override;
    virtual uint32_t getTableForClient(int origin, uint32_t userId, const TCHAR *name, shared_ptr<Table> *table) override;
 
@@ -3967,7 +3965,9 @@ public:
    DataCollectionError getMetricFromAgent(const TCHAR *metric, TCHAR *buffer, size_t size);
    DataCollectionError getTableFromAgent(const TCHAR *metric, shared_ptr<Table> *table);
    DataCollectionError getListFromAgent(const TCHAR *metric, StringList **list);
-   DataCollectionError getMetricFromSMCLP(const TCHAR *metric, TCHAR *buffer, size_t size);
+   DataCollectionError getMetricFromSmclp(const TCHAR *metric, TCHAR *buffer, size_t size);
+   DataCollectionError getTargetListFromSmclp(const TCHAR *metric, StringList **list);
+   DataCollectionError getPropertyListFromSmclp(const TCHAR *metric, StringList **list);
    DataCollectionError getMetricFromDeviceDriver(const TCHAR *metric, TCHAR *buffer, size_t size);
    DataCollectionError getMetricFromModbus(const TCHAR *metric, TCHAR *buffer, size_t size, uint16_t defaultUnitId = 0xFFFF);
    DataCollectionError getMetricFromEtherNetIP(const TCHAR *metric, TCHAR *buffer, size_t size);
@@ -3990,6 +3990,8 @@ public:
 
    ObjectArray<AgentTableDefinition> *openTableList();
    void closeTableList() { unlockProperties(); }
+
+   void getSmclpProperties(StringList *list) const;
 
    shared_ptr<AgentConnectionEx> createAgentConnection(bool sendServerId = false);
    shared_ptr<AgentConnectionEx> getAgentConnection(bool forcePrimary = false);

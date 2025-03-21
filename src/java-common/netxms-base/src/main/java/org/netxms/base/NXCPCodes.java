@@ -488,6 +488,7 @@ public class NXCPCodes
    public static final int CMD_GET_PACKAGE_DEPLOYMENT_JOBS = 0x01D3;
    public static final int CMD_CANCEL_PACKAGE_DEPLOYMENT_JOB = 0x01D4;
    public static final int CMD_QUERY_AI_ASSISTANT = 0x01D5;
+   public static final int CMD_GET_SMCLP_PROPERTIES = 0x01D6;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1357,6 +1358,7 @@ public class NXCPCodes
    public static final long VID_LAST_BACKUP_JOB_STATUS = 859;
    public static final long VID_JOB_ID = 860;
    public static final long VID_EXPECTED_CAPABILITIES = 861;
+   public static final long VID_AI_ASSISTANT_AVAILABLE = 862;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

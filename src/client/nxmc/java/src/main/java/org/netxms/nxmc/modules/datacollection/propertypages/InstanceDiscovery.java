@@ -91,6 +91,8 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
       discoveryMethod.add(i18n.tr("Windows Performance Counters"));
       discoveryMethod.add(i18n.tr("Web Service"));
       discoveryMethod.add(i18n.tr("Internal Table"));
+      discoveryMethod.add(i18n.tr("SM-CLP Targets"));
+      discoveryMethod.add(i18n.tr("SM-CLP Properties"));
       discoveryMethod.select(dco.getInstanceDiscoveryMethod());
       discoveryMethod.addSelectionListener(new SelectionListener() {
 			@Override
@@ -220,6 +222,9 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
             return i18n.tr("Web service request");
          case DataCollectionObject.IDM_WINPERF:
             return i18n.tr("Object name");
+         case DataCollectionObject.IDM_SMCLP_TARGETS:
+         case DataCollectionObject.IDM_SMCLP_PROPERTIES:
+            return i18n.tr("Target");
 		}
 		return ""; //$NON-NLS-1$
 	}

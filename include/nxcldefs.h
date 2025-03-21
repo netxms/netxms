@@ -230,6 +230,7 @@
 /**
  * Node flags
  */
+#define NF_DISABLE_SMCLP_PROPERTIES    0x00004000
 #define NF_DISABLE_VNC                 0x00008000
 #define NF_EXTERNAL_GATEWAY            0x00010000
 #define NF_DISABLE_DISCOVERY_POLL      0x00020000
@@ -1151,6 +1152,8 @@ enum AggregationFunction
 #define IDM_WINPERF                     6
 #define IDM_WEB_SERVICE                 7
 #define IDM_INTERNAL_TABLE              8
+#define IDM_SMCLP_TARGETS               9
+#define IDM_SMCLP_PROPERTIES           10
 
 /**
  * Event policy rule flags

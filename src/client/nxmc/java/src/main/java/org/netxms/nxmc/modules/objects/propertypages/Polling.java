@@ -183,6 +183,7 @@ public class Polling extends ObjectPropertyPage
    		addFlag(optionsGroup, AbstractNode.NF_DISABLE_ICMP, i18n.tr("Disable usage of &ICMP pings for status polling"));
          addFlag(optionsGroup, AbstractNode.NF_DISABLE_SSH, i18n.tr("Disable SS&H usage for all polls"));
          addFlag(optionsGroup, AbstractNode.NF_DISABLE_VNC, i18n.tr("Disable &VNC detection"));
+         addFlag(optionsGroup, AbstractNode.NF_DISABLE_SMCLP_PROPERTIES, i18n.tr("Disable reading of SM-CLP available properties metadata"));
 		}
       if (pollingTarget.canUseEtherNetIP())
       {

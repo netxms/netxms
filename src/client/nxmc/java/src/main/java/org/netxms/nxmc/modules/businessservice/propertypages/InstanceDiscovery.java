@@ -189,6 +189,9 @@ public class InstanceDiscovery extends ObjectPropertyPage
             return i18n.tr("Web service request");
          case DataCollectionObject.IDM_WINPERF:
             return i18n.tr("Object name");
+         case DataCollectionObject.IDM_SMCLP_TARGETS:
+         case DataCollectionObject.IDM_SMCLP_PROPERTIES:
+            return i18n.tr("Target");
       }
       return "";
 	}

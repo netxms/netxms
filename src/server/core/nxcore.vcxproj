@@ -558,7 +558,6 @@
     <ClCompile Include="sensor.cpp" />
     <ClCompile Include="server_stats.cpp" />
     <ClCompile Include="session.cpp" />
-    <ClCompile Include="smclp.cpp" />
     <ClCompile Include="snmp.cpp" />
     <ClCompile Include="snmpd.cpp" />
     <ClCompile Include="snmptrap.cpp" />
