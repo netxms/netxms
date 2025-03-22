@@ -843,6 +843,7 @@ private:
    const void* m_data;
    StringList m_args;
    bool m_sendOutput;
+   bool m_completed;
    uint32_t m_rcc;
    Condition m_completionCondition;
 
@@ -854,6 +855,7 @@ public:
       m_requestId = requestId;
       m_data = data;
       m_sendOutput = sendOutput;
+      m_completed = false;
       m_rcc = ERR_INTERNAL_ERROR;
    }
 
@@ -906,12 +908,16 @@ public:
     */
    void markAsCompleted(uint32_t rcc)
    {
-      m_rcc = rcc;
-      if (m_sendOutput)
-         m_session->registerForResponseSentCondition(m_requestId);
-      m_completionCondition.set();
-      if (m_sendOutput)
-         m_session->waitForResponseSentCondition(m_requestId);
+      if (!m_completed)
+      {
+         m_completed = true;
+         m_rcc = rcc;
+         if (m_sendOutput)
+            m_session->registerForResponseSentCondition(m_requestId);
+         m_completionCondition.set();
+         if (m_sendOutput)
+            m_session->waitForResponseSentCondition(m_requestId);
+      }
    }
 
    /**
@@ -919,7 +925,8 @@ public:
     */
    uint32_t waitForCompletion()
    {
-      m_completionCondition.wait();
+      if (!m_completed)
+         m_completionCondition.wait();
       return m_rcc;
    }
 
