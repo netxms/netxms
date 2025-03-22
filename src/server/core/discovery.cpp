@@ -374,8 +374,10 @@ static bool AcceptNewNodeStage1(DiscoveredAddress *address)
    if (hook != nullptr)
    {
       bool stop = false;
+      hook->setGlobalVariable("$ipAddress", NXSL_InetAddressClass::createObject(hook, address->ipAddr));
       hook->setGlobalVariable("$ipAddr", hook->createValue(ipAddrText));
       hook->setGlobalVariable("$ipNetMask", hook->createValue(address->ipAddr.getMaskBits()));
+      hook->setGlobalVariable("$macAddress", address->macAddr.isValid() ? NXSL_MacAddressClass::createObject(hook, address->macAddr) : hook->createValue());
       hook->setGlobalVariable("$macAddr", address->macAddr.isValid() ? hook->createValue(address->macAddr.toString()) : hook->createValue());
       hook->setGlobalVariable("$zoneUIN", hook->createValue(address->zoneUIN));
       if (hook->run())
