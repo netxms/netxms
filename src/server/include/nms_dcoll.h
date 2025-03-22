@@ -167,7 +167,7 @@ private:
 	int m_numMatches;			// Number of consecutive matches
 	int m_repeatInterval;		// -1 = default, 0 = off, >0 = seconds between repeats
 	time_t m_lastEventTimestamp;
-	TCHAR *m_lastEventMessage;
+	wchar_t *m_lastEventMessage;
 
    const ItemValue& value() const { return m_value; }
    void calculateAverage(ItemValue *result, const ItemValue &lastValue, ItemValue **ppPrevValues);
@@ -192,7 +192,7 @@ public:
 	int getFunction() const { return m_function; }
 	int getOperation() const { return m_operation; }
 	int getSampleCount() const { return m_sampleCount; }
-   const TCHAR *getStringValue() const { return m_value.getString(); }
+   const wchar_t *getStringValue() const { return m_value.getString(); }
    bool isReached() const { return m_isReached; }
    bool wasReachedBeforeMaintenance() const { return m_wasReachedBeforeMaint; }
    bool isDisabled() const { return m_disabled; }
@@ -203,7 +203,7 @@ public:
 	bool needValueExpansion() const { return m_expandValue; }
 	String getTextualDefinition() const;
 
-	void markLastEvent(int severity, const TCHAR *message);
+	void markLastEvent(int severity, const wchar_t *message);
    void saveStateBeforeMaintenance() { m_wasReachedBeforeMaint = m_isReached; }
    void setLastCheckedValue(const ItemValue &value) { m_lastCheckValue = value; }
 
@@ -511,14 +511,14 @@ protected:
    uint32_t m_allThresholdsRearmEvent; // Event to be generated when all thresholds are rearmed
 
    bool transform(ItemValue &value, time_t nElapsedTime);
-   void checkThresholds(ItemValue &value);
+   void checkThresholds(ItemValue &value, const shared_ptr<DCObject>& originalDci);
    void updateCacheSizeInternal(bool allowLoad);
    void clearCache();
 
    bool hasScriptThresholds() const;
    Threshold *getThresholdById(uint32_t id) const;
 
-   void markLastThresholdEvent(uint32_t thresholdId, int severity, const TCHAR *message)
+   void markLastThresholdEvent(uint32_t thresholdId, int severity, const wchar_t *message)
    {
       lock();
       Threshold *t = getThresholdById(thresholdId);

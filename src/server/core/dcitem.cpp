@@ -429,9 +429,10 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 }
 
 /**
- * Check last value for threshold violations
+ * Check last value for threshold violations. Original DCI is a pointer to source DCI
+ * if threshold check is performed on shadow copy or nullptr otherwise.
  */
-void DCItem::checkThresholds(ItemValue &value)
+void DCItem::checkThresholds(ItemValue &value, const shared_ptr<DCObject>& originalDci)
 {
 	if (m_thresholds == nullptr)
 		return;
@@ -452,7 +453,7 @@ void DCItem::checkThresholds(ItemValue &value)
       {
          case ThresholdCheckResult::ACTIVATED:
             {
-               shared_ptr<DCObject> sharedThis(shared_from_this());
+               shared_ptr<DCObject> sharedThis((originalDci != nullptr) ? originalDci : shared_from_this());
                EventBuilder(t->getEventCode(), m_ownerId)
                   .dci(m_id)
                   .param(_T("dciName"), m_name)
@@ -476,7 +477,7 @@ void DCItem::checkThresholds(ItemValue &value)
             break;
          case ThresholdCheckResult::DEACTIVATED:
             {
-               shared_ptr<DCObject> sharedThis(shared_from_this());
+               shared_ptr<DCObject> sharedThis((originalDci != nullptr) ? originalDci : shared_from_this());
                EventBuilder(t->getRearmEventCode(), m_ownerId)
                   .dci(m_id)
                   .param(_T("dciName"), m_name)
@@ -507,7 +508,7 @@ void DCItem::checkThresholds(ItemValue &value)
 	            time_t repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : static_cast<time_t>(t->getRepeatInterval());
 				   if (resendActivationEvent || ((repeatInterval != 0) && (t->getLastEventTimestamp() + repeatInterval <= now)))
 				   {
-	               shared_ptr<DCObject> sharedThis(shared_from_this());
+	               shared_ptr<DCObject> sharedThis((originalDci != nullptr) ? originalDci : shared_from_this());
 		            EventBuilder(t->getEventCode(), m_ownerId)
 		               .dci(m_id)
 		               .param(_T("dciName"), m_name)
@@ -797,7 +798,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
          // shared pointer to DCI for additional background processing
          shared_ptr<DCItem> shadowCopy = make_shared<DCItem>(this, true);
          unlock();
-         shadowCopy->checkThresholds(*pValue);
+         shadowCopy->checkThresholds(*pValue, shared_from_this());
          lock();
 
          // Reconcile threshold updates
@@ -813,7 +814,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
       }
       else
       {
-         checkThresholds(*pValue);
+         checkThresholds(*pValue, nullptr);
       }
    }
 

@@ -586,21 +586,21 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
 /**
  * Mark last activation event
  */
-void Threshold::markLastEvent(int severity, const TCHAR *message)
+void Threshold::markLastEvent(int severity, const wchar_t *message)
 {
 	m_lastEventTimestamp = time(nullptr);
 	m_currentSeverity = (BYTE)severity;
 	MemFree(m_lastEventMessage);
-	m_lastEventMessage = MemCopyString(message);
+	m_lastEventMessage = MemCopyStringW(message);
 
 	// Update threshold in database
-	StringBuffer query = _T("UPDATE thresholds SET current_severity=");
+	StringBuffer query(L"UPDATE thresholds SET current_severity=");
 	query.append(severity);
-	query.append(_T(",last_event_timestamp="));
+	query.append(L",last_event_timestamp=");
 	query.append(static_cast<int64_t>(m_lastEventTimestamp));
-	query.append(_T(",last_event_message="));
+	query.append(L",last_event_message=");
 	query.append(DBPrepareString(g_dbDriver, message, 2000));
-	query.append(_T("WHERE threshold_id="));
+	query.append(L"WHERE threshold_id=");
 	query.append(m_id);
 	QueueSQLRequest(query);
 }
@@ -1075,7 +1075,6 @@ void Threshold::reconcile(const Threshold& src)
    m_isReached = src.m_isReached;
    m_wasReachedBeforeMaint = src.m_wasReachedBeforeMaint;
    m_disabled = src.m_disabled;
-   m_lastEventTimestamp = src.m_lastEventTimestamp;
    m_currentSeverity = src.m_currentSeverity;
    m_lastScriptErrorReport = src.m_lastScriptErrorReport;
    m_lastCheckValue = src.m_lastCheckValue;
