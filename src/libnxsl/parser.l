@@ -293,6 +293,30 @@ static inline uint32_t StringToUInt32(const char *s)
 				return LEXER_ERROR;
 			}
 		}
+<STR,FSTR>\\u[0-9A-Fa-f]{4} {
+			char *eptr;
+			UCS2CHAR cp = (UCS2CHAR)strtoul(&yytext[2], &eptr, 16);
+			if (*eptr == 0)
+			{
+				char utf8cp[4];
+				size_t bytes = ucs2_to_utf8(&cp, 1, utf8cp, 4);
+				if (yyextra->m_stringSize + bytes <= MAX_STRING_SIZE)
+				{
+					memcpy(&yyextra->m_string[yyextra->m_stringSize], utf8cp, bytes);
+					yyextra->m_stringSize += bytes;
+				}
+				else
+				{
+					LexerError("String constant is too long", yyscanner);
+					return LEXER_ERROR;
+				}
+			}
+			else
+			{
+				LexerError("Invalid hex number", yyscanner);
+				return LEXER_ERROR;
+			}
+		}
 <STR>\"		{
 			BEGIN INITIAL;
 			yyextra->m_string[yyextra->m_stringSize] = 0;
