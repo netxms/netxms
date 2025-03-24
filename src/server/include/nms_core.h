@@ -1271,19 +1271,19 @@ public:
  * Functions
  */
 void ConfigPreLoad();
-bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *variable, TCHAR *buffer, size_t size, const TCHAR *defaultValue);
-TCHAR NXCORE_EXPORTABLE *ConfigReadStr(const TCHAR *variable, const TCHAR *defaultValue);
-bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE hdb, const TCHAR *variable, TCHAR *buffer, size_t size, const TCHAR *defaultValue);
+bool NXCORE_EXPORTABLE ConfigReadStr(const wchar_t *variable, wchar_t *buffer, size_t size, const wchar_t *defaultValue);
+wchar_t NXCORE_EXPORTABLE *ConfigReadStr(const wchar_t *variable, const wchar_t *defaultValue);
+bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE hdb, const wchar_t *variable, wchar_t *buffer, size_t size, const wchar_t *defaultValue);
 bool NXCORE_EXPORTABLE ConfigReadStrA(const wchar_t *variable, char *buffer, size_t size, const char *defaultValue);
 bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const wchar_t *variable, char *buffer, size_t size, const char *defaultValue);
 char NXCORE_EXPORTABLE *ConfigReadStrUTF8(const wchar_t *variable, const char *defaultValue);
-int32_t NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *variable, int32_t defaultValue);
-int32_t NXCORE_EXPORTABLE ConfigReadIntEx(DB_HANDLE hdb, const TCHAR *variable, int32_t defaultValue);
-uint32_t NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *variable, uint32_t defaultValue);
-int64_t NXCORE_EXPORTABLE ConfigReadInt64(const TCHAR *variable, int64_t defaultValue);
-uint64_t NXCORE_EXPORTABLE ConfigReadUInt64(const TCHAR *variable, uint64_t defaultValue);
+int32_t NXCORE_EXPORTABLE ConfigReadInt(const wchar_t *variable, int32_t defaultValue);
+int32_t NXCORE_EXPORTABLE ConfigReadIntEx(DB_HANDLE hdb, const wchar_t *variable, int32_t defaultValue);
+uint32_t NXCORE_EXPORTABLE ConfigReadULong(const wchar_t *variable, uint32_t defaultValue);
+int64_t NXCORE_EXPORTABLE ConfigReadInt64(const wchar_t *variable, int64_t defaultValue);
+uint64_t NXCORE_EXPORTABLE ConfigReadUInt64(const wchar_t *variable, uint64_t defaultValue);
 bool NXCORE_EXPORTABLE ConfigReadBoolean(const wchar_t *variable, bool defaultValue);
-bool NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *variable, int *buffer, size_t size, int defaultElementValue);
+bool NXCORE_EXPORTABLE ConfigReadByteArray(const wchar_t *variable, int *buffer, size_t size, int defaultElementValue);
 bool NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *variable, const TCHAR *value, bool create, bool isVisible = true, bool needRestart = false);
 bool NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *variable, int32_t value, bool create, bool isVisible = true, bool needRestart = false);
 bool NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *variable, uint32_t value, bool create, bool isVisible = true, bool needRestart = false);
@@ -1292,7 +1292,7 @@ bool NXCORE_EXPORTABLE ConfigWriteUInt64(const TCHAR *variable, uint64_t value, 
 bool NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *variable, int *value, size_t size, bool create, bool isVisible = true, bool needRestart = false);
 TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *varariable, const TCHAR *defaultValue);
 bool NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *variable, const TCHAR *value, bool create);
-bool NXCORE_EXPORTABLE ConfigDelete(const TCHAR *variable);
+bool NXCORE_EXPORTABLE ConfigDelete(const wchar_t *variable);
 
 void MetaDataPreLoad();
 bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *variable, TCHAR *buffer, int size, const TCHAR *defaultValue);

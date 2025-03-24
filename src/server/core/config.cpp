@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -45,14 +45,14 @@ extern int32_t g_maxClientSessions;
 extern uint64_t g_maxClientMessageSize;
 extern uint32_t g_clientFirstPacketTimeout;
 
-TCHAR s_serverCertificatePath[MAX_PATH] = _T("");
-TCHAR s_serverCertificateKeyPath[MAX_PATH] = _T("");
+TCHAR s_serverCertificatePath[MAX_PATH] = L"";
+TCHAR s_serverCertificateKeyPath[MAX_PATH] = L"";
 char s_serverCertificatePassword[MAX_PASSWORD] = "";
-TCHAR s_tunnelCertificatePath[MAX_PATH] = _T("");
-TCHAR s_tunnelCertificateKeyPath[MAX_PATH] = _T("");
+TCHAR s_tunnelCertificatePath[MAX_PATH] = L"";
+TCHAR s_tunnelCertificateKeyPath[MAX_PATH] = L"";
 char s_tunnelCertificatePassword[MAX_PASSWORD] = "";
-TCHAR s_internalCACertificatePath[MAX_PATH] = _T("");
-TCHAR s_internalCACertificateKeyPath[MAX_PATH] = _T("");
+TCHAR s_internalCACertificatePath[MAX_PATH] = L"";
+TCHAR s_internalCACertificateKeyPath[MAX_PATH] = L"";
 char s_internalCACertificatePassword[MAX_PASSWORD] = "";
 
 void UpdateAlarmExpirationTimes();
@@ -96,56 +96,56 @@ static uint64_t s_defaultThreadStackSize = 1024 * 1024;  // 1MB by default
  */
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-   { _T("AuditLogKey"), CT_MB_STRING, 0, 0, 128, 0, g_auditLogKey, nullptr },
-   { _T("BackgroundLogWriter"), CT_BOOLEAN_FLAG_64, 0, 0, AF_BACKGROUND_LOG_WRITER, 0, (void*)&g_flags, nullptr },
-   { _T("CodePage"), CT_MB_STRING, 0, 0, 256, 0, g_codePage, nullptr },
-   { _T("CreateCrashDumps"), CT_BOOLEAN_FLAG_64, 0, 0, AF_CATCH_EXCEPTIONS, 0, (void*)&g_flags, nullptr },
-   { _T("CRL"), CT_STRING_SET, 0, 0, 0, 0, &g_crlList, nullptr },
-   { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, 64, 0, g_szDailyLogFileSuffix, nullptr },
-   { _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_netxmsdDataDir, nullptr },
-   { _T("DBCacheConfigurationTables"), CT_BOOLEAN_FLAG_64, 0, 0, AF_CACHE_DB_ON_STARTUP, 0, (void*)&g_flags, nullptr },
-   { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDriver, nullptr },
-   { _T("DBDriverOptions"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams, nullptr },
-   { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, g_szDbLogin, nullptr },
-   { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbName, nullptr },
-   { _T("DBPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, g_szDbPassword, nullptr },
-   { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, g_szDbPassword, nullptr },
-   { _T("DBSchema"), CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbSchema, nullptr },
-   { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer, nullptr },
-   { _T("DBSessionSetupSQLScript"), CT_STRING, 0, 0, MAX_PATH, 0, g_dbSessionSetupSqlScriptPath, nullptr },
-   { _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &s_debugLevel, &s_debugLevel },
-   { _T("DebugTags"), CT_STRING_CONCAT, ',', 0, 0, 0, &s_debugTags, nullptr },
-   { _T("DefaultThreadStackSize"), CT_SIZE_BYTES, 0, 0, 0, 0, &s_defaultThreadStackSize, nullptr },
-   { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir, nullptr },
-   { _T("FullCrashDumps"), CT_BOOLEAN_FLAG_64, 0, 0, AF_WRITE_FULL_DUMP, 0, (void*)&g_flags, nullptr },
-   { _T("InternalCACertificate"), CT_STRING, 0, 0, MAX_PATH, 0, s_internalCACertificatePath, nullptr },
-   { _T("InternalCACertificateKey"), CT_STRING, 0, 0, MAX_PATH, 0, s_internalCACertificateKeyPath, nullptr },
-   { _T("InternalCACertificatePassword"), CT_MB_STRING, 0, 0, MAX_PASSWORD, 0, s_internalCACertificatePassword, nullptr },
-   { _T("LibraryDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_netxmsdLibDir, nullptr },
-   { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress, nullptr },
-   { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile, nullptr },
-   { _T("LogHistorySize"), CT_LONG, 0, 0, 0, 0, &g_logHistorySize, nullptr },
-   { _T("LogRotationMode"), CT_LONG, 0, 0, 0, 0, &g_logRotationMode, nullptr },
-   { _T("MaxClientMessageSize"), CT_SIZE_BYTES, 0, 0, 0, 0, &g_maxClientMessageSize, nullptr },
-   { _T("MaxClientSessions"), CT_LONG, 0, 0, 0, 0, &g_maxClientSessions, nullptr },
-   { _T("MaxLogSize"), CT_SIZE_BYTES, 0, 0, 0, 0, &g_maxLogSize, nullptr },
-   { _T("Module"), CT_STRING_LIST, 0, 0, 0, 0, &g_moduleLoadList, nullptr },
-   { _T("PeerNode"), CT_STRING, 0, 0, MAX_DB_STRING, 0, s_peerNode, nullptr },
-   { _T("PerfDataStorageDriver"), CT_STRING_CONCAT, '\n', 0, 0, 0, &g_pdsLoadList, nullptr },
-   { _T("ProcessAffinityMask"), CT_LONG, 0, 0, 0, 0, &g_processAffinityMask, nullptr },
-   { _T("ServerCertificate"), CT_STRING, 0, 0, MAX_PATH, 0, s_serverCertificatePath, nullptr },
-   { _T("ServerCertificateKey"), CT_STRING, 0, 0, MAX_PATH, 0, s_serverCertificateKeyPath, nullptr },
-   { _T("ServerCertificatePassword"), CT_MB_STRING, 0, 0, MAX_PASSWORD, 0, s_serverCertificatePassword, nullptr },
-   { _T("StartupSQLScript"), CT_STRING, 0, 0, MAX_PATH, 0, g_startupSqlScriptPath, nullptr },
-   { _T("TrustedCertificate"), CT_STRING_SET, 0, 0, 0, 0, &g_trustedCertificates, nullptr },
-   { _T("TunnelCertificate"), CT_STRING, 0, 0, MAX_PATH, 0, s_tunnelCertificatePath, nullptr },
-   { _T("TunnelCertificateKey"), CT_STRING, 0, 0, MAX_PATH, 0, s_tunnelCertificateKeyPath, nullptr },
-   { _T("TunnelCertificatePassword"), CT_MB_STRING, 0, 0, MAX_PASSWORD, 0, s_tunnelCertificatePassword, nullptr },
-   { _T("WriteLogAsJson"), CT_BOOLEAN_FLAG_64, 0, 0, AF_LOG_IN_JSON_FORMAT, 0, (void*)&g_flags, nullptr },
+   { L"AuditLogKey", CT_MB_STRING, 0, 0, 128, 0, g_auditLogKey, nullptr },
+   { L"BackgroundLogWriter", CT_BOOLEAN_FLAG_64, 0, 0, AF_BACKGROUND_LOG_WRITER, 0, (void*)&g_flags, nullptr },
+   { L"CodePage", CT_MB_STRING, 0, 0, 256, 0, g_codePage, nullptr },
+   { L"CreateCrashDumps", CT_BOOLEAN_FLAG_64, 0, 0, AF_CATCH_EXCEPTIONS, 0, (void*)&g_flags, nullptr },
+   { L"CRL", CT_STRING_SET, 0, 0, 0, 0, &g_crlList, nullptr },
+   { L"DailyLogFileSuffix", CT_STRING, 0, 0, 64, 0, g_szDailyLogFileSuffix, nullptr },
+   { L"DataDirectory", CT_STRING, 0, 0, MAX_PATH, 0, g_netxmsdDataDir, nullptr },
+   { L"DBCacheConfigurationTables", CT_BOOLEAN_FLAG_64, 0, 0, AF_CACHE_DB_ON_STARTUP, 0, (void*)&g_flags, nullptr },
+   { L"DBDriver", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDriver, nullptr },
+   { L"DBDriverOptions", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams, nullptr },
+   { L"DBLogin", CT_STRING, 0, 0, MAX_DB_LOGIN, 0, g_szDbLogin, nullptr },
+   { L"DBName", CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbName, nullptr },
+   { L"DBPassword", CT_STRING, 0, 0, MAX_PASSWORD, 0, g_szDbPassword, nullptr },
+   { L"DBEncryptedPassword", CT_STRING, 0, 0, MAX_PASSWORD, 0, g_szDbPassword, nullptr },
+   { L"DBSchema", CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbSchema, nullptr },
+   { L"DBServer", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer, nullptr },
+   { L"DBSessionSetupSQLScript", CT_STRING, 0, 0, MAX_PATH, 0, g_dbSessionSetupSqlScriptPath, nullptr },
+   { L"DebugLevel", CT_LONG, 0, 0, 0, 0, &s_debugLevel, &s_debugLevel },
+   { L"DebugTags", CT_STRING_CONCAT, ',', 0, 0, 0, &s_debugTags, nullptr },
+   { L"DefaultThreadStackSize", CT_SIZE_BYTES, 0, 0, 0, 0, &s_defaultThreadStackSize, nullptr },
+   { L"DumpDirectory", CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir, nullptr },
+   { L"FullCrashDumps", CT_BOOLEAN_FLAG_64, 0, 0, AF_WRITE_FULL_DUMP, 0, (void*)&g_flags, nullptr },
+   { L"InternalCACertificate", CT_STRING, 0, 0, MAX_PATH, 0, s_internalCACertificatePath, nullptr },
+   { L"InternalCACertificateKey", CT_STRING, 0, 0, MAX_PATH, 0, s_internalCACertificateKeyPath, nullptr },
+   { L"InternalCACertificatePassword", CT_MB_STRING, 0, 0, MAX_PASSWORD, 0, s_internalCACertificatePassword, nullptr },
+   { L"LibraryDirectory", CT_STRING, 0, 0, MAX_PATH, 0, g_netxmsdLibDir, nullptr },
+   { L"ListenAddress", CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress, nullptr },
+   { L"LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile, nullptr },
+   { L"LogHistorySize", CT_LONG, 0, 0, 0, 0, &g_logHistorySize, nullptr },
+   { L"LogRotationMode", CT_LONG, 0, 0, 0, 0, &g_logRotationMode, nullptr },
+   { L"MaxClientMessageSize", CT_SIZE_BYTES, 0, 0, 0, 0, &g_maxClientMessageSize, nullptr },
+   { L"MaxClientSessions", CT_LONG, 0, 0, 0, 0, &g_maxClientSessions, nullptr },
+   { L"MaxLogSize", CT_SIZE_BYTES, 0, 0, 0, 0, &g_maxLogSize, nullptr },
+   { L"Module", CT_STRING_LIST, 0, 0, 0, 0, &g_moduleLoadList, nullptr },
+   { L"PeerNode", CT_STRING, 0, 0, MAX_DB_STRING, 0, s_peerNode, nullptr },
+   { L"PerfDataStorageDriver", CT_STRING_CONCAT, '\n', 0, 0, 0, &g_pdsLoadList, nullptr },
+   { L"ProcessAffinityMask", CT_LONG, 0, 0, 0, 0, &g_processAffinityMask, nullptr },
+   { L"ServerCertificate", CT_STRING, 0, 0, MAX_PATH, 0, s_serverCertificatePath, nullptr },
+   { L"ServerCertificateKey", CT_STRING, 0, 0, MAX_PATH, 0, s_serverCertificateKeyPath, nullptr },
+   { L"ServerCertificatePassword", CT_MB_STRING, 0, 0, MAX_PASSWORD, 0, s_serverCertificatePassword, nullptr },
+   { L"StartupSQLScript", CT_STRING, 0, 0, MAX_PATH, 0, g_startupSqlScriptPath, nullptr },
+   { L"TrustedCertificate", CT_STRING_SET, 0, 0, 0, 0, &g_trustedCertificates, nullptr },
+   { L"TunnelCertificate", CT_STRING, 0, 0, MAX_PATH, 0, s_tunnelCertificatePath, nullptr },
+   { L"TunnelCertificateKey", CT_STRING, 0, 0, MAX_PATH, 0, s_tunnelCertificateKeyPath, nullptr },
+   { L"TunnelCertificatePassword", CT_MB_STRING, 0, 0, MAX_PASSWORD, 0, s_tunnelCertificatePassword, nullptr },
+   { L"WriteLogAsJson", CT_BOOLEAN_FLAG_64, 0, 0, AF_LOG_IN_JSON_FORMAT, 0, (void*)&g_flags, nullptr },
    /* deprecated parameters */
-   { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams, nullptr }, 
-   { _T("ServerCACertificate"), CT_STRING_SET, 0, 0, 0, 0, &g_trustedCertificates, nullptr },
-   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr, nullptr }
+   { L"DBDrvParams", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams, nullptr }, 
+   { L"ServerCACertificate", CT_STRING_SET, 0, 0, 0, 0, &g_trustedCertificates, nullptr },
+   { L"", CT_END_OF_LIST, 0, 0, 0, 0, nullptr, nullptr }
 };
 
 /**
@@ -158,40 +158,40 @@ Config g_serverConfig;
  */
 void NXCORE_EXPORTABLE FindConfigFile()
 {
-   if (_tcscmp(g_szConfigFile, _T("{search}")))
+   if (wcscmp(g_szConfigFile, L"{search}"))
       return;
 
 #ifdef _WIN32
    TCHAR path[MAX_PATH];
    GetNetXMSDirectory(nxDirEtc, path);
-   _tcscat(path, _T("\\netxmsd.conf"));
+   wcscat(path, L"\\netxmsd.conf");
    if (_taccess(path, 4) == 0)
    {
-      _tcscpy(g_szConfigFile, path);
+      wcscpy(g_szConfigFile, path);
    }
    else
    {
-      _tcscpy(g_szConfigFile, _T("C:\\netxmsd.conf"));
+      wcscpy(g_szConfigFile, L"C:\\netxmsd.conf");
    }
 #else
-   String homeDir = GetEnvironmentVariableEx(_T("NETXMS_HOME"));
+   String homeDir = GetEnvironmentVariableEx(L"NETXMS_HOME");
    if (!homeDir.isEmpty())
    {
-      TCHAR config[MAX_PATH];
-      _sntprintf(config, MAX_PATH, _T("%s/etc/netxmsd.conf"), homeDir.cstr());
-      if (_taccess(config, 4) == 0)
+      wchar_t config[MAX_PATH];
+      _sntprintf(config, MAX_PATH, L"%s/etc/netxmsd.conf", homeDir.cstr());
+      if (_waccess(config, 4) == 0)
       {
          _tcscpy(g_szConfigFile, config);
          goto stop_search;
       }
    }
-   if (_taccess(SYSCONFDIR _T("/netxmsd.conf"), 4) == 0)
+   if (_waccess(SYSCONFDIR L"/netxmsd.conf", 4) == 0)
    {
-      _tcscpy(g_szConfigFile, SYSCONFDIR _T("/netxmsd.conf"));
+      wcscpy(g_szConfigFile, SYSCONFDIR L"/netxmsd.conf");
    }
    else
    {
-      _tcscpy(g_szConfigFile, _T("/etc/netxmsd.conf"));
+      wcscpy(g_szConfigFile, L"/etc/netxmsd.conf");
    }
 stop_search:
    ;
@@ -208,22 +208,22 @@ bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel)
 
    FindConfigFile();
    if (IsStandalone())
-      WriteToTerminalEx(_T("Using configuration file \"%s\"\n"), g_szConfigFile);
+      WriteToTerminalEx(L"Using configuration file \"%s\"\n", g_szConfigFile);
 
-	if (g_serverConfig.loadConfig(g_szConfigFile, _T("server")) && g_serverConfig.parseTemplate(_T("server"), m_cfgTemplate))
+	if (g_serverConfig.loadConfig(g_szConfigFile, L"server") && g_serverConfig.parseTemplate(L"server", m_cfgTemplate))
    {
-      if ((!_tcsicmp(g_szLogFile, _T("{EventLog}"))) ||
-          (!_tcsicmp(g_szLogFile, _T("{syslog}"))))
+      if ((!_tcsicmp(g_szLogFile, L"{EventLog}")) ||
+          (!_tcsicmp(g_szLogFile, L"{syslog}")))
       {
          g_flags |= AF_USE_SYSLOG;
          g_flags &= ~(AF_USE_SYSTEMD_JOURNAL | AF_LOG_TO_STDOUT);
       }
-      else if (!_tcsicmp(g_szLogFile, _T("{systemd}")))
+      else if (!_tcsicmp(g_szLogFile, L"{systemd}"))
       {
          g_flags |= AF_USE_SYSTEMD_JOURNAL;
          g_flags &= ~(AF_USE_SYSLOG | AF_LOG_TO_STDOUT);
       }
-      else if (!_tcsicmp(g_szLogFile, _T("{stdout}")))
+      else if (!_tcsicmp(g_szLogFile, L"{stdout}"))
       {
          g_flags |= AF_LOG_TO_STDOUT;
          g_flags &= ~(AF_USE_SYSLOG | AF_USE_SYSTEMD_JOURNAL);
@@ -268,12 +268,12 @@ bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel)
    if (s_debugTags != nullptr)
    {
       int count;
-      TCHAR **tagList = SplitString(s_debugTags, _T(','), &count);
+      wchar_t **tagList = SplitString(s_debugTags, L',', &count);
       if (tagList != nullptr)
       {
          for(int i = 0; i < count; i++)
          {
-            TCHAR *level = _tcschr(tagList[i], _T(':'));
+            wchar_t *level = wcschr(tagList[i], L':');
             if (level != nullptr)
             {
                *level = 0;
@@ -289,7 +289,7 @@ bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel)
    }
 
 	// Decrypt password
-   DecryptPassword(g_szDbLogin, g_szDbPassword, g_szDbPassword, MAX_PASSWORD);
+   DecryptPasswordW(g_szDbLogin, g_szDbPassword, g_szDbPassword, MAX_PASSWORD);
    DecryptPasswordA("netxms", g_auditLogKey, g_auditLogKey, 128);
 
    // Parse peer node information
@@ -308,7 +308,7 @@ bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel)
    }
 
    // Update environment from config
-   unique_ptr<ObjectArray<ConfigEntry>> environment = g_serverConfig.getSubEntries(_T("/ENV"), _T("*"));
+   unique_ptr<ObjectArray<ConfigEntry>> environment = g_serverConfig.getSubEntries(L"/ENV", L"*");
    if (environment != nullptr)
    {
       for (int i = 0; i < environment->size(); i++)
@@ -337,7 +337,7 @@ static bool s_metadataCacheLoaded = false;
 void MetaDataPreLoad()
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT var_name,var_value FROM metadata"));
+   DB_RESULT hResult = DBSelect(hdb, L"SELECT var_name,var_value FROM metadata");
    if (hResult != nullptr)
    {
       s_metadataCacheLock.writeLock();
@@ -377,7 +377,7 @@ bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *name, TCHAR *buffer, int buf
    if (!success && !s_metadataCacheLoaded)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM metadata WHERE var_name=?"));
+      DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT var_value FROM metadata WHERE var_name=?");
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
@@ -407,7 +407,7 @@ bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *name, TCHAR *buffer, int buf
 int32_t NXCORE_EXPORTABLE MetaDataReadInt32(const TCHAR *variable, int32_t defaultValue)
 {
    TCHAR buffer[256];
-   if (MetaDataReadStr(variable, buffer, 256, _T("")))
+   if (MetaDataReadStr(variable, buffer, 256, L""))
    {
       TCHAR *eptr;
       int32_t value = _tcstol(buffer, &eptr, 0);
@@ -434,7 +434,7 @@ bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *variable, const TCHAR *valu
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    // Check for variable existence
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM metadata WHERE var_name=?"));
+	DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT var_value FROM metadata WHERE var_name=?");
 	if (hStmt == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
@@ -454,7 +454,7 @@ bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *variable, const TCHAR *valu
    // Create or update variable value
    if (bVarExist)
 	{
-		hStmt = DBPrepare(hdb, _T("UPDATE metadata SET var_value=? WHERE var_name=?"));
+		hStmt = DBPrepare(hdb, L"UPDATE metadata SET var_value=? WHERE var_name=?");
 		if (hStmt == nullptr)
       {
          DBConnectionPoolReleaseConnection(hdb);
@@ -465,7 +465,7 @@ bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *variable, const TCHAR *valu
 	}
    else
 	{
-		hStmt = DBPrepare(hdb, _T("INSERT INTO metadata (var_name,var_value) VALUES (?,?)"));
+		hStmt = DBPrepare(hdb, L"INSERT INTO metadata (var_name,var_value) VALUES (?,?)");
 		if (hStmt == nullptr)
       {
          DBConnectionPoolReleaseConnection(hdb);
@@ -502,7 +502,7 @@ static bool s_configCacheLoaded = false;
 void ConfigPreLoad()
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT var_name,var_value FROM config"));
+   DB_RESULT hResult = DBSelect(hdb, L"SELECT var_name,var_value FROM config");
    if (hResult != nullptr)
    {
       s_configCacheLock.writeLock();
@@ -522,10 +522,20 @@ void ConfigPreLoad()
 /**
  * Convert given text to uint32_t or use default value on conversion failure
  */
-static inline uint32_t ConvertToUint32(const TCHAR *value, uint32_t defaultValue)
+static inline uint32_t ConvertToUint32(const wchar_t *value, uint32_t defaultValue)
 {
-   TCHAR *eptr;
-   uint32_t i = _tcstoul(value, &eptr, 0);
+   wchar_t *eptr;
+   uint32_t i = wcstoul(value, &eptr, 0);
+   return (*eptr == 0) ? i : defaultValue;
+}
+
+/**
+ * Convert given text to uint32_t or use default value on conversion failure
+ */
+static inline int32_t ConvertToInt32(const wchar_t *value, int32_t defaultValue)
+{
+   wchar_t *eptr;
+   int32_t i = wcstoul(value, &eptr, 0);
    return (*eptr == 0) ? i : defaultValue;
 }
 
@@ -550,52 +560,68 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    s_configCacheLock.unlock();
 
 	// Restart syslog parser if configuration was changed
-	if (isCLOB && !_tcscmp(name, _T("SyslogParser")))
+	if (isCLOB && !wcscmp(name, L"SyslogParser"))
 	{
 		ReinitializeSyslogParser();
 	}
-   if (isCLOB && !_tcscmp(name, _T("WindowsEventParser")))
+   if (isCLOB && !wcscmp(name, L"WindowsEventParser"))
    {
       InitializeWindowsEventParser();
    }
-   else if (!_tcscmp(name, _T("Agent.RestartWaitTime")))
+   else if (!wcscmp(name, L"Agent.RestartWaitTime"))
    {
-      g_agentRestartWaitTime = _tcstol(value, nullptr, 0);
+      g_agentRestartWaitTime = ConvertToUint32(value, 0);
    }
-   else if (!_tcscmp(name, _T("Alarms.ResolveExpirationTime")))
+   else if (!wcscmp(name, L"Alarms.ResolveExpirationTime"))
    {
       UpdateAlarmExpirationTimes();
    }
-   else if (!_tcscmp(name, _T("Alarms.SummaryEmail.Enable")))
+   else if (!wcscmp(name, L"Alarms.StrictStatusFlow"))
    {
-      if (_tcstol(value, nullptr, 0))
+      NotifyClientSessions(NX_NOTIFY_ALARM_STATUS_FLOW_CHANGED, _tcstol(value, nullptr, 0));
+   }
+   else if (!wcscmp(name, L"Alarms.SummaryEmail.Enable"))
+   {
+      if (wcstol(value, nullptr, 0))
          EnableAlarmSummaryEmails();
       else
          DeleteScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
    }
-   else if (!_tcscmp(name, _T("Alarms.SummaryEmail.Schedule")))
+   else if (!wcscmp(name, L"Alarms.SummaryEmail.Schedule"))
    {
-      if (ConfigReadBoolean(_T("Alarms.SummaryEmail.Enable"), false))
+      if (ConfigReadBoolean(L"Alarms.SummaryEmail.Enable", false))
          EnableAlarmSummaryEmails();  // this call will update schedule for existing task
    }
-   else if (!_tcsncmp(name, _T("CAS."), 4))
+   else if (!_tcsncmp(name, L"CAS.", 4))
    {
       CASReadSettings();
    }
-   else if (!_tcscmp(name, _T("Client.FirstPacketTimeout")))
+   else if (!wcscmp(name, L"Client.FirstPacketTimeout"))
    {
       g_clientFirstPacketTimeout = ConvertToUint32(value, 2000);
       if (g_clientFirstPacketTimeout < 100)
          g_clientFirstPacketTimeout = 100;
-      nxlog_debug_tag(_T("client.session"), 2, _T("Client first packet timeout set to %u milliseconds"), g_clientFirstPacketTimeout);
+      nxlog_debug_tag(L"client.session", 2, L"Client first packet timeout set to %u milliseconds", g_clientFirstPacketTimeout);
    }
-   else if (!_tcscmp(name, _T("DataCollection.InstanceRetentionTime")))
+   else if (!wcscmp(name, L"DataCollection.DefaultDCIPollingInterval"))
    {
-      g_instanceRetentionTime = _tcstol(value, nullptr, 0);
+      DCObject::m_defaultPollingInterval = ConvertToInt32(value, 60);
    }
-   else if (!_tcscmp(name, _T("DBWriter.HouseKeeperInterlock")))
+   else if (!wcscmp(name, L"DataCollection.DefaultDCIRetentionTime"))
    {
-      switch(_tcstol(value, nullptr, 0))
+      DCObject::m_defaultRetentionTime = ConvertToInt32(value, 30);
+   }
+   else if (!wcscmp(name, L"DataCollection.InstancePollingInterval"))
+   {
+      g_instancePollingInterval = ConvertToUint32(value, 600);
+   }
+   else if (!wcscmp(name, L"DataCollection.InstanceRetentionTime"))
+   {
+      g_instanceRetentionTime = ConvertToUint32(value, 7);
+   }
+   else if (!wcscmp(name, L"DBWriter.HouseKeeperInterlock"))
+   {
+      switch(wcstol(value, nullptr, 0))
       {
          case 0:  // Auto
             if (g_dbSyntax == DB_SYNTAX_MSSQL)
@@ -612,25 +638,17 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
          default:
             break;
       }
-      nxlog_write_tag(NXLOG_INFO, _T("db.writer"), _T("DBWriter/Housekeeper interlock is %s"), (g_flags & AF_DBWRITER_HK_INTERLOCK) ? _T("ON") : _T("OFF"));
+      nxlog_write_tag(NXLOG_INFO, L"db.writer", L"DBWriter/Housekeeper interlock is %s", (g_flags & AF_DBWRITER_HK_INTERLOCK) ? L"ON" : L"OFF");
    }
-   else if (!_tcscmp(name, _T("DBWriter.MaxQueueSize")))
+   else if (!wcscmp(name, L"DBWriter.MaxQueueSize"))
    {
       OnDBWriterMaxQueueSizeChange();
    }
-   else if (!_tcscmp(name, _T("DataCollection.DefaultDCIPollingInterval")))
-   {
-      DCObject::m_defaultPollingInterval = _tcstol(value, nullptr, 0);
-   }
-   else if (!_tcscmp(name, _T("DataCollection.DefaultDCIRetentionTime")))
-   {
-      DCObject::m_defaultRetentionTime = _tcstol(value, nullptr, 0);
-   }
-   else if (!_tcscmp(name, _T("ICMP.CollectPollStatistics")))
+   else if (!wcscmp(name, L"ICMP.CollectPollStatistics"))
    {
       UpdateServerFlag(AF_COLLECT_ICMP_STATISTICS, value);
    }
-   else if (!_tcscmp(name, _T("ICMP.PingSize")))
+   else if (!wcscmp(name, L"ICMP.PingSize"))
    {
       uint32_t size = ConvertToUint32(value, 46);
       if (size < MIN_PING_SIZE)
@@ -640,18 +658,18 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
       else
          g_icmpPingSize = size;
    }
-   else if (!_tcscmp(name, _T("ICMP.PingTimeout")))
+   else if (!wcscmp(name, L"ICMP.PingTimeout"))
    {
       g_icmpPingTimeout = ConvertToUint32(value, 1500);
    }
-   else if (!_tcscmp(name, _T("ICMP.PollingInterval")))
+   else if (!wcscmp(name, L"ICMP.PollingInterval"))
    {
       g_icmpPollingInterval = ConvertToUint32(value, 60);
    }
-   else if (!_tcscmp(name, _T("ICMP.StatisticPeriod")))
+   else if (!wcscmp(name, L"ICMP.StatisticPeriod"))
    {
       uint32_t period = ConvertToUint32(value, 60);
-      nxlog_debug_tag(_T("poll.icmp"), 3, _T("Updating ICMP statistic period for configured collectors (new period is %u polls)"), period);
+      nxlog_debug_tag(L"poll.icmp", 3, L"Updating ICMP statistic period for configured collectors (new period is %u polls)", period);
       g_idxNodeById.forEach(
          [period] (NetObj *object) -> EnumerationCallbackResult
          {
@@ -659,72 +677,76 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
             return _CONTINUE;
          });
    }
-   else if (!_tcscmp(name, _T("NetworkDiscovery.ActiveDiscovery.Interval")) ||
-            !_tcscmp(name, _T("NetworkDiscovery.ActiveDiscovery.Schedule")))
+   else if (!wcscmp(name, L"NetworkDiscovery.ActiveDiscovery.Interval") ||
+            !wcscmp(name, L"NetworkDiscovery.ActiveDiscovery.Schedule"))
    {
       WakeupActiveDiscoveryThread();
    }
-   else if (!_tcscmp(name, _T("NetworkDiscovery.DisableProtocolProbe.Agent")))
+   else if (!wcscmp(name, L"NetworkDiscovery.DisableProtocolProbe.Agent"))
    {
       UpdateServerFlag(AF_DISABLE_AGENT_PROBE, value);
    }
-   else if (!_tcscmp(name, _T("NetworkDiscovery.DisableProtocolProbe.EtherNetIP")))
+   else if (!wcscmp(name, L"NetworkDiscovery.DisableProtocolProbe.EtherNetIP"))
    {
       UpdateServerFlag(AF_DISABLE_ETHERNETIP_PROBE, value);
    }
-   else if (!_tcscmp(name, _T("NetworkDiscovery.DisableProtocolProbe.SNMP.V1")))
+   else if (!wcscmp(name, L"NetworkDiscovery.DisableProtocolProbe.SNMP.V1"))
    {
       UpdateServerFlag(AF_DISABLE_SNMP_V1_PROBE, value);
    }
-   else if (!_tcscmp(name, _T("NetworkDiscovery.DisableProtocolProbe.SNMP.V2")))
+   else if (!wcscmp(name, L"NetworkDiscovery.DisableProtocolProbe.SNMP.V2"))
    {
       UpdateServerFlag(AF_DISABLE_SNMP_V2_PROBE, value);
    }
-   else if (!_tcscmp(name, _T("NetworkDiscovery.DisableProtocolProbe.SNMP.V3")))
+   else if (!wcscmp(name, L"NetworkDiscovery.DisableProtocolProbe.SNMP.V3"))
    {
       UpdateServerFlag(AF_DISABLE_SNMP_V3_PROBE, value);
    }
-   else if (!_tcscmp(name, _T("NetworkDiscovery.DisableProtocolProbe.SSH")))
+   else if (!wcscmp(name, L"NetworkDiscovery.DisableProtocolProbe.SSH"))
    {
       UpdateServerFlag(AF_DISABLE_SSH_PROBE, value);
    }
-   else if (!_tcscmp(name, _T("NetworkDiscovery.EnableParallelProcessing")))
+   else if (!wcscmp(name, L"NetworkDiscovery.EnableParallelProcessing"))
    {
       UpdateServerFlag(AF_PARALLEL_NETWORK_DISCOVERY, value);
    }
-   else if (!_tcscmp(name, _T("NetworkDiscovery.MergeDuplicateNodes")))
+   else if (!wcscmp(name, L"NetworkDiscovery.MergeDuplicateNodes"))
    {
       UpdateServerFlag(AF_MERGE_DUPLICATE_NODES, value);
    }
-   else if (!_tcscmp(name, _T("NetworkDiscovery.PassiveDiscovery.Interval")))
+   else if (!wcscmp(name, L"NetworkDiscovery.PassiveDiscovery.Interval"))
    {
       g_discoveryPollingInterval = ConvertToUint32(value, 900);
    }
-   else if (!_tcscmp(name, _T("NXSL.EnableContainerFunctions")))
+   else if (!wcscmp(name, L"NXSL.EnableContainerFunctions"))
    {
       UpdateServerFlag(AF_ENABLE_NXSL_CONTAINER_FUNCTIONS, value);
    }
-   else if (!_tcscmp(name, _T("Objects.AutobindOnConfigurationPoll")))
+   else if (!wcscmp(name, L"Objects.AutobindOnConfigurationPoll"))
    {
       UpdateServerFlag(AF_AUTOBIND_ON_CONF_POLL, value);
    }
-   else if (!_tcscmp(name, _T("Objects.AutobindPollingInterval")))
+   else if (!wcscmp(name, L"Objects.AutobindPollingInterval"))
    {
       g_autobindPollingInterval = ConvertToUint32(value, 3600);
    }
-   else if (!_tcscmp(name, _T("Objects.ConfigurationPollingInterval")))
+   else if (!wcscmp(name, L"Objects.Conditions.PollingInterval"))
+   {
+      g_conditionPollingInterval = ConvertToUint32(value, 60);
+   }
+   else if (!wcscmp(name, L"Objects.ConfigurationPollingInterval"))
    {
       g_configurationPollingInterval = ConvertToUint32(value, 3600);
    }
-   else if (!_tcscmp(name, _T("Objects.Interfaces.Enable8021xStatusPoll")))
+   else if (!wcscmp(name, L"Objects.Interfaces.Enable8021xStatusPoll"))
    {
       UpdateServerFlag(AF_ENABLE_8021X_STATUS_POLL, value);
    }
-   else if (!_tcscmp(name, _T("Objects.NetworkMaps.UpdateInterval")))
+   else if (!wcscmp(name, L"Objects.NetworkMaps.UpdateInterval"))
    {
       g_mapUpdatePollingInterval = ConvertToUint32(value, 60);
    }
-   else if (!_tcscmp(name, _T("Objects.Nodes.ResolveDNSToIPOnStatusPoll")))
+   else if (!wcscmp(name, L"Objects.Nodes.ResolveDNSToIPOnStatusPoll"))
    {
       switch(ConvertToUint32(value, static_cast<int>(PrimaryIPUpdateMode::NEVER)))
       {
@@ -739,67 +761,71 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
             break;
       }
    }
-   else if (!_tcscmp(name, _T("Objects.Nodes.ResolveDNSToIPOnStatusPoll.Interval")))
+   else if (!wcscmp(name, L"Objects.Nodes.ResolveDNSToIPOnStatusPoll.Interval"))
    {
       g_pollsBetweenPrimaryIpUpdate = ConvertToUint32(value, 1);
    }
-   else if (!_tcscmp(name, _T("Objects.Nodes.ResolveNames")))
+   else if (!wcscmp(name, L"Objects.Nodes.ResolveNames"))
    {
       UpdateServerFlag(AF_RESOLVE_NODE_NAMES, value);
    }
-   else if (!_tcscmp(name, _T("Objects.Security.CheckTrustedObjects")))
+   else if (!wcscmp(name, L"Objects.Security.CheckTrustedObjects"))
    {
       UpdateServerFlag(AF_CHECK_TRUSTED_OBJECTS, value);
    }
-   else if (!_tcscmp(name, _T("Objects.StatusPollingInterval")))
+   else if (!wcscmp(name, L"Objects.StatusPollingInterval"))
    {
       g_statusPollingInterval = ConvertToUint32(value, 60);
    }
-   else if (!_tcscmp(name, _T("Objects.Subnets.DeleteEmpty")))
+   else if (!wcscmp(name, L"Objects.Subnets.DeleteEmpty"))
    {
       UpdateServerFlag(AF_DELETE_EMPTY_SUBNETS, value);
    }
-   else if (!_tcsncmp(name, _T("SNMP.Agent."), 11))
+   else if (!_tcsncmp(name, L"SNMP.Agent.", 11))
    {
       OnSNMPAgentConfigurationChange(name, value);
    }
-   else if (!_tcscmp(name, _T("SNMP.Codepage")))
+   else if (!wcscmp(name, L"SNMP.Codepage"))
    {
       tchar_to_utf8(value, -1, g_snmpCodepage, sizeof(g_snmpCodepage));
    }
-   else if (!_tcscmp(name, _T("SNMP.Traps.AllowVarbindsConversion")))
+   else if (!wcscmp(name, L"SNMP.Traps.AllowVarbindsConversion"))
    {
       UpdateServerFlag(AF_ALLOW_TRAP_VARBIND_CONVERSION, value);
    }
-   else if (!_tcscmp(name, _T("SNMP.Traps.LogAll")))
+   else if (!wcscmp(name, L"SNMP.Traps.LogAll"))
    {
       UpdateServerFlag(AF_LOG_ALL_SNMP_TRAPS, value);
    }
-   else if (!_tcscmp(name, _T("SNMP.Traps.ProcessUnmanagedNodes")))
+   else if (!wcscmp(name, L"SNMP.Traps.ProcessUnmanagedNodes"))
    {
       UpdateServerFlag(AF_TRAPS_FROM_UNMANAGED_NODES, value);
    }
-   else if (!_tcscmp(name, _T("SNMP.Traps.RateLimit.Threshold")))
+   else if (!wcscmp(name, L"SNMP.Traps.RateLimit.Threshold"))
    {
       g_snmpTrapStormCountThreshold = ConvertToUint32(value, 0);
    }
-   else if (!_tcscmp(name, _T("SNMP.Traps.RateLimit.Duration")))
+   else if (!wcscmp(name, L"SNMP.Traps.RateLimit.Duration"))
    {
       g_snmpTrapStormDurationThreshold = ConvertToUint32(value, 15);
    }
-   else if (!_tcscmp(name, _T("SNMP.Traps.UnmatchedTrapEvent")))
+   else if (!wcscmp(name, L"SNMP.Traps.UnmatchedTrapEvent"))
    {
       UpdateServerFlag(AF_ENABLE_UNMATCHED_TRAP_EVENT, value);
    }
-   else if (!_tcscmp(name, _T("Alarms.StrictStatusFlow")))
-   {
-      NotifyClientSessions(NX_NOTIFY_ALARM_STATUS_FLOW_CHANGED, _tcstol(value, nullptr, 0));
-   }
-   else if (!_tcsncmp(name, _T("Syslog."), 7))
+   else if (!_tcsncmp(name, L"Syslog.", 7))
    {
       OnSyslogConfigurationChange(name, value);
    }
-   else if (!_tcsncmp(name, _T("WindowsEvents."), 14))
+   else if (!wcscmp(name, L"Topology.PollingInterval"))
+   {
+      g_topologyPollingInterval = ConvertToUint32(value, 1800);
+   }
+   else if (!wcscmp(name, L"Topology.RoutingTableUpdateInterval"))
+   {
+      g_routingTableUpdateInterval = ConvertToUint32(value, 300);
+   }
+   else if (!_tcsncmp(name, L"WindowsEvents.", 14))
    {
       OnWindowsEventsConfigurationChange(name, value);
    }
@@ -808,11 +834,11 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
 /**
  * Read string value from configuration table
  */
-bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE dbHandle, const TCHAR *variable, TCHAR *buffer, size_t size, const TCHAR *defaultValue)
+bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE dbHandle, const wchar_t *variable, wchar_t *buffer, size_t size, const wchar_t *defaultValue)
 {
    if (defaultValue != nullptr)
-      _tcslcpy(buffer, defaultValue, size);
-   if (_tcslen(variable) > 127)
+      wcslcpy(buffer, defaultValue, size);
+   if (wcslen(variable) > 127)
       return false;
 
    s_configCacheLock.readLock();
@@ -821,7 +847,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE dbHandle, const TCHAR *variable
    if (value != nullptr)
    {
       _tcslcpy(buffer, value, size);
-		nxlog_debug_tag(_T("config"), 8, _T("ConfigReadStr: (cached) name=%s value=\"%s\""), variable, buffer);
+		nxlog_debug_tag(L"config", 8, L"ConfigReadStr: (cached) name=%s value=\"%s\"", variable, buffer);
       return true;
    }
 
@@ -833,7 +859,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE dbHandle, const TCHAR *variable
 
    bool success = false;
    DB_HANDLE hdb = (dbHandle == nullptr) ? DBConnectionPoolAcquireConnection() : dbHandle;
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config WHERE var_name=?"));
+	DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT var_value FROM config WHERE var_name=?");
 	if (hStmt != nullptr)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
@@ -843,7 +869,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE dbHandle, const TCHAR *variable
 			if (DBGetNumRows(hResult) > 0)
 			{
 				DBGetField(hResult, 0, 0, buffer, size);
-				nxlog_debug_tag(_T("config"), 8, _T("ConfigReadStr: name=%s value=\"%s\""), variable, buffer);
+				nxlog_debug_tag(L"config", 8, L"ConfigReadStr: name=%s value=\"%s\"", variable, buffer);
 				success = true;
 			}
 		   DBFreeResult(hResult);
@@ -866,7 +892,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE dbHandle, const TCHAR *variable
 /**
  * Read string value from configuration table
  */
-bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *variable, TCHAR *buffer, size_t size, const TCHAR *defaultValue)
+bool NXCORE_EXPORTABLE ConfigReadStr(const wchar_t *variable, wchar_t *buffer, size_t size, const wchar_t *defaultValue)
 {
    return ConfigReadStrEx(nullptr, variable, buffer, size, defaultValue);
 }
@@ -874,7 +900,7 @@ bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *variable, TCHAR *buffer, size_
 /**
  * Read string value from configuration table. Returns dynamically allocated string.
  */
-TCHAR NXCORE_EXPORTABLE *ConfigReadStr(const TCHAR *variable, const TCHAR *defaultValue)
+wchar_t NXCORE_EXPORTABLE *ConfigReadStr(const wchar_t *variable, const wchar_t *defaultValue)
 {
    TCHAR buffer[MAX_CONFIG_VALUE];
    bool success = ConfigReadStrEx(nullptr, variable, buffer, MAX_CONFIG_VALUE, nullptr);
@@ -925,7 +951,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const wchar_t *variable, char *buffer, 
 
    bool success = false;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config WHERE var_name=?"));
+	DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT var_value FROM config WHERE var_name=?");
 	if (hStmt != nullptr)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
@@ -964,7 +990,7 @@ bool NXCORE_EXPORTABLE ConfigReadBoolean(const wchar_t *variable, bool defaultVa
    wchar_t buffer[64];
    if (!ConfigReadStr(variable, buffer, 64, nullptr))
       return defaultValue;
-   if (!_tcsicmp(buffer, _T("true")))
+   if (!_tcsicmp(buffer, L"true"))
       return true;
    return _tcstol(buffer, nullptr, 0) != 0;
 }
@@ -972,7 +998,7 @@ bool NXCORE_EXPORTABLE ConfigReadBoolean(const wchar_t *variable, bool defaultVa
 /**
  * Read integer value from configuration table
  */
-int32_t NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *variable, int32_t defaultValue)
+int32_t NXCORE_EXPORTABLE ConfigReadInt(const wchar_t *variable, int32_t defaultValue)
 {
    return ConfigReadIntEx(nullptr, variable, defaultValue);
 }
@@ -980,9 +1006,9 @@ int32_t NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *variable, int32_t defaultVa
 /**
  * Read integer value from configuration table
  */
-int32_t NXCORE_EXPORTABLE ConfigReadIntEx(DB_HANDLE hdb, const TCHAR *variable, int32_t defaultValue)
+int32_t NXCORE_EXPORTABLE ConfigReadIntEx(DB_HANDLE hdb, const wchar_t *variable, int32_t defaultValue)
 {
-   TCHAR buffer[64];
+   wchar_t buffer[64];
    if (ConfigReadStrEx(hdb, variable, buffer, 64, nullptr))
       return _tcstol(buffer, nullptr, 0);
    return defaultValue;
@@ -991,10 +1017,10 @@ int32_t NXCORE_EXPORTABLE ConfigReadIntEx(DB_HANDLE hdb, const TCHAR *variable, 
 /**
  * Read unsigned long value from configuration table
  */
-uint32_t NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *szVar, uint32_t defaultValue)
+uint32_t NXCORE_EXPORTABLE ConfigReadULong(const wchar_t *variable, uint32_t defaultValue)
 {
-   TCHAR buffer[64];
-   if (ConfigReadStr(szVar, buffer, 64, _T("")))
+   wchar_t buffer[64];
+   if (ConfigReadStr(variable, buffer, 64, L""))
       return _tcstoul(buffer, nullptr, 0);
    return defaultValue;
 }
@@ -1002,10 +1028,10 @@ uint32_t NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *szVar, uint32_t defaultV
 /**
  * Read signed long long value from configuration table
  */
-int64_t NXCORE_EXPORTABLE ConfigReadInt64(const TCHAR *variable, int64_t defaultValue)
+int64_t NXCORE_EXPORTABLE ConfigReadInt64(const wchar_t *variable, int64_t defaultValue)
 {
-   TCHAR buffer[64];
-   if (ConfigReadStr(variable, buffer, 64, _T("")))
+   wchar_t buffer[64];
+   if (ConfigReadStr(variable, buffer, 64, L""))
       return _tcstoll(buffer, nullptr, 10);
    return defaultValue;
 }
@@ -1013,10 +1039,10 @@ int64_t NXCORE_EXPORTABLE ConfigReadInt64(const TCHAR *variable, int64_t default
 /**
  * Read unsigned long long value from configuration table
  */
-uint64_t NXCORE_EXPORTABLE ConfigReadUInt64(const TCHAR *variable, uint64_t defaultValue)
+uint64_t NXCORE_EXPORTABLE ConfigReadUInt64(const wchar_t *variable, uint64_t defaultValue)
 {
-   TCHAR buffer[64];
-   if (ConfigReadStr(variable, buffer, 64, _T("")))
+   wchar_t buffer[64];
+   if (ConfigReadStr(variable, buffer, 64, L""))
       return _tcstoull(buffer, nullptr, 10);
    return defaultValue;
 }
@@ -1024,11 +1050,11 @@ uint64_t NXCORE_EXPORTABLE ConfigReadUInt64(const TCHAR *variable, uint64_t defa
 /**
  * Read byte array (in hex form) from configuration table into integer array
  */
-bool NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *variable, int *buffer, size_t size, int defaultElementValue)
+bool NXCORE_EXPORTABLE ConfigReadByteArray(const wchar_t *variable, int *buffer, size_t size, int defaultElementValue)
 {
    bool success;
-   TCHAR text[256];
-   if (ConfigReadStr(variable, text, 256, _T("")))
+   wchar_t text[256];
+   if (ConfigReadStr(variable, text, 256, L""))
    {
       char pbBytes[128];
       StrToBin(text, (BYTE *)pbBytes, 128);
@@ -1060,7 +1086,7 @@ bool NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *variable, const TCHAR *value,
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    // Check for variable existence
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config WHERE var_name=?"));
+	DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT var_value FROM config WHERE var_name=?");
 	if (hStmt == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
@@ -1087,7 +1113,7 @@ bool NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *variable, const TCHAR *value,
    // Create or update variable value
    if (bVarExist)
 	{
-		hStmt = DBPrepare(hdb, _T("UPDATE config SET var_value=? WHERE var_name=?"));
+		hStmt = DBPrepare(hdb, L"UPDATE config SET var_value=? WHERE var_name=?");
 		if (hStmt == nullptr)
       {
          DBConnectionPoolReleaseConnection(hdb);
@@ -1098,7 +1124,7 @@ bool NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *variable, const TCHAR *value,
 	}
    else
 	{
-		hStmt = DBPrepare(hdb, _T("INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES (?,?,?,?)"));
+		hStmt = DBPrepare(hdb, L"INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES (?,?,?,?)");
 		if (hStmt == nullptr)
       {
          DBConnectionPoolReleaseConnection(hdb);
@@ -1158,32 +1184,26 @@ bool NXCORE_EXPORTABLE ConfigWriteUInt64(const TCHAR *variable, uint64_t value, 
  */
 bool NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *variable, int *pnArray, size_t size, bool create, bool isVisible, bool needRestart)
 {
-   TCHAR szBuffer[256];
+   wchar_t szBuffer[256];
    for(size_t i = 0, j = 0; (i < size) && (i < 127); i++, j += 2)
-      _sntprintf(&szBuffer[j], 256 - j, _T("%02X"), (char)((pnArray[i] > 127) ? 127 : ((pnArray[i] < -127) ? -127 : pnArray[i])));
+      _sntprintf(&szBuffer[j], 256 - j, L"%02X", (char)((pnArray[i] > 127) ? 127 : ((pnArray[i] < -127) ? -127 : pnArray[i])));
    return ConfigWriteStr(variable, szBuffer, create, isVisible, needRestart);
 }
 
 /**
  * Delete configuratrion variable
  */
-bool NXCORE_EXPORTABLE ConfigDelete(const TCHAR *variable)
+bool NXCORE_EXPORTABLE ConfigDelete(const wchar_t *variable)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-   TCHAR query[1024];
-   _sntprintf(query, 1024, _T("DELETE FROM config WHERE var_name=%s"), (const TCHAR *)DBPrepareString(hdb, variable));
-   bool success = DBQuery(hdb, query);
-
+   bool success = ExecuteQueryOnObject(hdb, variable, L"DELETE FROM config WHERE var_name=?");
    DBConnectionPoolReleaseConnection(hdb);
-
    if (success)
    {
       s_configCacheLock.writeLock();
       s_configCache.remove(variable);
       s_configCacheLock.unlock();
    }
-
    return success;
 }
 
@@ -1194,7 +1214,7 @@ TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *variable, const TCHAR *defa
 {
    TCHAR *result = nullptr;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config_clob WHERE var_name=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT var_value FROM config_clob WHERE var_name=?");
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
@@ -1224,7 +1244,7 @@ bool NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *variable, const TCHAR *value
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    // Check for variable existence
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config_clob WHERE var_name=?"));
+	DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT var_value FROM config_clob WHERE var_name=?");
 	if (hStmt == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
@@ -1251,7 +1271,7 @@ bool NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *variable, const TCHAR *value
    // Create or update variable value
    if (bVarExist)
 	{
-		hStmt = DBPrepare(hdb, _T("UPDATE config_clob SET var_value=? WHERE var_name=?"));
+		hStmt = DBPrepare(hdb, L"UPDATE config_clob SET var_value=? WHERE var_name=?");
 		if (hStmt == nullptr)
       {
          DBConnectionPoolReleaseConnection(hdb);
@@ -1262,7 +1282,7 @@ bool NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *variable, const TCHAR *value
 	}
    else
 	{
-		hStmt = DBPrepare(hdb, _T("INSERT INTO config_clob (var_name,var_value) VALUES (?,?)"));
+		hStmt = DBPrepare(hdb, L"INSERT INTO config_clob (var_name,var_value) VALUES (?,?)");
 		if (hStmt == nullptr)
       {
          DBConnectionPoolReleaseConnection(hdb);
@@ -1294,7 +1314,7 @@ struct GetClientConfigurationHints_CallbackData
  */
 static EnumerationCallbackResult GetClientConfigurationHints_Callback(const TCHAR *key, const TCHAR *value, GetClientConfigurationHints_CallbackData *context)
 {
-   if (_tcsncmp(key, _T("Client."), 7))
+   if (wcsncmp(key, L"Client.", 7))
       return _CONTINUE;
 
    context->msg->setField(context->fieldId++, &key[7]);

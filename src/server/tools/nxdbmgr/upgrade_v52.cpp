@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 52.14 to 52.15
+ */
+static bool H_UpgradeFromV14()
+{
+   CHK_EXEC(SQLQuery(L"UPDATE config SET need_server_restart=0 WHERE var_name IN ('DataCollection.InstancePollingInterval','Objects.Conditions.PollingInterval','Topology.RoutingTableUpdateInterval','Topology.PollingInterval')"));
+   CHK_EXEC(SetMinorSchemaVersion(15));
+   return true;
+}
+
+/**
  * Upgrade from 52.13 to 52.14
  */
 static bool H_UpgradeFromV13()
@@ -332,6 +342,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 14, 52, 15, H_UpgradeFromV14 },
    { 13, 52, 14, H_UpgradeFromV13 },
    { 12, 52, 13, H_UpgradeFromV12 },
    { 11, 52, 12, H_UpgradeFromV11 },
