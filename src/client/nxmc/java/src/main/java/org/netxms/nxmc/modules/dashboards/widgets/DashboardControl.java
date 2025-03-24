@@ -474,6 +474,7 @@ public class DashboardControl extends Composite
    void duplicateElement(DashboardElement src)
    {
       DashboardElement element = new DashboardElement(src);
+      element.setIndex(elements.size());
       elements.add(element);
       createElementWidget(element);
       redoLayout();

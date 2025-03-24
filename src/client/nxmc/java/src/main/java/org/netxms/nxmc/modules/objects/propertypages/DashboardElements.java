@@ -436,6 +436,7 @@ public class DashboardElements extends ObjectPropertyPage
       for(Object o : selection.toList())
       {
          DashboardElement e = new DashboardElement((DashboardElement)o);
+         e.setIndex(elements.size());
          elements.add(e);
          newSelection.add(e);
       }

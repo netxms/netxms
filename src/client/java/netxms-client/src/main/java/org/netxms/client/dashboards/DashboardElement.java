@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,11 +72,12 @@ public class DashboardElement
 	private int index;
 
 	/**
-	 * Create dashboard element which takes 1 cell with FILL layout in both directions
-	 * 
-	 * @param type element's type
-	 * @param data element's data
-	 */
+    * Create dashboard element which takes 1 cell with FILL layout in both directions.
+    * 
+    * @param type element's type
+    * @param data element's data
+    * @param index element's index within dashboard (used for scripted chart update)
+    */
 	public DashboardElement(int type, String data, int index)
 	{
 		this.type = type;
@@ -86,11 +87,12 @@ public class DashboardElement
 	}
 
 	/**
-	 * Create dashboard element from NXCP message
-	 * 
-	 * @param msg NXCP message
-	 * @param baseId base variable ID
-	 */
+    * Create dashboard element from NXCP message
+    *
+    * @param msg NXCP message
+    * @param baseId base variable ID
+    * @param index element's index within dashboard (used for scripted chart update)
+    */
 	public DashboardElement(NXCPMessage msg, long baseId, int index)
 	{
 		type = msg.getFieldAsInt32(baseId);
@@ -109,6 +111,7 @@ public class DashboardElement
 		type = src.type;
 		data = src.data;
 		layout = src.layout;
+      index = src.index;
 	}
 
 	/**

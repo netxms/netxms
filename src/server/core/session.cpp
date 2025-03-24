@@ -1536,7 +1536,7 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_EXECUTE_LIBRARY_SCRIPT:
          executeLibraryScript(*request);
          break;
-      case CMD_EXECUTE_DASBOARD_SCRIPT:
+      case CMD_EXECUTE_DASHBOARD_SCRIPT:
          executeDashboardScript(*request);
          break;
       case CMD_STOP_SCRIPT:
