@@ -2800,7 +2800,7 @@ restart_status_poll:
             if ((now > m_failTimeSSH + capabilityExpirationTime) && !(m_state & DCSF_UNREACHABLE) && (now > m_recoveryTime + capabilityExpirationGracePeriod))
             {
                m_capabilities &= ~NC_IS_SSH;
-               m_state &= ~NSF_AGENT_UNREACHABLE;
+               m_state &= ~NSF_SSH_UNREACHABLE;
                sendPollerMsg(POLLER_WARNING _T("Attribute isSSH set to FALSE\r\n"));
             }
          }
