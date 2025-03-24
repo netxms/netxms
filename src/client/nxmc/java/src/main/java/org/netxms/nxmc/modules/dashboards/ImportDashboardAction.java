@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Reden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -112,25 +112,25 @@ public class ImportDashboardAction extends ObjectAction<AbstractObject>
 				Document dom = db.parse(dlg.getImportFile());
 				
 				Element root = dom.getDocumentElement();
-				if (!root.getNodeName().equals("dashboard")) //$NON-NLS-1$
+            if (!root.getNodeName().equals("dashboard"))
 					throw new Exception(i18n.tr("Invalid import file"));
 
 				root.normalize();
 
 				List<DashboardElement> dashboardElements = new ArrayList<DashboardElement>(); 
 
-				NodeList elementsRoot = root.getElementsByTagName("elements"); //$NON-NLS-1$
+            NodeList elementsRoot = root.getElementsByTagName("elements");
 				for(int i = 0; i < elementsRoot.getLength(); i++)
 				{
 					if (elementsRoot.item(i).getNodeType() != Node.ELEMENT_NODE)
 						continue;
 
-					NodeList elements = ((Element)elementsRoot.item(i)).getElementsByTagName("dashboardElement"); //$NON-NLS-1$
+               NodeList elements = ((Element)elementsRoot.item(i)).getElementsByTagName("dashboardElement");
 					for(int j = 0; j < elements.getLength(); j++)
 					{
 						Element e = (Element)elements.item(j);
-						DashboardElement de = new DashboardElement(getNodeValueAsInt(e, "type", 0), getNodeValueAsXml(e, "element"), j); //$NON-NLS-1$ //$NON-NLS-2$
-                  DashboardElementLayout layout = XMLTools.createFromXml(DashboardElementLayout.class, getNodeValueAsXml(e, "layout")); //$NON-NLS-1$
+                  DashboardElement de = new DashboardElement(getNodeValueAsInt(e, "type", 0), getNodeValueAsXml(e, "element"), j);
+                  DashboardElementLayout layout = XMLTools.createFromXml(DashboardElementLayout.class, getNodeValueAsXml(e, "layout"));
                   de.setLayout(new Gson().toJson(layout)); 
 						dashboardElements.add(de);
 					}
@@ -144,8 +144,8 @@ public class ImportDashboardAction extends ObjectAction<AbstractObject>
 					final long objectId = session.createObject(cd);
 
 					NXCObjectModificationData md = new NXCObjectModificationData(objectId);
-					md.setColumnCount(getNodeValueAsInt(root, "columns", 1)); //$NON-NLS-1$
-               md.setObjectFlags(getNodeValueAsInt(root, "flags", 0)); //$NON-NLS-1$
+               md.setColumnCount(getNodeValueAsInt(root, "columns", 1));
+               md.setObjectFlags(getNodeValueAsInt(root, "flags", 0));
                md.setAutoBindFlags(getNodeValueAsInt(root, "autoBindFlags", 0));
                md.setAutoBindFilter(getNodeValueAsString(root, "autoBindFilter", ""));
 					md.setDashboardElements(dashboardElements);

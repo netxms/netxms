@@ -14997,7 +14997,7 @@ public class NXCSession
     */
    public Map<String, String> executeScriptedComparisonChartElement(long dashboardId, long elementId, long objectId) throws IOException, NXCException
    {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_DASBOARD_SCRIPT);
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_DASHBOARD_SCRIPT);
       msg.setFieldUInt32(NXCPCodes.VID_DASHBOARD_ID, dashboardId);
       msg.setFieldUInt32(NXCPCodes.VID_ELEMENT_INDEX, elementId);
       msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, objectId);
