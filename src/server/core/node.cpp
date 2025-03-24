@@ -3417,7 +3417,7 @@ restart_status_poll:
             EventBuilder(EVENT_NODE_UP, m_id)
                .param(_T("reason"), reason)
                .post();
-            sendPollerMsg(POLLER_INFO _T("Node recovered from unreachable state\r\n"));
+            sendPollerMsg(POLLER_INFO L"Node recovered from unreachable state\r\n");
             resyncDataCollectionConfiguration = true; // Will cause addition of all remotely collected DCIs on proxy
             // Set recovery time to provide grace period for capability expiration
             m_recoveryTime = now;
@@ -3425,7 +3425,7 @@ restart_status_poll:
          }
          else
          {
-            sendPollerMsg(POLLER_INFO _T("Node is connected\r\n"));
+            sendPollerMsg(POLLER_INFO L"Node is connected\r\n");
          }
       }
    }
@@ -3435,20 +3435,28 @@ restart_status_poll:
    // Get uptime and update boot time
    if (!(m_state & DCSF_UNREACHABLE))
    {
-      TCHAR buffer[MAX_RESULT_LENGTH];
-      if (getMetricFromAgent(_T("System.Uptime"), buffer, MAX_RESULT_LENGTH) == DCE_SUCCESS)
+      time_t prevBootTime = m_bootTime;
+      wchar_t buffer[MAX_RESULT_LENGTH];
+      if (getMetricFromAgent(L"System.Uptime", buffer, MAX_RESULT_LENGTH) == DCE_SUCCESS)
       {
-         m_bootTime = time(nullptr) - _tcstol(buffer, nullptr, 0);
+         m_bootTime = time(nullptr) - wcstol(buffer, nullptr, 0);
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): boot time set to %u from agent"), m_name, m_id, (UINT32)m_bootTime);
       }
       else if (getMetricFromSNMP(m_snmpPort, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.3.0"), buffer, MAX_RESULT_LENGTH, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
       {
-         m_bootTime = time(nullptr) - _tcstol(buffer, nullptr, 0) / 100;   // sysUpTime is in hundredths of a second
+         m_bootTime = time(nullptr) - wcstol(buffer, nullptr, 0) / 100;   // sysUpTime is in hundredths of a second
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): boot time set to %u from SNMP"), m_name, m_id, (UINT32)m_bootTime);
       }
       else
       {
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): unable to get system uptime"), m_name, m_id);
+      }
+      if (m_bootTime > prevBootTime)
+      {
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"StatusPoll(%s [%d]): system restart detected (previous boot time = " INT64_FMT ", new boot time = " INT64_FMT ")",
+            m_name, m_id, static_cast<int64_t>(prevBootTime), static_cast<int64_t>(m_bootTime));
+         sendPollerMsg(L"System was restarted since last status poll\r\n");
+         updateInterfaceConfiguration(rqId);
       }
    }
    else
@@ -3459,20 +3467,22 @@ restart_status_poll:
    // Get agent uptime to check if it was restarted
    if (!(m_state & DCSF_UNREACHABLE) && isNativeAgent())
    {
-      TCHAR buffer[MAX_RESULT_LENGTH];
-      if (getMetricFromAgent(_T("Agent.Uptime"), buffer, MAX_RESULT_LENGTH) == DCE_SUCCESS)
+      wchar_t buffer[MAX_RESULT_LENGTH];
+      if (getMetricFromAgent(L"Agent.Uptime", buffer, MAX_RESULT_LENGTH) == DCE_SUCCESS)
       {
-         time_t oldAgentuptime = m_agentUpTime;
-         m_agentUpTime = _tcstol(buffer, nullptr, 0);
-         if (oldAgentuptime > m_agentUpTime)
+         time_t prevAgentUptime = m_agentUpTime;
+         m_agentUpTime = wcstol(buffer, nullptr, 0);
+         if (prevAgentUptime > m_agentUpTime)
          {
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"StatusPoll(%s [%d]): agent restart detected", m_name, m_id);
+            sendPollerMsg(L"Agent was restarted since last status poll\r\n");
             // agent was restarted, cancel existing file monitors (on agent side they should have been cancelled by restart)
             RemoveFileMonitorsByNodeId(m_id);
          }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): unable to get agent uptime"), m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"StatusPoll(%s [%d]): unable to get agent uptime", m_name, m_id);
          RemoveFileMonitorsByNodeId(m_id);
          m_agentUpTime = 0;
       }
