@@ -1733,7 +1733,7 @@ public:
 
    TextFileWriter& appendMBString(const char *str, ssize_t len = -1);
    TextFileWriter& appendUtf8String(const char *str, ssize_t len = -1);
-   TextFileWriter& appendWideString(const WCHAR *str, ssize_t len = -1);
+   TextFileWriter& appendWideString(const wchar_t *str, ssize_t len = -1);
 
    TextFileWriter& append(const TCHAR *str, size_t len)
    {

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -156,7 +156,7 @@ TextFileWriter& TextFileWriter::appendUtf8String(const char *str, ssize_t len)
 /**
  * Append wide character string
  */
-TextFileWriter& TextFileWriter::appendWideString(const WCHAR *str, ssize_t len)
+TextFileWriter& TextFileWriter::appendWideString(const wchar_t *str, ssize_t len)
 {
    if (len < 0)
       len = wcslen(str);
@@ -183,6 +183,94 @@ TextFileWriter& TextFileWriter::appendFormattedString(const TCHAR *format, ...)
  */
 TextFileWriter& TextFileWriter::appendFormattedStringV(const TCHAR *format, va_list args)
 {
+#ifdef UNICODE
+   size_t len = wcslen(format);
+   Buffer<char, 1024> mbformat(len * 3);
+   size_t nchars = wchar_to_utf8(format, len, mbformat, len * 3);
+   mbformat[nchars] = 0;
+
+   int state = 0;
+   bool hmod;
+   for(char *p = mbformat; *p != 0; p++)
+   {
+      switch (state)
+      {
+         case 0:  // Normal text
+            if (*p == '%')
+            {
+               state = 1;
+               hmod = false;
+            }
+            break;
+         case 1:  // Format start
+            switch (*p)
+            {
+               case 's':
+                  if (hmod)
+                  {
+                     memmove(p - 1, p, strlen(p - 1));
+                  }
+                  else
+                  {
+                     *p = 'S';
+                  }
+                  state = 0;
+                  break;
+               case 'S':
+                  state = 0;
+                  break;
+               case 'c':
+                  if (hmod)
+                  {
+                     memmove(p - 1, p, strlen(p - 1));
+                  }
+                  else
+                  {
+                     *p = 'C';
+                  }
+                  state = 0;
+                  break;
+               case 'C':
+                  state = 0;
+                  break;
+               case L'.':  // All this characters could be part of format specifier
+               case L'*':  // and has no interest for us
+               case L'+':
+               case L'-':
+               case L' ':
+               case L'#':
+               case L'0':
+               case L'1':
+               case L'2':
+               case L'3':
+               case L'4':
+               case L'5':
+               case L'6':
+               case L'7':
+               case L'8':
+               case L'9':
+               case L'l':
+               case L'L':
+               case L'F':
+               case L'N':
+               case L'w':
+                  break;
+               case L'h':  // check for %hs
+                  hmod = true;
+                  break;
+               default:    // All other characters means end of format
+                  state = 0;
+                  break;
+
+            }
+            break;
+      }
+   }
+
+   vfprintf(m_handle, mbformat, args);
+#else
+   vfprintf(m_handle, format, args);
+#endif
    return *this;
 }
 
