@@ -11,7 +11,7 @@
 	<events>
 		<event id="100013">
 			<guid>89dd9cbc-6781-4a0e-8ddb-89d83856d357</guid>
-			<name>SYS_SERVER_CERTIFICATE_EXPIRING</name>
+			<name>DC_SERVER_CERTIFICATE_EXPIRING</name>
 			<code>100013</code>
 			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>1</severity>
@@ -31,7 +31,7 @@
 		</event>
 		<event id="100014">
 			<guid>38ce9fba-4822-4b5a-84af-395540cae801</guid>
-			<name>SYS_SERVER_CERTIFICATE_OK</name>
+			<name>DC_SERVER_CERTIFICATE_OK</name>
 			<code>100014</code>
 			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>0</severity>
@@ -240,8 +240,8 @@
 							<function>0</function>
 							<condition>0</condition>
 							<value>30</value>
-							<activationEvent>SYS_SERVER_CERTIFICATE_EXPIRING</activationEvent>
-							<deactivationEvent>SYS_SERVER_CERTIFICATE_OK</deactivationEvent>
+							<activationEvent>DC_SERVER_CERTIFICATE_EXPIRING</activationEvent>
+							<deactivationEvent>DC_SERVER_CERTIFICATE_OK</deactivationEvent>
 							<sampleCount>1</sampleCount>
 							<repeatInterval>86400</repeatInterval>
 							<script></script>
