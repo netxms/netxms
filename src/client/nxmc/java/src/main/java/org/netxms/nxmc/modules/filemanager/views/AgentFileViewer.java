@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -320,7 +320,8 @@ public class AgentFileViewer extends AdHocObjectView
     * @param lineStyler line styler
     * @return true if view was created successfully
     */
-   public static boolean createView(ViewPlacement viewPlacement, final long nodeId, final AgentFileData file, long maxFileSize, boolean followChanges, boolean ignoreContext, long contextId, LineStyler lineStyler)
+   public static boolean createView(ViewPlacement viewPlacement, final long nodeId, final AgentFileData file,
+         long maxFileSize, boolean followChanges, boolean ignoreContext, long contextId, LineStyler lineStyler)
 	{
       I18n i18n = LocalizationHelper.getI18n(AgentFileViewer.class);
 	   boolean exceedSize = file.getFile().length() > BaseFileViewer.MAX_FILE_SIZE;

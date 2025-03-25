@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,6 +63,7 @@ public class MonitorPerspective extends Perspective
       configuration.multiViewMainArea = true;
       configuration.hasSupplementalArea = false;
       configuration.priority = 110;
+      configuration.ignoreViewContext = true; // There is no context in monitor perspective
    }
 
    /**
