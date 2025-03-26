@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** NetXMS Foundation Library
- ** Copyright (C) 2003-2024 Raden Solutions
+ ** Copyright (C) 2003-2025 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -1643,7 +1643,8 @@ bool Config::loadXmlConfigFromMemory(const char *xml, size_t xmlSize, const TCHA
    bool success = (XML_Parse(parser, xml, static_cast<int>(xmlSize), TRUE) != XML_STATUS_ERROR);
    if (!success)
    {
-      error(_T("%hs at line %d"), XML_ErrorString(XML_GetErrorCode(parser)), XML_GetCurrentLineNumber(parser));
+      error(_T("XML parser error in file \"%s\" at line %d (%hs)"),
+         ((name != nullptr) && (*name != 0)) ? name : _T(":memory:"), XML_GetCurrentLineNumber(parser), XML_ErrorString(XML_GetErrorCode(parser)));
    }
    XML_ParserFree(parser);
    return success;
@@ -1678,20 +1679,20 @@ bool Config::loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, const
    int ret = CALL_STAT_FOLLOW_SYMLINK(file, &fileStats);
    if (ret != 0)
    {
-      error(_T("Could not process \"%s\"!"), file);
+      error(_T("Cannot access file \"%s\" (%s)"), file, _tcserror(errno));
       return false;
    }
 
    if (!S_ISREG(fileStats.st_mode))
    {
-      error(_T("\"%s\" is not a file!"), file);
+      error(_T("\"%s\" is not a file"), file);
       return false;
    }
 
    FILE *f = _tfopen(file, _T("r"));
    if (f == nullptr)
    {
-      error(_T("Cannot open file %s"), file);
+      error(_T("Cannot open file \"%s\" (%s)"), file, _tcserror(errno));
       return false;
    }
 
