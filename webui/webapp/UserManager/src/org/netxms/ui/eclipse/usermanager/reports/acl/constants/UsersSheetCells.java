@@ -22,7 +22,7 @@ public enum UsersSheetCells
 {
    ID,
    LOGIN,
-   ACTIVE,
+   STATUS,
    FULL_NAME,
    DESCRIPTION,
    ORIGIN,
