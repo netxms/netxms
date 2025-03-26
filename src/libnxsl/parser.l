@@ -221,7 +221,7 @@ static inline uint32_t StringToUInt32(const char *s)
 <IMPORT>\"           { LexerError("Unexpected string constant in import section", yyscanner); return LEXER_ERROR; }
 <IMPORT>\'           { LexerError("Unexpected string constant in import section", yyscanner); return LEXER_ERROR; }
 
-<INITIAL,IMPORT>"//".*	;
+<INITIAL,IMPORT>"//".*	{ if (yyextra->m_converterMode) return ' '; }
 
 <INITIAL,IMPORT>{nl}				yyextra->m_currLine++;
 <INITIAL,IMPORT>{whitespace}	;
@@ -398,11 +398,27 @@ static inline uint32_t StringToUInt32(const char *s)
 			return T_STRING;
 		}
 <TXT>{nl}	{ yyextra->m_text.write('\n'); yyextra->m_currLine++; }
+<TXT><<EOF>> {
+			LexerError("Unterminated text block", yyscanner);
+			return LEXER_ERROR;
+		}
 <TXT>.		{ yyextra->m_text.write(*yytext); }
 
 <COMMENT>"/*"	yyextra->m_commentLevel++;
-<COMMENT>"*/"	{ yyextra->m_commentLevel--; if (yyextra->m_commentLevel == 0) yy_pop_state(yyscanner); }
+<COMMENT>"*/"	{
+			yyextra->m_commentLevel--;
+			if (yyextra->m_commentLevel == 0)
+			{
+				yy_pop_state(yyscanner);
+				if (yyextra->m_converterMode)
+					return ' ';
+			}
+		}
 <COMMENT>{nl}	yyextra->m_currLine++;
+<COMMENT><<EOF>> {
+			LexerError("Unterminated comment", yyscanner);
+			return LEXER_ERROR;
+		}
 <COMMENT>.	;
 
 %%
