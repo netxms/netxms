@@ -23,15 +23,18 @@ templates_DATA = \
 	hp_ilo.xml \
 	hpux.xml \
 	intel_baseboard.xml \
+	interface_traffic.xml \
 	lenovo_xcc.xml \
 	linux.xml \
 	lsi_megaraid.xml \
 	netgear_nas.xml \
 	netxms_agent.xml \
+	netxms_file_handle_usage.xml \
 	netxms_server.xml \
 	object_tools.xml \
-        printers.xml \
+	printers.xml \
 	qnap.xml \
+	rapl_energy_consumption.xml \
 	ruckus_zonedirector.xml \
 	sonicwall.xml \
 	sophos.xml \

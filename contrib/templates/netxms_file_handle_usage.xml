@@ -114,7 +114,7 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="true" autoUnbind="false">return classof($object) == &quot;Node&quot; &amp;&amp; $node.isAgent &amp;&amp; !($node.platformName like &quot;windows-*&quot;);</filter>
+			<filter autoBind="true" autoUnbind="false">return classof($object) == &quot;Node&quot; and $node.isAgent and !($node.platformName like &quot;windows-*&quot;) and $node.readAgentParameter(&quot;Agent.FileHandleLimit&quot;);</filter>
 			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
 		<template id="1433">
@@ -207,7 +207,7 @@
 					<content>ExternalMetric=ulimit.openFiles:ulimit -Hn</content>
 				</agentPolicy>
 			</agentPolicies>
-			<filter autoBind="true" autoUnbind="false">return classof($object) == &quot;Node&quot; &amp;&amp; $node.isLocalMgmt &amp;&amp; !($node.platformName like &quot;windows-*&quot;);</filter>
+			<filter autoBind="true" autoUnbind="false">return classof($object) == &quot;Node&quot; and $node.isLocalMgmt and !($node.platformName like &quot;windows-*&quot;);</filter>
 			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
 	</templates>
