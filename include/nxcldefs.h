@@ -262,6 +262,11 @@
 #define DBF_SCROLLABLE                 0x00020000
 
 /**
+ * Rack flags
+ */
+#define RCF_FRONT_ONLY                 0x00010000
+
+/**
  * Data Collection Target flags (lower bits of flags field)
  */
 #define DCF_DISABLE_STATUS_POLL        0x00000001

@@ -34,7 +34,6 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
@@ -54,7 +53,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class RackView extends ViewPart implements ISelectionProvider
 {
    public static final String ID = "org.netxms.ui.eclipse.objectview.views.RackView";
-   
+
    private Composite rackArea;
    private Rack rack;
    private RackWidget rackFrontWidget;
@@ -62,15 +61,15 @@ public class RackView extends ViewPart implements ISelectionProvider
    private ISelection selection = new StructuredSelection();
    private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
     */
    @Override
    public void init(IViewSite site) throws PartInitException
    {
       super.init(site);
-      
-      NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+
+      NXCSession session = ConsoleSharedData.getSession();
       String[] parts = site.getSecondaryId().split("&"); //$NON-NLS-1$
       rack = session.findObjectById(Long.parseLong((parts.length > 0) ? parts[0] : site.getSecondaryId()), Rack.class);
       if (rack == null)
@@ -88,29 +87,35 @@ public class RackView extends ViewPart implements ISelectionProvider
          @Override
          public Point computeSize(int wHint, int hHint, boolean changed)
          {
-            if ((rackFrontWidget == null) || (rackRearWidget == null) || (hHint == SWT.DEFAULT))
+            if ((rackFrontWidget == null) || (hHint == SWT.DEFAULT))
                return super.computeSize(wHint, hHint, changed);
+
+            if (rackRearWidget == null)
+               return rackFrontWidget.computeSize(wHint, hHint, changed);
 
             Point s = rackFrontWidget.computeSize((wHint != SWT.DEFAULT) ? wHint / 2 : wHint, hHint, changed);
             return new Point(s.x * 2, s.y);
          }
       };
       rackFrontWidget = new RackWidget(rackArea, SWT.NONE, rack, RackOrientation.FRONT);
-      rackRearWidget = new RackWidget(rackArea, SWT.NONE, rack, RackOrientation.REAR);
-      
+      rackRearWidget = !rack.isFrontSideOnly() ? new RackWidget(rackArea, SWT.NONE, rack, RackOrientation.REAR) : null;
+
       rackArea.setBackground(ThemeEngine.getBackgroundColor("Rack"));
       rackArea.addControlListener(new ControlAdapter() {
          @Override
          public void controlResized(ControlEvent e)
          {
-            if ((rackFrontWidget == null) || (rackRearWidget == null))
+            if (rackFrontWidget == null)
                return;
 
             int height = rackArea.getSize().y;
             Point size = rackFrontWidget.computeSize(SWT.DEFAULT, height, true);
             rackFrontWidget.setSize(size);
-            rackRearWidget.setSize(size);
-            rackRearWidget.setLocation(size.x, 0);
+            if (rackRearWidget != null)
+            {
+               rackRearWidget.setSize(size);
+               rackRearWidget.setLocation(size.x, 0);
+            }
          }
       });
 
@@ -124,13 +129,14 @@ public class RackView extends ViewPart implements ISelectionProvider
          }
       };
       rackFrontWidget.addSelectionListener(listener);
-      rackRearWidget.addSelectionListener(listener);
+      if (rackRearWidget != null)
+         rackRearWidget.addSelectionListener(listener);
 
       getSite().setSelectionProvider(this);
       createPopupMenu();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
     */
    @Override
@@ -153,12 +159,10 @@ public class RackView extends ViewPart implements ISelectionProvider
          }
       });
 
-      // Create menu.
-      Menu menu = menuMgr.createContextMenu(rackFrontWidget);
-      rackFrontWidget.setMenu(menu);
+      rackFrontWidget.setMenu(menuMgr.createContextMenu(rackFrontWidget));
 
-      menu = menuMgr.createContextMenu(rackRearWidget);
-      rackRearWidget.setMenu(menu);
+      if (rackRearWidget != null)
+         rackRearWidget.setMenu(menuMgr.createContextMenu(rackRearWidget));
 
       // Register menu for extension.
       getSite().registerContextMenu(menuMgr, this);
@@ -171,7 +175,7 @@ public class RackView extends ViewPart implements ISelectionProvider
     */
    private void fillContextMenu(IMenuManager manager)
    {
-      if(selection != null && ((IStructuredSelection)selection).getFirstElement() instanceof AbstractObject)
+      if (selection != null && ((IStructuredSelection)selection).getFirstElement() instanceof AbstractObject)
          ObjectContextMenu.fill(manager, getSite(), this);
    }
 
@@ -184,7 +188,7 @@ public class RackView extends ViewPart implements ISelectionProvider
       selectionListeners.add(listener);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
     */
    @Override
@@ -193,7 +197,7 @@ public class RackView extends ViewPart implements ISelectionProvider
       return selection;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
     */
    @Override
@@ -202,7 +206,7 @@ public class RackView extends ViewPart implements ISelectionProvider
       selectionListeners.remove(listener);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
     */
    @Override

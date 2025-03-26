@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,6 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Rack;
@@ -69,9 +68,12 @@ public class RackTab extends ObjectTab implements ISelectionProvider
          @Override
          public Point computeSize(int wHint, int hHint, boolean changed)
          {
-            if ((rackFrontWidget == null) || (rackRearWidget == null) || (hHint == SWT.DEFAULT))
+            if ((rackFrontWidget == null) || (hHint == SWT.DEFAULT))
                return super.computeSize(wHint, hHint, changed);
-            
+
+            if (rackRearWidget == null)
+               return rackFrontWidget.computeSize(wHint, hHint, changed);
+
             Point s = rackFrontWidget.computeSize(wHint, hHint, changed);
             return new Point(s.x * 2, s.y);
          }
@@ -81,7 +83,7 @@ public class RackTab extends ObjectTab implements ISelectionProvider
          @Override
          public void controlResized(ControlEvent e)
          {
-            if ((rackFrontWidget == null) || (rackRearWidget == null))
+            if (rackFrontWidget == null)
                return;
             updateRackWidgetsSize();
          }
@@ -98,7 +100,7 @@ public class RackTab extends ObjectTab implements ISelectionProvider
          }
       });
 	}
-	
+
    /**
     * Update size and position of rack widgets 
     */
@@ -107,8 +109,11 @@ public class RackTab extends ObjectTab implements ISelectionProvider
       int height = content.getSize().y;
       Point size = rackFrontWidget.computeSize(SWT.DEFAULT, height, true);
       rackFrontWidget.setSize(size);
-      rackRearWidget.setSize(size);
-      rackRearWidget.setLocation(size.x, 0);
+      if (rackRearWidget != null)
+      {
+         rackRearWidget.setSize(size);
+         rackRearWidget.setLocation(size.x, 0);
+      }
    }
 
    /**
@@ -126,17 +131,15 @@ public class RackTab extends ObjectTab implements ISelectionProvider
          }
       });
 
-      // Create menu.
-      Menu menu = menuMgr.createContextMenu(rackFrontWidget);
-      rackFrontWidget.setMenu(menu);
+      rackFrontWidget.setMenu(menuMgr.createContextMenu(rackFrontWidget));
       
-      menu = menuMgr.createContextMenu(rackRearWidget);
-      rackRearWidget.setMenu(menu);
+      if (rackRearWidget != null)
+         rackRearWidget.setMenu(menuMgr.createContextMenu(rackRearWidget));
 
       // Register menu for extension.
       getViewPart().getSite().registerContextMenu(menuMgr, this);
    }
-   
+
    /**
     * Fill port context menu
     * 
@@ -144,7 +147,7 @@ public class RackTab extends ObjectTab implements ISelectionProvider
     */
    private void fillContextMenu(IMenuManager manager)
    {
-      if(selection != null && ((IStructuredSelection)selection).getFirstElement() instanceof AbstractObject)
+      if (selection != null && ((IStructuredSelection)selection).getFirstElement() instanceof AbstractObject)
          ObjectContextMenu.fill(manager, getViewPart().getSite(), this);
    }
 
@@ -193,13 +196,16 @@ public class RackTab extends ObjectTab implements ISelectionProvider
                   listener.selectionChanged(new SelectionChangedEvent(RackTab.this, selection));
             }
          };
-         
+
          rackFrontWidget = new RackWidget(content, SWT.NONE, (Rack)object, RackOrientation.FRONT);
          rackFrontWidget.addSelectionListener(listener);
 
-         rackRearWidget = new RackWidget(content, SWT.NONE, (Rack)object, RackOrientation.REAR);
-         rackRearWidget.addSelectionListener(listener);
-         
+         if (!((Rack)object).isFrontSideOnly())
+         {
+            rackRearWidget = new RackWidget(content, SWT.NONE, (Rack)object, RackOrientation.REAR);
+            rackRearWidget.addSelectionListener(listener);
+         }
+
          scroller.setMinSize(content.computeSize(SWT.DEFAULT, scroller.getSize().y));
          updateRackWidgetsSize();
          createPopupMenu();
@@ -224,7 +230,7 @@ public class RackTab extends ObjectTab implements ISelectionProvider
       selectionListeners.add(listener);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
     */
    @Override
@@ -233,7 +239,7 @@ public class RackTab extends ObjectTab implements ISelectionProvider
       return selection;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
     */
    @Override
@@ -242,7 +248,7 @@ public class RackTab extends ObjectTab implements ISelectionProvider
       selectionListeners.remove(listener);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
     */
    @Override
@@ -251,7 +257,7 @@ public class RackTab extends ObjectTab implements ISelectionProvider
       this.selection = selection;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#selected()
     */
    @Override

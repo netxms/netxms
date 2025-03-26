@@ -38,7 +38,6 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RackOrientation;
@@ -122,7 +121,6 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
                   Point s = rackRearWidget.computeSize(wHint, hHint, changed);
                   return new Point(s.x, s.y);
                }
-
                return super.computeSize(wHint, hHint, changed);    
             }
          };
@@ -155,7 +153,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
 
          if (config.getDisplayMode() == RackDisplayMode.FULL || config.getDisplayMode() == RackDisplayMode.FRONT)
             setRackFrontWidget(new RackWidget(rackArea, SWT.NONE, rack, RackOrientation.FRONT));
-         if (config.getDisplayMode() == RackDisplayMode.FULL || config.getDisplayMode() == RackDisplayMode.BACK)
+         if (((config.getDisplayMode() == RackDisplayMode.FULL) && !rack.isFrontSideOnly()) || config.getDisplayMode() == RackDisplayMode.BACK)
             setRackRearWidget(new RackWidget(rackArea, SWT.NONE, rack, RackOrientation.REAR));
 
          scroller.setContent(rackArea);
@@ -204,7 +202,6 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
     */
    private void createPopupMenu()
    {
-      // Create menu manager.
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
       menuMgr.addMenuListener(new IMenuListener() {
@@ -214,18 +211,11 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
          }
       });
 
-      // Create menu.
       if (rackFrontWidget != null)
-      {
-         Menu menu = menuMgr.createContextMenu(rackFrontWidget);
-         rackFrontWidget.setMenu(menu);
-      }
-      
+         rackFrontWidget.setMenu(menuMgr.createContextMenu(rackFrontWidget));
+
       if (rackRearWidget != null)
-      {
-         Menu menu = menuMgr.createContextMenu(rackRearWidget);
-         rackRearWidget.setMenu(menu);
-      }
+         rackRearWidget.setMenu(menuMgr.createContextMenu(rackRearWidget));
 
       // Register menu for extension.
       viewPart.getSite().registerContextMenu(menuMgr, this);

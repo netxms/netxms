@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,8 @@ import org.netxms.client.objects.interfaces.HardwareEntity;
  */
 public class Rack extends GenericObject
 {
+   public final static int FRONT_SIDE_ONLY = 0x00010000;
+
 	private int height;
 	private boolean topBottomNumbering;
    private List<PassiveRackElement> passiveElements;
@@ -147,4 +149,14 @@ public class Rack extends GenericObject
             return e;
       return null;
 	}
+
+   /**
+    * Check if "front side only" flag is set for this rack.
+    *
+    * @return true if "front side only" flag is set for this rack
+    */
+   public boolean isFrontSideOnly()
+   {
+      return (flags & FRONT_SIDE_ONLY) != 0;
+   }
 }

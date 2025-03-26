@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -46,6 +47,7 @@ public class RackProperties extends ObjectPropertyPage
 	private Rack rack;
 	private LabeledSpinner rackHeight;
 	private Combo numberingScheme;
+   private Button checkFrontOnly;
 
    /**
     * Create new page.
@@ -118,6 +120,11 @@ public class RackProperties extends ObjectPropertyPage
       numberingScheme.add(i18n.tr("Top to bottom"));
       numberingScheme.select(rack.isTopBottomNumbering() ? 1 : 0);
       
+      checkFrontOnly = new Button(dialogArea, SWT.CHECK);
+      checkFrontOnly.setText(i18n.tr("&Front side only"));
+      checkFrontOnly.setSelection(rack.isFrontSideOnly());
+      checkFrontOnly.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
+
 		return dialogArea;
 	}
 
@@ -133,6 +140,7 @@ public class RackProperties extends ObjectPropertyPage
 		final NXCObjectModificationData md = new NXCObjectModificationData(rack.getObjectId());
 		md.setHeight(rackHeight.getSelection());
 		md.setRackNumberingTopBottom(numberingScheme.getSelectionIndex() == 1);
+      md.setObjectFlags(checkFrontOnly.getSelection() ? Rack.FRONT_SIDE_ONLY : 0, Rack.FRONT_SIDE_ONLY);
 
       final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Updating properties of rack {0}", rack.getObjectName()), null, messageArea) {
@@ -167,5 +175,6 @@ public class RackProperties extends ObjectPropertyPage
 		super.performDefaults();
 		rackHeight.setSelection(42);
 		numberingScheme.select(0);
+      checkFrontOnly.setSelection(false);
 	}
 }

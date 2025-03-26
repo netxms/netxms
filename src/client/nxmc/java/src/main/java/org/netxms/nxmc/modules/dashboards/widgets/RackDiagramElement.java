@@ -153,7 +153,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
 
          if (config.getDisplayMode() == RackDisplayMode.FULL || config.getDisplayMode() == RackDisplayMode.FRONT)
             setRackFrontWidget(new RackWidget(rackArea, SWT.NONE, rack, RackOrientation.FRONT, view));
-         if (config.getDisplayMode() == RackDisplayMode.FULL || config.getDisplayMode() == RackDisplayMode.BACK)
+         if (((config.getDisplayMode() == RackDisplayMode.FULL) && !rack.isFrontSideOnly()) || config.getDisplayMode() == RackDisplayMode.BACK)
             setRackRearWidget(new RackWidget(rackArea, SWT.NONE, rack, RackOrientation.REAR, view));
 
          scroller.setContent(rackArea);

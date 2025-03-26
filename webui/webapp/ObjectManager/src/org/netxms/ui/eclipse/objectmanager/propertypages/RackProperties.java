@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -44,8 +45,9 @@ public class RackProperties extends PropertyPage
 	private Rack rack;
 	private LabeledSpinner rackHeight;
 	private Combo numberingScheme;
-	
-	/* (non-Javadoc)
+   private Button checkFrontOnly;
+
+	/**
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
@@ -70,7 +72,7 @@ public class RackProperties extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       rackHeight.setLayoutData(gd);
-      
+
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -78,7 +80,12 @@ public class RackProperties extends PropertyPage
       numberingScheme.add(Messages.get().RackProperties_BottomTop);
       numberingScheme.add(Messages.get().RackProperties_TopBottom);
       numberingScheme.select(rack.isTopBottomNumbering() ? 1 : 0);
-      
+
+      checkFrontOnly = new Button(dialogArea, SWT.CHECK);
+      checkFrontOnly.setText("&Front side only");
+      checkFrontOnly.setSelection(rack.isFrontSideOnly());
+      checkFrontOnly.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
+
 		return dialogArea;
 	}
 
@@ -91,12 +98,13 @@ public class RackProperties extends PropertyPage
 	{
 		if (isApply)
 			setValid(false);
-		
+
 		final NXCObjectModificationData md = new NXCObjectModificationData(rack.getObjectId());
 		md.setHeight(rackHeight.getSelection());
 		md.setRackNumberingTopBottom(numberingScheme.getSelectionIndex() == 1);
-		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      md.setObjectFlags(checkFrontOnly.getSelection() ? Rack.FRONT_SIDE_ONLY : 0, Rack.FRONT_SIDE_ONLY);
+
+		final NXCSession session = ConsoleSharedData.getSession();
 		new ConsoleJob(String.format(Messages.get().RackProperties_UpdatingRackProperties, rack.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -127,9 +135,9 @@ public class RackProperties extends PropertyPage
 		}.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
@@ -137,23 +145,24 @@ public class RackProperties extends PropertyPage
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{
 		applyChanges(true);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+    */
 	@Override
 	protected void performDefaults()
 	{
 		super.performDefaults();
 		rackHeight.setSelection(42);
 		numberingScheme.select(0);
+      checkFrontOnly.setSelection(false);
 	}
 }
