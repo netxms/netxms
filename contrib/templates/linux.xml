@@ -25,7 +25,7 @@
 			<description></description>
 			<severity>3</severity>
 			<flags>1</flags>
-			<message>Low avalable physical memory (%&lt;{multipliers, units}currentValue&gt;)</message>
+			<message>Low available physical memory (%&lt;{units}currentValue&gt;)</message>
 			<tags></tags>
 		</event>
 		<event id="100030">
@@ -35,7 +35,7 @@
 			<description></description>
 			<severity>2</severity>
 			<flags>1</flags>
-			<message>High CPU I/O wait (%&lt;{multipliers, units}currentValue&gt;)</message>
+			<message>High CPU I/O wait (%&lt;{units}currentValue&gt;)</message>
 			<tags></tags>
 		</event>
 	</events>

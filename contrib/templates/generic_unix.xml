@@ -15,7 +15,7 @@
 			<description></description>
 			<severity>3</severity>
 			<flags>1</flags>
-			<message>High swap space usage (%&lt;{multipliers, units}currentValue&gt;)</message>
+			<message>High swap space usage (%&lt;{units}currentValue&gt;)</message>
 			<tags></tags>
 		</event>
 		<event id="100005">
@@ -25,7 +25,7 @@
 			<description></description>
 			<severity>2</severity>
 			<flags>1</flags>
-			<message>High CPU utilization (%&lt;{multipliers, units}currentValue&gt;)</message>
+			<message>High CPU utilization (%&lt;{units}currentValue&gt;)</message>
 			<tags></tags>
 		</event>
 		<event id="100004">

@@ -15,7 +15,7 @@
 			<description></description>
 			<severity>3</severity>
 			<flags>1</flags>
-			<message>Physical volume %&lt;instance&gt; is in %&lt;{multipliers, units}thresholdValue&gt; state</message>
+			<message>Physical volume %&lt;instance&gt; is in %&lt;thresholdValue&gt; state</message>
 			<tags></tags>
 		</event>
 		<event id="100023">
@@ -25,7 +25,7 @@
 			<description></description>
 			<severity>2</severity>
 			<flags>1</flags>
-			<message>%&lt;{multipliers, units}thresholdValue&gt; stalled partitions on physical volume %&lt;instance&gt;</message>
+			<message>%&lt;thresholdValue&gt; stalled partitions on physical volume %&lt;instance&gt;</message>
 			<tags></tags>
 		</event>
 		<event id="100022">

@@ -106,7 +106,7 @@
 			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>3</severity>
 			<flags>1</flags>
-			<message>Reading for a temperature probe %&lt;instance&gt; current: %&lt;{multipliers, units}currentValue&gt; treshold: %&lt;{multipliers, units}thresholdValue&gt;</message>
+			<message>Reading for a temperature probe %&lt;instance&gt; current: %&lt;{units}currentValue&gt; threshold: %&lt;{units}thresholdValue&gt;</message>
 			<tags></tags>
 		</event>
 		<event id="100023">
@@ -151,7 +151,7 @@
 		</event>
 		<event id="100027">
 			<guid>b118f8f2-2b43-e647-b688-75c9c6ec245e</guid>
-			<name>DC_DELL_HW_MEMMORY_OK</name>
+			<name>DC_DELL_HW_MEMORY_OK</name>
 			<code>100027</code>
 			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>0</severity>
@@ -181,7 +181,7 @@
 		</event>
 		<event id="100028">
 			<guid>da555df0-e72d-fa4c-a859-079371d5b56d</guid>
-			<name>DC_DELL_HW_MEMMORY</name>
+			<name>DC_DELL_HW_MEMORY</name>
 			<code>100028</code>
 			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>3</severity>
@@ -1082,15 +1082,15 @@
 							<function>0</function>
 							<condition>5</condition>
 							<value>3</value>
-							<activationEvent>DC_DELL_HW_MEMMORY</activationEvent>
-							<deactivationEvent>DC_DELL_HW_MEMMORY_OK</deactivationEvent>
+							<activationEvent>DC_DELL_HW_MEMORY</activationEvent>
+							<deactivationEvent>DC_DELL_HW_MEMORY_OK</deactivationEvent>
 							<sampleCount>1</sampleCount>
 							<repeatInterval>-1</repeatInterval>
 							<script></script>
 						</threshold>
 					</thresholds>
 					<perfTabSettings></perfTabSettings>
-					<instance>memmory</instance>
+					<instance>memory</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
 				<dci id="438">
