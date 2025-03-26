@@ -4076,11 +4076,10 @@ void ClientSession::changeObjectMgmtStatus(const NXCPMessage& request)
 				 (object->getObjectClass() != OBJECT_TEMPLATEGROUP) &&
 				 (object->getObjectClass() != OBJECT_TEMPLATEROOT))
 			{
-				bool bIsManaged = request.getFieldAsBoolean(VID_MGMT_STATUS);
-				object->setMgmtStatus(bIsManaged);
+				bool managed = request.getFieldAsBoolean(VID_MGMT_STATUS);
+				object->setMgmtStatus(managed);
 				msg.setField(VID_RCC, RCC_SUCCESS);
-            WriteAuditLog(AUDIT_OBJECTS, TRUE, m_userId, m_workstation, m_id, object->getId(),
-               _T("Object %s set to %s state"), object->getName(), bIsManaged ? _T("managed") : _T("unmanaged"));
+            writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Object %s set to %s state"), object->getName(), managed ? _T("managed") : _T("unmanaged"));
 			}
 			else
 			{

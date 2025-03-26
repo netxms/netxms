@@ -424,6 +424,43 @@ int H_ObjectExecuteScript(Context *context)
 }
 
 /**
+ * Handler for /v1/objects/:object-id/set-managed
+ */
+int H_ObjectSetManaged(Context *context)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(_T("object-id"));
+   if (objectId == 0)
+      return 400;
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+      return 404;
+
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_MODIFY))
+      return 403;
+
+   if ((object->getObjectClass() == OBJECT_TEMPLATE) ||
+       (object->getObjectClass() == OBJECT_TEMPLATEGROUP) ||
+       (object->getObjectClass() == OBJECT_TEMPLATEROOT))
+   {
+      context->setErrorResponse("Incompatible operation");
+      return 400;
+   }
+
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_ObjectSetManaged: empty request"));
+      return 400;
+   }
+
+   bool managed = json_object_get_boolean(request, "managed", false);
+   object->setMgmtStatus(managed);
+   context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Object %s set to %s state"), object->getName(), managed ? _T("managed") : _T("unmanaged"));
+   return 204;
+}
+
+/**
  * Handler for /v1/objects/:object-id/take-screenshot
  */
 int H_TakeScreenshot(Context *context)

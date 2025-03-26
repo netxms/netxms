@@ -46,6 +46,7 @@ int H_ObjectDetails(Context *context);
 int H_ObjectExecuteAgentCommand(Context *context);
 int H_ObjectExecuteScript(Context *context);
 int H_ObjectQuery(Context *context);
+int H_ObjectSetManaged(Context *context);
 int H_Objects(Context *context);
 int H_ObjectSearch(Context *context);
 int H_ObjectTools(Context *context);
@@ -213,6 +214,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/execute-script")
       .POST(H_ObjectExecuteScript)
+      .build();
+   RouteBuilder("v1/objects/:object-id/set-managed")
+      .POST(H_ObjectSetManaged)
       .build();
    RouteBuilder("v1/objects/:object-id/take-screenshot")
       .GET(H_TakeScreenshot)

@@ -30,6 +30,7 @@ import org.netxms.websvc.handlers.BindToHandler;
 import org.netxms.websvc.handlers.BusinessServiceChecks;
 import org.netxms.websvc.handlers.BusinessServiceTickets;
 import org.netxms.websvc.handlers.BusinessServiceUptime;
+import org.netxms.websvc.handlers.ChangeMgmtStateHandler;
 import org.netxms.websvc.handlers.ChangeZoneHandler;
 import org.netxms.websvc.handlers.DCObjectLastValue;
 import org.netxms.websvc.handlers.DCObjectPollHandler;
@@ -134,6 +135,7 @@ public class WebSvcApplication extends Application
       router.attach("/objects/{object-id}/object-tools/output/{id}", ObjectToolOutputHandler.class);
       router.attach("/objects/{object-id}/polls", Polls.class);
       router.attach("/objects/{object-id}/polls/output/{id}", PollsOutputHandler.class);
+      router.attach("/objects/{object-id}/set-managed", ChangeMgmtStateHandler.class);
       router.attach("/objects/{object-id}/tickets", BusinessServiceTickets.class);
       router.attach("/objects/{object-id}/unbind", UnbindHandler.class);
       router.attach("/objects/{object-id}/unbind-from", UnbindFromHandler.class);
