@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<formatVersion>5</formatVersion>
+	<nxslVersionV5>true</nxslVersionV5>
+	<server>
+		<version>5.1.0-rc326</version>
+		<buildTag>5.1-326-g2efb88b13b</buildTag>
+		<operatingSystem>Linux 6.8.0-55-generic</operatingSystem>
+	</server>
+	<description></description>
+	<events>
+	</events>
+	<templates>
+		<template id="912">
+			<guid>70bdf3e7-17ed-4377-a6a5-39342b56661d</guid>
+			<name>Interface Traffic Agent 32-bit counters</name>
+			<comments>{}Template to collect Network Traffic via NetXMS agent. For systems with 32-bit traffic counters. &#x0A;&#x0A;Set custom attribute `Template.InterfaceTraffic` to value `Yes` on nodes/containers to get this template applied automatically. &#x0A;&#x0A;DCIs are only added for interfaces with Expected state set to `UP`. &#x0A;&#x0A;You can exclude interfaces by having comma-separated list of their names in `Template.InterfaceTraffic.Exclude` custom attribute.&#x0A;</comments>
+			<path>
+				<element id="1">Interface Traffic</element>
+			</path>
+			<dataCollection>
+				<dci id="1751">
+					<guid>09dc5272-db34-4f1e-bf23-6458731b3b33</guid>
+					<name>Net.Interface.BytesIn({instance})</name>
+					<description>Inbound traffic on {instance-name}</description>
+					<dataType>7</dataType>
+					<transformedDataType>6</transformedDataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag>iface-inbound-bytes</systemTag>
+					<userTag></userTag>
+					<delta>2</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>8</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>b/s</unitName>
+					<multiplier>0</multiplier>
+					<allThresholdsRearmEvent>0</allThresholdsRearmEvent>
+					<transformation>return $1 * 8;</transformation>
+					<instance></instance>
+					<instanceDiscoveryData>Network.Interfaces</instanceDiscoveryData>
+					<instanceFilter>tracePrefix = &quot;      &quot;;&#x0A;interfaceTypes = [6, 7, 22]; // 6 - ethernetCsmacd, 7 - iso88023Csmacd, 22 - propPointToPointSerial&#x0A;&#x0A;interface = FindObject($1);&#x0A;if (interface == null) {PollerTrace(tracePrefix .. $1 .. &quot; skipped - could not find interface object&quot;); return false;}&#x0A;tracePrefix = tracePrefix .. interface.name .. &quot; (&quot; .. interface.ifIndex .. &quot;)&quot;;&#x0A;&#x0A;if (interface.isLoopback) {PollerTrace(tracePrefix .. &quot; skipped - is loopback&quot;); return false;}&#x0A;if (!(interface.ifType in interfaceTypes)) {PollerTrace(tracePrefix .. &quot; skipped - interface type&quot;); return false;}&#x0A;&#x0A;if (interface.expectedState != InterfaceExpectedState::UP) {PollerTrace(tracePrefix .. &quot; skipped - expected state of interface is not Up&quot;); return false;}&#x0A;&#x0A;attr = $object.getCustomAttribute(&quot;Template.InterfaceTraffic.Exclude&quot;);&#x0A;if (attr != null) {&#x0A;  exclude = attr.split(&quot;,&quot;, true);&#x0A;  if (interface.ifName in exclude) {&#x0A;    PollerTrace(tracePrefix .. interface.name .. &quot; skipped - interface listed in Template.InterfaceTraffic.Exclude custom attribute&quot;);&#x0A;    return false;&#x0A;  }&#x0A;}&#x0A;&#x0A;return [interface.ifIndex, interface.ifName, interface];</instanceFilter>
+				</dci>
+				<dci id="1752">
+					<guid>070048ea-8b5b-451a-bcba-f4dfd8c5e13d</guid>
+					<name>Net.Interface.BytesOut({instance})</name>
+					<description>Outbound traffic on {instance-name}</description>
+					<dataType>7</dataType>
+					<transformedDataType>6</transformedDataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag>iface-outbound-bytes</systemTag>
+					<userTag></userTag>
+					<delta>2</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>8</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>b/s</unitName>
+					<multiplier>0</multiplier>
+					<allThresholdsRearmEvent>0</allThresholdsRearmEvent>
+					<transformation>return $1 * 8;</transformation>
+					<instance></instance>
+					<instanceDiscoveryData>Network.Interfaces</instanceDiscoveryData>
+					<instanceFilter>interfaceTypes = [6, 7, 22]; // 6 - ethernetCsmacd, 7 - iso88023Csmacd, 22 - propPointToPointSerial&#x0A;&#x0A;interface = FindObject($1);&#x0A;if (interface == null) return false;&#x0A;&#x0A;if (interface.isLoopback) return false;&#x0A;if (!(interface.ifType in interfaceTypes)) return false;&#x0A;&#x0A;if (interface.expectedState != InterfaceExpectedState::UP) return false;&#x0A;&#x0A;attr = $object.getCustomAttribute(&quot;Template.InterfaceTraffic.Exclude&quot;);&#x0A;if (attr != null) {&#x0A;  exclude = attr.split(&quot;,&quot;, true);&#x0A;  if (interface.ifName in exclude) return false;&#x0A;}&#x0A;&#x0A;return [interface.ifIndex, interface.ifName, interface];</instanceFilter>
+				</dci>
+			</dataCollection>
+			<agentPolicies>
+			</agentPolicies>
+			<filter autoBind="true" autoUnbind="false">attr = $object.getCustomAttribute(&quot;Template.InterfaceTraffic&quot;);&#x0A;return attr != null and attr.toUpperCase() in [&quot;TRUE&quot;, &quot;YES&quot;, &quot;1&quot;] and classof($object) == &quot;Node&quot; and $node.isAgent and !$node.hasAgentIfXCounters;</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
+		</template>
+		<template id="909">
+			<guid>ff3938c0-674b-44e0-bde5-6167b82ebede</guid>
+			<name>Interface Traffic Agent 64-bit counters</name>
+			<comments>{}Template to collect Network Traffic via NetXMS agent. For systems with 64-bit traffic counters. &#x0A;&#x0A;Set custom attribute `Template.InterfaceTraffic` to value `Yes` on nodes/containers to get this template applied automatically.&#x0A;&#x0A;DCIs are only added for interfaces with Expected state set to `UP`. &#x0A;&#x0A;You can exclude interfaces by having comma-separated list of their names in `Template.InterfaceTraffic.Exclude` custom attribute.&#x0A;</comments>
+			<path>
+				<element id="1">Interface Traffic</element>
+			</path>
+			<dataCollection>
+				<dci id="1745">
+					<guid>8a42015f-9730-4785-a19b-f728500f2ea5</guid>
+					<name>Net.Interface.BytesOut64({instance})</name>
+					<description>Outbound traffic on {instance-name}</description>
+					<dataType>8</dataType>
+					<transformedDataType>6</transformedDataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag>iface-outbound-bits</systemTag>
+					<userTag></userTag>
+					<delta>2</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>8</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>b/s</unitName>
+					<multiplier>0</multiplier>
+					<allThresholdsRearmEvent>0</allThresholdsRearmEvent>
+					<transformation>return $1 * 8;</transformation>
+					<instance></instance>
+					<instanceDiscoveryData>Network.Interfaces</instanceDiscoveryData>
+					<instanceFilter>interfaceTypes = [6, 7, 22]; // 6 - ethernetCsmacd, 7 - iso88023Csmacd, 22 - propPointToPointSerial&#x0A;&#x0A;interface = FindObject($1);&#x0A;if (interface == null) return false;&#x0A;&#x0A;if (interface.isLoopback) return false;&#x0A;if (!(interface.ifType in interfaceTypes)) return false;&#x0A;&#x0A;if (interface.expectedState != InterfaceExpectedState::UP) return false;&#x0A;&#x0A;attr = $object.getCustomAttribute(&quot;Template.InterfaceTraffic.Exclude&quot;);&#x0A;if (attr != null) {&#x0A;  exclude = attr.split(&quot;,&quot;, true);&#x0A;  if (interface.ifName in exclude) return false;&#x0A;}&#x0A;&#x0A;return [interface.ifIndex, interface.ifName, interface];</instanceFilter>
+				</dci>
+				<dci id="1746">
+					<guid>6cf88a86-c400-4606-b09a-ec624e3397f6</guid>
+					<name>Net.Interface.BytesIn64({instance})</name>
+					<description>Inbound traffic on {instance-name}</description>
+					<dataType>8</dataType>
+					<transformedDataType>6</transformedDataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag>iface-inbound-bits</systemTag>
+					<userTag></userTag>
+					<delta>2</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>8</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>b/s</unitName>
+					<multiplier>0</multiplier>
+					<allThresholdsRearmEvent>0</allThresholdsRearmEvent>
+					<transformation>return $1 * 8;</transformation>
+					<instance></instance>
+					<instanceDiscoveryData>Network.Interfaces</instanceDiscoveryData>
+					<instanceFilter>tracePrefix = &quot;      &quot;;&#x0A;interfaceTypes = [6, 7, 22]; // 6 - ethernetCsmacd, 7 - iso88023Csmacd, 22 - propPointToPointSerial&#x0A;&#x0A;interface = FindObject($1);&#x0A;if (interface == null) {PollerTrace(tracePrefix .. $1 .. &quot; skipped - could not find interface object&quot;); return false;}&#x0A;tracePrefix = tracePrefix .. interface.name .. &quot; (&quot; .. interface.ifIndex .. &quot;)&quot;;&#x0A;&#x0A;if (interface.isLoopback) {PollerTrace(tracePrefix .. &quot; skipped - is loopback&quot;); return false;}&#x0A;if (!(interface.ifType in interfaceTypes)) {PollerTrace(tracePrefix .. &quot; skipped - interface type&quot;); return false;}&#x0A;&#x0A;if (interface.expectedState != InterfaceExpectedState::UP) {PollerTrace(tracePrefix .. &quot; skipped - expected state of interface is not Up&quot;); return false;}&#x0A;&#x0A;attr = $object.getCustomAttribute(&quot;Template.InterfaceTraffic.Exclude&quot;);&#x0A;if (attr != null) {&#x0A;  exclude = attr.split(&quot;,&quot;, true);&#x0A;  if (interface.ifName in exclude) {&#x0A;    PollerTrace(tracePrefix .. interface.name .. &quot; skipped - interface listed in Template.InterfaceTraffic.Exclude custom attribute&quot;);&#x0A;    return false;&#x0A;  }&#x0A;}&#x0A;&#x0A;return [interface.ifIndex, interface.ifName, interface];</instanceFilter>
+				</dci>
+			</dataCollection>
+			<agentPolicies>
+			</agentPolicies>
+			<filter autoBind="true" autoUnbind="false">attr = $object.getCustomAttribute(&quot;Template.InterfaceTraffic&quot;);&#x0A;return attr != null and attr.toUpperCase() in [&quot;TRUE&quot;, &quot;YES&quot;, &quot;1&quot;] and classof($object) == &quot;Node&quot; and $node.isAgent and $node.hasAgentIfXCounters;</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
+		</template>
+		<template id="911">
+			<guid>9ef33bb4-f02f-4c41-912a-2256019101d6</guid>
+			<name>Interface Traffic SNMP</name>
+			<comments>{}Template to collect Network Traffic via SNMP agent. Uses 32-bit traffic counters for interfaces with speed up to 20Mbps and 64-bit counters otherwise. &#x0A;&#x0A;Set custom attribute `Template.InterfaceTraffic` to value `Yes` on nodes/containers to get this template applied automatically.&#x0A;&#x0A;DCIs are only added for interfaces with Expected state set to `UP`. &#x0A;&#x0A;You can exclude interfaces by having comma-separated list of their names in `Template.InterfaceTraffic.Exclude` custom attribute.&#x0A;</comments>
+			<path>
+				<element id="1">Interface Traffic</element>
+			</path>
+			<dataCollection>
+				<dci id="1749">
+					<guid>2f9d47a3-cc2a-48e7-9702-d0d65653c967</guid>
+					<name>1.3.6.1.2.1.2.2.1.10.{instance}</name>
+					<description>Outbound traffic (32-bit counters) on {instance-name}</description>
+					<dataType>7</dataType>
+					<transformedDataType>6</transformedDataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag>iface-outbound-bits</systemTag>
+					<userTag></userTag>
+					<delta>2</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>8</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>b/s</unitName>
+					<multiplier>0</multiplier>
+					<allThresholdsRearmEvent>0</allThresholdsRearmEvent>
+					<transformation>return $1 * 8;</transformation>
+					<instance></instance>
+					<instanceDiscoveryData>Network.Interfaces</instanceDiscoveryData>
+					<instanceFilter>interfaceTypes = [6, 7, 22]; // 6 - ethernetCsmacd, 7 - iso88023Csmacd, 22 - propPointToPointSerial&#x0A;&#x0A;interface = FindObject($1);&#x0A;if (interface == null) return false; &#x0A;if (interface.isLoopback or interface.name == &quot;lo&quot;) return false;&#x0A;if (!(interface.ifType in interfaceTypes)) return false;&#x0A;&#x0A;if (interface.expectedState != InterfaceExpectedState::UP) return false;&#x0A;if ($node.hasIfXTable and interface.speed == 0) return false; &#x0A;if ($node.hasIfXTable and interface.speed &gt; 20000000) return false; &#x0A;&#x0A;attr = $object.getCustomAttribute(&quot;Template.InterfaceTraffic.Exclude&quot;);&#x0A;if (attr != null) {&#x0A;  exclude = attr.split(&quot;,&quot;, true);&#x0A;  if (interface.ifName in exclude) return false;&#x0A;}&#x0A;&#x0A;return [interface.ifIndex, interface.ifName, interface];</instanceFilter>
+				</dci>
+				<dci id="1750">
+					<guid>8e53dea8-232f-43f5-ad0e-47386cd368d0</guid>
+					<name>1.3.6.1.2.1.2.2.1.16.{instance}</name>
+					<description>Inbound traffic (32-bit counters) on {instance-name}</description>
+					<dataType>7</dataType>
+					<transformedDataType>6</transformedDataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag>iface-inbound-bits</systemTag>
+					<userTag></userTag>
+					<delta>2</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>8</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>b/s</unitName>
+					<multiplier>0</multiplier>
+					<allThresholdsRearmEvent>0</allThresholdsRearmEvent>
+					<transformation>return $1 * 8;</transformation>
+					<instance></instance>
+					<instanceDiscoveryData>Network.Interfaces</instanceDiscoveryData>
+					<instanceFilter>interfaceTypes = [6, 7, 22]; // 6 - ethernetCsmacd, 7 - iso88023Csmacd, 22 - propPointToPointSerial&#x0A;&#x0A;tracePrefix = &quot;      32-bit: &quot;;&#x0A;&#x0A;interface = FindObject($1);&#x0A;if (interface == null) {PollerTrace(tracePrefix .. $1 .. &quot; skipped - interface object not found&quot;); return false;}&#x0A;tracePrefix = tracePrefix .. interface.name .. &quot; (&quot; .. interface.ifIndex .. &quot;)&quot;;&#x0A;&#x0A;if (interface.isLoopback or interface.name == &quot;lo&quot;) {PollerTrace(tracePrefix .. &quot; skipped - is loopback&quot;); return false;}&#x0A;if (!(interface.ifType in interfaceTypes)) {PollerTrace(tracePrefix .. &quot; skipped - interface type&quot;); return false;}&#x0A;&#x0A;if (interface.expectedState != InterfaceExpectedState::UP) {PollerTrace(tracePrefix .. &quot; skipped - expected state of interface is not Up&quot;); return false;}&#x0A;if ($node.hasIfXTable and interface.speed == 0) {PollerTrace(tracePrefix .. &quot; skipped - IfXTable present and no speed information&quot;); return false;}&#x0A;if ($node.hasIfXTable and interface.speed &gt; 20000000) {PollerTrace(tracePrefix .. &quot; skipped - speed above 20MBps and IfXTable present&quot;); return false;}&#x0A;&#x0A;attr = $object.getCustomAttribute(&quot;Template.InterfaceTraffic.Exclude&quot;);&#x0A;if (attr != null) {&#x0A;  exclude = attr.split(&quot;,&quot;, true);&#x0A;  if (interface.ifName in exclude) {&#x0A;    PollerTrace(tracePrefix .. &quot; skipped - listed in Template.InterfaceTraffic.Exclude custom attribute&quot;);&#x0A;    return false;&#x0A;  }&#x0A;}&#x0A;&#x0A;PollerTrace(tracePrefix .. &quot; added/updated&quot;);&#x0A;return [interface.ifIndex, interface.ifName, interface];</instanceFilter>
+				</dci>
+				<dci id="2908">
+					<guid>43d82160-9ff8-4e4e-8e1b-e73ecfd450b9</guid>
+					<name>1.3.6.1.2.1.31.1.1.1.10.{instance}</name>
+					<description>Outbound traffic on {instance-name}</description>
+					<dataType>8</dataType>
+					<transformedDataType>6</transformedDataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag>iface-outbound-bits</systemTag>
+					<userTag></userTag>
+					<delta>2</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>8</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>b/s</unitName>
+					<multiplier>0</multiplier>
+					<allThresholdsRearmEvent>0</allThresholdsRearmEvent>
+					<transformation>return $1 * 8;</transformation>
+					<instance></instance>
+					<instanceDiscoveryData>Network.Interfaces</instanceDiscoveryData>
+					<instanceFilter>interfaceTypes = [6, 7, 22]; // 6 - ethernetCsmacd, 7 - iso88023Csmacd, 22 - propPointToPointSerial&#x0A;&#x0A;interface = FindObject($1);&#x0A;if (interface == null) return false; &#x0A;if (interface.isLoopback or interface.name == &quot;lo&quot;) return false;&#x0A;if (!(interface.ifType in interfaceTypes)) return false;&#x0A;&#x0A;if (!$node.hasIfXTable) return false; &#x0A;if (interface.expectedState != InterfaceExpectedState::UP) return false;&#x0A;if ($node.hasIfXTable and interface.speed != 0 and interface.speed &lt;= 20000000) return false; &#x0A;&#x0A;attr = $object.getCustomAttribute(&quot;Template.InterfaceTraffic.Exclude&quot;);&#x0A;if (attr != null) {&#x0A;  exclude = attr.split(&quot;,&quot;, true);&#x0A;  if (interface.ifName in exclude) return false;&#x0A;}&#x0A;&#x0A;return [interface.ifIndex, interface.ifName, interface];</instanceFilter>
+				</dci>
+				<dci id="2909">
+					<guid>40eec5a4-843e-4b95-bdfb-dd5d2894a981</guid>
+					<name>1.3.6.1.2.1.31.1.1.1.6.{instance}</name>
+					<description>Inbound traffic on {instance-name}</description>
+					<dataType>8</dataType>
+					<transformedDataType>6</transformedDataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag>iface-inbound-bits</systemTag>
+					<userTag></userTag>
+					<delta>2</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>8</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>b/s</unitName>
+					<multiplier>0</multiplier>
+					<allThresholdsRearmEvent>0</allThresholdsRearmEvent>
+					<transformation>return $1 * 8;</transformation>
+					<instance></instance>
+					<instanceDiscoveryData>Network.Interfaces</instanceDiscoveryData>
+					<instanceFilter>tracePrefix = &quot;      64-bit: &quot;;&#x0A;interfaceTypes = [6, 7, 22]; // 6 - ethernetCsmacd, 7 - iso88023Csmacd, 22 - propPointToPointSerial&#x0A;&#x0A;interface = FindObject($1);&#x0A;if (interface == null) {PollerTrace(tracePrefix .. $1 .. &quot; skipped - could not find interface object&quot;); return false;}&#x0A;tracePrefix = tracePrefix .. interface.name .. &quot; (&quot; .. interface.ifIndex .. &quot;)&quot;;&#x0A;&#x0A;if (interface.isLoopback or interface.name == &quot;lo&quot;) {PollerTrace(tracePrefix .. &quot; skipped - is loopback&quot;); return false;}&#x0A;if (!(interface.ifType in interfaceTypes)) {PollerTrace(tracePrefix .. &quot; skipped - interface type&quot;); return false;}&#x0A;&#x0A;if (!$node.hasIfXTable) {PollerTrace(tracePrefix .. &quot; skipped - IfXTable not available&quot;); return false;}&#x0A;if (interface.expectedState != InterfaceExpectedState::UP) {PollerTrace(tracePrefix .. &quot; skipped - expected state of interface is not Up&quot;); return false;}&#x0A;if ($node.hasIfXTable and interface.speed != 0 and interface.speed &lt;= 20000000) {PollerTrace(tracePrefix .. &quot; skipped - speed below 20MBps&quot;); return false;}&#x0A;&#x0A;attr = $object.getCustomAttribute(&quot;Template.InterfaceTraffic.Exclude&quot;);&#x0A;if (attr != null) {&#x0A;  exclude = attr.split(&quot;,&quot;, true);&#x0A;  if (interface.ifName in exclude) {&#x0A;    PollerTrace(tracePrefix .. interface.name .. &quot; skipped - interface listed in Template.InterfaceTraffic.Exclude custom attribute&quot;);&#x0A;    return false;&#x0A;  }&#x0A;}&#x0A;&#x0A;PollerTrace(tracePrefix .. &quot; added/updated&quot;);&#x0A;return [interface.ifIndex, interface.ifName, interface];</instanceFilter>
+				</dci>
+			</dataCollection>
+			<agentPolicies>
+			</agentPolicies>
+			<filter autoBind="true" autoUnbind="false">attr = $object.getCustomAttribute(&quot;Template.InterfaceTraffic&quot;);&#x0A;return attr != null and attr.toUpperCase() in [&quot;TRUE&quot;, &quot;YES&quot;, &quot;1&quot;] and classof($object) == &quot;Node&quot; and $node.isSNMP;</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
+		</template>
+	</templates>
+	<traps>
+	</traps>
+	<rules>
+	</rules>
+	<scripts>
+	</scripts>
+	<objectTools>
+	</objectTools>
+	<dciSummaryTables>
+	</dciSummaryTables>
+	<actions>
+	</actions>
+	<webServiceDefinitions>
+	</webServiceDefinitions>
+	<assetManagementSchema>
+	</assetManagementSchema>
+</configuration>
