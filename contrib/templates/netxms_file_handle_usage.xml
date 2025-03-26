@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<formatVersion>5</formatVersion>
+	<nxslVersionV5>true</nxslVersionV5>
+	<server>
+		<version>5.1.0-rc326</version>
+		<buildTag>5.1-326-g2efb88b13b</buildTag>
+		<operatingSystem>Linux 6.8.0-55-generic</operatingSystem>
+	</server>
+	<description></description>
+	<events>
+		<event id="100035">
+			<guid>1f3e6006-1488-420d-b70c-654df279d973</guid>
+			<name>DC_FILE_HANDLE_USAGE_HIGH</name>
+			<code>100035</code>
+			<description>Generated when threshold value reached for specific data collection item.&#x0A;Parameters are accessible via %&lt;...&gt; and can have &quot;m&quot; or &quot;multipliers&quot; and &quot;u&quot; or &quot;units&quot; format modifiers for value formatting (for example %&lt;{m,u}currentValue&gt;).&#x0A;&#x0A;Parameters:&#x0A;   1) dciName - Metric name&#x0A;   2) dciDescription - Item description&#x0A;   3) thresholdValue - Threshold value&#x0A;   4) currentValue - Actual value which is compared to threshold value&#x0A;   5) dciId - Data collection item ID&#x0A;   6) instance - Instance&#x0A;   7) isRepeatedEvent - Repeat flag&#x0A;   8) dciValue - Last collected DCI value&#x0A;   9) operation - Threshold&apos;s operation code&#x0A;   10) function - Threshold&apos;s function code&#x0A;   11) pollCount - Threshold&apos;s required poll count&#x0A;   12) thresholdDefinition - Threshold&apos;s textual definition</description>
+			<severity>3</severity>
+			<flags>1</flags>
+			<message>High file handle usage for %&lt;instance&gt; process (%&lt;currentValue&gt;)</message>
+			<tags></tags>
+		</event>
+		<event id="100038">
+			<guid>1081715d-1091-419b-a98d-4b6786da480e</guid>
+			<name>DC_FILE_HANDLE_USAGE_OK</name>
+			<code>100038</code>
+			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters are accessible via %&lt;...&gt; and can have &quot;m&quot; or &quot;multipliers&quot; and &quot;u&quot; or &quot;units&quot; format modifiers for value formatting (for example %&lt;{m,u}currentValue&gt;).&#x0D;&#x0A;&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   1) dciName - Metric name&#x0D;&#x0A;   2) dciDescription - Item description&#x0D;&#x0A;   3) dciId - Data collection item ID&#x0D;&#x0A;   4) instance - Instance&#x0D;&#x0A;   5) thresholdValue - Threshold value&#x0D;&#x0A;   6) currentValue - Actual value which is compared to threshold value&#x0D;&#x0A;   7) dciValue - Last collected DCI value&#x0D;&#x0A;   8) operation - Threshold&apos;s operation code&#x0D;&#x0A;   9) function - Threshold&apos;s function code&#x0D;&#x0A;   10) pollCount - Threshold&apos;s required poll count&#x0D;&#x0A;   11) thresholdDefinition - Threshold&apos;s textual definition</description>
+			<severity>0</severity>
+			<flags>1</flags>
+			<message>File handle usage for %&lt;instance&gt; process returned to normal (%&lt;currentValue&gt;)</message>
+			<tags></tags>
+		</event>
+	</events>
+	<templates>
+		<template id="1929">
+			<guid>b7732041-c276-4375-bc37-48799901eac5</guid>
+			<name>Agent File Handle Usage</name>
+			<comments></comments>
+			<path>
+				<element id="1">System</element>
+				<element id="2">NetXMS Agent</element>
+			</path>
+			<dataCollection>
+				<dci id="4869">
+					<guid>8ffde77f-2602-4717-89d2-86a63cd4a724</guid>
+					<name>Agent.FileHandleLimit</name>
+					<description>Agent: file handle limit</description>
+					<dataType>1</dataType>
+					<transformedDataType>6</transformedDataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<scheduleType>1</scheduleType>
+					<interval>86400</interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<userTag></userTag>
+					<delta>0</delta>
+					<flags>131072</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
+					<allThresholdsRearmEvent>0</allThresholdsRearmEvent>
+					<instance></instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
+				<dci id="4870">
+					<guid>7f131888-57e1-409a-9fe3-4ecf566bc51a</guid>
+					<name>Process.Handles(&quot;nxagentd&quot;)</name>
+					<description>Agent: file handles used</description>
+					<dataType>0</dataType>
+					<transformedDataType>6</transformedDataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<userTag></userTag>
+					<delta>0</delta>
+					<flags>131072</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
+					<allThresholdsRearmEvent>0</allThresholdsRearmEvent>
+					<thresholds>
+						<threshold id="1">
+							<function>6</function>
+							<condition>0</condition>
+							<value>80</value>
+							<activationEvent>DC_FILE_HANDLE_USAGE_HIGH</activationEvent>
+							<deactivationEvent>DC_FILE_HANDLE_USAGE_OK</deactivationEvent>
+							<sampleCount>1</sampleCount>
+							<repeatInterval>-1</repeatInterval>
+							<script>limit = GetDCIValueByName($node, &quot;Agent.FileHandleLimit&quot;);&#x0A;return limit != null and $1 &gt; limit * $2 / 100;</script>
+						</threshold>
+					</thresholds>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance>nxagentd</instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
+			</dataCollection>
+			<agentPolicies>
+			</agentPolicies>
+			<filter autoBind="true" autoUnbind="false">return classof($object) == &quot;Node&quot; &amp;&amp; $node.isAgent &amp;&amp; !($node.platformName like &quot;windows-*&quot;);</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
+		</template>
+		<template id="1433">
+			<guid>7fcbfe79-abf4-41ba-8677-09f2e1365ef1</guid>
+			<name>Server File Handle Usage</name>
+			<comments></comments>
+			<path>
+				<element id="1">System</element>
+				<element id="2">NetXMS Server</element>
+			</path>
+			<dataCollection>
+				<dci id="2639">
+					<guid>7f620810-258c-460c-b7ed-a7a156cdc095</guid>
+					<name>Process.Handles(&quot;netxmsd&quot;)</name>
+					<description>Server: file handles used</description>
+					<dataType>0</dataType>
+					<transformedDataType>6</transformedDataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<userTag></userTag>
+					<delta>0</delta>
+					<flags>131072</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
+					<allThresholdsRearmEvent>0</allThresholdsRearmEvent>
+					<thresholds>
+						<threshold id="1">
+							<function>6</function>
+							<condition>0</condition>
+							<value>80</value>
+							<activationEvent>DC_FILE_HANDLE_USAGE_HIGH</activationEvent>
+							<deactivationEvent>DC_FILE_HANDLE_USAGE_OK</deactivationEvent>
+							<sampleCount>1</sampleCount>
+							<repeatInterval>-1</repeatInterval>
+							<script>limit = $node.readInternalParameter(&quot;Server.FileHandleLimit&quot;);&#x0A;return limit != null and $1 &gt; limit * $2 / 100;</script>
+						</threshold>
+					</thresholds>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance>netxmsd</instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
+				<dci id="2643">
+					<guid>f1abb009-9f11-4efc-a415-c2e71de275d3</guid>
+					<name>Server.FileHandleLimit</name>
+					<description>Server: File handle limit</description>
+					<dataType>1</dataType>
+					<transformedDataType>6</transformedDataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<scheduleType>1</scheduleType>
+					<interval>86400</interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<userTag></userTag>
+					<delta>0</delta>
+					<flags>131072</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
+					<allThresholdsRearmEvent>0</allThresholdsRearmEvent>
+					<instance></instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
+			</dataCollection>
+			<agentPolicies>
+				<agentPolicy id="1">
+					<guid>efe53d4e-3259-4b08-bb8f-d974dc6f1fd0</guid>
+					<name>External metric for ulimit open files</name>
+					<type>AgentConfig</type>
+					<flags>0</flags>
+					<content>ExternalMetric=ulimit.openFiles:ulimit -Hn</content>
+				</agentPolicy>
+			</agentPolicies>
+			<filter autoBind="true" autoUnbind="false">return classof($object) == &quot;Node&quot; &amp;&amp; $node.isLocalMgmt &amp;&amp; !($node.platformName like &quot;windows-*&quot;);</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
+		</template>
+	</templates>
+	<traps>
+	</traps>
+	<rules>
+		<rule id="19">
+			<guid>4f7c2c1a-5adc-45d7-b328-bdce956bac29</guid>
+			<flags>7944</flags>
+			<alarmMessage>%m</alarmMessage>
+			<alarmImpact></alarmImpact>
+			<alarmKey>DC_THRESHOLD_%i_%&lt;dciId&gt;</alarmKey>
+			<rootCauseAnalysisScript></rootCauseAnalysisScript>
+			<alarmSeverity>5</alarmSeverity>
+			<alarmTimeout>0</alarmTimeout>
+			<alarmTimeoutEvent>43</alarmTimeoutEvent>
+			<downtimeTag></downtimeTag>
+			<script></script>
+			<actionScript></actionScript>
+			<comments>Generate alarm for high file handle usage</comments>
+			<sources>
+			</sources>
+			<sourceExclusions>
+			</sourceExclusions>
+			<events>
+				<event id="100035">
+					<name>DC_FILE_HANDLE_USAGE_HIGH</name>
+				</event>
+			</events>
+			<timeFrames>
+			</timeFrames>
+			<actions>
+			</actions>
+			<timerCancellations>
+			</timerCancellations>
+			<pStorageActions>
+			</pStorageActions>
+			<customAttributeActions>
+			</customAttributeActions>
+			<alarmCategories>
+			</alarmCategories>
+		</rule>
+	</rules>
+	<ruleOrdering>
+		<rule id="1">2d2c3d32-49d4-4e76-b6aa-782b30d90f28</rule>
+		<rule id="2">4fa20604-b56f-4f12-bb5d-2c3243a126c9</rule>
+		<rule id="3">45999e66-c16c-400d-8b79-63a0f8eb8958</rule>
+		<rule id="4">8537fa14-e824-435b-a1dd-be3e566b7f67</rule>
+		<rule id="5">2daa869f-9921-4f3e-9cb9-004c2f31f70a</rule>
+		<rule id="6">95d42ff2-6fe0-4b1c-9c7b-c18520393f9f</rule>
+		<rule id="7">6f46d451-ee66-4563-8747-d129877df24d</rule>
+		<rule id="8">727a0dca-ecc4-4490-bf4b-3fc8b5ff8cb4</rule>
+		<rule id="9">11176d3e-0149-448b-a5fe-2be764762775</rule>
+		<rule id="10">ecc3fb57-672d-489d-a0ef-4214ea896e0f</rule>
+		<rule id="11">5b8115f1-5c84-443a-9f88-18fc0b70f29e</rule>
+		<rule id="12">062228ef-c155-4669-a90a-603cae13240e</rule>
+		<rule id="13">943f5474-5614-44e1-820c-b8fe17bc4d0b</rule>
+		<rule id="14">9ce6b59e-e274-4c94-b314-4b4652c10c74</rule>
+		<rule id="15">e3120a33-216e-e048-aa3b-4f1a9f3f10fc</rule>
+		<rule id="16">bdc76d2e-967e-bf44-95a1-a229ef8b3ff4</rule>
+		<rule id="17">226de02d-9eb2-4ea1-a92c-2bdb1718f2ec</rule>
+		<rule id="18">02a21afe-c942-4953-8b5d-f463c597cff8</rule>
+		<rule id="19">4f7c2c1a-5adc-45d7-b328-bdce956bac29</rule>
+		<rule id="20">47fd5c32-b6c9-48b8-99fb-c389dde63bee</rule>
+		<rule id="21">dcdd6f93-2f9e-4c3e-97cb-95b6847f13ce</rule>
+		<rule id="22">d3acabe8-717d-4ceb-bb7f-498d5af898f2</rule>
+		<rule id="23">8e26af4b-e478-44c9-9c12-0b049ccb6c3c</rule>
+		<rule id="24">ea1dee96-b42e-499c-a992-0b0f9e4874b9</rule>
+		<rule id="25">f0c5a6b2-7427-45e5-8333-7d60d2b408e6</rule>
+		<rule id="26">b76f142a-6932-499e-aa6e-ac16cf8effb1</rule>
+		<rule id="27">ed3397a8-a496-4534-839b-5a6fc77c167c</rule>
+		<rule id="28">20a0f4a5-d90e-4961-ba88-a65b9ee45d07</rule>
+		<rule id="29">c6f66840-4758-420f-a27d-7bbf7b66a511</rule>
+		<rule id="30">9fa60260-c2ec-4371-b4e4-f5346b1d8400</rule>
+		<rule id="31">20ef861f-b8e4-4e04-898e-e57d13863661</rule>
+		<rule id="32">33f6193a-e103-4f5f-8bee-870bbcc08066</rule>
+		<rule id="33">417648af-5361-49a5-9471-6ef31e857b2d</rule>
+		<rule id="34">19bd89ba-8bb2-4915-8546-a1ecc650dedd</rule>
+		<rule id="35">cff7fe6b-2ad1-4c18-8a8f-4d397d44fe04</rule>
+		<rule id="36">68e102a3-58d3-4112-901c-f683356ba662</rule>
+		<rule id="37">68a629ef-c645-49e5-8a7b-c5e79308080e</rule>
+		<rule id="38">18507220-6a16-4e13-a6ba-141d907b924a</rule>
+		<rule id="39">8cca36cd-f821-43ae-8329-0eefe35df3b7</rule>
+		<rule id="40">404642a0-deb0-400d-b9f9-c86f5a83f7f5</rule>
+		<rule id="41">b8abb037-ab4a-4e05-adc4-9425ce440e4a</rule>
+		<rule id="42">2bb3df47-482b-4e4b-9b49-8c72c6b33011</rule>
+		<rule id="43">b517ca11-cdf8-4813-87fa-9a2ace070564</rule>
+		<rule id="44">bdd8f6b1-fe3a-4b20-bc0b-bb7507b264b2</rule>
+		<rule id="45">c19fbb37-98c9-43a5-90f2-7a54ba9116fa</rule>
+		<rule id="46">aa188673-049f-4c4d-8767-c1cf443c9547</rule>
+		<rule id="47">af00706c-b92a-4335-b441-190609c2494f</rule>
+		<rule id="48">9169a40b-cd9d-4328-b113-f690ef57773e</rule>
+		<rule id="49">81320995-d6db-4a3c-9670-12400eba4fe6</rule>
+		<rule id="50">96061edf-a46f-407a-a049-a55fa1ffb7e8</rule>
+		<rule id="51">75640293-d630-4bfc-9b5e-9655cf59fd00</rule>
+		<rule id="52">1499d2d3-2304-4bb1-823b-0c530cbb6224</rule>
+		<rule id="53">acbf02d5-3ff1-4235-a8a8-f85755b9a06b</rule>
+		<rule id="54">202d5b85-48fc-4b6e-9da9-53a6eb9a341d</rule>
+		<rule id="55">256c2abd-3e14-4e02-9606-7c78c77e1a78</rule>
+		<rule id="56">d4a41c71-bb4b-4fbd-83ac-6eea74a1db72</rule>
+		<rule id="57">b2ab7aac-d8bf-4399-bd16-62e2af566f98</rule>
+	</ruleOrdering>
+	<scripts>
+	</scripts>
+	<objectTools>
+	</objectTools>
+	<dciSummaryTables>
+	</dciSummaryTables>
+	<actions>
+	</actions>
+	<webServiceDefinitions>
+	</webServiceDefinitions>
+	<assetManagementSchema>
+	</assetManagementSchema>
+</configuration>
