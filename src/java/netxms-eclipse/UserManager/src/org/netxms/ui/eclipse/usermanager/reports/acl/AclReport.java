@@ -145,8 +145,8 @@ public class AclReport
       cell.setCellValue("Login");
       cell.setCellStyle(headerStyle);
 
-      cell = headerRow.createCell(UsersSheetCells.ACTIVE.ordinal());
-      cell.setCellValue("Active?");
+      cell = headerRow.createCell(UsersSheetCells.STATUS.ordinal());
+      cell.setCellValue("Status");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(UsersSheetCells.FULL_NAME.ordinal());
@@ -367,7 +367,7 @@ public class AclReport
       
       sheet.setColumnWidth(UsersSheetCells.ID.ordinal(), 2048);
       sheet.setColumnWidth(UsersSheetCells.LOGIN.ordinal(), 3072);
-      sheet.setColumnWidth(UsersSheetCells.ACTIVE.ordinal(), 2048);
+      sheet.setColumnWidth(UsersSheetCells.STATUS.ordinal(), 2048);
       sheet.setColumnWidth(UsersSheetCells.FULL_NAME.ordinal(), 6144);
       sheet.setColumnWidth(UsersSheetCells.DESCRIPTION.ordinal(), 6144);
       sheet.setColumnWidth(UsersSheetCells.ORIGIN.ordinal(), 2048);
@@ -379,7 +379,7 @@ public class AclReport
          HSSFRow row = sheet.createRow(rowNum.getAndIncrement());
          row.createCell(UsersSheetCells.ID.ordinal()).setCellValue(user.getId());
          row.createCell(UsersSheetCells.LOGIN.ordinal()).setCellValue(user.getName());
-         row.createCell(UsersSheetCells.ACTIVE.ordinal()).setCellValue(user.isDisabled() ? "YES" : "NO");
+         row.createCell(UsersSheetCells.STATUS.ordinal()).setCellValue(user.isDisabled() ? "Disabled" : "Active");
          row.createCell(UsersSheetCells.FULL_NAME.ordinal()).setCellValue(user.getFullName());
          row.createCell(UsersSheetCells.DESCRIPTION.ordinal()).setCellValue(user.getDescription());
          row.createCell(UsersSheetCells.ORIGIN.ordinal()).setCellValue((user.getFlags() & AbstractUserObject.LDAP_USER) != 0 ? "LDAP" : "Local");
