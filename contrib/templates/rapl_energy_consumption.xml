@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<formatVersion>5</formatVersion>
+	<nxslVersionV5>true</nxslVersionV5>
+	<server>
+		<version>5.1.0-rc326</version>
+		<buildTag>5.1-326-g2efb88b13b</buildTag>
+		<operatingSystem>Linux 6.8.0-55-generic</operatingSystem>
+	</server>
+	<description></description>
+	<events>
+	</events>
+	<templates>
+		<template id="816">
+			<guid>71df5e9c-6b82-43d2-8ff4-bca0906ab02a</guid>
+			<name>RAPL Energy Consumption</name>
+			<comments></comments>
+			<path>
+			</path>
+			<dataCollection>
+				<dci id="1671">
+					<guid>15c9e589-8238-46c1-afe7-00d986c1bf14</guid>
+					<name>System.EnergyConsumption.Total</name>
+					<description>Total power consumption</description>
+					<dataType>8</dataType>
+					<transformedDataType>5</transformedDataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<userTag></userTag>
+					<delta>2</delta>
+					<flags>131072</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>W</unitName>
+					<multiplier>0</multiplier>
+					<allThresholdsRearmEvent>0</allThresholdsRearmEvent>
+					<transformation>return FormatNumber($1 / 1000000, 1, 3); // uJ -&gt; J</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;0.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;24&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;1&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;Energy Consumption (J)&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;yAxisLabel&gt;&lt;/yAxisLabel&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
+				<dci id="1672">
+					<guid>b8a3b54f-700f-49bc-925a-032e51ec07bb</guid>
+					<name>System.EnergyConsumption.PowerZone({instance})</name>
+					<description>Power consumption for {instance}</description>
+					<dataType>8</dataType>
+					<transformedDataType>5</transformedDataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<userTag></userTag>
+					<delta>2</delta>
+					<flags>131072</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>1</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>W</unitName>
+					<multiplier>0</multiplier>
+					<allThresholdsRearmEvent>0</allThresholdsRearmEvent>
+					<transformation>return FormatNumber($1 / 1000000, 1, 3); // uJ -&gt; J</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;0.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;24&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;1&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;Energy Consumption (J)&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;yAxisLabel&gt;&lt;/yAxisLabel&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData>System.PowerZones</instanceDiscoveryData>
+				</dci>
+				<dci id="1673">
+					<guid>02e10f87-c7bc-4c75-ab7b-fa904a9f4279</guid>
+					<name>System.EnergyConsumption.Total</name>
+					<description>Total energy consumption for last minute</description>
+					<dataType>8</dataType>
+					<transformedDataType>5</transformedDataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<userTag></userTag>
+					<delta>1</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>J</unitName>
+					<multiplier>0</multiplier>
+					<allThresholdsRearmEvent>0</allThresholdsRearmEvent>
+					<transformation>return FormatNumber($1 / 1000000, 1, 3); // uJ -&gt; J</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;0.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;24&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;1&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;Energy Consumption (J)&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;yAxisLabel&gt;&lt;/yAxisLabel&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
+				<dci id="1674">
+					<guid>a7e7b378-0112-4c2e-a9c1-0f2f4d23bb46</guid>
+					<name>System.EnergyConsumption.PowerZone({instance})</name>
+					<description>Energy consumption for last minute for {instance}</description>
+					<dataType>8</dataType>
+					<transformedDataType>5</transformedDataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<userTag></userTag>
+					<delta>1</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>1</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>J</unitName>
+					<multiplier>0</multiplier>
+					<allThresholdsRearmEvent>0</allThresholdsRearmEvent>
+					<transformation>return FormatNumber($1 / 1000000, 1, 3); // uJ -&gt; J</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;0.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;24&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;1&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;Energy Consumption (J)&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;yAxisLabel&gt;&lt;/yAxisLabel&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData>System.PowerZones</instanceDiscoveryData>
+				</dci>
+			</dataCollection>
+			<agentPolicies>
+			</agentPolicies>
+			<filter autoBind="true" autoUnbind="false">if (classof($object) == &quot;Node&quot;) {&#x0A;  return $node.readAgentParameter(&quot;System.EnergyConsumption.Total&quot;) != null;&#x0A;}&#x0A;return false;</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
+		</template>
+	</templates>
+	<traps>
+	</traps>
+	<rules>
+	</rules>
+	<scripts>
+	</scripts>
+	<objectTools>
+	</objectTools>
+	<dciSummaryTables>
+	</dciSummaryTables>
+	<actions>
+	</actions>
+	<webServiceDefinitions>
+	</webServiceDefinitions>
+	<assetManagementSchema>
+	</assetManagementSchema>
+</configuration>
