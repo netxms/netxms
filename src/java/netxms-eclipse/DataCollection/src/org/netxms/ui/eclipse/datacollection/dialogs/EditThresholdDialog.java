@@ -258,8 +258,8 @@ public class EditThresholdDialog extends Dialog
       operation.add(Messages.get().EditThresholdDialog_NE);
       operation.add(Messages.get().EditThresholdDialog_LIKE);
       operation.add(Messages.get().EditThresholdDialog_NOTLIKE);
-      operation.add(i18n.tr("like (ignore case)"));
-      operation.add(i18n.tr("not like (ignore case)"));
+      operation.add("like (ignore case)");
+      operation.add("not like (ignore case)");
       operation.select((savedOperation != -1) ? savedOperation : threshold.getOperation());
       operation.setEnabled((function != Threshold.F_ERROR) && (function != Threshold.F_ANOMALY));
 
