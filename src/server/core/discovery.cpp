@@ -734,9 +734,9 @@ static bool AcceptNewNodeStage2(DiscoveredAddress *address)
             address->snmpTransport = nullptr;   // Transport will be deleted by NXSL object destructor
          }
          // TODO: make agent and SSH connection available in script
-         vm->setGlobalVariable("$node", vm->createValue(vm->createObject(&g_nxslDiscoveredNodeClass, &data)));
+         vm->setGlobalVariable("$node", vm->createValue(vm->createObject(&g_nxslDiscoveredNodeClass, data)));
 
-         NXSL_Value *param = vm->createValue(vm->createObject(&g_nxslDiscoveredNodeClass, &data));
+         NXSL_Value *param = vm->createValue(vm->createObject(&g_nxslDiscoveredNodeClass, data));
          if (vm->run(1, &param))
          {
             result = vm->getResult()->getValueAsBoolean();
