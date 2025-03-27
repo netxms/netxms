@@ -3221,7 +3221,7 @@ restart_status_poll:
          if (m_state & NSF_AGENT_UNREACHABLE)
          {
             // Use TCP ping to check if node actually unreachable if possible
-            if (m_ipAddress.isValidUnicast())
+            if (m_ipAddress.isValidUnicast() && (getEffectiveAgentProxy() == 0) && !(m_flags & NF_AGENT_OVER_TUNNEL_ONLY))
             {
                nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): using TCP ping on primary IP address"), m_name);
                sendPollerMsg(_T("Checking primary IP address with TCP ping on agent's port\r\n"));
@@ -3258,7 +3258,7 @@ restart_status_poll:
          if (m_state & NSF_ETHERNET_IP_UNREACHABLE)
          {
             // Use TCP ping to check if node actually unreachable if possible
-            if (m_ipAddress.isValidUnicast())
+            if (m_ipAddress.isValidUnicast() && (getEffectiveEtherNetIPProxy() == 0))
             {
                nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): using TCP ping on primary IP address"), m_name);
                sendPollerMsg(_T("Checking primary IP address with TCP ping on EtherNet/IP port\r\n"));
