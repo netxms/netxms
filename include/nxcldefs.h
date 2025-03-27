@@ -1132,6 +1132,8 @@ enum AggregationFunction
 #define OP_NE        5
 #define OP_LIKE      6
 #define OP_NOTLIKE   7
+#define OP_ILIKE     8  /* case-insensitive "like" */
+#define OP_INOTLIKE  9  /* case-insensitive "not like" */
 
 /**
  * DCI base units

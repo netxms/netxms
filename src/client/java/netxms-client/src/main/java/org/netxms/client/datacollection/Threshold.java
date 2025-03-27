@@ -45,9 +45,11 @@ public class Threshold
 	public static final int OP_NE       = 5;
 	public static final int OP_LIKE     = 6;
 	public static final int OP_NOTLIKE  = 7;
+   public static final int OP_ILIKE    = 8;
+   public static final int OP_INOTLIKE = 9;
 
    public static final String[] FUNCTION_NAMES = { "last(", "average(", "mean-deviation(", "diff(", "error(", "sum(", "script(", "abs-deviation(", "anomaly(" };
-   public static final String[] OPERATION_NAMES = { "<", "<=", "==", ">=", ">", "!=", "like", "not like" };
+   public static final String[] OPERATION_NAMES = { "<", "<=", "==", ">=", ">", "!=", "LIKE", "NOT LIKE", "ICASE LIKE", "ICASE NOT LIKE" };
 
 	private long id;
 	private int fireEvent;

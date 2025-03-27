@@ -237,6 +237,12 @@ bool DCTableCondition::check(Table *value, int row)
       case OP_NOTLIKE:
          result = !MatchString(m_value.getString(), value->getAsString(row, col, _T("")), true);
          break;
+      case OP_ILIKE:
+         result = MatchString(m_value.getString(), value->getAsString(row, col, _T("")), false);
+         break;
+      case OP_INOTLIKE:
+         result = !MatchString(m_value.getString(), value->getAsString(row, col, _T("")), false);
+         break;
       default:
          break;
    }

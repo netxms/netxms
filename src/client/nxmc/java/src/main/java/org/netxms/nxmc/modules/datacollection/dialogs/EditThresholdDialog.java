@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -263,6 +263,8 @@ public class EditThresholdDialog extends Dialog
       operation.add(i18n.tr("!= : not equal to"));
       operation.add(i18n.tr("like"));
       operation.add(i18n.tr("not like"));
+      operation.add(i18n.tr("like (ignore case)"));
+      operation.add(i18n.tr("not like (ignore case)"));
       operation.select((savedOperation != -1) ? savedOperation : threshold.getOperation());
       operation.setEnabled((function != Threshold.F_ERROR) && (function != Threshold.F_ANOMALY));
 

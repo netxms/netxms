@@ -117,7 +117,7 @@ Threshold::Threshold(const Threshold& src, bool shadowCopy) : m_value(src.m_valu
  */
 Threshold::Threshold(DB_RESULT hResult, int row, DCItem *relatedItem) : m_value(hResult, row, 1, 0, true)
 {
-   TCHAR textBuffer[MAX_EVENT_MSG_LENGTH];
+   wchar_t textBuffer[MAX_EVENT_MSG_LENGTH];
 
    m_id = DBGetFieldULong(hResult, row, 0);
    m_function = (BYTE)DBGetFieldLong(hResult, row, 3);
@@ -547,6 +547,16 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
             // This operation can be performed only on strings
             if (m_dataType == DCI_DT_STRING)
                match = !MatchString(tvalue.getString(), fvalue.getString(), true);
+            break;
+         case OP_ILIKE:
+            // This operation can be performed only on strings
+            if (m_dataType == DCI_DT_STRING)
+               match = MatchString(tvalue.getString(), fvalue.getString(), false);
+            break;
+         case OP_INOTLIKE:
+            // This operation can be performed only on strings
+            if (m_dataType == DCI_DT_STRING)
+               match = !MatchString(tvalue.getString(), fvalue.getString(), false);
             break;
          default:
             break;
@@ -1086,7 +1096,7 @@ void Threshold::reconcile(const Threshold& src)
 String Threshold::getTextualDefinition() const
 {
    static const TCHAR *functionNames[] = { _T("last("), _T("average("), _T("mean-deviation("), _T("diff("), _T("error("), _T("sum("), _T("script("), _T("abs-deviation("), _T("anomaly(") };
-   static const TCHAR *operationNames[] = { _T("<"), _T("<="), _T("=="), _T(">="), _T(">"), _T("!="), _T("like"), _T("not like") };
+   static const TCHAR *operationNames[] = { _T("<"), _T("<="), _T("=="), _T(">="), _T(">"), _T("!="), _T("LIKE"), _T("NOT LIKE"), _T("ICASE LIKE"), _T("ICASE NOT LIKE") };
 
    StringBuffer text(functionNames[m_function]);
    text.append(m_sampleCount);

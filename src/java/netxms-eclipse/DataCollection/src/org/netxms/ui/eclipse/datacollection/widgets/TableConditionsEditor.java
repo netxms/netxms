@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,7 +65,7 @@ public class TableConditionsEditor extends Composite
 		toolkit = new FormToolkit(getDisplay());
 		form = toolkit.createScrolledForm(this);
 		form.getBody().setLayout(new GridLayout());
-		
+
 		addColumnLink = toolkit.createImageHyperlink(form.getBody(), SWT.NONE);
 		addColumnLink.setText(Messages.get().TableConditionsEditor_Add);
 		addColumnLink.setImage(SharedIcons.IMG_ADD_OBJECT);
@@ -151,11 +151,11 @@ public class TableConditionsEditor extends Composite
 			super(parent, SWT.BORDER);
 
 			toolkit.adapt(this);
-			
+
 			GridLayout layout = new GridLayout();
 			layout.numColumns = 2;
 			setLayout(layout);
-			
+
 			content = toolkit.createComposite(this);
 			layout = new GridLayout();
 			layout.marginWidth = 0;
@@ -163,7 +163,7 @@ public class TableConditionsEditor extends Composite
 			layout.numColumns = 4;
 			content.setLayout(layout);
 			content.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-			
+
 			Composite buttons = toolkit.createComposite(this);
 			layout = new GridLayout();
 			layout.numColumns = 2;
@@ -196,12 +196,12 @@ public class TableConditionsEditor extends Composite
 			});
 
 		}
-		
+
 		/**
-		 * Get configured conditions
-		 * 
-		 * @return
-		 */
+       * Get configured conditions
+       * 
+       * @return configured conditions
+       */
 		public List<TableCondition> getConditions()
 		{
 			List<TableCondition> result = new ArrayList<TableCondition>(conditions.size());
@@ -276,10 +276,12 @@ public class TableConditionsEditor extends Composite
 			operation.add(Messages.get().EditThresholdDialog_NE);
 			operation.add(Messages.get().EditThresholdDialog_LIKE);
 			operation.add(Messages.get().EditThresholdDialog_NOTLIKE);
-			
+         operation.add(i18n.tr("like (ignore case)"));
+         operation.add(i18n.tr("not like (ignore case)"));
+
 			value = toolkit.createText(parent, "", SWT.BORDER); //$NON-NLS-1$
 			value.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-			
+
 			final ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.NONE);
 			link.setImage(SharedIcons.IMG_DELETE_OBJECT);
 			link.setToolTipText(Messages.get().TableConditionsEditor_DeleteCond);

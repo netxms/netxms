@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ import org.xnap.commons.i18n.I18n;
 public class TableConditionsEditor extends Composite
 {
    private I18n i18n = LocalizationHelper.getI18n(TableConditionsEditor.class);
-   
+
 	private ScrolledComposite scroller;
 	private Composite editorsArea;
 	private ImageHyperlink addColumnLink;
@@ -82,9 +82,9 @@ public class TableConditionsEditor extends Composite
 		editorsArea = new Composite(scroller, SWT.NONE);
       GridLayout layout = new GridLayout();
       editorsArea.setLayout(layout);
-      
+
       scroller.setContent(editorsArea);
-      
+
 		addColumnLink = new ImageHyperlink(editorsArea, SWT.NONE);
 		addColumnLink.setText(i18n.tr("Add..."));
 		addColumnLink.setImage(SharedIcons.IMG_ADD_OBJECT);
@@ -171,7 +171,7 @@ public class TableConditionsEditor extends Composite
 			GridLayout layout = new GridLayout();
 			layout.numColumns = 2;
 			setLayout(layout);
-			
+
 			content = new Composite(this, SWT.NONE);
 			layout = new GridLayout();
 			layout.marginWidth = 0;
@@ -179,7 +179,7 @@ public class TableConditionsEditor extends Composite
 			layout.numColumns = 4;
 			content.setLayout(layout);
 			content.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-			
+
 			Composite buttons = new Composite(this, SWT.NONE);
 			layout = new GridLayout();
 			layout.numColumns = 2;
@@ -212,13 +212,12 @@ public class TableConditionsEditor extends Composite
 			});
 
 		}
-		
+
 		/**
-		 * Get configured conditions
-		 * 
-		 * @returnyfk/#l5g7
-		 * 
-		 */
+       * Get configured conditions
+       * 
+       * @return configured conditions
+       */
 		public List<TableCondition> getConditions()
 		{
 			List<TableCondition> result = new ArrayList<TableCondition>(conditions.size());
@@ -291,10 +290,12 @@ public class TableConditionsEditor extends Composite
 			operation.add(i18n.tr("!= : not equal to"));
 			operation.add(i18n.tr("like"));
 			operation.add(i18n.tr("not like"));
-			
-			value = new Text(parent, SWT.BORDER); //$NON-NLS-1$
+         operation.add(i18n.tr("like (ignore case)"));
+         operation.add(i18n.tr("not like (ignore case)"));
+
+         value = new Text(parent, SWT.BORDER);
 			value.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-			
+
 			final ImageHyperlink link = new ImageHyperlink(parent, SWT.NONE);
 			link.setImage(SharedIcons.IMG_DELETE_OBJECT);
 			link.setToolTipText(i18n.tr("Delete condition"));

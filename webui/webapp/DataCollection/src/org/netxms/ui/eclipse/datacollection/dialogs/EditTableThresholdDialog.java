@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,9 +67,9 @@ public class EditTableThresholdDialog extends Dialog
 		newShell.setText(Messages.get().EditTableThresholdDialog_Title);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -102,7 +102,7 @@ public class EditTableThresholdDialog extends Dialog
 		gd.heightHint = 400;
 		conditionsEditor.setLayoutData(gd);
 		conditionsEditor.setConditions(threshold.getConditions());
-		
+
 		return dialogArea;
 	}
 
