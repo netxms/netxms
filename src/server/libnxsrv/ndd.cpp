@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -956,7 +956,7 @@ void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node,
    SNMP_PDU *response;
    if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
-      int32_t state = response->getVariable(0)->getValueAsInt();
+      int32_t state = (response->getNumVariables() > 0) ? response->getVariable(0)->getValueAsInt() : 0;
       switch(state)
       {
          case 2:
@@ -967,7 +967,8 @@ void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node,
          case 3:
             *adminState = static_cast<InterfaceAdminState>(state);
             // Check interface operational state
-            switch(response->getVariable(1)->getValueAsInt())
+            state = (response->getNumVariables() > 1) ? response->getVariable(1)->getValueAsInt() : 0;
+            switch(state)
             {
                case 1:
                   *operState = IF_OPER_STATE_UP;
