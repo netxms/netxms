@@ -297,7 +297,7 @@ public class ObjectBrowser extends NavigationView
     */
    private void createActions()
    {
-      actionMoveObject = new Action(i18n.tr("Move to another conatainer...")) {
+      actionMoveObject = new Action(i18n.tr("Move to another container...")) {
          @Override
          public void run()
          {
