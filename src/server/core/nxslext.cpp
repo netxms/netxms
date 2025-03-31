@@ -721,11 +721,13 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
-	NXSL_Object *object = argv[0]->getValueAsObject();
-	if (!object->getClass()->instanceOf(g_nxslNodeClass.getName()))
+	NXSL_Object *nxslObject = argv[0]->getValueAsObject();
+	if (!nxslObject->getClass()->instanceOf(g_nxslNetObjClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-   Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+	NetObj *object = static_cast<shared_ptr<NetObj>*>(nxslObject->getData())->get();
+	if (!object->isEventSource())
+	   return NXSL_ERR_BAD_CLASS;
 
 	// Event code
 	if (!argv[1]->isString())
@@ -744,7 +746,7 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM
 	bool success;
 	if (eventCode > 0)
 	{
-	   EventBuilder event(eventCode, *node);
+	   EventBuilder event(eventCode, *object);
 	   event.origin(EventOrigin::NXSL);
 
 		// User tag
