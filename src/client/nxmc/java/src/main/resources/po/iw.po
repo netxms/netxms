@@ -5993,7 +5993,7 @@ msgid "Cannot rename object %s"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/objects/views/ObjectBrowser.java:260
-msgid "Move to another conatainer"
+msgid "Move to another container"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/objects/views/ObjectBrowser.java:269

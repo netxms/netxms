@@ -335,7 +335,7 @@ public:
 };
 
 /**
- * DCI map conatainer
+ * DCI map container
  */
 class NetworkMapDCIContainer : public NetworkMapDCIElement
 {
