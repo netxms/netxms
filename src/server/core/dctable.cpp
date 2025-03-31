@@ -400,14 +400,23 @@ bool DCTable::transform(const shared_ptr<Table>& value)
 void DCTable::checkThresholds(Table *value)
 {
    lock();
-   for(int row = 0; row < value->getNumRows(); row++)
+   StringList instanceList;
+   for(int i = 0; i < m_thresholds->size(); i++)
    {
-      TCHAR instance[MAX_RESULT_LENGTH];
-      value->buildInstanceString(row, instance, MAX_RESULT_LENGTH);
-      for(int i = 0; i < m_thresholds->size(); i++)
+
+      DCTableThreshold *t = m_thresholds->get(i);
+      for(int row = 0; row < value->getNumRows(); row++)
       {
-		   DCTableThreshold *t = m_thresholds->get(i);
+         if (i == 0)
+         {
+            wchar_t instanceBuffer[MAX_RESULT_LENGTH];
+            value->buildInstanceString(row, instanceBuffer, MAX_RESULT_LENGTH);
+            instanceList.add(instanceBuffer);
+         }
+         const wchar_t *instance = instanceList.get(row);
+
          ThresholdCheckResult result = t->check(value, row, instance);
+
          switch(result)
          {
             case ThresholdCheckResult::ACTIVATED:
@@ -431,17 +440,33 @@ void DCTable::checkThresholds(Table *value)
                   .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
                   .param(_T("row"), row)
                   .param(_T("instance"), instance)
+                  .param(_T("instanceMissing"), false)
                   .post();
                NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), instance, result);
                break;
             case ThresholdCheckResult::ALREADY_ACTIVE:
-				   i = m_thresholds->size();  // Threshold condition still true, stop processing
+               i = m_thresholds->size();  // Threshold condition still true, stop processing
                break;
             default:
                break;
          }
       }
+      StringList missingInstances = t->removeMissingInstances(instanceList);
+      for (int i = 0; i < missingInstances.size(); i++)
+      {
+         EventBuilder(t->getDeactivationEvent(), m_ownerId)
+                          .dci(m_id)
+                          .param(_T("dciName"), m_name)
+                          .param(_T("dciDescription"), m_description)
+                          .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+                          .param(_T("row"), -1)
+                          .param(_T("instance"), missingInstances.get(i))
+                          .param(_T("instanceMissing"), true)
+                          .post();
+         NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), missingInstances.get(i), ThresholdCheckResult::DEACTIVATED);
+      }
    }
+
    unlock();
 }
 

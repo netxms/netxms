@@ -764,6 +764,25 @@ ThresholdCheckResult DCTableThreshold::check(Table *value, int row, const TCHAR 
 }
 
 /**
+ * Get missing instances and remove them form thresholds
+ */
+StringList DCTableThreshold::removeMissingInstances(const StringList &instanceList)
+{
+   StringList result;
+   StringList keys = m_instances.keys();
+   for (int i = 0; i < keys.size(); i++)
+   {
+      if (!instanceList.contains(keys.get(i)))
+      {
+         result.add(keys.get(i));
+         m_instances.remove(keys.get(i));
+      }
+   }
+
+   return result;
+}
+
+/**
  * Callback for cloning threshold instances
  */
 static EnumerationCallbackResult CloneThresholdInstances(const TCHAR *key, const DCTableThresholdInstance *value, StringObjectMap<DCTableThresholdInstance> *instances)

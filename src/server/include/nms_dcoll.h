@@ -775,6 +775,7 @@ public:
    void copyState(DCTableThreshold *src);
 
    ThresholdCheckResult check(Table *value, int row, const TCHAR *instance);
+   StringList removeMissingInstances(const StringList &instanceList);
    void saveStateBeforeMaintenance();
    void generateEventsAfterMaintenance(DCTable *table);
 
