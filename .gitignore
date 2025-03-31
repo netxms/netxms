@@ -331,3 +331,4 @@ cmake-build-debug/
 !gradle-wrapper.jar
 .cache/clangd/index/*
 compile_commands.json
+.aider*
