@@ -18,6 +18,8 @@
  */
 package org.netxms.nxmc.modules.nxsl.views;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -51,7 +53,131 @@ import org.xnap.commons.i18n.I18n;
 public class ScriptEditorView extends ConfigurationView
 {
    private final I18n i18n = LocalizationHelper.getI18n(ScriptEditorView.class);
-
+   
+   private static final Map<String, String> hintMap = new HashMap<String, String>() {
+      private static final long serialVersionUID = 1L;
+      {
+         put("Hook::StatusPoll", 
+               "Available global variables:\n" + 
+               "   $object - current object, one of 'NetObj' subclasses\n" + 
+               "   $node - current object if it is 'Node' class\n" + 
+               " \n" + 
+               "Expected return value:\n" + 
+               "   none - returned value is ignored\n");
+         put("Hook::ConfigurationPoll", 
+               "Available global variables:\n" + 
+               "   $object - current object, one of 'NetObj' subclasses\n" + 
+               "   $node - current object if it is 'Node' class\n" + 
+               " \n" + 
+               "Expected return value:\n" + 
+               "   none - returned value is ignored\n");
+         put("Hook::InstancePoll", 
+               "Available global variables:\n" + 
+               "   $object - current object, one of 'NetObj' subclasses\n" + 
+               "   $node - current object if it is 'Node' class\n" + 
+               " \n" + 
+               "  Expected return value:\n" + 
+               "   none - returned value is ignored\n");
+         put("Hook::TopologyPoll", 
+               "Available global variables:\n" + 
+               "   $node - current node, object of 'Node' type\n" + 
+               " \n" + 
+               "Expected return value:\n" + 
+               "   none - returned value is ignored\n");
+         put("Hook::CreateInterface", 
+               "Available global variables:\n" + 
+               "   $node - current node, object of 'Node' type\n" + 
+               "   $1 - current interface, object of 'Interface' type\n" + 
+               " \n" + 
+               "Expected return value:\n" + 
+               "   true/false - boolean - whether interface should be created\n");
+         put("Hook::AcceptNewNode", 
+               "Available global variables:\n" + 
+               "   $ipAddress - IP address of the node being processed of 'InetAddress' class\n" + 
+               "   $ipAddr - IP address of the node being processed as a text\n" + 
+               "   $ipNetMask - netmask of the node being processed as int\n" + 
+               "   $macAddress - network mask of 'MacAddress' class\n" + 
+               "   $macAddr - MAC address of the node being processed\n" + 
+               "   $zoneId - zone ID of the node being processed\n" + 
+               " \n" + 
+               "Expected return value:\n" + 
+               "   true/false - boolean - whether node processing should continue\n");
+         put("Hook::DiscoveryPoll", 
+               "Available global variables:\n" + 
+               "   $node - current node, object of 'Node' type\n" + 
+               " \n" + 
+               "Expected return value:\n" + 
+               "   none - returned value is ignored\n");
+         put("Hook::PostObjectCreate", 
+               "Available global variables:\n" + 
+               "   $object - current object, one of 'NetObj' subclasses\n" + 
+               "   $node - current object if it is 'Node' class\n" + 
+               " \n" + 
+               "Expected return value:\n" + 
+               "   none - returned value is ignored\n");
+         put("Hook::CreateSubnet", 
+               "Available global variables:\n" + 
+               "   $node - current node, object of 'Node' class\n" + 
+               "   $1 - current subnet, object of 'Subnet' class\n" + 
+               " \n" + 
+               "Expected return value:\n" + 
+               "   true/false - boolean - whether subnet should be created\n");
+         put("Hook::UpdateInterface", 
+               "Available global variables:\n" + 
+               "   $node - current node, object of 'Node' class\n" + 
+               "   $interface - current interface, object of 'Interface' class\n" + 
+               " \n" + 
+               "Expected return value:\n" + 
+               "   none - returned value is ignored\n");
+         put("Hook::EventProcessor", 
+               "Available global variables:\n" + 
+               "   $object - event source object, one of 'NetObj' subclasses\n" + 
+               "   $node - event source object if it is 'Node' class\n" + 
+               "   $event - event being processed (object of 'Event' class)\n" + 
+               " \n" + 
+               "Expected return value:\n" + 
+               "   none - returned value is ignored\n");
+         put("Hook::AlarmStateChange", 
+               "Available global variables:\n" + 
+               "   $alarm - alarm being processed (object of 'Alarm' class)\n" + 
+               "\n" + 
+               "Expected return value:\n" + 
+               "   none - returned value is ignored\n");
+         put("Hook::OpenUnboundTunnel", 
+               "Available global variables:\n" + 
+               "   $tunnel - incoming tunnel information (object of 'Tunnel' class)\n" + 
+               " \n" + 
+               "Expected return value:\n" + 
+               "   none - returned value is ignored\n");
+         put("Hook::OpenBoundTunnel", 
+               "Available global variables:\n" + 
+               "   $node - node this tunnel was bound to (object of 'Node' class)\n" + 
+               "   $tunnel - incoming tunnel information (object of 'Tunnel' class)\n" + 
+               " \n" + 
+               "Expected return value:\n" + 
+               "   none - returned value is ignored\n");
+         put("Hook::LDAPSynchronization", 
+               "Available global variables:\n" + 
+               "   $ldapObject - LDAP object being synchronized (object of 'LDAPObject' class)\n" + 
+               " \n" + 
+               "Expected return value:\n" + 
+               "   true/false - boolean - whether processing of this LDAP object should continue\n");
+         put("Hook::Login", 
+               "Available global variables:\n" + 
+               "   $user - user object (object of 'User' class)\n" + 
+               "   $session - session object (object of 'ClientSession' class)\n" + 
+               " \n" + 
+               "Expected return value:\n" + 
+               "   true/false - boolean - whether login for this session should continue\n");
+         put("Hook::RegisterForConfigurationBackup", 
+               "Available global variables:\n" + 
+               "   $node - node to be tested (object of 'Node' class)\n" + 
+               " \n" + 
+               "Expected return value:\n" + 
+               "   true/false - boolean - whether this node should be registered for configuration backup\n");
+      }
+   };
+   
    private NXCSession session;
    private ScriptEditor editor;
    private long scriptId;
@@ -125,7 +251,9 @@ public class ScriptEditorView extends ConfigurationView
    @Override
    protected void createContent(Composite parent)
    {
-      editor = new ScriptEditor(parent, SWT.NONE, SWT.H_SCROLL | SWT.V_SCROLL, false) {
+      String hint = hintMap.get(scriptName);
+      
+      editor = new ScriptEditor(parent, SWT.NONE, SWT.H_SCROLL | SWT.V_SCROLL, hint, false) {
          @Override
          protected void fillContextMenu(IMenuManager manager)
          {
