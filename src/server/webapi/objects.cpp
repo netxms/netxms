@@ -455,8 +455,9 @@ int H_ObjectSetMaintenance(Context *context)
    bool maintenance = json_object_get_boolean(request, "maintenance", false);
    if (maintenance)
    {
-      const TCHAR *comments = json_object_get_string_t(request, "comments", _T(""));
+      TCHAR *comments = json_object_get_string_t(request, "comments", _T(""));
       object->enterMaintenanceMode(context->getUserId(), comments);
+      MemFree(comments);
    }
    else
    {
