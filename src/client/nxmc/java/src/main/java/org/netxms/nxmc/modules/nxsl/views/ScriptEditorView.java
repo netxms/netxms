@@ -59,44 +59,44 @@ public class ScriptEditorView extends ConfigurationView
       {
          put("Hook::StatusPoll", 
                "Available global variables:\n" + 
-               "   $object - current object, one of 'NetObj' subclasses\n" + 
-               "   $node - current object if it is 'Node' class\n" + 
-               " \n" + 
-               "Expected return value:\n" + 
-               "   none - returned value is ignored\n");
+               "   $object - current object, one of 'NetObj' subclasses.\n" +
+               "   $node - current object if it is a 'Node' class. Not set for other object types.\n" +
+               " \n" +
+               "Expected return value:\n" +
+               "   none - return value is ignored.\n");
          put("Hook::ConfigurationPoll", 
-               "Available global variables:\n" + 
-               "   $object - current object, one of 'NetObj' subclasses\n" + 
-               "   $node - current object if it is 'Node' class\n" + 
-               " \n" + 
-               "Expected return value:\n" + 
-               "   none - returned value is ignored\n");
+               "Available global variables:\n" +
+               "   $object - current object, one of the 'NetObj' subclasses\n" +
+               "   $node - current object if it is a 'Node' class\n" +
+               " \n" +
+               "Expected return value:\n" +
+               "   none - return value is ignored\n");
          put("Hook::InstancePoll", 
-               "Available global variables:\n" + 
-               "   $object - current object, one of 'NetObj' subclasses\n" + 
-               "   $node - current object if it is 'Node' class\n" + 
-               " \n" + 
-               "  Expected return value:\n" + 
-               "   none - returned value is ignored\n");
+               "Available global variables:\n" +
+               "   $object - current object, one of the 'NetObj' subclasses\n" +
+               "   $node - current object if it is a 'Node' class\n" +
+               " \n" +
+               "Expected return value:\n" +
+               "   none - return value is ignored\n");
          put("Hook::TopologyPoll", 
                "Available global variables:\n" + 
-               "   $node - current node, object of 'Node' type\n" + 
+               "   $node - current node, an object of the 'Node' type\n" + 
                " \n" + 
                "Expected return value:\n" + 
-               "   none - returned value is ignored\n");
+               "   none - return value is ignored\n");
          put("Hook::CreateInterface", 
                "Available global variables:\n" + 
-               "   $node - current node, object of 'Node' type\n" + 
-               "   $1 - current interface, object of 'Interface' type\n" + 
+               "   $node - current node, an object of the 'Node' type\n" + 
+               "   $1 - current interface, an object of the 'Interface' type\n" + 
                " \n" + 
                "Expected return value:\n" + 
-               "   true/false - boolean - whether interface should be created\n");
+               "   true/false - boolean - whether the interface should be created\n");
          put("Hook::AcceptNewNode", 
                "Available global variables:\n" + 
-               "   $ipAddress - IP address of the node being processed of 'InetAddress' class\n" + 
-               "   $ipAddr - IP address of the node being processed as a text\n" + 
-               "   $ipNetMask - netmask of the node being processed as int\n" + 
-               "   $macAddress - network mask of 'MacAddress' class\n" + 
+               "   $ipAddress - IP address of the node being processed, an object of the 'InetAddress' class\n" + 
+               "   $ipAddr - IP address of the node being processed as text\n" + 
+               "   $ipNetMask - netmask of the node being processed as an integer\n" + 
+               "   $macAddress - MAC address, an object of the 'MacAddress' class\n" + 
                "   $macAddr - MAC address of the node being processed\n" + 
                "   $zoneId - zone ID of the node being processed\n" + 
                " \n" + 
@@ -104,74 +104,74 @@ public class ScriptEditorView extends ConfigurationView
                "   true/false - boolean - whether node processing should continue\n");
          put("Hook::DiscoveryPoll", 
                "Available global variables:\n" + 
-               "   $node - current node, object of 'Node' type\n" + 
+               "   $node - current node, an object of the 'Node' type\n" + 
                " \n" + 
                "Expected return value:\n" + 
-               "   none - returned value is ignored\n");
+               "   none - return value is ignored\n");
          put("Hook::PostObjectCreate", 
-               "Available global variables:\n" + 
-               "   $object - current object, one of 'NetObj' subclasses\n" + 
-               "   $node - current object if it is 'Node' class\n" + 
-               " \n" + 
-               "Expected return value:\n" + 
-               "   none - returned value is ignored\n");
+               "Available global variables:\n" +
+               "   $object - current object, one of the 'NetObj' subclasses\n" +
+               "   $node - current object if it is a 'Node' class\n" +
+               " \n" +
+               "Expected return value:\n" +
+               "   none - return value is ignored\n");
          put("Hook::CreateSubnet", 
                "Available global variables:\n" + 
-               "   $node - current node, object of 'Node' class\n" + 
-               "   $1 - current subnet, object of 'Subnet' class\n" + 
+               "   $node - current node, an object of the 'Node' class\n" + 
+               "   $1 - current subnet, an object of the 'Subnet' class\n" + 
                " \n" + 
                "Expected return value:\n" + 
-               "   true/false - boolean - whether subnet should be created\n");
+               "   true/false - boolean - whether the subnet should be created\n");
          put("Hook::UpdateInterface", 
                "Available global variables:\n" + 
-               "   $node - current node, object of 'Node' class\n" + 
-               "   $interface - current interface, object of 'Interface' class\n" + 
+               "   $node - current node, an object of the 'Node' class\n" + 
+               "   $interface - current interface, an object of the 'Interface' class\n" + 
                " \n" + 
                "Expected return value:\n" + 
-               "   none - returned value is ignored\n");
+               "   none - return value is ignored\n");
          put("Hook::EventProcessor", 
                "Available global variables:\n" + 
-               "   $object - event source object, one of 'NetObj' subclasses\n" + 
-               "   $node - event source object if it is 'Node' class\n" + 
-               "   $event - event being processed (object of 'Event' class)\n" + 
+               "   $object - event source object, one of the 'NetObj' subclasses\n" + 
+               "   $node - event source object if it is a 'Node' class\n" + 
+               "   $event - event being processed (an object of the 'Event' class)\n" + 
                " \n" + 
                "Expected return value:\n" + 
-               "   none - returned value is ignored\n");
+               "   none - return value is ignored\n");
          put("Hook::AlarmStateChange", 
                "Available global variables:\n" + 
-               "   $alarm - alarm being processed (object of 'Alarm' class)\n" + 
+               "   $alarm - alarm being processed (an object of the 'Alarm' class)\n" + 
                "\n" + 
                "Expected return value:\n" + 
-               "   none - returned value is ignored\n");
+               "   none - return value is ignored\n");
          put("Hook::OpenUnboundTunnel", 
                "Available global variables:\n" + 
-               "   $tunnel - incoming tunnel information (object of 'Tunnel' class)\n" + 
+               "   $tunnel - incoming tunnel information (an object of the 'Tunnel' class)\n" + 
                " \n" + 
                "Expected return value:\n" + 
-               "   none - returned value is ignored\n");
+               "   none - return value is ignored\n");
          put("Hook::OpenBoundTunnel", 
                "Available global variables:\n" + 
-               "   $node - node this tunnel was bound to (object of 'Node' class)\n" + 
-               "   $tunnel - incoming tunnel information (object of 'Tunnel' class)\n" + 
+               "   $node - node to which this tunnel was bound (an object of the 'Node' class)\n" + 
+               "   $tunnel - incoming tunnel information (an object of the 'Tunnel' class)\n" + 
                " \n" + 
                "Expected return value:\n" + 
-               "   none - returned value is ignored\n");
+               "   none - return value is ignored\n");
          put("Hook::LDAPSynchronization", 
                "Available global variables:\n" + 
-               "   $ldapObject - LDAP object being synchronized (object of 'LDAPObject' class)\n" + 
+               "   $ldapObject - LDAP object being synchronized (an object of the 'LDAPObject' class)\n" + 
                " \n" + 
                "Expected return value:\n" + 
-               "   true/false - boolean - whether processing of this LDAP object should continue\n");
+               "   true/false - boolean - whether the processing of this LDAP object should continue\n");
          put("Hook::Login", 
                "Available global variables:\n" + 
-               "   $user - user object (object of 'User' class)\n" + 
-               "   $session - session object (object of 'ClientSession' class)\n" + 
+               "   $user - user object (an object of the 'User' class)\n" + 
+               "   $session - session object (an object of the 'ClientSession' class)\n" + 
                " \n" + 
                "Expected return value:\n" + 
-               "   true/false - boolean - whether login for this session should continue\n");
+               "   true/false - boolean - whether the login for this session should continue\n");
          put("Hook::RegisterForConfigurationBackup", 
                "Available global variables:\n" + 
-               "   $node - node to be tested (object of 'Node' class)\n" + 
+               "   $node - node to be tested (an object of the 'Node' class)\n" + 
                " \n" + 
                "Expected return value:\n" + 
                "   true/false - boolean - whether this node should be registered for configuration backup\n");
