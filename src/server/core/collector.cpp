@@ -285,3 +285,37 @@ NXSL_Value *Collector::createNXSLObject(NXSL_VM *vm)
 {
    return vm->createValue(vm->createObject(&g_nxslCollectorClass, new shared_ptr<Collector>(self())));
 }
+
+/**
+ * Enter maintenance mode
+ */
+void Collector::enterMaintenanceMode(uint32_t userId, const TCHAR *comments)
+{
+   super::enterMaintenanceMode(userId, comments);
+
+   readLockChildList();
+   for(int i = 0; i < getChildList().size(); i++)
+   {
+      NetObj *object = getChildList().get(i);
+      if ((object->getObjectClass() == OBJECT_NODE) && (object->getStatus() != STATUS_UNMANAGED))
+         object->enterMaintenanceMode(userId, comments);
+   }
+   unlockChildList();
+}
+
+/**
+ * Leave maintenance mode
+ */
+void Collector::leaveMaintenanceMode(uint32_t userId)
+{
+   super::leaveMaintenanceMode(userId);
+
+   readLockChildList();
+   for(int i = 0; i < getChildList().size(); i++)
+   {
+      NetObj *object = getChildList().get(i);
+      if ((object->getObjectClass() == OBJECT_NODE) && (object->getStatus() != STATUS_UNMANAGED))
+         object->leaveMaintenanceMode(userId);
+   }
+   unlockChildList();
+}

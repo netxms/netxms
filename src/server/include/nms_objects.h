@@ -1477,6 +1477,7 @@ public:
    uint32_t getMaintenanceInitiator() const { return m_maintenanceInitiator; }
    virtual void enterMaintenanceMode(uint32_t userId, const TCHAR *comments);
    virtual void leaveMaintenanceMode(uint32_t userId);
+   virtual bool isMaintenanceApplicable() const { return false; }
 
    void fillMessage(NXCPMessage *msg, uint32_t userId, bool full = true);
    uint32_t modifyFromMessage(const NXCPMessage& msg);
@@ -1550,22 +1551,6 @@ public:
 
    unique_ptr<StructArray<ResponsibleUser>> getAllResponsibleUsers(const TCHAR *tag = nullptr) const;
    void setResponsibleUsersFromMessage(const NXCPMessage& msg);
-
-   bool isMaintenanceApplicable()
-   {
-      return (getObjectClass() == OBJECT_CONTAINER) ||
-               (getObjectClass() == OBJECT_COLLECTOR) ||
-               (getObjectClass() == OBJECT_CLUSTER) ||
-               (getObjectClass() == OBJECT_NODE) ||
-               (getObjectClass() == OBJECT_MOBILEDEVICE) ||
-               (getObjectClass() == OBJECT_ACCESSPOINT) ||
-               (getObjectClass() == OBJECT_CHASSIS) ||
-               (getObjectClass() == OBJECT_ZONE) ||
-               (getObjectClass() == OBJECT_SUBNET) ||
-               (getObjectClass() == OBJECT_NETWORK) ||
-               (getObjectClass() == OBJECT_SERVICEROOT) ||
-               (getObjectClass() == OBJECT_SENSOR);
-   }
 
    virtual json_t *toJson();
 
@@ -2682,6 +2667,7 @@ public:
 
    virtual void enterMaintenanceMode(uint32_t userId, const TCHAR *comments) override;
    virtual void leaveMaintenanceMode(uint32_t userId) override;
+   virtual bool isMaintenanceApplicable() const override { return true; }
 
    virtual bool lockForInstanceDiscoveryPoll() override;
 
@@ -4121,6 +4107,7 @@ public:
    }
 
    virtual bool showThresholdSummary() const override;
+   virtual bool isMaintenanceApplicable() const override { return true; }
 
    InetAddress getIpAddress() const { lockProperties(); auto a = m_ipAddress; unlockProperties(); return a; }
    bool isSyntheticMask() const { return (m_flags & SF_SYNTETIC_MASK) > 0; }
@@ -4170,6 +4157,7 @@ public:
    virtual int getObjectClass() const override { return OBJECT_SERVICEROOT; }
 
    virtual bool showThresholdSummary() const override;
+   virtual bool isMaintenanceApplicable() const override { return true; }
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 };
@@ -4263,6 +4251,8 @@ public:
    virtual bool showThresholdSummary() const override;
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
+
+   virtual bool isMaintenanceApplicable() const override { return true; }
 };
 
 /**
@@ -4488,6 +4478,7 @@ public:
    virtual void onObjectDelete(const NetObj& object) override;
 
    virtual bool showThresholdSummary() const override;
+   virtual bool isMaintenanceApplicable() const override { return true; }
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
@@ -4555,6 +4546,7 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
 
    virtual bool showThresholdSummary() const override;
+   virtual bool isMaintenanceApplicable() const override { return true; }
 
    void loadFromDatabase(DB_HANDLE hdb, DB_STATEMENT *prepartedStatements);
 };
@@ -4834,6 +4826,8 @@ public:
    }
 
    WirelessControllerBridge *getBridgeInterface() const;
+
+   virtual bool isMaintenanceApplicable() const override { return true; }
 };
 
 /**
@@ -4866,6 +4860,9 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+
+   virtual void enterMaintenanceMode(uint32_t userId, const TCHAR *comments) override;
+   virtual void leaveMaintenanceMode(uint32_t userId) override;
 
    virtual int getAdditionalMostCriticalStatus() override;
    virtual bool showThresholdSummary() const override;
