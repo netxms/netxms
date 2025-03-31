@@ -579,6 +579,93 @@ paths:
     servers:
       - url: http://127.0.0.1:8000
 
+  #maintenance
+  /objects/{object-id}/set-maintenance:
+    post:
+      operationId: changeMintenanceState
+      summary: Change object's maintenance state
+      description: Change object's maintenance state
+      parameters:   
+        - $ref: '#/components/parameters/objectId'
+      requestBody:
+        required: true
+        description: If maintenance should be enabled or disabled and comment
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                maintenance: 
+                  type: boolean
+                  description: true - if object should enter maintenance, and flase if object should leave maintenance
+                  example: true
+                comments: 
+                  type: string
+                  description: optional mintenance comment
+                  example: MAintenance comment
+      responses:
+        '200':
+          description: Object maintenance status changed
+        '401':
+          description: Access denied 
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                    "description": "Access denied",
+                    "error": 2
+                }
+      tags:
+        - Objects
+      servers:
+        - url: http://127.0.0.1:8000
+    servers:
+      - url: http://127.0.0.1:8000   
+
+  #managed
+  /objects/{object-id}/set-managed:
+    post:
+      operationId: changeManagedState
+      summary: Change object's managed state
+      description: Change object's managed state
+      parameters:   
+        - $ref: '#/components/parameters/objectId'
+      requestBody:
+        required: true
+        description: If object should be managed or unmanaged
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                managed: 
+                  type: boolean
+                  description: true - if object should enter managed, and flase if object should be unmanaged
+                  example: true
+      responses:
+        '200':
+          description: Object management status changed
+        '401':
+          description: Access denied 
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                    "description": "Access denied",
+                    "error": 2
+                }
+      tags:
+        - Objects
+      servers:
+        - url: http://127.0.0.1:8000
+    servers:
+      - url: http://127.0.0.1:8000   
+
+
 #network map anonymous access
   /objects/{object-id}/anonymous-access:
     post:
@@ -594,6 +681,10 @@ paths:
             application/json:
               schema:
                 type: object
+                properties:
+                  token:
+                    type: string
+                    description: Access token string 
               example:
                 {
                     "token": "5nohhaskul6kccbs2nobod2fiexnybkn"
@@ -1480,6 +1571,8 @@ components:
                 * UNMANAGED
                 * DISABLED
                 * TESTING
+          items:
+            type: string
         statusSingleThreshold:
           type: integer
 

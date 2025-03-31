@@ -379,6 +379,9 @@ paths:
                 parameters:
                   type: array
                   description: Optional list of parameters to be passed to the script
+                  items:
+                    type: string
+                    description: Single parameter entry
                 resultAsMap:
                   type: boolean
                   description: If true, result will always be presented as a map (JSON object)
@@ -409,6 +412,74 @@ paths:
                   reason:
                     type: string
                     description: Failure reason
+      security:
+        - BearerAuth: []
+
+  /objects/{object-id}/set-maintenance:
+    post:
+      summary: Make object enter or leave maintenance mode
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                maintenance:
+                  type: boolean
+                  description: true - if object should enter maintenance mode, false - if leave
+                comments:
+                  type: string
+                  description: Optional meintenance comments
+      responses:
+        '200':
+          description: Maintenance mode changed successfully
+        '400':
+          description: Invalid arguments
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have control access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+  /objects/{object-id}/set-managed:
+    post:
+      summary: Manage or unmanage object
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                managed:
+                  type: boolean
+                  description: true - for manage object, false - for object unmanage
+      responses:
+        '200':
+          description: Object successfully managed/unmanaged
+        '400':
+          description: Invalid arguments
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have control access to given object
+        '404':
+          description: Object with given ID does not exist
       security:
         - BearerAuth: []
   /objects/{object-id}/take-screenshot:

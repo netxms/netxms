@@ -1551,6 +1551,22 @@ public:
    unique_ptr<StructArray<ResponsibleUser>> getAllResponsibleUsers(const TCHAR *tag = nullptr) const;
    void setResponsibleUsersFromMessage(const NXCPMessage& msg);
 
+   bool isMaintenanceApplicable()
+   {
+      return (getObjectClass() == OBJECT_CONTAINER) ||
+               (getObjectClass() == OBJECT_COLLECTOR) ||
+               (getObjectClass() == OBJECT_CLUSTER) ||
+               (getObjectClass() == OBJECT_NODE) ||
+               (getObjectClass() == OBJECT_MOBILEDEVICE) ||
+               (getObjectClass() == OBJECT_ACCESSPOINT) ||
+               (getObjectClass() == OBJECT_CHASSIS) ||
+               (getObjectClass() == OBJECT_ZONE) ||
+               (getObjectClass() == OBJECT_SUBNET) ||
+               (getObjectClass() == OBJECT_NETWORK) ||
+               (getObjectClass() == OBJECT_SERVICEROOT) ||
+               (getObjectClass() == OBJECT_SENSOR);
+   }
+
    virtual json_t *toJson();
 
    static void linkObjects(const shared_ptr<NetObj>& parent, const shared_ptr<NetObj>& child);

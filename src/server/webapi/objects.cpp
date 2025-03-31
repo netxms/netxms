@@ -424,6 +424,49 @@ int H_ObjectExecuteScript(Context *context)
 }
 
 /**
+ * Handler for /v1/objects/:object-id/set-maintenance
+ */
+int H_ObjectSetMaintenance(Context *context)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(_T("object-id"));
+   if (objectId == 0)
+      return 400;
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+      return 404;
+
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_MODIFY))
+      return 403;
+
+   if (!object->isMaintenanceApplicable())
+   {
+      context->setErrorResponse("Incompatible operation");
+      return 400;
+   }
+
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_ObjectSetMaintenance: empty request"));
+      return 400;
+   }
+
+   bool maintenance = json_object_get_boolean(request, "maintenance", false);
+   if (maintenance)
+   {
+      const TCHAR *comments = json_object_get_string_t(request, "comments", _T(""));
+      object->enterMaintenanceMode(context->getUserId(), comments);
+   }
+   else
+   {
+      object->leaveMaintenanceMode(context->getUserId());
+   }
+   context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Object %s %s to maintenance state"), object->getName(), maintenance ? _T("entered") : _T("left"));
+   return 204;
+}
+
+/**
  * Handler for /v1/objects/:object-id/set-managed
  */
 int H_ObjectSetManaged(Context *context)

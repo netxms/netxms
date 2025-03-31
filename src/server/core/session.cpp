@@ -4113,18 +4113,7 @@ void ClientSession::enterMaintenanceMode(const NXCPMessage& request)
    {
       if (object->checkAccessRights(m_userId, OBJECT_ACCESS_MAINTENANCE))
       {
-         if ((object->getObjectClass() == OBJECT_CONTAINER) ||
-             (object->getObjectClass() == OBJECT_COLLECTOR) ||
-             (object->getObjectClass() == OBJECT_CLUSTER) ||
-             (object->getObjectClass() == OBJECT_NODE) ||
-             (object->getObjectClass() == OBJECT_MOBILEDEVICE) ||
-             (object->getObjectClass() == OBJECT_ACCESSPOINT) ||
-             (object->getObjectClass() == OBJECT_CHASSIS) ||
-             (object->getObjectClass() == OBJECT_ZONE) ||
-             (object->getObjectClass() == OBJECT_SUBNET) ||
-             (object->getObjectClass() == OBJECT_NETWORK) ||
-             (object->getObjectClass() == OBJECT_SERVICEROOT)||
-             (object->getObjectClass() == OBJECT_SENSOR))
+         if (object->isMaintenanceApplicable())
          {
             TCHAR *comments = request.getFieldAsString(VID_COMMENTS);
             object->enterMaintenanceMode(m_userId, comments);
@@ -4166,18 +4155,7 @@ void ClientSession::leaveMaintenanceMode(const NXCPMessage& request)
    {
       if (object->checkAccessRights(m_userId, OBJECT_ACCESS_MAINTENANCE))
       {
-         if ((object->getObjectClass() == OBJECT_CONTAINER) ||
-             (object->getObjectClass() == OBJECT_COLLECTOR) ||
-             (object->getObjectClass() == OBJECT_CLUSTER) ||
-             (object->getObjectClass() == OBJECT_NODE) ||
-             (object->getObjectClass() == OBJECT_MOBILEDEVICE) ||
-             (object->getObjectClass() == OBJECT_ACCESSPOINT) ||
-             (object->getObjectClass() == OBJECT_CHASSIS) ||
-             (object->getObjectClass() == OBJECT_ZONE) ||
-             (object->getObjectClass() == OBJECT_SUBNET) ||
-             (object->getObjectClass() == OBJECT_NETWORK) ||
-             (object->getObjectClass() == OBJECT_SERVICEROOT) ||
-             (object->getObjectClass() == OBJECT_SENSOR))
+         if (object->isMaintenanceApplicable())
          {
             object->leaveMaintenanceMode(m_userId);
             msg.setField(VID_RCC, RCC_SUCCESS);

@@ -47,6 +47,7 @@ import org.netxms.websvc.handlers.InfoHandler;
 import org.netxms.websvc.handlers.LastValues;
 import org.netxms.websvc.handlers.MapAccess;
 import org.netxms.websvc.handlers.NotificationHandler;
+import org.netxms.websvc.handlers.ChangeMaintenanceStateHandler;
 import org.netxms.websvc.handlers.ObjectToolOutputHandler;
 import org.netxms.websvc.handlers.ObjectTools;
 import org.netxms.websvc.handlers.Objects;
@@ -135,6 +136,7 @@ public class WebSvcApplication extends Application
       router.attach("/objects/{object-id}/object-tools/output/{id}", ObjectToolOutputHandler.class);
       router.attach("/objects/{object-id}/polls", Polls.class);
       router.attach("/objects/{object-id}/polls/output/{id}", PollsOutputHandler.class);
+      router.attach("/objects/{object-id}/set-maintenance", ChangeMaintenanceStateHandler.class);
       router.attach("/objects/{object-id}/set-managed", ChangeMgmtStateHandler.class);
       router.attach("/objects/{object-id}/tickets", BusinessServiceTickets.class);
       router.attach("/objects/{object-id}/unbind", UnbindHandler.class);
