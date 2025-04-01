@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,6 +53,7 @@ import org.netxms.client.ServerAction;
 import org.netxms.client.asset.AssetAttribute;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.client.datacollection.WebServiceDefinition;
+import org.netxms.client.events.ActionExecutionConfiguration;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.AbstractObject;
@@ -132,6 +133,7 @@ public class ExportFileBuilder extends ConfigurationView
 	private boolean modified = false;
 	private List<SnmpTrap> snmpTrapCache = null;
 	private List<EventProcessingPolicyRule> rulesCache = null;
+   private List<ServerAction> actionsCache = null;
 
    /**
     * Create configuration export view
@@ -309,7 +311,7 @@ public class ExportFileBuilder extends ConfigurationView
       layout.horizontalSpacing = 0;
 		clientArea.setLayout(layout);
       clientArea.setBackground(content.getBackground());
-		
+
       eventViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -499,7 +501,7 @@ public class ExportFileBuilder extends ConfigurationView
       column = new TableColumn(ruleViewer.getTable(), SWT.LEFT);
       column.setText("Rule Name");
       column.setWidth(250);
-      
+
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -541,13 +543,8 @@ public class ExportFileBuilder extends ConfigurationView
 						protected void run(IProgressMonitor monitor) throws Exception
 						{
 							rulesCache = session.getEventProcessingPolicy().getRules();
-							runInUIThread(new Runnable() {
-								@Override
-								public void run()
-								{
-									addRules();
-								}
-							});
+                     actionsCache = session.getActions();
+                     runInUIThread(() -> addRules());
 						}
 
 						@Override
@@ -563,7 +560,7 @@ public class ExportFileBuilder extends ConfigurationView
 				}
 			}
 		});
-		
+
       final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
 		linkRemove.setText(i18n.tr("Remove"));
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
@@ -1156,9 +1153,9 @@ public class ExportFileBuilder extends ConfigurationView
       i = 0;
       for(AssetAttribute a : assetAttributes.values())
          assetAttributesList[i++] = a.getName();
-      
+
       final String descriptionText = description.getText();
-      
+
       new Job(i18n.tr("Exporting and saving configuration"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -1256,7 +1253,7 @@ public class ExportFileBuilder extends ConfigurationView
 			setModified();
 		}
 	}
-	
+
 	/**
 	 * Add templates to list
 	 */
@@ -1301,7 +1298,7 @@ public class ExportFileBuilder extends ConfigurationView
 							if (c >= 100000)
 								eventCodes.add(c);
 						}
-						
+
 						for(Script s : session.getDataCollectionScripts(id))
 						   scriptList.put(s.getId(), s);
 					}
@@ -1325,7 +1322,7 @@ public class ExportFileBuilder extends ConfigurationView
 			}.start();
 		}
 	}
-	
+
 	/**
 	 * Add traps to list
 	 */
@@ -1365,6 +1362,7 @@ public class ExportFileBuilder extends ConfigurationView
 		if (dlg.open() == Window.OK)
 		{
          final Set<Integer> eventCodes = new HashSet<>();
+         final Set<Long> actionCodes = new HashSet<>();
 			for(EventProcessingPolicyRule r : dlg.getSelectedRules())
 			{
             rules.put(r.getGuid(), r);
@@ -1375,20 +1373,37 @@ public class ExportFileBuilder extends ConfigurationView
 						eventCodes.add(e);
 					}
 				}
+            for(ActionExecutionConfiguration ac : r.getActions())
+               actionCodes.add(ac.getActionId());
 			}
 			ruleViewer.setInput(rules.values().toArray());
 			setModified();
-			if (eventCodes.size() > 0)
+         if (!eventCodes.isEmpty())
 			{
             for(EventTemplate t : session.findMultipleEventTemplates(eventCodes))
 				{
 				   events.put(t.getCode(), t);
 				}
 				eventViewer.setInput(events.values().toArray());
-			};
+         }
+         if (!actionCodes.isEmpty())
+         {
+            for(Long actionId : actionCodes)
+            {
+               for(ServerAction action : actionsCache)
+               {
+                  if (action.getId() == actionId)
+                  {
+                     actions.put(actionId, action);
+                     break;
+                  }
+               }
+            }
+            actionViewer.setInput(actions.values().toArray());
+         }
 		}
 	}
-   
+
    /**
     * Add script to list
     */
@@ -1449,7 +1464,7 @@ public class ExportFileBuilder extends ConfigurationView
          setModified();
       }
    }
-   
+
    /**
     * Add web service definitions to list
     */
