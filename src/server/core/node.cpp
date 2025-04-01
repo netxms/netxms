@@ -172,7 +172,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_agentParameters = nullptr;
    m_agentTables = nullptr;
    m_driverParameters = nullptr;
-   m_smclpProperties = nullptr;
+   m_smclpMetrics = nullptr;
    m_pollerNode = 0;
    m_agentProxy = 0;
    m_snmpProxy = 0;
@@ -302,7 +302,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_agentParameters = nullptr;
    m_agentTables = nullptr;
    m_driverParameters = nullptr;
-   m_smclpProperties = nullptr;
+   m_smclpMetrics = nullptr;
    m_pollerNode = 0;
    m_agentProxy = newNodeData->agentProxyId;
    m_snmpProxy = newNodeData->snmpProxyId;
@@ -392,7 +392,7 @@ Node::~Node()
    delete m_agentParameters;
    delete m_agentTables;
    delete m_driverParameters;
-   delete m_smclpProperties;
+   delete m_smclpMetrics;
    MemFree(m_sysDescription);
    delete m_routingTable;
    delete m_vrrpInfo;
@@ -6298,13 +6298,13 @@ bool Node::confPollSmclp()
    if (success && !(m_flags & NF_DISABLE_SMCLP_PROPERTIES))
    {
       sendPollerMsg(_T("   Reading list of available SM-CLP targets and properties...\r\n"));
-      StringList *parameters = getAvailableMetricFromSmclp();
+      StringList *metrics = getAvailableMetricFromSmclp();
       lockProperties();
-      delete m_smclpProperties;
-      m_smclpProperties = parameters;
-      if (m_smclpProperties != nullptr)
+      delete m_smclpMetrics;
+      m_smclpMetrics = metrics;
+      if (m_smclpMetrics != nullptr)
       {
-         sendPollerMsg(POLLER_INFO _T("   %d SM-CLP metrics read\r\n"), m_smclpProperties->size());
+         sendPollerMsg(POLLER_INFO _T("   %d SM-CLP metrics read\r\n"), m_smclpMetrics->size());
       }
       else
       {
@@ -7732,20 +7732,24 @@ bool Node::getDataFromSmclp(const wchar_t *command, StringBuffer *output)
       shared_ptr<AgentConnectionEx> conn = proxy->acquireProxyConnection(ProxyType::SMCLP_PROXY, false);
       if (conn != nullptr)
       {
-         StringList parameterList;
-         TCHAR ipAddr[64];
-         parameterList.add(getIpAddress().toString(ipAddr));
-         parameterList.add(getSshPort());
-         parameterList.add(getSshLogin());
-         parameterList.add(getSshPassword());
-         parameterList.add(command);
-         parameterList.add(getSshKeyId());
+         StringList arguments;
 
-         rcc = conn->executeCommand(_T("SSH.Command"), parameterList, true,
-            [](ActionCallbackEvent event, const TCHAR *text, void *context) {
-            if (event == ACE_DATA)
-               static_cast<StringBuffer*>(context)->append(text);
-         }, output);
+         lockProperties();
+         wchar_t ipAddr[64];
+         arguments.add(m_ipAddress.toString(ipAddr));
+         arguments.add(m_sshPort);
+         arguments.add(m_sshLogin);
+         arguments.add(m_sshPassword);
+         arguments.add(command);
+         arguments.add(m_sshKeyId);
+         unlockProperties();
+
+         rcc = conn->executeCommand(_T("SSH.Command"), arguments, true,
+            [] (ActionCallbackEvent event, const TCHAR *text, void *context) -> void
+            {
+               if (event == ACE_DATA)
+                  static_cast<StringBuffer*>(context)->append(text);
+            }, output);
       }
    }
    return rcc == ERR_SUCCESS;
@@ -7754,7 +7758,7 @@ bool Node::getDataFromSmclp(const wchar_t *command, StringBuffer *output)
 /**
  * Get item's value via SM-CLP protocol
  */
-DataCollectionError Node::getMetricFromSmclp(const TCHAR *param, TCHAR *buffer, size_t size)
+DataCollectionError Node::getMetricFromSmclp(const wchar_t *metric, wchar_t *buffer, size_t size)
 {
    DataCollectionError result = DCE_COLLECTION_ERROR;
 
@@ -7764,46 +7768,46 @@ DataCollectionError Node::getMetricFromSmclp(const TCHAR *param, TCHAR *buffer, 
    if ((m_state & DCSF_UNREACHABLE) || (m_state & NSF_SSH_UNREACHABLE))
       return DCE_COMM_ERROR;
 
-   if (wcsspn(param, SMCLP_ALLOWED_SYMBOLS) != wcslen(param))
+   if (wcsspn(metric, SMCLP_ALLOWED_SYMBOLS) != wcslen(metric))
       return DCE_NOT_SUPPORTED;
 
    wchar_t path[MAX_PARAM_NAME];
-   wcslcpy(path, param, MAX_PARAM_NAME);
-   TCHAR *attr = _tcsrchr(path, L'/');
-   if (attr == nullptr)
+   wcslcpy(path, metric, MAX_PARAM_NAME);
+   wchar_t *property = wcsrchr(path, L'/');
+   if (property == nullptr)
       return DCE_NOT_SUPPORTED;
 
-   *attr = L' ';
-   attr++;
+   *property = L' ';
+   property++;
 
    StringBuffer output;
    StringBuffer command(L"show ");
    command.append(path);
    if (getDataFromSmclp(command, &output))
    {
-      wcscat(attr, L"=");
+      wcscat(property, L"=");
 
-      ssize_t attribute = output.find(attr);
-      if (attribute == -1)
+      ssize_t propertyIndex = output.find(property);
+      if (propertyIndex == -1)
          return DCE_COLLECTION_ERROR;
 
-      ssize_t paramSart = attribute + wcslen(attr);
-      ssize_t paramEnd = output.find(L"\n", paramSart);
-      if (attribute == -1)
+      ssize_t valueSart = propertyIndex + wcslen(property);
+      ssize_t valueEnd = output.find(L"\n", valueSart);
+      if (propertyIndex == -1)
          return DCE_COLLECTION_ERROR;
 
-      _tcslcpy(buffer, output + paramSart, MIN(size, paramEnd - paramSart));
+      wcslcpy(buffer, output + valueSart, MIN(size, valueEnd - valueSart));
       result = DCE_SUCCESS;
    }
 
-   nxlog_debug_tag(_T("dc.smclp"), 7, _T("Node(%s)->getMetricFromSmclp(%s): result=%d"), m_name, param, result);
+   nxlog_debug_tag(_T("dc.smclp"), 7, _T("Node(%s)->getMetricFromSmclp(%s): result=%d"), m_name, metric, result);
    return result;
 }
 
 /**
  * Get list of targets for provided path
  */
-DataCollectionError Node::getTargetListFromSmclp(const TCHAR *param, StringList **list)
+DataCollectionError Node::getTargetListFromSmclp(const wchar_t *target, StringList **list)
 {
    *list = nullptr;
    DataCollectionError result = DCE_COLLECTION_ERROR;
@@ -7814,13 +7818,13 @@ DataCollectionError Node::getTargetListFromSmclp(const TCHAR *param, StringList 
    if ((m_state & DCSF_UNREACHABLE) || (m_state & NSF_SSH_UNREACHABLE))
       return DCE_COMM_ERROR;
 
-   if (wcsspn(param, SMCLP_ALLOWED_SYMBOLS) != wcslen(param))
+   if (wcsspn(target, SMCLP_ALLOWED_SYMBOLS) != wcslen(target))
       return DCE_NOT_SUPPORTED;
 
    StringBuffer output;
 
    StringBuffer command(L"show ");
-   command.append(param);
+   command.append(target);
    if (getDataFromSmclp(command, &output))
    {
       if (!output.contains(L"Properties"))
@@ -7847,14 +7851,14 @@ DataCollectionError Node::getTargetListFromSmclp(const TCHAR *param, StringList 
       result = DCE_SUCCESS;
    }
 
-   nxlog_debug_tag(_T("dc.smclp"), 7, _T("Node(%s)->getTargetListFromSmclp(%s): result=%d"), m_name, param, result);
+   nxlog_debug_tag(_T("dc.smclp"), 7, _T("Node(%s)->getTargetListFromSmclp(%s): result=%d"), m_name, target, result);
    return result;
 }
 
 /**
  * Get list of properties for provided path
  */
-DataCollectionError Node::getPropertyListFromSmclp(const TCHAR *param, StringList **list)
+DataCollectionError Node::getPropertyListFromSmclp(const wchar_t *target, StringList **list)
 {
    *list = nullptr;
    DataCollectionError result = DCE_COLLECTION_ERROR;
@@ -7865,13 +7869,13 @@ DataCollectionError Node::getPropertyListFromSmclp(const TCHAR *param, StringLis
    if ((m_state & DCSF_UNREACHABLE) || (m_state & NSF_SSH_UNREACHABLE))
       return DCE_COMM_ERROR;
 
-   if (wcsspn(param, SMCLP_ALLOWED_SYMBOLS) != wcslen(param))
+   if (wcsspn(target, SMCLP_ALLOWED_SYMBOLS) != wcslen(target))
       return DCE_NOT_SUPPORTED;
 
    StringBuffer output;
 
    StringBuffer command(L"show ");
-   command.append(param);
+   command.append(target);
    if (getDataFromSmclp(command, &output))
    {
       if (!output.contains(L"Verbs"))
@@ -7898,7 +7902,7 @@ DataCollectionError Node::getPropertyListFromSmclp(const TCHAR *param, StringLis
       result = DCE_SUCCESS;
    }
 
-   nxlog_debug_tag(_T("dc.smclp"), 7, _T("Node(%s)->getPropertyListFromSmclp(%s): result=%d"), m_name, param, result);
+   nxlog_debug_tag(_T("dc.smclp"), 7, _T("Node(%s)->getPropertyListFromSmclp(%s): result=%d"), m_name, target, result);
    return result;
 }
 
@@ -7912,10 +7916,10 @@ StringList *Node::getAvailableMetricFromSmclp()
       return nullptr;
 
    StringBuffer output;
-   StringList *elements = nullptr;
+   StringList *metrics = nullptr;
    if (getDataFromSmclp(L"show -a", &output))
    {
-      elements = new StringList();
+      metrics = new StringList();
       StringList currentElements;
       int state = 0;
       StringBuffer root;
@@ -7952,10 +7956,10 @@ StringList *Node::getAvailableMetricFromSmclp()
                   currentElements.add(sb);
                }
                break;
-            case 3: //cehck if element is dynamic
-               if (!string.contains(L"delete")) //ignore dynamic parameters
+            case 3: // check if target is dynamic
+               if (!string.contains(L"delete")) // ignore dynamic target properties
                {
-                  elements->addAll(currentElements);
+                  metrics->addAll(currentElements);
                }
                currentElements.clear();
                state = 0;
@@ -7965,7 +7969,7 @@ StringList *Node::getAvailableMetricFromSmclp()
    }
 
    nxlog_debug_tag(_T("dc.smclp"), 7, _T("Node::getAvailableMetricFromSMCLP(%s)"), m_name);
-   return elements;
+   return metrics;
 }
 
 /**
@@ -8863,7 +8867,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       }
       else if (MatchString(_T("Server.PDS.DriverStat(*)"), name, false))
       {
-         TCHAR driver[64], metric[64];
+         wchar_t driver[64], metric[64];
          AgentGetParameterArg(name, 1, driver, 64);
          AgentGetParameterArg(name, 2, metric, 64);
          rc = GetPerfDataStorageDriverMetric(driver, metric, buffer);
@@ -9757,15 +9761,15 @@ void Node::getInterfaceStateFromAgent(uint32_t index, InterfaceAdminState *admin
 }
 
 /**
- * Put list of supported parameters into NXCP message
+ * Add SM-CLP metrics supported by this node to provided set
  */
-void Node::getSmclpProperties(StringList *list) const
+void Node::getSmclpMetrics(StringSet *metrics) const
 {
    lockProperties();
-   if (m_smclpProperties != nullptr)
+   if (m_smclpMetrics != nullptr)
    {
-      list->addAll(m_smclpProperties);
-      nxlog_debug_tag(_T("dc.smclp"), 6, _T("Node::getSmclpProperties(%s): sending %d parameters"), m_name, m_smclpProperties->size());
+      metrics->addAll(m_smclpMetrics);
+      nxlog_debug_tag(_T("dc.smclp"), 6, _T("Node::getSmclpProperties(%s): added %d metrics"), m_name, m_smclpMetrics->size());
    }
    unlockProperties();
 }

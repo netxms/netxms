@@ -17905,20 +17905,20 @@ void ClientSession::getSmclpProperties(const NXCPMessage& request)
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
-      StringList list;
+      StringSet metrics;
       switch(object->getObjectClass())
       {
          case OBJECT_NODE:
             response.setField(VID_RCC, RCC_SUCCESS);
-            static_cast<Node&>(*object).getSmclpProperties(&list);
+            static_cast<Node&>(*object).getSmclpMetrics(&metrics);
             break;
          case OBJECT_CLUSTER:
          case OBJECT_TEMPLATE:
             response.setField(VID_RCC, RCC_SUCCESS);
             g_idxNodeById.forEach(
-               [&list] (NetObj *object)
+               [&metrics] (NetObj *object)
                {
-                  static_cast<Node&>(*object).getSmclpProperties(&list);
+                  static_cast<Node&>(*object).getSmclpMetrics(&metrics);
                   return _CONTINUE;
                });
             break;
@@ -17927,14 +17927,14 @@ void ClientSession::getSmclpProperties(const NXCPMessage& request)
             {
                shared_ptr<NetObj> controller = FindObjectById(static_cast<Chassis&>(*object).getControllerId(), OBJECT_NODE);
                if (controller != nullptr)
-                  static_cast<Node&>(*controller).getSmclpProperties(&list);
+                  static_cast<Node&>(*controller).getSmclpMetrics(&metrics);
             }
             break;
          default:
             response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
             break;
       }
-      response.setField(VID_PROPERTIES, list);
+      response.setField(VID_PROPERTIES, metrics);
    }
    else
    {

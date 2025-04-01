@@ -3502,7 +3502,7 @@ protected:
    ObjectArray<AgentParameterDefinition> *m_agentParameters; // List of metrics supported by agent
    ObjectArray<AgentTableDefinition> *m_agentTables; // List of supported tables
    ObjectArray<AgentParameterDefinition> *m_driverParameters; // List of metrics supported by driver
-   StringList *m_smclpProperties; // List of metrics supported by SM-CLP
+   StringList *m_smclpMetrics;  // List of metrics supported by SM-CLP
    time_t m_failTimeAgent;
    time_t m_failTimeSNMP;
    time_t m_failTimeSSH;
@@ -3967,9 +3967,9 @@ public:
    DataCollectionError getMetricFromAgent(const TCHAR *metric, TCHAR *buffer, size_t size);
    DataCollectionError getTableFromAgent(const TCHAR *metric, shared_ptr<Table> *table);
    DataCollectionError getListFromAgent(const TCHAR *metric, StringList **list);
-   DataCollectionError getMetricFromSmclp(const TCHAR *metric, TCHAR *buffer, size_t size);
-   DataCollectionError getTargetListFromSmclp(const TCHAR *metric, StringList **list);
-   DataCollectionError getPropertyListFromSmclp(const TCHAR *metric, StringList **list);
+   DataCollectionError getMetricFromSmclp(const wchar_t *metric, wchar_t *buffer, size_t size);
+   DataCollectionError getTargetListFromSmclp(const wchar_t *target, StringList **list);
+   DataCollectionError getPropertyListFromSmclp(const wchar_t *target, StringList **list);
    DataCollectionError getMetricFromDeviceDriver(const TCHAR *metric, TCHAR *buffer, size_t size);
    DataCollectionError getMetricFromModbus(const TCHAR *metric, TCHAR *buffer, size_t size, uint16_t defaultUnitId = 0xFFFF);
    DataCollectionError getMetricFromEtherNetIP(const TCHAR *metric, TCHAR *buffer, size_t size);
@@ -3993,7 +3993,7 @@ public:
    ObjectArray<AgentTableDefinition> *openTableList();
    void closeTableList() { unlockProperties(); }
 
-   void getSmclpProperties(StringList *list) const;
+   void getSmclpMetrics(StringSet *metrics) const;
 
    shared_ptr<AgentConnectionEx> createAgentConnection(bool sendServerId = false);
    shared_ptr<AgentConnectionEx> getAgentConnection(bool forcePrimary = false);
