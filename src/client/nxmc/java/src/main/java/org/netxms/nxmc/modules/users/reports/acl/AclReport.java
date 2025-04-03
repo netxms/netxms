@@ -508,7 +508,7 @@ public class AclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(GroupsSheetCells.CONFIGURE_TRAPS.ordinal());
-      cell.setCellValue("SNMP Traps");
+      cell.setCellValue("Configure SNMP Traps");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(GroupsSheetCells.DELETE_ALARMS.ordinal());
