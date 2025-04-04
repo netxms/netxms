@@ -724,28 +724,28 @@ StringBuffer DCTableThreshold::getConditionAsText() const
  *    ALREADY_ACTIVE - when value match the threshold condition and threshold is already active
  *    ALREADY_INACTIVE - when value doesn't match the threshold condition and threshold is already inactive
  */
-ThresholdCheckResult DCTableThreshold::check(Table *value, int row, const TCHAR *instance)
+ThresholdCheckResult DCTableThreshold::check(Table *value, int row, const TCHAR *instanceString)
 {
    for(int i = 0; i < m_groups.size(); i++)
    {
       if (m_groups.get(i)->check(value, row))
       {
-         DCTableThresholdInstance *i = m_instances.get(instance);
-         if (i != nullptr)
+         DCTableThresholdInstance *instance = m_instances.get(instanceString);
+         if (instance != nullptr)
          {
-            i->updateRow(row);
-            i->incMatchCount();
-            if (i->isActive())
+            instance->updateRow(row);
+            instance->incMatchCount();
+            if (instance->isActive())
                return ThresholdCheckResult::ALREADY_ACTIVE;
          }
          else
          {
-            i = new DCTableThresholdInstance(instance, 1, false, row);
-            m_instances.set(instance, i);
+            instance = new DCTableThresholdInstance(instanceString, 1, false, row);
+            m_instances.set(instanceString, instance);
          }
-         if (i->getMatchCount() >= m_sampleCount)
+         if (instance->getMatchCount() >= m_sampleCount)
          {
-            i->setActive();
+            instance->setActive();
             return ThresholdCheckResult::ACTIVATED;
          }
          return ThresholdCheckResult::ALREADY_INACTIVE;
@@ -753,11 +753,11 @@ ThresholdCheckResult DCTableThreshold::check(Table *value, int row, const TCHAR 
    }
 
    // no match
-   DCTableThresholdInstance *i = m_instances.get(instance);
-   if (i != nullptr)
+   DCTableThresholdInstance *instance = m_instances.get(instanceString);
+   if (instance != nullptr)
    {
-      bool deactivated = i->isActive();
-      m_instances.remove(instance);
+      bool deactivated = instance->isActive();
+      m_instances.remove(instanceString);
       return deactivated ? ThresholdCheckResult::DEACTIVATED : ThresholdCheckResult::ALREADY_INACTIVE;
    }
    return ThresholdCheckResult::ALREADY_INACTIVE;

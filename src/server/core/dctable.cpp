@@ -401,22 +401,15 @@ void DCTable::checkThresholds(Table *value)
 {
    lock();
    StringList instanceList;
-   for(int i = 0; i < m_thresholds->size(); i++)
+   for(int row = 0; row < value->getNumRows(); row++)
    {
-
-      DCTableThreshold *t = m_thresholds->get(i);
-      for(int row = 0; row < value->getNumRows(); row++)
+      TCHAR instance[MAX_RESULT_LENGTH];
+      value->buildInstanceString(row, instance, MAX_RESULT_LENGTH);
+      instanceList.add(instance);
+      for(int i = 0; i < m_thresholds->size(); i++)
       {
-         if (i == 0)
-         {
-            wchar_t instanceBuffer[MAX_RESULT_LENGTH];
-            value->buildInstanceString(row, instanceBuffer, MAX_RESULT_LENGTH);
-            instanceList.add(instanceBuffer);
-         }
-         const wchar_t *instance = instanceList.get(row);
-
+         DCTableThreshold *t = m_thresholds->get(i);
          ThresholdCheckResult result = t->check(value, row, instance);
-
          switch(result)
          {
             case ThresholdCheckResult::ACTIVATED:
@@ -451,6 +444,11 @@ void DCTable::checkThresholds(Table *value)
                break;
          }
       }
+   }
+
+   for(int i = 0; i < m_thresholds->size(); i++)
+   {
+      DCTableThreshold *t = m_thresholds->get(i);
       StringList missingInstances = t->removeMissingInstances(instanceList);
       for (int i = 0; i < missingInstances.size(); i++)
       {
@@ -466,7 +464,6 @@ void DCTable::checkThresholds(Table *value)
          NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), missingInstances.get(i), ThresholdCheckResult::DEACTIVATED);
       }
    }
-
    unlock();
 }
 
