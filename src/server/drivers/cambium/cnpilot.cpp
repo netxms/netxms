@@ -73,9 +73,9 @@ bool CambiumCnPilotDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_Ob
 bool CambiumCnPilotDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.22.1.1.1.8.0")));  // cambiumAPSWVersion
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.22.1.1.1.4.0")));  // cambiumAPSerialNum
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.22.1.1.1.5.0")));  // cambiumAPModel
+   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 17713, 22, 1, 1, 1, 8, 0 }));  // cambiumAPSWVersion
+   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 17713, 22, 1, 1, 1, 4, 0 }));  // cambiumAPSerialNum
+   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 17713, 22, 1, 1, 1, 5, 0 }));  // cambiumAPModel
 
    SNMP_PDU *response;
    if (snmp->doRequest(&request, &response) != SNMP_ERR_SUCCESS)
@@ -83,16 +83,15 @@ bool CambiumCnPilotDriver::getHardwareInformation(SNMP_Transport *snmp, NObject 
 
    if (response->getNumVariables() != request.getNumVariables())
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Malformed device response in CambiumCnPilotDriver::getHardwareInformation"));
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Malformed device response in CambiumCnPilotDriver::getHardwareInformation");
       delete response;
       return false;
    }
 
-   _tcscpy(hwInfo->vendor, _T("Cambium"));
-
-   response->getVariable(0)->getValueAsString(hwInfo->productVersion, sizeof(hwInfo->productVersion) / sizeof(TCHAR));
-   response->getVariable(1)->getValueAsString(hwInfo->serialNumber, sizeof(hwInfo->serialNumber) / sizeof(TCHAR));
-   response->getVariable(2)->getValueAsString(hwInfo->productName, sizeof(hwInfo->productName) / sizeof(TCHAR));
+   wcscpy(hwInfo->vendor, L"Cambium");
+   response->getVariable(0)->getValueAsString(hwInfo->productVersion, sizeof(hwInfo->productVersion) / sizeof(wchar_t));
+   response->getVariable(1)->getValueAsString(hwInfo->serialNumber, sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
+   response->getVariable(2)->getValueAsString(hwInfo->productName, sizeof(hwInfo->productName) / sizeof(wchar_t));
 
    delete response;
    return true;
@@ -119,6 +118,8 @@ static uint32_t HandlerRadioInterfaces(SNMP_Variable *var, SNMP_Transport *snmp,
    SNMP_ObjectId oid = var->getName();
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
 
+   uint32_t radioIndex = oid.getLastElement();
+
    oid.changeElement(11, 6);  // cambiumRadioChannel
    request.bindVariable(new SNMP_Variable(oid));
 
@@ -126,6 +127,9 @@ static uint32_t HandlerRadioInterfaces(SNMP_Variable *var, SNMP_Transport *snmp,
    request.bindVariable(new SNMP_Variable(oid));
 
    oid.changeElement(11, 2);  // cambiumRadioMACAddress
+   request.bindVariable(new SNMP_Variable(oid));
+
+   oid.changeElement(11, 3);  // cambiumRadioBandType
    request.bindVariable(new SNMP_Variable(oid));
 
    oid.changeElement(9, 4);  // cambiumWlanSsid
@@ -143,19 +147,29 @@ static uint32_t HandlerRadioInterfaces(SNMP_Variable *var, SNMP_Transport *snmp,
 
    if (response->getNumVariables() != request.getNumVariables())
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Malformed device response in CambiumCnPilotDriver::getRadioInterfaces"));
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Malformed device response in CambiumCnPilotDriver::getRadioInterfaces");
       delete response;
       return SNMP_ERR_SUCCESS;
    }
 
    RadioInterfaceInfo *ri = radios->addPlaceholder();
    memset(ri, 0, sizeof(RadioInterfaceInfo));
-   ri->index = oid.getLastElement() + 1;
-   TCHAR macAddrText[64] = _T("");
+   ri->index = radioIndex;
+   wchar_t macAddrText[64] = L"";
    memcpy(ri->bssid, MacAddress::parse(response->getVariable(2)->getValueAsString(macAddrText, 64)).value(), MAC_ADDR_LENGTH);
-   _sntprintf(ri->name, MAX_OBJECT_NAME, _T("radio%u"), ri->index - 1);
-   response->getVariable(3)->getValueAsString(ri->ssid, MAX_SSID_LENGTH);
-   ri->channel = static_cast<uint16_t>(_tcstol(response->getVariable(0)->getValueAsString(macAddrText, 64), nullptr, 10));
+   _sntprintf(ri->name, MAX_OBJECT_NAME, L"radio%u", radioIndex);
+   response->getVariable(4)->getValueAsString(ri->ssid, MAX_SSID_LENGTH);
+
+   wchar_t band[32] = L"";
+   response->getVariable(3)->getValueAsString(band, 32);
+   if (!wcsicmp(band, L"2.4GHz"))
+      ri->band = RADIO_BAND_2_4_GHZ;
+   if (!wcsicmp(band, L"5GHz"))
+      ri->band = RADIO_BAND_2_4_GHZ;
+   else
+      ri->band = RADIO_BAND_UNKNOWN;
+   ri->channel = static_cast<uint16_t>(wcstol(response->getVariable(0)->getValueAsString(macAddrText, 64), nullptr, 10));
+   ri->frequency = WirelessChannelToFrequency(ri->band, ri->channel);
    ri->powerDBm = response->getVariable(1)->getValueAsInt();
    ri->powerMW = (int)pow(10.0, (double)ri->powerDBm / 10.0);
 
@@ -174,7 +188,7 @@ static uint32_t HandlerRadioInterfaces(SNMP_Variable *var, SNMP_Transport *snmp,
 StructArray<RadioInterfaceInfo> *CambiumCnPilotDriver::getRadioInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    auto radios = new StructArray<RadioInterfaceInfo>(0, 8);
-   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.17713.22.1.2.1.4"), HandlerRadioInterfaces, radios) != SNMP_ERR_SUCCESS)  // cambiumRadioWlan
+   if (SnmpWalk(snmp, { 1, 3, 6, 1, 4, 1, 17713, 22, 1, 2, 1, 4 }, HandlerRadioInterfaces, radios) != SNMP_ERR_SUCCESS)  // cambiumRadioWlan
    {
       delete radios;
       return nullptr;
@@ -185,10 +199,8 @@ StructArray<RadioInterfaceInfo> *CambiumCnPilotDriver::getRadioInterfaces(SNMP_T
 /**
  * Handler for wireless station enumeration
  */
-static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snmp, ObjectArray<WirelessStationInfo> *wsList)
 {
-   auto wsList = static_cast<ObjectArray<WirelessStationInfo>*>(arg);
-
    SNMP_ObjectId oid = var->getName();
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
 
@@ -205,7 +217,7 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *s
 
    if (response->getNumVariables() != request.getNumVariables())
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Malformed device response in CambiumEPMPDriver::getWirelessStations"));
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Malformed device response in CambiumEPMPDriver::getWirelessStations");
       delete response;
       return SNMP_ERR_SUCCESS;
    }
@@ -213,7 +225,7 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *s
    auto info = new WirelessStationInfo;
    memset(info, 0, sizeof(WirelessStationInfo));
 
-   TCHAR addrText[64];
+   wchar_t addrText[64];
    memcpy(info->macAddr, MacAddress::parse(var->getValueAsString(addrText, 64)).value(), MAC_ADDR_LENGTH);
    info->ipAddr = InetAddress::parse(response->getVariable(0)->getValueAsString(addrText, 64)).getAddressV4();
    info->rfIndex = response->getVariable(1)->getValueAsInt();
@@ -235,7 +247,7 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *s
 ObjectArray<WirelessStationInfo> *CambiumCnPilotDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, Ownership::True);
-   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.17713.22.1.3.1.2"), HandlerWirelessStationList, wsList) != SNMP_ERR_SUCCESS)  // cambiumClientMACAddress
+   if (SnmpWalk(snmp, { 1, 3, 6, 1, 4, 1, 17713, 22, 1, 3, 1, 2 }, HandlerWirelessStationList, wsList) != SNMP_ERR_SUCCESS)  // cambiumClientMACAddress
    {
       delete wsList;
       wsList = nullptr;
