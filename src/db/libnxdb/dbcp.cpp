@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2008-2021 Raden Solutions
+** Copyright (C) 2008-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -345,11 +345,11 @@ retry:
 	   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
       PoolConnectionInfo *conn = new PoolConnectionInfo;
       conn->handle = DBConnect(m_driver, m_server, m_dbName, m_login, m_password, m_schema, errorText);
-      if (conn->handle != NULL)
+      if (conn->handle != nullptr)
       {
          conn->inUse = true;
          conn->resetOnRelease = false;
-         conn->connectTime = time(NULL);
+         conn->connectTime = time(nullptr);
          conn->lastAccessTime = conn->connectTime;
          conn->usageCount = 0;
          strlcpy(conn->srcFile, srcFile, 128);
@@ -367,7 +367,7 @@ retry:
 
 	m_poolAccessMutex.unlock();
 
-	if (handle == NULL)
+	if (handle == nullptr)
 	{
    	nxlog_debug_tag(DEBUG_TAG, 1, _T("Database connection pool exhausted (call from %hs:%d)"), srcFile, srcLine);
       m_condRelease.wait(10000);

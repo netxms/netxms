@@ -217,6 +217,7 @@ bool PackageDeploymentJob::createDatabaseRecord()
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
+   DBConnectionPoolReleaseConnection(hdb);
    return success;
 }
 
