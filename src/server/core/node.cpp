@@ -7997,6 +7997,9 @@ DataCollectionError Node::getMetricFromDeviceDriver(const TCHAR *metric, TCHAR *
  */
 DataCollectionError Node::getMetricFromModbus(const TCHAR *metric, TCHAR *buffer, size_t size, uint16_t defaultUnitId)
 {
+   if (!(m_capabilities & NC_IS_MODBUS_TCP))
+      return DCE_NOT_SUPPORTED;
+
    uint16_t unitId = (defaultUnitId != 0xFFFF) ? defaultUnitId : m_modbusUnitId;
    const TCHAR *source;
    const TCHAR *conversion;
@@ -8011,7 +8014,7 @@ DataCollectionError Node::getMetricFromModbus(const TCHAR *metric, TCHAR *buffer
    if (transport == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 7, _T("Node(%s)->getMetricFromModbus(%s): cannot create Modbus transport"), m_name, metric);
-      return DCE_NOT_SUPPORTED;
+      return DCE_COMM_ERROR;
    }
 
    ModbusOperationStatus status;
