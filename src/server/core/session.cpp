@@ -3738,7 +3738,10 @@ void ClientSession::modifyObject(const NXCPMessage& request)
          // if he has OBJECT_ACCESS_ACL permission
          if (request.isFieldExist(VID_ACL_SIZE))
             if (!object->checkAccessRights(m_userId, OBJECT_ACCESS_ACL))
+            {
+               debugPrintf(6, L"User %u does not have access control rights on object \"%s\" [%u]", m_userId, object->getName(), object->getId());
                rcc = RCC_ACCESS_DENIED;
+            }
 
          // If allowed, change object and set completion code
          if (rcc == RCC_SUCCESS)
@@ -3779,6 +3782,7 @@ void ClientSession::modifyObject(const NXCPMessage& request)
       {
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
 			writeAuditLog(AUDIT_OBJECTS, false, objectId, _T("Access denied on object modification"));
+         debugPrintf(6, L"User %u does not have modification rights on object \"%s\" [%u]", m_userId, object->getName(), object->getId());
       }
    }
    else

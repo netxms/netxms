@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,6 +33,10 @@ void AccessList::updateFromMessage(const NXCPMessage& msg)
    int count = msg.getFieldAsUInt32(VID_ACL_SIZE);
    if (count > 0)
    {
+      int originalSize = m_elements.size();
+      BYTE *marks = static_cast<BYTE*>(MemAllocLocal(originalSize));
+      memset(marks, 0, originalSize);
+
       for(int i = 0; i < count; i++)
       {
          uint32_t userId = msg.getFieldAsUInt32(VID_ACL_USER_BASE + i);
@@ -43,6 +47,7 @@ void AccessList::updateFromMessage(const NXCPMessage& msg)
             {
                m_elements.get(j)->accessRights = msg.getFieldAsUInt32(VID_ACL_RIGHTS_BASE + i);
                found = true;
+               marks[j] = 1;
                break;
             }
 
@@ -53,6 +58,13 @@ void AccessList::updateFromMessage(const NXCPMessage& msg)
             e->accessRights = msg.getFieldAsUInt32(VID_ACL_RIGHTS_BASE + i);
          }
       }
+
+      // Remove missing elements
+      for(int i = originalSize - 1; i >= 0; i--)
+         if (!marks[i])
+            m_elements.remove(i);
+
+      MemFreeLocal(marks);
    }
    else
    {

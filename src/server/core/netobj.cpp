@@ -1501,13 +1501,6 @@ uint32_t NetObj::modifyFromMessageInternal(const NXCPMessage& msg)
 	if (msg.isFieldExist(VID_CATEGORY_ID))
 	   m_categoryId = msg.getFieldAsUInt32(VID_CATEGORY_ID);
 
-   // Change object's ACL
-   if (msg.isFieldExist(VID_ACL_SIZE))
-   {
-      m_inheritAccessRights = msg.getFieldAsBoolean(VID_INHERIT_RIGHTS);
-      m_accessList.updateFromMessage(msg);
-   }
-
 	// Change trusted nodes list
    if (msg.isFieldExist(VID_TRUSTED_OBJECTS))
    {
@@ -1616,6 +1609,13 @@ uint32_t NetObj::modifyFromMessageInternalStage2(const NXCPMessage& msg)
 
    if (msg.isFieldExist(VID_RESPONSIBLE_USERS_COUNT))
       setResponsibleUsersFromMessage(msg);
+
+   // Change object's ACL
+   if (msg.isFieldExist(VID_ACL_SIZE))
+   {
+      m_inheritAccessRights = msg.getFieldAsBoolean(VID_INHERIT_RIGHTS);
+      m_accessList.updateFromMessage(msg);
+   }
 
    return RCC_SUCCESS;
 }
