@@ -36,6 +36,7 @@ ClickHouseStorageDriver::ClickHouseStorageDriver() : m_senders(0, 16, Ownership:
    m_enableUnsignedType = true;
    m_validateValues = false;
    m_correctValues = false;
+   m_useTemplateAttributes = true;
 }
 
 /**
@@ -75,6 +76,9 @@ bool ClickHouseStorageDriver::init(Config *config)
 
    m_correctValues = config->getValueAsBoolean(L"/ClickHouse/CorrectValues", m_correctValues);
    nxlog_debug_tag(DEBUG_TAG, 2, L"Value correction is %s", m_correctValues ? L"enabled" : L"disabled");
+
+   m_useTemplateAttributes = config->getValueAsBoolean(L"/ClickHouse/UseTemplateAttributes", m_useTemplateAttributes);
+   nxlog_debug_tag(DEBUG_TAG, 2, L"Template attributes are %s", m_useTemplateAttributes ? L"enabled" : L"disabled");
 
    int queueCount = config->getValueAsInt(L"/ClickHouse/Queues", 1);
    if (queueCount < 1)
@@ -408,8 +412,29 @@ bool ClickHouseStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, con
          break;
    }
 
+   // Get custom tags from template
+   if (m_useTemplateAttributes)
+   {
+      uint32_t templateId = dci->getTemplateId();
+      if (templateId == dci->getOwnerId())
+      {
+         // Created by instance discovery, try to get parent template
+         shared_ptr<DCObject> instanceDiscoveryDCI = dci->getOwner()->getDCObjectById(dci->getTemplateItemId(), 0);
+         templateId = (instanceDiscoveryDCI != nullptr) ? instanceDiscoveryDCI->getTemplateId() : 0;
+      }
+      if (templateId != 0)
+      {
+         shared_ptr<NetObj> templateObject = FindObjectById(templateId, OBJECT_TEMPLATE);
+         if ((templateObject != nullptr) && getTagsFromObject(*templateObject, &record))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("Metric not sent: ignore flag set on template object %s"), templateObject->getName());
+            return true;
+         }
+      }
+   }
+
    // Get custom tags from host
-   if (getTagsFromObject(static_cast<NetObj&>(*dci->getOwner()), &record))
+   if (getTagsFromObject(*dci->getOwner(), &record))
    {
       nxlog_debug_tag(DEBUG_TAG, 7, L"Metric not sent: ignore flag set on owner object");
       return true;
@@ -419,7 +444,7 @@ bool ClickHouseStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, con
    shared_ptr<NetObj> relatedObject = FindObjectById(dci->getRelatedObject());
    if (relatedObject != nullptr)
    {
-      if (getTagsFromObject(static_cast<NetObj&>(*relatedObject), &record))
+      if (getTagsFromObject(*relatedObject, &record))
       {
          nxlog_debug_tag(DEBUG_TAG, 7, _T("Metric not sent: ignore flag set on related object %s"), relatedObject->getName());
          return true;

@@ -176,11 +176,12 @@ class ClickHouseStorageDriver : public PerfDataStorageDriver
 {
 private:
    ObjectArray<ClickHouseSender> m_senders;
+   StructArray<DataColumn> m_dataColumns;
    bool m_ignoreStringMetrics;
    bool m_enableUnsignedType;
    bool m_validateValues;
    bool m_correctValues;
-   StructArray<DataColumn> m_dataColumns;
+   bool m_useTemplateAttributes;
 
    bool getTagsFromObject(const NetObj& object, MetricRecord *record);
 

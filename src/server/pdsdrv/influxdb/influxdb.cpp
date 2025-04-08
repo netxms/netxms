@@ -45,6 +45,7 @@ InfluxDBStorageDriver::InfluxDBStorageDriver() : m_senders(0, 16, Ownership::Tru
    m_enableUnsignedType = false;
    m_validateValues = false;
    m_correctValues = false;
+   m_useTemplateAttributes = false;
 }
 
 /**
@@ -96,6 +97,9 @@ bool InfluxDBStorageDriver::init(Config *config)
 
    m_correctValues = config->getValueAsBoolean(_T("/InfluxDB/CorrectValues"), m_correctValues);
    nxlog_debug_tag(DEBUG_TAG, 2, L"Value correction is %s", m_correctValues ? L"enabled" : L"disabled");
+
+   m_useTemplateAttributes = config->getValueAsBoolean(_T("/InfluxDB/UseTemplateAttributes"), m_useTemplateAttributes);
+   nxlog_debug_tag(DEBUG_TAG, 2, L"Template attributes are %s", m_correctValues ? L"enabled" : L"disabled");
 
    int queueCount = config->getValueAsInt(_T("/InfluxDB/Queues"), 1);
    if (queueCount < 1)
@@ -352,9 +356,30 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
          break;
    }
 
-   // Get Host CA's
+   // Get custom tags from template
    StringBuffer tags;
-   if (GetTagsFromObject(static_cast<NetObj&>(*dci->getOwner()), &tags))
+   if (m_useTemplateAttributes)
+   {
+      uint32_t templateId = dci->getTemplateId();
+      if (templateId == dci->getOwnerId())
+      {
+         // Created by instance discovery, try to get parent template
+         shared_ptr<DCObject> instanceDiscoveryDCI = dci->getOwner()->getDCObjectById(dci->getTemplateItemId(), 0);
+         templateId = (instanceDiscoveryDCI != nullptr) ? instanceDiscoveryDCI->getTemplateId() : 0;
+      }
+      if (templateId != 0)
+      {
+         shared_ptr<NetObj> templateObject = FindObjectById(templateId, OBJECT_TEMPLATE);
+         if ((templateObject != nullptr) && GetTagsFromObject(*templateObject, &tags))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("Metric not sent: ignore flag set on template object %s"), templateObject->getName());
+            return true;
+         }
+      }
+   }
+
+   // Get Host CA's
+   if (GetTagsFromObject(*dci->getOwner(), &tags))
    {
       nxlog_debug_tag(DEBUG_TAG, 7, _T("Metric not sent: ignore flag set on owner object"));
       return true;
@@ -364,7 +389,7 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    shared_ptr<NetObj> relatedObject = FindObjectById(dci->getRelatedObject());
    if (relatedObject != nullptr)
    {
-      if (GetTagsFromObject(static_cast<NetObj&>(*relatedObject), &tags))
+      if (GetTagsFromObject(*relatedObject, &tags))
       {
          nxlog_debug_tag(DEBUG_TAG, 7, _T("Metric not sent: ignore flag set on related object %s"), relatedObject->getName());
          return true;

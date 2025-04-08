@@ -200,6 +200,7 @@ private:
    bool m_enableUnsignedType;
    bool m_validateValues;
    bool m_correctValues;
+   bool m_useTemplateAttributes;
 
 public:
    InfluxDBStorageDriver();
