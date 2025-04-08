@@ -95,6 +95,7 @@ import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.base.widgets.RoundedLabel;
 import org.netxms.nxmc.base.widgets.ServerClock;
+import org.netxms.nxmc.base.widgets.Spacer;
 import org.netxms.nxmc.base.widgets.WelcomePage;
 import org.netxms.nxmc.keyboard.KeyBindingManager;
 import org.netxms.nxmc.keyboard.KeyStroke;
@@ -121,7 +122,7 @@ import org.xnap.commons.i18n.I18n;
 public class MainWindow extends Window implements MessageAreaHolder
 {
    private static final Logger logger = LoggerFactory.getLogger(MainWindow.class);
-   private I18n i18n = LocalizationHelper.getI18n(MainWindow.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(MainWindow.class);
 
    private Composite windowContent;
    private ToolBar mainMenu;
@@ -987,31 +988,6 @@ public class MainWindow extends Window implements MessageAreaHolder
             objectsOutOfSyncIndicator.setLabelBackground(null);
             headerArea.layout(true);
          });
-      }
-   }
-
-   /**
-    * Spacer composite
-    */
-   private static class Spacer extends Composite
-   {
-      private int width;
-
-      public Spacer(Composite parent, int width)
-      {
-         super(parent, SWT.NONE);
-         this.width = width;
-         setBackground(parent.getBackground());
-         setLayoutData(new GridData(SWT.CENTER, SWT.FILL, false, true));
-      }
-
-      /**
-       * @see org.eclipse.swt.widgets.Control#computeSize(int, int, boolean)
-       */
-      @Override
-      public Point computeSize(int wHint, int hHint, boolean changed)
-      {
-         return new Point(width, (hHint == SWT.DEFAULT) ? 20 : hHint);
       }
    }
 

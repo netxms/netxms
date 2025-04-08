@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1668,18 +1668,26 @@ public class WidgetHelper
    }
 
    /**
-    * Create browser widget and optionally set initial location.
+    * Create browser widget and optionally set initial location. Returns null if browser cannot be created.
     *
     * @param parent parent composite
     * @param style browser widget style
     * @param url initial location (can be null)
-    * @return browser widget
+    * @return browser widget or null if browser cannot be instantiated
     */
    public static Browser createBrowser(Composite parent, int style, String url)
    {
-      Browser browser = new Browser(parent, style);
-      if (url != null)
-         browser.setUrl(url);
-      return browser;
+      try
+      {
+         Browser browser = new Browser(parent, style);
+         if (url != null)
+            browser.setUrl(url);
+         return browser;
+      }
+      catch(Throwable t)
+      {
+         logger.error("Cannot create browser widget", t);
+         return null;
+      }
    }
 }

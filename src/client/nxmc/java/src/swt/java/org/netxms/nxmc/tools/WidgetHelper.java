@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -95,12 +95,16 @@ import org.netxms.nxmc.base.widgets.SortableTreeViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.resources.ThemeEngine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility class for simplified creation of widgets
  */
 public class WidgetHelper
 {
+   private static final Logger logger = LoggerFactory.getLogger(WidgetHelper.class);
+
 	public static final int INNER_SPACING = 2;
 	public static final int OUTER_SPACING = 4;
 	public static final int DIALOG_WIDTH_MARGIN = 10;
@@ -1596,18 +1600,26 @@ public class WidgetHelper
    }
 
    /**
-    * Create browser widget and optionally set initial location.
+    * Create browser widget and optionally set initial location. Returns null if browser cannot be created.
     *
     * @param parent parent composite
     * @param style browser widget style
     * @param url initial location (can be null)
-    * @return browser widget
+    * @return browser widget or null if browser cannot be instantiated
     */
    public static Browser createBrowser(Composite parent, int style, String url)
    {
-      Browser browser = new Browser(parent, style | SWT.EDGE);
-      if (url != null)
-         browser.setUrl(url);
-      return browser;
+      try
+      {
+         Browser browser = new Browser(parent, style | SWT.EDGE);
+         if (url != null)
+            browser.setUrl(url);
+         return browser;
+      }
+      catch(Throwable t)
+      {
+         logger.error("Cannot create browser widget", t);
+         return null;
+      }
    }
 }

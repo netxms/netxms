@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,47 +19,31 @@
 package org.netxms.nxmc.base.widgets;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.browser.Browser;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
- * PDF viewer
+ * Spacer composite
  */
-public class PDFViewer extends Composite
+public class Spacer extends Composite
 {
-   private Browser browser;
+   private int width;
 
-   /**
-    * @param parent
-    * @param style
-    */
-   public PDFViewer(Composite parent, int style)
+   public Spacer(Composite parent, int width)
    {
-      super(parent, style);
-      setLayout(new FillLayout());
-      browser = WidgetHelper.createBrowser(this, SWT.NONE, null);
+      super(parent, SWT.NONE);
+      this.width = width;
+      setBackground(parent.getBackground());
+      setLayoutData(new GridData(SWT.CENTER, SWT.FILL, false, true));
    }
 
    /**
-    * Open document file.
-    *
-    * @param fileName document file name
+    * @see org.eclipse.swt.widgets.Control#computeSize(int, int, boolean)
     */
-   public void openFile(String fileName)
+   @Override
+   public Point computeSize(int wHint, int hHint, boolean changed)
    {
-      openUrl("file://" + fileName);
-   }
-
-   /**
-    * Open document by URL.
-    *
-    * @param url document URL
-    */
-   public void openUrl(String url)
-   {
-      if (browser != null)
-         browser.setUrl(url);
+      return new Point(width, (hHint == SWT.DEFAULT) ? 20 : hHint);
    }
 }

@@ -18,35 +18,58 @@
  */
 package org.netxms.nxmc.base.widgets;
 
-import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.LocationEvent;
 import org.eclipse.swt.browser.LocationListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.ToolBar;
-import org.eclipse.swt.widgets.ToolItem;
+import org.eclipse.swt.widgets.Shell;
 import org.netxms.nxmc.PreferenceStore;
-import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ExternalWebBrowser;
+import org.netxms.nxmc.tools.FontTools;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Welcome page
  */
 public class WelcomePage extends Composite
 {
+   private static final I18n i18n = LocalizationHelper.getI18n(WelcomePage.class);
    private static final String ERROR_PAGE = 
          "<html>"+
+         "<head>" +
+         "   <style>" +
+         ".button {" +
+         "   text-decoration: none;" +
+         "   font-weight: 600;" +
+         "   background-color: #3498db;" +
+         "   color: #f0f0f0;" +
+         "   padding-left: 24px;" +
+         "   padding-right: 24px;" +
+         "   padding-top: 10px;" +
+         "   padding-bottom: 10px;" +
+         "   border: 1px solid #ffffff;" +
+         "   border-radius: 8px;" +
+         "}" +
+         "   </style>" +
+         "</head>" +
          "   <body>" +
          "      <div style=\"padding: 10px; display: flex; flex-wrap: nowrap; align-items: center;\">" +
-         "         <img src=\"data:image/png;base64,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\">" +
-         "         <div style=\"font-size: 1.5rem;\">Cannot load page content. Please use external browser to navigate to <a href=\"ext{url}\">{url}</a>.</div>" +
+         "         <img src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAClUlEQVR4nO2bzXGDMBCFXQIdhEMKcAkMFaQEl0AJmjTgEiiBErjk7hJcAUMJjtYWDsESSNrVH9bOvFskvfcZCSLE4UBU9fdPwzVy3RzrwnXmKqm8o4ubaT0El+kcOnvI8JP6dw4/qY0tfM/FHAjGVK0zVSzhQczh2AVXJxmzczXm0oDOZc8cewAI1+W4LsecBtad88yDl8brNDBc8JgzI39+Km8ADMPvC4BF+P0AsAy/DwCI8OkDQIZPGwBB+HQBEIVPEwBh+PQAEIcHNbRxpZ5pANTyR0qsSvLEr77JAFBvY3nZpaEEQBne28aESwB9bb5RAdPoSB9z1bczAIzarIvKADKADCADyAAygAwgA9gFgOHj84ur4+qFTlttTADw/ipl/6EBcDMt100iMFqo2kkAwLmBl79f6f8ydRQMgPjlZeaeJlUQFgBMw09ioQF0GwaVEGYAbMODrqEB9Bom1yAwRPi7UgGwOh0WfWqH5xpDAzgZmN2EYBge1MZwFzC5CpQQLMI/+okAQCHMWEOwDg8VGgAWAip8LAAQEEb09IkFAJQlBNwCGhMAKEcQ1HeP2ABAEUNYf36IEQAUEYTth6dYAUAhIWg9OUYNAEpAMF3tQaXWAAkAaN/2CkCET38NIAif7l2AMHx6zwEOwq9DiAmAw/BqCLEAsAgPYcoB+a90FAAswxeiLW4/QQLAz6cnBOFnfVhBmAD0EghezvsMjzc2JKu5JQSmOic4+oAw6L0X2AyPgHCdPkBSnRXsatrP3sqF4Z4qvC2EeyNu7KQAQK3KAoB2eAsI47OR+IVcA2gWRrfeCxiHN4Tw/2CnuBJcfgF+kRhVmbQOrwlhlPYv1oRGcXeg0FFiksGCNDPWYsMvxlD2/wtnrMBIlZAfegAAAABJRU5ErkJggg==\">" +
+         "         <div style=\"font-size: 1.5rem; padding: 0.5rem;\">Cannot load page content.<br>Please use external browser to navigate to <a href=\"ext{url}\">{url}</a>.</div>" +
+         "      </div>" +
+         "      <div style=\"padding: 10px; display: flex; flex-wrap: nowrap; align-items: center;\">" +
+         "         <p style=\"text-align: center; padding-top: 16px; padding-bottom: 16px;\"><a href=\"app:close\" class=\"button\">CLOSE</a></p>" +
          "      </div>" +
          "   </body>" +
          "</html>";
@@ -64,6 +87,12 @@ public class WelcomePage extends Composite
    {
       super(parent, style);
 
+      final Font headerFont = ThemeEngine.getFont("Window.Header");
+      final Font headerFontBold = FontTools.createAdjustedFont(headerFont, 2, SWT.BOLD);
+      addDisposeListener((e) -> {
+         headerFontBold.dispose();
+      });
+
       GridLayout layout = new GridLayout();
       layout.marginHeight = 0;
       layout.marginWidth = 0;
@@ -73,23 +102,21 @@ public class WelcomePage extends Composite
       Composite header = new Composite(this, SWT.NONE);
       layout = new GridLayout();
       layout.numColumns = 2;
+      layout.marginWidth = 10;
       header.setLayout(layout);
       header.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       Label title = new Label(header, SWT.NONE);
       title.setText("Welcome to NetXMS " + serverVersion);
-      title.setFont(JFaceResources.getBannerFont());
+      title.setFont(headerFontBold);
       title.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-      ToolBar toolbar = new ToolBar(header, SWT.FLAT | SWT.HORIZONTAL | SWT.RIGHT);
-      toolbar.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
-
-      Label separator = new Label(this, SWT.SEPARATOR | SWT.HORIZONTAL);
-      separator.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-
-      ToolItem closeButton = new ToolItem(toolbar, SWT.PUSH);
-      closeButton.setImage(SharedIcons.IMG_CLOSE);
-      closeButton.setText("Close");
+      Button closeButton = new Button(header, SWT.PUSH);
+      closeButton.setFont(headerFont);
+      GridData gd = new GridData(SWT.RIGHT, SWT.CENTER, false, false);
+      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
+      closeButton.setLayoutData(gd);
+      closeButton.setText(i18n.tr("Close"));
       closeButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -99,31 +126,46 @@ public class WelcomePage extends Composite
          }
       });
 
+      Shell shell = getShell();
+      if (shell != null)
+         shell.setDefaultButton(closeButton);
+
+      Label separator = new Label(this, SWT.SEPARATOR | SWT.HORIZONTAL);
+      separator.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
       Browser browser = WidgetHelper.createBrowser(this, SWT.NONE, null);
-      browser.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      if (browser != null)
+      {
+         browser.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-      final String url = "https://netxms.github.io/changelog/" + serverVersion.replace('.', '_') + ".html";
-      browser.addLocationListener(new LocationListener() {
-         @Override
-         public void changing(LocationEvent event)
-         {
-            if (event.location.startsWith("exthttp"))
+         final String url = "https://netxms.github.io/changelog/" + serverVersion.replace('.', '_') + ".html";
+         browser.addLocationListener(new LocationListener() {
+            @Override
+            public void changing(LocationEvent event)
             {
-               event.doit = false;
-               ExternalWebBrowser.open(event.location.substring(3));
+               if (event.location.startsWith("exthttp"))
+               {
+                  event.doit = false;
+                  ExternalWebBrowser.open(event.location.substring(3));
+               }
+               else if (event.location.equals("app:close"))
+               {
+                  WelcomePage.this.dispose();
+                  PreferenceStore.getInstance().set("WelcomePage.LastDisplayedVersion", serverVersion);
+               }
             }
-         }
 
-         @Override
-         public void changed(LocationEvent event)
-         {
-            if (initialLoad && (browser.getText().indexOf("<title>NetXMS Version " + serverVersion) == -1))
+            @Override
+            public void changed(LocationEvent event)
             {
-               initialLoad = false;
-               browser.setText(ERROR_PAGE.replace("{url}", url));
+               if (initialLoad && (browser.getText().indexOf("<title>NetXMS Version " + serverVersion) == -1))
+               {
+                  initialLoad = false;
+                  browser.setText(ERROR_PAGE.replace("{url}", url));
+               }
             }
-         }
-      });
-      browser.setUrl(url);
+         });
+         browser.setUrl(url);
+      }
    }
 }

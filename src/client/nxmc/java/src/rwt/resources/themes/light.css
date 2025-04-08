@@ -2256,6 +2256,26 @@ Button.HeaderButton[PUSH]:pressed {
    background-color: rgb(71,113,134);
 }
 
+Button.WelcomePageButton[PUSH] {
+   border: none;
+   border-radius: 8px;
+   background-color: #3498db;
+   color: #f0f0f0;
+   padding: 10px 24px 10px 24px;
+   background-image: none;
+   animation: hoverOut 500ms ease-out;
+   cursor: pointer;
+   font: 16px "Metropolis Medium", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
+}
+
+Button.WelcomePageButton[PUSH]:hover {
+   background-color: #9eceee;
+}
+
+Button.WelcomePageButton[PUSH]:pressed {
+   background-color: #217bb8;
+}
+
 Link.login {
   font: 16px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
 }
