@@ -1717,7 +1717,7 @@ NXSL_METHOD_DEFINITION(Node, enableTopologyPolling)
 }
 
 /**
- * enableSsh(enabled) method
+ * enableVnc(enabled) method
  */
 NXSL_METHOD_DEFINITION(Node, enableVnc)
 {
