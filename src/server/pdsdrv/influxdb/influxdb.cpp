@@ -99,7 +99,7 @@ bool InfluxDBStorageDriver::init(Config *config)
    nxlog_debug_tag(DEBUG_TAG, 2, L"Value correction is %s", m_correctValues ? L"enabled" : L"disabled");
 
    m_useTemplateAttributes = config->getValueAsBoolean(_T("/InfluxDB/UseTemplateAttributes"), m_useTemplateAttributes);
-   nxlog_debug_tag(DEBUG_TAG, 2, L"Template attributes are %s", m_correctValues ? L"enabled" : L"disabled");
+   nxlog_debug_tag(DEBUG_TAG, 2, L"Template attributes are %s", m_useTemplateAttributes ? L"enabled" : L"disabled");
 
    int queueCount = config->getValueAsInt(_T("/InfluxDB/Queues"), 1);
    if (queueCount < 1)
