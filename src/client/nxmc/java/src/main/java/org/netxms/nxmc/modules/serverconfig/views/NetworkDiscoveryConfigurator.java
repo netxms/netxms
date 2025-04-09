@@ -707,6 +707,14 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
       activeDiscoveryAddressList.setContentProvider(new ArrayContentProvider());
       activeDiscoveryAddressList.setLabelProvider(new AddressListLabelProvider(true));
       activeDiscoveryAddressList.setComparator(new AddressListElementComparator(true));
+      
+      // Hide Zone column if zoning is disabled
+      if (!Registry.getSession().isZoningEnabled())
+      {
+         final org.eclipse.swt.widgets.TableColumn zoneColumn = activeDiscoveryAddressList.getTable().getColumn(ZONE);
+         zoneColumn.setWidth(0);
+         zoneColumn.setResizable(false);
+      }
       activeDiscoveryAddressList.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
