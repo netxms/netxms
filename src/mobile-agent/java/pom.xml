@@ -4,7 +4,7 @@
    <groupId>org.netxms</groupId>
    <artifactId>netxms-mobile-agent</artifactId>
    <packaging>jar</packaging>
-   <version>5.2-SNAPSHOT</version>
+   <version>5.3-SNAPSHOT</version>
    <name>netxms-mobile-agent</name>
    <description>NetXMS mobile agent connector</description>
    <url>http://www.netxms.org</url>

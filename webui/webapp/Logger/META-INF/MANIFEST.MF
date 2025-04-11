@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Logger
 Bundle-SymbolicName: org.netxms.ui.eclipse.logger
-Bundle-Version: 5.2.0
+Bundle-Version: 5.3.0
 Bundle-Vendor: netxms.org
 Fragment-Host: org.slf4j.api;bundle-version="1.7.10"
 Automatic-Module-Name: org.netxms.ui.eclipse.logger

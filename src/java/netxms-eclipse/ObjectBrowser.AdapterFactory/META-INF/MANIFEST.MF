@@ -2,8 +2,8 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Adapter Factory for Object Browser Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.objectbrowser.adapterfactory;singleton:=true
-Bundle-Version: 5.2.0
+Bundle-Version: 5.3.0
 Bundle-Vendor: netxms.org
-Fragment-Host: org.netxms.ui.eclipse.objectbrowser;bundle-version="5.2.0"
+Fragment-Host: org.netxms.ui.eclipse.objectbrowser;bundle-version="5.3.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Automatic-Module-Name: org.netxms.ui.eclipse.objectbrowser.adapterfactory
