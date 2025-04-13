@@ -26,7 +26,7 @@
 /**
  * Create DCItem from another DCItem
  */
-DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
+DCItem::DCItem(const DCItem *src, bool shadowCopy, bool copyThresholds) : DCObject(src, shadowCopy)
 {
    m_dataType = src->m_dataType;
    m_transformedDataType = src->m_transformedDataType;
@@ -51,11 +51,11 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
 	m_multiplier = src->m_multiplier;
 	m_unitName = src->m_unitName;
 	m_snmpRawValueType = src->m_snmpRawValueType;
-   _tcscpy(m_predictionEngine, src->m_predictionEngine);
+   wcscpy(m_predictionEngine, src->m_predictionEngine);
    m_allThresholdsRearmEvent = src->m_allThresholdsRearmEvent;
 
    // Copy thresholds
-	if (src->getThresholdCount() > 0)
+	if (copyThresholds && (src->getThresholdCount() > 0))
 	{
 		m_thresholds = new ObjectArray<Threshold>(src->m_thresholds->size(), 8, Ownership::True);
 		for(int i = 0; i < src->m_thresholds->size(); i++)
@@ -777,7 +777,11 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
            QueueIDataInsert(tmTimeStamp, owner->getId(), m_id, originalValue, pValue->getString(), getStorageClass());
 
       if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
-           PerfDataStorageRequest(this, tmTimeStamp, pValue->getString());
+      {
+         // Operate on copy to prevent deadlock if fan-out driver access owning object
+         DCItem copy(this, false, false);
+         PerfDataStorageRequest(&copy, tmTimeStamp, pValue->getString());
+      }
    }
 
    // Update prediction engine
