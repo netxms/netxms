@@ -536,7 +536,7 @@ protected:
    using DCObject::updateFromMessage;
 
 public:
-   DCItem(const DCItem *src, bool shadowCopy);
+   DCItem(const DCItem *src, bool shadowCopy, bool copyThresholds = true);
    DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay);
    DCItem(uint32_t id, const TCHAR *name, int source, int dataType, BYTE scheduleType, const TCHAR *pollingInterval,
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
