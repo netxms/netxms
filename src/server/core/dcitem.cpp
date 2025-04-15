@@ -778,9 +778,11 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
 
       if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
       {
-         // Operate on copy to prevent deadlock if fan-out driver access owning object
+         // Operate on copy with this DCI unlocked to prevent deadlock if fan-out driver access owning object
          DCItem copy(this, false, false);
+         unlock();
          PerfDataStorageRequest(&copy, tmTimeStamp, pValue->getString());
+         lock();
       }
    }
 
