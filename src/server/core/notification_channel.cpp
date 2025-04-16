@@ -579,7 +579,7 @@ void NotificationChannel::writeNotificationLog(const NotificationMessage& notifi
 
    DB_STATEMENT hStmt = DBPrepare(hdb,
          (g_dbSyntax == DB_SYNTAX_TSDB) ?
-            _T("INSERT INTO notification_log (id,notification_timestamp,notification_channel,recipient,subject,message,event_code,event_id,rule_id,success) VAevent_code,event_id,rule_id,LUES (?,to_timestamp(?),?,?,?,?,?,?,?,?)") :
+            _T("INSERT INTO notification_log (id,notification_timestamp,notification_channel,recipient,subject,message,event_code,event_id,rule_id,success) VALUES (?,to_timestamp(?),?,?,?,?,?,?,?,?)") :
             _T("INSERT INTO notification_log (id,notification_timestamp,notification_channel,recipient,subject,message,event_code,event_id,rule_id,success) VALUES (?,?,?,?,?,?,?,?,?,?)"));
    if (hStmt != nullptr)
    {
