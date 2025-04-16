@@ -56,6 +56,7 @@ public class GenerateObjectAccessReportAction extends Action
    {
       try
       {
+         Activator.logInfo("Report generation started");
          final File tmpFile = File.createTempFile("ACLReport_" + viewPart.hashCode(), "_" + System.currentTimeMillis());
          final AclReport report = new AclReport(tmpFile.getAbsolutePath());
          new ConsoleJob("Generating object access report", viewPart, Activator.PLUGIN_ID) {
@@ -78,7 +79,7 @@ public class GenerateObjectAccessReportAction extends Action
       catch(IOException e)
       {
          Activator.logError("Unexpected I/O error", e);
-         MessageDialogHelper.openError(viewPart.getSite().getShell(), "Error", "Cannot generate user access report (internal server error)");
+         MessageDialogHelper.openError(viewPart.getSite().getShell(), "Error", "Cannot generate user access report: " + e.getMessage());
       }
    }
 }
