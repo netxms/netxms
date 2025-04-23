@@ -193,6 +193,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       Boolean cachedFlag = readOnlyFlagsCache.get(object.getObjectId());
       actionLock.setChecked(true);
       lockObjectMove(true);
+      
       if (cachedFlag != null)
       {
          readOnly = cachedFlag;

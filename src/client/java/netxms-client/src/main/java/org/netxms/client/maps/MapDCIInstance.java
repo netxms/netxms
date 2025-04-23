@@ -46,14 +46,14 @@ public class MapDCIInstance
     * @param type type of DCI
     * @param mapObjectId network map object ID
     */
-   public MapDCIInstance(long dciID, long nodeID, String column, String instance, int type, long mapObjectId)
+   public MapDCIInstance(long dciID, long nodeID, String column, String instance, int type, long mapObjectId, int initialCount)
    {
       this.setDciID(dciID);
       this.setNodeID(nodeID);
       this.setColumn(column);
       this.setInstance(instance);
       this.type = type;
-      mapObjectIdList.put(mapObjectId, 1);
+      mapObjectIdList.put(mapObjectId, initialCount);
    }
 
    /**
@@ -64,14 +64,14 @@ public class MapDCIInstance
     * @param type type of DCI
     * @param mapObjectId network map object ID
     */
-   public MapDCIInstance(long dciID, long nodeID, int type, long mapObjectId)
+   public MapDCIInstance(long dciID, long nodeID, int type, long mapObjectId, int initialCount)
    {
       this.setDciID(dciID);
       this.setNodeID(nodeID);
       this.setColumn("");
       this.setInstance("");
       this.type = type;
-      mapObjectIdList.put(mapObjectId, 1);
+      mapObjectIdList.put(mapObjectId, initialCount);
    }
 
    /**
@@ -79,7 +79,7 @@ public class MapDCIInstance
     *
     * @param mapId map object ID
     */
-   public void addMap(long mapId)
+   public void addMap(long mapId, int initialCount)
    {
       Integer count = mapObjectIdList.get(mapId);
       if (count != null)
