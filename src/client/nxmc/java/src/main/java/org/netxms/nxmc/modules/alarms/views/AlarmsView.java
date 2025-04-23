@@ -28,8 +28,10 @@ import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.widgets.helpers.SearchQueryContentProposalProvider;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.widgets.AlarmList;
+import org.netxms.nxmc.modules.dashboards.propertypages.AlarmViewer;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.tools.VisibilityValidator;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -67,7 +69,7 @@ public class AlarmsView extends ObjectView
    @Override
    protected void createContent(Composite parent)
    {
-      alarmList = new AlarmList(this, parent, SWT.NONE, "AlarmView.AlarmList", null);
+      alarmList = new AlarmList(this, parent, SWT.NONE, "AlarmView.AlarmList", () -> AlarmsView.this.isActive());
       setFilterClient(alarmList.getViewer(), alarmList.getFilter());
       enableFilterAutocomplete(new SearchQueryContentProposalProvider(alarmList.getAttributeProposals()));
       
@@ -89,6 +91,16 @@ public class AlarmsView extends ObjectView
    protected void onObjectChange(AbstractObject object)
    {
       alarmList.setRootObject((object != null) ? object.getObjectId() : 0);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#activate()
+    */
+   @Override
+   public void activate()
+   {
+      super.activate();
+      alarmList.doPendingUpdates();
    }
 
    /**
@@ -137,5 +149,5 @@ public class AlarmsView extends ObjectView
       manager.add(new Separator());
       manager.add(actionExportToCsv);
       super.fillLocalMenu(manager);
-   }     
+   }
 }
