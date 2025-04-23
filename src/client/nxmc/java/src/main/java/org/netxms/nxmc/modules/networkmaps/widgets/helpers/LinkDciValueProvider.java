@@ -161,7 +161,7 @@ public class LinkDciValueProvider implements DisposableSingleton
 	 * @param dciID
 	 * @param mapPage
 	 */
-	public void addDci(long nodeID, long dciID, NetworkMapPage mapPage)
+	public void addDci(long nodeID, long dciID, NetworkMapPage mapPage, int initialCount)
 	{
 	   synchronized(dciIDList)
       {
@@ -170,14 +170,14 @@ public class LinkDciValueProvider implements DisposableSingleton
          {
             if(item.getDciID() == dciID)
             {
-               item.addMap(mapPage.getMapObjectId());
+               item.addMap(mapPage.getMapObjectId(), initialCount);
                exists = true;
                break;
             }
          }
          if(!exists)
          {
-            dciIDList.add(new MapDCIInstance(dciID, nodeID, DataCollectionItem.DCO_TYPE_ITEM, mapPage.getMapObjectId()));
+            dciIDList.add(new MapDCIInstance(dciID, nodeID, DataCollectionItem.DCO_TYPE_ITEM, mapPage.getMapObjectId(), initialCount));
             syncThread.interrupt();
          }
       }
@@ -192,7 +192,7 @@ public class LinkDciValueProvider implements DisposableSingleton
 	 * @param instance
 	 * @param mapPage
 	 */
-   public void addDci(long nodeID, long dciID, String column, String instance, NetworkMapPage mapPage)
+   public void addDci(long nodeID, long dciID, String column, String instance, NetworkMapPage mapPage, int initialCount)
    {
       synchronized(dciIDList)
       {
@@ -201,14 +201,14 @@ public class LinkDciValueProvider implements DisposableSingleton
          {
             if(item.getDciID() == dciID)
             {
-               item.addMap(mapPage.getMapObjectId());
+               item.addMap(mapPage.getMapObjectId(), initialCount);
                exists = true;
                break;
             }
          }
          if(!exists)
          {
-            dciIDList.add(new MapDCIInstance(dciID, nodeID, column, instance, DataCollectionItem.DCO_TYPE_TABLE, mapPage.getMapObjectId()));
+            dciIDList.add(new MapDCIInstance(dciID, nodeID, column, instance, DataCollectionItem.DCO_TYPE_TABLE, mapPage.getMapObjectId(), initialCount));
             syncThread.interrupt();
          }
       }

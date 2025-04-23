@@ -1448,6 +1448,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    protected void refreshDciRequestList(NetworkMapPage oldMapPage, boolean removeOldMapDci)
    {
       Collection<NetworkMapLink> linkList = mapPage.getLinks();
+      removeOldMapDci = (oldMapPage != null && oldMapPage.getMapObjectId() != 0 && removeOldMapDci);
       for(NetworkMapLink item : linkList)
       {
          if (item.hasDciData())
@@ -1456,11 +1457,11 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
             {
                if (value.getType() == MapDataSource.ITEM)
                {
-                  dciValueProvider.addDci(value.getNodeId(), value.getDciId(), mapPage);
+                  dciValueProvider.addDci(value.getNodeId(), value.getDciId(), mapPage, removeOldMapDci ? 2 : 1);
                }
                else
                {
-                  dciValueProvider.addDci(value.getNodeId(), value.getDciId(), value.getColumn(), value.getInstance(), mapPage);
+                  dciValueProvider.addDci(value.getNodeId(), value.getDciId(), value.getColumn(), value.getInstance(), mapPage, removeOldMapDci ? 2 : 1);
                }
             }
          }
@@ -1477,11 +1478,11 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
                {
                   if (value.getType() == MapDataSource.ITEM)
                   {
-                     dciValueProvider.addDci(value.getNodeId(), value.getDciId(), mapPage);
+                     dciValueProvider.addDci(value.getNodeId(), value.getDciId(), mapPage, removeOldMapDci ? 2 : 1);
                   }
                   else
                   {
-                     dciValueProvider.addDci(value.getNodeId(), value.getDciId(), value.getColumn(), value.getInstance(), mapPage);
+                     dciValueProvider.addDci(value.getNodeId(), value.getDciId(), value.getColumn(), value.getInstance(), mapPage, removeOldMapDci ? 2 : 1);
                   }
                }
             }
@@ -1494,15 +1495,15 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
             MapDataSource value = config.getDci();
             if (value.getType() == MapDataSource.ITEM)
             {
-               dciValueProvider.addDci(value.getNodeId(), value.getDciId(), mapPage);
+               dciValueProvider.addDci(value.getNodeId(), value.getDciId(), mapPage, removeOldMapDci ? 2 : 1);
             }
             else
             {
-               dciValueProvider.addDci(value.getNodeId(), value.getDciId(), value.getColumn(), value.getInstance(), mapPage);
+               dciValueProvider.addDci(value.getNodeId(), value.getDciId(), value.getColumn(), value.getInstance(), mapPage, removeOldMapDci ? 2 : 1);
             }
          }
       }
-      if (oldMapPage != null && oldMapPage.getMapObjectId() != 0 && removeOldMapDci)
+      if (removeOldMapDci)
          dciValueProvider.removeDcis(oldMapPage);
    }
 
