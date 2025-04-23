@@ -668,6 +668,7 @@ typedef struct
 #define CMD_CANCEL_PACKAGE_DEPLOYMENT_JOB 0x01D4
 #define CMD_QUERY_AI_ASSISTANT            0x01D5
 #define CMD_GET_SMCLP_PROPERTIES          0x01D6
+#define CMD_GET_INTERFACE_DCIS            0x01D7
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1542,6 +1543,7 @@ typedef struct
 #define VID_JOB_ID                  ((uint32_t)860)
 #define VID_EXPECTED_CAPABILITIES   ((uint32_t)861)
 #define VID_AI_ASSISTANT_AVAILABLE  ((uint32_t)862)
+#define VID_DCI_IDS                 ((uint32_t)863)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)
@@ -1808,5 +1810,7 @@ typedef struct
 
 // Base field for script warnings
 #define VID_WARNING_LIST_BASE       ((uint32_t)0x38000000)
+
+#define VID_UNIT_NAMES_BASE         ((uint32_t)0x10000000)
 
 #endif   /* _nms_cscp_h_ */

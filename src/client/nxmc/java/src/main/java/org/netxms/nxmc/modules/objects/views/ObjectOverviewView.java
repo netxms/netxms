@@ -55,6 +55,7 @@ import org.netxms.nxmc.modules.objects.views.elements.ObjectState;
 import org.netxms.nxmc.modules.objects.views.elements.OverviewPageElement;
 import org.netxms.nxmc.modules.objects.views.elements.PollStates;
 import org.netxms.nxmc.modules.objects.views.elements.Topology;
+import org.netxms.nxmc.modules.objects.views.elements.TrafficLineChart;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -141,7 +142,7 @@ public class ObjectOverviewView extends ObjectView
       rightColumn.setBackground(viewArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
-      gd.horizontalAlignment = SWT.LEFT;
+      gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.minimumWidth = SWT.DEFAULT;
       rightColumn.setLayoutData(gd);
@@ -160,7 +161,7 @@ public class ObjectOverviewView extends ObjectView
       e = new Location(leftColumn, e, this);
       elements.add(e);
       e = new LastValues(leftColumn, e, this);
-      elements.add(e);
+      elements.add(e);   
       e = new ExternalResources(leftColumn, e, this);
       elements.add(e);
       e = new Comments(leftColumn, e, this);
@@ -177,6 +178,10 @@ public class ObjectOverviewView extends ObjectView
       elements.add(e);
       e = new Connection(rightColumn, e, this);
       elements.add(e);
+      e = new TrafficLineChart(rightColumn, e, this, false);
+      elements.add(e);   
+      e = new TrafficLineChart(rightColumn, e, this, true);
+      elements.add(e); 
    }
 
    /**

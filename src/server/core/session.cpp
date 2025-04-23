@@ -1999,6 +1999,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_SMCLP_PROPERTIES:
          getSmclpProperties(*request);
          break;
+      case CMD_GET_INTERFACE_DCIS:
+         getInterfaceTrafficDcis(*request);
+         break;
       case CMD_EPP_RECORD:
          processEventProcessingPolicyRecord(*request);
          break;
@@ -17947,3 +17950,114 @@ void ClientSession::getSmclpProperties(const NXCPMessage& request)
 
    sendMessage(response);
 }
+
+/**
+ * Set to message traffic and utilization DCIs and it's units
+ */
+static void CollectInterfaceTrafficDcis(shared_ptr<Node> node, uint32_t interfaceId, NXCPMessage *response)
+{
+   bool foundElements[6] = {false, false, false, false, false, false};
+   const int IN_BITS = 0;
+   const int OUT_BITS = 1;
+   const int IN_UTIL = 2;
+   const int OUT_UTIL = 3;
+   const int IN_BYTES = 4;
+   const int OUT_BYTES = 5;
+   uint32_t dciId[4] = { 0, 0, 0, 0 };
+   StringBuffer units[4];
+
+   node->getDCObjectByFilter([interfaceId, &foundElements, &dciId, &units] (DCObject *obj)
+      {
+         if ((obj->getType() != DCO_TYPE_ITEM) || (obj->getRelatedObject() != interfaceId))
+            return false;
+
+         String tag = obj->getSystemTag();
+         if (foundElements[IN_BITS] && foundElements[OUT_BITS] && foundElements[IN_UTIL] && foundElements[OUT_UTIL])
+            return true;
+
+         if (!foundElements[IN_BITS] && tag.equals(L"iface-inbound-bits"))
+         {
+            dciId[IN_BITS] = obj->getId();
+            units[IN_BITS] = static_cast<DCItem *>(obj)->getUnitName();
+            foundElements[IN_BITS] = true;
+            return false;
+         }
+         if ((!foundElements[IN_BITS] || !foundElements[IN_BYTES]) && tag.equals(L"iface-inbound-bytes"))
+         {
+            dciId[IN_BITS] = obj->getId();
+            units[IN_BITS] = static_cast<DCItem *>(obj)->getUnitName();
+            foundElements[IN_BYTES] = true;
+            return false;
+         }
+
+         if (!foundElements[OUT_BITS] && tag.equals(L"iface-outbound-bits"))
+         {
+            dciId[OUT_BITS] = obj->getId();
+            units[OUT_BITS] = static_cast<DCItem *>(obj)->getUnitName();
+            foundElements[OUT_BITS] = true;
+            return false;
+         }
+         if ((!foundElements[OUT_BITS] || !foundElements[OUT_BYTES]) && tag.equals(L"iface-outbound-bytes"))
+         {
+            dciId[OUT_BITS] = obj->getId();
+            units[OUT_BITS] = static_cast<DCItem *>(obj)->getUnitName();
+            foundElements[OUT_BYTES] = true;
+            return false;
+         }
+
+         if (!foundElements[IN_UTIL] && tag.equals(L"iface-inbound-util"))
+         {
+            dciId[IN_UTIL] = obj->getId();
+            units[IN_UTIL] = static_cast<DCItem *>(obj)->getUnitName();
+            foundElements[IN_UTIL] = true;
+            return false;
+         }
+         if (!foundElements[OUT_UTIL] && tag.equals(L"iface-outbound-util"))
+         {
+            dciId[OUT_UTIL] = obj->getId();
+            units[OUT_UTIL] = static_cast<DCItem *>(obj)->getUnitName();
+            foundElements[OUT_UTIL] = true;
+            return false;
+         }
+         return false;
+      });
+
+   response->setFieldFromInt32Array(VID_DCI_IDS, 4, dciId);
+   uint32_t base = VID_UNIT_NAMES_BASE;
+   for (int i = 0; i < 4; i++)
+   {
+      response->setField(base++, units[i]);
+   }
+}
+
+/**
+ * Get interface related DCI list with traffic and utilization
+ */
+void ClientSession::getInterfaceTrafficDcis(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t interfaceId = request.getFieldAsInt32(VID_INTERFACE_ID);
+   shared_ptr<NetObj> interface = FindObjectById(interfaceId, OBJECT_INTERFACE);
+   if (interface != nullptr)
+   {
+      shared_ptr<Node> node = static_cast<Interface&>(*interface).getParentNode();
+      if (interface->checkAccessRights(m_userId, OBJECT_ACCESS_READ) &&
+               (node->checkAccessRights(m_userId, OBJECT_ACCESS_READ) || node->checkAccessRights(m_userId, OBJECT_ACCESS_DELEGATED_READ)))
+      {
+         CollectInterfaceTrafficDcis(node, interfaceId, &response);
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+

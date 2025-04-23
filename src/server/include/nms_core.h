@@ -965,6 +965,7 @@ private:
    void clearPeerInterface(const NXCPMessage& request);
    void queryAiAssistant(const NXCPMessage& request);
    void getSmclpProperties(const NXCPMessage& request);
+   void getInterfaceTrafficDcis(const NXCPMessage& request);
 
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);
