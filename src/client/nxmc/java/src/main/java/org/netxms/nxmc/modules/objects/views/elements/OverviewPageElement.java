@@ -82,6 +82,7 @@ public abstract class OverviewPageElement
          gd.horizontalSpan = horizontalSpan;
 			gd.grabExcessHorizontalSpace = true;
          gd.verticalAlignment = verticalAlignment;
+         gd.heightHint = getHeightHint();
 			widget.setLayoutData(gd);
 		}
 		onObjectChange();
@@ -203,6 +204,16 @@ public abstract class OverviewPageElement
 	 * @return
 	 */
 	protected abstract Control createClientArea(Composite parent);
+	
+	/**
+	 * Get height hint for element content.
+	 *
+	 * @return height hint for element content
+	 */
+	protected int getHeightHint()
+	{
+	   return SWT.DEFAULT;
+	}
 	
 	/**
 	 * Handler for object change.

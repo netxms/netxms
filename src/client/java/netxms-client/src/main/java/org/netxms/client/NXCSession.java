@@ -104,6 +104,7 @@ import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.datacollection.GraphFolder;
+import org.netxms.client.datacollection.InterfaceTrafficDcis;
 import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.datacollection.PredictionEngine;
@@ -15054,5 +15055,27 @@ public class NXCSession
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId(), commandTimeout * 10);   // LLM response can take significant amount of time
       return response.getFieldAsString(NXCPCodes.VID_MESSAGE);
+   }
+
+   /**
+    * Get interface traffic DCIs 
+    * 
+    * @param interfaceId interface id to find DCIs for 
+    * @return DCI and it's unit: 4 DCIs - 2 pairs (first are trafic, second utilization). 
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public InterfaceTrafficDcis getInterfaceTrafficDcis(long interfaceId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_INTERFACE_TRAFFIC_DCIS);
+      msg.setFieldUInt32(NXCPCodes.VID_INTERFACE_ID, interfaceId);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      Long[] dciList = response.getFieldAsUInt32ArrayEx(NXCPCodes.VID_DCI_IDS);
+      String[] unitNames = new String[4];
+      long base = NXCPCodes.VID_UNIT_NAMES_BASE;
+      for (int i = 0; i < 4; i++)
+         unitNames[i] = response.getFieldAsString(base++);
+      return new InterfaceTrafficDcis(dciList, unitNames);
    }
 }
