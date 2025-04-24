@@ -349,7 +349,7 @@ void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
 	   TCHAR agentFileId[MAX_PATH];
       pMsg->getFieldAsString(VID_FILE_NAME, agentFileId, MAX_PATH);
       unique_ptr<StructArray<std::pair<ClientSession*, uuid>>> sessions = FindFileMonitoringSessions(agentFileId);
-      debugPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: found %d sessions for file monitors with agent ID %s on node %s [%u]"),
+      debugPrintf(8, _T("AgentConnectionEx::onFileMonitoringData: found %d sessions for file monitors with agent ID %s on node %s [%u]"),
             sessions->size(), agentFileId, node->getName(), node->getId());
       for(int i = 0; i < sessions->size(); i++)
       {
