@@ -906,6 +906,9 @@ void NetObj::deleteObject(NetObj *initiator)
       delete recalcList;
    }
 
+   //Delete scheduled tasks
+   DeleteScheduledTasksForDeletedObject(m_id);
+
    lockProperties();
    m_isHidden = false;
    m_isDeleted = true;

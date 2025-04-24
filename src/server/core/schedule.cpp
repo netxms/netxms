@@ -910,6 +910,56 @@ int NXCORE_EXPORTABLE DeleteScheduledTasksByKey(const TCHAR *taskKey)
 }
 
 /**
+ * Delete scheduled task(s) by associated object id
+ */
+static void DeleteScheduledTaskByKey(ObjectArray<ScheduledTask> *category, uint32_t objectId, IntegerArray<uint64_t> *deleteList)
+{
+   for (int i = 0; i < category->size(); i++)
+   {
+      ScheduledTask *task = category->get(i);
+      if (task->getObjectId() == objectId && task->isSystem())
+      {
+         if (!task->isRunning())
+         {
+            deleteList->add(task->getId());
+            category->remove(i);
+            i--;
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Delete of scheduled task [%u] delayed because task is still running"), task->getId());
+            task->disable();  // Prevent re-run
+            ThreadPoolExecuteSerialized(g_schedulerThreadPool, _T("DeleteTask"), DelayedTaskDelete, CAST_TO_POINTER(task->getId(), void*));
+         }
+      }
+   }
+
+}
+
+/**
+ * Delete scheduled task(s) by associated object id
+ */
+void DeleteScheduledTasksForDeletedObject(uint32_t objectId)
+{
+   IntegerArray<uint64_t> deleteList;
+
+   s_oneTimeTaskLock.lock();
+   DeleteScheduledTaskByKey(&s_oneTimeTasks, objectId, &deleteList);
+   DeleteScheduledTaskByKey(&s_completedOneTimeTasks, objectId, &deleteList);
+   s_oneTimeTaskLock.unlock();
+
+   s_recurrentTaskLock.lock();
+   DeleteScheduledTaskByKey(&s_recurrentTasks, objectId, &deleteList);
+   s_recurrentTaskLock.unlock();
+
+   for(int i = 0; i < deleteList.size(); i++)
+   {
+      DeleteScheduledTaskFromDB(deleteList.get(i));
+   }
+}
+
+
+/**
  * Get number of scheduled tasks with given key
  */
 int NXCORE_EXPORTABLE CountScheduledTasksByKey(const TCHAR *taskKey)
