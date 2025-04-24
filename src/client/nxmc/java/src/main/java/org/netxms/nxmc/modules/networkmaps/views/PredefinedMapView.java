@@ -118,7 +118,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    private Action actionImageProperties;
 	private Color defaultLinkColor = null;
    private boolean disableGeolocationBackground = false;
-   private boolean diableLintTextAutoUpdate = true;
+   private boolean disableLinkTextAutoUpdate = true;
    private Map<Long, Boolean> readOnlyFlagsCache = new HashMap<>();
    private Set<NetworkMapElement> movedElementList = new HashSet<>();
    private Set<NetworkMapLink> changedLinkList = new HashSet<>();
@@ -458,7 +458,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	   NetworkMap mapObject = getMapObject();
 	   if (mapObject != null)
 	   {
-	      diableLintTextAutoUpdate = mapObject.isDontUpdateLinkText();
+	      disableLinkTextAutoUpdate = mapObject.isDontUpdateLinkText();
 	      mapPage = mapObject.createMapPage();	      
 	   }
 	   else
@@ -1147,7 +1147,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 		if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapLink))
 			return;
 
-		LinkEditor link = new LinkEditor((NetworkMapLink)selection.getFirstElement(), mapPage, diableLintTextAutoUpdate);
+		LinkEditor link = new LinkEditor((NetworkMapLink)selection.getFirstElement(), mapPage, disableLinkTextAutoUpdate);
 
       PreferenceManager pm = new PreferenceManager();
       pm.addToRoot(new PreferenceNode("link.general", new LinkGeneral(link)));
