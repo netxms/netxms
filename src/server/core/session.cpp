@@ -119,7 +119,9 @@ uint32_t CompileMibFiles(ClientSession *session, uint32_t requestId);
 
 uint64_t StartFileUploadToAgent(const shared_ptr<Node>& node, const TCHAR *localFile, const TCHAR *remoteFile, uint32_t userId);
 
+#if WITH_PRIVATE_EXTENSIONS || (defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD))
 int GetMaxAllowedNodeCount();
+#endif
 
 /**
  * Maximum client message size

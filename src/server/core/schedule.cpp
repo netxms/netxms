@@ -862,7 +862,7 @@ bool NXCORE_EXPORTABLE DeleteScheduledTaskByHandlerId(const TCHAR *taskHandlerId
 /**
  * Delete scheduled task(s) by task key from given task category
  */
-static void DeleteScheduledTaskByKey(ObjectArray<ScheduledTask> *category, const TCHAR *taskKey, IntegerArray<uint64_t> *deleteList)
+static void DeleteScheduledTasksByKey(ObjectArray<ScheduledTask> *category, const TCHAR *taskKey, IntegerArray<uint64_t> *deleteList)
 {
    for (int i = 0; i < category->size(); i++)
    {
@@ -893,12 +893,12 @@ int NXCORE_EXPORTABLE DeleteScheduledTasksByKey(const TCHAR *taskKey)
    IntegerArray<uint64_t> deleteList;
 
    s_oneTimeTaskLock.lock();
-   DeleteScheduledTaskByKey(&s_oneTimeTasks, taskKey, &deleteList);
-   DeleteScheduledTaskByKey(&s_completedOneTimeTasks, taskKey, &deleteList);
+   DeleteScheduledTasksByKey(&s_oneTimeTasks, taskKey, &deleteList);
+   DeleteScheduledTasksByKey(&s_completedOneTimeTasks, taskKey, &deleteList);
    s_oneTimeTaskLock.unlock();
 
    s_recurrentTaskLock.lock();
-   DeleteScheduledTaskByKey(&s_recurrentTasks, taskKey, &deleteList);
+   DeleteScheduledTasksByKey(&s_recurrentTasks, taskKey, &deleteList);
    s_recurrentTaskLock.unlock();
 
    for(int i = 0; i < deleteList.size(); i++)
@@ -912,12 +912,12 @@ int NXCORE_EXPORTABLE DeleteScheduledTasksByKey(const TCHAR *taskKey)
 /**
  * Delete scheduled task(s) by associated object id
  */
-static void DeleteScheduledTaskByKey(ObjectArray<ScheduledTask> *category, uint32_t objectId, IntegerArray<uint64_t> *deleteList)
+static void DeleteScheduledTasksByObjectId(ObjectArray<ScheduledTask> *category, uint32_t objectId, bool allTasks, IntegerArray<uint64_t> *deleteList)
 {
    for (int i = 0; i < category->size(); i++)
    {
       ScheduledTask *task = category->get(i);
-      if (task->getObjectId() == objectId && task->isSystem())
+      if (task->getObjectId() == objectId && (allTasks || task->isSystem()))
       {
          if (!task->isRunning())
          {
@@ -939,25 +939,26 @@ static void DeleteScheduledTaskByKey(ObjectArray<ScheduledTask> *category, uint3
 /**
  * Delete scheduled task(s) by associated object id
  */
-void DeleteScheduledTasksForDeletedObject(uint32_t objectId)
+int NXCORE_EXPORTABLE DeleteScheduledTasksByObjectId(uint32_t objectId, bool allTasks)
 {
    IntegerArray<uint64_t> deleteList;
 
    s_oneTimeTaskLock.lock();
-   DeleteScheduledTaskByKey(&s_oneTimeTasks, objectId, &deleteList);
-   DeleteScheduledTaskByKey(&s_completedOneTimeTasks, objectId, &deleteList);
+   DeleteScheduledTasksByObjectId(&s_oneTimeTasks, objectId, allTasks, &deleteList);
+   DeleteScheduledTasksByObjectId(&s_completedOneTimeTasks, objectId, allTasks, &deleteList);
    s_oneTimeTaskLock.unlock();
 
    s_recurrentTaskLock.lock();
-   DeleteScheduledTaskByKey(&s_recurrentTasks, objectId, &deleteList);
+   DeleteScheduledTasksByObjectId(&s_recurrentTasks, objectId, allTasks, &deleteList);
    s_recurrentTaskLock.unlock();
 
    for(int i = 0; i < deleteList.size(); i++)
    {
       DeleteScheduledTaskFromDB(deleteList.get(i));
    }
-}
 
+   return deleteList.size();
+}
 
 /**
  * Get number of scheduled tasks with given key
