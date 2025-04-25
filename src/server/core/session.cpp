@@ -18041,15 +18041,21 @@ void ClientSession::getInterfaceTrafficDcis(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    uint32_t interfaceId = request.getFieldAsInt32(VID_INTERFACE_ID);
-   shared_ptr<NetObj> interface = FindObjectById(interfaceId, OBJECT_INTERFACE);
-   if (interface != nullptr)
+   shared_ptr<NetObj> iface = FindObjectById(interfaceId, OBJECT_INTERFACE);
+   if (iface != nullptr)
    {
-      shared_ptr<Node> node = static_cast<Interface&>(*interface).getParentNode();
-      if (interface->checkAccessRights(m_userId, OBJECT_ACCESS_READ) &&
-               (node->checkAccessRights(m_userId, OBJECT_ACCESS_READ) || node->checkAccessRights(m_userId, OBJECT_ACCESS_DELEGATED_READ)))
+      if (iface->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
       {
-         GetInterfaceTrafficDcis(node, interfaceId, &response);
-         response.setField(VID_RCC, RCC_SUCCESS);
+         shared_ptr<Node> node = static_cast<Interface&>(*iface).getParentNode();
+         if (node->checkAccessRights(m_userId, OBJECT_ACCESS_READ) || node->checkAccessRights(m_userId, OBJECT_ACCESS_DELEGATED_READ))
+         {
+            GetInterfaceTrafficDcis(node, interfaceId, &response);
+            response.setField(VID_RCC, RCC_SUCCESS);
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
+         }
       }
       else
       {
@@ -18063,4 +18069,3 @@ void ClientSession::getInterfaceTrafficDcis(const NXCPMessage& request)
 
    sendMessage(response);
 }
-
