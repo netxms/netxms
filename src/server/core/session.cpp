@@ -17957,17 +17957,18 @@ void ClientSession::getSmclpProperties(const NXCPMessage& request)
 static void GetInterfaceTrafficDcis(shared_ptr<Node> node, uint32_t interfaceId, NXCPMessage *response)
 {
    bool foundElements[6] = {false, false, false, false, false, false};
-   const int IN_BITS = 0;
-   const int OUT_BITS = 1;
-   const int IN_UTIL = 2;
-   const int OUT_UTIL = 3;
-   const int IN_BYTES = 4;
-   const int OUT_BYTES = 5;
    uint32_t dciId[4] = { 0, 0, 0, 0 };
    StringBuffer units[4];
 
    node->getDCObjectByFilter([interfaceId, &foundElements, &dciId, &units] (DCObject *obj)
       {
+         const int IN_BITS = 0;
+         const int OUT_BITS = 1;
+         const int IN_UTIL = 2;
+         const int OUT_UTIL = 3;
+         const int IN_BYTES = 4;
+         const int OUT_BYTES = 5;
+
          if ((obj->getType() != DCO_TYPE_ITEM) || (obj->getRelatedObject() != interfaceId))
             return false;
 
