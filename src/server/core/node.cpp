@@ -4595,29 +4595,31 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
    if (m_capabilities & NC_IS_NATIVE_AGENT)
    {
       uint32_t error, socketError;
-      bool newConnection;
       agentLock();
-      connectToAgent(&error, &socketError, &newConnection, true);
+      bool connected = connectToAgent(&error, &socketError, nullptr, true);
       agentUnlock();
 
-      // Check if agent was marked as unreachable before full poll
-      if ((m_state & NSF_AGENT_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
+      if (connected)
       {
-         m_state &= ~NSF_AGENT_UNREACHABLE;
-         PostSystemEvent(EVENT_AGENT_OK, m_id);
-         sendPollerMsg(POLLER_INFO _T("   Connectivity with NetXMS agent restored\r\n"));
-         m_pollCountAgent = 0;
-
-         // Reset connection time of all proxy connections so they can be re-established immediately
-         for(int i = 0; i < MAX_PROXY_TYPE; i++)
+         // Check if agent was marked as unreachable before full poll
+         if ((m_state & NSF_AGENT_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
          {
-            m_proxyConnections[i].lock();
-            m_proxyConnections[i].setLastConnectTime(0);
-            m_proxyConnections[i].unlock();
-         }
-      }
+            m_state &= ~NSF_AGENT_UNREACHABLE;
+            PostSystemEvent(EVENT_AGENT_OK, m_id);
+            sendPollerMsg(POLLER_INFO _T("   Connectivity with NetXMS agent restored\r\n"));
+            m_pollCountAgent = 0;
 
-      ExitFromUnreachableState();
+            // Reset connection time of all proxy connections so they can be re-established immediately
+            for(int i = 0; i < MAX_PROXY_TYPE; i++)
+            {
+               m_proxyConnections[i].lock();
+               m_proxyConnections[i].setLastConnectTime(0);
+               m_proxyConnections[i].unlock();
+            }
+         }
+
+         ExitFromUnreachableState();
+      }
    }
 
    POLL_CANCELLATION_CHECKPOINT();
@@ -4626,7 +4628,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       modified |= MODIFY_NODE_PROPERTIES;
 
    // Check if SNMP was marked as unreachable before full poll
-   if ((m_capabilities & NC_IS_SNMP) && (m_state & NSF_SNMP_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
+   if ((m_capabilities & NC_IS_SNMP) && !(m_expectedCapabilities & NC_IS_SNMP) && (m_state & NSF_SNMP_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
    {
       m_state &= ~NSF_SNMP_UNREACHABLE;
       PostSystemEvent(EVENT_SNMP_OK, m_id);
@@ -4641,7 +4643,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       modified |= MODIFY_NODE_PROPERTIES;
 
    // Check if SSH was marked as unreachable before full poll
-   if ((m_capabilities & NC_IS_SSH) && (m_state & NSF_SSH_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
+   if ((m_capabilities & NC_IS_SSH) && !(m_expectedCapabilities & NC_IS_SSH) && (m_state & NSF_SSH_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
    {
       m_state &= ~NSF_SSH_UNREACHABLE;
       PostSystemEvent(EVENT_SSH_OK, m_id);
@@ -4661,7 +4663,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       modified |= MODIFY_NODE_PROPERTIES;
 
    // Check if Ethernet/IP was marked as unreachable before full poll
-   if ((m_capabilities & NC_IS_ETHERNET_IP) && (m_state & NSF_ETHERNET_IP_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
+   if ((m_capabilities & NC_IS_ETHERNET_IP) && !(m_expectedCapabilities & NC_IS_ETHERNET_IP) && (m_state & NSF_ETHERNET_IP_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
    {
       m_state &= ~NSF_ETHERNET_IP_UNREACHABLE;
       PostSystemEvent(EVENT_ETHERNET_IP_OK, m_id);
@@ -4675,7 +4677,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       modified |= MODIFY_NODE_PROPERTIES;
 
    // Check if MODBUS was marked as unreachable before full poll
-   if ((m_capabilities & NC_IS_MODBUS_TCP) && (m_state & NSF_MODBUS_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
+   if ((m_capabilities & NC_IS_MODBUS_TCP) && !(m_expectedCapabilities & NC_IS_MODBUS_TCP) && (m_state & NSF_MODBUS_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
    {
       m_state &= ~NSF_MODBUS_UNREACHABLE;
       PostSystemEvent(EVENT_MODBUS_OK, m_id);
