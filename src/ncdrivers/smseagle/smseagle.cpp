@@ -4,7 +4,7 @@
 ** 
 ** SMSEagle API documentation - https://www.smseagle.eu/api/
 **
-** Copyright (C) 2014-2023 Raden Solutions
+** Copyright (C) 2014-2025 Raden Solutions
 ** Copyright (C) 2016 TEMPEST a.s.
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -118,16 +118,6 @@ SMSEagleDriver::SMSEagleDriver(Config *config)
 }
 
 /**
- * Callback for processing data received from cURL
- */
-static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *context)
-{
-   size_t bytes = size * nmemb;
-   static_cast<ByteStream*>(context)->write(ptr, bytes);
-   return bytes;
-}
-
-/**
  * Send SMS
  */
 int SMSEagleDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
@@ -147,7 +137,7 @@ int SMSEagleDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCH
 
    curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
-   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
+   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
 
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, (m_flags & OPTION_VERIFY_CERTIFICATE) ? 1 : 0);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, (m_flags & OPTION_VERIFY_HOST) ? 2 : 0);

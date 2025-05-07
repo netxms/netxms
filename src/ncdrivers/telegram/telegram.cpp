@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Notification channel driver for Telegram messenger
-** Copyright (C) 2014-2024 Raden Solutions
+** Copyright (C) 2014-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -238,16 +238,6 @@ TelegramDriver::~TelegramDriver()
 }
 
 /**
- * Callback for processing data received from cURL
- */
-static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *context)
-{
-   size_t bytes = size * nmemb;
-   static_cast<ByteStream*>(context)->write(ptr, bytes);
-   return bytes;
-}
-
-/**
  * Send request to Telegram API
  */
 static CallResponse SendTelegramRequest(const char *token, const ProxyInfo *proxy, long ipVersion, const char *method, json_t *data)
@@ -265,7 +255,7 @@ static CallResponse SendTelegramRequest(const char *token, const ProxyInfo *prox
 
    curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
-   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
+   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Telegram Driver/" NETXMS_VERSION_STRING_A);
 
    ByteStream responseData(32768);
@@ -617,7 +607,7 @@ void TelegramDriver::updateHandler(TelegramDriver *driver)
 
       curl_easy_setopt(curl, CURLOPT_HEADER, 0L); // do not include header in data
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, 300L);
-      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
+      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
       curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Telegram Driver/" NETXMS_VERSION_STRING_A);
 
       curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);

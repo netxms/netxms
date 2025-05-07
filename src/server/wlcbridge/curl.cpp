@@ -26,16 +26,6 @@
 #define DEBUG_TAG WLCBRIDGE_DEBUG_TAG _T(".curl")
 
 /**
- * Callback for processing data received from cURL
- */
-static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *context)
-{
-   size_t bytes = size * nmemb;
-   static_cast<ByteStream*>(context)->write(ptr, bytes);
-   return bytes;
-}
-
-/**
  * Create CURL handle with common setup
  */
 CURL *CreateCurlHandle(ByteStream *responseData, char *errorBuffer)
@@ -53,7 +43,7 @@ CURL *CreateCurlHandle(ByteStream *responseData, char *errorBuffer)
 
    curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 180);
-   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
+   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, (long)0);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, (long)0);
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS WLC Bridge/" NETXMS_VERSION_STRING_A);

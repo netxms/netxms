@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Notification channel driver for Kannel gateway
-** Copyright (C) 2014-2023 Raden Solutions
+** Copyright (C) 2014-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -68,15 +68,6 @@ KannelDriver::KannelDriver(Config *config)
 }
 
 /**
- * Callback for processing data received from cURL
- */
-static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *context)
-{
-   static_cast<ByteStream*>(context)->write(ptr, size * nmemb);
-   return size * nmemb;
-}
-
-/**
  * Send SMS
  */
 int KannelDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
@@ -95,7 +86,7 @@ int KannelDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR
       curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1); // do not install signal handlers or send signals
       curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
-      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
+      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
 
       ByteStream *data = new ByteStream();
       curl_easy_setopt(curl, CURLOPT_WRITEDATA, data);
