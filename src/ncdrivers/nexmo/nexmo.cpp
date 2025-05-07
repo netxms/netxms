@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SMS driver for Nexmo gateway
-** Copyright (C) 2014-2019 Raden Solutions
+** Copyright (C) 2014-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -75,16 +75,6 @@ NexmoDriver::NexmoDriver(Config *config)
 	};
 
 	config->parseTemplate(_T("Nexmo"), configTemplate);
-}
-
-/**
- * Callback for processing data received from cURL
- */
-static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *context)
-{
-   size_t bytes = size * nmemb;
-   static_cast<ByteStream*>(context)->write(ptr, bytes);
-   return bytes;
 }
 
 /**
@@ -173,7 +163,7 @@ int NexmoDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR*
       curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1); // do not install signal handlers or send signals
       curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
-      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
+      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
 
       ByteStream responseData(32768);
       responseData.setAllocationStep(32768);
