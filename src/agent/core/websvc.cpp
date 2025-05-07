@@ -80,16 +80,6 @@ WebServiceRequest::WebServiceRequest() : StructuredDataExtractor(DEBUG_TAG)
 }
 
 /**
- * Callback for processing data received from cURL
- */
-static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *context)
-{
-   size_t bytes = size * nmemb;
-   static_cast<ByteStream*>(context)->write(ptr, bytes);
-   return bytes;
-}
-
-/**
  * Get curl auth type from NetXMS internal code
  */
 static long CurlAuthType(WebServiceAuthType authType)
@@ -181,7 +171,7 @@ uint32_t WebServiceRequest::query(const TCHAR *url, uint16_t requestMethod, cons
       curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
       curl_easy_setopt(curl, CURLOPT_HEADER, static_cast<long>(0));
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, static_cast<long>((requestTimeout != 0) ? requestTimeout : 10));
-      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
+      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
       curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Agent/" NETXMS_VERSION_STRING_A);
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, verifyPeer ? 1 : 0);
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, verifyHost ? 2 : 0);

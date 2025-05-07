@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Notification channel driver for Mattermost
-** Copyright (C) 2024 Raden Solutions
+** Copyright (C) 2024-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -76,16 +76,6 @@ public:
 
    static MattermostDriver *createInstance(Config *config);
 };
-
-/**
- * Callback for processing data received from cURL
- */
-static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *context)
-{
-   size_t bytes = size * nmemb;
-   static_cast<ByteStream*>(context)->write(ptr, bytes);
-   return bytes;
-}
 
 /**
  * Create driver instance
@@ -222,7 +212,7 @@ int MattermostDriver::send(const TCHAR *recipient, const TCHAR *subject, const T
 
    curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
-   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
+   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Mattermost Driver/" NETXMS_VERSION_STRING_A);
 
    ByteStream responseData(32768);
@@ -300,7 +290,7 @@ bool MattermostDriver::checkHealth()
 
    curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
-   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
+   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Mattermost Driver/" NETXMS_VERSION_STRING_A);
 
    ByteStream responseData(32768);

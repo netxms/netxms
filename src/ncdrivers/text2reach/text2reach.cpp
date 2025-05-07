@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SMS driver for Text2Reach.com service
-** Copyright (C) 2014-2023 Raden Solutions
+** Copyright (C) 2014-2025 Raden Solutions
 **
 ** Text2Reach API documentation - http://www.text2reach.com/files/text2reach_bulkapi_v1.14.pdf
 **
@@ -88,16 +88,6 @@ Text2ReachDriver::Text2ReachDriver(Config *config)
 }
 
 /**
- * Callback for processing data received from cURL
- */
-static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *context)
-{
-   size_t bytes = size * nmemb;
-   static_cast<ByteStream*>(context)->write(ptr, bytes);
-   return bytes;
-}
-
-/**
  * Send SMS
  */
 int Text2ReachDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
@@ -112,7 +102,7 @@ int Text2ReachDriver::send(const TCHAR* recipient, const TCHAR* subject, const T
    {
       curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuffer);
       curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
-      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
+      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, static_cast<long>(m_verifyPeer ? 1 : 0));
 
       ByteStream responseData(32768);

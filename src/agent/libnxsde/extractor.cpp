@@ -28,7 +28,7 @@
 /**
  * Function to replace new line to space
  */
-char *RemoveNewLines(char* str)
+static char *RemoveNewLines(char* str)
 {
     char *currentPos = strchr(str,'\n');
     while (currentPos != nullptr)
@@ -102,7 +102,7 @@ uint32_t StructuredDataExtractor::getMetricFromXML(const TCHAR *query, char *buf
 /**
  * JQ logging callback
  */
-void JqMessageCallback(void *data, jv error)
+static void JqMessageCallback(void *data, jv error)
 {
    const char *text = jv_string_value(error);
    size_t len = strlen(text);
@@ -115,7 +115,7 @@ void JqMessageCallback(void *data, jv error)
  * Convert old request format to new format if required
  * replace '/' to '.'
  */
-String ConvertRequestToJqFormat(const TCHAR *originalValue)
+static String ConvertRequestToJqFormat(const TCHAR *originalValue)
 {
    StringBuffer result;
    if (originalValue[0] == _T('/'))

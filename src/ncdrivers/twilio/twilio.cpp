@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Notification channel driver for Twilio
-** Copyright (C) 2022 Raden Solutions
+** Copyright (C) 2022-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -50,6 +50,7 @@ private:
       memset(m_callerId, 0, sizeof(m_callerId));
       memset(m_voice, 0, sizeof(m_voice));
       m_useTTS = false;
+      m_verifyPeer = false;
    }
 
 public:
@@ -57,16 +58,6 @@ public:
 
    static TwilioDriver *createInstance(Config *config);
 };
-
-/**
- * Callback for processing data received from cURL
- */
-static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *context)
-{
-   size_t bytes = size * nmemb;
-   static_cast<ByteStream*>(context)->write(ptr, bytes);
-   return bytes;
-}
 
 /**
  * Create driver instance
@@ -139,7 +130,7 @@ int TwilioDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR
 
    curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
-   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
+   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, static_cast<long>(m_verifyPeer ? 1 : 0));
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Twilio Driver/" NETXMS_VERSION_STRING_A);
    curl_easy_setopt(curl, CURLOPT_USERNAME, m_sid);

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,17 +21,6 @@
 #include "netsvc.h"
 
 /**
- * Callback for processing data received from cURL
- */
-static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *userdata)
-{
-    ByteStream *data = static_cast<ByteStream*>(userdata);
-    size_t bytes = size * nmemb;
-    data->write(ptr, bytes);
-    return bytes;
-}
-
-/**
  * Service check sub-handler - other protocols
  */
 LONG NetworkServiceStatus_Other(CURL *curl, const OptionList& options, const char *url, int *result)
@@ -40,7 +29,7 @@ LONG NetworkServiceStatus_Other(CURL *curl, const OptionList& options, const cha
     ByteStream data(32768);
     data.setAllocationStep(32768);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, OnCurlDataReceived);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
 
     char errorText[CURL_ERROR_SIZE] = "";
     curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorText);
