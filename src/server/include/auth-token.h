@@ -31,6 +31,16 @@
 #define USER_AUTHENTICATION_TOKEN_LENGTH  20
 
 /**
+ * Authentication token types
+ */
+enum class AuthenticationTokenType
+{
+   EPHEMERAL = 0,    // Not saved to database, usually short-lived
+   PERSISTENT = 1,   // Saved to database, usually with long expiration time
+   SERVICE = 2       // Similar to ephemeral but will not trigger existing session disconnect
+};
+
+/**
  * User authentication token
  */
 class NXCORE_EXPORTABLE UserAuthenticationToken : public GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>
@@ -56,8 +66,8 @@ public:
    }
 
    char *toStringA(char *buffer) const;
-   WCHAR *toStringW(WCHAR *buffer) const;
-   TCHAR *toString(TCHAR *buffer) const
+   wchar_t *toStringW(wchar_t *buffer) const;
+   wchar_t *toString(wchar_t *buffer) const
    {
       return toStringW(buffer);
    }
@@ -67,9 +77,9 @@ public:
       return String(toString(buffer));
    }
 
-   static UserAuthenticationToken parseW(const WCHAR *s);
+   static UserAuthenticationToken parseW(const wchar_t *s);
    static UserAuthenticationToken parseA(const char *s);
-   static UserAuthenticationToken parse(const TCHAR *s)
+   static UserAuthenticationToken parse(const wchar_t *s)
    {
       return parseW(s);
    }
@@ -92,23 +102,25 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
    time_t issuingTime;
    time_t expirationTime;
    bool persistent;
+   bool service;
    bool validClearText;
    String description;
 
    /**
     * Create new token
     */
-   AuthenticationTokenDescriptor(uint32_t uid, uint32_t validFor, bool _persistent, const TCHAR *_description) : description(_description)
+   AuthenticationTokenDescriptor(uint32_t uid, uint32_t validFor, AuthenticationTokenType type, const TCHAR *_description) : description(_description)
    {
       BYTE bytes[USER_AUTHENTICATION_TOKEN_LENGTH];
       GenerateRandomBytes(bytes, USER_AUTHENTICATION_TOKEN_LENGTH);
       token = UserAuthenticationToken(bytes);
       CalculateSHA256Hash(bytes, USER_AUTHENTICATION_TOKEN_LENGTH, hash);
-      tokenId = _persistent ? CreateUniqueId(IDG_AUTHTOKEN) : 0;
+      tokenId = (type == AuthenticationTokenType::PERSISTENT) ? CreateUniqueId(IDG_AUTHTOKEN) : 0;
       userId = uid;
       issuingTime = time(nullptr);
       expirationTime = issuingTime + validFor;
-      persistent = _persistent;
+      persistent = (type == AuthenticationTokenType::PERSISTENT);
+      service = (type == AuthenticationTokenType::SERVICE);
       validClearText = true;
    }
 
@@ -127,6 +139,7 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
       StrToBin(text, hash, SHA256_DIGEST_SIZE);
 
       persistent = true;
+      service = false;
       validClearText = false;
    }
 
@@ -145,6 +158,7 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
       }
       msg->setFieldFromTime(baseId + 5, issuingTime);
       msg->setFieldFromTime(baseId + 6, expirationTime);
+      msg->setField(baseId + 7, service);
    }
 };
 

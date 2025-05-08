@@ -30,7 +30,7 @@
 /**
  * Convert authentication token to string form (wide char version)
  */
-WCHAR *UserAuthenticationToken::toStringW(WCHAR *buffer) const
+WCHAR *UserAuthenticationToken::toStringW(wchar_t *buffer) const
 {
    char encoded[ENCODED_USER_AUTHENTICATION_TOKEN_LENGTH + 1];
    base32_encode(reinterpret_cast<const char*>(m_value), USER_AUTHENTICATION_TOKEN_LENGTH, encoded, ENCODED_USER_AUTHENTICATION_TOKEN_LENGTH + 1);
@@ -65,9 +65,9 @@ static inline UserAuthenticationToken ParseToken(char *s)
 /**
  * Parse user authentication token (wide char version)
  */
-UserAuthenticationToken UserAuthenticationToken::parseW(const WCHAR *s)
+UserAuthenticationToken UserAuthenticationToken::parseW(const wchar_t *s)
 {
-   if (_tcslen(s) != ENCODED_USER_AUTHENTICATION_TOKEN_LENGTH)
+   if (wcslen(s) != ENCODED_USER_AUTHENTICATION_TOKEN_LENGTH)
       return UserAuthenticationToken();
 
    char ts[ENCODED_USER_AUTHENTICATION_TOKEN_LENGTH + 1];
@@ -118,19 +118,19 @@ void LoadAuthenticationTokens()
 /**
  * Issue authentication token
  */
-shared_ptr<AuthenticationTokenDescriptor> NXCORE_EXPORTABLE IssueAuthenticationToken(uint32_t userId, uint32_t validFor, bool persistent, const TCHAR *description)
+shared_ptr<AuthenticationTokenDescriptor> NXCORE_EXPORTABLE IssueAuthenticationToken(uint32_t userId, uint32_t validFor, AuthenticationTokenType type, const wchar_t *description)
 {
-   TCHAR userName[MAX_USER_NAME];
+   wchar_t userName[MAX_USER_NAME];
    if ((userId & GROUP_FLAG) || ResolveUserId(userId, userName) == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot issue authentication token for unknown user [%u]"), userId);
       return shared_ptr<AuthenticationTokenDescriptor>();
    }
 
-   auto descriptor = make_shared<AuthenticationTokenDescriptor>(userId, validFor, persistent, description);
+   auto descriptor = make_shared<AuthenticationTokenDescriptor>(userId, validFor, type, description);
    s_tokens.set(descriptor->hash, descriptor);
 
-   if (persistent)
+   if (type == AuthenticationTokenType::PERSISTENT)
    {
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("New persistent authentication token issued for user %s [%u]"), userName, userId);
 
@@ -152,7 +152,8 @@ shared_ptr<AuthenticationTokenDescriptor> NXCORE_EXPORTABLE IssueAuthenticationT
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("New ephemeral authentication token issued for user %s [%u]"), userName, userId);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("New %s authentication token issued for user %s [%u]"),
+         (type == AuthenticationTokenType::SERVICE) ? L"service" : L"ephemeral", userName, userId);
    }
 
    return descriptor;
@@ -211,7 +212,7 @@ uint32_t NXCORE_EXPORTABLE RevokeAuthenticationToken(uint32_t tokenId, uint32_t 
 /**
  * Authenticate user with token. If validFor is non-zero, token expiration time will be set to current time + provided value.
  */
-bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId, uint32_t validFor)
+bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId, bool *serviceToken, uint32_t validFor)
 {
    UserAuthenticationTokenHash hash;
    CalculateSHA256Hash(token.value(), USER_AUTHENTICATION_TOKEN_LENGTH, hash);
@@ -235,6 +236,8 @@ bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken
       descriptor->expirationTime = now + validFor;
    }
    *userId = descriptor->userId;
+   if (serviceToken != nullptr)
+      *serviceToken = descriptor->service;
    return true;
 }
 
@@ -296,9 +299,10 @@ void ShowAuthenticationTokens(ServerConsole *console)
       [console] (const UserAuthenticationTokenHash& key, const shared_ptr<AuthenticationTokenDescriptor>& descriptor) -> EnumerationCallbackResult
       {
          TCHAR userName[MAX_USER_NAME];
-         console->printf(_T(" %10u | %c%c    | %-32s | %6u | %-24s | %s\n"),
+         console->printf(_T(" %10u | %c%c%c   | %-32s | %6u | %-24s | %s\n"),
             descriptor->tokenId,
-            descriptor->persistent ? _T('P') : _T('-'), descriptor->validClearText ? _T('V') : _T('-'),
+            descriptor->persistent ? _T('P') : _T('-'), descriptor->service ? _T('S') : _T('-'),
+            descriptor->validClearText ? _T('V') : _T('-'),
             descriptor->validClearText ? descriptor->token.toString().cstr() : _T("unavailable"),
             descriptor->userId, ResolveUserId(descriptor->userId, userName),
             FormatTimestamp(descriptor->expirationTime).cstr());

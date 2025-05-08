@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -360,7 +360,7 @@ NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession
          }
 
          // Issue authentication token for reporting server (valid for 5 minutes)
-         request->setField(VID_AUTH_TOKEN, IssueAuthenticationToken(session->getUserId(), 300)->token.toString());
+         request->setField(VID_AUTH_TOKEN, IssueAuthenticationToken(session->getUserId(), 300, AuthenticationTokenType::SERVICE)->token.toString());
          break;
    }
 
@@ -409,7 +409,7 @@ void ExecuteReport(const shared_ptr<ScheduledTaskParameters>& parameters)
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Data view is not required or cannot be prepared for report %s"), reportId.toString().cstr());
 
    // Issue authentication token for reporting server (valid for 5 minutes)
-   request.setField(VID_AUTH_TOKEN, IssueAuthenticationToken(parameters->m_userId, 300)->token.toString());
+   request.setField(VID_AUTH_TOKEN, IssueAuthenticationToken(parameters->m_userId, 300, AuthenticationTokenType::SERVICE)->token.toString());
 
    if (s_connector->sendMessage(&request))
    {
