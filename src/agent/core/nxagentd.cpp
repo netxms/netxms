@@ -2052,7 +2052,11 @@ int main(int argc, char *argv[])
 	int uid = 0, gid = 0;
 #endif
 
+   FILE *fplog = fopen("C:\\NetXMS\\log\\startup.log", "a");
+   fprintf(fplog, "Starting agent, command line: '%s'\n", GetCommandLineA());
+
    InitNetXMSProcess(false);
+   fprintf(fplog, "InitNetXMSProcess completed\n");
 
    // Check for alternate config file location
 #ifdef _WIN32
@@ -2085,7 +2089,8 @@ int main(int argc, char *argv[])
 #endif
 
    // Parse command line
-	if (argc == 1)
+   fprintf(fplog, "parsing command line (argc=%d)\n", argc);
+   if (argc == 1)
 		command = Command::HELP;
    opterr = 1;
 
@@ -2096,6 +2101,8 @@ int main(int argc, char *argv[])
    while((ch = getopt(argc, argv, VALID_OPTIONS)) != -1)
 #endif
    {
+      fprintf(fplog, "Found command line option -%c %s\n", ch, optarg);
+
       switch(ch)
       {
          case 'B':  //zone UIN
@@ -2317,10 +2324,12 @@ int main(int argc, char *argv[])
 	if (!_tcscmp(g_szConfigIncludeDir, _T("{search}")))
       SearchConfig(_T("nxagentd.conf.d"), g_szConfigIncludeDir);
 
+   fprintf(fplog, "bRestart=%d\n", bRestart);
    if (bRestart)
       DoRestartActions(oldPID);
 
    // Do requested action
+   fprintf(fplog, "command=%d\n", command);
    shared_ptr<Config> config;
    switch(command)
    {
@@ -2339,9 +2348,11 @@ int main(int argc, char *argv[])
             }
          }
 #endif
+         fprintf(fplog, "g_dwFlags=0x%08x  s_startupFlags=0x%08x\n", g_dwFlags, s_startupFlags);
 
          if (g_dwFlags & AF_CENTRAL_CONFIG)
          {
+            fprintf(fplog, "config download\n");
             if (s_debugLevel > 0)
                _tprintf(_T("Downloading configuration from %s...\n"), g_szConfigServer);
             if (DownloadConfig(g_szConfigServer))
@@ -2356,8 +2367,11 @@ int main(int argc, char *argv[])
             }
          }
 
-			if (!LoadConfig(configSection, true, false))
+         fprintf(fplog, "loading and parsing config\n");
+         if (!LoadConfig(configSection, true, false))
 			{
+            fprintf(fplog, "config load error\n");
+
             _tprintf(_T("WARNING: configuration loaded with errors\n"));
 		      g_failFlags |= FAIL_LOAD_CONFIG;
 			}
@@ -2370,8 +2384,11 @@ int main(int argc, char *argv[])
             _tcslcpy(g_masterAgent, &configSection[4], MAX_PATH);
          }
 
+         fprintf(fplog, "parsing config\n");
          if (!config->parseTemplate(configSection, m_cfgTemplate))
          {
+            fprintf(fplog, "config parse error\n");
+
             _tprintf(_T("WARNING: configuration loaded with errors\n"));
             g_failFlags |= FAIL_LOAD_CONFIG;
          }
@@ -2420,6 +2437,7 @@ int main(int argc, char *argv[])
             GetNetXMSDirectory(nxDirData, s_dumpDirectory);
             _tcslcat(s_dumpDirectory, _T("\\dump"), MAX_PATH);
          }
+         fprintf(fplog, "dump dir set to %S\n", s_dumpDirectory);
 
          // Configure exception handling
          if (s_startupFlags & SF_FATAL_EXIT_ON_CRT_ERROR)
@@ -2433,6 +2451,7 @@ int main(int argc, char *argv[])
 
             TCHAR crashServerCmdLine[256];
             _sntprintf(crashServerCmdLine, 256, _T("nxcrashsrv.exe nxagentd-crashsrv-%u \"%s\""), GetCurrentProcessId(), s_dumpDirectory);
+            fprintf(fplog, "starting crash server as %S\n", crashServerCmdLine);
             crashServer = new ProcessExecutor(crashServerCmdLine, false);
             if (crashServer->execute())
             {
@@ -2493,14 +2512,20 @@ int main(int argc, char *argv[])
          {
             s_startupFlags &= ~(SF_USE_SYSLOG | SF_USE_SYSTEMD_JOURNAL | SF_LOG_TO_STDOUT);
          }
+         fprintf(fplog, "updated s_startupFlags=0x%08x\n", s_startupFlags);
+
 #ifdef _WIN32
          UpdateEnvironment();
          if (g_dwFlags & AF_DAEMON)
          {
+            fprintf(fplog, "Calling InitService()\n");
+            fclose(fplog);
             InitService();
          }
          else
          {
+            fprintf(fplog, "Calling Initialize()\n");
+            fclose(fplog);
             if (Initialize())
             {
                Main();
