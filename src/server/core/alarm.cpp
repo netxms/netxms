@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ private:
    void updateMostCritical()
    {
       m_mostCritical = -1;
-      for(int i = 0; i < m_severities.size(); i++)
+      for(int i = 0; (i < m_severities.size()) && (m_mostCritical < STATUS_CRITICAL); i++)
          if (m_severities.get(i)->second > m_mostCritical)
             m_mostCritical = m_severities.get(i)->second;
    }
@@ -1141,6 +1141,7 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
          s_alarmList.lock();
          nxlog_debug_tag(DEBUG_TAG, 7, _T("AlarmManager: adding new active alarm, current alarm count %d"), s_alarmList.size());
          s_alarmList.add(alarm);
+         UpdateObjectOnAlarmUpdate(event->getSourceId(), alarm, false);
          s_alarmList.unlock();
       }
 
@@ -1175,7 +1176,7 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
       }
 
       NotifyClients(NX_NOTIFY_NEW_ALARM, alarm);
-      UpdateObjectOnAlarmUpdate(event->getSourceId(), alarm, true);
+      RecalculateObjectStatus(event->getSourceId());
    }
 
    if (updateRelatedEvent)
@@ -1376,32 +1377,38 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(const IntegerArray<uint32_t>& alarmIds,
             {
                // Allow to resolve/terminate alarms for objects that are already deleted
                shared_ptr<NetObj> object = FindObjectById(alarm->getSourceObject());
+               bool allowResolve = true;
                if ((session != nullptr) && (object != nullptr))
                {
                   // If user does not have the required object access rights, the alarm cannot be terminated
-                  if (!object->checkAccessRights(session->getUserId(), terminate ? OBJECT_ACCESS_TERM_ALARMS : OBJECT_ACCESS_UPDATE_ALARMS))
+                  if (object->checkAccessRights(session->getUserId(), terminate ? OBJECT_ACCESS_TERM_ALARMS : OBJECT_ACCESS_UPDATE_ALARMS))
+                  {
+                     session->writeAuditLog(AUDIT_OBJECTS, true, object->getId(),
+                        _T("%s alarm %u (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
+                        alarm->getAlarmId(), alarm->getMessage(), object->getName());
+                  }
+                  else
                   {
                      failIds->add(currentId);
                      failCodes->add(RCC_ACCESS_DENIED);
-                     break;
+                     allowResolve = false;
                   }
-
-                  session->writeAuditLog(AUDIT_OBJECTS, true, object->getId(),
-                     _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
-                     alarm->getAlarmId(), alarm->getMessage(), object->getName());
                }
 
-               alarm->resolve((session != nullptr) ? session->getUserId() : 0, nullptr, terminate, false, includeSubordinates);
-               processedAlarms.add(alarm->getAlarmId());
-               if (object != nullptr)
+               if (allowResolve)
                {
-                  if (!updatedObjects.contains(object->getId()))
-                     updatedObjects.add(object->getId());
-               }
-               UpdateObjectOnAlarmResolve(alarm->getSourceObject(), alarm->getAlarmId(), false);
-               if (terminate)
-               {
-                  s_alarmList.remove(alarm);
+                  alarm->resolve((session != nullptr) ? session->getUserId() : 0, nullptr, terminate, false, includeSubordinates);
+                  processedAlarms.add(alarm->getAlarmId());
+                  if (object != nullptr)
+                  {
+                     if (!updatedObjects.contains(object->getId()))
+                        updatedObjects.add(object->getId());
+                  }
+                  UpdateObjectOnAlarmResolve(alarm->getSourceObject(), alarm->getAlarmId(), false);
+                  if (terminate)
+                  {
+                     s_alarmList.remove(alarm);
+                  }
                }
             }
             else
@@ -2191,6 +2198,7 @@ static void WatchdogThread()
 		{
 		   Alarm *alarm = terminatedAlarms.get(i);
          alarm->resolve(0, nullptr, true, true, false);
+         UpdateObjectOnAlarmResolve(alarm->getSourceObject(), alarm->getAlarmId(), true);
 		   s_alarmList.remove(alarm);
 		}
 
