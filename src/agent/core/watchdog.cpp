@@ -30,6 +30,8 @@
 
 #define DEBUG_TAG _T("watchdog")
 
+StringList GetDisconnectedExtSubagents();
+
 /**
  * Static data
  */
@@ -215,9 +217,8 @@ static inline bool VerifyExecutable(const wchar_t *path)
 /**
  * Watchdog for user agents
  */
-THREAD_RESULT THREAD_CALL UserAgentWatchdog(void *arg)
+void UserAgentWatchdog(TCHAR *executableName)
 {
-   TCHAR *executableName = static_cast<TCHAR*>(arg);
    nxlog_debug_tag(DEBUG_TAG, 1, _T("User agent watchdog started (executable name %s)"), executableName);
 
    while (!AgentSleepAndCheckForShutdown(60000))
@@ -280,7 +281,56 @@ THREAD_RESULT THREAD_CALL UserAgentWatchdog(void *arg)
 
    MemFree(executableName);
    nxlog_debug_tag(DEBUG_TAG, 1, _T("User agent watchdog stopped"));
-   return THREAD_OK;
+}
+
+/**
+ * Watchdog for external subagents
+ */
+void ExternalSubagentWatchdog()
+{
+   nxlog_debug_tag(DEBUG_TAG, 1, L"External subagent watchdog started");
+
+   while (!AgentSleepAndCheckForShutdown(60000))
+   {
+      StringList disconnectedSubagents = GetDisconnectedExtSubagents();
+      if (disconnectedSubagents.isEmpty())
+         continue;
+
+      nxlog_debug_tag(DEBUG_TAG, 6, L"%d external subagent%s not running", disconnectedSubagents.size(), disconnectedSubagents.size() == 1 ? L" is" : L"s are");
+
+      // Find session to run
+      WTS_SESSION_INFO *sessions;
+      DWORD sessionCount;
+      if (!WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &sessions, &sessionCount))
+         continue;
+
+      bool found = false;
+      for (DWORD i = 0; i < sessionCount; i++)
+      {
+         if ((sessions[i].State == WTSActive) || (sessions[i].State == WTSConnected))
+         {
+            for (int j = 0; j < disconnectedSubagents.size(); j++)
+            {
+               const wchar_t *name = disconnectedSubagents.get(j);
+               StringBuffer command = L"\"";
+               command.append(GetAgentExecutableName());
+               command.append(L"\" -H -G EXT:");
+               command.append(name);
+               if (ExecuteInSession(&sessions[i], command.getBuffer(), false))
+                  nxlog_debug_tag(DEBUG_TAG, 6, L"Started external subagent %s in session %u", name, sessions[i].SessionId);
+               else
+                  nxlog_debug_tag(DEBUG_TAG, 6, L"Cannot start external subagent %s in session %u", name, sessions[i].SessionId);
+            }
+            found = true;
+            break;
+         }
+      }
+
+      if (!found)
+         nxlog_debug_tag(DEBUG_TAG, 6, L"Cannot find suitable session for starting external subagent");
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 1, L"External subagent watchdog stopped");
 }
 
 #endif

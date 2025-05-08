@@ -1038,3 +1038,17 @@ LONG H_IsExtSubagentConnected(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, 
    }
    return rc;
 }
+
+/**
+ * Get list of disconnected external subagents
+ */
+StringList GetDisconnectedExtSubagents()
+{
+   StringList ds;
+   for (int i = 0; i < s_subagents.size(); i++)
+   {
+      if (!s_subagents.get(i)->isConnected())
+         ds.add(s_subagents.get(i)->getName());
+   }
+   return ds;
+}
