@@ -86,7 +86,15 @@ DatabaseQuery g_queries[] =
 			_T("count(*) FILTER (WHERE MODE = 'ShareUpdateExclusiveLock') AS shareupdateexclusive ")
 			_T("FROM pg_catalog.pg_locks l RIGHT JOIN pg_catalog.pg_database d ON d.oid = l.database WHERE NOT datistemplate AND datallowconn GROUP BY d.datname")
 	},
-	{ _T("BGWRITER"), 0, 0, 0,
+	{ _T("BGWRITER"), MAKE_PGSQL_VERSION(17, 0, 0), 0, 0,
+		_T("SELECT c.num_timed AS checkpoints_timed, c.num_requested AS checkpoints_req, ")
+			_T("c.write_time AS checkpoint_write_time, c.sync_time AS checkpoint_sync_time, ")
+			_T("c.buffers_written AS buffers_checkpoint, b.buffers_clean, b.maxwritten_clean, ")
+			_T("(SELECT buffers_written FROM pg_stat_io WHERE context = 'backend') AS buffers_backend, ")
+			_T("(SELECT fsyncs FROM pg_stat_io WHERE context = 'backend') AS buffers_backend_fsync, ")
+			_T("b.buffers_alloc FROM pg_stat_checkpointer c, pg_stat_bgwriter b")
+	},
+	{ _T("BGWRITER"), 0, MAKE_PGSQL_VERSION(17, 0, 0), 0,
 		_T("SELECT checkpoints_timed, checkpoints_req, checkpoint_write_time, checkpoint_sync_time, buffers_checkpoint, buffers_clean, maxwritten_clean, ")
 			_T("buffers_backend, buffers_backend_fsync, buffers_alloc FROM pg_catalog.pg_stat_bgwriter")
 	},
