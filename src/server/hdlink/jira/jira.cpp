@@ -66,6 +66,7 @@ JiraLink::JiraLink() : HelpDeskLink(), m_recentComments(0, 16, Ownership::True)
    m_curl = nullptr;
    m_headers = nullptr;
    m_webhookHandle = nullptr;
+   m_verifyPeer = false;
 }
 
 /**

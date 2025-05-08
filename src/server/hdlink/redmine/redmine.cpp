@@ -65,6 +65,7 @@ RedmineLink::RedmineLink() : HelpDeskLink()
    strcpy(m_apiKey, "netxms");
    m_password[0] = 0;
    m_curl = nullptr;
+   m_verifyPeer = false;
 }
 
 /**
