@@ -1297,7 +1297,7 @@ if test $? = 0; then
 	if test $? = 0; then
 		check_substr "$COMPONENTS" "client"
 		if test $? = 0; then
-			SERVER_COMPONENTS="$SERVER_COMPONENTS nxreportd"
+			SERVER_COMPONENTS="nxreportd $SERVER_COMPONENTS"
 		fi
 	fi
 fi
@@ -4117,14 +4117,14 @@ if test $? = 0; then
 	if test "x$MICROHTTPD_SUPPORT" = "xyes"; then
 		AC_DEFINE(WITH_MICROHTTPD, 1, Define to 1 if microhttpd is supported)
 		COMPONENTS="$COMPONENTS microhttpd"
-		SERVER_COMPONENTS="$SERVER_COMPONENTS webapi"
+		SERVER_COMPONENTS="webapi $SERVER_COMPONENTS"
 		if test "x$HAVE_LIBCURL" = "xyes"; then
 			HDLINK_DIRS="$HDLINK_DIRS jira"
 		fi
 	fi
 
 	if test "x$HAVE_LIBCURL" = "xyes"; then
-		SERVER_COMPONENTS="$SERVER_COMPONENTS wlcbridge"
+		SERVER_COMPONENTS="wlcbridge $SERVER_COMPONENTS"
 	fi
 
 	CPPFLAGS="$OLD_CPPFLAGS"
@@ -5081,11 +5081,13 @@ if test "x${BUILD_SERVER}" = "xyes"; then
 	else
 		echo "Editline support        : NO"
 	fi
-   if test "x${HAVE_LIBISOTREE}" = "xyes"; then
-      echo "Isolation tree support  : YES"
-   else
-      echo "Isolation tree support  : NO"
-   fi
+	if test "x${HAVE_LIBISOTREE}" = "xyes"; then
+		echo "Isolation tree support  : YES"
+	else
+		echo "Isolation tree support  : NO"
+	fi
+	echo "Server components       : ${SERVER_COMPONENTS}"
+	echo "Fan-out data drivers    : ${PDSDRV_DIRS}"
 	echo "Helpdesk system drivers : ${HDLINK_DIRS}"
 else
 	echo "Build Server            : NO"
