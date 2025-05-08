@@ -2304,13 +2304,18 @@ uint32_t ClientSession::authenticateUserByToken(const NXCPMessage& request, Logi
    if (!token.isNull())
    {
       uint32_t userId;
-      if (ValidateAuthenticationToken(token, &userId))
+      bool serviceToken;
+      if (ValidateAuthenticationToken(token, &userId, &serviceToken))
       {
          if (ResolveUserId(userId, loginInfo->loginName) != nullptr)
          {
             debugPrintf(5, _T("Authentication token is valid, login name %s"), loginInfo->loginName);
             rcc = AuthenticateUser(loginInfo->loginName, nullptr, 0, nullptr, nullptr, &m_userId, &m_systemAccessRights,
                   &loginInfo->changePassword, &loginInfo->intruderLockout, &loginInfo->closeOtherSessions, true, &loginInfo->graceLogins);
+
+            // Cancel "close other session" if authenticated with service token
+            if (serviceToken)
+               loginInfo->closeOtherSessions = false;
          }
          else
          {
@@ -2684,7 +2689,8 @@ void ClientSession::issueAuthToken(const NXCPMessage& request)
       bool persistent = request.getFieldAsBoolean(VID_PERSISTENT);
       TCHAR description[128] = _T("");
       request.getFieldAsString(VID_DESCRIPTION, description, 128);
-      shared_ptr<AuthenticationTokenDescriptor> token = IssueAuthenticationToken(userId, request.getFieldAsUInt32(VID_VALIDITY_TIME), persistent, description);
+      shared_ptr<AuthenticationTokenDescriptor> token = IssueAuthenticationToken(userId, request.getFieldAsUInt32(VID_VALIDITY_TIME),
+         persistent ? AuthenticationTokenType::PERSISTENT : AuthenticationTokenType::EPHEMERAL, description);
       token->fillMessage(&response, VID_ELEMENT_LIST_BASE);
       response.setField(VID_RCC, RCC_SUCCESS);
 
@@ -3812,15 +3818,15 @@ void ClientSession::enableAnonymousObjectAccess(const NXCPMessage& request)
 
             if (!validToken)
             {
-               StringBuffer description(_T("Anonymous access token for object \""));
+               StringBuffer description(L"Anonymous access token for object \"");
                description.append(object->getName());
-               description.append(_T("\""));
-               IssueAuthenticationToken(uid, 3650 * 86400, true, description)->token.toString(tokenText);
-               object->setCustomAttribute(_T("$anonymousAccessToken"), tokenText, StateChange::CLEAR);
+               description.append(L"\"");
+               IssueAuthenticationToken(uid, 3650 * 86400, AuthenticationTokenType::PERSISTENT, description)->token.toString(tokenText);
+               object->setCustomAttribute(L"$anonymousAccessToken", tokenText, StateChange::CLEAR);
             }
 
-            debugPrintf(4, _T("Enabled anonymous access for object \"%s\" [%u]"), object->getName(), object->getId());
-            writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("Enabled anonymous access"));
+            debugPrintf(4, L"Enabled anonymous access for object \"%s\" [%u]", object->getName(), object->getId());
+            writeAuditLog(AUDIT_OBJECTS, true, objectId, L"Enabled anonymous access");
             response.setField(VID_RCC, RCC_SUCCESS);
             response.setField(VID_TOKEN, tokenText);
          }
