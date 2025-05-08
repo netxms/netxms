@@ -444,6 +444,7 @@
     <ClCompile Include="nproc.cpp" />
     <ClCompile Include="nxagentd.cpp" />
     <ClCompile Include="package.cpp" />
+    <ClCompile Include="pe_cert.cpp" />
     <ClCompile Include="policy.cpp" />
     <ClCompile Include="problems.cpp" />
     <ClCompile Include="proxy.cpp" />
