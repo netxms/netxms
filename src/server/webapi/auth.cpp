@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2023-2024 Raden Solutions
+** Copyright (C) 2023-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -76,7 +76,7 @@ void CheckPendingLoginRequests(const shared_ptr<ScheduledTaskParameters>& parame
  */
 static inline void CompleteLogin(json_t *response, const LoginRequest& loginRequest)
 {
-   UserAuthenticationToken token = IssueAuthenticationToken(loginRequest.userId, AUTH_TOKEN_VALIDITY_TIME, false, _T("Web access token"))->token;
+   UserAuthenticationToken token = IssueAuthenticationToken(loginRequest.userId, AUTH_TOKEN_VALIDITY_TIME, AuthenticationTokenType::EPHEMERAL, _T("Web access token"))->token;
    char encodedToken[64];
    json_object_set_new(response, "token", json_string(token.toStringA(encodedToken)));
    json_object_set_new(response, "userId", json_integer(loginRequest.userId));

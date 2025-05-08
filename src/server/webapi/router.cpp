@@ -210,7 +210,7 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
          return nullptr;
       }
 
-      if (!ValidateAuthenticationToken(token, &userId, AUTH_TOKEN_VALIDITY_TIME))
+      if (!ValidateAuthenticationToken(token, &userId, nullptr, AUTH_TOKEN_VALIDITY_TIME))
       {
          nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Authentication token \"%hs\" provided in request is invalid or expired", encodedToken);
          *responseCode = 401;  // Unauthorized
