@@ -89,7 +89,8 @@ void SyslogReceiver();
 void TunnelManager();
 
 #ifdef _WIN32
-THREAD_RESULT THREAD_CALL UserAgentWatchdog(void *);
+void ExternalSubagentWatchdog();
+void UserAgentWatchdog(TCHAR *executableName);
 #endif
 
 void StartLocalDataCollector();
@@ -1660,7 +1661,11 @@ BOOL Initialize()
       }
       if (g_config->getValueAsBoolean(_T("/CORE/UserAgentWatchdog"), false))
       {
-         ThreadCreate(UserAgentWatchdog, 0, MemCopyString(g_config->getValue(_T("/CORE/UserAgentExecutable"), _T("nxuseragent.exe"))));
+         ThreadCreate(UserAgentWatchdog, MemCopyString(g_config->getValue(_T("/CORE/UserAgentExecutable"), _T("nxuseragent.exe"))));
+      }
+      if (g_config->getValueAsBoolean(_T("/CORE/ExternalSubagentWatchdog"), false))
+      {
+         ThreadCreate(ExternalSubagentWatchdog);
       }
 #endif
 	}
