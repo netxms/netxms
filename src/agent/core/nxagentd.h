@@ -756,6 +756,36 @@ public:
    bool isConvertSnmpStringToHex() const { return (m_flags & TCF_SNMP_HEX_STRING) != 0; }
 };
 
+#ifdef _WIN32
+
+/**
+  * Structure to hold certificate information including fingerprint
+  */
+struct PE_CERT_INFO
+{
+   BYTE *fingerprint;
+   DWORD fingerprintSize;
+   LPWSTR subjectName;
+   LPWSTR issuerName;
+
+   PE_CERT_INFO()
+   {
+      fingerprint = nullptr;
+      fingerprintSize = 0;
+      subjectName = nullptr;
+      issuerName = nullptr;
+   }
+
+   ~PE_CERT_INFO()
+   {
+      MemFree(fingerprint);
+      MemFree(subjectName);
+      MemFree(issuerName);
+   }
+};
+
+#endif
+
 /**
  * Functions
  */
@@ -874,6 +904,8 @@ void UnregisterProblem(const TCHAR *key);
 
 bool LoadConfig(const TCHAR *configSection, bool firstStart, bool logErrors);
 
+const TCHAR *GetAgentExecutableName();
+
 #ifdef WITH_SYSTEMD
 bool RestartService(UINT32 pid);
 #endif
@@ -890,6 +922,8 @@ void InstallEventSource(const TCHAR *path);
 void RemoveEventSource();
 
 bool ExecuteInAllSessions(const TCHAR *command);
+
+BOOL GetPeCertificateInfo(LPCWSTR filePath, PE_CERT_INFO *certInfo);
 
 #endif
 

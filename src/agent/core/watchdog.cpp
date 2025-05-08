@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -198,6 +198,21 @@ int WatchdogMain(DWORD pid, const TCHAR *configSection)
 bool ExecuteInSession(WTS_SESSION_INFO *session, TCHAR *command, bool allSessions);
 
 /**
+ * Verify executable
+ */
+static inline bool VerifyExecutable(const wchar_t *path)
+{
+   if (VerifyFileSignature(path))
+      return true;
+
+   PE_CERT_INFO exeCert, agentCert;
+   if (GetPeCertificateInfo(path, &exeCert) && GetPeCertificateInfo(GetAgentExecutableName(), &agentCert))
+      return (exeCert.fingerprintSize == agentCert.fingerprintSize) && !memcmp(exeCert.fingerprint, agentCert.fingerprint, exeCert.fingerprintSize);
+
+   return false;
+}
+
+/**
  * Watchdog for user agents
  */
 THREAD_RESULT THREAD_CALL UserAgentWatchdog(void *arg)
@@ -247,7 +262,7 @@ THREAD_RESULT THREAD_CALL UserAgentWatchdog(void *arg)
             command.append(binDir);
             command.append(_T("\\"));
             command.append(executableName);
-            if (VerifyFileSignature(command.cstr() + 1)) // skip leading "
+            if (VerifyExecutable(command.cstr() + 1)) // skip leading "
             {
                command.append(_T("\""));
                ExecuteInSession(&sessions[i], command.getBuffer(), false);

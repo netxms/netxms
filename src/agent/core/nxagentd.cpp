@@ -546,6 +546,14 @@ bool ServerInfo::match(const InetAddress &addr, bool forceResolve)
    return result;
 }
 
+/**
+ * Get agent executable name
+ */
+const TCHAR *GetAgentExecutableName()
+{
+   return s_executableName;
+}
+
 #ifdef _WIN32
 
 /**
