@@ -247,15 +247,15 @@ THREAD_RESULT THREAD_CALL UserAgentWatchdog(void *arg)
             command.append(binDir);
             command.append(_T("\\"));
             command.append(executableName);
-            if (VerifyFileSignature(command.cstr() + 1)) // skip leading "
+            //if (VerifyFileSignature(command.cstr() + 1)) // skip leading "
             {
                command.append(_T("\""));
                ExecuteInSession(&sessions[i], command.getBuffer(), false);
             }
-            else
-            {
-               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Signature validation failed for user agent executable \"%s\""), command.cstr() + 1);
-            }
+            //else
+            //{
+            //   nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Signature validation failed for user agent executable \"%s\""), command.cstr() + 1);
+            //}
          }
       }
 
