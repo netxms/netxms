@@ -87,6 +87,7 @@ static struct
    { ERR_FILE_APPEND_POSSIBLE, _T("New data can be appended to existing file") },
    { ERR_REMOTE_CONNECT_FAILED, _T("Connect to remote system failed") },
    { ERR_SYSCALL_FAILED, _T("System API call failed") },
+   { ERR_TCP_PROXY_DISABLED, _T("TCP proxy function is disabled") },
    { 0xFFFFFFFF, nullptr }
 };
 
@@ -136,6 +137,8 @@ uint32_t LIBNXSRV_EXPORTABLE AgentErrorToRCC(uint32_t err)
          return RCC_FILE_APPEND_POSSIBLE;
       case ERR_REMOTE_CONNECT_FAILED:
          return RCC_REMOTE_CONNECT_FAILED;
+      case ERR_TCP_PROXY_DISABLED:
+         return RCC_RESOURCE_NOT_AVAILABLE;
    }
    return RCC_AGENT_ERROR;
 }
