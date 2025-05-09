@@ -786,7 +786,7 @@ void CommSession::processCommand(NXCPMessage *request)
             }
             else
             {
-               response.setField(VID_RCC, ERR_ACCESS_DENIED);
+               response.setField(VID_RCC, !(g_dwFlags & AF_ENABLE_TCP_PROXY) ? ERR_TCP_PROXY_DISABLED : ERR_ACCESS_DENIED);
             }
             break;
          case CMD_CLOSE_TCP_PROXY:
@@ -796,7 +796,7 @@ void CommSession::processCommand(NXCPMessage *request)
             }
             else
             {
-               response.setField(VID_RCC, ERR_ACCESS_DENIED);
+               response.setField(VID_RCC, !(g_dwFlags & AF_ENABLE_TCP_PROXY) ? ERR_TCP_PROXY_DISABLED : ERR_ACCESS_DENIED);
             }
             break;
          case CMD_ADD_UA_NOTIFICATION:
