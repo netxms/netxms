@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -256,9 +256,14 @@ const TCHAR LIBNXCLIENT_EXPORTABLE *NXCGetErrorText(uint32_t error)
       _T("ARP cache not available"),
       _T("Device view not available"),
       _T("Invalid token ID"),
-      _T("Cannot connect to remote system")
+      _T("Cannot connect to remote system"),
+      _T("Node is already a member of a wireless domain"),
+      _T("Controller unavailable"),
+      _T("Partial command fail"),
+      _T("Agent access denied"),
+      _T("TCP proxy function is disabled")
    };
-	return (error <= RCC_REMOTE_CONNECT_FAILED) ? errorText[error] : _T("No message for this error");
+	return (error <= RCC_TCP_PROXY_DISABLED) ? errorText[error] : _T("No message for this error");
 }
 
 #ifdef _WIN32

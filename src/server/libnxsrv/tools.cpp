@@ -112,7 +112,7 @@ uint32_t LIBNXSRV_EXPORTABLE AgentErrorToRCC(uint32_t err)
       case ERR_SUCCESS:
          return RCC_SUCCESS;
       case ERR_ACCESS_DENIED:
-         return RCC_ACCESS_DENIED;
+         return RCC_AGENT_ACCESS_DENIED;
       case ERR_IO_FAILURE:
          return RCC_IO_ERROR;
       case ERR_ALREADY_AUTHENTICATED:
@@ -138,7 +138,7 @@ uint32_t LIBNXSRV_EXPORTABLE AgentErrorToRCC(uint32_t err)
       case ERR_REMOTE_CONNECT_FAILED:
          return RCC_REMOTE_CONNECT_FAILED;
       case ERR_TCP_PROXY_DISABLED:
-         return RCC_RESOURCE_NOT_AVAILABLE;
+         return RCC_TCP_PROXY_DISABLED;
    }
    return RCC_AGENT_ERROR;
 }
