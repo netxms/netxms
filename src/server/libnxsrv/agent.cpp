@@ -2635,6 +2635,24 @@ uint32_t AgentConnection::enableFileUpdates()
 }
 
 /**
+ * Set activation token for agent component
+ */
+uint32_t AgentConnection::setComponentToken(const char *component, uint32_t expirationTime, const char *secret)
+{
+   AgentComponentToken token;
+   memset(&token, 0, sizeof(token));
+   strlcpy(token.component, component, sizeof(token.component));
+   token.expirationTime = htonq(time(nullptr) + 86400); // 24 hours
+   SignMessage(&token, sizeof(token) - sizeof(token.hmac), reinterpret_cast<const BYTE*>(secret), strlen(secret), token.hmac);
+
+   NXCPMessage request(CMD_SET_COMPONENT_TOKEN, generateRequestId(), m_nProtocolVersion);
+   request.setField(VID_TOKEN, reinterpret_cast<BYTE*>(&token), sizeof(token));
+   if (!sendMessage(&request))
+      return ERR_CONNECTION_BROKEN;
+   return waitForRCC(request.getId(), m_commandTimeout);
+}
+
+/**
  * Take screenshot from remote system
  */
 uint32_t AgentConnection::takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size)

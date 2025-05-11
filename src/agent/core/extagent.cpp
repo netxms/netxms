@@ -732,6 +732,16 @@ void ExternalSubagent::notifyOnPolicyInstall(const uuid& guid)
 }
 
 /**
+ * Notify subagent that new component activation token is available
+ */
+void ExternalSubagent::notifyOnComponentToken(const AgentComponentToken *token)
+{
+   NXCPMessage msg(CMD_SET_COMPONENT_TOKEN, m_requestId++);
+   msg.setField(VID_TOKEN, reinterpret_cast<const BYTE*>(token), sizeof(AgentComponentToken));
+   sendMessage(&msg);
+}
+
+/**
  * Add external subagent from config.
  * Each line in config should be in form 
  * name:user
@@ -1016,6 +1026,21 @@ void NotifyExtSubagentsOnPolicyInstall(uuid *guid)
       }
    }
    delete guid;
+}
+
+/**
+ * Notify all connected external subagents about new componnet activation token
+ */
+void NotifyExtSubagentsOnComponentToken(const AgentComponentToken *token)
+{
+   for(int i = 0; i < s_subagents.size(); i++)
+   {
+      if (s_subagents.get(i)->isConnected())
+      {
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("Sending component activation token notification to external subagent %s"), s_subagents.get(i)->getName());
+         s_subagents.get(i)->notifyOnComponentToken(token);
+      }
+   }
 }
 
 /**

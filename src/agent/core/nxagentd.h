@@ -269,6 +269,7 @@ public:
    void restart();
    void syncPolicies();
    void notifyOnPolicyInstall(const uuid& guid);
+   void notifyOnComponentToken(const AgentComponentToken *token);
 };
 
 /**
@@ -376,6 +377,7 @@ private:
    void webServiceCustomRequest(NXCPMessage *request);
    void sendMessageInBackground(NXCP_MESSAGE *msg);
    void getHostNameByAddr(NXCPMessage *request, NXCPMessage *response);
+   uint32_t setComponentToken(NXCPMessage *request);
 
    void processCommand(NXCPMessage *request);
 

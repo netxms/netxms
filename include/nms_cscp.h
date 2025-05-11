@@ -669,6 +669,7 @@ typedef struct
 #define CMD_QUERY_AI_ASSISTANT            0x01D5
 #define CMD_GET_SMCLP_PROPERTIES          0x01D6
 #define CMD_GET_INTERFACE_TRAFFIC_DCIS    0x01D7
+#define CMD_SET_COMPONENT_TOKEN           0x01D8
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101

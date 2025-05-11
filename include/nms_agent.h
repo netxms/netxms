@@ -237,9 +237,31 @@ struct PolicyChangeNotification
 };
 
 /**
+ * Agent component token
+ */
+#pragma pack(1)
+struct AgentComponentToken
+{
+   char component[16];
+   uint64_t expirationTime;   // In network byte order
+   BYTE hmac[SHA256_DIGEST_SIZE];
+};
+#pragma pack()
+
+/**
+ * Validate token
+ */
+static inline bool ValidateComponentToken(const AgentComponentToken *token, const char *secret)
+{
+   return ValidateMessageSignature(token, sizeof(AgentComponentToken) - SHA256_DIGEST_SIZE,
+      reinterpret_cast<const BYTE*>(secret), strlen(secret), token->hmac);
+}
+
+/**
  * Internal notification codes
  */
 #define AGENT_NOTIFY_POLICY_INSTALLED  1
+#define AGENT_NOTIFY_TOKEN_RECEIVED    2
 
 /**
  * Descriptions for common parameters
