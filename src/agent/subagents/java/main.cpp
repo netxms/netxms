@@ -146,6 +146,7 @@ static NETXMS_SUBAGENT_INFO s_subagentInfo =
    SubAgentShutdown,
    NULL,                         // bool (*commandHandler)(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pResponse, void *session)
    NULL,                         // bool (*notify)(UINT32 code, void *data)
+   nullptr,                      // bool (*metricFilter)(const TCHAR*, const TCHAR*, AbstractCommSession*)
    0,                            // numParamaters
    NULL,                         // parameters
    0,                            // numLists

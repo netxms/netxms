@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** Subagent for Oracle monitoring
- ** Copyright (C) 2009-2021 Raden Solutions
+ ** Copyright (C) 2009-2025 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -527,7 +527,7 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("ORACLE"), NETXMS_VERSION_STRING,
-	SubAgentInit, SubAgentShutdown, nullptr, nullptr,
+	SubAgentInit, SubAgentShutdown, nullptr, nullptr, nullptr,
 	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM), s_parameters,
 	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST), s_lists,
 	sizeof(s_tables) / sizeof(NETXMS_SUBAGENT_TABLE), s_tables,

@@ -724,7 +724,7 @@ void AddPushMetric(const TCHAR *name, int dataType, const TCHAR *description)
 /**
  * Add metric to list
  */
-void AddMetric(const TCHAR *name, LONG (*handler)(const TCHAR*, const TCHAR*, TCHAR*, AbstractCommSession*), const TCHAR *arg, int dataType, const TCHAR *description)
+void AddMetric(const TCHAR *name, LONG (*handler)(const TCHAR*, const TCHAR*, TCHAR*, AbstractCommSession*), const TCHAR *arg, int dataType, const TCHAR *description, bool (*filter)(const TCHAR*, const TCHAR*, AbstractCommSession*))
 {
    // Search for existing metric
    NETXMS_SUBAGENT_PARAM *p = nullptr;
@@ -740,6 +740,7 @@ void AddMetric(const TCHAR *name, LONG (*handler)(const TCHAR*, const TCHAR*, TC
       p->handler = handler;
       p->dataType = dataType;
       _tcslcpy(p->description, description, MAX_DB_STRING);
+      p->filter = filter;
 
       // If we are replacing System.PlatformName, add pointer to
       // platform suffix as argument, otherwise, use supplied pArg
@@ -761,6 +762,7 @@ void AddMetric(const TCHAR *name, LONG (*handler)(const TCHAR*, const TCHAR*, TC
       np.arg = arg;
       np.dataType = dataType;
       _tcslcpy(np.description, description, MAX_DB_STRING);
+      np.filter = filter;
       s_metrics.add(np);
    }
 }
@@ -768,7 +770,7 @@ void AddMetric(const TCHAR *name, LONG (*handler)(const TCHAR*, const TCHAR*, TC
 /**
  * Add list
  */
-void AddList(const TCHAR *name, LONG (*handler)(const TCHAR*, const TCHAR*, StringList*, AbstractCommSession*), const TCHAR *arg)
+void AddList(const TCHAR *name, LONG (*handler)(const TCHAR*, const TCHAR*, StringList*, AbstractCommSession*), const TCHAR *arg, bool (*filter)(const TCHAR*, const TCHAR*, AbstractCommSession*))
 {
    // Search for existing enum
    NETXMS_SUBAGENT_LIST *p = nullptr;
@@ -783,6 +785,7 @@ void AddList(const TCHAR *name, LONG (*handler)(const TCHAR*, const TCHAR*, Stri
       // Replace existing handler and arg
       p->handler = handler;
       p->arg = arg;
+      p->filter = filter;
    }
    else
    {
@@ -791,6 +794,7 @@ void AddList(const TCHAR *name, LONG (*handler)(const TCHAR*, const TCHAR*, Stri
       _tcslcpy(np.name, name, MAX_PARAM_NAME - 1);
       np.handler = handler;
       np.arg = arg;
+      np.filter = filter;
       s_lists.add(np);
    }
 }
@@ -799,7 +803,8 @@ void AddList(const TCHAR *name, LONG (*handler)(const TCHAR*, const TCHAR*, Stri
  * Add table
  */
 void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *), const TCHAR *arg,
-         const TCHAR *instanceColumns, const TCHAR *description, int numColumns, NETXMS_SUBAGENT_TABLE_COLUMN *columns)
+         const TCHAR *instanceColumns, const TCHAR *description, int numColumns, NETXMS_SUBAGENT_TABLE_COLUMN *columns,
+         bool (*filter)(const TCHAR*, const TCHAR*, AbstractCommSession*))
 {
    // Search for existing table
    NETXMS_SUBAGENT_TABLE *p = nullptr;
@@ -818,6 +823,7 @@ void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, 
 		_tcslcpy(p->description, description, MAX_DB_STRING);
       p->numColumns = numColumns;
       p->columns = columns;
+      p->filter = filter;
    }
    else
    {
@@ -830,6 +836,7 @@ void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, 
 		_tcslcpy(np.description, description, MAX_DB_STRING);
       np.numColumns = numColumns;
       np.columns = columns;
+      np.filter = filter;
       s_tables.add(np);
       nxlog_debug(7, _T("Table %s added (%d predefined columns, instance columns \"%s\")"), name, numColumns, instanceColumns);
    }
@@ -854,15 +861,15 @@ bool AddExternalMetric(TCHAR *config, bool isList)
 	TCHAR *arg = MemCopyString(cmdLine);
    if (isList)
    {
-      AddList(config, H_ExternalList, arg);
+      AddList(config, H_ExternalList, arg, nullptr);
    }
    else
    {
-      AddMetric(config, H_ExternalMetric, arg, DCI_DT_STRING, _T(""));
+      AddMetric(config, H_ExternalMetric, arg, DCI_DT_STRING, _T(""), nullptr);
       TCHAR nameExitCode[MAX_PARAM_NAME];
       _tcslcpy(nameExitCode, config, MAX_PARAM_NAME);
       _tcslcat(nameExitCode, _T(".ExitCode"), MAX_PARAM_NAME);
-      AddMetric(nameExitCode, H_ExternalMetricExitCode, arg, DCI_DT_INT, _T(""));
+      AddMetric(nameExitCode, H_ExternalMetricExitCode, arg, DCI_DT_INT, _T(""), nullptr);
    }
    return true;
 }
@@ -931,7 +938,7 @@ bool AddExternalTable(TCHAR *config)
    }
    else
    {
-      AddTable(config, H_ExternalTable, reinterpret_cast<const TCHAR*>(td), instanceColumns, description, 0, nullptr);
+      AddTable(config, H_ExternalTable, reinterpret_cast<const TCHAR*>(td), instanceColumns, description, 0, nullptr, nullptr);
    }
    return true;
 }
@@ -998,7 +1005,7 @@ bool AddExternalTable(ConfigEntry *config)
    }
    else
    {
-      AddTable(config->getName(), H_ExternalTable, reinterpret_cast<const TCHAR *>(td), *td->instanceColumns, config->getSubEntryValue(_T("Description"), 0, _T("")), 0, nullptr);
+      AddTable(config->getName(), H_ExternalTable, reinterpret_cast<const TCHAR *>(td), *td->instanceColumns, config->getSubEntryValue(_T("Description"), 0, _T("")), 0, nullptr, nullptr);
    }
    return true;
 }
@@ -1104,7 +1111,7 @@ uint32_t GetMetricValue(const TCHAR *param, TCHAR *value, AbstractCommSession *s
       NETXMS_SUBAGENT_PARAM *p = s_metrics.get(i);
       if (MatchString(p->name, param, FALSE))
       {
-         LONG rc = p->handler(param, p->arg, value, session);
+         LONG rc = ((p->filter == nullptr) || p->filter(param, p->arg, session)) ? p->handler(param, p->arg, value, session) : SYSINFO_RC_ACCESS_DENIED;
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
@@ -1221,7 +1228,7 @@ uint32_t GetListValue(const TCHAR *param, StringList *value, AbstractCommSession
       NETXMS_SUBAGENT_LIST *list = s_lists.get(i);
       if (MatchString(list->name, param, false))
       {
-         LONG rc = list->handler(param, list->arg, value, session);
+         LONG rc = ((list->filter == nullptr) || list->filter(param, list->arg, session)) ? list->handler(param, list->arg, value, session) : SYSINFO_RC_ACCESS_DENIED;
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
@@ -1332,7 +1339,7 @@ uint32_t GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *se
             }
          }
 
-         LONG rc = t->handler(param, t->arg, value, session);
+         LONG rc = ((t->filter == nullptr) || t->filter(param, t->arg, session)) ? t->handler(param, t->arg, value, session) : SYSINFO_RC_ACCESS_DENIED;
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:

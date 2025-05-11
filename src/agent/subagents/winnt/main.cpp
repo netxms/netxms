@@ -485,7 +485,7 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("WinNT"), NETXMS_VERSION_STRING,
-   SubAgentInit, SubAgentShutdown, nullptr, nullptr,
+   SubAgentInit, SubAgentShutdown, nullptr, nullptr, nullptr,
    sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    s_parameters,
    sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),

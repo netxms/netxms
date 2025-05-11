@@ -411,7 +411,7 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("TUXEDO"), NETXMS_VERSION_STRING,
-   SubAgentInit, SubAgentShutdown, nullptr, nullptr,
+   SubAgentInit, SubAgentShutdown, nullptr, nullptr, nullptr,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
    sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),

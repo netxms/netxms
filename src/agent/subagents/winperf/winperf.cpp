@@ -1,6 +1,6 @@
 /*
 ** Windows Performance NetXMS subagent
-** Copyright (C) 2004-2023 Victor Kirhenshtein
+** Copyright (C) 2004-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -369,7 +369,7 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("WinPerf"), NETXMS_VERSION_STRING,
-   SubAgentInit, SubAgentShutdown, nullptr, nullptr,     // handlers
+   SubAgentInit, SubAgentShutdown, nullptr, nullptr, nullptr,    // callbacks
    0, nullptr,             // parameters
    sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
    s_lists,

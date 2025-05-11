@@ -439,6 +439,7 @@ static NETXMS_SUBAGENT_INFO m_info =
    SubAgentShutdown, // unload handler
    nullptr, // command handler
    nullptr, // notification handler
+   nullptr, // metric filter
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
    sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
