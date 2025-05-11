@@ -509,7 +509,13 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_COMPILE_MIB_FILES"),
       _T("CMD_EXECUTE_DASHBOARD_SCRIPT"),
       _T("CMD_UPDATE_PEER_INTERFACE"),
-      _T("CMD_CLEAR_PEER_INTERFACE")
+      _T("CMD_CLEAR_PEER_INTERFACE"),
+      _T("CMD_GET_PACKAGE_DEPLOYMENT_JOBS"),
+      _T("CMD_CANCEL_PACKAGE_DEPLOYMENT_JOB"),
+      _T("CMD_QUERY_AI_ASSISTANT"),
+      _T("CMD_GET_SMCLP_PROPERTIES"),
+      _T("CMD_GET_INTERFACE_TRAFFIC_DCIS"),
+      _T("CMD_SET_COMPONENT_TOKEN")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -522,7 +528,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_CLEAR_PEER_INTERFACE))
+   if ((code >= CMD_LOGIN) && (code <= CMD_SET_COMPONENT_TOKEN))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

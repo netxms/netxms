@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NXCP API
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -578,7 +578,7 @@ typedef void NXCPEncryptionContext;
 
 #endif
 
-typedef bool (*NXCPMessageNameResolver)(UINT16 code, TCHAR *buffer);
+typedef bool (*NXCPMessageNameResolver)(uint16_t code, TCHAR *buffer);
 
 
 //

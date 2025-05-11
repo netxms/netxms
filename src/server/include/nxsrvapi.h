@@ -1122,6 +1122,7 @@ public:
    uint32_t setServerId(uint64_t serverId);
    uint32_t enableTraps();
    uint32_t enableFileUpdates();
+   uint32_t setComponentToken(const char *component, uint32_t expirationTime, const char *secret);
 
    shared_ptr<ArpCache> getArpCache();
    InterfaceList *getInterfaceList();
