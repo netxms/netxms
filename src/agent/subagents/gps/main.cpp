@@ -1,6 +1,6 @@
 /*
 ** NetXMS GPS receiver subagent
-** Copyright (C) 2006-2021 Raden Solutions
+** Copyright (C) 2006-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -379,7 +379,7 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("GPS"), NETXMS_VERSION_STRING,
-	SubAgentInit, SubAgentShutdown, nullptr, nullptr,
+	SubAgentInit, SubAgentShutdown, nullptr, nullptr, nullptr,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	0, nullptr,	// lists

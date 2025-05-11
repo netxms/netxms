@@ -697,7 +697,7 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("LOGWATCH"), NETXMS_VERSION_STRING,
-	SubagentInit, SubagentShutdown, nullptr, OnAgentNotify,
+	SubagentInit, SubagentShutdown, nullptr, OnAgentNotify, nullptr,
 	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	s_parameters,
 	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),

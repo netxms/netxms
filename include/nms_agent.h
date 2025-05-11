@@ -984,6 +984,7 @@ struct NETXMS_SUBAGENT_PARAM
    const TCHAR *arg;
    int dataType;		// Use DT_DEPRECATED to indicate deprecated parameter
    TCHAR description[MAX_DB_STRING];
+   bool (*filter)(const TCHAR *metric, const TCHAR *arg, AbstractCommSession *session);
 };
 
 /**
@@ -1005,6 +1006,7 @@ struct NETXMS_SUBAGENT_LIST
    LONG (*handler)(const TCHAR*, const TCHAR*, StringList*, AbstractCommSession*);
    const TCHAR *arg;
    TCHAR description[MAX_DB_STRING];
+   bool (*filter)(const TCHAR *metric, const TCHAR *arg, AbstractCommSession *session);
 };
 
 /**
@@ -1030,6 +1032,7 @@ struct NETXMS_SUBAGENT_TABLE
    TCHAR description[MAX_DB_STRING];
    int numColumns;
    NETXMS_SUBAGENT_TABLE_COLUMN *columns;
+   bool (*filter)(const TCHAR *metric, const TCHAR *arg, AbstractCommSession *session);
 };
 
 /**
@@ -1059,6 +1062,7 @@ struct NETXMS_SUBAGENT_INFO
    void (*shutdown)();       // Called at subagent unload. Can be NULL.
    bool (*commandHandler)(uint32_t command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session);
    void (*notify)(uint32_t code, void *data);  // Generic notification interface
+   bool (*mericFilter)(const TCHAR *metric, const TCHAR *arg, AbstractCommSession *session);
    size_t numParameters;
    NETXMS_SUBAGENT_PARAM *parameters;
    size_t numLists;

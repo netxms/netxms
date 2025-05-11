@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006-2022 Victor Kirhenshtein
+** Copyright (C) 2006-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -387,7 +387,7 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("UPS"), NETXMS_VERSION_STRING,
-   SubAgentInit, SubAgentShutdown, nullptr, nullptr,
+   SubAgentInit, SubAgentShutdown, nullptr, nullptr, nullptr,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
    sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),

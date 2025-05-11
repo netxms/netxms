@@ -363,7 +363,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("INFORMIX"), NETXMS_VERSION_STRING,
-	SubAgentInit, SubAgentShutdown, nullptr, nullptr,
+	SubAgentInit, SubAgentShutdown, nullptr, nullptr, nullptr,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM), m_parameters,
 	0, nullptr,
    0, nullptr,

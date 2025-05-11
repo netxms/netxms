@@ -167,7 +167,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("XEN"), NETXMS_VERSION_STRING,
-   SubagentInit, SubagentShutdown, NULL, NULL,
+   SubagentInit, SubagentShutdown, nullptr, nullptr, nullptr,
    sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    s_parameters,
    sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),

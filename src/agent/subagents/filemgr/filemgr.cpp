@@ -1752,7 +1752,7 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("FILEMGR"), NETXMS_VERSION_STRING,
-   SubagentInit, SubagentShutdown, ProcessCommands, nullptr,
+   SubagentInit, SubagentShutdown, ProcessCommands, nullptr, nullptr,
    0, nullptr, // parameters
    0, nullptr, // lists
    0, nullptr, // tables

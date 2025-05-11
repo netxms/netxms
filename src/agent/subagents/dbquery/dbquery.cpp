@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -76,7 +76,7 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("DBQUERY"), NETXMS_VERSION_STRING,
-   SubAgentInit, SubAgentShutdown, nullptr, nullptr,
+   SubAgentInit, SubAgentShutdown, nullptr, nullptr, nullptr,
 	0,	nullptr, // parameters
 	0, nullptr,	// lists
 	0,	nullptr, // tables

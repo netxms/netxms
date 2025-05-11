@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2013 Raden Solutions
+ * Copyright (C) 2013-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -414,12 +414,12 @@ static NETXMS_SUBAGENT_INFO m_agentInfo =
    NETXMS_SUBAGENT_INFO_MAGIC,
    SUBAGENT_NAME,
    NETXMS_VERSION_STRING,
-   DB2Init, DB2Shutdown, NULL, NULL,
+   DB2Init, DB2Shutdown, nullptr, nullptr, nullptr,
    (sizeof(m_agentParams) / sizeof(NETXMS_SUBAGENT_PARAM)), m_agentParams,
-   0, NULL,
-   0, NULL,
-   0, NULL,
-   0, NULL
+   0, nullptr,
+   0, nullptr,
+   0, nullptr,
+   0, nullptr
 };
 
 static QUERY g_queries[] =

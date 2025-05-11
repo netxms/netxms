@@ -69,7 +69,7 @@ static LONG H_InterfaceList(const TCHAR *pszParam, const TCHAR *pArg, StringList
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-   { _T("Net.InterfaceList"), H_InterfaceList, NULL }
+   { _T("Net.InterfaceList"), H_InterfaceList, nullptr }
 };
 
 /**
@@ -79,13 +79,13 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("DEVEMU"), NETXMS_VERSION_STRING,
-   SubagentInit, SubagentShutdown, NULL, NULL,
-   0, NULL, // parameters
+   SubagentInit, SubagentShutdown, nullptr, nullptr, nullptr,
+   0, nullptr, // parameters
    sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
    s_lists,
-   0, NULL, // tables
-   0, NULL, // actions
-   0, NULL  // push parameters
+   0, nullptr, // tables
+   0, nullptr, // actions
+   0, nullptr  // push parameters
 };
 
 /**

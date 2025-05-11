@@ -180,7 +180,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("SSH"), NETXMS_VERSION_STRING,
-   SubagentInit, SubagentShutdown, nullptr, nullptr,
+   SubagentInit, SubagentShutdown, nullptr, nullptr, nullptr,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
    sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),

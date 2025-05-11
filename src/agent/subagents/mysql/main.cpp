@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** Subagent for MySQL monitoring
- ** Copyright (C) 2016-2021 Raden Solutions
+ ** Copyright (C) 2016-2025 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -281,7 +281,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-   { _T("MySQL.Databases"), H_DatabaseList, NULL, _T("MySQL: databases being monitored") }
+   { _T("MySQL.Databases"), H_DatabaseList, nullptr, _T("MySQL: databases being monitored") }
 };
 
 /**
@@ -291,12 +291,12 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("MYSQL"), NETXMS_VERSION_STRING,
-   SubAgentInit, SubAgentShutdown, NULL, NULL,
+   SubAgentInit, SubAgentShutdown, nullptr, nullptr, nullptr,
    sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM), s_parameters,
    sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST), s_lists,
-   0, NULL,    // tables
-   0, NULL,    // actions
-   0, NULL     // push parameters
+   0, nullptr,    // tables
+   0, nullptr,    // actions
+   0, nullptr     // push parameters
 };
 
 /**

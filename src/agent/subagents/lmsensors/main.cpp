@@ -222,7 +222,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("LMSENSORS"), NETXMS_VERSION_STRING,
-   SubagentInit, SubagentShutdown, NULL, NULL,
+   SubagentInit, SubagentShutdown, nullptr, nullptr, nullptr,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
    0, NULL, // enums

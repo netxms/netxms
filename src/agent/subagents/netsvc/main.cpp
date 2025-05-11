@@ -1,6 +1,6 @@
 /*
  ** NetXMS Network Service check subagent
- ** Copyright (C) 2013-2023 Raden Solutions
+ ** Copyright (C) 2013-2025 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -459,7 +459,7 @@ static NETXMS_SUBAGENT_PARAM s_metrics[] =
 static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC, _T("NETSVC"), NETXMS_VERSION_STRING,
-   SubagentInit, nullptr, CommandHandler, nullptr,
+   SubagentInit, nullptr, CommandHandler, nullptr, nullptr,
    sizeof(s_metrics) / sizeof(NETXMS_SUBAGENT_PARAM), s_metrics,
    0, nullptr,  // lists
    0, nullptr,  // tables
