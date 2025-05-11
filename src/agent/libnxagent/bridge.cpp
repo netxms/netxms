@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -209,7 +209,7 @@ bool LIBNXAGENT_EXPORTABLE AgentGetScreenInfoForUserSession(uint32_t sessionId, 
  * Add message to notification queue. Ownership will be taken by the queue and
  * pointer to message should be considered invalid after this call.
  */
-void LIBNXAGENT_EXPORTABLE AgentQueueNotifictionMessage(NXCPMessage *msg)
+void LIBNXAGENT_EXPORTABLE AgentQueueNotificationMessage(NXCPMessage *msg)
 {
    if (s_fpQueueNotificationMessage != nullptr)
       s_fpQueueNotificationMessage(msg);

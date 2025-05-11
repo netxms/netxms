@@ -1329,7 +1329,7 @@ bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsBoolean(const TCHAR *metric, int i
 
 void LIBNXAGENT_EXPORTABLE AgentPostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp);
 void LIBNXAGENT_EXPORTABLE AgentPostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const StringMap &args);
-void LIBNXAGENT_EXPORTABLE AgentQueueNotifictionMessage(NXCPMessage *msg);
+void LIBNXAGENT_EXPORTABLE AgentQueueNotificationMessage(NXCPMessage *msg);
 
 bool LIBNXAGENT_EXPORTABLE AgentEnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void *), void *data);
 shared_ptr<AbstractCommSession> LIBNXAGENT_EXPORTABLE AgentFindServerSession(uint64_t serverId);
