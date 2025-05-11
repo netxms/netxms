@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -301,7 +301,6 @@ LONG H_SubAgentTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
 LONG H_IsSubagentLoaded(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	TCHAR name[256];
-
 	AgentGetParameterArg(pszCmd, 1, name, 256);
 	int rc = 0;
    for(int i = 0; i < s_subAgents.size(); i++)
@@ -322,10 +321,10 @@ LONG H_IsSubagentLoaded(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, A
 bool ProcessCommandBySubAgent(uint32_t command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
 {
    bool processed = false;
-   for(int i = 0; (i < s_subAgents.size()) && (!processed); i++)
+   for(int i = 0; (i < s_subAgents.size()) && !processed; i++)
    {
       NETXMS_SUBAGENT_INFO *s = s_subAgents.get(i)->info;
-      if (s->commandHandler != NULL)
+      if (s->commandHandler != nullptr)
       {
          processed = s->commandHandler(command, request, response, session);
          session->debugPrintf(7, _T("Command %sprocessed by sub-agent %s"), 
@@ -344,7 +343,7 @@ void NotifySubAgents(uint32_t code, void *data)
    for(int i = 0; i < s_subAgents.size(); i++)
    {
       NETXMS_SUBAGENT_INFO *s = s_subAgents.get(i)->info;
-      if (s->notify != NULL)
+      if (s->notify != nullptr)
       {
          s->notify(code, data);
       }

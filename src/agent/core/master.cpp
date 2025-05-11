@@ -107,6 +107,16 @@ static void NotifySubAgentsOnPolicyInstall(const uuid& guid)
 }
 
 /**
+ * Notify subagents on new component activation token
+ */
+static void NotifySubAgentsOnComponentToken(const NXCPMessage& request)
+{
+   AgentComponentToken token;
+   if (request.getFieldAsBinary(VID_TOKEN, reinterpret_cast<BYTE*>(&token), sizeof(token)) == sizeof(token))
+      NotifySubAgents(AGENT_NOTIFY_TOKEN_RECEIVED, &token);
+}
+
+/**
  * Pipe to master agent
  */
 static NamedPipe *s_pipe = nullptr;
@@ -198,6 +208,9 @@ void MasterAgentListener()
                   break;
                case CMD_DEPLOY_AGENT_POLICY:
                   NotifySubAgentsOnPolicyInstall(msg->getFieldAsGUID(VID_GUID));
+                  break;
+               case CMD_SET_COMPONENT_TOKEN:
+                  NotifySubAgentsOnComponentToken(*msg);
                   break;
 					default:
 						response.setField(VID_RCC, ERR_UNKNOWN_COMMAND);

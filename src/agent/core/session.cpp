@@ -37,6 +37,7 @@ uint32_t UpdateUserAgentNotifications(uint64_t serverId, NXCPMessage *request);
 void RegisterSessionForNotifications(const shared_ptr<CommSession>& session);
 void SetLocalSystemTime(int64_t newTime);
 uint32_t InstallSoftwarePackage(CommSession *session, const char *packageType, const TCHAR *packageFile, const TCHAR *command);
+void NotifyExtSubagentsOnComponentToken(const AgentComponentToken *token);
 
 extern VolatileCounter g_authenticationFailures;
 
@@ -678,6 +679,9 @@ void CommSession::processCommand(NXCPMessage *request)
             {
                response.setField(VID_RCC, ERR_ACCESS_DENIED);
             }
+            break;
+         case CMD_SET_COMPONENT_TOKEN:
+            response.setField(VID_RCC, setComponentToken(request));
             break;
          case CMD_DEPLOY_AGENT_POLICY:
             if (m_masterServer)
@@ -1525,6 +1529,24 @@ void CommSession::waitForResponseSentCondition(uint32_t responseId)
       responseCondition->wait();
    }
    m_responseConditionMap.remove(responseId);
+}
+
+/**
+ * Set component activation token
+ */
+uint32_t CommSession::setComponentToken(NXCPMessage *request)
+{
+   AgentComponentToken token;
+   if (request->getFieldAsBinary(VID_TOKEN, reinterpret_cast<BYTE*>(&token), sizeof(token)) != sizeof(token))
+   {
+      debugPrintf(4, _T("Received invalid component token (data size mismatch)"));
+      return ERR_MALFORMED_COMMAND;
+   }
+
+   debugPrintf(4, _T("Received component token \"%hs\""), token.component);
+   NotifySubAgents(AGENT_NOTIFY_TOKEN_RECEIVED, &token);
+   NotifyExtSubagentsOnComponentToken(&token);
+   return ERR_SUCCESS;
 }
 
 /**
