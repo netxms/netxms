@@ -492,7 +492,7 @@ DWORD WINAPI EventLogReader::subscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION actio
    msg->setField(VID_EVENT_CODE, eventId);
    msg->setField(VID_MESSAGE, messageText);
    msg->setField(VID_RAW_DATA, xml);
-   AgentQueueNotifictionMessage(msg);  // Takes ownership of message object
+   AgentQueueNotificationMessage(msg);  // Takes ownership of message object
    nxlog_debug_tag(DEBUG_TAG, 7, _T("New event from \"%s\" sent to notification queue: %u(%u): \"%s\""),
          reader->m_name, eventId, level, messageText);
 
