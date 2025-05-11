@@ -1,6 +1,6 @@
 /*
 ** WMI NetXMS subagent
-** Copyright (C) 2008-2020 Victor Kirhenshtein
+** Copyright (C) 2008-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -560,11 +560,11 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-   { _T("ACPI.ThermalZones"), H_ACPIThermalZones, NULL },
-   { _T("Hardware.NetworkAdapters"), H_NetworkAdaptersList, NULL },
-   { _T("WMI.Classes(*)"), H_WMIClasses, NULL },
-   { _T("WMI.NameSpaces"), H_WMINameSpaces, NULL },
-   { _T("WMI.Query(*)"), H_WMIListQuery, NULL, }
+   { _T("ACPI.ThermalZones"), H_ACPIThermalZones, nullptr },
+   { _T("Hardware.NetworkAdapters"), H_NetworkAdaptersList, nullptr },
+   { _T("WMI.Classes(*)"), H_WMIClasses, nullptr },
+   { _T("WMI.NameSpaces"), H_WMINameSpaces, nullptr },
+   { _T("WMI.Query(*)"), H_WMIListQuery, nullptr }
 };
 
 /**
@@ -572,8 +572,8 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
  */
 static NETXMS_SUBAGENT_TABLE s_tables[] =
 {
-   { _T("Hardware.NetworkAdapters"), H_NetworkAdaptersTable, NULL, _T("INDEX"), DCTDESC_HARDWARE_NETWORK_ADAPTERS },
-   { _T("WMI.Query(*)"), H_WMITableQuery, NULL, _T(""), _T("Generic WMI query") }
+   { _T("Hardware.NetworkAdapters"), H_NetworkAdaptersTable, nullptr, _T("INDEX"), DCTDESC_HARDWARE_NETWORK_ADAPTERS },
+   { _T("WMI.Query(*)"), H_WMITableQuery, nullptr, _T(""), _T("Generic WMI query") }
 };
 
 /**
@@ -583,15 +583,15 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("WMI"), NETXMS_VERSION_STRING,
-   NULL, NULL, NULL, NULL,     // handlers
+   nullptr, nullptr, nullptr, nullptr,  nullptr,    // callbacks
    sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    s_parameters,
    sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
    s_lists,
    sizeof(s_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
    s_tables,
-   0, NULL,	// actions
-   0, NULL	// push parameters
+   0, nullptr,	// actions
+   0, nullptr	// push parameters
 };
 
 /**

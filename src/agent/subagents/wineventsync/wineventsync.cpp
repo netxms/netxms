@@ -88,7 +88,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("WinEventSync"), NETXMS_VERSION_STRING,
-   SubAgentInit, SubAgentShutdown, nullptr, nullptr,     // handlers
+   SubAgentInit, SubAgentShutdown, nullptr, nullptr, nullptr,    // callbacks
    0, nullptr,             // parameters
    sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
    m_lists,

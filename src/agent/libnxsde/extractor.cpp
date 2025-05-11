@@ -401,7 +401,7 @@ uint32_t StructuredDataExtractor::getMetricFromText(const TCHAR *pattern, TCHAR 
       {
          if ((result >=2 || result == 0) && fields[2] != -1)
          {
-            size_t minSize = MIN((fields[3] - fields[2]), size);
+            size_t minSize = std::min(static_cast<size_t>(fields[3] - fields[2]), size);
             _tcsncpy(buffer, &dataLine[fields[2]], minSize);
             buffer[minSize] = 0;
             nxlog_debug_tag(DEBUG_TAG, 8, _T("StructuredDataExtractor::getMetricFromText(%s): data match: \"%s\""), m_source, buffer);

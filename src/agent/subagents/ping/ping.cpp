@@ -1,6 +1,6 @@
 /*
 ** NetXMS PING subagent
-** Copyright (C) 2004-2023 Victor Kirhenshtein
+** Copyright (C) 2004-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -688,7 +688,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("PING"), NETXMS_VERSION_STRING,
-	SubagentInit, SubagentShutdown, nullptr, nullptr,
+	SubagentInit, SubagentShutdown, nullptr, nullptr, nullptr,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),

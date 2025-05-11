@@ -211,7 +211,7 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("VMGR"), NETXMS_VERSION_STRING,
-   SubagentInit, SubagentShutdown, nullptr, nullptr,
+   SubagentInit, SubagentShutdown, nullptr, nullptr, nullptr,
 	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	s_parameters,
 	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),

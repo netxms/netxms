@@ -221,8 +221,9 @@ static NETXMS_SUBAGENT_INFO m_info =
 	_T("RPI"), NETXMS_VERSION_STRING,
 	SubagentInit,
 	SubagentShutdown,
-	NULL, // command handler
-	NULL, // notification handler
+	nullptr, // command handler
+	nullptr, // notification handler
+	nullptr, // metric filter
 	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	s_parameters,
 	0, NULL,		// lists

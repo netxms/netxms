@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -193,7 +193,7 @@ bool AddBackgroundExternalMetric(TCHAR *config)
    uint32_t interval = _tcstoul(intervalStr, nullptr, 0);
    auto metric = new BackgroundExternalMetric(cmdTemplate, interval);
    s_backgroundMetrics.add(metric);
-   AddMetric(config, H_BackgroundExternalMetric, reinterpret_cast<TCHAR*>(metric), DCI_DT_STRING, _T(""));
+   AddMetric(config, H_BackgroundExternalMetric, reinterpret_cast<TCHAR*>(metric), DCI_DT_STRING, _T(""), nullptr);
 
    return true;
 }
