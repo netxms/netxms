@@ -558,6 +558,7 @@ uint32_t StructuredDataExtractor::updateContent(const char *text, size_t size, b
 {
    deleteContent();
    uint32_t rcc = ERR_SUCCESS;
+   m_responseData = MemCopyBlock(text, size + 1); // +1 for null terminator
    if (!forcePlainTextParser && (*text == '<'))
    {
       m_type = DocumentType::XML;

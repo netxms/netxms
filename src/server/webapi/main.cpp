@@ -194,6 +194,17 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/find/mac-address")
       .GET(H_FindMacAddress)
       .build();
+   /*
+   RouteBuilder("v1/grafana/alarms")
+      .POST(H_GrafanaGetAlarms)
+      .build();
+   RouteBuilder("v1/grafana/summary-table")
+      .POST(H_GrafanaGetSummaryTable)
+      .build();
+   RouteBuilder("v1/grafana/object-query")
+      .POST(H_GrafanaGetObjectQuery)
+      .build();
+      */
    RouteBuilder("v1/login")
       .POST(H_Login)
       .noauth()

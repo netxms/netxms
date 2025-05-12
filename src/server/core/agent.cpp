@@ -628,6 +628,7 @@ WebServiceCallResult *AgentConnectionEx::webServiceCustomRequest(HttpRequestMeth
    msg.setField(VID_VERIFY_HOST, verifyHost);
    msg.setField(VID_FOLLOW_LOCATION, followLocation);
    msg.setField(VID_RETENTION_TIME, cacheRetentionTime);
+   msg.setField(VID_FORCE_PLAIN_TEXT_PARSER, true); // force plain text parser for NXSL web service as we use only text
    headers.fillMessage(&msg, VID_HEADERS_BASE, VID_NUM_HEADERS);
    msg.setField(VID_REQUEST_DATA, data);
 
