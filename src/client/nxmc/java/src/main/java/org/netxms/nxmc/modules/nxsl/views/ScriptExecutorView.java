@@ -514,6 +514,7 @@ public class ScriptExecutorView extends AdHocObjectView
       actionExecute.setEnabled(false);
       actionClearOutputAndExecute.setEnabled(false);
       actionStop.setEnabled(true);
+      clearMessages();
       Job job = new Job(i18n.tr("Executing script"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
