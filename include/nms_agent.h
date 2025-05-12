@@ -244,6 +244,8 @@ struct AgentComponentToken
 {
    char component[16];
    uint64_t expirationTime;   // In network byte order
+   uint64_t issuingTime;      // In network byte order
+   char padding[32];          // Can be used in the future for additional fields without changing structure size
    BYTE hmac[SHA256_DIGEST_SIZE];
 };
 #pragma pack()
