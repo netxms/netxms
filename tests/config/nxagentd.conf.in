@@ -5,6 +5,8 @@ LogFile = ~STATEDIR~/nxagentd.log
 SubAgent = filemgr.nsm
 SubAgent = ping.nsm
 
+EnableWebServiceProxy=yes
+
 Action = netstat:netstat 
 Action = testEcho:echo $1 $2 $3 $4
 
