@@ -315,7 +315,6 @@ public class ServerConsole extends ViewPart implements ITerminalListener
    /**
     * @see org.eclipse.tm.internal.terminal.control.ITerminalListener#setTerminalTitle(java.lang.String)
     */
-   @SuppressWarnings("removal")
    @Override
 	public void setTerminalTitle(String title)
 	{

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1475,7 +1475,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected void addDciToRequestList()
    {
       Collection<NetworkMapLink> linkList = mapPage.getLinks();
-      for (NetworkMapLink item : linkList)
+      for(NetworkMapLink item : linkList)
       {
          if(item.hasDciData())
          {
@@ -1483,11 +1483,11 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
             {
                if(value.getType() == MapDataSource.ITEM)
                {
-                  dciValueProvider.addDci(value.getNodeId(), value.getDciId(), mapPage);
+                  dciValueProvider.addDci(value.getNodeId(), value.getDciId(), mapPage, 1);
                }
                else
                {
-                  dciValueProvider.addDci(value.getNodeId(), value.getDciId(), value.getColumn(), value.getInstance(), mapPage);
+                  dciValueProvider.addDci(value.getNodeId(), value.getDciId(), value.getColumn(), value.getInstance(), mapPage, 1);
                }
             }
          }
@@ -1504,28 +1504,28 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
                {
                   if(value.getType() == MapDataSource.ITEM)
                   {
-                     dciValueProvider.addDci(value.getNodeId(), value.getDciId(), mapPage);
+                     dciValueProvider.addDci(value.getNodeId(), value.getDciId(), mapPage, 1);
                   }
                   else
                   {
-                     dciValueProvider.addDci(value.getNodeId(), value.getDciId(), value.getColumn(), value.getInstance(), mapPage);
+                     dciValueProvider.addDci(value.getNodeId(), value.getDciId(), value.getColumn(), value.getInstance(), mapPage, 1);
                   }
                }
             }
          }
-         
-         if(element instanceof NetworkMapDCIImage)
+
+         if (element instanceof NetworkMapDCIImage)
          {
             NetworkMapDCIImage item = (NetworkMapDCIImage)element;
             DCIImageConfiguration config = item.getImageOptions();
             MapDataSource value = config.getDci();
-            if(value.getType() == MapDataSource.ITEM)
+            if (value.getType() == MapDataSource.ITEM)
             {
-               dciValueProvider.addDci(value.getNodeId(), value.getDciId(), mapPage);
+               dciValueProvider.addDci(value.getNodeId(), value.getDciId(), mapPage, 1);
             }
             else
             {
-               dciValueProvider.addDci(value.getNodeId(), value.getDciId(), value.getColumn(), value.getInstance(), mapPage);
+               dciValueProvider.addDci(value.getNodeId(), value.getDciId(), value.getColumn(), value.getInstance(), mapPage, 1);
             }
          }
       }
