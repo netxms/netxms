@@ -46,6 +46,7 @@ import org.netxms.client.UserAgentNotification;
 import org.netxms.client.constants.ObjectPollType;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.datacollection.WebServiceDefinition;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.mt.MappingTable;
 import org.netxms.client.mt.MappingTableEntry;
@@ -367,6 +368,39 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       {
          session.deleteMappingTable(id);
       }
+   }
+   
+   @Test
+   public void testNXSLWebService() throws Exception
+   {
+      session = connectAndLogin();
+      AbstractObject managementNode = TestHelper.findManagementServer(session);
+      assertNotNull(managementNode); 
+      String webServiceId = "neste";
+      String webServiceUrl = "https://www.neste.lv/lv/content/degvielas-cenas";
+      
+      List<WebServiceDefinition> definition = session.getWebServiceDefinitions();
+      boolean found = false;
+      for (WebServiceDefinition ws : definition)
+      {
+         if (ws.getName().equals(webServiceId))
+         {
+            found = true;
+            break;
+         }
+      }
+      if (!found)
+      {
+         WebServiceDefinition ws = new WebServiceDefinition(webServiceId);
+         ws.setUrl(webServiceUrl);
+         session.modifyWebServiceDefinition(ws);
+      }
+      
+      List<String> params = new ArrayList<String>();
+      params.add(Long.toString(managementNode.getObjectId()));
+      params.add(webServiceId);
+      
+      executeScript("/webService.nxsl", params);
    }
 
    /**
