@@ -243,7 +243,6 @@ retry:
 
                size_t size;
                const char *text = reinterpret_cast<const char*>(data.buffer(&size));
-               m_responseData = MemCopyBlock(text, size);
                size--;  // Because of added zero byte
                while((size > 0) && isspace(*text))
                {
