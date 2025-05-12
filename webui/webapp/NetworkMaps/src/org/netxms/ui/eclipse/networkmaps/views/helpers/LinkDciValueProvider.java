@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,7 +71,7 @@ public class LinkDciValueProvider
 	   }
 
       return instance;
-	}
+   }
 
    /**
     * Constructor
@@ -165,7 +165,7 @@ public class LinkDciValueProvider
 	 * @param dciID
 	 * @param mapPage
 	 */
-	public void addDci(long nodeID, long dciID, NetworkMapPage mapPage)
+	public void addDci(long nodeID, long dciID, NetworkMapPage mapPage, int initialCount)
 	{
 	   synchronized(dciIDList)
       {
@@ -174,14 +174,14 @@ public class LinkDciValueProvider
          {
             if(item.getDciID() == dciID)
             {
-               item.addMap(mapPage.getMapObjectId());
+               item.addMap(mapPage.getMapObjectId(), initialCount);
                exists = true;
                break;
             }
          }
          if(!exists)
          {
-            dciIDList.add(new MapDCIInstance(dciID, nodeID, DataCollectionItem.DCO_TYPE_ITEM, mapPage.getMapObjectId()));
+            dciIDList.add(new MapDCIInstance(dciID, nodeID, DataCollectionItem.DCO_TYPE_ITEM, mapPage.getMapObjectId(), initialCount));
             syncThread.interrupt();
          }
       }
@@ -196,7 +196,7 @@ public class LinkDciValueProvider
 	 * @param instance
 	 * @param mapPage
 	 */
-   public void addDci(long nodeID, long dciID, String column, String instance, NetworkMapPage mapPage)
+   public void addDci(long nodeID, long dciID, String column, String instance, NetworkMapPage mapPage, int initialCount)
    {
       synchronized(dciIDList)
       {
@@ -205,14 +205,14 @@ public class LinkDciValueProvider
          {
             if(item.getDciID() == dciID)
             {
-               item.addMap(mapPage.getMapObjectId());
+               item.addMap(mapPage.getMapObjectId(), initialCount);
                exists = true;
                break;
             }
          }
          if(!exists)
          {
-            dciIDList.add(new MapDCIInstance(dciID, nodeID, column, instance, DataCollectionItem.DCO_TYPE_TABLE, mapPage.getMapObjectId()));
+            dciIDList.add(new MapDCIInstance(dciID, nodeID, column, instance, DataCollectionItem.DCO_TYPE_TABLE, mapPage.getMapObjectId(), initialCount));
             syncThread.interrupt();
          }
       }

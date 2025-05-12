@@ -466,11 +466,11 @@ public class NetworkMapWidget extends Composite
             {
                if(value.getType() == MapDataSource.ITEM)
                {
-                  dciValueProvider.addDci(value.getNodeId(), value.getDciId(), mapPage);
+                  dciValueProvider.addDci(value.getNodeId(), value.getDciId(), mapPage, 1);
                }
                else
                {
-                  dciValueProvider.addDci(value.getNodeId(), value.getDciId(), value.getColumn(), value.getInstance(), mapPage);
+                  dciValueProvider.addDci(value.getNodeId(), value.getDciId(), value.getColumn(), value.getInstance(), mapPage, 1);
                }
             }
          }
@@ -487,11 +487,11 @@ public class NetworkMapWidget extends Composite
                {
                   if(value.getType() == MapDataSource.ITEM)
                   {
-                     dciValueProvider.addDci(value.getNodeId(), value.getDciId(), mapPage);
+                     dciValueProvider.addDci(value.getNodeId(), value.getDciId(), mapPage, 1);
                   }
                   else
                   {
-                     dciValueProvider.addDci(value.getNodeId(), value.getDciId(), value.getColumn(), value.getInstance(), mapPage);
+                     dciValueProvider.addDci(value.getNodeId(), value.getDciId(), value.getColumn(), value.getInstance(), mapPage, 1);
                   }
                }
             }
@@ -504,16 +504,16 @@ public class NetworkMapWidget extends Composite
             MapDataSource value = config.getDci();
             if(value.getType() == MapDataSource.ITEM)
             {
-               dciValueProvider.addDci(value.getNodeId(), value.getDciId(), mapPage);
+               dciValueProvider.addDci(value.getNodeId(), value.getDciId(), mapPage, 1);
             }
             else
             {
-               dciValueProvider.addDci(value.getNodeId(), value.getDciId(), value.getColumn(), value.getInstance(), mapPage);
+               dciValueProvider.addDci(value.getNodeId(), value.getDciId(), value.getColumn(), value.getInstance(), mapPage, 1);
             }
          }
       }
    }
-   
+
    /**
     * Get map label provider
     * @return label provider
@@ -522,7 +522,7 @@ public class NetworkMapWidget extends Composite
    {
       return labelProvider;
    }
-   
+
    /**
     * Get control
     * @return control

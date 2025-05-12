@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Raden SOlutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,7 +39,6 @@ public class DataSourceEditDlg extends Dialog
 {
 	private MapDataSource dci;
 	private DciSelector dciSelector;
-	private LabeledText name;
 	private LabeledText instance;
 	private LabeledText dataColumn;
 	private LabeledText formatString;
@@ -54,9 +53,9 @@ public class DataSourceEditDlg extends Dialog
 		this.dci = dci;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -64,9 +63,9 @@ public class DataSourceEditDlg extends Dialog
 		newShell.setText(Messages.get().DataSourceEditDlg_Title);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
