@@ -2642,7 +2642,9 @@ uint32_t AgentConnection::setComponentToken(const char *component, uint32_t expi
    AgentComponentToken token;
    memset(&token, 0, sizeof(token));
    strlcpy(token.component, component, sizeof(token.component));
-   token.expirationTime = htonq(time(nullptr) + 86400); // 24 hours
+   time_t now = time(nullptr);
+   token.expirationTime = htonq(now + 86400); // 24 hours
+   token.issuingTime = htonq(now);
    SignMessage(&token, sizeof(token) - sizeof(token.hmac), reinterpret_cast<const BYTE*>(secret), strlen(secret), token.hmac);
 
    NXCPMessage request(CMD_SET_COMPONENT_TOKEN, generateRequestId(), m_nProtocolVersion);
