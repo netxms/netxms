@@ -1,0 +1,25 @@
+/*
+* This script requires:
+*     node that can execute web service (management node)
+*     existing web service name
+*/
+
+nodeId = $1;
+webServiceName = $2;
+managementNode = FindObject(nodeId);
+
+result = managementNode.callWebService(webServiceName, "GET", "additional/ult/path");
+assert(result.success); // "false"
+assert(result.errorMessage.isEmpty); // "No connection with agent"
+assert(result.agentErrorCode == 0); // "0"
+assert(result.httpResponseCode == 200); // "0"
+assert(!result.document.isEmpty); // ""
+
+webSvc = managementNode.getWebService(webServiceName);
+result = webSvc.get();
+
+assert(result.success); // "false"
+assert(result.errorMessage.isEmpty); // "No connection with agent"
+assert(result.agentErrorCode == 0); // "0"
+assert(result.httpResponseCode == 200); // "0"
+assert(!result.document.isEmpty); // ""
