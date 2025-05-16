@@ -4311,6 +4311,7 @@ public:
    void dump(const TCHAR *tag, int level, const TCHAR *prefix = _T(""), bool withHeader = true, TCHAR delimiter = _T(',')) const;
 
    json_t *toJson() const;
+   json_t *toGrafanaJson() const;
 
    static Table *createFromXML(const char *xml);
    TCHAR *toXML() const;

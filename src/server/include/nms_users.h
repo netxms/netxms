@@ -491,8 +491,8 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Object *ldapObject);
 void FillGroupMembershipInfo(NXCPMessage *msg, uint32_t userId);
 void UpdateGroupMembership(uint32_t userId, size_t numGroups, uint32_t *groups);
 void DumpUsers(CONSOLE_CTX pCtx);
-unique_ptr<ObjectArray<UserDatabaseObject>> FindUserDBObjects(const IntegerArray<uint32_t>& ids);
-unique_ptr<ObjectArray<UserDatabaseObject>> FindUserDBObjects(const StructArray<ResponsibleUser>& ids);
+unique_ptr<ObjectArray<UserDatabaseObject>> NXCORE_EXPORTABLE FindUserDBObjects(const IntegerArray<uint32_t>& ids);
+unique_ptr<ObjectArray<UserDatabaseObject>> NXCORE_EXPORTABLE FindUserDBObjects(const StructArray<ResponsibleUser>& ids);
 NXSL_Value *GetUserDBObjectForNXSL(uint32_t id, NXSL_VM *vm);
 
 shared_ptr<AuthenticationTokenDescriptor> NXCORE_EXPORTABLE IssueAuthenticationToken(uint32_t userId, uint32_t validFor,
