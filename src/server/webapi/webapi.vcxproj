@@ -331,6 +331,7 @@
     <ClCompile Include="datacoll.cpp" />
     <ClCompile Include="dcst.cpp" />
     <ClCompile Include="find.cpp" />
+    <ClCompile Include="grafana.cpp" />
     <ClCompile Include="info.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="objects.cpp" />

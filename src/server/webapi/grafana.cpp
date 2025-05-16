@@ -23,7 +23,7 @@
 #include "webapi.h"
 #include <nms_users.h>
 
-static const char *severityNames[] =
+static const char *s_severityNames[] =
 {
    "Normal",
    "Warning",
@@ -35,7 +35,7 @@ static const char *severityNames[] =
    "Testing"
 };
 
-static const char *stateNames[] =
+static const char *s_stateNames[] =
 {
    "Outstanding",
    "Acknowledged",
@@ -55,7 +55,7 @@ int H_GrafanaGetAlarms(Context *context)
       return 400;
    }
 
-   uint32_t rootId = json_object_get_int32(request, "rootId", 0);
+   uint32_t rootId = json_object_get_int32(request, "rootObjectId", 0);
    if (rootId != 0)
    {
       shared_ptr<NetObj> object = FindObjectById(rootId);
@@ -66,25 +66,25 @@ int H_GrafanaGetAlarms(Context *context)
    }
 
    json_t *alarmArray = json_array();
-   ObjectArray<Alarm> *alarms = GetAlarms();
+   ObjectArray<Alarm> *alarms = GetAlarms(rootId, true);
    for(int i = 0; i < alarms->size(); i++)
    {
       Alarm *alarm = alarms->get(i);
       shared_ptr<NetObj> object = FindObjectById(alarm->getSourceObject());
       if ((object != nullptr) &&
-          ((rootId == 0) || (rootId == object->getId()) || object->isParent(rootId)) &&
           object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ_ALARMS) &&
           alarm->checkCategoryAccess(context->getUserId(), context->getSystemAccessRights()))
       {
          json_t *json = json_object();
          json_object_set_new(json, "Id", json_integer(alarm->getAlarmId()));
-         json_object_set_new(json, "Severity", json_string(severityNames[alarm->getCurrentSeverity()]));
-         json_object_set_new(json, "State", json_string(stateNames[alarm->getState() & ALARM_STATE_MASK]));
-         if(object->getAlias() != nullptr && !object->getAlias().isBlank())
+         json_object_set_new(json, "Severity", json_string(s_severityNames[alarm->getCurrentSeverity()]));
+         json_object_set_new(json, "State", json_string(s_stateNames[alarm->getState() & ALARM_STATE_MASK]));
+         SharedString alias = object->getAlias();
+         if(!alias.isBlank())
          {
             StringBuffer buffer(object->getName());
             buffer.append(_T(" ("));
-            buffer.append(object->getAlias().cstr());
+            buffer.append(alias.cstr());
             buffer.append(_T(")"));
             json_object_set_new(json, "Source", json_string_t(buffer));
          }
@@ -95,27 +95,29 @@ int H_GrafanaGetAlarms(Context *context)
          json_object_set_new(json, "Message", json_string_t(alarm->getMessage()));
          json_object_set_new(json, "Count", json_integer(alarm->getRepeatCount()));
 
-         IntegerArray<uint32_t> ids;
-         switch (alarm->getState() & ALARM_STATE_MASK)
+         if ((alarm->getState() & ALARM_STATE_MASK) == ALARM_STATE_OUTSTANDING)
          {
-            case ALARM_STATE_OUTSTANDING:
-               json_object_set_new(json, "Ack/Resolve by", json_string(""));
-               break;
-            case ALARM_STATE_ACKNOWLEDGED:
-               ids.add(alarm->getAckByUser());
-               break;
-            case ALARM_STATE_RESOLVED:
-               ids.add(alarm->getResolvedByUser());
-               break;
-            case ALARM_STATE_TERMINATED:
-               ids.add(alarm->getTermByUser());
-               break;
-         }
+            json_object_set_new(json, "Ack/Resolve by", json_string(""));
 
-         if (ids.size() > 0)
+         }
+         else
          {
-            unique_ptr<ObjectArray<UserDatabaseObject>> users = FindUserDBObjects(ids);
-            json_object_set_new(json, "Ack/Resolve by", json_string_t((users->size() > 0) ? users->get(0)->getName() : _T("")));
+            uint32_t userId;
+            switch (alarm->getState() & ALARM_STATE_MASK)
+            {
+               case ALARM_STATE_ACKNOWLEDGED:
+                  userId = alarm->getAckByUser();
+                  break;
+               case ALARM_STATE_RESOLVED:
+                  userId = alarm->getResolvedByUser();
+                  break;
+               case ALARM_STATE_TERMINATED:
+                  userId = alarm->getTermByUser();
+                  break;
+            }
+            TCHAR buffer[MAX_USER_NAME];
+            ResolveUserId(userId, buffer, true);
+            json_object_set_new(json, "Ack/Resolve by", json_string_t(buffer));
          }
          json_object_set_new(json, "Created", json_time_string(alarm->getCreationTime()));
          json_object_set_new(json, "Last Change", json_time_string(alarm->getLastChangeTime()));
@@ -168,16 +170,16 @@ int H_GrafanaGetSummaryTable(Context *context)
    }
 
    uint32_t rootId = json_object_get_int32(request, "rootObjectId", 0);
-   uint32_t tableId = json_object_get_int32(request, "table-id", 0);
+   uint32_t tableId = json_object_get_int32(request, "tableId", 0);
    if (tableId == 0)
    {
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_QuerySummaryTable: invalid summary table ID"));
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaGetSummaryTable: invalid summary table ID"));
       context->setErrorResponse("Invalid summary table ID");
       return 400;
    }
    if (rootId == 0)
    {
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_QuerySummaryTable: invalid root object ID"));
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaGetSummaryTable: invalid root object ID"));
       context->setErrorResponse("Invalid root object ID");
       return 400;
    }
@@ -193,7 +195,7 @@ int H_GrafanaGetObjectQuery(Context *context)
    json_t *request = context->getRequestDocument();
    if (request == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_ObjectQuery: empty request"));
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaGetObjectQuery: empty request"));
       return 400;
    }
 
@@ -201,19 +203,14 @@ int H_GrafanaGetObjectQuery(Context *context)
    uint32_t queryId = json_object_get_int32(request, "queryId", 0);
    StringMap inputFields(json_object_get(request, "inputFields"));
 
-   TCHAR errorMessage[1024];
-   *errorMessage = 0;
+   TCHAR errorMessage[1024] = L"";
    unique_ptr<ObjectArray<ObjectQueryResult>> objects = FindAndExecuteObjectQueries(queryId, rootId,
          context->getUserId(), errorMessage, 1024, nullptr, true,
-         nullptr, nullptr, inputFields, json_object_get_int32(request, "limit"));
+         nullptr, nullptr, &inputFields, json_object_get_int32(request, "limit"));
    if (objects == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_QuerySummaryTable: %s"), errorMessage);
-#ifdef UNICODE
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaGetObjectQuery: %s"), errorMessage);
       char *utf8Error = UTF8StringFromWideString(errorMessage);
-#else
-      char *utf8Error = UTF8StringFromMBString(errorMessage);
-#endif
       context->setErrorResponse(utf8Error);
       MemFree(utf8Error);
       return 400;

@@ -32,13 +32,12 @@ int H_Alarms(Context *context)
 
    json_t *output = json_array();
 
-   ObjectArray<Alarm> *alarms = GetAlarms();
+   ObjectArray<Alarm> *alarms = GetAlarms(rootId, true);
    for(int i = 0; i < alarms->size(); i++)
    {
       Alarm *alarm = alarms->get(i);
       shared_ptr<NetObj> object = FindObjectById(alarm->getSourceObject());
       if ((object != nullptr) &&
-          ((rootId == 0) || (rootId == object->getId()) || object->isParent(rootId)) &&
           object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ_ALARMS) &&
           alarm->checkCategoryAccess(context->getUserId(), context->getSystemAccessRights()))
       {

@@ -418,11 +418,11 @@ static inline const wchar_t *GetVariableMetadata(NXSL_VM *vm, const NXSL_Identif
 /**
  * Get all configured object queries
  */
-unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE FindAndExecuteObjectQueries(uint32_t qyeryId, uint32_t rootObjectId, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
+unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE FindAndExecuteObjectQueries(uint32_t queryId, uint32_t rootObjectId, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
    std::function<void(int)> progressCallback, bool readAllComputedFields, const StringList *fields, const StringList *orderBy,
    const StringMap *inputFields, uint32_t contextObjectId, uint32_t limit)
 {
-   shared_ptr<ObjectQuery> query = s_objectQueries.get(qyeryId);
+   shared_ptr<ObjectQuery> query = s_objectQueries.get(queryId);
    if (query == nullptr)
    {
       _tcslcpy(errorMessage, _T("Invalid object query ID"), errorMessageLen);
@@ -607,7 +607,7 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
    }
 
    // Sort result set, apply limit, remove hidden columns
-   if (readFields && (resultSet != nullptr) && !resultSet->isEmpty()) //TODO: readFields is flase
+   if (readFields && (resultSet != nullptr) && !resultSet->isEmpty())
    {
       StringList realOrderBy;
       if (orderBy != nullptr)

@@ -200,11 +200,11 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/grafana/infinity/alarms")
       .POST(H_GrafanaGetAlarms)
       .build();
-   RouteBuilder("v1/grafana/infinity/summary-table")
-      .POST(H_GrafanaGetSummaryTable)
-      .build();
    RouteBuilder("v1/grafana/infinity/object-query")
       .POST(H_GrafanaGetObjectQuery)
+      .build();
+   RouteBuilder("v1/grafana/infinity/summary-table")
+      .POST(H_GrafanaGetSummaryTable)
       .build();
    RouteBuilder("v1/login")
       .POST(H_Login)
