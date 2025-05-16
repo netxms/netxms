@@ -383,6 +383,31 @@ json_t *Table::toJson() const
 }
 
 /**
+ * Create JSON document from table in Grafana format
+ */
+json_t *Table::toGrafanaJson() const
+{
+   json_t *data = json_array();
+   for(int i = 0; i < m_data.size(); i++)
+   {
+      json_t *row = json_object();
+      for(int j = 0; j < m_columns.size(); j++)
+      {
+#ifdef UNICODE
+         char *name = UTF8StringFromWideString(m_columns.get(j)->getDisplayName());
+#else
+         char *name = UTF8StringFromMBString(m_columns.get(j)->getDisplayName());
+#endif
+         json_object_set_new(row, name, json_string_t(m_data.get(i)->getValue(j)));
+         MemFree(name);
+      }
+      json_array_append_new(data, row);
+   }
+
+   return data;
+}
+
+/**
  * Create XML document from table
  */
 TCHAR *Table::toXML() const

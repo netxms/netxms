@@ -5503,6 +5503,7 @@ public:
    uint32_t fillMessage(NXCPMessage *msg, uint32_t baseId) const;
 
    uint32_t getId() const { return m_id; }
+   String getScript() const { return m_source; }
 };
 
 #define MAX_USER_AGENT_MESSAGE_SIZE 1024
@@ -5623,6 +5624,9 @@ template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<ObjectQueryResult>;
 unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const TCHAR *query, uint32_t rootObjectId, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
          std::function<void(int)> progressCallback = nullptr, bool readAllComputedFields = false, const StringList *fields = nullptr, const StringList *orderBy = nullptr,
          const StringMap *inputFields = nullptr, uint32_t contextObjectId = 0, uint32_t limit = 0);
+unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE FindAndExecuteObjectQueries(uint32_t queryId, uint32_t rootObjectId, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
+   std::function<void(int)> progressCallback, bool readAllComputedFields, const StringList *fields, const StringList *orderBy,
+   const StringMap *inputFields, uint32_t contextObjectId = 0, uint32_t limit = 0);
 uint32_t GetObjectQueries(NXCPMessage *msg);
 uint32_t ModifyObjectQuery(const NXCPMessage& msg, uint32_t *queryId);
 uint32_t DeleteObjectQuery(uint32_t queryId);

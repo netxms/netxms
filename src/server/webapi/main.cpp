@@ -40,6 +40,9 @@ int H_AlarmTerminate(Context *context);
 int H_Alarms(Context *context);
 int H_DataCollectionHistory(Context *context);
 int H_FindMacAddress(Context *context);
+int H_GrafanaGetAlarms(Context *context);
+int H_GrafanaGetSummaryTable(Context *context);
+int H_GrafanaGetObjectQuery(Context *context);
 int H_Login(Context *context);
 int H_Logout(Context *context);
 int H_ObjectDetails(Context *context);
@@ -194,17 +197,15 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/find/mac-address")
       .GET(H_FindMacAddress)
       .build();
-   /*
-   RouteBuilder("v1/grafana/alarms")
+   RouteBuilder("v1/grafana/infinity/alarms")
       .POST(H_GrafanaGetAlarms)
       .build();
-   RouteBuilder("v1/grafana/summary-table")
-      .POST(H_GrafanaGetSummaryTable)
-      .build();
-   RouteBuilder("v1/grafana/object-query")
+   RouteBuilder("v1/grafana/infinity/object-query")
       .POST(H_GrafanaGetObjectQuery)
       .build();
-      */
+   RouteBuilder("v1/grafana/infinity/summary-table")
+      .POST(H_GrafanaGetSummaryTable)
+      .build();
    RouteBuilder("v1/login")
       .POST(H_Login)
       .noauth()
