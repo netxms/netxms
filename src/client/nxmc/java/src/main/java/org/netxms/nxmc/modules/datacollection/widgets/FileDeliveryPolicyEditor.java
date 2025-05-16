@@ -29,7 +29,6 @@ import java.util.Set;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
@@ -40,9 +39,7 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
@@ -51,9 +48,9 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.widgets.EmbeddedProgressMonitor;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.dialogs.FilePermissionDialog;
 import org.netxms.nxmc.modules.datacollection.views.PolicyEditorView;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.FileDeliveryPolicy;
@@ -69,9 +66,13 @@ import org.netxms.nxmc.tools.MessageDialogHelper;
  */
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
+
 public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
 {
    private static final Logger logger = LoggerFactory.getLogger(FileDeliveryPolicyEditor.class);
+
+   private final I18n i18n = LocalizationHelper.getI18n(FileDeliveryPolicyEditor.class);
 
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_GUID = 1;
@@ -81,7 +82,6 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
    public static final int COLUMN_PERMISSIONS = 5;
 
    private SortableTreeViewer fileTree;
-   private EmbeddedProgressMonitor progressMonitor;
    private Set<PathElement> rootElements = new HashSet<PathElement>();
    private Action actionAddRoot;
    private Action actionAddDirectory;
@@ -102,9 +102,9 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
    {
       super(parent, style, policy, view);
 
-      setLayout(new FormLayout());
+      setLayout(new FillLayout());
 
-      final String[] columnNames = { "Name", "Guid", "Date", "User", "Group", "Permissions" };
+      final String[] columnNames = { i18n.tr("Name"), i18n.tr("GUID"), i18n.tr("Date"), i18n.tr("User"), i18n.tr("Group"), i18n.tr("Permissions") };
       final int[] columnWidths = { 300, 300, 200, 150, 150, 200 };
       fileTree = new SortableTreeViewer(this, columnNames, columnWidths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
       fileTree.setContentProvider(new FileDeliveryPolicyContentProvider());
@@ -126,21 +126,6 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          }
       });
 
-      progressMonitor = new EmbeddedProgressMonitor(this, SWT.NONE, false);
-
-      FormData fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(100, 0);
-      fd.bottom = new FormAttachment(100, 0);
-      fileTree.getControl().setLayoutData(fd);
-
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(100, 0);
-      fd.bottom = new FormAttachment(100, 0);
-      progressMonitor.setLayoutData(fd);
-
       createActions();
       createPopupMenu();
 
@@ -153,7 +138,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
     */
    private void createActions()
    {
-      actionAddRoot = new Action("&Add root directory...", ResourceManager.getImageDescriptor("icons/add_directory.png")) {
+      actionAddRoot = new Action(i18n.tr("&Add root directory..."), ResourceManager.getImageDescriptor("icons/add_directory.png")) {
          @Override
          public void run()
          {
@@ -161,23 +146,23 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          }
       };
 
-      actionAddDirectory = new Action("Add d&irectory...", ResourceManager.getImageDescriptor("icons/add_directory.png")) {
+      actionAddDirectory = new Action(i18n.tr("Add d&irectory..."), ResourceManager.getImageDescriptor("icons/add_directory.png")) {
          @Override
          public void run()
          {
             addDirectory();
          }
       };
-      
-      actionAddFile = new Action("Add &file...", ResourceManager.getImageDescriptor("icons/add_file.png")) {
+
+      actionAddFile = new Action(i18n.tr("Add &file..."), ResourceManager.getImageDescriptor("icons/add_file.png")) {
          @Override
          public void run()
          {
             addFile();
          }
       };
-      
-      actionRename = new Action("&Rename...", SharedIcons.RENAME) {
+
+      actionRename = new Action(i18n.tr("&Rename..."), SharedIcons.RENAME) {
          @Override
          public void run()
          {
@@ -185,23 +170,23 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          }
       };
 
-      actionDelete = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
+      actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
          {
             deleteElements();
          }
       };
-      
-      actionUpdate = new Action("&Update...", ResourceManager.getImageDescriptor("icons/update_file.png")) {
+
+      actionUpdate = new Action(i18n.tr("&Update..."), ResourceManager.getImageDescriptor("icons/update_file.png")) {
          @Override
          public void run()
          {
             updateFile();
          }
       };
-      
-      actionEditPermissions = new Action("&Permissions...", ResourceManager.getImageDescriptor("icons/permissions.png")) {
+
+      actionEditPermissions = new Action(i18n.tr("&Permissions..."), ResourceManager.getImageDescriptor("icons/permissions.png")) {
          @Override
          public void run()
          {
@@ -215,18 +200,11 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
     */
    private void createPopupMenu()
    {
-      // Create menu manager
-      MenuManager menuMgr = new MenuManager();
-      menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager manager)
-         {
-            fillContextMenu(manager);
-         }
-      });
+      MenuManager manager = new MenuManager();
+      manager.setRemoveAllWhenShown(true);
+      manager.addMenuListener((m) -> fillContextMenu(m));
 
-      // Create menu
-      Menu menu = menuMgr.createContextMenu(fileTree.getControl());
+      Menu menu = manager.createContextMenu(fileTree.getControl());
       fileTree.getControl().setMenu(menu);
    }
 
@@ -274,8 +252,6 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       fileTransferInProgress = enable;
       actionAddFile.setEnabled(!enable);
       view.enableSaveAction(!enable);
-      progressMonitor.setVisible(enable);
-      ((FormData)fileTree.getControl().getLayoutData()).bottom = enable ? new FormAttachment(progressMonitor, 0, SWT.TOP) : new FormAttachment(100, 0);
       layout(true, true);
    }
 
@@ -399,7 +375,8 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
             PathElement e = ((PathElement)selection.getFirstElement()).findChild(f.getName());
             if (e != null)
             {
-               if (!MessageDialogHelper.openQuestion(getShell(), "File overwrite confirmation", "File with " + f.getName() + " already exist. Do you want to overwrite it?"))
+               if (!MessageDialogHelper.openQuestion(getShell(), i18n.tr("File overwrite confirmation"),
+                     i18n.tr("File named {0} already exists. Do you want to overwrite it?", f.getName())))
                   continue;
                e.setFile(f);
             }
@@ -424,7 +401,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
 
          logger.info("FileDeliveryPolicyEditor: " + uploadList.size() + " files to upload");          
          final NXCSession session = Registry.getSession();
-         new Job("Uploading files", view) {
+         new Job(i18n.tr("Uploading files"), view) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
@@ -459,7 +436,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
             @Override
             protected String getErrorMessage()
             {
-               return "Cannot upload file";
+               return i18n.tr("Cannot upload file");
             }
 
             @Override
@@ -469,7 +446,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
                   enableFileTransferMode(false);
                });
             }
-         }.start(progressMonitor);
+         }.start();
       }
    }
 
@@ -479,7 +456,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
    private void deleteFile(final String name)
    {
       final NXCSession session = Registry.getSession();
-      new Job("Delete file", view) {
+      new Job(i18n.tr("Deleting file"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -489,7 +466,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot delete file";
+            return i18n.tr("Cannot delete file");
          }
       }.start();
    }
@@ -516,7 +493,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
 
       final PathElement e = (PathElement)selection.getFirstElement();
       final NXCSession session = Registry.getSession();
-      new Job("Uploading file", view) {
+      new Job(i18n.tr("Uploading file"), view) {
          @Override
          protected void run(final IProgressMonitor monitor) throws Exception
          {
@@ -548,7 +525,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot upload file";
+            return i18n.tr("Cannot upload file");
          }
 
          @Override
@@ -558,7 +535,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
                enableFileTransferMode(false);
             });
          }
-      }.start(progressMonitor);
+      }.start();
    }
 
    /**
@@ -566,17 +543,17 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
     */
    private void addElement(PathElement parent)
    {
-      InputDialog dlg = new InputDialog(getShell(), (parent == null) ? "New root directory" : "New directory", "Enter name for new directory", "", new IInputValidator() {
+      InputDialog dlg = new InputDialog(getShell(), (parent == null) ? i18n.tr("New Root Directory") : i18n.tr("New Directory"), i18n.tr("Enter name for new directory"), "", new IInputValidator() {
          @Override
          public String isValid(String newText)
          {
             if (newText.isEmpty())
-               return "Name cannot be empty";
+               return i18n.tr("Name cannot be empty");
             if (parent != null)
                for (PathElement el : parent.getChildren())
                {
                   if(newText.equalsIgnoreCase(el.getName()))
-                     return "Object with this name already exists";
+                     return i18n.tr("Directory with this name already exists");
                }
             return null;
          }
@@ -608,17 +585,17 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          return;
 
       PathElement element = (PathElement)selection.getFirstElement();
-      InputDialog dlg = new InputDialog(getShell(), element.isFile() ? "Rename file" : "Rename directory", "Enter new name", element.getName(), new IInputValidator() {
+      InputDialog dlg = new InputDialog(getShell(), element.isFile() ? i18n.tr("Rename File") : i18n.tr("Rename Directory"), i18n.tr("Enter new name"), element.getName(), new IInputValidator() {
          @Override
          public String isValid(String newText)
          {
             if (newText.isEmpty())
-               return "Name cannot be empty";
+               return i18n.tr("Name cannot be empty");
             if (element.getParent() != null)
                for (PathElement el : element.getParent().getChildren())
                {
                   if(!el.equals(element) && newText.equalsIgnoreCase(el.getName()))
-                     return "Object with this name already exists";
+                     return i18n.tr("File or directory with this name already exists");
                }
             return null;
          }
@@ -674,7 +651,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       if (selection.isEmpty())
          return;
 
-      if (!MessageDialogHelper.openQuestion(getShell(), "Delete confirmation", "Delete selected files?"))
+      if (!MessageDialogHelper.openQuestion(getShell(), i18n.tr("Delete Files"), i18n.tr("Delete selected files?")))
          return;
 
       for(Object o : selection.toList())
@@ -740,7 +717,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
    @Override
    public String isSaveAllowed()
    {
-      return fileTransferInProgress ? "File transfer is in progress" : null;
+      return fileTransferInProgress ? i18n.tr("File transfer is in progress") : null;
    }
 
    /**

@@ -22,6 +22,7 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -45,6 +46,7 @@ import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
+import org.netxms.nxmc.base.widgets.ProgressArea;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.keyboard.KeyBindingManager;
 import org.netxms.nxmc.keyboard.KeyStroke;
@@ -69,6 +71,7 @@ public abstract class View implements MessageAreaHolder
    private MessageArea messageArea;
    private FilterText filterText;
    private Composite clientArea;
+   private ProgressArea progressArea;
    private boolean hasFilter;
    private boolean showFilterTooltip;
    private boolean showFilterLabel;
@@ -211,6 +214,9 @@ public abstract class View implements MessageAreaHolder
 
       clientArea = new Composite(viewArea, SWT.NONE);
       clientArea.setLayout(new FillLayout());
+
+      progressArea = new ProgressArea(viewArea, SWT.NONE);
+
       createContent(clientArea);
 
       if (originalView != null)
@@ -229,6 +235,12 @@ public abstract class View implements MessageAreaHolder
       fd.right = new FormAttachment(100, 0);
       messageArea.setLayoutData(fd);
 
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      fd.right = new FormAttachment(100, 0);
+      progressArea.setLayoutData(fd);
+
       if (hasFilter)
       {
          fd = new FormData();
@@ -241,7 +253,7 @@ public abstract class View implements MessageAreaHolder
          fd.left = new FormAttachment(0, 0);
          fd.top = new FormAttachment(filterText);
          fd.right = new FormAttachment(100, 0);
-         fd.bottom = new FormAttachment(100, 0);
+         fd.bottom = new FormAttachment(progressArea);
          clientArea.setLayoutData(fd);
 
          filterEnabled = PreferenceStore.getInstance().getAsBoolean(getBaseId() + ".showFilter", true);
@@ -254,7 +266,7 @@ public abstract class View implements MessageAreaHolder
          fd.left = new FormAttachment(0, 0);
          fd.top = new FormAttachment(messageArea);
          fd.right = new FormAttachment(100, 0);
-         fd.bottom = new FormAttachment(100, 0);
+         fd.bottom = new FormAttachment(progressArea);
          clientArea.setLayoutData(fd);
       }
    }
@@ -1003,5 +1015,27 @@ public abstract class View implements MessageAreaHolder
    public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
       baseId = memento.getAsString("baseId");
+   }
+
+   /**
+    * Create progress monitor for job.
+    *
+    * @param jobId ID if job to create monitor for
+    * @return progress monitor
+    */
+   public IProgressMonitor createProgressMonitor(int jobId)
+   {
+      return (progressArea != null) ? progressArea.createMonitor(jobId) : null;
+   }
+
+   /**
+    * Job completion handler. Removes progress monitor from progress area.
+    *
+    * @param jobId ID of completed job
+    */
+   public void onJobCompletion(int jobId)
+   {
+      if (progressArea != null)
+         progressArea.removeMonitor(jobId);
    }
 }

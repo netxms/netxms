@@ -82,12 +82,18 @@ public class JobManager
     * @param job job object
     * @param monitor optional progress monitor
     */
-   protected synchronized void submit(final Job job, final IProgressMonitor monitor)
+   protected synchronized void submit(final Job job, IProgressMonitor monitor)
    {
       job.setId(jobId++);
       jobs.put(job.getId(), job);
+      if ((monitor == null) && (job.getView() != null))
+      {
+         monitor = job.getView().createProgressMonitor(job.getId());
+      }
+
+      final IProgressMonitor finalMonitor = monitor;
       threadPool.execute(() -> {
-         job.execute(monitor);
+         job.execute(finalMonitor);
          onJobCompletion(job);
       });
    }

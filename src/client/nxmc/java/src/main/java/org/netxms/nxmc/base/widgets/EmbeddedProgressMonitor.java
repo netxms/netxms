@@ -47,7 +47,7 @@ public class EmbeddedProgressMonitor extends Composite implements IProgressMonit
       layout.marginWidth = 5;
       setLayout(layout);
 
-      monitor = new ProgressMonitorPart(this, null);
+      monitor = new ProgressMonitorPart(this, null, showStopButton);
    }
 
    /**
