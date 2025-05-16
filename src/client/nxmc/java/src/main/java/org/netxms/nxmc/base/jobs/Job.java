@@ -136,6 +136,7 @@ public abstract class Job
 
       try
       {
+         monitor.beginTask(name, IProgressMonitor.UNKNOWN);
          run(monitor);
       }
       catch(Exception e)
@@ -152,6 +153,10 @@ public abstract class Job
          monitor.done();
          jobFinalize();
          state = JobState.COMPLETED;
+         if (view != null)
+         {
+            runInUIThread(() -> view.onJobCompletion(id));
+         }
       }
    }
 
