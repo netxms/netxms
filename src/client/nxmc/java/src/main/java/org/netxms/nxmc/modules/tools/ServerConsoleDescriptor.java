@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2021 Raden Solutions
+ * Copyright (C) 2021-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,5 +58,14 @@ public class ServerConsoleDescriptor implements ToolDescriptor
    public View createView()
    {
       return new ServerConsole();
+   }
+
+   /**
+    * @see org.netxms.nxmc.services.ToolDescriptor#getRequiredComponentId()
+    */
+   @Override
+   public String getRequiredComponentId()
+   {
+      return null;
    }
 }

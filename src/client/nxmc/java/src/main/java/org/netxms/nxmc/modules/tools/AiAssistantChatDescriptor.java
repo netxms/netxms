@@ -59,4 +59,13 @@ public class AiAssistantChatDescriptor implements ToolDescriptor
    {
       return new AiAssistantChatView();
    }
+
+   /**
+    * @see org.netxms.nxmc.services.ToolDescriptor#getRequiredComponentId()
+    */
+   @Override
+   public String getRequiredComponentId()
+   {
+      return "AI-ASSISTANT";
+   }
 }

@@ -46,4 +46,11 @@ public interface ToolDescriptor
     * @return view
     */
    public View createView();
+
+   /**
+    * Get ID of server component that is required for this view.
+    *
+    * @return ID of required component or null if there are no restrictions
+    */
+   public String getRequiredComponentId();
 }

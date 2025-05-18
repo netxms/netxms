@@ -59,4 +59,13 @@ public class MibExplorerToolDescriptor implements ToolDescriptor
    {
       return new MibExplorer(0, 0, true);
    }
+
+   /**
+    * @see org.netxms.nxmc.services.ToolDescriptor#getRequiredComponentId()
+    */
+   @Override
+   public String getRequiredComponentId()
+   {
+      return null;
+   }
 }

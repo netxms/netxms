@@ -59,4 +59,13 @@ public class ObjectFinderDescriptor implements ToolDescriptor
    {
       return new ObjectFinder();
    }
+
+   /**
+    * @see org.netxms.nxmc.services.ToolDescriptor#getRequiredComponentId()
+    */
+   @Override
+   public String getRequiredComponentId()
+   {
+      return null;
+   }
 }
