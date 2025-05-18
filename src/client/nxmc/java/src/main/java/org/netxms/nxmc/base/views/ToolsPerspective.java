@@ -21,6 +21,8 @@ package org.netxms.nxmc.base.views;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
+import org.netxms.client.NXCSession;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.services.ToolDescriptor;
@@ -74,11 +76,19 @@ public class ToolsPerspective extends Perspective
    @Override
    protected void configureViews()
    {
+      NXCSession session = Registry.getSession();
       for(ToolDescriptor e : elements)
       {
-         View view = e.createView();
-         addMainView(view);
-         logger.debug("Added tools perspective view \"" + view.getName() + "\"");
+         if ((e.getRequiredComponentId() == null) || session.isServerComponentRegistered(e.getRequiredComponentId()))
+         {
+            View view = e.createView();
+            addMainView(view);
+            logger.debug("Added tools perspective view \"" + view.getName() + "\"");
+         }
+         else
+         {
+            logger.debug("Skipping tools perspective element \"" + e.getName() + "\" (component " + e.getRequiredComponentId() + " not available)");
+         }
       }
    }
 }

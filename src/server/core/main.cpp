@@ -1216,6 +1216,13 @@ retry_db_lock:
    InitializeDeviceBackupInterface();
    RegisterPredictionEngines();
 
+   // Check if AI assistant is available
+   ENUMERATE_MODULES(pfProcessRequestToAiAssistant)
+   {
+      RegisterComponent(L"AI-ASSISTANT");
+      break;
+   }
+
    // Load users and authentication methods
    LoadTwoFactorAuthenticationMethods();
    InitUsers();
