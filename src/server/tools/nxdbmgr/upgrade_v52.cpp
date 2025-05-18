@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 52.15 to 52.16
+ */
+static bool H_UpgradeFromV15()
+{
+   static const wchar_t *batch =
+      L"ALTER TABLE icmp_statistics ADD jitter integer\n"
+      L"UPDATE icmp_statistics SET jitter=0\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"icmp_statistics", L"jitter"));
+   CHK_EXEC(SetMinorSchemaVersion(16));
+   return true;
+}
+
+/**
  * Upgrade from 52.14 to 52.15
  */
 static bool H_UpgradeFromV14()
@@ -342,6 +357,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 15, 52, 16, H_UpgradeFromV15 },
    { 14, 52, 15, H_UpgradeFromV14 },
    { 13, 52, 14, H_UpgradeFromV13 },
    { 12, 52, 13, H_UpgradeFromV12 },

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ IcmpStatCollector::IcmpStatCollector(int period)
    m_maxResponseTime = 0;
    m_avgResponseTime = 0;
    m_packetLoss = 0;
+   m_jitter = 0;
    m_rawResponseTimes = MemAllocArrayNoInit<uint16_t>(period);
    memset(m_rawResponseTimes, 0xFF, period * sizeof(uint16_t));
    m_writePos = 0;
@@ -59,6 +60,8 @@ void IcmpStatCollector::recalculate()
    int sampleCount = 0;
    int responseCount = 0;
    uint64_t totalTime = 0;
+   uint64_t totalJitter = 0;
+   uint32_t lastResponseTime = 0;
    for(int i = 0; i < m_bufferSize; i++)
    {
       if (m_rawResponseTimes[i] == 0xFFFF)
@@ -71,6 +74,7 @@ void IcmpStatCollector::recalculate()
          if (responseCount == 1)
          {
             m_minResponseTime = m_maxResponseTime = m_rawResponseTimes[i];
+            lastResponseTime = m_rawResponseTimes[i];
          }
          else
          {
@@ -78,6 +82,7 @@ void IcmpStatCollector::recalculate()
                m_minResponseTime = m_rawResponseTimes[i];
             if (m_maxResponseTime < m_rawResponseTimes[i])
                m_maxResponseTime = m_rawResponseTimes[i];
+            totalJitter += abs(static_cast<int>(lastResponseTime) - static_cast<int>(m_rawResponseTimes[i]));
          }
       }
    }
@@ -86,11 +91,13 @@ void IcmpStatCollector::recalculate()
    {
       m_avgResponseTime = static_cast<uint32_t>(totalTime / responseCount);
       m_packetLoss = (sampleCount - responseCount) * 100 / sampleCount;
+      m_jitter = (responseCount > 1) ? static_cast<uint32_t>(totalJitter / (responseCount - 1)) : 0;
    }
    else
    {
       m_avgResponseTime = 0;
       m_packetLoss = 100;
+      m_jitter = 0;
    }
 }
 
@@ -172,8 +179,8 @@ bool IcmpStatCollector::saveToDatabase(DB_HANDLE hdb, uint32_t objectId, const T
    DBFreeStatement(hStmt);
 
    hStmt = recordExists ?
-            DBPrepare(hdb, _T("UPDATE icmp_statistics SET min_response_time=?,max_response_time=?,avg_response_time=?,last_response_time=?,packet_loss=?,sample_count=?,raw_response_times=? WHERE object_id=? AND poll_target=?")) :
-            DBPrepare(hdb, _T("INSERT INTO icmp_statistics (min_response_time,max_response_time,avg_response_time,last_response_time,packet_loss,sample_count,raw_response_times,object_id,poll_target) VALUES (?,?,?,?,?,?,?,?,?)"));
+            DBPrepare(hdb, _T("UPDATE icmp_statistics SET min_response_time=?,max_response_time=?,avg_response_time=?,last_response_time=?,packet_loss=?,jitter=?,sample_count=?,raw_response_times=? WHERE object_id=? AND poll_target=?")) :
+            DBPrepare(hdb, _T("INSERT INTO icmp_statistics (min_response_time,max_response_time,avg_response_time,last_response_time,packet_loss,jitter,sample_count,raw_response_times,object_id,poll_target) VALUES (?,?,?,?,?,?,?,?,?,?)"));
    if (hStmt == nullptr)
       return false;
 
@@ -182,6 +189,7 @@ bool IcmpStatCollector::saveToDatabase(DB_HANDLE hdb, uint32_t objectId, const T
    DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_avgResponseTime);
    DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_lastResponseTime);
    DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_packetLoss);
+   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_jitter);
 
    int sampleCount = 0;
    StringBuffer serializedResponseTimes;
@@ -198,11 +206,11 @@ bool IcmpStatCollector::saveToDatabase(DB_HANDLE hdb, uint32_t objectId, const T
       if (i == m_bufferSize)
          i = 0;
    }
-   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, sampleCount);
-   DBBind(hStmt, 7, DB_SQLTYPE_TEXT, serializedResponseTimes, DB_BIND_STATIC);
+   DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, sampleCount);
+   DBBind(hStmt, 8, DB_SQLTYPE_TEXT, serializedResponseTimes, DB_BIND_STATIC);
 
-   DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, objectId);
-   DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, target, DB_BIND_STATIC);
+   DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, objectId);
+   DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, target, DB_BIND_STATIC);
 
    bool success = DBExecute(hStmt);
    DBFreeStatement(hStmt);
@@ -214,7 +222,7 @@ bool IcmpStatCollector::saveToDatabase(DB_HANDLE hdb, uint32_t objectId, const T
  */
 IcmpStatCollector *IcmpStatCollector::loadFromDatabase(DB_HANDLE hdb, uint32_t objectId, const TCHAR *target, int period)
 {
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT min_response_time,max_response_time,avg_response_time,last_response_time,packet_loss,sample_count,raw_response_times FROM icmp_statistics WHERE object_id=? AND poll_target=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT min_response_time,max_response_time,avg_response_time,last_response_time,packet_loss,jitter,sample_count,raw_response_times FROM icmp_statistics WHERE object_id=? AND poll_target=?"));
    if (hStmt == nullptr)
       return nullptr;
 
@@ -240,11 +248,12 @@ IcmpStatCollector *IcmpStatCollector::loadFromDatabase(DB_HANDLE hdb, uint32_t o
    collector->m_avgResponseTime = DBGetFieldULong(hResult, 0, 2);
    collector->m_lastResponseTime = DBGetFieldULong(hResult, 0, 3);
    collector->m_packetLoss = DBGetFieldULong(hResult, 0, 4);
+   collector->m_jitter = DBGetFieldULong(hResult, 0, 5);
 
-   int sampleCount = DBGetFieldLong(hResult, 0, 5);
+   int sampleCount = DBGetFieldLong(hResult, 0, 6);
    if (sampleCount > 0)
    {
-      TCHAR *data = DBGetField(hResult, 0, 6, nullptr, 0);
+      wchar_t *data = DBGetField(hResult, 0, 7, nullptr, 0);
       if ((data != nullptr) && (_tcslen(data) == sampleCount * 3))
       {
          int pos = 0;
@@ -255,17 +264,17 @@ IcmpStatCollector *IcmpStatCollector::loadFromDatabase(DB_HANDLE hdb, uint32_t o
          }
          for(int i = 0; i < sampleCount; i++, pos += 3)
          {
-            TCHAR value[4];
-            memcpy(value, &data[pos], 3 * sizeof(TCHAR));
+            wchar_t value[4];
+            memcpy(value, &data[pos], 3 * sizeof(wchar_t));
             value[3] = 0;
-            collector->m_rawResponseTimes[i] = static_cast<uint16_t>(_tcstoul(value, nullptr, 16));
+            collector->m_rawResponseTimes[i] = static_cast<uint16_t>(wcstoul(value, nullptr, 16));
          }
          if (sampleCount < collector->m_bufferSize)
             collector->m_writePos = sampleCount;
       }
       else
       {
-         nxlog_debug_tag(_T("poll.icmp"), 6, _T("Sample count and raw data length mismatch for collector %s at node [%u] (count %d, len %d)"),
+         nxlog_debug_tag(L"poll.icmp", 6, L"Sample count and raw data length mismatch for collector %s at node [%u] (count %d, len %d)",
                   target, objectId, sampleCount, (int)_tcslen(CHECK_NULL_EX(data)));
       }
       MemFree(data);

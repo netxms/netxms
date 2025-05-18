@@ -1860,6 +1860,7 @@ private:
    uint32_t m_maxResponseTime;
    uint32_t m_avgResponseTime;
    uint32_t m_packetLoss;
+   uint32_t m_jitter;
    uint16_t *m_rawResponseTimes;
    int m_writePos;
    int m_bufferSize;
@@ -1875,6 +1876,7 @@ public:
    uint32_t min() const { return m_minResponseTime; }
    uint32_t max() const { return m_maxResponseTime; }
    uint32_t packetLoss() const { return m_packetLoss; }
+   uint32_t jitter() const { return m_jitter; }
    bool empty() const { return (m_writePos == 0) && (m_rawResponseTimes[m_bufferSize - 1] == 0xFFFF); }
 
    void update(uint32_t responseTime);
@@ -3266,7 +3268,8 @@ enum class IcmpStatFunction
    MIN,
    MAX,
    AVERAGE,
-   LOSS
+   LOSS,
+   JITTER
 };
 
 /**
@@ -4046,8 +4049,8 @@ public:
    void addHostConnections(LinkLayerNeighbors *nbs);
    void addExistingConnections(LinkLayerNeighbors *nbs);
 
-   bool getIcmpStatistics(const TCHAR *target, uint32_t *last, uint32_t *min, uint32_t *max, uint32_t *avg, uint32_t *loss) const;
-   DataCollectionError getIcmpStatistic(const TCHAR *param, IcmpStatFunction function, TCHAR *value) const;
+   bool getIcmpStatistics(const TCHAR *target, uint32_t *last, uint32_t *min, uint32_t *max, uint32_t *avg, uint32_t *loss, uint32_t *jitter) const;
+   DataCollectionError getIcmpStatistic(const wchar_t *param, IcmpStatFunction function, wchar_t *value) const;
    StringList *getIcmpStatCollectors() const;
    void updateIcmpStatisticPeriod(uint32_t period);
 

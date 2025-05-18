@@ -112,6 +112,8 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 
 		if ((object instanceof Template) || (object instanceof AbstractNode))
 		{
+         list.add(new AgentParameter("ICMP.Jitter", "ICMP ping: jitter", DataType.UINT32));
+         list.add(new AgentParameter("ICMP.Jitter(*)", "ICMP ping to {instance}: jitter", DataType.UINT32));
          list.add(new AgentParameter("ICMP.PacketLoss", "ICMP ping: packet loss", DataType.UINT32));
          list.add(new AgentParameter("ICMP.PacketLoss(*)", "ICMP ping to {instance}: packet loss", DataType.UINT32));
          list.add(new AgentParameter("ICMP.ResponseTime.Average", "ICMP ping: average response time", DataType.UINT32));

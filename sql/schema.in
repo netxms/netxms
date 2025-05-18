@@ -830,6 +830,7 @@ CREATE TABLE icmp_statistics
    avg_response_time integer not null,
    last_response_time integer not null,
    packet_loss integer not null,
+   jitter integer not null,
    sample_count integer not null,
    raw_response_times SQL_TEXT null,
    PRIMARY KEY(object_id,poll_target)

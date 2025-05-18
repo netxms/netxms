@@ -8417,6 +8417,14 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
          _tcscpy(buffer, _T("-1"));
       }
    }
+   else if (!_tcsicmp(_T("ICMP.Jitter"), name))
+   {
+      rc = getIcmpStatistic(nullptr, IcmpStatFunction::JITTER, buffer);
+   }
+   else if (MatchString(_T("ICMP.Jitter(*)"), name, false))
+   {
+      rc = getIcmpStatistic(name, IcmpStatFunction::JITTER, buffer);
+   }
    else if (!_tcsicmp(_T("ICMP.PacketLoss"), name))
    {
       rc = getIcmpStatistic(nullptr, IcmpStatFunction::LOSS, buffer);
@@ -13530,7 +13538,7 @@ void Node::icmpPollAddress(AgentConnection *conn, const TCHAR *target, const Ine
 /**
  * Get all ICMP statistics for given target
  */
-bool Node::getIcmpStatistics(const TCHAR *target, uint32_t *last, uint32_t *min, uint32_t *max, uint32_t *avg, uint32_t *loss) const
+bool Node::getIcmpStatistics(const TCHAR *target, uint32_t *last, uint32_t *min, uint32_t *max, uint32_t *avg, uint32_t *loss, uint32_t *jitter) const
 {
    lockProperties();
    IcmpStatCollector *collector = (m_icmpStatCollectors != nullptr) ? m_icmpStatCollectors->get(target) : nullptr;
@@ -13564,18 +13572,18 @@ StringList *Node::getIcmpStatCollectors() const
 /**
  * Get ICMP poll statistic for given target and function
  */
-DataCollectionError Node::getIcmpStatistic(const TCHAR *param, IcmpStatFunction function, TCHAR *value) const
+DataCollectionError Node::getIcmpStatistic(const wchar_t *param, IcmpStatFunction function, wchar_t *value) const
 {
-   TCHAR key[MAX_OBJECT_NAME + 2];
+   wchar_t key[MAX_OBJECT_NAME + 2];
    if (param != nullptr)
    {
-      TCHAR target[MAX_OBJECT_NAME];
-      if (!AgentGetParameterArg(param, 1, target, MAX_OBJECT_NAME))
+      wchar_t target[MAX_OBJECT_NAME];
+      if (!AgentGetParameterArgW(param, 1, target, MAX_OBJECT_NAME))
          return DataCollectionError::DCE_NOT_SUPPORTED;
 
-      if ((_tcslen(target) >= 2) && (target[1] == ':'))
+      if ((wcslen(target) >= 2) && (target[1] == ':'))
       {
-         _tcslcpy(key, target, MAX_OBJECT_NAME + 2);
+         wcslcpy(key, target, MAX_OBJECT_NAME + 2);
       }
       else
       {
@@ -13594,13 +13602,13 @@ DataCollectionError Node::getIcmpStatistic(const TCHAR *param, IcmpStatFunction 
 
             key[0] = 'N';
             key[1] = ':';
-            _tcslcpy(&key[2], object->getName(), MAX_OBJECT_NAME);
+            wcslcpy(&key[2], object->getName(), MAX_OBJECT_NAME);
          }
       }
    }
    else
    {
-      _tcscpy(key, _T("PRI"));
+      wcscpy(key, L"PRI");
    }
 
    lockProperties();
@@ -13614,6 +13622,9 @@ DataCollectionError Node::getIcmpStatistic(const TCHAR *param, IcmpStatFunction 
          {
             case IcmpStatFunction::AVERAGE:
                ret_uint(value, collector->average());
+               break;
+            case IcmpStatFunction::JITTER:
+               ret_uint(value, collector->jitter());
                break;
             case IcmpStatFunction::LAST:
                ret_uint(value, collector->last());
