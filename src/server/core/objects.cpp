@@ -1905,16 +1905,17 @@ static void PrintInterfaceIcmpStatistic(ServerConsole *console, const Interface&
    if (parentNode == nullptr)
       return;
 
-   TCHAR target[MAX_OBJECT_NAME + 2];
+   wchar_t target[MAX_OBJECT_NAME + 2];
    _sntprintf(target, MAX_OBJECT_NAME + 2, _T("N:%s"), iface.getName());
-   UINT32 last, min, max, avg, loss;
-   if (parentNode->getIcmpStatistics(target, &last, &min, &max, &avg, &loss))
+   uint32_t last, min, max, avg, loss, jitter;
+   if (parentNode->getIcmpStatistics(target, &last, &min, &max, &avg, &loss, &jitter))
    {
       ConsolePrintf(console, _T("   ICMP statistics:\n"));
       ConsolePrintf(console, _T("      RTT last.........: %u ms\n"), last);
       ConsolePrintf(console, _T("      RTT min..........: %u ms\n"), min);
       ConsolePrintf(console, _T("      RTT max..........: %u ms\n"), max);
       ConsolePrintf(console, _T("      RTT average......: %u ms\n"), avg);
+      ConsolePrintf(console, _T("      Jitter...........: %u ms\n"), jitter);
       ConsolePrintf(console, _T("      Packet loss......: %u\n"), loss);
    }
 }
@@ -1962,14 +1963,15 @@ static void DumpObject(ServerConsole *console, const NetObj& object)
             StringList *collectors = static_cast<const Node&>(object).getIcmpStatCollectors();
             for(int i = 0; i < collectors->size(); i++)
             {
-               uint32_t last, min, max, avg, loss;
-               if (static_cast<const Node&>(object).getIcmpStatistics(collectors->get(i), &last, &min, &max, &avg, &loss))
+               uint32_t last, min, max, avg, loss, jitter;
+               if (static_cast<const Node&>(object).getIcmpStatistics(collectors->get(i), &last, &min, &max, &avg, &loss, &jitter))
                {
                   ConsolePrintf(console, _T("   ICMP statistics (%s):\n"), collectors->get(i));
                   ConsolePrintf(console, _T("      RTT last.........: %u ms\n"), last);
                   ConsolePrintf(console, _T("      RTT min..........: %u ms\n"), min);
                   ConsolePrintf(console, _T("      RTT max..........: %u ms\n"), max);
                   ConsolePrintf(console, _T("      RTT average......: %u ms\n"), avg);
+                  ConsolePrintf(console, _T("      Jitter...........: %u ms\n"), jitter);
                   ConsolePrintf(console, _T("      Packet loss......: %u\n"), loss);
                }
             }
