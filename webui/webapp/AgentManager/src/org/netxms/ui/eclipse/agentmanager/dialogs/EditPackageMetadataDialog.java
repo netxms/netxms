@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2022-2023 Raden Solutions
+ * Copyright (C) 2022-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -118,11 +118,12 @@ public class EditPackageMetadataDialog extends Dialog
       command = new LabeledText(dialogArea, SWT.NONE);
       command.setLabel("Command");
       command.setText(packageInfo.getCommand());
-      command.getTextControl().setTextLimit(255);
+      command.getTextControl().setTextLimit(4000);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.horizontalSpan = 3;
-      gd.grabExcessHorizontalSpace = true;
+      gd.grabExcessHorizontalSpace = false;
+      gd.widthHint = 300;
       command.setLayoutData(gd);
 
       description = new LabeledText(dialogArea, SWT.NONE);
@@ -132,7 +133,8 @@ public class EditPackageMetadataDialog extends Dialog
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.horizontalSpan = 3;
-      gd.grabExcessHorizontalSpace = true;
+      gd.grabExcessHorizontalSpace = false;
+      gd.widthHint = 300;
       description.setLayoutData(gd);
 
       return dialogArea;

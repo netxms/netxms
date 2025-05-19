@@ -1688,7 +1688,7 @@ CREATE TABLE agent_pkg
   version varchar(31) null,
   platform varchar(63) null,
   pkg_file varchar(255) null,
-  command varchar(255) null,
+  command varchar(4000) null,
   description varchar(255) null,
   PRIMARY KEY(pkg_id)
 ) TABLE_TYPE;

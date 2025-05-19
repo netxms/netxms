@@ -391,15 +391,15 @@ public:
 class ServerDownloadFileInfo : public DownloadFileInfo
 {
 protected:
-   std::function<void (const TCHAR*, uint32_t, bool)> m_completionCallback;
+   std::function<void (const wchar_t*, uint32_t, bool)> m_completionCallback;
    uint32_t m_uploadData;
 
 public:
-   ServerDownloadFileInfo(const TCHAR *name, time_t fileModificationTime = 0) : DownloadFileInfo(name, fileModificationTime)
+   ServerDownloadFileInfo(const wchar_t *name, time_t fileModificationTime = 0) : DownloadFileInfo(name, fileModificationTime)
    {
       m_uploadData = 0;
    }
-   ServerDownloadFileInfo(const TCHAR *name, std::function<void (const TCHAR*, uint32_t, bool)> completionCallback, time_t fileModificationTime = 0) :
+   ServerDownloadFileInfo(const wchar_t *name, std::function<void (const wchar_t*, uint32_t, bool)> completionCallback, time_t fileModificationTime = 0) :
          DownloadFileInfo(name, fileModificationTime), m_completionCallback(completionCallback)
    {
       m_uploadData = 0;
@@ -409,7 +409,8 @@ public:
    virtual void close(bool success);
 
    void setUploadData(uint32_t data) { m_uploadData = data; }
-   void updatePackageDBInfo(const TCHAR *description, const TCHAR *pkgName, const TCHAR *pkgVersion, const TCHAR *pkgType, const TCHAR *platform, const TCHAR *cleanFileName, const TCHAR *command);
+   void updatePackageDBInfo(const wchar_t *description, const wchar_t *pkgName, const wchar_t *pkgVersion, const wchar_t *pkgType,
+      const wchar_t *platform, const wchar_t *cleanFileName, const wchar_t *command);
 };
 
 /**
