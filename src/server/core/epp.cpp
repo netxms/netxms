@@ -209,7 +209,7 @@ EPRule::EPRule(const ConfigEntry& config, bool nxslV5) : m_timeFrames(0, 16, Own
          const TCHAR *timerKey = actions->get(i)->getSubEntryValue(_T("timerKey"));
          const TCHAR *blockingTimerKey = actions->get(i)->getSubEntryValue(_T("blockingTimerKey"));
          const TCHAR *snoozeTime = actions->get(i)->getSubEntryValue(_T("snoozeTime"));
-         bool active = actions->get(i)->getSubEntryValueAsBoolean(_T("active"), true);
+         bool active = actions->get(i)->getSubEntryValueAsBoolean(_T("active"), 0, true);
          if (!guid.isNull())
          {
             uint32_t actionId = FindActionByGUID(guid);
