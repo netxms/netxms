@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [5.2.1], [bugs@netxms.org])
+AC_INIT([NetXMS], [5.2.2], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE([tar-ustar subdir-objects])
