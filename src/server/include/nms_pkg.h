@@ -48,9 +48,9 @@ struct PackageDetails
    wchar_t name[MAX_OBJECT_NAME];
    wchar_t version[32];
    wchar_t platform[MAX_PLATFORM_NAME_LEN];
-   wchar_t packageFile[256];
-   wchar_t command[256];
-   wchar_t description[256];
+   MutableString packageFile;
+   MutableString command;
+   MutableString description;
 };
 
 /**

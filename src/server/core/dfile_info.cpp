@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2017-2020 Raden Solutions
+** Copyright (C) 2017-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,7 +32,8 @@ ServerDownloadFileInfo::~ServerDownloadFileInfo()
 /**
  * Update database information about agent package
  */
-void ServerDownloadFileInfo::updatePackageDBInfo(const TCHAR *description, const TCHAR *pkgName, const TCHAR *pkgVersion, const TCHAR *pkgType, const TCHAR *platform, const TCHAR *cleanFileName, const TCHAR *command)
+void ServerDownloadFileInfo::updatePackageDBInfo(const wchar_t *description, const wchar_t *pkgName, const wchar_t *pkgVersion, const wchar_t *pkgType,
+   const wchar_t *platform, const wchar_t *cleanFileName, const wchar_t *command)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO agent_pkg (pkg_id,pkg_name,version,description,platform,pkg_file,pkg_type,command) VALUES (?,?,?,?,?,?,?,?)"));
@@ -45,7 +46,7 @@ void ServerDownloadFileInfo::updatePackageDBInfo(const TCHAR *description, const
       DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, platform, DB_BIND_STATIC);
       DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, cleanFileName, DB_BIND_STATIC);
       DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, pkgType, DB_BIND_STATIC);
-      DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, command, DB_BIND_STATIC);
+      DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, command, DB_BIND_STATIC, 4000);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }

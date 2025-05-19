@@ -92,12 +92,12 @@ uint32_t GetPackageDetails(uint32_t packageId, PackageDetails *details)
          {
             details->id = packageId;
             DBGetField(hResult, 0, 0, details->platform, MAX_PLATFORM_NAME_LEN);
-            DBGetField(hResult, 0, 1, details->packageFile, 256);
+            details->packageFile = DBGetFieldAsString(hResult, 0, 1);
             DBGetField(hResult, 0, 2, details->type, 16);
             DBGetField(hResult, 0, 3, details->name, MAX_OBJECT_NAME);
             DBGetField(hResult, 0, 4, details->version, 32);
-            DBGetField(hResult, 0, 5, details->command, 256);
-            DBGetField(hResult, 0, 6, details->description, 256);
+            details->command = DBGetFieldAsString(hResult, 0, 5);
+            details->description = DBGetFieldAsString(hResult, 0, 6);
             rcc = RCC_SUCCESS;
          }
          else
@@ -131,7 +131,7 @@ uint32_t UninstallPackage(uint32_t packageId)
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   TCHAR query[256];
+   wchar_t query[256];
    _sntprintf(query, 256, L"SELECT pkg_file FROM agent_pkg WHERE pkg_id=%u", packageId);
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult != nullptr)

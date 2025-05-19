@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 52.16 to 52.17
+ */
+static bool H_UpgradeFromV16()
+{
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("agent_pkg"), _T("command"), 4000, true));
+   CHK_EXEC(SetMinorSchemaVersion(17));
+   return true;
+}
+
+/**
  * Upgrade from 52.15 to 52.16
  */
 static bool H_UpgradeFromV15()
@@ -357,6 +367,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 16, 52, 17, H_UpgradeFromV16 },
    { 15, 52, 16, H_UpgradeFromV15 },
    { 14, 52, 15, H_UpgradeFromV14 },
    { 13, 52, 14, H_UpgradeFromV13 },

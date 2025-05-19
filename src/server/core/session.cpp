@@ -7762,7 +7762,9 @@ void ClientSession::getInstalledPackages(const NXCPMessage& request)
             response.setField(VID_PACKAGE_TYPE, DBGetField(hResult, 4, buffer, MAX_DB_STRING));
             response.setField(VID_PACKAGE_NAME, DBGetField(hResult, 5, buffer, MAX_DB_STRING));
             response.setField(VID_DESCRIPTION, DBGetField(hResult, 6, buffer, MAX_DB_STRING));
-            response.setField(VID_COMMAND, DBGetField(hResult, 7, buffer, MAX_DB_STRING));
+            wchar_t *command = DBGetField(hResult, 7, nullptr, 0);
+            response.setField(VID_COMMAND, command);
+            MemFree(command);
             sendMessage(response);
             response.deleteAllFields();
          }
@@ -7797,9 +7799,9 @@ void ClientSession::installPackage(const NXCPMessage& request)
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_PACKAGES)
    {
-      TCHAR packageName[MAX_PACKAGE_NAME_LEN], description[MAX_DB_STRING];
-      TCHAR packageVersion[MAX_AGENT_VERSION_LEN], packageType[16], fileName[MAX_DB_STRING];
-      TCHAR platform[MAX_PLATFORM_NAME_LEN], command[MAX_DB_STRING];
+      wchar_t packageName[MAX_PACKAGE_NAME_LEN], description[MAX_DB_STRING];
+      wchar_t packageVersion[MAX_AGENT_VERSION_LEN], packageType[16], fileName[MAX_DB_STRING];
+      wchar_t platform[MAX_PLATFORM_NAME_LEN];
 
       request.getFieldAsString(VID_PACKAGE_NAME, packageName, MAX_PACKAGE_NAME_LEN);
       request.getFieldAsString(VID_DESCRIPTION, description, MAX_DB_STRING);
@@ -7807,10 +7809,10 @@ void ClientSession::installPackage(const NXCPMessage& request)
       request.getFieldAsString(VID_PACKAGE_VERSION, packageVersion, MAX_AGENT_VERSION_LEN);
       request.getFieldAsString(VID_PACKAGE_TYPE, packageType, 16);
       request.getFieldAsString(VID_PLATFORM_NAME, platform, MAX_PLATFORM_NAME_LEN);
-      request.getFieldAsString(VID_COMMAND, command, MAX_DB_STRING);
+      SharedString command = request.getFieldAsSharedString(VID_COMMAND);
 
       // Remove possible path specification from file name
-      const TCHAR *cleanFileName = GetCleanFileName(fileName);
+      const wchar_t *cleanFileName = GetCleanFileName(fileName);
 
       if (IsValidObjectName(cleanFileName, true) && IsValidObjectName(packageName))
       {
@@ -7820,11 +7822,11 @@ void ClientSession::installPackage(const NXCPMessage& request)
             // Check for duplicate file name
             if (!IsDuplicatePackageFileName(cleanFileName))
             {
-               TCHAR fullFileName[MAX_PATH];
-               _tcscpy(fullFileName, g_netxmsdDataDir);
-               _tcscat(fullFileName, DDIR_PACKAGES);
-               _tcscat(fullFileName, FS_PATH_SEPARATOR);
-               _tcscat(fullFileName, cleanFileName);
+               wchar_t fullFileName[MAX_PATH];
+               wcscpy(fullFileName, g_netxmsdDataDir);
+               wcscat(fullFileName, DDIR_PACKAGES);
+               wcscat(fullFileName, FS_PATH_SEPARATOR);
+               wcscat(fullFileName, cleanFileName);
 
                ServerDownloadFileInfo *fInfo = new ServerDownloadFileInfo(fullFileName,
                   [] (const TCHAR *fileName, uint32_t uploadData, bool success) -> void
@@ -7894,14 +7896,14 @@ void ClientSession::updatePackageMetadata(const NXCPMessage& request)
    {
       TCHAR packageName[MAX_PACKAGE_NAME_LEN], description[MAX_DB_STRING];
       TCHAR packageVersion[MAX_AGENT_VERSION_LEN], packageType[16];
-      TCHAR platform[MAX_PLATFORM_NAME_LEN], command[MAX_DB_STRING];
+      TCHAR platform[MAX_PLATFORM_NAME_LEN];
 
       request.getFieldAsString(VID_PACKAGE_NAME, packageName, MAX_PACKAGE_NAME_LEN);
       request.getFieldAsString(VID_DESCRIPTION, description, MAX_DB_STRING);
       request.getFieldAsString(VID_PACKAGE_VERSION, packageVersion, MAX_AGENT_VERSION_LEN);
       request.getFieldAsString(VID_PACKAGE_TYPE, packageType, 16);
       request.getFieldAsString(VID_PLATFORM_NAME, platform, MAX_PLATFORM_NAME_LEN);
-      request.getFieldAsString(VID_COMMAND, command, MAX_DB_STRING);
+      SharedString command = request.getFieldAsSharedString(VID_COMMAND);
 
       uint32_t packageId = request.getFieldAsUInt32(VID_PACKAGE_ID);
       if (IsValidPackageId(packageId))
@@ -7918,7 +7920,7 @@ void ClientSession::updatePackageMetadata(const NXCPMessage& request)
                DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, description, DB_BIND_STATIC);
                DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, platform, DB_BIND_STATIC);
                DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, packageType, DB_BIND_STATIC);
-               DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, command, DB_BIND_STATIC);
+               DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, command, DB_BIND_STATIC, 4000);
                DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, packageId);
                success = DBExecute(hStmt);
                DBFreeStatement(hStmt);

@@ -1172,9 +1172,10 @@ uint32_t CommSession::installPackage(NXCPMessage *request)
    TCHAR fullPath[MAX_PATH];
    BuildFullPath(packageName, fullPath);
 
-   TCHAR command[MAX_PATH] = _T("");
-   request->getFieldAsString(VID_COMMAND, command, MAX_PATH);
-   return InstallSoftwarePackage(this, packageType, fullPath, command);
+   TCHAR *command = request->getFieldAsString(VID_COMMAND);
+   uint32_t rcc = InstallSoftwarePackage(this, packageType, fullPath, command);
+   MemFree(command);
+   return rcc;
 }
 
 /**
