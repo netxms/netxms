@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -78,7 +79,7 @@ public class EppAlarmTest extends AbstractSessionTest
       final String templateNameEventUp = "TestEventUp";
       final String ruleEventDownComment = "test comment for TestEventDown event";
       final String ruleEventUpComment = "test comment for TestEventUp event";
-      final String alarmKey = "Test Key for TestEventDown event %I";
+      final String alarmKey = "Test Key for TestEventDown event" + new Date().getTime();
       final String alarmMessage = "ALARM MESSAGE for event down";
 
       Node node = TestHelper.findManagementServer(session);
@@ -155,7 +156,7 @@ public class EppAlarmTest extends AbstractSessionTest
 
       session.sendEvent(0, templateNameEventUp, node.getObjectId(), new String[] {}, null, null, null); // sending rule which terminated
                                                                                                   // alarm
-      Thread.sleep(500);
+      Thread.sleep(1000);
       alarm = findAlarmByKey(session, alarmKey);
       assertNull(alarm); // checking that cannot find the alarm in the list of alarms, indicating that it is terminated
 
