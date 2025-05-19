@@ -150,6 +150,7 @@ public class EppAlarmTest extends AbstractSessionTest
       testRule.setAlarmSeverity(Severity.MAJOR); // Changing the severity of testRule to MAJOR
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, templateNameEventDown, node.getObjectId(), new String[] {}, null, null, null);
+      Thread.sleep(1000);
       alarm = findAlarmByKey(session, alarmKey);
 
       assertEquals(testRule.getAlarmSeverity(), alarm.getCurrentSeverity());// checking that alarm takes severity from rule
