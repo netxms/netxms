@@ -368,14 +368,18 @@ static inline void ThreadSleep(int nSeconds)
 
 static inline void ThreadSleepMs(uint32_t milliseconds)
 {
+   int rc;
+   do
+   {
 #if HAVE_NANOSLEEP && HAVE_DECL_NANOSLEEP
-	struct timespec interval, remainder;
-	interval.tv_sec = milliseconds / 1000;
-	interval.tv_nsec = (milliseconds % 1000) * 1000000; // milli -> nano
-	nanosleep(&interval, &remainder);
+      struct timespec interval, remainder;
+      interval.tv_sec = milliseconds / 1000;
+      interval.tv_nsec = (milliseconds % 1000) * 1000000; // milli -> nano
+      rc = nanosleep(&interval, &remainder);
 #else
-	usleep(milliseconds * 1000);   // Convert to microseconds
+      rc = usleep(milliseconds * 1000);   // Convert to microseconds
 #endif
+   } while((rc != 0) && (errno == EINTR));
 }
 
 static inline THREAD ThreadCreateEx(ThreadFunction startAddress, int stackSize, void *args)
