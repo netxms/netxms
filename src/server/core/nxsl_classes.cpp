@@ -1693,6 +1693,14 @@ NXSL_METHOD_DEFINITION(Node, enableRoutingTablePolling)
 }
 
 /**
+ * enableSmclpPropertyPolling(enabled) method
+ */
+NXSL_METHOD_DEFINITION(Node, enableSmclpPropertyPolling)
+{
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_SMCLP_PROPERTIES, true);
+}
+
+/**
  * enableSnmp(enabled) method
  */
 NXSL_METHOD_DEFINITION(Node, enableSnmp)
@@ -2107,6 +2115,7 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, enableModbusTcp, 1);
    NXSL_REGISTER_METHOD(Node, enablePrimaryIPPing, 1);
    NXSL_REGISTER_METHOD(Node, enableRoutingTablePolling, 1);
+   NXSL_REGISTER_METHOD(Node, enableSmclpPropertyPolling, 1);
    NXSL_REGISTER_METHOD(Node, enableSnmp, 1);
    NXSL_REGISTER_METHOD(Node, enableSsh, 1);
    NXSL_REGISTER_METHOD(Node, enableTopologyPolling, 1);
