@@ -84,14 +84,28 @@ public class JobManager
     */
    protected synchronized void submit(final Job job, IProgressMonitor monitor)
    {
-      job.setId(jobId++);
-      jobs.put(job.getId(), job);
-      if ((monitor == null) && (job.getView() != null))
+      // Call submit in UI thread to avoid deadlock
+      if ((job.getDisplay().getThread() != Thread.currentThread()) && (monitor == null) && (job.getView() != null))
       {
-         monitor = job.getView().createProgressMonitor(job.getId());
+         job.getDisplay().asyncExec(() -> {
+            submit(job, monitor);
+         });
+         return;
       }
 
-      final IProgressMonitor finalMonitor = monitor;
+      job.setId(jobId++);
+      jobs.put(job.getId(), job);
+
+      final IProgressMonitor finalMonitor;
+      if ((monitor == null) && (job.getView() != null))
+      {
+         finalMonitor = job.getView().createProgressMonitor(job.getId());
+      }
+      else
+      {
+         finalMonitor = monitor;
+      }
+
       threadPool.execute(() -> {
          job.execute(finalMonitor);
          onJobCompletion(job);
