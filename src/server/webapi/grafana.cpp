@@ -29,6 +29,7 @@ static const char *s_severityNames[] =
    "Warning",
    "Minor",
    "Major",
+   "Critical",
    "Unknown",
    "Unmanaged",
    "Disabled",
