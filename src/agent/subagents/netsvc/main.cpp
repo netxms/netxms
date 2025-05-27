@@ -28,7 +28,7 @@
 #endif
 
 uint32_t g_netsvcFlags = NETSVC_AF_VERIFYPEER;
-uint32_t g_netsvcTimeout = 5000;
+uint32_t g_netsvcTimeout = 1000;
 char g_netsvcDomainName[128] = "example.org";
 
 /**
