@@ -9798,7 +9798,11 @@ shared_ptr<AgentConnectionEx> Node::getAgentConnection(bool forcePrimary)
  */
 shared_ptr<AgentConnectionEx> Node::acquireProxyConnection(ProxyType type, bool validate)
 {
-   m_proxyConnections[type].lock();
+   if (!m_proxyConnections[type].timedLock(4000))
+   {
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 5, _T("Node::acquireProxyConnection(%s [%u] type=%d): cannot acquire lock on proxy connection"), m_name, m_id, (int)type);
+      return shared_ptr<AgentConnectionEx>();
+   }
 
    shared_ptr<AgentConnectionEx> conn = m_proxyConnections[type].get();
    if ((conn != nullptr) && !conn->isConnected())
