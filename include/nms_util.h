@@ -1125,6 +1125,7 @@ public:
    ObjectLock(const T& object) : m_mutex(MutexType::FAST), m_object(object) { }
 
    void lock() { m_mutex.lock(); }
+   bool timedLock(uint32_t timeout) { return m_mutex.timedLock(timeout); }
    void unlock() { m_mutex.unlock(); }
 
    const T& get() { return m_object; }

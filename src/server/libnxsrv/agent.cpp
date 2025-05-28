@@ -1287,10 +1287,11 @@ uint32_t AgentConnection::nop()
    uint32_t requestId = generateRequestId();
    msg.setCode(CMD_KEEPALIVE);
    msg.setId(requestId);
-   if (sendMessage(&msg))
-      return waitForRCC(requestId, m_commandTimeout);
-   else
+   if (!sendMessage(&msg))
       return ERR_CONNECTION_BROKEN;
+
+   // 750 ms should be enough for agent to respond to keepalive even on slow links
+   return waitForRCC(requestId, std::min(m_commandTimeout, static_cast<uint32_t>(750)));
 }
 
 /**
