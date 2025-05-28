@@ -301,6 +301,27 @@ void PackageDeploymentJob::setCompletedStatus(PackageDeploymentStatus status, co
 }
 
 /**
+ * Mark job as failed
+ */
+void PackageDeploymentJob::markAsFailed(const wchar_t *errorMessage, bool reschedule)
+{
+   setCompletedStatus(PKG_JOB_FAILED, errorMessage);
+   if (reschedule)
+   {
+      auto job = make_shared<PackageDeploymentJob>(this, time(nullptr) + 600); // Reschedule for 10 minutes later
+      if (job->createDatabaseRecord())
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("PackageDeploymentJob::markAsFailed: scheduled retry for deployment of package [%u] on node \"%s\" [%u]"), m_packageId, GetObjectName(m_nodeId, nullptr), m_nodeId);
+         RegisterPackageDeploymentJob(job);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("PackageDeploymentJob::markAsFailed: cannot create database record for deployment job [%u] on node \"%s\" [%u]"), job->getId(), GetObjectName(m_nodeId, nullptr), m_nodeId);
+      }
+   }
+}
+
+/**
  * Fill NXCP message
  */
 void PackageDeploymentJob::fillMessage(NXCPMessage *msg, uint32_t baseId) const
@@ -429,7 +450,7 @@ void PackageDeploymentJob::execute()
    if (node == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, L"PackageDeploymentJob::execute(): invalid node ID [%u] in job [%u]", m_nodeId, m_id);
-      markAsFailed(L"Target node no longer available");
+      markAsFailed(L"Target node no longer available", false);
       return;
    }
 
@@ -437,14 +458,14 @@ void PackageDeploymentJob::execute()
    if (!node->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY | OBJECT_ACCESS_CONTROL | OBJECT_ACCESS_UPLOAD))
    {
       nxlog_debug_tag(DEBUG_TAG, 4, L"PackageDeploymentJob::execute(): user [%u] has insufficient rights on node %s [%u] in job [%u]", m_userId, node->getName(), m_nodeId, m_id);
-      markAsFailed(L"Access denied");
+      markAsFailed(L"Access denied", false);
       return;
    }
 
    if (node->isLocalManagement() && !wcscmp(m_packageType, L"agent-installer"))
    {
       nxlog_debug_tag(DEBUG_TAG, 4, L"PackageDeploymentJob::execute(): attempt to deploy agent on management node in job [%u]", m_id);
-      markAsFailed(L"Management server cannot deploy agent to itself");
+      markAsFailed(L"Management server cannot deploy agent to itself", false);
       return;
    }
 
@@ -453,7 +474,7 @@ void PackageDeploymentJob::execute()
    if (agentConn == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, L"PackageDeploymentJob::execute(): cannot connect to agent on node %s [%u] in job [%u]", node->getName(), m_nodeId, m_id);
-      markAsFailed(L"Unable to connect to agent");
+      markAsFailed(L"Unable to connect to agent", true);
       return;
    }
 
@@ -484,7 +505,7 @@ void PackageDeploymentJob::execute()
    {
       nxlog_debug_tag(DEBUG_TAG, 4, L"PackageDeploymentJob::execute(): package \"%s\" [%u] is not compatible with node %s [%u] in job [%u]",
          m_packageFile.cstr(), m_packageId, node->getName(), m_nodeId, m_id);
-      markAsFailed(L"Package is not compatible with target platform");
+      markAsFailed(L"Package is not compatible with target platform", false);
       return;
    }
 
@@ -500,7 +521,7 @@ void PackageDeploymentJob::execute()
    {
       nxlog_debug_tag(DEBUG_TAG, 4, L"PackageDeploymentJob::execute(): file transfer failed to node %s [%u] in job [%u] (%u: %s)",
          node->getName(), m_nodeId, m_id, rcc, AgentErrorCodeToText(rcc));
-      markAsFailed(L"File transfer failed");
+      markAsFailed(L"File transfer failed", true);
       return;
    }
 
@@ -512,7 +533,7 @@ void PackageDeploymentJob::execute()
       const wchar_t *errorMessage;
       success = UpgradeAgent(this, node.get(), agentConn.get(), &errorMessage);
       if (!success)
-         markAsFailed(errorMessage);
+         markAsFailed(errorMessage, false);
    }
    else
    {
@@ -531,7 +552,7 @@ void PackageDeploymentJob::execute()
          const wchar_t *errorMessage = AgentErrorCodeToText(rcc);
          nxlog_debug_tag(DEBUG_TAG, 5, _T("PackageDeploymentJob::execute(): installation of package \"%s\" [%u] failed on node \"%s\" [%u] (%s)"),
             m_packageFile.cstr(), m_packageId, node->getName(), node->getId(), errorMessage);
-         markAsFailed(errorMessage);
+         markAsFailed(errorMessage, false);
       }
    }
 

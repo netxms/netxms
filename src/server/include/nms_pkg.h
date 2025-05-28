@@ -77,11 +77,7 @@ private:
    wchar_t m_errorMessage[256];
 
    void setCompletedStatus(PackageDeploymentStatus status, const wchar_t *errorMessage = nullptr);
-   void markAsFailed(const wchar_t *errorMessage)
-   {
-      setCompletedStatus(PKG_JOB_FAILED, errorMessage);
-   }
-
+   void markAsFailed(const wchar_t *errorMessage, bool reschedule);
    void notifyClients() const;
 
 public:
@@ -100,6 +96,22 @@ public:
       wcslcpy(m_platform, package.platform, MAX_PLATFORM_NAME_LEN);
       wcslcpy(m_version, package.version, 32);
       m_errorMessage[0] = 0;
+   }
+   PackageDeploymentJob(const PackageDeploymentJob *src, time_t executionTime) : m_packageFile(src->m_packageFile), m_command(src->m_command), m_description(src->m_description)
+   {
+      m_id = CreateUniqueId(IDG_PACKAGE_DEPLOYMENT_JOB);
+      m_nodeId = src->m_nodeId;
+      m_userId = src->m_userId;
+      m_status = PKG_JOB_SCHEDULED;
+      m_creationTime = time(nullptr);
+      m_executionTime = executionTime;
+      m_completionTime = 0;
+      m_packageId = src->m_packageId;
+      wcslcpy(m_packageType, src->m_packageType, 16);
+      wcslcpy(m_packageName, src->m_packageName, MAX_OBJECT_NAME);
+      wcslcpy(m_platform, src->m_platform, MAX_PLATFORM_NAME_LEN);
+      wcslcpy(m_version, src->m_version, 32);
+      _sntprintf(m_errorMessage, 256, L"Retry after failure (%s)", src->m_errorMessage);
    }
    PackageDeploymentJob(DB_RESULT hResult, int row);
 
