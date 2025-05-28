@@ -779,7 +779,7 @@ public:
 
    virtual bool open(bool append = false);
    virtual bool write(const BYTE *data, size_t dataSize, bool compressedStream);
-   virtual void close(bool success);
+   virtual void close(bool success, bool deleteOnFailure = true);
 
    static uint32_t getFileInfo(NXCPMessage *response, const TCHAR *fileName);
    const TCHAR *getFileName() const { return m_fileName; }

@@ -132,7 +132,7 @@ CommSession::CommSession(const shared_ptr<AbstractCommChannel>& channel, const I
 static EnumerationCallbackResult AbortFileTransfer(const uint32_t& key, DownloadFileInfo *file, CommSession *session)
 {
    session->debugPrintf(4, _T("Transfer of file %s aborted because of session termination"), file->getFileName());
-   file->close(false);
+   file->close(false, false);
    return _CONTINUE;
 }
 
