@@ -155,7 +155,7 @@ uint32_t DownloadFileInfo::getFileInfo(NXCPMessage *response, const TCHAR *fileN
 /**
  * Closes file and changes it's date if required
  */
-void DownloadFileInfo::close(bool success)
+void DownloadFileInfo::close(bool success, bool deleteOnFailure)
 {
    _close(m_fileHandle);
    m_fileHandle = -1;
@@ -173,7 +173,7 @@ void DownloadFileInfo::close(bool success)
             SetLastModificationTime(m_fileName, m_fileModificationTime);
       }
    }
-   else
+   else if (deleteOnFailure)
    {
       // Remove received file part in case of failure
       _tremove(tempFileName);
