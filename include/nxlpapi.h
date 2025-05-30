@@ -436,6 +436,7 @@ public:
    void setFileName(const TCHAR *name);
    void setFileEncoding(int encoding) { m_fileEncoding = encoding; }
    void setFileCheckInterval(uint32_t interval) { m_fileCheckInterval = interval; }
+   void setFilePreallocated(bool isPreallocated) { m_preallocatedFile = isPreallocated; }
    void setGuid(const uuid& guid);
 
 	void setThread(THREAD thread) { m_thread = thread; }
