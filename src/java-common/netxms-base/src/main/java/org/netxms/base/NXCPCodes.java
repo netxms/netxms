@@ -1361,6 +1361,7 @@ public class NXCPCodes
    public static final long VID_EXPECTED_CAPABILITIES = 861;
    public static final long VID_AI_ASSISTANT_AVAILABLE = 862;
    public static final long VID_DCI_IDS = 863;
+   public static final long VID_SMTP_TLS_MODE = 864;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

@@ -185,13 +185,17 @@ void RSConnector::sendConfiguration()
       if (configuration != nullptr)
       {
          Config parsedConfiguration;
-         if (parsedConfiguration.loadConfigFromMemory(configuration, strlen(configuration), _T("SMTP"), nullptr, true, false))
+         if (parsedConfiguration.loadConfigFromMemory(configuration, strlen(configuration), L"SMTP", nullptr, true, false))
          {
-            msg.setField(VID_SMTP_SERVER, parsedConfiguration.getValue(_T("/SMTP/Server")));
-            msg.setField(VID_SMTP_PORT, parsedConfiguration.getValueAsUInt(_T("/SMTP/Port"), 25));
-            msg.setField(VID_SMTP_LOCAL_HOSTNAME, parsedConfiguration.getValue(_T("/SMTP/LocalHostName")));
-            msg.setField(VID_SMTP_FROM_NAME, parsedConfiguration.getValue(_T("/SMTP/FromName")));
-            msg.setField(VID_SMTP_FROM_ADDRESS, parsedConfiguration.getValue(_T("/SMTP/FromAddr")));
+            const wchar_t *tlsMode = parsedConfiguration.getValue(L"/SMTP/TLSMode", L"NONE");
+            msg.setField(VID_SMTP_SERVER, parsedConfiguration.getValue(L"/SMTP/Server"));
+            msg.setField(VID_SMTP_PORT, parsedConfiguration.getValueAsUInt(L"/SMTP/Port", !wcsicmp(tlsMode, L"TLS") ? 465 : 25));
+            msg.setField(VID_SMTP_LOCAL_HOSTNAME, parsedConfiguration.getValue(L"/SMTP/LocalHostName"));
+            msg.setField(VID_SMTP_FROM_NAME, parsedConfiguration.getValue(L"/SMTP/FromName"));
+            msg.setField(VID_SMTP_FROM_ADDRESS, parsedConfiguration.getValue(L"/SMTP/FromAddr"));
+            msg.setField(VID_SMTP_LOGIN, parsedConfiguration.getValue(L"/SMTP/Login"));
+            msg.setField(VID_SMTP_PASSWORD, parsedConfiguration.getValue(L"/SMTP/Password"));
+            msg.setField(VID_SMTP_TLS_MODE, tlsMode);
          }
          else
          {
