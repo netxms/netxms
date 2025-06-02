@@ -13337,6 +13337,9 @@ json_t *Node::toJson()
    json_object_set_new(root, "modbusUnitId", json_integer(m_modbusUnitId));
    json_object_set_new(root, "modbusTCPPort", json_integer(m_modbusTcpPort));
    json_object_set_new(root, "modbusProxy", json_integer(m_modbusProxy));
+   json_object_set_new(root, "vncPassword", json_string_t(m_vncPassword));
+   json_object_set_new(root, "vncPort", json_integer(m_vncPort));
+   json_object_set_new(root, "vncProxy", json_integer(m_vncProxy));
    unlockProperties();
    return root;
 }
@@ -13346,24 +13349,24 @@ json_t *Node::toJson()
  */
 struct IcmpPollTarget
 {
-   TCHAR name[MAX_OBJECT_NAME];
+   wchar_t name[MAX_OBJECT_NAME];
    InetAddress address;
 
-   IcmpPollTarget(const TCHAR *category, const TCHAR *_name, const InetAddress& _address)
+   IcmpPollTarget(const wchar_t *category, const wchar_t *_name, const InetAddress& _address)
    {
       if (category != nullptr)
       {
-         _tcslcpy(name, category, MAX_OBJECT_NAME);
-         _tcslcat(name, _T(":"), MAX_OBJECT_NAME);
+         wcslcpy(name, category, MAX_OBJECT_NAME);
+         wcslcat(name, L":", MAX_OBJECT_NAME);
          if (_name != nullptr)
-            _tcslcat(name, _name, MAX_OBJECT_NAME);
+            wcslcat(name, _name, MAX_OBJECT_NAME);
          else
-            _address.toString(&name[_tcslen(name)]);
+            _address.toString(&name[wcslen(name)]);
       }
       else
       {
          if (_name != nullptr)
-            _tcslcpy(name, _name, MAX_OBJECT_NAME);
+            wcslcpy(name, _name, MAX_OBJECT_NAME);
          else
             _address.toString(name);
       }
