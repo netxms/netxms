@@ -342,6 +342,10 @@ public class CommunicationManager
       properties.setProperty("smtp.fromAddr@remote", request.getFieldAsString(NXCPCodes.VID_SMTP_FROM_ADDRESS));
       properties.setProperty("smtp.fromName@remote", request.getFieldAsString(NXCPCodes.VID_SMTP_FROM_NAME));
       properties.setProperty("smtp.server@remote", request.getFieldAsString(NXCPCodes.VID_SMTP_SERVER));
+      properties.setProperty("smtp.port@remote", request.getFieldAsString(NXCPCodes.VID_SMTP_PORT));
+      properties.setProperty("smtp.login@remote", request.getFieldAsString(NXCPCodes.VID_SMTP_LOGIN));
+      properties.setProperty("smtp.password@remote", request.getFieldAsString(NXCPCodes.VID_SMTP_PASSWORD));
+      properties.setProperty("smtp.tlsMode@remote", request.getFieldAsString(NXCPCodes.VID_SMTP_TLS_MODE));
       server.updateConfiguration(properties);
    }
 

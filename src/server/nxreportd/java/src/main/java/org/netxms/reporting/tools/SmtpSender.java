@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,7 +43,6 @@ public final class SmtpSender
    private static Logger logger = LoggerFactory.getLogger(SmtpSender.class);
 
    private Server server;
-   private Properties properties;
 
    /**
     * Create new SMTP sender
@@ -53,10 +52,6 @@ public final class SmtpSender
    public SmtpSender(Server server)
    {
       this.server = server;
-
-      properties = new Properties();
-      properties.putAll(System.getProperties());
-      properties.setProperty("mail.host", server.getConfigurationProperty("smtp.server", "localhost"));
    }
 
    /**
@@ -71,9 +66,55 @@ public final class SmtpSender
    public void sendMail(String recipient, String subject, String body, String fileName, File file)
    {
       logger.info("Sending notification email to " + recipient);
+
+      Properties properties = new Properties();
+      properties.putAll(System.getProperties());
+      properties.setProperty("mail.smtp.host", server.getConfigurationProperty("smtp.server", "localhost"));
+      properties.setProperty("mail.smtp.port", server.getConfigurationProperty("smtp.port", "25"));
+
+      // Configure authentication if login is provided
+      String login = server.getConfigurationProperty("smtp.login", "");
+      if (!login.isEmpty())
+      {
+         properties.setProperty("mail.smtp.auth", "true");
+         properties.setProperty("mail.smtp.user", login);
+         properties.setProperty("mail.smtp.password", server.getConfigurationProperty("smtp.password", ""));
+      }
+
+      String tlsMode = server.getConfigurationProperty("smtp.tlsMode", "NONE");
+      if (tlsMode.equalsIgnoreCase("STARTTLS"))
+      {
+         properties.setProperty("mail.smtp.starttls.enable", "true");
+         properties.setProperty("mail.smtp.ssl.enable", "false");
+      }
+      else if (tlsMode.equalsIgnoreCase("TLS"))
+      {
+         properties.setProperty("mail.smtp.starttls.enable", "false");
+         properties.setProperty("mail.smtp.ssl.enable", "true");
+      }
+      else
+      {
+         properties.setProperty("mail.smtp.starttls.enable", "false");
+         properties.setProperty("mail.smtp.ssl.enable", "false");
+      }
+
       try
       {
-         Session session = Session.getDefaultInstance(properties);
+         Session session;
+         if (properties.containsKey("mail.smtp.auth"))
+         {
+            session = Session.getInstance(properties, new javax.mail.Authenticator() {
+               protected javax.mail.PasswordAuthentication getPasswordAuthentication()
+               {
+                  return new javax.mail.PasswordAuthentication(properties.getProperty("mail.smtp.user"), properties.getProperty("mail.smtp.password"));
+               }
+            });
+         }
+         else
+         {
+            session = Session.getInstance(properties);
+         }
+
          MimeMessage message = new MimeMessage(session);
          String name = server.getConfigurationProperty("smtp.fromName");
          if (name != null)

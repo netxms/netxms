@@ -109,7 +109,6 @@ SmtpDriver *SmtpDriver::createInstance(Config *config)
       return nullptr;
    }
 
-
    if (!_tcscmp(authMethod, _T("basic")))
    {
       driver->m_authMetod = CURLAUTH_BASIC;

@@ -1544,6 +1544,8 @@ typedef struct
 #define VID_JOB_ID                  ((uint32_t)860)
 #define VID_EXPECTED_CAPABILITIES   ((uint32_t)861)
 #define VID_AI_ASSISTANT_AVAILABLE  ((uint32_t)862)
+#define VID_DCI_IDS                 ((uint32_t)863)
+#define VID_SMTP_TLS_MODE           ((uint32_t)864)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

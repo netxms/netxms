@@ -274,6 +274,7 @@ public final class Server implements Daemon
    public String getConfigurationProperty(String name, String defaultValue)
    {
       String value = configuration.getProperty(name);
+      logger.debug("Configuration property: {}={}", name, value != null ? value : "null");
       return (value != null) ? value : configuration.getProperty(name + "@remote", defaultValue);
    }
 
