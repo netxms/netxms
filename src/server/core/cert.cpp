@@ -48,11 +48,11 @@ static inline const ASN1_TIME *X509_get0_notAfter(const X509 *x)
  */
 StringSet g_trustedCertificates;
 StringSet g_crlList;
-TCHAR g_serverCertificatePath[MAX_PATH] = _T("");
-TCHAR g_serverCertificateKeyPath[MAX_PATH] = _T("");
+wchar_t g_serverCertificatePath[MAX_PATH] = L"";
+wchar_t g_serverCertificateKeyPath[MAX_PATH] = L"";
 char g_serverCertificatePassword[MAX_PASSWORD] = "";
-TCHAR g_internalCACertificatePath[MAX_PATH] = _T("");
-TCHAR g_internalCACertificateKeyPath[MAX_PATH] = _T("");
+wchar_t g_internalCACertificatePath[MAX_PATH] = L"";
+wchar_t g_internalCACertificateKeyPath[MAX_PATH] = L"";
 char g_internalCACertificatePassword[MAX_PASSWORD] = "";
 
 /**

@@ -44,6 +44,7 @@ shared_ptr<AssetRoot> NXCORE_EXPORTABLE g_assetRoot;
 shared_ptr<BusinessServiceRoot> NXCORE_EXPORTABLE g_businessServiceRoot;
 
 uint32_t NXCORE_EXPORTABLE g_dwMgmtNode = 0;
+wchar_t NXCORE_EXPORTABLE g_mgmtAgentAddress[128] = L"";
 
 ObjectQueue<TemplateUpdateTask> g_templateUpdateQueue(256, Ownership::True);
 

@@ -5697,6 +5697,7 @@ extern shared_ptr<DashboardRoot> NXCORE_EXPORTABLE g_dashboardRoot;
 extern shared_ptr<BusinessServiceRoot> NXCORE_EXPORTABLE g_businessServiceRoot;
 
 extern uint32_t NXCORE_EXPORTABLE g_dwMgmtNode;
+extern wchar_t NXCORE_EXPORTABLE g_mgmtAgentAddress[];
 extern bool g_modificationsLocked;
 extern ObjectQueue<TemplateUpdateTask> g_templateUpdateQueue;
 
