@@ -5226,6 +5226,7 @@ bool Node::confPollAgent()
    if (((m_capabilities & NC_IS_NATIVE_AGENT) && (m_state & NSF_AGENT_UNREACHABLE)) || (m_flags & NF_DISABLE_NXCP))
    {
       sendPollerMsg(_T("   NetXMS agent polling is %s\r\n"), (m_flags & NF_DISABLE_NXCP) ? _T("disabled") : _T("not possible"));
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): agent polling is %s"), m_name, (m_flags & NF_DISABLE_NXCP) ? _T("disabled") : _T("not possible"));
       return false;
    }
    bool hasChanges = false;
@@ -5244,13 +5245,27 @@ bool Node::confPollAgent()
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): direct agent connection is disabled and there are no active tunnels"), m_name);
          return false;
       }
-      if (!m_ipAddress.isValidUnicast() && !((m_capabilities & NC_IS_LOCAL_MGMT) && m_ipAddress.isLoopback()))
+      InetAddress addr = m_ipAddress;
+      if ((m_capabilities & NC_IS_LOCAL_MGMT) && (g_mgmtAgentAddress[0] != 0))
+      {
+         // If node is local management node and external agent address is set, use it instead of node's primary IP address
+         addr = InetAddress::resolveHostName(g_mgmtAgentAddress);
+         if (addr.isValid())
+         {
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s [%u]): using external agent address %s"), m_name, m_id, g_mgmtAgentAddress);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s [%u]): cannot resolve external agent address %s"), m_name, m_id, g_mgmtAgentAddress);
+         }
+      }
+      if (!addr.isValidUnicast() && !((m_capabilities & NC_IS_LOCAL_MGMT) && addr.isLoopback()))
       {
          sendPollerMsg(POLLER_ERROR _T("   Node primary IP is invalid and there are no active tunnels\r\n"));
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node primary IP is invalid and there are no active tunnels"), m_name);
          return false;
       }
-      pAgentConn = make_shared<AgentConnectionEx>(m_id, m_ipAddress, m_agentPort, m_agentSecret, isAgentCompressionAllowed());//direct connection to agent without tunnel
+      pAgentConn = make_shared<AgentConnectionEx>(m_id, addr, m_agentPort, m_agentSecret, isAgentCompressionAllowed());
       setAgentProxy(pAgentConn.get());
    }
    pAgentConn->setCommandTimeout(g_agentCommandTimeout);
@@ -7115,9 +7130,29 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
    // Create new agent connection object if needed
    if (m_agentConnection == nullptr)
    {
-      m_agentConnection = (tunnel != nullptr) ?
-               make_shared<AgentConnectionEx>(m_id, tunnel, m_agentSecret, isAgentCompressionAllowed()) :
-               make_shared<AgentConnectionEx>(m_id, m_ipAddress, m_agentPort, m_agentSecret, isAgentCompressionAllowed());
+      if (tunnel != nullptr)
+      {
+         m_agentConnection = make_shared<AgentConnectionEx>(m_id, tunnel, m_agentSecret, isAgentCompressionAllowed());
+      }
+      else
+      {
+         InetAddress addr = m_ipAddress;
+         if ((m_capabilities & NC_IS_LOCAL_MGMT) && (g_mgmtAgentAddress[0] != 0))
+         {
+            // If node is local management node and external agent address is set, use it instead of node's primary IP address
+            addr = InetAddress::resolveHostName(g_mgmtAgentAddress);
+            if (addr.isValid())
+            {
+               nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%u]): using external agent address %s"), m_name, m_id, g_mgmtAgentAddress);
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%u]): cannot resolve external agent address %s"), m_name, m_id, g_mgmtAgentAddress);
+               return false;
+            }
+         }
+         m_agentConnection = make_shared<AgentConnectionEx>(m_id, addr, m_agentPort, m_agentSecret, isAgentCompressionAllowed());
+      }
       nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%d]): new agent connection created"), m_name, m_id);
    }
    else
@@ -10105,13 +10140,27 @@ shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
    }
    else
    {
-      if ((!m_ipAddress.isValidUnicast() && !((m_capabilities & NC_IS_LOCAL_MGMT) && m_ipAddress.isLoopback())) || (m_flags & NF_AGENT_OVER_TUNNEL_ONLY))
+      InetAddress addr = m_ipAddress;
+      if ((m_capabilities & NC_IS_LOCAL_MGMT) && (g_mgmtAgentAddress[0] != 0))
       {
-         nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::createAgentConnection(%s [%d]): %s and there are no active tunnels"), m_name, m_id,
+         // If node is local management node and external agent address is set, use it instead of node's primary IP address
+         addr = InetAddress::resolveHostName(g_mgmtAgentAddress);
+         if (addr.isValid())
+         {
+            nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::createAgentConnection(%s [%u]): using external agent address %s"), m_name, m_id, g_mgmtAgentAddress);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::createAgentConnection(%s [%u]): cannot resolve external agent address %s"), m_name, m_id, g_mgmtAgentAddress);
+         }
+      }
+      if ((!addr.isValidUnicast() && !((m_capabilities & NC_IS_LOCAL_MGMT) && addr.isLoopback())) || (m_flags & NF_AGENT_OVER_TUNNEL_ONLY))
+      {
+         nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::createAgentConnection(%s [%u]): %s and there are no active tunnels"), m_name, m_id,
                   (m_flags & NF_AGENT_OVER_TUNNEL_ONLY) ? _T("direct agent connections are disabled") : _T("node primary IP is invalid"));
          return shared_ptr<AgentConnectionEx>();
       }
-      conn = make_shared<AgentConnectionEx>(m_id, m_ipAddress, m_agentPort, m_agentSecret, isAgentCompressionAllowed());
+      conn = make_shared<AgentConnectionEx>(m_id, addr, m_agentPort, m_agentSecret, isAgentCompressionAllowed());
       if (!setAgentProxy(conn.get()))
       {
          return shared_ptr<AgentConnectionEx>();
@@ -10126,7 +10175,7 @@ shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
    {
       setLastAgentCommTime();
    }
-   nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::createAgentConnection(%s [%d]): conn=%p"), m_name, (int)m_id, conn.get());
+   nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::createAgentConnection(%s [%u]): conn=%p"), m_name, m_id, conn.get());
    return conn;
 }
 

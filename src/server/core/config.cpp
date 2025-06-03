@@ -34,26 +34,16 @@ extern wchar_t *g_pdsLoadList;
 extern InetAddressList g_peerNodeAddrList;
 extern StringSet g_trustedCertificates;
 extern StringSet g_crlList;
-extern TCHAR g_serverCertificatePath[];
-extern TCHAR g_serverCertificateKeyPath[];
+extern wchar_t g_serverCertificatePath[];
+extern wchar_t g_serverCertificateKeyPath[];
 extern char g_serverCertificatePassword[];
-extern TCHAR g_internalCACertificatePath[];
-extern TCHAR g_internalCACertificateKeyPath[];
+extern wchar_t g_internalCACertificatePath[];
+extern wchar_t g_internalCACertificateKeyPath[];
 extern char g_internalCACertificatePassword[];
 extern char g_auditLogKey[];
 extern int32_t g_maxClientSessions;
 extern uint64_t g_maxClientMessageSize;
 extern uint32_t g_clientFirstPacketTimeout;
-
-TCHAR s_serverCertificatePath[MAX_PATH] = L"";
-TCHAR s_serverCertificateKeyPath[MAX_PATH] = L"";
-char s_serverCertificatePassword[MAX_PASSWORD] = "";
-TCHAR s_tunnelCertificatePath[MAX_PATH] = L"";
-TCHAR s_tunnelCertificateKeyPath[MAX_PATH] = L"";
-char s_tunnelCertificatePassword[MAX_PASSWORD] = "";
-TCHAR s_internalCACertificatePath[MAX_PATH] = L"";
-TCHAR s_internalCACertificateKeyPath[MAX_PATH] = L"";
-char s_internalCACertificatePassword[MAX_PASSWORD] = "";
 
 void UpdateAlarmExpirationTimes();
 void WakeupActiveDiscoveryThread();
@@ -92,6 +82,19 @@ static TCHAR s_peerNode[MAX_DB_STRING];
 static uint64_t s_defaultThreadStackSize = 1024 * 1024;  // 1MB by default
 
 /**
+ * Certificate locations
+ */
+static wchar_t s_serverCertificatePath[MAX_PATH] = L"";
+static wchar_t s_serverCertificateKeyPath[MAX_PATH] = L"";
+static char s_serverCertificatePassword[MAX_PASSWORD] = "";
+static wchar_t s_tunnelCertificatePath[MAX_PATH] = L"";
+static wchar_t s_tunnelCertificateKeyPath[MAX_PATH] = L"";
+static char s_tunnelCertificatePassword[MAX_PASSWORD] = "";
+static wchar_t s_internalCACertificatePath[MAX_PATH] = L"";
+static wchar_t s_internalCACertificateKeyPath[MAX_PATH] = L"";
+static char s_internalCACertificatePassword[MAX_PASSWORD] = "";
+
+/**
  * Config file template
  */
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
@@ -126,6 +129,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { L"LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile, nullptr },
    { L"LogHistorySize", CT_LONG, 0, 0, 0, 0, &g_logHistorySize, nullptr },
    { L"LogRotationMode", CT_LONG, 0, 0, 0, 0, &g_logRotationMode, nullptr },
+   { L"ManagementAgentAddress", CT_STRING, 0, 0, 128, 0, g_mgmtAgentAddress, nullptr },
    { L"MaxClientMessageSize", CT_SIZE_BYTES, 0, 0, 0, 0, &g_maxClientMessageSize, nullptr },
    { L"MaxClientSessions", CT_LONG, 0, 0, 0, 0, &g_maxClientSessions, nullptr },
    { L"MaxLogSize", CT_SIZE_BYTES, 0, 0, 0, 0, &g_maxLogSize, nullptr },
