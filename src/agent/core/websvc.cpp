@@ -329,17 +329,24 @@ void QueryWebService(NXCPMessage* request, shared_ptr<AbstractCommSession> sessi
    }
 
    TCHAR *url = request->getFieldAsString(VID_URL);
+   bool forcePlaintext = request->getFieldAsBoolean(VID_FORCE_PLAIN_TEXT_PARSER);
+   StringBuffer cacheKey;
+   if (forcePlaintext)
+   {
+      cacheKey = _T("forcePlaintext:");
+   }
+   cacheKey.append(url);
 
    s_serviceRequestCacheLock.lock();
    shared_ptr<WebServiceRequest> serviceRequest;
    if (requestMethodCode == (uint16_t)HttpRequestMethod::_GET)
    {
-      serviceRequest = s_serviceRequestCache.getShared(url);
+      serviceRequest = s_serviceRequestCache.getShared(cacheKey);
       if (serviceRequest == nullptr)
       {
          serviceRequest = make_shared<WebServiceRequest>();
-         s_serviceRequestCache.set(url, serviceRequest);
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("QueryWebService(): Create new cache entry for URL %s"), url);
+         s_serviceRequestCache.set(cacheKey, serviceRequest);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("QueryWebService(): Create new cache entry for URL %s"), cacheKey.cstr());
       }
    }
    else
@@ -347,7 +354,7 @@ void QueryWebService(NXCPMessage* request, shared_ptr<AbstractCommSession> sessi
       // Request methods other than GET are never cached, so we don't put it into s_serviceRequestCache.
       // Also such requests invalidate the cache for that URL per https://www.rfc-editor.org/rfc/rfc7234#section-4.4 .
       // Cache should be invalidated upon successful response, but unconditional early invalidation will still behave correctly.
-      s_serviceRequestCache.remove(url);
+      s_serviceRequestCache.remove(cacheKey);
       serviceRequest = make_shared<WebServiceRequest>();
    }
    s_serviceRequestCacheLock.unlock();
@@ -381,7 +388,7 @@ void QueryWebService(NXCPMessage* request, shared_ptr<AbstractCommSession> sessi
       result = serviceRequest->query(url, requestMethodCode, requestData, login, password, authType, headers,
                request->getFieldAsBoolean(VID_VERIFY_CERT), verifyHost,
                request->getFieldAsBoolean(VID_FOLLOW_LOCATION),
-               request->getFieldAsBoolean(VID_FORCE_PLAIN_TEXT_PARSER),
+               forcePlaintext,
                request->getFieldAsUInt32(VID_TIMEOUT));
 
       curl_slist_free_all(headers);
@@ -440,17 +447,24 @@ void WebServiceCustomRequest(NXCPMessage* request, shared_ptr<AbstractCommSessio
    }
 
    TCHAR *url = request->getFieldAsString(VID_URL);
+   bool forcePlaintext = request->getFieldAsBoolean(VID_FORCE_PLAIN_TEXT_PARSER);
+   StringBuffer cacheKey;
+   if (forcePlaintext)
+   {
+      cacheKey = _T("forcePlaintext:");
+   }
+   cacheKey.append(url);
 
    s_serviceRequestCacheLock.lock();
    shared_ptr<WebServiceRequest> serviceRequest;
    if (requestMethodCode == (uint16_t)HttpRequestMethod::_GET)
    {
-      serviceRequest = s_serviceRequestCache.getShared(url);
+      serviceRequest = s_serviceRequestCache.getShared(cacheKey);
       if (serviceRequest == nullptr)
       {
          serviceRequest = make_shared<WebServiceRequest>();
-         s_serviceRequestCache.set(url, serviceRequest);
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("WebServiceCustomRequest(): Create new cache entry for URL %s"), url);
+         s_serviceRequestCache.set(cacheKey, serviceRequest);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("WebServiceCustomRequest(): Create new cache entry for URL %s"), cacheKey.cstr());
       }
    }
    else
@@ -458,7 +472,7 @@ void WebServiceCustomRequest(NXCPMessage* request, shared_ptr<AbstractCommSessio
       // Request methods other than GET are never cached, so we don't put it into s_serviceRequestCache.
       // Also such requests invalidate the cache for that URL per https://www.rfc-editor.org/rfc/rfc7234#section-4.4 .
       // Cache should be invalidated upon successful response, but unconditional early invalidation will still behave correctly.
-      s_serviceRequestCache.remove(url);
+      s_serviceRequestCache.remove(cacheKey);
       serviceRequest = make_shared<WebServiceRequest>();
    }
    s_serviceRequestCacheLock.unlock();
@@ -492,7 +506,7 @@ void WebServiceCustomRequest(NXCPMessage* request, shared_ptr<AbstractCommSessio
                request->getFieldAsBoolean(VID_VERIFY_CERT),
                request->getFieldAsBoolean(VID_VERIFY_HOST),
                request->getFieldAsBoolean(VID_FOLLOW_LOCATION),
-               request->getFieldAsBoolean(VID_FORCE_PLAIN_TEXT_PARSER),
+               forcePlaintext,
                request->getFieldAsUInt32(VID_TIMEOUT));
 
       curl_slist_free_all(headers);
