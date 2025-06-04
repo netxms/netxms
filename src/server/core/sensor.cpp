@@ -293,6 +293,7 @@ StringMap *Sensor::getInstanceList(DCObject *dco)
    StringList *instances = nullptr;
    StringMap *instanceMap = nullptr;
    shared_ptr<Table> instanceTable;
+   wchar_t tableName[MAX_DB_STRING], nameColumn[MAX_DB_STRING];
    switch(dco->getInstanceDiscoveryMethod())
    {
       case IDM_AGENT_LIST:
@@ -301,16 +302,20 @@ StringMap *Sensor::getInstanceList(DCObject *dco)
          break;
       case IDM_AGENT_TABLE:
          if (sourceNode != nullptr)
-            sourceNode->getTableFromAgent(dco->getInstanceDiscoveryData(), &instanceTable);
+         {
+            parseInstanceDiscoveryTableName(dco->getInstanceDiscoveryData(), tableName, nameColumn);
+            sourceNode->getTableFromAgent(tableName, &instanceTable);
+         }
          break;
       case IDM_INTERNAL_TABLE:
+         parseInstanceDiscoveryTableName(dco->getInstanceDiscoveryData(), tableName, nameColumn);
          if (sourceNode != nullptr)
          {
-            sourceNode->getInternalTable(dco->getInstanceDiscoveryData(), &instanceTable);
+            sourceNode->getInternalTable(tableName, &instanceTable);
          }
          else
          {
-            getInternalTable(dco->getInstanceDiscoveryData(), &instanceTable);
+            getInternalTable(tableName, &instanceTable);
          }
          break;
       case IDM_SCRIPT:
@@ -351,12 +356,24 @@ StringMap *Sensor::getInstanceList(DCObject *dco)
 
    if (instanceTable != nullptr)
    {
-      TCHAR buffer[1024];
-      instanceMap = new StringMap;
+      instanceMap = new StringMap();
+      wchar_t buffer[1024];
+      int nameColumnIndex = (nameColumn[0] != 0) ? instanceTable->getColumnIndex(nameColumn) : -1;
       for(int i = 0; i < instanceTable->getNumRows(); i++)
       {
          instanceTable->buildInstanceString(i, buffer, 1024);
-         instanceMap->set(buffer, buffer);
+         if (nameColumnIndex != -1)
+         {
+            const wchar_t *name = instanceTable->getAsString(i, nameColumnIndex, buffer);
+            if (name != nullptr)
+               instanceMap->set(buffer, name);
+            else
+               instanceMap->set(buffer, buffer);
+         }
+         else
+         {
+            instanceMap->set(buffer, buffer);
+         }
       }
    }
    else if (instanceMap == nullptr)

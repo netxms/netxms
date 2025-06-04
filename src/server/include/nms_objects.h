@@ -2651,6 +2651,8 @@ protected:
    bool saveDCIListForCleanup(DB_HANDLE hdb);
    void loadDCIListForCleanup(DB_HANDLE hdb);
 
+   static void parseInstanceDiscoveryTableName(const wchar_t *definition, wchar_t *tableName, wchar_t *nameColumn);
+
 public:
    DataCollectionTarget(uint32_t pollableFlags);
    DataCollectionTarget(const TCHAR *name, uint32_t pollableFlags);

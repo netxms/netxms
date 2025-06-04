@@ -7038,6 +7038,7 @@ StringMap *Node::getInstanceList(DCObject *dco)
    StringList *instances = nullptr;
    StringMap *instanceMap = nullptr;
    shared_ptr<Table> instanceTable;
+   wchar_t tableName[MAX_DB_STRING], nameColumn[MAX_DB_STRING];
    switch(dco->getInstanceDiscoveryMethod())
    {
       case IDM_AGENT_LIST:
@@ -7045,18 +7046,31 @@ StringMap *Node::getInstanceList(DCObject *dco)
          break;
       case IDM_AGENT_TABLE:
       case IDM_INTERNAL_TABLE:
+         parseInstanceDiscoveryTableName(dco->getInstanceDiscoveryData(), tableName, nameColumn);
          if (dco->getInstanceDiscoveryMethod() == IDM_AGENT_TABLE)
-            node->getTableFromAgent(dco->getInstanceDiscoveryData(), &instanceTable);
+            node->getTableFromAgent(tableName, &instanceTable);
          else
-            node->getInternalTable(dco->getInstanceDiscoveryData(), &instanceTable);
+            node->getInternalTable(tableName, &instanceTable);
          if (instanceTable != nullptr)
          {
-            TCHAR buffer[1024];
-            instances = new StringList();
+            instanceMap = new StringMap();
+            wchar_t buffer[1024];
+            int nameColumnIndex = (nameColumn[0] != 0) ? instanceTable->getColumnIndex(nameColumn) : -1;
             for(int i = 0; i < instanceTable->getNumRows(); i++)
             {
                instanceTable->buildInstanceString(i, buffer, 1024);
-               instances->add(buffer);
+               if (nameColumnIndex != -1)
+               {
+                  const wchar_t *name = instanceTable->getAsString(i, nameColumnIndex, buffer);
+                  if (name != nullptr)
+                     instanceMap->set(buffer, name);
+                  else
+                     instanceMap->set(buffer, buffer);
+               }
+               else
+               {
+                  instanceMap->set(buffer, buffer);
+               }
             }
          }
          break;
@@ -7073,8 +7087,8 @@ StringMap *Node::getInstanceList(DCObject *dco)
          node->getListFromWebService(dco->getInstanceDiscoveryData(), &instances);
          break;
       case IDM_WINPERF:
-         TCHAR query[256];
-         _sntprintf(query, 256, _T("PDH.ObjectInstances(\"%s\")"), EscapeStringForAgent(dco->getInstanceDiscoveryData()).cstr());
+         wchar_t query[256];
+         _sntprintf(query, 256, L"PDH.ObjectInstances(\"%s\")", EscapeStringForAgent(dco->getInstanceDiscoveryData()).cstr());
          node->getListFromAgent(query, &instances);
          break;
       case IDM_SMCLP_TARGETS:

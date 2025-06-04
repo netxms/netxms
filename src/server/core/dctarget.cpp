@@ -2458,6 +2458,31 @@ StringMap *DataCollectionTarget::getInstanceList(DCObject *dco)
 }
 
 /**
+ * Parse instance discovery data into table name and name of the column that provides instance name.
+ */
+void DataCollectionTarget::parseInstanceDiscoveryTableName(const wchar_t *definition, wchar_t *tableName, wchar_t *nameColumn)
+{
+   const wchar_t *d = wcsrchr(definition, _T(')'));
+   if (d != nullptr)
+      d++;
+   else
+      d = definition;
+
+   const wchar_t *c = wcsrchr(d, L':');
+   if (c != nullptr)
+   {
+      memcpy(tableName, d, (c - d) * sizeof(wchar_t));
+      tableName[c - d] = 0;
+      wcslcpy(nameColumn, c + 1, MAX_DB_STRING);
+   }
+   else
+   {
+      wcslcpy(tableName, d, MAX_DB_STRING);
+      nameColumn[0] = 0;
+   }
+}
+
+/**
  * Cancellation checkpoint for instance discovery loop
  */
 #define INSTANCE_DISCOVERY_CANCELLATION_CHECKPOINT \
