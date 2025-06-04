@@ -97,7 +97,7 @@ public class JobManager
       jobs.put(job.getId(), job);
 
       final IProgressMonitor finalMonitor;
-      if ((monitor == null) && (job.getView() != null))
+      if ((monitor == null) && (job.getView() != null) && job.isUser())
       {
          finalMonitor = job.getView().createProgressMonitor(job.getId());
       }
