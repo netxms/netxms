@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.nxsl.widgets;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -93,17 +94,29 @@ public class ScriptEditor extends CompositeWithMessageArea
 
    private static final Color ERROR_COLOR = new Color(Display.getDefault(), 255, 0, 0);
    private static final Color WARNING_COLOR = new Color(Display.getDefault(), 224, 224, 0);
+   private static final Color COMMENT_COLOR = new Color(Display.getDefault(), 63, 127, 95);
+   private static final Color STRING_COLOR = new Color(Display.getDefault(), 42, 0, 255);
+   private static final Color KEYWORD_COLOR = new Color(Display.getDefault(), 127, 0, 85);
+   private static final Color FUNCTION_COLOR = new Color(Display.getDefault(), 100, 90, 0);
+
+   private static final Set<String> KEYWORDS = Set.of("abort", "and", "array", "boolean", "break", "case", "catch", "const", "continue", "default", "do", "else", "exit", "false", "for", "foreach",
+         "function", "global", "if", "ilike", "imatch", "import", "in", "int32", "int64", "like", "match", "new", "not", "null", "or", "real", "return", "select", "string", "switch", "true",
+         "try", "uint32", "uint64", "when", "while", "with", "FALSE", "NULL", "TRUE");
+
+   private static final Set<String> BUILTIN_FUNCTIONS = Set.of("_exit", "assert", "chr", "classof", "d2x", "ord", "print", "println", "range", "sleep", "time", "trace", "typeof", "x2d",
+         "FormatMetricPrefix", "FormatNumber", "GetCurrentTime", "GetCurrentTimeMs", "GetMonotonicClockTime", "GetThreadPoolNames", "JsonParse", "ReadPersistentStorage", "SecondsToUptime",
+         "WritePersistentStorage", "Base64::Decode", "Base64::Encode", "Crypto::MD5", "Crypto::SHA1", "Crypto::SHA256", "Math::Abs", "Math::Acos", "Math::Asin", "Math::Atan", "Math::Atan2",
+         "Math::Atanh", "Math::Average", "Math::Ceil", "Math::Cos", "Math::Cosh", "Math::Exp", "Math::Floor", "Math::Log", "Math::Log10", "Math::Max", "Math::MeanAbsoluteDeviation", "Math::Min",
+         "Math::Pow", "Math::Pow10", "Math::Random", "Math::Round", "Math::Sin", "Math::Sinh", "Math::StandardDeviation", "Math::Sqrt", "Math::Sum", "Math::Tan", "Math::Tanh", "Math::Weierstrass",
+         "Net::GetLocalHostName", "Net::ResolveAddress", "Net::ResolveHostname");
 
    private Composite content;
    private StyledText editor;
    private LineStyleListener lineNumberingStyleListener;
    private ModifyListener lineNumberModifyListener;
-	private Set<String> functions = new HashSet<String>(0);
+   private Set<String> functions = new HashSet<String>(BUILTIN_FUNCTIONS);
 	private Set<String> variables = new HashSet<String>(0);
    private Set<String> constants = new HashSet<String>(0);
-	private String[] functionsCache = new String[0];
-	private String[] variablesCache = new String[0];
-   private String[] constantsCache = new String[0];
 	private String hintText;
 	private Composite hintArea;
 	private Text hintTextControl = null;
@@ -213,6 +226,8 @@ public class ScriptEditor extends CompositeWithMessageArea
       editor.addLineStyleListener(lineNumberingStyleListener);
       editor.addModifyListener(lineNumberModifyListener);
 
+      editor.addLineStyleListener((e) -> styleLine(e));
+
       editor.setFont(JFaceResources.getTextFont());
       editor.setWordWrap(false);
 
@@ -281,6 +296,151 @@ public class ScriptEditor extends CompositeWithMessageArea
 
       undoManager = new StyledTextUndoManager(editor);
 	}
+
+   /**
+    * Set syntax highlighting
+    *
+    * @param e line style event
+    */
+   private void styleLine(LineStyleEvent e)
+   {
+      String text = e.lineText;
+      ArrayList<StyleRange> styles = new ArrayList<StyleRange>();
+      int lineOffset = e.lineOffset;
+      int length = text.length();
+
+      // Check if line is part of multiline comment
+      String fullText = editor.getText();
+      boolean inComment = false;
+      int commentStart = fullText.lastIndexOf("/*", lineOffset);
+      if (commentStart >= 0)
+      {
+         int commentEnd = fullText.lastIndexOf("*/", lineOffset);
+         if ((commentEnd < 0) || (commentEnd < commentStart))
+            inComment = true;
+      }
+
+      if (inComment)
+      {
+         // Find end of comment if any
+         int endComment = text.indexOf("*/");
+         if (endComment >= 0)
+         {
+            StyleRange style = new StyleRange();
+            style.start = lineOffset;
+            style.length = endComment + 2;
+            style.foreground = COMMENT_COLOR;
+            styles.add(style);
+         }
+         else
+         {
+            StyleRange style = new StyleRange();
+            style.start = lineOffset;
+            style.length = length;
+            style.foreground = COMMENT_COLOR;
+            styles.add(style);
+            e.styles = styles.toArray(new StyleRange[styles.size()]);
+            return;
+         }
+      }
+
+      int pos = 0;
+      while(pos < length)
+      {
+         // Skip whitespace
+         while((pos < length) && Character.isWhitespace(text.charAt(pos)))
+            pos++;
+         if (pos >= length)
+            break;
+
+         // Check for comments
+         if ((pos < length - 1) && (text.charAt(pos) == '/'))
+         {
+            if (text.charAt(pos + 1) == '/')
+            {
+               StyleRange style = new StyleRange();
+               style.start = lineOffset + pos;
+               style.length = length - pos;
+               style.foreground = COMMENT_COLOR;
+               styles.add(style);
+               break;
+            }
+            else if (text.charAt(pos + 1) == '*')
+            {
+               int end = text.indexOf("*/", pos + 2);
+               StyleRange style = new StyleRange();
+               style.start = lineOffset + pos;
+               style.length = (end >= 0) ? end - pos + 2 : length - pos;
+               style.foreground = COMMENT_COLOR;
+               styles.add(style);
+               pos = (end >= 0) ? end + 2 : length;
+               continue;
+            }
+         }
+
+         // Check for strings
+         if (text.charAt(pos) == '"')
+         {
+            int end = pos + 1;
+            while((end < length) && (text.charAt(end) != '"'))
+            {
+               if ((text.charAt(end) == '\\') && (end < length - 1))
+                  end++;
+               end++;
+            }
+            if (end < length)
+               end++;
+            StyleRange style = new StyleRange();
+            style.start = lineOffset + pos;
+            style.length = end - pos;
+            style.foreground = STRING_COLOR;
+            styles.add(style);
+            pos = end;
+            continue;
+         }
+
+         // Check for keywords and functions
+         if (Character.isJavaIdentifierStart(text.charAt(pos)))
+         {
+            int end = pos + 1;
+            while((end < length) && (Character.isJavaIdentifierPart(text.charAt(end)) || (text.charAt(end) == ':')))
+               end++;
+            String word = text.substring(pos, end);
+
+            StyleRange style = new StyleRange();
+            style.start = lineOffset + pos;
+            style.length = end - pos;
+
+            boolean isKeyword = false;
+            for(String k : KEYWORDS)
+            {
+               if (k.equals(word))
+               {
+                  style.foreground = KEYWORD_COLOR;
+                  style.fontStyle = SWT.BOLD;
+                  isKeyword = true;
+                  break;
+               }
+            }
+
+            if (!isKeyword && functions.contains(word))
+            {
+               style.foreground = FUNCTION_COLOR;
+               style.fontStyle = SWT.BOLD;
+            }
+
+            if (style.foreground != null)
+               styles.add(style);
+
+            pos = end;
+            continue;
+         }
+
+         pos++;
+      }
+
+      e.styles = styles.toArray(new StyleRange[styles.size()]);
+   }
 
    /**
     * Position "Compile" button
@@ -496,7 +656,6 @@ public class ScriptEditor extends CompositeWithMessageArea
 	public void setFunctions(Set<String> functions)
 	{
 		this.functions = functions;
-		functionsCache = functions.toArray(new String[functions.size()]);
 	}
 	
 	/**
@@ -507,7 +666,6 @@ public class ScriptEditor extends CompositeWithMessageArea
 	public void addFunctions(Collection<String> fc)
 	{
 		functions.addAll(fc);
-		functionsCache = functions.toArray(new String[functions.size()]);
 	}
 
 	/**
@@ -516,7 +674,6 @@ public class ScriptEditor extends CompositeWithMessageArea
 	public void setVariables(Set<String> variables)
 	{
 		this.variables = variables;
-		variablesCache = variables.toArray(new String[variables.size()]);
 	}
 
 	/**
@@ -527,7 +684,6 @@ public class ScriptEditor extends CompositeWithMessageArea
 	public void addVariables(Collection<String> vc)
 	{
 		variables.addAll(vc);
-		variablesCache = variables.toArray(new String[variables.size()]);
 	}
 
    /**
@@ -536,7 +692,6 @@ public class ScriptEditor extends CompositeWithMessageArea
    public void setConstants(Set<String> constants)
    {
       this.constants = constants;
-      constantsCache = constants.toArray(new String[constants.size()]);
    }
 
    /**
@@ -547,31 +702,6 @@ public class ScriptEditor extends CompositeWithMessageArea
    public void addConstants(Collection<String> cc)
    {
       constants.addAll(cc);
-      constantsCache = constants.toArray(new String[constants.size()]);
-   }
-
-	/**
-	 * @return the functionsCache
-	 */
-	public String[] getFunctions()
-	{
-		return functionsCache;
-	}
-
-	/**
-	 * @return the variablesCache
-	 */
-	public String[] getVariables()
-	{
-		return variablesCache;
-	}
-
-   /**
-    * @return constants cache
-    */
-   public String[] getConstants()
-   {
-      return constantsCache;
    }
 
    /**
