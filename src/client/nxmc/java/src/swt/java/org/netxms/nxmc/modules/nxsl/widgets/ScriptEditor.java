@@ -411,19 +411,12 @@ public class ScriptEditor extends CompositeWithMessageArea
             style.start = lineOffset + pos;
             style.length = end - pos;
 
-            boolean isKeyword = false;
-            for(String k : KEYWORDS)
+            if (KEYWORDS.contains(word))
             {
-               if (k.equals(word))
-               {
-                  style.foreground = KEYWORD_COLOR;
-                  style.fontStyle = SWT.BOLD;
-                  isKeyword = true;
-                  break;
-               }
+               style.foreground = KEYWORD_COLOR;
+               style.fontStyle = SWT.BOLD;
             }
-
-            if (!isKeyword && functions.contains(word))
+            else if (functions.contains(word))
             {
                style.foreground = FUNCTION_COLOR;
                style.fontStyle = SWT.BOLD;
