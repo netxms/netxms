@@ -18,8 +18,12 @@
  */
 package org.netxms.nxmc.modules.objects.views;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -32,10 +36,16 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
+import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.queries.ObjectQueryResult;
+import org.netxms.nxmc.Memento;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.CopyTableRowsAction;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.views.ConfigurationView;
+import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.modules.objects.views.helpers.ObjectQueryResultLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -52,10 +62,87 @@ public class ObjectQueryResultView extends ConfigurationView
    private Action actionCopyToClipboard;
    private Action actionCopySelectionToClipboard;
 
+   /**
+    * Default constructor for cloning.
+    */
+   public ObjectQueryResultView()
+   {
+      super("Object Query Results", ResourceManager.getImageDescriptor("icons/config-views/object-query-results.png"), "object-query.results.none", false);
+   }
+
+   /**
+    * Create object query result view.
+    *
+    * @param queryName query name
+    * @param resultSet query result set
+    */
    public ObjectQueryResultView(String queryName, List<ObjectQueryResult> resultSet)
    {
-      super(queryName, ResourceManager.getImageDescriptor("icons/config-views/object-query-results.png"), "object-query.results." + queryName, false);
+      super(queryName, ResourceManager.getImageDescriptor("icons/config-views/object-query-results.png"), "object-query.results." + queryName + "." + System.currentTimeMillis(), false);
       this.resultSet = resultSet;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      ObjectQueryResultView view = (ObjectQueryResultView)super.cloneView();
+      view.resultSet = this.resultSet;
+      return view;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);
+      for(int i = 0; i < resultSet.size(); i++)
+      {
+         ObjectQueryResult r = resultSet.get(i);
+         int index = 0;
+         for(Entry<String, String> e : r.getProperties().entrySet())
+         {
+            memento.set("result." + i + ".key." + index, e.getKey());
+            memento.set("result." + i + ".value." + index, e.getValue());
+            index++;
+         }
+         memento.set("result." + i + ".size", index);
+         memento.set("result." + i + ".object", r.getObject().getObjectId());
+      }
+      memento.set("result.size", resultSet.size());
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento) throws ViewNotRestoredException
+   {
+      super.restoreState(memento);
+      int count = memento.getAsInteger("result.size", 0);
+      resultSet = new ArrayList<>(count);
+      NXCSession session = Registry.getSession();
+      for(int i = 0; i < count; i++)
+      {
+         long objectId = memento.getAsLong("result." + i + ".object", 0);
+         AbstractObject object = session.findObjectById(objectId);
+         Map<String, String> properties = new HashMap<>();
+         int propCount = memento.getAsInteger("result." + i + ".size", 0);
+         for(int j = 0; j < propCount; j++)
+         {
+            String key = memento.getAsString("result." + i + ".key." + j);
+            String value = memento.getAsString("result." + i + ".value." + j);
+            if (key != null && value != null)
+            {
+               properties.put(key, value);
+            }
+         }
+         resultSet.add(new ObjectQueryResult(object, properties));
+      }
    }
 
    /**
@@ -79,6 +166,16 @@ public class ObjectQueryResultView extends ConfigurationView
    protected void postContentCreate()
    {
       super.postContentCreate();
+      updateResultTable(resultSet);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ConfigurationView#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      super.postClone(view);
       updateResultTable(resultSet);
    }
 
