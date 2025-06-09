@@ -1,6 +1,6 @@
 /* 
 ** SQLite Database Driver
-** Copyright (C) 2005-2022 Victor Kirhenshtein
+** Copyright (C) 2005-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -105,6 +105,7 @@ static DBDRV_CONNECTION Connect(const char *host, const char *login, const char 
 		pConn->pdb = hdb;
 
       sqlite3_exec(hdb, "PRAGMA foreign_keys = ON", nullptr, nullptr, nullptr);
+      sqlite3_exec(hdb, "PRAGMA journal_mode = WAL", nullptr, nullptr, nullptr);
    }
 	else
 	{
