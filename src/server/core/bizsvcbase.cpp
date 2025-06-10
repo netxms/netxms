@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -187,7 +187,7 @@ uint32_t BaseBusinessService::modifyCheckFromMessage(const NXCPMessage& request)
 /**
  * Modify business service from request
  */
-uint32_t BaseBusinessService::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t BaseBusinessService::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
    AutoBindTarget::modifyFromMessage(msg);
    if (msg.isFieldExist(VID_OBJECT_STATUS_THRESHOLD))
@@ -198,7 +198,7 @@ uint32_t BaseBusinessService::modifyFromMessageInternal(const NXCPMessage& msg)
    {
       m_dciStatusThreshhold = msg.getFieldAsUInt32(VID_DCI_STATUS_THRESHOLD);
    }
-   return super::modifyFromMessageInternal(msg);
+   return super::modifyFromMessageInternal(msg, session);
 }
 
 /**

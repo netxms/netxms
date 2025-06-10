@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -218,7 +218,7 @@ void NetworkService::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 /**
  * Modify object from message
  */
-uint32_t NetworkService::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t NetworkService::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
    // Polling node
    if (msg.isFieldExist(VID_POLLER_NODE_ID))
@@ -285,7 +285,7 @@ uint32_t NetworkService::modifyFromMessageInternal(const NXCPMessage& msg)
       m_response = msg.getFieldAsString(VID_SERVICE_RESPONSE);
    }
 
-   return super::modifyFromMessageInternal(msg);
+   return super::modifyFromMessageInternal(msg, session);
 }
 
 /**

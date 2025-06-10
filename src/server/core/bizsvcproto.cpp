@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -158,7 +158,7 @@ void BusinessServicePrototype::fillMessageLocked(NXCPMessage *msg, uint32_t user
 /**
  * Modify business service prototype from request
  */
-uint32_t BusinessServicePrototype::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t BusinessServicePrototype::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
    if (msg.isFieldExist(VID_INSTD_METHOD))
       m_instanceDiscoveryMethod = msg.getFieldAsUInt32(VID_INSTD_METHOD);
@@ -179,13 +179,13 @@ uint32_t BusinessServicePrototype::modifyFromMessageInternal(const NXCPMessage& 
       compileInstanceDiscoveryFilterScript();
    }
 
-   return super::modifyFromMessageInternal(msg);
+   return super::modifyFromMessageInternal(msg, session);
 }
 
 /**
  * Modify business service prototype from NXCP message - stage 2
  */
-uint32_t BusinessServicePrototype::modifyFromMessageInternalStage2(const NXCPMessage& msg)
+uint32_t BusinessServicePrototype::modifyFromMessageInternalStage2(const NXCPMessage& msg, ClientSession *session)
 {
    // Update all services created from this prototype
    processRelatedServices([](BusinessServicePrototype *prototype, BusinessService *service) -> void { service->updateFromPrototype(*prototype); });

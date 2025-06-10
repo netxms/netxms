@@ -1427,13 +1427,13 @@ void NetObj::setModified(uint32_t flags, bool notify)
 /**
  * Modify object from NXCP message - common wrapper
  */
-uint32_t NetObj::modifyFromMessage(const NXCPMessage& msg)
+uint32_t NetObj::modifyFromMessage(const NXCPMessage& msg, ClientSession *session)
 {
    lockProperties();
-   uint32_t rcc = modifyFromMessageInternal(msg);
+   uint32_t rcc = modifyFromMessageInternal(msg, session);
    unlockProperties();
    if (rcc == RCC_SUCCESS)
-      rcc = modifyFromMessageInternalStage2(msg);
+      rcc = modifyFromMessageInternalStage2(msg, session);
    markAsModified(MODIFY_ALL);
    return rcc;
 }
@@ -1450,7 +1450,7 @@ void NetObj::updateFlags(uint32_t flags, uint32_t mask)
 /**
  * Modify object from NXCP message
  */
-uint32_t NetObj::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t NetObj::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
    // Change object's name
    if (msg.isFieldExist(VID_OBJECT_NAME))
@@ -1604,13 +1604,13 @@ uint32_t NetObj::modifyFromMessageInternal(const NXCPMessage& msg)
  * used when more direct control over locks is needed (for example when
  * code should lock parent or children list without holding property lock).
  */
-uint32_t NetObj::modifyFromMessageInternalStage2(const NXCPMessage& msg)
+uint32_t NetObj::modifyFromMessageInternalStage2(const NXCPMessage& msg, ClientSession *session)
 {
    if (msg.isFieldExist(VID_NUM_CUSTOM_ATTRIBUTES))
       setCustomAttributesFromMessage(msg);
 
    if (msg.isFieldExist(VID_RESPONSIBLE_USERS_COUNT))
-      setResponsibleUsersFromMessage(msg);
+      setResponsibleUsersFromMessage(msg, session);
 
    // Change object's ACL
    if (msg.isFieldExist(VID_ACL_SIZE))
@@ -3322,7 +3322,7 @@ unique_ptr<StructArray<ResponsibleUser>> NetObj::getAllResponsibleUsers(const TC
 /**
  * Set list of responsible users from NXCP message
  */
-void NetObj::setResponsibleUsersFromMessage(const NXCPMessage& msg)
+void NetObj::setResponsibleUsersFromMessage(const NXCPMessage& msg, ClientSession *session)
 {
    int count = msg.getFieldAsInt32(VID_RESPONSIBLE_USERS_COUNT);
    StructArray<ResponsibleUser> *responsibleUsers = (count > 0) ? new StructArray<ResponsibleUser>(count, 16) : nullptr;
@@ -3339,7 +3339,7 @@ void NetObj::setResponsibleUsersFromMessage(const NXCPMessage& msg)
    lockResponsibleUsersList();
    ENUMERATE_MODULES(pfOnResponsibleUserListChange)
    {
-      CURRENT_MODULE.pfOnResponsibleUserListChange(this, m_responsibleUsers, responsibleUsers);
+      CURRENT_MODULE.pfOnResponsibleUserListChange(this, m_responsibleUsers, responsibleUsers, session);
    }
    delete m_responsibleUsers;
    m_responsibleUsers = responsibleUsers;

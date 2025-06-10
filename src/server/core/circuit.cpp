@@ -92,10 +92,10 @@ bool Circuit::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Modify object from message
  */
-uint32_t Circuit::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t Circuit::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
    AutoBindTarget::modifyFromMessage(msg);
-   return super::modifyFromMessageInternal(msg);
+   return super::modifyFromMessageInternal(msg, session);
 }
 
 /**
