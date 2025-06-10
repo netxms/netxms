@@ -210,7 +210,7 @@ void Sensor::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 /**
  * Modify object from NXCP message
  */
-uint32_t Sensor::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t Sensor::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
    if (msg.isFieldExist(VID_MAC_ADDR))
       m_macAddress = msg.getFieldAsMacAddress(VID_MAC_ADDR);
@@ -229,7 +229,7 @@ uint32_t Sensor::modifyFromMessageInternal(const NXCPMessage& msg)
    if (msg.isFieldExist(VID_MODBUS_UNIT_ID))
       m_modbusUnitId = msg.getFieldAsUInt16(VID_MODBUS_UNIT_ID);
 
-   return super::modifyFromMessageInternal(msg);
+   return super::modifyFromMessageInternal(msg, session);
 }
 
 /**

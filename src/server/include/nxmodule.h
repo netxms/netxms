@@ -91,6 +91,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb, uint32_t objectId);
 };
 
+struct ResponsibleUser;
 struct WirelessControllerBridge;
 
 /**
@@ -129,6 +130,7 @@ typedef struct
 	uint32_t (*pfValidateObjectCreation)(int objectClass, const TCHAR *name, const InetAddress& ipAddr, uint32_t zoneId, const NXCPMessage& request);
    uint32_t (*pfAdditionalLoginCheck)(uint32_t userId, const NXCPMessage& request);
    void (*pfOnNodeMgmtStatusChange)(const shared_ptr<Node>& node, bool isManaged);
+   void (*pfOnResponsibleUserListChange)(NetObj *object, const StructArray<ResponsibleUser> *oldList, const StructArray<ResponsibleUser> *newList, ClientSession *session);
    void (*pfClientSessionClose)(ClientSession *session);
    void (*pfNXSLServerEnvConfig)(NXSL_Environment *env);
    void (*pfNXSLServerVMConfig)(NXSL_VM *vm);

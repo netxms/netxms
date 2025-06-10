@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -229,7 +229,7 @@ void VPNConnector::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 /**
  * Modify object from message
  */
-uint32_t VPNConnector::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t VPNConnector::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
    // Peer gateway
    if (msg.isFieldExist(VID_PEER_GATEWAY))
@@ -253,7 +253,7 @@ uint32_t VPNConnector::modifyFromMessageInternal(const NXCPMessage& msg)
          m_remoteNetworks->add(new InetAddress(msg.getFieldAsInetAddress(fieldId++)));
    }
 
-   return super::modifyFromMessageInternal(msg);
+   return super::modifyFromMessageInternal(msg, session);
 }
 
 /**
