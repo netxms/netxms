@@ -3507,7 +3507,7 @@ void ClientSession::modifyObject(const NXCPMessage& request)
          // If allowed, change object and set completion code
          if (rcc == RCC_SUCCESS)
 			{
-            rcc = object->modifyFromMessage(request);
+            rcc = object->modifyFromMessage(request, this);
 	         if (rcc == RCC_SUCCESS)
 				{
 					object->postModify();
@@ -9663,7 +9663,7 @@ void ClientSession::updateResponsibleUsers(const NXCPMessage& request)
    {
       if (object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY) || object->checkAccessRights(m_userId, OBJECT_ACCESS_EDIT_RESP_USERS))
       {
-         object->setResponsibleUsersFromMessage(request);
+         object->setResponsibleUsersFromMessage(request, this);
          object->markAsModified(MODIFY_RESPONSIBLE_USERS);
          response.setField(VID_RCC, RCC_SUCCESS);
       }

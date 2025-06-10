@@ -202,7 +202,7 @@ void Dashboard::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 /**
  * Modify object from NXCP message
  */
-uint32_t Dashboard::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t Dashboard::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
    AutoBindTarget::modifyFromMessage(msg);
 
@@ -229,7 +229,7 @@ uint32_t Dashboard::modifyFromMessageInternal(const NXCPMessage& msg)
 		}
 	}
 
-	return super::modifyFromMessageInternal(msg);
+	return super::modifyFromMessageInternal(msg, session);
 }
 
 /**

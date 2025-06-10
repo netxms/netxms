@@ -254,7 +254,7 @@ void ConditionObject::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userI
 /**
  * Modify object from NXCP message
  */
-uint32_t ConditionObject::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t ConditionObject::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
    // Change script
    if (msg.isFieldExist(VID_SCRIPT))
@@ -318,7 +318,7 @@ uint32_t ConditionObject::modifyFromMessageInternal(const NXCPMessage& msg)
       }
    }
 
-   return super::modifyFromMessageInternal(msg);
+   return super::modifyFromMessageInternal(msg, session);
 }
 
 /**
