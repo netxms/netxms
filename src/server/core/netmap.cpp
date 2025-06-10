@@ -737,7 +737,7 @@ void NetworkMap::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
 /**
  * Update network map object from NXCP message
  */
-uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
    AutoBindTarget::modifyFromMessage(msg);
 
@@ -932,7 +932,7 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 		}
 	}
 
-	return super::modifyFromMessageInternal(msg);
+	return super::modifyFromMessageInternal(msg, session);
 }
 
 /**

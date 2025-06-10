@@ -251,7 +251,7 @@ void ConditionObject::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
 /**
  * Modify object from NXCP message
  */
-uint32_t ConditionObject::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t ConditionObject::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
    // Change script
    if (msg.isFieldExist(VID_SCRIPT))
@@ -310,7 +310,7 @@ uint32_t ConditionObject::modifyFromMessageInternal(const NXCPMessage& msg)
       }
    }
 
-   return super::modifyFromMessageInternal(msg);
+   return super::modifyFromMessageInternal(msg, session);
 }
 
 /**

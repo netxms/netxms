@@ -268,15 +268,15 @@ void Zone::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
 /**
  * Modify object from message
  */
-uint32_t Zone::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t Zone::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
-   return super::modifyFromMessageInternal(msg);
+   return super::modifyFromMessageInternal(msg, session);
 }
 
 /**
  * Modify object from message (stage 2)
  */
-uint32_t Zone::modifyFromMessageInternalStage2(const NXCPMessage& msg)
+uint32_t Zone::modifyFromMessageInternalStage2(const NXCPMessage& msg, ClientSession *session)
 {
    if (msg.isFieldExist(VID_ZONE_PROXY_LIST))
    {
@@ -306,7 +306,7 @@ uint32_t Zone::modifyFromMessageInternalStage2(const NXCPMessage& msg)
             m_proxyNodes.remove(proxyId);
       }
    }
-   return super::modifyFromMessageInternalStage2(msg);
+   return super::modifyFromMessageInternalStage2(msg, session);
 }
 
 /**
