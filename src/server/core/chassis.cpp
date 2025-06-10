@@ -172,7 +172,7 @@ void Chassis::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 /**
  * Modify object from NXCP message
  */
-uint32_t Chassis::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t Chassis::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
    if (msg.isFieldExist(VID_CONTROLLER_ID))
       m_controllerId = msg.getFieldAsUInt32(VID_CONTROLLER_ID);
@@ -192,7 +192,7 @@ uint32_t Chassis::modifyFromMessageInternal(const NXCPMessage& msg)
    if (msg.isFieldExist(VID_RACK_ORIENTATION))
       m_rackOrientation = static_cast<RackOrientation>(msg.getFieldAsInt16(VID_RACK_ORIENTATION));
 
-   return super::modifyFromMessageInternal(msg);
+   return super::modifyFromMessageInternal(msg, session);
 }
 
 /**

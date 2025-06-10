@@ -1076,7 +1076,7 @@ void Interface::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 /**
  * Modify object from message
  */
-uint32_t Interface::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t Interface::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
    // Number of required polls
    if (msg.isFieldExist(VID_REQUIRED_POLLS))
@@ -1086,7 +1086,7 @@ uint32_t Interface::modifyFromMessageInternal(const NXCPMessage& msg)
 	if (msg.isFieldExist(VID_EXPECTED_STATE))
 		setExpectedStateInternal(msg.getFieldAsInt16(VID_EXPECTED_STATE));
 
-   return super::modifyFromMessageInternal(msg);
+   return super::modifyFromMessageInternal(msg, session);
 }
 
 /**

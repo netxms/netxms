@@ -171,7 +171,7 @@ void Rack::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 /**
  * Modify object from message
  */
-uint32_t Rack::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t Rack::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
 	if (msg.isFieldExist(VID_HEIGHT))
 		m_height = msg.getFieldAsUInt16(VID_HEIGHT);
@@ -211,7 +211,7 @@ uint32_t Rack::modifyFromMessageInternal(const NXCPMessage& msg)
       }
    }
 
-   return super::modifyFromMessageInternal(msg);
+   return super::modifyFromMessageInternal(msg, session);
 }
 
 /**
