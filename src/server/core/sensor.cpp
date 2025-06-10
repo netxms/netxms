@@ -355,7 +355,7 @@ void Sensor::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 /**
  * Modify object from NXCP message
  */
-uint32_t Sensor::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t Sensor::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
    if (msg.isFieldExist(VID_MAC_ADDR))
       m_macAddress = msg.getFieldAsMacAddress(VID_MAC_ADDR);
@@ -394,7 +394,7 @@ uint32_t Sensor::modifyFromMessageInternal(const NXCPMessage& msg)
       m_xmlConfig = msg.getFieldAsString(VID_XML_CONFIG);
    }
 
-   return super::modifyFromMessageInternal(msg);
+   return super::modifyFromMessageInternal(msg, session);
 }
 
 /**

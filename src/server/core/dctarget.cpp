@@ -159,7 +159,7 @@ void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg, uint32_t 
 /**
  * Modify object from message
  */
-uint32_t DataCollectionTarget::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t DataCollectionTarget::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
    if (msg.isFieldExist(VID_GEOLOCATION_CTRL_MODE))
       m_geoLocationControlMode = static_cast<GeoLocationControlMode>(msg.getFieldAsInt16(VID_GEOLOCATION_CTRL_MODE));
@@ -170,7 +170,7 @@ uint32_t DataCollectionTarget::modifyFromMessageInternal(const NXCPMessage& msg)
    if (msg.isFieldExist(VID_WEB_SERVICE_PROXY))
       m_webServiceProxy = msg.getFieldAsUInt32(VID_WEB_SERVICE_PROXY);
 
-   return super::modifyFromMessageInternal(msg);
+   return super::modifyFromMessageInternal(msg, session);
 }
 
 /**

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -186,9 +186,9 @@ void MobileDevice::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 /**
  * Modify object from message
  */
-uint32_t MobileDevice::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t MobileDevice::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
-   return super::modifyFromMessageInternal(msg);
+   return super::modifyFromMessageInternal(msg, session);
 }
 
 /**

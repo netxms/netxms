@@ -668,7 +668,7 @@ void NetworkMap::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 /**
  * Update network map object from NXCP message
  */
-uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
 	if (msg.isFieldExist(VID_MAP_TYPE))
 		m_mapType = msg.getFieldAsInt16(VID_MAP_TYPE);
@@ -829,7 +829,7 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 		}
 	}
 
-	return super::modifyFromMessageInternal(msg);
+	return super::modifyFromMessageInternal(msg, session);
 }
 
 /**

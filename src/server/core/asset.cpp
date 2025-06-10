@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -209,12 +209,12 @@ void Asset::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 /**
  * Modify asset object from message
  */
-uint32_t Asset::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t Asset::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
    if (msg.isFieldExist(VID_LINKED_OBJECT))
       m_linkedObjectId = msg.getFieldAsUInt32(VID_LINKED_OBJECT);
 
-   return super::modifyFromMessageInternal(msg);
+   return super::modifyFromMessageInternal(msg, session);
 }
 
 /**

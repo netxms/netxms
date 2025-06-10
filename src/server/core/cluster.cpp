@@ -377,7 +377,7 @@ void Cluster::changeZone(uint32_t newZoneUIN)
 /**
  * Modify object from message
  */
-uint32_t Cluster::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t Cluster::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
    // Change cluster type
    if (msg.isFieldExist(VID_CLUSTER_TYPE))
@@ -435,7 +435,7 @@ uint32_t Cluster::modifyFromMessageInternal(const NXCPMessage& msg)
 
    AutoBindTarget::modifyFromMessage(msg);
 
-   return super::modifyFromMessageInternal(msg);
+   return super::modifyFromMessageInternal(msg, session);
 }
 
 /**

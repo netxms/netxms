@@ -8548,7 +8548,7 @@ void Node::updateFlags(uint32_t flags, uint32_t mask)
 /**
  * Modify object from NXCP message
  */
-uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg)
+uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
    // Change primary IP address
    if (msg.isFieldExist(VID_IP_ADDRESS))
@@ -8850,7 +8850,7 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg)
       msg.getFieldAsUtf8String(VID_SNMP_CODEPAGE, m_snmpCodepage, 16);
    }
 
-   return super::modifyFromMessageInternal(msg);
+   return super::modifyFromMessageInternal(msg, session);
 }
 
 /**
