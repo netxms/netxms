@@ -3325,27 +3325,24 @@ unique_ptr<StructArray<ResponsibleUser>> NetObj::getAllResponsibleUsers(const TC
 void NetObj::setResponsibleUsersFromMessage(const NXCPMessage& msg)
 {
    int count = msg.getFieldAsInt32(VID_RESPONSIBLE_USERS_COUNT);
-   lockResponsibleUsersList();
-   if (count > 0)
-   {
-      if (m_responsibleUsers == nullptr)
-         m_responsibleUsers = new StructArray<ResponsibleUser>(count, 16);
-      else
-         m_responsibleUsers->clear();
+   StructArray<ResponsibleUser> *responsibleUsers = (count > 0) ? new StructArray<ResponsibleUser>(count, 16) : nullptr;
 
-      uint32_t fieldId = VID_RESPONSIBLE_USERS_BASE;
-      for(int i = 0; i < count; i++)
-      {
-         ResponsibleUser *r = m_responsibleUsers->addPlaceholder();
-         r->userId = msg.getFieldAsUInt32(fieldId++);
-         msg.getFieldAsString(fieldId++, r->tag, MAX_RESPONSIBLE_USER_TAG_LEN);
-         fieldId += 8;
-      }
-   }
-   else
+   uint32_t fieldId = VID_RESPONSIBLE_USERS_BASE;
+   for(int i = 0; i < count; i++)
    {
-      delete_and_null(m_responsibleUsers);
+      ResponsibleUser *r = responsibleUsers->addPlaceholder();
+      r->userId = msg.getFieldAsUInt32(fieldId++);
+      msg.getFieldAsString(fieldId++, r->tag, MAX_RESPONSIBLE_USER_TAG_LEN);
+      fieldId += 8;
    }
+
+   lockResponsibleUsersList();
+   ENUMERATE_MODULES(pfOnResponsibleUserListChange)
+   {
+      CURRENT_MODULE.pfOnResponsibleUserListChange(this, m_responsibleUsers, responsibleUsers);
+   }
+   delete m_responsibleUsers;
+   m_responsibleUsers = responsibleUsers;
    unlockResponsibleUsersList();
 }
 
