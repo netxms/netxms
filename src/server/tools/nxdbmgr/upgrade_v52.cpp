@@ -24,6 +24,45 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 52.17 to 52.18
+ */
+static bool H_UpgradeFromV17()
+{
+   if (GetSchemaLevelForMajorVersion(51) < 27)
+   {
+      CHK_EXEC(CreateEventTemplate(EVENT_RESPONSIBLE_USER_ADDED, _T("SYS_RESPONSIBLE_USER_ADDED"),
+            EVENT_SEVERITY_NORMAL, 0, _T("27e38dfb-1027-454a-8cd9-fbc49dcf0a9c"),
+            _T("New responsible user %<userName> (ID: %<userId>, Tag: \"%<tag>\") added to object %<objectName> (ID: %<objectId>) by %<operator>"),
+            _T("Generated when new responsible user added to the object.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) userId - User ID\r\n")
+            _T("   2) userName - User name\r\n")
+            _T("   3) tag - User tag\r\n")
+            _T("   4) objectId - Object ID\r\n")
+            _T("   5) objectName - Object name\r\n")
+            _T("   6) operator - Operator (user who made change to object)")
+         ));
+
+      CHK_EXEC(CreateEventTemplate(EVENT_RESPONSIBLE_USER_REMOVED, _T("SYS_RESPONSIBLE_USER_REMOVED"),
+            EVENT_SEVERITY_NORMAL, 0, _T("c17409f9-1213-4c48-8249-62caa79a01c5"),
+            _T("Responsible user %<userName> (ID: %<userId>, Tag: \"%<tag>\") removed from object %<objectName> (ID: %<objectId>) by %<operator>"),
+            _T("Generated when new responsible user added to the object.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) userId - User ID\r\n")
+            _T("   2) userName - User name\r\n")
+            _T("   3) tag - User tag\r\n")
+            _T("   4) objectId - Object ID\r\n")
+            _T("   5) objectName - Object name\r\n")
+            _T("   6) operator - Operator (user who made change to object)")
+         ));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(51, 27));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(18));
+   return true;
+}
+
+/**
  * Upgrade from 52.16 to 52.17
  */
 static bool H_UpgradeFromV16()
@@ -367,6 +406,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 17, 52, 18, H_UpgradeFromV17 },
    { 16, 52, 17, H_UpgradeFromV16 },
    { 15, 52, 16, H_UpgradeFromV15 },
    { 14, 52, 15, H_UpgradeFromV14 },
