@@ -1368,6 +1368,8 @@ protected:
    virtual uint32_t modifyFromMessageInternalStage2(const NXCPMessage& msg, ClientSession *session);
    virtual void updateFlags(uint32_t flags, uint32_t mask);
 
+   void setResponsibleUsers(StructArray<ResponsibleUser> *responsibleUsers, ClientSession *session);
+
    bool isGeoLocationHistoryTableExists(DB_HANDLE hdb) const;
    bool createGeoLocationHistoryTable(DB_HANDLE hdb);
 
