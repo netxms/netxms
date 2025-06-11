@@ -23,6 +23,7 @@
 #include "nxcore.h"
 #include <netxms-version.h>
 #include <asset_management.h>
+#include <nms_users.h>
 
 /**
  * Class names
@@ -3275,6 +3276,120 @@ unique_ptr<StructArray<ResponsibleUser>> NetObj::getAllResponsibleUsers(const TC
 }
 
 /**
+ * Set responsible users for object
+ *
+ * @param responsibleUsers new responsible users list, or nullptr to remove all responsible users
+ * @param session client session that requested change (for event logging)
+ */
+void NetObj::setResponsibleUsers(StructArray<ResponsibleUser> *responsibleUsers, ClientSession *session)
+{
+   lockResponsibleUsersList();
+   if ((m_responsibleUsers == nullptr) && (responsibleUsers != nullptr))
+   {
+      for(int i = 0; i < responsibleUsers->size(); i++)
+      {
+         const ResponsibleUser *user = responsibleUsers->get(i);
+         wchar_t userName[MAX_USER_NAME], operatorName[MAX_USER_NAME];
+         ResolveUserId(user->userId, userName, true);
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 4, L"New responsible user %s [%u] tag=%s on object %s [%u]", userName, user->userId, user->tag, m_name, m_id);
+         EventBuilder(EVENT_RESPONSIBLE_USER_ADDED, g_dwMgmtNode)
+            .param(L"userId", user->userId, EventBuilder::OBJECT_ID_FORMAT)
+            .param(L"userName", userName)
+            .param(L"tag", user->tag)
+            .param(L"objectId", m_id, EventBuilder::OBJECT_ID_FORMAT)
+            .param(L"objectName", m_name)
+            .param(L"operator", (session != nullptr) ? ResolveUserId(session->getUserId(), operatorName, true) : L"system")
+            .post();
+      }
+   }
+   else if ((m_responsibleUsers != nullptr) && (responsibleUsers == nullptr))
+   {
+      for(int i = 0; i < m_responsibleUsers->size(); i++)
+      {
+         const ResponsibleUser *user = m_responsibleUsers->get(i);
+         wchar_t userName[MAX_USER_NAME], operatorName[MAX_USER_NAME];
+         ResolveUserId(user->userId, userName, true);
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 4, L"Responsible user %s [%u] tag=\"%s\" removed from object %s [%u]", userName, user->userId, user->tag, m_name, m_id);
+         EventBuilder(EVENT_RESPONSIBLE_USER_REMOVED, g_dwMgmtNode)
+            .param(L"userId", user->userId, EventBuilder::OBJECT_ID_FORMAT)
+            .param(L"userName", userName)
+            .param(L"tag", user->tag)
+            .param(L"objectId", m_id, EventBuilder::OBJECT_ID_FORMAT)
+            .param(L"objectName", m_name)
+            .param(L"operator", (session != nullptr) ? ResolveUserId(session->getUserId(), operatorName, true) : L"system")
+            .post();
+      }
+   }
+   else if ((m_responsibleUsers != nullptr) && (responsibleUsers != nullptr))
+   {
+      for(int i = 0; i < m_responsibleUsers->size(); i++)
+      {
+         const ResponsibleUser *oldUser = m_responsibleUsers->get(i);
+         bool found = false;
+         for(int j = 0; j < responsibleUsers->size(); j++)
+         {
+            const ResponsibleUser *newUser = responsibleUsers->get(j);
+            if (oldUser->userId == newUser->userId)
+            {
+               found = true;
+               break;
+            }
+         }
+         if (!found)
+         {
+            wchar_t userName[MAX_USER_NAME], operatorName[MAX_USER_NAME];
+            ResolveUserId(oldUser->userId, userName, true);
+            nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 4, L"Responsible user %s [%u] tag=\"%s\" removed from object %s [%u]", userName, oldUser->userId, oldUser->tag, m_name, m_id);
+            EventBuilder(EVENT_RESPONSIBLE_USER_REMOVED, g_dwMgmtNode)
+               .param(L"userId", oldUser->userId, EventBuilder::OBJECT_ID_FORMAT)
+               .param(L"userName", userName)
+               .param(L"tag", oldUser->tag)
+               .param(L"objectId", m_id, EventBuilder::OBJECT_ID_FORMAT)
+               .param(L"objectName", m_name)
+               .param(L"operator", (session != nullptr) ? ResolveUserId(session->getUserId(), operatorName, true) : L"system")
+               .post();
+         }
+      }
+      for(int i = 0; i < responsibleUsers->size(); i++)
+      {
+         const ResponsibleUser *newUser = responsibleUsers->get(i);
+         bool found = false;
+         for(int j = 0; j < m_responsibleUsers->size(); j++)
+         {
+            const ResponsibleUser *oldUser = m_responsibleUsers->get(j);
+            if (oldUser->userId == newUser->userId)
+            {
+               found = true;
+               break;
+            }
+         }
+         if (!found)
+         {
+            wchar_t userName[MAX_USER_NAME], operatorName[MAX_USER_NAME];
+            ResolveUserId(newUser->userId, userName, true);
+            nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 4, L"New responsible user %s [%u] tag=%s on object %s [%u]", userName, newUser->userId, newUser->tag, m_name, m_id);
+            EventBuilder(EVENT_RESPONSIBLE_USER_ADDED, g_dwMgmtNode)
+               .param(L"userId", newUser->userId, EventBuilder::OBJECT_ID_FORMAT)
+               .param(L"userName", userName)
+               .param(L"tag", newUser->tag)
+               .param(L"objectId", m_id, EventBuilder::OBJECT_ID_FORMAT)
+               .param(L"objectName", m_name)
+               .param(L"operator", (session != nullptr) ? ResolveUserId(session->getUserId(), operatorName, true) : L"system")
+               .post();
+         }
+      }
+   }
+   ENUMERATE_MODULES(pfOnResponsibleUserListChange)
+   {
+      CURRENT_MODULE.pfOnResponsibleUserListChange(this, m_responsibleUsers, responsibleUsers, session);
+   }
+   delete m_responsibleUsers;
+   m_responsibleUsers = responsibleUsers;
+   unlockResponsibleUsersList();
+   markAsModified(MODIFY_RESPONSIBLE_USERS);
+}
+
+/**
  * Set list of responsible users from NXCP message
  */
 void NetObj::setResponsibleUsersFromMessage(const NXCPMessage& msg, ClientSession *session)
@@ -3291,14 +3406,7 @@ void NetObj::setResponsibleUsersFromMessage(const NXCPMessage& msg, ClientSessio
       fieldId += 8;
    }
 
-   lockResponsibleUsersList();
-   ENUMERATE_MODULES(pfOnResponsibleUserListChange)
-   {
-      CURRENT_MODULE.pfOnResponsibleUserListChange(this, m_responsibleUsers, responsibleUsers, session);
-   }
-   delete m_responsibleUsers;
-   m_responsibleUsers = responsibleUsers;
-   unlockResponsibleUsersList();
+   setResponsibleUsers(responsibleUsers, session);
 }
 
 /**

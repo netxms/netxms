@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -193,6 +193,8 @@
 #define EVENT_MODBUS_OK                             139
 #define EVENT_IF_STP_STATE_CHANGED                  140
 #define EVENT_IF_SPEED_CHANGED                      141
+#define EVENT_RESPONSIBLE_USER_ADDED                145
+#define EVENT_RESPONSIBLE_USER_REMOVED              146
 
 #define EVENT_SNMP_UNMATCHED_TRAP                   500
 #define EVENT_SNMP_COLD_START                       501
