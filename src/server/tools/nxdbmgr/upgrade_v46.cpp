@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2022-2024 Raden Solutions
+** Copyright (C) 2022-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,13 +21,53 @@
 **/
 
 #include "nxdbmgr.h"
+#include <nxevent.h>
 
 /**
- * Upgrade from 46.2 to 50.0
+ * Upgrade from 46.3 to 50.0
+ */
+static bool H_UpgradeFromV3()
+{
+   CHK_EXEC(SetMajorSchemaVersion(50, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 46.2 to 46.3
  */
 static bool H_UpgradeFromV2()
 {
-   CHK_EXEC(SetMajorSchemaVersion(50, 0));
+   if (GetSchemaLevelForMajorVersion(45) < 5)
+   {
+      CHK_EXEC(CreateEventTemplate(EVENT_RESPONSIBLE_USER_ADDED, _T("SYS_RESPONSIBLE_USER_ADDED"),
+            EVENT_SEVERITY_NORMAL, 0, _T("27e38dfb-1027-454a-8cd9-fbc49dcf0a9c"),
+            _T("New responsible user %<userName> (ID: %<userId>, Tag: \"%<tag>\") added to object %<objectName> (ID: %<objectId>) by %<operator>"),
+            _T("Generated when new responsible user added to the object.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) userId - User ID\r\n")
+            _T("   2) userName - User name\r\n")
+            _T("   3) tag - User tag\r\n")
+            _T("   4) objectId - Object ID\r\n")
+            _T("   5) objectName - Object name\r\n")
+            _T("   6) operator - Operator (user who made change to object)")
+         ));
+
+      CHK_EXEC(CreateEventTemplate(EVENT_RESPONSIBLE_USER_REMOVED, _T("SYS_RESPONSIBLE_USER_REMOVED"),
+            EVENT_SEVERITY_NORMAL, 0, _T("c17409f9-1213-4c48-8249-62caa79a01c5"),
+            _T("Responsible user %<userName> (ID: %<userId>, Tag: \"%<tag>\") removed from object %<objectName> (ID: %<objectId>) by %<operator>"),
+            _T("Generated when new responsible user added to the object.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) userId - User ID\r\n")
+            _T("   2) userName - User name\r\n")
+            _T("   3) tag - User tag\r\n")
+            _T("   4) objectId - Object ID\r\n")
+            _T("   5) objectName - Object name\r\n")
+            _T("   6) operator - Operator (user who made change to object)")
+         ));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(45, 5));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(3));
    return true;
 }
 
@@ -69,7 +109,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 2,  50, 0,  H_UpgradeFromV2  },
+   { 3,  50, 0,  H_UpgradeFromV3  },
+   { 2,  46, 3,  H_UpgradeFromV2  },
    { 1,  46, 2,  H_UpgradeFromV1  },
    { 0,  46, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }

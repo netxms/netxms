@@ -9963,7 +9963,6 @@ void ClientSession::updateResponsibleUsers(const NXCPMessage& request)
       if (object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY) || object->checkAccessRights(m_userId, OBJECT_ACCESS_EDIT_RESP_USERS))
       {
          object->setResponsibleUsersFromMessage(request, this);
-         object->markAsModified(MODIFY_RESPONSIBLE_USERS);
          response.setField(VID_RCC, RCC_SUCCESS);
       }
       else

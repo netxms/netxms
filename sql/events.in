@@ -1761,6 +1761,36 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       '   6) newSpeedText - New speed in bps with optional multiplier (kbps, Mbps, etc.)'
    );
 
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_RESPONSIBLE_USER_ADDED, 'SYS_RESPONSIBLE_USER_ADDED', '27e38dfb-1027-454a-8cd9-fbc49dcf0a9c',
+		EVENT_SEVERITY_NORMAL, 0,
+		'New responsible user %<userName> (ID: %<userId>, Tag: "%<tag>") added to object %<objectName> (ID: %<objectId>) by %<operator>',
+		'Generated when new responsible user added to the object.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) userId - User ID' CONCAT CRLF CONCAT
+		'   2) userName - User name' CONCAT CRLF CONCAT
+		'   3) tag - User tag' CONCAT CRLF CONCAT
+		'   4) objectId - Object ID' CONCAT CRLF CONCAT
+		'   5) objectName - Object name' CONCAT CRLF CONCAT
+		'   6) operator - Operator (user who made change to object)'
+	);
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_RESPONSIBLE_USER_REMOVED, 'SYS_RESPONSIBLE_USER_REMOVED', 'c17409f9-1213-4c48-8249-62caa79a01c5',
+		EVENT_SEVERITY_NORMAL, 0,
+		'Responsible user %<userName> (ID: %<userId>, Tag: "%<tag>") removed from object %<objectName> (ID: %<objectId>) by %<operator>',
+		'Generated when responsible user removed from the object.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) userId - User ID' CONCAT CRLF CONCAT
+		'   2) userName - User name' CONCAT CRLF CONCAT
+		'   3) tag - User tag' CONCAT CRLF CONCAT
+		'   4) objectId - Object ID' CONCAT CRLF CONCAT
+		'   5) objectName - Object name' CONCAT CRLF CONCAT
+		'   6) operator - Operator (user who made change to object)'
+	);
+
 /*
 ** SNMP traps
 */
