@@ -20,6 +20,9 @@
 **
 **/
 
+#ifndef _nms_users_h_
+#define _nms_users_h_
+
 #if WITH_LDAP
 
 #if !defined(__hpux)
@@ -174,9 +177,6 @@ public:
    void syncUsers();
    uint32_t ldapUserLogin(const TCHAR *name, const TCHAR *password);
 };
-
-#ifndef _nms_users_h_
-#define _nms_users_h_
 
 /**
  * Maximum number of grace logins allowed for user
@@ -604,4 +604,4 @@ uint32_t DeleteUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName);
 void CASReadSettings();
 bool CASAuthenticate(const char *ticket, TCHAR *loginName);
 
-#endif
+#endif   /* _nms_users_h_ */
