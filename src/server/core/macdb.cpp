@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -337,26 +337,27 @@ void FindVendorByMacList(const NXCPMessage& request, NXCPMessage* response)
 /**
  * Load OUI database file
  */
-template<size_t MaxLen, typename T> static bool LoadOUIDatabaseFile(const TCHAR *fileName, HashMap<T, String> *map)
+template<size_t MaxLen, typename T> static bool LoadOUIDatabaseFile(const wchar_t *fileName, HashMap<T, String> *map)
 {
-   TCHAR path[MAX_PATH];
+   wchar_t path[MAX_PATH];
    GetNetXMSDirectory(nxDirShare, path);
-   _tcscat(path, FS_PATH_SEPARATOR);
-   _tcscat(path, _T("oui"));
-   _tcscat(path, FS_PATH_SEPARATOR);
-   _tcscat(path, fileName);
+   wcscat(path, FS_PATH_SEPARATOR);
+   wcscat(path, L"oui");
+   wcscat(path, FS_PATH_SEPARATOR);
+   wcscat(path, fileName);
 
    char *fileContent = LoadFileAsUTF8String(path);
    if (fileContent == nullptr)
    {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot open OUI database file \"%s\" (%s)"), path, _tcserror(errno));
+      if ((errno != ENOENT) || wcsncmp(fileName, L"custom-", 7))
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Cannot open OUI database file \"%s\" (%s)", path, _wcserror(errno));
       return false;
    }
 
-   TCHAR *content = WideStringFromUTF8String(fileContent);
+   wchar_t *content = WideStringFromUTF8String(fileContent);
    MemFree(fileContent);
 
-   Table *table = Table::createFromCSV(content, _T(','));
+   Table *table = Table::createFromCSV(content, L',');
    MemFree(content);
    if (table == nullptr)
    {
@@ -367,11 +368,11 @@ template<size_t MaxLen, typename T> static bool LoadOUIDatabaseFile(const TCHAR 
    for (int i = 0; i < table->getNumRows(); i++)
    {
       T oui;
-      StringBuffer ouiText = table->getAsString(i, 1, _T(""));
+      StringBuffer ouiText = table->getAsString(i, 1, L"");
       if (ouiText.length() % 2 != 0)
          ouiText.append(_T("0"));
       StrToBin(ouiText, oui, MaxLen);
-      map->set(oui, new String(table->getAsString(i, 2, _T(""))));
+      map->set(oui, new String(table->getAsString(i, 2, L"")));
    }
 
    delete table;
@@ -383,12 +384,24 @@ template<size_t MaxLen, typename T> static bool LoadOUIDatabaseFile(const TCHAR 
  */
 void LoadOUIDatabase()
 {
-   if (LoadOUIDatabaseFile<3, oui24_t>(_T("oui.csv"), &s_ouiMap))
+   if (LoadOUIDatabaseFile<3, oui24_t>(L"oui.csv", &s_ouiMap))
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("OUI-24 database loaded (%d entries)"), s_ouiMap.size());
 
-   if (LoadOUIDatabaseFile<4, oui28_t>(_T("oui28.csv"), &s_ouiMap28))
+   if (LoadOUIDatabaseFile<4, oui28_t>(L"oui28.csv", &s_ouiMap28))
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("OUI-28 database loaded (%d entries)"), s_ouiMap28.size());
 
-   if (LoadOUIDatabaseFile<5, oui36_t>(_T("oui36.csv"), &s_ouiMap36))
+   if (LoadOUIDatabaseFile<5, oui36_t>(L"oui36.csv", &s_ouiMap36))
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("OUI-36 database loaded (%d entries)"), s_ouiMap36.size());
+
+   int size = s_ouiMap.size();
+   if (LoadOUIDatabaseFile<3, oui24_t>(L"custom-oui.csv", &s_ouiMap))
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Custom OUI-24 database loaded (%d entries)"), s_ouiMap.size() - size);
+
+   size = s_ouiMap28.size();
+   if (LoadOUIDatabaseFile<4, oui28_t>(L"custom-oui28.csv", &s_ouiMap28))
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Custom OUI-28 database loaded (%d entries)"), s_ouiMap28.size() - size);
+
+   size = s_ouiMap36.size();
+   if (LoadOUIDatabaseFile<5, oui36_t>(L"custom-oui36.csv", &s_ouiMap36))
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Custom OUI-36 database loaded (%d entries)"), s_ouiMap36.size() - size);
 }
