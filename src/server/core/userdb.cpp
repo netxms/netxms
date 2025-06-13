@@ -244,22 +244,38 @@ static void AccountStatusUpdater()
 			if (object->isDeleted() || object->isGroup())
 				continue;
 
-			User *user = (User *)object;
+			User *user = static_cast<User*>(object);
 
 			if (user->isDisabled() && (user->getReEnableTime() > 0) && (user->getReEnableTime() <= now))
 			{
 				// Re-enable temporary disabled user
 				user->enable();
-            WriteAuditLog(AUDIT_SECURITY, true, user->getId(), nullptr, AUDIT_SYSTEM_SID, 0, _T("Temporary disabled user account \"%s\" re-enabled by system"), user->getName());
-				nxlog_debug_tag(DEBUG_TAG, 3, _T("Temporary disabled user account \"%s\" re-enabled"), user->getName());
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Temporary disabled user account \"%s\" re-enabled"), user->getName());
+
+            // Execute audit log in separate thread to avoid deadlock
+				uint32_t userId = user->getId();
+				String userName(user->getName());
+				ThreadPoolExecute(g_mainThreadPool,
+				   [userId, userName] () -> void
+				   {
+				      WriteAuditLog(AUDIT_SECURITY, true, userId, nullptr, AUDIT_SYSTEM_SID, 0, _T("Temporary disabled user account \"%s\" re-enabled by system"), userName.cstr());
+				   });
 			}
 
 			if (!user->isDisabled() && (blockInactiveAccounts > 0) && (user->getLastLoginTime() > 0) && (user->getLastLoginTime() + blockInactiveAccounts < now) &&
 			    ((user->getEnableTime() == 0) || (user->getEnableTime() + blockInactiveAccounts < now)))
 			{
 				user->disable();
-            WriteAuditLog(AUDIT_SECURITY, TRUE, user->getId(), nullptr, AUDIT_SYSTEM_SID, 0, _T("User account \"%s\" disabled by system due to inactivity"), user->getName());
-				nxlog_debug_tag(DEBUG_TAG, 3, _T("User account \"%s\" disabled due to inactivity"), user->getName());
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("User account \"%s\" disabled due to inactivity"), user->getName());
+
+            // Execute audit log in separate thread to avoid deadlock
+            uint32_t userId = user->getId();
+            String userName(user->getName());
+            ThreadPoolExecute(g_mainThreadPool,
+               [userId, userName] () -> void
+               {
+                  WriteAuditLog(AUDIT_SECURITY, true, userId, nullptr, AUDIT_SYSTEM_SID, 0, _T("User account \"%s\" disabled by system due to inactivity"), userName.cstr());
+               });
 			}
 		}
 		s_userDatabaseLock.unlock();
