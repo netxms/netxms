@@ -88,7 +88,7 @@ IMPORTS
           "201109190000Z" -- 19 Sep 2011 12:00:00 GMT
         DESCRIPTION
           "Add agentTransferUploadFilename,agentTransferUploadRemoteFilename,
-           agentTransferDownloadFilename length restrcted to 31 characters"
+           agentTransferDownloadFilename length restricted to 31 characters"
         REVISION
           "201012190000Z" -- 19 Dec 2010 12:00:00 GMT
         DESCRIPTION
@@ -1148,7 +1148,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "SNMPv3 User Authentication.  The user passsword must be set
+                     "SNMPv3 User Authentication.  The user password must be set
                      to a string greater than or equal to 8 characters for this to be
                      set to anything but none(1).
 
@@ -1754,7 +1754,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          DESCRIPTION
                      "Agent LAG Type.
 
-                     static(1)  - This LAG is staticly maintained.
+                     static(1)  - This LAG is statically maintained.
                      dynamic(2) - This LAG is dynamicly maintained."
          ::= { agentLagSummaryConfigEntry 10 }
 
