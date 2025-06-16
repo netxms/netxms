@@ -1753,15 +1753,16 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 	(
 		EVENT_RESPONSIBLE_USER_MODIFIED, 'SYS_RESPONSIBLE_USER_MODIFIED', '84baa8d0-f70c-4d92-b243-7fe5e7df0fed',
 		EVENT_SEVERITY_NORMAL, 0,
-		'Responsible user %<userName> (ID: %<userId>, Tag: "%<tag>") on object %<objectName> (ID: %<objectId>) modified by %<operator>',
+		'Responsible user %<userName> (ID: %<userId>) tag on object %<objectName> (ID: %<objectId>) changed from "%<prevTag>" to "%<tag>" by %<operator>',
 		'Generated when the responsible user''s record for the object is modified.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
 		'   1) userId - User ID' CONCAT CRLF CONCAT
 		'   2) userName - User name' CONCAT CRLF CONCAT
-		'   3) tag - User tag' CONCAT CRLF CONCAT
-		'   4) objectId - Object ID' CONCAT CRLF CONCAT
-		'   5) objectName - Object name' CONCAT CRLF CONCAT
-		'   6) operator - Operator (user who made change to the object)'
+		'   3) tag - New user tag' CONCAT CRLF CONCAT
+		'   4) prevTag - Previous user tag' CONCAT CRLF CONCAT
+		'   5) objectId - Object ID' CONCAT CRLF CONCAT
+		'   6) objectName - Object name' CONCAT CRLF CONCAT
+		'   7) operator - Operator (user who made change to the object)'
 	);
 
 /*
