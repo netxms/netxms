@@ -3355,7 +3355,7 @@ void NetObj::setResponsibleUsers(StructArray<ResponsibleUser> *responsibleUsers,
          const ResponsibleUser *newUser = responsibleUsers->get(i);
          bool found = false;
          bool changed = false;
-         wchar_t oldTag[MAX_RESPONSIBLE_USER_TAG_LEN];
+         wchar_t prevTag[MAX_RESPONSIBLE_USER_TAG_LEN];
          for(int j = 0; j < m_responsibleUsers->size(); j++)
          {
             const ResponsibleUser *oldUser = m_responsibleUsers->get(j);
@@ -3364,7 +3364,7 @@ void NetObj::setResponsibleUsers(StructArray<ResponsibleUser> *responsibleUsers,
                found = true;
                if (wcscmp(oldUser->tag, newUser->tag))
                {
-                  wcslcpy(oldTag, oldUser->tag, MAX_RESPONSIBLE_USER_TAG_LEN);
+                  wcslcpy(prevTag, oldUser->tag, MAX_RESPONSIBLE_USER_TAG_LEN);
                   changed = true;
                }
                break;
@@ -3388,11 +3388,12 @@ void NetObj::setResponsibleUsers(StructArray<ResponsibleUser> *responsibleUsers,
          {
             wchar_t userName[MAX_USER_NAME], operatorName[MAX_USER_NAME];
             ResolveUserId(newUser->userId, userName, true);
-            nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 4, L"Responsible user %s [%u] tag changed \"%s\" -> \"%s\" on object %s [%u]", userName, newUser->userId, oldTag, newUser->tag, m_name, m_id);
+            nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 4, L"Responsible user %s [%u] tag changed \"%s\" -> \"%s\" on object %s [%u]", userName, newUser->userId, prevTag, newUser->tag, m_name, m_id);
             EventBuilder(EVENT_RESPONSIBLE_USER_MODIFIED, g_dwMgmtNode)
                .param(L"userId", newUser->userId, EventBuilder::OBJECT_ID_FORMAT)
                .param(L"userName", userName)
                .param(L"tag", newUser->tag)
+               .param(L"prevTag", prevTag)
                .param(L"objectId", m_id, EventBuilder::OBJECT_ID_FORMAT)
                .param(L"objectName", m_name)
                .param(L"operator", (session != nullptr) ? ResolveUserId(session->getUserId(), operatorName, true) : L"system")
