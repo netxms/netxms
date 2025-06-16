@@ -49,7 +49,7 @@ static bool H_UpgradeFromV26()
             _T("   3) tag - User tag\r\n")
             _T("   4) objectId - Object ID\r\n")
             _T("   5) objectName - Object name\r\n")
-            _T("   6) operator - Operator (user who made change to object)")
+            _T("   6) operator - Operator (user who made change to the object)")
          ));
 
       CHK_EXEC(CreateEventTemplate(EVENT_RESPONSIBLE_USER_REMOVED, _T("SYS_RESPONSIBLE_USER_REMOVED"),
@@ -62,7 +62,20 @@ static bool H_UpgradeFromV26()
             _T("   3) tag - User tag\r\n")
             _T("   4) objectId - Object ID\r\n")
             _T("   5) objectName - Object name\r\n")
-            _T("   6) operator - Operator (user who made change to object)")
+            _T("   6) operator - Operator (user who made change to the object)")
+         ));
+
+      CHK_EXEC(CreateEventTemplate(EVENT_RESPONSIBLE_USER_MODIFIED, _T("SYS_RESPONSIBLE_USER_MODIFIED"),
+            EVENT_SEVERITY_NORMAL, 0, _T("84baa8d0-f70c-4d92-b243-7fe5e7df0fed"),
+            _T("Responsible user %<userName> (ID: %<userId>, Tag: \"%<tag>\") on object %<objectName> (ID: %<objectId>) modified by %<operator>"),
+            _T("Generated when the responsible user's record for the object is modified.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) userId - User ID\r\n")
+            _T("   2) userName - User name\r\n")
+            _T("   3) tag - User tag\r\n")
+            _T("   4) objectId - Object ID\r\n")
+            _T("   5) objectName - Object name\r\n")
+            _T("   6) operator - Operator (user who made change to the object)")
          ));
 
       CHK_EXEC(SetSchemaLevelForMajorVersion(50, 49));
