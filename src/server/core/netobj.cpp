@@ -264,142 +264,6 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
       success = getAsPollable()->saveToDatabase(hdb);
    }
 
-   if (!success)
-      return false;
-
-   if (!(m_modified & MODIFY_COMMON_PROPERTIES))
-      return saveModuleData(hdb);
-
-   static const TCHAR *columns[] = {
-      _T("name"), _T("status"), _T("is_deleted"), _T("inherit_access_rights"), _T("last_modified"), _T("status_calc_alg"),
-      _T("status_prop_alg"), _T("status_fixed_val"), _T("status_shift"), _T("status_translation"), _T("status_single_threshold"),
-      _T("status_thresholds"), _T("comments"), _T("is_system"), _T("location_type"), _T("latitude"), _T("longitude"),
-      _T("location_accuracy"), _T("location_timestamp"), _T("guid"), _T("map_image"), _T("drilldown_object_id"), _T("country"),
-      _T("region"), _T("city"), _T("district"), _T("street_address"), _T("postcode"), _T("maint_event_id"),
-      _T("state_before_maint"), _T("state"), _T("flags"), _T("creation_time"), _T("maint_initiator"), _T("alias"),
-      _T("name_on_map"), _T("category"), _T("comments_source"), _T("asset_id"), nullptr
-   };
-
-   DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_properties"), _T("object_id"), m_id, columns);
-   if (hStmt == nullptr)
-      return false;
-
-   lockProperties();
-
-   TCHAR szTranslation[16], szThresholds[16], lat[32], lon[32];
-   for(int i = 0, j = 0; i < 4; i++, j += 2)
-   {
-      _sntprintf(&szTranslation[j], 16 - j, _T("%02X"), (BYTE)m_statusTranslation[i]);
-      _sntprintf(&szThresholds[j], 16 - j, _T("%02X"), (BYTE)m_statusThresholds[i]);
-   }
-   _sntprintf(lat, 32, _T("%f"), m_geoLocation.getLatitude());
-   _sntprintf(lon, 32, _T("%f"), m_geoLocation.getLongitude());
-
-   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
-   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_status);
-   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)(m_isDeleted ? 1 : 0));
-   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)(m_inheritAccessRights ? 1 : 0));
-   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_timestamp);
-   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_statusCalcAlg);
-   DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_statusPropAlg);
-   DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_fixedStatus);
-   DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_statusShift);
-   DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, szTranslation, DB_BIND_STATIC);
-   DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (LONG)m_statusSingleThreshold);
-   DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, szThresholds, DB_BIND_STATIC);
-   DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_comments, DB_BIND_STATIC);
-   DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (LONG)(m_isSystem ? 1 : 0));
-   DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getType());
-   DBBind(hStmt, 16, DB_SQLTYPE_VARCHAR, lat, DB_BIND_STATIC);
-   DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, lon, DB_BIND_STATIC);
-   DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getAccuracy());
-   DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
-   DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_guid);
-   DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_mapImage);
-   DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_drilldownObjectId);
-   DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_postalAddress.getCountry(), DB_BIND_STATIC);
-   DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_postalAddress.getRegion(), DB_BIND_STATIC);
-   DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_postalAddress.getCity(), DB_BIND_STATIC);
-   DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_postalAddress.getDistrict(), DB_BIND_STATIC);
-   DBBind(hStmt, 27, DB_SQLTYPE_VARCHAR, m_postalAddress.getStreetAddress(), DB_BIND_STATIC);
-   DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, m_postalAddress.getPostCode(), DB_BIND_STATIC);
-   DBBind(hStmt, 29, DB_SQLTYPE_BIGINT, m_maintenanceEventId);
-   DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_stateBeforeMaintenance);
-   DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_state);
-   DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_flags);
-   DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_creationTime));
-   DBBind(hStmt, 34, DB_SQLTYPE_INTEGER, m_maintenanceInitiator);
-   DBBind(hStmt, 35, DB_SQLTYPE_VARCHAR, m_alias, DB_BIND_STATIC);
-   DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, m_nameOnMap, DB_BIND_STATIC);
-   DBBind(hStmt, 37, DB_SQLTYPE_INTEGER, m_categoryId);
-   DBBind(hStmt, 38, DB_SQLTYPE_TEXT, m_commentsSource, DB_BIND_STATIC);
-   DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_assetId);
-   DBBind(hStmt, 40, DB_SQLTYPE_INTEGER, m_id);
-
-   success = DBExecute(hStmt);
-   DBFreeStatement(hStmt);
-   if (success)
-   {
-      m_savedStatus = m_status;
-      m_savedState = m_state;
-   }
-
-   // Save dashboard associations
-   if (success && (m_modified & MODIFY_DASHBOARD_LIST))
-   {
-      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dashboard_associations WHERE object_id=?"));
-      if (success && !m_dashboards.isEmpty())
-      {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO dashboard_associations (object_id,dashboard_id) VALUES (?,?)"), true);
-         if (hStmt != nullptr)
-         {
-            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            for(int i = 0; (i < m_dashboards.size()) && success; i++)
-            {
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dashboards.get(i));
-               success = DBExecute(hStmt);
-            }
-            DBFreeStatement(hStmt);
-         }
-         else
-         {
-            success = false;
-         }
-      }
-   }
-
-   // Save URL associations
-   if (success && (m_modified & MODIFY_OBJECT_URLS))
-   {
-      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM object_urls WHERE object_id=?"));
-      if (success && !m_urls.isEmpty())
-      {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO object_urls (object_id,url_id,url,description) VALUES (?,?,?,?)"), true);
-         if (hStmt != nullptr)
-         {
-            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            for(int i = 0; (i < m_urls.size()) && success; i++)
-            {
-               const ObjectUrl *url = m_urls.get(i);
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, url->getId());
-               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, url->getUrl(), DB_BIND_STATIC);
-               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, url->getDescription(), DB_BIND_STATIC);
-               success = DBExecute(hStmt);
-            }
-            DBFreeStatement(hStmt);
-         }
-         else
-         {
-            success = false;
-         }
-      }
-   }
-
-   unlockProperties();
-
-   if (success)
-      success = saveTrustedObjects(hdb);
-
    // Save responsible users
    if (success && (m_modified & MODIFY_RESPONSIBLE_USERS))
    {
@@ -407,7 +271,7 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
       lockResponsibleUsersList();
       if (success && (m_responsibleUsers != nullptr) && !m_responsibleUsers->isEmpty())
       {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO responsible_users (object_id,user_id,tag) VALUES (?,?,?)"), m_responsibleUsers->size() > 1);
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO responsible_users (object_id,user_id,tag) VALUES (?,?,?)"), m_responsibleUsers->size() > 1);
          if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -427,6 +291,146 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
       }
       unlockResponsibleUsersList();
    }
+
+   if (success && (m_modified & MODIFY_COMMON_PROPERTIES))
+   {
+      static const TCHAR *columns[] = {
+         _T("name"), _T("status"), _T("is_deleted"), _T("inherit_access_rights"), _T("last_modified"), _T("status_calc_alg"),
+         _T("status_prop_alg"), _T("status_fixed_val"), _T("status_shift"), _T("status_translation"), _T("status_single_threshold"),
+         _T("status_thresholds"), _T("comments"), _T("is_system"), _T("location_type"), _T("latitude"), _T("longitude"),
+         _T("location_accuracy"), _T("location_timestamp"), _T("guid"), _T("map_image"), _T("drilldown_object_id"), _T("country"),
+         _T("region"), _T("city"), _T("district"), _T("street_address"), _T("postcode"), _T("maint_event_id"),
+         _T("state_before_maint"), _T("state"), _T("flags"), _T("creation_time"), _T("maint_initiator"), _T("alias"),
+         _T("name_on_map"), _T("category"), _T("comments_source"), _T("asset_id"), nullptr
+      };
+
+      DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_properties"), _T("object_id"), m_id, columns);
+      if (hStmt != nullptr)
+      {
+         lockProperties();
+
+         TCHAR szTranslation[16], szThresholds[16], lat[32], lon[32];
+         for(int i = 0, j = 0; i < 4; i++, j += 2)
+         {
+            _sntprintf(&szTranslation[j], 16 - j, _T("%02X"), (BYTE)m_statusTranslation[i]);
+            _sntprintf(&szThresholds[j], 16 - j, _T("%02X"), (BYTE)m_statusThresholds[i]);
+         }
+         _sntprintf(lat, 32, _T("%f"), m_geoLocation.getLatitude());
+         _sntprintf(lon, 32, _T("%f"), m_geoLocation.getLongitude());
+
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_status);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)(m_isDeleted ? 1 : 0));
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)(m_inheritAccessRights ? 1 : 0));
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_timestamp);
+         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_statusCalcAlg);
+         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_statusPropAlg);
+         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_fixedStatus);
+         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_statusShift);
+         DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, szTranslation, DB_BIND_STATIC);
+         DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (LONG)m_statusSingleThreshold);
+         DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, szThresholds, DB_BIND_STATIC);
+         DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_comments, DB_BIND_STATIC);
+         DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (LONG)(m_isSystem ? 1 : 0));
+         DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getType());
+         DBBind(hStmt, 16, DB_SQLTYPE_VARCHAR, lat, DB_BIND_STATIC);
+         DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, lon, DB_BIND_STATIC);
+         DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getAccuracy());
+         DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
+         DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_guid);
+         DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_mapImage);
+         DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_drilldownObjectId);
+         DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_postalAddress.getCountry(), DB_BIND_STATIC);
+         DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_postalAddress.getRegion(), DB_BIND_STATIC);
+         DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_postalAddress.getCity(), DB_BIND_STATIC);
+         DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_postalAddress.getDistrict(), DB_BIND_STATIC);
+         DBBind(hStmt, 27, DB_SQLTYPE_VARCHAR, m_postalAddress.getStreetAddress(), DB_BIND_STATIC);
+         DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, m_postalAddress.getPostCode(), DB_BIND_STATIC);
+         DBBind(hStmt, 29, DB_SQLTYPE_BIGINT, m_maintenanceEventId);
+         DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_stateBeforeMaintenance);
+         DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_state);
+         DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_flags);
+         DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_creationTime));
+         DBBind(hStmt, 34, DB_SQLTYPE_INTEGER, m_maintenanceInitiator);
+         DBBind(hStmt, 35, DB_SQLTYPE_VARCHAR, m_alias, DB_BIND_STATIC);
+         DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, m_nameOnMap, DB_BIND_STATIC);
+         DBBind(hStmt, 37, DB_SQLTYPE_INTEGER, m_categoryId);
+         DBBind(hStmt, 38, DB_SQLTYPE_TEXT, m_commentsSource, DB_BIND_STATIC);
+         DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_assetId);
+         DBBind(hStmt, 40, DB_SQLTYPE_INTEGER, m_id);
+
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+         if (success)
+         {
+            m_savedStatus = m_status;
+            m_savedState = m_state;
+         }
+         unlockProperties();
+      }
+      else
+      {
+         success = false;
+      }
+   }
+
+   // Save dashboard associations
+   if (success && (m_modified & MODIFY_DASHBOARD_LIST))
+   {
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dashboard_associations WHERE object_id=?"));
+      if (success && !m_dashboards.isEmpty())
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dashboard_associations (object_id,dashboard_id) VALUES (?,?)"), true);
+         if (hStmt != nullptr)
+         {
+            lockProperties();
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; (i < m_dashboards.size()) && success; i++)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dashboards.get(i));
+               success = DBExecute(hStmt);
+            }
+            unlockProperties();
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+   }
+
+   // Save URL associations
+   if (success && (m_modified & MODIFY_OBJECT_URLS))
+   {
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM object_urls WHERE object_id=?"));
+      if (success && !m_urls.isEmpty())
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO object_urls (object_id,url_id,url,description) VALUES (?,?,?,?)"), true);
+         if (hStmt != nullptr)
+         {
+            lockProperties();
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; (i < m_urls.size()) && success; i++)
+            {
+               const ObjectUrl *url = m_urls.get(i);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, url->getId());
+               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, url->getUrl(), DB_BIND_STATIC);
+               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, url->getDescription(), DB_BIND_STATIC);
+               success = DBExecute(hStmt);
+            }
+            unlockProperties();
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+   }
+
+   if (success)
+      success = saveTrustedObjects(hdb);
 
    return success ? saveModuleData(hdb) : false;
 }
