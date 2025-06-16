@@ -196,6 +196,7 @@
 #define EVENT_AP_UNKNOWN                            142
 #define EVENT_RESPONSIBLE_USER_ADDED                145
 #define EVENT_RESPONSIBLE_USER_REMOVED              146
+#define EVENT_RESPONSIBLE_USER_MODIFIED             147
 
 #define EVENT_SNMP_UNMATCHED_TRAP                   500
 #define EVENT_SNMP_COLD_START                       501
