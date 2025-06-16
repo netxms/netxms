@@ -3426,12 +3426,15 @@ void NetObj::setResponsibleUsers(StructArray<ResponsibleUser> *responsibleUsers,
       {
          const ResponsibleUser *newUser = responsibleUsers->get(i);
          bool found = false;
+         bool changed = false;
          for(int j = 0; j < m_responsibleUsers->size(); j++)
          {
             const ResponsibleUser *oldUser = m_responsibleUsers->get(j);
             if (oldUser->userId == newUser->userId)
             {
                found = true;
+               if (wcscmp(oldUser->tag, newUser->tag))
+                  changed = true;
                break;
             }
          }
@@ -3441,6 +3444,20 @@ void NetObj::setResponsibleUsers(StructArray<ResponsibleUser> *responsibleUsers,
             ResolveUserId(newUser->userId, userName, true);
             nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 4, L"New responsible user %s [%u] tag=%s on object %s [%u]", userName, newUser->userId, newUser->tag, m_name, m_id);
             EventBuilder(EVENT_RESPONSIBLE_USER_ADDED, g_dwMgmtNode)
+               .param(L"userId", newUser->userId, EventBuilder::OBJECT_ID_FORMAT)
+               .param(L"userName", userName)
+               .param(L"tag", newUser->tag)
+               .param(L"objectId", m_id, EventBuilder::OBJECT_ID_FORMAT)
+               .param(L"objectName", m_name)
+               .param(L"operator", (session != nullptr) ? ResolveUserId(session->getUserId(), operatorName, true) : L"system")
+               .post();
+         }
+         else if (changed)
+         {
+            wchar_t userName[MAX_USER_NAME], operatorName[MAX_USER_NAME];
+            ResolveUserId(newUser->userId, userName, true);
+            nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 4, L"New responsible user %s [%u] tag=%s on object %s [%u]", userName, newUser->userId, newUser->tag, m_name, m_id);
+            EventBuilder(EVENT_RESPONSIBLE_USER_MODIFIED, g_dwMgmtNode)
                .param(L"userId", newUser->userId, EventBuilder::OBJECT_ID_FORMAT)
                .param(L"userName", userName)
                .param(L"tag", newUser->tag)
