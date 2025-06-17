@@ -753,21 +753,23 @@ AC_ARG_WITH(openssl,
 	fi
 ])
 
-AC_ARG_WITH(pcre,
-[AS_HELP_STRING(--with-pcre,specify PCRE location)],
-[
-	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno"; then
-		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-		LDFLAGS="$LDFLAGS -L${withval}/lib"
-		CPPFLAGS="$CPPFLAGS -I${withval}/include"
-	fi
-])
-
 AC_ARG_WITH(bundled-openssl,
 [AS_HELP_STRING(--with-bundled-openssl,use bundled OpenSSL libraries with product-specific prefix)],
 [
 	OPENSSL_LIBSSL="nxssl"
 	OPENSSL_LIBCRYPTO="nxcrypto"
+])
+
+AC_ARG_WITH(pcre2,
+[AS_HELP_STRING(--with-pcre2,specify PCRE2 location)],
+[
+	if test "x$withval" != "xno" ; then
+		if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+			LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+			LDFLAGS="$LDFLAGS -L${withval}/lib"
+			CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		fi
+	fi
 ])
 
 AC_ARG_ENABLE(ssh,
@@ -3669,28 +3671,34 @@ fi
 
 
 #--------------------------------------------------------------------
-# PCRE
+# PCRE2
 #--------------------------------------------------------------------
 
 if test "x$DIST_BUILD" != "xyes"; then
-	AC_CHECK_HEADER(pcre.h,
+	AC_CHECK_HEADER(pcre2.h,
 		[
-			AC_DEFINE(HAVE_PCRE_H, 1, [Define to 1 if you have the <pcre.h> header file.])
+			AC_DEFINE(HAVE_PCRE2_H, 1, [Define to 1 if you have the <pcre2.h> header file.])
 		],
 		[
-			AC_CHECK_HEADER(pcre/pcre.h,
+			AC_CHECK_HEADER(pcre2/pcre2.h,
 				[
-					AC_DEFINE(HAVE_PCRE_PCRE_H, 1, [Define to 1 if you have the <pcre/pcre.h> header file.])
+					AC_DEFINE(HAVE_PCRE2_PCRE2_H, 1, [Define to 1 if you have the <pcre2/pcre2.h> header file.])
 				],
 				[
-					AC_MSG_ERROR([Cannot find pcre.h - check your PCRE installation])
+					AC_MSG_ERROR([Cannot find pcre2.h - check your PCRE2 installation])
+				],
+				[
+					#define PCRE2_CODE_UNIT_WIDTH 8
 				])
+		],
+		[
+			#define PCRE2_CODE_UNIT_WIDTH 8
 		])
-	AC_CHECK_LIB(pcre, pcre_compile, [PCRE_LIBS="-lpcre"], [AC_MSG_ERROR(libpcre is requred)])
+	AC_CHECK_LIB(pcre2-8, pcre2_compile_8, [PCRE_LIBS="-lpcre2-8"], [AC_MSG_ERROR(libpcre2-8 is required)])
 	if test $ac_cv_sizeof_wchar_t -eq 2; then
-		AC_CHECK_LIB(pcre16, pcre16_compile, [PCRE_LIBS="$PCRE_LIBS -lpcre16"], [AC_MSG_ERROR(libpcre16 is requred)])
+		AC_CHECK_LIB(pcre2-16, pcre2_compile_16, [PCRE_LIBS="$PCRE_LIBS -lpcre2-16"], [AC_MSG_ERROR(libpcre2-16 is required)])
 	else
-		AC_CHECK_LIB(pcre32, pcre32_compile, [PCRE_LIBS="$PCRE_LIBS -lpcre32"], [AC_MSG_ERROR(libpcre32 is requred)])
+		AC_CHECK_LIB(pcre2-32, pcre2_compile_32, [PCRE_LIBS="$PCRE_LIBS -lpcre2-32"], [AC_MSG_ERROR(libpcre2-32 is required)])
 	fi
 fi
 
