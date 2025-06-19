@@ -23,7 +23,6 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.dashboards.widgets.DashboardControl;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -126,62 +125,8 @@ public class ElementCreationMenuManager extends MenuManager
          @Override
          public void run()
          {
-            handler.elementCreated(new DashboardElement(type, getDefaultElementConfig(type), 0));
+            handler.elementCreated(new DashboardElement(type, "{}", 0));
          }
       });
-   }
-
-   /**
-    * Get default configuration for given element type.
-    *
-    * @param type element type
-    * @return default configuration
-    */
-   private static String getDefaultElementConfig(int type)
-   {
-      switch(type)
-      {
-         case DashboardElement.BAR_CHART:
-         case DashboardElement.PIE_CHART:
-         case DashboardElement.TUBE_CHART:
-         case DashboardElement.SCRIPTED_BAR_CHART:
-         case DashboardElement.SCRIPTED_PIE_CHART:
-            return DashboardControl.DEFAULT_CHART_CONFIG;
-         case DashboardElement.LINE_CHART:
-            return DashboardControl.DEFAULT_LINE_CHART_CONFIG;
-         case DashboardElement.DIAL_CHART:
-            return DashboardControl.DEFAULT_DIAL_CHART_CONFIG;
-         case DashboardElement.AVAILABLITY_CHART:
-            return DashboardControl.DEFAULT_AVAILABILITY_CHART_CONFIG;
-         case DashboardElement.TABLE_BAR_CHART:
-         case DashboardElement.TABLE_PIE_CHART:
-         case DashboardElement.TABLE_TUBE_CHART:
-            return DashboardControl.DEFAULT_TABLE_CHART_CONFIG;
-         case DashboardElement.LABEL:
-            return DashboardControl.DEFAULT_LABEL_CONFIG;
-         case DashboardElement.ALARM_VIEWER:
-         case DashboardElement.EVENT_MONITOR:
-         case DashboardElement.FILE_MONITOR:
-         case DashboardElement.SYSLOG_MONITOR:
-         case DashboardElement.SNMP_TRAP_MONITOR:
-         case DashboardElement.STATUS_INDICATOR:
-         case DashboardElement.STATUS_MAP:
-         case DashboardElement.DASHBOARD:
-         case DashboardElement.RACK_DIAGRAM:
-            return DashboardControl.DEFAULT_OBJECT_REFERENCE_CONFIG;
-         case DashboardElement.NETWORK_MAP:
-         case DashboardElement.SERVICE_COMPONENTS:
-            return DashboardControl.DEFAULT_NETWORK_MAP_CONFIG;
-         case DashboardElement.GEO_MAP:
-            return DashboardControl.DEFAULT_GEO_MAP_CONFIG;
-         case DashboardElement.WEB_PAGE:
-            return DashboardControl.DEFAULT_WEB_PAGE_CONFIG;
-         case DashboardElement.TABLE_VALUE:
-            return DashboardControl.DEFAULT_TABLE_VALUE_CONFIG;
-         case DashboardElement.DCI_SUMMARY_TABLE:
-            return DashboardControl.DEFAULT_SUMMARY_TABLE_CONFIG;
-         default:
-            return "<element>\n</element>";
-      }
    }
 }

@@ -61,19 +61,6 @@ public class DashboardControl extends Composite
 {
    private static final Logger logger = LoggerFactory.getLogger(DashboardControl.class);
 
-   public static final String DEFAULT_CHART_CONFIG = "<element>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>";
-   public static final String DEFAULT_LINE_CHART_CONFIG = "<element>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>";
-   public static final String DEFAULT_DIAL_CHART_CONFIG = "<element>\n\t<maxValue>100</maxValue>\n\t<yellowZone>70</yellowZone>\n\t<redZone>90</redZone>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>";
-   public static final String DEFAULT_AVAILABILITY_CHART_CONFIG = "<element>\n\t<objectId>9</objectId>\n</element>";
-   public static final String DEFAULT_TABLE_CHART_CONFIG = "<element>\n\t<nodeId>0</nodeId>\n\t<dciId>0</dciId>\n\t<dataColumn>DATA</dataColumn>\n</element>";
-   public static final String DEFAULT_OBJECT_REFERENCE_CONFIG = "<element>\n\t<objectId>0</objectId>\n</element>";
-   public static final String DEFAULT_LABEL_CONFIG = "<element>\n\t<title>Label</title>\n</element>";
-   public static final String DEFAULT_NETWORK_MAP_CONFIG = "<element>\n\t<objectId>0</objectId>\n\t<title></title>\n</element>";
-   public static final String DEFAULT_GEO_MAP_CONFIG = "<element>\n\t<latitude>0</latitude>\n\t<longitude>0</longitude>\n\t<zoom>8</zoom>\t<title></title>\n</element>";
-   public static final String DEFAULT_WEB_PAGE_CONFIG = "<element>\n\t<url>http://</url>\n\t<title></title>\n</element>";
-   public static final String DEFAULT_TABLE_VALUE_CONFIG = "<element>\n\t<objectId>0</objectId>\n\t<dciId>0</dciId>\n\t<title></title>\n</element>";
-   public static final String DEFAULT_SUMMARY_TABLE_CONFIG = "<element>\n\t<baseObjectId>0</baseObjectId>\n\t<tableId>0</tableId>\n</element>";
-
    private final I18n i18n = LocalizationHelper.getI18n(DashboardControl.class);
 
 	private Dashboard dashboard;
