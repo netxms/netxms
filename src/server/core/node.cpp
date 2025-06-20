@@ -13343,6 +13343,7 @@ json_t *Node::toJson()
    json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
    json_object_set_new(root, "primaryName", json_string_t(m_primaryHostName));
    json_object_set_new(root, "tunnelId", m_tunnelId.toJson());
+   json_object_set_new(root, "capabilityFlags", json_integer(m_capabilities));
    json_object_set_new(root, "stateFlags", json_integer(m_state));
    json_object_set_new(root, "type", json_integer(m_type));
    json_object_set_new(root, "subType", json_string_t(m_subType));

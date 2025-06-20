@@ -197,6 +197,7 @@ json_t *Sensor::toJson()
    json_object_set_new(root, "deviceAddress", json_string_t(m_deviceAddress));
    json_object_set_new(root, "gatewayNode", json_integer(m_gatewayNodeId));
    json_object_set_new(root, "modbusUnitId", json_integer(m_modbusUnitId));
+   json_object_set_new(root, "capabilityFlags", json_integer(m_capabilities));
    unlockProperties();
 
    return root;
