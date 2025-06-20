@@ -74,6 +74,9 @@ public class Inventory extends TableElement
             break;
          case AbstractObject.OBJECT_INTERFACE:
             Interface iface = (Interface)object;
+            AbstractNode parentNode = iface.getParentNode();
+            if (parentNode != null)
+               addPair(i18n.tr("Parent node"), parentNode.getObjectName());
             Interface parentIface = iface.getParentInterface();
             if (parentIface != null)
                addPair(i18n.tr("Parent interface"), parentIface.getObjectName());
