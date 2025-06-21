@@ -3,6 +3,73 @@ info:
   title: NetXMS API
   version: 1.0.0
 paths:
+  /:
+    get:
+      summary: Root endpoint
+      description: Root API endpoint providing basic API information.
+      responses:
+        '200':
+          description: API root information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: API name
+                  version:
+                    type: string
+                    description: API version
+      security: []
+  /server-info:
+    get:
+      summary: Get server information
+      description: Retrieve detailed server information including version, build, and configuration details.
+      responses:
+        '200':
+          description: Server information retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version:
+                    type: string
+                    description: Server version
+                  build:
+                    type: string
+                    description: Build information
+                  serverTime:
+                    type: string
+                    format: date-time
+                    description: Current server time
+        '401':
+          description: Unauthorized
+      security:
+        - BearerAuth: []
+  /status:
+    get:
+      summary: Get server status
+      description: Retrieve current server status and health information.
+      responses:
+        '200':
+          description: Server status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: Server status
+                  uptime:
+                    type: integer
+                    description: Server uptime in seconds
+        '401':
+          description: Unauthorized
+      security:
+        - BearerAuth: []
   /alarms:
     get:
       summary: List Alarms
@@ -514,6 +581,70 @@ paths:
                     description: Failure reason
       security:
         - BearerAuth: []
+  /objects/{object-id}/data-collection/{dci-id}/history:
+    get:
+      summary: Get data collection history
+      description: Retrieve historical data for a specific DCI (Data Collection Item).
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: Object ID
+        - name: dci-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: DCI (Data Collection Item) ID
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+            description: Start time for data retrieval
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+            description: End time for data retrieval
+        - name: maxDataPoints
+          in: query
+          schema:
+            type: integer
+            description: Maximum number of data points to return
+      responses:
+        '200':
+          description: Data collection history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dciId:
+                    type: integer
+                    description: DCI ID
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        timestamp:
+                          type: string
+                          format: date-time
+                        value:
+                          type: string
+                          description: Data value
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object or DCI with given ID does not exist
+      security:
+        - BearerAuth: []
 
   /objects/{object-id}/set-maintenance:
     post:
@@ -726,6 +857,109 @@ paths:
                       type: string
                     filter:
                       type: string
+      security:
+        - BearerAuth: []
+  /dci-summary-tables:
+    get:
+      summary: List DCI summary tables
+      description: Retrieve a list of available DCI summary tables.
+      responses:
+        '200':
+          description: DCI summary tables retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: Summary table ID
+                    name:
+                      type: string
+                      description: Summary table name
+                    description:
+                      type: string
+                      description: Summary table description
+        '401':
+          description: Unauthorized
+      security:
+        - BearerAuth: []
+  /dci-summary-tables/{table-id}/query:
+    post:
+      summary: Query specific DCI summary table
+      description: Execute a query on a specific DCI summary table.
+      parameters:
+        - name: table-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: Summary table ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rootObjectId:
+                  type: integer
+                  description: Root object ID for table query
+                filters:
+                  type: object
+                  description: Optional filters to apply to the query
+      responses:
+        '200':
+          description: Summary table query executed successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  description: Summary table row data
+        '401':
+          description: Unauthorized
+        '404':
+          description: Summary table with given ID does not exist
+      security:
+        - BearerAuth: []
+  /dci-summary-tables/adhoc-query:
+    post:
+      summary: Execute ad-hoc DCI summary table query
+      description: Execute an ad-hoc query on DCI summary tables.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+                  description: Ad-hoc query string
+                rootObjectId:
+                  type: integer
+                  description: Root object ID for table query
+                parameters:
+                  type: object
+                  description: Query parameters
+      responses:
+        '200':
+          description: Ad-hoc query executed successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  description: Query result row data
+        '400':
+          description: Invalid query
+        '401':
+          description: Unauthorized
       security:
         - BearerAuth: []
 components:
