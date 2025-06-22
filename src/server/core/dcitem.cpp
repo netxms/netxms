@@ -1804,6 +1804,90 @@ void DCItem::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId, cons
 }
 
 /**
+ * Put last value into JSON object
+ */
+json_t *DCItem::lastValueToJSON()
+{
+   json_t *data = json_object();
+
+   lock();
+   json_object_set_new(data, "ownerId", json_integer(m_ownerId));
+   json_object_set_new(data, "id", json_integer(m_id));
+   json_object_set_new(data, "name", json_string_t(m_name));
+   json_object_set_new(data, "flags", json_integer(m_flags));
+   json_object_set_new(data, "description", json_string_t(m_description));
+   json_object_set_new(data, "sourceType", json_integer(m_source));
+
+   if (m_cacheSize > 0)
+   {
+      json_object_set_new(data, "dataType", json_integer(getTransformedDataType()));
+      json_object_set_new(data, "value", json_string_t(m_ppValueCache[0]->getString()));
+      json_object_set_new(data, "timestamp", json_integer(m_ppValueCache[0]->getTimeStamp()));
+   }
+   else
+   {
+      json_object_set_new(data, "dataType", json_integer(DCI_DT_NULL));
+      json_object_set_new(data, "value", json_string(""));
+      json_object_set_new(data, "timestamp", json_integer(0));
+   }
+
+   // Show resource-bound DCIs as inactive if cluster resource is not on this node
+   json_object_set_new(data, "status", json_integer(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED));
+   json_object_set_new(data, "type", json_integer(getType()));
+   json_object_set_new(data, "errorCount", json_integer(m_errorCount));
+   json_object_set_new(data, "templateItemId", json_integer(m_templateItemId));
+   json_object_set_new(data, "unitName", json_string_t(m_unitName));
+   json_object_set_new(data, "multiplier", json_integer(m_multiplier));
+   json_object_set_new(data, "noValue", json_boolean(!hasValue()));
+   json_object_set_new(data, "comments", json_string_t(m_comments));
+   json_object_set_new(data, "anomalyDetected", json_boolean(m_anomalyDetected));
+   json_object_set_new(data, "userTag", json_string_t(m_userTag));
+
+   if (m_thresholds != nullptr)
+   {
+      int mostCritical = -1;
+      int severity = STATUS_NORMAL;
+      for(int i = 0; i < m_thresholds->size(); i++)
+      {
+         if (m_thresholds->get(i)->isReached())
+         {
+            if (!(m_flags & DCF_ALL_THRESHOLDS))
+            {
+               mostCritical = i;
+               break;
+            }
+
+            int currSeverity = m_thresholds->get(i)->getCurrentSeverity();
+            if (currSeverity > severity)
+            {
+               severity = currSeverity;
+               mostCritical = i;
+               if (severity == STATUS_CRITICAL)
+                  break;
+            }
+         }
+      }
+
+      if (mostCritical != -1)
+      {
+         json_object_set_new(data, "hasActiveThreshold", json_boolean(true));
+         json_object_set_new(data, "threshold", m_thresholds->get(mostCritical)->toJson());
+      }
+      else
+      {
+         json_object_set_new(data, "hasActiveThreshold", json_boolean(false));
+      }
+   }
+   else
+   {
+      json_object_set_new(data, "hasActiveThreshold", json_boolean(false));
+   }
+
+   unlock();
+   return data;
+}
+
+/**
  * Get item's last value for use in NXSL
  */
 NXSL_Value *DCItem::getRawValueForNXSL(NXSL_VM *vm)
