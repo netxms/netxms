@@ -581,6 +581,45 @@ paths:
                     description: Failure reason
       security:
         - BearerAuth: []
+  /objects/{object-id}/data-collection/current-values:
+    get:
+      summary: Get current DCI values
+      description: Retrieve current values for all data collection items (DCIs) of a given object.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: Object ID
+      responses:
+        '200':
+          description: Current DCI values retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  objectId:
+                    type: integer
+                    description: Object ID
+                  objectName:
+                    type: string
+                    description: Object name
+                  values:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DCIValue'
+        '400':
+          description: Object is not data collection target
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
   /objects/{object-id}/data-collection/{dci-id}/history:
     get:
       summary: Get data collection history
@@ -1122,6 +1161,73 @@ components:
         - 6
         - 7
         - 8
+    DCIValue:
+      type: object
+      description: Data Collection Item (DCI) current value
+      properties:
+        ownerId:
+          type: integer
+          description: Object ID that owns this DCI
+        id:
+          type: integer
+          description: DCI ID
+        name:
+          type: string
+          description: DCI name
+        flags:
+          type: integer
+          description: DCI flags
+        description:
+          type: string
+          description: DCI description
+        sourceType:
+          type: integer
+          description: Data source type
+        dataType:
+          type: integer
+          description: Data type
+        value:
+          type: string
+          description: Current value as string
+        timestamp:
+          type: integer
+          description: Timestamp of last value collection (Unix timestamp)
+        status:
+          type: integer
+          description: Current DCI status
+        type:
+          type: integer
+          description: DCI type
+        errorCount:
+          type: integer
+          description: Number of consecutive collection errors
+        templateItemId:
+          type: integer
+          description: Template item ID if DCI is created from template
+        unitName:
+          type: string
+          description: Unit name for the value
+        multiplier:
+          type: integer
+          description: Value multiplier
+        noValue:
+          type: boolean
+          description: True if DCI has no collected value
+        comments:
+          type: string
+          description: DCI comments
+        anomalyDetected:
+          type: boolean
+          description: True if anomaly was detected in recent values
+        userTag:
+          type: string
+          description: User-defined tag
+        hasActiveThreshold:
+          type: boolean
+          description: True if DCI has active threshold
+        threshold:
+          type: object
+          description: Active threshold information (present only if hasActiveThreshold is true)
   securitySchemes:
     BearerAuth:
       type: http
