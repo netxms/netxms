@@ -923,6 +923,11 @@ unique_ptr<ObjectArray<AssetPropertyAutofillContext>> PrepareAssetPropertyAutofi
          SharedString newValue;
          switch (a->value->getSystemType())
          {
+            case AMSystemType::MacAddress:
+            case AMSystemType::None:
+            case AMSystemType::Serial:
+               // Those system types are not intended to be autofilled
+               break;
             case AMSystemType::IPAddress:
                if (linkedObject->getObjectClass() == OBJECT_NODE && static_pointer_cast<Node>(linkedObject)->getIpAddress().isValid())
                {
