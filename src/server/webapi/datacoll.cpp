@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2023 Raden Solutions
+** Copyright (C) 2023-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -226,6 +226,7 @@ int H_DataCollectionHistory(Context *context)
    }
 
    context->setResponseData(response);
+   json_decref(response);
    return 200;
 }
 
@@ -261,5 +262,6 @@ int H_DataCollectionCurrentValues(Context *context)
    json_object_set_new(response, "values", values);
 
    context->setResponseData(response);
+   json_decref(response);
    return 200;
 }
