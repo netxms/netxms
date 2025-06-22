@@ -923,14 +923,10 @@ unique_ptr<ObjectArray<AssetPropertyAutofillContext>> PrepareAssetPropertyAutofi
          SharedString newValue;
          switch (a->value->getSystemType())
          {
-            case AMSystemType::None:
-               nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 1, _T("PrepareAssetPropertyAutofill: unexpected AMSystemType::None for property %s"), a->key);
-               break;
-            case AMSystemType::Serial:
-               nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 1, _T("PrepareAssetPropertyAutofill: unexpected AMSystemType::Serial for property %s"), a->key);
-               break;
             case AMSystemType::MacAddress:
-               nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 1, _T("PrepareAssetPropertyAutofill: unexpected AMSystemType::MacAddress for property %s"), a->key);
+            case AMSystemType::None:
+            case AMSystemType::Serial:
+               // Those system types are not intended to be autofilled
                break;
             case AMSystemType::IPAddress:
                if (linkedObject->getObjectClass() == OBJECT_NODE && static_pointer_cast<Node>(linkedObject)->getIpAddress().isValid())
