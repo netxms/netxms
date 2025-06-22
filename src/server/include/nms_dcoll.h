@@ -379,6 +379,7 @@ public:
 
    virtual void fillLastValueSummaryMessage(NXCPMessage *bsg, uint32_t baseId, const TCHAR *column = nullptr, const TCHAR *instance = nullptr) = 0;
    virtual void fillLastValueMessage(NXCPMessage *msg) = 0;
+   virtual json_t *lastValueToJSON() = 0;
 
    shared_ptr<DCObjectInfo> createDescriptor() const;
 
@@ -588,6 +589,8 @@ public:
 
    virtual void fillLastValueSummaryMessage(NXCPMessage *bsg, uint32_t baseId,const TCHAR *column = nullptr, const TCHAR *instance = nullptr) override;
    virtual void fillLastValueMessage(NXCPMessage *msg) override;
+   virtual json_t *lastValueToJSON() override;
+
    NXSL_Value *getValueForNXSL(NXSL_VM *vm, int function, int sampleCount);
    NXSL_Value *getRawValueForNXSL(NXSL_VM *vm);
    const TCHAR *getLastValue();
@@ -858,6 +861,7 @@ public:
 
    virtual void fillLastValueSummaryMessage(NXCPMessage *bsg, uint32_t baseId,const TCHAR *column = nullptr, const TCHAR *instance = nullptr) override;
    virtual void fillLastValueMessage(NXCPMessage *msg) override;
+   virtual json_t *lastValueToJSON() override;
 
    int getColumnDataType(const TCHAR *name) const;
    const ObjectArray<DCTableColumn>& getColumns() const { return *m_columns; }

@@ -2708,7 +2708,7 @@ uint32_t DataCollectionTarget::getDataCollectionSummary(NXCPMessage *msg, bool o
 {
    readLockDciAccess();
 
-   uint32_t fieldId = VID_DCI_VALUES_BASE, dwCount = 0;
+   uint32_t fieldId = VID_DCI_VALUES_BASE, count = 0;
    for(int i = 0; i < m_dcObjects.size(); i++)
    {
       DCObject *object = m_dcObjects.get(i);
@@ -2719,10 +2719,33 @@ uint32_t DataCollectionTarget::getDataCollectionSummary(NXCPMessage *msg, bool o
       {
          static_cast<DCItem*>(object)->fillLastValueSummaryMessage(msg, fieldId);
          fieldId += 50;
-         dwCount++;
+         count++;
       }
    }
-   msg->setField(VID_NUM_ITEMS, dwCount);
+   msg->setField(VID_NUM_ITEMS, count);
+
+   unlockDciAccess();
+   return RCC_SUCCESS;
+}
+
+/**
+ * Get last (current) DCI values.
+ */
+uint32_t DataCollectionTarget::getDataCollectionSummary(json_t *values, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId)
+{
+   readLockDciAccess();
+
+   for(int i = 0; i < m_dcObjects.size(); i++)
+   {
+      DCObject *object = m_dcObjects.get(i);
+      if ((object->hasValue() || includeNoValueObjects) &&
+          (!objectTooltipOnly || object->isShowOnObjectTooltip()) &&
+          (!overviewOnly || object->isShowInObjectOverview()) &&
+          object->hasAccess(userId))
+      {
+         json_array_append_new(values, static_cast<DCItem*>(object)->lastValueToJSON());
+      }
+   }
 
    unlockDciAccess();
    return RCC_SUCCESS;

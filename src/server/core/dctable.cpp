@@ -791,6 +791,25 @@ void DCTable::fillLastValueMessage(NXCPMessage *msg)
 }
 
 /**
+ * Put last value into JSON object
+ */
+json_t *DCTable::lastValueToJSON()
+{
+   json_t *value;
+   lock();
+   if (m_lastValue != nullptr)
+   {
+      value = m_lastValue->toJson();
+   }
+   else
+   {
+      value = json_null();
+   }
+   unlock();
+   return value;
+}
+
+/**
  * Get summary of last collected value (to show along simple DCI values)
  */
 void DCTable::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t fieldId, const TCHAR *column, const TCHAR *instance)

@@ -228,3 +228,38 @@ int H_DataCollectionHistory(Context *context)
    context->setResponseData(response);
    return 200;
 }
+
+/**
+ * Handler for /v1/objects/:object-id/data-collection/current-values
+ * Returns current values for all DCIs of given object
+ */
+int H_DataCollectionCurrentValues(Context *context)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(_T("object-id"));
+   if (objectId == 0)
+      return 400;
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+      return 404;
+
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+      return 403;
+
+   if (!object->isDataCollectionTarget())
+   {
+      context->setErrorResponse("Object is not data collection target");
+      return 400;
+   }
+
+   json_t *response = json_object();
+   json_object_set_new(response, "objectId", json_integer(objectId));
+   json_object_set_new(response, "objectName", json_string_t(object->getName()));
+
+   json_t *values = json_array();
+   static_cast<DataCollectionTarget&>(*object).getDataCollectionSummary(values, false, false, false, context->getUserId());
+   json_object_set_new(response, "values", values);
+
+   context->setResponseData(response);
+   return 200;
+}
