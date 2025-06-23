@@ -1,6 +1,6 @@
-# $Id$
+#  $Id$
 #
-# NetXMS - Network Management System
+#  NetXMS - Network Management System
 # Configure script
 #
 
@@ -757,7 +757,17 @@ AC_ARG_WITH(pcre,
 [AS_HELP_STRING(--with-pcre,specify PCRE location)],
 [
 	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno"; then
-		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+		LDFLAGS="$LDFLAGS -L${withval}/lib"
+		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+	fi
+])
+
+AC_ARG_WITH(pcre2,
+[AS_HELP_STRING(--with-pcre2,specify PCRE2 location)],
+[
+	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno"; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
 		LDFLAGS="$LDFLAGS -L${withval}/lib"
 		CPPFLAGS="$CPPFLAGS -I${withval}/include"
 	fi
@@ -3669,31 +3679,72 @@ fi
 
 
 #--------------------------------------------------------------------
-# PCRE
+# PCRE & PCRE2
 #--------------------------------------------------------------------
+
+HAVE_PCRE="no"
+HAVE_PCRE2="no"
 
 if test "x$DIST_BUILD" != "xyes"; then
 	AC_CHECK_HEADER(pcre.h,
 		[
 			AC_DEFINE(HAVE_PCRE_H, 1, [Define to 1 if you have the <pcre.h> header file.])
+			HAVE_PCRE="yes"
 		],
 		[
 			AC_CHECK_HEADER(pcre/pcre.h,
 				[
 					AC_DEFINE(HAVE_PCRE_PCRE_H, 1, [Define to 1 if you have the <pcre/pcre.h> header file.])
-				],
-				[
-					AC_MSG_ERROR([Cannot find pcre.h - check your PCRE installation])
+					HAVE_PCRE="yes"
 				])
 		])
-	AC_CHECK_LIB(pcre, pcre_compile, [PCRE_LIBS="-lpcre"], [AC_MSG_ERROR(libpcre is requred)])
-	if test $ac_cv_sizeof_wchar_t -eq 2; then
-		AC_CHECK_LIB(pcre16, pcre16_compile, [PCRE_LIBS="$PCRE_LIBS -lpcre16"], [AC_MSG_ERROR(libpcre16 is requred)])
-	else
-		AC_CHECK_LIB(pcre32, pcre32_compile, [PCRE_LIBS="$PCRE_LIBS -lpcre32"], [AC_MSG_ERROR(libpcre32 is requred)])
+	if test "$HAVE_PCRE" = "yes"; then
+		AC_CHECK_LIB(pcre, pcre_compile, [PCRE_LIBS="-lpcre"], [HAVE_PCRE="no"])
+		if test $ac_cv_sizeof_wchar_t -eq 2; then
+			AC_CHECK_LIB(pcre16, pcre16_compile, [PCRE_LIBS="$PCRE_LIBS -lpcre16"], [HAVE_PCRE="no"])
+		else
+			AC_CHECK_LIB(pcre32, pcre32_compile, [PCRE_LIBS="$PCRE_LIBS -lpcre32"], [HAVE_PCRE="no"])
+		fi
 	fi
 fi
 
+if test "x$DIST_BUILD" != "xyes"; then
+	AC_CHECK_HEADER(pcre2.h,
+		[
+			AC_DEFINE(HAVE_PCRE2_H, 1, [Define to 1 if you have the <pcre2.h> header file.])
+			HAVE_PCRE2="yes"
+		],
+		[
+			AC_CHECK_HEADER(pcre2/pcre2.h,
+				[
+					AC_DEFINE(HAVE_PCRE2_PCRE2_H, 1, [Define to 1 if you have the <pcre2/pcre2.h> header file.])
+					HAVE_PCRE2="yes"
+				],
+                [],
+                [
+                    #define PCRE2_CODE_UNIT_WIDTH 8
+                ])
+		],
+        [
+            #define PCRE2_CODE_UNIT_WIDTH 8
+        ])
+	if test "$HAVE_PCRE2" = "yes"; then
+		AC_CHECK_LIB(pcre2-8, pcre2_compile_8, [PCRE2_LIBS="-lpcre2-8"], [HAVE_PCRE2="no"])
+		if test $ac_cv_sizeof_wchar_t -eq 2; then
+			AC_CHECK_LIB(pcre2-16, pcre2_compile_16, [PCRE2_LIBS="$PCRE2_LIBS -lpcre2-16"], [HAVE_PCRE2="no"])
+		else
+			AC_CHECK_LIB(pcre2-32, pcre2_compile_32, [PCRE2_LIBS="$PCRE2_LIBS -lpcre2-32"], [HAVE_PCRE2="no"])
+		fi
+	fi
+fi
+
+if test "$HAVE_PCRE" = "no" -a "$HAVE_PCRE2" = "no"; then
+    AC_MSG_ERROR(Either libpcre or libpcre2 is required)
+fi
+
+if test "$HAVE_PCRE2" = "yes"; then
+	AC_DEFINE(USE_PCRE2, 1, [Define to 1 if PCRE2 is used as regular expression engine])
+fi
 
 #--------------------------------------------------------------------
 # MySQL
@@ -4444,7 +4495,11 @@ else
 fi
 
 LDFLAGS="$LDFLAGS_PREFIX $LDFLAGS $PTHREAD_LDFLAGS $LDFLAGS_SUFFIX"
-LIBS="$LIBS $PCRE_LIBS"
+if test "x$HAVE_PCRE2" = "xyes"; then
+	LIBS="$LIBS $PCRE2_LIBS"
+else
+	LIBS="$LIBS $PCRE_LIBS"
+fi
 if test "x${RELEASE_BUILD}" = "xyes"; then
 	NETXMS_JAR_VERSION="$PACKAGE_VERSION"
 else
