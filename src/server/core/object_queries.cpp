@@ -240,6 +240,22 @@ uint32_t GetObjectQueries(NXCPMessage *msg)
 }
 
 /**
+ * Get all configured object queries
+ */
+json_t *GetObjectQueriesList()
+{
+   json_t *result = json_array();
+   s_objectQueries.forEach([result](ObjectQuery *query) {
+      json_t *queryJson = json_object();
+      json_object_set_new(queryJson, "id", json_integer(query->getId()));
+      json_object_set_new(queryJson, "name", json_string_t(query->getName()));
+      json_array_append_new(result, queryJson);
+      return _CONTINUE;
+   });
+   return result;
+}
+
+/**
  * Create or modify object query from message
  */
 uint32_t ModifyObjectQuery(const NXCPMessage& msg, uint32_t *queryId)

@@ -40,10 +40,13 @@ int H_AlarmTerminate(Context *context);
 int H_Alarms(Context *context);
 int H_DataCollectionCurrentValues(Context *context);
 int H_DataCollectionHistory(Context *context);
+int H_GrafanaDciList(Context *context);
 int H_FindMacAddress(Context *context);
 int H_GrafanaGetAlarms(Context *context);
 int H_GrafanaGetSummaryTable(Context *context);
+int H_GrafanaObjectList(Context *context);
 int H_GrafanaGetObjectQuery(Context *context);
+int H_GrafanaGetObjectsStatus(Context *context);
 int H_Login(Context *context);
 int H_Logout(Context *context);
 int H_ObjectDetails(Context *context);
@@ -55,12 +58,14 @@ int H_ObjectSetManaged(Context *context);
 int H_Objects(Context *context);
 int H_ObjectSearch(Context *context);
 int H_ObjectTools(Context *context);
+int H_GrafanaObjectQueryList(Context *context);
 int H_QueryAdHocSummaryTable(Context *context);
 int H_QuerySummaryTable(Context *context);
 int H_Root(Context *context);
 int H_ServerInfo(Context *context);
 int H_Status(Context *context);
 int H_SummaryTables(Context *context);
+int H_GrafanaSummaryTablesList(Context *context);
 int H_TakeScreenshot(Context *context);
 
 /**
@@ -206,6 +211,21 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/grafana/infinity/summary-table")
       .POST(H_GrafanaGetSummaryTable)
+      .build();
+   RouteBuilder("v1/grafana/objects/:object-id/dci-list")
+      .GET(H_GrafanaDciList)
+      .build();
+   RouteBuilder("v1/grafana/objects-status")
+      .POST(H_GrafanaGetObjectsStatus)
+      .build();
+   RouteBuilder("v1/grafana/object-list")
+      .GET(H_GrafanaObjectList)
+      .build();
+   RouteBuilder("v1/grafana/summary-table-list")
+      .GET(H_GrafanaSummaryTablesList)
+      .build();
+   RouteBuilder("v1/grafana/query-list")
+      .GET(H_GrafanaObjectQueryList)
       .build();
    RouteBuilder("v1/login")
       .POST(H_Login)

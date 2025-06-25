@@ -1530,6 +1530,7 @@ public:
    virtual bool showThresholdSummary() const;
    virtual bool isEventSource() const;
    virtual bool isDataCollectionTarget() const;
+   virtual bool isContainerObject() const;
 
    bool isPollable() const { return m_asPollable != nullptr; }
    Pollable *getAsPollable() { return m_asPollable; }
@@ -1964,7 +1965,7 @@ public:
    shared_ptr<DCObject> getDCObjectByDescription(const WCHAR *description, uint32_t userId) const;
    shared_ptr<DCObject> getDCObjectByTag(const WCHAR *tag, uint32_t userId) const;
    shared_ptr<DCObject> getDCObjectByTagPattern(const WCHAR *tagPattern, uint32_t userId) const;
-   unique_ptr<SharedObjectArray<DCObject>> getAllDCObjects() const;
+   unique_ptr<SharedObjectArray<DCObject>> getAllDCObjects(uint32_t userId = 0) const;
    unique_ptr<SharedObjectArray<DCObject>> getDCObjectsByRegex(const TCHAR *regex, bool searchName, uint32_t userId) const;
    SharedObjectArray<DCObject> getDCObjectsByFilter(std::function<bool (DCObject*)> filter, uint32_t userId = 0) const;
    NXSL_Value *getAllDCObjectsForNXSL(NXSL_VM *vm, const WCHAR *name, const WCHAR *description, const WCHAR *tag, uint32_t userId) const;
@@ -2996,6 +2997,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool showThresholdSummary() const override;
+   virtual bool isContainerObject() const override { return true; }
 
    virtual void enterMaintenanceMode(uint32_t userId, const TCHAR *comments) override;
    virtual void leaveMaintenanceMode(uint32_t userId) override;
@@ -4098,6 +4100,7 @@ public:
 
    virtual int getObjectClass() const override { return OBJECT_SUBNET; }
    virtual InetAddress getPrimaryIpAddress() const override { return getIpAddress(); }
+   virtual bool isContainerObject() const override { return true; }
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
@@ -4167,6 +4170,7 @@ public:
 
    virtual bool showThresholdSummary() const override;
    virtual bool isMaintenanceApplicable() const override { return true; }
+   virtual bool isContainerObject() const override { return true; }
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 };
@@ -4253,6 +4257,7 @@ public:
    shared_ptr<const Container> self() const { return static_pointer_cast<const Container>(NObject::self()); }
 
    virtual int getObjectClass() const override { return OBJECT_CONTAINER; }
+   virtual bool isContainerObject() const override { return true; }
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
@@ -4488,6 +4493,7 @@ public:
 
    virtual bool showThresholdSummary() const override;
    virtual bool isMaintenanceApplicable() const override { return true; }
+   virtual bool isContainerObject() const override { return true; }
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
@@ -4556,6 +4562,7 @@ public:
 
    virtual bool showThresholdSummary() const override;
    virtual bool isMaintenanceApplicable() const override { return true; }
+   virtual bool isContainerObject() const override { return true; }
 
    void loadFromDatabase(DB_HANDLE hdb, DB_STATEMENT *prepartedStatements);
 };
@@ -4837,6 +4844,7 @@ public:
    WirelessControllerBridge *getBridgeInterface() const;
 
    virtual bool isMaintenanceApplicable() const override { return true; }
+   virtual bool isContainerObject() const override { return true; }
 };
 
 /**
@@ -4865,6 +4873,7 @@ public:
    shared_ptr<const Collector> self() const { return static_pointer_cast<const Collector>(NObject::self()); }
 
    virtual int getObjectClass() const override { return OBJECT_COLLECTOR; }
+   virtual bool isContainerObject() const override { return true; }
 
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
@@ -5512,6 +5521,7 @@ public:
    uint32_t fillMessage(NXCPMessage *msg, uint32_t baseId) const;
 
    uint32_t getId() const { return m_id; }
+   const TCHAR *getName() const { return m_name; }
    String getScript() const { return m_source; }
 };
 
@@ -5639,6 +5649,7 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE FindAndExecuteObjec
 uint32_t GetObjectQueries(NXCPMessage *msg);
 uint32_t ModifyObjectQuery(const NXCPMessage& msg, uint32_t *queryId);
 uint32_t DeleteObjectQuery(uint32_t queryId);
+json_t NXCORE_EXPORTABLE *GetObjectQueriesList();
 
 bool LoadObjects();
 void DumpObjects(ServerConsole *console, const TCHAR *filter);

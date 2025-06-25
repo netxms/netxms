@@ -1448,6 +1448,7 @@ uint32_t NXCORE_EXPORTABLE DeleteSummaryTable(uint32_t tableId);
 Table NXCORE_EXPORTABLE *QuerySummaryTable(uint32_t tableId, SummaryTable *adHocDefinition, uint32_t baseObjectId, uint32_t userId, uint32_t *rcc);
 bool CreateSummaryTableExportRecord(uint32_t id, TextFileWriter& xml);
 bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *context, bool nxslV5);
+json_t NXCORE_EXPORTABLE *GetSummaryTablesList();
 
 void FullCommunityListToMessage(uint32_t userId, NXCPMessage *msg);
 void ZoneCommunityListToMessage(int32_t zoneUIN, NXCPMessage *msg);

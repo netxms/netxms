@@ -1177,13 +1177,17 @@ SharedObjectArray<DCObject> DataCollectionOwner::getDCObjectsByFilter(std::funct
 /**
  * Get all data collection objects
  */
-unique_ptr<SharedObjectArray<DCObject>> DataCollectionOwner::getAllDCObjects() const
+unique_ptr<SharedObjectArray<DCObject>> DataCollectionOwner::getAllDCObjects(uint32_t userId) const
 {
    readLockDciAccess();
    auto result = make_unique<SharedObjectArray<DCObject>>(m_dcObjects.size());
    for(int i = 0; i < m_dcObjects.size(); i++)
    {
-      result->add(m_dcObjects.getShared(i));
+      shared_ptr<DCObject> dci = m_dcObjects.getShared(i);
+      if (userId == 0 || dci->hasAccess(userId))
+      {
+         result->add(dci);
+      }
    }
    unlockDciAccess();
    return result;

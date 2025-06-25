@@ -2338,6 +2338,14 @@ bool NetObj::isDataCollectionTarget() const
 }
 
 /**
+ * Must return true if object is a container object
+ */
+bool NetObj::isContainerObject() const
+{
+   return false;
+}
+
+/**
  * Get module data
  */
 ModuleData *NetObj::getModuleData(const TCHAR *module)
