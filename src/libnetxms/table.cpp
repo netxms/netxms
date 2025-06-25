@@ -393,17 +393,25 @@ json_t *Table::toGrafanaJson() const
       json_t *row = json_object();
       for(int j = 0; j < m_columns.size(); j++)
       {
+         TableColumnDefinition *tableRow = m_columns.get(j);
 #ifdef UNICODE
-         char *name = UTF8StringFromWideString(m_columns.get(j)->getDisplayName());
+         char *name = UTF8StringFromWideString(tableRow->getDisplayName());
 #else
-         char *name = UTF8StringFromMBString(m_columns.get(j)->getDisplayName());
+         char *name = UTF8StringFromMBString(tableRow->getDisplayName());
 #endif
-         json_object_set_new(row, name, json_string_t(m_data.get(i)->getValue(j)));
+         if (tableRow->getDataType() != DCI_DT_STRING)
+         {
+            String formattedValue = FormatDCIValue(tableRow->getUnitName(), m_data.get(i)->getValue(j));
+            json_object_set_new(row, name, json_string_t(formattedValue));
+         }
+         else
+         {
+            json_object_set_new(row, name, json_string_t(m_data.get(i)->getValue(j)));
+         }
          MemFree(name);
       }
       json_array_append_new(data, row);
    }
-
    return data;
 }
 

@@ -5156,3 +5156,74 @@ String LIBNETXMS_EXPORTABLE FormatNumber(double n, bool useBinaryMultipliers, in
 
    return String(out);
 }
+
+/**
+ * List of units that should be exempt from multiplication
+ */
+static const TCHAR *s_unitsWithoutMultipliers[] = { _T("%"), _T("°C"), _T("°F"), _T("dbm") };
+
+/**
+ * Format DCI value based on Unit and value.
+ */
+String FormatDCIValue(String unitName, String value)
+{
+   if (value.isEmpty())
+      return String();
+
+   bool useUnits = true;
+   bool useMultiplier = true;
+   StringBuffer units = unitName;
+   bool useBinaryPrefixes = units.containsIgnoreCase(_T(" (IEC)"));
+   units.replace(_T(" (IEC)"), _T(""));
+   units.replace(_T(" (Metric)"), _T(""));
+
+   for (size_t i = 0; useMultiplier && !units.isEmpty() && i < sizeof(s_unitsWithoutMultipliers) / sizeof(TCHAR*); i++)
+   {
+      if (!_tcscmp(s_unitsWithoutMultipliers[i], units))
+      {
+         useMultiplier = false;
+         break;
+      }
+   }
+
+   if (useUnits && !_tcsicmp(unitName, _T("Uptime")))
+   {
+      TCHAR *eptr;
+      uint64_t time = _tcstoull(value, &eptr, 10);
+      return (*eptr != 0) ? String(value) : SecondsToUptime(time, true);
+   }
+
+   if (useUnits && !_tcsicmp(unitName, _T("Epoch time")))
+   {
+      TCHAR *eptr;
+      time_t time = static_cast<time_t>(_tcstoll(value, &eptr, 10));
+      return (*eptr != 0) ? String(value) : FormatTimestamp(time);
+   }
+
+   TCHAR *eptr;
+   double inVal = _tcstod(value, &eptr);
+   if (*eptr != 0)
+      return String(value);
+
+   StringBuffer result;
+   TCHAR prefixSymbol[8] = _T("");
+   if (useMultiplier)
+   {
+      result.append(FormatNumber(inVal, useBinaryPrefixes, 0, 2));
+   }
+   else
+   {
+      result.append(value);
+   }
+
+   if (useUnits && !units.isEmpty())
+   {
+      if (*prefixSymbol == 0)
+         result.append(_T(" "));
+      result.append(units);
+   }
+
+   return result;
+}
+
+

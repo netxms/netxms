@@ -24,6 +24,47 @@
 #define SELECTION_COLUMNS (historicalDataType != HDT_RAW) ? tablePrefix : _T(""), (historicalDataType == HDT_RAW_AND_PROCESSED) ? _T("_value,raw_value") : ((historicalDataType == HDT_PROCESSED) || (historicalDataType == HDT_FULL_TABLE)) ?  _T("_value") : _T("raw_value")
 
 /**
+ * Handler for /v1/objects/:object-id/dci-list
+ */
+int H_DciList(Context *context)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(_T("object-id"));
+   if (objectId == 0)
+      return 400;
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+      return 404;
+
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+      return 403;
+
+   if (!object->isDataCollectionTarget())
+   {
+      context->setErrorResponse("Object is not data collection target");
+      return 400;
+   }
+   SharedObjectArray<DCObject> dciObjects;
+   static_cast<DataCollectionTarget&>(*object).getDcis(context->getUserId(), &dciObjects);
+
+   json_t *array = json_array();
+   for(int i = 0; i < dciObjects.size(); i++)
+   {
+      json_t *json = json_object();
+      auto object = dciObjects.get(i);
+      json_object_set_new(json, "name", json_string_t(object->getDescription()));
+      json_object_set_new(json, "id", json_integer(object->getId()));
+      json_array_append_new(array, json);
+   }
+
+   json_t *result = json_object();
+   json_object_set_new(result, "objects", array);
+   context->setResponseData(result);
+   json_decref(array);
+   return 200;
+}
+
+/**
  * Prepare statement for reading data from idata/tdata table
  */
 static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, uint32_t nodeId, int dciType, DCObjectStorageClass storageClass,

@@ -6168,6 +6168,7 @@ uuid LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsGUIDA(const char *optString, 
 
 String LIBNETXMS_EXPORTABLE SecondsToUptime(uint64_t arg, bool withSeconds);
 String LIBNETXMS_EXPORTABLE FormatNumber(double n, bool useBinaryMultipliers, int multiplierPower, int precision, const TCHAR *unit = nullptr);
+String LIBNETXMS_EXPORTABLE FormatDCIValue(String unitName, String value);
 
 #ifdef UNICODE
 #define ExtractNamedOptionValue ExtractNamedOptionValueW

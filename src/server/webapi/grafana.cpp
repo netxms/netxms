@@ -45,7 +45,28 @@ static const char *s_stateNames[] =
 };
 
 /**
- * Handler for v1/grafana/alarms
+ * Format object name for Grafana
+ */
+static inline String FormatObjectNameForGrafana(const NetObj *object)
+{
+   StringBuffer buffer;
+   SharedString alias = object->getAlias();
+   if (!alias.isBlank())
+   {
+      buffer.append(object->getName());
+      buffer.append(_T(" ("));
+      buffer.append(alias.cstr());
+      buffer.append(_T(")"));
+   }
+   else
+   {
+      buffer.append(object->getName());
+   }
+   return buffer;
+}
+
+/**
+ * Handler for /v1/grafana/infinity/alarms
  */
 int H_GrafanaGetAlarms(Context *context)
 {
@@ -80,19 +101,7 @@ int H_GrafanaGetAlarms(Context *context)
          json_object_set_new(json, "Id", json_integer(alarm->getAlarmId()));
          json_object_set_new(json, "Severity", json_string(s_severityNames[alarm->getCurrentSeverity()]));
          json_object_set_new(json, "State", json_string(s_stateNames[alarm->getState() & ALARM_STATE_MASK]));
-         SharedString alias = object->getAlias();
-         if(!alias.isBlank())
-         {
-            StringBuffer buffer(object->getName());
-            buffer.append(_T(" ("));
-            buffer.append(alias.cstr());
-            buffer.append(_T(")"));
-            json_object_set_new(json, "Source", json_string_t(buffer));
-         }
-         else
-         {
-            json_object_set_new(json, "Source", json_string_t(object->getName()));
-         }
+         json_object_set_new(json, "Source", json_string_t(FormatObjectNameForGrafana(object.get())));
          json_object_set_new(json, "Message", json_string_t(alarm->getMessage()));
          json_object_set_new(json, "Count", json_integer(alarm->getRepeatCount()));
 
@@ -151,7 +160,8 @@ static int ExecuteSummaryTableQuery(Context *context, uint32_t tableId, uint32_t
    }
 
    nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("ExecuteSummaryTableQuery(id=%u): %d rows in resulting table"), tableId, result->getNumRows());
-   json_t *response = result->toGrafanaJson();
+   json_t *response;
+   response = result->toGrafanaJson();
    context->setResponseData(response);
    json_decref(response);
    delete result;
@@ -159,14 +169,14 @@ static int ExecuteSummaryTableQuery(Context *context, uint32_t tableId, uint32_t
 }
 
 /**
- * Handler for v1/grafana/summary-table
+ * Handler for /v1/grafana/infinity/summary-table
  */
 int H_GrafanaGetSummaryTable(Context *context)
 {
    json_t *request = context->getRequestDocument();
    if (request == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaGetSummaryTable: empty request"));
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaInfinityGetSummaryTable: empty request"));
       return 400;
    }
 
@@ -174,13 +184,13 @@ int H_GrafanaGetSummaryTable(Context *context)
    uint32_t tableId = json_object_get_int32(request, "tableId", 0);
    if (tableId == 0)
    {
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaGetSummaryTable: invalid summary table ID"));
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaInfinityGetSummaryTable: invalid summary table ID"));
       context->setErrorResponse("Invalid summary table ID");
       return 400;
    }
    if (rootId == 0)
    {
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaGetSummaryTable: invalid root object ID"));
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaInfinityGetSummaryTable: invalid root object ID"));
       context->setErrorResponse("Invalid root object ID");
       return 400;
    }
@@ -189,14 +199,14 @@ int H_GrafanaGetSummaryTable(Context *context)
 }
 
 /**
- * Handler for v1/grafana/object-query
+ * Handler for /v1/grafana/infinity/object-query
  */
 int H_GrafanaGetObjectQuery(Context *context)
 {
    json_t *request = context->getRequestDocument();
    if (request == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaGetObjectQuery: empty request"));
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaInfinityGetObjectQuery: empty request"));
       return 400;
    }
 
@@ -210,7 +220,7 @@ int H_GrafanaGetObjectQuery(Context *context)
          nullptr, nullptr, &inputFields, json_object_get_int32(request, "limit"));
    if (objects == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaGetObjectQuery: %s"), errorMessage);
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaInfinityGetObjectQuery: %s"), errorMessage);
       char *utf8Error = UTF8StringFromWideString(errorMessage);
       context->setErrorResponse(utf8Error);
       MemFree(utf8Error);
@@ -228,3 +238,58 @@ int H_GrafanaGetObjectQuery(Context *context)
    json_decref(output);
    return 200;
 }
+
+/**
+ * Handler for /v1/grafana/objects-status
+ */
+int H_GrafanaGetObjectsStatus(Context *context)
+{
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaGetObjectsStatus: empty request"));
+      return 400;
+   }
+
+   uint32_t rootId = json_object_get_int32(request, "rootObjectId", 0);
+   if (rootId == 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaGetObjectsStatus: invalid root object ID"));
+      context->setErrorResponse("Invalid root object ID");
+      return 400;
+   }
+
+   shared_ptr<NetObj> rootObject = FindObjectById(rootId);
+   if (rootObject == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaGetObjectsStatus: no objects found for root ID %u"), rootId);
+      return 404;
+   }
+   if (!rootObject->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ_ALARMS))
+      return 403;
+
+   unique_ptr<SharedObjectArray<NetObj>> objects = rootObject->getAllChildren((rootObject->getObjectClass() != OBJECT_NODE));
+   // Return only event source children of the root object if root is not a node, otherwise return all node children.
+   json_t *response = json_array();
+   for(int i = 0; i < objects->size(); i++)
+   {
+      NetObj *object = objects->get(i);
+      if (object->getObjectClass() != OBJECT_COLLECTOR)
+         continue; // Skip collectorsre
+
+      if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+         continue;
+
+      json_t *objJson = json_object();
+      json_object_set_new(objJson, "Name",  json_string_t(FormatObjectNameForGrafana(object)));
+      json_object_set_new(objJson, "Status", json_integer(object->getStatus()));
+
+      json_array_append_new(response, objJson);
+   }
+
+   context->setResponseData(response);
+   json_decref(response);
+   return 200;
+}
+
+
