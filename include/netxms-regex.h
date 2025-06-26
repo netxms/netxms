@@ -85,9 +85,11 @@ typedef pcre2_match_data_32 pcre32_extra;
 
 // Additional PCRE1 compatibility constants
 #define PCRE_CASELESS           PCRE2_CASELESS
+#define PCRE_DOTALL             PCRE2_DOTALL
 #define PCRE_INFO_NAMECOUNT     PCRE2_INFO_NAMECOUNT
 #define PCRE_INFO_NAMETABLE     PCRE2_INFO_NAMETABLE
 #define PCRE_INFO_NAMEENTRYSIZE PCRE2_INFO_NAMEENTRYSIZE
+#define PCRE_MULTILINE          PCRE2_MULTILINE
 
 #ifdef UNICODE
 #define PCRE_COMMON_FLAGS       PCRE_COMMON_FLAGS_W
