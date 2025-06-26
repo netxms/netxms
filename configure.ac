@@ -3736,14 +3736,14 @@ if test "x$DIST_BUILD" != "xyes"; then
 			AC_CHECK_LIB(pcre2-32, pcre2_compile_32, [PCRE2_LIBS="$PCRE2_LIBS -lpcre2-32"], [HAVE_PCRE2="no"])
 		fi
 	fi
-fi
 
-if test "$HAVE_PCRE" = "no" -a "$HAVE_PCRE2" = "no"; then
-    AC_MSG_ERROR(Either libpcre or libpcre2 is required)
-fi
+	if test "$HAVE_PCRE" = "no" -a "$HAVE_PCRE2" = "no"; then
+		AC_MSG_ERROR(Either libpcre or libpcre2 is required)
+	fi
 
-if test "$HAVE_PCRE2" = "yes"; then
-	AC_DEFINE(USE_PCRE2, 1, [Define to 1 if PCRE2 is used as regular expression engine])
+	if test "$HAVE_PCRE2" = "yes"; then
+		AC_DEFINE(USE_PCRE2, 1, [Define to 1 if PCRE2 is used as regular expression engine])
+	fi
 fi
 
 #--------------------------------------------------------------------
