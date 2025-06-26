@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2024 Victor Kirhenshtein
+** Copyright (C) 2004-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -518,7 +518,7 @@ static void CheckNodes()
                   success = success && SQLQuery(StringBuffer(_T("DELETE FROM node_components WHERE node_id=")).append(nodeId));
                   success = success && SQLQuery(StringBuffer(_T("DELETE FROM ospf_areas WHERE node_id=")).append(nodeId));
                   success = success && SQLQuery(StringBuffer(_T("DELETE FROM ospf_neighbors WHERE node_id=")).append(nodeId));
-                  if (success && SQLQuery(StringBuffer(_T("DELETE FROM object_properties WHERE object_id=%d")).append(nodeId)))
+                  if (success && SQLQuery(StringBuffer(_T("DELETE FROM object_properties WHERE object_id=")).append(nodeId)))
                      g_dbCheckFixes++;
                }
             }
