@@ -268,14 +268,13 @@ int H_GrafanaGetObjectsStatus(Context *context)
    if (!rootObject->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ_ALARMS))
       return 403;
 
-   unique_ptr<SharedObjectArray<NetObj>> objects = rootObject->getAllChildren((rootObject->getObjectClass() != OBJECT_NODE));
-   // Return only event source children of the root object if root is not a node, otherwise return all node children.
+   unique_ptr<SharedObjectArray<NetObj>> objects = rootObject->getAllChildren(false);
    json_t *response = json_array();
    for(int i = 0; i < objects->size(); i++)
    {
       NetObj *object = objects->get(i);
-      if (object->getObjectClass() != OBJECT_COLLECTOR)
-         continue; // Skip collectorsre
+      if (object->isContainerObject() || !object->isEventSource())
+         continue; // Skip containers
 
       if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
          continue;
