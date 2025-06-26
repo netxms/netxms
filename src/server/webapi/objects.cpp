@@ -165,88 +165,6 @@ int H_ObjectQuery(Context *context)
 }
 
 /**
- * Object list filter types
- */
-enum class ObjectFilterTypes
-{
-   DataCollectionTarget,
-   Alarm,
-   Query,
-   Summary,
-   Unknown
-};
-
-/**
- * String to ObjectFilterTypes conversion
- */
-ObjectFilterTypes StringToObjectFilterType(const char *type)
-{
-   if (type == nullptr)
-      return ObjectFilterTypes::Unknown;
-   if (!strcmp(type, "dci"))
-      return ObjectFilterTypes::DataCollectionTarget;
-   else if (!strcmp(type, "alarm"))
-      return ObjectFilterTypes::Alarm;
-   else if (!strcmp(type, "query"))
-      return ObjectFilterTypes::Query;
-   else if (!strcmp(type, "summary"))
-      return ObjectFilterTypes::Summary;
-   else
-      return ObjectFilterTypes::Unknown;
-}
-
-/**
- * Handler for /v1/object-list
- */
-int H_ObjectList(Context *context)
-{
-   ObjectFilterTypes type = StringToObjectFilterType(context->getQueryParameter("filter"));
-
-   unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(
-      [context, type] (NetObj *object) -> bool
-      {
-         if (object->isHidden() || object->isSystem() || object->isDeleted() || !object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
-            return false;
-         if (type == ObjectFilterTypes::DataCollectionTarget && !object->isDataCollectionTarget())
-            return false;
-         if (type == ObjectFilterTypes::Summary && !object->isContainerObject())
-            return false;
-         if ((type == ObjectFilterTypes::Alarm || type == ObjectFilterTypes::Summary) && (!object->isEventSource() && !object->isContainerObject()))
-            return false;
-
-         return true;
-      });
-
-   json_t *array = json_array();
-   for(int i = 0; i < objects->size(); i++)
-   {
-      json_t *json = json_object();
-      auto object = objects->get(i);
-      SharedString alias = object->getAlias();
-      if(!alias.isBlank())
-      {
-         StringBuffer buffer(object->getName());
-         buffer.append(_T(" ("));
-         buffer.append(alias.cstr());
-         buffer.append(_T(")"));
-         json_object_set_new(json, "name", json_string_t(buffer));
-      }
-      else
-      {
-         json_object_set_new(json, "name", json_string_t(object->getName()));
-      }
-      json_object_set_new(json, "id", json_integer(object->getId()));
-      json_array_append_new(array, json);
-   }
-
-   json_t *result = json_object();
-   json_object_set_new(result, "objects", array);
-   context->setResponseData(result);
-   json_decref(array);
-   return 200;
-}
-
-/**
  * Handler for /v1/objects
  */
 int H_Objects(Context *context)
@@ -639,35 +557,5 @@ int H_TakeScreenshot(Context *context)
    MemFree(data);
 
    context->writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("Screenshot taken for session \"%s\""), sessionName);
-   return 200;
-}
-
-/**
- * Handler for /v1/query-list
- */
-int H_ObjectQueryList(Context *context)
-{
-   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_OBJECT_QUERIES))
-      return 403;
-
-   json_t *result = json_object();
-   json_object_set_new(result, "objects", GetObjectQueriesList());
-   context->setResponseData(result);
-   json_decref(result);
-   return 200;
-}
-
-/**
- * Handler for /v1/query-list
- */
-int H_SummaryTablesList(Context *context)
-{
-   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS))
-      return 403;
-
-   json_t *result = json_object();
-   json_object_set_new(result, "objects", GetSummaryTablesList());
-   context->setResponseData(result);
-   json_decref(result);
    return 200;
 }

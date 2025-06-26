@@ -5165,9 +5165,9 @@ static const TCHAR *s_unitsWithoutMultipliers[] = { _T("%"), _T("°C"), _T("°F"
 /**
  * Format DCI value based on Unit and value.
  */
-String FormatDCIValue(String unitName, String value)
+String LIBNETXMS_EXPORTABLE FormatDCIValue(const TCHAR *unitName, const TCHAR *value)
 {
-   if (value.isEmpty())
+   if (value == nullptr || *value == 0)
       return String();
 
    bool useUnits = true;

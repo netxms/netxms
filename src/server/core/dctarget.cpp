@@ -3005,23 +3005,6 @@ void DataCollectionTarget::findDcis(const SearchQuery &query, uint32_t userId, S
 }
 
 /**
- * Get list of all DCIs user has access to
- */
-void DataCollectionTarget::getDcis(uint32_t userId, SharedObjectArray<DCObject> *result)
-{
-   readLockDciAccess();
-   for(int i = 0; i < m_dcObjects.size(); i++)
-   {
-      shared_ptr<DCObject> dci = m_dcObjects.getShared(i);
-      if (dci->hasAccess(userId))
-      {
-         result->add(dci);
-      }
-   }
-   unlockDciAccess();
-}
-
-/**
  * Build internal communication topology
  */
 shared_ptr<NetworkMapObjectList> DataCollectionTarget::buildInternalCommunicationTopology()

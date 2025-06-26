@@ -160,8 +160,7 @@ static int ExecuteSummaryTableQuery(Context *context, uint32_t tableId, uint32_t
    }
 
    nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("ExecuteSummaryTableQuery(id=%u): %d rows in resulting table"), tableId, result->getNumRows());
-   json_t *response;
-   response = result->toGrafanaJson();
+   json_t *response = result->toGrafanaJson();
    context->setResponseData(response);
    json_decref(response);
    delete result;
@@ -176,7 +175,7 @@ int H_GrafanaGetSummaryTable(Context *context)
    json_t *request = context->getRequestDocument();
    if (request == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaInfinityGetSummaryTable: empty request"));
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaGetSummaryTable: empty request"));
       return 400;
    }
 
@@ -184,13 +183,13 @@ int H_GrafanaGetSummaryTable(Context *context)
    uint32_t tableId = json_object_get_int32(request, "tableId", 0);
    if (tableId == 0)
    {
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaInfinityGetSummaryTable: invalid summary table ID"));
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaGetSummaryTable: invalid summary table ID"));
       context->setErrorResponse("Invalid summary table ID");
       return 400;
    }
    if (rootId == 0)
    {
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaInfinityGetSummaryTable: invalid root object ID"));
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaGetSummaryTable: invalid root object ID"));
       context->setErrorResponse("Invalid root object ID");
       return 400;
    }
@@ -206,7 +205,7 @@ int H_GrafanaGetObjectQuery(Context *context)
    json_t *request = context->getRequestDocument();
    if (request == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaInfinityGetObjectQuery: empty request"));
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaGetObjectQuery: empty request"));
       return 400;
    }
 
@@ -220,7 +219,7 @@ int H_GrafanaGetObjectQuery(Context *context)
          nullptr, nullptr, &inputFields, json_object_get_int32(request, "limit"));
    if (objects == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaInfinityGetObjectQuery: %s"), errorMessage);
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_GrafanaGetObjectQuery: %s"), errorMessage);
       char *utf8Error = UTF8StringFromWideString(errorMessage);
       context->setErrorResponse(utf8Error);
       MemFree(utf8Error);
@@ -291,4 +290,159 @@ int H_GrafanaGetObjectsStatus(Context *context)
    return 200;
 }
 
+/*******************************************
+ * Element lists for Grafana
+ *******************************************/
+
+/**
+ * Handler for /v1/grafana/objects/:object-id/dci-list
+ */
+int H_GrafanaDciList(Context *context)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(_T("object-id"));
+   if (objectId == 0)
+      return 400;
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+      return 404;
+
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+      return 403;
+
+   if (!object->isDataCollectionTarget())
+   {
+      context->setErrorResponse("Object is not data collection target");
+      return 400;
+   }
+   unique_ptr<SharedObjectArray<DCObject>> dciObjects = static_cast<DataCollectionTarget&>(*object).getAllDCObjects(context->getUserId());
+
+   json_t *array = json_array();
+   for(int i = 0; i < dciObjects->size(); i++)
+   {
+      json_t *json = json_object();
+      auto object = dciObjects->get(i);
+      json_object_set_new(json, "name", json_string_t(object->getDescription()));
+      json_object_set_new(json, "id", json_integer(object->getId()));
+      json_array_append_new(array, json);
+   }
+
+   json_t *result = json_object();
+   json_object_set_new(result, "objects", array);
+   context->setResponseData(result);
+   json_decref(result);
+   return 200;
+}
+
+/**
+ * Handler for /v1/grafana/query-list
+ */
+int H_GrafanaObjectQueryList(Context *context)
+{
+   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_OBJECT_QUERIES))
+      return 403;
+
+   json_t *result = json_object();
+   json_object_set_new(result, "objects", GetObjectQueriesList());
+   context->setResponseData(result);
+   json_decref(result);
+   return 200;
+}
+
+/**
+ * Handler for /v1/grafana/summary-table-list
+ */
+int H_GrafanaSummaryTablesList(Context *context)
+{
+   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS))
+      return 403;
+
+   json_t *result = json_object();
+   json_object_set_new(result, "objects", GetSummaryTablesList());
+   context->setResponseData(result);
+   json_decref(result);
+   return 200;
+}
+
+/**
+ * Object list filter types
+ */
+enum class ObjectFilterTypes
+{
+   DataCollectionTarget,
+   Alarm,
+   Query,
+   Summary,
+   Unknown
+};
+
+/**
+ * String to ObjectFilterTypes conversion
+ */
+ObjectFilterTypes StringToObjectFilterType(const char *type)
+{
+   if (type == nullptr)
+      return ObjectFilterTypes::Unknown;
+   if (!strcmp(type, "dci"))
+      return ObjectFilterTypes::DataCollectionTarget;
+   else if (!strcmp(type, "alarm"))
+      return ObjectFilterTypes::Alarm;
+   else if (!strcmp(type, "query"))
+      return ObjectFilterTypes::Query;
+   else if (!strcmp(type, "summary"))
+      return ObjectFilterTypes::Summary;
+   else
+      return ObjectFilterTypes::Unknown;
+}
+
+/**
+ * Handler for /v1/grafana/object-list
+ */
+int H_GrafanaObjectList(Context *context)
+{
+   ObjectFilterTypes type = StringToObjectFilterType(context->getQueryParameter("filter"));
+
+   unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(
+      [context, type] (NetObj *object) -> bool
+      {
+         if (object->isHidden() || object->isSystem() || object->isDeleted() || !object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+            return false;
+         if (type == ObjectFilterTypes::DataCollectionTarget && !object->isDataCollectionTarget())
+            return false;
+         if (type == ObjectFilterTypes::Summary && !object->isContainerObject())
+            return false;
+         if ((type == ObjectFilterTypes::Alarm || type == ObjectFilterTypes::Summary) && (!object->isEventSource() && !object->isContainerObject()))
+            return false;
+
+         return true;
+      });
+
+   json_t *array = json_array();
+   for(int i = 0; i < objects->size(); i++)
+   {
+      json_t *json = json_object();
+      auto object = objects->get(i);
+      SharedString alias = object->getAlias();
+      if(!alias.isBlank())
+      {
+         StringBuffer buffer(object->getName());
+         buffer.append(_T(" ("));
+         buffer.append(alias.cstr());
+         buffer.append(_T(")"));
+         json_object_set_new(json, "name", json_string_t(buffer));
+      }
+      else
+      {
+         json_object_set_new(json, "name", json_string_t(object->getName()));
+      }
+      json_object_set_new(json, "id", json_integer(object->getId()));
+      json_array_append_new(array, json);
+   }
+
+   json_t *result = json_object();
+   json_object_set_new(result, "objects", array);
+   context->setResponseData(result);
+   json_decref(result);
+   return 200;
+}
 

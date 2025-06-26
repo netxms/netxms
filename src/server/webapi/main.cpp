@@ -40,10 +40,11 @@ int H_AlarmTerminate(Context *context);
 int H_Alarms(Context *context);
 int H_DataCollectionCurrentValues(Context *context);
 int H_DataCollectionHistory(Context *context);
-int H_DciList(Context *context);
+int H_GrafanaDciList(Context *context);
 int H_FindMacAddress(Context *context);
 int H_GrafanaGetAlarms(Context *context);
 int H_GrafanaGetSummaryTable(Context *context);
+int H_GrafanaObjectList(Context *context);
 int H_GrafanaGetObjectQuery(Context *context);
 int H_GrafanaGetObjectsStatus(Context *context);
 int H_Login(Context *context);
@@ -55,17 +56,16 @@ int H_ObjectQuery(Context *context);
 int H_ObjectSetMaintenance(Context *context);
 int H_ObjectSetManaged(Context *context);
 int H_Objects(Context *context);
-int H_ObjectList(Context *context);
 int H_ObjectSearch(Context *context);
 int H_ObjectTools(Context *context);
-int H_ObjectQueryList(Context *context);
+int H_GrafanaObjectQueryList(Context *context);
 int H_QueryAdHocSummaryTable(Context *context);
 int H_QuerySummaryTable(Context *context);
 int H_Root(Context *context);
 int H_ServerInfo(Context *context);
 int H_Status(Context *context);
 int H_SummaryTables(Context *context);
-int H_SummaryTablesList(Context *context);
+int H_GrafanaSummaryTablesList(Context *context);
 int H_TakeScreenshot(Context *context);
 
 /**
@@ -212,8 +212,20 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/grafana/infinity/summary-table")
       .POST(H_GrafanaGetSummaryTable)
       .build();
+   RouteBuilder("v1/grafana/objects/:object-id/dci-list")
+      .GET(H_GrafanaDciList)
+      .build();
    RouteBuilder("v1/grafana/objects-status")
       .POST(H_GrafanaGetObjectsStatus)
+      .build();
+   RouteBuilder("v1/grafana/object-list")
+      .GET(H_GrafanaObjectList)
+      .build();
+   RouteBuilder("v1/grafana/summary-table-list")
+      .GET(H_GrafanaSummaryTablesList)
+      .build();
+   RouteBuilder("v1/grafana/query-list")
+      .GET(H_GrafanaObjectQueryList)
       .build();
    RouteBuilder("v1/login")
       .POST(H_Login)
@@ -233,9 +245,6 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/data-collection/:dci-id/history")
       .GET(H_DataCollectionHistory)
-      .build();
-   RouteBuilder("v1/objects/:object-id/dci-list")
-      .GET(H_DciList)
       .build();
    RouteBuilder("v1/objects/:object-id/execute-agent-command")
       .POST(H_ObjectExecuteAgentCommand)
@@ -261,20 +270,11 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/object-tools")
       .GET(H_ObjectTools)
       .build();
-   RouteBuilder("v1/object-list")
-      .GET(H_ObjectList)
-      .build();
    RouteBuilder("v1/server-info")
       .GET(H_ServerInfo)
       .build();
    RouteBuilder("v1/status")
       .GET(H_Status)
-      .build();
-   RouteBuilder("v1/summary-table-list")
-      .GET(H_SummaryTablesList)
-      .build();
-   RouteBuilder("v1/query-list")
-      .GET(H_ObjectQueryList)
       .build();
 
    return true;

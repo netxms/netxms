@@ -629,8 +629,6 @@ bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *cont
    return true;
 }
 
-
-
 /**
  * Get list of configured DCI summary tables
  */
@@ -643,15 +641,12 @@ json_t *GetSummaryTablesList()
    {
       TCHAR buffer[256];
       int32_t count = DBGetNumRows(hResult);
-      uint32_t fieldId = VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-
-         json_t *queryJson = json_object();
-         json_object_set_new(queryJson, "id", json_integer(DBGetFieldULong(hResult, i, 0)));
-         json_object_set_new(queryJson, "name", json_string_t(DBGetField(hResult, i, 1, buffer, 256)));
-         json_array_append_new(result, queryJson);
-         fieldId += 5;
+         json_t *summatyTableEntry = json_object();
+         json_object_set_new(summatyTableEntry, "id", json_integer(DBGetFieldULong(hResult, i, 0)));
+         json_object_set_new(summatyTableEntry, "name", json_string_t(DBGetField(hResult, i, 1, buffer, 256)));
+         json_array_append_new(result, summatyTableEntry);
       }
       DBFreeResult(hResult);
    }

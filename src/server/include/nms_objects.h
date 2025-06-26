@@ -1965,7 +1965,7 @@ public:
    shared_ptr<DCObject> getDCObjectByDescription(const WCHAR *description, uint32_t userId) const;
    shared_ptr<DCObject> getDCObjectByTag(const WCHAR *tag, uint32_t userId) const;
    shared_ptr<DCObject> getDCObjectByTagPattern(const WCHAR *tagPattern, uint32_t userId) const;
-   unique_ptr<SharedObjectArray<DCObject>> getAllDCObjects() const;
+   unique_ptr<SharedObjectArray<DCObject>> getAllDCObjects(uint32_t userId = 0) const;
    unique_ptr<SharedObjectArray<DCObject>> getDCObjectsByRegex(const TCHAR *regex, bool searchName, uint32_t userId) const;
    SharedObjectArray<DCObject> getDCObjectsByFilter(std::function<bool (DCObject*)> filter, uint32_t userId = 0) const;
    NXSL_Value *getAllDCObjectsForNXSL(NXSL_VM *vm, const WCHAR *name, const WCHAR *description, const WCHAR *tag, uint32_t userId) const;
@@ -2714,7 +2714,6 @@ public:
    double getProxyLoadFactor() const { return m_proxyLoadFactor.load(); }
    int getDciThreshold(uint32_t dciId);
    void findDcis(const SearchQuery &query, uint32_t userId, SharedObjectArray<DCObject> *result);
-   void getDcis(uint32_t userId, SharedObjectArray<DCObject> *result);
 
    uint64_t getCacheMemoryUsage();
 
