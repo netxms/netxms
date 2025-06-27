@@ -330,6 +330,10 @@ void LoadObjectQueries()
  */
 static int FilterObject(NXSL_VM *vm, const shared_ptr<NetObj>& object, const shared_ptr<NetObj>& context, const StringMap *inputFields, NXSL_VariableSystem **globalVariables)
 {
+   // Remove global variables that may be set by previous script execution
+   vm->removeGlobalVariable("$node");
+   vm->removeGlobalVariable("$map");
+
    SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
    vm->setContextObject(object->createNXSLObject(vm));
    if (inputFields != nullptr)
