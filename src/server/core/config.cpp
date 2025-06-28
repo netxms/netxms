@@ -773,6 +773,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       UpdateServerFlag(AF_RESOLVE_NODE_NAMES, value);
    }
+   else if (!wcscmp(name, L"Objects.Nodes.SyncNamesWithDNS"))
+   {
+      UpdateServerFlag(AF_SYNC_NODE_NAMES_WITH_DNS, value);
+   }
    else if (!wcscmp(name, L"Objects.Security.CheckTrustedObjects"))
    {
       UpdateServerFlag(AF_CHECK_TRUSTED_OBJECTS, value);
