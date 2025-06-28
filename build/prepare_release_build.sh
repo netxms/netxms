@@ -40,11 +40,6 @@ mv ./plugin.xml src/java/netxms-eclipse/Core/plugin.xml
 cat src/java/netxms-eclipse/Product/nxmc.product | $SED -r "s,^Version [0-9.]+\$,Version $VERSION," > nxmc.product
 mv ./nxmc.product src/java/netxms-eclipse/Product/nxmc.product
 
-$SED -i -e "s,org.netxms:netxms-client:[0-9].[0-9]-SNAPSHOT,org.netxms:netxms-client:$VERSION,g" android/agent/app/build.gradle
-$SED -i -e "s,org.netxms:netxms-mobile-agent:[0-9].[0-9]-SNAPSHOT,org.netxms:netxms-mobile-agent:$VERSION,g" android/agent/app/build.gradle
-$SED -i -e "s,org.netxms:netxms-client:[0-9].[0-9]-SNAPSHOT,org.netxms:netxms-client:$VERSION,g" android/console/app/build.gradle
-$SED -i -e "s,org.netxms:netxms-base:[0-9].[0-9]-SNAPSHOT,org.netxms:netxms-base:$VERSION,g" android/console/app/build.gradle
-
 $SED -i -e "s/^AC_INIT.*/AC_INIT([NetXMS], [$VERSION], [bugs@netxms.org])/g" configure.ac
 
 if [ -x ./private/branding/build/prepare_release_build_hook.sh ]; then
