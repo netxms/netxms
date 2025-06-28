@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 52.18 to 52.19
+ */
+static bool H_UpgradeFromV18()
+{
+   CHK_EXEC(SQLQuery(L"UPDATE config SET data_type='P' WHERE var_name IN ('Jira.Password','LDAP.SyncUserPassword','RADIUS.SecondarySecret','RADIUS.Secret','SNMP.Agent.V3.AuthenticationPassword')"));
+   CHK_EXEC(SetMinorSchemaVersion(19));
+   return true;
+}
+
+/**
  * Upgrade from 52.17 to 52.18
  */
 static bool H_UpgradeFromV17()
@@ -420,6 +430,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 18, 52, 19, H_UpgradeFromV18 },
    { 17, 52, 18, H_UpgradeFromV17 },
    { 16, 52, 17, H_UpgradeFromV16 },
    { 15, 52, 16, H_UpgradeFromV15 },
