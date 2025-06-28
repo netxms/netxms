@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -175,6 +175,7 @@ public class VariableEditDialog extends Dialog
             if (variable.getName() != null)
                spinnerValue.setFocus();
             break;
+         case PASSWORD:
          case STRING:
             textValue = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 300, i18n.tr("Value"), 
                   variable.getValue(), WidgetHelper.DEFAULT_LAYOUT_DATA);
@@ -237,6 +238,7 @@ public class VariableEditDialog extends Dialog
 	      case INTEGER:
 	         value = spinnerValue.getText();
             break;
+         case PASSWORD:
 	      case STRING:
 	         value = textValue.getText();
 	         break;

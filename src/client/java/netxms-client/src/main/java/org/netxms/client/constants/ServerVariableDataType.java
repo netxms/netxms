@@ -32,7 +32,8 @@ public enum ServerVariableDataType
    BOOLEAN(1),
    INTEGER(2),
    CHOICE(3),
-   COLOR(4);
+   COLOR(4),
+   PASSWORD(5);
 
    private static Logger logger = LoggerFactory.getLogger(ServerVariableDataType.class);
    private static Map<Integer, ServerVariableDataType> lookupTableValue = new HashMap<Integer, ServerVariableDataType>();
@@ -44,11 +45,12 @@ public enum ServerVariableDataType
          lookupTableValue.put(element.value, element);
       }
       
-      lookupTableCode.put((int)'S', STRING);
-      lookupTableCode.put((int)'I', INTEGER);
       lookupTableCode.put((int)'B', BOOLEAN);
       lookupTableCode.put((int)'C', CHOICE);
       lookupTableCode.put((int)'H', COLOR);
+      lookupTableCode.put((int)'I', INTEGER);
+      lookupTableCode.put((int)'P', PASSWORD);
+      lookupTableCode.put((int)'S', STRING);
    }
 
    private int value;

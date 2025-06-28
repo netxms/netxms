@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,21 +23,14 @@ import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
@@ -111,30 +104,14 @@ public class ServerVariables extends ConfigurationView
       ServerVariablesFilter filter = new ServerVariablesFilter();
       setFilterClient(viewer, filter);
       viewer.addFilter(filter);
-      viewer.addDoubleClickListener(new IDoubleClickListener() {
-         @Override
-         public void doubleClick(DoubleClickEvent event)
-         {
-            editVariable();
-         }
+      viewer.addDoubleClickListener((e) -> editVariable());
+      viewer.addSelectionChangedListener((e) -> {
+         IStructuredSelection selection = viewer.getStructuredSelection();
+         actionEdit.setEnabled(selection.size() == 1);
+         actionDelete.setEnabled(selection.size() > 0);
+         actionDefaultValue.setEnabled(selection.size() > 0);
       });
-      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-         @Override
-         public void selectionChanged(SelectionChangedEvent event)
-         {
-            IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-            actionEdit.setEnabled(selection.size() == 1);
-            actionDelete.setEnabled(selection.size() > 0);
-            actionDefaultValue.setEnabled(selection.size() > 0);
-         }
-      });
-      viewer.getTable().addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            WidgetHelper.saveTableViewerSettings(viewer, ID);
-         }
-      });
+      viewer.getTable().addDisposeListener((e) -> WidgetHelper.saveTableViewerSettings(viewer, ID));
 
       createActions();
       createContextMenu();
@@ -199,17 +176,10 @@ public class ServerVariables extends ConfigurationView
     */
    private void createContextMenu()
    {
-      // Create menu manager.
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
-         {
-            fillContextMenu(mgr);
-         }
-      });
+      menuMgr.addMenuListener((m) -> fillContextMenu(m));
 
-      // Create menu.
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
       viewer.getControl().setMenu(menu);
    }
