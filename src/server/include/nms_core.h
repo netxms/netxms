@@ -492,6 +492,7 @@ struct AgentFileTransfer
 class NXCORE_EXPORTABLE GenericClientSession
 {
 protected:
+   session_id_t m_id;
    uint32_t m_userId;
    uint64_t m_systemAccessRights; // User's system access rights
    TCHAR m_loginName[MAX_USER_NAME];
@@ -507,6 +508,9 @@ protected:
 
 public:
    virtual ~GenericClientSession() {}
+
+   session_id_t getId() const { return m_id; }
+   void setId(session_id_t id) { if (m_id == -1) m_id = id; }
 
    const TCHAR *getLoginName() const { return m_loginName; }
    uint32_t getUserId() const { return m_userId; }
@@ -551,7 +555,6 @@ struct LoginInfo;
 class NXCORE_EXPORTABLE ClientSession : public GenericClientSession
 {
 private:
-   session_id_t m_id;
    SOCKET m_socket;
    BackgroundSocketPollerHandle *m_socketPoller;
    SocketMessageReceiver *m_messageReceiver;
@@ -965,6 +968,7 @@ private:
    void updatePeerInterface(const NXCPMessage& request);
    void clearPeerInterface(const NXCPMessage& request);
    void queryAiAssistant(const NXCPMessage& request);
+   void clearAiAssistantChat(const NXCPMessage& request);
    void getSmclpProperties(const NXCPMessage& request);
    void getInterfaceTrafficDcis(const NXCPMessage& request);
 
@@ -1006,9 +1010,6 @@ public:
    virtual void writeAuditLog(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *format, ...) const override;
    virtual void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...) const override;
    virtual void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...) const override;
-
-   session_id_t getId() const { return m_id; }
-   void setId(session_id_t id) { if (m_id == -1) m_id = id; }
 
    void setSocketPoller(BackgroundSocketPollerHandle *p) { m_socketPoller = p; }
 

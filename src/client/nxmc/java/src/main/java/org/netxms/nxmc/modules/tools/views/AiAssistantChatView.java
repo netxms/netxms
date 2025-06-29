@@ -50,7 +50,7 @@ public class AiAssistantChatView extends View
    private NXCSession session;
    private MarkdownViewer chatOutput;
    private Text chatInput;
-   private Action actionClearOutput;
+   private Action actionClearChat;
 
    /**
     * Create server console view
@@ -127,14 +127,27 @@ public class AiAssistantChatView extends View
     */
    private void createActions()
    {
-      actionClearOutput = new Action(i18n.tr("Clear &output"), SharedIcons.CLEAR_LOG) {
+      actionClearChat = new Action(i18n.tr("&Clear chat"), SharedIcons.CLEAR_LOG) {
          @Override
          public void run()
          {
-            chatOutput.setText("");
+            new Job(i18n.tr("Clearing AI assistant chat"), AiAssistantChatView.this) {
+               @Override
+               protected void run(IProgressMonitor monitor) throws Exception
+               {
+                  session.clearAiAssistantChat();
+                  runInUIThread(() -> chatOutput.setText(""));
+               }
+
+               @Override
+               protected String getErrorMessage()
+               {
+                  return i18n.tr("Cannot clear AI assistant chat");
+               }
+            }.start();
          }
       };
-      addKeyBinding("M1+L", actionClearOutput);
+      addKeyBinding("M1+L", actionClearChat);
    }
 
    /**
@@ -143,7 +156,7 @@ public class AiAssistantChatView extends View
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
    {
-      manager.add(actionClearOutput);
+      manager.add(actionClearChat);
    }
 
    /**
@@ -152,7 +165,7 @@ public class AiAssistantChatView extends View
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
-      manager.add(actionClearOutput);
+      manager.add(actionClearChat);
    }
 
    /**

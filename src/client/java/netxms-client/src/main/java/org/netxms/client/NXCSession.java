@@ -15058,10 +15058,23 @@ public class NXCSession
    }
 
    /**
-    * Get interface traffic DCIs 
+    * Clear AI assistant chat history.
     * 
-    * @param interfaceId interface id to find DCIs for 
-    * @return DCI and it's unit: 4 DCIs - 2 pairs (first are trafic, second utilization). 
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void clearAiAssistantChat() throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CLEAR_AI_ASSISTANT_CHAT);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Get interface traffic DCIs
+    * 
+    * @param interfaceId interface id to find DCIs for
+    * @return DCI and it's unit: 4 DCIs - 2 pairs (first are trafic, second utilization).
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
