@@ -327,6 +327,14 @@ public:
       json_decref(response);
    }
 
+   void setErrorResponse(const wchar_t *reason)
+   {
+      json_t *response = json_object();
+      json_object_set_new(response, "reason", json_string_w(reason));
+      setResponseData(response);
+      json_decref(response);
+   }
+
    void setAgentErrorResponse(uint32_t agentErrorCode);
 
    void setResponseHeader(const TCHAR *header, const TCHAR *content)
