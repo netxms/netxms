@@ -133,7 +133,7 @@ int H_ObjectQuery(Context *context)
       return 400;
    }
 
-   TCHAR *query = json_object_get_string_t(request, "query", nullptr);
+   wchar_t *query = json_object_get_string_w(request, "query", nullptr);
    if (query == nullptr)
    {
       context->setErrorResponse("Query not provided");
@@ -144,10 +144,17 @@ int H_ObjectQuery(Context *context)
    StringList orderBy(json_object_get(request, "orderBy"));
    StringMap inputFields(json_object_get(request, "inputFields"));
 
-   TCHAR errorMessage[1024];
+   wchar_t errorMessage[1024];
    unique_ptr<ObjectArray<ObjectQueryResult>> objects = QueryObjects(query, json_object_get_uint32(request, "rootObjectId", 0),
       context->getUserId(), errorMessage, 1024, nullptr, json_object_get_boolean(request, "readAllFields"), &fields, &orderBy, &inputFields, json_object_get_int32(request, "limit"));
    MemFree(query);
+
+   if (objects == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_ObjectQuery: query failed (%s)"), errorMessage);
+      context->setErrorResponse(errorMessage);
+      return 400;
+   }
 
    json_t *output = json_array();
    for(int i = 0; i < objects->size(); i++)
