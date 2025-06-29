@@ -489,6 +489,9 @@ public class NXCPCodes
    public static final int CMD_CANCEL_PACKAGE_DEPLOYMENT_JOB = 0x01D4;
    public static final int CMD_QUERY_AI_ASSISTANT = 0x01D5;
    public static final int CMD_GET_SMCLP_PROPERTIES = 0x01D6;
+   public static final int CMD_GET_INTERFACE_TRAFFIC_DCIS = 0x01D7;
+   public static final int CMD_SET_COMPONENT_TOKEN = 0x01D8;
+   public static final int CMD_CLEAR_AI_ASSISTANT_CHAT = 0x01D9;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

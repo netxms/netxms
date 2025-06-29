@@ -15055,4 +15055,17 @@ public class NXCSession
       NXCPMessage response = waitForRCC(msg.getMessageId(), commandTimeout * 10);   // LLM response can take significant amount of time
       return response.getFieldAsString(NXCPCodes.VID_MESSAGE);
    }
+
+   /**
+    * Clear AI assistant chat history.
+    * 
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void clearAiAssistantChat() throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CLEAR_AI_ASSISTANT_CHAT);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
 }

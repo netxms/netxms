@@ -2016,6 +2016,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_QUERY_AI_ASSISTANT:
          queryAiAssistant(*request);
          break;
+      case CMD_CLEAR_AI_ASSISTANT_CHAT:
+         clearAiAssistantChat(*request);
+         break;
       default:
          if ((code >> 8) == 0x11)
          {
@@ -17890,7 +17893,7 @@ void ClientSession::queryAiAssistant(const NXCPMessage& request)
          if (prompt == nullptr)
             break;
       }
-      answer = CURRENT_MODULE.pfProcessRequestToAiAssistant(prompt, m_userId);
+      answer = CURRENT_MODULE.pfProcessRequestToAiAssistant(prompt, this);
       if (answer != nullptr)
          break;
    }
@@ -17905,6 +17908,29 @@ void ClientSession::queryAiAssistant(const NXCPMessage& request)
       response.setField(VID_RCC, moduleFound ? RCC_SYSTEM_FAILURE : RCC_NOT_IMPLEMENTED);
    }
    MemFree(prompt);
+   sendMessage(response);
+}
+
+/**
+ * Clear AI assistant chat history
+ *
+ * Called by:
+ * CMD_CLEAR_AI_ASSISTANT_CHAT
+ *
+ * Return values:
+ * VID_RCC                          Request completion code
+ */
+void ClientSession::clearAiAssistantChat(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t rcc = RCC_NOT_IMPLEMENTED;
+   ENUMERATE_MODULES(pfProcessRequestToAiAssistant)
+   {
+      rcc = CURRENT_MODULE.pfClearAiAssistantChat(this);
+      if (rcc != RCC_NOT_IMPLEMENTED)
+         break;
+   }
+   response.setField(VID_RCC, rcc);
    sendMessage(response);
 }
 
