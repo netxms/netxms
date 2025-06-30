@@ -1,6 +1,6 @@
 /* 
 ** nxhwid - diplay local system hardware ID
-** Copyright (C) 2006-2020 Raden Solutions
+** Copyright (C) 2006-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -76,19 +76,30 @@ int main(int argc, char *argv[])
 
    SMBIOS_Parse(SMBIOS_Reader);
 
-   int rc;
+   int rc = 0;
    BYTE hwid[HARDWARE_ID_LENGTH];
    if (GetSystemHardwareId(hwid))
    {
       TCHAR buffer[128];
-      _tprintf(_T("%s\n"), BinToStr(hwid, sizeof(hwid), buffer));
-      rc = 0;
+      _tprintf(_T("Hardware ID: %s\n"), BinToStr(hwid, sizeof(hwid), buffer));
    }
    else
    {
-      _tprintf(_T("ERROR\n"));
+      _tprintf(_T("Hardware ID: n/a\n"));
       rc = 1;
    }
-	
+
+   BYTE sysid[SYSTEM_ID_LENGTH];
+   if (GetUniqueSystemId(sysid))
+   {
+      TCHAR buffer[128];
+      _tprintf(_T("System ID:   %s\n"), BinToStr(sysid, sizeof(sysid), buffer));
+   }
+   else
+   {
+      _tprintf(_T("System ID:   n/a\n"));
+      rc = 1;
+   }
+   
    return rc;
 }
