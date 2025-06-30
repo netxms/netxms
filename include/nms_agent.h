@@ -60,6 +60,7 @@
 #define MAX_INSTANCE_COLUMNS     8
 #define ZONE_PROXY_KEY_LENGTH    16
 #define HARDWARE_ID_LENGTH       SHA1_DIGEST_SIZE
+#define SYSTEM_ID_LENGTH         SHA1_DIGEST_SIZE
 #define SSH_PORT                 22
 
 #ifndef MODBUS_TCP_DEFAULT_PORT
@@ -1384,6 +1385,7 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_TableHandler(const TCHAR *cmd, const TCHAR *ar
 
 bool LIBNXAGENT_EXPORTABLE GetSystemHardwareId(BYTE *hwid);
 bool LIBNXAGENT_EXPORTABLE GetHardwareSerialNumber(char *buffer, size_t size);
+bool LIBNXAGENT_EXPORTABLE GetUniqueSystemId(BYTE *sysid);
 
 #ifdef _WIN32
 ObjectArray<ProcessInformation> LIBNXAGENT_EXPORTABLE *GetProcessListForUserSession(DWORD sessionId);

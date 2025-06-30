@@ -490,3 +490,38 @@ bool LIBNXAGENT_EXPORTABLE GetSystemHardwareId(BYTE *hwid)
    SHA1Final(&ctx, hwid);
    return success;
 }
+
+/**
+ * Get unique ID for local system (not necessarily hardware based). Provided buffer should be at least SYSTEM_ID_LENGTH bytes long.
+ */
+bool LIBNXAGENT_EXPORTABLE GetUniqueSystemId(BYTE *sysid)
+{
+   char id[INTERNAL_BUFFER_SIZE];
+#if defined(_WIN32) || defined(_AIX)
+   if (!GetUniqueMachineId(id))
+      return false;
+#else
+   bool success = false;
+   int fh = _open("/etc/machine-id", O_RDONLY);
+   if (fh != -1)
+   {
+      int bytes = _read(fh, id, INTERNAL_BUFFER_SIZE - 1);
+      if (bytes > 0)
+      {
+         id[bytes] = 0;
+         success = true;
+      }
+      _close(fh);
+   }
+
+   if (!success)
+      return false;
+#endif
+
+   SHA1_STATE ctx;
+   SHA1Init(&ctx);
+   SHA1Update(&ctx, "GetUniqueSystemId", 17);
+   SHA1Update(&ctx, id, strlen(id));
+   SHA1Final(&ctx, sysid);
+   return true;
+}
