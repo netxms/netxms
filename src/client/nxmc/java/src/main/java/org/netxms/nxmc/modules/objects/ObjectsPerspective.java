@@ -593,6 +593,10 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          objectStatus.setText(StatusDisplayInfo.getStatusText(object.getStatus()));
       objectStatus.setLabelBackground(StatusDisplayInfo.getStatusBackgroundColor(object.getStatus()));
 
+      updateObjectToolBar(object);
+      updateObjectMenuBar(object);
+      updateContextDashboardsAndMaps(object);
+
       if (objectDetails != null)
          updateObjectDetails(object);
       else
