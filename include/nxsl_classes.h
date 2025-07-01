@@ -375,7 +375,6 @@ protected:
 
    void setName(const TCHAR *name);
    const StringList& getClassHierarchy() const { return m_classHierarchy; }
-   const StringSet& getAttributes() const { return m_attributes; }
 
    bool compareAttributeName(const NXSL_Identifier& name, const NXSL_Identifier& tmpl)
    {
@@ -416,6 +415,7 @@ public:
    bool isIterable() const { return m_iterable; }
 
    void scanAttributes();
+   const StringSet& getAttributes() const { return m_attributes; }
 };
 
 /**
