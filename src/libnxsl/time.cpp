@@ -136,7 +136,7 @@ NXSL_Value *NXSL_DateTimeClass::getAttr(NXSL_Object *object, const NXSL_Identifi
       return value;
 
    NXSL_VM *vm = object->vm();
-   auto st = &(static_cast<DateTime*>(object->getData())->data);
+   struct tm *st = (attr.value[0] != '?') ? &(static_cast<DateTime*>(object->getData())->data) : nullptr;
    if (compareAttributeName(attr, "second") || compareAttributeName(attr, "sec") || compareAttributeName(attr, "tm_sec"))
    {
       value = vm->createValue((LONG)st->tm_sec);
