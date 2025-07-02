@@ -298,7 +298,7 @@ public class ImageHyperlink extends Hyperlink
    {
       if ((disabledImage == null || disabledImage.isDisposed()) && image != null && !image.isDisposed())
       {
-         disabledImage = new Image(image.getDevice(), image, SWT.IMAGE_DISABLE);
+         disabledImage = new Image(getDisplay(), image, SWT.IMAGE_DISABLE);
       }
    }
 
