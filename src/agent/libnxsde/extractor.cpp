@@ -558,6 +558,31 @@ uint32_t StructuredDataExtractor::updateContent(const char *text, size_t size, b
 {
    deleteContent();
    uint32_t rcc = ERR_SUCCESS;
+   //Check for BOM
+   if (size >= 3 && (static_cast<unsigned char>(text[0]) == 0xEF) && (static_cast<unsigned char>(text[1]) == 0xBB) && (static_cast<unsigned char>(text[2]) == 0xBF)) // UTF-8 BOM
+   {
+      text += 3;
+      size -= 3;
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("StructuredDataExtractor::updateContent(%s, %s): skipped BOM sequence"), m_source, id);
+   }
+   else if (size >= 4 && (static_cast<unsigned char>(text[0]) == 0x00) && (static_cast<unsigned char>(text[1]) == 0x00) && (static_cast<unsigned char>(text[2]) == 0xFE) && (static_cast<unsigned char>(text[3]) == 0xFF)) // UTF-32 BOM
+   {
+      text += 4;
+      size -= 4;
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("StructuredDataExtractor::updateContent(%s, %s): skipped BOM sequence"), m_source, id);
+   }
+   else if (size >= 2 && (static_cast<unsigned char>(text[0]) == 0xFF) && (static_cast<unsigned char>(text[1]) == 0xFE)) // UTF-16 LE BOM
+   {
+      text += 2;
+      size -= 2;
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("StructuredDataExtractor::updateContent(%s, %s): skipped BOM sequence"), m_source, id);
+   }
+   else if (size >= 2 && (static_cast<unsigned char>(text[0]) == 0xFE) && (static_cast<unsigned char>(text[1]) == 0xFF)) // UTF-16 BE BOM
+   {
+      text += 3;
+      size -= 3;
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("StructuredDataExtractor::updateContent(%s, %s): skipped BOM sequence"), m_source, id);
+   }
    m_responseData = MemCopyBlock(text, size + 1); // +1 for null terminator
    if (!forcePlainTextParser && (*text == '<'))
    {
