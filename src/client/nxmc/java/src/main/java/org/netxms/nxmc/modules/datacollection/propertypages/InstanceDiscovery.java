@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,8 @@ package org.netxms.nxmc.modules.datacollection.propertypages;
 
 import java.util.Arrays;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -45,11 +45,12 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
 {
    private final I18n i18n = LocalizationHelper.getI18n(InstanceDiscovery.class);   
 	private static final String[] DCI_FUNCTIONS = { "FindDCIByName", "FindDCIByDescription", "GetDCIObject", "GetDCIValue", "GetDCIValueByDescription", "GetDCIValueByName" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-	private static final String[] DCI_VARIABLES = { "$dci", "$node" }; //$NON-NLS-1$ //$NON-NLS-2$
-	
+   private static final String[] DCI_VARIABLES = { "$dci", "$node" };
+
 	private DataCollectionObject dco;
 	private Combo discoveryMethod;
 	private LabeledText discoveryData;
+   private LabeledText instanceNameColumn;
 	private ScriptEditor filterScript;
 	private Group groupRetention;
    private Combo instanceRetentionMode;
@@ -94,37 +95,43 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
       discoveryMethod.add(i18n.tr("SM-CLP Targets"));
       discoveryMethod.add(i18n.tr("SM-CLP Properties"));
       discoveryMethod.select(dco.getInstanceDiscoveryMethod());
-      discoveryMethod.addSelectionListener(new SelectionListener() {
+      discoveryMethod.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
 				int method = discoveryMethod.getSelectionIndex();
 		      discoveryData.setLabel(getDataLabel(method));
 		      discoveryData.setEnabled(method != DataCollectionObject.IDM_NONE);
+            instanceNameColumn.setEnabled((method == DataCollectionObject.IDM_AGENT_TABLE) || (method == DataCollectionObject.IDM_INTERNAL_TABLE));
 		      filterScript.setEnabled(method != DataCollectionObject.IDM_NONE);
             instanceRetentionMode.setEnabled(method != DataCollectionObject.IDM_NONE);
 		      instanceRetentionTime.setEnabled(method != DataCollectionObject.IDM_NONE && instanceRetentionMode.getSelectionIndex() > 0);
 			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
 		});
+
+      boolean isTableSource = (dco.getInstanceDiscoveryMethod() == DataCollectionObject.IDM_AGENT_TABLE) || 
+            (dco.getInstanceDiscoveryMethod() == DataCollectionObject.IDM_INTERNAL_TABLE);
 
       discoveryData = new LabeledText(dialogArea, SWT.NONE);
       discoveryData.setLabel(getDataLabel(dco.getInstanceDiscoveryMethod()));
-      discoveryData.setText(dco.getInstanceDiscoveryData());
+      discoveryData.setText(isTableSource ? getTableName(dco.getInstanceDiscoveryData()) : dco.getInstanceDiscoveryData());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       discoveryData.setLayoutData(gd);
       discoveryData.setEnabled(dco.getInstanceDiscoveryMethod() != DataCollectionObject.IDM_NONE);
 
+      instanceNameColumn = new LabeledText(dialogArea, SWT.NONE);
+      instanceNameColumn.setLabel(i18n.tr("Instance name column"));
+      instanceNameColumn.setText(isTableSource ? getColumnName(dco.getInstanceDiscoveryData()) : "");
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      instanceNameColumn.setLayoutData(gd);
+      instanceNameColumn.setEnabled(isTableSource);
+
       groupRetention = new Group(dialogArea, SWT.NONE);
       groupRetention.setText("Instance retention");
-      gd = new GridData();
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
@@ -143,17 +150,11 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
       instanceRetentionMode.add("Custom");
       instanceRetentionMode.select(dco.getInstanceRetentionTime() == -1 ? 0 : 1);
       instanceRetentionMode.setEnabled(dco.getInstanceDiscoveryMethod() != DataCollectionObject.IDM_NONE);
-      instanceRetentionMode.addSelectionListener(new SelectionListener() {
+      instanceRetentionMode.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
             instanceRetentionTime.setEnabled(instanceRetentionMode.getSelectionIndex() == 1);
-         }
-
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-           widgetSelected(e); 
          }
       });
 
@@ -171,6 +172,7 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
       gd.grabExcessVerticalSpace = true;
       gd.widthHint = 0;
       gd.heightHint = 0;
+      gd.minimumHeight = 100;
       final WidgetFactory factory = new WidgetFactory() {
 			@Override
 			public Control createControl(Composite parent, int style)
@@ -194,6 +196,30 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
 
 		return dialogArea;
 	}
+
+   /**
+    * Get column name from table definition (in form table:column)
+    *
+    * @param tableDefinition table definition
+    * @return column name or empty string if table definition is not in expected format
+    */
+   private static String getColumnName(String tableDefinition)
+   {
+      int i = tableDefinition.lastIndexOf(':');
+      return (i != -1) ? tableDefinition.substring(i + 1) : "";
+   }
+
+   /**
+    * Get table name from table definition (in form table:column)
+    *
+    * @param tableDefinition table definition
+    * @return table name
+    */
+   private static String getTableName(String tableDefinition)
+   {
+      int i = tableDefinition.lastIndexOf(':');
+      return (i != -1) ? tableDefinition.substring(0, i) : tableDefinition;
+   }
 
 	/**
 	 * Get label for data field
@@ -226,19 +252,28 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
          case DataCollectionObject.IDM_SMCLP_PROPERTIES:
             return i18n.tr("Target");
 		}
-		return ""; //$NON-NLS-1$
+      return "";
 	}
 
-	/**
-	 * Apply changes
-	 * 
-	 * @param isApply true if update operation caused by "Apply" button
-	 */
+   /**
+    * @see org.netxms.nxmc.base.propertypages.PropertyPage#applyChanges(boolean)
+    */
    @Override
 	protected boolean applyChanges(final boolean isApply)
 	{
-	   dco.setInstanceDiscoveryMethod(discoveryMethod.getSelectionIndex());
-	   dco.setInstanceDiscoveryData(discoveryData.getText());
+      int method = discoveryMethod.getSelectionIndex();
+      dco.setInstanceDiscoveryMethod(method);
+      String data = discoveryData.getText().trim();
+      if ((method == DataCollectionObject.IDM_AGENT_TABLE) || (method == DataCollectionObject.IDM_INTERNAL_TABLE))
+      {
+         // For table sources, data could be in form "table:column"
+         String column = instanceNameColumn.getText().trim();
+         dco.setInstanceDiscoveryData(column.isEmpty() ? data : data + ":" + column);
+      }
+      else
+      {
+         dco.setInstanceDiscoveryData(data);
+      }
 	   dco.setInstanceDiscoveryFilter(filterScript.getText());
 	   if (instanceRetentionMode.getSelectionIndex() == 0)
 	      dco.setInstanceRetentionTime(-1);
@@ -257,9 +292,11 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
 		super.performDefaults();
 		discoveryMethod.select(DataCollectionObject.IDM_NONE);
 		discoveryData.setLabel(getDataLabel(DataCollectionObject.IDM_NONE));
-		discoveryData.setText(""); //$NON-NLS-1$
+      discoveryData.setText("");
 		discoveryData.setEnabled(false);
-		filterScript.setText(""); //$NON-NLS-1$
+      instanceNameColumn.setText("");
+      instanceNameColumn.setEnabled(false);
+      filterScript.setText("");
 		filterScript.setEnabled(false);
 		instanceRetentionMode.select(0);
 		instanceRetentionTime.setSelection(0);
