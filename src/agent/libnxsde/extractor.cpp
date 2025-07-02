@@ -558,6 +558,13 @@ uint32_t StructuredDataExtractor::updateContent(const char *text, size_t size, b
 {
    deleteContent();
    uint32_t rcc = ERR_SUCCESS;
+   //Check for UTF-8 BOM
+   if (size >= 3 && (static_cast<unsigned char>(text[0]) == 0xEF) && (static_cast<unsigned char>(text[1]) == 0xBB) && (static_cast<unsigned char>(text[2]) == 0xBF))
+   {
+      text += 3;
+      size -= 3;
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("StructuredDataExtractor::updateContent(%s, %s): skipped BOM sequence"), m_source, id);
+   }
    m_responseData = MemCopyBlock(text, size + 1); // +1 for null terminator
    if (!forcePlainTextParser && (*text == '<'))
    {
