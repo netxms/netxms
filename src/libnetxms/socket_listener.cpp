@@ -37,6 +37,7 @@ GenericSocketListener::GenericSocketListener(int type, uint16_t port, bool allow
    m_socketV4 = INVALID_SOCKET;
    m_socketV6 = INVALID_SOCKET;
    m_stop = false;
+   m_name[0] = 0;
    m_acceptErrors = 0;
    m_acceptedConnections = 0;
    m_rejectedConnections = 0;
