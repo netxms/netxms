@@ -227,20 +227,15 @@ int H_ObjectDetails(Context *context)
 /**
  * Check if an object has any descendants matching the class filter
  */
-static bool HasDescendantsMatchingClassFilter(uint32_t objectId, uint32_t userId, const std::unordered_set<int> &classFilter, std::unordered_set<uint32_t> &visited, int maxDepth, int currentDepth)
+static bool HasDescendantsMatchingClassFilter(const shared_ptr<NetObj>& object, uint32_t userId, const std::unordered_set<int> &classFilter, std::unordered_set<uint32_t> &visited, int maxDepth, int currentDepth)
 {
+   uint32_t objectId = object->getId();
+   
    // Prevent infinite recursion and respect maximum depth
    if (visited.count(objectId) > 0 || currentDepth >= maxDepth)
       return false;
 
    visited.insert(objectId);
-
-   shared_ptr<NetObj> object = FindObjectById(objectId);
-   if (object == nullptr)
-   {
-      visited.erase(objectId);
-      return false;
-   }
 
    unique_ptr<SharedObjectArray<NetObj>> children = object->getChildren();
    bool hasMatchingDescendants = false;
@@ -259,7 +254,9 @@ static bool HasDescendantsMatchingClassFilter(uint32_t objectId, uint32_t userId
       else
       {
          // Check descendants recursively
-         hasMatchingDescendants = HasDescendantsMatchingClassFilter(child->getId(), userId, classFilter, visited, maxDepth, currentDepth + 1);
+         shared_ptr<NetObj> childPtr = FindObjectById(child->getId());
+         if (childPtr != nullptr)
+            hasMatchingDescendants = HasDescendantsMatchingClassFilter(childPtr, userId, classFilter, visited, maxDepth, currentDepth + 1);
       }
    }
 
@@ -270,19 +267,14 @@ static bool HasDescendantsMatchingClassFilter(uint32_t objectId, uint32_t userId
 /**
  * Recursively build nested object tree structure
  */
-static json_t *BuildNestedObjectTree(uint32_t objectId, uint32_t userId, const std::unordered_set<int> &classFilter, std::unordered_set<uint32_t> &visited, int maxDepth, int currentDepth)
+static json_t *BuildNestedObjectTree(const shared_ptr<NetObj>& object, uint32_t userId, const std::unordered_set<int> &classFilter, std::unordered_set<uint32_t> &visited, int maxDepth, int currentDepth)
 {
+   uint32_t objectId = object->getId();
+   
    if (visited.count(objectId) > 0 || currentDepth >= maxDepth)
       return json_array();
 
    visited.insert(objectId);
-
-   shared_ptr<NetObj> object = FindObjectById(objectId);
-   if (object == nullptr)
-   {
-      visited.erase(objectId);
-      return json_array();
-   }
 
    unique_ptr<SharedObjectArray<NetObj>> children = object->getChildren();
    json_t *output = json_array();
@@ -300,14 +292,16 @@ static json_t *BuildNestedObjectTree(uint32_t objectId, uint32_t userId, const s
          {
             // Check if this child has descendants matching the class filter
             std::unordered_set<uint32_t> tempVisited;
-            if (!HasDescendantsMatchingClassFilter(child->getId(), userId, classFilter, tempVisited, maxDepth, currentDepth + 1))
+            shared_ptr<NetObj> childPtr = FindObjectById(child->getId());
+            if (childPtr == nullptr || !HasDescendantsMatchingClassFilter(childPtr, userId, classFilter, tempVisited, maxDepth, currentDepth + 1))
                continue;
          }
       }
 
       json_t *childObject = CreateObjectSummary(*child);
 
-      json_t *nestedChildren = BuildNestedObjectTree(child->getId(), userId, classFilter, visited, maxDepth, currentDepth + 1);
+      shared_ptr<NetObj> childPtr = FindObjectById(child->getId());
+      json_t *nestedChildren = (childPtr != nullptr) ? BuildNestedObjectTree(childPtr, userId, classFilter, visited, maxDepth, currentDepth + 1) : json_array();
       if (json_array_size(nestedChildren) > 0)
       {
          json_object_set_new(childObject, "children", nestedChildren);
@@ -362,7 +356,7 @@ int H_ObjectSubTree(Context *context)
 
    // Always use recursive implementation
    std::unordered_set<uint32_t> visited;
-   json_t *output = BuildNestedObjectTree(objectId, context->getUserId(), classFilter, visited, maxDepth, 0);
+   json_t *output = BuildNestedObjectTree(object, context->getUserId(), classFilter, visited, maxDepth, 0);
 
    context->setResponseData(output);
    json_decref(output);
