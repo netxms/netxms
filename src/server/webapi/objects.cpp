@@ -227,7 +227,7 @@ int H_ObjectDetails(Context *context)
 /**
  * Check if an object has any descendants matching the class filter
  */
-bool HasDescendantsMatchingClassFilter(uint32_t objectId, uint32_t userId, const std::unordered_set<int> &classFilter, std::unordered_set<uint32_t> &visited, int maxDepth, int currentDepth)
+static bool HasDescendantsMatchingClassFilter(uint32_t objectId, uint32_t userId, const std::unordered_set<int> &classFilter, std::unordered_set<uint32_t> &visited, int maxDepth, int currentDepth)
 {
    // Prevent infinite recursion and respect maximum depth
    if (visited.count(objectId) > 0 || currentDepth >= maxDepth)
@@ -235,18 +235,21 @@ bool HasDescendantsMatchingClassFilter(uint32_t objectId, uint32_t userId, const
 
    visited.insert(objectId);
 
-   unique_ptr<SharedObjectArray<NetObj>> children = g_idxObjectById.getObjects(
-      [userId, objectId] (NetObj *obj) -> bool
-      {
-         if (obj->isHidden() || obj->isSystem() || obj->isDeleted() || !obj->checkAccessRights(userId, OBJECT_ACCESS_READ))
-            return false;
-         return obj->isDirectParent(objectId);
-      });
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+   {
+      visited.erase(objectId);
+      return false;
+   }
 
+   unique_ptr<SharedObjectArray<NetObj>> children = object->getChildren();
    bool hasMatchingDescendants = false;
    for(int i = 0; i < children->size() && !hasMatchingDescendants; i++)
    {
       NetObj *child = children->get(i);
+
+      if (child->isHidden() || child->isSystem() || child->isDeleted() || !child->checkAccessRights(userId, OBJECT_ACCESS_READ))
+         continue;
 
       // Check if this child matches the class filter
       if (classFilter.count(child->getObjectClass()) > 0)
@@ -267,37 +270,41 @@ bool HasDescendantsMatchingClassFilter(uint32_t objectId, uint32_t userId, const
 /**
  * Recursively build nested object tree structure
  */
-json_t *BuildNestedObjectTree(uint32_t objectId, uint32_t userId, const std::unordered_set<int> &classFilter, std::unordered_set<uint32_t> &visited, int maxDepth, int currentDepth)
+static json_t *BuildNestedObjectTree(uint32_t objectId, uint32_t userId, const std::unordered_set<int> &classFilter, std::unordered_set<uint32_t> &visited, int maxDepth, int currentDepth)
 {
    if (visited.count(objectId) > 0 || currentDepth >= maxDepth)
       return json_array();
 
    visited.insert(objectId);
 
-   unique_ptr<SharedObjectArray<NetObj>> children = g_idxObjectById.getObjects(
-      [userId, objectId, &classFilter, maxDepth, currentDepth] (NetObj *obj) -> bool
-      {
-         if (obj->isHidden() || obj->isSystem() || obj->isDeleted() || !obj->checkAccessRights(userId, OBJECT_ACCESS_READ))
-            return false;
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+   {
+      visited.erase(objectId);
+      return json_array();
+   }
 
-         if (obj->isDirectParent(objectId))
-         {
-            if (classFilter.empty())
-               return true;
-
-            if (classFilter.count(obj->getObjectClass()) > 0)
-               return true;
-
-            std::unordered_set<uint32_t> tempVisited;
-            return HasDescendantsMatchingClassFilter(obj->getId(), userId, classFilter, tempVisited, maxDepth, currentDepth + 1);
-         }
-         return false;
-      });
-
+   unique_ptr<SharedObjectArray<NetObj>> children = object->getChildren();
    json_t *output = json_array();
    for(int i = 0; i < children->size(); i++)
    {
       NetObj *child = children->get(i);
+
+      if (child->isHidden() || child->isSystem() || child->isDeleted() || !child->checkAccessRights(userId, OBJECT_ACCESS_READ))
+         continue;
+
+      // Apply class filter if specified
+      if (!classFilter.empty())
+      {
+         if (classFilter.count(child->getObjectClass()) == 0)
+         {
+            // Check if this child has descendants matching the class filter
+            std::unordered_set<uint32_t> tempVisited;
+            if (!HasDescendantsMatchingClassFilter(child->getId(), userId, classFilter, tempVisited, maxDepth, currentDepth + 1))
+               continue;
+         }
+      }
+
       json_t *childObject = CreateObjectSummary(*child);
 
       json_t *nestedChildren = BuildNestedObjectTree(child->getId(), userId, classFilter, visited, maxDepth, currentDepth + 1);
@@ -318,9 +325,9 @@ json_t *BuildNestedObjectTree(uint32_t objectId, uint32_t userId, const std::uno
 }
 
 /**
- * Handler for /v1/objects/:object-id/children
+ * Handler for /v1/objects/:object-id/sub-tree
  */
-int H_ObjectChildren(Context *context)
+int H_ObjectSubTree(Context *context)
 {
    uint32_t objectId = context->getPlaceholderValueAsUInt32(_T("object-id"));
    if (objectId == 0)
@@ -349,14 +356,9 @@ int H_ObjectChildren(Context *context)
    }
 
    // Get maximum depth parameter (default 10)
-   int maxDepth = 10;
-   const char *maxDepthParam = context->getQueryParameter("maxDepth");
-   if (maxDepthParam != nullptr)
-   {
-      int depth = atoi(maxDepthParam);
-      if (depth > 0 && depth <= 100)  // Cap at 100 levels to prevent abuse
-         maxDepth = depth;
-   }
+   int maxDepth = context->getQueryParameterAsInt32("maxDepth", 10);
+   if (maxDepth > 100)  // Cap at 100 levels to prevent abuse
+      maxDepth = 100;
 
    // Always use recursive implementation
    std::unordered_set<uint32_t> visited;
