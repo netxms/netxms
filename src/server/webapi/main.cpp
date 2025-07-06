@@ -50,7 +50,7 @@ int H_GrafanaGetObjectsStatus(Context *context);
 int H_Login(Context *context);
 int H_Logout(Context *context);
 int H_ObjectDetails(Context *context);
-int H_ObjectChildren(Context *context);
+int H_ObjectSubTree(Context *context);
 int H_ObjectExecuteAgentCommand(Context *context);
 int H_ObjectExecuteScript(Context *context);
 int H_ObjectQuery(Context *context);
@@ -262,8 +262,8 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/objects/:object-id/take-screenshot")
       .GET(H_TakeScreenshot)
       .build();
-   RouteBuilder("v1/objects/:object-id/children")
-      .GET(H_ObjectChildren)
+   RouteBuilder("v1/objects/:object-id/sub-tree")
+      .GET(H_ObjectSubTree)
       .build();
    RouteBuilder("v1/objects/query")
       .POST(H_ObjectQuery)
