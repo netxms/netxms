@@ -470,7 +470,7 @@ bool MajorSchemaUpgrade_V52()
             break;
       if (s_dbUpgradeMap[i].upgradeProc == nullptr)
       {
-         WriteToTerminalEx(L"Unable to find upgrade procedure for version 51.%d\n", minor);
+         WriteToTerminalEx(L"Unable to find upgrade procedure for version 52.%d\n", minor);
          return false;
       }
       WriteToTerminalEx(L"Upgrading from version 52.%d to %d.%d\n", minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);
