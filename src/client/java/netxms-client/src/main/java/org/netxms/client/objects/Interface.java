@@ -21,6 +21,7 @@ package org.netxms.client.objects;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -426,6 +427,7 @@ public class Interface extends GenericObject implements ZoneMember, NodeComponen
 	private long peerNodeId;
 	private long peerInterfaceId;
 	private LinkLayerDiscoveryProtocol peerDiscoveryProtocol;
+   private Date peerLastUpdateTime;
 	private int zoneId;
 	private String description;
    protected String ifAlias;
@@ -466,6 +468,7 @@ public class Interface extends GenericObject implements ZoneMember, NodeComponen
 		peerNodeId = msg.getFieldAsInt64(NXCPCodes.VID_PEER_NODE_ID);
 		peerInterfaceId = msg.getFieldAsInt64(NXCPCodes.VID_PEER_INTERFACE_ID);
 		peerDiscoveryProtocol = LinkLayerDiscoveryProtocol.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_PEER_PROTOCOL));
+      peerLastUpdateTime = msg.getFieldAsDate(NXCPCodes.VID_PEER_LAST_UPDATED);
 		zoneId = msg.getFieldAsInt32(NXCPCodes.VID_ZONE_UIN);
 		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
 		adminState = msg.getFieldAsInt32(NXCPCodes.VID_ADMIN_STATE);
@@ -647,6 +650,14 @@ public class Interface extends GenericObject implements ZoneMember, NodeComponen
 	{
 		return peerInterfaceId;
 	}
+
+   /**
+    * @return the peerLastUpdateTime
+    */
+   public Date getPeerLastUpdateTime()
+   {
+      return peerLastUpdateTime;
+   }
 
    /**
     * @see org.netxms.client.objects.interfaces.ZoneMember#getZoneId()

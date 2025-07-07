@@ -24,6 +24,15 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 52.19 to 53.0
+ */
+static bool H_UpgradeFromV19()
+{
+   CHK_EXEC(SetMajorSchemaVersion(53, 0));
+   return true;
+}
+
+/**
  * Upgrade from 52.18 to 52.19
  */
 static bool H_UpgradeFromV18()
@@ -430,6 +439,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 19, 53, 0,  H_UpgradeFromV19 },
    { 18, 52, 19, H_UpgradeFromV18 },
    { 17, 52, 18, H_UpgradeFromV17 },
    { 16, 52, 17, H_UpgradeFromV16 },
@@ -461,7 +471,7 @@ bool MajorSchemaUpgrade_V52()
    if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
       return false;
 
-   while ((major == 52) && (minor < DB_SCHEMA_VERSION_V52_MINOR))
+   while (major == 52)
    {
       // Find upgrade procedure
       int i;
@@ -470,7 +480,7 @@ bool MajorSchemaUpgrade_V52()
             break;
       if (s_dbUpgradeMap[i].upgradeProc == nullptr)
       {
-         WriteToTerminalEx(L"Unable to find upgrade procedure for version 51.%d\n", minor);
+         WriteToTerminalEx(L"Unable to find upgrade procedure for version 52.%d\n", minor);
          return false;
       }
       WriteToTerminalEx(L"Upgrading from version 52.%d to %d.%d\n", minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);

@@ -39,6 +39,7 @@ Interface::Interface() : super(), m_macAddress(MacAddress::ZERO)
 	m_peerNodeId = 0;
 	m_peerInterfaceId = 0;
    m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
+   m_peerLastUpdated = 0;
    m_adminState = IF_ADMIN_STATE_UNKNOWN;
    m_operState = IF_OPER_STATE_UNKNOWN;
    m_pendingOperState = IF_OPER_STATE_UNKNOWN;
@@ -84,6 +85,7 @@ Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyn
 	m_peerNodeId = 0;
 	m_peerInterfaceId = 0;
    m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
+   m_peerLastUpdated = 0;
    m_adminState = IF_ADMIN_STATE_UNKNOWN;
    m_operState = IF_OPER_STATE_UNKNOWN;
    m_pendingOperState = IF_OPER_STATE_UNKNOWN;
@@ -137,6 +139,7 @@ Interface::Interface(const TCHAR *objectName, const TCHAR *ifName, const TCHAR *
    m_pendingOperState = IF_OPER_STATE_UNKNOWN;
    m_confirmedOperState = IF_OPER_STATE_UNKNOWN;
    m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
+   m_peerLastUpdated = 0;
 	m_dot1xPaeAuthState = PAE_STATE_UNKNOWN;
 	m_dot1xBackendAuthState = BACKEND_STATE_UNKNOWN;
    m_lastDownEventId = 0;
@@ -183,7 +186,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepa
 		_T("SELECT if_type,if_index,node_id,mac_addr,required_polls,bridge_port,phy_chassis,phy_module,")
 		_T("phy_pic,phy_port,peer_node_id,peer_if_id,description,if_name,if_alias,dot1x_pae_state,dot1x_backend_state,")
 		_T("admin_state,oper_state,peer_proto,mtu,speed,parent_iface,last_known_oper_state,last_known_admin_state,")
-      _T("ospf_area,ospf_if_type,ospf_if_state,stp_port_state,iftable_suffix FROM interfaces WHERE id=?"));
+      _T("ospf_area,ospf_if_type,ospf_if_state,stp_port_state,peer_last_updated,iftable_suffix FROM interfaces WHERE id=?"));
 	if (hStmt == nullptr)
 		return false;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -224,9 +227,10 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepa
       m_ospfType = static_cast<OSPFInterfaceType>(DBGetFieldLong(hResult, 0, 26));
       m_ospfState = static_cast<OSPFInterfaceState>(DBGetFieldLong(hResult, 0, 27));
       m_stpPortState = static_cast<SpanningTreePortState>(DBGetFieldLong(hResult, 0, 28));
+      m_peerLastUpdated = static_cast<time_t>(DBGetFieldInt64(hResult, 0, 29));
 
-      TCHAR suffixText[128];
-      DBGetField(hResult, 0, 29, suffixText, 128);
+      wchar_t suffixText[128];
+      DBGetField(hResult, 0, 30, suffixText, 128);
       Trim(suffixText);
       if (suffixText[0] == 0)
       {
@@ -251,7 +255,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepa
          }
          else
          {
-            nxlog_write(NXLOG_ERROR, _T("Inconsistent database: interface %s [%u] linked to non-existent node [%u]"), m_name, m_id, nodeId);
+            nxlog_write(NXLOG_ERROR, L"Inconsistent database: interface %s [%u] linked to non-existent node [%u]", m_name, m_id, nodeId);
          }
       }
       else
@@ -338,16 +342,16 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
    {
       uint32_t nodeId = getParentNodeId();
 
-      static const TCHAR *columns[] = {
-         _T("node_id"), _T("if_type"), _T("if_index"), _T("mac_addr"), _T("required_polls"), _T("bridge_port"),
-         _T("phy_chassis"), _T("phy_module"), _T("phy_pic"), _T("phy_port"), _T("peer_node_id"), _T("peer_if_id"),
-         _T("description"), _T("admin_state"), _T("oper_state"), _T("dot1x_pae_state"), _T("dot1x_backend_state"),
-         _T("peer_proto"), _T("mtu"), _T("speed"), _T("parent_iface"), _T("iftable_suffix"), _T("last_known_oper_state"),
-         _T("last_known_admin_state"), _T("if_alias"), _T("ospf_area"), _T("ospf_if_type"), _T("ospf_if_state"),
-         _T("stp_port_state"), _T("if_name"), nullptr
+      static const wchar_t *columns[] = {
+         L"node_id", L"if_type", L"if_index", L"mac_addr", L"required_polls", L"bridge_port",
+         L"phy_chassis", L"phy_module", L"phy_pic", L"phy_port", L"peer_node_id", L"peer_if_id",
+         L"description", L"admin_state", L"oper_state", L"dot1x_pae_state", L"dot1x_backend_state",
+         L"peer_proto", L"mtu", L"speed", L"parent_iface", L"iftable_suffix", L"last_known_oper_state",
+         L"last_known_admin_state", L"if_alias", L"ospf_area", L"ospf_if_type", L"ospf_if_state",
+         L"stp_port_state", L"if_name", L"peer_last_updated", nullptr
       };
 
-      DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("interfaces"), _T("id"), m_id, columns);
+      DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"interfaces", L"id", m_id, columns);
       if (hStmt != nullptr)
       {
          TCHAR ospfArea[16];
@@ -382,7 +386,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          }
          else
          {
-            DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
+            DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, L"", DB_BIND_STATIC);
          }
          DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastKnownOperState));
          DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastKnownAdminState));
@@ -390,12 +394,13 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          if (m_flags & IF_OSPF_INTERFACE)
             DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, IpToStr(m_ospfArea, ospfArea), DB_BIND_STATIC);
          else
-            DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
+            DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, L"", DB_BIND_STATIC);
          DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_ospfType));
          DBBind(hStmt, 28, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_ospfState));
          DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_stpPortState));
          DBBind(hStmt, 30, DB_SQLTYPE_VARCHAR, m_ifName, DB_BIND_STATIC, MAX_DB_STRING - 1);
-         DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_peerLastUpdated));
+         DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -410,11 +415,11 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
       // Save VLAN list
       if (success)
       {
-         success = executeQueryOnObject(hdb, _T("DELETE FROM interface_vlan_list WHERE iface_id=?"));
+         success = executeQueryOnObject(hdb, L"DELETE FROM interface_vlan_list WHERE iface_id=?");
          lockProperties();
          if (success && (m_vlans != nullptr) && !m_vlans->isEmpty())
          {
-            hStmt = DBPrepare(hdb, _T("INSERT INTO interface_vlan_list (iface_id,vlan_id) VALUES (?,?)"), m_vlans->size() > 1);
+            hStmt = DBPrepare(hdb, L"INSERT INTO interface_vlan_list (iface_id,vlan_id) VALUES (?,?)", m_vlans->size() > 1);
             if (hStmt != nullptr)
             {
                DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -466,6 +471,31 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
    else
    {
       success = true;
+   }
+   return success;
+}
+
+/**
+ * Save runtime data to database. Called only on server shutdown to save
+ * less important but frequently changing runtime data when it is not feasible
+ * to mark object as modified on each change of such data.
+ */
+bool Interface::saveRuntimeData(DB_HANDLE hdb)
+{
+   if (!super::saveRuntimeData(hdb))
+      return false;
+
+   bool success = true;
+   if ((m_peerNodeId != 0) && (m_peerLastUpdated != 0))
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE interfaces SET peer_last_updated=? WHERE id=?"));
+      if (hStmt == nullptr)
+         return false;
+
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_peerLastUpdated));
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
+      success = DBExecute(hStmt);
+      DBFreeStatement(hStmt);
    }
    return success;
 }
@@ -1088,6 +1118,7 @@ void Interface::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 	msg->setField(VID_PEER_NODE_ID, m_peerNodeId);
 	msg->setField(VID_PEER_INTERFACE_ID, m_peerInterfaceId);
 	msg->setField(VID_PEER_PROTOCOL, static_cast<int16_t>(m_peerDiscoveryProtocol));
+	msg->setFieldFromTime(VID_PEER_LAST_UPDATED, m_peerLastUpdated);
 	msg->setField(VID_DESCRIPTION, m_description);
    msg->setField(VID_IF_ALIAS, m_ifAlias);
 	msg->setField(VID_ADMIN_STATE, m_adminState);
@@ -1332,6 +1363,10 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
       peerChanged = true;
    }
 
+   m_peerLastUpdated = time(nullptr);
+   if (!peerChanged)
+      setModified(MODIFY_RUNTIME);
+
    unlockProperties();
 
    if (peerChanged && !m_isSystem)
@@ -1387,6 +1422,10 @@ void Interface::setPeer(AccessPoint *ap, LinkLayerProtocol protocol)
       peerChanged = true;
    }
 
+   m_peerLastUpdated = time(nullptr);
+   if (!peerChanged)
+      setModified(MODIFY_RUNTIME);
+
    unlockProperties();
 
    if (peerChanged && !m_isSystem)
@@ -1412,6 +1451,21 @@ void Interface::setPeer(AccessPoint *ap, LinkLayerProtocol protocol)
       }
       unlockParentList();
    }
+}
+
+/**
+ * Clear peer information
+ */
+void Interface::clearPeerData()
+{
+   lockProperties();
+   m_peerNodeId = 0;
+   m_peerInterfaceId = 0;
+   m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
+   m_peerLastUpdated = 0;
+   m_flags &= ~IF_PEER_REFLECTION;
+   setModified(MODIFY_INTERFACE_PROPERTIES | MODIFY_COMMON_PROPERTIES);
+   unlockProperties();
 }
 
 /**

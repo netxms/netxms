@@ -3137,6 +3137,10 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
 			value = vm->createValue();
 		}
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("peerLastUpdateTime"))
+   {
+      vm->createValue(static_cast<int64_t>(iface->getPeerLastUpdateTime()));
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("peerNode"))
    {
       shared_ptr<NetObj> peerNode = FindObjectById(iface->getPeerNodeId());

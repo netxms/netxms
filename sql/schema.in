@@ -658,6 +658,7 @@ CREATE TABLE interfaces
   peer_node_id integer not null,
   peer_if_id integer not null,
   peer_proto integer not null,
+  peer_last_updated integer not null,
   mac_addr varchar(16) null,
   required_polls integer not null,
   admin_state integer not null,

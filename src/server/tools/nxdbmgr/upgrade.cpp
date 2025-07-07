@@ -49,6 +49,7 @@ bool MajorSchemaUpgrade_V46();
 bool MajorSchemaUpgrade_V50();
 bool MajorSchemaUpgrade_V51();
 bool MajorSchemaUpgrade_V52();
+bool MajorSchemaUpgrade_V53();
 
 /**
  * Move to next major version of DB schema
@@ -171,6 +172,7 @@ static struct
    { 50, MajorSchemaUpgrade_V50 },
    { 51, MajorSchemaUpgrade_V51 },
    { 52, MajorSchemaUpgrade_V52 },
+   { 53, MajorSchemaUpgrade_V53 },
    { 0, nullptr }
 };
 

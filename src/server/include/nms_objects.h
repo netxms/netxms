@@ -2209,6 +2209,7 @@ protected:
    uint32_t m_peerNodeId;             // ID of peer node object, or 0 if unknown
    uint32_t m_peerInterfaceId;       // ID of peer interface object, or 0 if unknown
    LinkLayerProtocol m_peerDiscoveryProtocol;  // Protocol used to discover peer node
+   time_t m_peerLastUpdated;
    int16_t m_adminState;             // interface administrative state
    int16_t m_operState;             // interface operational state
    int16_t m_pendingOperState;
@@ -2243,6 +2244,7 @@ protected:
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
 
    void setExpectedStateInternal(int state);
+   void clearPeerData();
 
 public:
    Interface();
@@ -2263,6 +2265,7 @@ public:
    }
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool saveRuntimeData(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
 
@@ -2296,6 +2299,7 @@ public:
    uint32_t getPeerNodeId() const { return m_peerNodeId; }
    uint32_t getPeerInterfaceId() const { return m_peerInterfaceId; }
    LinkLayerProtocol getPeerDiscoveryProtocol() const { return m_peerDiscoveryProtocol; }
+   time_t getPeerLastUpdateTime() const { return m_peerLastUpdated; }
    uint32_t getOSPFArea() const { return m_ospfArea; }
    OSPFInterfaceType getOSPFType() const { return m_ospfType; }
    OSPFInterfaceState getOSPFState() const { return m_ospfState; }
@@ -2367,12 +2371,21 @@ public:
    void clearPeer()
    {
       lockProperties();
-      m_peerNodeId = 0;
-      m_peerInterfaceId = 0;
-      m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
-      m_flags &= ~IF_PEER_REFLECTION;
-      setModified(MODIFY_INTERFACE_PROPERTIES | MODIFY_COMMON_PROPERTIES);
+      clearPeerData();
       unlockProperties();
+   }
+   bool clearExpiredPeerData(uint32_t maxAgeSeconds)
+   {
+      bool cleared = false;
+      time_t cutoffTime = time(nullptr) - maxAgeSeconds;
+      lockProperties();
+      if ((m_peerLastUpdated > 0) && (m_peerLastUpdated < cutoffTime))
+      {
+         clearPeerData();
+         cleared = true;
+      }
+      unlockProperties();
+      return cleared;
    }
    void setDescription(const TCHAR *description)
    {

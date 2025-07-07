@@ -392,6 +392,7 @@
     <ClCompile Include="upgrade_v50.cpp" />
     <ClCompile Include="upgrade_v51.cpp" />
     <ClCompile Include="upgrade_v52.cpp" />
+    <ClCompile Include="upgrade_v53.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\netxms-version.h" />

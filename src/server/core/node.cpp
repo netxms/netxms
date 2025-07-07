@@ -11437,6 +11437,8 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
          }
       }
 
+      uint32_t peerRetentionTime = ConfigReadULong(_T("Objects.Interfaces.PeerRetentionTime"), 30) * 86400; // Default 30 days
+
       readLockChildList();
       for(int i = 0; i < getChildList().size(); i++)
       {
@@ -11469,7 +11471,16 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
             {
                ClearPeer(iface->getPeerInterfaceId());
                iface->clearPeer();
-               nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("Node::topologyPoll(%s [%u]): Removed outdated peer information from interface %s [%u]"), m_name, m_id, iface->getName(), iface->getId());
+               nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("Node::topologyPoll(%s [%u]): Removed outdated peer information from interface %s [%u] (multiple MAC addresses detected)"), m_name, m_id, iface->getName(), iface->getId());
+               continue;
+            }
+
+            // Remove expired peer information
+            if (iface->clearExpiredPeerData(peerRetentionTime))
+            {
+               sendPollerMsg(_T("   Removed outdated peer information from interface %s\r\n"), iface->getName());
+               nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("Node::topologyPoll(%s [%u]): removed outdated peer information from interface \"%s\" [%u] (no confirmation for more than %d days)"),
+                  m_name, m_id, iface->getName(), iface->getId(), peerRetentionTime / 86400);
             }
          }
       }

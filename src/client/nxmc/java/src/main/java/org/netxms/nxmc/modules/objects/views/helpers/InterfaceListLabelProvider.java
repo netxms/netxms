@@ -32,6 +32,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Interface;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.InterfacesView;
 import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
@@ -135,6 +136,8 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
             return getPeerInterfaceName(iface);
          case InterfacesView.COLUMN_PEER_IP_ADDRESS:
             return getPeerIpAddress(iface);
+         case InterfacesView.COLUMN_PEER_LAST_UPDATED:
+            return (iface.getPeerLastUpdateTime().getTime() != 0) ? DateFormatFactory.getDateTimeFormat().format(iface.getPeerLastUpdateTime()) : "";
          case InterfacesView.COLUMN_PEER_MAC_ADDRESS:
             macAddr = getPeerMacAddress(iface);
             return (macAddr != null) ? macAddr.toString() : null;

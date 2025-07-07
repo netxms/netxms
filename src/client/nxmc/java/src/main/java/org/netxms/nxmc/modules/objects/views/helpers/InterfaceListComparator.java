@@ -119,6 +119,9 @@ public class InterfaceListComparator extends ViewerComparator
          case InterfacesView.COLUMN_PEER_IP_ADDRESS:
             result = ComparatorHelper.compareInetAddresses(getPeerIpAddress(iface1), getPeerIpAddress(iface2));
             break;
+         case InterfacesView.COLUMN_PEER_LAST_UPDATED:
+            result = Long.compare(iface1.getPeerLastUpdateTime().getTime(), iface2.getPeerLastUpdateTime().getTime());
+            break;
          case InterfacesView.COLUMN_PEER_MAC_ADDRESS:
             result = getPeerMacAddress(iface1).compareTo(getPeerMacAddress(iface2));
             break;
