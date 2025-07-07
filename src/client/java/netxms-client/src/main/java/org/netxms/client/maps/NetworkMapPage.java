@@ -478,4 +478,19 @@ public class NetworkMapPage
    {
       return mapObjectId;
    }
+
+   /**
+    * @param link
+    */
+   public NetworkMapLink findLink(NetworkMapLink link)
+   {
+      for(NetworkMapLink l : links.values())
+      {
+         if (l.getElement1() == link.getElement1() && l.getElement2() == link.getElement2() &&
+               l.getDuplicateCount() == link.getDuplicateCount())
+            return l;
+      }
+      return null;
+      
+   }
 }

@@ -397,9 +397,25 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    @Override
    public void refresh()
 	{
+
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      List<Object> newSelection = new ArrayList<Object>(selection.size());
+      
 		buildMapPage(mapPage);
 		viewer.setInput(mapPage);
-		viewer.setSelection(StructuredSelection.EMPTY);
+		for (Object s : selection)
+		{
+		   if (s instanceof NetworkMapLink)
+         {
+		      newSelection.add(mapPage.findLink((NetworkMapLink)s));            
+         }
+		   else if (s instanceof NetworkMapElement)
+		   {
+		      NetworkMapElement element = (NetworkMapElement)s;
+            newSelection.add(mapPage.getElement(element.getId(), element.getClass()));    
+		   }
+		}
+      viewer.setSelection(new StructuredSelection(newSelection));  
 	}
 
 	/**
@@ -770,6 +786,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 			{
 				viewer.alignToGrid(false);
 				updateObjectPositions();
+				saveLayout();
 			}
 		};
       addKeyBinding("M1+M3+G", actionAlignToGrid);

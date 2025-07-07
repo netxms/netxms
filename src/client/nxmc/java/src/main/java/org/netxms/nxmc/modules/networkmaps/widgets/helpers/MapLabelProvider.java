@@ -537,7 +537,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
             ConnectionEndpointLocator sourceEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), false);
             sourceEndpointLocator.setVDistance(0);
             final Label label = new ConnectorLabel(name, this);
-            label.setFont(fontLabel[viewer.getCurrentZoomIndex()]);
+            label.setFont(getLabelFont());
             connection.getConnectionFigure().add(label, sourceEndpointLocator);
          }
 
@@ -547,7 +547,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
             ConnectionEndpointLocator targetEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), true);
             targetEndpointLocator.setVDistance(0);
             final Label label = new ConnectorLabel(name, this);
-            label.setFont(fontLabel[viewer.getCurrentZoomIndex()]);
+            label.setFont(getLabelFont());
             connection.getConnectionFigure().add(label, targetEndpointLocator);
          }
 		}
@@ -715,7 +715,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
             nameLocatorCenter.setRelativePosition(PositionConstants.CENTER);
             nameLocatorObject1 = new ConnectionLocator(connection.getConnectionFigure(), ConnectionLocator.SOURCE);
             nameLocatorObject2 = new ConnectionLocator(connection.getConnectionFigure(), ConnectionLocator.TARGET);
-            //TODO: 
+            //TODO: add support for bend points in MultiLabelConnectionLocator
          }
          else
          {
