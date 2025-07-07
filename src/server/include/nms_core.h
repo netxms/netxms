@@ -260,6 +260,7 @@ enum CertificateOperation
 #include "nms_events.h"
 #include "nms_actions.h"
 #include "nms_alarm.h"
+#include "jwt.h"
 
 /**
  * New node flags

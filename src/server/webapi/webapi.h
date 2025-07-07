@@ -29,6 +29,7 @@
 #include <nxmodule.h>
 #include <nxconfig.h>
 #include <microhttpd.h>
+#include <jwt.h>
 
 #include <string>
 
@@ -39,6 +40,13 @@
 #define DEBUG_TAG_WEBAPI  _T("webapi")
 
 #define AUTH_TOKEN_VALIDITY_TIME 86400
+#define JWT_ACCESS_TOKEN_VALIDITY_TIME 1800    // 30 minutes (default)
+#define JWT_REFRESH_TOKEN_VALIDITY_TIME 604800  // 7 days (default)
+
+// JWT configuration functions
+void InitializeJwtConfiguration();
+int GetJwtAccessTokenValidityTime();
+int GetJwtRefreshTokenValidityTime();
 
 /* do undefs for Method enum values in case any of them defined in system headers */
 #undef DELETE

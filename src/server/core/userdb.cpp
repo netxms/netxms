@@ -634,8 +634,10 @@ bool NXCORE_EXPORTABLE ValidateUserId(uint32_t id, TCHAR *loginName, uint64_t *s
    {
       if (!object->isDisabled())
       {
-         _tcslcpy(loginName, object->getName(), MAX_USER_NAME);
-         *systemAccess = GetEffectiveSystemRights(static_cast<User*>(object));
+         if (loginName != nullptr)
+            _tcslcpy(loginName, object->getName(), MAX_USER_NAME);
+         if (systemAccess != nullptr)
+            *systemAccess = GetEffectiveSystemRights(static_cast<User*>(object));
          success = true;
       }
       else
