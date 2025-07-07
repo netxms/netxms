@@ -334,15 +334,13 @@ int H_ObjectSubTree(Context *context)
    const char *classFilterParam = context->getQueryParameter("class");
    if (classFilterParam != nullptr)
    {
-      char *p, *last;
-      char *buffer = MemCopyStringA(classFilterParam);
-      for((p = strtok_r(buffer, ",", &last)); p != nullptr; (p = strtok_r(nullptr, ",", &last)))
-      {
-         int n = NetObj::getObjectClassByNameA(p);
-         if (n != OBJECT_GENERIC)
-            classFilter.insert(n);
-      }
-      MemFree(buffer);
+      String(classFilterParam, "UTF8").split(L",", true,
+         [&classFilter] (const String& className) ->void
+         {
+            int n = NetObj::getObjectClassByName(className);
+            if (n != OBJECT_GENERIC)
+               classFilter.insert(n);
+         });
    }
 
    // Get maximum depth parameter (default 10)

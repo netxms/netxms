@@ -393,7 +393,7 @@ void NXSL_ProgramBuilder::dump(FILE *fp, uint32_t addr, const NXSL_Instruction& 
          _ftprintf(fp, _T("(%hs), %04X\n"), instruction.m_operand.m_identifier->value, instruction.m_addr2);
          break;
       case OPCODE_UPDATE_EXPRVAR:
-         _ftprintf(fp, _T("(%hs)\n"), instruction.m_operand.m_identifier->value);
+         _ftprintf(fp, _T("(%hs), %04X\n"), instruction.m_operand.m_identifier->value, instruction.m_addr2);
          break;
       case OPCODE_PUSH_VARPTR:
          _ftprintf(fp, _T("%hs\n"), instruction.m_operand.m_variable->getName().value);
