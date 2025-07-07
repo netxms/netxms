@@ -254,9 +254,7 @@ static bool HasDescendantsMatchingClassFilter(const shared_ptr<NetObj>& object, 
       else
       {
          // Check descendants recursively
-         shared_ptr<NetObj> childPtr = FindObjectById(child->getId());
-         if (childPtr != nullptr)
-            hasMatchingDescendants = HasDescendantsMatchingClassFilter(childPtr, userId, classFilter, visited, maxDepth, currentDepth + 1);
+         hasMatchingDescendants = HasDescendantsMatchingClassFilter(children->getShared(i), userId, classFilter, visited, maxDepth, currentDepth + 1);
       }
    }
 
@@ -292,16 +290,14 @@ static json_t *BuildNestedObjectTree(const shared_ptr<NetObj>& object, uint32_t 
          {
             // Check if this child has descendants matching the class filter
             std::unordered_set<uint32_t> tempVisited;
-            shared_ptr<NetObj> childPtr = FindObjectById(child->getId());
-            if (childPtr == nullptr || !HasDescendantsMatchingClassFilter(childPtr, userId, classFilter, tempVisited, maxDepth, currentDepth + 1))
+            if (!HasDescendantsMatchingClassFilter(children->getShared(i), userId, classFilter, tempVisited, maxDepth, currentDepth + 1))
                continue;
          }
       }
 
       json_t *childObject = CreateObjectSummary(*child);
 
-      shared_ptr<NetObj> childPtr = FindObjectById(child->getId());
-      json_t *nestedChildren = (childPtr != nullptr) ? BuildNestedObjectTree(childPtr, userId, classFilter, visited, maxDepth, currentDepth + 1) : json_array();
+      json_t *nestedChildren = BuildNestedObjectTree(children->getShared(i), userId, classFilter, visited, maxDepth, currentDepth + 1);
       if (json_array_size(nestedChildren) > 0)
       {
          json_object_set_new(childObject, "children", nestedChildren);
