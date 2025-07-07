@@ -266,6 +266,7 @@ public class ExtendedGraphViewer extends GraphViewer
                {
                   if (!(getLayoutAlgorithm() instanceof ManualLayout))
                   {
+                     dragStarted = false;
                      unblockRefresh();
                      return;
                   }
@@ -339,7 +340,7 @@ public class ExtendedGraphViewer extends GraphViewer
     */
    public void blockRefresh()
    {
-      blockRefresh++;
+     blockRefresh++;
    }
 
 	/**
@@ -347,7 +348,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	 */
 	public void unblockRefresh()
    {
-      blockRefresh--;
+	   blockRefresh--;
    }
 	
 

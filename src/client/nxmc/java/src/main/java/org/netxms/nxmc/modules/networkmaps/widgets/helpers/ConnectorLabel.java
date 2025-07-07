@@ -55,6 +55,7 @@ public class ConnectorLabel extends Label
 		super(s);
 		initLabel();
 		this.labelProvider = labelProvider;
+      setFont(labelProvider.getLabelFont());
       setBorder(new LineBorder(DEFAULT_BORDER_COLOR, 1, SWT.LINE_DOT));
 	}
 
