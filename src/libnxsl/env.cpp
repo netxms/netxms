@@ -210,7 +210,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "GetCurrentTimeMs", F_GetCurrentTimeMs, 0 },
    { "GetMonotonicClockTime", F_GetMonotonicClockTime, 0 },
    { "GetThreadPoolNames", F_GetThreadPoolNames, 0 },
-   { "JsonParse", F_JsonParse, 1 },
+   { "JsonParse", F_JsonParse, -1 },
    { "ReadPersistentStorage", F_ReadPersistentStorage, 1 },
 	{ "SecondsToUptime", F_SecondsToUptime, 1 },
    { "SplitString", F_SplitString, 2, true },
