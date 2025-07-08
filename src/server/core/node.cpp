@@ -2370,7 +2370,7 @@ shared_ptr<Interface> Node::createNewInterface(InterfaceInfo *info, bool manuall
  */
 void Node::deleteInterface(Interface *iface)
 {
-   nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 5, _T("Node::deleteInterface(node=%s [%d], interface=%s [%d])"), m_name, m_id, iface->getName(), iface->getId());
+   nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 5, _T("Node::deleteInterface(node=%s [%u], interface=%s [%u])"), m_name, m_id, iface->getName(), iface->getId());
 
    // Check if we should unlink node from interface's subnet
    if (!iface->isExcludedFromTopology())
@@ -2402,7 +2402,7 @@ void Node::deleteInterface(Interface *iface)
             {
                unlinkObjects(subnet.get(), this);
             }
-            nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 5, _T("Node::deleteInterface(node=%s [%d], interface=%s [%d]): unlinked from subnet %s [%d]"),
+            nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 5, _T("Node::deleteInterface(node=%s [%u], interface=%s [%u]): unlinked from subnet %s [%u]"),
                       m_name, m_id, iface->getName(), iface->getId(),
                       (subnet != nullptr) ? subnet->getName() : _T("(null)"),
                       (subnet != nullptr) ? subnet->getId() : 0);
@@ -7020,12 +7020,12 @@ StringMap *Node::getInstanceList(DCObject *dco)
       node = static_pointer_cast<Node>(FindObjectById(dco->getSourceNode(), OBJECT_NODE));
       if (node == nullptr)
       {
-         nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 6, _T("Node::getInstanceList(%s [%d]): source node [%d] not found"), dco->getName().cstr(), dco->getId(), dco->getSourceNode());
+         nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 6, _T("Node::getInstanceList(%s [%u]): source node [%u] not found"), dco->getName().cstr(), dco->getId(), dco->getSourceNode());
          return nullptr;
       }
       if (!node->isTrustedObject(m_id))
       {
-         nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 6, _T("Node::getInstanceList(%s [%d]): this node (%s [%d]) is not trusted by source node %s [%d]"),
+         nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 6, _T("Node::getInstanceList(%s [%u]): this node (%s [%u]) is not trusted by source node %s [%d]"),
                   dco->getName().cstr(), dco->getId(), m_name, m_id, node->getName(), node->getId());
          return nullptr;
       }
@@ -11945,7 +11945,7 @@ shared_ptr<Subnet> Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
          {
             linkObjects(g_entireNetwork, subnet);
          }
-         nxlog_debug(4, _T("Node::createSubnet(): Created new subnet %s [%d] for node %s [%d]"),
+         nxlog_debug(4, _T("Node::createSubnet(): Created new subnet %s [%u] for node %s [%u]"),
                   subnet->getName(), subnet->getId(), m_name, m_id);
       }
       else
@@ -12012,7 +12012,7 @@ void Node::checkSubnetBinding()
       shared_ptr<Subnet> pSubnet = FindSubnetForNode(m_zoneUIN, addr);
       if (pSubnet != nullptr)
       {
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::checkSubnetBinding(%s [%d]): found subnet %s [%d]"), m_name, m_id, pSubnet->getName(), pSubnet->getId());
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::checkSubnetBinding(%s [%d]): found subnet %s [%u]"), m_name, m_id, pSubnet->getName(), pSubnet->getId());
          if (isSync)
          {
             pSubnet.reset();   // No further checks on this subnet
@@ -12021,7 +12021,7 @@ void Node::checkSubnetBinding()
          {
             if (pSubnet->isSyntheticMask() && !iface->isSyntheticMask() && (addr.getMaskBits() > 0))
             {
-               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Setting correct netmask for subnet %s [%d] from node %s [%d]"),
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Setting correct netmask for subnet %s [%u] from node %s [%u]"),
                         pSubnet->getName(), pSubnet->getId(), m_name, m_id);
                if ((addr.getHostBits() < 2) && (getParentCount() > 1))
                {
@@ -12040,7 +12040,7 @@ void Node::checkSubnetBinding()
             // Check if node is linked to this subnet
             if ((pSubnet != nullptr) && !pSubnet->isDirectChild(m_id))
             {
-               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Restored link between subnet %s [%d] and node %s [%u]"),
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Restored link between subnet %s [%u] and node %s [%u]"),
                         pSubnet->getName(), pSubnet->getId(), m_name, m_id);
                pSubnet->addNode(self());
             }
