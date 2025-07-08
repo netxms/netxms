@@ -435,19 +435,33 @@ int F_JsonArray(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
  */
 int F_JsonParse(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
+   if ((argc < 1) || (argc > 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
+   size_t flags = ((argc > 1) && argv[1]->isTrue()) ? JSON_DECODE_INT_AS_REAL : 0;
 #ifdef UNICODE
    char *utfString = UTF8StringFromWideString(argv[0]->getValueAsCString());
 #else
    char *utfString = UTF8StringFromMBString(argv[0]->getValueAsCString());
 #endif
    json_error_t error;
-   json_t *json = json_loads(utfString, 0, &error);
+   json_t *json = json_loads(utfString, flags, &error);
    MemFree(utfString);
-   *result = (json != nullptr) ?
-         (json_typeof(json) == JSON_ARRAY ? vm->createValue(vm->createObject(&g_nxslJsonArrayClass, json)) : vm->createValue(vm->createObject(&g_nxslJsonObjectClass, json)))
-               : vm->createValue();
+
+   if (json == nullptr)
+   {
+      nxlog_debug_tag(_T("nxsl"), 5, _T("JsonParse: JSON parsing error at line %d, column %d (%hs)"), error.line, error.column, error.text);
+      vm->setGlobalVariable("$jsonErrorColumn", vm->createValue(error.column));
+      vm->setGlobalVariable("$jsonErrorLine", vm->createValue(error.line));
+      vm->setGlobalVariable("$jsonErrorMessage", vm->createValue(error.text));
+      *result = vm->createValue();
+   }
+   else
+   {
+      *result = (json_typeof(json) == JSON_ARRAY) ? vm->createValue(vm->createObject(&g_nxslJsonArrayClass, json)) : vm->createValue(vm->createObject(&g_nxslJsonObjectClass, json));
+   }
    return 0;
 }
