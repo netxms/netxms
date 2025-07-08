@@ -4953,6 +4953,7 @@ AC_CONFIG_FILES([
 	tests/test-libnetxms/Makefile
 	tests/test-libnxcc/Makefile
 	tests/test-libnxdb/Makefile
+	tests/test-jwt/Makefile
 	tests/test-libnxsl/Makefile
 	tests/test-libnxsnmp/Makefile
 	tools/Makefile
