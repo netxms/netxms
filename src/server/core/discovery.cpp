@@ -607,8 +607,10 @@ static bool AcceptNewNodeStage2(DiscoveredAddress *address)
    if (!DuplicatesCheck(address))
       return false;
 
-   TCHAR ipAddrText[MAX_IP_ADDR_TEXT_LEN];
+   wchar_t ipAddrText[MAX_IP_ADDR_TEXT_LEN];
    address->ipAddr.toString(ipAddrText);
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("AcceptNewNodeStage2(%s): netmask=%d source=%s ignoreFilter=%s"), ipAddrText, address->ipAddr.getMaskBits(),
+      s_discoveredAddrSourceTypeAsText[address->sourceType], BooleanToString(address->ignoreFilter));
 
    DiscoveryFilterData *data = address->data;
 
@@ -827,7 +829,7 @@ void DiscoveredAddressPoller()
       if (address == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator received
 
-      TCHAR ipAddrText[MAX_IP_ADDR_TEXT_LEN];
+      wchar_t ipAddrText[MAX_IP_ADDR_TEXT_LEN];
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("DiscoveredAddressPoller: stage 2 processing for address %s/%d in zone %d (source type %s, source node [%u])"),
                address->ipAddr.toString(ipAddrText), address->ipAddr.getMaskBits(), address->zoneUIN,
                s_discoveredAddrSourceTypeAsText[address->sourceType], address->sourceNodeId);
@@ -873,7 +875,7 @@ void EnqueueDiscoveredAddress(DiscoveredAddress *address)
 }
 
 /**
- * Check potential new node from sysog, SNMP trap, or address range scan
+ * Check potential new node from syslog, SNMP trap, or address range scan
  */
 void CheckPotentialNode(const InetAddress& ipAddr, int32_t zoneUIN, DiscoveredAddressSourceType sourceType, uint32_t sourceNodeId)
 {
@@ -937,7 +939,7 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, uint32_t i
    if (IsShutdownInProgress())
       return;
 
-   TCHAR buffer[MAX_IP_ADDR_TEXT_LEN];
+   wchar_t buffer[MAX_IP_ADDR_TEXT_LEN];
    nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking potential node %s at %s:%u (source: %s)"),
             ipAddr.toString(buffer), node->getName(), ifIndex, s_discoveredAddrSourceTypeAsText[sourceType]);
    if (!ipAddr.isValidUnicast())

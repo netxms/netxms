@@ -506,7 +506,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       job.setUser(false);
       job.start();
 	}
-	
+
 	/**
 	 * Remove previous map objects
 	 */
