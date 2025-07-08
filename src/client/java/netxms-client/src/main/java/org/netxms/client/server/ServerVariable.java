@@ -128,6 +128,11 @@ public final class ServerVariable
          return (s != null) ? s : value;
       }
 
+      if ((dataType == ServerVariableDataType.INTEGER) && (unit != null) && !unit.isEmpty())
+      {
+         return value + " " + unit;
+      }
+
       return value;
    }
 
