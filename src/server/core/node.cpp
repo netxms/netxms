@@ -3999,7 +3999,7 @@ NetworkPathCheckResult Node::checkNetworkPath(uint32_t requestId)
  */
 void Node::checkAgentPolicyBinding(const shared_ptr<AgentConnectionEx>& conn)
 {
-   sendPollerMsg(_T("   Checking agent policy deployment\r\n"));
+   sendPollerMsg(L"   Checking agent policy deployment\r\n");
 
    AgentPolicyInfo *ap;
    uint32_t rcc = conn->getPolicyInventory(&ap);
@@ -4027,10 +4027,10 @@ void Node::checkAgentPolicyBinding(const shared_ptr<AgentConnectionEx>& conn)
          {
             sendPollerMsg(_T("      Removing policy %s from agent\r\n"), guid.toString().cstr());
             auto data = make_shared<AgentPolicyRemovalData>(self(), guid, ap->getType(i), isNewPolicyTypeFormatSupported());
-            _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), getName(), getId(), _T("unknown"), guid.toString().cstr());
+            _sntprintf(data->debugId, 256, L"%s [%u] from %s/%s", getName(), getId(), L"unknown", guid.toString().cstr());
 
-            TCHAR key[64];
-            _sntprintf(key, 64, _T("AgentPolicyDeployment_%u"), m_id);
+            wchar_t key[64];
+            _sntprintf(key, 64, L"AgentPolicyDeployment_%u", m_id);
             ThreadPoolExecuteSerialized(g_pollerThreadPool, key, RemoveAgentPolicy, data);
          }
 
@@ -11991,13 +11991,13 @@ void Node::checkSubnetBinding()
    unlockChildList();
 
    // Check if we have subnet bindings for all interfaces
-   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Checking subnet bindings for node %s [%u]"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"Checking subnet bindings for node %s [%u]", m_name, m_id);
    for(int i = 0; i < addrList.size(); i++)
    {
       InetAddress addr = addrList.get(i);
 
-      TCHAR buffer[64];
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::checkSubnetBinding(%s [%u]): checking address %s/%d"), m_name, m_id, addr.toString(buffer), addr.getMaskBits());
+      wchar_t buffer[64];
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"Node::checkSubnetBinding(%s [%u]): checking address %s/%d", m_name, m_id, addr.toString(buffer), addr.getMaskBits());
 
       shared_ptr<Interface> iface = findInterfaceByIP(addr);
       if (iface == nullptr)
@@ -12040,7 +12040,7 @@ void Node::checkSubnetBinding()
             // Check if node is linked to this subnet
             if ((pSubnet != nullptr) && !pSubnet->isDirectChild(m_id))
             {
-               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Restored link between subnet %s [%u] and node %s [%u]"),
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, L"Restored link between subnet %s [%u] and node %s [%u]",
                         pSubnet->getName(), pSubnet->getId(), m_name, m_id);
                pSubnet->addNode(self());
             }
@@ -12048,8 +12048,8 @@ void Node::checkSubnetBinding()
       }
       else if (!isSync)
       {
-         TCHAR buffer[64];
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Missing subnet for address %s/%d on interface %s [%u]"),
+         wchar_t buffer[64];
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, L"Missing subnet for address %s/%d on interface %s [%u]",
             addr.toString(buffer), addr.getMaskBits(), iface->getName(), iface->getIfIndex());
 
          // Ignore masks 255.255.255.255 and 255.255.255.254 - some point-to-point interfaces can have such mask

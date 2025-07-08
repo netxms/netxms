@@ -609,8 +609,6 @@ static bool AcceptNewNodeStage2(DiscoveredAddress *address)
 
    wchar_t ipAddrText[MAX_IP_ADDR_TEXT_LEN];
    address->ipAddr.toString(ipAddrText);
-   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("AcceptNewNodeStage2(%s): netmask=%d source=%s ignoreFilter=%s"), ipAddrText, address->ipAddr.getMaskBits(),
-      s_discoveredAddrSourceTypeAsText[address->sourceType], BooleanToString(address->ignoreFilter));
 
    DiscoveryFilterData *data = address->data;
 
@@ -626,6 +624,7 @@ static bool AcceptNewNodeStage2(DiscoveredAddress *address)
          if (iface->type == IFTYPE_SOFTWARE_LOOPBACK)
             continue;
 
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("AcceptNewNodeStage2(%s): checking interface %s (ifIndex=%u type=%u)"), ipAddrText, iface->name, iface->index, iface->type);
          for (int j = 0; j < iface->ipAddrList.size(); j++)
          {
             InetAddress addr = iface->ipAddrList.get(j);
@@ -641,15 +640,16 @@ static bool AcceptNewNodeStage2(DiscoveredAddress *address)
                break;
             }
 
-            // Do not do subnet checks for /32 and /128 addresses
-            if (addr.getHostBits() > 1)
+            // Do not do subnet checks for /0, /32 and /128 addresses
+            if ((addr.getHostBits() > 1) && (addr.getMaskBits() > 0))
             {
                shared_ptr<Subnet> subnet = FindSubnetForNode(address->zoneUIN, addr);
                if (subnet != nullptr)
                {
                   if (subnet->getIpAddress().equals(addr))
                   {
-                     nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage2(%s): IP address %s on interface %s already known as subnet address"), ipAddrText, addr.toString().cstr(), iface->name);
+                     nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage2(%s): IP address %s on interface %s already known as subnet address"),
+                        ipAddrText, addr.toString().cstr(), iface->name);
                      duplicate = true;
                      break;
                   }
@@ -665,13 +665,15 @@ static bool AcceptNewNodeStage2(DiscoveredAddress *address)
                InetAddress subnetAddress = addr.getSubnetAddress();
                if (subnetAddress.contains(address->ipAddr) && address->ipAddr.isSubnetBroadcast(subnetAddress.getMaskBits()))
                {
-                  nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage2(%s): IP address is a broadcast address for subnet %s/%d"), ipAddrText, subnetAddress.toString().cstr(), subnetAddress.getMaskBits());
+                  nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage2(%s): IP address %s on interface %s is a broadcast address for subnet %s/%d"),
+                     ipAddrText, addr.toString().cstr(), iface->name, subnetAddress.toString().cstr(), subnetAddress.getMaskBits());
                   duplicate = true;
                   break;
                }
                if (subnetAddress.equals(address->ipAddr))
                {
-                  nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage2(%s): IP address is a subnet address for subnet %s/%d"), ipAddrText, subnetAddress.toString().cstr(), subnetAddress.getMaskBits());
+                  nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage2(%s): IP address %s on interface %s is a subnet address for subnet %s/%d"),
+                     ipAddrText, addr.toString().cstr(), iface->name, subnetAddress.toString().cstr(), subnetAddress.getMaskBits());
                   duplicate = true;
                   break;
                }
