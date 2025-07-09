@@ -418,8 +418,16 @@ static void ShowTasks(ServerConsole *console)
             stateName = _T("UNKNOWN");
             break;
       }
-      console->printf(_T(" ") UINT64_FMT_ARGS(_T("-10")) _T(" | %-9s | %3d%%     | %s\n"), t->getId(), stateName,
-         (t->getState() == BackgroundTaskState::RUNNING) ? t->getProgress() : 100, t->getDescription());
+      if (t->getState() == BackgroundTaskState::FAILED)
+      {
+         console->printf(_T(" ") UINT64_FMT_ARGS(_T("-10")) _T(" | %-9s | %3d%%     | %s (%s)\n"), t->getId(), stateName,
+            (t->getState() == BackgroundTaskState::RUNNING) ? t->getProgress() : 100, t->getDescription(), t->getFailureReson().cstr());
+      }
+      else
+      {
+         console->printf(_T(" ") UINT64_FMT_ARGS(_T("-10")) _T(" | %-9s | %3d%%     | %s\n"), t->getId(), stateName,
+            (t->getState() == BackgroundTaskState::RUNNING) ? t->getProgress() : 100, t->getDescription());
+      }
    }
 }
 
