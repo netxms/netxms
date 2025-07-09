@@ -1404,7 +1404,7 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
          ShowQueueStats(console, &g_windowsEventWriterQueue, _T("Windows event writer"));
          ConsolePrintf(console, _T("\n"));
       }
-      else if (IsCommand(_T("ROUTING-TABLE"), szBuffer, 1))
+      else if (IsCommand(L"ROUTING-TABLE", szBuffer, 1))
       {
          ExtractWord(pArg, szBuffer);
          uint32_t dwNode = _tcstoul(szBuffer, nullptr, 0);
@@ -1415,44 +1415,44 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
             {
                if (pObject->getObjectClass() == OBJECT_NODE)
                {
-                  ConsolePrintf(console, _T("Routing table for node %s:\n\n"), pObject->getName());
+                  ConsolePrintf(console, L"Routing table for node %s:\n\n", pObject->getName());
                   auto routingTable = static_cast<Node&>(*pObject).getCachedRoutingTable();
                   if (routingTable != nullptr)
                   {
                      for(int i = 0; i < routingTable->size(); i++)
                      {
-                        ROUTE *r = routingTable->get(i);
-                        TCHAR szIpAddr[MAX_IP_ADDR_TEXT_LEN];
-                        _sntprintf(szBuffer, 256, _T("%s/%d"), r->destination.toString(szIpAddr), r->destination.getMaskBits());
-                        ConsolePrintf(console, _T("%-18s %-15s %-6d %-3d %-5d %d\n"), szBuffer, r->nextHop.toString(szIpAddr), r->ifIndex, r->routeType, r->metric, r->protocol);
+                        const ROUTE *r = routingTable->get(i);
+                        wchar_t ipAddrText[MAX_IP_ADDR_TEXT_LEN];
+                        _sntprintf(szBuffer, 256, L"%s/%d", r->destination.toString(ipAddrText), r->destination.getMaskBits());
+                        ConsolePrintf(console, L"%-18s %-15s %-6d %-3d %-5d %d\n", szBuffer, r->nextHop.toString(ipAddrText), r->ifIndex, r->routeType, r->metric, r->protocol);
                      }
-                     ConsoleWrite(console, _T("\n"));
+                     ConsoleWrite(console, L"\n");
                   }
                   else
                   {
-                     ConsoleWrite(console, _T("Node doesn't have cached routing table\n\n"));
+                     ConsoleWrite(console, L"Node doesn't have cached routing table\n\n");
                   }
                }
                else
                {
-                  ConsoleWrite(console, _T("ERROR: Object is not a node\n\n"));
+                  ConsoleWrite(console, L"ERROR: Object is not a node\n\n");
                }
             }
             else
             {
-               ConsolePrintf(console, _T("ERROR: Object with ID %d does not exist\n\n"), dwNode);
+               ConsolePrintf(console, L"ERROR: Object with ID %d does not exist\n\n", dwNode);
             }
          }
          else
          {
-            ConsoleWrite(console, _T("ERROR: Invalid or missing node ID\n\n"));
+            ConsoleWrite(console, L"ERROR: Invalid or missing node ID\n\n");
          }
       }
-      else if (IsCommand(_T("SESSIONS"), szBuffer, 2))
+      else if (IsCommand(L"SESSIONS", szBuffer, 2))
       {
-         ConsoleWrite(console, _T("\n\x1b[1mCLIENT SESSIONS\x1b[0m\n"));
+         ConsoleWrite(console, L"\n\x1b[1mCLIENT SESSIONS\x1b[0m\n");
          DumpClientSessions(console);
-         ConsoleWrite(console, _T("\n\x1b[1mMOBILE DEVICE SESSIONS\x1b[0m\n"));
+         ConsoleWrite(console, L"\n\x1b[1mMOBILE DEVICE SESSIONS\x1b[0m\n");
          DumpMobileDeviceSessions(console);
       }
       else if (IsCommand(_T("SIZEOF"), szBuffer, 4))

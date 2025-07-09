@@ -3563,7 +3563,7 @@ protected:
    uint32_t m_icmpProxy;       // Node used as proxy for ICMP ping
    uint64_t m_lastEvents[MAX_LAST_EVENTS];
    ObjectArray<RoutingLoopEvent> *m_routingLoopEvents;
-   RoutingTable *m_routingTable;
+   shared_ptr<RoutingTable> m_routingTable;
    shared_ptr<NetworkPath> m_lastKnownNetworkPath;
    shared_ptr<ForwardingDatabase> m_fdb;
    shared_ptr<ArpCache> m_arpCache;
@@ -3937,8 +3937,9 @@ public:
          iface.getIfTableSuffixLen(), iface.getIfTableSuffix(), adminState, operState, speed);
    }
    void getInterfaceStateFromAgent(uint32_t ifIndex, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed);
-   RoutingTable *getRoutingTable();
-   RoutingTable *getCachedRoutingTable() { return m_routingTable; }
+   shared_ptr<RoutingTable> readRoutingTable();
+   shared_ptr<RoutingTable> getRoutingTable();
+   shared_ptr<RoutingTable> getCachedRoutingTable() const { return GetAttributeWithLock(m_routingTable, m_routingTableMutex); }
    shared_ptr<NetworkPath> getLastKnownNetworkPath() const { return GetAttributeWithLock(m_lastKnownNetworkPath, m_mutexProperties); }
    shared_ptr<LinkLayerNeighbors> getLinkLayerNeighbors() const { return GetAttributeWithLock(m_linkLayerNeighbors, m_topologyMutex); }
    shared_ptr<VlanList> getVlans() const { return GetAttributeWithLock(m_vlans, m_topologyMutex); }

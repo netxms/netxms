@@ -14293,7 +14293,7 @@ void ClientSession::getRoutingTable(const NXCPMessage& request)
    {
       if (node->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
       {
-         RoutingTable *rt = static_cast<Node&>(*node).getRoutingTable();
+         shared_ptr<RoutingTable> rt = static_cast<Node&>(*node).getRoutingTable();
          if (rt != nullptr)
          {
             response.setField(VID_RCC, RCC_SUCCESS);
@@ -14301,7 +14301,7 @@ void ClientSession::getRoutingTable(const NXCPMessage& request)
             uint32_t id = VID_ELEMENT_LIST_BASE;
             for(int i = 0; i < rt->size(); i++)
             {
-               ROUTE *route = rt->get(i);
+               const ROUTE *route = rt->get(i);
                response.setField(id++, route->destination);
                response.setField(id++, route->nextHop);
                response.setField(id++, route->ifIndex);
@@ -14315,17 +14315,16 @@ void ClientSession::getRoutingTable(const NXCPMessage& request)
                }
                else if (route->ifIndex != 0)
                {
-                  TCHAR buffer[32];
-                  _sntprintf(buffer, 32, _T("[%u]"), route->ifIndex);
+                  wchar_t buffer[32];
+                  _sntprintf(buffer, 32, L"[%u]", route->ifIndex);
                   response.setField(id++, buffer);
                }
                else
                {
-                  response.setField(id++, _T(""));
+                  response.setField(id++, L"");
                }
                id += 3;
             }
-            delete rt;
          }
          else
          {
@@ -14335,7 +14334,7 @@ void ClientSession::getRoutingTable(const NXCPMessage& request)
       else
       {
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
-         WriteAuditLog(AUDIT_OBJECTS, FALSE, m_userId, m_workstation, m_id, node->getId(), _T("Access denied on reading routing table"));
+         WriteAuditLog(AUDIT_OBJECTS, FALSE, m_userId, m_workstation, m_id, node->getId(), L"Access denied on reading routing table");
       }
    }
    else  // No object with given ID

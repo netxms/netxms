@@ -33,6 +33,8 @@
 #include <sys/resource.h>
 #endif
 
+#define ROUTING_TABLE_CACHE_TIMEOUT  120  // Routing table cache timeout in seconds
+
 #define SMCLP_ALLOWED_SYMBOLS L"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/-_"
 
 #define DEBUG_TAG_DC_AGENT_CACHE    _T("dc.agent.cache")
@@ -182,7 +184,6 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_icmpProxy = 0;
    memset(m_lastEvents, 0, sizeof(m_lastEvents));
    m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, Ownership::True);
-   m_routingTable = nullptr;
    m_failTimeAgent = TIMESTAMP_NEVER;
    m_failTimeSNMP = TIMESTAMP_NEVER;
    m_failTimeSSH = TIMESTAMP_NEVER;
@@ -313,7 +314,6 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    memset(m_lastEvents, 0, sizeof(m_lastEvents));
    m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, Ownership::True);
    m_isHidden = true;
-   m_routingTable = nullptr;
    m_failTimeAgent = TIMESTAMP_NEVER;
    m_failTimeSNMP = TIMESTAMP_NEVER;
    m_failTimeSSH = TIMESTAMP_NEVER;
@@ -394,7 +394,6 @@ Node::~Node()
    delete m_driverParameters;
    delete m_smclpMetrics;
    MemFree(m_sysDescription);
-   delete m_routingTable;
    delete m_vrrpInfo;
    delete m_snmpSecurity;
    delete m_radioInterfaces;
@@ -8290,7 +8289,7 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, shared_ptr<Table> 
    }
    else if (!_tcsicmp(name, _T("Topology.RoutingTable")))
    {
-      RoutingTable *rt = getRoutingTable();
+      shared_ptr<RoutingTable> rt = getCachedRoutingTable();
       if (rt != nullptr)
       {
          auto table = make_shared<Table>();
@@ -8319,7 +8318,6 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, shared_ptr<Table> 
             table->set(7, r->metric);
             table->set(8, r->protocol);
          }
-         delete rt;
          *result = table;
       }
       else
@@ -10494,11 +10492,11 @@ uint32_t Node::getInterfaceCount(Interface **lastInterface)
 }
 
 /**
- * Get routing table from node
+ * Read routing table from node
  */
-RoutingTable *Node::getRoutingTable()
+shared_ptr<RoutingTable> Node::readRoutingTable()
 {
-   RoutingTable *routingTable = nullptr;
+   shared_ptr<RoutingTable> routingTable;
 
    if ((m_capabilities & NC_IS_NATIVE_AGENT) && (!(m_flags & NF_DISABLE_NXCP)))
    {
@@ -10519,9 +10517,31 @@ RoutingTable *Node::getRoutingTable()
    }
 
    if (routingTable != nullptr)
+      routingTable->sort();
+
+   return routingTable;
+}
+
+/**
+ * Get cached routing table if available, read from node otherwise and updated cached version.
+ */
+shared_ptr<RoutingTable> Node::getRoutingTable()
+{
+   routingTableLock();
+   auto routingTable = m_routingTable;
+   routingTableUnlock();
+
+   if ((routingTable == nullptr) || (routingTable->timestamp() < time(nullptr) - ROUTING_TABLE_CACHE_TIMEOUT))
    {
-      SortRoutingTable(routingTable);
+      routingTable = readRoutingTable();
+      if (routingTable != nullptr)
+      {
+         routingTableLock();
+         m_routingTable = routingTable;
+         routingTableUnlock();
+      }
    }
+
    return routingTable;
 }
 
@@ -10665,15 +10685,7 @@ void Node::routingTablePoll(PollerInfo *poller, ClientSession *session, uint32_t
    unlockProperties();
 
    pollerLock(routing);
-   auto routingTable = getRoutingTable();
-   if (routingTable != nullptr)
-   {
-      routingTableLock();
-      delete m_routingTable;
-      m_routingTable = routingTable;
-      routingTableUnlock();
-      nxlog_debug_tag(DEBUG_TAG_ROUTES_POLL, 5, _T("Routing table updated for node %s [%d]"), m_name, m_id);
-   }
+   getRoutingTable();   // will update m_routingTable if needed
    pollerUnlock();
 }
 

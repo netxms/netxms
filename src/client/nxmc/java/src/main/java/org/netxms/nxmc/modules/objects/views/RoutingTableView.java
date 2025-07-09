@@ -170,13 +170,9 @@ public class RoutingTableView extends ObjectView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final List<Route> rt = session.getRoutingTable(getObjectId());
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  viewer.setInput(rt.toArray());
-                  viewer.packColumns();
-               }
+            runInUIThread(() -> {
+               viewer.setInput(rt.toArray());
+               viewer.packColumns();
             });
          }
 
