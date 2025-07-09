@@ -1454,18 +1454,16 @@ void Interface::setPeer(AccessPoint *ap, LinkLayerProtocol protocol)
 }
 
 /**
- * Clear peer information
+ * Clear peer information. Expects that property lock is already held.
  */
 void Interface::clearPeerData()
 {
-   lockProperties();
    m_peerNodeId = 0;
    m_peerInterfaceId = 0;
    m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
    m_peerLastUpdated = 0;
    m_flags &= ~IF_PEER_REFLECTION;
    setModified(MODIFY_INTERFACE_PROPERTIES | MODIFY_COMMON_PROPERTIES);
-   unlockProperties();
 }
 
 /**
