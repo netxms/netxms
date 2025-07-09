@@ -190,11 +190,9 @@ static EnumerationCallbackResult HandlerInetCidrRouteTable(const SNMP_Variable *
 /**
  * Get routing table via SNMP
  */
-RoutingTable *SnmpGetRoutingTable(SNMP_Transport *snmp, const Node& node)
+shared_ptr<RoutingTable> SnmpGetRoutingTable(SNMP_Transport *snmp, const Node& node)
 {
-   RoutingTable *routingTable = new RoutingTable(0, 64);
-   if (routingTable == nullptr)
-      return nullptr;
+   shared_ptr<RoutingTable> routingTable = make_shared<RoutingTable>();
 
    // Use snapshots because some devices does not respond to GET requests to individual table entries
    // Attempt to use inetCidrRouteTable first
@@ -202,7 +200,7 @@ RoutingTable *SnmpGetRoutingTable(SNMP_Transport *snmp, const Node& node)
    SNMP_Snapshot *snapshot = SNMP_Snapshot::create(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 7, 1 });
    if (snapshot != nullptr)
    {
-      success = (snapshot->walk({ 1, 3, 6, 1, 2, 1, 4, 24, 7, 1, 9 }, HandlerInetCidrRouteTable, routingTable) == _CONTINUE);
+      success = (snapshot->walk({ 1, 3, 6, 1, 2, 1, 4, 24, 7, 1, 9 }, HandlerInetCidrRouteTable, routingTable.get()) == _CONTINUE);
       delete snapshot;
       if (success)
          nxlog_debug_tag(DEBUG_TAG_SNMP_ROUTES, 5, _T("SnmpGetRoutingTable(%s [%u]): %d routes retrieved from inetCidrRouteTable"), node.getName(), node.getId(), routingTable->size());
@@ -214,7 +212,7 @@ RoutingTable *SnmpGetRoutingTable(SNMP_Transport *snmp, const Node& node)
       SNMP_Snapshot *snapshot = SNMP_Snapshot::create(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 4, 1 });
       if (snapshot != nullptr)
       {
-         success = (snapshot->walk({ 1, 3, 6, 1, 2, 1, 4, 24, 4, 1, 7 }, HandlerIPCidrRouteTable, routingTable) == _CONTINUE);
+         success = (snapshot->walk({ 1, 3, 6, 1, 2, 1, 4, 24, 4, 1, 7 }, HandlerIPCidrRouteTable, routingTable.get()) == _CONTINUE);
          delete snapshot;
          if (success)
             nxlog_debug_tag(DEBUG_TAG_SNMP_ROUTES, 5, _T("SnmpGetRoutingTable(%s [%u]): %d routes retrieved from ipCidrRouteTable"), node.getName(), node.getId(), routingTable->size());
@@ -224,7 +222,7 @@ RoutingTable *SnmpGetRoutingTable(SNMP_Transport *snmp, const Node& node)
    // If not successful, try ipForwardTable
    if (!success || routingTable->isEmpty())
    {
-      success = (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 2, 1, 2 }, HandlerIPForwardTable, routingTable, false, true) == SNMP_ERR_SUCCESS);
+      success = (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 2, 1, 2 }, HandlerIPForwardTable, routingTable.get(), false, true) == SNMP_ERR_SUCCESS);
       if (success)
          nxlog_debug_tag(DEBUG_TAG_SNMP_ROUTES, 5, _T("SnmpGetRoutingTable(%s [%u]): %d routes retrieved from ipForwardTable"), node.getName(), node.getId(), routingTable->size());
    }
@@ -232,16 +230,18 @@ RoutingTable *SnmpGetRoutingTable(SNMP_Transport *snmp, const Node& node)
    // If not successful, try ipRouteTable
    if (!success || routingTable->isEmpty())
    {
-      success = (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 21, 1, 11 }, HandlerIPRouteTable, routingTable, false, true) == SNMP_ERR_SUCCESS);
+      success = (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 21, 1, 11 }, HandlerIPRouteTable, routingTable.get(), false, true) == SNMP_ERR_SUCCESS);
       if (success)
          nxlog_debug_tag(DEBUG_TAG_SNMP_ROUTES, 5, _T("SnmpGetRoutingTable(%s [%u]): %d routes retrieved from ipRouteTable"), node.getName(), node.getId(), routingTable->size());
    }
 
    if (!success)
    {
-      delete_and_null(routingTable);
+      routingTable.reset();
       nxlog_debug_tag(DEBUG_TAG_SNMP_ROUTES, 5, _T("SnmpGetRoutingTable(%s [%u]): failed to get routing table via SNMP"), node.getName(), node.getId());
    }
+
+   nxlog_debug_tag(DEBUG_TAG_SNMP_ROUTES, 5, _T("SnmpGetRoutingTable(%s [%u]): %d routes retrieved"), node.getName(), node.getId(), routingTable->size());
    return routingTable;
 }
 

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -141,16 +141,4 @@ uint32_t LIBNXSRV_EXPORTABLE AgentErrorToRCC(uint32_t err)
          return RCC_RESOURCE_NOT_AVAILABLE;
    }
    return RCC_AGENT_ERROR;
-}
-
-/**
- * Sort routing table (put most specific routes first)
- */
-void LIBNXSRV_EXPORTABLE SortRoutingTable(RoutingTable *routingTable)
-{
-   routingTable->sort(
-      [] (const void *p1, const void *p2) -> int
-      {
-         return -(COMPARE_NUMBERS(static_cast<const ROUTE*>(p1)->destination.getMaskBits(), static_cast<const ROUTE*>(p2)->destination.getMaskBits()));
-      });
 }

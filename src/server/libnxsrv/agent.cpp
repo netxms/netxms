@@ -2488,13 +2488,13 @@ uint32_t AgentConnection::writeConfigFile(const TCHAR *content)
 /**
  * Get routing table from agent
  */
-RoutingTable *AgentConnection::getRoutingTable()
+shared_ptr<RoutingTable> AgentConnection::getRoutingTable()
 {
    StringList *data;
    if (getList(_T("Net.IP.RoutingTable"), &data) != ERR_SUCCESS)
       return nullptr;
 
-   auto routingTable = new RoutingTable(data->size(), 64);
+   auto routingTable = make_shared<RoutingTable>(data->size());
    for(int i = 0; i < data->size(); i++)
    {
       TCHAR *line = MemCopyString(data->get(i));

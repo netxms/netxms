@@ -1354,7 +1354,7 @@ void InitLocalNetInfo();
 shared_ptr<ArpCache> GetLocalArpCache();
 InterfaceList *GetLocalInterfaceList();
 
-RoutingTable *SnmpGetRoutingTable(SNMP_Transport *snmp, const Node& node);
+shared_ptr<RoutingTable> SnmpGetRoutingTable(SNMP_Transport *snmp, const Node& node);
 
 void LoadNetworkDeviceDrivers();
 NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *snmpTransport);

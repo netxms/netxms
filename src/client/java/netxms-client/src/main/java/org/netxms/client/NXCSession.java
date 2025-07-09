@@ -11885,7 +11885,7 @@ public class NXCSession
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ROUTING_TABLE);
       msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       sendMessage(msg);
-      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      final NXCPMessage response = waitForRCC(msg.getMessageId(), commandTimeout * 10); // Routing table may take a long time to retrieve
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
       List<Route> rt = new ArrayList<Route>(count);
       long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;

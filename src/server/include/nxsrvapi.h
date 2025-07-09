@@ -758,7 +758,37 @@ struct ROUTE
 /**
  * Routing table
  */
-typedef StructArray<ROUTE> RoutingTable;
+class LIBNXSRV_EXPORTABLE RoutingTable
+{
+private:
+   StructArray<ROUTE> m_routes;
+   time_t m_timestamp;
+
+public:
+   RoutingTable(int initialSize = 0) : m_routes(initialSize, 64)
+   {
+      m_timestamp = time(nullptr);
+   }
+
+   int size() const { return m_routes.size(); }
+   bool isEmpty() const { return m_routes.isEmpty(); }
+   const ROUTE *get(int index) const { return m_routes.get(index); }
+   time_t timestamp() const { return m_timestamp; }
+
+   void add(const ROUTE& r)
+   {
+      m_routes.add(r);
+   }
+
+   void sort()
+   {
+      m_routes.sort(
+         [] (const void *p1, const void *p2) -> int
+         {
+            return -(COMPARE_NUMBERS(static_cast<const ROUTE*>(p1)->destination.getMaskBits(), static_cast<const ROUTE*>(p2)->destination.getMaskBits()));
+         });
+   }
+};
 
 /**
  * Information about policies installed on agent
@@ -1127,7 +1157,7 @@ public:
 
    shared_ptr<ArpCache> getArpCache();
    InterfaceList *getInterfaceList();
-   RoutingTable *getRoutingTable();
+   shared_ptr<RoutingTable> getRoutingTable();
    uint32_t getParameter(const TCHAR *param, TCHAR *buffer, size_t size);
    uint32_t getList(const TCHAR *param, StringList **list);
    uint32_t getTable(const TCHAR *param, Table **table);
@@ -1396,7 +1426,6 @@ struct ServerCommandLineTool
  */
 int LIBNXSRV_EXPORTABLE ExecuteServerCommandLineTool(ServerCommandLineTool *tool);
 
-void LIBNXSRV_EXPORTABLE SortRoutingTable(RoutingTable *routingTable);
 const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(uint32_t err);
 uint32_t LIBNXSRV_EXPORTABLE AgentErrorToRCC(uint32_t err);
 void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy);
