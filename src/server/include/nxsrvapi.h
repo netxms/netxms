@@ -756,6 +756,10 @@ struct ROUTE
    RoutingProtocol protocol;
 };
 
+#ifdef _WIN32
+template class LIBNXSRV_TEMPLATE_EXPORTABLE StructArray<ROUTE>;
+#endif
+
 /**
  * Routing table
  */
@@ -790,6 +794,10 @@ public:
          });
    }
 };
+
+#ifdef _WIN32
+template class LIBNXSRV_TEMPLATE_EXPORTABLE shared_ptr<RoutingTable>;
+#endif
 
 /**
  * Information about policies installed on agent
