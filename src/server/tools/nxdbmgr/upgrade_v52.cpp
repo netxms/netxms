@@ -28,7 +28,7 @@
  */
 static bool H_UpgradeFromV18()
 {
-   CHK_EXEC(SQLQuery(L"UPDATE config SET data_type='P' WHERE var_name IN ('Jira.Password','LDAP.SyncUserPassword','RADIUS.SecondarySecret','RADIUS.Secret','SNMP.Agent.V3.AuthenticationPassword')"));
+   CHK_EXEC(SQLQuery(L"UPDATE config SET data_type='P' WHERE var_name IN ('Jira.Password','LDAP.SyncUserPassword','RADIUS.SecondarySecret','RADIUS.Secret','SNMP.Agent.V3.AuthenticationPassword','SNMP.Agent.V3.EncryptionPassword')"));
    CHK_EXEC(SetMinorSchemaVersion(19));
    return true;
 }
