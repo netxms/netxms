@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -235,13 +235,15 @@ shared_ptr<RoutingTable> SnmpGetRoutingTable(SNMP_Transport *snmp, const Node& n
          nxlog_debug_tag(DEBUG_TAG_SNMP_ROUTES, 5, _T("SnmpGetRoutingTable(%s [%u]): %d routes retrieved from ipRouteTable"), node.getName(), node.getId(), routingTable->size());
    }
 
-   if (!success)
+   if (success)
+   {
+      nxlog_debug_tag(DEBUG_TAG_SNMP_ROUTES, 5, _T("SnmpGetRoutingTable(%s [%u]): %d routes retrieved"), node.getName(), node.getId(), routingTable->size());
+   }
+   else
    {
       routingTable.reset();
       nxlog_debug_tag(DEBUG_TAG_SNMP_ROUTES, 5, _T("SnmpGetRoutingTable(%s [%u]): failed to get routing table via SNMP"), node.getName(), node.getId());
    }
-
-   nxlog_debug_tag(DEBUG_TAG_SNMP_ROUTES, 5, _T("SnmpGetRoutingTable(%s [%u]): %d routes retrieved"), node.getName(), node.getId(), routingTable->size());
    return routingTable;
 }
 
