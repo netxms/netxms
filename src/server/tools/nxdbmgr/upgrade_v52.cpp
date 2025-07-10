@@ -24,11 +24,24 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 52.19 to 53.0
+ * Upgrade from 52.20 to 53.0
+ */
+static bool H_UpgradeFromV20()
+{
+   CHK_EXEC(SetMajorSchemaVersion(53, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 52.19 to 52.20
  */
 static bool H_UpgradeFromV19()
 {
-   CHK_EXEC(SetMajorSchemaVersion(53, 0));
+   CHK_EXEC(CreateConfigParam(L"DataCollection.Scheduler.RequireConnectivity",
+            L"0",
+            L"Skip data collection scheduling if communication channel is unavailable.",
+            nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(20));
    return true;
 }
 
@@ -439,7 +452,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 19, 53, 0,  H_UpgradeFromV19 },
+   { 20, 53, 0,  H_UpgradeFromV20 },
+   { 19, 52, 20, H_UpgradeFromV19 },
    { 18, 52, 19, H_UpgradeFromV18 },
    { 17, 52, 18, H_UpgradeFromV17 },
    { 16, 52, 17, H_UpgradeFromV16 },

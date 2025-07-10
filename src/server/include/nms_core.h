@@ -1298,10 +1298,10 @@ bool NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *variable, const TCHAR *value
 bool NXCORE_EXPORTABLE ConfigDelete(const wchar_t *variable);
 
 void MetaDataPreLoad();
-bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *variable, TCHAR *buffer, int size, const TCHAR *defaultValue);
-int32_t NXCORE_EXPORTABLE MetaDataReadInt32(const TCHAR *variable, int32_t defaultValue);
-bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *variable, const TCHAR *value);
-bool NXCORE_EXPORTABLE MetaDataWriteInt32(const TCHAR *variable, int32_t value);
+bool NXCORE_EXPORTABLE MetaDataReadStr(const wchar_t *variable, wchar_t *buffer, int size, const wchar_t *defaultValue);
+int32_t NXCORE_EXPORTABLE MetaDataReadInt32(const wchar_t *variable, int32_t defaultValue);
+bool NXCORE_EXPORTABLE MetaDataWriteStr(const wchar_t *variable, const wchar_t *value);
+bool NXCORE_EXPORTABLE MetaDataWriteInt32(const wchar_t *variable, int32_t value);
 
 void NXCORE_EXPORTABLE FindConfigFile();
 bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel);

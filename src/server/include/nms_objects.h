@@ -2718,14 +2718,14 @@ public:
    virtual uint32_t getDataCollectionSummary(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId) override;
    virtual uint32_t getDataCollectionSummary(json_t *values, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId) override;
 
+   uint32_t getPerfTabDCIList(NXCPMessage *msg, uint32_t userId);
    uint32_t getTableLastValue(uint32_t dciId, NXCPMessage *msg);
    uint32_t getDciLastValue(uint32_t dciId, NXCPMessage *msg);
    uint32_t getThresholdSummary(NXCPMessage *msg, uint32_t baseId, uint32_t userId);
-   uint32_t getPerfTabDCIList(NXCPMessage *msg, uint32_t userId);
+   int getDciThresholdSeverity(uint32_t dciId);
    void getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, uint32_t userId);
    void getTooltipLastValues(NXCPMessage *msg, uint32_t userId, uint32_t *index);
    double getProxyLoadFactor() const { return m_proxyLoadFactor.load(); }
-   int getDciThreshold(uint32_t dciId);
    void findDcis(const SearchQuery &query, uint32_t userId, SharedObjectArray<DCObject> *result);
 
    uint64_t getCacheMemoryUsage();

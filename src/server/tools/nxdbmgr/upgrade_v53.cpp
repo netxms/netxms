@@ -23,6 +23,23 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 53.1 to 53.2
+ */
+static bool H_UpgradeFromV1()
+{
+   if (GetSchemaLevelForMajorVersion(52) < 20)
+   {
+      CHK_EXEC(CreateConfigParam(L"DataCollection.Scheduler.RequireConnectivity",
+               L"0",
+               L"Skip data collection scheduling if communication channel is unavailable.",
+               nullptr, 'B', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(52, 20));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(2));
+   return true;
+}
+
+/**
  * Upgrade from 53.0 to 53.1
  */
 static bool H_UpgradeFromV0()
@@ -53,6 +70,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 1,  53, 2,  H_UpgradeFromV1  },
    { 0,  53, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }
 };

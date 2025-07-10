@@ -292,6 +292,7 @@ protected:
    SharedString m_userTag;
    time_t m_lastPoll;           // Last poll time
    time_t m_lastValueTimestamp; // Timestamp of last obtained value
+   time_t m_nextPollTime;       // If set, do not poll earlier than given time
    int32_t m_pollingInterval;   // Polling interval in seconds
    int32_t m_retentionTime;     // Retention time in days
    StringContainer<6> m_pollingIntervalSrc;
@@ -433,6 +434,7 @@ public:
    void setStatus(int status, bool generateEvent, bool userChange = false);
    void setBusyFlag() { m_busy = 1; }
    void clearBusyFlag() { m_busy = 0; }
+   void setNextPollTime(time_t t) { m_nextPollTime = t; }
    void setTemplateId(uint32_t templateId, uint32_t dwItemId) { m_templateId = templateId; m_templateItemId = dwItemId; }
    void updateTimeIntervals() { lock(); updateTimeIntervalsInternal(); unlock(); }
    void fillSchedulingDataMessage(NXCPMessage *msg, uint32_t base) const;

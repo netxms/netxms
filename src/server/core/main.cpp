@@ -515,6 +515,8 @@ static void LoadGlobalConfig()
       g_flags |= AF_TRAP_SOURCES_IN_ALL_ZONES;
    if (ConfigReadBoolean(_T("ICMP.CollectPollStatistics"), true))
       g_flags |= AF_COLLECT_ICMP_STATISTICS;
+   if (ConfigReadBoolean(_T("DataCollection.Scheduler.RequireConnectivity"), false))
+      g_flags |= AF_DC_SCHEDULER_REQUIRES_CONNECTIVITY;
 
    switch(ConfigReadInt(_T("NetworkDiscovery.Type"), 0))
    {

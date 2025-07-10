@@ -1062,9 +1062,9 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
             ConsoleWrite(console, _T("ERROR: Invalid or missing node ID\n\n"));
          }
       }
-      else if (IsCommand(_T("FLAGS"), szBuffer, 1))
+      else if (IsCommand(L"FLAGS", szBuffer, 1))
       {
-         ConsolePrintf(console, _T("Flags: 0x") UINT64X_FMT(_T("016")) _T("\n"), static_cast<uint64_t>(g_flags));
+         ConsolePrintf(console, L"Flags: 0x" UINT64X_FMT(L"016") L"\n", static_cast<uint64_t>(g_flags));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DAEMON));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_USE_SYSLOG));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_PASSIVE_NETWORK_DISCOVERY));
@@ -1120,6 +1120,7 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ENABLE_UNMATCHED_TRAP_EVENT));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ENTERPRISE_EDITION));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DEVICE_BACKUP_API_ENABLED));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DC_SCHEDULER_REQUIRES_CONNECTIVITY));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_SHUTDOWN));
          ConsolePrintf(console, _T("\n"));
@@ -1129,7 +1130,7 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
          ExtractWord(pArg, szBuffer);
          if (IsCommand(_T("DETAILS"), szBuffer, 1))
          {
-            TCHAR *text = GetHeapInfo();
+            wchar_t *text = GetHeapInfo();
             if (text != nullptr)
             {
                ConsoleWrite(console, text);
