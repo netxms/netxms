@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -100,8 +100,8 @@ static void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, TCHAR
          case DS_WINPERF:
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
 			   {
-				   TCHAR name[MAX_PARAM_NAME];
-				   _sntprintf(name, MAX_PARAM_NAME, _T("PDH.CounterValue(\"%s\",%d)"), EscapeStringForAgent(dci.getName()).cstr(), dci.getSampleCount());
+				   wchar_t name[MAX_PARAM_NAME];
+				   _sntprintf(name, MAX_PARAM_NAME, L"PDH.CounterValue(\"%s\",%d)", EscapeStringForAgent(dci.getName()).cstr(), dci.getSampleCount());
 	            *error = static_cast<Node*>(dcTarget)->getMetricFromAgent(name, buffer, MAX_RESULT_LENGTH);
 			   }
 			   else

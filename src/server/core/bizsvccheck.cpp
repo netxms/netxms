@@ -342,7 +342,7 @@ int BusinessServiceCheck::execute(const shared_ptr<BusinessServiceTicketData>& t
 				if ((object != nullptr) && object->isDataCollectionTarget())
 				{
 					int threshold = (m_statusThreshold != 0) ? m_statusThreshold : ConfigReadInt(_T("BusinessServices.Check.Threshold.DataCollection"), STATUS_WARNING);
-					int dciStatus = static_cast<DataCollectionTarget&>(*object).getDciThreshold(m_relatedDCI);
+					int dciStatus = static_cast<DataCollectionTarget&>(*object).getDciThresholdSeverity(m_relatedDCI);
 					if (dciStatus >= threshold)
 					{
 					   m_state = STATUS_CRITICAL;

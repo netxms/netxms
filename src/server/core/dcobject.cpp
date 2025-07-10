@@ -83,6 +83,7 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
    m_status = ITEM_STATUS_NOT_SUPPORTED;
    m_lastPoll = 0;
    m_lastValueTimestamp = 0;
+   m_nextPollTime = 0;
    m_schedules = nullptr;
    m_tLastCheck = 0;
 	m_flags = 0;
@@ -129,6 +130,7 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
    m_status = src->m_status;
    m_lastPoll = shadowCopy ? src->m_lastPoll : 0;
    m_lastValueTimestamp = shadowCopy ? src->m_lastValueTimestamp : 0;
+   m_nextPollTime = shadowCopy ? src->m_nextPollTime : 0;
    m_tLastCheck = shadowCopy ? src->m_tLastCheck : 0;
    m_errorCount = shadowCopy ? src->m_errorCount : 0;
 	m_flags = src->m_flags;
@@ -170,6 +172,7 @@ DCObject::DCObject(uint32_t id, const TCHAR *name, int source, BYTE scheduleType
    m_scheduledForDeletion = 0;
    m_lastPoll = 0;
    m_lastValueTimestamp = 0;
+   m_nextPollTime = 0;
    m_flags = 0;
    m_stateFlags = 0;
    m_schedules = nullptr;
@@ -236,6 +239,7 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_scheduledForDeletion = 0;
    m_lastPoll = 0;
    m_lastValueTimestamp = 0;
+   m_nextPollTime = 0;
    m_tLastCheck = 0;
    m_errorCount = 0;
    m_resourceId = 0;
@@ -695,7 +699,8 @@ bool DCObject::isReadyForPolling(time_t currTime)
    bool result;
    if ((m_status != ITEM_STATUS_DISABLED) && (!m_busy) &&
        isCacheLoaded() && (m_source != DS_PUSH_AGENT) &&
-       matchClusterResource() && hasValue() && (getAgentCacheMode() == AGENT_CACHE_OFF))
+       matchClusterResource() && hasValue() && (getAgentCacheMode() == AGENT_CACHE_OFF) &&
+       (m_nextPollTime <= currTime))
    {
       if (m_pollingScheduleType == DC_POLLING_SCHEDULE_ADVANCED)
       {

@@ -711,11 +711,11 @@ uint32_t DataCollectionTarget::getDciLastValue(uint32_t dciId, NXCPMessage *msg)
 }
 
 /**
- * 
+ * Get active threshold severity for given DCI
  */
-int DataCollectionTarget::getDciThreshold(uint32_t dciId)
+int DataCollectionTarget::getDciThresholdSeverity(uint32_t dciId)
 {
-   int threshold = 0;
+   int severity = 0;
 
    readLockDciAccess();
 
@@ -730,14 +730,14 @@ int DataCollectionTarget::getDciThreshold(uint32_t dciId)
          }
          else
          {
-            threshold = static_cast<DCItem*>(object)->getThresholdSeverity();
+            severity = static_cast<DCItem*>(object)->getThresholdSeverity();
          }
          break;
       }
    }
 
    unlockDciAccess();
-   return threshold;
+   return severity;
 }
 
 /**
@@ -1007,6 +1007,8 @@ void DataCollectionTarget::queueItemsForPolling()
 
    time_t currTime = time(nullptr);
 
+   bool requireConnectivity = getCustomAttributeAsBoolean(L"SysConfig:DataCollection.Scheduler.RequireConnectivity", (g_flags & AF_DC_SCHEDULER_REQUIRES_CONNECTIVITY) != 0);
+
    readLockDciAccess();
    for(int i = 0; i < m_dcObjects.size(); i++)
    {
@@ -1023,8 +1025,68 @@ void DataCollectionTarget::queueItemsForPolling()
              (object->getDataSource() == DS_SMCLP))
          {
             uint32_t sourceNodeId = getEffectiveSourceNode(object);
-            TCHAR key[32];
-            _sntprintf(key, 32, _T("%08X/%s"), (sourceNodeId != 0) ? sourceNodeId : m_id, object->getDataProviderName());
+            if (requireConnectivity)
+            {
+               Node *target;
+               shared_ptr<NetObj> sourceNode;
+               if (sourceNodeId != 0)
+               {
+                  sourceNode = FindObjectById(sourceNodeId, OBJECT_NODE);
+                  target = static_cast<Node*>(sourceNode.get());
+               }
+               else if (getObjectClass() == OBJECT_NODE)
+               {
+                  target = static_cast<Node*>(this);
+               }
+               else
+               {
+                  // skip connectivity check if target is not a node
+                  target = nullptr;
+               }
+
+               if (target != nullptr)
+               {
+                  if (((object->getDataSource() == DS_NATIVE_AGENT) || (object->getDataSource() == DS_WINPERF)) && (!target->isNativeAgent() || (target->getState() & NSF_AGENT_UNREACHABLE)))
+                  {
+                     nxlog_debug_tag(_T("obj.dc.queue"), 8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" skipped because agent is unreachable"),
+                              m_name, object->getId(), object->getName().cstr());
+                     // Set next poll time to be at least half of status polling interval later to avoid re-checking too often
+                     object->setNextPollTime(currTime + g_statusPollingInterval / 2);
+                     object->clearBusyFlag();
+                     continue;  // Skip polling if agent is unreachable
+                  }
+                  if ((object->getDataSource() == DS_SNMP_AGENT) && (!target->isSNMPSupported() || (target->getState() & NSF_SNMP_UNREACHABLE)))
+                  {
+                     nxlog_debug_tag(_T("obj.dc.queue"), 8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" skipped because SNMP is unreachable"),
+                              m_name, object->getId(), object->getName().cstr());
+                     // Set next poll time to be at least half of status polling interval later to avoid re-checking too often
+                     object->setNextPollTime(currTime + g_statusPollingInterval / 2);
+                     object->clearBusyFlag();
+                     continue;  // Skip polling if SNMP is unreachable
+                  }
+                  if (((object->getDataSource() == DS_SSH) || (object->getDataSource() == DS_SMCLP)) && (!target->isSSHSupported() || (target->getState() & NSF_SSH_UNREACHABLE)))
+                  {
+                     nxlog_debug_tag(_T("obj.dc.queue"), 8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" skipped because SSH is unreachable"),
+                              m_name, object->getId(), object->getName().cstr());
+                     // Set next poll time to be at least half of status polling interval later to avoid re-checking too often
+                     object->setNextPollTime(currTime + g_statusPollingInterval / 2);
+                     object->clearBusyFlag();
+                     continue;  // Skip polling if SSH is unreachable
+                  }
+                  if ((object->getDataSource() == DS_MODBUS) && (!target->isModbusTCPSupported() || (target->getState() & NSF_MODBUS_UNREACHABLE)))
+                  {
+                     nxlog_debug_tag(_T("obj.dc.queue"), 8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" skipped because MODBUS is unreachable"),
+                              m_name, object->getId(), object->getName().cstr());
+                     // Set next poll time to be at least half of status polling interval later to avoid re-checking too often
+                     object->setNextPollTime(currTime + g_statusPollingInterval / 2);
+                     object->clearBusyFlag();
+                     continue;  // Skip polling if MODBUS is unreachable
+                  }
+               }
+            }
+
+            wchar_t key[32];
+            _sntprintf(key, 32, L"%08X/%s", (sourceNodeId != 0) ? sourceNodeId : m_id, object->getDataProviderName());
             ThreadPoolExecuteSerialized(g_dataCollectorThreadPool, key, DataCollector, m_dcObjects.getShared(i));
          }
          else

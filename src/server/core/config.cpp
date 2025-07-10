@@ -69,12 +69,12 @@ static uint32_t s_debugLevel = (uint32_t)NXCONFIG_UNINITIALIZED_VALUE;
 /**
  * Debug tags from config
  */
-static TCHAR *s_debugTags = nullptr;
+static wchar_t *s_debugTags = nullptr;
 
 /**
  * Peer node information
  */
-static TCHAR s_peerNode[MAX_DB_STRING];
+static wchar_t s_peerNode[MAX_DB_STRING];
 
 /**
  * Default thared stack size
@@ -361,19 +361,19 @@ void MetaDataPreLoad()
 /**
  * Read string value from metadata table
  */
-bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *name, TCHAR *buffer, int bufSize, const TCHAR *defaultValue)
+bool NXCORE_EXPORTABLE MetaDataReadStr(const wchar_t *name, wchar_t *buffer, int bufSize, const wchar_t *defaultValue)
 {
    bool success = false;
 
-   _tcslcpy(buffer, defaultValue, bufSize);
-   if (_tcslen(name) > 127)
+   wcslcpy(buffer, defaultValue, bufSize);
+   if (wcslen(name) > 127)
       return false;
 
    s_metadataCacheLock.readLock();
-   const TCHAR *value = s_metadataCache.get(name);
+   const wchar_t *value = s_metadataCache.get(name);
    if (value != nullptr)
    {
-      _tcslcpy(buffer, value, bufSize);
+      wcslcpy(buffer, value, bufSize);
       success = true;
    }
    s_metadataCacheLock.unlock();
@@ -392,7 +392,7 @@ bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *name, TCHAR *buffer, int buf
             {
                DBGetField(hResult, 0, 0, buffer, bufSize);
                s_metadataCacheLock.writeLock();
-               s_metadataCache.setPreallocated(_tcsdup(name), DBGetField(hResult, 0, 0, nullptr, 0));
+               s_metadataCache.setPreallocated(MemCopyStringW(name), DBGetField(hResult, 0, 0, nullptr, 0));
                s_metadataCacheLock.unlock();
                success = true;
             }
@@ -408,13 +408,13 @@ bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *name, TCHAR *buffer, int buf
 /**
  * Read integer value from metadata table
  */
-int32_t NXCORE_EXPORTABLE MetaDataReadInt32(const TCHAR *variable, int32_t defaultValue)
+int32_t NXCORE_EXPORTABLE MetaDataReadInt32(const wchar_t *variable, int32_t defaultValue)
 {
-   TCHAR buffer[256];
+   wchar_t buffer[256];
    if (MetaDataReadStr(variable, buffer, 256, L""))
    {
-      TCHAR *eptr;
-      int32_t value = _tcstol(buffer, &eptr, 0);
+      wchar_t *eptr;
+      int32_t value = wcstol(buffer, &eptr, 0);
       return (*eptr == 0) ? value : defaultValue;
    }
    else
@@ -426,7 +426,7 @@ int32_t NXCORE_EXPORTABLE MetaDataReadInt32(const TCHAR *variable, int32_t defau
 /**
  * Write string value to metadata table
  */
-bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *variable, const TCHAR *value)
+bool NXCORE_EXPORTABLE MetaDataWriteStr(const wchar_t *variable, const wchar_t *value)
 {
    if (_tcslen(variable) > 63)
       return false;
@@ -487,9 +487,9 @@ bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *variable, const TCHAR *valu
 /**
  * Write integer value to metadata table
  */
-bool NXCORE_EXPORTABLE MetaDataWriteInt32(const TCHAR *variable, int32_t value)
+bool NXCORE_EXPORTABLE MetaDataWriteInt32(const wchar_t *variable, int32_t value)
 {
-   TCHAR buffer[32];
+   wchar_t buffer[32];
    return MetaDataWriteStr(variable, IntegerToString(value, buffer));
 }
 
@@ -622,6 +622,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!wcscmp(name, L"DataCollection.InstanceRetentionTime"))
    {
       g_instanceRetentionTime = ConvertToUint32(value, 7);
+   }
+   else if (!wcscmp(name, L"DataCollection.Scheduler.RequireConnectivity"))
+   {
+      UpdateServerFlag(AF_DC_SCHEDULER_REQUIRES_CONNECTIVITY, value);
    }
    else if (!wcscmp(name, L"DBWriter.HouseKeeperInterlock"))
    {
