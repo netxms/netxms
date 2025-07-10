@@ -10277,27 +10277,18 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   TCHAR exportFileName[MAX_PATH];
+   wchar_t exportFileName[MAX_PATH];
    bool success = false;
 
    if (checkSystemAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_VIEW_EVENT_DB | SYSTEM_ACCESS_EPP))
    {
-      uint32_t *pdwTemplateList;
-      uint32_t dwNumTemplates = request.getFieldAsUInt32(VID_NUM_OBJECTS);
-      if (dwNumTemplates > 0)
-      {
-         pdwTemplateList = MemAllocArray<uint32_t>(dwNumTemplates);
-         request.getFieldAsInt32Array(VID_OBJECT_LIST, dwNumTemplates, pdwTemplateList);
-      }
-      else
-      {
-         pdwTemplateList = nullptr;
-      }
+      IntegerArray<uint32_t> templateList;
+      request.getFieldAsInt32Array(VID_OBJECT_LIST, &templateList);
 
-      uint32_t i;
-      for(i = 0; i < dwNumTemplates; i++)
+      int i;
+      for(i = 0; i < templateList.size(); i++)
       {
-         shared_ptr<NetObj> object = FindObjectById(pdwTemplateList[i]);
+         shared_ptr<NetObj> object = FindObjectById(templateList.get(i));
          if (object != nullptr)
          {
             if (object->getObjectClass() == OBJECT_TEMPLATE)
@@ -10321,26 +10312,26 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
          }
       }
 
-      if (i == dwNumTemplates)   // All objects passed test
+      if (i == templateList.size())   // All objects passed test
       {
          GetNetXMSDirectory(nxDirData, exportFileName);
-         _tcslcat(exportFileName, FS_PATH_SEPARATOR _T("export-"), MAX_PATH);
-         IntegerToString(GetCurrentTimeMs(), &exportFileName[_tcslen(exportFileName)]);
-         _tcslcat(exportFileName, _T(".xml"), MAX_PATH);
+         wcslcat(exportFileName, FS_PATH_SEPARATOR L"export-", MAX_PATH);
+         IntegerToString(GetCurrentTimeMs(), &exportFileName[wcslen(exportFileName)]);
+         wcslcat(exportFileName, L".xml", MAX_PATH);
 
-         FILE *out = _tfopen(exportFileName, _T("w"));
+         FILE *out = _wfopen(exportFileName, L"w");
          if (out != nullptr)
          {
             TextFileWriter writer(out);
 
-            TCHAR osVersion[256];
+            wchar_t osVersion[256];
             GetOSVersionString(osVersion, 256);
 
             writer.appendUtf8String("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration>\n\t<formatVersion>5</formatVersion>\n\t<nxslVersionV5>true</nxslVersionV5>\n\t<server>\n\t\t<version>"
                      NETXMS_VERSION_STRING_A "</version>\n\t\t<buildTag>" NETXMS_BUILD_TAG_A "</buildTag>\n\t\t<operatingSystem>");
             writer.appendPreallocated(EscapeStringForXML(osVersion, -1));
             writer.appendUtf8String("</operatingSystem>\n\t</server>\n\t<description>");
-            TCHAR *description = request.getFieldAsString(VID_DESCRIPTION);
+            wchar_t *description = request.getFieldAsString(VID_DESCRIPTION);
             writer.appendPreallocated(EscapeStringForXML(description, -1));
             MemFree(description);
             writer.appendUtf8String("</description>\n");
@@ -10357,9 +10348,9 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
 
             // Write templates
             writer.appendUtf8String("\t<templates>\n");
-            for(i = 0; i < dwNumTemplates; i++)
+            for(i = 0; i < templateList.size(); i++)
             {
-               shared_ptr<NetObj> object = FindObjectById(pdwTemplateList[i]);
+               shared_ptr<NetObj> object = FindObjectById(templateList.get(i));
                if (object != nullptr)
                {
                   static_cast<Template&>(*object).createExportRecord(writer);
@@ -10459,12 +10450,10 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
          }
          else
          {
-            debugPrintf(4, _T("Cannot open configuration export file \"%s\" (%s)"), exportFileName, _tcserror(errno));
+            debugPrintf(4, L"Cannot open configuration export file \"%s\" (%s)", exportFileName, _wcserror(errno));
             response.setField(VID_RCC, RCC_FILE_IO_ERROR);
          }
       }
-
-      MemFree(pdwTemplateList);
    }
    else
    {
@@ -10476,7 +10465,7 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
    if (success)
    {
       sendFile(exportFileName, request.getId(), 0, true);
-      _tremove(exportFileName);
+      _wremove(exportFileName);
    }
 }
 

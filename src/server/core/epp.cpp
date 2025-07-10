@@ -422,50 +422,50 @@ void EPRule::createOrderingExportRecord(TextFileWriter& xml) const
  */
 void EPRule::createExportRecord(TextFileWriter& xml) const
 {
-   xml.append(_T("\t\t<rule id=\""));
+   xml.appendUtf8String("\t\t<rule id=\"");
    xml.append(m_id + 1);
-   xml.append(_T("\">\n\t\t\t<guid>"));
-   xml.append(m_guid.toString());
-   xml.append(_T("</guid>\n\t\t\t<flags>"));
+   xml.appendUtf8String("\">\n\t\t\t<guid>");
+   xml.append(m_guid);
+   xml.appendUtf8String("</guid>\n\t\t\t<flags>");
    xml.append(m_flags);
-   xml.append(_T("</flags>\n\t\t\t<alarmMessage>"));
+   xml.appendUtf8String("</flags>\n\t\t\t<alarmMessage>");
    xml.append(EscapeStringForXML2(m_alarmMessage));
-   xml.append(_T("</alarmMessage>\n\t\t\t<alarmImpact>"));
+   xml.appendUtf8String("</alarmMessage>\n\t\t\t<alarmImpact>");
    xml.append(EscapeStringForXML2(m_alarmImpact));
-   xml.append(_T("</alarmImpact>\n\t\t\t<alarmKey>"));
+   xml.appendUtf8String("</alarmImpact>\n\t\t\t<alarmKey>");
    xml.append(EscapeStringForXML2(m_alarmKey));
-   xml.append(_T("</alarmKey>\n\t\t\t<rootCauseAnalysisScript>"));
+   xml.appendUtf8String("</alarmKey>\n\t\t\t<rootCauseAnalysisScript>");
    xml.append(EscapeStringForXML2(m_rcaScriptName));
-   xml.append(_T("</rootCauseAnalysisScript>\n\t\t\t<alarmSeverity>"));
+   xml.appendUtf8String("</rootCauseAnalysisScript>\n\t\t\t<alarmSeverity>");
    xml.append(m_alarmSeverity);
-   xml.append(_T("</alarmSeverity>\n\t\t\t<alarmTimeout>"));
+   xml.appendUtf8String("</alarmSeverity>\n\t\t\t<alarmTimeout>");
    xml.append(m_alarmTimeout);
-   xml.append(_T("</alarmTimeout>\n\t\t\t<alarmTimeoutEvent>"));
+   xml.appendUtf8String("</alarmTimeout>\n\t\t\t<alarmTimeoutEvent>");
    xml.append(m_alarmTimeoutEvent);
-   xml.append(_T("</alarmTimeoutEvent>\n\t\t\t<downtimeTag>"));
+   xml.appendUtf8String("</alarmTimeoutEvent>\n\t\t\t<downtimeTag>");
    xml.append(EscapeStringForXML2(m_downtimeTag));
-   xml.append(_T("</downtimeTag>\n\t\t\t<script>"));
+   xml.appendUtf8String("</downtimeTag>\n\t\t\t<script>");
    xml.append(EscapeStringForXML2(m_filterScriptSource));
-   xml.append(_T("</script>\n\t\t\t<actionScript>"));
+   xml.appendUtf8String("</script>\n\t\t\t<actionScript>");
    xml.append(EscapeStringForXML2(m_actionScriptSource));
-   xml.append(_T("</actionScript>\n\t\t\t<comments>"));
+   xml.appendUtf8String("</actionScript>\n\t\t\t<comments>");
    xml.append(EscapeStringForXML2(m_comments));
-   xml.append(_T("</comments>\n\t\t\t<sources>\n"));
+   xml.appendUtf8String("</comments>\n\t\t\t<sources>\n");
 
    for(int i = 0; i < m_sources.size(); i++)
    {
       shared_ptr<NetObj> object = FindObjectById(m_sources.get(i));
       if (object != nullptr)
       {
-         TCHAR guidText[128];
-         xml.appendFormattedString(_T("\t\t\t\t<source id=\"%d\">\n")
-                                _T("\t\t\t\t\t<name>%s</name>\n")
-                                _T("\t\t\t\t\t<guid>%s</guid>\n")
-                                _T("\t\t\t\t\t<class>%d</class>\n")
-                                _T("\t\t\t\t</source>\n"),
-                                object->getId(),
-                                (const TCHAR *)EscapeStringForXML2(object->getName()),
-                                object->getGuid().toString(guidText), object->getObjectClass());
+         xml.appendUtf8String("\t\t\t\t<source id=\"");
+         xml.append(object->getId());
+         xml.appendUtf8String("\">\n\t\t\t\t\t<name>");
+         xml.append(EscapeStringForXML2(object->getName()));
+         xml.appendUtf8String("</name>\n\t\t\t\t\t<guid>");
+         xml.append(object->getGuid());
+         xml.appendUtf8String("</guid>\n\t\t\t\t\t<class>");
+         xml.append(object->getObjectClass());
+         xml.appendUtf8String("</class>\n\t\t\t\t</source>\n");
       }
    }
    xml.appendUtf8String("\t\t\t</sources>\n\t\t\t<sourceExclusions>\n");
@@ -475,28 +475,29 @@ void EPRule::createExportRecord(TextFileWriter& xml) const
       shared_ptr<NetObj> object = FindObjectById(m_sourceExclusions.get(i));
       if (object != nullptr)
       {
-         TCHAR guidText[128];
-         xml.appendFormattedString(_T("\t\t\t\t<sourceExclusion id=\"%d\">\n")
-                                _T("\t\t\t\t\t<name>%s</name>\n")
-                                _T("\t\t\t\t\t<guid>%s</guid>\n")
-                                _T("\t\t\t\t\t<class>%d</class>\n")
-                                _T("\t\t\t\t</sourceExclusion>\n"),
-                                object->getId(),
-                                (const TCHAR *)EscapeStringForXML2(object->getName()),
-                                object->getGuid().toString(guidText), object->getObjectClass());
+         xml.appendUtf8String("\t\t\t\t<sourceExclusion id=\"");
+         xml.append(object->getId());
+         xml.appendUtf8String("\">\n\t\t\t\t\t<name>");
+         xml.append(EscapeStringForXML2(object->getName()));
+         xml.appendUtf8String("</name>\n\t\t\t\t\t<guid>");
+         xml.append(object->getGuid());
+         xml.appendUtf8String("</guid>\n\t\t\t\t\t<class>");
+         xml.append(object->getObjectClass());
+         xml.appendUtf8String("</class>\n\t\t\t\t</sourceExclusion>\n");
       }
    }
 
-   xml += _T("\t\t\t</sourceExclusions>\n\t\t\t<events>\n");
+   xml.appendUtf8String("\t\t\t</sourceExclusions>\n\t\t\t<events>\n");
 
    for(int i = 0; i < m_events.size(); i++)
    {
-      TCHAR eventName[MAX_EVENT_NAME];
+      xml.appendUtf8String("\t\t\t\t<event id=\"");
+      xml.append(m_events.get(i));
+      xml.appendUtf8String("\">\n\t\t\t\t\t<name>");
+      wchar_t eventName[MAX_EVENT_NAME];
       EventNameFromCode(m_events.get(i), eventName);
-      xml.appendFormattedString(_T("\t\t\t\t<event id=\"%d\">\n")
-                             _T("\t\t\t\t\t<name>%s</name>\n")
-                             _T("\t\t\t\t</event>\n"),
-                             m_events.get(i), (const TCHAR *)EscapeStringForXML2(eventName));
+      xml.append(EscapeStringForXML2(eventName));
+      xml.appendUtf8String("</name>\n\t\t\t\t</event>\n");
    }
 
    xml.appendUtf8String("\t\t\t</events>\n\t\t\t<timeFrames>\n");
@@ -504,7 +505,13 @@ void EPRule::createExportRecord(TextFileWriter& xml) const
    for(int i = 0; i < m_timeFrames.size(); i++)
    {
       TimeFrame *timeFrame = m_timeFrames.get(i);
-      xml.appendFormattedString(_T("\t\t\t\t<timeFrame id=\"%d\" time=\"%u\" date=\"") UINT64_FMT _T("\" />\n"), i + 1, timeFrame->getTimeFilter(), timeFrame->getDateFilter());
+      xml.appendUtf8String("\t\t\t\t<timeFrame id=\"");
+      xml.append(i + 1);
+      xml.appendUtf8String("\" time=\"");
+      xml.append(timeFrame->getTimeFilter());
+      xml.appendUtf8String("\" date=\"");
+      xml.append(timeFrame->getDateFilter());
+      xml.appendUtf8String("\" />\n");
    }
 
    xml.appendUtf8String("\t\t\t</timeFrames>\n\t\t\t<actions>\n");
@@ -513,19 +520,19 @@ void EPRule::createExportRecord(TextFileWriter& xml) const
       xml.append(_T("\t\t\t\t<action id=\""));
       const ActionExecutionConfiguration *a = m_actions.get(i);
       xml.append(a->actionId);
-      xml.append(_T("\">\n\t\t\t\t\t<guid>"));
+      xml.appendUtf8String("\">\n\t\t\t\t\t<guid>");
       xml.append(GetActionGUID(a->actionId));
-      xml.append(_T("</guid>\n\t\t\t\t\t<timerDelay>"));
+      xml.appendUtf8String("</guid>\n\t\t\t\t\t<timerDelay>");
       xml.append(EscapeStringForXML2(a->timerDelay));
-      xml.append(_T("</timerDelay>\n\t\t\t\t\t<timerKey>"));
-      xml.append((const TCHAR *)EscapeStringForXML2(a->timerKey));
-      xml.append(_T("</timerKey>\n\t\t\t\t\t<blockingTimerKey>"));
+      xml.appendUtf8String("</timerDelay>\n\t\t\t\t\t<timerKey>");
+      xml.append(EscapeStringForXML2(a->timerKey));
+      xml.appendUtf8String("</timerKey>\n\t\t\t\t\t<blockingTimerKey>");
       xml.append(EscapeStringForXML2(a->blockingTimerKey));
-      xml.append(_T("</blockingTimerKey>\n\t\t\t\t\t<snoozeTime>"));
+      xml.appendUtf8String("</blockingTimerKey>\n\t\t\t\t\t<snoozeTime>");
       xml.append(EscapeStringForXML2(a->snoozeTime));
-      xml.append(_T("</snoozeTime>\n\t\t\t\t\t<active>"));
+      xml.appendUtf8String("</snoozeTime>\n\t\t\t\t\t<active>");
       xml.append(a->active);
-      xml.append(_T("</active>\n\t\t\t\t</action>\n"));
+      xml.appendUtf8String("</active>\n\t\t\t\t</action>\n");
    }
 
    xml.appendUtf8String("\t\t\t</actions>\n\t\t\t<timerCancellations>\n");
@@ -538,31 +545,55 @@ void EPRule::createExportRecord(TextFileWriter& xml) const
 
    xml.appendUtf8String("\t\t\t</timerCancellations>\n\t\t\t<pStorageActions>\n");
    int id = 0;
-   for(KeyValuePair<const TCHAR> *action : m_pstorageSetActions)
+   for(KeyValuePair<const wchar_t> *action : m_pstorageSetActions)
    {
-      xml.appendFormattedString(_T("\t\t\t\t<set id=\"%d\" key=\"%s\">%s</set>\n"), ++id, action->key, action->value);
+      xml.appendUtf8String("\t\t\t\t<set id=\"");
+      xml.append(++id);
+      xml.appendUtf8String("\" key=\"");
+      xml.append(EscapeStringForXML2(action->key));
+      xml.appendUtf8String("\">");
+      xml.append(EscapeStringForXML2(action->value));
+      xml.appendUtf8String("</set>\n");
    }
    for(int i = 0; i < m_pstorageDeleteActions.size(); i++)
    {
-      xml.appendFormattedString(_T("\t\t\t\t<delete id=\"%d\" key=\"%s\"/>\n"), i + 1, m_pstorageDeleteActions.get(i));
+      xml.appendUtf8String("\t\t\t\t<delete id=\"");
+      xml.append(i + 1);
+      xml.appendUtf8String("\" key=\"");
+      xml.append(EscapeStringForXML2(m_pstorageDeleteActions.get(i)));
+      xml.appendUtf8String("\"/>\n");
    }
 
    xml.appendUtf8String("\t\t\t</pStorageActions>\n\t\t\t<customAttributeActions>\n");
    id = 0;
-   for(KeyValuePair<const TCHAR> *action : m_customAttributeSetActions)
+   for(KeyValuePair<const wchar_t> *action : m_customAttributeSetActions)
    {
-      xml.appendFormattedString(_T("\t\t\t\t<set id=\"%d\" name=\"%s\">%s</set>\n"), ++id, action->key, action->value);
+      xml.appendUtf8String("\t\t\t\t<set id=\"");
+      xml.append(++id);
+      xml.appendUtf8String("\" name=\"");
+      xml.append(EscapeStringForXML2(action->key));
+      xml.appendUtf8String("\">");
+      xml.append(EscapeStringForXML2(action->value));
+      xml.appendUtf8String("</set>\n");
    }
    for(int i = 0; i < m_customAttributeDeleteActions.size(); i++)
    {
-      xml.appendFormattedString(_T("\t\t\t\t<delete id=\"%d\" name=\"%s\"/>\n"), i + 1, m_pstorageDeleteActions.get(i));
+      xml.appendUtf8String("\t\t\t\t<delete id=\"");
+      xml.append(i + 1);
+      xml.appendUtf8String("\" name=\"");
+      xml.append(EscapeStringForXML2(m_customAttributeDeleteActions.get(i)));
+      xml.appendUtf8String("\"/>\n");
    }
 
    xml.appendUtf8String("\t\t\t</customAttributeActions>\n\t\t\t<alarmCategories>\n");
    for(int i = 0; i < m_alarmCategoryList.size(); i++)
    {
       AlarmCategory *category = GetAlarmCategory(m_alarmCategoryList.get(i));
-      xml.appendFormattedString(_T("\t\t\t\t<category id=\"%d\" name=\"%s\">"), category->getId(), category->getName());
+      xml.appendUtf8String("\t\t\t\t<category id=\"");
+      xml.append(category->getId());
+      xml.appendUtf8String("\" name=\"");
+      xml.append(EscapeStringForXML2(category->getName()));
+      xml.appendUtf8String("\">");
       xml.append(category->getDescription());
       xml.appendUtf8String("</category>\n");
       delete category;
@@ -583,7 +614,7 @@ void EPRule::validateConfig() const
       const uint32_t objectId = m_sourceExclusions.get(i);
       if (FindObjectById(objectId) == nullptr)
       {
-         ReportConfigurationError(_T("EPP"), _T("invalid-object-id"), _T("Invalid object ID %u in EPP rule %u"), objectId, ruleId);
+         ReportConfigurationError(L"EPP", L"invalid-object-id", L"Invalid object ID %u in EPP rule %u", objectId, ruleId);
       }
    }
 
@@ -592,7 +623,7 @@ void EPRule::validateConfig() const
       const uint32_t objectId = m_sources.get(i);
       if (FindObjectById(objectId) == nullptr)
       {
-         ReportConfigurationError(_T("EPP"), _T("invalid-object-id"), _T("Invalid object ID %u in EPP rule %u"), objectId, ruleId);         
+         ReportConfigurationError(L"EPP", L"invalid-object-id", L"Invalid object ID %u in EPP rule %u", objectId, ruleId);
       }
    }
 }
