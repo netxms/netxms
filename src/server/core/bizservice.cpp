@@ -262,7 +262,7 @@ bool BusinessService::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT 
    if (!Pollable::loadFromDatabase(hdb, m_id))
       return false;
 
-   m_serviceState = getMostCriticalCheckState();
+   m_serviceState = getMostCriticalCheckStatus();
    return true;
 }
 
@@ -355,16 +355,16 @@ void BusinessService::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 /**
  * Returns most critical service check state
  */
-int BusinessService::getMostCriticalCheckState()
+int BusinessService::getMostCriticalCheckStatus()
 {
-   int state = STATUS_NORMAL;
+   int status = STATUS_NORMAL;
    unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = getChecks();
    for (const shared_ptr<BusinessServiceCheck>& check : *checks)
    {
-      if (check->getState() > state)
-         state = check->getState();
+      if (check->getStatus() > status)
+         status = check->getStatus();
    }
-   return state;
+   return status;
 }
 
 /**
@@ -372,7 +372,7 @@ int BusinessService::getMostCriticalCheckState()
  */
 int BusinessService::getAdditionalMostCriticalStatus()
 {
-   return getMostCriticalCheckState();
+   return getMostCriticalCheckStatus();
 }
 
 /**
@@ -485,7 +485,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, uin
    poller->setStatus(_T("executing checks"));
    sendPollerMsg(_T("Executing business service checks\r\n"));
 
-   int mostCriticalState = STATUS_NORMAL;
+   int mostCriticalStatus = STATUS_NORMAL;
    unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = getChecks();
    for (const shared_ptr<BusinessServiceCheck>& check : *checks)
    {
@@ -494,45 +494,45 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, uin
 
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("BusinessService::statusPoll(%s [%u]): executing check %s [%u]"), m_name, m_id, checkDescription.cstr(), check->getId());
       sendPollerMsg(_T("   Executing business service check \"%s\"\r\n"), checkDescription.cstr());
-      int oldCheckState = check->getState();
-      int newCheckState = check->execute(data);
+      int oldCheckStatus = check->getStatus();
+      int newCheckStatus = check->execute(data);
 
       if (data->ticketId != 0)
       {
          ThreadPoolExecuteSerialized(g_mainThreadPool, _T("BizSvcTicketUpdate"), this, &BusinessService::addTicketToParents, data);
       }
-      if (oldCheckState != newCheckState)
+      if (oldCheckStatus != newCheckStatus)
       {
-         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): state of check %s [%u] changed from %s to %s"),
-               m_name, m_id, checkDescription.cstr(), check->getId(), GetStatusAsText(oldCheckState, true), GetStatusAsText(newCheckState, true));
-         sendPollerMsg(_T("   State of business service check \"%s\" changed from %s to %s\r\n"), checkDescription.cstr(), GetStatusAsText(oldCheckState, true), GetStatusAsText(newCheckState, true));
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): status of check %s [%u] changed from %s to %s"),
+               m_name, m_id, checkDescription.cstr(), check->getId(), GetStatusAsText(oldCheckStatus, true), GetStatusAsText(newCheckStatus, true));
+         sendPollerMsg(_T("   Status of business service check \"%s\" changed from %s to %s\r\n"), checkDescription.cstr(), GetStatusAsText(oldCheckStatus, true), GetStatusAsText(newCheckStatus, true));
          NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
       }
-      if (newCheckState > mostCriticalState)
+      if (newCheckStatus > mostCriticalStatus)
       {
-         mostCriticalState = newCheckState;
+         mostCriticalStatus = newCheckStatus;
       }
    }
    sendPollerMsg(_T("All business service checks executed\r\n"));
 
-   // Include state of child services into calculation
-   if (mostCriticalState != STATUS_CRITICAL)
+   // Include status of child services into calculation
+   if (mostCriticalStatus != STATUS_CRITICAL)
    {
       readLockChildList();
-      for(int i = 0; (i < getChildList().size()) && (mostCriticalState != STATUS_CRITICAL); i++)
+      for(int i = 0; (i < getChildList().size()) && (mostCriticalStatus != STATUS_CRITICAL); i++)
       {
          NetObj *o = getChildList().get(i);
          if (o->getObjectClass() != OBJECT_BUSINESSSERVICE)
             continue;
 
-         int state = static_cast<BusinessService*>(o)->getServiceState();
-         if (state > mostCriticalState)
-            mostCriticalState = state;
+         int status = static_cast<BusinessService*>(o)->getServiceState();
+         if (status > mostCriticalStatus)
+            mostCriticalStatus = status;
       }
       unlockChildList();
    }
 
-   changeState(mostCriticalState);
+   changeState(mostCriticalStatus);
    calculateCompoundStatus();
 
    lockProperties();

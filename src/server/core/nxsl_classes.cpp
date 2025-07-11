@@ -4344,7 +4344,7 @@ NXSL_Value *NXSL_BusinessServiceCheckClass::getAttr(NXSL_Object *object, const N
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("state"))
    {
-      value = vm->createValue(check->getState());
+      value = vm->createValue(check->getStatus());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("type"))
    {

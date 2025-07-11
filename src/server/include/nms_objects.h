@@ -5198,7 +5198,7 @@ protected:
    BusinessServiceCheckType m_type;
    uint32_t m_relatedObject;
    uint32_t m_relatedDCI;
-   int m_state;
+   int m_status;
    int m_statusThreshold;
    TCHAR *m_script;
    NXSL_Program *m_compiledScript;
@@ -5224,7 +5224,7 @@ public:
    uint32_t getPrototypeServiceId() const { return m_prototypeServiceId; }
    uint32_t getPrototypeCheckId() const { return m_prototypeCheckId; }
    BusinessServiceCheckType getType() const { return m_type; }
-   int getState() const { return m_state; }
+   int getStatus() const { return m_status; }
    const TCHAR *getFailureReason() const { return m_reason; }
    uint32_t getCurrentTicket() const { return m_currentTicket; }
    uint32_t getRelatedObject() const { return m_relatedObject; }
@@ -5386,7 +5386,7 @@ protected:
    void changeState(int newState);
    void onChildStateChange();
 
-   int getMostCriticalCheckState();
+   int getMostCriticalCheckStatus();
 
    void validateAutomaticObjectChecks();
    void validateAutomaticDCIChecks();
