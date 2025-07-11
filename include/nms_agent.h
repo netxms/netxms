@@ -235,6 +235,7 @@ struct PolicyChangeNotification
 {
    uuid guid;
    const TCHAR *type;
+   bool sameContent;
 };
 
 /**

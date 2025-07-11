@@ -296,9 +296,9 @@ uint32_t DeployPolicy(NXCPMessage *request, uint64_t serverId, const TCHAR *serv
    nxlog_debug_tag(DEBUG_TAG, 5, _T("DeployPolicy(): content size %d"), size);
 
    uint32_t rcc;
+   bool sameFileContent = false;
    if (!_tcscmp(type, _T("AgentConfig")))
    {
-      bool sameFileContent;
       rcc = DeployPolicy(guid, content, size, g_szConfigPolicyDir, &sameFileContent);
       if ((size != 0) && (rcc == ERR_SUCCESS))
       {
@@ -309,12 +309,10 @@ uint32_t DeployPolicy(NXCPMessage *request, uint64_t serverId, const TCHAR *serv
    }
    else if (!_tcscmp(type, _T("LogParserConfig")))
    {
-      bool sameFileContent;
       rcc = DeployPolicy(guid, content, size, g_szLogParserDirectory, &sameFileContent);
    }
    else if (!_tcscmp(type, _T("SupportApplicationConfig")))
    {
-      bool sameFileContent;
       rcc = DeployPolicy(guid, content, size, g_userAgentPolicyDirectory, &sameFileContent);
       if (rcc == ERR_SUCCESS)
       {
@@ -343,6 +341,7 @@ uint32_t DeployPolicy(NXCPMessage *request, uint64_t serverId, const TCHAR *serv
       PolicyChangeNotification n;
       n.guid = guid;
       n.type = type;
+      n.sameContent = sameFileContent;
 		NotifySubAgents(AGENT_NOTIFY_POLICY_INSTALLED, &n);
 
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Policy %s of type %s successfully deployed"), guid.toString().cstr(), type);
@@ -480,13 +479,13 @@ uint32_t GetPolicyInventory(NXCPMessage *msg, uint64_t serverId)
 /**
  * Update policy inventory in database from actual policy files
  */
-void UpdatePolicyInventory()
+static void UpdatePolicyInventory()
 {
 	DB_HANDLE hdb = GetLocalDatabaseHandle();
 	if (hdb == nullptr)
 	   return;
 
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT guid,type FROM agent_policy"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT guid,type,content_hash FROM agent_policy"));
    if (hResult == nullptr)
       return;
 
@@ -503,8 +502,42 @@ void UpdatePolicyInventory()
          nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Unregistering policy %s (policy file is missing)"), guid.toString().cstr());
          UnregisterPolicy(guid);
       }
+      else
+      {
+         TCHAR hashAsText[33];
+         if (DBGetField(hResult, row, 2, hashAsText, 33) != nullptr)
+         {
+            BYTE hashB[MD5_DIGEST_SIZE];
+            StrToBin(hashAsText, hashB, MD5_DIGEST_SIZE);
+
+            BYTE hashA[MD5_DIGEST_SIZE];
+            if (CalculateFileMD5Hash(filePath, hashA))
+            {
+               if (memcmp(hashA, hashB, MD5_DIGEST_SIZE) != 0)
+               {
+                  nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Delete and unregistering policy %s (policy hash mismatch)"), guid.toString().cstr());
+                  _tremove(filePath);
+                  UnregisterPolicy(guid);
+               }
+            }
+         }
+         else
+         {
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Unregistering policy %s (policy hash missing)"), guid.toString().cstr());
+            UnregisterPolicy(guid);
+         }
+      }
    }
    DBFreeResult(hResult);
+}
+
+/**
+ * Update policy inventory in database from actual policy files
+ */
+void StartPolicyHousekeeper()
+{
+   UpdatePolicyInventory();
+   ThreadPoolScheduleRelative(g_webSvcThreadPool, 24 * 60 * 60 * 1000, StartPolicyHousekeeper); // Schedule next update in 24 hours
 }
 
 /**

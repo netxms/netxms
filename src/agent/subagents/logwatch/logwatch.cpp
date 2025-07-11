@@ -600,6 +600,12 @@ static void OnAgentNotify(UINT32 code, void *data)
       if (!p->getGuid().equals(n->guid))
          continue;
 
+      if (n->sameContent)
+      {
+         s_parserLock.unlock();
+         return;
+      }
+
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Reloading parser for file %s"), p->getFileName());
       p->stop();
       s_parsers.remove(i);

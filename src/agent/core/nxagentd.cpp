@@ -110,7 +110,7 @@ void InitSessionList();
 
 bool RegisterOnServer(const TCHAR *server, int32_t zoneUIN);
 
-void UpdatePolicyInventory();
+void StartPolicyHousekeeper();
 
 void UpdateUserAgentsEnvironment();
 
@@ -1633,7 +1633,7 @@ BOOL Initialize()
 	   }
 
 	   // Update policy inventory according to files that exist on file system
-      UpdatePolicyInventory();
+      StartPolicyHousekeeper();
 
       StartWebServiceHousekeeper();
 
