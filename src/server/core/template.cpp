@@ -820,7 +820,6 @@ void Template::checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyIn
    {
       const shared_ptr<GenericAgentPolicy>& policy = m_policyList.getShared(i);
       auto data = make_shared<AgentPolicyDeploymentData>(node, node->isNewPolicyTypeFormatSupported());
-      data->forceInstall = true;
 
       int j;
       for(j = 0; j < ap->size(); j++)
