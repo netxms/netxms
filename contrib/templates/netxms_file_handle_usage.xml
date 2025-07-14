@@ -199,13 +199,6 @@
 				</dci>
 			</dataCollection>
 			<agentPolicies>
-				<agentPolicy id="1">
-					<guid>efe53d4e-3259-4b08-bb8f-d974dc6f1fd0</guid>
-					<name>External metric for ulimit open files</name>
-					<type>AgentConfig</type>
-					<flags>0</flags>
-					<content>ExternalMetric=ulimit.openFiles:ulimit -Hn</content>
-				</agentPolicy>
 			</agentPolicies>
 			<filter autoBind="true" autoUnbind="false">return classof($object) == &quot;Node&quot; and $node.isLocalMgmt and !($node.platformName like &quot;windows-*&quot;);</filter>
 			<filter2 autoBind="false" autoUnbind="false"></filter2>
