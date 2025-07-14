@@ -405,7 +405,7 @@ int H_GrafanaObjectList(Context *context)
    unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(
       [context, type] (NetObj *object) -> bool
       {
-         if (object->isHidden() || object->isSystem() || object->isDeleted() || !object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+         if (object->isHidden() || object->isDeleted() || !object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
             return false;
          if (type == ObjectFilterTypes::DataCollectionTarget && !object->isDataCollectionTarget())
             return false;

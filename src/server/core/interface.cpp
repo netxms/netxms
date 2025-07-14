@@ -739,33 +739,31 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): status changed from %d to %d"), m_id, m_name, m_status, newStatus);
 		m_status = newStatus;
 		m_pendingStatus = -1;	// Invalidate pending status
-      if (!m_isSystem)
-      {
-		   sendPollerMsg(_T("      Interface status changed to %s\r\n"), GetStatusAsText(m_status, true));
 
-         // Post system event if it was not already sent before unknown state
-         if ((m_lastKnownOperState == IF_OPER_STATE_UNKNOWN || m_lastKnownOperState != static_cast<int16_t>(operState)) ||
-             (m_lastKnownAdminState == IF_ADMIN_STATE_UNKNOWN || m_lastKnownAdminState != static_cast<int16_t>(adminState)))
+		sendPollerMsg(_T("      Interface status changed to %s\r\n"), GetStatusAsText(m_status, true));
+
+      // Post system event if it was not already sent before unknown state
+      if ((m_lastKnownOperState == IF_OPER_STATE_UNKNOWN || m_lastKnownOperState != static_cast<int16_t>(operState)) ||
+          (m_lastKnownAdminState == IF_ADMIN_STATE_UNKNOWN || m_lastKnownAdminState != static_cast<int16_t>(adminState)))
+      {
+         const InetAddress& addr = m_ipAddressList.getFirstUnicastAddress();
+         readLockParentList();
+         for(const std::shared_ptr<NetObj> parent : getParentList())
          {
-            const InetAddress& addr = m_ipAddressList.getFirstUnicastAddress();
-            readLockParentList();
-            for(const std::shared_ptr<NetObj> parent : getParentList())
-            {
-               EventBuilder((expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_status] : statusToEvent[m_status], parent->getId())
-                  .param(_T("interfaceObjectId"), m_id)
-                  .param(_T("interfaceName"), m_name)
-                  .param(_T("interfaceIpAddress"), addr)
-                  .param(_T("interfaceNetMask"), addr.getMaskBits())
-                  .param(_T("interfaceIndex"), m_index)
-                  .post(eventQueue);
-            }
-            unlockParentList();
+            EventBuilder((expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_status] : statusToEvent[m_status], parent->getId())
+               .param(_T("interfaceObjectId"), m_id)
+               .param(_T("interfaceName"), m_name)
+               .param(_T("interfaceIpAddress"), addr)
+               .param(_T("interfaceNetMask"), addr.getMaskBits())
+               .param(_T("interfaceIndex"), m_index)
+               .post(eventQueue);
          }
-         if (static_cast<int16_t>(operState) != IF_OPER_STATE_UNKNOWN)
-            m_lastKnownOperState = static_cast<int16_t>(operState);
-         if (static_cast<int16_t>(adminState) != IF_ADMIN_STATE_UNKNOWN)
-            m_lastKnownAdminState = static_cast<int16_t>(adminState);
+         unlockParentList();
       }
+      if (static_cast<int16_t>(operState) != IF_OPER_STATE_UNKNOWN)
+         m_lastKnownOperState = static_cast<int16_t>(operState);
+      if (static_cast<int16_t>(adminState) != IF_ADMIN_STATE_UNKNOWN)
+         m_lastKnownAdminState = static_cast<int16_t>(adminState);
    }
 	else if (expectedState == IF_EXPECTED_STATE_IGNORE)
 	{
@@ -789,7 +787,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 	}
 	unlockProperties();
 
-   if (!m_isSystem && (oldSpeed != speed))
+   if (oldSpeed != speed)
    {
       readLockParentList();
       for(const std::shared_ptr<NetObj> parent : getParentList())
@@ -951,22 +949,19 @@ void Interface::stpStatusPoll(uint32_t rqId, SNMP_Transport *transport, const No
       setModified(MODIFY_INTERFACE_PROPERTIES);
       unlockProperties();
 
-      if (!m_isSystem)
+      readLockParentList();
+      for(const std::shared_ptr<NetObj> parent : getParentList())
       {
-         readLockParentList();
-         for(const std::shared_ptr<NetObj> parent : getParentList())
-         {
-            EventBuilder(EVENT_IF_STP_STATE_CHANGED, parent->getId())
-               .param(_T("ifIndex"), m_index)
-               .param(_T("ifName"), m_name)
-               .param(_T("oldState"), static_cast<int>(oldState))
-               .param(_T("oldStateText"), STPPortStateToText(oldState))
-               .param(_T("newState"), static_cast<int>(stpState))
-               .param(_T("newStateText"), STPPortStateToText(stpState))
-               .post();
-         }
-         unlockParentList();
+         EventBuilder(EVENT_IF_STP_STATE_CHANGED, parent->getId())
+            .param(_T("ifIndex"), m_index)
+            .param(_T("ifName"), m_name)
+            .param(_T("oldState"), static_cast<int>(oldState))
+            .param(_T("oldStateText"), STPPortStateToText(oldState))
+            .param(_T("newState"), static_cast<int>(stpState))
+            .param(_T("newStateText"), STPPortStateToText(stpState))
+            .post();
       }
+      unlockParentList();
    }
 }
 
@@ -1021,30 +1016,28 @@ void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, const No
 	   sendPollerMsg(_T("      Port PAE state changed to %s\r\n"), PAE_STATE_TEXT(paeState));
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Interface::paeStatusPoll(%s [%u]): Port PAE state changed to %s"), m_name, m_id, PAE_STATE_TEXT(paeState));
 		modified = true;
-      if (!m_isSystem)
+
+		readLockParentList();
+      for(const std::shared_ptr<NetObj> parent : getParentList())
       {
-         readLockParentList();
-         for(const std::shared_ptr<NetObj> parent : getParentList())
+         EventBuilder(EVENT_8021X_PAE_STATE_CHANGED, parent->getId())
+            .param(_T("newPaeStateCode"), paeState)
+            .param(_T("newPaeStateText"), PAE_STATE_TEXT(paeState))
+            .param(_T("oldPaeStateCode"), static_cast<uint32_t>(m_dot1xPaeAuthState))
+            .param(_T("oldPaeStateText"), PAE_STATE_TEXT(m_dot1xPaeAuthState))
+            .param(_T("interfaceIndex"), m_id)
+            .param(_T("interfaceName"), m_name)
+            .post();
+
+         if (paeState == PAE_STATE_FORCE_UNAUTH)
          {
-            EventBuilder(EVENT_8021X_PAE_STATE_CHANGED, parent->getId())
-               .param(_T("newPaeStateCode"), paeState)
-               .param(_T("newPaeStateText"), PAE_STATE_TEXT(paeState))
-               .param(_T("oldPaeStateCode"), static_cast<uint32_t>(m_dot1xPaeAuthState))
-               .param(_T("oldPaeStateText"), PAE_STATE_TEXT(m_dot1xPaeAuthState))
+            EventBuilder(EVENT_8021X_PAE_FORCE_UNAUTH, parent->getId())
                .param(_T("interfaceIndex"), m_id)
                .param(_T("interfaceName"), m_name)
                .post();
-
-            if (paeState == PAE_STATE_FORCE_UNAUTH)
-            {
-               EventBuilder(EVENT_8021X_PAE_FORCE_UNAUTH, parent->getId())
-                  .param(_T("interfaceIndex"), m_id)
-                  .param(_T("interfaceName"), m_name)
-                  .post();
-            }
          }
-         unlockParentList();
       }
+      unlockParentList();
 	}
 
 	if (m_dot1xBackendAuthState != static_cast<int16_t>(backendState))
@@ -1053,36 +1046,34 @@ void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, const No
 	   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Interface::paeStatusPoll(%s [%u]): Port backend state changed to %s"),
 	         m_name, m_id, BACKEND_STATE_TEXT(backendState));
 		modified = true;
-      if (!m_isSystem)
+
+		readLockParentList();
+      for(const std::shared_ptr<NetObj> parent : getParentList())
       {
-         readLockParentList();
-         for(const std::shared_ptr<NetObj> parent : getParentList())
+         EventBuilder(EVENT_8021X_BACKEND_STATE_CHANGED, parent->getId())
+            .param(_T("newBackendStateCode"), backendState)
+            .param(_T("newBackendStateText"), BACKEND_STATE_TEXT(backendState))
+            .param(_T("oldBackendStateCode"), (UINT32)m_dot1xBackendAuthState)
+            .param(_T("oldBackendStateText"), BACKEND_STATE_TEXT(m_dot1xBackendAuthState))
+            .param(_T("interfaceIndex"), m_id)
+            .param(_T("interfaceName"), m_name)
+            .post();
+         if (backendState == BACKEND_STATE_FAIL)
          {
-            EventBuilder(EVENT_8021X_BACKEND_STATE_CHANGED, parent->getId())
-               .param(_T("newBackendStateCode"), backendState)
-               .param(_T("newBackendStateText"), BACKEND_STATE_TEXT(backendState))
-               .param(_T("oldBackendStateCode"), (UINT32)m_dot1xBackendAuthState)
-               .param(_T("oldBackendStateText"), BACKEND_STATE_TEXT(m_dot1xBackendAuthState))
+            EventBuilder(EVENT_8021X_AUTH_FAILED, parent->getId())
                .param(_T("interfaceIndex"), m_id)
                .param(_T("interfaceName"), m_name)
                .post();
-            if (backendState == BACKEND_STATE_FAIL)
-            {
-               EventBuilder(EVENT_8021X_AUTH_FAILED, parent->getId())
-                  .param(_T("interfaceIndex"), m_id)
-                  .param(_T("interfaceName"), m_name)
-                  .post();
-            }
-            else if (backendState == BACKEND_STATE_TIMEOUT)
-            {
-               EventBuilder(EVENT_8021X_AUTH_TIMEOUT, parent->getId())
-                  .param(_T("interfaceIndex"), m_id)
-                  .param(_T("interfaceName"), m_name)
-                  .post();
-            }
          }
-         unlockParentList();
+         else if (backendState == BACKEND_STATE_TIMEOUT)
+         {
+            EventBuilder(EVENT_8021X_AUTH_TIMEOUT, parent->getId())
+               .param(_T("interfaceIndex"), m_id)
+               .param(_T("interfaceName"), m_name)
+               .post();
+         }
       }
+      unlockParentList();
 	}
 
 	if (modified)
@@ -1369,7 +1360,7 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
 
    unlockProperties();
 
-   if (peerChanged && !m_isSystem)
+   if (peerChanged)
    {
       readLockParentList();
       for(const std::shared_ptr<NetObj> parent : getParentList())
@@ -1428,7 +1419,7 @@ void Interface::setPeer(AccessPoint *ap, LinkLayerProtocol protocol)
 
    unlockProperties();
 
-   if (peerChanged && !m_isSystem)
+   if (peerChanged)
    {
       readLockParentList();
       for(const std::shared_ptr<NetObj> parent : getParentList())

@@ -23,6 +23,16 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 53.2 to 53.3
+ */
+static bool H_UpgradeFromV2()
+{
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("object_properties"), _T("is_system")));
+   CHK_EXEC(SetMinorSchemaVersion(3));
+   return true;
+}
+
+/**
  * Upgrade from 53.1 to 53.2
  */
 static bool H_UpgradeFromV1()
@@ -70,6 +80,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 2,  53, 3,  H_UpgradeFromV2  },
    { 1,  53, 2,  H_UpgradeFromV1  },
    { 0,  53, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }

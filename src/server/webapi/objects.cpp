@@ -97,7 +97,7 @@ int H_ObjectSearch(Context *context)
    unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(
       [context, parentId, zoneUIN, name, &classFilter, ipAddressFilter] (NetObj *object) -> bool
       {
-         if (object->isHidden() || object->isSystem() || object->isDeleted() || !object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+         if (object->isHidden() || object->isDeleted() || !object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
             return false;
          if ((zoneUIN != 0) && (object->getZoneUIN() != zoneUIN))
             return false;
@@ -184,7 +184,7 @@ int H_Objects(Context *context)
    unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(
       [context, parentId, filter] (NetObj *object) -> bool
       {
-         if (object->isHidden() || object->isSystem() || object->isDeleted() || !object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+         if (object->isHidden() || object->isDeleted() || !object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
             return false;
          if ((filter[0] != 0) && (_tcsistr(object->getName(), filter) == nullptr) && (_tcsistr(object->getAlias(), filter) == nullptr))
             return false;
@@ -243,7 +243,7 @@ static bool HasDescendantsMatchingClassFilter(const shared_ptr<NetObj>& object, 
    {
       NetObj *child = children->get(i);
 
-      if (child->isHidden() || child->isSystem() || child->isDeleted() || !child->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      if (child->isHidden() || child->isDeleted() || !child->checkAccessRights(userId, OBJECT_ACCESS_READ))
          continue;
 
       // Check if this child matches the class filter
@@ -280,7 +280,7 @@ static json_t *BuildNestedObjectTree(const shared_ptr<NetObj>& object, uint32_t 
    {
       NetObj *child = children->get(i);
 
-      if (child->isHidden() || child->isSystem() || child->isDeleted() || !child->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      if (child->isHidden() || child->isDeleted() || !child->checkAccessRights(userId, OBJECT_ACCESS_READ))
          continue;
 
       // Apply class filter if specified

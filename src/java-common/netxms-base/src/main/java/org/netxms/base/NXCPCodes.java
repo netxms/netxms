@@ -772,7 +772,7 @@ public class NXCPCodes
 	public static final long VID_PORT = 268;
 	public static final long VID_PDU = 269;
 	public static final long VID_PDU_SIZE = 270;
-	public static final long VID_IS_SYSTEM = 271;
+//	public static final long VID_IS_SYSTEM = 271;
 	public static final long VID_GRAPH_CONFIG = 272;
 	public static final long VID_NUM_GRAPHS = 273;
 	public static final long VID_GRAPH_ID = 274;

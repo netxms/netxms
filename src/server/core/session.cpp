@@ -2985,7 +2985,7 @@ void ClientSession::getObjects(const NXCPMessage& request)
 	unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(
 	   [baseTimeStamp, this] (NetObj *object) -> bool
 	   {
-         return !object->isHidden() && !object->isSystem() && !object->isDeleted() &&
+         return !object->isHidden() && !object->isDeleted() &&
                 (object->getTimeStamp() >= baseTimeStamp) &&
                 object->checkAccessRights(m_userId, OBJECT_ACCESS_READ);
 	   });
@@ -3063,7 +3063,7 @@ void ClientSession::getSelectedObjects(const NXCPMessage& request)
    for(int i = 0; i < objects.size(); i++)
 	{
 		shared_ptr<NetObj> object = FindObjectById(objects.get(i));
-      if ((object != nullptr) && (object->getTimeStamp() >= timestamp) && !object->isHidden() && !object->isSystem())
+      if ((object != nullptr) && (object->getTimeStamp() >= timestamp) && !object->isHidden())
       {
          if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
          {

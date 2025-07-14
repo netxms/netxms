@@ -1314,7 +1314,6 @@ protected:
    bool m_isDeleted;
    bool m_isDeleteInitiated;
    bool m_isHidden;
-   bool m_isSystem;
    uuid m_mapImage;
    uint32_t m_drilldownObjectId;    // Object that should be opened on drill-down request
    uint32_t m_categoryId;
@@ -1435,8 +1434,6 @@ public:
    bool isOrphaned() const { return getParentCount() == 0; }
    bool isEmpty() const { return getChildCount() == 0; }
 
-   bool isSystem() const { return m_isSystem; }
-   void setSystemFlag(bool flag) { m_isSystem = flag; }
    void setFlag(uint32_t flag) { lockProperties(); m_flags |= flag; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
    void clearFlag(uint32_t flag) { lockProperties(); m_flags &= ~flag; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
 

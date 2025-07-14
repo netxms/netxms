@@ -334,7 +334,6 @@ private:
       bridgePort = 0;
       memset(macAddr, 0, sizeof(macAddr));
       isPhysicalPort = false;
-      isSystem = false;
       parentIndex = 0;
    }
 
@@ -351,7 +350,6 @@ public:
    InetAddressList ipAddrList;
    BYTE macAddr[MAC_ADDR_LENGTH];
 	bool isPhysicalPort;
-   bool isSystem;
    uint32_t ifTableSuffix[16];   // actual ifTable suffix
    int ifTableSuffixLength;
    uint32_t parentIndex;

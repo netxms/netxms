@@ -2183,7 +2183,6 @@ shared_ptr<Interface> Node::createInterfaceObject(const InterfaceInfo& info, boo
    iface->setPhysicalLocation(info.location);
    iface->setPhysicalPortFlag(info.isPhysicalPort);
    iface->setManualCreationFlag(manuallyCreated);
-   iface->setSystemFlag(info.isSystem);
    iface->setMTU(info.mtu);
    iface->setSpeed(info.speed);
    iface->setIfTableSuffix(info.ifTableSuffixLength, info.ifTableSuffix);
@@ -2338,17 +2337,15 @@ shared_ptr<Interface> Node::createNewInterface(InterfaceInfo *info, bool manuall
    linkObjects(self(), iface);
    if (!m_isHidden)
       iface->unhide();
-   if (!iface->isSystem())
-   {
-      const InetAddress& addr = iface->getFirstIpAddress();
-      EventBuilder(EVENT_INTERFACE_ADDED, m_id)
-         .param(_T("interfaceObjectId"), iface->getId())
-         .param(_T("interfaceName"), iface->getName())
-         .param(_T("interfaceIpAddress"), addr)
-         .param(_T("interfaceNetmask"), addr.getMaskBits())
-         .param(_T("interfaceIndex"), iface->getIfIndex())
-         .post();
-   }
+
+   const InetAddress& addr = iface->getFirstIpAddress();
+   EventBuilder(EVENT_INTERFACE_ADDED, m_id)
+      .param(_T("interfaceObjectId"), iface->getId())
+      .param(_T("interfaceName"), iface->getName())
+      .param(_T("interfaceIpAddress"), addr)
+      .param(_T("interfaceNetmask"), addr.getMaskBits())
+      .param(_T("interfaceIndex"), iface->getIfIndex())
+      .post();
 
    if (!iface->isExcludedFromTopology())
    {

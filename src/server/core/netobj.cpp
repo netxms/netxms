@@ -72,7 +72,6 @@ NetObj::NetObj() : NObject(), m_mutexProperties(MutexType::FAST), m_dashboards(0
    m_isDeleted = false;
    m_isDeleteInitiated = false;
    m_isHidden = false;
-   m_isSystem = false;
    m_maintenanceEventId = 0;
    m_maintenanceInitiator = 0;
    m_inheritAccessRights = true;
@@ -297,7 +296,7 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
       static const TCHAR *columns[] = {
          _T("name"), _T("status"), _T("is_deleted"), _T("inherit_access_rights"), _T("last_modified"), _T("status_calc_alg"),
          _T("status_prop_alg"), _T("status_fixed_val"), _T("status_shift"), _T("status_translation"), _T("status_single_threshold"),
-         _T("status_thresholds"), _T("comments"), _T("is_system"), _T("location_type"), _T("latitude"), _T("longitude"),
+         _T("status_thresholds"), _T("comments"), _T("location_type"), _T("latitude"), _T("longitude"),
          _T("location_accuracy"), _T("location_timestamp"), _T("guid"), _T("map_image"), _T("drilldown_object_id"), _T("country"),
          _T("region"), _T("city"), _T("district"), _T("street_address"), _T("postcode"), _T("maint_event_id"),
          _T("state_before_maint"), _T("state"), _T("flags"), _T("creation_time"), _T("maint_initiator"), _T("alias"),
@@ -309,7 +308,7 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
       {
          lockProperties();
 
-         TCHAR szTranslation[16], szThresholds[16], lat[32], lon[32];
+         wchar_t szTranslation[16], szThresholds[16], lat[32], lon[32];
          for(int i = 0, j = 0; i < 4; i++, j += 2)
          {
             _sntprintf(&szTranslation[j], 16 - j, _T("%02X"), (BYTE)m_statusTranslation[i]);
@@ -331,33 +330,32 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (LONG)m_statusSingleThreshold);
          DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, szThresholds, DB_BIND_STATIC);
          DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_comments, DB_BIND_STATIC);
-         DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (LONG)(m_isSystem ? 1 : 0));
-         DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getType());
-         DBBind(hStmt, 16, DB_SQLTYPE_VARCHAR, lat, DB_BIND_STATIC);
-         DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, lon, DB_BIND_STATIC);
-         DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getAccuracy());
-         DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
-         DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_guid);
-         DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_mapImage);
-         DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_drilldownObjectId);
-         DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_postalAddress.getCountry(), DB_BIND_STATIC);
-         DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_postalAddress.getRegion(), DB_BIND_STATIC);
-         DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_postalAddress.getCity(), DB_BIND_STATIC);
-         DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_postalAddress.getDistrict(), DB_BIND_STATIC);
-         DBBind(hStmt, 27, DB_SQLTYPE_VARCHAR, m_postalAddress.getStreetAddress(), DB_BIND_STATIC);
-         DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, m_postalAddress.getPostCode(), DB_BIND_STATIC);
-         DBBind(hStmt, 29, DB_SQLTYPE_BIGINT, m_maintenanceEventId);
-         DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_stateBeforeMaintenance);
-         DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_state);
-         DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_flags);
-         DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_creationTime));
-         DBBind(hStmt, 34, DB_SQLTYPE_INTEGER, m_maintenanceInitiator);
-         DBBind(hStmt, 35, DB_SQLTYPE_VARCHAR, m_alias, DB_BIND_STATIC);
-         DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, m_nameOnMap, DB_BIND_STATIC);
-         DBBind(hStmt, 37, DB_SQLTYPE_INTEGER, m_categoryId);
-         DBBind(hStmt, 38, DB_SQLTYPE_TEXT, m_commentsSource, DB_BIND_STATIC);
-         DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_assetId);
-         DBBind(hStmt, 40, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getType());
+         DBBind(hStmt, 15, DB_SQLTYPE_VARCHAR, lat, DB_BIND_STATIC);
+         DBBind(hStmt, 16, DB_SQLTYPE_VARCHAR, lon, DB_BIND_STATIC);
+         DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getAccuracy());
+         DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
+         DBBind(hStmt, 19, DB_SQLTYPE_VARCHAR, m_guid);
+         DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_mapImage);
+         DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, m_drilldownObjectId);
+         DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, m_postalAddress.getCountry(), DB_BIND_STATIC);
+         DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_postalAddress.getRegion(), DB_BIND_STATIC);
+         DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_postalAddress.getCity(), DB_BIND_STATIC);
+         DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_postalAddress.getDistrict(), DB_BIND_STATIC);
+         DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_postalAddress.getStreetAddress(), DB_BIND_STATIC);
+         DBBind(hStmt, 27, DB_SQLTYPE_VARCHAR, m_postalAddress.getPostCode(), DB_BIND_STATIC);
+         DBBind(hStmt, 28, DB_SQLTYPE_BIGINT, m_maintenanceEventId);
+         DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_stateBeforeMaintenance);
+         DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_state);
+         DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_flags);
+         DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_creationTime));
+         DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, m_maintenanceInitiator);
+         DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, m_alias, DB_BIND_STATIC);
+         DBBind(hStmt, 35, DB_SQLTYPE_VARCHAR, m_nameOnMap, DB_BIND_STATIC);
+         DBBind(hStmt, 36, DB_SQLTYPE_INTEGER, m_categoryId);
+         DBBind(hStmt, 37, DB_SQLTYPE_TEXT, m_commentsSource, DB_BIND_STATIC);
+         DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, m_assetId);
+         DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -578,7 +576,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb, DB_STATEMENT *preparedStatement
    DB_STATEMENT hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_COMMON_PROPERTIES,
                                   _T("SELECT name,status,is_deleted,inherit_access_rights,last_modified,status_calc_alg,")
                                   _T("status_prop_alg,status_fixed_val,status_shift,status_translation,status_single_threshold,")
-                                  _T("status_thresholds,comments,is_system,location_type,latitude,longitude,location_accuracy,")
+                                  _T("status_thresholds,comments,location_type,latitude,longitude,location_accuracy,")
                                   _T("location_timestamp,guid,map_image,drilldown_object_id,country,region,city,district,street_address,")
                                   _T("postcode,maint_event_id,state_before_maint,maint_initiator,state,flags,creation_time,alias,")
                                   _T("name_on_map,category,comments_source,asset_id FROM object_properties WHERE object_id=?"));
@@ -603,47 +601,46 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb, DB_STATEMENT *preparedStatement
 				m_statusSingleThreshold = DBGetFieldLong(hResult, 0, 10);
             DBGetFieldByteArray(hResult, 0, 11, m_statusThresholds, 4, 50);
             m_comments = DBGetFieldAsSharedString(hResult, 0, 12);
-            m_isSystem = DBGetFieldLong(hResult, 0, 13) ? true : false;
 
-            int locType = DBGetFieldLong(hResult, 0, 14);
+            int locType = DBGetFieldLong(hResult, 0, 13);
             if (locType != GL_UNSET)
 				{
 					TCHAR lat[32], lon[32];
 
-					DBGetField(hResult, 0, 15, lat, 32);
-					DBGetField(hResult, 0, 16, lon, 32);
-					m_geoLocation = GeoLocation(locType, lat, lon, DBGetFieldLong(hResult, 0, 17), DBGetFieldULong(hResult, 0, 18));
+					DBGetField(hResult, 0, 14, lat, 32);
+					DBGetField(hResult, 0, 15, lon, 32);
+					m_geoLocation = GeoLocation(locType, lat, lon, DBGetFieldLong(hResult, 0, 16), DBGetFieldULong(hResult, 0, 17));
 				}
 				else
 				{
 					m_geoLocation = GeoLocation();
 				}
 
-				m_guid = DBGetFieldGUID(hResult, 0, 19);
-				m_mapImage = DBGetFieldGUID(hResult, 0, 20);
-				m_drilldownObjectId = DBGetFieldULong(hResult, 0, 21);
+				m_guid = DBGetFieldGUID(hResult, 0, 18);
+				m_mapImage = DBGetFieldGUID(hResult, 0, 19);
+				m_drilldownObjectId = DBGetFieldULong(hResult, 0, 20);
 
-            TCHAR buffer[256];
-            m_postalAddress.setCountry(DBGetField(hResult, 0, 22, buffer, 64));
-            m_postalAddress.setRegion(DBGetField(hResult, 0, 23, buffer, 64));
-            m_postalAddress.setCity(DBGetField(hResult, 0, 24, buffer, 64));
-            m_postalAddress.setDistrict(DBGetField(hResult, 0, 25, buffer, 64));
-            m_postalAddress.setStreetAddress(DBGetField(hResult, 0, 26, buffer, 256));
-            m_postalAddress.setPostCode(DBGetField(hResult, 0, 27, buffer, 32));
+            wchar_t buffer[256];
+            m_postalAddress.setCountry(DBGetField(hResult, 0, 21, buffer, 64));
+            m_postalAddress.setRegion(DBGetField(hResult, 0, 22, buffer, 64));
+            m_postalAddress.setCity(DBGetField(hResult, 0, 23, buffer, 64));
+            m_postalAddress.setDistrict(DBGetField(hResult, 0, 24, buffer, 64));
+            m_postalAddress.setStreetAddress(DBGetField(hResult, 0, 25, buffer, 256));
+            m_postalAddress.setPostCode(DBGetField(hResult, 0, 26, buffer, 32));
 
-            m_maintenanceEventId = DBGetFieldUInt64(hResult, 0, 28);
-            m_stateBeforeMaintenance = DBGetFieldULong(hResult, 0, 29);
-            m_maintenanceInitiator = DBGetFieldULong(hResult, 0, 30);
+            m_maintenanceEventId = DBGetFieldUInt64(hResult, 0, 27);
+            m_stateBeforeMaintenance = DBGetFieldULong(hResult, 0, 28);
+            m_maintenanceInitiator = DBGetFieldULong(hResult, 0, 29);
 
-            m_state = m_savedState = DBGetFieldULong(hResult, 0, 31);
+            m_state = m_savedState = DBGetFieldULong(hResult, 0, 30);
             m_runtimeFlags = 0;
-            m_flags = DBGetFieldULong(hResult, 0, 32);
-            m_creationTime = static_cast<time_t>(DBGetFieldULong(hResult, 0, 33));
-            m_alias = DBGetFieldAsSharedString(hResult, 0, 34);
-            m_nameOnMap = DBGetFieldAsSharedString(hResult, 0, 35);
-            m_categoryId = DBGetFieldULong(hResult, 0, 36);
-            m_commentsSource = DBGetFieldAsSharedString(hResult, 0, 37);
-            m_assetId = DBGetFieldULong(hResult, 0, 38);
+            m_flags = DBGetFieldULong(hResult, 0, 31);
+            m_creationTime = static_cast<time_t>(DBGetFieldULong(hResult, 0, 32));
+            m_alias = DBGetFieldAsSharedString(hResult, 0, 33);
+            m_nameOnMap = DBGetFieldAsSharedString(hResult, 0, 34);
+            m_categoryId = DBGetFieldULong(hResult, 0, 35);
+            m_commentsSource = DBGetFieldAsSharedString(hResult, 0, 36);
+            m_assetId = DBGetFieldULong(hResult, 0, 37);
             success = true;
          }
 			else if (ignoreEmptyResults)
@@ -1220,10 +1217,9 @@ void NetObj::fillMessageLockedEssential(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_OBJECT_NAME, m_name);
    msg->setField(VID_ALIAS, m_alias);
    msg->setField(VID_NAME_ON_MAP, m_nameOnMap);
-   msg->setField(VID_OBJECT_STATUS, (WORD)m_status);
-   msg->setField(VID_IS_DELETED, (WORD)(m_isDeleted ? 1 : 0));
-   msg->setField(VID_IS_SYSTEM, (INT16)(m_isSystem ? 1 : 0));
-   msg->setField(VID_MAINTENANCE_MODE, (INT16)(m_maintenanceEventId ? 1 : 0));
+   msg->setField(VID_OBJECT_STATUS, static_cast<uint16_t>(m_status));
+   msg->setField(VID_IS_DELETED, m_isDeleted);
+   msg->setField(VID_MAINTENANCE_MODE, m_maintenanceEventId != 0);
    msg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
    msg->setField(VID_IMAGE, m_mapImage);
    msg->setField(VID_DRILL_DOWN_OBJECT_ID, m_drilldownObjectId);
@@ -1242,19 +1238,19 @@ void NetObj::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_PRIMARY_ZONE_PROXY_ID, m_primaryZoneProxyId);
    msg->setField(VID_BACKUP_ZONE_PROXY_ID, m_backupZoneProxyId);
    msg->setField(VID_INHERIT_RIGHTS, m_inheritAccessRights);
-   msg->setField(VID_STATUS_CALCULATION_ALG, (WORD)m_statusCalcAlg);
-   msg->setField(VID_STATUS_PROPAGATION_ALG, (WORD)m_statusPropAlg);
-   msg->setField(VID_FIXED_STATUS, (WORD)m_fixedStatus);
-   msg->setField(VID_STATUS_SHIFT, (WORD)m_statusShift);
-   msg->setField(VID_STATUS_TRANSLATION_1, (WORD)m_statusTranslation[0]);
-   msg->setField(VID_STATUS_TRANSLATION_2, (WORD)m_statusTranslation[1]);
-   msg->setField(VID_STATUS_TRANSLATION_3, (WORD)m_statusTranslation[2]);
-   msg->setField(VID_STATUS_TRANSLATION_4, (WORD)m_statusTranslation[3]);
-   msg->setField(VID_STATUS_SINGLE_THRESHOLD, (WORD)m_statusSingleThreshold);
-   msg->setField(VID_STATUS_THRESHOLD_1, (WORD)m_statusThresholds[0]);
-   msg->setField(VID_STATUS_THRESHOLD_2, (WORD)m_statusThresholds[1]);
-   msg->setField(VID_STATUS_THRESHOLD_3, (WORD)m_statusThresholds[2]);
-   msg->setField(VID_STATUS_THRESHOLD_4, (WORD)m_statusThresholds[3]);
+   msg->setField(VID_STATUS_CALCULATION_ALG, static_cast<uint16_t>(m_statusCalcAlg));
+   msg->setField(VID_STATUS_PROPAGATION_ALG, static_cast<uint16_t>(m_statusPropAlg));
+   msg->setField(VID_FIXED_STATUS, static_cast<uint16_t>(m_fixedStatus));
+   msg->setField(VID_STATUS_SHIFT, static_cast<uint16_t>(m_statusShift));
+   msg->setField(VID_STATUS_TRANSLATION_1, static_cast<uint16_t>(m_statusTranslation[0]));
+   msg->setField(VID_STATUS_TRANSLATION_2, static_cast<uint16_t>(m_statusTranslation[1]));
+   msg->setField(VID_STATUS_TRANSLATION_3, static_cast<uint16_t>(m_statusTranslation[2]));
+   msg->setField(VID_STATUS_TRANSLATION_4, static_cast<uint16_t>(m_statusTranslation[3]));
+   msg->setField(VID_STATUS_SINGLE_THRESHOLD, static_cast<uint16_t>(m_statusSingleThreshold));
+   msg->setField(VID_STATUS_THRESHOLD_1, static_cast<uint16_t>(m_statusThresholds[0]));
+   msg->setField(VID_STATUS_THRESHOLD_2, static_cast<uint16_t>(m_statusThresholds[1]));
+   msg->setField(VID_STATUS_THRESHOLD_3, static_cast<uint16_t>(m_statusThresholds[2]));
+   msg->setField(VID_STATUS_THRESHOLD_4, static_cast<uint16_t>(m_statusThresholds[3]));
    msg->setField(VID_COMMENTS_SOURCE, CHECK_NULL_EX(m_commentsSource));
    msg->setField(VID_ASSET_ID, m_assetId);
 	msg->setFieldFromTime(VID_CREATION_TIME, m_creationTime);
@@ -1417,7 +1413,7 @@ void NetObj::setModified(uint32_t flags, bool notify)
    }
 
    // Send event to all connected clients
-   if (notify && !m_isHidden && !m_isSystem)
+   if (notify && !m_isHidden)
    {
       nxlog_debug_tag(_T("obj.notify"), 7, _T("Sending object change notification for %s [%u] (flags=0x%08X)"), m_name, m_id, flags);
       shared_ptr<NetObj> object = self();
@@ -1648,10 +1644,6 @@ uint32_t NetObj::getUserRights(uint32_t userId) const
    if (userId == 0)
       return 0xFFFFFFFF;
 
-	// Non-admin users have no rights to system objects
-	if (m_isSystem)
-		return 0;
-
    // Check if have direct right assignment
    bool hasDirectRights = m_accessList.getUserRights(userId, &rights);
 
@@ -1844,15 +1836,12 @@ void NetObj::unhide()
 {
    lockProperties();
    m_isHidden = false;
-   if (!m_isSystem)
-   {
-      shared_ptr<NetObj> object = self();
-      EnumerateClientSessions(
-         [object] (ClientSession *session) -> void
-         {
-            session->onObjectChange(object);
-         });
-   }
+   shared_ptr<NetObj> object = self();
+   EnumerateClientSessions(
+      [object] (ClientSession *session) -> void
+      {
+         session->onObjectChange(object);
+      });
    unlockProperties();
 
    readLockChildList();
@@ -2707,7 +2696,6 @@ json_t *NetObj::toJson()
    json_object_set_new(root, "statusTranslation", json_integer_array(m_statusTranslation, 4));
    json_object_set_new(root, "statusSingleThreshold", json_integer(m_statusSingleThreshold));
    json_object_set_new(root, "statusThresholds", json_integer_array(m_statusThresholds, 4));
-   json_object_set_new(root, "isSystem", json_boolean(m_isSystem));
    json_object_set_new(root, "maintenanceEventId", json_integer(m_maintenanceEventId));
    json_object_set_new(root, "maintenanceInitiator", json_integer(m_maintenanceInitiator));
    json_object_set_new(root, "mapImage", m_mapImage.toJson());

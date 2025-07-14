@@ -953,7 +953,7 @@ typedef struct
 #define VID_PORT							((uint32_t)268)
 #define VID_PDU							((uint32_t)269)
 #define VID_PDU_SIZE						((uint32_t)270)
-#define VID_IS_SYSTEM					((uint32_t)271)
+//#define VID_IS_SYSTEM					((uint32_t)271)
 #define VID_GRAPH_CONFIG				((uint32_t)272)
 #define VID_NUM_GRAPHS					((uint32_t)273)
 #define VID_GRAPH_ID						((uint32_t)274)
