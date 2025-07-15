@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ static void UpdateEnvironment()
          currEnvList.add(entrySet->get(i)->getName());
    }
 
-   if (LoadConfig(oldConfig->getAlias(_T("agent")), false, false))
+   if (LoadConfig(oldConfig->getAlias(_T("agent")), StringBuffer(), false, false))
    {
       StringList newEnvList;
       shared_ptr<Config> newConfig = g_config;

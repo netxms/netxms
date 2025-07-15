@@ -918,7 +918,7 @@ void NotifyConnectedServers(const TCHAR *notificationCode);
 void RegisterProblem(int severity, const TCHAR *key, const TCHAR *message);
 void UnregisterProblem(const TCHAR *key);
 
-bool LoadConfig(const TCHAR *configSection, bool firstStart, bool logErrors);
+bool LoadConfig(const TCHAR *configSection, const StringBuffer& cmdLineValues, bool firstStart, bool logErrors);
 
 const TCHAR *GetAgentExecutableName();
 
