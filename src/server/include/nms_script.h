@@ -32,8 +32,8 @@ public:
    NXSL_NetObjClass();
 
    virtual void onObjectDelete(NXSL_Object *object) override;
-
    virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual json_t *toJson(NXSL_Object *object, int depth) override;
 };
 
 /**

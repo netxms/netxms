@@ -11530,9 +11530,9 @@ void ClientSession::executeScript(const NXCPMessage& request)
 
       if (vm->run(sargs))
       {
-         TCHAR buffer[1024];
-         const TCHAR *value = vm->getResult()->getValueAsCString();
-         _sntprintf(buffer, 1024, _T("\n\n*** FINISHED ***\n\nResult: %s\n\n"), CHECK_NULL(value));
+         wchar_t buffer[1024];
+         const wchar_t *value = vm->getResult()->getValueAsCString();
+         _sntprintf(buffer, 1024, L"\n\n*** FINISHED ***\n\nResult: %s\n\n", CHECK_NULL(value));
          buffer[1023] = 0;
          response.setField(VID_MESSAGE, buffer);
          response.setField(VID_RCC, RCC_SUCCESS);
@@ -11554,8 +11554,8 @@ void ClientSession::executeScript(const NXCPMessage& request)
                for(int i = 0; i < a->size(); i++)
                {
                   NXSL_Value *e = a->getByPosition(i);
-                  TCHAR key[16];
-                  _sntprintf(key, 16, _T("%d"), i + 1);
+                  wchar_t key[16];
+                  IntegerToString(i + 1, key);
                   if (e->isHashMap())
                   {
                      json_t *json = e->toJson();
@@ -11572,7 +11572,7 @@ void ClientSession::executeScript(const NXCPMessage& request)
             }
             else
             {
-               map.set(_T("1"), result->getValueAsCString());
+               map.set(L"1", result->getValueAsCString());
             }
             map.fillMessage(&response, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
             sendMessage(response);
@@ -11586,7 +11586,7 @@ void ClientSession::executeScript(const NXCPMessage& request)
          sendMessage(response);
 
          if (!developmentMode)
-            ReportScriptError(SCRIPT_CONTEXT_CLIENT, object.get(), 0, vm->getErrorText(), _T("ClientSession::executeScript"));
+            ReportScriptError(SCRIPT_CONTEXT_CLIENT, object.get(), 0, vm->getErrorText(), L"ClientSession::executeScript");
       }
 
       m_scriptExecutorsLock.lock();
@@ -11861,8 +11861,8 @@ void ClientSession::executeDashboardScript(const NXCPMessage& request)
             for(int i = 0; i < a->size(); i++)
             {
                NXSL_Value *e = a->getByPosition(i);
-               TCHAR key[16];
-               _sntprintf(key, 16, _T("%d"), i + 1);
+               wchar_t key[16];
+               IntegerToString(i + 1, key);
                if (e->isHashMap())
                {
                   json_t *json = e->toJson();
@@ -11879,7 +11879,7 @@ void ClientSession::executeDashboardScript(const NXCPMessage& request)
          }
          else
          {
-            map.set(_T("1"), result->getValueAsCString());
+            map.set(L"1", result->getValueAsCString());
          }
          map.fillMessage(&response, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
       }

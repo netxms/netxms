@@ -81,7 +81,7 @@ static NXSL_Value *ValueFromJson(NXSL_VM *vm, json_t *json)
 /**
  * Create json_t from NXSL value
  */
-json_t *NXSL_Value::toJson()
+json_t *NXSL_Value::toJson(int depth)
 {
    if (isInteger())
       return json_integer(getValueAsInt64());
@@ -94,17 +94,20 @@ json_t *NXSL_Value::toJson()
    if (m_dataType == NXSL_DT_ARRAY)
    {
       json_t *jarray = json_array();
-      NXSL_Array *a = m_value.arrayHandle->getObject();
-      for(int i = 0; i < a->size(); i++)
+      if (depth > 0)
       {
-         NXSL_Value *v = a->getByPosition(i);
-         if (v->isObject(_T("JsonObject")) || v->isObject(_T("JsonArray")))
+         NXSL_Array *a = m_value.arrayHandle->getObject();
+         for(int i = 0; i < a->size(); i++)
          {
-            json_array_append(jarray, static_cast<json_t*>(v->getValueAsObject()->getData()));
-         }
-         else
-         {
-            json_array_append_new(jarray, v->toJson());
+            NXSL_Value *v = a->getByPosition(i);
+            if (v->isObject(_T("JsonObject")) || v->isObject(_T("JsonArray")))
+            {
+               json_array_append(jarray, static_cast<json_t*>(v->getValueAsObject()->getData()));
+            }
+            else
+            {
+               json_array_append_new(jarray, v->toJson(depth - 1));
+            }
          }
       }
       return jarray;
@@ -112,45 +115,17 @@ json_t *NXSL_Value::toJson()
    if (m_dataType == NXSL_DT_HASHMAP)
    {
       json_t *jobject = json_object();
-      NXSL_HashMap *m = m_value.hashMapHandle->getObject();
-      StringList keys = m->getKeysAsList();
-      for(int i = 0; i < keys.size(); i++)
+      if (depth > 0)
       {
-         const TCHAR *key = keys.get(i);
-         NXSL_Value *v = m->get(key);
-
-         char jkey[1024];
-         tchar_to_utf8(key, -1, jkey, 1024);
-         jkey[1023] = 0;
-
-         if (v->isObject(_T("JsonObject")) || v->isObject(_T("JsonArray")))
+         NXSL_HashMap *m = m_value.hashMapHandle->getObject();
+         StringList keys = m->getKeysAsList();
+         for(int i = 0; i < keys.size(); i++)
          {
-            json_object_set(jobject, jkey, static_cast<json_t*>(v->getValueAsObject()->getData()));
-         }
-         else
-         {
-            json_object_set_new(jobject, jkey, v->toJson());
-         }
-      }
-      return jobject;
-   }
-   if (m_dataType == NXSL_DT_OBJECT)
-   {
-      if (isObject(_T("JsonObject")) || isObject(_T("JsonArray")))
-         return json_incref(static_cast<json_t*>(m_value.object->getData()));
+            const TCHAR *key = keys.get(i);
+            NXSL_Value *v = m->get(key);
 
-      json_t *jobject = json_object();
-      m_value.object->getClass()->scanAttributes();
-      for(const TCHAR *a : m_value.object->getClass()->getAttributes())
-      {
-         if (!_tcscmp(a, _T("__class")))
-            continue;
-
-         NXSL_Value *v = m_value.object->getClass()->getAttr(m_value.object, a);
-         if (v != nullptr)
-         {
             char jkey[1024];
-            tchar_to_utf8(a, -1, jkey, 1024);
+            tchar_to_utf8(key, -1, jkey, 1024);
             jkey[1023] = 0;
 
             if (v->isObject(_T("JsonObject")) || v->isObject(_T("JsonArray")))
@@ -159,11 +134,15 @@ json_t *NXSL_Value::toJson()
             }
             else
             {
-               json_object_set_new(jobject, jkey, v->toJson());
+               json_object_set_new(jobject, jkey, v->toJson(depth - 1));
             }
          }
       }
       return jobject;
+   }
+   if (m_dataType == NXSL_DT_OBJECT)
+   {
+      return m_value.object->getClass()->toJson(m_value.object, depth);
    }
    return json_null();
 }
@@ -296,6 +275,14 @@ bool NXSL_JsonObjectClass::setAttr(NXSL_Object *object, const NXSL_Identifier& a
 }
 
 /**
+ * Implementation of "JsonObject" class: toJson()
+ */
+json_t *NXSL_JsonObjectClass::toJson(NXSL_Object *object, int depth)
+{
+   return json_incref(static_cast<json_t*>(object->getData()));
+}
+
+/**
  * JsonArray method serialize()
  */
 NXSL_METHOD_DEFINITION(JsonArray, serialize)
@@ -404,7 +391,7 @@ void NXSL_JsonArrayClass::onObjectDelete(NXSL_Object *object)
 }
 
 /**
- * Implementation of "JsonObject" class: get attribute
+ * Implementation of "JsonArray" class: get attribute
  */
 NXSL_Value *NXSL_JsonArrayClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
 {
@@ -415,7 +402,7 @@ NXSL_Value *NXSL_JsonArrayClass::getAttr(NXSL_Object *object, const NXSL_Identif
    NXSL_VM *vm = object->vm();
    if (NXSL_COMPARE_ATTRIBUTE_NAME("size"))
    {
-      value = vm->createValue(static_cast<UINT32>(json_array_size(static_cast<json_t*>(object->getData()))));
+      value = vm->createValue(static_cast<uint32_t>(json_array_size(static_cast<json_t*>(object->getData()))));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("values"))
    {
@@ -429,6 +416,14 @@ NXSL_Value *NXSL_JsonArrayClass::getAttr(NXSL_Object *object, const NXSL_Identif
       value = vm->createValue(values);
    }
    return value;
+}
+
+/**
+ * Implementation of "JsonArray" class: toJson()
+ */
+json_t *NXSL_JsonArrayClass::toJson(NXSL_Object *object, int depth)
+{
+   return json_incref(static_cast<json_t*>(object->getData()));
 }
 
 /**

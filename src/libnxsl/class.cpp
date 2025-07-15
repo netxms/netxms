@@ -191,6 +191,33 @@ void NXSL_Class::toString(StringBuffer *sb, NXSL_Object *object)
 }
 
 /**
+ * Get JSON representation of NXSL object
+ */
+json_t *NXSL_Class::toJson(NXSL_Object *object, int depth)
+{
+   json_t *jobject = json_object();
+   if (depth <= 0)
+      return jobject;
+
+   scanAttributes();
+   for(const TCHAR *a : getAttributes())
+   {
+      if (!_tcscmp(a, _T("__class")))
+         continue;
+
+      NXSL_Value *v = getAttr(object, a);
+      if (v != nullptr)
+      {
+         char jkey[1024];
+         tchar_to_utf8(a, -1, jkey, 1024);
+         jkey[1023] = 0;
+         json_object_set_new(jobject, jkey, v->toJson(depth - 1));
+      }
+   }
+   return jobject;
+}
+
+/**
  * Class "Class" constructor
  */
 NXSL_MetaClass::NXSL_MetaClass() : NXSL_Class()

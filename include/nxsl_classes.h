@@ -407,6 +407,7 @@ public:
 	virtual void onObjectDelete(NXSL_Object *object);
 
 	virtual void toString(StringBuffer *sb, NXSL_Object *object);
+	virtual json_t *toJson(NXSL_Object *object, int depth);
 
    virtual NXSL_Value *getNext(NXSL_Object *object, NXSL_Value *curr);
 
@@ -827,7 +828,7 @@ public:
    bool equals(const NXSL_Value *v) const;
    void serialize(ByteStream& s) const;
 
-   json_t *toJson();
+   json_t *toJson(int depth = 16);
 
    static NXSL_Value *load(NXSL_ValueManager *vm, ByteStream& s);
 };
@@ -1750,6 +1751,7 @@ public:
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual bool setAttr(NXSL_Object *object, const NXSL_Identifier& attr, NXSL_Value *value) override;
+   virtual json_t *toJson(NXSL_Object *object, int depth) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
@@ -1762,6 +1764,7 @@ public:
    NXSL_JsonArrayClass();
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual json_t *toJson(NXSL_Object *object, int depth) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 

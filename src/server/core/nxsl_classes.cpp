@@ -784,6 +784,14 @@ void NXSL_NetObjClass::onObjectDelete(NXSL_Object *object)
 }
 
 /**
+ * Convert object to JSON
+ */
+json_t *NXSL_NetObjClass::toJson(NXSL_Object *object, int depth)
+{
+   return SharedObjectFromData<NetObj>(object)->toJson();
+}
+
+/**
  * NXSL class NetObj: get attribute
  */
 NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const NXSL_Identifier& attr)
