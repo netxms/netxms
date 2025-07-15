@@ -674,6 +674,7 @@ CREATE TABLE interfaces
   ospf_if_type integer not null,
   ospf_if_state integer not null,
   stp_port_state integer not null,
+  state_before_maintenance varchar(2000) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

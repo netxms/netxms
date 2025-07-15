@@ -23,6 +23,16 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 53.3 to 53.4
+ */
+static bool H_UpgradeFromV3()
+{
+   CHK_EXEC(SQLQuery(L"ALTER TABLE interfaces ADD state_before_maintenance varchar(2000)"));
+   CHK_EXEC(SetMinorSchemaVersion(4));
+   return true;
+}
+
+/**
  * Upgrade from 53.2 to 53.3
  */
 static bool H_UpgradeFromV2()
@@ -80,6 +90,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 3,  53, 4,  H_UpgradeFromV3  },
    { 2,  53, 3,  H_UpgradeFromV2  },
    { 1,  53, 2,  H_UpgradeFromV1  },
    { 0,  53, 1,  H_UpgradeFromV0  },

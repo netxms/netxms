@@ -26,7 +26,7 @@
 /**
  * Default constructor for Interface object
  */
-Interface::Interface() : super(), m_macAddress(MacAddress::ZERO)
+Interface::Interface() : super(), m_macAddress(MacAddress::ZERO), m_beforeMaintenaceData(Ownership::True)
 {
    m_parentInterfaceId = 0;
    m_index = 0;
@@ -66,7 +66,8 @@ Interface::Interface() : super(), m_macAddress(MacAddress::ZERO)
 /**
  * Constructor for "fake" interface object
  */
-Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyntheticMask) : super(), m_macAddress(MacAddress::ZERO), m_description(_T("unknown")), m_ifName(_T("unknown"))
+Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyntheticMask)
+          : super(), m_macAddress(MacAddress::ZERO), m_description(_T("unknown")), m_ifName(_T("unknown")), m_beforeMaintenaceData(Ownership::True)
 {
    m_parentInterfaceId = 0;
 	m_flags = bSyntheticMask ? IF_SYNTHETIC_MASK : 0;
@@ -115,7 +116,7 @@ Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyn
  * Constructor for normal interface object
  */
 Interface::Interface(const TCHAR *objectName, const TCHAR *ifName, const TCHAR *description, uint32_t index, const InetAddressList& addrList, uint32_t ifType, int32_t zoneUIN)
-          : super(), m_macAddress(MacAddress::ZERO), m_description(description), m_ifName(ifName)
+          : super(), m_macAddress(MacAddress::ZERO), m_description(description), m_ifName(ifName), m_beforeMaintenaceData(Ownership::True)
 {
    if ((ifType == IFTYPE_SOFTWARE_LOOPBACK) || addrList.isLoopbackOnly())
       m_flags = IF_LOOPBACK;
@@ -186,7 +187,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepa
 		_T("SELECT if_type,if_index,node_id,mac_addr,required_polls,bridge_port,phy_chassis,phy_module,")
 		_T("phy_pic,phy_port,peer_node_id,peer_if_id,description,if_name,if_alias,dot1x_pae_state,dot1x_backend_state,")
 		_T("admin_state,oper_state,peer_proto,mtu,speed,parent_iface,last_known_oper_state,last_known_admin_state,")
-      _T("ospf_area,ospf_if_type,ospf_if_state,stp_port_state,peer_last_updated,iftable_suffix FROM interfaces WHERE id=?"));
+      _T("ospf_area,ospf_if_type,ospf_if_state,stp_port_state,peer_last_updated,iftable_suffix,state_before_maintenance FROM interfaces WHERE id=?"));
 	if (hStmt == nullptr)
 		return false;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -240,6 +241,33 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepa
          {
             m_ifTableSuffixLen = (int)l;
             m_ifTableSuffix = MemCopyArray(suffix, l);
+         }
+      }
+
+      //Parse data in format: nodeId:status:operState:adminState:dot1xPaeAuthState:dot1xBackendAuthState:stpPortState;...
+      String beforeMaintenaceData = DBGetFieldAsString(hResult, 0, 31);
+      if (!beforeMaintenaceData.isEmpty())
+      {
+         StringList nodes = beforeMaintenaceData.split(_T(";"));
+         for (int i = 0; i < nodes.size(); i++)
+         {
+            StringList fields = String(nodes.get(i)).split(_T(":"));
+            if (fields.size() >= 7)
+            {
+               uint32_t nodeId = _tcstoul(fields.get(0), nullptr, 0);
+               if (nodeId == 0)
+                  continue; // skip empty nodeId
+
+               InterfaceState *state = new InterfaceState();
+               state->status = _tcstoul(fields.get(1), nullptr, 0);
+               state->operState = _tcstoul(fields.get(2), nullptr, 0);
+               state->adminState = _tcstoul(fields.get(3), nullptr, 0);
+               state->dot1xPaeAuthState = _tcstoul(fields.get(4), nullptr, 0);
+               state->dot1xBackendAuthState = _tcstoul(fields.get(5), nullptr, 0);
+               state->stpPortState = static_cast<SpanningTreePortState>(_tcstoul(fields.get(6), nullptr, 0));
+
+               m_beforeMaintenaceData.set(nodeId, state);
+            }
          }
       }
 
@@ -348,7 +376,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          L"description", L"admin_state", L"oper_state", L"dot1x_pae_state", L"dot1x_backend_state",
          L"peer_proto", L"mtu", L"speed", L"parent_iface", L"iftable_suffix", L"last_known_oper_state",
          L"last_known_admin_state", L"if_alias", L"ospf_area", L"ospf_if_type", L"ospf_if_state",
-         L"stp_port_state", L"if_name", L"peer_last_updated", nullptr
+         L"stp_port_state", L"if_name", L"peer_last_updated", L"state_before_maintenance", nullptr
       };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"interfaces", L"id", m_id, columns);
@@ -400,7 +428,18 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_stpPortState));
          DBBind(hStmt, 30, DB_SQLTYPE_VARCHAR, m_ifName, DB_BIND_STATIC, MAX_DB_STRING - 1);
          DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_peerLastUpdated));
-         DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_id);
+
+         //Serialize data in format: nodeId:status:operState:adminState:dot1xPaeAuthState:dot1xBackendAuthState:stpPortState;...
+         StringBuffer dataBeforeMaintenance;
+         m_beforeMaintenaceData.forEach([&dataBeforeMaintenance](const uint32_t& nodeId, InterfaceState *state) {
+            dataBeforeMaintenance.appendFormattedString(_T("%u:%u:%u:%u:%u:%u:%u;"),
+               nodeId, state->status, state->operState, state->adminState,
+               state->dot1xPaeAuthState, state->dot1xBackendAuthState, state->stpPortState);
+            return EnumerationCallbackResult::_CONTINUE;
+         });
+         DBBind(hStmt, 32, DB_SQLTYPE_VARCHAR, dataBeforeMaintenance.cstr(), DB_BIND_STATIC, MAX_DB_STRING - 1);
+
+         DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -514,6 +553,190 @@ bool Interface::deleteFromDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM interface_vlan_list WHERE iface_id=?"));
    return success;
 }
+
+/**
+ * Save interface status before maintenance to regenerate events on maintenance end.
+ */
+void Interface::saveStateBeforeMaintenance(uint32_t nodeId)
+{
+   lockProperties();
+   InterfaceState *state = new InterfaceState();
+   state->status = m_status;
+   state->operState = m_lastKnownOperState;
+   state->adminState = m_lastKnownAdminState;
+   state->dot1xPaeAuthState = m_dot1xPaeAuthState;
+   state->dot1xBackendAuthState = m_dot1xBackendAuthState;
+   state->stpPortState = m_stpPortState;
+
+   m_beforeMaintenaceData.set(nodeId, state);
+   setModified(MODIFY_INTERFACE_PROPERTIES);
+   unlockProperties();
+}
+
+/**
+ * Convert interface status to event
+ */
+static uint32_t statusToEvent[] =
+{
+   EVENT_INTERFACE_UP,       // Normal
+   EVENT_INTERFACE_UP,       // Warning
+   EVENT_INTERFACE_UP,       // Minor
+   EVENT_INTERFACE_DOWN,     // Major
+   EVENT_INTERFACE_DOWN,     // Critical
+   EVENT_INTERFACE_UNKNOWN,  // Unknown
+   EVENT_INTERFACE_UNKNOWN,  // Unmanaged
+   EVENT_INTERFACE_DISABLED, // Disabled
+   EVENT_INTERFACE_TESTING   // Testing
+};
+static uint32_t statusToEventInverted[] =
+{
+   EVENT_INTERFACE_EXPECTED_DOWN, // Normal
+   EVENT_INTERFACE_EXPECTED_DOWN, // Warning
+   EVENT_INTERFACE_EXPECTED_DOWN, // Minor
+   EVENT_INTERFACE_UNEXPECTED_UP, // Major
+   EVENT_INTERFACE_UNEXPECTED_UP, // Critical
+   EVENT_INTERFACE_UNKNOWN,  // Unknown
+   EVENT_INTERFACE_UNKNOWN,  // Unmanaged
+   EVENT_INTERFACE_DISABLED, // Disabled
+   EVENT_INTERFACE_TESTING   // Testing
+};
+
+/**
+ * Pae state text
+ */
+static const TCHAR *paeStateText[] =
+{
+   _T("UNKNOWN"),
+   _T("INITIALIZE"),
+   _T("DISCONNECTED"),
+   _T("CONNECTING"),
+   _T("AUTHENTICATING"),
+   _T("AUTHENTICATED"),
+   _T("ABORTING"),
+   _T("HELD"),
+   _T("FORCE AUTH"),
+   _T("FORCE UNAUTH"),
+   _T("RESTART")
+};
+static const TCHAR *backendStateText[] =
+{
+   _T("UNKNOWN"),
+   _T("REQUEST"),
+   _T("RESPONSE"),
+   _T("SUCCESS"),
+   _T("FAIL"),
+   _T("TIMEOUT"),
+   _T("IDLE"),
+   _T("INITIALIZE"),
+   _T("IGNORE")
+};
+#define PAE_STATE_TEXT(x) ((((int)(x) <= PAE_STATE_RESTART) && ((int)(x) >= 0)) ? paeStateText[(int)(x)] : paeStateText[0])
+#define BACKEND_STATE_TEXT(x) ((((int)(x) <= BACKEND_STATE_IGNORE) && ((int)(x) >= 0)) ? backendStateText[(int)(x)] : backendStateText[0])
+
+
+/**
+ * Generate events for interface after maintenance end.
+ */
+void Interface::generateEventsAfterMaintenace(uint32_t parentId)
+{
+   lockProperties();
+   InterfaceState *state = m_beforeMaintenaceData.get(parentId);
+   if (state == nullptr)
+   {
+      unlockProperties();
+      return;
+   }
+
+   shared_ptr<Node> node = getParentNode();
+   if (node == nullptr)
+   {
+      unlockProperties();
+      m_beforeMaintenaceData.remove(parentId);
+      return;
+   }
+
+   int expectedState = (m_flags & IF_EXPECTED_STATE_MASK) >> 28;
+   int requiredPolls = (m_requiredPollCount > 0) ? m_requiredPollCount :
+                       ((node->getRequiredPollCount() > 0) ? node->getRequiredPollCount() : g_requiredPolls);
+   if ((state->status != m_status) && (m_statusPollCount >= requiredPolls) && (expectedState != IF_EXPECTED_STATE_IGNORE))
+   {
+      if ((m_lastKnownOperState == IF_OPER_STATE_UNKNOWN || m_lastKnownOperState != static_cast<int16_t>(state->operState)) ||
+         (m_lastKnownAdminState == IF_ADMIN_STATE_UNKNOWN || m_lastKnownAdminState != static_cast<int16_t>(state->adminState)))
+      {
+         const InetAddress& addr = m_ipAddressList.getFirstUnicastAddress();
+         EventBuilder((expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_status] : statusToEvent[m_status], parentId)
+           .param(_T("interfaceObjectId"), m_id)
+           .param(_T("interfaceName"), m_name)
+           .param(_T("interfaceIpAddress"), addr)
+           .param(_T("interfaceNetMask"), addr.getMaskBits())
+           .param(_T("interfaceIndex"), m_index)
+           .post();
+      }
+   }
+
+   if (state->dot1xPaeAuthState != m_dot1xPaeAuthState)
+   {
+      EventBuilder(EVENT_8021X_PAE_STATE_CHANGED, parentId)
+         .param(_T("newPaeStateCode"), m_dot1xPaeAuthState)
+         .param(_T("newPaeStateText"), PAE_STATE_TEXT(m_dot1xPaeAuthState))
+         .param(_T("oldPaeStateCode"), static_cast<uint32_t>(state->dot1xPaeAuthState))
+         .param(_T("oldPaeStateText"), PAE_STATE_TEXT(state->dot1xPaeAuthState))
+         .param(_T("interfaceIndex"), m_id)
+         .param(_T("interfaceName"), m_name)
+         .post();
+
+      if (m_dot1xPaeAuthState == PAE_STATE_FORCE_UNAUTH)
+      {
+         EventBuilder(EVENT_8021X_PAE_FORCE_UNAUTH, parentId)
+            .param(_T("interfaceIndex"), m_id)
+            .param(_T("interfaceName"), m_name)
+            .post();
+      }
+   }
+
+   if (state->dot1xBackendAuthState != m_dot1xBackendAuthState)
+   {
+      EventBuilder(EVENT_8021X_BACKEND_STATE_CHANGED, parentId)
+         .param(_T("newBackendStateCode"), m_dot1xBackendAuthState)
+         .param(_T("newBackendStateText"), BACKEND_STATE_TEXT(m_dot1xBackendAuthState))
+         .param(_T("oldBackendStateCode"), (UINT32)state->dot1xBackendAuthState)
+         .param(_T("oldBackendStateText"), BACKEND_STATE_TEXT(state->dot1xBackendAuthState))
+         .param(_T("interfaceIndex"), m_id)
+         .param(_T("interfaceName"), m_name)
+         .post();
+      if (m_dot1xBackendAuthState == BACKEND_STATE_FAIL)
+      {
+         EventBuilder(EVENT_8021X_AUTH_FAILED, parentId)
+            .param(_T("interfaceIndex"), m_id)
+            .param(_T("interfaceName"), m_name)
+            .post();
+      }
+      else if (m_dot1xBackendAuthState == BACKEND_STATE_TIMEOUT)
+      {
+         EventBuilder(EVENT_8021X_AUTH_TIMEOUT, parentId)
+            .param(_T("interfaceIndex"), m_id)
+            .param(_T("interfaceName"), m_name)
+            .post();
+      }
+   }
+
+   if (state->stpPortState != m_stpPortState)
+   {
+      EventBuilder(EVENT_IF_STP_STATE_CHANGED, parentId)
+         .param(_T("ifIndex"), m_index)
+         .param(_T("ifName"), m_name)
+         .param(_T("oldState"), static_cast<int>(state->stpPortState))
+         .param(_T("oldStateText"), STPPortStateToText(state->stpPortState))
+         .param(_T("newState"), static_cast<int>(m_stpPortState))
+         .param(_T("newStateText"), STPPortStateToText(m_stpPortState))
+         .post();
+   }
+
+   m_beforeMaintenaceData.remove(parentId);
+   setModified(MODIFY_INTERFACE_PROPERTIES);
+   unlockProperties();
+}
+
 
 /**
  * Perform status poll on interface
@@ -711,31 +934,6 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 
    if ((newStatus != oldStatus) && (m_statusPollCount >= requiredPolls) && (expectedState != IF_EXPECTED_STATE_IGNORE))
    {
-		static uint32_t statusToEvent[] =
-		{
-			EVENT_INTERFACE_UP,       // Normal
-			EVENT_INTERFACE_UP,       // Warning
-			EVENT_INTERFACE_UP,       // Minor
-			EVENT_INTERFACE_DOWN,     // Major
-			EVENT_INTERFACE_DOWN,     // Critical
-			EVENT_INTERFACE_UNKNOWN,  // Unknown
-			EVENT_INTERFACE_UNKNOWN,  // Unmanaged
-			EVENT_INTERFACE_DISABLED, // Disabled
-			EVENT_INTERFACE_TESTING   // Testing
-		};
-		static uint32_t statusToEventInverted[] =
-		{
-			EVENT_INTERFACE_EXPECTED_DOWN, // Normal
-			EVENT_INTERFACE_EXPECTED_DOWN, // Warning
-			EVENT_INTERFACE_EXPECTED_DOWN, // Minor
-			EVENT_INTERFACE_UNEXPECTED_UP, // Major
-			EVENT_INTERFACE_UNEXPECTED_UP, // Critical
-			EVENT_INTERFACE_UNKNOWN,  // Unknown
-			EVENT_INTERFACE_UNKNOWN,  // Unmanaged
-			EVENT_INTERFACE_DISABLED, // Disabled
-			EVENT_INTERFACE_TESTING   // Testing
-		};
-
 		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): status changed from %d to %d"), m_id, m_name, m_status, newStatus);
 		m_status = newStatus;
 		m_pendingStatus = -1;	// Invalidate pending status
@@ -970,35 +1168,6 @@ void Interface::stpStatusPoll(uint32_t rqId, SNMP_Transport *transport, const No
  */
 void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, const Node& node)
 {
-	static const TCHAR *paeStateText[] =
-	{
-		_T("UNKNOWN"),
-		_T("INITIALIZE"),
-		_T("DISCONNECTED"),
-		_T("CONNECTING"),
-		_T("AUTHENTICATING"),
-		_T("AUTHENTICATED"),
-		_T("ABORTING"),
-		_T("HELD"),
-		_T("FORCE AUTH"),
-		_T("FORCE UNAUTH"),
-		_T("RESTART")
-	};
-	static const TCHAR *backendStateText[] =
-	{
-		_T("UNKNOWN"),
-		_T("REQUEST"),
-		_T("RESPONSE"),
-		_T("SUCCESS"),
-		_T("FAIL"),
-		_T("TIMEOUT"),
-		_T("IDLE"),
-		_T("INITIALIZE"),
-		_T("IGNORE")
-	};
-#define PAE_STATE_TEXT(x) ((((int)(x) <= PAE_STATE_RESTART) && ((int)(x) >= 0)) ? paeStateText[(int)(x)] : paeStateText[0])
-#define BACKEND_STATE_TEXT(x) ((((int)(x) <= BACKEND_STATE_IGNORE) && ((int)(x) >= 0)) ? backendStateText[(int)(x)] : backendStateText[0])
-
    sendPollerMsg(_T("      Checking port 802.1x status...\r\n"));
 
 	TCHAR oid[256];

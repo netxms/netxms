@@ -2181,6 +2181,19 @@ public:
 };
 
 /**
+ * Structure used to save interface state before maintenance
+ */
+struct InterfaceState
+{
+   uint32_t status;
+   uint32_t operState;
+   uint32_t adminState;
+   uint32_t dot1xPaeAuthState;
+   uint32_t dot1xBackendAuthState;;
+   SpanningTreePortState stpPortState;
+};
+
+/**
  * Interface class
  */
 class NXCORE_EXPORTABLE Interface : public NetObj
@@ -2228,6 +2241,7 @@ protected:
    uint32_t *m_ifTableSuffix;
    IntegerArray<uint32_t> *m_vlans;
    uint64_t m_lastDownEventId;
+   HashMap<uint32_t, InterfaceState> m_beforeMaintenaceData;
 
    void icmpStatusPoll(uint32_t rqId, uint32_t nodeIcmpProxy, Cluster *cluster, InterfaceAdminState *adminState, InterfaceOperState *operState);
    void paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, const Node& node);
@@ -2278,6 +2292,9 @@ public:
    uint32_t getParentNodeId() const;
    String getParentNodeName() const;
    uint32_t getParentInterfaceId() const { return m_parentInterfaceId; }
+
+   void saveStateBeforeMaintenance(uint32_t nodeId);
+   void generateEventsAfterMaintenace(uint32_t parentId);
 
    const InetAddressList *getIpAddressList() const { return &m_ipAddressList; }
    InetAddress getFirstIpAddress() const;
@@ -2505,6 +2522,9 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
+
+   void saveStateBeforeMaintenance();
+   void generateEventsAfterMaintenace();
 
    void statusPoll(ClientSession *session, uint32_t rqId, const shared_ptr<Node>& pollerNode, ObjectQueue<Event> *eventQueue);
 

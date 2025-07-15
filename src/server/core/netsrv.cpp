@@ -289,6 +289,46 @@ uint32_t NetworkService::modifyFromMessageInternal(const NXCPMessage& msg, Clien
 }
 
 /**
+ * Save object before maintenance
+ */
+void NetworkService::saveStateBeforeMaintenance()
+{
+   lockProperties();
+   m_stateBeforeMaintenance = m_status;
+   setModified(MODIFY_COMMON_PROPERTIES);
+   unlockProperties();
+}
+
+/**
+ * Regenerate events after maintenance end
+ */
+void NetworkService::generateEventsAfterMaintenace()
+{
+   shared_ptr<Node> hostNode = m_hostNode.lock();
+   if (hostNode == nullptr)
+   {
+      m_status = STATUS_UNKNOWN;
+      return;     // Service without host node, which is VERY strange
+   }
+
+   lockProperties();
+   if (m_stateBeforeMaintenance != m_status)
+   {
+      if (m_pollCount >= ((m_requiredPollCount > 0) ? m_requiredPollCount : g_requiredPolls))
+      {
+         EventBuilder(m_status == STATUS_NORMAL ? EVENT_SERVICE_UP :
+                     (m_status == STATUS_CRITICAL ? EVENT_SERVICE_DOWN : EVENT_SERVICE_UNKNOWN),
+                     hostNode->getId())
+            .param(_T("serviceName"), m_name)
+            .param(_T("serviceObjectId"), m_id)
+            .param(_T("serviceType"), m_serviceType)
+            .post();
+      }
+   }
+   unlockProperties();
+}
+
+/**
  * Perform status poll on network service
  */
 void NetworkService::statusPoll(ClientSession *session, uint32_t rqId, const shared_ptr<Node>& pollerNode, ObjectQueue<Event> *eventQueue)

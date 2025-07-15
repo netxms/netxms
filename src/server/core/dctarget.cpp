@@ -1968,6 +1968,17 @@ void DataCollectionTarget::enterMaintenanceMode(uint32_t userId, const TCHAR *co
    }
    unlockDciAccess();
 
+   readLockChildList();
+   for(int i = 0; i < getChildList().size(); i++)
+   {
+      NetObj *object = getChildList().get(i);
+      if (object->getObjectClass() == OBJECT_INTERFACE)
+         static_cast<Interface*>(object)->saveStateBeforeMaintenance(m_id);
+      if (object->getObjectClass() == OBJECT_NETWORKSERVICE)
+         static_cast<NetworkService*>(object)->saveStateBeforeMaintenance();
+   }
+   unlockChildList();
+
    lockProperties();
    m_maintenanceEventId = eventId;
    m_maintenanceInitiator = userId;
@@ -2018,6 +2029,17 @@ void DataCollectionTarget::leaveMaintenanceMode(uint32_t userId)
       _sntprintf(threadKey, 32, _T("POLL_%u"), getId());
       ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, static_cast<Pollable*>(this), &Pollable::doForcedStatusPoll, RegisterPoller(PollerType::STATUS, self()));
    }
+
+   readLockChildList();
+   for(int i = 0; i < getChildList().size(); i++)
+   {
+      NetObj *object = getChildList().get(i);
+      if (object->getObjectClass() == OBJECT_INTERFACE)
+         static_cast<Interface*>(object)->generateEventsAfterMaintenace(m_id);
+      else if (object->getObjectClass() == OBJECT_NETWORKSERVICE)
+         static_cast<NetworkService*>(object)->generateEventsAfterMaintenace();
+   }
+   unlockChildList();
 }
 
 /**
