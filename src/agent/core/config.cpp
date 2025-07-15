@@ -342,7 +342,7 @@ static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 /**
  * Load config
  */
-bool LoadConfig(const TCHAR *configSection, bool firstStart, bool ignoreErrors)
+bool LoadConfig(const TCHAR *configSection, const StringBuffer& cmdLineValues, bool firstStart, bool ignoreErrors)
 {
    shared_ptr<Config> config = make_shared<Config>();
    config->setTopLevelTag(_T("config"));
@@ -375,6 +375,13 @@ bool LoadConfig(const TCHAR *configSection, bool firstStart, bool ignoreErrors)
    bool validConfig = config->loadConfig(g_szConfigFile, DEFAULT_CONFIG_SECTION, nullptr, true);
    if (validConfig)
    {
+      if (!cmdLineValues.isEmpty())
+      {
+         char *content = cmdLineValues.getUTF8String();
+         config->loadIniConfigFromMemory(content, strlen(content), _T("<cmdline>"), DEFAULT_CONFIG_SECTION, true);
+         MemFree(content);
+      }
+
       const TCHAR *dir = config->getValue(_T("/%agent/DataDirectory"));
       if (dir != nullptr)
       {

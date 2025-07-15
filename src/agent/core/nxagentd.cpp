@@ -165,9 +165,9 @@ uint32_t H_SystemExecute(const shared_ptr<ActionExecutionContext>& context);
  * Valid options for getopt()
  */
 #if defined(_WIN32)
-#define VALID_OPTIONS   "B:c:CdD:e:EfFG:hHiIkKlM:n:N:P:Q:r:RsSt:TUvW:X:Z:z:"
+#define VALID_OPTIONS   "B:c:CdD:e:EfFG:hHiIkKlM:n:N:O:P:Q:r:RsSt:TUvW:X:Z:z:"
 #else
-#define VALID_OPTIONS   "B:c:CdD:fFg:G:hkKlM:p:P:Q:r:St:Tu:vW:xX:Z:z:"
+#define VALID_OPTIONS   "B:c:CdD:fFg:G:hkKlM:p:O:P:Q:r:St:Tu:vW:xX:Z:z:"
 #endif
 
 /**
@@ -454,7 +454,9 @@ static TCHAR m_szHelpText[] =
 #ifdef _WIN32
    _T("   -n <name>        : Service name\n")
    _T("   -N <name>        : Service display name\n")
-#else
+#endif
+   _T("   -O <option>      : Set configuration option\n")
+#ifndef _WIN32
    _T("   -p               : Path to pid file (default: /var/run/nxagentd.pid)\n")
 #endif
    _T("   -P <text>        : Set platform suffix to <text>\n")
@@ -2052,9 +2054,10 @@ int main(int argc, char *argv[])
 	char *eptr;
    TCHAR configSection[MAX_DB_STRING] = DEFAULT_CONFIG_SECTION;
    TCHAR configEntry[MAX_DB_STRING];
-   const char *extraConfigValues = NULL;
+   const char *extraConfigValues = nullptr;
    bool forceCreateConfig = false;
    bool restartExternalProcesses = false;
+   StringBuffer cmdLineConfigValues;   // configuration values passed on command line
 #ifdef _WIN32
    TCHAR szModuleName[MAX_PATH];
    HKEY hKey;
@@ -2184,6 +2187,14 @@ int main(int argc, char *argv[])
             break;
          case 'l':
             command = Command::GET_LOG_LOCATION;
+            break;
+         case 'O':   // Override configuration values
+            if (optarg != nullptr)
+            {
+               if (!cmdLineConfigValues.isEmpty())
+                  cmdLineConfigValues.append(_T("\n"));
+               cmdLineConfigValues.appendMBString(optarg);
+            }
             break;
 #ifndef _WIN32
          case 'p':   // PID file
@@ -2369,7 +2380,7 @@ int main(int argc, char *argv[])
             }
          }
 
-			if (!LoadConfig(configSection, true, false))
+			if (!LoadConfig(configSection, cmdLineConfigValues, true, false))
 			{
             _tprintf(_T("WARNING: configuration loaded with errors\n"));
 		      g_failFlags |= FAIL_LOAD_CONFIG;
@@ -2606,7 +2617,7 @@ int main(int argc, char *argv[])
          break;
       case Command::CHECK_CONFIG:
          {
-            bool validConfig = LoadConfig(configSection, true, false);
+            bool validConfig = LoadConfig(configSection, cmdLineConfigValues, true, false);
             if (validConfig)
             {
                config = g_config;
@@ -2623,7 +2634,7 @@ int main(int argc, char *argv[])
          break;
       case Command::QUERY_CONFIG:
          {
-            bool validConfig = LoadConfig(configSection, true, true);
+            bool validConfig = LoadConfig(configSection, cmdLineConfigValues, true, true);
             if (validConfig)
             {
                config = g_config;
@@ -2651,7 +2662,7 @@ int main(int argc, char *argv[])
          exitCode = 0;
          break;
       case Command::GET_LOG_LOCATION:
-         if (LoadConfig(configSection, true, true))
+         if (LoadConfig(configSection, cmdLineConfigValues, true, true))
          {
             if (g_config->parseTemplate(configSection, m_cfgTemplate))
             {
@@ -2670,7 +2681,7 @@ int main(int argc, char *argv[])
          }
          break;
       case Command::RESET_IDENTITY:
-         if (LoadConfig(configSection, true, false))
+         if (LoadConfig(configSection, cmdLineConfigValues, true, false))
          {
             if (g_config->parseTemplate(configSection, m_cfgTemplate))
             {
