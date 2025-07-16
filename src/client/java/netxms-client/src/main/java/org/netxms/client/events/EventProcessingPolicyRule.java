@@ -545,6 +545,17 @@ public class EventProcessingPolicyRule
    }
 
    /**
+    * Check if rule's filter is empty.
+    *
+    * @return true if rule's filter is empty, false otherwise
+    */
+   public boolean isFilterEmpty()
+   {
+      return sources.isEmpty() && sourceExclusions.isEmpty() && events.isEmpty() && filterScript.isBlank() && timeFrames.isEmpty() &&
+         ((flags & (SEVERITY_NORMAL | SEVERITY_WARNING | SEVERITY_MINOR | SEVERITY_MAJOR | SEVERITY_CRITICAL)) == (SEVERITY_NORMAL | SEVERITY_WARNING | SEVERITY_MINOR | SEVERITY_MAJOR | SEVERITY_CRITICAL));
+   }
+
+   /**
     * Check rule's DISABLED flag
     *
     * @return true if DISABLED flag set

@@ -874,6 +874,13 @@ bool EPRule::processEvent(Event *event) const
    if ((event->getRootId() != 0) && !(m_flags & RF_ACCEPT_CORRELATED))
       return false;
 
+   // Check if rule has no filters at all
+   if (isFilterEmpty())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("EPP rule %u ignored because filter is empty"), m_id + 1);
+      return false;
+   }
+
    if (!matchSeverity(event->getSeverity()) || !matchEvent(event->getCode()))
       return false;
 
@@ -891,7 +898,7 @@ bool EPRule::processEvent(Event *event) const
    if (!matchTime(&currLocal) || !matchScript(event))
       return false;
 
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("Event ") UINT64_FMT _T(" match EPP rule %d"), event->getId(), (int)m_id + 1);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("Event ") UINT64_FMT _T(" match EPP rule %u"), event->getId(), m_id + 1);
 
    // Generate alarm if requested
    uint32_t alarmId = 0;
@@ -1485,7 +1492,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
 /**
  * Create NXCP message with rule's data
  */
-void EPRule::createMessage(NXCPMessage *msg) const
+void EPRule::fillMessage(NXCPMessage *msg) const
 {
    msg->setField(VID_FLAGS, m_flags);
    msg->setField(VID_RULE_ID, m_id);
@@ -1698,7 +1705,7 @@ void EventPolicy::sendToClient(ClientSession *session, uint32_t requestId) const
    readLock();
    for(int i = 0; i < m_rules.size(); i++)
    {
-      m_rules.get(i)->createMessage(&msg);
+      m_rules.get(i)->fillMessage(&msg);
       session->sendMessage(msg);
       msg.deleteAllFields();
    }

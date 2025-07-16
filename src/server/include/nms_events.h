@@ -653,6 +653,12 @@ private:
    uint32_t generateAlarm(Event *event) const;
    void executeActionScript(Event *event) const;
 
+   bool isFilterEmpty() const
+   {
+      return m_events.isEmpty() && m_sources.isEmpty() && m_sourceExclusions.isEmpty() && m_timeFrames.isEmpty() && (m_filterScript == nullptr) &&
+         ((m_flags & (RF_SEVERITY_INFO | RF_SEVERITY_WARNING | RF_SEVERITY_MINOR | RF_SEVERITY_MAJOR | RF_SEVERITY_CRITICAL)) == (RF_SEVERITY_INFO | RF_SEVERITY_WARNING | RF_SEVERITY_MINOR | RF_SEVERITY_MAJOR | RF_SEVERITY_CRITICAL));
+   }
+
 public:
    EPRule(uint32_t id);
    EPRule(DB_RESULT hResult, int row);
@@ -666,7 +672,7 @@ public:
    bool loadFromDB(DB_HANDLE hdb);
 	bool saveToDB(DB_HANDLE hdb) const;
    bool processEvent(Event *event) const;
-   void createMessage(NXCPMessage *msg) const;
+   void fillMessage(NXCPMessage *msg) const;
    void createExportRecord(TextFileWriter& xml) const;
    void createOrderingExportRecord(TextFileWriter& xml) const;
    json_t *toJson() const;

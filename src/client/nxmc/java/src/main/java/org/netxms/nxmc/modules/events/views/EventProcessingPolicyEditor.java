@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -503,25 +503,15 @@ public class EventProcessingPolicyEditor extends ConfigurationView
             session.saveEventProcessingPolicy(policy);
             if (unlockAfterSave)
                session.closeEventProcessingPolicy();
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  modified = false;
-               }
+            runInUIThread(() -> {
+               modified = false;
             });
          }
 
          @Override
          protected void jobFinalize()
          {
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  actionSave.setEnabled(modified);
-               }
-            });
+            runInUIThread(() -> actionSave.setEnabled(modified));
          }
 
          @Override

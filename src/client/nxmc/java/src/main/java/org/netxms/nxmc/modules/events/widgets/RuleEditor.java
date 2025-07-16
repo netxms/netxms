@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,8 +26,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map.Entry;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
-import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
@@ -191,7 +189,7 @@ public class RuleEditor extends Composite
          @Override
          public void run()
          {
-            editRule("org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0"); //$NON-NLS-1$
+            editRule("org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0");
          }
       };
       condition.addButton(new DashboardElementButton(i18n.tr("Edit condition"), SharedIcons.IMG_EDIT, editRuleCondition));
@@ -211,7 +209,7 @@ public class RuleEditor extends Composite
          @Override
          public void run()
          {
-            editRule("org.netxms.ui.eclipse.epp.propertypages.RuleAction#1"); //$NON-NLS-1$
+            editRule("org.netxms.ui.eclipse.epp.propertypages.RuleAction#1");
          }
       };
       action.addButton(new DashboardElementButton(i18n.tr("Edit actions"), SharedIcons.IMG_EDIT, editRuleAction));
@@ -273,7 +271,7 @@ public class RuleEditor extends Composite
    private void createLeftPanel()
    {
       leftPanel = new Composite(this, SWT.NONE);
-      leftPanel.setBackground(ThemeEngine.getBackgroundColor(rule.isDisabled() ? "RuleEditor.Title.Disabled" : "RuleEditor.Title.Normal"));
+      leftPanel.setBackground(ThemeEngine.getBackgroundColor((rule.isDisabled() || rule.isFilterEmpty()) ? "RuleEditor.Title.Disabled" : "RuleEditor.Title.Normal"));
       leftPanel.addMouseListener(ruleMouseListener);
 
       GridLayout layout = new GridLayout();
@@ -313,13 +311,7 @@ public class RuleEditor extends Composite
    {
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
-         {
-            editor.fillRuleContextMenu(mgr);
-         }
-      });
-
+      menuMgr.addMenuListener((m) -> editor.fillRuleContextMenu(m));
       for(Control c : controls)
       {
          Menu menu = menuMgr.createContextMenu(c);
@@ -354,7 +346,7 @@ public class RuleEditor extends Composite
       };
 
       header = new Composite(this, SWT.NONE);
-      header.setBackground(ThemeEngine.getBackgroundColor(rule.isDisabled() ? "RuleEditor.Title.Disabled" : "RuleEditor.Title.Normal"));
+      header.setBackground(ThemeEngine.getBackgroundColor((rule.isDisabled() || rule.isFilterEmpty()) ? "RuleEditor.Title.Disabled" : "RuleEditor.Title.Normal"));
       header.addMouseListener(headerMouseListener);
 
       GridLayout layout = new GridLayout();
@@ -369,6 +361,8 @@ public class RuleEditor extends Composite
       headerLabel = new Label(header, SWT.NONE);
       if (rule.isDisabled())
          headerLabel.setText(rule.getComments() + i18n.tr(" (disabled)"));
+      else if (rule.isFilterEmpty())
+         headerLabel.setText(rule.getComments() + i18n.tr(" (empty filter)"));
       else
          headerLabel.setText(rule.getComments());
       headerLabel.setBackground(header.getBackground());
@@ -497,6 +491,12 @@ public class RuleEditor extends Composite
       GridLayout layout = new GridLayout();
       layout.verticalSpacing = 0;
       clientArea.setLayout(layout);
+
+      if (rule.isFilterEmpty())
+      {
+         createLabel(clientArea, 0, true, i18n.tr("SKIP"), null);
+         return clientArea;
+      }
 
       boolean needAnd = false;
       if (((rule.getSources().size() > 0 || rule.getSourceExclusions().size() > 0) && rule.isSourceInverted())
@@ -1065,6 +1065,8 @@ public class RuleEditor extends Composite
       {
          if (rule.isDisabled())
             headerLabel.setText(rule.getComments() + i18n.tr(" (disabled)"));
+         else if (rule.isFilterEmpty())
+            headerLabel.setText(rule.getComments() + i18n.tr(" (empty filter)"));
          else
             headerLabel.setText(rule.getComments());
 
@@ -1152,7 +1154,8 @@ public class RuleEditor extends Composite
    public void setSelected(boolean selected)
    {
       this.selected = selected;
-      final Color color = ThemeEngine.getBackgroundColor(selected ? "RuleEditor.Title.Selected" : (rule.isDisabled() ? "RuleEditor.Title.Disabled" : "RuleEditor.Title.Normal"));
+      final Color color = ThemeEngine
+            .getBackgroundColor(selected ? "RuleEditor.Title.Selected" : ((rule.isDisabled() || rule.isFilterEmpty()) ? "RuleEditor.Title.Disabled" : "RuleEditor.Title.Normal"));
 
       leftPanel.setBackground(color);
       for(Control c : leftPanel.getChildren())
@@ -1179,7 +1182,10 @@ public class RuleEditor extends Composite
       if (enabled)
       {
          rule.setFlags(rule.getFlags() & ~EventProcessingPolicyRule.DISABLED);
-         headerLabel.setText(rule.getComments());
+         if (rule.isFilterEmpty())
+            headerLabel.setText(rule.getComments() + i18n.tr(" (empty filter)"));
+         else
+            headerLabel.setText(rule.getComments());
       }
       else
       {
@@ -1198,7 +1204,7 @@ public class RuleEditor extends Composite
    private void updateBackground()
    {
       final Color color = ThemeEngine.getBackgroundColor(
-            selected ? "RuleEditor.Title.Selected" : (rule.isDisabled() ? "RuleEditor.Title.Disabled" : "RuleEditor.Title.Normal"));
+            selected ? "RuleEditor.Title.Selected" : ((rule.isDisabled() || rule.isFilterEmpty()) ? "RuleEditor.Title.Disabled" : "RuleEditor.Title.Normal"));
       leftPanel.setBackground(color);
       for(Control c : leftPanel.getChildren())
          c.setBackground(color);
