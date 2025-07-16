@@ -23,6 +23,16 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 53.4 to 53.5
+ */
+static bool H_UpgradeFromV4()
+{
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='Objects.Security.ReadAccessViaMap'")));
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
+
+/**
  * Upgrade from 53.3 to 53.4
  */
 static bool H_UpgradeFromV3()
@@ -90,6 +100,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 4,  53, 5,  H_UpgradeFromV4  },
    { 3,  53, 4,  H_UpgradeFromV3  },
    { 2,  53, 3,  H_UpgradeFromV2  },
    { 1,  53, 2,  H_UpgradeFromV1  },
