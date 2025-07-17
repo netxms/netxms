@@ -1174,6 +1174,86 @@ bool NetworkMap::buildTopologyGraphFromSeed(const shared_ptr<Node>& seed, Networ
 }
 
 /**
+ * Add or update links in map content
+ * Properties should be locked before calling this method.
+ */
+bool NetworkMap::mergeLinks(NetworkMapContent *content, const ObjectArray<ObjLink>& links)
+{
+   bool modified = false;
+   // add new links and update existing
+   for(int i = 0; i < links.size(); i++)
+   {
+      ObjLink *newLink = links.get(i);
+      NetworkMapLink *link = nullptr;
+      bool isNew = true;
+      for(int j = 0; j < content->m_links.size(); j++)
+      {
+         NetworkMapLink *currLink = content->m_links.get(j);
+         if (newLink->type == currLink->getType())
+         {
+            uint32_t obj1 = content->objectIdFromElementId(currLink->getElement1());
+            uint32_t obj2 = content->objectIdFromElementId(currLink->getElement2());
+            if ((newLink->object1 == obj1) && (newLink->iface1 == currLink->getInterface1()) && (newLink->object2 == obj2) && (newLink->iface2 == currLink->getInterface2()))
+            {
+               link = currLink;
+               isNew = false;
+               break;
+            }
+            if ((newLink->object1 == obj2) && (newLink->iface1 == currLink->getInterface2()) && (newLink->object2 == obj1) && (newLink->iface2 == currLink->getInterface1()))
+            {
+               link = currLink;
+               newLink->swap();
+               isNew = false;
+               break;
+            }
+         }
+      }
+
+      // Add new link if needed
+      if (link == nullptr)
+      {
+         uint32_t e1 = content->elementIdFromObjectId(newLink->object1);
+         uint32_t e2 = content->elementIdFromObjectId(newLink->object2);
+         // Element ID can be 0 if link points to object removed by filter
+         if ((e1 != 0) && (e2 != 0))
+         {
+            link = new NetworkMapLink(m_nextLinkId++, e1, newLink->iface1, e2, newLink->iface2, newLink->type);
+            link->setColorSource(MAP_LINK_COLOR_SOURCE_INTERFACE_STATUS);
+            link->setFlags(AUTO_GENERATED);
+            link->updateDciList(m_dciSet, true);
+            link->updateColorSourceObjectList(m_objectSet, true);
+            m_objectSet.put(link->getInterface1());
+            m_objectSet.put(link->getInterface2());
+            content->m_links.add(link);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG_NETMAP, 3, _T("NetworkMap(%s [%u])/updateLinks: cannot add link because elements are missing for object pair (%u,%u)"),
+                     m_name, m_id, newLink->object1, newLink->object2);
+         }
+      }
+
+      // Update link properties
+      if (link != nullptr)
+      {
+         m_objectSet.remove(link->getInterface1());
+         m_objectSet.remove(link->getInterface2());
+         bool updated = link->update(*newLink, !(m_flags & MF_DONT_UPDATE_LINK_TEXT));
+         m_objectSet.put(newLink->iface1);
+         m_objectSet.put(newLink->iface2);
+         if (updated || isNew)
+         {
+            nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateLinks: link %u (%u) - %u (%u) %s"),
+                     m_name, m_id, link->getElement1(), newLink->object1, link->getElement2(), newLink->object2, isNew ? _T("added") : _T("updated"));
+            sendPollerMsg(_T("   %s link between \"%s\" and \"%s\"\r\n"), isNew ? _T("Added") : _T("Updated"), GetObjectName(newLink->object1, _T("unknown")), GetObjectName(newLink->object2, _T("unknown")));
+            modified = true;
+         }
+      }
+   }
+   return modified;
+}
+
+/**
  * Update objects from given list
  */
 void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
@@ -1351,81 +1431,9 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
       }
    }
 
-   // add new links and update existing
-   const ObjectArray<ObjLink>& links = objects.getLinks();
-   for(int i = 0; i < links.size(); i++)
-   {
-      ObjLink *newLink = links.get(i);
-      NetworkMapLink *link = nullptr;
-      bool isNew = true;
-      for(int j = 0; j < content.m_links.size(); j++)
-      {
-         NetworkMapLink *currLink = content.m_links.get(j);
-         if (newLink->type == currLink->getType())
-         {
-            uint32_t obj1 = content.objectIdFromElementId(currLink->getElement1());
-            uint32_t obj2 = content.objectIdFromElementId(currLink->getElement2());
-            if ((newLink->object1 == obj1) && (newLink->iface1 == currLink->getInterface1()) && (newLink->object2 == obj2) && (newLink->iface2 == currLink->getInterface2()))
-            {
-               link = currLink;
-               isNew = false;
-               break;
-            }
-            if ((newLink->object1 == obj2) && (newLink->iface1 == currLink->getInterface2()) && (newLink->object2 == obj1) && (newLink->iface2 == currLink->getInterface1()))
-            {
-               link = currLink;
-               newLink->swap();
-               isNew = false;
-               break;
-            }
-         }
-      }
-
-      // Add new link if needed
-      if (link == nullptr)
-      {
-         uint32_t e1 = content.elementIdFromObjectId(newLink->object1);
-         uint32_t e2 = content.elementIdFromObjectId(newLink->object2);
-         // Element ID can be 0 if link points to object removed by filter
-         if ((e1 != 0) && (e2 != 0))
-         {
-            lockProperties();
-            link = new NetworkMapLink(m_nextLinkId++, e1, newLink->iface1, e2, newLink->iface2, newLink->type);
-            link->setColorSource(MAP_LINK_COLOR_SOURCE_INTERFACE_STATUS);
-            link->setFlags(AUTO_GENERATED);
-            link->updateDciList(m_dciSet, true);
-            link->updateColorSourceObjectList(m_objectSet, true);
-            m_objectSet.put(link->getInterface1());
-            m_objectSet.put(link->getInterface2());
-            unlockProperties();
-            content.m_links.add(link);
-         }
-         else
-         {
-            nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: cannot add link because elements are missing for object pair (%u,%u)"),
-                     m_name, m_id, newLink->object1, newLink->object2);
-         }
-      }
-
-      // Update link properties
-      if (link != nullptr)
-      {
-         lockProperties();
-         m_objectSet.remove(link->getInterface1());
-         m_objectSet.remove(link->getInterface2());
-         bool updated = link->update(*newLink, !(m_flags & MF_DONT_UPDATE_LINK_TEXT));
-         m_objectSet.put(newLink->iface1);
-         m_objectSet.put(newLink->iface2);
-         unlockProperties();
-         if (updated || isNew)
-         {
-            nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: link %u (%u) - %u (%u) %s"),
-                     m_name, m_id, link->getElement1(), newLink->object1, link->getElement2(), newLink->object2, isNew ? _T("added") : _T("updated"));
-            sendPollerMsg(_T("   %s link between \"%s\" and \"%s\"\r\n"), isNew ? _T("Added") : _T("Updated"), GetObjectName(newLink->object1, _T("unknown")), GetObjectName(newLink->object2, _T("unknown")));
-            modified = true;
-         }
-      }
-   }
+   lockProperties();
+   modified = mergeLinks(&content, objects.getLinks());
+   unlockProperties();
 
    if (modified)
    {
@@ -1999,4 +2007,35 @@ json_t *NetworkMap::toJson()
 
    unlockProperties();
    return root;
+}
+
+/**
+ * Connect nodes automatically based on L2 topology
+ */
+void NetworkMap::autoConnectNodes(const IntegerArray<uint32_t> &nodeList)
+{
+   ObjectArray<ObjLink> links;
+   for (int i = 0; i < nodeList.size(); i++)
+   {
+      uint32_t firstNodeId = nodeList.get(i);
+      for (int j = i + 1; j < nodeList.size(); j++)
+      {
+         uint32_t secondNodeId = nodeList.get(j);
+
+         shared_ptr<Node> firstNode = static_pointer_cast<Node>(FindObjectById(firstNodeId, OBJECT_NODE));
+         shared_ptr<Node> secondNode = static_pointer_cast<Node>(FindObjectById(secondNodeId, OBJECT_NODE));
+         if ((firstNode != nullptr) && (secondNode != nullptr))
+         {
+            firstNode->getL2Connections(secondNodeId, &links);
+         }
+      }
+   }
+
+   lockProperties();
+   if (mergeLinks(&m_mapContent, links))
+   {
+      setModified(MODIFY_MAP_CONTENT);
+   }
+   unlockProperties();
+   nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s): auto connect completed"), m_name);
 }

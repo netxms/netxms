@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.networkmaps.views;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -55,6 +56,7 @@ import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.maps.MapLayoutAlgorithm;
+import org.netxms.client.maps.MapType;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
@@ -116,6 +118,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	private Action actionTextBoxProperties;
 	private Action actionGroupBoxProperties;
    private Action actionImageProperties;
+   private Action actionAutoLinkNodes;
 	private Color defaultLinkColor = null;
    private boolean disableGeolocationBackground = false;
    private boolean disableLinkTextAutoUpdate = true;
@@ -389,6 +392,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          public void selectionChanged(SelectionChangedEvent event)
          {
             actionLinkObjects.setEnabled(!readOnly && (((IStructuredSelection)event.getSelection()).size() == 2));
+            actionAutoLinkNodes.setEnabled(!readOnly && (getMapObject().getMapType() == MapType.CUSTOM) && (((IStructuredSelection)event.getSelection()).size() >= 2));
          }
       });
 
@@ -527,7 +531,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	protected void createActions()
 	{
 		super.createActions();
-
+		
       actionAddObject = new Action(i18n.tr("&Add object..."), SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
@@ -602,6 +606,17 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 			}
 		};
       addKeyBinding("M1+L", actionLinkObjects);
+
+      actionAutoLinkNodes = new Action(i18n.tr("&Auto-link nodes"), ResourceManager.getImageDescriptor("icons/netmap/add_link.png")) {
+         @Override
+         public void run()
+         {
+            if (getMapObject().getMapType() == MapType.CUSTOM)
+            {
+               autoLinkSelectedObjects();
+            }
+         }
+      };
 
       actionRemove = new Action(i18n.tr("&Remove from map"), SharedIcons.DELETE_OBJECT) {
 			@Override
@@ -705,6 +720,8 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          int size = viewer.getStructuredSelection().size();
    		if (size == 2)
    			manager.add(actionLinkObjects);
+   		if (size >= 2 && getMapObject().getMapType() == MapType.CUSTOM)
+   			manager.add(actionAutoLinkNodes);
    		manager.add(actionRemove);
    		manager.add(new Separator());
 	   }
@@ -1134,6 +1151,39 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       long id2 = ((NetworkMapObject)objects[1]).getId();
       mapPage.addLink(new NetworkMapLink(mapPage.createLinkId(), NetworkMapLink.NORMAL, id1, id2));
       saveMap();
+   }
+   
+   /**
+    * Auto link nodes based on L2 connectivity
+    */
+   private void autoLinkSelectedObjects()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() < 2)
+         return;
+      
+      List<Long> nodes = new ArrayList<Long>(selection.size());
+      for (Object object : selection.toList())
+      {
+         if (object instanceof NetworkMapObject)
+         {
+            nodes.add(((NetworkMapObject)object).getObjectId());
+         }
+      }     
+
+      new Job("Auto link network map nodes", this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.autoLinkNetworkMapNodes(getObjectId(), nodes);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot auto link network map nodes";
+         }
+      }.start();
    }
 
 	/**

@@ -2004,6 +2004,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_INTERFACE_TRAFFIC_DCIS:
          getInterfaceTrafficDcis(*request);
          break;
+      case CMD_LINK_NETWORK_MAP_NODES:
+         autoConnectNetworkMapNodes(*request);
+         break;
       case CMD_EPP_RECORD:
          processEventProcessingPolicyRecord(*request);
          break;
@@ -18081,6 +18084,38 @@ void ClientSession::getInterfaceTrafficDcis(const NXCPMessage& request)
       else
       {
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Autoconnect network map nodes based on topology information
+ */
+void ClientSession::autoConnectNetworkMapNodes(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> map = FindObjectById(request.getFieldAsUInt32(VID_MAP_ID), OBJECT_NETWORKMAP);
+   if (map != nullptr)
+   {
+      if (map->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
+      {
+         IntegerArray<uint32_t> nodeList;
+         request.getFieldAsInt32Array(VID_NODE_LIST, &nodeList);
+         static_cast<NetworkMap&>(*map).autoConnectNodes(nodeList);
+         writeAuditLog(AUDIT_OBJECTS, true, map->getId(), _T("Network map nodes auto-connected successfully"));
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+         writeAuditLog(AUDIT_OBJECTS, false, map->getId(), _T("Access denied on auto-connecting network map nodes"));
       }
    }
    else

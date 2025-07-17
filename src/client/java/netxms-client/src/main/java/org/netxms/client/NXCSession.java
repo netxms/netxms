@@ -15091,4 +15091,20 @@ public class NXCSession
          unitNames[i] = response.getFieldAsString(base++);
       return new InterfaceTrafficDcis(dciList, unitNames);
    }
+
+   /**
+    * Auto link nodes based on L2 topology information
+    * 
+    * @param nodeList list of nodes to link
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void autoLinkNetworkMapNodes(long mapId, Collection<Long> nodes) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_LINK_NETWORK_MAP_NODES);
+      msg.setFieldUInt32(NXCPCodes.VID_MAP_ID, mapId);
+      msg.setField(NXCPCodes.VID_NODE_LIST, nodes);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
 }
