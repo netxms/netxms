@@ -398,9 +398,22 @@ void Array::sort(int (*cb)(void *, const void *, const void *), void *context)
 /**
  * Find element (assuming array is already sorted)
  */
-void *Array::find(const void *key, int (*cb)(const void *, const void *)) const
+void *Array::bsearch(const void *key, int (*cb)(const void *, const void *)) const
 {
-   return bsearch(key, m_data, m_size, m_elementSize, cb);
+   return ::bsearch(key, m_data, m_size, m_elementSize, cb);
+}
+
+/**
+ * Find element by enumeration
+ */
+void *Array::find(std::function<bool (const void*)> comparator) const
+{
+   for(int i = 0; i < m_size; i++)
+   {
+      if (comparator(m_storePointers ? m_data[i] : ADDR(i)))
+         return m_storePointers ? m_data[i] : ADDR(i);
+   }
+   return nullptr;
 }
 
 /**

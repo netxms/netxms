@@ -59,7 +59,7 @@ ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareCom
    for(i = 0; i < newSet->size(); i++)
    {
       nc = newSet->get(i);
-      oc = oldSet->find(nc, HardwareComponentComparator);
+      oc = oldSet->bsearch(nc, HardwareComponentComparator);
       if (oc == nullptr)
       {
          nc->setChangeCode(CHANGE_ADDED);
@@ -70,7 +70,7 @@ ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareCom
    for(i = 0; i < oldSet->size(); i++)
    {
       oc = oldSet->get(i);
-      nc = newSet->find(oc, HardwareComponentComparator);
+      nc = newSet->bsearch(oc, HardwareComponentComparator);
       if (nc == nullptr)
       {
          oc->setChangeCode(CHANGE_REMOVED);

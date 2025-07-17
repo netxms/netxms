@@ -903,9 +903,12 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg, ClientSes
             loc.objectId = static_cast<NetworkMapObject*>(oldElement)->getObjectId();
             loc.posX = oldElement->getPosX();
             loc.posY = oldElement->getPosY();
-            m_deletedObjects.insert(0, &loc);
-            if (m_deletedObjects.size() > MAX_DELETED_OBJECT_COUNT)
-               m_deletedObjects.remove(MAX_DELETED_OBJECT_COUNT);
+            if (m_deletedObjects.find([loc] (const NetworkMapObjectLocation *l) { return l->objectId == loc.objectId; }) == nullptr)
+            {
+               m_deletedObjects.insert(0, &loc);
+               if (m_deletedObjects.size() > MAX_DELETED_OBJECT_COUNT)
+                  m_deletedObjects.remove(MAX_DELETED_OBJECT_COUNT);
+            }
          }
       }
 		m_mapContent.m_elements.clear();
@@ -1378,10 +1381,13 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
          loc.posY = netMapObject->getPosY();
 
          lockProperties();
-         m_deletedObjects.insert(0, &loc);
-         if (m_deletedObjects.size() > MAX_DELETED_OBJECT_COUNT)
-            m_deletedObjects.remove(MAX_DELETED_OBJECT_COUNT);
-         m_objectSet.remove(netMapObject->getObjectId());
+         if (m_deletedObjects.find([loc] (const NetworkMapObjectLocation *l) { return l->objectId == loc.objectId; }) == nullptr)
+         {
+            m_deletedObjects.insert(0, &loc);
+            if (m_deletedObjects.size() > MAX_DELETED_OBJECT_COUNT)
+               m_deletedObjects.remove(MAX_DELETED_OBJECT_COUNT);
+            m_objectSet.remove(netMapObject->getObjectId());
+         }
          unlockProperties();
 
          content.m_elements.remove(i);

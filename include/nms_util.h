@@ -1973,7 +1973,8 @@ public:
    void *first() const { return get(0); }
    void *last() const { return get(m_size - 1); }
    int indexOf(void *element) const;
-   void *find(const void *key, int (*cb)(const void *, const void *)) const;
+   void *bsearch(const void *key, int (*cb)(const void *, const void *)) const;
+   void *find(std::function<bool (const void*)> comparator) const;
 
 	int add(void *element);
 	void addAll(const Array& src);
@@ -2060,9 +2061,9 @@ public:
    using Array::sort;
    void sort(int (*cb)(const T **, const T **)) { Array::sort((int (*)(const void *, const void *))cb); }
    template<typename C> void sort(int (*cb)(C *, const T **, const T **), C *context) { Array::sort((int (*)(void *, const void *, const void *))cb, (void *)context); }
-   T *find(const T *key, int (*cb)(const T **, const T **)) const
+   T *bsearch(const T *key, int (*cb)(const T **, const T **)) const
    {
-      T **result = (T **)Array::find(&key, (int (*)(const void *, const void *))cb);
+      T **result = (T **)Array::bsearch(&key, (int (*)(const void *, const void *))cb);
       return (result != nullptr) ? *result : nullptr;
    }
 
@@ -2244,6 +2245,12 @@ public:
 	void unlink(int index) { Array::unlink(index); }
    void unlink(const T *element) { Array::unlink((void *)element); }
    void unlink(const T &element) { Array::unlink((void *)&element); }
+   T *find(std::function<bool (const T*)> comparator) const
+   {
+      return const_cast<T*>(static_cast<const T*>(Array::find(
+         [comparator](const void* element) { return comparator(static_cast<const T*>(element)); }
+      )));
+   }
 
    using Array::sort;
    void sort(int (*cb)(const T*, const T*)) { Array::sort((int (*)(const void*, const void*))cb); }

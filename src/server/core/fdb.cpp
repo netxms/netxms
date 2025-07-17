@@ -106,7 +106,7 @@ uint32_t ForwardingDatabase::findMacAddress(const MacAddress& macAddr, bool *isS
 {
    ForwardingDatabaseEntry key;
 	key.macAddr = macAddr;
-	ForwardingDatabaseEntry *entry = static_cast<ForwardingDatabaseEntry*>(m_fdb.find(&key, EntryComparator));
+	ForwardingDatabaseEntry *entry = static_cast<ForwardingDatabaseEntry*>(m_fdb.bsearch(&key, EntryComparator));
    if ((entry != nullptr) && (isStatic != nullptr))
       *isStatic = (entry->type == 5);
 	return (entry != nullptr) ? entry->ifIndex : 0;
