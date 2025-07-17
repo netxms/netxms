@@ -28,6 +28,7 @@
 #include <asset_management.h>
 #include <ncdrv.h>
 #include <device-backup.h>
+#include <netxms_maps.h>
 
 #ifndef _WIN32
 #include <sys/resource.h>
@@ -11248,6 +11249,34 @@ shared_ptr<NetworkMapObjectList> Node::buildL2Topology(int radius, bool includeE
    int nDepth = (radius <= 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
    BuildL2Topology(*result, this, filterProvider, nDepth, includeEndNodes, useL1Topology);
    return result;
+}
+
+/**
+ * Get L2 connections for given second node ID
+ * Will return empty list if no connections found
+ */
+void Node::getL2Connections(uint32_t secondNodeId, ObjectArray<ObjLink> *links)
+{
+   readLockChildList();
+   for(int i = 0; i < getChildList().size(); i++)
+   {
+      NetObj *object = getChildList().get(i);
+      if (object->getObjectClass() == OBJECT_INTERFACE)
+      {
+         Interface *iface = static_cast<Interface*>(object);
+         if (iface->getPeerNodeId() == secondNodeId)
+         {
+            ObjLink *link = new ObjLink();
+            link->object1 = m_id;
+            link->iface1 = iface->getId();
+            link->object2 = secondNodeId;
+            link->iface2 = iface->getPeerInterfaceId();
+            link->type = LINK_TYPE_NORMAL;
+            links->add(link);
+         }
+      }
+   }
+   unlockChildList();
 }
 
 /**

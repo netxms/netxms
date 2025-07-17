@@ -3457,6 +3457,8 @@ template class NXCORE_TEMPLATE_EXPORTABLE StructArray<OSPFArea>;
 template class NXCORE_TEMPLATE_EXPORTABLE StructArray<OSPFNeighbor>;
 #endif
 
+class ObjLink;
+
 /**
  * Status of device configuration backup job
  */
@@ -4089,6 +4091,7 @@ public:
    shared_ptr<NetObj> findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, int *type);
    void addHostConnections(LinkLayerNeighbors *nbs);
    void addExistingConnections(LinkLayerNeighbors *nbs);
+   void getL2Connections(uint32_t secondNodeId, ObjectArray<ObjLink> *links);
 
    bool getIcmpStatistics(const TCHAR *target, uint32_t *last, uint32_t *min, uint32_t *max, uint32_t *avg, uint32_t *loss, uint32_t *jitter) const;
    DataCollectionError getIcmpStatistic(const wchar_t *param, IcmpStatFunction function, wchar_t *value) const;
@@ -4769,6 +4772,7 @@ protected:
    bool connectTopologySubgraphs(NetworkMapObjectList *graph, int mapType, const ObjectArray<IntegerArray<uint32_t>>& unconnectedSubgraphs);
    void updateObjects(const NetworkMapObjectList& objects);
    void updateLinks();
+   bool mergeLinks(NetworkMapContent *content, const ObjectArray<ObjLink>& links);
 
    void setFilter(const TCHAR *filter);
    void setLinkStylingScript(const TCHAR *script);
@@ -4823,6 +4827,7 @@ public:
    void setBackgroundColor(uint32_t color) { m_backgroundColor = color; }
 
    bool isAllowedOnMap(const shared_ptr<NetObj>& object);
+   void autoConnectNodes(const IntegerArray<uint32_t> &nodeList);
 };
 
 /**
