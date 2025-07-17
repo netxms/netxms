@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.snmp.views;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -216,7 +217,13 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 			}
 		});
 
-		details = new MibObjectDetails(mibViewSplitter, SWT.BORDER, true, mibBrowser);
+		details = new MibObjectDetails(mibViewSplitter, SWT.BORDER, true, mibBrowser, new Consumer<String>() {
+		   @Override
+         public void accept(String oid)
+         {
+            doWalk(oid);
+         }
+		});
 
 		// Create result area
 		resultArea = new Composite(splitter, SWT.BORDER);
@@ -336,7 +343,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 			@Override
 			public void run()
 			{
-				doWalk();
+				doWalk(null);
 			}
 		};
       actionWalk.setEnabled(getObject() != null);
@@ -601,14 +608,19 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 	/**
 	 * Do SNMP walk
 	 */
-	private void doWalk()
+	public void doWalk(String oid)
 	{
       if (walkActive || (getObject() == null))
 			return;
 
-		final MibObject mibObject = mibBrowser.getSelection();
-		if (mibObject == null)
-			return;
+      
+      if (oid == null)
+      {
+         final MibObject mibObject = mibBrowser.getSelection();
+         if (mibObject == null)
+            return;
+         oid = mibObject.getObjectId().toString();
+      }
 
 		walkActive = true;
 		actionWalk.setEnabled(false);
@@ -616,13 +628,14 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
       viewer.refresh();
 
       final long nodeId = getObjectId();
+      final String queryOid = oid;
       walkObjectId = nodeId;
 
       Job job = new Job(i18n.tr("Walking MIB tree"), this) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
-            session.snmpWalk(nodeId, mibObject.getObjectId().toString(), MibExplorer.this);
+            session.snmpWalk(nodeId, queryOid, MibExplorer.this);
 			}
 
 			@Override
