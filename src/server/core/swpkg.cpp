@@ -50,7 +50,7 @@ ObjectArray<SoftwarePackage> *CalculatePackageChanges(ObjectArray<SoftwarePackag
    for(int i = 0; i < oldSet->size(); i++)
    {
       SoftwarePackage *p = oldSet->get(i);
-      SoftwarePackage *np = newSet->find(p, PackageNameComparator);
+      SoftwarePackage *np = newSet->bsearch(p, PackageNameComparator);
       if (np == nullptr)
       {
          p->setChangeCode(CHANGE_REMOVED);
@@ -61,7 +61,7 @@ ObjectArray<SoftwarePackage> *CalculatePackageChanges(ObjectArray<SoftwarePackag
       if (!_tcscmp(p->getVersion(), np->getVersion()))
          continue;
 
-      if (newSet->find(p, PackageNameVersionComparator) != nullptr)
+      if (newSet->bsearch(p, PackageNameVersionComparator) != nullptr)
          continue;
 
       // multiple versions of same package could be installed
@@ -93,7 +93,7 @@ ObjectArray<SoftwarePackage> *CalculatePackageChanges(ObjectArray<SoftwarePackag
       SoftwarePackage *p = newSet->get(i);
       if (p->getChangeCode() == CHANGE_UPDATED)
          continue;   // already marked as upgrade for some existing package
-      if (oldSet->find(p, PackageNameVersionComparator) != NULL)
+      if (oldSet->bsearch(p, PackageNameVersionComparator) != NULL)
          continue;
 
       p->setChangeCode(CHANGE_ADDED);
