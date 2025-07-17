@@ -53,6 +53,7 @@ int H_ObjectDetails(Context *context);
 int H_ObjectSubTree(Context *context);
 int H_ObjectExecuteAgentCommand(Context *context);
 int H_ObjectExecuteScript(Context *context);
+int H_ObjectExpandText(Context *context);
 int H_ObjectQuery(Context *context);
 int H_ObjectSetMaintenance(Context *context);
 int H_ObjectSetManaged(Context *context);
@@ -252,6 +253,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/execute-script")
       .POST(H_ObjectExecuteScript)
+      .build();
+   RouteBuilder("v1/objects/:object-id/expand-text")
+      .POST(H_ObjectExpandText)
       .build();
    RouteBuilder("v1/objects/:object-id/set-maintenance")
       .POST(H_ObjectSetMaintenance)

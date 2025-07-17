@@ -684,6 +684,58 @@ paths:
           description: Object or DCI with given ID does not exist
       security:
         - BearerAuth: []
+  /objects/{object-id}/expand-text:
+    post:
+      summary: Expand text macros
+      description: Expand text containing NetXMS macros in the context of a given object.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: Object ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  description: Text containing macros to expand
+                alarmId:
+                  type: integer
+                  description: Optional alarm ID for alarm-related macro expansion
+                inputFields:
+                  type: object
+                  description: Optional key-value pairs for custom macro substitution
+                  additionalProperties:
+                    type: string
+      responses:
+        '200':
+          description: Text expanded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  expandedText:
+                    type: string
+                    description: Text with all macros expanded
+        '400':
+          description: Invalid request or missing text parameter
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object or alarm
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
 
   /objects/{object-id}/set-maintenance:
     post:
