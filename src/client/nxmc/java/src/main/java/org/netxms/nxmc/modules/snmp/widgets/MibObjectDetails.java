@@ -21,8 +21,11 @@ package org.netxms.nxmc.modules.snmp.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.snmp.MibObject;
@@ -30,6 +33,7 @@ import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.snmp.SnmpConstants;
 import org.netxms.nxmc.modules.snmp.shared.MibCache;
+import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -59,8 +63,9 @@ public class MibObjectDetails extends Composite
 	 * @param style standard SWT styles for widget
 	 * @param showOID if true, "Object ID" input field will be shown
 	 * @param mibTree associated MIB tree
+	 * @param mibExplorer 
 	 */
-	public MibObjectDetails(Composite parent, int style, boolean showOID, MibBrowser mibTree)
+	public MibObjectDetails(Composite parent, int style, boolean showOID, MibExplorer mibExplorer, MibBrowser mibTree)
 	{
 		super(parent, style);
 
@@ -71,7 +76,21 @@ public class MibObjectDetails extends Composite
 
 		if (showOID)
 		{
-         oid = WidgetHelper.createLabeledText(this, SWT.BORDER, 500, i18n.tr("Object identifier (OID)"), "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+	      /* MIB object information: status, type, etc. */
+	      Composite oidGroup = new Composite(this, SWT.NONE);
+	      layout = new GridLayout();
+	      layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+	      layout.marginHeight = 0;
+	      layout.marginWidth = 0;
+	      layout.numColumns = 2;
+	      layout.makeColumnsEqualWidth = false;
+	      oidGroup.setLayout(layout);
+	      GridData gd = new GridData();
+	      gd.horizontalAlignment = SWT.FILL;
+	      gd.grabExcessHorizontalSpace = true;
+	      oidGroup.setLayoutData(gd);
+	      
+         oid = WidgetHelper.createLabeledText(oidGroup, SWT.BORDER, 500, i18n.tr("Object identifier (OID)"), "", WidgetHelper.DEFAULT_LAYOUT_DATA);
 			oid.addModifyListener(new ModifyListener() {
 				@Override
 				public void modifyText(ModifyEvent e)
@@ -80,8 +99,35 @@ public class MibObjectDetails extends Composite
                   onManualOidChange();
 				}
 			});
+			
+         Button button = new Button(oidGroup, SWT.PUSH);
+         button.setText(i18n.tr("&Walk..."));
+         gd = new GridData();
+         gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
+         gd.verticalAlignment = SWT.BOTTOM;
+         button.setLayoutData(gd);
+         button.addSelectionListener(new SelectionListener() {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               mibExplorer.doWalk(oid.getText());
+            }
+            
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e)
+            {
+               widgetSelected(e);
+            }
+         });
 
-         oidText = WidgetHelper.createLabeledText(this, SWT.BORDER, 500, i18n.tr("OID as text"), "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+
+         gd = new GridData();
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessVerticalSpace = true;
+         gd.verticalAlignment = SWT.FILL;
+         gd.horizontalSpan = 2;
+         oidText = WidgetHelper.createLabeledText(oidGroup, SWT.BORDER, 500, i18n.tr("OID as text"), "", gd);
 			oidText.setEditable(false);
 		}
 		else

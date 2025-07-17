@@ -173,7 +173,7 @@ public class MibSelectionDialog extends Dialog
 			});
 		}
 		
-		details = new MibObjectDetails(dialogArea, SWT.NONE, false, mibTree);
+		details = new MibObjectDetails(dialogArea, SWT.NONE, false, null, mibTree);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
