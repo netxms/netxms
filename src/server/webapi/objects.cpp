@@ -564,6 +564,62 @@ int H_ObjectExecuteScript(Context *context)
 }
 
 /**
+ * Handler for /v1/objects/:object-id/expand-text
+ */
+int H_ObjectExpandText(Context *context)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(_T("object-id"));
+   if (objectId == 0)
+      return 400;
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+      return 404;
+
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+      return 403;
+
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_ObjectExpandText: empty request"));
+      return 400;
+   }
+
+   TCHAR *text = json_object_get_string_t(request, "text", nullptr);
+   if (text == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_ObjectExpandText: missing text parameter"));
+      context->setErrorResponse("Text parameter is missing");
+      return 400;
+   }
+
+   uint32_t alarmId = json_object_get_uint32(request, "alarmId", 0);
+   Alarm *alarm = (alarmId != 0) ? FindAlarmById(alarmId) : nullptr;
+   if ((alarm != nullptr) && (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ_ALARMS) || !alarm->checkCategoryAccess(context->getUserId(), context->getSystemAccessRights())))
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_ObjectExpandText: alarm ID is provided but user has no access to that alarm"));
+      context->setErrorResponse("Alarm ID is provided but user has no access to that alarm");
+      delete alarm;
+      MemFree(text);
+      return 403;
+   }
+
+   StringMap inputFields(json_object_get(request, "inputFields"));
+
+   StringBuffer expandedText = object->expandText(text, alarm, nullptr, shared_ptr<DCObjectInfo>(), context->getLoginName(), nullptr, nullptr, &inputFields, nullptr);
+
+   json_t *response = json_object();
+   json_object_set_new(response, "expandedText", json_string_t(expandedText));
+   context->setResponseData(response);
+   json_decref(response);
+
+   delete alarm;
+   MemFree(text);
+   return 200;
+}
+
+/**
  * Handler for /v1/objects/:object-id/set-maintenance
  */
 int H_ObjectSetMaintenance(Context *context)
