@@ -15095,7 +15095,8 @@ public class NXCSession
    /**
     * Auto link nodes based on L2 topology information
     * 
-    * @param nodeList list of nodes to link
+    * @param mapId network map id
+    * @param nodes list of nodes to link
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
