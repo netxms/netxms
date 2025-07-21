@@ -387,7 +387,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       if (mapObjectSyncer == null)
          mapObjectSyncer = MapObjectSyncer.getInstance();
 
-      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+      viewer.addPostSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
@@ -718,7 +718,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	   if (!readOnly)
 	   {
          int size = viewer.getStructuredSelection().size();
-   		if (size == 2)
+   		if (size >= 2)
    			manager.add(actionLinkObjects);
    		if (size >= 2 && getMapObject().getMapType() == MapType.CUSTOM)
    			manager.add(actionAutoLinkNodes);
