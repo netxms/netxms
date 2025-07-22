@@ -40,7 +40,7 @@ struct Secret
 
    Secret(const TCHAR *value, time_t ttl)
    {
-      this->value = _tcsdup(value);
+      this->value = MemCopyString(value);
       if (ttl > 0)
          this->validTo = time(nullptr) + ttl;
       else
@@ -103,7 +103,6 @@ static volatile DebugTagManager s_tagTree;
 static Mutex s_mutexDebugTagTreeWrite(MutexType::FAST);
 static NxLogRotationHook s_rotationHook = nullptr;
 static ObjectArray<Secret> s_secrets;
-static Mutex s_mutexSecrets(MutexType::FAST);
 
 /**
  * Swaps tag tree pointers and waits till reader count drops to 0
@@ -143,7 +142,6 @@ static inline void FormatString(msg_buffer_t& buffer, const TCHAR *format, va_li
  */
 static void FilterSecrets(msg_buffer_t& buffer)
 {
-   s_mutexSecrets.lock();
    time_t now = time(nullptr);
    for(int i = s_secrets.size() - 1; i >= 0; i--)
    {
@@ -164,7 +162,6 @@ static void FilterSecrets(msg_buffer_t& buffer)
          p += len;
       }
    }
-   s_mutexSecrets.unlock();
 }
 
 /**
@@ -218,9 +215,9 @@ void LIBNETXMS_EXPORTABLE nxlog_add_secret(const TCHAR *value, time_t ttl)
 {
    if (_tcslen(value) > 0)
    {
-      s_mutexSecrets.lock();
+      s_mutexLogAccess.lock();
       s_secrets.add(new Secret(value, ttl));
-      s_mutexSecrets.unlock();
+      s_mutexLogAccess.unlock();
    }
 }
 
@@ -231,7 +228,7 @@ void LIBNETXMS_EXPORTABLE nxlog_remove_secret(const TCHAR *value)
 {
    if (_tcslen(value) > 0)
    {
-      s_mutexSecrets.lock();
+      s_mutexLogAccess.lock();
       for(int i = s_secrets.size() - 1; i >= 0; i--)
       {
          Secret *s = s_secrets.get(i);
@@ -240,7 +237,7 @@ void LIBNETXMS_EXPORTABLE nxlog_remove_secret(const TCHAR *value)
             break;
          }
       }
-      s_mutexSecrets.unlock();
+      s_mutexLogAccess.unlock();
    }
 }
 
