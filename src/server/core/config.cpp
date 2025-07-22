@@ -24,6 +24,7 @@
 #include <nxconfig.h>
 #include <nxnet.h>
 #include <nms_users.h>
+#include <nxvault.h>
 
 /**
  * Externals
@@ -95,6 +96,35 @@ static wchar_t s_internalCACertificateKeyPath[MAX_PATH] = L"";
 static char s_internalCACertificatePassword[MAX_PASSWORD] = "";
 
 /**
+ * Database password command
+ */
+static wchar_t s_dbPasswordCommand[MAX_PATH] = L"";
+
+/**
+ * Vault configuration
+ */
+static wchar_t s_vaultURL[MAX_PATH] = L"";
+static wchar_t s_vaultAppRoleId[256] = L"";
+static wchar_t s_vaultAppRoleSecretId[256] = L"";
+static wchar_t s_vaultDBCredentialPath[MAX_PATH] = L"";
+static uint32_t s_vaultTimeout = 5000;
+static bool s_vaultTLSVerify = true;
+
+/**
+ * Vault configuration template
+ */
+static NX_CFG_TEMPLATE m_vaultCfgTemplate[] =
+{
+   { L"AppRoleId", CT_STRING, 0, 0, 256, 0, s_vaultAppRoleId, nullptr },
+   { L"AppRoleSecretId", CT_STRING, 0, 0, 256, 0, s_vaultAppRoleSecretId, nullptr },
+   { L"DBCredentialPath", CT_STRING, 0, 0, MAX_PATH, 0, s_vaultDBCredentialPath, nullptr },
+   { L"TLSVerify", CT_BOOLEAN, 0, 0, 0, 0, &s_vaultTLSVerify, nullptr },
+   { L"Timeout", CT_LONG, 0, 0, 0, 0, &s_vaultTimeout, nullptr },
+   { L"URL", CT_STRING, 0, 0, MAX_PATH, 0, s_vaultURL, nullptr },
+   { L"", CT_END_OF_LIST, 0, 0, 0, 0, nullptr, nullptr }
+};
+
+/**
  * Config file template
  */
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
@@ -113,6 +143,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { L"DBName", CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbName, nullptr },
    { L"DBPassword", CT_STRING, 0, 0, MAX_PASSWORD, 0, g_szDbPassword, nullptr },
    { L"DBEncryptedPassword", CT_STRING, 0, 0, MAX_PASSWORD, 0, g_szDbPassword, nullptr },
+   { L"DBPasswordCommand", CT_STRING, 0, 0, MAX_PATH, 0, s_dbPasswordCommand, nullptr },
    { L"DBSchema", CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbSchema, nullptr },
    { L"DBServer", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer, nullptr },
    { L"DBSessionSetupSQLScript", CT_STRING, 0, 0, MAX_PATH, 0, g_dbSessionSetupSqlScriptPath, nullptr },
@@ -200,6 +231,83 @@ void NXCORE_EXPORTABLE FindConfigFile()
 stop_search:
    ;
 #endif
+}
+
+/**
+ * Retrieve database credentials from Vault
+ */
+void NXCORE_EXPORTABLE RetrieveDatabaseCredentialsFromVault()
+{
+   // Parse vault configuration section
+   g_serverConfig.parseTemplate(L"VAULT", m_vaultCfgTemplate);
+   
+   VaultDatabaseCredentialConfig config;
+   config.url = s_vaultURL;
+   config.appRoleId = s_vaultAppRoleId;
+   config.appRoleSecretId = s_vaultAppRoleSecretId;
+   config.dbCredentialPath = s_vaultDBCredentialPath;
+   config.timeout = s_vaultTimeout;
+   config.tlsVerify = s_vaultTLSVerify;
+   
+   ::RetrieveDatabaseCredentialsFromVault(&config, g_szDbLogin, MAX_DB_LOGIN, 
+         g_szDbPassword, MAX_PASSWORD, _T("config"), false);
+}
+
+/**
+ * Execute database password command if configured
+ */
+void NXCORE_EXPORTABLE ExecuteDatabasePasswordCommand()
+{
+   if (s_dbPasswordCommand[0] != 0)
+   {
+      nxlog_write_tag(NXLOG_INFO, L"config", L"Executing database password command: %s", s_dbPasswordCommand);
+      
+      OutputCapturingProcessExecutor executor(s_dbPasswordCommand, true);
+      
+      if (executor.execute())
+      {
+         if (executor.waitForCompletion(30000))  // 30 second timeout
+         {
+            if (executor.getExitCode() == 0)
+            {
+               const char *output = executor.getOutput();
+               if (output != nullptr && *output != 0)
+               {
+                  // Trim trailing whitespace (including newlines)
+                  size_t len = strlen(output);
+                  while (len > 0 && (output[len-1] == '\n' || output[len-1] == '\r' || 
+                         output[len-1] == ' ' || output[len-1] == '\t'))
+                  {
+                     len--;
+                  }
+                  
+                  // Convert to wide char and store as password
+                  MultiByteToWideCharSysLocale(output, g_szDbPassword, len);
+                  g_szDbPassword[len] = 0;
+                  
+                  nxlog_write_tag(NXLOG_INFO, L"config", L"Database password successfully retrieved from command");
+               }
+               else
+               {
+                  nxlog_write_tag(NXLOG_WARNING, L"config", L"Database password command returned empty output");
+               }
+            }
+            else
+            {
+               nxlog_write_tag(NXLOG_ERROR, L"config", L"Database password command failed with exit code %d", executor.getExitCode());
+            }
+         }
+         else
+         {
+            executor.stop();
+            nxlog_write_tag(NXLOG_ERROR, L"config", L"Database password command timed out");
+         }
+      }
+      else
+      {
+         nxlog_write_tag(NXLOG_ERROR, L"config", L"Failed to execute database password command: %s", s_dbPasswordCommand);
+      }
+   }
 }
 
 /**
@@ -295,6 +403,8 @@ bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel)
 	// Decrypt password
    DecryptPasswordW(g_szDbLogin, g_szDbPassword, g_szDbPassword, MAX_PASSWORD);
    DecryptPasswordA("netxms", g_auditLogKey, g_auditLogKey, 128);
+
+
 
    // Parse peer node information
    if (s_peerNode[0] != 0)
