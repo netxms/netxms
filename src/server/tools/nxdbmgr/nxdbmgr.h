@@ -30,6 +30,8 @@
 #include <nxdbapi.h>
 #include <netxmsdb.h>
 #include <nxdbmgr_tools.h>
+#include <nxproc.h>
+#include <nxvault.h>
 
 /**
  * Column identifier (table.column)
