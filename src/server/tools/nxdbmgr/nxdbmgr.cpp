@@ -53,7 +53,17 @@ static TCHAR s_dbLogin[MAX_DB_LOGIN] = _T("netxms");
 static TCHAR s_dbPassword[MAX_PASSWORD] = _T("");
 static TCHAR s_dbName[MAX_DB_NAME] = _T("netxms_db");
 static TCHAR s_dbSchema[MAX_DB_NAME] = _T("");
+static TCHAR s_dbPasswordCommand[MAX_PATH] = _T("");
 static TCHAR *s_moduleLoadList = nullptr;
+
+// Vault configuration
+static TCHAR s_vaultURL[MAX_PATH] = _T("");
+static TCHAR s_vaultAppRoleId[256] = _T("");
+static TCHAR s_vaultAppRoleSecretId[256] = _T("");
+static TCHAR s_vaultDBCredentialPath[MAX_PATH] = _T("");
+static uint32_t s_vaultTimeout = 5000;
+static bool s_vaultTLSVerify = true;
+
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("CodePage"), CT_MB_STRING, 0, 0, MAX_PATH, 0, s_codePage },
@@ -62,6 +72,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, s_dbLogin },
    { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbName },
    { _T("DBPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, s_dbPassword },
+   { _T("DBPasswordCommand"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbPasswordCommand },
    { _T("DBSchema"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbSchema },
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbServer },
    { _T("Module"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_moduleLoadList, nullptr },
@@ -73,6 +84,20 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 static DB_DRIVER s_driver = nullptr;
 
 /**
+ * Vault configuration template
+ */
+static NX_CFG_TEMPLATE m_vaultCfgTemplate[] =
+{
+   { _T("AppRoleId"), CT_STRING, 0, 0, 256, 0, s_vaultAppRoleId, nullptr },
+   { _T("AppRoleSecretId"), CT_STRING, 0, 0, 256, 0, s_vaultAppRoleSecretId, nullptr },
+   { _T("DBCredentialPath"), CT_STRING, 0, 0, MAX_PATH, 0, s_vaultDBCredentialPath, nullptr },
+   { _T("TLSVerify"), CT_BOOLEAN, 0, 0, 0, 0, &s_vaultTLSVerify, nullptr },
+   { _T("Timeout"), CT_LONG, 0, 0, 0, 0, &s_vaultTimeout, nullptr },
+   { _T("URL"), CT_STRING, 0, 0, MAX_PATH, 0, s_vaultURL, nullptr },
+   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr, nullptr }
+};
+
+/**
  * Query tracer callback
  */
 static void QueryTracerCallback(const TCHAR *query, bool failure, const TCHAR *errorText)
@@ -81,6 +106,82 @@ static void QueryTracerCallback(const TCHAR *query, bool failure, const TCHAR *e
       WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, query);
    else if (IsQueryTraceEnabled())
       ShowQuery(query);
+}
+
+/**
+ * Retrieve database credentials from Vault
+ */
+static void RetrieveDatabaseCredentialsFromVault(Config *config)
+{
+   // Parse vault configuration section
+   config->parseTemplate(_T("VAULT"), m_vaultCfgTemplate);
+   
+   VaultDatabaseCredentialConfig vaultConfig;
+   vaultConfig.url = s_vaultURL;
+   vaultConfig.appRoleId = s_vaultAppRoleId;
+   vaultConfig.appRoleSecretId = s_vaultAppRoleSecretId;
+   vaultConfig.dbCredentialPath = s_vaultDBCredentialPath;
+   vaultConfig.timeout = s_vaultTimeout;
+   vaultConfig.tlsVerify = s_vaultTLSVerify;
+   
+   ::RetrieveDatabaseCredentialsFromVault(&vaultConfig, s_dbLogin, MAX_DB_LOGIN, 
+         s_dbPassword, MAX_PASSWORD, nullptr, true);
+}
+
+/**
+ * Execute database password command
+ */
+static void ExecuteDatabasePasswordCommand()
+{
+   if (s_dbPasswordCommand[0] == 0)
+      return;
+
+   _tprintf(_T("Executing database password command: %s\n"), s_dbPasswordCommand);
+   
+   OutputCapturingProcessExecutor executor(s_dbPasswordCommand, true);
+   
+   if (executor.execute())
+   {
+      if (executor.waitForCompletion(30000))  // 30 second timeout
+      {
+         if (executor.getExitCode() == 0)
+         {
+            const char *output = executor.getOutput();
+            if (output != nullptr && *output != 0)
+            {
+               // Trim trailing whitespace (including newlines)
+               size_t len = strlen(output);
+               while (len > 0 && (output[len-1] == '\n' || output[len-1] == '\r' || 
+                      output[len-1] == ' ' || output[len-1] == '\t'))
+               {
+                  len--;
+               }
+               
+               // Convert to wide char and store as password
+               MultiByteToWideCharSysLocale(output, s_dbPassword, len);
+               s_dbPassword[len] = 0;
+               
+               _tprintf(_T("Database password successfully retrieved from command\n"));
+            }
+            else
+            {
+               _tprintf(_T("WARNING: Database password command returned empty output\n"));
+            }
+         }
+         else
+         {
+            _tprintf(_T("ERROR: Database password command failed with exit code %d\n"), executor.getExitCode());
+         }
+      }
+      else
+      {
+         _tprintf(_T("ERROR: Database password command timed out\n"));
+      }
+   }
+   else
+   {
+      _tprintf(_T("ERROR: Failed to execute database password command\n"));
+   }
 }
 
 /**
@@ -653,7 +754,6 @@ stop_search:
       PAUSE;
       return 2;
    }
-	delete config;
 
 	// Read and decrypt password
 	if (!_tcscmp(s_dbPassword, _T("?")))
@@ -666,6 +766,14 @@ stop_search:
 	   }
    }
    DecryptPassword(s_dbLogin, s_dbPassword, s_dbPassword, MAX_PASSWORD);
+
+   // Execute DBPasswordCommand if specified
+   ExecuteDatabasePasswordCommand();
+
+   // Retrieve database credentials from Vault if configured
+   RetrieveDatabaseCredentialsFromVault(config);
+
+	delete config;
 
 #ifndef _WIN32
 	SetDefaultCodepage(s_codePage);
