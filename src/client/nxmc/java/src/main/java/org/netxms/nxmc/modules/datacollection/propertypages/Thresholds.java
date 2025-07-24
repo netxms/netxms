@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.datacollection.propertypages;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -41,6 +42,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.Threshold;
+import org.netxms.nxmc.base.widgets.DateTimeSelector;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -67,6 +69,9 @@ public class Thresholds extends AbstractDCIPropertyPage
 	private LabeledText instance;
    private Button checkDetectAnomalies;
 	private Button checkAllThresholds;
+   private Button disableProcessing;
+   private Button disableUntil;
+   private DateTimeSelector disableUntilTimeSelector;
    private SortableTableViewer thresholdList;
 	private Button addButton;
 	private Button modifyButton;
@@ -122,6 +127,35 @@ public class Thresholds extends AbstractDCIPropertyPage
 		checkAllThresholds = new Button(dialogArea, SWT.CHECK);
       checkAllThresholds.setText(i18n.tr("Process all thresholds"));
 		checkAllThresholds.setSelection(dci.isProcessAllThresholds());
+
+      disableProcessing = new Button(dialogArea, SWT.CHECK);
+      disableProcessing.setText(i18n.tr("Disable threshold processing"));
+      disableProcessing.setSelection(dci.getThresholdDisableEndTime() != 0);
+      disableProcessing.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            disableUntil.setEnabled(disableProcessing.getSelection());
+            disableUntilTimeSelector.setEnabled(disableProcessing.getSelection() && disableUntil.getSelection());
+         }
+      });
+
+      disableUntil = new Button(dialogArea, SWT.CHECK);
+      disableUntil.setText(i18n.tr("Re-enable threshold processing at given time"));
+      disableUntil.setSelection(dci.getThresholdDisableEndTime() > 0);
+      disableUntil.setEnabled(disableProcessing.getSelection());
+      disableUntil.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            disableUntilTimeSelector.setEnabled(disableProcessing.getSelection() && disableUntil.getSelection());
+         }
+      });
+
+      disableUntilTimeSelector = new DateTimeSelector(dialogArea, SWT.NONE);
+      disableUntilTimeSelector.setEnabled(disableProcessing.getSelection() && disableUntil.getSelection());
+      if (dci.getThresholdDisableEndTime() > 0)
+         disableUntilTimeSelector.setValue(new Date(dci.getThresholdDisableEndTime() * 1000L));
 
 		Composite thresholdArea = new Composite(dialogArea, SWT.NONE);
 		gd = new GridData();
@@ -336,7 +370,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 	@SuppressWarnings("unchecked")
    private void duplicateThreshold()
 	{
-      final IStructuredSelection selection = (IStructuredSelection)thresholdList.getSelection();
+      final IStructuredSelection selection = thresholdList.getStructuredSelection();
       if (selection.size() > 0)
       {
          List<Threshold> list = selection.toList();
@@ -353,7 +387,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 	 */
 	private void moveUp()
 	{
-		final IStructuredSelection selection = (IStructuredSelection)thresholdList.getSelection();
+      final IStructuredSelection selection = thresholdList.getStructuredSelection();
 		if (selection.size() == 1)
 		{
 			final Threshold threshold = (Threshold)selection.getFirstElement();
@@ -373,7 +407,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 	 */
 	private void moveDown()
 	{
-		final IStructuredSelection selection = (IStructuredSelection)thresholdList.getSelection();
+      final IStructuredSelection selection = thresholdList.getStructuredSelection();
 		if (selection.size() == 1)
 		{
 			final Threshold threshold = (Threshold)selection.getFirstElement();
@@ -400,7 +434,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 
 		column = new TableColumn(table, SWT.LEFT);
       column.setText(i18n.tr("Activation event"));
-      
+
       column = new TableColumn(table, SWT.LEFT);
       column.setText(i18n.tr("Deactivation event"));
 
@@ -423,6 +457,25 @@ public class Thresholds extends AbstractDCIPropertyPage
 		dci.getThresholds().clear();
 		dci.getThresholds().addAll(thresholds);
       dci.setAllThresholdsRearmEvent(rearmEventSelector.getEventCode());
+
+      long disableEndTime;
+      if (disableProcessing.getSelection())
+      {
+         if (disableUntil.getSelection())
+         {
+            disableEndTime = disableUntilTimeSelector.getValue().getTime() / 1000;
+         }
+         else
+         {
+            disableEndTime = -1; // permanently disabled
+         }
+      }
+      else
+      {
+         disableEndTime = 0; // enabled
+      }
+      dci.setThresholdDisableEndTime(disableEndTime);
+
 		editor.modify();
 		return true;
 	}

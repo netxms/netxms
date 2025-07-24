@@ -80,7 +80,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy, bool copyThresholds) : DCObje
  *    instd_method,instd_data,instd_filter,samples,comments,guid,npe_name,
  *    instance_retention_time,grace_period_start,related_object,polling_schedule_type,
  *    retention_type,polling_interval_src,retention_time_src,snmp_version,state_flags,
- *    all_rearmed_event,transformed_datatype,user_tag
+ *    all_rearmed_event,transformed_datatype,user_tag,thresholds_disable_end_time
  */
 DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
@@ -133,6 +133,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
    m_allThresholdsRearmEvent = DBGetFieldUInt32(hResult, row, 38);
    m_transformedDataType = (BYTE)DBGetFieldLong(hResult, row, 39);
    m_userTag = DBGetFieldAsSharedString(hResult, row, 40);
+   m_thresholdDisableEndTime = DBGetFieldTime(hResult, row, 41);
 
    int effectivePollingInterval = getEffectivePollingInterval();
    m_startTime = (useStartupDelay && (effectivePollingInterval >= 10)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
@@ -316,7 +317,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
       L"instd_filter", L"samples", L"comments", L"guid", L"npe_name", L"instance_retention_time",
       L"grace_period_start", L"related_object", L"polling_interval_src", L"retention_time_src",
       L"polling_schedule_type", L"retention_type", L"snmp_version", L"state_flags", L"all_rearmed_event",
-      L"transformed_datatype", L"user_tag", nullptr
+      L"transformed_datatype", L"user_tag", L"thresholds_disable_end_time", nullptr
    };
 
 	DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"items", L"item_id", m_id, columns);
@@ -371,7 +372,8 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_allThresholdsRearmEvent);
    DBBind(hStmt, 40, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_transformedDataType));
    DBBind(hStmt, 41, DB_SQLTYPE_VARCHAR, m_userTag, DB_BIND_STATIC, MAX_DCI_TAG_LENGTH - 1);
-   DBBind(hStmt, 42, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 42, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_thresholdDisableEndTime));
+   DBBind(hStmt, 43, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -794,9 +796,11 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
          engine->update(owner->getId(), m_id, getStorageClass(), tmTimeStamp, pValue->getDouble());
    }
 
-   // Check thresholds and add value to cache
+   // Check thresholds
+   time_t now = time(nullptr);
    if (m_cacheLoaded && (tmTimeStamp >= m_prevValueTimeStamp) &&
-       ((g_offlineDataRelevanceTime <= 0) || (tmTimeStamp > (time(nullptr) - g_offlineDataRelevanceTime))))
+       ((m_thresholdDisableEndTime == 0) || (m_thresholdDisableEndTime > 0 && m_thresholdDisableEndTime < tmTimeStamp)) &&
+       ((g_offlineDataRelevanceTime <= 0) || (tmTimeStamp > (now - g_offlineDataRelevanceTime))))
    {
       if (hasScriptThresholds())
       {
@@ -823,6 +827,13 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
       else
       {
          checkThresholds(*pValue, nullptr);
+      }
+
+      if ((m_thresholdDisableEndTime > 0) && (m_thresholdDisableEndTime < now))
+      {
+         // Thresholds were disabled, reset disable end time
+         m_thresholdDisableEndTime = 0;
+         getOwner()->markAsModified(MODIFY_DATA_COLLECTION);
       }
    }
 
@@ -867,6 +878,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
       }
    }
 
+   // Update cache
    if ((m_cacheSize > 0) && (tmTimeStamp >= m_prevValueTimeStamp))
    {
       delete m_ppValueCache[m_cacheSize - 1];
@@ -1760,6 +1772,7 @@ void DCItem::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId, cons
    msg->setField(baseId++, m_comments);
    msg->setField(baseId++, m_anomalyDetected);
    msg->setField(baseId++, m_userTag);
+   msg->setFieldFromTime(baseId++, m_thresholdDisableEndTime);
 
 	if (m_thresholds != nullptr)
 	{
@@ -1842,6 +1855,7 @@ json_t *DCItem::lastValueToJSON()
    json_object_set_new(data, "comments", json_string_t(m_comments));
    json_object_set_new(data, "anomalyDetected", json_boolean(m_anomalyDetected));
    json_object_set_new(data, "userTag", json_string_t(m_userTag));
+   json_object_set_new(data, "thresholdDisableEndTime", json_integer(m_thresholdDisableEndTime));
 
    if (m_thresholds != nullptr)
    {

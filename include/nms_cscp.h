@@ -1549,6 +1549,7 @@ typedef struct
 #define VID_DCI_IDS                 ((uint32_t)863)
 #define VID_SMTP_TLS_MODE           ((uint32_t)864)
 #define VID_PEER_LAST_UPDATED       ((uint32_t)865)
+#define VID_THRESHOLD_ENABLE_TIME   ((uint32_t)866)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

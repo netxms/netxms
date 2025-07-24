@@ -912,6 +912,7 @@ CREATE TABLE items
   grace_period_start integer not null,
   related_object integer not null,
   all_rearmed_event integer not null, // Event code to be generated when all thresholds are rearmed
+  thresholds_disable_end_time integer not null,
   PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
@@ -986,6 +987,7 @@ CREATE TABLE dc_tables
   instance_retention_time integer not null,
   grace_period_start integer not null,
   related_object integer not null,
+  thresholds_disable_end_time integer not null,
   PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 

@@ -831,7 +831,7 @@ public class DataCollectionView extends BaseDataCollectionView
       final IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
          return;
-      
+
       new Job(i18n.tr("Changing status of data collection items for {0}", getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception

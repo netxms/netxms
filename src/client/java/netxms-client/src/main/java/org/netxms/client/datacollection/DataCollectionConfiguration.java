@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -481,7 +481,7 @@ public class DataCollectionConfiguration
    {
       if (localChangeListener != null)
          localChangeListener.onObjectChange();
-      
+
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_BULK_DCI_UPDATE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)ownerId);
 

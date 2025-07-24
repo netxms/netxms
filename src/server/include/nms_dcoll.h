@@ -331,6 +331,7 @@ protected:
    time_t m_instanceGracePeriodStart;  // Start of grace period for missing instance
    int32_t m_instanceRetentionTime;      // Retention time if instance is not found
    time_t m_startTime;                 // Time to start data collection
+   time_t m_thresholdDisableEndTime;   // If not 0, time until when thresholds are not processed
    uint32_t m_relatedObject;
 
    void lock() const { m_mutex.lock(); }

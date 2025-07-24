@@ -53,7 +53,7 @@
 #define CLIENT_PROTOCOL_VERSION_MOBILE    1     /* All functionality relevant for mobile client */
 #define CLIENT_PROTOCOL_VERSION_TCPPROXY  1     /* All functionality relevant for TCP proxy sessions */
 #define CLIENT_PROTOCOL_VERSION_SCHEDULER 2     /* All functionality relevant for scheduler configuration */
-#define CLIENT_PROTOCOL_VERSION_FULL      53    /* All functionality */
+#define CLIENT_PROTOCOL_VERSION_FULL      54    /* All functionality */
 
 /**
  * Protocol version positions

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,6 +53,7 @@ public abstract class DciValue
    protected int multiplier;
    protected boolean noValueObject;
    protected boolean anomalyDetected;
+   protected long thresholdDisableEndTime;
 
    /**
     * Factory method to create correct DciValue subclass from NXCP message.
@@ -111,6 +112,7 @@ public abstract class DciValue
       comments = msg.getFieldAsString(fieldId++);
       anomalyDetected = msg.getFieldAsBoolean(fieldId++);
       userTag = msg.getFieldAsString(fieldId++);
+      thresholdDisableEndTime = msg.getFieldAsInt64(fieldId++);
 		if (msg.getFieldAsBoolean(fieldId++))
 			activeThreshold = new Threshold(msg, fieldId);
 		else
@@ -336,6 +338,17 @@ public abstract class DciValue
    public boolean isAnomalyDetected()
    {
       return anomalyDetected;
+   }
+
+   /**
+    * Get time until which threshold processing is disabled for this DCI. Value of 0 means that threshold processing is enabled.
+    * Value of -1 means that threshold processing is disabled permanently.
+    *
+    * @return the thresholdDisableEndTime time in seconds since epoch until which threshold processing is disabled
+    */
+   public long getThresholdDisableEndTime()
+   {
+      return thresholdDisableEndTime;
    }
 
    /**

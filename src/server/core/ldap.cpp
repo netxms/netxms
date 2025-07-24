@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -676,7 +676,7 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult)
          continue;
       }
 
-      for(attribute = ldap_first_attributeA(m_ldapConn, entry, &ber); attribute != NULL; attribute = ldap_next_attributeA(m_ldapConn, entry, ber))
+      for(attribute = ldap_first_attributeA(m_ldapConn, entry, &ber); attribute != nullptr; attribute = ldap_next_attributeA(m_ldapConn, entry, ber))
       {
          // We get values only for those attributes that are used for user/group creation
          if (!stricmp(attribute, m_ldapFullNameAttr))

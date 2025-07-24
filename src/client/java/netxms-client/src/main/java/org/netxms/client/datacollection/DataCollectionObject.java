@@ -108,6 +108,7 @@ public abstract class DataCollectionObject
    protected String instanceDiscoveryFilter;
    protected List<Integer> accessList;
    protected int instanceRetentionTime;
+   protected long thresholdDisableEndTime;
    protected long relatedObject;
 
 	/**
@@ -158,7 +159,8 @@ public abstract class DataCollectionObject
       instanceDiscoveryMethod = msg.getFieldAsInt32(NXCPCodes.VID_INSTD_METHOD);
       instanceDiscoveryData = msg.getFieldAsString(NXCPCodes.VID_INSTD_DATA);
       instanceDiscoveryFilter = msg.getFieldAsString(NXCPCodes.VID_INSTD_FILTER);      
-      relatedObject = msg.getFieldAsInt64(NXCPCodes.VID_RELATED_OBJECT);      
+      relatedObject = msg.getFieldAsInt64(NXCPCodes.VID_RELATED_OBJECT);
+      thresholdDisableEndTime = msg.getFieldAsInt64(NXCPCodes.VID_THRESHOLD_ENABLE_TIME);
 
       Integer acl[] = msg.getFieldAsInt32ArrayEx(NXCPCodes.VID_ACL);
       if (acl == null)
@@ -203,6 +205,7 @@ public abstract class DataCollectionObject
       accessList = new ArrayList<Integer>(0);
       instanceRetentionTime = -1;
       relatedObject = 0;
+      thresholdDisableEndTime = 0;
 	}
 
    /**
@@ -274,6 +277,7 @@ public abstract class DataCollectionObject
       accessList = new ArrayList<Integer>(src.accessList);
 	   instanceRetentionTime = src.instanceRetentionTime;
 	   relatedObject = src.relatedObject;
+      thresholdDisableEndTime = src.thresholdDisableEndTime;
    }
 
    /**
@@ -319,7 +323,8 @@ public abstract class DataCollectionObject
       if (instanceDiscoveryFilter != null)
          msg.setField(NXCPCodes.VID_INSTD_FILTER, instanceDiscoveryFilter);
       msg.setFieldInt32(NXCPCodes.VID_RELATED_OBJECT, (int)relatedObject);
-      
+      msg.setFieldInt64(NXCPCodes.VID_THRESHOLD_ENABLE_TIME, thresholdDisableEndTime);
+
       msg.setField(NXCPCodes.VID_ACL, accessList.toArray(new Long[accessList.size()]));
 	}
 
@@ -995,5 +1000,27 @@ public abstract class DataCollectionObject
    public long getTemplateItemId()
    {
       return templateItemId;
+   }
+
+   /**
+    * Get time until which threshold processing is disabled for this DCI. Value of 0 means that threshold processing is enabled.
+    * Value of -1 means that threshold processing is disabled permanently.
+    *
+    * @return the thresholdDisableEndTime time in seconds since epoch until which threshold processing is disabled
+    */
+   public long getThresholdDisableEndTime()
+   {
+      return thresholdDisableEndTime;
+   }
+
+   /**
+    * Set time until which threshold processing is disabled for this DCI. Value of 0 means that threshold processing is enabled.
+    * Value of -1 means that threshold processing is disabled permanently.
+    * 
+    * @param thresholdDisableEndTime time in seconds since epoch until which threshold processing is disabled
+    */
+   public void setThresholdDisableEndTime(long thresholdDisableEndTime)
+   {
+      this.thresholdDisableEndTime = thresholdDisableEndTime;
    }
 }

@@ -89,6 +89,8 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 			case BaseDataCollectionView.LV_COLUMN_ID:
 				return stateImages[((DciValue)element).getStatus()];
 			case BaseDataCollectionView.LV_COLUMN_THRESHOLD:
+            if (((DciValue)element).getThresholdDisableEndTime() != 0)
+               return StatusDisplayInfo.getStatusImage(ObjectStatus.UNMANAGED);
 				Threshold threshold = ((DciValue)element).getActiveThreshold();
 				return (threshold != null) ? thresholdLabelProvider.getColumnImage(threshold, Thresholds.COLUMN_EVENT) : StatusDisplayInfo.getStatusImage(Severity.NORMAL);
 		}
@@ -142,6 +144,12 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
     */
    private String formatThreshold(DciValue value)
 	{
+      if (value.getThresholdDisableEndTime() != 0)
+      {
+         if (value.getThresholdDisableEndTime() == -1)
+            return i18n.tr("Disabled permanently");
+         return i18n.tr("Disabled until {0}", DateFormatFactory.getDateTimeFormat().format(value.getThresholdDisableEndTime() * 1000));
+      }
       Threshold threshold = value.getActiveThreshold();
       if (threshold == null)
          return i18n.tr("OK");

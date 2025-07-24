@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -100,6 +100,7 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
    m_instanceRetentionTime = -1;
    m_instanceGracePeriodStart = 0;
    m_startTime = 0;
+   m_thresholdDisableEndTime = 0;
    m_relatedObject = 0;
 }
 
@@ -147,6 +148,7 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
    m_instanceRetentionTime = src->m_instanceRetentionTime;
    m_instanceGracePeriodStart = src->m_instanceGracePeriodStart;
    m_startTime = src->m_startTime;
+   m_thresholdDisableEndTime = src->m_thresholdDisableEndTime;
    m_relatedObject = src->m_relatedObject;
 }
 
@@ -189,6 +191,7 @@ DCObject::DCObject(uint32_t id, const TCHAR *name, int source, BYTE scheduleType
    m_instanceRetentionTime = -1;
    m_instanceGracePeriodStart = 0;
    m_startTime = 0;
+   m_thresholdDisableEndTime = 0;
    m_relatedObject = 0;
 
    updateTimeIntervalsInternal();
@@ -292,6 +295,7 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_instanceRetentionTime = config->getSubEntryValueAsInt(_T("instanceRetentionTime"), 0, -1);
    m_instanceGracePeriodStart = 0;
    m_startTime = 0;
+   m_thresholdDisableEndTime = 0;
    m_relatedObject = 0;
 
    updateTimeIntervalsInternal();
@@ -826,6 +830,7 @@ void DCObject::createMessage(NXCPMessage *msg)
    msg->setField(VID_INSTANCE, m_instanceName);
    msg->setFieldFromInt32Array(VID_ACL, m_accessList);
    msg->setField(VID_INSTANCE_RETENTION, m_instanceRetentionTime);
+   msg->setFieldFromTime(VID_THRESHOLD_ENABLE_TIME, m_thresholdDisableEndTime);
    msg->setField(VID_RELATED_OBJECT, m_relatedObject);
    unlock();
 }
@@ -904,7 +909,7 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
    m_instanceDiscoveryMethod = msg.getFieldAsUInt16(VID_INSTD_METHOD);
    m_instanceDiscoveryData = msg.getFieldAsSharedString(VID_INSTD_DATA, MAX_INSTANCE_LEN);
 
-   TCHAR *pszStr = msg.getFieldAsString(VID_INSTD_FILTER);
+   wchar_t *pszStr = msg.getFieldAsString(VID_INSTD_FILTER);
    setInstanceFilter(pszStr);
    MemFree(pszStr);
 
@@ -915,6 +920,8 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
 
    m_instanceRetentionTime = msg.getFieldAsInt32(VID_INSTANCE_RETENTION);
    m_relatedObject = msg.getFieldAsUInt32(VID_RELATED_OBJECT);
+
+   m_thresholdDisableEndTime = msg.getFieldAsTime(VID_THRESHOLD_ENABLE_TIME);
 
 	unlock();
 }

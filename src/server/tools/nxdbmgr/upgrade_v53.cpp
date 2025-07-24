@@ -23,6 +23,24 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 53.5 to 53.6
+ */
+static bool H_UpgradeFromV5()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE items ADD thresholds_disable_end_time integer\n")
+      _T("UPDATE items SET thresholds_disable_end_time=0\n")
+      _T("ALTER TABLE dc_tables ADD thresholds_disable_end_time integer\n")
+      _T("UPDATE dc_tables SET thresholds_disable_end_time=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("items"), _T("thresholds_disable_end_time")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("dc_tables"), _T("thresholds_disable_end_time")));
+   CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
+
+/**
  * Upgrade from 53.4 to 53.5
  */
 static bool H_UpgradeFromV4()
@@ -100,6 +118,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 5,  53, 6,  H_UpgradeFromV5  },
    { 4,  53, 5,  H_UpgradeFromV4  },
    { 3,  53, 4,  H_UpgradeFromV3  },
    { 2,  53, 3,  H_UpgradeFromV2  },

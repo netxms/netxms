@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -1178,10 +1178,10 @@ InetAddress LIBNXDB_EXPORTABLE DBGetFieldInetAddr(DB_UNBUFFERED_RESULT hResult, 
 /**
  * Get field's value as GUID from unbuffered SELECT result
  */
-uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_UNBUFFERED_RESULT hResult, int iColumn)
+uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_UNBUFFERED_RESULT hResult, int column)
 {
    TCHAR buffer[64];
-   return (DBGetField(hResult, iColumn, buffer, 64) == NULL) ? uuid::NULL_UUID : uuid::parse(buffer);
+   return (DBGetField(hResult, column, buffer, 64) == nullptr) ? uuid::NULL_UUID : uuid::parse(buffer);
 }
 
 /**

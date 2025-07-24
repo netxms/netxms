@@ -4558,17 +4558,16 @@ void ClientSession::changeDCIStatus(const NXCPMessage& request)
             else
             {
                if (successCount == result->size())
+               {
                   response.setField(VID_RCC, RCC_SUCCESS);
+               }
+               else if (successCount == 0 && (failReason == RCC_ACCESS_DENIED || failReason == RCC_INVALID_DCI_ID))
+               {
+                  response.setField(VID_RCC, RCC_ACCESS_DENIED);
+               }
                else
                {
-                  if (successCount == 0 && (failReason == RCC_ACCESS_DENIED || failReason == RCC_INVALID_DCI_ID))
-                  {
-                     response.setField(VID_RCC, RCC_ACCESS_DENIED);
-                  }
-                  else
-                  {
-                     response.setField(VID_RCC, RCC_PARTIAL_FAIL);
-                  }
+                  response.setField(VID_RCC, RCC_PARTIAL_FAIL);
                }
                response.setFieldFromInt32Array(VID_ITEM_LIST, result.get());
             }

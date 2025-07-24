@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -61,7 +61,7 @@ DCTable::DCTable(uint32_t id, const TCHAR *name, int source, BYTE scheduleType, 
  *    transformation_script,comments,guid,instd_method,instd_data,
  *    instd_filter,instance,instance_retention_time,grace_period_start,
  *    related_object,polling_schedule_type,retention_type,polling_interval_src,
- *    retention_time_src,snmp_version,state_flags,user_tag
+ *    retention_time_src,snmp_version,state_flags,user_tag,thresholds_disable_end_time
  */
 DCTable::DCTable(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
@@ -97,6 +97,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hRes
    m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldInt32(hResult, row, 29));
    m_stateFlags = DBGetFieldUInt32(hResult, row, 30);
    m_userTag = DBGetFieldAsSharedString(hResult, row, 31);
+   m_thresholdDisableEndTime = DBGetFieldTime(hResult, row, 32);
 
    int effectivePollingInterval = getEffectivePollingInterval();
    m_startTime = (useStartupDelay && (effectivePollingInterval >= 10)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
@@ -292,7 +293,7 @@ bool DCTable::processNewValue(time_t timestamp, const shared_ptr<Table>& value, 
 	   {
 	      if (g_dbSyntax == DB_SYNTAX_TSDB)
 	      {
-	         TCHAR query[256];
+	         wchar_t query[256];
 	         _sntprintf(query, 256, _T("INSERT INTO tdata_sc_%s (item_id,tdata_timestamp,tdata_value) VALUES (?,to_timestamp(?),?)"),
 	                  getStorageClassName(getStorageClass()));
             hStmt = DBPrepare(hdb, query);
@@ -304,7 +305,7 @@ bool DCTable::processNewValue(time_t timestamp, const shared_ptr<Table>& value, 
 	   }
 	   else
 	   {
-	      TCHAR query[256];
+	      wchar_t query[256];
 	      _sntprintf(query, 256, _T("INSERT INTO tdata_%u (item_id,tdata_timestamp,tdata_value) VALUES (?,?,?)"), nodeId);
 	      hStmt = DBPrepare(hdb, query);
 	   }
@@ -324,8 +325,20 @@ bool DCTable::processNewValue(time_t timestamp, const shared_ptr<Table>& value, 
 
 	   DBConnectionPoolReleaseConnection(hdb);
    }
-   if ((g_offlineDataRelevanceTime <= 0) || (timestamp > (time(nullptr) - g_offlineDataRelevanceTime)))
+
+   time_t now = time(nullptr);
+   if (((g_offlineDataRelevanceTime <= 0) || (timestamp > (now - g_offlineDataRelevanceTime))) &&
+       ((m_thresholdDisableEndTime == 0) || (m_thresholdDisableEndTime > 0 && m_thresholdDisableEndTime < timestamp)))
+   {
       checkThresholds(value.get());
+
+      if ((m_thresholdDisableEndTime > 0) && (m_thresholdDisableEndTime < now))
+      {
+         // Thresholds were disabled, reset disable end time
+         m_thresholdDisableEndTime = 0;
+         getOwner()->markAsModified(MODIFY_DATA_COLLECTION);
+      }
+   }
 
    if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
       PerfDataStorageRequest(this, timestamp, value.get());
@@ -513,7 +526,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
       L"instd_method", L"instd_data", L"instd_filter", L"instance", L"instance_retention_time",
       L"grace_period_start", L"related_object", L"polling_interval_src", L"retention_time_src",
       L"polling_schedule_type", L"retention_type", L"snmp_version", L"state_flags", L"user_tag",
-      nullptr
+      L"thresholds_disable_end_time", nullptr
    };
 
 	DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"dc_tables", L"item_id", m_id, columns);
@@ -559,7 +572,8 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_snmpVersion);
    DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_stateFlags);
    DBBind(hStmt, 32, DB_SQLTYPE_VARCHAR, m_userTag, DB_BIND_STATIC, MAX_DCI_TAG_LENGTH - 1);
-   DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_thresholdDisableEndTime));
+   DBBind(hStmt, 34, DB_SQLTYPE_INTEGER, m_id);
 
 	bool result = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -845,6 +859,7 @@ void DCTable::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t fieldId, co
    msg->setField(fieldId++, m_comments);
    msg->setField(fieldId++, false); // Anomaly detected
    msg->setField(fieldId++, m_userTag);
+   msg->setFieldFromTime(fieldId++, m_thresholdDisableEndTime);
 
    if (m_thresholds != nullptr)
    {
@@ -965,7 +980,7 @@ void DCTable::mergeValues(Table *dest, Table *src, int count) const
 {
    for(int sRow = 0; sRow < src->getNumRows(); sRow++)
    {
-      TCHAR instance[MAX_RESULT_LENGTH];
+      wchar_t instance[MAX_RESULT_LENGTH];
 
       src->buildInstanceString(sRow, instance, MAX_RESULT_LENGTH);
       int dRow = dest->findRowByInstance(instance);

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** DB Library
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -187,6 +187,11 @@ bool LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iCo
 bool LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iColumn, BYTE *data, size_t size, BYTE defaultValue);
 uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int iRow, int iColumn);
 
+static inline time_t DBGetFieldTime(DB_RESULT hResult, int row, int column)
+{
+   return static_cast<time_t>(DBGetFieldInt64(hResult, row, column));
+}
+
 DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectUnbuffered(DB_HANDLE hConn, const TCHAR *szQuery);
 DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectUnbufferedEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText);
 bool LIBNXDB_EXPORTABLE DBFetch(DB_UNBUFFERED_RESULT hResult);
@@ -207,7 +212,12 @@ uint64_t LIBNXDB_EXPORTABLE DBGetFieldUInt64(DB_UNBUFFERED_RESULT hResult, int c
 double LIBNXDB_EXPORTABLE DBGetFieldDouble(DB_UNBUFFERED_RESULT hResult, int iColumn);
 uint32_t LIBNXDB_EXPORTABLE DBGetFieldIPAddr(DB_UNBUFFERED_RESULT hResult, int column);
 InetAddress LIBNXDB_EXPORTABLE DBGetFieldInetAddr(DB_UNBUFFERED_RESULT hResult, int column);
-uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_UNBUFFERED_RESULT hResult, int iColumn);
+uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_UNBUFFERED_RESULT hResult, int column);
+
+static inline time_t DBGetFieldTime(DB_UNBUFFERED_RESULT hResult, int column)
+{
+   return static_cast<time_t>(DBGetFieldInt64(hResult, column));
+}
 
 bool LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn);
 bool LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn);

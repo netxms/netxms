@@ -287,7 +287,7 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedS
         L"instd_filter,samples,comments,guid,npe_name,instance_retention_time,"
         L"grace_period_start,related_object,polling_schedule_type,retention_type,"
         L"polling_interval_src,retention_time_src,snmp_version,state_flags,all_rearmed_event,"
-        L"transformed_datatype,user_tag "
+        L"transformed_datatype,user_tag,thresholds_disable_end_time "
         L"FROM items WHERE node_id=?");
 	if (hStmt != nullptr)
 	{
@@ -309,7 +309,8 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedS
         L"transformation_script,comments,guid,instd_method,instd_data,"
         L"instd_filter,instance,instance_retention_time,grace_period_start,"
         L"related_object,polling_schedule_type,retention_type,polling_interval_src,"
-        L"retention_time_src,snmp_version,state_flags,user_tag FROM dc_tables WHERE node_id=?");
+        L"retention_time_src,snmp_version,state_flags,user_tag,thresholds_disable_end_time "
+        L"FROM dc_tables WHERE node_id=?");
 	if (hStmt != nullptr)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -999,23 +1000,23 @@ void DataCollectionOwner::prepareForDeletion()
 void DataCollectionOwner::updateFromImport(ConfigEntry *config, ImportContext *context, bool nxslV5)
 {
    lockProperties();
-   _tcslcpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Object")), MAX_OBJECT_NAME);
-   m_flags = config->getSubEntryValueAsUInt(_T("flags"), 0, m_flags);
+   wcslcpy(m_name, config->getSubEntryValue(L"name", 0, L"Unnamed Object"), MAX_OBJECT_NAME);
+   m_flags = config->getSubEntryValueAsUInt(L"flags", 0, m_flags);
    unlockProperties();
-   setComments(config->getSubEntryValue(_T("comments"), 0, nullptr));
+   setComments(config->getSubEntryValue(L"comments", 0, nullptr));
 
    // Data collection
    ObjectArray<uuid> guidList(32, 32, Ownership::True);
 
    writeLockDciAccess();
-   ConfigEntry *dcRoot = config->findEntry(_T("dataCollection"));
+   ConfigEntry *dcRoot = config->findEntry(L"dataCollection");
    if (dcRoot != nullptr)
    {
-      unique_ptr<ObjectArray<ConfigEntry>> dcis = dcRoot->getSubEntries(_T("dci#*"));
+      unique_ptr<ObjectArray<ConfigEntry>> dcis = dcRoot->getSubEntries(L"dci#*");
       for(int i = 0; i < dcis->size(); i++)
       {
          ConfigEntry *e = dcis->get(i);
-         uuid guid = e->getSubEntryValueAsUUID(_T("guid"));
+         uuid guid = e->getSubEntryValueAsUUID(L"guid");
          shared_ptr<DCObject> curr = !guid.isNull() ? getDCObjectByGUID(guid, 0, false) : shared_ptr<DCObject>();
          if ((curr != nullptr) && (curr->getType() == DCO_TYPE_ITEM))
          {
@@ -1030,7 +1031,7 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config, ImportContext *c
          guidList.add(new uuid(guid));
       }
 
-      unique_ptr<ObjectArray<ConfigEntry>> dctables = dcRoot->getSubEntries(_T("dctable#*"));
+      unique_ptr<ObjectArray<ConfigEntry>> dctables = dcRoot->getSubEntries(L"dctable#*");
       for(int i = 0; i < dctables->size(); i++)
       {
          ConfigEntry *e = dctables->get(i);
