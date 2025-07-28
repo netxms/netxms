@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2005-2020 Victor Kirhenshtein
+** Copyright (C) 2005-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -120,6 +120,10 @@ enum
 	MEMINFO_PHYSICAL_AVAILABLE_PERC,
 	MEMINFO_PHYSICAL_CACHED,
 	MEMINFO_PHYSICAL_CACHED_PERC,
+	MEMINFO_PHYSICAL_CLIENT,
+	MEMINFO_PHYSICAL_CLIENT_PERC,
+	MEMINFO_PHYSICAL_COMP,
+	MEMINFO_PHYSICAL_COMP_PERC,
 	MEMINFO_PHYSICAL_FREE,
 	MEMINFO_PHYSICAL_FREE_PERC,
 	MEMINFO_PHYSICAL_TOTAL,

@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -135,6 +135,18 @@ LONG H_MemoryInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
          case MEMINFO_PHYSICAL_CACHED_PERC:
             ret_double(value, (double)vmi.numperm * 100.0 / vmi.memsizepgs, 2);
             break;
+         case MEMINFO_PHYSICAL_CLIENT:
+            ret_uint64(value, vmi.numperm * getpagesize());
+            break;
+         case MEMINFO_PHYSICAL_CLIENT_PERC:
+            ret_double(value, (double)vmi.numperm * 100.0 / vmi.memsizepgs, 2);
+            break;
+         case MEMINFO_PHYSICAL_COMP:
+            ret_uint64(value, (vmi.memsizepgs - vmi.numfrb - vmi.numperm) * getpagesize());
+            break;
+         case MEMINFO_PHYSICAL_COMP_PERC:
+            ret_double(value, static_cast<double>(vmi.memsizepgs - vmi.numfrb - vmi.numperm) * 100.0 / vmi.memsizepgs, 2);
+            break;
          case MEMINFO_PHYSICAL_FREE:
             ret_uint64(value, vmi.numfrb * getpagesize());
             break;
@@ -145,7 +157,7 @@ LONG H_MemoryInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
             ret_uint64(value, (vmi.memsizepgs - vmi.numfrb) * getpagesize());
             break;
          case MEMINFO_PHYSICAL_USED_PERC:
-            ret_double(value, ((double)vmi.memsizepgs - vmi.numfrb) * 100.0 / vmi.memsizepgs, 2);
+            ret_double(value, static_cast<double>(vmi.memsizepgs - vmi.numfrb) * 100.0 / vmi.memsizepgs, 2);
             break;
          case MEMINFO_PHYSICAL_TOTAL:
             ret_uint64(value, vmi.memsizepgs * getpagesize());

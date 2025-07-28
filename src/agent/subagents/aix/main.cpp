@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2005-2024 Victor Kirhenshtein
+** Copyright (C) 2005-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -285,6 +285,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.Memory.Physical.AvailablePerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_AVAILABLE_PERC, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE_PCT },
    { _T("System.Memory.Physical.Cached"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_CACHED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_CACHED },
    { _T("System.Memory.Physical.CachedPerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_CACHED_PERC, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_CACHED_PCT },
+   { _T("System.Memory.Physical.Client"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_CLIENT, DCI_DT_UINT64, _T("Physical memory used for client frames") },
+   { _T("System.Memory.Physical.ClientPerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_CLIENT_PERC, DCI_DT_FLOAT, _T("Percentage of physical memory used for client frames") },
+   { _T("System.Memory.Physical.Computational"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_COMP, DCI_DT_UINT64, _T("Physical memory used for working segments") },
+   { _T("System.Memory.Physical.ComputationalPerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_COMP_PERC, DCI_DT_FLOAT, _T("Percentage of physical memory used for working segments") },
    { _T("System.Memory.Physical.Free"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
    { _T("System.Memory.Physical.FreePerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_FREE_PERC, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE_PCT },
    { _T("System.Memory.Physical.Total"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },
