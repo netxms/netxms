@@ -57,6 +57,12 @@ static perfstat_cpu_t *m_cpuStats;
 static int m_currentSlot = 0;
 static int m_maxCPU = 0;
 
+// update detailed stats
+#define UPDATE(delta, target) { \
+      if (delta > 0) { *(target + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = (double)delta / onePercent; } \
+      else { *(target + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 0; } \
+   }
+
 /**
  * Stats collector
  */
@@ -113,30 +119,23 @@ static void CpuUsageCollector()
 			uint64_t iowaitDelta = iowait - m_lastIoWait[cpu];
 			uint64_t totalDelta = userDelta + systemDelta + idleDelta + iowaitDelta;
 			
-			double onePercent = (double)totalDelta / 100.0; // 1% of total
-			if (onePercent == 0)
-			{
-				onePercent = 1; // TODO: why 1?
-			}
+         if (totalDelta > 0)
+         {
+            double onePercent = (double)totalDelta / 100.0; // 1% of total
 
-			// update detailed stats
-#define UPDATE(delta, target) { \
-				if (delta > 0) { *(target + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = (double)delta / onePercent; } \
-				else { *(target + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 0; } \
-			}
+            UPDATE(userDelta, m_cpuUsageUser);
+            UPDATE(systemDelta, m_cpuUsageSystem);
+            UPDATE(idleDelta, m_cpuUsageIdle);
+            UPDATE(iowaitDelta, m_cpuUsageIoWait);
 
-			UPDATE(userDelta, m_cpuUsageUser);
-			UPDATE(systemDelta, m_cpuUsageSystem);
-			UPDATE(idleDelta, m_cpuUsageIdle);
-			UPDATE(iowaitDelta, m_cpuUsageIoWait);
-
-			// update overall cpu usage
-			if (totalDelta > 0)
-			{
 				*(m_cpuUsage + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 100.0 - ((double)idleDelta / onePercent);
 			}
 			else
 			{
+            *(m_cpuUsageUser + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 0;
+            *(m_cpuUsageSystem + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 0;
+            *(m_cpuUsageIdle + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 100;
+            *(m_cpuUsageIoWait + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 0;
 				*(m_cpuUsage + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 0;
 			}
 
@@ -172,11 +171,7 @@ static void CpuUsageCollector()
       m_cpuPhysicalUsageIdle[m_currentSlot] = (double)deltaIdle * 100.0 / (double)deltaTotal;
       m_cpuPhysicalUsageIoWait[m_currentSlot] = (double)deltaIoWait * 100.0 / (double)deltaTotal;
 
-      m_cpuPhysicalUsage[m_currentSlot] = 
-         100 - m_cpuPhysicalUsageUser[m_currentSlot]
-         - m_cpuPhysicalUsageSystem[m_currentSlot]
-         - m_cpuPhysicalUsageIdle[m_currentSlot]
-         - m_cpuPhysicalUsageIoWait[m_currentSlot];
+      m_cpuPhysicalUsage[m_currentSlot] = 100.0 - m_cpuPhysicalUsageIdle[m_currentSlot];
    }
    else
    {
