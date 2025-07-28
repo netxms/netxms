@@ -594,6 +594,8 @@ int DataCollectionOwner::updateMultipleDCObjects(const NXCPMessage& request, uin
    SharedString pollingIntervalSrc = request.getFieldAsSharedString(VID_POLLING_INTERVAL);
    SharedString retentionTimeSrc = request.getFieldAsSharedString(VID_RETENTION_TIME);
    SharedString unitName = request.getFieldAsSharedString(VID_UNITS_NAME);
+   bool thresholdEnableTimeUpdated = request.isFieldExist(VID_THRESHOLD_ENABLE_TIME);
+   time_t thresholdEnableTime = request.getFieldAsTime(VID_THRESHOLD_ENABLE_TIME);
 
    int count = 0;
    readLockDciAccess();
@@ -617,6 +619,8 @@ int DataCollectionOwner::updateMultipleDCObjects(const NXCPMessage& request, uin
                   dci->setRetentionType(static_cast<BYTE>(retentionType));
                if (!unitName.isNull() && (dci->getType() == DCO_TYPE_ITEM))
                   static_cast<DCItem*>(dci)->setUnitName(unitName);
+               if (thresholdEnableTimeUpdated)
+                  dci->setThresholdDisableEndTime(thresholdEnableTime);
                NotifyClientsOnDCIUpdate(*this, dci);
                count++;
             }

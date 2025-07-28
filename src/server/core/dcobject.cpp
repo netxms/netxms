@@ -605,6 +605,16 @@ void DCObject::setRetention(const TCHAR *retention)
 }
 
 /**
+ * Set threshold disable end time, 0 - to process thresholds
+ */
+void DCObject::setThresholdDisableEndTime(time_t thresholdDisableEndTime)
+{
+   lock();
+   m_thresholdDisableEndTime = thresholdDisableEndTime;
+   unlock();
+}
+
+/**
  * Expand custom schedule string
  */
 String DCObject::expandSchedule(const TCHAR *schedule)

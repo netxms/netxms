@@ -19,6 +19,7 @@
 package org.netxms.nxmc.modules.datacollection.views;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -44,10 +45,12 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.TableColumn;
+import org.netxms.base.NXCPCodes;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.DataOrigin;
+import org.netxms.client.datacollection.BulkDciUpdateElement;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
@@ -72,6 +75,8 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.modules.datacollection.ShowHistoricalDataMenuItems;
 import org.netxms.nxmc.modules.datacollection.dialogs.BulkUpdateDialog;
+import org.netxms.nxmc.modules.datacollection.dialogs.DisableThresholdsDialog;
+import org.netxms.nxmc.modules.datacollection.dialogs.helpers.BulkDciThresholdUpdateElement;
 import org.netxms.nxmc.modules.datacollection.dialogs.helpers.BulkDciUpdateElementUI;
 import org.netxms.nxmc.modules.datacollection.views.helpers.DciComparator;
 import org.netxms.nxmc.modules.datacollection.views.helpers.DciFilter;
@@ -133,6 +138,8 @@ public class DataCollectionView extends BaseDataCollectionView
    private Action actionDuplicate;
    private Action actionActivate;
    private Action actionDisable;
+   private Action actionActivateThresholds;
+   private Action actionDisableThresholds;
    private Action actionBulkUpdate;
    private Action actionHideTemplateItems;
    private Action actionApplyChanges;
@@ -224,41 +231,7 @@ public class DataCollectionView extends BaseDataCollectionView
       viewer.addFilter(dcFilter);
       WidgetHelper.restoreTableViewerSettings(viewer, configPrefix);
 
-      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-         @Override
-         public void selectionChanged(SelectionChangedEvent event)
-         {
-            IStructuredSelection selection = (IStructuredSelection)event.getSelection();
-            if (selection != null)
-            {
-               actionEdit.setEnabled(selection.size() == 1);
-               actionDelete.setEnabled(selection.size() > 0);
-               actionCopy.setEnabled(selection.size() > 0);
-               actionMove.setEnabled(selection.size() > 0);
-               actionConvert.setEnabled(selection.size() > 0);
-               actionDuplicate.setEnabled(selection.size() > 0);
-               actionBulkUpdate.setEnabled(selection.size() > 0);
-
-               Iterator<?> it = selection.iterator();
-               boolean canActivate = false;
-               boolean canDisable = false;
-               boolean hasTemplate = false;
-               while(it.hasNext() && (!canActivate || !canDisable))
-               {
-                  DataCollectionObject dci = (DataCollectionObject)it.next();
-                  if (dci.getStatus() != DataCollectionObject.ACTIVE)
-                     canActivate = true;
-                  if (dci.getStatus() != DataCollectionObject.DISABLED)
-                     canDisable = true;
-                  if (dci.getTemplateId() != 0 && dci.getTemplateId() != getObjectId())
-                     hasTemplate = true;    
-               }
-               actionActivate.setEnabled(canActivate);
-               actionDisable.setEnabled(canDisable);
-               actionShowTemplate.setEnabled((selection.size() == 1) && hasTemplate);
-            }
-         }
-      });
+      viewer.addSelectionChangedListener(new DciSelectionChange());
       viewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
@@ -356,45 +329,7 @@ public class DataCollectionView extends BaseDataCollectionView
    {
       super.postLastValueViewCreation(configPrefix, validator);
 
-      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-         @Override
-         public void selectionChanged(SelectionChangedEvent event)
-         {
-            IStructuredSelection selection = (IStructuredSelection)event.getSelection();
-            if (selection != null)
-            {
-               actionEdit.setEnabled(selection.size() == 1);
-               actionDelete.setEnabled(selection.size() > 0);
-               actionCopy.setEnabled(selection.size() > 0);
-               actionMove.setEnabled(selection.size() > 0);
-               actionConvert.setEnabled(selection.size() > 0);
-               actionDuplicate.setEnabled(selection.size() > 0);
-               actionBulkUpdate.setEnabled(selection.size() > 0);
-
-               Iterator<?> it = selection.iterator();
-               boolean canActivate = false;
-               boolean canDisable = false;
-               boolean hasTemplate = false;
-               while(it.hasNext() && (!canActivate || !canDisable))
-               {
-                  DciValue dci = (DciValue)it.next();
-                  if (dci.getStatus() != DataCollectionObject.ACTIVE)
-                     canActivate = true;
-                  if (dci.getStatus() != DataCollectionObject.DISABLED)
-                     canDisable = true;
-                  if (dci.getTemplateDciId() != 0)
-                  {
-                     DataCollectionObject dco = getDataCollectionObject(dci);
-                     if (dco != null && dco.getTemplateId() != 0 && dco.getTemplateId() != getObjectId())
-                        hasTemplate = true;                            
-                  }         
-               }
-               actionActivate.setEnabled(canActivate);
-               actionDisable.setEnabled(canDisable);
-               actionShowTemplate.setEnabled((selection.size() == 1) && hasTemplate);
-            }
-         }
-      });
+      viewer.addSelectionChangedListener(new DciSelectionChange());
 
       final Display display = viewer.getControl().getDisplay();
       clientListener = new SessionListener() {
@@ -443,6 +378,9 @@ public class DataCollectionView extends BaseDataCollectionView
          manager.add(actionActivate);
       if (actionDisable.isEnabled())
          manager.add(actionDisable);
+      if (actionActivateThresholds.isEnabled())
+         manager.add(actionActivateThresholds);
+      manager.add(actionDisableThresholds);
       manager.add(actionEdit);
       manager.add(actionBulkUpdate);
       manager.add(actionDuplicate);
@@ -589,6 +527,25 @@ public class DataCollectionView extends BaseDataCollectionView
       };
       actionDisable.setEnabled(false);
       
+      actionActivateThresholds = new Action(i18n.tr("Enable threshold processing"), ResourceManager.getImageDescriptor("icons/dci/active.gif")) {
+         @Override
+         public void run()
+         {
+            changeThresholdStatus(false);
+            actionActivateThresholds.setEnabled(false);
+         }
+      };
+      actionActivateThresholds.setEnabled(false);
+
+      actionDisableThresholds = new Action(i18n.tr("Disable threshold processing"), ResourceManager.getImageDescriptor("icons/dci/disabled.gif")) {
+         @Override
+         public void run()
+         {
+            changeThresholdStatus(true);
+            actionActivateThresholds.setEnabled(true);
+         }
+      };
+    
       actionCreateItem = new Action(i18n.tr("&New parameter..."), SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
@@ -647,7 +604,7 @@ public class DataCollectionView extends BaseDataCollectionView
             showTemplate();
          }
       };
-      actionDisable.setEnabled(false);
+      actionShowTemplate.setEnabled(false);
    }
 
    /**
@@ -1116,6 +1073,51 @@ public class DataCollectionView extends BaseDataCollectionView
    }
 
    /**
+    * Open bulk update dialog
+    */
+   private void changeThresholdStatus(boolean disableThresholds)
+   {      
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      final Set<Long> dciList = new HashSet<Long>(selection.size());   
+      final List<BulkDciUpdateElement> elements;
+      
+      Iterator<?> it = selection.iterator();
+      while(it.hasNext())
+      {
+         DataCollectionObject dco = getDataCollectionObject(it.next());
+         dciList.add(dco.getId());
+      }    
+      
+      if (disableThresholds)
+      {
+         DisableThresholdsDialog dlg = new DisableThresholdsDialog(getWindow().getShell());
+         if (dlg.open() != Window.OK)
+            return;      
+         
+         elements = dlg.getBulkUpdateElements();
+      }
+      else
+      {
+         elements = new ArrayList<BulkDciUpdateElement>(Arrays.asList(new BulkDciThresholdUpdateElement(NXCPCodes.VID_THRESHOLD_ENABLE_TIME, 0L)));
+      }
+
+      new Job(i18n.tr("Executing bulk DCI threshold update"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            dciConfig.bulkUpdateDCIs(dciList, elements);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Failed to execute bulk DCI threshold update");
+         }
+      }.start();
+   }
+
+
+   /**
     * Display message with information about policy deploy
     */
    public void showInformationMessage()
@@ -1500,5 +1502,69 @@ public class DataCollectionView extends BaseDataCollectionView
    {      
       super.restoreState(memento);
       editMode = memento.getAsBoolean("editMode", false);
-   }  
+   }     
+
+   /**
+    * DCI selection change listener class
+    */
+   private final class DciSelectionChange implements ISelectionChangedListener
+   {
+      @Override
+      public void selectionChanged(SelectionChangedEvent event)
+      {
+         IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+         if (selection != null)
+         {
+            actionEdit.setEnabled(selection.size() == 1);
+            actionDelete.setEnabled(selection.size() > 0);
+            actionCopy.setEnabled(selection.size() > 0);
+            actionMove.setEnabled(selection.size() > 0);
+            actionConvert.setEnabled(selection.size() > 0);
+            actionDuplicate.setEnabled(selection.size() > 0);
+            actionBulkUpdate.setEnabled(selection.size() > 0);
+
+            Iterator<?> it = selection.iterator();
+            boolean canActivate = false;
+            boolean canDisable = false;
+            boolean canActivateThresholds = false;
+            boolean hasTemplate = false;
+            while(it.hasNext() && (!canActivate || !canDisable))
+            {
+               Object object = it.next();
+               if (object instanceof DataCollectionObject) 
+               {
+                  DataCollectionObject dci = (DataCollectionObject)object;
+                  if (dci.getStatus() != DataCollectionObject.ACTIVE)
+                     canActivate = true;
+                  if (dci.getStatus() != DataCollectionObject.DISABLED)
+                     canDisable = true;
+                  if (dci.getThresholdDisableEndTime() != 0)
+                     canActivateThresholds = true;
+                  if (dci.getTemplateId() != 0 && dci.getTemplateId() != getObjectId())
+                     hasTemplate = true;    
+               }
+               else
+               {
+                  DciValue dci = (DciValue)object;
+                  if (dci.getStatus() != DataCollectionObject.ACTIVE)
+                     canActivate = true;
+                  if (dci.getStatus() != DataCollectionObject.DISABLED)
+                     canDisable = true;
+                  if (dci.getThresholdDisableEndTime() != 0)
+                     canActivateThresholds = true;
+                  if (dci.getTemplateDciId() != 0)
+                  {
+                     DataCollectionObject dco = getDataCollectionObject(dci);
+                     if (dco != null && dco.getTemplateId() != 0 && dco.getTemplateId() != getObjectId())
+                        hasTemplate = true;                            
+                  }        
+               }
+            }
+            actionActivate.setEnabled(canActivate);
+            actionDisable.setEnabled(canDisable);
+            actionActivateThresholds.setEnabled(canActivateThresholds);
+            actionShowTemplate.setEnabled((selection.size() == 1) && hasTemplate);
+         }
+      }
+   }
 }

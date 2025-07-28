@@ -67,5 +67,9 @@ public class BulkDciUpdateElement
       {
          msg.setFieldInt32(fieldId, (Integer)value);         
       }
+      else if (value instanceof Long)
+      {
+         msg.setFieldInt64(fieldId, (Long)value);         
+      }
    }
 }
