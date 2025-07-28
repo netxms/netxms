@@ -3657,7 +3657,7 @@ protected:
    bool isDuplicateOf(Node *node, TCHAR *reason, size_t size);
    void reconcileWithDuplicateNode(Node *node);
 
-   bool connectToAgent(UINT32 *error = nullptr, UINT32 *socketError = nullptr, bool *newConnection = nullptr, bool forceConnect = false);
+   bool connectToAgent(uint32_t *error = nullptr, uint32_t *socketError = nullptr, bool *newConnection = nullptr, bool forceConnect = false);
    void setLastAgentCommTime() { m_lastAgentCommTime = time(nullptr); }
 
    void updateClusterMembership();
