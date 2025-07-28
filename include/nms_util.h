@@ -5701,6 +5701,7 @@ int64_t LIBNETXMS_EXPORTABLE GetProcessRSS();
 
 #endif
 
+TCHAR LIBNETXMS_EXPORTABLE *GetSocketErrorText(uint32_t errorCode, TCHAR *buffer, size_t size);
 TCHAR LIBNETXMS_EXPORTABLE *GetLastSocketErrorText(TCHAR *buffer, size_t size);
 
 TCHAR LIBNETXMS_EXPORTABLE *GetLocalHostName(TCHAR *buffer, size_t size, bool fqdn);

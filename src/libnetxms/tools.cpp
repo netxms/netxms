@@ -1351,25 +1351,40 @@ String LIBNETXMS_EXPORTABLE GetSystemErrorText(uint32_t error)
 #endif
 
 /**
+ * Get socket error text by error code
+ * @param errorCode error code
+ * @param buffer buffer to store result
+ * @param size size of buffer
+ * @return pointer to buffer with error text
+ */
+TCHAR LIBNETXMS_EXPORTABLE *GetSocketErrorText(uint32_t errorCode, TCHAR *buffer, size_t size)
+{
+#ifdef _WIN32
+   _sntprintf(buffer, size, _T("%u "), errorCode);
+   size_t len = _tcslen(buffer);
+   GetSystemErrorText(errorCode, &buffer[len], size - len);
+#else
+   _sntprintf(buffer, size, _T("%u "), errorCode);
+   size_t len = _tcslen(buffer);
+#if HAVE_STRERROR_R
+   _tcserror_r(errorCode, &buffer[len], size - len);
+#else
+   _tcslcpy(&buffer[len], _tcserror(errorCode), size - len);
+#endif
+#endif
+   return buffer;
+}
+
+/**
  * Get last socket error as text
  */
 TCHAR LIBNETXMS_EXPORTABLE *GetLastSocketErrorText(TCHAR *buffer, size_t size)
 {
 #ifdef _WIN32
-   DWORD error = WSAGetLastError();
-   _sntprintf(buffer, size, _T("%u "), error);
-   size_t len = _tcslen(buffer);
-   GetSystemErrorText(error, &buffer[len], size - len);
+   return GetSocketErrorText(WSAGetLastError(), buffer, size);
 #else
-   _sntprintf(buffer, size, _T("%u "), errno);
-   size_t len = _tcslen(buffer);
-#if HAVE_STRERROR_R
-   _tcserror_r(errno, &buffer[len], size - len);
-#else
-   _tcslcpy(&buffer[len], _tcserror(errno), size - len);
+   return GetSocketErrorText(errno, buffer, size);
 #endif
-#endif
-   return buffer;
 }
 
 #if (!HAVE_DAEMON || !HAVE_DECL_DAEMON) && !defined(_WIN32)
