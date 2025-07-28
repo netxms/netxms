@@ -26,12 +26,12 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.apache.poi.hssf.usermodel.HSSFCell;
-import org.apache.poi.hssf.usermodel.HSSFCellStyle;
-import org.apache.poi.hssf.usermodel.HSSFFont;
-import org.apache.poi.hssf.usermodel.HSSFRow;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
@@ -104,10 +104,10 @@ public class AclReport
          }
       }
 
-      HSSFWorkbook wb = new HSSFWorkbook();
-      HSSFFont headerFont = wb.createFont();
+      XSSFWorkbook wb = new XSSFWorkbook();
+      XSSFFont headerFont = wb.createFont();
       headerFont.setBold(true);
-      HSSFCellStyle headerCellStyle = wb.createCellStyle();
+      XSSFCellStyle headerCellStyle = wb.createCellStyle();
       headerCellStyle.setFont(headerFont);
 
       wb.createSheet();
@@ -135,13 +135,13 @@ public class AclReport
     * @param wb
     * @param headerStyle
     */
-   private void generateUserSheet(HSSFWorkbook wb, HSSFCellStyle headerStyle)
+   private void generateUserSheet(XSSFWorkbook wb, XSSFCellStyle headerStyle)
    {
       AtomicInteger rowNum = new AtomicInteger(0);
-      HSSFSheet sheet = wb.getSheet(SHEET_USERS);
-      HSSFRow headerRow = sheet.createRow(rowNum.getAndIncrement());
+      XSSFSheet sheet = wb.getSheet(SHEET_USERS);
+      XSSFRow headerRow = sheet.createRow(rowNum.getAndIncrement());
 
-      HSSFCell cell = headerRow.createCell(UsersSheetCells.ID.ordinal());
+      XSSFCell cell = headerRow.createCell(UsersSheetCells.ID.ordinal());
       cell.setCellValue("ID");
       cell.setCellStyle(headerStyle);
 
@@ -380,7 +380,7 @@ public class AclReport
       AbstractUserObject[] userDatabaseObjects = session.getUserDatabaseObjects();
       Arrays.stream(userDatabaseObjects).filter(p -> p instanceof User).sorted(Comparator.comparing(AbstractUserObject::getName)).forEach(element -> {
          User user = (User)element;
-         HSSFRow row = sheet.createRow(rowNum.getAndIncrement());
+         XSSFRow row = sheet.createRow(rowNum.getAndIncrement());
          row.createCell(UsersSheetCells.ID.ordinal()).setCellValue(user.getId());
          row.createCell(UsersSheetCells.LOGIN.ordinal()).setCellValue(user.getName());
          row.createCell(UsersSheetCells.STATUS.ordinal()).setCellValue(user.isDisabled() ? "Disabled" : "Active");
@@ -391,7 +391,7 @@ public class AclReport
          boolean firstRow = true;
          for(long groupId : user.getGroups())
          {
-            final HSSFRow groupRow;
+            final XSSFRow groupRow;
             if (firstRow)
             {
                groupRow = row;
@@ -466,7 +466,7 @@ public class AclReport
     * @param accessBit access bit to test
     * @param user user or group
     */
-   private void createPermissionCell(HSSFRow row, UsersSheetCells cellId, long accessBit, AbstractUserObject userObject)
+   private void createPermissionCell(XSSFRow row, UsersSheetCells cellId, long accessBit, AbstractUserObject userObject)
    {
       row.createCell(cellId.ordinal()).setCellValue(((userObject.getSystemRights() & accessBit) != 0) ? i18n.tr("YES") : i18n.tr("NO"));
    }
@@ -477,13 +477,13 @@ public class AclReport
     * @param wb
     * @param headerStyle
     */
-   private void generateGroupsSheet(HSSFWorkbook wb, HSSFCellStyle headerStyle)
+   private void generateGroupsSheet(XSSFWorkbook wb, XSSFCellStyle headerStyle)
    {
       AtomicInteger rowNum = new AtomicInteger(0);
-      HSSFSheet sheet = wb.getSheet(SHEET_GROUPS);
-      HSSFRow headerRow = sheet.createRow(rowNum.getAndIncrement());
+      XSSFSheet sheet = wb.getSheet(SHEET_GROUPS);
+      XSSFRow headerRow = sheet.createRow(rowNum.getAndIncrement());
 
-      HSSFCell cell = headerRow.createCell(GroupsSheetCells.ID.ordinal());
+      XSSFCell cell = headerRow.createCell(GroupsSheetCells.ID.ordinal());
       cell.setCellStyle(headerStyle);
       cell.setCellValue("ID");
 
@@ -706,7 +706,7 @@ public class AclReport
 
       Arrays.stream(session.getUserDatabaseObjects()).filter(p -> p instanceof UserGroup).sorted(Comparator.comparing(AbstractUserObject::getName)).forEach(element -> {
          UserGroup group = (UserGroup)element;
-         HSSFRow row = sheet.createRow(rowNum.getAndIncrement());
+         XSSFRow row = sheet.createRow(rowNum.getAndIncrement());
 
          row.createCell(GroupsSheetCells.ID.ordinal()).setCellValue(group.getId());
          row.createCell(GroupsSheetCells.NAME.ordinal()).setCellValue(group.getName());
@@ -715,7 +715,7 @@ public class AclReport
          boolean firstRow = true;
          for(long memberId : group.getMembers())
          {
-            final HSSFRow memberRow;
+            final XSSFRow memberRow;
             if (firstRow)
             {
                memberRow = row;
@@ -802,7 +802,7 @@ public class AclReport
     * @param accessBit access bit to test
     * @param user user or group
     */
-   private void createPermissionCell(HSSFRow row, GroupsSheetCells cellId, long accessBit, AbstractUserObject userObject)
+   private void createPermissionCell(XSSFRow row, GroupsSheetCells cellId, long accessBit, AbstractUserObject userObject)
    {
       row.createCell(cellId.ordinal()).setCellValue(((userObject.getSystemRights() & accessBit) != 0) ? i18n.tr("YES") : i18n.tr("NO"));
    }
@@ -814,13 +814,13 @@ public class AclReport
     * @param headerStyle
     * @param permissions
     */
-   private void generatePermissionsSheet(HSSFWorkbook wb, HSSFCellStyle headerStyle, List<ObjectAccess> permissions)
+   private void generatePermissionsSheet(XSSFWorkbook wb, XSSFCellStyle headerStyle, List<ObjectAccess> permissions)
    {
       AtomicInteger rowNum = new AtomicInteger(0);
-      HSSFSheet sheet = wb.getSheet(SHEET_PERMISSIONS);
-      HSSFRow headerRow = sheet.createRow(rowNum.getAndIncrement());
+      XSSFSheet sheet = wb.getSheet(SHEET_PERMISSIONS);
+      XSSFRow headerRow = sheet.createRow(rowNum.getAndIncrement());
 
-      HSSFCell cell = headerRow.createCell(PermissionsSheetCells.OBJECT_NAME.ordinal());
+      XSSFCell cell = headerRow.createCell(PermissionsSheetCells.OBJECT_NAME.ordinal());
       cell.setCellStyle(headerStyle);
       cell.setCellValue("Object Name");
 
@@ -929,7 +929,7 @@ public class AclReport
 
       for(ObjectAccess element : permissions)
       {
-         HSSFRow row = sheet.createRow(rowNum.getAndIncrement());
+         XSSFRow row = sheet.createRow(rowNum.getAndIncrement());
 
          row.createCell(PermissionsSheetCells.OBJECT_NAME.ordinal()).setCellValue(element.name);
          row.createCell(PermissionsSheetCells.USER_OR_GROUP_NAME.ordinal()).setCellValue(element.userName);
@@ -969,7 +969,7 @@ public class AclReport
     * @param accessBit access bit to test
     * @param element access list element
     */
-   private void createPermissionCell(HSSFRow row, PermissionsSheetCells cellId, int accessBit, ObjectAccess element)
+   private void createPermissionCell(XSSFRow row, PermissionsSheetCells cellId, int accessBit, ObjectAccess element)
    {
       row.createCell(cellId.ordinal()).setCellValue(((element.accessRights & accessBit) != 0) ? i18n.tr("YES") : i18n.tr("NO"));
    }
