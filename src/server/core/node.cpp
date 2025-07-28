@@ -2916,8 +2916,9 @@ restart_status_poll:
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): agent unreachable, error=%d, socketError=%d. Poll count %d of %d"),
-                  m_name, (int)error, (int)socketError, m_pollCountAgent, requiredPolls);
+         wchar_t errorText[256];
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): agent unreachable, error=\"%u %s\", socketError=\"%s\". Poll count %d of %d"),
+                  m_name, error, AgentErrorCodeToText(error), GetSocketErrorText(socketError, errorText, 256), m_pollCountAgent, requiredPolls);
          sendPollerMsg(POLLER_ERROR _T("Cannot connect to NetXMS agent (%s)\r\n"), AgentErrorCodeToText(error));
          if (m_state & NSF_AGENT_UNREACHABLE)
          {
@@ -4618,6 +4619,12 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
          }
 
          ExitFromUnreachableState();
+      }
+      else
+      {
+         wchar_t errorText[256];
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): agent unreachable, error=\"%u %s\", socketError=\"%s\""),
+                  m_name, error, AgentErrorCodeToText(error), GetSocketErrorText(socketError, errorText, 256));
       }
    }
 
@@ -7102,7 +7109,7 @@ StringMap *Node::getInstanceList(DCObject *dco)
 /**
  * Connect to native agent. Assumes that access to agent connection is already locked.
  */
-bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnection, bool forceConnect)
+bool Node::connectToAgent(uint32_t *error, uint32_t *socketError, bool *newConnection, bool forceConnect)
 {
    if ((g_flags & AF_SHUTDOWN) || m_isDeleteInitiated)
       return false;
@@ -10127,13 +10134,16 @@ shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
        ((m_state & NSF_AGENT_UNREACHABLE) && (m_pollCountAgent == 0)) ||
        (m_status == STATUS_UNMANAGED) ||
        m_isDeleteInitiated)
+   {
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::createAgentConnection(%s [%u]): connection to agent is not possible (status=%d flags=0x%08x)"), m_name, m_id, m_status, m_flags);
       return shared_ptr<AgentConnectionEx>();
+   }
 
    shared_ptr<AgentConnectionEx> conn;
    shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(m_id);
    if (tunnel != nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::createAgentConnection(%s [%d]): using agent tunnel"), m_name, (int)m_id);
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::createAgentConnection(%s [%u]): using agent tunnel"), m_name, m_id);
       conn = make_shared<AgentConnectionEx>(m_id, tunnel, m_agentSecret, isAgentCompressionAllowed());
    }
    else
@@ -10165,8 +10175,12 @@ shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
       }
    }
    conn->setCommandTimeout(g_agentCommandTimeout);
-   if (!conn->connect(g_serverKey, nullptr, nullptr, sendServerId ? g_serverId : 0))
+   uint32_t errorCode, socketErrorCode;
+   if (!conn->connect(g_serverKey, &errorCode, &socketErrorCode, sendServerId ? g_serverId : 0))
    {
+      wchar_t errorText[256];
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::createAgentConnection(%s [%u]): connect failed, error = \"%d %s\", socket error = \"%s\""),
+         m_name, m_id, errorCode, AgentErrorCodeToText(errorCode), GetSocketErrorText(socketErrorCode, errorText, 256));
       conn.reset();
    }
    else

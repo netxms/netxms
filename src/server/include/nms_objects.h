@@ -3691,7 +3691,7 @@ protected:
    bool getDataFromSmclp(const wchar_t *parameters, StringBuffer *output);
    StringList *getAvailableMetricFromSmclp();
 
-   bool connectToAgent(UINT32 *error = nullptr, UINT32 *socketError = nullptr, bool *newConnection = nullptr, bool forceConnect = false);
+   bool connectToAgent(uint32_t *error = nullptr, uint32_t *socketError = nullptr, bool *newConnection = nullptr, bool forceConnect = false);
    void setLastAgentCommTime() { m_lastAgentCommTime = time(nullptr); }
 
    void updateClusterMembership();
