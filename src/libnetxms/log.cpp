@@ -33,6 +33,26 @@
 
 #define LOCAL_MSG_BUFFER_SIZE    1024
 
+struct Secret
+{
+   TCHAR *value;
+   time_t validTo;
+
+   Secret(const TCHAR *value, time_t ttl)
+   {
+      this->value = MemCopyString(value);
+      if (ttl > 0)
+         this->validTo = time(nullptr) + ttl;
+      else
+         this->validTo = 0;
+   }
+
+   ~Secret()
+   {
+      MemFree(value);
+   }
+};
+
 typedef Buffer<TCHAR, LOCAL_MSG_BUFFER_SIZE> msg_buffer_t;
 
 /**
@@ -81,6 +101,7 @@ static Condition s_writerStopCondition(true);
 static NxLogDebugWriter s_debugWriter = nullptr;
 static volatile DebugTagManager s_tagTree;
 static Mutex s_mutexDebugTagTreeWrite(MutexType::FAST);
+static ObjectArray<Secret> s_secrets;
 
 /**
  * Swaps tag tree pointers and waits till reader count drops to 0
@@ -112,6 +133,33 @@ static inline void FormatString(msg_buffer_t& buffer, const TCHAR *format, va_li
    buffer.realloc(bufferSize);
    _vsntprintf(buffer, bufferSize, format, args2);
    va_end(args2);
+}
+
+/**
+ * Filter secrets
+ */
+static void FilterSecrets(msg_buffer_t& buffer)
+{
+   time_t now = time(nullptr);
+   for(int i = s_secrets.size() - 1; i >= 0; i--)
+   {
+      Secret *s = s_secrets.get(i);
+      if ((s->validTo > 0) && (s->validTo < now))
+      {
+         s_secrets.remove(i);
+         continue;
+      }
+
+      TCHAR *p = buffer;
+      while((p = _tcsstr(p, s->value)) != nullptr)
+      {
+         size_t len = _tcslen(s->value);
+         for (int i = 0; i < len; i++) {
+            *(p + i) = _T('*');
+         }
+         p += len;
+      }
+   }
 }
 
 /**
@@ -156,6 +204,39 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level(int level)
    s_tagTree.secondary->setRootDebugLevel(level); // Update the previously active tree
    InterlockedDecrement(&s_tagTree.secondary->m_writers);
    s_mutexDebugTagTreeWrite.unlock();
+}
+
+/**
+ * Add secret token
+ */
+void LIBNETXMS_EXPORTABLE nxlog_add_secret(const TCHAR *value, time_t ttl)
+{
+   if (_tcslen(value) > 0)
+   {
+      s_mutexLogAccess.lock();
+      s_secrets.add(new Secret(value, ttl));
+      s_mutexLogAccess.unlock();
+   }
+}
+
+/**
+ * Remove secret token
+ */
+void LIBNETXMS_EXPORTABLE nxlog_remove_secret(const TCHAR *value)
+{
+   if (_tcslen(value) > 0)
+   {
+      s_mutexLogAccess.lock();
+      for(int i = s_secrets.size() - 1; i >= 0; i--)
+      {
+         Secret *s = s_secrets.get(i);
+         if (!_tcscmp(s->value, value)) {
+            s_secrets.remove(i);
+            break;
+         }
+      }
+      s_mutexLogAccess.unlock();
+   }
 }
 
 /**
@@ -1181,6 +1262,7 @@ static void WriteLog(int16_t severity, const TCHAR *tag, const TCHAR *format, va
    {
       msg_buffer_t message(LOCAL_MSG_BUFFER_SIZE);
       FormatString(message, format, args);
+      FilterSecrets(message);
 
 #ifdef _WIN32
       const TCHAR *strings = message.buffer();
@@ -1260,12 +1342,16 @@ static void WriteLog(int16_t severity, const TCHAR *tag, const TCHAR *format, va
       }
 
       TCHAR tagf[20];
+      msg_buffer_t message(LOCAL_MSG_BUFFER_SIZE);
+      FormatString(message, format, args);
+      FilterSecrets(message);
+
       s_mutexLogAccess.lock();
       if (tag != NULL)
          _ftprintf(stderr, _T("<%d>[%s] "), level, FormatTag(tag, tagf));
       else
          _ftprintf(stderr, _T("<%d> "), level);
-      _vftprintf(stderr, format, args);
+      _fputts(message, stderr);
       _fputtc(_T('\n'), stderr);
       fflush(stderr);
       s_mutexLogAccess.unlock();
@@ -1274,6 +1360,7 @@ static void WriteLog(int16_t severity, const TCHAR *tag, const TCHAR *format, va
    {
       msg_buffer_t message(LOCAL_MSG_BUFFER_SIZE);
       FormatString(message, format, args);
+      FilterSecrets(message);
       WriteLogToFile(severity, tag, message);
    }
 }
