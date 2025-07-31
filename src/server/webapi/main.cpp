@@ -49,6 +49,7 @@ int H_GrafanaGetObjectQuery(Context *context);
 int H_GrafanaGetObjectsStatus(Context *context);
 int H_Login(Context *context);
 int H_Logout(Context *context);
+int H_RefreshToken(Context *context);
 int H_ObjectDetails(Context *context);
 int H_ObjectSubTree(Context *context);
 int H_ObjectExecuteAgentCommand(Context *context);
@@ -173,6 +174,9 @@ static void Logger(void *context, const char *format, va_list args)
 static bool InitModule(Config *config)
 {
    s_listenerPort = static_cast<uint16_t>(config->getValueAsInt(_T("/WEBAPI/ListenerPort"), 8000));
+   
+   // Initialize JWT configuration
+   InitializeJwtConfiguration();
 
    RouteBuilder("")
       .GET(H_Root)
@@ -235,6 +239,10 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/logout")
       .POST(H_Logout)
+      .build();
+   RouteBuilder("v1/auth/refresh")
+      .POST(H_RefreshToken)
+      .noauth()
       .build();
    RouteBuilder("v1/objects")
       .GET(H_Objects)

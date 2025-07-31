@@ -184,13 +184,13 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
    {
       nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Selected route requires authentication");
 
-      char encodedToken[64] = "";
+      char encodedToken[2048] = "";  // Increased size for JWT tokens
       MHD_get_connection_values(connection, MHD_HEADER_KIND,
          [] (void *context, MHD_ValueKind kind, const char *key, const char *value)
          {
             if (!stricmp(key, "Authorization") && !strnicmp(value, "Bearer ", 7))
             {
-               strlcpy(static_cast<char*>(context), &value[7], 64);
+               strlcpy(static_cast<char*>(context), &value[7], 2048);
                return MHD_NO;
             }
             return MHD_YES;
@@ -202,30 +202,88 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
          return nullptr;
       }
 
-      token = UserAuthenticationToken::parseA(encodedToken);
-      if (token.isNull())
+      bool jwtValidation = false;
+      
+      // Try JWT validation first (check if token contains dots - JWT format)
+      if (strchr(encodedToken, '.') != nullptr)
       {
-         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Authentication token \"%hs\" provided in request has invalid format", encodedToken);
-         *responseCode = 401;  // Unauthorized
-         return nullptr;
+         extern const char *s_jwtSecret;  // Declare external access to JWT secret
+         JwtToken *jwtToken = JwtToken::parse(encodedToken, s_jwtSecret);
+         if (jwtToken != nullptr && jwtToken->isValid())
+         {
+            // Check if token is blocked
+            String jti = jwtToken->getJti();
+            char *jtiUtf8 = UTF8StringFromTString(jti.cstr());
+            bool isBlocked = !jti.isEmpty() && JwtTokenBlocklist::getInstance()->isBlocked(jtiUtf8);
+            MemFree(jtiUtf8);
+            if (isBlocked)
+            {
+               nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"JWT token is blocked");
+               delete jwtToken;
+               *responseCode = 401;
+               return nullptr;
+            }
+            
+            // Verify it's an access token
+            String tokenType = jwtToken->getClaim("type");
+            if (tokenType.equals(_T("access")))
+            {
+               userId = static_cast<uint32_t>(jwtToken->getClaimAsInt("userId"));
+               systemAccessRights = static_cast<uint64_t>(jwtToken->getClaimAsInt("systemAccessRights"));
+               
+               uint32_t rcc;
+               if (ValidateUserId(userId, loginName, nullptr, &rcc))
+               {
+                  jwtValidation = true;
+                  nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"JWT token provided in request successfully passed validation (userId=%u)", userId);
+               }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"JWT token provided in request is valid but associated login is not (RCC=%u)", rcc);
+                  delete jwtToken;
+                  *responseCode = 403;
+                  return nullptr;
+               }
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"JWT token is not an access token (type=%hs)", tokenType.cstr());
+               delete jwtToken;
+               *responseCode = 401;
+               return nullptr;
+            }
+            delete jwtToken;
+         }
       }
-
-      if (!ValidateAuthenticationToken(token, &userId, nullptr, AUTH_TOKEN_VALIDITY_TIME))
+      
+      // Fall back to legacy token validation if JWT validation failed
+      if (!jwtValidation)
       {
-         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Authentication token \"%hs\" provided in request is invalid or expired", encodedToken);
-         *responseCode = 401;  // Unauthorized
-         return nullptr;
-      }
+         token = UserAuthenticationToken::parseA(encodedToken);
+         if (token.isNull())
+         {
+            nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Authentication token \"%hs\" provided in request has invalid format", encodedToken);
+            *responseCode = 401;  // Unauthorized
+            return nullptr;
+         }
 
-      uint32_t rcc;
-      if (!ValidateUserId(userId, loginName, &systemAccessRights, &rcc))
-      {
-         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Authentication token \"%hs\" provided in request is valid but associated login is not (RCC=%u)", encodedToken);
-         *responseCode = 403;  // Forbidden
-         return nullptr;
-      }
+         if (!ValidateAuthenticationToken(token, &userId, nullptr, AUTH_TOKEN_VALIDITY_TIME))
+         {
+            nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Authentication token \"%hs\" provided in request is invalid or expired", encodedToken);
+            *responseCode = 401;  // Unauthorized
+            return nullptr;
+         }
 
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Authentication token provided in request successfully passed validation (userId=%u)", userId);
+         uint32_t rcc;
+         if (!ValidateUserId(userId, loginName, &systemAccessRights, &rcc))
+         {
+            nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Authentication token \"%hs\" provided in request is valid but associated login is not (RCC=%u)", encodedToken);
+            *responseCode = 403;  // Forbidden
+            return nullptr;
+         }
+
+         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Legacy authentication token provided in request successfully passed validation (userId=%u)", userId);
+      }
    }
 
    return new Context(connection, path, methodId, handler, token, userId, loginName, systemAccessRights, std::move(placeholderValues));
