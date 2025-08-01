@@ -427,6 +427,7 @@ public:
    uint32_t getRelatedObject() const { return m_relatedObject; }
    bool isDisabledByUser() { return (m_stateFlags & DCO_STATE_DISABLED_BY_USER) ? true : false; }
    SharedString getComments() const { return GetAttributeWithLock(m_comments, m_mutex); }
+   time_t getThresholdDisableEndTime() const { return m_thresholdDisableEndTime; }
 
 	bool matchClusterResource();
    bool isReadyForPolling(time_t currTime);
@@ -915,6 +916,7 @@ private:
    bool m_hasActiveThreshold;
    int m_thresholdSeverity;
    uint32_t m_relatedObject;
+   time_t m_thresholdDisableEndTime;
 
 public:
    DCObjectInfo(const DCObject& object);
@@ -947,6 +949,8 @@ public:
    bool hasActiveThreshold() const { return m_hasActiveThreshold; }
    int getThresholdSeverity() const { return m_thresholdSeverity; }
    uint32_t getRelatedObject() const { return m_relatedObject; }
+   time_t getThresholdDisableEndTime() const { return m_thresholdDisableEndTime; }
+
    String formatValue(const TCHAR *value, const StringList *parameters) const;
 };
 

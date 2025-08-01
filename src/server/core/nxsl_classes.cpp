@@ -1118,7 +1118,7 @@ NXSL_Value *NXSL_NetworkMapClass::getAttr(NXSL_Object *object, const NXSL_Identi
    {
       value = vm->createValue(netmap->getBackgroundLatitude());
    }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("getBackgroundLongitude"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("backgroundLongitude"))
    {
       value = vm->createValue(netmap->getBackgroundLatitude());
    }
@@ -3147,7 +3147,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("peerLastUpdateTime"))
    {
-      vm->createValue(static_cast<int64_t>(iface->getPeerLastUpdateTime()));
+      value = vm->createValue(static_cast<int64_t>(iface->getPeerLastUpdateTime()));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("peerNode"))
    {
@@ -5435,6 +5435,10 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const NXSL_Identifier& a
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("templateItemId"))
    {
       value = vm->createValue(dci->getTemplateItemId());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("thresholdDisableEndTime"))
+   {
+      value = vm->createValue(static_cast<int64_t>(dci->getThresholdDisableEndTime()));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("transformedDataType") && (dci->getType() == DCO_TYPE_ITEM))
    {

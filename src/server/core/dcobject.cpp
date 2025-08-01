@@ -1832,6 +1832,7 @@ DCObjectInfo::DCObjectInfo(const DCObject& object) : m_pollingSchedules(object.g
    m_hasActiveThreshold = false;
    m_thresholdSeverity = SEVERITY_NORMAL;
    m_relatedObject = object.getRelatedObject();
+   m_thresholdDisableEndTime = object.m_thresholdDisableEndTime;
 }
 
 /**
@@ -1875,6 +1876,7 @@ DCObjectInfo::DCObjectInfo(const NXCPMessage& msg, const DCObject *object) : m_p
    m_hasActiveThreshold = false;
    m_thresholdSeverity = SEVERITY_NORMAL;
    m_relatedObject = (object != nullptr) ? object->getRelatedObject() : 0;
+   m_thresholdDisableEndTime = (object != nullptr) ? object->getThresholdDisableEndTime() : 0;
 }
 
 /**
