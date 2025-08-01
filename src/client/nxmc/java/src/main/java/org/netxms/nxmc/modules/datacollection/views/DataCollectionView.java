@@ -537,12 +537,12 @@ public class DataCollectionView extends BaseDataCollectionView
       };
       actionActivateThresholds.setEnabled(false);
 
-      actionDisableThresholds = new Action(i18n.tr("Disable threshold processing"), ResourceManager.getImageDescriptor("icons/dci/disabled.gif")) {
+      actionDisableThresholds = new Action(i18n.tr("Disable threshold processing..."), ResourceManager.getImageDescriptor("icons/dci/disabled.gif")) {
          @Override
          public void run()
          {
-            changeThresholdStatus(true);
-            actionActivateThresholds.setEnabled(true);
+            if (changeThresholdStatus(true))
+               actionActivateThresholds.setEnabled(true);
          }
       };
     
@@ -1074,8 +1074,9 @@ public class DataCollectionView extends BaseDataCollectionView
 
    /**
     * Open bulk update dialog
+    * @return 
     */
-   private void changeThresholdStatus(boolean disableThresholds)
+   private boolean changeThresholdStatus(boolean disableThresholds)
    {      
       IStructuredSelection selection = viewer.getStructuredSelection();
       final Set<Long> dciList = new HashSet<Long>(selection.size());   
@@ -1092,7 +1093,7 @@ public class DataCollectionView extends BaseDataCollectionView
       {
          DisableThresholdsDialog dlg = new DisableThresholdsDialog(getWindow().getShell());
          if (dlg.open() != Window.OK)
-            return;      
+            return false;      
          
          elements = dlg.getBulkUpdateElements();
       }
@@ -1114,6 +1115,7 @@ public class DataCollectionView extends BaseDataCollectionView
             return i18n.tr("Failed to execute bulk DCI threshold update");
          }
       }.start();
+      return true;
    }
 
 
