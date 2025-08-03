@@ -5897,7 +5897,7 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tags, int level
 void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const char *definition);
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level();
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level_tag(const TCHAR *tag);
-int LIBNETXMS_EXPORTABLE nxlog_get_debug_level_tag_object(const TCHAR *tag, UINT32 objectId);
+int LIBNETXMS_EXPORTABLE nxlog_get_debug_level_tag_object(const TCHAR *tag, uint32_t objectId);
 void LIBNETXMS_EXPORTABLE nxlog_reset_debug_level_tags();
 
 /**
@@ -5922,6 +5922,9 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_writer(NxLogDebugWriter writer);
 
 typedef void (*NxLogConsoleWriter)(const TCHAR *, ...);
 void LIBNETXMS_EXPORTABLE nxlog_set_console_writer(NxLogConsoleWriter writer);
+
+typedef void (*NxLogRotationHook)();
+void LIBNETXMS_EXPORTABLE nxlog_set_rotation_hook(NxLogRotationHook hook);
 
 void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text);
 void LIBNETXMS_EXPORTABLE WriteToTerminalEx(const TCHAR *format, ...)
