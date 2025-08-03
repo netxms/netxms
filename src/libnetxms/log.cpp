@@ -81,6 +81,7 @@ static Condition s_writerStopCondition(true);
 static NxLogDebugWriter s_debugWriter = nullptr;
 static volatile DebugTagManager s_tagTree;
 static Mutex s_mutexDebugTagTreeWrite(MutexType::FAST);
+static NxLogRotationHook s_rotationHook = nullptr;
 
 /**
  * Swaps tag tree pointers and waits till reader count drops to 0
@@ -277,7 +278,7 @@ int LIBNETXMS_EXPORTABLE nxlog_get_debug_level_tag(const TCHAR *tag)
 /**
  * Get current debug level for tag/object combination
  */
-int LIBNETXMS_EXPORTABLE nxlog_get_debug_level_tag_object(const TCHAR *tag, UINT32 objectId)
+int LIBNETXMS_EXPORTABLE nxlog_get_debug_level_tag_object(const TCHAR *tag, uint32_t objectId)
 {
    TCHAR fullTag[256];
    _sntprintf(fullTag, 256, _T("%s.%u"), tag, objectId);
@@ -304,6 +305,14 @@ ObjectArray<DebugTagInfo> LIBNETXMS_EXPORTABLE *nxlog_get_all_debug_tags()
 void LIBNETXMS_EXPORTABLE nxlog_set_debug_writer(NxLogDebugWriter writer)
 {
    s_debugWriter = writer;
+}
+
+/**
+ * Set log rotation hook
+ */
+void LIBNETXMS_EXPORTABLE nxlog_set_rotation_hook(NxLogRotationHook hook)
+{
+   s_rotationHook = hook;
 }
 
 /**
@@ -502,7 +511,7 @@ static bool RotateLog(bool needLock)
 	if (needLock)
 		s_mutexLogAccess.lock();
 
-	if ((s_flags & NXLOG_ROTATION_ERROR) && (s_lastRotationAttempt > time(NULL) - 3600))
+	if ((s_flags & NXLOG_ROTATION_ERROR) && (s_lastRotationAttempt > time(nullptr) - 3600))
 	{
 	   if (needLock)
 	      s_mutexLogAccess.unlock();
@@ -660,10 +669,28 @@ static bool RotateLog(bool needLock)
       s_flags &= ~NXLOG_ROTATION_ERROR;
    else
       s_flags |= NXLOG_ROTATION_ERROR;
-   s_lastRotationAttempt = time(NULL);
+   s_lastRotationAttempt = time(nullptr);
 
 	if (needLock)
+	{
 		s_mutexLogAccess.unlock();
+		if (s_rotationHook != nullptr)
+		   s_rotationHook();
+   }
+	else
+	{
+	   // Run rotation hook in background thread
+      // This is needed to avoid deadlock if rotation hook tries to write to log
+	   NxLogRotationHook rotationHook = s_rotationHook;
+      if (rotationHook != nullptr)
+      {
+         ThreadCreate(
+            [rotationHook]() -> void
+            {
+               rotationHook();
+            });
+      }
+	}
 
 	MemFree(buffer);
 	return (s_flags & NXLOG_IS_OPEN) ? true : false;

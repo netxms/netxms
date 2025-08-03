@@ -986,6 +986,38 @@ static void SaveAgentIdToFile()
 }
 
 /**
+ * Log agent information
+ */
+static void LogAgentInfo()
+{
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Core agent version ") NETXMS_VERSION_STRING _T(" (build tag ") NETXMS_BUILD_TAG _T(")"));
+   TCHAR timezone[32];
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("System time zone is %s"), GetSystemTimeZone(timezone, 32));
+   nxlog_write_tag(NXLOG_INFO, _T("config"), _T("Additional configuration files was loaded from %s"), g_szConfigIncludeDir);
+   nxlog_write_tag(NXLOG_INFO, _T("logger"), _T("Debug level set to %d"), s_debugLevel);
+
+   if (g_failFlags & FAIL_LOAD_CONFIG)
+   {
+      nxlog_write_tag(NXLOG_WARNING, _T("config"), _T("Configuration loaded with errors"));
+      RegisterProblem(SEVERITY_MINOR, _T("agent-config-load"), _T("Agent configuration loaded with errors"));
+   }
+   nxlog_write_tag(NXLOG_INFO, _T("config"), _T("Main configuration file: %s"), g_szConfigFile);
+   nxlog_write_tag(NXLOG_INFO, _T("config"), _T("Configuration tree:"));
+   g_config->print();
+
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("PATH = %s"), GetEnvironmentVariableEx(_T("PATH")).cstr());
+#if defined(_AIX)
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("LIBPATH = %s"), GetEnvironmentVariableEx(_T("LIBPATH")).cstr());
+#elif !defined(_WIN32)
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("LD_LIBRARY_PATH = %s"), GetEnvironmentVariableEx(_T("LD_LIBRARY_PATH")).cstr());
+#ifdef __sunos
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("LD_LIBRARY_PATH_32 = %s"), GetEnvironmentVariableEx(_T("LD_LIBRARY_PATH_32")).cstr());
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("LD_LIBRARY_PATH_64 = %s"), GetEnvironmentVariableEx(_T("LD_LIBRARY_PATH_64")).cstr());
+#endif
+#endif
+}
+
+/**
  * Agent initialization
  */
 BOOL Initialize()
@@ -1042,31 +1074,9 @@ BOOL Initialize()
                _tprintf(_T("WARNING: cannot set log rotation policy; using default values\n"));
       }
    }
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Core agent version ") NETXMS_VERSION_STRING _T(" (build tag ") NETXMS_BUILD_TAG _T(")"));
-   TCHAR timezone[32];
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("System time zone is %s"), GetSystemTimeZone(timezone, 32));
-   nxlog_write_tag(NXLOG_INFO, _T("config"), _T("Additional configuration files was loaded from %s"), g_szConfigIncludeDir);
-   nxlog_write_tag(NXLOG_INFO, _T("logger"), _T("Debug level set to %d"), s_debugLevel);
 
-   if (g_failFlags & FAIL_LOAD_CONFIG)
-   {
-      nxlog_write_tag(NXLOG_WARNING, _T("config"), _T("Configuration loaded with errors"));
-      RegisterProblem(SEVERITY_MINOR, _T("agent-config-load"), _T("Agent configuration loaded with errors"));
-   }
-   nxlog_write_tag(NXLOG_INFO, _T("config"), _T("Main configuration file: %s"), g_szConfigFile);
-   nxlog_write_tag(NXLOG_INFO, _T("config"), _T("Configuration tree:"));
-   g_config->print();
-
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("PATH = %s"), GetEnvironmentVariableEx(_T("PATH")).cstr());
-#if defined(_AIX)
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("LIBPATH = %s"), GetEnvironmentVariableEx(_T("LIBPATH")).cstr());
-#elif !defined(_WIN32)
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("LD_LIBRARY_PATH = %s"), GetEnvironmentVariableEx(_T("LD_LIBRARY_PATH")).cstr());
-#ifdef __sunos
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("LD_LIBRARY_PATH_32 = %s"), GetEnvironmentVariableEx(_T("LD_LIBRARY_PATH_32")).cstr());
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("LD_LIBRARY_PATH_64 = %s"), GetEnvironmentVariableEx(_T("LD_LIBRARY_PATH_64")).cstr());
-#endif
-#endif
+   LogAgentInfo();
+   nxlog_set_rotation_hook(LogAgentInfo);
 
    if (s_debugTags != nullptr)
    {
