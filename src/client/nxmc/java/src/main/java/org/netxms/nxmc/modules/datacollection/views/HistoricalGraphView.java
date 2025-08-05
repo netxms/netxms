@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -474,26 +474,21 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
                monitor.worked(1);
             }
 
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
+            runInUIThread(() -> {
+               if (!((Widget)chart).isDisposed())
                {
-                  if (!((Widget)chart).isDisposed())
-                  {
-                     chart.setTimeRange(configuration.getTimeFrom(), configuration.getTimeTo());
-                     setChartData(data, thresholds);
-                     clearMessages();
-                  }
-                  updateInProgress = false;
+                  chart.setTimeRange(configuration.getTimeFrom(), configuration.getTimeTo());
+                  setChartData(data, thresholds);
+                  clearMessages();
                }
+               updateInProgress = false;
             });
          }
 
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot get value for DCI %s:\"%s\""), session.getObjectName(currentItem.nodeId),
-                  currentItem.name);
+            return String.format(i18n.tr("Cannot get value for DCI %s:\"%s\""), session.getObjectName(currentItem.nodeId), currentItem.name);
          }
 
          @Override

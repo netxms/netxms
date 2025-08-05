@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,10 +45,10 @@ public class BarChart extends GenericComparisonChart
    private static final int MARGIN_WIDTH = 5;
    private static final int MARGIN_HEIGHT = 10;
    private static final int MARGIN_LABELS = 4;
-   
+
    private boolean tooltipShown = false;
    private double total = 0;
-   List<Rectangle> elements;
+   private List<Rectangle> elements;
 
    /**
     * @param parent
@@ -57,9 +57,8 @@ public class BarChart extends GenericComparisonChart
    public BarChart(Chart parent)
    {
       super(parent);
-      
+
       WidgetHelper.attachMouseTrackListener(this, new MouseTrackListener() {
-         
          @Override
          public void mouseHover(MouseEvent e)
          {
@@ -70,12 +69,12 @@ public class BarChart extends GenericComparisonChart
                tooltipShown = true;
             }            
          }
-         
+
          @Override
          public void mouseExit(MouseEvent e)
          {   
          }
-         
+
          @Override
          public void mouseEnter(MouseEvent e)
          {     
