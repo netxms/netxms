@@ -41,6 +41,8 @@ int H_Alarms(Context *context);
 int H_DataCollectionCurrentValues(Context *context);
 int H_DataCollectionHistory(Context *context);
 int H_GrafanaDciList(Context *context);
+int H_RegisterPushDeviceToken(Context *context);
+int H_RemovePushDeviceToken(Context *context);
 int H_FindMacAddress(Context *context);
 int H_GrafanaGetAlarms(Context *context);
 int H_GrafanaGetSummaryTable(Context *context);
@@ -201,6 +203,12 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/dci-summary-tables/adhoc-query")
       .POST(H_QueryAdHocSummaryTable)
+      .build();
+   RouteBuilder("v1/profile/push-token")
+      .POST(H_RegisterPushDeviceToken)
+      .build();
+   RouteBuilder("v1/profile/push-token/:device-token")
+      .DELETE(H_RemovePushDeviceToken)
       .build();
    RouteBuilder("v1/find/mac-address")
       .GET(H_FindMacAddress)
