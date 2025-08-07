@@ -972,6 +972,12 @@ bool NXCORE_EXPORTABLE Initialize()
 	// Wait for database password if needed
 	GetDatabasePassword();
 
+	// Execute database password command if configured
+	ExecuteDatabasePasswordCommand();
+
+	// Retrieve database credentials from Vault if configured
+	RetrieveDatabaseCredentialsFromVault();
+
    // Set up callback for DBConnect
    DBSetSessionInitCallback(DbSessionInitCallback);
 
