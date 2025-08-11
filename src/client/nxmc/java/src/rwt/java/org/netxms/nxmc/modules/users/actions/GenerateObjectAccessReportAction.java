@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020-2023 Raden Soultions
+ * Copyright (C) 2020-2025 Raden Soultions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,12 +24,16 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.netxms.client.NXCSession;
 import org.netxms.nxmc.DownloadServiceHandler;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.users.reports.acl.AbstractAclReport;
 import org.netxms.nxmc.modules.users.reports.acl.AclReport;
+import org.netxms.nxmc.modules.users.reports.acl.HbtfAclReport;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +69,8 @@ public class GenerateObjectAccessReportAction extends Action
       try
       {
          final File tmpFile = File.createTempFile("ACLReport_" + view.hashCode(), "_" + System.currentTimeMillis());
-         final AclReport report = new AclReport(tmpFile.getAbsolutePath());
+         NXCSession session = Registry.getSession();
+         final AbstractAclReport report = session.getClientConfigurationHint("AclReportVariant", "").equals("HBTF") ? new HbtfAclReport(tmpFile.getAbsolutePath()) : new AclReport(tmpFile.getAbsolutePath());
          new Job(i18n.tr("Generating object access report"), view) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception

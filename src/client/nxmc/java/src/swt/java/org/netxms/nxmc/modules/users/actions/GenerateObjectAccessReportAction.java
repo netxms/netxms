@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020-2023 Raden Soultions
+ * Copyright (C) 2020-2025 Raden Soultions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,11 +24,15 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.FileDialog;
+import org.netxms.client.NXCSession;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.users.reports.acl.AbstractAclReport;
 import org.netxms.nxmc.modules.users.reports.acl.AclReport;
+import org.netxms.nxmc.modules.users.reports.acl.HbtfAclReport;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -67,7 +71,8 @@ public class GenerateObjectAccessReportAction extends Action
       if (outputFileName == null)
          return;
 
-      final AclReport report = new AclReport(outputFileName);
+      NXCSession session = Registry.getSession();
+      final AbstractAclReport report = session.getClientConfigurationHint("AclReportVariant", "").equals("HBTF") ? new HbtfAclReport(outputFileName) : new AclReport(outputFileName);
       new Job(i18n.tr("Generating object access report"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
