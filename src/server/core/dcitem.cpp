@@ -1136,6 +1136,7 @@ bool DCItem::transform(ItemValue &value, time_t elapsedTime)
       return false;  // Transformation script present but cannot be compiled
 
    bool success = true;
+   int deltaDataType = m_dataType;
 
    switch(m_deltaCalculation)
    {
@@ -1223,26 +1224,27 @@ bool DCItem::transform(ItemValue &value, time_t elapsedTime)
          if (elapsedTime == 0)
             elapsedTime++;
 
+         deltaDataType = DCI_DT_FLOAT;  // Result will be in float type
          switch(m_dataType)
          {
             case DCI_DT_INT:
-               value = (value.getInt32() - m_prevRawValue.getInt32()) / static_cast<int32_t>(elapsedTime);
+               value = static_cast<double>(value.getInt32() - m_prevRawValue.getInt32()) / static_cast<double>(elapsedTime);
                break;
             case DCI_DT_UINT:
-               value = (value.getUInt32() - m_prevRawValue.getUInt32()) / static_cast<uint32_t>(elapsedTime);
+               value = static_cast<double>(value.getUInt32() - m_prevRawValue.getUInt32()) / static_cast<double>(elapsedTime);
                break;
             case DCI_DT_COUNTER32:
                if (value.getUInt32() >= m_prevRawValue.getUInt32())
                {
                   uint32_t delta = value.getUInt32() - m_prevRawValue.getUInt32();
-                  value = delta / static_cast<uint32_t>(elapsedTime);
+                  value = static_cast<double>(delta) / static_cast<double>(elapsedTime);
                   m_prevDeltaValue = delta;
                }
                else
                {
                   // discontinuity: counter reset or wrap around
                   uint32_t delta = value.getUInt32() - m_prevRawValue.getUInt32();  // unsigned math
-                  nxlog_debug_tag(DEBUG_TAG_DC_TRANSFORM, 6, _T("32-bit counter reset or rollover detected; DCI=\"%s\" [%u]; node=\"%s\" [%u]; new value=%u old value=%u delta=%u prev delta=%u"),
+                  nxlog_debug_tag(DEBUG_TAG_DC_TRANSFORM, 6, L"32-bit counter reset or rollover detected; DCI=\"%s\" [%u]; node=\"%s\" [%u]; new value=%u old value=%u delta=%u prev delta=%u",
                             m_description.cstr(), m_id, getOwnerName(), getOwnerId(), value.getUInt32(), m_prevRawValue.getUInt32(), delta, static_cast<uint32_t>(m_prevDeltaValue));
                   if (delta > static_cast<uint32_t>(m_prevDeltaValue))
                   {
@@ -1253,29 +1255,29 @@ bool DCItem::transform(ItemValue &value, time_t elapsedTime)
                   else
                   {
                      // Assume counter wrap around, value looks valid
-                     value = delta / static_cast<uint32_t>(elapsedTime);
+                     value = static_cast<double>(delta) / static_cast<double>(elapsedTime);
                      m_prevDeltaValue = delta;
                   }
                }
                break;
             case DCI_DT_INT64:
-               value = (value.getInt64() - m_prevRawValue.getInt64()) / static_cast<int64_t>(elapsedTime);
+               value = static_cast<double>(value.getInt64() - m_prevRawValue.getInt64()) / static_cast<double>(elapsedTime);
                break;
             case DCI_DT_UINT64:
-               value = (value.getUInt64() - m_prevRawValue.getUInt64()) / static_cast<uint64_t>(elapsedTime);
+               value = static_cast<double>(value.getUInt64() - m_prevRawValue.getUInt64()) / static_cast<double>(elapsedTime);
                break;
             case DCI_DT_COUNTER64:
                // assume counter reset if new value is less then previous
                if (value.getUInt64() >= m_prevRawValue.getUInt64())
                {
                   m_prevDeltaValue = value.getUInt64() - m_prevRawValue.getUInt64();
-                  value = m_prevDeltaValue / static_cast<uint64_t>(elapsedTime);
+                  value = static_cast<double>(m_prevDeltaValue) / static_cast<double>(elapsedTime);
                }
                else
                {
                   // discontinuity: counter reset or wrap around
                   uint64_t delta = value.getUInt64() - m_prevRawValue.getUInt64();  // unsigned math
-                  nxlog_debug_tag(DEBUG_TAG_DC_TRANSFORM, 6, _T("64-bit counter reset or rollover detected; DCI=\"%s\" [%u]; node=\"%s\" [%u]; new value=") UINT64_FMT _T(" old value=") UINT64_FMT _T(" delta=") UINT64_FMT _T(" prev delta=") UINT64_FMT,
+                  nxlog_debug_tag(DEBUG_TAG_DC_TRANSFORM, 6, L"64-bit counter reset or rollover detected; DCI=\"%s\" [%u]; node=\"%s\" [%u]; new value=" UINT64_FMT L" old value=" UINT64_FMT L" delta=" UINT64_FMT L" prev delta=" UINT64_FMT,
                             m_description.cstr(), m_id, getOwnerName(), getOwnerId(), value.getUInt64(), m_prevRawValue.getUInt64(), delta, m_prevDeltaValue);
                   if (delta > m_prevDeltaValue)
                   {
@@ -1286,7 +1288,7 @@ bool DCItem::transform(ItemValue &value, time_t elapsedTime)
                   else
                   {
                      // Assume counter wrap around, value looks valid
-                     value = delta / static_cast<uint64_t>(elapsedTime);
+                     value = static_cast<double>(delta) / static_cast<double>(elapsedTime);
                      m_prevDeltaValue = delta;
                   }
                }
@@ -1365,16 +1367,16 @@ bool DCItem::transform(ItemValue &value, time_t elapsedTime)
          }
          else if (vm->getErrorCode() == NXSL_ERR_EXECUTION_ABORTED)
          {
-            nxlog_debug_tag(DEBUG_TAG_DC_TRANSFORM, 6, _T("Transformation script for DCI \"%s\" [%d] on node %s [%d] aborted"),
+            nxlog_debug_tag(DEBUG_TAG_DC_TRANSFORM, 6, L"Transformation script for DCI \"%s\" [%d] on node %s [%d] aborted",
                       m_description.cstr(), m_id, getOwnerName(), getOwnerId());
          }
          else
          {
             time_t now = time(nullptr);
-            if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
+            if (m_lastScriptErrorReport + ConfigReadInt(L"DataCollection.ScriptErrorReportInterval", 86400) < now)
             {
-               ReportScriptError(SCRIPT_CONTEXT_DCI, getOwner().get(), m_id, vm->getErrorText(), _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
-               nxlog_debug_tag(DEBUG_TAG_DC_TRANSFORM, 6, _T("Failed to execute transformation script for object %s [%u] DCI %s [%u] (%s)"),
+               ReportScriptError(SCRIPT_CONTEXT_DCI, getOwner().get(), m_id, vm->getErrorText(), L"DCI::%s::%d::TransformationScript", getOwnerName(), m_id);
+               nxlog_debug_tag(DEBUG_TAG_DC_TRANSFORM, 6, L"Failed to execute transformation script for object %s [%u] DCI %s [%u] (%s)",
                         getOwnerName(), getOwnerId(), m_name.cstr(), m_id, vm->getErrorText());
                m_lastScriptErrorReport = now;
             }
@@ -1389,19 +1391,19 @@ bool DCItem::transform(ItemValue &value, time_t elapsedTime)
       else
       {
          time_t now = time(nullptr);
-         if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
+         if (m_lastScriptErrorReport + ConfigReadInt(L"DataCollection.ScriptErrorReportInterval", 86400) < now)
          {
-            ReportScriptError(SCRIPT_CONTEXT_DCI, getOwner().get(), m_id, _T("Script load failed"), _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
-            nxlog_debug_tag(DEBUG_TAG_DC_TRANSFORM, 6, _T("Failed to load transformation script for object %s [%u] DCI %s [%u]"),
+            ReportScriptError(SCRIPT_CONTEXT_DCI, getOwner().get(), m_id, L"Script load failed", L"DCI::%s::%d::TransformationScript", getOwnerName(), m_id);
+            nxlog_debug_tag(DEBUG_TAG_DC_TRANSFORM, 6, L"Failed to load transformation script for object %s [%u] DCI %s [%u]",
                      getOwnerName(), getOwnerId(), m_name.cstr(), m_id);
             m_lastScriptErrorReport = now;
          }
          success = false;
       }
    }
-   else if (getTransformedDataType() != m_dataType)
+   else if (getTransformedDataType() != deltaDataType)
    {
-      ConvertValue(value, getTransformedDataType(), m_dataType);
+      ConvertValue(value, getTransformedDataType(), deltaDataType);
    }
    return success;
 }
@@ -1418,7 +1420,7 @@ int DCItem::getNXSLDataType() const
 /**
  * Set new ID and node/template association
  */
-void DCItem::changeBinding(UINT32 newId, shared_ptr<DataCollectionOwner> newOwner, bool doMacroExpansion)
+void DCItem::changeBinding(uint32_t newId, shared_ptr<DataCollectionOwner> newOwner, bool doMacroExpansion)
 {
 	DCObject::changeBinding(newId, newOwner, doMacroExpansion);
 

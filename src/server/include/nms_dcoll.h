@@ -606,7 +606,7 @@ public:
    void updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32_t **mapIndex, uint32_t **mapId);
    void fillMessageWithThresholds(NXCPMessage *msg, bool activeOnly);
 
-   virtual void changeBinding(UINT32 newId, shared_ptr<DataCollectionOwner> newOwner, bool doMacroExpansion) override;
+   virtual void changeBinding(uint32_t newId, shared_ptr<DataCollectionOwner> newOwner, bool doMacroExpansion) override;
 
 	virtual bool deleteAllData() override;
    virtual bool deleteEntry(time_t timestamp) override;
