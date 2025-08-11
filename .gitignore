@@ -327,8 +327,6 @@ target
 CMakeLists.txt
 cmake-build-debug/
 
-# re-enable gradle wrapper
-!gradle-wrapper.jar
-.cache/clangd/index/*
-compile_commands.json
+# Other
 .aider*
+.netxmsd_history
