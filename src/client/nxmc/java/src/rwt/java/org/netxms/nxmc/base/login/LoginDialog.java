@@ -20,7 +20,6 @@ package org.netxms.nxmc.base.login;
 
 import java.io.IOException;
 import java.io.InputStream;
-import javax.servlet.ServletContext;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -53,6 +52,7 @@ import org.netxms.nxmc.tools.ColorConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
+import jakarta.servlet.ServletContext;
 
 /**
  * Login dialog

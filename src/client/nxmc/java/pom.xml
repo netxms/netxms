@@ -41,8 +41,8 @@
       <build.finalName>${project.artifactId}-${project.version}</build.finalName>
       <commonmark.version>0.24.0</commonmark.version>
       <lib.scope>compile</lib.scope>
-      <rwt.version>3.29.0</rwt.version>
-      <swt.version>3.128.0</swt.version>
+      <rwt.version>4.3.0</rwt.version>
+      <swt.version>3.130.0</swt.version>
       <packaging.type>jar</packaging.type>
    </properties>
    <profiles>
@@ -465,15 +465,15 @@
                <scope>${lib.scope}</scope>
             </dependency>
             <dependency>
-               <groupId>javax.servlet</groupId>
-               <artifactId>javax.servlet-api</artifactId>
-               <version>4.0.1</version>
+               <groupId>jakarta.servlet</groupId>
+               <artifactId>jakarta.servlet-api</artifactId>
+               <version>6.0.0</version>
                <scope>provided</scope>
             </dependency>
             <dependency>
-               <groupId>javax.websocket</groupId>
-               <artifactId>javax.websocket-api</artifactId>
-               <version>1.1</version>
+               <groupId>jakarta.websocket</groupId>
+               <artifactId>jakarta.websocket-api</artifactId>
+               <version>2.0.0</version>
                <scope>provided</scope>
             </dependency>
             <dependency>
@@ -551,7 +551,7 @@
                <plugin>
                   <groupId>org.eclipse.jetty</groupId>
                   <artifactId>jetty-maven-plugin</artifactId>
-                  <version>10.0.12</version>
+                  <version>11.0.25</version>
                   <configuration>
                      <httpConnector>
                         <port>8008</port>

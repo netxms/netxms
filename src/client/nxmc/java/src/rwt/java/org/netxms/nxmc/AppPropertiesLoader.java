@@ -25,10 +25,10 @@ import java.net.UnknownHostException;
 import java.util.Properties;
 import java.util.function.BiConsumer;
 import javax.naming.InitialContext;
-import javax.servlet.ServletContext;
 import org.eclipse.rap.rwt.RWT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import jakarta.servlet.ServletContext;
 
 /**
  * Loader class for application properties. Will try to find properties in JNDI, nxmc.properties file, JVM options, and process
