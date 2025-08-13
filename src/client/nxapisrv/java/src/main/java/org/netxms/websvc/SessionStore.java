@@ -18,12 +18,12 @@
  */
 package org.netxms.websvc;
 
+import jakarta.servlet.ServletContext;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import javax.servlet.ServletContext;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;

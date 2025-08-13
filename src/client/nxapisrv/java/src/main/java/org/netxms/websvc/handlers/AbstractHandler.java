@@ -18,6 +18,7 @@
  */
 package org.netxms.websvc.handlers;
 
+import jakarta.servlet.ServletContext;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Date;
@@ -25,7 +26,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import javax.servlet.ServletContext;
 import org.apache.commons.codec.binary.Base64;
 import org.json.JSONObject;
 import org.netxms.client.NXCException;
