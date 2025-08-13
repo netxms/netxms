@@ -63,7 +63,7 @@ public class TablePieChartElement extends TableComparisonChartElement
       chartConfig.setExtendedLegend(config.isExtendedLegend());
       chartConfig.setTranslucent(config.isTranslucent());
 
-      chart = new Chart(getContentArea(), SWT.NONE, ChartType.PIE, chartConfig);
+      chart = new Chart(getContentArea(), SWT.NONE, ChartType.PIE, chartConfig, view);
 		startRefreshTimer();
 	}
 }

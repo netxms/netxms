@@ -138,7 +138,7 @@ public class InterfaceTrafficChart extends OverviewPageElement implements Histor
       chartConfiguration.setUseMultipliers(true);
       chartConfiguration.setAutoScale(true);
       chartConfiguration.setTimePeriod(new TimePeriod()); 
-      chart = new Chart(content, SWT.NONE, ChartType.LINE, chartConfiguration);      
+      chart = new Chart(content, SWT.NONE, ChartType.LINE, chartConfiguration, null);
       chart.setTimeRange(from, to);
       chart.addDoubleClickListener((e) -> openHistoryGraph());
 

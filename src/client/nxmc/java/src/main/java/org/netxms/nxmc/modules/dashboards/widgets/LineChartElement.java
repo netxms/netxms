@@ -122,7 +122,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
       chartConfig.setModifyYBase(config.modifyYBase());
       chartConfig.setYAxisLabel(config.getYAxisLabel());
 
-      chart = new Chart(getContentArea(), SWT.NONE, ChartType.LINE, chartConfig);
+      chart = new Chart(getContentArea(), SWT.NONE, ChartType.LINE, chartConfig, view);
 
       addDisposeListener((e) -> {
          if (refreshController != null)

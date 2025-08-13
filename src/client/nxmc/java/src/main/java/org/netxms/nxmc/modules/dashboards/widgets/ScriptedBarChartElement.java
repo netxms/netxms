@@ -74,7 +74,7 @@ public class ScriptedBarChartElement extends ScriptedComparisonChartElement
       chartConfig.setMaxYScaleValue(elementConfig.getMaxYScaleValue());
       chartConfig.setYAxisLabel(elementConfig.getYAxisLabel());
 
-      chart = new Chart(getContentArea(), SWT.NONE, ChartType.BAR, chartConfig);
+      chart = new Chart(getContentArea(), SWT.NONE, ChartType.BAR, chartConfig, view);
       chart.setDrillDownObjectId(elementConfig.getDrillDownObjectId());
       chart.rebuild();
 

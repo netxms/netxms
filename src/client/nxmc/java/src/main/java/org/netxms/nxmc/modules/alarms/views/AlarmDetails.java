@@ -625,7 +625,7 @@ public class AlarmDetails extends AdHocObjectView
          chartConfiguration.setGridVisible(true);
          chartConfiguration.setTranslucent(true);
 
-         chart = new Chart(dataArea, SWT.NONE, ChartType.LINE, chartConfiguration);
+         chart = new Chart(dataArea, SWT.NONE, ChartType.LINE, chartConfiguration, this);
          ChartDciConfig item = new ChartDciConfig(dci);
          item.lineChartType = ChartDciConfig.AREA;
          item.setColor(ColorConverter.rgbToInt(new RGB(127, 154, 72)));

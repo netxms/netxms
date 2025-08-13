@@ -76,7 +76,7 @@ public class ObjectStatusChartElement extends ComparisonChartElement
       chartConfig.setLegendVisible(elementConfig.isShowLegend());
       chartConfig.setTransposed(elementConfig.isTransposed());
       chartConfig.setTranslucent(elementConfig.isTranslucent());
-      chart = new Chart(getContentArea(), SWT.NONE, ChartType.BAR, chartConfig);
+      chart = new Chart(getContentArea(), SWT.NONE, ChartType.BAR, chartConfig, view);
 
 		for(int i = 0; i <= ObjectStatus.UNKNOWN.getValue(); i++)
 		{

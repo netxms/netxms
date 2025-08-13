@@ -95,7 +95,7 @@ public class AvailabilityChartElement extends ElementWidget
       chartConfig.setLegendPosition(elementConfig.getLegendPosition());
       chartConfig.setLegendVisible(elementConfig.isShowLegend());
       chartConfig.setTranslucent(elementConfig.isTranslucent());
-      chart = new Chart(getContentArea(), SWT.NONE, ChartType.PIE, chartConfig);
+      chart = new Chart(getContentArea(), SWT.NONE, ChartType.PIE, chartConfig, view);
       chart.addParameter(new ChartDciConfig(i18n.tr("Uptime")));
       chart.addParameter(new ChartDciConfig(i18n.tr("Downtime")));
       chart.setPaletteEntry(0, new ChartColor(127, 154, 72));

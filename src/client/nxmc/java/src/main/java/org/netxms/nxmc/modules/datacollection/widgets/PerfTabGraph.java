@@ -109,7 +109,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
       chartConfiguration.setYAxisLabel(settings.getYAxisLabel());
       chartConfiguration.setTimePeriod(settings.getTimePeriod());
 
-      chart = new Chart(this, SWT.NONE, ChartType.LINE, chartConfiguration);
+      chart = new Chart(this, SWT.NONE, ChartType.LINE, chartConfiguration, view);
 
       final Date from = new Date(System.currentTimeMillis() - settings.getTimeRangeMillis());
       final Date to = new Date(System.currentTimeMillis());

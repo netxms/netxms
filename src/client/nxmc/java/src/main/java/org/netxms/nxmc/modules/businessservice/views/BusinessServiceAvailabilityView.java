@@ -180,7 +180,7 @@ public class BusinessServiceAvailabilityView extends ObjectView
       chartConfiguration.setLegendPosition(ChartConfiguration.POSITION_RIGHT);
       chartConfiguration.setTranslucent(false);
 
-      chart = new Chart(parent, SWT.NONE, ChartType.PIE, chartConfiguration);
+      chart = new Chart(parent, SWT.NONE, ChartType.PIE, chartConfiguration, this);
       chart.setBackground(getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
       chart.addParameter(new ChartDciConfig(i18n.tr("Uptime")));
       chart.addParameter(new ChartDciConfig(i18n.tr("Downtime")));

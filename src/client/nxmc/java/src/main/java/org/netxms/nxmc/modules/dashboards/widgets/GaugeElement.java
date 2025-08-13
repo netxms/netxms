@@ -40,10 +40,10 @@ import com.google.gson.Gson;
 public class GaugeElement extends ComparisonChartElement
 {
    private static final Logger logger = LoggerFactory.getLogger(GaugeElement.class);
-   
+
 	private GaugeConfig elementConfig;
    private Font heightCalculationFont = null;
-	
+
 	/**
 	 * @param parent
 	 * @param data
@@ -89,16 +89,16 @@ public class GaugeElement extends ComparisonChartElement
 		switch(elementConfig.getGaugeType())
 		{
          case GaugeConfig.BAR:
-            chart = new Chart(getContentArea(), SWT.NONE, ChartType.BAR_GAUGE, chartConfig);
+            chart = new Chart(getContentArea(), SWT.NONE, ChartType.BAR_GAUGE, chartConfig, view);
             break;
          case GaugeConfig.CIRCULAR:
-            chart = new Chart(getContentArea(), SWT.NONE, ChartType.CIRCULAR_GAUGE, chartConfig);
+            chart = new Chart(getContentArea(), SWT.NONE, ChartType.CIRCULAR_GAUGE, chartConfig, view);
             break;
          case GaugeConfig.TEXT:
-            chart = new Chart(getContentArea(), SWT.NONE, ChartType.TEXT_GAUGE, chartConfig);
+            chart = new Chart(getContentArea(), SWT.NONE, ChartType.TEXT_GAUGE, chartConfig, view);
             break;
 			default:
-            chart = new Chart(getContentArea(), SWT.NONE, ChartType.DIAL_GAUGE, chartConfig);
+            chart = new Chart(getContentArea(), SWT.NONE, ChartType.DIAL_GAUGE, chartConfig, view);
 				break;
 		}
       chart.setDrillDownObjectId(elementConfig.getDrillDownObjectId());

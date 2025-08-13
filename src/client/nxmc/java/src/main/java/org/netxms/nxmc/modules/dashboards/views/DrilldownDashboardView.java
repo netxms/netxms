@@ -30,14 +30,16 @@ import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Context dashboard view
+ * Drill-down dashboard view
  */
-public class ContextDashboardView extends AbstractDashboardView
+public class DrilldownDashboardView extends AbstractDashboardView
 {
-   private final I18n i18n = LocalizationHelper.getI18n(ContextDashboardView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(DrilldownDashboardView.class);
 
    private Dashboard dashboard;
    private SessionListener clientListener;
+   private long dashboardContextId; // dashboard context
+   private long viewContextId; // view context
 
    /**
     * @param name
@@ -45,18 +47,20 @@ public class ContextDashboardView extends AbstractDashboardView
     * @param id
     * @param hasFilter
     */
-   public ContextDashboardView(Dashboard dashboard)
+   public DrilldownDashboardView(Dashboard dashboard, long dashboardContextId, long viewContextId)
    {
       super(dashboard.getObjectName(), ResourceManager.getImageDescriptor("icons/object-views/dashboard.png"), "objects.context.dashboard." + dashboard.getObjectId());
       this.dashboard = dashboard;
+      this.dashboardContextId = dashboardContextId;
+      this.viewContextId = viewContextId;
    }
 
    /**
     * Clone constructor
     */
-   protected ContextDashboardView()
+   protected DrilldownDashboardView()
    {
-      super(LocalizationHelper.getI18n(ContextDashboardView.class).tr("Dashboard"), ResourceManager.getImageDescriptor("icons/object-views/dashboard.png"), null);
+      super(LocalizationHelper.getI18n(DrilldownDashboardView.class).tr("Dashboard"), ResourceManager.getImageDescriptor("icons/object-views/dashboard.png"), null);
    } 
 
    /**
@@ -65,9 +69,21 @@ public class ContextDashboardView extends AbstractDashboardView
    @Override
    public View cloneView()
    {
-      ContextDashboardView view = (ContextDashboardView)super.cloneView();
+      DrilldownDashboardView view = (DrilldownDashboardView)super.cloneView();
       view.dashboard = dashboard;
+      view.dashboardContextId = dashboardContextId;
+      view.viewContextId = viewContextId;
       return view;
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      super.postClone(view);
+      rebuildCurrentDashboard();
    }
 
    /**
@@ -76,7 +92,7 @@ public class ContextDashboardView extends AbstractDashboardView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && (context instanceof AbstractObject) && ((AbstractObject)context).hasDashboard(dashboard.getObjectId());
+      return (context == null) || ((context instanceof AbstractObject) && ((AbstractObject)context).getObjectId() == viewContextId);
    }
 
    /**
@@ -95,13 +111,14 @@ public class ContextDashboardView extends AbstractDashboardView
                getViewArea().getDisplay().asyncExec(() -> {
                   dashboard = (Dashboard)n.getObject();
                   setName(dashboard.getObjectName());
-                  onObjectChange(ContextDashboardView.this.getObject());
+                  rebuildCurrentDashboard();
                });
             }
          }
       };
 
       session.addListener(clientListener);
+      rebuildCurrentDashboard();
    }
 
    /**
@@ -110,7 +127,8 @@ public class ContextDashboardView extends AbstractDashboardView
    @Override
    protected void rebuildCurrentDashboard()
    {
-      rebuildDashboard(dashboard, getObject());
+      AbstractObject contextObject = (dashboardContextId != 0) ? session.findObjectById(dashboardContextId) : null;
+      rebuildDashboard(dashboard, contextObject);
    }
 
    /**
@@ -119,16 +137,6 @@ public class ContextDashboardView extends AbstractDashboardView
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      rebuildDashboard(dashboard, object);
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#getPriority()
-    */
-   @Override
-   public int getPriority()
-   {
-      return (dashboard.getDisplayPriority() > 0) ? dashboard.getDisplayPriority() : super.getPriority();
    }
 
    /**
@@ -139,6 +147,26 @@ public class ContextDashboardView extends AbstractDashboardView
    {
       session.removeListener(clientListener);
       super.dispose();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#isCloseable()
+    */
+   @Override
+   public boolean isCloseable()
+   {
+      return true;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#getFullName()
+    */
+   @Override
+   public String getFullName()
+   {
+      if (dashboardContextId == 0)
+         return getName();
+      return getName() + " - " + session.getObjectName(dashboardContextId);
    }
 
    /**

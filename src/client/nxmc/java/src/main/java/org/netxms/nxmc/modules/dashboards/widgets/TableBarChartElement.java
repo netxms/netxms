@@ -68,7 +68,7 @@ public class TableBarChartElement extends TableComparisonChartElement
       chartConfig.setMaxYScaleValue(config.getMaxYScaleValue());
       chartConfig.setYAxisLabel(config.getYAxisLabel());
 
-      chart = new Chart(getContentArea(), SWT.NONE, ChartType.BAR, chartConfig);
+      chart = new Chart(getContentArea(), SWT.NONE, ChartType.BAR, chartConfig, view);
 		
 		startRefreshTimer();
 	}

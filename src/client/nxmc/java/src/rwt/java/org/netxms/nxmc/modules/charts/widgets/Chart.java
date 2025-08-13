@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,9 +50,14 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.modules.charts.api.ChartColor;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
+import org.netxms.nxmc.modules.dashboards.views.DrilldownDashboardView;
+import org.netxms.nxmc.modules.networkmaps.views.AdHocPredefinedMapView;
+import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorCache;
 
@@ -76,16 +81,19 @@ public class Chart extends Composite
    private boolean mouseDown = false;
    private Set<IDoubleClickListener> doubleClickListeners = new HashSet<IDoubleClickListener>();
    private MenuManager menuManager = null;
+   private MouseListener mouseListener = null;
+   private View view;
 
    /**
     * Create empty chart control.
     *
     * @param parent parent control
     * @param style chart control style
+    * @param view view that contains this chart
     */
-   public Chart(Composite parent, int style)
+   public Chart(Composite parent, int style, View view)
    {
-      this(parent, style, ChartType.LINE, null);
+      this(parent, style, ChartType.LINE, null, view);
    }
 
    /**
@@ -93,22 +101,22 @@ public class Chart extends Composite
     *
     * @param parent parent control
     * @param style chart control style
+    * @param type chart type
+    * @param configuration chart configuration
+    * @param view view that contains this chart (can be null)
     */
-   public Chart(Composite parent, int style, ChartType type, ChartConfiguration configuration)
+   public Chart(Composite parent, int style, ChartType type, ChartConfiguration configuration, View view)
    {
       super(parent, style);
+
+      this.view = view;
 
       colorCache = new ColorCache(this);
 
       createDefaultPalette();
       setBackground(ThemeEngine.getBackgroundColor("Chart.Base"));
 
-      this.type = type;
-      this.configuration = configuration;
-      if (configuration != null)
-         rebuild();
-
-      addMouseListener(new MouseListener() {
+      mouseListener = new MouseListener() {
          @Override
          public void mouseDown(MouseEvent e)
          {
@@ -133,7 +141,13 @@ public class Chart extends Composite
             mouseDown = false;
             fireDoubleClickListeners();
          }
-      });
+      };
+      addMouseListener(mouseListener);
+
+      this.type = type;
+      this.configuration = configuration;
+      if (configuration != null)
+         rebuild();
    }
 
    /**
@@ -398,6 +412,7 @@ public class Chart extends Composite
          for(Control c : plotAreaComposite.getChildren())
             c.setMenu(menu);
       }
+      plotAreaComposite.addMouseListener(mouseListener);
    }
 
    /**
@@ -712,14 +727,27 @@ public class Chart extends Composite
     */
    void openDrillDownObject()
    {
+      if (view == null)
+         return;
+
       AbstractObject object = Registry.getSession().findObjectById(drillDownObjectId);
       if (object == null)
          return;
 
-      if (!(object instanceof Dashboard) && !(object instanceof NetworkMap))
-         return;
-
-      /* TODO: implement open */
+      if (object instanceof Dashboard)
+      {
+         Dashboard dashboard = (Dashboard)object;
+         AbstractObject dashboardContext = (view instanceof AbstractDashboardView) ? ((AbstractDashboardView)view).getDashboardContext() : null;
+         long dashboardContextId = (dashboardContext != null) ? dashboardContext.getObjectId() : 0;
+         long contextObjectId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+         view.openView(new DrilldownDashboardView(dashboard, dashboardContextId, contextObjectId));
+      }
+      else if (object instanceof NetworkMap)
+      {
+         NetworkMap map = (NetworkMap)object;
+         long contextObjectId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+         view.openView(new AdHocPredefinedMapView(contextObjectId, map));
+      }
    }
 
    /**

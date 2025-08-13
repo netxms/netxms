@@ -327,7 +327,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       }
 
       ChartConfiguration chartConfiguration = new ChartConfiguration(configuration);
-      chart = new Chart(chartParent, SWT.NONE, ChartType.LINE, chartConfiguration);
+      chart = new Chart(chartParent, SWT.NONE, ChartType.LINE, chartConfiguration, this);
       createPopupMenu();
 
       // Data

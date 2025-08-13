@@ -165,7 +165,7 @@ public class DataComparisonView extends AdHocObjectView
       chartConfiguration.setTransposed(transposed);
       chartConfiguration.setTranslucent(translucent);
 
-      chart = new Chart(parent, SWT.NONE, chartType, chartConfiguration);
+      chart = new Chart(parent, SWT.NONE, chartType, chartConfiguration, this);
       for(ChartDciConfig item : items)
          chart.addParameter(item);
       chart.rebuild();

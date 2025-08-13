@@ -69,7 +69,7 @@ public class PieChartElement extends ComparisonChartElement
       chartConfig.setDoughnutRendering(elementConfig.isDoughnutRendering());
       chartConfig.setShowTotal(elementConfig.isShowTotal());
 
-      chart = new Chart(getContentArea(), SWT.NONE, ChartType.PIE, chartConfig);
+      chart = new Chart(getContentArea(), SWT.NONE, ChartType.PIE, chartConfig, view);
       chart.setDrillDownObjectId(elementConfig.getDrillDownObjectId());
 
       configureMetrics();
