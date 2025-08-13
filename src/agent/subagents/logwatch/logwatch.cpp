@@ -67,6 +67,9 @@ static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
 	if (!AgentGetParameterArg(cmd, 1, name, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
+   TCHAR fileName[MAX_PATH];
+   AgentGetParameterArg(cmd, 2, fileName, MAX_PATH);
+
    s_parserLock.lock();
 
 	LogParser *parser = nullptr;
@@ -75,8 +78,16 @@ static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
       LogParser *p = s_parsers.get(i);
 		if (!_tcsicmp(p->getName(), name))
 		{
-			parser = p;
-			break;
+		   if (*fileName == 0)
+         {
+            parser = p;
+            break;
+         }
+         else if (!_tcsicmp(p->getFileName(), fileName))
+         {
+            parser = p;
+            break;
+         }
 		}
    }
 
