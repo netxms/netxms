@@ -118,6 +118,7 @@ public class DataCollectionView extends BaseDataCollectionView
    public static final int DC_COLUMN_STATUSCALC = 13;
 
    private boolean editMode = false;
+   private boolean previousEditMode = false;
    private Composite parent;
    private SessionListener clientListener = null;
    private DataCollectionConfiguration dciConfig = null;
@@ -569,6 +570,7 @@ public class DataCollectionView extends BaseDataCollectionView
          public void run()
          {
             editMode = actionToggleEditMode.isChecked();
+            previousEditMode = editMode;
             switchMode();
             refresh();
          }
@@ -1226,6 +1228,13 @@ public class DataCollectionView extends BaseDataCollectionView
       if (!editMode && (object instanceof Template))      
       {
          editMode = true;
+         actionToggleEditMode.setChecked(true);
+         switchMode();
+      }
+      else if (editMode != previousEditMode && !(object instanceof Template))
+      {
+         editMode = previousEditMode;
+         actionToggleEditMode.setChecked(previousEditMode);
          switchMode();
       }
 
