@@ -64,11 +64,11 @@ static void ParserThreadEventLog(LogParser *parser)
 static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	TCHAR name[256];
-	if (!AgentGetParameterArg(cmd, 1, name, 256))
+	if (!AgentGetMetricArg(cmd, 1, name, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
    TCHAR fileName[MAX_PATH];
-   AgentGetParameterArg(cmd, 2, fileName, MAX_PATH);
+   AgentGetMetricArg(cmd, 2, fileName, MAX_PATH);
 
    s_parserLock.lock();
 
@@ -76,19 +76,11 @@ static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
 	for(int i = 0; i < s_parsers.size(); i++)
    {
       LogParser *p = s_parsers.get(i);
-		if (!_tcsicmp(p->getName(), name))
-		{
-		   if (*fileName == 0)
-         {
-            parser = p;
-            break;
-         }
-         else if (!_tcsicmp(p->getFileName(), fileName))
-         {
-            parser = p;
-            break;
-         }
-		}
+		if (!_tcsicmp(p->getName(), name) && ((*fileName == 0) || !_tcsicmp(p->getFileName(), fileName)))
+      {
+         parser = p;
+         break;
+      }
    }
 
    LONG rc = SYSINFO_RC_SUCCESS;
@@ -106,7 +98,7 @@ static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
             ret_int(value, parser->getProcessedRecordsCount());
             break;
          case 'T':   // Metric timestamp
-            if (AgentGetParameterArg(cmd, 2, name, 256))
+            if (AgentGetMetricArg(cmd, 3, name, 256))
             {
                time_t timestamp;
                if (parser->getMetricTimestamp(name, &timestamp))
@@ -120,7 +112,7 @@ static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
             }
             break;
          case 'V':   // Metric value
-            if (AgentGetParameterArg(cmd, 2, name, 256))
+            if (AgentGetMetricArg(cmd, 3, name, 256))
             {
                if (!parser->getMetricValue(name, value, MAX_RESULT_LENGTH))
                   rc = SYSINFO_RC_NO_SUCH_INSTANCE;
