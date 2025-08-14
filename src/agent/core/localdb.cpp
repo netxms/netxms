@@ -243,6 +243,7 @@ static const TCHAR *s_dbTables[] =
    _T("dc_snmp_table_columns"),
    _T("dc_snmp_targets"),
    _T("device_decoder_map"),
+   _T("file_integrity"),
    _T("notification_data"),
    _T("notification_servers"),
    _T("registry"),
