@@ -39,6 +39,27 @@ static DB_HANDLE s_db = NULL;
 
 
 /**
+ * Upgrade from V14 to V15
+ */
+static BOOL H_UpgradeFromV14(int currVersion, int newVersion)
+{
+   if (!DBIsTableExist(s_db, _T("file_integrity")))
+   {
+      static TCHAR serversQuery[] =
+            _T("CREATE TABLE file_integrity (")
+            _T("  path varchar(4096) not null,")
+            _T("  hash varchar(64) not null,")
+            _T("  mod_time integer not null,")
+            _T("  permissions integer not null,")
+            _T("  PRIMARY KEY(path))");
+      CHK_EXEC(Query(serversQuery));
+   }
+
+   CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 15));
+   return TRUE;
+}
+
+/**
  * Upgrade from V13 to V14
  */
 static BOOL H_UpgradeFromV13(int currVersion, int newVersion)
@@ -487,6 +508,7 @@ static struct
    { 11, 12, H_UpgradeFromV11 },
    { 12, 13, H_UpgradeFromV12 },
    { 13, 14, H_UpgradeFromV13 },
+   { 14, 15, H_UpgradeFromV14 },
    { 0, 0, nullptr }
 };
 
