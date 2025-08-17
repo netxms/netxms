@@ -169,6 +169,9 @@ target
 /src/client/java/netxms-client/.classpath
 /src/client/java/netxms-client/.project
 /src/client/java/netxms-client/.settings
+/src/client/mcp/.classpath
+/src/client/mcp/.project
+/src/client/mcp/.settings
 /src/client/nxalarm/nxalarm
 /src/client/nxapisrv/java/.classpath
 /src/client/nxapisrv/java/.project
