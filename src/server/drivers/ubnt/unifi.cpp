@@ -1,4 +1,3 @@
-
 /* 
 ** NetXMS - Network Management System
 ** Drivers for Ubiquiti Networks devices
@@ -28,12 +27,25 @@
 #include <curl/curl.h>
 #include <math.h>
 #include <map>
+#include <assert.h>
+#include <stdlib.h>
 
 #define DEBUG_TAG_UBNT _T("ndd.ubnt")
 
-/**
- * UniFi station parsing / matching helpers
- */
+// UTF-8 helper (TCHAR -> std::string)
+static std::string toUtf8(const TCHAR *s)
+{
+#ifdef UNICODE
+    char *mb = MBStringFromWideString(s);
+    std::string out = (mb != nullptr) ? mb : "";
+    MemFree(mb);
+    return out;
+#else
+    return (s != nullptr) ? std::string(s) : std::string();
+#endif
+}
+
+// UniFi station parsing / matching helpers
 namespace UnifiHelpers
 {
     /**
@@ -67,17 +79,11 @@ namespace UnifiHelpers
 
         // SSID (must have essid or ssid)
         if (json_t *v = json_object_get(sta, "essid"); json_is_string(v))
-        {
             mb_to_wchar(json_string_value(v), -1, info->ssid, MAX_SSID_LENGTH);
-        }
         else if (json_t *v2 = json_object_get(sta, "ssid"); json_is_string(v2))
-        {
             mb_to_wchar(json_string_value(v2), -1, info->ssid, MAX_SSID_LENGTH);
-        }
         else
-        {
             return false;
-        }
 
         // RSSI (optional)
         if (json_t *v = json_object_get(sta, "rssi"); json_is_integer(v))
@@ -145,13 +151,14 @@ namespace UnifiHelpers
         return false;
     }
 
-    /**
-     * Extract station array from UniFi JSON response
-     */
-    static json_t *GetStationArrayFromJson(const std::string &jsonText)
+    // Extract station array from UniFi JSON response
+    static json_t *GetStationArrayFromJson(const StringBuffer &jsonText)
     {
+        // Convert TCHAR JSON (UTF-16 on UNICODE builds) to UTF-8 for jansson
+        const std::string jsonUtf8 = toUtf8(jsonText.cstr());
+
         json_error_t err;
-        json_t *root = json_loads(jsonText.c_str(), 0, &err);
+        json_t *root = json_loads(jsonUtf8.c_str(), 0, &err);
         if (root == nullptr)
         {
             nxlog_debug_tag(DEBUG_TAG_UBNT, 3, _T("GetStationArrayFromJson: JSON parse error at line %d: %hs"), err.line, err.text);
@@ -161,33 +168,34 @@ namespace UnifiHelpers
         json_t *arr = nullptr;
         if (json_is_object(root))
         {
-            arr = json_object_get(root, "data");
-            if (!json_is_array(arr))
-                arr = nullptr;
+            arr = json_object_get(root, "data"); // borrowed
+            if (json_is_array(arr))
+                json_incref(arr); // make it owned
         }
         else if (json_is_array(root))
         {
             arr = root;
         }
 
-        if (!json_is_array(arr))
+        if (arr == nullptr)
         {
             json_decref(root);
             return nullptr;
         }
 
-        return root; // caller must decref
+        if (arr != root)
+            json_decref(root); // drop original object if we detached array
+
+        return arr; // caller must json_decref()
     }
 } // namespace UnifiHelpers
 
-/**
- * UniFi SNMP radio discovery helpers
- */
+// UniFi SNMP radio discovery helpers
 namespace UnifiSnmpHelpers
 {
     struct VapInfo
     {
-        uint32_t radioIndex;
+        uint32_t radioIndex = 0;
         std::wstring radioName;
         std::wstring mode;
     };
@@ -199,36 +207,7 @@ namespace UnifiSnmpHelpers
         std::map<uint32_t, VapInfo> vapInfoMap;
     };
 
-    /**
-     * Generic SNMP walk handler for assigning string values into RadioInterfaceInfo fields
-     */
-    static uint32_t AssignStringWalkHandler(SNMP_Variable *v, SNMP_Transport *, void *context, TCHAR (RadioInterfaceInfo::*field)[MAX_OBJECT_NAME], size_t maxLen)
-    {
-        auto *ctx = static_cast<RadioWalkContext *>(context);
-        if (v->getType() == ASN_OCTET_STRING && v->getValueLength() > 0)
-        {
-            TCHAR buf[MAX_OBJECT_NAME];
-            v->getValueAsString(buf, MAX_OBJECT_NAME);
-
-            const SNMP_ObjectId &oid = v->getName();
-            uint32_t idx = oid.getElement(oid.length() - 1);
-
-            if ((idx > 0) && (idx <= (uint32_t)ctx->radios->size()))
-            {
-                RadioInterfaceInfo *r = ctx->radios->get(idx - 1);
-                if (r != nullptr)
-                {
-                    _tcslcpy(r->*field, buf, maxLen);
-                    return SNMP_ERR_SUCCESS;
-                }
-            }
-        }
-        return SNMP_ERR_SUCCESS;
-    }
-
-    /**
-     * Assign SNMP integer into RadioInterfaceInfo field
-     */
+    // Assign SNMP integer into RadioInterfaceInfo field
     template <typename Member>
     static uint32_t AssignIntWalkHandler(SNMP_Variable *v, void *context, Member RadioInterfaceInfo::*field)
     {
@@ -247,9 +226,7 @@ namespace UnifiSnmpHelpers
         return SNMP_ERR_SUCCESS;
     }
 
-    /**
-     * Assign SNMP string into RadioInterfaceInfo TCHAR array field (any size)
-     */
+    // Assign SNMP string into RadioInterfaceInfo TCHAR array field (any size)
     template <size_t N>
     static uint32_t AssignStringWalkHandler(SNMP_Variable *v, SNMP_Transport *, void *context, TCHAR (RadioInterfaceInfo::*field)[N], size_t maxLen)
     {
@@ -272,9 +249,7 @@ namespace UnifiSnmpHelpers
         return SNMP_ERR_SUCCESS;
     }
 
-    /**
-     * Assign SNMP string value into VapInfo string-like field (e.g. std::wstring)
-     */
+    // Assign SNMP string value into VapInfo string-like field (e.g. std::wstring)
     template <typename Member>
     static uint32_t AssignVapStringWalkHandler(SNMP_Variable *v, void *context, Member VapInfo::*field)
     {
@@ -283,16 +258,13 @@ namespace UnifiSnmpHelpers
         {
             TCHAR buf[MAX_OBJECT_NAME];
             v->getValueAsString(buf, MAX_OBJECT_NAME);
-
             uint32_t vapIndex = v->getName().getElement(v->getName().length() - 1);
             ctx->vapInfoMap[vapIndex].*field = buf;
         }
         return SNMP_ERR_SUCCESS;
     }
 
-    /**
-     * Assign SNMP integer value into VapInfo integer field
-     */
+    // Assign SNMP integer value into VapInfo integer field
     template <typename Member>
     static uint32_t AssignVapIntWalkHandler(SNMP_Variable *v, void *context, Member VapInfo::*field)
     {
@@ -305,7 +277,7 @@ namespace UnifiSnmpHelpers
         return SNMP_ERR_SUCCESS;
     }
 
-    // NameWalkHandler with debug + ifNameMap mapping
+    // Name + ifNameMap mapping
     static uint32_t NameWalkHandler(SNMP_Variable *v, SNMP_Transport *t, void *context)
     {
         auto *ctx = static_cast<RadioWalkContext *>(context);
@@ -335,7 +307,6 @@ namespace UnifiSnmpHelpers
     static uint32_t SsidWalkHandler(SNMP_Variable *v, SNMP_Transport *t, void *context)
     {
         auto *ctx = static_cast<RadioWalkContext *>(context);
-
         uint32_t rc = AssignStringWalkHandler(v, t, ctx, &RadioInterfaceInfo::ssid, MAX_SSID_LENGTH);
         if (rc != SNMP_ERR_SUCCESS)
             return rc;
@@ -368,7 +339,6 @@ namespace UnifiSnmpHelpers
                     r->channel = (uint16_t)v->getValueAsUInt();
                     r->band = (r->channel < 15) ? RADIO_BAND_2_4_GHZ : RADIO_BAND_5_GHZ;
                     r->frequency = WirelessChannelToFrequency(r->band, r->channel);
-
                     nxlog_debug_tag(DEBUG_TAG_UBNT, 7, _T("[SNMP] ChannelWalkHandler: radio index=%u channel=%u freq=%u band=%s"), r->index, r->channel, r->frequency, RadioBandDisplayName(r->band));
                 }
             }
@@ -403,12 +373,9 @@ namespace UnifiSnmpHelpers
         auto *ctx = static_cast<RadioWalkContext *>(context);
         TCHAR buf[64];
         v->getValueAsString(buf, 64);
-
         uint32_t vapIndex = v->getName().getElement(v->getName().length() - 1);
         ctx->vapInfoMap[vapIndex].mode = buf;
-
         nxlog_debug_tag(DEBUG_TAG_UBNT, 7, _T("[SNMP] VapModeWalkHandler: VAP %u mode=\"%s\""), vapIndex, buf);
-
         return SNMP_ERR_SUCCESS;
     }
 
@@ -418,11 +385,8 @@ namespace UnifiSnmpHelpers
         auto *ctx = static_cast<RadioWalkContext *>(context);
         uint32_t radioIndex = v->getValueAsUInt();
         uint32_t vapIndex = v->getName().getElement(v->getName().length() - 1);
-
         ctx->vapInfoMap[vapIndex].radioIndex = radioIndex;
-
         nxlog_debug_tag(DEBUG_TAG_UBNT, 7, _T("[SNMP] VapRadioIndexWalkHandler: VAP %u → radioIndex=%u"), vapIndex, radioIndex);
-
         return SNMP_ERR_SUCCESS;
     }
 
@@ -432,17 +396,11 @@ namespace UnifiSnmpHelpers
         auto *ctx = static_cast<RadioWalkContext *>(context);
         TCHAR buf[MAX_OBJECT_NAME];
         v->getValueAsString(buf, MAX_OBJECT_NAME);
-
         uint32_t radioIndex = v->getName().getElement(v->getName().length() - 1);
-
         for (auto &it : ctx->vapInfoMap)
-        {
             if (it.second.radioIndex == radioIndex)
                 it.second.radioName = buf;
-        }
-
         nxlog_debug_tag(DEBUG_TAG_UBNT, 7, _T("[SNMP] RadioNameWalkHandler: radioIndex=%u name=\"%s\" assigned to VAPs"), radioIndex, buf);
-
         return SNMP_ERR_SUCCESS;
     }
 
@@ -450,37 +408,21 @@ namespace UnifiSnmpHelpers
     static uint32_t BssidWalkHandler(SNMP_Variable *v, SNMP_Transport *, void *context)
     {
         auto *ctx = static_cast<RadioWalkContext *>(context);
-
         if ((v->getType() == ASN_OCTET_STRING) && (v->getValueLength() == MAC_ADDR_LENGTH))
         {
             RadioInterfaceInfo r{};
             r.index = (uint32_t)ctx->radios->size() + 1;
             r.ifIndex = r.index;
             v->getRawValue(r.bssid, MAC_ADDR_LENGTH);
-
             _tcslcpy(r.name, _T("Radio (SNMP)"), MAX_OBJECT_NAME);
             r.band = RADIO_BAND_UNKNOWN;
-
             ctx->radios->add(r);
-
             nxlog_debug_tag(DEBUG_TAG_UBNT, 7, _T("[SNMP] BssidWalkHandler: discovered radio index=%u BSSID=%s"), r.index, MacAddress(r.bssid, MAC_ADDR_LENGTH).toString().cstr());
         }
-
         return SNMP_ERR_SUCCESS;
     }
 } // namespace UnifiSnmpHelpers
 
-/**
- * Constructor
- */
-UbiquitiUniFiDriver::UbiquitiUniFiDriver()
-{
-    nxlog_debug_tag(DEBUG_TAG_UBNT, 4, _T("UbiquitiUniFiDriver initialized (version %s)"), NETXMS_VERSION_STRING);
-}
-
-/**
- * Helpers
- */
 void TrimInPlace(StringBuffer &s)
 {
     const TCHAR *p = s.cstr();
@@ -491,7 +433,6 @@ void TrimInPlace(StringBuffer &s)
     size_t j = len;
     while (j > i && _istspace(p[j - 1]))
         j--;
-
     if ((i == 0) && (j == len))
         return; // nothing to trim
 
@@ -516,7 +457,6 @@ void NormalizeControllerURL(StringBuffer &url)
         t.append(url);
         url = t;
     }
-    // remove trailing slash(es)
     while (url.length() > 0 && url.cstr()[url.length() - 1] == _T('/'))
         url.removeRange(url.length() - 1, 1);
 
@@ -546,21 +486,7 @@ bool ReadNodeAttr(NObject *node, const TCHAR *name, StringBuffer &out)
     return false;
 }
 
-static std::string toUtf8(const TCHAR *s)
-{
-#ifdef UNICODE
-    char *mb = MBStringFromWideString(s);
-    std::string out = (mb != nullptr) ? mb : "";
-    MemFree(mb);
-    return out;
-#else
-    return (s != nullptr) ? std::string(s) : std::string();
-#endif
-}
-
-/**
- * Config Handler
- */
+// Config
 struct UnifiConfig
 {
     StringBuffer url;
@@ -571,9 +497,10 @@ struct UnifiConfig
     bool verifyTLS = false;
 };
 
+// Load config
 static bool LoadUnifiConfig(NObject *node, UnifiConfig &cfg)
 {
-    nxlog_debug_tag(DEBUG_TAG_UBNT, 5, _T("LoadUnifiConfig: reading mixed-case config"));
+    nxlog_debug_tag(DEBUG_TAG_UBNT, 5, _T("LoadUnifiConfig: reading config"));
 
     ReadCfgStr(_T("Unifi.ControllerURL"), cfg.url);
     ReadCfgStr(_T("Unifi.Site"), cfg.site);
@@ -610,6 +537,12 @@ static bool LoadUnifiConfig(NObject *node, UnifiConfig &cfg)
                     cfg.url.cstr(), cfg.site.cstr(), cfg.token.isEmpty() ? _T("<empty>") : _T("<set>"), cfg.verifyTLS ? 1 : 0);
 
     return !cfg.url.isEmpty();
+}
+
+// Constructor - Driver identity
+UbiquitiUniFiDriver::UbiquitiUniFiDriver()
+{
+    nxlog_debug_tag(DEBUG_TAG_UBNT, 4, _T("UbiquitiUniFiDriver initialized (version %s)"), NETXMS_VERSION_STRING);
 }
 
 /**
@@ -650,7 +583,6 @@ bool UbiquitiUniFiDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_Obj
 {
     TCHAR model[128];
     uint32_t rc = SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.41112.1.6.3.3.0"), nullptr, 0, model, sizeof(model), SG_STRING_RESULT);
-
     bool supported = (rc == SNMP_ERR_SUCCESS) && (model[0] != 0);
     nxlog_debug_tag(DEBUG_TAG_UBNT, 5, _T("UbiquitiUniFiDriver::isDeviceSupported: rc=%u model=\"%s\" supported=%d"), rc, (model[0] != 0) ? model : _T("<empty>"), supported ? 1 : 0);
     return supported;
@@ -690,7 +622,7 @@ StructArray<RadioInterfaceInfo> *UbiquitiUniFiDriver::getRadioInterfaces(SNMP_Tr
     auto radios = new StructArray<RadioInterfaceInfo>(0, 4);
     UnifiSnmpHelpers::RadioWalkContext ctx{radios};
 
-    // Build ifName -> ifIndex map
+    // ifName -> ifIndex map
     auto buildIfNameMap = [](SNMP_Variable *v, SNMP_Transport *, void *context) -> uint32_t
     {
         auto *map = static_cast<std::map<std::wstring, uint32_t> *>(context);
@@ -704,7 +636,6 @@ StructArray<RadioInterfaceInfo> *UbiquitiUniFiDriver::getRadioInterfaces(SNMP_Tr
 
     SnmpWalk(snmp, _T(".1.3.6.1.2.1.31.1.1.1.1"), buildIfNameMap, &ctx.ifNameMap);
 
-    // Optional fallback: ifDescr
     auto buildIfDescrMap = [](SNMP_Variable *v, SNMP_Transport *, void *context) -> uint32_t
     {
         auto *map = static_cast<std::map<std::wstring, uint32_t> *>(context);
@@ -712,22 +643,18 @@ StructArray<RadioInterfaceInfo> *UbiquitiUniFiDriver::getRadioInterfaces(SNMP_Tr
         v->getValueAsString(buf, MAX_OBJECT_NAME);
         const SNMP_ObjectId &oid = v->getName();
         uint32_t ifIndex = oid.getElement(oid.length() - 1);
-        // only add if not already present
         if (map->find(buf) == map->end())
             (*map)[buf] = ifIndex;
         return SNMP_ERR_SUCCESS;
     };
 
-    // Collect VAP mode + radio index + radio name
+    // Collect VAP details
     SnmpWalk(snmp, _T(".1.3.6.1.4.1.41112.1.6.1.2.1.9"), UnifiSnmpHelpers::VapModeWalkHandler, &ctx);
     SnmpWalk(snmp, _T(".1.3.6.1.4.1.41112.1.6.1.1.1.3"), UnifiSnmpHelpers::VapRadioIndexWalkHandler, &ctx);
     SnmpWalk(snmp, _T(".1.3.6.1.4.1.41112.1.6.1.1.1.2"), UnifiSnmpHelpers::RadioNameWalkHandler, &ctx);
 
     for (auto &it : ctx.vapInfoMap)
-    {
-        nxlog_debug_tag(DEBUG_TAG_UBNT, 5, _T("VAP %u → radioIndex=%u, radioName=\"%s\", mode=\"%s\""),
-                        it.first, it.second.radioIndex, it.second.radioName.c_str(), it.second.mode.c_str());
-    }
+        nxlog_debug_tag(DEBUG_TAG_UBNT, 5, _T("VAP %u → radioIndex=%u, radioName=\"%s\", mode=\"%s\""), it.first, it.second.radioIndex, it.second.radioName.c_str(), it.second.mode.c_str());
 
     SnmpWalk(snmp, _T(".1.3.6.1.2.1.2.2.1.2"), buildIfDescrMap, &ctx.ifNameMap);
     SnmpWalk(snmp, _T(".1.3.6.1.4.1.41112.1.6.1.2.1.2"), UnifiSnmpHelpers::BssidWalkHandler, &ctx);
@@ -746,17 +673,60 @@ StructArray<RadioInterfaceInfo> *UbiquitiUniFiDriver::getRadioInterfaces(SNMP_Tr
     return radios;
 }
 
-static size_t CurlWriteToString(void *ptr, size_t size, size_t nmemb, void *userdata)
+// CURL write buffer
+struct CurlGrowBuf
 {
-    std::string *s = static_cast<std::string *>(userdata);
-    s->append(static_cast<char *>(ptr), size * nmemb);
-    return size * nmemb;
+    char *data = nullptr;
+    size_t size = 0;
+    size_t cap = 0;
+
+    ~CurlGrowBuf() { free(data); }
+
+    bool ensure(size_t need)
+    {
+        if (size + need + 1 <= cap)
+            return true;
+        size_t ncap = (cap == 0) ? (need + 1024) : cap;
+        while (ncap < size + need + 1)
+            ncap *= 2;
+        char *nd = (char *)realloc(data, ncap);
+        if (nd == nullptr)
+            return false;
+        data = nd;
+        cap = ncap;
+        return true;
+    }
+
+    bool append(const void *src, size_t n)
+    {
+        if (n == 0)
+            return true;
+        if (!ensure(n))
+            return false;
+        memcpy(data + size, src, n);
+        size += n;
+        data[size] = 0;
+        return true;
+    }
+};
+
+static size_t CurlWriteToGrowBuf(void *ptr, size_t size, size_t nmemb, void *userdata)
+{
+    if (userdata == nullptr || ptr == nullptr)
+        return 0;
+
+    CurlGrowBuf *b = static_cast<CurlGrowBuf *>(userdata);
+    const size_t total = size * nmemb;
+    if (total == 0)
+        return 0;
+
+    if (!b->append(ptr, total))
+        return 0;
+    return total;
 }
 
-static void CurlInitCommon(CURL *curl, std::string &body, bool verifyTLS)
+static void CurlInitCommon(CURL *curl, bool verifyTLS)
 {
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlWriteToString);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &body);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 5L);
@@ -771,38 +741,92 @@ static void CurlInitCommon(CURL *curl, std::string &body, bool verifyTLS)
     }
 }
 
-static bool HttpGetJson(CURL *curl, const char *url, struct curl_slist *headers, std::string &out, long &code)
+// HTTP helpers
+static bool HttpGetJson(CURL *curl, const TCHAR *urlW, struct curl_slist *headers, StringBuffer &out, long &code, bool verifyTLS)
 {
+    CurlGrowBuf body;
+    CurlInitCommon(curl, verifyTLS);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlWriteToGrowBuf);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &body);
+
+    const std::string url = toUtf8(urlW);
     curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
-    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     if (headers)
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
     out.clear();
     code = 0;
+
     CURLcode rc = curl_easy_perform(curl);
     if (rc != CURLE_OK)
         return false;
+
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &code);
+
+#ifdef UNICODE
+    if (body.data != nullptr)
+    {
+        WCHAR *w = WideStringFromUTF8String(body.data);
+        if (w != nullptr)
+        {
+            out = w;
+            MemFree(w);
+        }
+    }
+#else
+    if (body.data != nullptr)
+        out = body.data;
+#endif
+
     return (code >= 200 && code < 300);
 }
 
-static bool HttpPostJson(CURL *curl, const char *url, struct curl_slist *headers, const std::string &payload, std::string &out, long &code)
+static bool HttpPostJson(CURL *curl, const TCHAR *urlW, struct curl_slist *headers, const TCHAR *payloadW, StringBuffer &out, long &code, bool verifyTLS)
 {
-    curl_easy_setopt(curl, CURLOPT_URL, url);
+    CurlGrowBuf body;
+    CurlInitCommon(curl, verifyTLS);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlWriteToGrowBuf);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &body);
+
+    const std::string url = toUtf8(urlW);
+    const std::string payload = toUtf8(payloadW);
+
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_POST, 1L);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload.c_str());
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)payload.size());
     if (headers)
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
     out.clear();
     code = 0;
+
     CURLcode rc = curl_easy_perform(curl);
     if (rc != CURLE_OK)
         return false;
+
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &code);
+
+#ifdef UNICODE
+    if (body.data != nullptr)
+    {
+        WCHAR *w = WideStringFromUTF8String(body.data);
+        if (w != nullptr)
+        {
+            out = w;
+            MemFree(w);
+        }
+    }
+#else
+    if (body.data != nullptr)
+        out = body.data;
+#endif
+
     return (code >= 200 && code < 300);
 }
 
+// UniFi controller API
 static bool UnifiLogin(CURL *curl, const UnifiConfig &cfg, bool isUnifiOS)
 {
     curl_easy_setopt(curl, CURLOPT_COOKIEFILE, ""); // enable cookie engine
@@ -810,61 +834,55 @@ static bool UnifiLogin(CURL *curl, const UnifiConfig &cfg, bool isUnifiOS)
     struct curl_slist *headers = nullptr;
     headers = curl_slist_append(headers, "Content-Type: application/json");
 
-    std::string body;
+    StringBuffer url, payload, body;
     long code = 0;
-    CurlInitCommon(curl, body, cfg.verifyTLS);
 
-    const std::string base = toUtf8(cfg.url);
-    const std::string user = toUtf8(cfg.user);
-    const std::string pass = toUtf8(cfg.pass);
-
-    std::string url, payload;
     if (isUnifiOS)
     {
-        url = base + "/api/auth/login";
-        payload = "{\"username\":\"" + user + "\",\"password\":\"" + pass + "\",\"rememberMe\":true}";
+        url.append(cfg.url).append(_T("/api/auth/login"));
+        payload.append(_T("{\"username\":\"")).append(cfg.user).append(_T("\",\"password\":\"")).append(cfg.pass).append(_T("\",\"rememberMe\":true}"));
     }
     else
     {
-        url = base + "/api/login";
-        payload = "{\"username\":\"" + user + "\",\"password\":\"" + pass + "\"}";
+        url.append(cfg.url).append(_T("/api/login"));
+        payload.append(_T("{\"username\":\"")).append(cfg.user).append(_T("\",\"password\":\"")).append(cfg.pass).append(_T("\"}"));
     }
 
-    bool ok = HttpPostJson(curl, url.c_str(), headers, payload, body, code);
+    bool ok = HttpPostJson(curl, url.cstr(), headers, payload.cstr(), body, code, cfg.verifyTLS);
     curl_slist_free_all(headers);
 
-    nxlog_debug_tag(DEBUG_TAG_UBNT, 4, _T("UnifiLogin: url=%hs user=%hs isUnifiOS=%d rc=%d code=%ld"), url.c_str(), user.c_str(), isUnifiOS ? 1 : 0, ok ? 0 : -1, code);
+    nxlog_debug_tag(DEBUG_TAG_UBNT, 4, _T("UnifiLogin: url=%s user=%s isUnifiOS=%d rc=%d code=%ld"),
+                    url.cstr(), cfg.user.cstr(), isUnifiOS ? 1 : 0, ok ? 0 : -1, code);
 
     return ok && code >= 200 && code < 300;
 }
 
-static bool UnifiFetchStations(CURL *curl, const UnifiConfig &cfg, std::string &jsonOut)
+static bool UnifiFetchStations(CURL *curl, const UnifiConfig &cfg, StringBuffer &jsonOut)
 {
     struct curl_slist *headers = nullptr;
     if (!cfg.token.isEmpty())
     {
-        std::string h = "X-API-KEY:" + toUtf8(cfg.token);
-        headers = curl_slist_append(headers, h.c_str());
+        StringBuffer h;
+        h.append(_T("X-API-KEY:")).append(cfg.token);
+        const std::string hUtf8 = toUtf8(h.cstr());
+        headers = curl_slist_append(headers, hUtf8.c_str());
         headers = curl_slist_append(headers, "Accept: application/json");
     }
 
     long code = 0;
-    CurlInitCommon(curl, jsonOut, cfg.verifyTLS);
-
-    const std::string base = toUtf8(cfg.url);
-    const std::string site = toUtf8(cfg.site);
 
     // UniFi OS first
-    std::string uos = base + "/proxy/network/api/s/" + site + "/stat/sta";
-    if (HttpGetJson(curl, uos.c_str(), headers, jsonOut, code))
+    StringBuffer uos;
+    uos.append(cfg.url).append(_T("/proxy/network/api/s/")).append(cfg.site).append(_T("/stat/sta"));
+    if (HttpGetJson(curl, uos.cstr(), headers, jsonOut, code, cfg.verifyTLS))
     {
         if (headers)
             curl_slist_free_all(headers);
         return true;
     }
-    if ((code == 401 || code == 403) && cfg.user.length() > 0 && cfg.pass.length() > 0)
+    if ((code == 401 || code == 403) && !cfg.user.isEmpty() && !cfg.pass.isEmpty())
     {
-        if (UnifiLogin(curl, cfg, true) && HttpGetJson(curl, uos.c_str(), headers, jsonOut, code))
+        if (UnifiLogin(curl, cfg, true) && HttpGetJson(curl, uos.cstr(), headers, jsonOut, code, cfg.verifyTLS))
         {
             if (headers)
                 curl_slist_free_all(headers);
@@ -872,17 +890,18 @@ static bool UnifiFetchStations(CURL *curl, const UnifiConfig &cfg, std::string &
         }
     }
 
-    // Legacy
-    std::string legacy = base + "/api/s/" + site + "/stat/sta";
-    if (HttpGetJson(curl, legacy.c_str(), headers, jsonOut, code))
+    // UniFi Appliance
+    StringBuffer legacy;
+    legacy.append(cfg.url).append(_T("/api/s/")).append(cfg.site).append(_T("/stat/sta"));
+    if (HttpGetJson(curl, legacy.cstr(), headers, jsonOut, code, cfg.verifyTLS))
     {
         if (headers)
             curl_slist_free_all(headers);
         return true;
     }
-    if ((code == 401 || code == 403) && cfg.user.length() > 0 && cfg.pass.length() > 0)
+    if ((code == 401 || code == 403) && !cfg.user.isEmpty() && !cfg.pass.isEmpty())
     {
-        if (UnifiLogin(curl, cfg, false) && HttpGetJson(curl, legacy.c_str(), headers, jsonOut, code))
+        if (UnifiLogin(curl, cfg, false) && HttpGetJson(curl, legacy.cstr(), headers, jsonOut, code, cfg.verifyTLS))
         {
             if (headers)
                 curl_slist_free_all(headers);
@@ -911,6 +930,7 @@ ObjectArray<WirelessStationInfo> *UbiquitiUniFiDriver::getWirelessStations(SNMP_
         return nullptr;
     }
 
+    // Radios via SNMP (optional for matching)
     unique_ptr<StructArray<RadioInterfaceInfo>> radios(getRadioInterfaces(snmp, node, nullptr));
 
     CURL *curl = curl_easy_init();
@@ -920,15 +940,14 @@ ObjectArray<WirelessStationInfo> *UbiquitiUniFiDriver::getWirelessStations(SNMP_
         return nullptr;
     }
 
-    std::string jsonText;
+    StringBuffer jsonText;
     ObjectArray<WirelessStationInfo> *stations = nullptr;
 
     if (UnifiFetchStations(curl, cfg, jsonText))
     {
-        json_t *root = UnifiHelpers::GetStationArrayFromJson(jsonText);
-        if (root != nullptr)
+        json_t *arr = UnifiHelpers::GetStationArrayFromJson(jsonText);
+        if (arr != nullptr)
         {
-            json_t *arr = json_is_array(root) ? root : json_object_get(root, "data");
             stations = new ObjectArray<WirelessStationInfo>(0, 32, Ownership::True);
 
             size_t idx;
@@ -939,8 +958,7 @@ ObjectArray<WirelessStationInfo> *UbiquitiUniFiDriver::getWirelessStations(SNMP_
                     continue;
 
                 auto *info = new WirelessStationInfo;
-                if (UnifiHelpers::FillStaInfoFromJson(item, info) && UnifiHelpers::MatchStaToRadio(info, radios.get()))
-                    stations->add(info);
+                if (UnifiHelpers::FillStaInfoFromJson(item, info) && UnifiHelpers::MatchStaToRadio(info, radios.get())) stations->add(info);
                 else
                     delete info;
             }
@@ -951,7 +969,7 @@ ObjectArray<WirelessStationInfo> *UbiquitiUniFiDriver::getWirelessStations(SNMP_
                 stations = nullptr;
             }
 
-            json_decref(root);
+            json_decref(arr);
         }
     }
     else
