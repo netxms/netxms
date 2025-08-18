@@ -47,7 +47,7 @@ const TCHAR *UbiquitiAirMaxDriver::getVersion()
  */
 int UbiquitiAirMaxDriver::isPotentialDevice(const SNMP_ObjectId &oid)
 {
-   return oid.equals({1, 3, 6, 1, 4, 1, 10002, 1}) || oid.startsWith({1, 3, 6, 1, 4, 1, 41112}) ? 254 : 0;
+   return oid.equals({1, 3, 6, 1, 4, 1, 10002, 1}) || oid.startsWith({1, 3, 6, 1, 4, 1, 41112, 1, 4}) ? 254 : 0;
 }
 
 /**
