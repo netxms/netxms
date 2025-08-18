@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Drivers for Ubiquiti Networks devices
 ** Copyright (C) 2003-2024 Victor Kirhenshtein
@@ -26,7 +26,7 @@
 
 #include <nddrv.h>
 
-#define DEBUG_TAG_UBNT  _T("ndd.ubnt")
+#define DEBUG_TAG_UBNT _T("ndd.ubnt")
 
 /**
  * Driver for AirMAX devices
@@ -34,11 +34,11 @@
 class UbiquitiAirMaxDriver : public NetworkDeviceDriver
 {
 public:
-	virtual const TCHAR *getName() override;
-	virtual const TCHAR *getVersion() override;
+   virtual const TCHAR *getName() override;
+   virtual const TCHAR *getVersion() override;
 
-	virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
-	virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
+   virtual int isPotentialDevice(const SNMP_ObjectId &oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId &oid) override;
    virtual bool isWirelessAccessPoint(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual StructArray<RadioInterfaceInfo> *getRadioInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
@@ -53,10 +53,29 @@ public:
    virtual const TCHAR *getName() override;
    virtual const TCHAR *getVersion() override;
 
-   virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
+   virtual int isPotentialDevice(const SNMP_ObjectId &oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId &oid) override;
    virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
 };
 
-#endif
+/**
+ * Driver for UniFi devices
+ */
+class UbiquitiUniFiDriver : public NetworkDeviceDriver
+{
+public:
+   UbiquitiUniFiDriver();
+
+   virtual const TCHAR *getName() override;
+   virtual const TCHAR *getVersion() override;
+
+   virtual int isPotentialDevice(const SNMP_ObjectId &oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId &oid) override;
+   virtual bool isWirelessAccessPoint(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual StructArray<RadioInterfaceInfo> *getRadioInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+};
+
+#endif /* _ubnt_h_ */

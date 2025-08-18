@@ -24,6 +24,9 @@
     <ClCompile Include="ubnt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="unifi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\nddrv.h">
