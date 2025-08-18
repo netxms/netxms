@@ -279,7 +279,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       mapHeight = mapObject.getHeight();
       int width = mapWidth == 0 ? session.getNetworkMapDefaultWidth() : mapWidth;
       int height = mapHeight == 0 ? session.getNetworkMapDefaultHeight() : mapHeight;
-      
+
       if (mapObject.isFitToScreen())
       {
          setMapSize(-1, -1);         
@@ -288,7 +288,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       {
          setMapSize(width, height);
       }
-      
+
       if ((mapObject.getBackground() != null) && (mapObject.getBackground().compareTo(NXCommon.EMPTY_GUID) != 0))
       {
          if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
