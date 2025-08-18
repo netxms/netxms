@@ -264,7 +264,7 @@ public class NetworkMapWidget extends Composite
       
       currentMapId = mapObject.getObjectId();
 		setMapLayout(mapObject.getLayout());
-		
+
 		if ((mapObject.getBackground() != null) && (mapObject.getBackground().compareTo(NXCommon.EMPTY_GUID) != 0))
 		{
 			if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
@@ -280,7 +280,7 @@ public class NetworkMapWidget extends Composite
 
 		setConnectionRouter(mapObject.getDefaultLinkRouting());
 		viewer.setBackgroundColor(ColorConverter.rgbFromInt(mapObject.getBackgroundColor()));
-		
+
 		if (mapObject.getDefaultLinkColor() >= 0)
 		{
 			if (defaultLinkColor != null)
@@ -294,6 +294,8 @@ public class NetworkMapWidget extends Composite
       labelProvider.setShowStatusFrame(mapObject.isShowStatusFrame());
       labelProvider.setShowStatusIcons(mapObject.isShowStatusIcon());
       labelProvider.setTranslucentLabelBackground(mapObject.isTranslucentLabelBackground());
+      labelProvider.setDefaultLinkStyle(mapObject.getDefaultLinkStyle());
+      labelProvider.setDefaultLinkWidth(mapObject.getDefaultLinkWidth());
 
 		mapPage = mapObject.createMapPage();
       addDciToRequestList();	

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ import com.google.gson.Gson;
 public class NetworkMapElement extends ElementWidget
 {
    private static final Logger logger = LoggerFactory.getLogger(NetworkMapElement.class);
-   
+
 	private NetworkMap mapObject;
 	private NetworkMapWidget mapWidget;
 	private NetworkMapConfig config;
@@ -59,7 +59,7 @@ public class NetworkMapElement extends ElementWidget
          logger.error("Cannot parse dashboard element configuration", e);
          config = new NetworkMapConfig();
       }
-      
+
       processCommonSettings(config);
 
       NXCSession session = Registry.getSession();
@@ -76,7 +76,7 @@ public class NetworkMapElement extends ElementWidget
 		{
 		   mapWidget.enableObjectDoubleClick();
 		}
-		
+
 		if (config.isHideLinkLabelsEnabled())
 		{
 		   mapWidget.hideLinkLabels(true);
