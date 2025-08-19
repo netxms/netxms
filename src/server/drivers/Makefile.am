@@ -225,7 +225,7 @@ tplink_la_LIBADD = ../../libnetxms/libnetxms.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../libnxsrv/libnxsrv.la
 
-ubnt_la_SOURCES = ubnt/airmax.cpp ubnt/edgeswitch.cpp ubnt/ubnt.cpp ubnt/unifi.cpp
+ubnt_la_SOURCES = ubnt/airmax.cpp ubnt/edgeswitch.cpp ubnt/ubnt.cpp
 ubnt_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 ubnt_la_LDFLAGS = -module -avoid-version
 ubnt_la_LIBADD = ../../libnetxms/libnetxms.la \

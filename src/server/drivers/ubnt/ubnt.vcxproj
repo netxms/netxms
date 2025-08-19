@@ -377,7 +377,6 @@
     <ClCompile Include="airmax.cpp" />
     <ClCompile Include="edgeswitch.cpp" />
     <ClCompile Include="ubnt.cpp" />
-    <ClCompile Include="unifi.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\nddrv.h" />
