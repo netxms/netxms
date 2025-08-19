@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Drivers for Ubiquiti Networks devices
 ** Copyright (C) 2003-2024 Victor Kirhenshtein
@@ -502,9 +502,13 @@ static bool LoadUnifiConfig(NObject *node, UnifiConfig &cfg)
 {
     nxlog_debug_tag(DEBUG_TAG_UBNT, 5, _T("LoadUnifiConfig: reading config"));
 
+    StringBuffer t;
     ReadCfgStr(_T("Unifi.ControllerURL"), cfg.url);
     ReadCfgStr(_T("Unifi.Site"), cfg.site);
-    ReadCfgStr(_T("Unifi.Token"), cfg.token);
+    if (ReadCfgStr(_T("Unifi.Token"), t) && !t.isEmpty())
+        cfg.token = t;
+    else
+        cfg.token = _T("NOTSET");  // Pass this instead of being empty
     ReadCfgStr(_T("Unifi.User"), cfg.user);
     ReadCfgStr(_T("Unifi.Password"), cfg.pass);
     {
@@ -514,7 +518,6 @@ static bool LoadUnifiConfig(NObject *node, UnifiConfig &cfg)
     }
 
     // per-node overrides
-    StringBuffer t;
     if (ReadNodeAttr(node, _T("Unifi.ControllerURL"), t) && !t.isEmpty())
         cfg.url = t;
     if (ReadNodeAttr(node, _T("Unifi.Site"), t) && !t.isEmpty())
@@ -958,7 +961,8 @@ ObjectArray<WirelessStationInfo> *UbiquitiUniFiDriver::getWirelessStations(SNMP_
                     continue;
 
                 auto *info = new WirelessStationInfo;
-                if (UnifiHelpers::FillStaInfoFromJson(item, info) && UnifiHelpers::MatchStaToRadio(info, radios.get())) stations->add(info);
+                if (UnifiHelpers::FillStaInfoFromJson(item, info) && UnifiHelpers::MatchStaToRadio(info, radios.get()))
+                    stations->add(info);
                 else
                     delete info;
             }
