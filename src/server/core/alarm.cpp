@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,16 +24,16 @@
 #include <netxms-regex.h>
 #include <nms_users.h>
 
-#define DEBUG_TAG _T("alarm")
+#define DEBUG_TAG L"alarm"
 
 /**
  * Column list for loading alarms from database
  */
 #define ALARM_LOAD_COLUMN_LIST \
-   _T("alarm_id,source_object_id,zone_uin,source_event_code,source_event_id,message,original_severity,current_severity,") \
-   _T("alarm_key,creation_time,last_change_time,hd_state,hd_ref,ack_by,repeat_count,alarm_state,timeout,timeout_event,") \
-   _T("resolved_by,ack_timeout,dci_id,alarm_category_ids,rule_guid,rule_description,parent_alarm_id,event_tags,") \
-   _T("rca_script_name,impact,last_state_change_time")
+   L"alarm_id,source_object_id,zone_uin,source_event_code,source_event_id,message,original_severity,current_severity," \
+   L"alarm_key,creation_time,last_change_time,hd_state,hd_ref,ack_by,repeat_count,alarm_state,timeout,timeout_event," \
+   L"resolved_by,ack_timeout,dci_id,alarm_category_ids,rule_guid,rule_description,parent_alarm_id,event_tags," \
+   L"rca_script_name,impact,last_state_change_time"
 
 /**
  * Alarm comments constructor
@@ -67,7 +67,7 @@ private:
    void updateMostCritical()
    {
       m_mostCritical = -1;
-      for(int i = 0; i < m_severities.size(); i++)
+      for(int i = 0; (i < m_severities.size()) && (m_mostCritical < STATUS_CRITICAL); i++)
          if (m_severities.get(i)->second > m_mostCritical)
             m_mostCritical = m_severities.get(i)->second;
    }
@@ -394,11 +394,11 @@ Alarm::Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, c
    m_ruleGuid = ruleGuid;
 
    StringBuffer buffer = StringBuffer(ruleDescription);
-   buffer.replace(_T("\n"), _T(" "));
-   buffer.replace(_T("\r"), _T(" "));
-   buffer.replace(_T("\t"), _T(" "));
-   buffer.replace(_T("  "), _T(" "));
-   _tcslcpy(m_ruleDescription, buffer, MAX_DB_STRING);
+   buffer.replace(L"\n", L" ");
+   buffer.replace(L"\r", L" ");
+   buffer.replace(L"\t", L" ");
+   buffer.replace(L"  ", L" ");
+   wcslcpy(m_ruleDescription, buffer, MAX_DB_STRING);
 
    m_sourceObject = event->getSourceId();
    m_zoneUIN = event->getZoneUIN();
@@ -421,8 +421,8 @@ Alarm::Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, c
    m_resolvedByUser = INVALID_UID;
    m_termByUser = INVALID_UID;
    m_relatedEvents.add(event->getId());
-   _tcslcpy(m_message, message, MAX_EVENT_MSG_LENGTH);
-   _tcslcpy(m_key, key, MAX_DB_STRING);
+   wcslcpy(m_message, message, MAX_EVENT_MSG_LENGTH);
+   wcslcpy(m_key, key, MAX_DB_STRING);
    m_notificationCode = 0;
 }
 
@@ -478,8 +478,8 @@ Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row) : m_relatedEvents(16, 16
    m_commentCount = GetCommentCount(hdb, m_alarmId);
    m_termByUser = 0;
 
-   TCHAR query[256];
-   _sntprintf(query, 256, _T("SELECT event_id FROM alarm_events WHERE alarm_id=%d"), (int)m_alarmId);
+   wchar_t query[256];
+   _sntprintf(query, 256, L"SELECT event_id FROM alarm_events WHERE alarm_id=%u", m_alarmId);
    DB_RESULT eventResult = DBSelect(hdb, query);
    if (eventResult != nullptr)
    {
@@ -505,7 +505,7 @@ Alarm::Alarm(const Alarm *src, bool copyEvents, uint32_t notificationCode) : m_r
    m_lastChangeTime = src->m_lastChangeTime;
    m_lastStateChangeTime = src->m_lastStateChangeTime;
    m_ruleGuid = src->m_ruleGuid;
-   _tcscpy(m_ruleDescription, src->m_ruleDescription);
+   wcscpy(m_ruleDescription, src->m_ruleDescription);
    m_sourceObject = src->m_sourceObject;
    m_zoneUIN = src->m_zoneUIN;
    m_sourceEventCode = src->m_sourceEventCode;
@@ -522,9 +522,9 @@ Alarm::Alarm(const Alarm *src, bool copyEvents, uint32_t notificationCode) : m_r
    m_repeatCount = src->m_repeatCount;
    m_timeout = src->m_timeout;
    m_timeoutEvent = src->m_timeoutEvent;
-   _tcscpy(m_message, src->m_message);
-   _tcscpy(m_key, src->m_key);
-   _tcscpy(m_helpDeskRef, src->m_helpDeskRef);
+   wcscpy(m_message, src->m_message);
+   wcscpy(m_key, src->m_key);
+   wcscpy(m_helpDeskRef, src->m_helpDeskRef);
    m_impact = MemCopyString(src->m_impact);
    m_commentCount = src->m_commentCount;
    if (copyEvents)
@@ -551,8 +551,8 @@ static void ExecuteHookScript(NXSL_VM *vm)
 {
    if (!vm->run())
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Alarm::executeHookScript: hook script execution error (%s)"), vm->getErrorText());
-      ReportScriptError(SCRIPT_CONTEXT_ALARM, nullptr, 0, vm->getErrorText(), _T("Hook::AlarmStateChange"));
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Alarm::executeHookScript: hook script execution error (%s)", vm->getErrorText());
+      ReportScriptError(SCRIPT_CONTEXT_ALARM, nullptr, 0, vm->getErrorText(), L"Hook::AlarmStateChange");
    }
    delete vm;
 }
@@ -779,7 +779,7 @@ void Alarm::updateInDatabase()
 
 	if (m_state == ALARM_STATE_TERMINATED)
 	{
-	   TCHAR query[256];
+	   wchar_t query[256];
 		_sntprintf(query, 256, _T("DELETE FROM alarm_events WHERE alarm_id=%u"), m_alarmId);
 		QueueSQLRequest(query);
 	}
@@ -791,8 +791,8 @@ void Alarm::updateInDatabase()
  */
 void Alarm::updateStateChangeLog(int prevState, uint32_t userId)
 {
-   TCHAR valRecordId[32], valAlarmId[16], valPrevState[16], valNewState[16], valChangeTime[16], valDuration[16], valChangeBy[16];
-   const TCHAR *values[7] = { valRecordId, valAlarmId, valPrevState, valNewState, valChangeTime, valDuration, valChangeBy };
+   wchar_t valRecordId[32], valAlarmId[16], valPrevState[16], valNewState[16], valChangeTime[16], valDuration[16], valChangeBy[16];
+   const wchar_t *values[7] = { valRecordId, valAlarmId, valPrevState, valNewState, valChangeTime, valDuration, valChangeBy };
    IntegerToString(InterlockedIncrement64(&s_stateChangeLogRecordId), valRecordId);
    IntegerToString(m_alarmId, valAlarmId);
    IntegerToString(prevState, valPrevState);
@@ -801,10 +801,10 @@ void Alarm::updateStateChangeLog(int prevState, uint32_t userId)
    if (m_lastStateChangeTime < m_lastChangeTime)
       IntegerToString(static_cast<int32_t>(m_lastChangeTime - m_lastStateChangeTime), valDuration);
    else
-      memcpy(valDuration, _T("0"), sizeof(TCHAR) * 2);
+      memcpy(valDuration, L"0", sizeof(wchar_t) * 2);
    IntegerToString(userId, valChangeBy);
    static int sqlTypes[7] = { DB_SQLTYPE_BIGINT, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER };
-   QueueSQLRequest(_T("INSERT INTO alarm_state_changes (record_id,alarm_id,prev_state,new_state,change_time,prev_state_duration,change_by) VALUES (?,?,?,?,?,?,?)"), 7, sqlTypes, values);
+   QueueSQLRequest(L"INSERT INTO alarm_state_changes (record_id,alarm_id,prev_state,new_state,change_time,prev_state_duration,change_by) VALUES (?,?,?,?,?,?,?)", 7, sqlTypes, values);
    m_lastStateChangeTime = m_lastChangeTime;
 }
 
@@ -1135,14 +1135,12 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
       if (openHelpdeskIssue)
          alarm->openHelpdeskIssue(nullptr);
 
-      // Add new alarm to active alarm list if needed
-		if ((alarm->getState() & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED)
-      {
-         s_alarmList.lock();
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("AlarmManager: adding new active alarm, current alarm count %d"), s_alarmList.size());
-         s_alarmList.add(alarm);
-         s_alarmList.unlock();
-      }
+      // Add new alarm to active alarm list
+      s_alarmList.lock();
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("AlarmManager: adding new active alarm, current alarm count %d"), s_alarmList.size());
+      s_alarmList.add(alarm);
+      UpdateObjectOnAlarmUpdate(event->getSourceId(), alarm, false);
+      s_alarmList.unlock();
 
 		alarm->createInDatabase();
       updateRelatedEvent = true;
@@ -1175,7 +1173,7 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
       }
 
       NotifyClients(NX_NOTIFY_NEW_ALARM, alarm);
-      UpdateObjectOnAlarmUpdate(event->getSourceId(), alarm, true);
+      RecalculateObjectStatus(event->getSourceId());
    }
 
    if (updateRelatedEvent)
@@ -1317,8 +1315,8 @@ void Alarm::resolve(uint32_t userId, Event *event, bool terminate, bool notify, 
       // Add record to alarm_events table if alarm is resolved
       m_relatedEvents.add(event->getId());
 
-      TCHAR valAlarmId[16], valEventId[32], valEventCode[16], valSeverity[16], valSource[16], valTimestamp[16];
-      const TCHAR *values[8] = { valAlarmId, valEventId, valEventCode, event->getName(), valSeverity, valSource, valTimestamp, event->getMessage() };
+      wchar_t valAlarmId[16], valEventId[32], valEventCode[16], valSeverity[16], valSource[16], valTimestamp[16];
+      const wchar_t *values[8] = { valAlarmId, valEventId, valEventCode, event->getName(), valSeverity, valSource, valTimestamp, event->getMessage() };
       IntegerToString(m_alarmId, valAlarmId);
       IntegerToString(event->getId(), valEventId);
       IntegerToString(event->getCode(), valEventCode);
@@ -1326,7 +1324,7 @@ void Alarm::resolve(uint32_t userId, Event *event, bool terminate, bool notify, 
       IntegerToString(event->getSourceId(), valSource);
       IntegerToString(static_cast<uint32_t>(event->getTimestamp()), valTimestamp);
       static int sqlTypes[8] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_BIGINT, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR };
-      QueueSQLRequest(_T("INSERT INTO alarm_events (alarm_id,event_id,event_code,event_name,severity,source_object_id,event_timestamp,message) VALUES (?,?,?,?,?,?,?,?)"), 8, sqlTypes, values);
+      QueueSQLRequest(L"INSERT INTO alarm_events (alarm_id,event_id,event_code,event_name,severity,source_object_id,event_timestamp,message) VALUES (?,?,?,?,?,?,?,?)", 8, sqlTypes, values);
    }
 }
 
@@ -1376,32 +1374,38 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(const IntegerArray<uint32_t>& alarmIds,
             {
                // Allow to resolve/terminate alarms for objects that are already deleted
                shared_ptr<NetObj> object = FindObjectById(alarm->getSourceObject());
+               bool allowResolve = true;
                if ((session != nullptr) && (object != nullptr))
                {
                   // If user does not have the required object access rights, the alarm cannot be terminated
-                  if (!object->checkAccessRights(session->getUserId(), terminate ? OBJECT_ACCESS_TERM_ALARMS : OBJECT_ACCESS_UPDATE_ALARMS))
+                  if (object->checkAccessRights(session->getUserId(), terminate ? OBJECT_ACCESS_TERM_ALARMS : OBJECT_ACCESS_UPDATE_ALARMS))
+                  {
+                     session->writeAuditLog(AUDIT_OBJECTS, true, object->getId(),
+                        _T("%s alarm %u (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
+                        alarm->getAlarmId(), alarm->getMessage(), object->getName());
+                  }
+                  else
                   {
                      failIds->add(currentId);
                      failCodes->add(RCC_ACCESS_DENIED);
-                     break;
+                     allowResolve = false;
                   }
-
-                  session->writeAuditLog(AUDIT_OBJECTS, true, object->getId(),
-                     _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
-                     alarm->getAlarmId(), alarm->getMessage(), object->getName());
                }
 
-               alarm->resolve((session != nullptr) ? session->getUserId() : 0, nullptr, terminate, false, includeSubordinates);
-               processedAlarms.add(alarm->getAlarmId());
-               if (object != nullptr)
+               if (allowResolve)
                {
-                  if (!updatedObjects.contains(object->getId()))
-                     updatedObjects.add(object->getId());
-               }
-               UpdateObjectOnAlarmResolve(alarm->getSourceObject(), alarm->getAlarmId(), false);
-               if (terminate)
-               {
-                  s_alarmList.remove(alarm);
+                  alarm->resolve((session != nullptr) ? session->getUserId() : 0, nullptr, terminate, false, includeSubordinates);
+                  processedAlarms.add(alarm->getAlarmId());
+                  if (object != nullptr)
+                  {
+                     if (!updatedObjects.contains(object->getId()))
+                        updatedObjects.add(object->getId());
+                  }
+                  UpdateObjectOnAlarmResolve(alarm->getSourceObject(), alarm->getAlarmId(), false);
+                  if (terminate)
+                  {
+                     s_alarmList.remove(alarm);
+                  }
                }
             }
             else
@@ -1849,7 +1853,7 @@ bool DeleteObjectAlarms(uint32_t objectId, DB_HANDLE hdb)
 
    // Delete all object alarms from database
    bool success = false;
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT alarm_id FROM alarms WHERE source_object_id=?"));
+	DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT alarm_id FROM alarms WHERE source_object_id=?");
 	if (hStmt != nullptr)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, objectId);
@@ -1861,9 +1865,9 @@ bool DeleteObjectAlarms(uint32_t objectId, DB_HANDLE hdb)
 			for(int i = 0; i < count; i++)
          {
             uint32_t alarmId = DBGetFieldULong(hResult, i, 0);
-            ExecuteQueryOnObject(hdb, alarmId, _T("DELETE FROM alarm_notes WHERE alarm_id=?"));
-            ExecuteQueryOnObject(hdb, alarmId, _T("DELETE FROM alarm_events WHERE alarm_id=?"));
-            ExecuteQueryOnObject(hdb, alarmId, _T("DELETE FROM alarm_state_changes WHERE alarm_id=?"));
+            ExecuteQueryOnObject(hdb, alarmId, L"DELETE FROM alarm_notes WHERE alarm_id=?");
+            ExecuteQueryOnObject(hdb, alarmId, L"DELETE FROM alarm_events WHERE alarm_id=?");
+            ExecuteQueryOnObject(hdb, alarmId, L"DELETE FROM alarm_state_changes WHERE alarm_id=?");
          }
 			DBFreeResult(hResult);
 		}
@@ -1871,15 +1875,8 @@ bool DeleteObjectAlarms(uint32_t objectId, DB_HANDLE hdb)
 	}
 
    if (success)
-   {
-	   hStmt = DBPrepare(hdb, _T("DELETE FROM alarms WHERE source_object_id=?"));
-	   if (hStmt != nullptr)
-	   {
-		   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, objectId);
-         success = DBExecute(hStmt) ? true : false;
-         DBFreeStatement(hStmt);
-      }
-   }
+      success = ExecuteQueryOnObject(hdb, objectId, L"DELETE FROM alarms WHERE source_object_id=?");
+
    return success;
 }
 
@@ -2032,7 +2029,7 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(uint32_t alarmId, bool
    if ((objectId == 0) && useDatabase)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      DB_STATEMENT stmt = DBPrepare(hdb, _T("SELECT source_object_id FROM alarms WHERE alarm_id=?"));
+      DB_STATEMENT stmt = DBPrepare(hdb, L"SELECT source_object_id FROM alarms WHERE alarm_id=?");
       if (stmt != nullptr)
       {
          DBBind(stmt, 1, DB_SQLTYPE_INTEGER, alarmId);
@@ -2191,6 +2188,7 @@ static void WatchdogThread()
 		{
 		   Alarm *alarm = terminatedAlarms.get(i);
          alarm->resolve(0, nullptr, true, true, false);
+         UpdateObjectOnAlarmResolve(alarm->getSourceObject(), alarm->getAlarmId(), true);
 		   s_alarmList.remove(alarm);
 		}
 
@@ -2351,19 +2349,9 @@ uint32_t Alarm::deleteComment(uint32_t commentId)
    uint32_t rcc;
    if (IsValidCommentId(m_alarmId, commentId))
    {
-      DB_HANDLE db = DBConnectionPoolAcquireConnection();
-      DB_STATEMENT stmt = DBPrepare(db, _T("DELETE FROM alarm_notes WHERE note_id=?"));
-      if (stmt != nullptr)
-      {
-         DBBind(stmt, 1, DB_SQLTYPE_INTEGER, commentId);
-         rcc = DBExecute(stmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
-         DBFreeStatement(stmt);
-      }
-      else
-      {
-         rcc = RCC_DB_FAILURE;
-      }
-      DBConnectionPoolReleaseConnection(db);
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      rcc = ExecuteQueryOnObject(hdb, commentId, L"DELETE FROM alarm_notes WHERE note_id=?") ? RCC_SUCCESS : RCC_DB_FAILURE;
+      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
@@ -2404,7 +2392,7 @@ ObjectArray<AlarmComment> *GetAlarmComments(uint32_t alarmId)
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    ObjectArray<AlarmComment> *comments = new ObjectArray<AlarmComment>(16, 16, Ownership::False);
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT note_id,change_time,user_id,note_text FROM alarm_notes WHERE alarm_id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT note_id,change_time,user_id,note_text FROM alarm_notes WHERE alarm_id=?");
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, alarmId);
@@ -2627,8 +2615,8 @@ Alarm NXCORE_EXPORTABLE *LoadAlarmFromDatabase(uint32_t alarmId)
  */
 void UpdateAlarmExpirationTimes()
 {
-   s_resolveExpirationTime = ConfigReadInt(_T("Alarms.ResolveExpirationTime"), 0);
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("Resolved alarms expiration time set to %u seconds"), s_resolveExpirationTime);
+   s_resolveExpirationTime = ConfigReadInt(L"Alarms.ResolveExpirationTime", 0);
+   nxlog_debug_tag(DEBUG_TAG, 3, L"Resolved alarms expiration time set to %u seconds", s_resolveExpirationTime);
 }
 
 /**
@@ -2636,7 +2624,7 @@ void UpdateAlarmExpirationTimes()
  */
 static void RootCauseUpdateThread()
 {
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("Root cause update thread started"));
+   nxlog_debug_tag(DEBUG_TAG, 3, L"Root cause update thread started");
    while(!s_shutdown.wait(60000))
    {
       if (!(g_flags & AF_SERVER_INITIALIZED))
@@ -2709,7 +2697,7 @@ static void RootCauseUpdateThread()
 bool InitAlarmManager()
 {
    s_watchdogThread = INVALID_THREAD_HANDLE;
-   s_resolveExpirationTime = ConfigReadInt(_T("Alarms.ResolveExpirationTime"), 0);
+   s_resolveExpirationTime = ConfigReadInt(L"Alarms.ResolveExpirationTime", 0);
 
    // Load active alarms into memory
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -2755,7 +2743,10 @@ bool InitAlarmManager()
    s_alarmList.forEach(
       [] (Alarm *curr) -> EnumerationCallbackResult
       {
-         UpdateObjectOnAlarmUpdate(curr->getSourceObject(), curr, false);
+         if (curr->getState() != ALARM_STATE_RESOLVED)
+         {
+            UpdateObjectOnAlarmUpdate(curr->getSourceObject(), curr, false);
+         }
          if (curr->getParentAlarmId() != 0)
          {
             Alarm *parent = s_alarmList.find(curr->getParentAlarmId());
