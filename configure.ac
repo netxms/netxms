@@ -4894,6 +4894,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/tb/Makefile
 	src/server/drivers/tplink/Makefile
 	src/server/drivers/ubnt/Makefile
+	src/server/drivers/unifi/Makefile
 	src/server/drivers/westerstrand/Makefile
 	src/server/hdlink/Makefile
 	src/server/hdlink/jira/Makefile

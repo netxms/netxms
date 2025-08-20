@@ -171,6 +171,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mikrotik", "src\server\driv
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ubnt", "src\server\drivers\ubnt\ubnt.vcxproj", "{500DE9BF-6FC1-4ACB-91AA-308BA2D33F38}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unifi", "src\server\drivers\unifi\unifi.vcxproj", "{2ae3cfe2-6cd8-4d73-bc5a-23269fb53471}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "db2", "src\agent\subagents\db2\db2.vcxproj", "{90B762AB-B7BA-42D6-9819-C787AB3F59D1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "filemgr", "src\agent\subagents\filemgr\filemgr.vcxproj", "{BBE9028E-725C-45C6-97C9-BFC443F19EA8}"
@@ -1390,6 +1392,21 @@ Global
 		{500DE9BF-6FC1-4ACB-91AA-308BA2D33F38}.Release|Win32.ActiveCfg = Release|Win32
 		{500DE9BF-6FC1-4ACB-91AA-308BA2D33F38}.Release|x64.ActiveCfg = Release|x64
 		{500DE9BF-6FC1-4ACB-91AA-308BA2D33F38}.Release|x64.Build.0 = Release|x64
+		{2ae3cfe2-6cd8-4d73-bc5a-23269fb53471}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{2ae3cfe2-6cd8-4d73-bc5a-23269fb53471}.Debug|ARM64.Build.0 = Debug|ARM64
+		{2ae3cfe2-6cd8-4d73-bc5a-23269fb53471}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2ae3cfe2-6cd8-4d73-bc5a-23269fb53471}.Debug|x64.ActiveCfg = Debug|x64
+		{2ae3cfe2-6cd8-4d73-bc5a-23269fb53471}.Debug|x64.Build.0 = Debug|x64
+		{2ae3cfe2-6cd8-4d73-bc5a-23269fb53471}.Release - Client Only|ARM64.ActiveCfg = Release - Client Only|ARM64
+		{2ae3cfe2-6cd8-4d73-bc5a-23269fb53471}.Release - Client Only|ARM64.Build.0 = Release - Client Only|ARM64
+		{2ae3cfe2-6cd8-4d73-bc5a-23269fb53471}.Release - Client Only|Win32.ActiveCfg = Release - Client Only|Win32
+		{2ae3cfe2-6cd8-4d73-bc5a-23269fb53471}.Release - Client Only|Win32.Build.0 = Release - Client Only|Win32
+		{2ae3cfe2-6cd8-4d73-bc5a-23269fb53471}.Release - Client Only|x64.ActiveCfg = Release - Client Only|x64
+		{2ae3cfe2-6cd8-4d73-bc5a-23269fb53471}.Release|ARM64.ActiveCfg = Release|ARM64
+		{2ae3cfe2-6cd8-4d73-bc5a-23269fb53471}.Release|ARM64.Build.0 = Release|ARM64
+		{2ae3cfe2-6cd8-4d73-bc5a-23269fb53471}.Release|Win32.ActiveCfg = Release|Win32
+		{2ae3cfe2-6cd8-4d73-bc5a-23269fb53471}.Release|x64.ActiveCfg = Release|x64
+		{2ae3cfe2-6cd8-4d73-bc5a-23269fb53471}.Release|x64.Build.0 = Release|x64
 		{90B762AB-B7BA-42D6-9819-C787AB3F59D1}.Debug|ARM64.ActiveCfg = Debug|ARM64
 		{90B762AB-B7BA-42D6-9819-C787AB3F59D1}.Debug|Win32.ActiveCfg = Debug|Win32
 		{90B762AB-B7BA-42D6-9819-C787AB3F59D1}.Debug|Win32.Build.0 = Debug|Win32
@@ -3116,6 +3133,7 @@ Global
 		{12D6E037-84D8-406A-8A9B-3E00D3E0D426} = {71683564-472B-4216-BA74-0F34BC843D92}
 		{500DE9BF-6FC1-4ACB-91AA-308BA1D37F38} = {53997B2A-D94C-428C-816D-938C297A1866}
 		{500DE9BF-6FC1-4ACB-91AA-308BA2D33F38} = {53997B2A-D94C-428C-816D-938C297A1866}
+		{2ae3cfe2-6cd8-4d73-bc5a-23269fb53471} = {53997B2A-D94C-428C-816D-938C297A1866}
 		{90B762AB-B7BA-42D6-9819-C787AB3F59D1} = {451F583D-C2DB-4414-870C-7FA0189BE7DD}
 		{BBE9028E-725C-45C6-97C9-BFC443F19EA8} = {451F583D-C2DB-4414-870C-7FA0189BE7DD}
 		{C1A5E28A-CF47-4D96-9656-3312F16E3724} = {71683564-472B-4216-BA74-0F34BC843D92}
