@@ -1371,16 +1371,34 @@ shared_ptr<Template> NXCORE_EXPORTABLE FindTemplateByName(const TCHAR *name)
 
 /**
  * Check if given IP address is used by cluster (it's either
- * resource IP or located on one of sync subnets)
+ * resource IP or located on one of sync subnets).
+ * Optionally can return ID of cluster object and flag indicating
+ * if given IP address is resource IP.
  */
-bool NXCORE_EXPORTABLE IsClusterIP(int32_t zoneUIN, const InetAddress& ipAddr)
+bool NXCORE_EXPORTABLE IsClusterIP(int32_t zoneUIN, const InetAddress& ipAddr, uint32_t *clusterId, bool *isResource)
 {
 	return g_idxObjectById.find(
-	   [zoneUIN, ipAddr] (NetObj *object) -> bool
+	   [zoneUIN, ipAddr, clusterId, isResource] (NetObj *object) -> bool
 	   {
-         return (object->getObjectClass() == OBJECT_CLUSTER) && !object->isDeleted() &&
-                (static_cast<Cluster*>(object)->getZoneUIN() == zoneUIN) &&
-                (static_cast<Cluster*>(object)->isVirtualAddr(ipAddr) || static_cast<Cluster*>(object)->isSyncAddr(ipAddr));
+         if ((object->getObjectClass() != OBJECT_CLUSTER) || object->isDeleted() || (static_cast<Cluster*>(object)->getZoneUIN() != zoneUIN))
+	         return false;
+         if (static_cast<Cluster*>(object)->isVirtualAddr(ipAddr))
+         {
+            if (clusterId != nullptr)
+               *clusterId = object->getId();
+            if (isResource != nullptr)
+               *isResource = true;
+            return true;
+         }
+         if (static_cast<Cluster*>(object)->isSyncAddr(ipAddr))
+         {
+            if (clusterId != nullptr)
+               *clusterId = object->getId();
+            if (isResource != nullptr)
+               *isResource = false;
+            return true;
+         }
+         return false;
 	   }) != nullptr;
 }
 
