@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Drivers for Ubiquiti Networks devices
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -47,7 +47,7 @@ const TCHAR *UbiquitiAirMaxDriver::getVersion()
  */
 int UbiquitiAirMaxDriver::isPotentialDevice(const SNMP_ObjectId &oid)
 {
-   return oid.equals({1, 3, 6, 1, 4, 1, 10002, 1}) || oid.startsWith({1, 3, 6, 1, 4, 1, 41112, 1, 4}) ? 254 : 0;
+   return oid.equals({ 1, 3, 6, 1, 4, 1, 10002, 1 }) || oid.startsWith({ 1, 3, 6, 1, 4, 1, 41112, 1, 4 }) ? 254 : 0;
 }
 
 /**
@@ -59,9 +59,9 @@ int UbiquitiAirMaxDriver::isPotentialDevice(const SNMP_ObjectId &oid)
 bool UbiquitiAirMaxDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId &oid)
 {
    TCHAR tmp[256];
-   if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.41112.1.6.3.3.0"), nullptr, 0, tmp, sizeof(tmp), 0) == SNMP_ERR_SUCCESS && tmp[0] != 0)
+   if ((SnmpGet(snmp->getSnmpVersion(), snmp, { 1, 3, 6, 1, 4, 1, 41112, 1, 6, 3, 3, 0 }, tmp, sizeof(tmp), SG_STRING_RESULT) == SNMP_ERR_SUCCESS) && (tmp[0] != 0))
       return true;
-   if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.41112.1.1.1.3.1"), nullptr, 0, tmp, sizeof(tmp), 0) == SNMP_ERR_SUCCESS && (_tcslen(tmp) > 0))
+   if ((SnmpGet(snmp->getSnmpVersion(), snmp, { 1, 3, 6, 1, 4, 1, 41112, 1, 1, 1, 3, 1 }, tmp, sizeof(tmp), SG_STRING_RESULT) == SNMP_ERR_SUCCESS) && (tmp[0] != 0))
       return true;
    return false;
 }
@@ -91,49 +91,58 @@ static uint32_t HandlerRadioInterfaceList(SNMP_Variable *var, SNMP_Transport *sn
    memset(radio, 0, sizeof(RadioInterfaceInfo));
    radio->index = radioIndex;
    radio->ifIndex = radioIndex;
+   var->getValueAsString(radio->ssid, MAX_SSID_LENGTH); // SSID (from walked variable)
 
-   // Name (ifDescr)
-   TCHAR ifDescr[MAX_OBJECT_NAME];
-   if (SnmpGet(snmp->getSnmpVersion(), snmp, {1, 3, 6, 1, 2, 1, 2, 2, 1, 2, radioIndex}, ifDescr, sizeof(ifDescr), SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
-      _tcslcpy(radio->name, ifDescr, MAX_OBJECT_NAME);
+   SNMP_PDU request;
+   SNMP_ObjectId oid({ 1, 3, 6, 1, 2, 1, 2, 2, 1, 2 });
 
-   // BSSID (ifPhysAddress)
-   BYTE macAddr[MAC_ADDR_LENGTH];
-   if (SnmpGet(snmp->getSnmpVersion(), snmp, {1, 3, 6, 1, 2, 1, 2, 2, 1, 6, radioIndex}, macAddr, sizeof(macAddr), SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
-      memcpy(radio->bssid, macAddr, MAC_ADDR_LENGTH);
+   oid.extend(radioIndex);
+   request.bindVariable(new SNMP_Variable(oid)); // Name (ifDescr)
 
-   // SSID (from walked variable)
-   var->getValueAsString(radio->ssid, MAX_SSID_LENGTH);
+   oid.changeElement(oid.length() - 2, 6); // BSSID (ifPhysAddress)
+   request.bindVariable(new SNMP_Variable(oid));
 
-   // Channel (per radio index)
-   UINT32 channel = 0;
-   if (SnmpGetEx(snmp, {1, 3, 6, 1, 4, 1, 41112, 1, 4, 1, 1, 3, radioIndex}, &channel, sizeof(channel), 0) == SNMP_ERR_SUCCESS)
-      radio->channel = channel;
+   oid = { 1, 3, 6, 1, 4, 1, 41112, 1, 4, 1, 1, 3 }; // Channel
+   oid.extend(radioIndex);
+   request.bindVariable(new SNMP_Variable(oid));
 
-   // Frequency (per radio index)
-   UINT32 frequency = 0;
-   if (SnmpGetEx(snmp, {1, 3, 6, 1, 4, 1, 41112, 1, 4, 1, 1, 4, radioIndex}, &frequency, sizeof(frequency), 0) == SNMP_ERR_SUCCESS)
-      radio->frequency = static_cast<uint16_t>(frequency);
+   oid.changeElement(oid.length() - 1, 4); // Frequency
+   request.bindVariable(new SNMP_Variable(oid));
 
-   // TX Power (dBm, per radio index)
-   UINT32 txPower = 0;
-   if (SnmpGetEx(snmp, {1, 3, 6, 1, 4, 1, 41112, 1, 4, 1, 1, 6, radioIndex}, &txPower, sizeof(txPower), 0) == SNMP_ERR_SUCCESS)
+   oid.changeElement(oid.length() - 1, 6); // TX Power (dBm)
+   request.bindVariable(new SNMP_Variable(oid));
+
+   SNMP_PDU *response = nullptr;
+   if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
-      radio->powerDBm = (int32_t)txPower;
-      radio->powerMW = (uint32_t)(pow(10.0, (double)radio->powerDBm / 10.0));
-   }
+      if (request.getNumVariables() == response->getNumVariables())
+      {
+         // Name (ifDescr)
+         SNMP_Variable *var = response->getVariable(0);
+         if (var->getType() == ASN_OCTET_STRING)
+            var->getValueAsString(radio->name, MAX_OBJECT_NAME);
 
-   // Band detection from frequency
-   if (radio->frequency >= 2400 && radio->frequency < 2500)
-      radio->band = RADIO_BAND_2_4_GHZ;
-   else if (radio->frequency >= 3600 && radio->frequency < 3700)
-      radio->band = RADIO_BAND_3_65_GHZ;
-   else if (radio->frequency >= 4900 && radio->frequency < 6000)
-      radio->band = RADIO_BAND_5_GHZ;
-   else if (radio->frequency >= 5925 && radio->frequency < 7125)
-      radio->band = RADIO_BAND_6_GHZ;
-   else
-      radio->band = RADIO_BAND_UNKNOWN;
+         // BSSID (ifPhysAddress)
+         var = response->getVariable(1);
+         if (var->getType() == ASN_OCTET_STRING && var->getValueLength() >= MAC_ADDR_LENGTH)
+            var->getRawValue(radio->bssid, MAC_ADDR_LENGTH);
+
+         // Channel
+         var = response->getVariable(2);
+         radio->channel = var->getValueAsUInt();
+
+         // Frequency
+         var = response->getVariable(3);
+         radio->frequency = static_cast<uint16_t>(var->getValueAsUInt());
+         radio->band = WirelessFrequencyToBand(radio->frequency);
+
+         // TX Power (dBm)
+         SNMP_Variable *varTxPower = response->getVariable(4);
+         radio->powerDBm = varTxPower->getValueAsInt();
+         radio->powerMW = static_cast<int32_t>(pow(10.0, (double)radio->powerDBm / 10.0));
+      }
+      delete response;
+   }
 
    nxlog_debug_tag(DEBUG_TAG_UBNT, 7, _T("[SNMP] Radio index=%u name=\"%s\" SSID=\"%s\" MAC=%02X:%02X:%02X:%02X:%02X:%02X channel=%u freq=%u MHz power=%d dBm (%u mW) band=%d"),
                    radioIndex, radio->name, radio->ssid, radio->bssid[0], radio->bssid[1], radio->bssid[2], radio->bssid[3], radio->bssid[4], radio->bssid[5],
@@ -153,7 +162,7 @@ static uint32_t HandlerRadioInterfaceList(SNMP_Variable *var, SNMP_Transport *sn
 StructArray<RadioInterfaceInfo> *UbiquitiAirMaxDriver::getRadioInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    auto radios = new StructArray<RadioInterfaceInfo>(0, 4);
-   if (SnmpWalk(snmp, _T(".1.2.840.10036.1.1.1.9"), HandlerRadioInterfaceList, radios) != SNMP_ERR_SUCCESS) // dot11DesiredSSID
+   if (SnmpWalk(snmp, { 1, 2, 840, 10036, 1, 1, 1, 9 }, HandlerRadioInterfaceList, radios) != SNMP_ERR_SUCCESS) // dot11DesiredSSID
    {
       delete radios;
       return nullptr;
@@ -166,44 +175,57 @@ StructArray<RadioInterfaceInfo> *UbiquitiAirMaxDriver::getRadioInterfaces(SNMP_T
  */
 static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snmp, ObjectArray<WirelessStationInfo> *wsList)
 {
-   const SNMP_ObjectId &name = var->getName();
+   SNMP_ObjectId oid = var->getName();
+
+   SNMP_PDU request;
+   oid.changeElement(11, 2); // SSID
+   request.bindVariable(new SNMP_Variable(oid));
+
+   oid.changeElement(11, 3); // RSSI
+   request.bindVariable(new SNMP_Variable(oid));
+
+   oid.changeElement(11, 5); // TX rate
+   request.bindVariable(new SNMP_Variable(oid));
+
+   oid.changeElement(11, 12); // RX rate
+   request.bindVariable(new SNMP_Variable(oid));
+
+   oid.changeElement(11, 10); // IP address
+   request.bindVariable(new SNMP_Variable(oid));
+
+   SNMP_PDU *response = nullptr;
+   if (snmp->doRequest(&request, &response) != SNMP_ERR_SUCCESS)
+      return SNMP_ERR_AGENT;
+
+   if (request.getNumVariables() != response->getNumVariables())
+   {
+      nxlog_debug_tag(DEBUG_TAG_UBNT, 5, _T("[SNMP] Invalid response from Ubiquiti AirMax device - number of variables in request (%d) does not match number of variables in response (%d)"),
+                      request.getNumVariables(), response->getNumVariables());
+      delete response;
+      return SNMP_ERR_AGENT;
+   }
 
    // MAC starts at element 13
    BYTE mac[MAC_ADDR_LENGTH];
    for (int i = 0; i < MAC_ADDR_LENGTH; i++)
-      mac[i] = name.getElement(i + 13);
+      mac[i] = oid.getElement(i + 13);
 
    WirelessStationInfo *info = new WirelessStationInfo;
    memset(info, 0, sizeof(WirelessStationInfo));
    memcpy(info->macAddr, mac, MAC_ADDR_LENGTH);
    info->apMatchPolicy = AP_MATCH_BY_RFINDEX;
-
-   uint32_t apIndex = name.getElement(name.length() - 7); // element just before MAC
-   info->rfIndex = apIndex;
+   info->rfIndex = oid.getElement(oid.length() - 7); // element just before MAC
    info->vlan = 1;
+   response->getVariable(0)->getValueAsString(info->ssid, MAX_SSID_LENGTH); // SSID
+   info->rssi = response->getVariable(1)->getValueAsInt();
+   info->txRate = response->getVariable(2)->getValueAsUInt(); // TX rate (kbps)
+   info->rxRate = response->getVariable(3)->getValueAsUInt(); // RX rate (kbps)
 
-   // SSID
-   SnmpGet(snmp->getSnmpVersion(), snmp, {1, 3, 6, 1, 4, 1, 41112, 1, 4, 7, 1, 2, apIndex, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]}, info->ssid, sizeof(info->ssid), SG_STRING_RESULT);
-
-   // RSSI
-   SnmpGet(snmp->getSnmpVersion(), snmp, {1, 3, 6, 1, 4, 1, 41112, 1, 4, 7, 1, 3, apIndex, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]}, &info->rssi, sizeof(info->rssi), 0);
-
-   // TX rate (kbps)
-   uint32_t txRate = 0;
-   if (SnmpGet(snmp->getSnmpVersion(), snmp, {1, 3, 6, 1, 4, 1, 41112, 1, 4, 7, 1, 5, apIndex, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]}, &txRate, sizeof(txRate), 0) == SNMP_ERR_SUCCESS)
-      info->txRate = txRate;
-
-   // RX rate (kbps)
-   uint32_t rxRate = 0;
-   if (SnmpGet(snmp->getSnmpVersion(), snmp, {1, 3, 6, 1, 4, 1, 41112, 1, 4, 7, 1, 12, apIndex, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]}, &rxRate, sizeof(rxRate), 0) == SNMP_ERR_SUCCESS)
-      info->rxRate = rxRate;
-
-   // IP address
-   InetAddress ip;
-   if (SnmpGet(snmp->getSnmpVersion(), snmp, {1, 3, 6, 1, 4, 1, 41112, 1, 4, 7, 1, 10, apIndex, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]}, &ip, sizeof(ip), 0) == SNMP_ERR_SUCCESS)
-      info->ipAddr = ip;
+   wchar_t ipAddr[64];
+   info->ipAddr = InetAddress::parse(response->getVariable(4)->getValueAsIPAddr(ipAddr));
 
    wsList->add(info);
+   delete response;
 
    nxlog_debug_tag(DEBUG_TAG_UBNT, 7, _T("[SNMP] Station MAC=%02X:%02X:%02X:%02X:%02X:%02X SSID=\"%s\" RSSI=%d dBm TX=%u RX=%u IP=%s (rfIndex=%u)"),
                    mac[0], mac[1], mac[2], mac[3], mac[4], mac[5], info->ssid, info->rssi, info->txRate, info->rxRate, (const TCHAR *)info->ipAddr.toString(), info->rfIndex);
@@ -221,7 +243,7 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *s
 ObjectArray<WirelessStationInfo> *UbiquitiAirMaxDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, Ownership::True);
-   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.41112.1.4.7.1.1"), HandlerWirelessStationList, wsList) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, { 1, 3, 6, 1, 4, 1, 41112, 1, 4, 7, 1, 1 }, HandlerWirelessStationList, wsList) != SNMP_ERR_SUCCESS)
    {
       delete wsList;
       wsList = nullptr;
@@ -240,31 +262,65 @@ ObjectArray<WirelessStationInfo> *UbiquitiAirMaxDriver::getWirelessStations(SNMP
  */
 bool UbiquitiAirMaxDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *, DriverData *, DeviceHardwareInfo *hwInfo)
 {
-   TCHAR buf[256];
+   SNMP_PDU request;
 
    // Product name / model
-   if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.2.840.10036.3.1.2.1.3.5"), nullptr, 0, buf, sizeof(buf), SG_STRING_RESULT) == SNMP_ERR_SUCCESS && buf[0] != 0)
+   request.bindVariable(new SNMP_Variable({ 1, 2, 840, 10036, 3, 1, 2, 1, 3, 5 }));
+
+   // Firmware version  
+   request.bindVariable(new SNMP_Variable({ 1, 2, 840, 10036, 3, 1, 2, 1, 4, 5 }));
+
+   // Vendor
+   request.bindVariable(new SNMP_Variable({ 1, 2, 840, 10036, 3, 1, 2, 1, 2, 5 }));
+
+   // Serial number (base MAC without colons)
+   request.bindVariable(new SNMP_Variable({ 1, 2, 840, 10036, 1, 1, 1, 1, 5 }));
+
+   SNMP_PDU *response = nullptr;
+   if (snmp->doRequest(&request, &response) != SNMP_ERR_SUCCESS)
+      return false;
+
+   if (request.getNumVariables() != response->getNumVariables())
    {
-      _tcslcpy(hwInfo->productCode, buf, 32);
-      _tcslcpy(hwInfo->productName, buf, 128);
+      delete response;
+      return false;
+   }
+
+   SNMP_Variable *var = response->getVariable(0);
+   if (var->getType() == ASN_OCTET_STRING)
+   {
+      TCHAR buf[256];
+      var->getValueAsString(buf, sizeof(buf));
+      if (buf[0] != 0)
+      {
+         _tcslcpy(hwInfo->productCode, buf, 32);
+         _tcslcpy(hwInfo->productName, buf, 128);
+      }
    }
 
    // Firmware version
-   if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.2.840.10036.3.1.2.1.4.5"), nullptr, 0, buf, sizeof(buf), SG_STRING_RESULT) == SNMP_ERR_SUCCESS && buf[0] != 0)
-      _tcslcpy(hwInfo->productVersion, buf, 16);
+   var = response->getVariable(1);
+   var->getValueAsString(hwInfo->productVersion, 16);
 
    // Vendor
-   if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.2.840.10036.3.1.2.1.2.5"), nullptr, 0, buf, sizeof(buf), SG_STRING_RESULT) == SNMP_ERR_SUCCESS && buf[0] != 0)
-      _tcslcpy(hwInfo->vendor, buf, 128);
-   else
+   var = response->getVariable(2);
+   var->getValueAsString(hwInfo->vendor, 128);
+   if (hwInfo->vendor[0] == 0)
       _tcscpy(hwInfo->vendor, _T("Ubiquiti, Inc."));
 
    // Serial number (base MAC without colons)
-   BYTE mac[MAC_ADDR_LENGTH];
-   if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.2.840.10036.1.1.1.1.5"), nullptr, 0, mac, sizeof(mac), SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
+   var = response->getVariable(3);
+   if (var->getType() == ASN_OCTET_STRING && var->getValueLength() >= MAC_ADDR_LENGTH)
+   {
+      BYTE mac[MAC_ADDR_LENGTH];
+      var->getRawValue(mac, MAC_ADDR_LENGTH);
       BinToStr(mac, MAC_ADDR_LENGTH, hwInfo->serialNumber); // TCHAR-safe
+   }
    else
+   {
       hwInfo->serialNumber[0] = 0;
+   }
 
+   delete response;
    return true;
 }
