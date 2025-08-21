@@ -345,6 +345,9 @@ public class NXCSession
    private Set<ServerConsoleListener> consoleListeners = new HashSet<ServerConsoleListener>(0);
    private Map<Long, ProgressListener> progressListeners = new HashMap<Long, ProgressListener>(0);
 
+   // Active server channel subscriptions
+   private Map<String, Integer> serverChannelSubscriptions = new HashMap<String, Integer>(0);
+
    // Message subscriptions
    private Map<MessageSubscription, MessageHandler> messageSubscriptions = new HashMap<MessageSubscription, MessageHandler>(0);
 
@@ -2881,6 +2884,20 @@ public class NXCSession
             login(authenticationToken);
             logger.debug("Reconnect completed");
 
+            // Restore subscriptions
+            for(Entry<String, Integer> e : serverChannelSubscriptions.entrySet())
+            {
+               NXCPMessage msg = new NXCPMessage(NXCPCodes.CMD_CHANGE_SUBSCRIPTION);
+               msg.setField(NXCPCodes.VID_NAME, e.getKey());
+               msg.setFieldInt16(NXCPCodes.VID_OPERATION, 1);
+               for(int i = 0; i < e.getValue(); i++)
+               {
+                  msg.setMessageId(requestId.getAndIncrement());
+                  sendMessage(msg);
+                  waitForRCC(msg.getMessageId());
+               }
+            }
+
             synchronized(this)
             {
                reconnectThread = null;
@@ -5086,6 +5103,15 @@ public class NXCSession
       msg.setFieldInt16(NXCPCodes.VID_OPERATION, 1);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
+      synchronized(serverChannelSubscriptions)
+      {
+         Integer count = serverChannelSubscriptions.get(channel);
+         if (count == null)
+         {
+            count = Integer.valueOf(0);
+         }
+         serverChannelSubscriptions.put(channel, count + 1);
+      }
    }
 
    /**
@@ -5102,6 +5128,17 @@ public class NXCSession
       msg.setFieldInt16(NXCPCodes.VID_OPERATION, 0);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
+      synchronized(serverChannelSubscriptions)
+      {
+         Integer count = serverChannelSubscriptions.get(channel);
+         if (count != null)
+         {
+            if (count > 1)
+               serverChannelSubscriptions.put(channel, count - 1);
+            else
+               serverChannelSubscriptions.remove(channel);
+         }
+      }
    }
 
    /**
