@@ -93,7 +93,7 @@ static uint32_t HandlerRadioInterfaceList(SNMP_Variable *var, SNMP_Transport *sn
    radio->ifIndex = radioIndex;
    var->getValueAsString(radio->ssid, MAX_SSID_LENGTH); // SSID (from walked variable)
 
-   SNMP_PDU request;
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    SNMP_ObjectId oid({ 1, 3, 6, 1, 2, 1, 2, 2, 1, 2 });
 
    oid.extend(radioIndex);
@@ -177,7 +177,7 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *s
 {
    SNMP_ObjectId oid = var->getName();
 
-   SNMP_PDU request;
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    oid.changeElement(11, 2); // SSID
    request.bindVariable(new SNMP_Variable(oid));
 
@@ -262,7 +262,7 @@ ObjectArray<WirelessStationInfo> *UbiquitiAirMaxDriver::getWirelessStations(SNMP
  */
 bool UbiquitiAirMaxDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *, DriverData *, DeviceHardwareInfo *hwInfo)
 {
-   SNMP_PDU request;
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
 
    // Product name / model
    request.bindVariable(new SNMP_Variable({ 1, 2, 840, 10036, 3, 1, 2, 1, 3, 5 }));
@@ -289,12 +289,12 @@ bool UbiquitiAirMaxDriver::getHardwareInformation(SNMP_Transport *snmp, NObject 
    SNMP_Variable *var = response->getVariable(0);
    if (var->getType() == ASN_OCTET_STRING)
    {
-      TCHAR buf[256];
+      wchar_t buf[256];
       var->getValueAsString(buf, sizeof(buf));
       if (buf[0] != 0)
       {
-         _tcslcpy(hwInfo->productCode, buf, 32);
-         _tcslcpy(hwInfo->productName, buf, 128);
+         wcslcpy(hwInfo->productCode, buf, 32);
+         wcslcpy(hwInfo->productName, buf, 128);
       }
    }
 
