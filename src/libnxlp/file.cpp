@@ -946,7 +946,7 @@ bool LogParser::monitorFile2(off_t startOffset)
       lastPos = processNewRecords(fh, fname);
       _close(fh);
       size = static_cast<size_t>(st.st_size);
-      m_offset = size;
+      m_offset = static_cast<off_t>(st.st_size);
       mtime = st.st_mtime;
 
       if (m_stopCondition.wait(m_fileCheckInterval))
