@@ -19,5 +19,6 @@ EXTRA_DIST = \
 	procinfo.cpp \
 	prod.cpp \
 	system.cpp \
+	usb.cpp \
 	winnt.vcxproj winnt.vcxproj.filters \
 	winnt_subagent.h
