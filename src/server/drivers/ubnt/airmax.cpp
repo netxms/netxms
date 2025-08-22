@@ -102,14 +102,11 @@ static uint32_t HandlerRadioInterfaceList(SNMP_Variable *var, SNMP_Transport *sn
    oid.changeElement(oid.length() - 2, 6); // BSSID (ifPhysAddress)
    request.bindVariable(new SNMP_Variable(oid));
 
-   oid = { 1, 3, 6, 1, 4, 1, 41112, 1, 4, 1, 1, 3 }; // Channel
+   oid = { 1, 3, 6, 1, 4, 1, 41112, 1, 4, 1, 1, 4 }; // ubntRadioFreq
    oid.extend(radioIndex);
    request.bindVariable(new SNMP_Variable(oid));
 
-   oid.changeElement(oid.length() - 1, 4); // Frequency
-   request.bindVariable(new SNMP_Variable(oid));
-
-   oid.changeElement(oid.length() - 1, 6); // TX Power (dBm)
+   oid.changeElement(oid.length() - 2, 5); // ubntRadioTxPower
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response = nullptr;
@@ -127,17 +124,18 @@ static uint32_t HandlerRadioInterfaceList(SNMP_Variable *var, SNMP_Transport *sn
          if (var->getType() == ASN_OCTET_STRING && var->getValueLength() >= MAC_ADDR_LENGTH)
             var->getRawValue(radio->bssid, MAC_ADDR_LENGTH);
 
-         // Channel
+         // Frequency, Channel and Band (per radio index)
          var = response->getVariable(2);
          radio->channel = var->getValueAsUInt();
 
          // Frequency
          var = response->getVariable(3);
          radio->frequency = static_cast<uint16_t>(var->getValueAsUInt());
+         radio->channel = WirelessFrequencyToChannel(radio->frequency);
          radio->band = WirelessFrequencyToBand(radio->frequency);
 
          // TX Power (dBm)
-         SNMP_Variable *varTxPower = response->getVariable(4);
+         SNMP_Variable *varTxPower = response->getVariable(3);
          radio->powerDBm = varTxPower->getValueAsInt();
          radio->powerMW = static_cast<int32_t>(pow(10.0, (double)radio->powerDBm / 10.0));
       }
