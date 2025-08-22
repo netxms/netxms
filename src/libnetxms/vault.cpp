@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -41,9 +41,13 @@ VaultClient::VaultClient()
 /**
  * Constructor with URL
  */
-VaultClient::VaultClient(const TCHAR *url, uint32_t timeout)
+VaultClient::VaultClient(const char *url, uint32_t timeout)
 {
-   _tcslcpy(m_url, url, MAX_PATH);
+   strlcpy(m_url, url, sizeof(m_url));
+   size_t urlLen = strlen(m_url);
+   if (urlLen > 0 && m_url[urlLen - 1] == '/')
+      m_url[urlLen - 1] = 0;
+
    m_token[0] = 0;
    m_timeout = timeout;
    m_verifyPeer = true;
@@ -51,20 +55,14 @@ VaultClient::VaultClient(const TCHAR *url, uint32_t timeout)
 }
 
 /**
- * Destructor
- */
-VaultClient::~VaultClient()
-{
-   // Clear sensitive data
-   memset(m_token, 0, sizeof(m_token));
-}
-
-/**
  * Set Vault URL
  */
-void VaultClient::setUrl(const TCHAR *url)
+void VaultClient::setUrl(const char *url)
 {
-   _tcslcpy(m_url, url, MAX_PATH);
+   strlcpy(m_url, url, sizeof(m_url));
+   size_t urlLen = strlen(m_url);
+   if (urlLen > 0 && m_url[urlLen - 1] == '/')
+      m_url[urlLen - 1] = 0;
 }
 
 /**
@@ -109,10 +107,7 @@ bool VaultClient::apiCall(const char *method, const char *path, const char *payl
 
    // Build full URL
    char url[1024];
-   tchar_to_utf8(m_url, -1, url, sizeof(url));
-   size_t urlLen = strlen(url);
-   if (urlLen > 0 && url[urlLen - 1] == '/')
-      url[urlLen - 1] = 0;
+   strcpy(url, m_url);
    strlcat(url, path, sizeof(url));
 
    nxlog_debug_tag(DEBUG_TAG, 6, _T("Vault API call: %hs %hs"), method, url);
@@ -526,7 +521,7 @@ bool LIBNETXMS_EXPORTABLE RetrieveDatabaseCredentialsFromVault(const VaultDataba
       TCHAR *dbLogin, size_t dbLoginSize, TCHAR *dbPassword, size_t dbPasswordSize, 
       const TCHAR *debugTag, bool consoleOutput)
 {
-   const TCHAR *tag = (debugTag != nullptr) ? debugTag : _T("vault");
+   const TCHAR *tag = (debugTag != nullptr) ? debugTag : DEBUG_TAG;
 
    if ((config->url == nullptr) || (config->url[0] == 0) || 
        (config->dbCredentialPath == nullptr) || (config->dbCredentialPath[0] == 0))
@@ -556,22 +551,15 @@ bool LIBNETXMS_EXPORTABLE RetrieveDatabaseCredentialsFromVault(const VaultDataba
    }
 
    // Decrypt AppRole secret ID if encrypted
-   TCHAR decryptedSecretId[256];
-   _tcscpy(decryptedSecretId, config->appRoleSecretId);
-   DecryptPassword(_T("netxms"), decryptedSecretId, decryptedSecretId, 256);
-
-   // Convert to UTF-8 for Vault API
-   char roleId[256], secretId[256], credPath[MAX_PATH];
-   tchar_to_utf8(config->appRoleId, -1, roleId, sizeof(roleId));
-   tchar_to_utf8(decryptedSecretId, -1, secretId, sizeof(secretId));
-   tchar_to_utf8(config->dbCredentialPath, -1, credPath, sizeof(credPath));
+   char secretId[256];
+   DecryptPasswordA("netxms", config->appRoleSecretId, secretId, 256);
 
    bool credentialsUpdated = false;
 
-   if (vault.authenticateWithAppRole(roleId, secretId))
+   if (vault.authenticateWithAppRole(config->appRoleId, secretId))
    {
       // Try to read database login
-      if (vault.readSecret(credPath, "login", dbLogin, dbLoginSize))
+      if (vault.readSecret(config->dbCredentialPath, "login", dbLogin, dbLoginSize))
       {
          if (consoleOutput)
             _tprintf(_T("Database login retrieved from Vault\n"));
@@ -581,7 +569,7 @@ bool LIBNETXMS_EXPORTABLE RetrieveDatabaseCredentialsFromVault(const VaultDataba
       }
 
       // Read database password
-      if (vault.readSecret(credPath, "password", dbPassword, dbPasswordSize))
+      if (vault.readSecret(config->dbCredentialPath, "password", dbPassword, dbPasswordSize))
       {
          if (consoleOutput)
             _tprintf(_T("Database password retrieved from Vault\n"));
@@ -592,9 +580,9 @@ bool LIBNETXMS_EXPORTABLE RetrieveDatabaseCredentialsFromVault(const VaultDataba
       else
       {
          if (consoleOutput)
-            _tprintf(_T("ERROR: Failed to read database password from Vault path: %s\n"), config->dbCredentialPath);
+            _tprintf(_T("ERROR: Failed to read database password from Vault path: %hs\n"), config->dbCredentialPath);
          else
-            nxlog_write_tag(NXLOG_ERROR, tag, _T("Failed to read database password from Vault path: %s"), config->dbCredentialPath);
+            nxlog_write_tag(NXLOG_ERROR, tag, _T("Failed to read database password from Vault path: %hs"), config->dbCredentialPath);
       }
    }
    else

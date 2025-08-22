@@ -45,7 +45,7 @@ enum class VaultAuthMethod
 class LIBNETXMS_EXPORTABLE VaultClient
 {
 private:
-   TCHAR m_url[MAX_PATH];
+   char m_url[512];
    char m_token[256];
    uint32_t m_timeout;
    bool m_verifyPeer;
@@ -60,12 +60,22 @@ protected:
 
 public:
    VaultClient();
-   VaultClient(const TCHAR *url, uint32_t timeout = 5000);
-   ~VaultClient();
+   VaultClient(const char *url, uint32_t timeout = 5000);
+   ~VaultClient()
+   {
+      // Clear sensitive data
+      SecureZeroMemory(m_token, sizeof(m_token));
+   }
 
-   void setUrl(const TCHAR *url);
-   void setTimeout(uint32_t timeout) { m_timeout = timeout; }
-   void setVerifyPeer(bool verify) { m_verifyPeer = verify; }
+   void setUrl(const char *url);
+   void setTimeout(uint32_t timeout)
+   {
+      m_timeout = timeout;
+   }
+   void setVerifyPeer(bool verify)
+   {
+      m_verifyPeer = verify;
+   }
 
    bool authenticate(VaultAuthMethod method, const char *param1, const char *param2 = nullptr);
    bool authenticateWithToken(const char *token);
@@ -77,7 +87,6 @@ public:
    bool writeSecret(const char *path, const char *field, const char *value);
 
    bool isAuthenticated() const;
-   const TCHAR *getUrl() const { return m_url; }
 };
 
 /**
@@ -85,10 +94,10 @@ public:
  */
 struct VaultDatabaseCredentialConfig
 {
-   const TCHAR *url;
-   const TCHAR *appRoleId;
-   const TCHAR *appRoleSecretId;
-   const TCHAR *dbCredentialPath;
+   const char *url;
+   const char *appRoleId;
+   const char *appRoleSecretId;
+   const char *dbCredentialPath;
    uint32_t timeout;
    bool tlsVerify;
 };
