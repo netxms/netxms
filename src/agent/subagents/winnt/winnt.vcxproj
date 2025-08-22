@@ -396,6 +396,7 @@
     <ClCompile Include="procinfo.cpp" />
     <ClCompile Include="prod.cpp" />
     <ClCompile Include="system.cpp" />
+    <ClCompile Include="usb.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\nms_agent.h" />
