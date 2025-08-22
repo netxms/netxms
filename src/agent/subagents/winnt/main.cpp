@@ -85,6 +85,7 @@ uint32_t H_TerminateUserSession(const shared_ptr<ActionExecutionContext>& contex
 LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 uint32_t H_UninstallProduct(const shared_ptr<ActionExecutionContext>& context);
 LONG H_Uptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_UsbConnectedCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_WindowsFirewallCurrentProfile(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_WindowsFirewallProfileState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_WindowsFirewallState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -415,6 +416,8 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
    { _T("System.Update.LastDownloadTime"), H_SysUpdateTime, _T("Download"), DCI_DT_INT64, _T("System update: last download time") },
    { _T("System.Update.LastInstallTime"), H_SysUpdateTime, _T("Install"), DCI_DT_INT64, _T("System update: last install time") },
    { _T("System.Uptime"), H_Uptime, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME },
+
+   { _T("USB.ConnectedCount(*)"), H_UsbConnectedCount, nullptr, DCI_DT_INT, _T("Number of connected USB devices matching VID/PID") },
 
    { _T("WindowsFirewall.CurrentProfile"), H_WindowsFirewallCurrentProfile, nullptr, DCI_DT_STRING, _T("Windows firewall: current profile") },
    { _T("WindowsFirewall.State"), H_WindowsFirewallState, nullptr, DCI_DT_INT, _T("Windows firewall: state of current profile") },
