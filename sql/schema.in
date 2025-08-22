@@ -1483,13 +1483,15 @@ CREATE TABLE policy_time_frame_list
  */
 CREATE TABLE policy_action_list
 (
+  record_id integer not null, 
   rule_id integer not null,
   action_id integer not null,
   timer_delay varchar(127) null,
   timer_key varchar(127) null,
   blocking_timer_key varchar(127) null,
   snooze_time varchar(127) null, 
-  active char(1) not null
+  active char(1) not null,
+  PRIMARY KEY(record_id,rule_id)
 ) TABLE_TYPE;
 
 /**

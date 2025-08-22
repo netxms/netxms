@@ -1313,7 +1313,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
    // Actions
    if (success && !m_actions.isEmpty())
    {
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO policy_action_list (rule_id,action_id,timer_delay,timer_key,blocking_timer_key,snooze_time,active) VALUES (?,?,?,?,?,?,?)"), m_actions.size() > 1);
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO policy_action_list (rule_id,action_id,timer_delay,timer_key,blocking_timer_key,snooze_time,active,record_id) VALUES (?,?,?,?,?,?,?,?)"), m_actions.size() > 1);
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -1326,6 +1326,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
             DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, a->blockingTimerKey, DB_BIND_STATIC, 127);
             DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, a->snoozeTime, DB_BIND_STATIC, 127);
             DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, a->active ? _T("1") : _T("0"), DB_BIND_STATIC);
+            DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, i);
             success = DBExecute(hStmt);
          }
          DBFreeStatement(hStmt);
