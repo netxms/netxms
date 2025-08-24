@@ -743,6 +743,7 @@ mibs_DATA = \
 	TOKEN-RING-RMON-MIB.mib \
 	TOKENRING-STATION-SR-MIB.mib \
 	TUNNEL-MIB.mib \
+	UBNT-AirMAX-MIB.mib \
 	UBNT-EdgeMAX-MIB.mib \
 	UBNT-MIB.mib \
 	UCD-DISKIO-MIB.mib \
