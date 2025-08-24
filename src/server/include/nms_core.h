@@ -1307,6 +1307,9 @@ bool NXCORE_EXPORTABLE MetaDataWriteInt32(const wchar_t *variable, int32_t value
 void NXCORE_EXPORTABLE FindConfigFile();
 bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel);
 
+void ExecuteDatabasePasswordCommand();
+void RetrieveDatabaseCredentialsFromVault();
+
 bool LockDatabase(InetAddress *lockAddr, TCHAR *lockInfo);
 void NXCORE_EXPORTABLE UnlockDatabase();
 

@@ -898,9 +898,12 @@ void CheckPotentialNode(const InetAddress& ipAddr, int32_t zoneUIN, DiscoveredAd
       return;
    }
 
-   if (IsClusterIP(zoneUIN, ipAddr))
+   uint32_t clusterId;
+   bool isResource;
+   if (IsClusterIP(zoneUIN, ipAddr, &clusterId, &isResource))
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s in zone %d rejected (IP address is known as cluster resource address)"), ipAddr.toString(buffer), zoneUIN);
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, L"Potential node %s in zone %d rejected (IP address is known as %s address in cluster \"%s\" [%u])",
+         ipAddr.toString(buffer), zoneUIN, isResource ? _T("resource") : _T("synchronization"), GetObjectName(clusterId, L"unknown"), clusterId);
       return;
    }
 
@@ -950,9 +953,12 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, uint32_t i
       return;
    }
 
-   if (IsClusterIP(node->getZoneUIN(), ipAddr))
+   uint32_t clusterId;
+   bool isResource;
+   if (IsClusterIP(node->getZoneUIN(), ipAddr, &clusterId, &isResource))
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address is known as cluster resource address)"), ipAddr.toString(buffer));
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, L"Potential node %s rejected (IP address is known as %s address in cluster \"%s\" [%u])",
+         ipAddr.toString(buffer), isResource ? _T("resource") : _T("synchronization"), GetObjectName(clusterId, L"unknown"), clusterId);
       return;
    }
 

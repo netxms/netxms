@@ -5669,7 +5669,7 @@ uint32_t NXCORE_EXPORTABLE FindLocalMgmtNode();
 shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByUIN(int32_t zoneUIN);
 shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByProxyId(uint32_t proxyId);
 int32_t FindUnusedZoneUIN();
-bool NXCORE_EXPORTABLE IsClusterIP(int32_t zoneUIN, const InetAddress& ipAddr);
+bool NXCORE_EXPORTABLE IsClusterIP(int32_t zoneUIN, const InetAddress& ipAddr, uint32_t *clusterId = nullptr, bool *isResource = nullptr);
 bool NXCORE_EXPORTABLE IsParentObject(uint32_t object1, uint32_t object2);
 unique_ptr<StructArray<DependentNode>> GetNodeDependencies(uint32_t nodeId);
 IntegerArray<uint32_t> CheckSubnetOverlap(const InetAddress &addr, int32_t uin);

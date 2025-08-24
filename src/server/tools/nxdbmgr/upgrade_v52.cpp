@@ -24,13 +24,62 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 52.20 to 53.0
+ * Upgrade from 52.21 to 53.0
  */
-static bool H_UpgradeFromV20()
+static bool H_UpgradeFromV21()
 {
    CHK_EXEC(SetMajorSchemaVersion(53, 0));
    return true;
 }
+
+/**
+ * Upgrade from 52.20 to 52.21
+ */
+static bool H_UpgradeFromV20()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE policy_action_list ADD record_id integer")));
+
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_MYSQL:
+         CHK_EXEC(SQLQuery(_T("SET @rownum := 0")));
+         CHK_EXEC(SQLQuery(_T("UPDATE policy_action_list SET record_id = (@rownum := @rownum + 1)")));
+         break;
+      case DB_SYNTAX_TSDB:
+      case DB_SYNTAX_PGSQL:
+         CHK_EXEC(SQLQuery(_T("UPDATE policy_action_list SET record_id = sub.rn FROM (SELECT ctid, ROW_NUMBER() OVER (ORDER BY rule_id, action_id) AS rn FROM policy_action_list) sub WHERE policy_action_list.ctid = sub.ctid")));
+         break;
+      case DB_SYNTAX_SQLITE:
+         CHK_EXEC(SQLQuery(_T("UPDATE policy_action_list SET record_id = (SELECT COUNT(*) FROM policy_action_list AS t2 WHERE t2.rowid <= policy_action_list.rowid)")));
+         break;
+      case DB_SYNTAX_ORACLE:
+         CHK_EXEC(SQLQuery(_T("MERGE INTO policy_action_list t USING (SELECT rowid AS rid, ROW_NUMBER() OVER (ORDER BY rowid) AS rn FROM policy_action_list) s ON (t.rowid = s.rid) WHEN MATCHED THEN UPDATE SET t.record_id = s.rn")));
+         break;
+      case DB_SYNTAX_MSSQL:
+         CHK_EXEC(SQLQuery(_T("WITH numbered AS (SELECT ROW_NUMBER() OVER (ORDER BY rule_id, action_id) AS rn, * FROM policy_action_list) UPDATE numbered SET record_id = rn")));
+         break;
+      default:
+         WriteToTerminal(L"Unsupported DB syntax for row numbering in policy_action_list\n");
+         return false;
+   }
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("policy_action_list"), _T("record_id")));
+   DBAddPrimaryKey(g_dbHandle, _T("policy_action_list"), _T("record_id,rule_id"));
+
+   if (g_dbSyntax == DB_SYNTAX_PGSQL)
+   {
+      static const TCHAR *batch =
+         _T("UPDATE metadata SET var_value='ALTER TABLE idata_%d ADD PRIMARY KEY (item_id,idata_timestamp)' WHERE var_name='IDataIndexCreationCommand_0'\n")
+         _T("UPDATE metadata SET var_value='ALTER TABLE tdata_%d ADD PRIMARY KEY (item_id,tdata_timestamp)' WHERE var_name='TDataIndexCreationCommand_0'\n")
+         _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+
+      RegisterOnlineUpgrade(52, 21);
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(21));
+   return true;
+}
+
 
 /**
  * Upgrade from 52.19 to 52.20
@@ -452,7 +501,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 20, 53, 0,  H_UpgradeFromV20 },
+   { 21, 53, 0,  H_UpgradeFromV21 },
+   { 20, 52, 21, H_UpgradeFromV20 },
    { 19, 52, 20, H_UpgradeFromV19 },
    { 18, 52, 19, H_UpgradeFromV18 },
    { 17, 52, 18, H_UpgradeFromV17 },
