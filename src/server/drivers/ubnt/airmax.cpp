@@ -85,28 +85,30 @@ bool UbiquitiAirMaxDriver::isWirelessAccessPoint(SNMP_Transport *snmp, NObject *
 static uint32_t HandlerRadioInterfaceList(SNMP_Variable *var, SNMP_Transport *snmp, StructArray<RadioInterfaceInfo> *radios)
 {
    const SNMP_ObjectId &name = var->getName();
-   uint32_t radioIndex = name.getElement(name.length() - 1);
 
    RadioInterfaceInfo *radio = radios->addPlaceholder();
    memset(radio, 0, sizeof(RadioInterfaceInfo));
-   radio->index = radioIndex;
-   radio->ifIndex = radioIndex;
-   var->getValueAsString(radio->ssid, MAX_SSID_LENGTH); // SSID (from walked variable)
+   radio->index = name.getElement(name.length() - 1);
+   radio->ifIndex = var->getValueAsUInt();
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    SNMP_ObjectId oid({ 1, 3, 6, 1, 2, 1, 2, 2, 1, 2 });
 
-   oid.extend(radioIndex);
+   oid.extend(radio->ifIndex);
    request.bindVariable(new SNMP_Variable(oid)); // Name (ifDescr)
 
-   oid.changeElement(oid.length() - 2, 6); // BSSID (ifPhysAddress)
+   oid.changeElement(9, 6);
+   request.bindVariable(new SNMP_Variable(oid)); // BSSID (ifPhysAddress)
+
+   oid = { 1, 2, 840, 10036, 1, 1, 1, 9 }; // dot11DesiredSSID
+   oid.extend(radio->ifIndex);
    request.bindVariable(new SNMP_Variable(oid));
 
    oid = { 1, 3, 6, 1, 4, 1, 41112, 1, 4, 1, 1, 4 }; // ubntRadioFreq
-   oid.extend(radioIndex);
+   oid.extend(radio->index);
    request.bindVariable(new SNMP_Variable(oid));
 
-   oid.changeElement(oid.length() - 2, 5); // ubntRadioTxPower
+   oid.changeElement(11, 5); // ubntRadioTxPower
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response = nullptr;
@@ -124,26 +126,26 @@ static uint32_t HandlerRadioInterfaceList(SNMP_Variable *var, SNMP_Transport *sn
          if (var->getType() == ASN_OCTET_STRING && var->getValueLength() >= MAC_ADDR_LENGTH)
             var->getRawValue(radio->bssid, MAC_ADDR_LENGTH);
 
-         // Frequency, Channel and Band (per radio index)
+         // SSID
          var = response->getVariable(2);
-         radio->channel = var->getValueAsUInt();
+         var->getValueAsString(radio->ssid, MAX_SSID_LENGTH);
 
-         // Frequency
+         // Frequency, Channel and Band (per radio index)
          var = response->getVariable(3);
          radio->frequency = static_cast<uint16_t>(var->getValueAsUInt());
          radio->channel = WirelessFrequencyToChannel(radio->frequency);
          radio->band = WirelessFrequencyToBand(radio->frequency);
 
          // TX Power (dBm)
-         SNMP_Variable *varTxPower = response->getVariable(3);
+         SNMP_Variable *varTxPower = response->getVariable(4);
          radio->powerDBm = varTxPower->getValueAsInt();
          radio->powerMW = static_cast<int32_t>(pow(10.0, (double)radio->powerDBm / 10.0));
       }
       delete response;
    }
 
-   nxlog_debug_tag(DEBUG_TAG_UBNT, 7, _T("[SNMP] Radio index=%u name=\"%s\" SSID=\"%s\" MAC=%02X:%02X:%02X:%02X:%02X:%02X channel=%u freq=%u MHz power=%d dBm (%u mW) band=%d"),
-                   radioIndex, radio->name, radio->ssid, radio->bssid[0], radio->bssid[1], radio->bssid[2], radio->bssid[3], radio->bssid[4], radio->bssid[5],
+   nxlog_debug_tag(DEBUG_TAG_UBNT, 7, _T("[SNMP] radioIndex=%u ifIndex=%u name=\"%s\" SSID=\"%s\" BSSID=%02X:%02X:%02X:%02X:%02X:%02X channel=%u freq=%u MHz power=%d dBm (%u mW) band=%d"),
+                   radio->index, radio->ifIndex, radio->name, radio->ssid, radio->bssid[0], radio->bssid[1], radio->bssid[2], radio->bssid[3], radio->bssid[4], radio->bssid[5],
                    radio->channel, radio->frequency, radio->powerDBm, radio->powerMW, radio->band);
 
    return SNMP_ERR_SUCCESS;
@@ -160,7 +162,7 @@ static uint32_t HandlerRadioInterfaceList(SNMP_Variable *var, SNMP_Transport *sn
 StructArray<RadioInterfaceInfo> *UbiquitiAirMaxDriver::getRadioInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    auto radios = new StructArray<RadioInterfaceInfo>(0, 4);
-   if (SnmpWalk(snmp, { 1, 2, 840, 10036, 1, 1, 1, 9 }, HandlerRadioInterfaceList, radios) != SNMP_ERR_SUCCESS) // dot11DesiredSSID
+   if (SnmpWalk(snmp, { 1, 3, 6, 1, 4, 1, 41112, 1, 4, 1, 1, 1 }, HandlerRadioInterfaceList, radios) != SNMP_ERR_SUCCESS) // ubntRadioIndex
    {
       delete radios;
       return nullptr;
@@ -176,13 +178,11 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *s
    SNMP_ObjectId oid = var->getName();
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
-   oid.changeElement(11, 2); // SSID
-   request.bindVariable(new SNMP_Variable(oid));
 
    oid.changeElement(11, 3); // RSSI
    request.bindVariable(new SNMP_Variable(oid));
 
-   oid.changeElement(11, 5); // TX rate
+   oid.changeElement(11, 11); // TX rate
    request.bindVariable(new SNMP_Variable(oid));
 
    oid.changeElement(11, 12); // RX rate
@@ -212,15 +212,18 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *s
    memset(info, 0, sizeof(WirelessStationInfo));
    memcpy(info->macAddr, mac, MAC_ADDR_LENGTH);
    info->apMatchPolicy = AP_MATCH_BY_RFINDEX;
-   info->rfIndex = oid.getElement(oid.length() - 7); // element just before MAC
    info->vlan = 1;
-   response->getVariable(0)->getValueAsString(info->ssid, MAX_SSID_LENGTH); // SSID
-   info->rssi = response->getVariable(1)->getValueAsInt();
-   info->txRate = response->getVariable(2)->getValueAsUInt(); // TX rate (kbps)
-   info->rxRate = response->getVariable(3)->getValueAsUInt(); // RX rate (kbps)
+
+   // Radio index is at element 12 just before MAC
+   uint32_t radioIndex = oid.getElement(oid.length() - 7);
+   info->rfIndex = radioIndex;
+
+   info->rssi = response->getVariable(0)->getValueAsInt();    // RSSI
+   info->txRate = response->getVariable(1)->getValueAsUInt(); // TX rate (kbps)
+   info->rxRate = response->getVariable(2)->getValueAsUInt(); // RX rate (kbps)
 
    wchar_t ipAddr[64];
-   info->ipAddr = InetAddress::parse(response->getVariable(4)->getValueAsIPAddr(ipAddr));
+   info->ipAddr = InetAddress::parse(response->getVariable(3)->getValueAsIPAddr(ipAddr));
 
    wsList->add(info);
    delete response;
