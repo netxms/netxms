@@ -516,7 +516,7 @@ static bool AddPKForDataTableForGivenQuery(const TCHAR *query)
       for(int i = 0; i < count; i++)
       {
          uint32_t id = DBGetFieldULong(hResult, i, 0);
-         if (!IsDataTableExist(_T("idata_%u"), id))
+         if (IsDataTableExist(_T("idata_%u"), id))
          {
             TCHAR table[64];
             _sntprintf(table, 64, _T("idata_%d"), id);
@@ -524,7 +524,7 @@ static bool AddPKForDataTableForGivenQuery(const TCHAR *query)
             DBAddPrimaryKey(g_dbHandle,table, _T("item_id,idata_timestamp"));
 
          }
-         if (!IsDataTableExist(_T("tdata_%u"), id))
+         if (IsDataTableExist(_T("tdata_%u"), id))
          {
             TCHAR table[64];
             _sntprintf(table, 64, _T("tdata_%d"), id);
@@ -584,7 +584,7 @@ struct
    bool (*handler)();
 } s_handlers[] =
 {
-   { 52, 21,  Upgrade_52_21  },
+   { 52, 21, Upgrade_52_21  },
    { 43, 9,  Upgrade_43_9  },
    { 35, 2,  Upgrade_35_2  },
    { 33, 6,  Upgrade_33_6  },
