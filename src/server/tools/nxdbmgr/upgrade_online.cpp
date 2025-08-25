@@ -503,34 +503,34 @@ static bool Upgrade_43_9()
 }
 
 /**
- * Add primary key for data table for given query
+ * Add primary key for data tables for objects selected by given query
  */
-static bool AddPKForDataTableForGivenQuery(const TCHAR *query)
+static bool AddPKForDataTables(const wchar_t *query)
 {
    bool success = false;
    DB_RESULT hResult = SQLSelect(query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       success = true;
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          uint32_t id = DBGetFieldULong(hResult, i, 0);
-         if (IsDataTableExist(_T("idata_%u"), id))
+         if (IsDataTableExist(L"idata_%u", id))
          {
-            TCHAR table[64];
-            _sntprintf(table, 64, _T("idata_%d"), id);
-            DBDropIndex(g_dbHandle, table, _T("item_id,idata_timestamp"));
+            wchar_t table[64], index[64];
+            _sntprintf(table, 64, L"idata_%u", id);
+            _sntprintf(index, 64, L"idx_idata_%u_id_timestamp", id);
+            DBDropIndex(g_dbHandle, table, index);
             DBAddPrimaryKey(g_dbHandle,table, _T("item_id,idata_timestamp"));
-
          }
-         if (IsDataTableExist(_T("tdata_%u"), id))
+         if (IsDataTableExist(L"tdata_%u", id))
          {
-            TCHAR table[64];
-            _sntprintf(table, 64, _T("tdata_%d"), id);
-            DBDropIndex(g_dbHandle, table, _T("item_id,tdata_timestamp"));
-            DBAddPrimaryKey(g_dbHandle,table, _T("item_id,tdata_timestamp"));
-
+            wchar_t table[64], index[64];
+            _sntprintf(table, 64, L"tdata_%u", id);
+            _sntprintf(index, 64, L"idx_tdata_%u", id);
+            DBDropIndex(g_dbHandle, table, index);
+            DBAddPrimaryKey(g_dbHandle,table, L"item_id,tdata_timestamp");
          }
       }
       DBFreeResult(hResult);
@@ -539,24 +539,13 @@ static bool AddPKForDataTableForGivenQuery(const TCHAR *query)
 }
 
 /**
- * Add primary key for data table for given object class
+ * Add primary key to all data tables for given object class
  */
-static bool AddPKForObjectDataTable(const TCHAR *className)
+static bool AddPKForClassDataTables(const wchar_t *className)
 {
-   TCHAR query[1024];
-   _sntprintf(query, 256, _T("SELECT id FROM %s"), className);
-   return AddPKForDataTableForGivenQuery(query);
-}
-
-
-/**
- * Create primary key for data tables for collector and circuit containers
- */
-static bool AddPKForDataTablesContainers()
-{
-   TCHAR query[1024];
-   _sntprintf(query, 256, _T("SELECT id FROM object_containers WHERE object_class=29 OR object_class=30"));
-   return AddPKForDataTableForGivenQuery(query);
+   wchar_t query[1024];
+   _sntprintf(query, 256, L"SELECT id FROM %s", className);
+   return AddPKForDataTables(query);
 }
 
 /**
@@ -564,13 +553,13 @@ static bool AddPKForDataTablesContainers()
  */
 static bool Upgrade_52_21()
 {
-   CHK_EXEC_NO_SP(AddPKForObjectDataTable(_T("nodes")));
-   CHK_EXEC_NO_SP(AddPKForObjectDataTable(_T("clusters")));
-   CHK_EXEC_NO_SP(AddPKForObjectDataTable(_T("mobile_devices")));
-   CHK_EXEC_NO_SP(AddPKForObjectDataTable(_T("access_points")));
-   CHK_EXEC_NO_SP(AddPKForObjectDataTable(_T("chassis")));
-   CHK_EXEC_NO_SP(AddPKForObjectDataTable(_T("sensors")));
-   CHK_EXEC_NO_SP(AddPKForDataTablesContainers());
+   CHK_EXEC_NO_SP(AddPKForClassDataTables(L"nodes"));
+   CHK_EXEC_NO_SP(AddPKForClassDataTables(L"clusters"));
+   CHK_EXEC_NO_SP(AddPKForClassDataTables(L"mobile_devices"));
+   CHK_EXEC_NO_SP(AddPKForClassDataTables(L"access_points"));
+   CHK_EXEC_NO_SP(AddPKForClassDataTables(L"chassis"));
+   CHK_EXEC_NO_SP(AddPKForClassDataTables(L"sensors"));
+   CHK_EXEC_NO_SP(AddPKForDataTables(L"SELECT id FROM object_containers WHERE object_class=29 OR object_class=30"));
    return true;
 }
 
@@ -584,7 +573,7 @@ struct
    bool (*handler)();
 } s_handlers[] =
 {
-   { 52, 21, Upgrade_52_21  },
+   { 52, 21, Upgrade_52_21 },
    { 43, 9,  Upgrade_43_9  },
    { 35, 2,  Upgrade_35_2  },
    { 33, 6,  Upgrade_33_6  },
