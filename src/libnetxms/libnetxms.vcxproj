@@ -489,6 +489,7 @@
     <ClCompile Include="tp.cpp" />
     <ClCompile Include="unicode.cpp" />
     <ClCompile Include="uuid.cpp" />
+    <ClCompile Include="vault.cpp" />
     <ClCompile Include="wcscasestr.cpp" />
     <ClCompile Include="wcslcat.cpp" />
     <ClCompile Include="wcslcpy.cpp" />

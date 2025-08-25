@@ -273,6 +273,9 @@
     <ClCompile Include="tfw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vault.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\base32.h">
