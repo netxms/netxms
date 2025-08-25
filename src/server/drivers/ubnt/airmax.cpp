@@ -108,7 +108,7 @@ static uint32_t HandlerRadioInterfaceList(SNMP_Variable *var, SNMP_Transport *sn
    oid.extend(radio->index);
    request.bindVariable(new SNMP_Variable(oid));
 
-   oid.changeElement(11, 5); // ubntRadioTxPower
+   oid.changeElement(11, 6); // ubntRadioTxPower
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response = nullptr;
@@ -137,9 +137,9 @@ static uint32_t HandlerRadioInterfaceList(SNMP_Variable *var, SNMP_Transport *sn
          radio->band = WirelessFrequencyToBand(radio->frequency);
 
          // TX Power (dBm)
-         SNMP_Variable *varTxPower = response->getVariable(4);
-         radio->powerDBm = varTxPower->getValueAsInt();
-         radio->powerMW = static_cast<int32_t>(pow(10.0, (double)radio->powerDBm / 10.0));
+         var = response->getVariable(4);
+         radio->powerDBm = var->getValueAsInt();
+         radio->powerMW = static_cast<int32_t>(pow(10.0, static_cast<double>(radio->powerDBm) / 10.0));
       }
       delete response;
    }
