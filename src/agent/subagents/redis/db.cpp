@@ -103,13 +103,13 @@ bool RedisInstance::connect()
       m_redis = nullptr;
    }
 
-   char server[MAX_STR];
-   WideCharToMultiByteSysLocale(m_info.server, server, MAX_STR);
+   char *server = UTF8StringFromWideString(m_info.server);
 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("Redis %s: connecting to %s:%d"), m_info.id, m_info.server, m_info.port);
 
    struct timeval timeout = {1, 500000};
    m_redis = redisConnectWithTimeout(server, m_info.port, timeout);
+   MemFree(server);
 
    if (m_redis == nullptr || m_redis->err)
    {
@@ -126,10 +126,11 @@ bool RedisInstance::connect()
 
    if (m_info.password[0] != 0)
    {
-      char password[MAX_PASSWORD];
-      WideCharToMultiByteSysLocale(m_info.password, password, MAX_PASSWORD);
+      char *password = UTF8StringFromWideString(m_info.password);
 
       redisReply *reply = (redisReply *)redisCommand(m_redis, "AUTH %s", password);
+      SecureZeroMemory(password, strlen(password));
+      MemFree(password);
       if (reply == nullptr || reply->type == REDIS_REPLY_ERROR)
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Redis %s: authentication failed"), m_info.id);
@@ -188,9 +189,9 @@ void RedisInstance::disconnect()
  */
 void RedisInstance::setDataFromMB(const TCHAR *key, const char *value)
 {
-   WCHAR wvalue[MAX_STR];
-   MultiByteToWideCharSysLocale(value, wvalue, MAX_STR);
-   m_data->set(key, wvalue);
+   TCHAR *tvalue = TStringFromUTF8String(value);
+   m_data->set(key, tvalue);
+   MemFree(tvalue);
 }
 
 /**
@@ -198,10 +199,11 @@ void RedisInstance::setDataFromMB(const TCHAR *key, const char *value)
  */
 void RedisInstance::setDataFromMBPair(const char *mbKey, const char *mbValue)
 {
-   WCHAR wkey[MAX_STR], wvalue[MAX_STR];
-   MultiByteToWideCharSysLocale(mbKey, wkey, MAX_STR);
-   MultiByteToWideCharSysLocale(mbValue, wvalue, MAX_STR);
-   m_data->set(wkey, wvalue);
+   TCHAR *tkey = TStringFromUTF8String(mbKey);
+   TCHAR *tvalue = TStringFromUTF8String(mbValue);
+   m_data->set(tkey, tvalue);
+   MemFree(tkey);
+   MemFree(tvalue);
 }
 
 /**
@@ -324,10 +326,7 @@ void RedisInstance::parseMemoryInfo(const char *infoData)
              !strcmp(line, "maxmemory") ||
              !strcmp(line, "mem_fragmentation_ratio"))
          {
-            WCHAR wkey[MAX_STR], wvalue[MAX_STR];
-            MultiByteToWideCharSysLocale(line, wkey, MAX_STR);
-            MultiByteToWideCharSysLocale(value, wvalue, MAX_STR);
-            m_data->set(wkey, wvalue);
+            setDataFromMBPair(line, value);
          }
       }
       line = strtok(nullptr, "\r\n");
@@ -375,10 +374,7 @@ void RedisInstance::parsePersistenceInfo(const char *infoData)
              !strcmp(line, "rdb_last_save_time") ||
              !strcmp(line, "aof_enabled"))
          {
-            WCHAR wkey[MAX_STR], wvalue[MAX_STR];
-            MultiByteToWideCharSysLocale(line, wkey, MAX_STR);
-            MultiByteToWideCharSysLocale(value, wvalue, MAX_STR);
-            m_data->set(wkey, wvalue);
+            setDataFromMBPair(line, value);
          }
       }
       line = strtok(nullptr, "\r\n");
@@ -409,10 +405,7 @@ void RedisInstance::parseStatsInfo(const char *infoData)
              !strncmp(line, "expired_", 8) ||
              !strncmp(line, "evicted_", 8))
          {
-            WCHAR wkey[MAX_STR], wvalue[MAX_STR];
-            MultiByteToWideCharSysLocale(line, wkey, MAX_STR);
-            MultiByteToWideCharSysLocale(value, wvalue, MAX_STR);
-            m_data->set(wkey, wvalue);
+            setDataFromMBPair(line, value);
          }
       }
       line = strtok(nullptr, "\r\n");
@@ -460,10 +453,7 @@ void RedisInstance::parseReplicationInfo(const char *infoData)
 
          if (!strcmp(line, "role"))
          {
-            WCHAR wkey[MAX_STR], wvalue[MAX_STR];
-            MultiByteToWideCharSysLocale(line, wkey, MAX_STR);
-            MultiByteToWideCharSysLocale(value, wvalue, MAX_STR);
-            m_data->set(wkey, wvalue);
+            setDataFromMBPair(line, value);
 
             if (!strcmp(value, "master"))
                isMaster = true;
@@ -471,10 +461,7 @@ void RedisInstance::parseReplicationInfo(const char *infoData)
          else if (!strcmp(line, "connected_slaves") ||
                   !strcmp(line, "master_link_status"))
          {
-            WCHAR wkey[MAX_STR], wvalue[MAX_STR];
-            MultiByteToWideCharSysLocale(line, wkey, MAX_STR);
-            MultiByteToWideCharSysLocale(value, wvalue, MAX_STR);
-            m_data->set(wkey, wvalue);
+            setDataFromMBPair(line, value);
          }
       }
       line = strtok(nullptr, "\r\n");
@@ -527,10 +514,10 @@ void RedisInstance::parseKeyspaceInfo(const char *infoData)
 
                   TCHAR dbKey[64];
                   _sntprintf(dbKey, 64, _T("keys_%hs"), line);
-                  WCHAR wvalue[32];
-                  swprintf(wvalue, 32, L"%llu", (unsigned long long)count);
-                  m_data->set(dbKey, wvalue);
-                  nxlog_debug_tag(DEBUG_TAG, 5, _T("Redis %s: stored %s = %s"), m_info.id, dbKey, wvalue);
+                  TCHAR tvalue[32];
+                  _sntprintf(tvalue, 32, _T("%llu"), (unsigned long long)count);
+                  m_data->set(dbKey, tvalue);
+                  nxlog_debug_tag(DEBUG_TAG, 5, _T("Redis %s: stored %s = %s"), m_info.id, dbKey, tvalue);
                }
             }
          }
