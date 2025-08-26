@@ -521,6 +521,16 @@ AC_ARG_WITH(mongodb,
 	COMPONENTS="$COMPONENTS mongodb"
 fi ])
 
+AC_ARG_WITH(redis,
+[AS_HELP_STRING(--with-redis,build Redis monitoring subagent)],
+[ if test "x$withval" != "xno" ; then
+	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		REDIS_CPPFLAGS="-I${withval}/include"
+		REDIS_LDFLAGS="-L${withval}/lib"
+	fi
+	COMPONENTS="$COMPONENTS redis"
+fi ])
+
 AC_ARG_WITH(asterisk,
 [AS_HELP_STRING(--with-asterisk,build Asterisk subagent)],
 [ if test "x$withval" != "xno" ; then
@@ -1380,6 +1390,11 @@ fi
 check_substr "$COMPONENTS" "mongodb"
 if test $? = 0; then
 	SUBAGENT_DIRS="$SUBAGENT_DIRS mongodb"
+fi
+
+check_substr "$COMPONENTS" "redis"
+if test $? = 0; then
+	SUBAGENT_DIRS="$SUBAGENT_DIRS redis"
 fi
 
 check_substr "$COMPONENTS" "vmgr"
@@ -4355,6 +4370,45 @@ fi
 
 
 #--------------------------------------------------------------------
+# Redis
+#--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "redis"
+if test $? = 0; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LIBS="$LIBS"
+
+	if test "x$REDIS_CPPFLAGS" = "x"; then
+		# Check standard locations
+		if test -d /usr/include/hiredis; then
+			REDIS_CPPFLAGS="-I/usr/include"
+		elif test -d /usr/local/include/hiredis; then
+			REDIS_CPPFLAGS="-I/usr/local/include"
+			REDIS_LDFLAGS="-L/usr/local/lib"
+		elif test -d /opt/homebrew/include/hiredis; then
+			REDIS_CPPFLAGS="-I/opt/homebrew/include"
+			REDIS_LDFLAGS="-L/opt/homebrew/lib"
+		fi
+	fi
+
+	CPPFLAGS="$CPPFLAGS $REDIS_CPPFLAGS"
+	LDFLAGS="$LDFLAGS $REDIS_LDFLAGS"
+
+	AC_CHECK_HEADER(hiredis/hiredis.h,,AC_MSG_ERROR([*** Cannot find hiredis/hiredis.h - check your hiredis installation or use --with-redis=DIR ***]))
+	AC_CHECK_LIB(hiredis, redisConnect, [ REDIS_LIBS="-lhiredis" ], AC_MSG_ERROR([*** Cannot find hiredis library ***]))
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LIBS="$OLD_LIBS"
+fi
+
+AC_SUBST(REDIS_CPPFLAGS)
+AC_SUBST(REDIS_LDFLAGS)
+AC_SUBST(REDIS_LIBS)
+
+
+#--------------------------------------------------------------------
 # Asterisk
 #--------------------------------------------------------------------
 
@@ -4795,6 +4849,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/pgsql/Makefile
 	src/agent/subagents/ping/Makefile
 	src/agent/subagents/python/Makefile
+	src/agent/subagents/redis/Makefile
 	src/agent/subagents/rpi/Makefile
 	src/agent/subagents/sms/Makefile
 	src/agent/subagents/ssh/Makefile
