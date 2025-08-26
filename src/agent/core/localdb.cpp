@@ -215,6 +215,13 @@ static const TCHAR *s_dbInitQueries[] =
    _T("  permissions integer not null,")
    _T("  PRIMARY KEY(path))"),
 
+   _T("CREATE TABLE logwatch_files (")
+   _T("  name varchar(256) not null,") //name or guid for policy or hash for regular file
+   _T("  path varchar(4096) not null,") //File name assuming there are no policy where same file is defined twice
+   _T("  size number(20) not null,")
+   _T("  last_update_time integer not null,")
+   _T("  PRIMARY KEY(name,path))"),
+
    nullptr
 };
 
@@ -244,6 +251,7 @@ static const TCHAR *s_dbTables[] =
    _T("dc_snmp_targets"),
    _T("device_decoder_map"),
    _T("file_integrity"),
+   _T("logwatch_files"),
    _T("notification_data"),
    _T("notification_servers"),
    _T("registry"),

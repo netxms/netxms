@@ -640,6 +640,7 @@ bool LogParser::monitorFile(off_t startOffset)
 			nxlog_debug_tag(DEBUG_TAG, 5, _T("Parsing existing records in file \"%s\""), fname);
 			off_t resetPos = processNewRecords(fh, fname);
          _lseek(fh, resetPos, SEEK_SET);
+         m_offset = resetPos;
          readFromStart = m_rescan;
          startOffset = -1;
       }
@@ -649,6 +650,7 @@ bool LogParser::monitorFile(off_t startOffset)
          _lseek(fh, startOffset, SEEK_SET);
          off_t resetPos = processNewRecords(fh, fname);
          _lseek(fh, resetPos, SEEK_SET);
+         m_offset = resetPos;
          startOffset = -1;
       }
 		else if (m_preallocatedFile)
@@ -724,6 +726,7 @@ bool LogParser::monitorFile(off_t startOffset)
 				nxlog_debug_tag(DEBUG_TAG, 6, _T("New data available in file \"%s\""), fname);
 				off_t resetPos = processNewRecords(fh, fname);
 				_lseek(fh, resetPos, SEEK_SET);
+	         m_offset = resetPos;
 			}
 			else if (m_preallocatedFile)
 			{
@@ -735,6 +738,7 @@ bool LogParser::monitorFile(off_t startOffset)
 	            nxlog_debug_tag(DEBUG_TAG, 6, _T("New data available in file \"%s\""), fname);
 	            off_t resetPos = processNewRecords(fh, fname);
 	            _lseek(fh, resetPos, SEEK_SET);
+	            m_offset = resetPos;
 				}
 				else
 				{
@@ -750,6 +754,7 @@ bool LogParser::monitorFile(off_t startOffset)
                      _lseek(fh, 0, SEEK_SET);
                      off_t resetPos = processNewRecords(fh, fname);
                      _lseek(fh, resetPos, SEEK_SET);
+                     m_offset = resetPos;
                   }
                }
 				}
@@ -941,6 +946,7 @@ bool LogParser::monitorFile2(off_t startOffset)
       lastPos = processNewRecords(fh, fname);
       _close(fh);
       size = static_cast<size_t>(st.st_size);
+      m_offset = size;
       mtime = st.st_mtime;
 
       if (m_stopCondition.wait(m_fileCheckInterval))
@@ -1122,6 +1128,7 @@ bool LogParser::monitorFileWithSnapshot(off_t startOffset)
       _close(fh);
       size = static_cast<size_t>(st.st_size);
       mtime = st.st_mtime;
+      m_offset = lastPos;
 
       DestroyFileSnapshot(snapshot);
       if (m_stopCondition.wait(m_fileCheckInterval))

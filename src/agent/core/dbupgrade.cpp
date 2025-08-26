@@ -39,6 +39,24 @@ static DB_HANDLE s_db = NULL;
 
 
 /**
+ * Upgrade from V15 to V16
+ */
+static BOOL H_UpgradeFromV15(int currVersion, int newVersion)
+{
+   static TCHAR serversQuery[] =
+         _T("CREATE TABLE logwatch_files (")
+         _T("  name varchar(256) not null,")
+         _T("  path varchar(4096) not null,")
+         _T("  size number(20) not null,")
+         _T("  last_update_time integer not null,")
+         _T("  PRIMARY KEY(name,path))");
+   CHK_EXEC(Query(serversQuery));
+
+   CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 16));
+   return TRUE;
+}
+
+/**
  * Upgrade from V14 to V15
  */
 static BOOL H_UpgradeFromV14(int currVersion, int newVersion)
@@ -509,6 +527,7 @@ static struct
    { 12, 13, H_UpgradeFromV12 },
    { 13, 14, H_UpgradeFromV13 },
    { 14, 15, H_UpgradeFromV14 },
+   { 15, 16, H_UpgradeFromV15 },
    { 0, 0, nullptr }
 };
 

@@ -390,6 +390,8 @@ private:
    char *m_readBuffer;
    size_t m_readBufferSize;
    TCHAR *m_textBuffer;
+   off_t m_offset;
+   TCHAR m_fileNameHash[MD5_DIGEST_SIZE * 2 + 1];
 
 	const TCHAR *checkContext(LogParserRule *rule);
 	bool matchLogRecord(bool hasAttributes, const TCHAR *source, uint32_t eventId, uint32_t level, const TCHAR *line,
@@ -431,6 +433,7 @@ public:
    void getEventList(HashSet<uint32_t> *eventList) const;
    bool isUsingEvent(uint32_t eventCode) const;
    int getCharSize() const;
+   String getIdentifier() const { return (!m_guid.equals(uuid::NULL_UUID)) ? m_guid.toString() : m_fileNameHash; }
 
 	void setName(const TCHAR *name);
    void setFileName(const TCHAR *name);
@@ -442,6 +445,7 @@ public:
 	void setThread(THREAD thread) { m_thread = thread; }
 	THREAD getThread() { return m_thread; }
    Condition *getStopCondition() { return &m_stopCondition; }
+   off_t getCurrentOffset() const { return m_offset; }
 
 	void setProcessAllFlag(bool flag) { m_processAllRules = flag; }
 	bool getProcessAllFlag() const { return m_processAllRules; }

@@ -163,6 +163,8 @@ LogParser::LogParser() : m_rules(0, 16, Ownership::True), m_stopCondition(true)
    m_readBuffer = nullptr;
    m_readBufferSize = 0;
    m_textBuffer = nullptr;
+   m_fileNameHash[0] = 0;
+   m_offset = -1;
 }
 
 /**
@@ -219,6 +221,8 @@ LogParser::LogParser(const LogParser *src) : m_rules(src->m_rules.size(), 16, Ow
    m_readBuffer = nullptr;
    m_readBufferSize = 0;
    m_textBuffer = nullptr;
+   _tcscpy(m_fileNameHash, src->m_fileNameHash);
+   m_offset = -1;
 }
 
 /**
@@ -425,6 +429,10 @@ void LogParser::setFileName(const TCHAR *name)
 	m_fileName = MemCopyString(name);
 	if (m_name == nullptr)
 		m_name = MemCopyString(name);	// Set parser name to file name
+
+   BYTE hash[MD5_DIGEST_SIZE];
+   CalculateMD5Hash((BYTE *)name, _tcslen(name) * sizeof(TCHAR), hash);
+   BinToStr(hash, MD5_DIGEST_SIZE, m_fileNameHash);
 }
 
 /**
