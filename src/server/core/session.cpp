@@ -17886,7 +17886,7 @@ void ClientSession::queryAiAssistant(const NXCPMessage& request)
          if (prompt == nullptr)
             break;
       }
-      answer = CURRENT_MODULE.pfProcessRequestToAiAssistant(prompt, this);
+      answer = CURRENT_MODULE.pfProcessRequestToAiAssistant(prompt, nullptr, this);
       if (answer != nullptr)
          break;
    }

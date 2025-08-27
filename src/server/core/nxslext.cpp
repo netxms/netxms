@@ -2188,6 +2188,44 @@ static int F_IsMarkdownComment(int argc, NXSL_Value **argv, NXSL_Value **result,
 }
 
 /**
+ * Query AI assistant
+ * Syntax:
+ *    QueryAIAssistant(prompt, [context])
+ * where:
+ *     prompt - prompt to send to AI assistant
+ *     context - NetXMS object providing context for AI assistant (optional)
+ * Return value:
+ *     answer from AI assistant or null on failure
+ */
+static int F_QueryAIAssistant(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if ((argc == 0) || (argc > 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   if ((argc == 2) && !argv[1]->isObject(_T("NetObj")))
+      return NXSL_ERR_NOT_OBJECT;
+
+   char *prompt = UTF8StringFromWideString(argv[0]->getValueAsCString());
+   NetObj *context = (argc == 2) ? static_cast<shared_ptr<NetObj>*>(argv[1]->getValueAsObject()->getData())->get() : nullptr;
+   char *answer = nullptr;
+   ENUMERATE_MODULES(pfProcessRequestToAiAssistant)
+   {
+      answer = CURRENT_MODULE.pfProcessRequestToAiAssistant(prompt, context, nullptr);
+      if (answer != nullptr)
+         break;
+   }
+   MemFree(prompt);
+
+   *result = (answer != nullptr) ? vm->createValue(answer) : vm->createValue();
+   MemFree(answer);
+
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
  * Additional server functions to use within all scripts
  */
 static NXSL_ExtFunction m_nxslServerFunctions[] =
@@ -2251,6 +2289,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { "PollerTrace", F_PollerTrace, 1 },
 	{ "PostEvent", F_PostEvent, -1 },
    { "PostEventEx", F_PostEventEx, -1 },
+   { "QueryAIAssistant", F_QueryAIAssistant, -1 },
 	{ "RenameObject", F_RenameObject, 2, true },
 	{ "SendMail", F_SendMail, -1, true },
 	{ "SendNotification", F_SendNotification, 4 },
