@@ -6281,7 +6281,9 @@ bool Node::confPollSsh()
       unlockProperties();
 
       ExitFromUnreachableState();
-      modified = confPollSmclp();
+
+      if (confPollSmclp())
+         modified = true;
    }
    else
    {
@@ -6301,7 +6303,11 @@ bool Node::confPollSmclp()
 
    StringBuffer output;
    bool success = getDataFromSmclp(L"version", &output);
-   success = output.contains(L"status=0");
+   if (success)
+   {
+      success = output.contains(L"status=0");
+   }
+
    if(success)
    {
       sendPollerMsg(POLLER_INFO _T("   SM-CLP protocol is supported\r\n"));

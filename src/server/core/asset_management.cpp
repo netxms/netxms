@@ -612,8 +612,6 @@ uint32_t DeleteAssetAttribute(const NXCPMessage &msg, const ClientSession &sessi
       session.writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldAttrData, nullptr, _T("Asset attribute \"%s\" deleted"), name.cstr());
       json_decref(oldAttrData);
 
-      result = RCC_SUCCESS;
-
       bool success = attribute->deleteFromDatabase();
       s_schema.remove(name);
 
