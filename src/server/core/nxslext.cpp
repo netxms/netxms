@@ -2520,9 +2520,9 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
       NXSL_ENV_CONSTANT("MapLinkStyle::DashDotDot", 5);
 
       // Map link data label position
-      NXSL_ENV_CONSTANT("MapLinkStyle::Center", 0);
-      NXSL_ENV_CONSTANT("MapLinkStyle::Object1", 1);
-      NXSL_ENV_CONSTANT("MapLinkStyle::Object2", 2);
+      NXSL_ENV_CONSTANT("LinkLabelPosition::Center", 0);
+      NXSL_ENV_CONSTANT("LinkLabelPosition::Object1", 1);
+      NXSL_ENV_CONSTANT("LinkLabelPosition::Object2", 2);
    }
 
    if (name.value[0] == 'N')
