@@ -1438,7 +1438,8 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
    }
 
    lockProperties();
-   modified = mergeLinks(&content, objects.getLinks());
+   if (mergeLinks(&content, objects.getLinks()))
+      modified = true;
    unlockProperties();
 
    if (modified)

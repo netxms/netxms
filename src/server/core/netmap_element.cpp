@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -407,8 +407,6 @@ void NetworkMapDCIElement::updateDciList(CountingHashSet<uint32_t> *dciSet, bool
             else
                dciSet->remove(id);
          }
-
-         dciList = json_object_get(json, "dci");
       }
       else
       {
@@ -419,10 +417,7 @@ void NetworkMapDCIElement::updateDciList(CountingHashSet<uint32_t> *dciSet, bool
             dciSet->put(id);
          else
             dciSet->remove(id);
-
       }
-
-      //dciRuleList/dciId
    }
    else
    {
