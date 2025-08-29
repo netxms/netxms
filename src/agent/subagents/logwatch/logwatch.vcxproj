@@ -385,6 +385,9 @@
     <ClInclude Include="logwatch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\db\libnxdb\libnxdb.vcxproj">
+      <Project>{f3e29541-3a0e-45ec-8bec-e193f2401622}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\libnetxms\libnetxms.vcxproj">
       <Project>{b1745870-f3ed-4acb-b813-0c4f47ef0793}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
