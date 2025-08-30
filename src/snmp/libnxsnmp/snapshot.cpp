@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -22,6 +22,12 @@
 **/
 
 #include "libnxsnmp.h"
+
+#undef uthash_malloc
+#define uthash_malloc(sz) m_pool.allocate(sz)
+#undef uthash_free
+#define uthash_free(ptr,sz) do { } while(0)
+
 #include <uthash.h>
 
 /**
@@ -37,10 +43,10 @@ struct SNMP_SnapshotIndexEntry
 /**
  * Constructor
  */
-SNMP_Snapshot::SNMP_Snapshot()
+SNMP_Snapshot::SNMP_Snapshot() : m_values(0, 256, Ownership::True), m_pool(8192)
 {
-   m_values = new ObjectArray<SNMP_Variable>(64, 64, Ownership::True);
    m_index = nullptr;
+   m_indexData = nullptr;
 }
 
 /**
@@ -48,25 +54,22 @@ SNMP_Snapshot::SNMP_Snapshot()
  */
 SNMP_Snapshot::~SNMP_Snapshot()
 {
-   delete m_values;
-
-   SNMP_SnapshotIndexEntry *entry, *tmp;
-   HASH_ITER(hh, m_index, entry, tmp)
-   {
-      HASH_DEL(m_index, entry);
-      MemFree(entry);
-   }
+   MemFree(m_indexData);
 }
 
 /**
- * Build OID index
+ * Build OID index. Expected to be called only once.
  */
 void SNMP_Snapshot::buildIndex()
 {
-   for(int i = 0; i < m_values->size(); i++)
+   if (m_values.isEmpty())
+      return;
+
+   m_indexData = MemAllocArray<SNMP_SnapshotIndexEntry>(m_values.size());
+   for(int i = 0; i < m_values.size(); i++)
    {
-      SNMP_Variable *v = m_values->get(i);
-      SNMP_SnapshotIndexEntry *entry = MemAllocStruct<SNMP_SnapshotIndexEntry>();
+      SNMP_Variable *v = m_values.get(i);
+      SNMP_SnapshotIndexEntry *entry = &m_indexData[i];
       entry->var = v;
       entry->pos = i;
       HASH_ADD_KEYPTR(hh, m_index, entry->var->getName().value(), (unsigned int)(entry->var->getName().length() * sizeof(uint32_t)), entry);
@@ -102,10 +105,12 @@ SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const TCHAR *bas
 {
    SNMP_Snapshot *s = new SNMP_Snapshot();
 
-   uint32_t rc = SnmpWalk(transport, baseOid, [s](SNMP_Variable *var) -> uint32_t {
-      s->m_values->add(new SNMP_Variable(var));
-      return SNMP_ERR_SUCCESS;
-   });
+   uint32_t rc = SnmpWalk(transport, baseOid,
+      [s] (SNMP_Variable *var) -> uint32_t
+      {
+         s->m_values.add(new SNMP_Variable(var));
+         return SNMP_ERR_SUCCESS;
+      });
 
    if (rc == SNMP_ERR_SUCCESS)
       s->buildIndex();
@@ -121,10 +126,12 @@ SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const uint32_t *
 {
    SNMP_Snapshot *s = new SNMP_Snapshot();
 
-   uint32_t rc = SnmpWalk(transport, baseOid, oidLen, [s](SNMP_Variable *var) -> uint32_t {
-      s->m_values->add(new SNMP_Variable(var));
-      return SNMP_ERR_SUCCESS;
-   });
+   uint32_t rc = SnmpWalk(transport, baseOid, oidLen,
+      [s] (SNMP_Variable *var) -> uint32_t
+      {
+         s->m_values.add(new SNMP_Variable(var));
+         return SNMP_ERR_SUCCESS;
+      });
 
    if (rc == SNMP_ERR_SUCCESS)
       s->buildIndex();
@@ -170,11 +177,11 @@ const SNMP_Variable *SNMP_Snapshot::getNext(const uint32_t *oid, size_t oidLen) 
 {
    SNMP_SnapshotIndexEntry *entry = find(oid, oidLen);
    if (entry != nullptr)
-      return m_values->get(entry->pos + 1);
+      return m_values.get(entry->pos + 1);
 
-   for(int i = 0; i < m_values->size(); i++)
+   for(int i = 0; i < m_values.size(); i++)
    {
-      SNMP_Variable *v = m_values->get(i);
+      SNMP_Variable *v = m_values.get(i);
       int c = v->getName().compare(oid, oidLen);
       if ((c == OID_FOLLOWING) || (c == OID_LONGER))
          return v;
