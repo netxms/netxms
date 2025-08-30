@@ -93,9 +93,47 @@ TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *str, int length)
  */
 String LIBNETXMS_EXPORTABLE EscapeStringForXML2(const TCHAR *str, int length)
 {
-	StringBuffer s;
-	s.setBuffer(EscapeStringForXML(str, length));
-	return s;
+   if (str == nullptr)
+      return String();
+
+	StringBuffer out;
+   const TCHAR *in = str;
+   int inLen = (length == -1) ? static_cast<int>(_tcslen(str)) : length;
+   for(; inLen > 0; in++, inLen--)
+   {
+      switch(*in)
+      {
+         case _T('&'):
+            out.append(_T("&amp;"));
+            break;
+         case _T('<'):
+            out.append(_T("&lt;"));
+            break;
+         case _T('>'):
+            out.append(_T("&gt;"));
+            break;
+         case _T('"'):
+            out.append(_T("&quot;"));
+            break;
+         case _T('\''):
+            out.append(_T("&apos;"));
+            break;
+         default:
+            if (*in < 32)
+            {
+               TCHAR buffer[8];
+               _sntprintf(buffer, 8, _T("&#x%02X;"), *in);
+               out.append(buffer);
+            }
+            else
+            {
+               out.append(*in);
+            }
+            break;
+      }
+   }
+
+	return out;
 }
 
 /**
