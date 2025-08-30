@@ -209,7 +209,7 @@ shared_ptr<RoutingTable> SnmpGetRoutingTable(SNMP_Transport *snmp, const Node& n
    // If not successful, try ipCidrRouteTable
    if (!success || routingTable->isEmpty())
    {
-      SNMP_Snapshot *snapshot = SNMP_Snapshot::create(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 4, 1 });
+      snapshot = SNMP_Snapshot::create(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 4, 1 });
       if (snapshot != nullptr)
       {
          success = (snapshot->walk({ 1, 3, 6, 1, 2, 1, 4, 24, 4, 1, 7 }, HandlerIPCidrRouteTable, routingTable.get()) == _CONTINUE);

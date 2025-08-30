@@ -1111,8 +1111,10 @@ struct SNMP_SnapshotIndexEntry;
 class LIBNXSNMP_EXPORTABLE SNMP_Snapshot
 {
 private:
-   ObjectArray<SNMP_Variable> *m_values;
+   ObjectArray<SNMP_Variable> m_values;
    SNMP_SnapshotIndexEntry *m_index;
+   SNMP_SnapshotIndexEntry *m_indexData;
+   MemoryPool m_pool;
 
    void buildIndex();
    SNMP_SnapshotIndexEntry *find(const uint32_t *oid, size_t oidLen) const;
@@ -1137,7 +1139,7 @@ public:
 #endif
    }
 
-   Iterator<SNMP_Variable> begin() { return m_values->begin(); }
+   Iterator<SNMP_Variable> begin() { return m_values.begin(); }
 
    EnumerationCallbackResult walk(const TCHAR *baseOid, EnumerationCallbackResult (*handler)(const SNMP_Variable *, const SNMP_Snapshot *, void *), void *context) const;
    EnumerationCallbackResult walk(const uint32_t *baseOid, size_t baseOidLen, EnumerationCallbackResult (*handler)(const SNMP_Variable *, const SNMP_Snapshot *, void *), void *context) const;
@@ -1199,8 +1201,8 @@ public:
 #endif
    }
 
-   const SNMP_Variable *first() const { return m_values->get(0); }
-   const SNMP_Variable *last() const { return m_values->get(m_values->size() - 1); }
+   const SNMP_Variable *first() const { return m_values.get(0); }
+   const SNMP_Variable *last() const { return m_values.get(m_values.size() - 1); }
 
    int32_t getAsInt32(const TCHAR *oid) const
    {
@@ -1281,8 +1283,8 @@ public:
 #endif
    }
 
-   int size() const { return m_values->size(); }
-   bool isEmpty() const { return m_values->size() == 0; }
+   int size() const { return m_values.size(); }
+   bool isEmpty() const { return m_values.isEmpty(); }
 };
 
 /**
