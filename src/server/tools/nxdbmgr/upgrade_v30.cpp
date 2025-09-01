@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2023 Victor Kirhenshtein
+** Copyright (C) 2004-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1868,12 +1868,12 @@ static bool H_UpgradeFromV49()
 {
    if (GetSchemaLevelForMajorVersion(22) < 39)
    {
-      TCHAR tmp[MAX_CONFIG_VALUE] = _T("");
+      TCHAR tmp[MAX_CONFIG_VALUE_LENGTH] = _T("");
       DB_RESULT hResult = SQLSelect(_T("SELECT var_value from config WHERE var_name='LdapMappingName'"));
       if (hResult != nullptr)
       {
          if(DBGetNumRows(hResult) > 0)
-            DBGetField(hResult, 0, 0, tmp, MAX_CONFIG_VALUE);
+            DBGetField(hResult, 0, 0, tmp, MAX_CONFIG_VALUE_LENGTH);
       }
 
       CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='LdapUserMappingName' WHERE var_name='LdapMappingName'")));

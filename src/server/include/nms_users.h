@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -132,10 +132,10 @@ class LDAPConnection
 private:
 #if WITH_LDAP
    LDAP *m_ldapConn;
-   LDAP_CHAR m_connList[MAX_CONFIG_VALUE];
-   LDAP_CHAR m_searchBase[MAX_CONFIG_VALUE];
-   LDAP_CHAR m_searchFilter[MAX_CONFIG_VALUE];
-   LDAP_CHAR m_userDN[MAX_CONFIG_VALUE];
+   LDAP_CHAR m_connList[MAX_CONFIG_VALUE_LENGTH];
+   LDAP_CHAR m_searchBase[MAX_CONFIG_VALUE_LENGTH];
+   LDAP_CHAR m_searchFilter[MAX_CONFIG_VALUE_LENGTH];
+   LDAP_CHAR m_userDN[MAX_CONFIG_VALUE_LENGTH];
    LDAP_CHAR m_userPassword[MAX_PASSWORD];
    char *m_ldapFullNameAttr;
    char *m_ldapUserLoginNameAttr;

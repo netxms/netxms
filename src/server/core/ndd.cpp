@@ -112,8 +112,8 @@ void LoadNetworkDeviceDrivers()
 	_tcscpy(path, g_netxmsdLibDir);
 	_tcscat(path, LDIR_NDD);
 
-	TCHAR buffer[MAX_CONFIG_VALUE];
-	ConfigReadStr(_T("NetworkDeviceDrivers.Blacklist"), buffer, MAX_CONFIG_VALUE, _T(""));
+	TCHAR buffer[MAX_CONFIG_VALUE_LENGTH];
+	ConfigReadStr(_T("NetworkDeviceDrivers.Blacklist"), buffer, MAX_CONFIG_VALUE_LENGTH, _T(""));
    StringList blacklist;
 	blacklist.splitAndAdd(buffer, _T(","));
 

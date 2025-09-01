@@ -23,7 +23,7 @@
 #include "nxcore.h"
 #include <nms_users.h>
 
-static TCHAR s_recipients[MAX_CONFIG_VALUE] = _T("");
+static TCHAR s_recipients[MAX_CONFIG_VALUE_LENGTH] = _T("");
 static const TCHAR *s_severities[8] = { _T("<td style=\"background:rgb(0, 192, 0)\">Normal</td>"), _T("<td style=\"background:rgb(0, 255, 255)\">Warning</td>"),
          _T("<td style=\"background:rgb(231, 226, 0)\">Minor</td>"), _T("<td style=\"background:rgb(255, 128, 0)\">Major</td>"),
          _T("<td style=\"background:rgb(192, 0, 0)\">Critical</td>"), _T("<td style=\"background:rgb(0, 0, 128)\">Unknown</td>"),
@@ -144,6 +144,6 @@ void SendAlarmSummaryEmail(const shared_ptr<ScheduledTaskParameters>& parameters
 
    TCHAR channelName[MAX_OBJECT_NAME];
    ConfigReadStr(_T("DefaultNotificationChannel.SMTP.Html"), channelName, MAX_OBJECT_NAME, _T("SMTP-HTML"));
-   ConfigReadStr(_T("Alarms.SummaryEmail.Recipients"), s_recipients, MAX_CONFIG_VALUE, _T(""));
+   ConfigReadStr(_T("Alarms.SummaryEmail.Recipients"), s_recipients, MAX_CONFIG_VALUE_LENGTH, _T(""));
    SendNotification(channelName, s_recipients, subject, summary, 0, 0, uuid::NULL_UUID);
 }

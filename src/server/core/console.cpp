@@ -600,8 +600,8 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
       ExtractWord(pArg, szBuffer);
       if (szBuffer[0] != 0)
       {
-         TCHAR value[MAX_CONFIG_VALUE];
-         ConfigReadStr(szBuffer, value, MAX_CONFIG_VALUE, _T(""));
+         TCHAR value[MAX_CONFIG_VALUE_LENGTH];
+         ConfigReadStr(szBuffer, value, MAX_CONFIG_VALUE_LENGTH, _T(""));
          ConsolePrintf(console, _T("%s = %s\n"), szBuffer, value);
       }
       else
