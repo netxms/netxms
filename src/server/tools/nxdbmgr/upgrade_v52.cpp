@@ -24,6 +24,26 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 52.21 to 52.22
+ */
+static bool H_UpgradeFromV21()
+{
+   static const TCHAR *batch =
+      _T("UPDATE config SET var_name='Topology.RoutingTable.UpdateInterval' WHERE var_name='Topology.RoutingTableUpdateInterval'\n")
+      _T("UPDATE object_custom_attributes SET attr_name='SysConfig:Topology.RoutingTable.UpdateInterval' WHERE attr_name='SysConfig:Topology.RoutingTableUpdateInterval'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(CreateConfigParam(L"Topology.RoutingTable.MaxSize",
+            L"4000",
+            L"Maximum retrievable routing table size. Larger routing tables will not be retrieved from devices.",
+            L"records", 'I', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(22));
+   return true;
+}
+
+/**
  * Upgrade from 52.20 to 52.21
  */
 static bool H_UpgradeFromV20()
@@ -491,6 +511,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 21, 52, 22, H_UpgradeFromV21 },
    { 20, 52, 21, H_UpgradeFromV20 },
    { 19, 52, 20, H_UpgradeFromV19 },
    { 18, 52, 19, H_UpgradeFromV18 },

@@ -60,7 +60,7 @@ Modified to run on Compaq Alpha hardware.
 Modified 10/03
 By Victor Kirhenshtein (victor@securityprojects.org)
 Still 100% public domain
-Modified to be used as part of network mamagement system agent
+Modified to be used as part of network management system agent
 
 
 */
@@ -177,9 +177,6 @@ void I_SHA1Update(SHA1_CTX* context, const unsigned char* data, unsigned int len
 {
    uint32_t i, j; /* JHB */
 
-#ifdef VERBOSE
-    SHAPrintContext(context, "before");
-#endif
    j = (context->count[0] >> 3) & 63;
    if ((context->count[0] += len << 3) < (len << 3))
       context->count[1]++;
@@ -197,9 +194,6 @@ void I_SHA1Update(SHA1_CTX* context, const unsigned char* data, unsigned int len
    else
       i = 0;
    memcpy(&context->buffer[j], &data[i], len - i);
-#ifdef VERBOSE
-    SHAPrintContext(context, "after ");
-#endif
 }
 
 
@@ -219,24 +213,16 @@ void I_SHA1Final(SHA1_CTX *context, unsigned char *digest)
    {
       I_SHA1Update(context, (unsigned char*)"\0", 1);
    }
-   I_SHA1Update(context, finalcount, 8); /* Should cause a SHA1Transform()
-    */
+   I_SHA1Update(context, finalcount, 8); /* Should cause a SHA1Transform() */
    for (i = 0; i < 20; i++)
    {
       digest[i] = (unsigned char)((context->state[i >> 2] >> ((3 - (i & 3)) * 8)) & 255);
    }
    /* Wipe variables */
-#ifdef _WIN32
     SecureZeroMemory(context->buffer, 64);
     SecureZeroMemory(context->state, 20);
     SecureZeroMemory(context->count, 8);
     SecureZeroMemory(finalcount, 8);	/* SWR */
-#else
-   memset(context->buffer, 0, 64);
-   memset(context->state, 0, 20);
-   memset(context->count, 0, 8);
-   memset(finalcount, 0, 8); /* SWR */
-#endif
 #ifdef SHA1HANDSOFF  /* make SHA1Transform overwrite it's own static vars */
    SHA1Transform(context->state, context->buffer);
 #endif

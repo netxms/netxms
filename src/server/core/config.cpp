@@ -833,7 +833,7 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       g_topologyPollingInterval = ConvertToUint32(value, 1800);
    }
-   else if (!wcscmp(name, L"Topology.RoutingTableUpdateInterval"))
+   else if (!wcscmp(name, L"Topology.RoutingTable.UpdateInterval"))
    {
       g_routingTableUpdateInterval = ConvertToUint32(value, 300);
    }

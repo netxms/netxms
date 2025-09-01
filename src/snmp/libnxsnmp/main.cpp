@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -138,10 +138,10 @@ const TCHAR LIBNXSNMP_EXPORTABLE *SnmpGetErrorText(uint32_t errorCode)
       _T("Authentication failure"),
       _T("Decryption error"),
       _T("Malformed or unexpected response from agent"),
-      _T("Operation aborted")
+      _T("Operation aborted"),
+      _T("Snapshot size limit reached")
    };
-
-   return (errorCode <= SNMP_ERR_ABORTED) ? errorText[errorCode] : _T("Unknown error");
+   return (errorCode <= SNMP_ERR_SNAPSHOT_TOO_BIG) ? errorText[errorCode] : _T("Unknown error");
 }
 
 /**
@@ -171,7 +171,6 @@ const TCHAR LIBNXSNMP_EXPORTABLE *SnmpGetProtocolErrorText(SNMP_ErrorCode errorC
       _T("Not writable"),
       _T("Inconsistent name")
    };
-
    return ((static_cast<int>(errorCode) >= 0) && (static_cast<int>(errorCode) <= SNMP_PDU_ERR_INCONSISTENT_NAME)) ? errorText[errorCode] : _T("Unknown error");
 }
 
