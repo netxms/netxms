@@ -685,7 +685,7 @@ private:
    void leaveMaintenanceMode(const NXCPMessage& request);
    void openNodeDCIList(const NXCPMessage& request);
    void closeNodeDCIList(const NXCPMessage& request);
-   void getDCOObject(const NXCPMessage& request);
+   void getDCObject(const NXCPMessage& request);
    void modifyNodeDCI(const NXCPMessage& request);
    void copyDCI(const NXCPMessage& request);
    void bulkDCIUpdate(const NXCPMessage& request);

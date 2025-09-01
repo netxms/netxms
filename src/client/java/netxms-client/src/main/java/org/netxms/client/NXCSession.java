@@ -7813,11 +7813,11 @@ public class NXCSession
          throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_ACTION);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       msg.setField(NXCPCodes.VID_EXPAND_STRING, true);
       msg.setField(NXCPCodes.VID_ACTION_NAME, action);
       msg.setField(NXCPCodes.VID_RECEIVE_OUTPUT, receiveOutput);
-      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
+      msg.setFieldUInt32(NXCPCodes.VID_ALARM_ID, alarmId);
 
       if (inputValues != null)
       {
@@ -7908,7 +7908,7 @@ public class NXCSession
    public void executeAction(long nodeId, String action, String[] args, boolean receiveOutput, final TextOutputListener listener, final Writer writer) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_ACTION);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       msg.setField(NXCPCodes.VID_ACTION_NAME, action);
       msg.setField(NXCPCodes.VID_RECEIVE_OUTPUT, receiveOutput);
 
@@ -7981,8 +7981,8 @@ public class NXCSession
          final Writer writer) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_SSH_COMMAND);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
-      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);      
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_ALARM_ID, alarmId);
       msg.setField(NXCPCodes.VID_COMMAND, command);
       msg.setField(NXCPCodes.VID_RECEIVE_OUTPUT, receiveOutput);
       if (inputFields != null)
@@ -8051,7 +8051,7 @@ public class NXCSession
    public void wakeupNode(final long objectId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_WAKEUP_NODE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, objectId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -8067,7 +8067,7 @@ public class NXCSession
    public PhysicalComponent getNodePhysicalComponents(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_NODE_COMPONENTS);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return new PhysicalComponent(response, NXCPCodes.VID_COMPONENT_LIST_BASE, null);
@@ -8084,7 +8084,7 @@ public class NXCSession
    public DeviceView getDeviceView(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DEVICE_VIEW);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       sendMessage(msg);
       return new DeviceView(waitForRCC(msg.getMessageId()));
    }
@@ -8101,7 +8101,7 @@ public class NXCSession
    public List<WinPerfObject> getNodeWinPerfObjects(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_WINPERF_OBJECTS);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return WinPerfObject.createListFromMessage(response);
@@ -8118,7 +8118,7 @@ public class NXCSession
    public List<SoftwarePackage> getNodeSoftwarePackages(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_NODE_SOFTWARE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
@@ -8143,7 +8143,7 @@ public class NXCSession
    public List<HardwareComponent> getNodeHardwareComponents(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_NODE_HARDWARE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -8170,7 +8170,7 @@ public class NXCSession
    public List<UserSession> getUserSessions(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_USER_SESSIONS);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -8406,11 +8406,11 @@ public class NXCSession
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DataCollectionObject getDcoDefenition(long objectId, long dciId) throws IOException, NXCException
+   public DataCollectionObject getDataCollectionObject(long objectId, long dciId) throws IOException, NXCException
    {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCO_OBJECT);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
-      msg.setFieldInt64(NXCPCodes.VID_DCI_ID, dciId);
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DC_OBJECT);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, objectId);
+      msg.setFieldUInt32(NXCPCodes.VID_DCI_ID, dciId);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
       int type = response.getFieldAsInt32(NXCPCodes.VID_DCOBJECT_TYPE);
@@ -8441,7 +8441,7 @@ public class NXCSession
    public long modifyDataCollectionObject(DataCollectionObject dcObject) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_MODIFY_NODE_DCI);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)dcObject.getNodeId());
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, dcObject.getNodeId());
       dcObject.fillMessage(msg);
       sendMessage(msg);
       return waitForRCC(msg.getMessageId()).getFieldAsInt64(NXCPCodes.VID_DCI_ID);
@@ -8475,7 +8475,7 @@ public class NXCSession
    public long[] changeDCIStatus(final long ownerId, long[] items, int status) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_DCI_STATUS);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)ownerId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, ownerId);
       msg.setFieldInt16(NXCPCodes.VID_DCI_STATUS, status);
       msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, items.length);
       msg.setField(NXCPCodes.VID_ITEM_LIST, items);
@@ -8493,7 +8493,7 @@ public class NXCSession
    public void resyncAgentDataCollectionConfiguration(final long nodeId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_RESYNC_AGENT_DCI_CONF);
-      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_NODE_ID, nodeId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -8513,7 +8513,7 @@ public class NXCSession
          DataCollectionObject dcObject) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_TEST_DCI_TRANSFORMATION);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       msg.setField(NXCPCodes.VID_SCRIPT, script);
       msg.setField(NXCPCodes.VID_VALUE, inputValue);
       if (dcObject != null)

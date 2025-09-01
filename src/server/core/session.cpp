@@ -1131,8 +1131,8 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_UNLOCK_NODE_DCI_LIST:
          closeNodeDCIList(*request);
          break;
-      case CMD_GET_DCO_OBJECT:
-         getDCOObject(*request);
+      case CMD_GET_DC_OBJECT:
+         getDCObject(*request);
          break;
       case CMD_MODIFY_NODE_DCI:
       case CMD_DELETE_NODE_DCI:
@@ -4361,7 +4361,7 @@ void ClientSession::closeNodeDCIList(const NXCPMessage& request)
 /**
  * Get information about single data collection item (do not lock DCI list)
  */
-void ClientSession::getDCOObject(const NXCPMessage& request)
+void ClientSession::getDCObject(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
