@@ -2197,7 +2197,7 @@ void ClientSession::sendServerInfo(const NXCPMessage& request)
       CLIENT_PROTOCOL_VERSION_TCPPROXY,
       CLIENT_PROTOCOL_VERSION_SCHEDULER
    };
-	TCHAR szBuffer[MAX_CONFIG_VALUE];
+	wchar_t szBuffer[MAX_CONFIG_VALUE_LENGTH];
 	String strURL;
 
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
@@ -2215,20 +2215,20 @@ void ClientSession::sendServerInfo(const NXCPMessage& request)
    msg.setField(VID_CHALLENGE, m_challenge, CLIENT_CHALLENGE_SIZE);
    msg.setField(VID_TIMESTAMP, (UINT32)time(nullptr));
 
-   GetSystemTimeZone(szBuffer, sizeof(szBuffer) / sizeof(TCHAR));
+   GetSystemTimeZone(szBuffer, sizeof(szBuffer) / sizeof(wchar_t));
    msg.setField(VID_TIMEZONE, szBuffer);
    debugPrintf(2, _T("Server time zone: %s"), szBuffer);
 
-   ConfigReadStr(_T("Client.TileServerURL"), szBuffer, MAX_CONFIG_VALUE, _T("http://tile.netxms.org/osm/"));
+   ConfigReadStr(_T("Client.TileServerURL"), szBuffer, MAX_CONFIG_VALUE_LENGTH, _T("http://tile.netxms.org/osm/"));
    msg.setField(VID_TILE_SERVER_URL, szBuffer);
 
-   ConfigReadStr(_T("Client.DefaultConsoleDateFormat"), szBuffer, MAX_CONFIG_VALUE, _T("dd.MM.yyyy"));
+   ConfigReadStr(_T("Client.DefaultConsoleDateFormat"), szBuffer, MAX_CONFIG_VALUE_LENGTH, _T("dd.MM.yyyy"));
    msg.setField(VID_DATE_FORMAT, szBuffer);
 
-   ConfigReadStr(_T("Client.DefaultConsoleTimeFormat"), szBuffer, MAX_CONFIG_VALUE, _T("HH:mm:ss"));
+   ConfigReadStr(_T("Client.DefaultConsoleTimeFormat"), szBuffer, MAX_CONFIG_VALUE_LENGTH, _T("HH:mm:ss"));
    msg.setField(VID_TIME_FORMAT, szBuffer);
 
-   ConfigReadStr(_T("Client.DefaultConsoleShortTimeFormat"), szBuffer, MAX_CONFIG_VALUE, _T("HH:mm"));
+   ConfigReadStr(_T("Client.DefaultConsoleShortTimeFormat"), szBuffer, MAX_CONFIG_VALUE_LENGTH, _T("HH:mm"));
    msg.setField(VID_SHORT_TIME_FORMAT, szBuffer);
 
    FillComponentsMessage(&msg);
@@ -3258,16 +3258,16 @@ void ClientSession::getConfigurationVariables(const NXCPMessage& request)
          int count = DBGetNumRows(hResult);
          response.setField(VID_NUM_VARIABLES, static_cast<uint32_t>(count));
          uint32_t fieldId = VID_VARLIST_BASE;
-         TCHAR buffer[MAX_CONFIG_VALUE];
+         TCHAR buffer[MAX_CONFIG_VALUE_LENGTH];
          for(int i = 0; i < count; i++, fieldId += 10)
          {
             response.setField(fieldId, DBGetField(hResult, i, 0, buffer, MAX_DB_STRING));
-            response.setField(fieldId + 1, DBGetField(hResult, i, 1, buffer, MAX_CONFIG_VALUE));
-            response.setField(fieldId + 2, (WORD)DBGetFieldLong(hResult, i, 2));
-            response.setField(fieldId + 3, DBGetField(hResult, i, 3, buffer, MAX_CONFIG_VALUE));
-            response.setField(fieldId + 4, DBGetField(hResult, i, 4, buffer, MAX_CONFIG_VALUE));
-            response.setField(fieldId + 5, DBGetField(hResult, i, 5, buffer, MAX_CONFIG_VALUE));
-            response.setField(fieldId + 6, DBGetField(hResult, i, 6, buffer, MAX_CONFIG_VALUE));
+            response.setField(fieldId + 1, DBGetField(hResult, i, 1, buffer, MAX_CONFIG_VALUE_LENGTH));
+            response.setField(fieldId + 2, static_cast<uint16_t>(DBGetFieldLong(hResult, i, 2)));
+            response.setField(fieldId + 3, DBGetField(hResult, i, 3, buffer, MAX_CONFIG_VALUE_LENGTH));
+            response.setField(fieldId + 4, DBGetField(hResult, i, 4, buffer, MAX_CONFIG_VALUE_LENGTH));
+            response.setField(fieldId + 5, DBGetField(hResult, i, 5, buffer, MAX_CONFIG_VALUE_LENGTH));
+            response.setField(fieldId + 6, DBGetField(hResult, i, 6, buffer, MAX_CONFIG_VALUE_LENGTH));
          }
          DBFreeResult(hResult);
 
@@ -3279,7 +3279,7 @@ void ClientSession::getConfigurationVariables(const NXCPMessage& request)
             for(int i = 0; i < count; i++)
             {
                response.setField(fieldId++, DBGetField(hResult, i, 0, buffer, MAX_DB_STRING));
-               response.setField(fieldId++, DBGetField(hResult, i, 1, buffer, MAX_CONFIG_VALUE));
+               response.setField(fieldId++, DBGetField(hResult, i, 1, buffer, MAX_CONFIG_VALUE_LENGTH));
                response.setField(fieldId++, DBGetField(hResult, i, 2, buffer, MAX_DB_STRING));
             }
             DBFreeResult(hResult);
@@ -3317,7 +3317,7 @@ void ClientSession::getPublicConfigurationVariable(const NXCPMessage& request)
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config WHERE var_name=? AND is_public='Y'"));
    if (hStmt != nullptr)
    {
-      TCHAR name[64];
+      wchar_t name[64];
       request.getFieldAsString(VID_NAME, name, 64);
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
 
@@ -3326,8 +3326,8 @@ void ClientSession::getPublicConfigurationVariable(const NXCPMessage& request)
       {
          if (DBGetNumRows(hResult) > 0)
          {
-            TCHAR value[MAX_CONFIG_VALUE];
-            response.setField(VID_VALUE, DBGetField(hResult, 0, 0, value, MAX_CONFIG_VALUE));
+            wchar_t value[MAX_CONFIG_VALUE_LENGTH];
+            response.setField(VID_VALUE, DBGetField(hResult, 0, 0, value, MAX_CONFIG_VALUE_LENGTH));
             response.setField(VID_RCC, RCC_SUCCESS);
          }
          else
@@ -3359,19 +3359,19 @@ void ClientSession::setConfigurationVariable(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   TCHAR name[MAX_OBJECT_NAME];
+   wchar_t name[MAX_OBJECT_NAME];
    request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
 
    if (checkSystemAccessRights(SYSTEM_ACCESS_SERVER_CONFIG))
    {
-      TCHAR oldValue[MAX_CONFIG_VALUE], newValue[MAX_CONFIG_VALUE];
-      request.getFieldAsString(VID_VALUE, newValue, MAX_CONFIG_VALUE);
-      ConfigReadStr(name, oldValue, MAX_CONFIG_VALUE, _T(""));
+      wchar_t oldValue[MAX_CONFIG_VALUE_LENGTH], newValue[MAX_CONFIG_VALUE_LENGTH];
+      request.getFieldAsString(VID_VALUE, newValue, MAX_CONFIG_VALUE_LENGTH);
+      ConfigReadStr(name, oldValue, MAX_CONFIG_VALUE_LENGTH, L"");
       if (ConfigWriteStr(name, newValue, true))
       {
          response.setField(VID_RCC, RCC_SUCCESS);
          writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue, 'T',
-                                 _T("Server configuration variable \"%s\" changed from \"%s\" to \"%s\""), name, oldValue, newValue);
+            L"Server configuration variable \"%s\" changed from \"%s\" to \"%s\"", name, oldValue, newValue);
       }
       else
       {
@@ -3380,7 +3380,7 @@ void ClientSession::setConfigurationVariable(const NXCPMessage& request)
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on setting server configuration variable \"%s\""), name);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on setting server configuration variable \"%s\"", name);
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
@@ -3400,20 +3400,29 @@ void ClientSession::setDefaultConfigurationVariableValues(const NXCPMessage& req
       if (stmt != nullptr)
       {
          int numVars = request.getFieldAsInt32(VID_NUM_VARIABLES);
-         UINT32 fieldId = VID_VARLIST_BASE;
-         TCHAR varName[64], defValue[MAX_CONFIG_VALUE];
+         uint32_t fieldId = VID_VARLIST_BASE;
+         wchar_t varName[64], defValue[MAX_CONFIG_VALUE_LENGTH];
          for(int i = 0; i < numVars; i++)
          {
             request.getFieldAsString(fieldId++, varName, 64);
             DBBind(stmt, 1, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC);
 
-            DB_RESULT result = DBSelectPrepared(stmt);
-            if (result != nullptr)
+            DB_RESULT hResult = DBSelectPrepared(stmt);
+            if (hResult != nullptr)
             {
-               DBGetField(result, 0, 0, defValue, MAX_CONFIG_VALUE);
-               ConfigWriteStr(varName, defValue, false);
-               response.setField(VID_RCC, RCC_SUCCESS);
-               DBFreeResult(result);
+               DBGetField(hResult, 0, 0, defValue, MAX_CONFIG_VALUE_LENGTH);
+               DBFreeResult(hResult);
+
+               if (ConfigWriteStr(varName, defValue, false))
+               {
+                  response.setField(VID_RCC, RCC_SUCCESS);
+                  writeAuditLog(AUDIT_SYSCFG, true, 0, L"Server configuration variable %s reset to default value", varName);
+               }
+               else
+               {
+                  response.setField(VID_RCC, RCC_DB_FAILURE);
+                  break;
+               }
             }
             else
             {
@@ -3431,7 +3440,7 @@ void ClientSession::setDefaultConfigurationVariableValues(const NXCPMessage& req
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied for setting server configuration variables to default"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied for setting server configuration variables to default");
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(response);

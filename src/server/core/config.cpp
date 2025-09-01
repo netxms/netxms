@@ -914,9 +914,9 @@ bool NXCORE_EXPORTABLE ConfigReadStr(const wchar_t *variable, wchar_t *buffer, s
  */
 wchar_t NXCORE_EXPORTABLE *ConfigReadStr(const wchar_t *variable, const wchar_t *defaultValue)
 {
-   TCHAR buffer[MAX_CONFIG_VALUE];
-   bool success = ConfigReadStrEx(nullptr, variable, buffer, MAX_CONFIG_VALUE, nullptr);
-   return success ? MemCopyString(buffer) : MemCopyString(defaultValue);
+   wchar_t buffer[MAX_CONFIG_VALUE_LENGTH];
+   bool success = ConfigReadStrEx(nullptr, variable, buffer, MAX_CONFIG_VALUE_LENGTH, nullptr);
+   return success ? MemCopyStringW(buffer) : MemCopyStringW(defaultValue);
 }
 
 /**
@@ -989,7 +989,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const wchar_t *variable, char *buffer, 
  */
 char NXCORE_EXPORTABLE *ConfigReadStrUTF8(const wchar_t *variable, const char *defaultValue)
 {
-   char buffer[MAX_CONFIG_VALUE * 3];
+   char buffer[MAX_CONFIG_VALUE_LENGTH * 3];
    bool success = ConfigReadStrUTF8(variable, buffer, sizeof(buffer), nullptr);
    return success ? MemCopyStringA(buffer) : MemCopyStringA(defaultValue);
 }
@@ -1002,9 +1002,9 @@ bool NXCORE_EXPORTABLE ConfigReadBoolean(const wchar_t *variable, bool defaultVa
    wchar_t buffer[64];
    if (!ConfigReadStr(variable, buffer, 64, nullptr))
       return defaultValue;
-   if (!_tcsicmp(buffer, L"true"))
+   if (!wcsicmp(buffer, L"true"))
       return true;
-   return _tcstol(buffer, nullptr, 0) != 0;
+   return wcstol(buffer, nullptr, 0) != 0;
 }
 
 /**
@@ -1022,7 +1022,7 @@ int32_t NXCORE_EXPORTABLE ConfigReadIntEx(DB_HANDLE hdb, const wchar_t *variable
 {
    wchar_t buffer[64];
    if (ConfigReadStrEx(hdb, variable, buffer, 64, nullptr))
-      return _tcstol(buffer, nullptr, 0);
+      return wcstol(buffer, nullptr, 0);
    return defaultValue;
 }
 
@@ -1033,7 +1033,7 @@ uint32_t NXCORE_EXPORTABLE ConfigReadULong(const wchar_t *variable, uint32_t def
 {
    wchar_t buffer[64];
    if (ConfigReadStr(variable, buffer, 64, L""))
-      return _tcstoul(buffer, nullptr, 0);
+      return wcstoul(buffer, nullptr, 0);
    return defaultValue;
 }
 
@@ -1044,7 +1044,7 @@ int64_t NXCORE_EXPORTABLE ConfigReadInt64(const wchar_t *variable, int64_t defau
 {
    wchar_t buffer[64];
    if (ConfigReadStr(variable, buffer, 64, L""))
-      return _tcstoll(buffer, nullptr, 10);
+      return wcstoll(buffer, nullptr, 10);
    return defaultValue;
 }
 
@@ -1055,7 +1055,7 @@ uint64_t NXCORE_EXPORTABLE ConfigReadUInt64(const wchar_t *variable, uint64_t de
 {
    wchar_t buffer[64];
    if (ConfigReadStr(variable, buffer, 64, L""))
-      return _tcstoull(buffer, nullptr, 10);
+      return wcstoull(buffer, nullptr, 10);
    return defaultValue;
 }
 

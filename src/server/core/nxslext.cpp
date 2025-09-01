@@ -1774,7 +1774,7 @@ static int F_DriverReadParameter(int argc, NXSL_Value **argv, NXSL_Value **resul
  * Optional second argumet is default value
  * Returns variable's value if found, default value if not found, and null if not found and no default value given
  */
-static int F_GetConfigurationVariable(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_GetConfigurationVariable(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if ((argc == 0) || (argc > 2))
 		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -1782,14 +1782,14 @@ static int F_GetConfigurationVariable(int argc, NXSL_Value **argv, NXSL_Value **
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	TCHAR buffer[MAX_CONFIG_VALUE];
-	if (ConfigReadStr(argv[0]->getValueAsCString(), buffer, MAX_CONFIG_VALUE, _T("")))
+	wchar_t buffer[MAX_CONFIG_VALUE_LENGTH];
+	if (ConfigReadStr(argv[0]->getValueAsCString(), buffer, MAX_CONFIG_VALUE_LENGTH, L""))
 	{
-		*ppResult = vm->createValue(buffer);
+		*result = vm->createValue(buffer);
 	}
 	else
 	{
-		*ppResult = (argc == 2) ? vm->createValue(argv[1]) : vm->createValue();
+		*result = (argc == 2) ? vm->createValue(argv[1]) : vm->createValue();
 	}
 
 	return 0;

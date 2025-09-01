@@ -725,8 +725,8 @@ static bool AcceptNewNodeStage2(DiscoveredAddress *address)
    // Execute filter script
    if (result && (filterFlags & DFF_EXECUTE_SCRIPT))
    {
-      TCHAR filterScript[MAX_CONFIG_VALUE];
-      ConfigReadStr(_T("NetworkDiscovery.Filter.Script"), filterScript, MAX_CONFIG_VALUE, _T(""));
+      TCHAR filterScript[MAX_CONFIG_VALUE_LENGTH];
+      ConfigReadStr(_T("NetworkDiscovery.Filter.Script"), filterScript, MAX_CONFIG_VALUE_LENGTH, _T(""));
       Trim(filterScript);
 
       NXSL_VM *vm = CreateServerScriptVM(filterScript, shared_ptr<NetObj>());
