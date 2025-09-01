@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.dashboards.config;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import org.eclipse.swt.SWT;
 import org.netxms.nxmc.modules.dashboards.dialogs.helpers.DciIdMatchingData;
 import org.netxms.nxmc.modules.dashboards.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
@@ -49,6 +50,13 @@ public class TableValueConfig extends DashboardElementConfig
 
 	@Element(required = false)
 	private int refreshRate = 30;
+
+   @Element(required = false)
+   private String sortColumn = null;
+
+   @Element(required = false)
+   private int sortDirection = SWT.UP;	
+	
 
    /**
     * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
@@ -194,4 +202,36 @@ public class TableValueConfig extends DashboardElementConfig
 	{
 		this.refreshRate = refreshRate;
 	}
+
+   /**
+    * @return sort column
+    */
+   public String getSortColumn()
+   {
+      return sortColumn;
+   }
+
+   /**
+    * @param sortColumn the sortColumn to set
+    */
+   public void setSortColumn(String sortColumn)
+   {
+      this.sortColumn = sortColumn;
+   }
+
+   /**
+    * @return sort direction (SWT.UP or SWT.DOWN)
+    */
+   public int getSortDirection()
+   {
+      return sortDirection;
+   }
+
+   /**
+    * @param sortDirection the sortDirection to set (SWT.UP or SWT.DOWN)
+    */
+   public void setSortDirection(int sortDirection)
+   {
+      this.sortDirection = sortDirection;
+   }
 }

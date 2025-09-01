@@ -8398,6 +8398,39 @@ public class NXCSession
    }
 
    /**
+    * Get data collection object without opening data collection configuration.
+    *
+    * @param objectId object identifier (node or template)
+    * @param dciId    data collection item identifier
+    * @return Data collection object
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public DataCollectionObject getDcoDefenition(long objectId, long dciId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCO_OBJECT);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      msg.setFieldInt64(NXCPCodes.VID_DCI_ID, dciId);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      int type = response.getFieldAsInt32(NXCPCodes.VID_DCOBJECT_TYPE);
+      DataCollectionObject dco;
+      switch(type)
+      {
+         case DataCollectionObject.DCO_TYPE_ITEM:
+            dco = new DataCollectionItem(null, response);
+            break;
+         case DataCollectionObject.DCO_TYPE_TABLE:
+            dco = new DataCollectionTable(null, response);
+            break;
+         default:
+            dco = null;
+            break;
+      }
+      return dco;
+   }
+
+   /**
     * Modify data collection object without opening data collection configuration.
     *
     * @param dcObject dcObject collection object

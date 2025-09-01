@@ -18,16 +18,27 @@
  */
 package org.netxms.nxmc.modules.dashboards.propertypages;
 
+import java.util.ArrayList;
+import java.util.List;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Spinner;
+import org.netxms.client.NXCSession;
+import org.netxms.client.datacollection.ColumnDefinition;
 import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
 import org.netxms.nxmc.modules.dashboards.config.TableValueConfig;
@@ -51,6 +62,10 @@ public class TableValue extends DashboardElementPropertyPage
    private TemplateDciSelector dciTag;
    private TitleConfigurator title;
 	private Spinner refreshRate;
+	private Combo sortColumn;
+	private Button sortDirectionAscending;
+   private Button sortDirectionDescending;
+	
 
    /**
     * Create page.
@@ -158,6 +173,78 @@ public class TableValue extends DashboardElementPropertyPage
       gd.horizontalSpan = 2;
       dciTag.setLayoutData(gd);
       dciTag.setEnabled(config.getObjectId() == AbstractObject.CONTEXT);
+      
+      Group goupSortingOrder = new Group(dialogArea, SWT.NONE);
+      goupSortingOrder.setText("Sorting order");
+      layout = new GridLayout();
+      layout.marginTop = WidgetHelper.OUTER_SPACING;
+      layout.marginBottom = WidgetHelper.OUTER_SPACING * 2;
+      layout.marginWidth = WidgetHelper.OUTER_SPACING;
+      layout.numColumns = 2;
+      goupSortingOrder.setLayout(layout);
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.FILL;
+      goupSortingOrder.setLayoutData(gd);
+      
+      sortDirectionAscending = new Button(goupSortingOrder, SWT.RADIO);
+      sortDirectionAscending.setText(i18n.tr("Ascending"));
+      sortDirectionAscending.setSelection(config.getSortDirection() == SWT.UP);
+      sortDirectionAscending.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
+      
+      sortDirectionDescending = new Button(goupSortingOrder, SWT.RADIO);
+      sortDirectionDescending.setText(i18n.tr("Descending"));
+      sortDirectionDescending.setSelection(config.getSortDirection() == SWT.DOWN);
+      sortDirectionDescending.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
+
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      sortColumn = WidgetHelper.createLabeledCombo(dialogArea, SWT.NONE, i18n.tr("Sort column"), gd);
+      
+      if (config.getObjectId() != AbstractObject.CONTEXT && config.getObjectId() != 0 && config.getDciId() != 0)
+      {
+         NXCSession session = Registry.getSession();
+         new Job(i18n.tr("Get table DCI columns"), null) {            
+            @Override
+            protected void run(IProgressMonitor monitor) throws Exception
+            {
+               DataCollectionObject table = session.getDcoDefenition(config.getObjectId(), config.getDciId());
+               if (table == null || !(table instanceof DataCollectionTable))
+                  return;
+               
+               runInUIThread(() -> {
+                  DataCollectionTable dciTable = (DataCollectionTable)table;
+                  List<ColumnDefinition> dciColumns = dciTable.getColumns();
+                  int selection = -1;
+                  int index = 0;
+                  ArrayList<String> columns = new ArrayList<String>();
+                  for(; index < dciColumns.size(); index++)
+                  {
+                     columns.add(dciColumns.get(index).getName());
+                     if (config.getSortColumn() != null && config.getSortColumn().equals(dciColumns.get(index).getName()))
+                     {
+                        selection = index;
+                     }
+                  }
+                  if (selection == -1 && config.getSortColumn() != null)
+                  {
+                     columns.add(config.getSortColumn());
+                     selection = index;
+                  }    
+                  sortColumn.setItems(columns.toArray(new String[columns.size()]));
+                  sortColumn.select(selection);
+               });
+            }
+            
+            @Override
+            protected String getErrorMessage()
+            {
+               return i18n.tr("Cannot get table DCI columns");
+            }
+         }.start();
+      }      
 
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
@@ -182,6 +269,8 @@ public class TableValue extends DashboardElementPropertyPage
       config.setDciDescription(dciDescription.getText());
       config.setDciTag(dciTag.getText());
 		config.setRefreshRate(refreshRate.getSelection());
+		config.setSortColumn(sortColumn.getText());
+		config.setSortDirection(sortDirectionAscending.getSelection() ? SWT.UP : SWT.DOWN);
 		return true;
 	}
 }

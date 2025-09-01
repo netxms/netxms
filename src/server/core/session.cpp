@@ -1131,6 +1131,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_UNLOCK_NODE_DCI_LIST:
          closeNodeDCIList(*request);
          break;
+      case CMD_GET_DCO_OBJECT:
+         getDCOObject(*request);
+         break;
       case CMD_MODIFY_NODE_DCI:
       case CMD_DELETE_NODE_DCI:
          modifyNodeDCI(*request);
@@ -4330,6 +4333,52 @@ void ClientSession::closeNodeDCIList(const NXCPMessage& request)
          }
          else
          {
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Get information about single data collection item (do not lock DCI list)
+ */
+void ClientSession::getDCOObject(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t objectId = request.getFieldAsUInt32(VID_OBJECT_ID);
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object != nullptr)
+   {
+      if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
+      {
+         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+         {
+            uint32_t itemId = request.getFieldAsUInt32(VID_DCI_ID);
+            shared_ptr<DCObject> dcObject = static_cast<DataCollectionOwner&>(*object).getDCObjectById(itemId, m_userId);
+            if (dcObject != nullptr)
+            {
+               response.setField(VID_RCC, RCC_SUCCESS);
+               dcObject->createMessage(&response);
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_INVALID_DCI_ID);
+            }
+         }
+         else
+         {
+            writeAuditLog(AUDIT_OBJECTS, false, objectId, _T("Access denied on getting data collection item for object %s"), object->getName());
             response.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
       }

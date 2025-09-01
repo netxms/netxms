@@ -493,6 +493,7 @@ public class NXCPCodes
    public static final int CMD_SET_COMPONENT_TOKEN = 0x01D8;
    public static final int CMD_CLEAR_AI_ASSISTANT_CHAT = 0x01D9;
    public static final int CMD_LINK_NETWORK_MAP_NODES = 0x01DA;
+   public static final int CMD_GET_DCO_OBJECT = 0x01DB;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

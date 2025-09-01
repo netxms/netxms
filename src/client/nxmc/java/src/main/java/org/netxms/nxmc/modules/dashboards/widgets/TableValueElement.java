@@ -70,6 +70,7 @@ public class TableValueElement extends ElementWidget
       processCommonSettings(config);
 
       viewer = new TableValueViewer(getContentArea(), SWT.NONE, view, parent.getDashboardObject().getGuid().toString(), false);
+      viewer.setSortColumn(config.getSortColumn(), config.getSortDirection());
       if (config.getObjectId() == AbstractObject.CONTEXT)
       {
          configureContext();
