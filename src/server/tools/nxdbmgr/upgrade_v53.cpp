@@ -23,11 +23,35 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 53.7 to 53.8
+ */
+static bool H_UpgradeFromV7()
+{
+   if (GetSchemaLevelForMajorVersion(52) < 22)
+   {
+      static const TCHAR *batch =
+         _T("UPDATE config SET var_name='Topology.RoutingTable.UpdateInterval' WHERE var_name='Topology.RoutingTableUpdateInterval'\n")
+         _T("UPDATE object_custom_attributes SET attr_name='SysConfig:Topology.RoutingTable.UpdateInterval' WHERE attr_name='SysConfig:Topology.RoutingTableUpdateInterval'\n")
+         _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+
+      CHK_EXEC(CreateConfigParam(L"Topology.RoutingTable.MaxSize",
+               L"4000",
+               L"Maximum retrievable routing table size. Larger routing tables will not be retrieved from devices.",
+               L"records", 'I', true, false, false, false));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(52, 22));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(8));
+   return true;
+}
+
+/**
  * Upgrade from 53.6 to 53.7
  */
 static bool H_UpgradeFromV6()
 {
-
    if (GetSchemaLevelForMajorVersion(52) < 21)
    {
       CHK_EXEC(SQLQuery(_T("ALTER TABLE policy_action_list ADD record_id integer")));
@@ -172,6 +196,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 7,  53, 8,  H_UpgradeFromV7  },
    { 6,  53, 7,  H_UpgradeFromV6  },
    { 5,  53, 6,  H_UpgradeFromV5  },
    { 4,  53, 5,  H_UpgradeFromV4  },

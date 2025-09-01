@@ -1164,7 +1164,7 @@ public:
 
    shared_ptr<ArpCache> getArpCache();
    InterfaceList *getInterfaceList();
-   shared_ptr<RoutingTable> getRoutingTable();
+   shared_ptr<RoutingTable> getRoutingTable(size_t limit = 0);
    uint32_t getParameter(const TCHAR *param, TCHAR *buffer, size_t size);
    uint32_t getList(const TCHAR *param, StringList **list);
    uint32_t getTable(const TCHAR *param, Table **table);

@@ -449,7 +449,7 @@ static void LoadGlobalConfig()
    g_discoveryPollingInterval = ConfigReadInt(_T("NetworkDiscovery.PassiveDiscovery.Interval"), 900);
    g_icmpPollingInterval = ConfigReadInt(_T("ICMP.PollingInterval"), 60);
    g_instancePollingInterval = ConfigReadInt(_T("DataCollection.InstancePollingInterval"), 600);
-   g_routingTableUpdateInterval = ConfigReadInt(_T("Topology.RoutingTableUpdateInterval"), 300);
+   g_routingTableUpdateInterval = ConfigReadInt(_T("Topology.RoutingTable.UpdateInterval"), 300);
    g_statusPollingInterval = ConfigReadInt(_T("Objects.StatusPollingInterval"), 60);
    g_topologyPollingInterval = ConfigReadInt(_T("Topology.PollingInterval"), 1800);
    g_autobindPollingInterval = ConfigReadInt(_T("Objects.AutobindPollingInterval"), 3600);

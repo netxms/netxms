@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -98,6 +98,7 @@
 #define SNMP_ERR_DECRYPTION         19    /* decryption error */
 #define SNMP_ERR_BAD_RESPONSE       20    /* malformed or unexpected response from agent */
 #define SNMP_ERR_ABORTED            21    /* operation aborted */
+#define SNMP_ERR_SNAPSHOT_TOO_BIG   22    /* snapshot size limit reached */
 
 
 //
@@ -916,8 +917,8 @@ private:
 	BYTE m_signature[48];
 	size_t m_signatureOffset;
 
-   bool parseVariable(const BYTE *pData, size_t varLength);
-   bool parseVarBinds(const BYTE *pData, size_t pduLength);
+   bool parseVariable(const BYTE *data, size_t varLength);
+   bool parseVarBinds(const BYTE *pduData, size_t pduLength);
    bool parsePdu(const BYTE *pdu, size_t pduLength);
    bool parseTrapPDU(const BYTE *pData, size_t pduLength);
    bool parseTrap2PDU(const BYTE *pData, size_t pduLength);
@@ -940,7 +941,7 @@ public:
    ~SNMP_PDU();
 
    bool parse(const BYTE *rawData, size_t rawLength, SNMP_SecurityContext *securityContext, bool engineIdAutoupdate);
-   size_t encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext);
+   size_t encode(BYTE **outBuffer, SNMP_SecurityContext *securityContext);
 
    SNMP_Command getCommand() const { return m_command; }
    int getNumVariables() const { return m_variables.size(); }
@@ -1122,20 +1123,23 @@ private:
 
 public:
    SNMP_Snapshot();
-   virtual ~SNMP_Snapshot();
-
-   static SNMP_Snapshot *create(SNMP_Transport *transport, const TCHAR *baseOid);
-   static SNMP_Snapshot *create(SNMP_Transport *transport, const uint32_t *baseOid, size_t oidLen);
-   static inline SNMP_Snapshot *create(SNMP_Transport *transport, const SNMP_ObjectId& baseOid)
+   ~SNMP_Snapshot()
    {
-      return create(transport, baseOid.value(), baseOid.length());
+      MemFree(m_indexData);
    }
-   static inline SNMP_Snapshot *create(SNMP_Transport *transport, std::initializer_list<uint32_t> baseOid)
+
+   static SNMP_Snapshot *create(SNMP_Transport *transport, const TCHAR *baseOid, size_t limit = 0);
+   static SNMP_Snapshot *create(SNMP_Transport *transport, const uint32_t *baseOid, size_t oidLen, size_t limit = 0);
+   static inline SNMP_Snapshot *create(SNMP_Transport *transport, const SNMP_ObjectId& baseOid, size_t limit = 0)
+   {
+      return create(transport, baseOid.value(), baseOid.length(), limit);
+   }
+   static inline SNMP_Snapshot *create(SNMP_Transport *transport, std::initializer_list<uint32_t> baseOid, size_t limit = 0)
    {
 #if __cpp_lib_nonmember_container_access
-      return create(transport, std::data(baseOid), baseOid.size());
+      return create(transport, std::data(baseOid), baseOid.size(), limit);
 #else
-      return create(transport, SNMP_ObjectId(baseOid));
+      return create(transport, SNMP_ObjectId(baseOid), limit);
 #endif
    }
 

@@ -2488,11 +2488,17 @@ uint32_t AgentConnection::writeConfigFile(const TCHAR *content)
 /**
  * Get routing table from agent
  */
-shared_ptr<RoutingTable> AgentConnection::getRoutingTable()
+shared_ptr<RoutingTable> AgentConnection::getRoutingTable(size_t limit)
 {
    StringList *data;
    if (getList(_T("Net.IP.RoutingTable"), &data) != ERR_SUCCESS)
       return nullptr;
+
+   if ((limit != 0) && (data->size() > limit))
+   {
+      delete data;
+      return nullptr;  // Routing table is too big
+   }
 
    auto routingTable = make_shared<RoutingTable>(data->size());
    for(int i = 0; i < data->size(); i++)

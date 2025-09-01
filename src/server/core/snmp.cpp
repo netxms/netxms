@@ -44,8 +44,13 @@ static inline uint32_t IPv4AddressFromOID(const SNMP_ObjectId& oid, uint32_t off
 /**
  * Handler for route enumeration via ipRouteTable
  */
-static uint32_t HandlerIPRouteTable(SNMP_Variable *varbind, SNMP_Transport *snmpTransport, RoutingTable *routingTable)
+static uint32_t HandlerIPRouteTable(SNMP_Variable *varbind, SNMP_Transport *snmpTransport, std::pair<RoutingTable*, size_t> *context)
 {
+   RoutingTable *routingTable = context->first;
+   size_t limit = context->second;
+   if ((limit != 0) && (routingTable->size() >= limit))
+      return SNMP_ERR_ABORTED;
+
    SNMP_ObjectId oid(varbind->getName());
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpTransport->getSnmpVersion());
@@ -95,8 +100,13 @@ static uint32_t HandlerIPRouteTable(SNMP_Variable *varbind, SNMP_Transport *snmp
 /**
  * Handler for route enumeration via ipForwardTable
  */
-static uint32_t HandlerIPForwardTable(SNMP_Variable *varbind, SNMP_Transport *snmpTransport, RoutingTable *routingTable)
+static uint32_t HandlerIPForwardTable(SNMP_Variable *varbind, SNMP_Transport *snmpTransport, std::pair<RoutingTable*, size_t> *context)
 {
+   RoutingTable *routingTable = context->first;
+   size_t limit = context->second;
+   if ((limit != 0) && (routingTable->size() >= limit))
+      return SNMP_ERR_ABORTED;
+
    SNMP_ObjectId oid(varbind->getName());
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpTransport->getSnmpVersion());
@@ -194,10 +204,12 @@ shared_ptr<RoutingTable> SnmpGetRoutingTable(SNMP_Transport *snmp, const Node& n
 {
    shared_ptr<RoutingTable> routingTable = make_shared<RoutingTable>();
 
+   size_t limit = node.getCustomAttributeAsInt32(L"SysConfig:Topology.RoutingTable.MaxSize" , ConfigReadInt(L"Topology.RoutingTable.MaxSize", 4000));
+
    // Use snapshots because some devices does not respond to GET requests to individual table entries
    // Attempt to use inetCidrRouteTable first
    bool success = false;
-   SNMP_Snapshot *snapshot = SNMP_Snapshot::create(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 7, 1 });
+   SNMP_Snapshot *snapshot = SNMP_Snapshot::create(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 7, 1 }, limit * 20); // Each table entry is about 20 OIDs
    if (snapshot != nullptr)
    {
       success = (snapshot->walk({ 1, 3, 6, 1, 2, 1, 4, 24, 7, 1, 9 }, HandlerInetCidrRouteTable, routingTable.get()) == _CONTINUE);
@@ -209,7 +221,7 @@ shared_ptr<RoutingTable> SnmpGetRoutingTable(SNMP_Transport *snmp, const Node& n
    // If not successful, try ipCidrRouteTable
    if (!success || routingTable->isEmpty())
    {
-      snapshot = SNMP_Snapshot::create(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 4, 1 });
+      snapshot = SNMP_Snapshot::create(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 4, 1 }, limit * 20); // Each table entry is about 20 OIDs
       if (snapshot != nullptr)
       {
          success = (snapshot->walk({ 1, 3, 6, 1, 2, 1, 4, 24, 4, 1, 7 }, HandlerIPCidrRouteTable, routingTable.get()) == _CONTINUE);
@@ -222,7 +234,8 @@ shared_ptr<RoutingTable> SnmpGetRoutingTable(SNMP_Transport *snmp, const Node& n
    // If not successful, try ipForwardTable
    if (!success || routingTable->isEmpty())
    {
-      success = (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 2, 1, 2 }, HandlerIPForwardTable, routingTable.get(), false, true) == SNMP_ERR_SUCCESS);
+      std::pair<RoutingTable*, size_t> context(routingTable.get(), limit);
+      success = (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 2, 1, 2 }, HandlerIPForwardTable, &context, false, true) == SNMP_ERR_SUCCESS);
       if (success)
          nxlog_debug_tag(DEBUG_TAG_SNMP_ROUTES, 5, _T("SnmpGetRoutingTable(%s [%u]): %d routes retrieved from ipForwardTable"), node.getName(), node.getId(), routingTable->size());
    }
@@ -230,7 +243,8 @@ shared_ptr<RoutingTable> SnmpGetRoutingTable(SNMP_Transport *snmp, const Node& n
    // If not successful, try ipRouteTable
    if (!success || routingTable->isEmpty())
    {
-      success = (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 21, 1, 11 }, HandlerIPRouteTable, routingTable.get(), false, true) == SNMP_ERR_SUCCESS);
+      std::pair<RoutingTable*, size_t> context(routingTable.get(), limit);
+      success = (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 21, 1, 11 }, HandlerIPRouteTable, &context, false, true) == SNMP_ERR_SUCCESS);
       if (success)
          nxlog_debug_tag(DEBUG_TAG_SNMP_ROUTES, 5, _T("SnmpGetRoutingTable(%s [%u]): %d routes retrieved from ipRouteTable"), node.getName(), node.getId(), routingTable->size());
    }

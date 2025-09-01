@@ -2549,7 +2549,7 @@ bool Node::lockForRoutingTablePoll()
        (m_status != STATUS_UNMANAGED) &&
        !(m_flags & NF_DISABLE_ROUTE_POLL) &&
        (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
-       (static_cast<uint32_t>(time(nullptr) - m_routingPollState.getLastCompleted()) > getCustomAttributeAsUInt32(_T("SysConfig:Topology.RoutingTableUpdateInterval"), g_routingTableUpdateInterval)) &&
+       (static_cast<uint32_t>(time(nullptr) - m_routingPollState.getLastCompleted()) > getCustomAttributeAsUInt32(_T("SysConfig:Topology.RoutingTable.UpdateInterval"), g_routingTableUpdateInterval)) &&
        !isAgentRestarting() && !isProxyAgentRestarting())
    {
       success = m_routingPollState.schedule();
@@ -10521,7 +10521,8 @@ shared_ptr<RoutingTable> Node::readRoutingTable()
       shared_ptr<AgentConnectionEx> conn = getAgentConnection();
       if (conn != nullptr)
       {
-         routingTable = conn->getRoutingTable();
+         size_t limit = getCustomAttributeAsInt32(L"SysConfig:Topology.RoutingTable.MaxSize" , ConfigReadInt(L"Topology.RoutingTable.MaxSize", 4000));
+         routingTable = conn->getRoutingTable(limit);
       }
    }
    if ((routingTable == nullptr) && (m_capabilities & NC_IS_SNMP) && (!(m_flags & NF_DISABLE_SNMP)))
