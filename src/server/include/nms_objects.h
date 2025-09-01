@@ -2193,6 +2193,10 @@ struct InterfaceState
    SpanningTreePortState stpPortState;
 };
 
+#ifdef _WIN32
+template class NXCORE_TEMPLATE_EXPORTABLE HashMap<uint32_t, InterfaceState>;
+#endif
+
 /**
  * Interface class
  */
