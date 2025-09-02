@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -158,7 +158,7 @@ static void GenerateTrapEvent(SnmpTrap *trap, const shared_ptr<Node>& node, cons
          NXSL_Array *varbinds = new NXSL_Array(vm);
          for(int i = (pdu->getVersion() == SNMP_VERSION_1) ? 0 : 2; i < pdu->getNumVariables(); i++)
          {
-            varbinds->append(vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, new SNMP_Variable(pdu->getVariable(i)))));
+            varbinds->append(vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, new SNMP_Variable(*pdu->getVariable(i)))));
          }
          vm->setGlobalVariable("$varbinds", vm->createValue(varbinds));
          event.vm(vm);

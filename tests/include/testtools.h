@@ -128,7 +128,7 @@ static inline void __AssertEquals(const char *value, const char *expected, const
 /**
  * Assert that two string values are equal
  */
-static inline void __AssertEquals(const WCHAR *value, const WCHAR *expected, const char *file, int line)
+static inline void __AssertEquals(const wchar_t *value, const wchar_t *expected, const char *file, int line)
 {
    if (!wcscmp(value, expected))
       return;

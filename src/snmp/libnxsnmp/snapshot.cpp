@@ -102,7 +102,7 @@ SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const TCHAR *bas
       {
          if ((limit != 0) && (s->m_values.size() >= limit))
             return SNMP_ERR_SNAPSHOT_TOO_BIG;
-         s->m_values.add(new SNMP_Variable(var));
+         s->m_values.add(new SNMP_Variable(std::move(*var)));
          return SNMP_ERR_SUCCESS;
       });
 
@@ -125,7 +125,7 @@ SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const uint32_t *
       {
          if ((limit != 0) && (s->m_values.size() >= limit))
             return SNMP_ERR_SNAPSHOT_TOO_BIG;
-         s->m_values.add(new SNMP_Variable(var));
+         s->m_values.add(new SNMP_Variable(std::move(*var)));
          return SNMP_ERR_SUCCESS;
       });
 

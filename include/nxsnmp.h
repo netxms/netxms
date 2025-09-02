@@ -674,8 +674,12 @@ public:
    SNMP_Variable(const uint32_t *name, size_t nameLen, uint32_t type = ASN_NULL);
    SNMP_Variable(const SNMP_ObjectId &name, uint32_t type = ASN_NULL);
    SNMP_Variable(std::initializer_list<uint32_t> name, uint32_t type = ASN_NULL);
-   SNMP_Variable(const SNMP_Variable *src);
+   SNMP_Variable(const SNMP_Variable& src);
+   SNMP_Variable(SNMP_Variable&& src);
    ~SNMP_Variable();
+
+   SNMP_Variable& operator=(const SNMP_Variable& src);
+   SNMP_Variable& operator=(SNMP_Variable&& src);
 
    bool decode(const BYTE *data, size_t varLength);
    size_t encode(BYTE *buffer, size_t bufferSize) const;

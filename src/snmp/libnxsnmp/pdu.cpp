@@ -178,7 +178,7 @@ SNMP_PDU::SNMP_PDU(const SNMP_PDU& src) :  m_variables(src.m_variables.size(), 1
    m_signatureOffset = src.m_signatureOffset;
 
    for(int i = 0; i < src.m_variables.size(); i++)
-      m_variables.add(new SNMP_Variable(src.m_variables.get(i)));
+      m_variables.add(new SNMP_Variable(*src.m_variables.get(i)));
 }
 
 /**

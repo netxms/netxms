@@ -77,19 +77,41 @@ SNMP_Variable::SNMP_Variable(std::initializer_list<uint32_t> name, uint32_t type
 /**
  * Copy constructor
  */
-SNMP_Variable::SNMP_Variable(const SNMP_Variable *src) : m_name(src->m_name), m_codepage(src->m_codepage)
+SNMP_Variable::SNMP_Variable(const SNMP_Variable& src) : m_name(src.m_name), m_codepage(src.m_codepage)
 {
-   m_valueLength = src->m_valueLength;
-   if ((m_valueLength <= SNMP_VARBIND_INTERNAL_BUFFER_SIZE) && (src->m_value != nullptr))
+   m_valueLength = src.m_valueLength;
+   if ((m_valueLength <= SNMP_VARBIND_INTERNAL_BUFFER_SIZE) && (src.m_value != nullptr))
    {
       m_value = m_valueBuffer;
-      memcpy(m_value, src->m_value, m_valueLength);
+      memcpy(m_value, src.m_value, m_valueLength);
    }
    else
    {
-      m_value = (src->m_value != nullptr) ? MemCopyBlock(src->m_value, src->m_valueLength) : nullptr;
+      m_value = (src.m_value != nullptr) ? MemCopyBlock(src.m_value, src.m_valueLength) : nullptr;
    }
-   m_type = src->m_type;
+   m_type = src.m_type;
+}
+
+/**
+ * Move constructor
+ */
+SNMP_Variable::SNMP_Variable(SNMP_Variable&& src) : m_name(std::move(src.m_name)), m_codepage(src.m_codepage)
+{
+   m_valueLength = src.m_valueLength;
+   if ((m_valueLength <= SNMP_VARBIND_INTERNAL_BUFFER_SIZE) && (src.m_value != nullptr))
+   {
+      m_value = m_valueBuffer;
+      memcpy(m_value, src.m_value, m_valueLength);
+      if (src.m_value != src.m_valueBuffer)
+         MemFreeAndNull(src.m_value);
+   }
+   else
+   {
+      m_value = src.m_value;
+      src.m_value = nullptr;
+   }
+   src.m_valueLength = 0;
+   m_type = src.m_type;
 }
 
 /**
@@ -99,6 +121,68 @@ SNMP_Variable::~SNMP_Variable()
 {
    if (m_value != m_valueBuffer)
       MemFree(m_value);
+}
+
+/**
+ * Assignment operator
+ */
+SNMP_Variable& SNMP_Variable::operator=(const SNMP_Variable& src)
+{
+   if (this != &src)
+   {
+      m_name = src.m_name;
+      m_codepage = src.m_codepage;
+
+      m_valueLength = src.m_valueLength;
+      if ((m_valueLength <= SNMP_VARBIND_INTERNAL_BUFFER_SIZE) && (src.m_value != nullptr))
+      {
+         if (m_value != m_valueBuffer)
+            MemFree(m_value);
+         m_value = m_valueBuffer;
+         memcpy(m_value, src.m_value, m_valueLength);
+      }
+      else
+      {
+         if (m_value != m_valueBuffer)
+            MemFree(m_value);
+         m_value = (src.m_value != nullptr) ? MemCopyBlock(src.m_value, src.m_valueLength) : nullptr;
+      }
+      m_type = src.m_type;
+   }
+   return *this;
+}
+
+/**
+ * Move assignment operator
+ */
+SNMP_Variable& SNMP_Variable::operator=(SNMP_Variable&& src)
+{
+   if (this != &src)
+   {
+      m_name = std::move(src.m_name);
+      m_codepage = src.m_codepage;
+
+      m_valueLength = src.m_valueLength;
+      if ((m_valueLength <= SNMP_VARBIND_INTERNAL_BUFFER_SIZE) && (src.m_value != nullptr))
+      {
+         if (m_value != m_valueBuffer)
+            MemFree(m_value);
+         m_value = m_valueBuffer;
+         memcpy(m_value, src.m_value, m_valueLength);
+         if (src.m_value != src.m_valueBuffer)
+            MemFreeAndNull(src.m_value);
+      }
+      else
+      {
+         if (m_value != m_valueBuffer)
+            MemFree(m_value);
+         m_value = src.m_value;
+         src.m_value = nullptr;
+      }
+      src.m_valueLength = 0;
+      m_type = src.m_type;
+   }
+   return *this;
 }
 
 /**
