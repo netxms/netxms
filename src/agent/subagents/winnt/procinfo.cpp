@@ -427,7 +427,8 @@ LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
    SYSTEM_PROCESS_INFORMATION *process = static_cast<SYSTEM_PROCESS_INFORMATION*>(processInfoBuffer);
    do
    {
-      if (MatchProcess(static_cast<DWORD>(reinterpret_cast<ULONG_PTR>(process->UniqueProcessId)), process->ImageName.Buffer, (cmdLine[0] != 0) || (windowTitle[0] != 0), procName, cmdLine, user, windowTitle))
+      if (MatchProcess(static_cast<DWORD>(reinterpret_cast<ULONG_PTR>(process->UniqueProcessId)), process->ImageName.Buffer,
+          (cmdLine[0] != 0) || (user[0] != 0) || (windowTitle[0] != 0), procName, cmdLine, user, windowTitle))
       {
          counter++;  // Number of processes with specific name
          attributeValue = GetProcessAttribute(process, mse.ullTotalPhys, attribute, aggregationMethod, counter, attributeValue);

@@ -2041,6 +2041,8 @@ void LIBNETXMS_EXPORTABLE WindowsProductNameFromVersion(OSVERSIONINFOEX *ver, TC
                      _tcscpy(buffer, _T("Server 2019"));
                   else if (ver->dwBuildNumber <= 20348)
                      _tcscpy(buffer, _T("Server 2022"));
+                  else if (ver->dwBuildNumber <= 26212)
+                     _tcscpy(buffer, _T("Server 2025"));
                   else
                      _sntprintf(buffer, 256, _T("Server %d.%d.%d"), ver->dwMajorVersion, ver->dwMinorVersion, ver->dwBuildNumber);
                }
