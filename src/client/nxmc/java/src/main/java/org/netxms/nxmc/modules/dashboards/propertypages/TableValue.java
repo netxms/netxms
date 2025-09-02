@@ -210,7 +210,7 @@ public class TableValue extends DashboardElementPropertyPage
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
-               DataCollectionObject table = session.getDcoDefenition(config.getObjectId(), config.getDciId());
+               DataCollectionObject table = session.getDataCollectionObject(config.getObjectId(), config.getDciId());
                if (table == null || !(table instanceof DataCollectionTable))
                   return;
                
