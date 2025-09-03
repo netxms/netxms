@@ -339,6 +339,11 @@ void NXSL_ProgramBuilder::dump(FILE *fp, uint32_t addr, const NXSL_Instruction& 
    switch(instruction.m_opCode)
    {
       case OPCODE_CALL_EXTERNAL:
+         if (instruction.m_addr2 == OPTIONAL_FUNCTION_CALL)
+            _ftprintf(fp, _T("[optional] %hs, %d\n"), instruction.m_operand.m_identifier->value, instruction.m_stackItems);
+         else
+            _ftprintf(fp, _T("%hs, %d\n"), instruction.m_operand.m_identifier->value, instruction.m_stackItems);
+         break;
       case OPCODE_GLOBAL:
       case OPCODE_SELECT:
          _ftprintf(fp, _T("%hs, %d\n"), instruction.m_operand.m_identifier->value, instruction.m_stackItems);
@@ -663,7 +668,7 @@ void NXSL_ProgramBuilder::removeInstructions(uint32_t start, int count)
 		{
          instr->m_operand.m_addr -= count;
 		}
-		if ((instr->m_addr2 != INVALID_ADDRESS) && (instr->m_addr2 > start))
+		if ((instr->m_addr2 != INVALID_ADDRESS) && (instr->m_addr2 != OPTIONAL_FUNCTION_CALL) && (instr->m_addr2 > start))
 		{
          instr->m_addr2 -= count;
 		}

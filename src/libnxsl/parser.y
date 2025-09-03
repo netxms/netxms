@@ -64,6 +64,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_IMPORT
 %token T_NEW
 %token T_NULL
+%token T_OPTIONAL
 %token T_RANGE
 %token T_RETURN
 %token T_SELECT
@@ -117,6 +118,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %type <valIdentifier> FunctionName
 %type <valIdentifier> GlobalVariableDeclarationStart
 %type <valIdentifier> ModuleName
+%type <valIdentifier> OptionalFunctionName
 %type <valInt32> BuiltinType
 %type <valInt32> ParameterList
 %type <valInt32> SelectList
@@ -1369,6 +1371,18 @@ FunctionCall:
 	if (builder->getEnvironment()->isDeprecatedFunction($1))
 		compiler->warning(_T("Function \"%hs\" is deprecated"), $1.v);
 }
+|	OptionalFunctionName { builder->addInstruction(lexer->getCurrLine(), OPCODE_ARGV); } ParameterList ')'
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_EXTERNAL, $1, $3, OPTIONAL_FUNCTION_CALL);
+	if (builder->getEnvironment()->isDeprecatedFunction($1))
+		compiler->warning(_T("Function \"%hs\" is deprecated"), $1.v);
+}
+|	OptionalFunctionName ')'
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_EXTERNAL, $1, 0, OPTIONAL_FUNCTION_CALL);
+	if (builder->getEnvironment()->isDeprecatedFunction($1))
+		compiler->warning(_T("Function \"%hs\" is deprecated"), $1.v);
+}
 ;
 
 ParameterList:
@@ -1397,6 +1411,18 @@ FunctionName:
 {
 	$$ = $1;
 	builder->addRequiredModule($1.v, lexer->getCurrLine(), true, false, false);
+}
+;
+
+OptionalFunctionName:
+	T_OPTIONAL T_IDENTIFIER '('
+{
+	$$ = $2;
+}
+|	T_OPTIONAL T_COMPOUND_IDENTIFIER '('
+{
+	$$ = $2;
+	builder->addRequiredModule($2.v, lexer->getCurrLine(), true, false, true);
 }
 ;
 

@@ -102,6 +102,7 @@ static inline uint32_t StringToUInt32(const char *s)
 <INITIAL,FEXPR>"not"      return T_NOT;
 <INITIAL,FEXPR>"NULL"     return T_NULL;
 <INITIAL,FEXPR>"null"     return T_NULL;
+<INITIAL,FEXPR>"optional" return T_OPTIONAL;
 <INITIAL,FEXPR>"or"       return T_OR;
 <INITIAL,FEXPR>"real"     return T_TYPE_REAL;
 <INITIAL,FEXPR>"return"   return T_RETURN;

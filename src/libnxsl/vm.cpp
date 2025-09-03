@@ -1458,12 +1458,26 @@ void NXSL_VM::execute()
                   }
                   else
                   {
-                     error(NXSL_ERR_NO_FUNCTION);
+                     if (cp->m_addr2 == OPTIONAL_FUNCTION_CALL)
+                     {
+                        // optional function call, push null to stack
+                        for(int i = 0; i < cp->m_stackItems; i++)
+                           destroyValue(m_dataStack.pop());
+                        m_dataStack.push(createValue());
+
+                        // convert to push null
+                        cp->m_opCode = OPCODE_PUSH_NULL;
+                        destroyIdentifier(cp->m_operand.m_identifier);
+                     }
+                     else
+                     {
+                        error(NXSL_ERR_NO_FUNCTION);
+                     }
                   }
                }
                else
                {
-                  error(constructor ? NXSL_ERR_NO_OBJECT_CONSTRUCTOR : NXSL_ERR_NO_FUNCTION);
+                  error(NXSL_ERR_NO_OBJECT_CONSTRUCTOR);
                }
             }
          }

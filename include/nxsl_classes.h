@@ -39,6 +39,11 @@
 const uint32_t INVALID_ADDRESS = 0xFFFFFFFF;
 
 /**
+ * Optional function call indicator
+ */
+const uint32_t OPTIONAL_FUNCTION_CALL = 0xFFFFFFFE;
+
+/**
  * Limit on nested function calls
  */
 #define NESTED_FUNCTION_CALLS_LIMIT    1024
