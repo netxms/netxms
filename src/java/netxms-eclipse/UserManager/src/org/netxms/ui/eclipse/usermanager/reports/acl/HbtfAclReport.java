@@ -279,7 +279,7 @@ public class HbtfAclReport extends AbstractAclReport
          row.createCell(UsersSheetCells.ORIGIN.ordinal()).setCellValue((user.getFlags() & AbstractUserObject.LDAP_USER) != 0 ? "LDAP" : "Local");
 
          boolean firstRow = true;
-         for(int groupId : user.getGroups())
+         for(long groupId : user.getGroups())
          {
             final XSSFRow groupRow;
             if (firstRow)
@@ -552,7 +552,7 @@ public class HbtfAclReport extends AbstractAclReport
          row.createCell(GroupsSheetCells.DESCRIPTION.ordinal()).setCellValue(group.getDescription());
 
          boolean firstRow = true;
-         for(int memberId : group.getMembers())
+         for(long memberId : group.getMembers())
          {
             final XSSFRow memberRow;
             if (firstRow)
@@ -652,10 +652,6 @@ public class HbtfAclReport extends AbstractAclReport
       cell = headerRow.createCell(PermissionsSheetCells.READ.ordinal());
       cell.setCellStyle(headerStyle);
       cell.setCellValue("Read");
-
-      cell = headerRow.createCell(PermissionsSheetCells.DELEGATED_READ.ordinal());
-      cell.setCellStyle(headerStyle);
-      cell.setCellValue("Delegated Read");
 
       cell = headerRow.createCell(PermissionsSheetCells.MODIFY.ordinal());
       cell.setCellStyle(headerStyle);
@@ -757,7 +753,6 @@ public class HbtfAclReport extends AbstractAclReport
          row.createCell(PermissionsSheetCells.INHERIT_ACCESS.ordinal()).setCellValue(element.inheritAccessRights ? "YES" : "NO");
 
          createPermissionCell(row, PermissionsSheetCells.READ, UserAccessRights.OBJECT_ACCESS_READ, element);
-         createPermissionCell(row, PermissionsSheetCells.DELEGATED_READ, UserAccessRights.OBJECT_ACCESS_DELEGATED_READ, element);
          createPermissionCell(row, PermissionsSheetCells.MODIFY, UserAccessRights.OBJECT_ACCESS_MODIFY, element);
          createPermissionCell(row, PermissionsSheetCells.EDIT_COMMENTS, UserAccessRights.OBJECT_ACCESS_EDIT_COMMENTS, element);
          createPermissionCell(row, PermissionsSheetCells.EDIT_RESP_USERS, UserAccessRights.OBJECT_ACCESS_EDIT_RESP_USERS, element);

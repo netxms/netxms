@@ -215,12 +215,12 @@ public abstract class AbstractAclReport
    protected static class ObjectAccess
    {
       public String name;
-      public int userId;
+      public long userId;
       public String userName;
       public boolean inheritAccessRights;
       public int accessRights;
 
-      public ObjectAccess(String name, boolean inheritAccessRights, int userId, int accessRights)
+      public ObjectAccess(String name, boolean inheritAccessRights, long userId, int accessRights)
       {
          this.name = name;
          this.inheritAccessRights = inheritAccessRights;
