@@ -499,8 +499,7 @@ static void UpdateParsersFromTemplate(LogParser *templateParser, StringObjectMap
       p->setCallback(LogParserMatch);
       p->setDataPushCallback(AgentPushParameterData);
       p->setActionCallback(ExecuteAction);
-      off_t startOffset = RestoreParserFilePosition(p);
-      p->setThread(ThreadCreateEx(ParserThreadFile, p, firstRun ? static_cast<off_t>(-1) : startOffset));
+      p->setThread(ThreadCreateEx(ParserThreadFile, p, firstRun ? RestoreParserFilePosition(p) : static_cast<off_t>(0)));
       activeParsers->set(matchingFiles.get(i), p);
    }
 
