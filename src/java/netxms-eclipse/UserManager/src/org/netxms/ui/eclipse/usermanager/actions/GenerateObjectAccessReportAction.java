@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020-2023 Raden Soultions
+ * Copyright (C) 2020-2025 Raden Soultions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,9 +26,12 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.ui.IViewPart;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.usermanager.Activator;
+import org.netxms.ui.eclipse.usermanager.reports.acl.AbstractAclReport;
 import org.netxms.ui.eclipse.usermanager.reports.acl.AclReport;
+import org.netxms.ui.eclipse.usermanager.reports.acl.HbtfAclReport;
 
 /**
  * Action to generate object access report
@@ -62,7 +65,8 @@ public class GenerateObjectAccessReportAction extends Action
       if (outputFileName == null)
          return;
 
-      final AclReport report = new AclReport(outputFileName);
+      final AbstractAclReport report = ConsoleSharedData.getSession().getClientConfigurationHint("AclReportVariant", "").equals("HBTF") ? new HbtfAclReport(outputFileName) :
+            new AclReport(outputFileName);
       new ConsoleJob("Generating object access report", viewPart, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
