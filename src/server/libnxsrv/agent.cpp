@@ -2660,11 +2660,13 @@ uint32_t AgentConnection::enableFileUpdates()
  */
 uint32_t AgentConnection::setComponentToken(const char *component, uint32_t expirationTime, const char *secret)
 {
+   debugPrintf(5, _T("Issuing component token (component=%hs, expiration=%u)"), component, expirationTime);
+
    AgentComponentToken token;
    memset(&token, 0, sizeof(token));
    strlcpy(token.component, component, sizeof(token.component));
    time_t now = time(nullptr);
-   token.expirationTime = htonq(now + 86400); // 24 hours
+   token.expirationTime = htonq(now + expirationTime);
    token.issuingTime = htonq(now);
    SignMessage(&token, sizeof(token) - sizeof(token.hmac), reinterpret_cast<const BYTE*>(secret), strlen(secret), token.hmac);
 
