@@ -154,6 +154,7 @@ Community support:
 
 * [Forum](https://www.netxms.org/forum)
 * [Telegram](https://telegram.me/netxms)
+* [X/Twitter](https://github.com/netxms/netxms)
 * [Issue tracker](https://dev.raden.solutions/projects/netxms/)
     
 Commercial support: [Raden Solutions](https://www.radensolutions.com/)
