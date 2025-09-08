@@ -597,6 +597,20 @@ void RunPendingOnlineUpgrades()
       return;
    }
 
+   // Check if database is locked
+   bool locked = false;
+   TCHAR lockStatus[MAX_DB_STRING];
+   if (DBMgrMetaDataReadStr(_T("DBOnlineUpgradeLockStatus"), lockStatus, MAX_DB_STRING, _T("")))
+      locked = _tcscmp(lockStatus, _T("LOCKED")) == 0;
+
+   if (locked)
+   {
+      if (!GetYesNo(_T("Online upgrade is locked by another process\nAre you sure you want to start online upgrade?")))
+      {
+         return;
+      }
+   }
+
    StringList upgradeList = String(buffer).split(_T(","));
    for(int i = 0; i < upgradeList.size(); i++)
    {
@@ -616,14 +630,20 @@ void RunPendingOnlineUpgrades()
          }
          if (handler != nullptr)
          {
+            DBMgrMetaDataWriteStr(_T("DBOnlineUpgradeLockStatus"), _T("LOCKED"));
+
             _tprintf(_T("Running background upgrade procedure for version %d.%d\n"), major, minor);
             if (!handler())
             {
                _tprintf(_T("Background upgrade procedure for version %d.%d failed\n"), major, minor);
+
+               DBMgrMetaDataWriteStr(_T("DBOnlineUpgradeLockStatus"), _T("UNLOCKED"));
                break;
             }
             _tprintf(_T("Background upgrade procedure for version %d.%d completed\n"), major, minor);
             UnregisterOnlineUpgrade(major, minor);
+
+            DBMgrMetaDataWriteStr(_T("DBOnlineUpgradeLockStatus"), _T("UNLOCKED"));
          }
          else
          {
