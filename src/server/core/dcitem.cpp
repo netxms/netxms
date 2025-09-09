@@ -472,6 +472,8 @@ void DCItem::checkThresholds(ItemValue &value, const shared_ptr<DCObject>& origi
                   .param(_T("function"), t->getFunction())
                   .param(_T("pollCount"), t->getSampleCount())
                   .param(_T("thresholdDefinition"), t->getTextualDefinition())
+                  .param(_T("instanceValue"), m_instanceDiscoveryData)
+                  .param(_T("instanceName"), m_instanceName)
                   .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
             }
             if (!(m_flags & DCF_ALL_THRESHOLDS))
@@ -495,6 +497,8 @@ void DCItem::checkThresholds(ItemValue &value, const shared_ptr<DCObject>& origi
                   .param(_T("function"), t->getFunction())
                   .param(_T("pollCount"), t->getSampleCount())
                   .param(_T("thresholdDefinition"), t->getTextualDefinition())
+                  .param(_T("instanceValue"), m_instanceDiscoveryData)
+                  .param(_T("instanceName"), m_instanceName)
                   .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, SEVERITY_NORMAL, nullptr); });
             }
             if (!(m_flags & DCF_ALL_THRESHOLDS))
@@ -527,6 +531,8 @@ void DCItem::checkThresholds(ItemValue &value, const shared_ptr<DCObject>& origi
 		               .param(_T("function"), t->getFunction())
 		               .param(_T("pollCount"), t->getSampleCount())
 		               .param(_T("thresholdDefinition"), t->getTextualDefinition())
+	                  .param(_T("instanceValue"), m_instanceDiscoveryData)
+	                  .param(_T("instanceName"), m_instanceName)
 		               .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
 				   }
             }
@@ -551,6 +557,8 @@ void DCItem::checkThresholds(ItemValue &value, const shared_ptr<DCObject>& origi
          .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
          .param(_T("instance"), m_instanceName)
          .param(_T("dciValue"), value.getString())
+         .param(_T("instanceValue"), m_instanceDiscoveryData)
+         .param(_T("instanceName"), m_instanceName)
          .post();
    }
 }
@@ -948,6 +956,8 @@ void DCItem::processNewError(bool noInstance, time_t now)
                   .param(_T("function"), t->getFunction())
                   .param(_T("pollCount"), t->getSampleCount())
                   .param(_T("thresholdDefinition"), t->getTextualDefinition())
+                  .param(_T("instanceValue"), m_instanceDiscoveryData)
+                  .param(_T("instanceName"), m_instanceName)
                   .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
             }
             if (!(m_flags & DCF_ALL_THRESHOLDS))
@@ -973,6 +983,8 @@ void DCItem::processNewError(bool noInstance, time_t now)
                   .param(_T("function"), t->getFunction())
                   .param(_T("pollCount"), t->getSampleCount())
                   .param(_T("thresholdDefinition"), t->getTextualDefinition())
+                  .param(_T("instanceValue"), m_instanceDiscoveryData)
+                  .param(_T("instanceName"), m_instanceName)
                   .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, SEVERITY_NORMAL, nullptr); });
             }
             NotifyClientsOnThresholdChange(m_ownerId, m_id, thresholdId, nullptr, result);
@@ -999,6 +1011,8 @@ void DCItem::processNewError(bool noInstance, time_t now)
 		               .param(_T("function"), t->getFunction())
 		               .param(_T("pollCount"), t->getSampleCount())
 		               .param(_T("thresholdDefinition"), t->getTextualDefinition())
+	                  .param(_T("instanceValue"), m_instanceDiscoveryData)
+	                  .param(_T("instanceName"), m_instanceName)
 		               .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
 				   }
             }
@@ -1022,6 +1036,8 @@ void DCItem::processNewError(bool noInstance, time_t now)
          .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
          .param(_T("instance"), m_instanceName)
          .param(_T("dciValue"), _T(""))
+         .param(_T("instanceValue"), m_instanceDiscoveryData)
+         .param(_T("instanceName"), m_instanceName)
          .post();
    }
 
@@ -1072,6 +1088,8 @@ void DCItem::generateEventsAfterMaintenance()
                .param(_T("function"), t->getFunction())
                .param(_T("pollCount"), t->getSampleCount())
                .param(_T("thresholdDefinition"), t->getTextualDefinition())
+               .param(_T("instanceValue"), m_instanceDiscoveryData)
+               .param(_T("instanceName"), m_instanceName)
                .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
          }
          else
@@ -1089,6 +1107,8 @@ void DCItem::generateEventsAfterMaintenance()
                .param(_T("function"), t->getFunction())
                .param(_T("pollCount"), t->getSampleCount())
                .param(_T("thresholdDefinition"), t->getTextualDefinition())
+               .param(_T("instanceValue"), m_instanceDiscoveryData)
+               .param(_T("instanceName"), m_instanceName)
                .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, SEVERITY_NORMAL, nullptr); });
          }
       }

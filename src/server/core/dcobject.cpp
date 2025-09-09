@@ -1033,11 +1033,13 @@ void DCObject::expandInstance()
 {
    StringBuffer temp = m_name;
    temp.replace(_T("{instance}"), m_instanceDiscoveryData);
+   temp.replace(_T("{instance-value}"), m_instanceDiscoveryData);
    temp.replace(_T("{instance-name}"), m_instanceName);
    m_name = temp;
 
    temp = m_description;
    temp.replace(_T("{instance}"), m_instanceDiscoveryData);
+   temp.replace(_T("{instance-value}"), m_instanceDiscoveryData);
    temp.replace(_T("{instance-name}"), m_instanceName);
    m_description = temp;
 }

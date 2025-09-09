@@ -274,7 +274,9 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   9) operation - Threshold''s operation code' CONCAT CRLF CONCAT
 		'   10) function - Threshold''s function code' CONCAT CRLF CONCAT
 		'   11) pollCount - Threshold''s required poll count' CONCAT CRLF CONCAT
-		'   12) thresholdDefinition - Threshold''s textual definition'
+		'   12) thresholdDefinition - Threshold''s textual definition' CONCAT CRLF CONCAT
+		'   13) instanceValue - Instance value' CONCAT CRLF CONCAT
+		'   14) instanceName - Instance name same as instance'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -294,7 +296,9 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   8) operation - Threshold''s operation code' CONCAT CRLF CONCAT
 		'   9) function - Threshold''s function code' CONCAT CRLF CONCAT
 		'   10) pollCount - Threshold''s required poll count' CONCAT CRLF CONCAT
-		'   11) thresholdDefinition - Threshold''s textual definition'
+		'   11) thresholdDefinition - Threshold''s textual definition' CONCAT CRLF CONCAT
+		'   12) instanceValue - Instance value' CONCAT CRLF CONCAT
+		'   13) instanceName - Instance name same as instance'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
         (
@@ -308,7 +312,9 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
                 '   2) dciDescription - Data collection item description' CONCAT CRLF CONCAT
                 '   3) dciId - Data collection item ID' CONCAT CRLF CONCAT
                 '   4) instance - Instance' CONCAT CRLF CONCAT
-                '   5) dciValue - Last collected DCI value'
+                '   5) dciValue - Last collected DCI value' CONCAT CRLF CONCAT
+		'   6) instanceValue - Instance value' CONCAT CRLF CONCAT
+		'   7) instanceName - Instance name same as instance'
         );
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -840,27 +846,27 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 	(
 		EVENT_TABLE_THRESHOLD_ACTIVATED, 'SYS_TABLE_THRESHOLD_ACTIVATED', 'c08a1cfe-3128-40c2-99cc-378e7ef91f79',
 		EVENT_SEVERITY_MINOR, 1,
-		'Threshold activated on table "%2" row %4 (%5)',
+		'Threshold activated on table "%<dciDescription>" row %<row> (%<instance>)',
 		'Generated when table threshold is activated.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Table DCI name' CONCAT CRLF CONCAT
-		'   2) Table DCI description' CONCAT CRLF CONCAT
-		'   3) Table DCI ID' CONCAT CRLF CONCAT
-		'   4) Table row' CONCAT CRLF CONCAT
-		'   5) Instance'
+		'   1) dciName - Table DCI name' CONCAT CRLF CONCAT
+		'   2) dciDescription - Table DCI description' CONCAT CRLF CONCAT
+		'   3) dciId - Table DCI ID' CONCAT CRLF CONCAT
+		'   4) row - Table row' CONCAT CRLF CONCAT
+		'   5) instance - Instance'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_TABLE_THRESHOLD_DEACTIVATED, 'SYS_TABLE_THRESHOLD_DEACTIVATED', '479085e7-e1d1-4f2a-9d96-1d522f51b26a',
 		EVENT_SEVERITY_NORMAL, 1,
-		'Threshold deactivated on table "%2" row %4 (%5)',
+		'Threshold deactivated on table "%<dciDescription>" row %<row> (%<instance>)',
 		'Generated when table threshold is deactivated.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Table DCI name' CONCAT CRLF CONCAT
-		'   2) Table DCI description' CONCAT CRLF CONCAT
-		'   3) Table DCI ID' CONCAT CRLF CONCAT
-		'   4) Table row' CONCAT CRLF CONCAT
-		'   5) Instance'
+		'   1) dciName - Table DCI name' CONCAT CRLF CONCAT
+		'   2) dciDescription - Table DCI description' CONCAT CRLF CONCAT
+		'   3) dciId - Table DCI ID' CONCAT CRLF CONCAT
+		'   4) row - Table row' CONCAT CRLF CONCAT
+		'   5) instance - Instance'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

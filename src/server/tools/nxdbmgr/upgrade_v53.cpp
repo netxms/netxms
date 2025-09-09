@@ -23,6 +23,88 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 53.8 to 53.9
+ */
+static bool H_UpgradeFromV8()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when threshold value reached for specific data collection item.\r\n")
+      _T("Parameters are accessible via %<...> and can have \"m\" or \"multipliers\" and \"u\" or \"units\" format modifiers for value formatting (for example %<{m,u}currentValue>).\r\n\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) dciName - Parameter name\r\n")
+      _T("   2) dciDescription - Item description\r\n")
+      _T("   3) thresholdValue - Threshold value\r\n")
+      _T("   4) currentValue - Actual value which is compared to threshold value\r\n")
+      _T("   5) dciId - Data collection item ID\r\n")
+      _T("   6) instance - Instance\r\n")
+      _T("   7) isRepeatedEvent - Repeat flag\r\n")
+      _T("   8) dciValue - Last collected DCI value\r\n")
+      _T("   9) operation - Threshold''s operation code\r\n")
+      _T("   10) function - Threshold''s function code\r\n")
+      _T("   11) pollCount - Threshold''s required poll count\r\n")
+      _T("   12) thresholdDefinition - Threshold''s textual definition\r\n")
+      _T("   13) instanceValue - Instance value\r\n")
+      _T("   14) instanceName - Instance name same as instance'")
+      _T(" WHERE event_code=17")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when threshold check is rearmed for specific data collection item.\r\n")
+      _T("Parameters are accessible via %<...> and can have \"m\" or \"multipliers\" and \"u\" or \"units\" format modifiers for value formatting (for example %<{m,u}currentValue>)\r\n\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) dciName - Parameter name\r\n")
+      _T("   2) dciDescription - Item description\r\n")
+      _T("   3) dciId - Data collection item ID\r\n")
+      _T("   4) instance - Instance\r\n")
+      _T("   5) thresholdValue - Threshold value\r\n")
+      _T("   6) currentValue - Actual value which is compared to threshold value\r\n")
+      _T("   7) dciValue - Last collected DCI value\r\n")
+      _T("   8) operation - Threshold''s operation code\r\n")
+      _T("   9) function - Threshold''s function code\r\n")
+      _T("   10) pollCount - Threshold''s required poll count\r\n")
+      _T("   11) thresholdDefinition - Threshold''s textual definition\r\n")
+      _T("   12) instanceValue - Instance value\r\n")
+      _T("   13) instanceName - Instance name same as instance'")
+      _T( "WHERE event_code=18")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='All thresholds rearmed for data collection item %<dciDescription> (Metric: %<dciName>)")
+      _T("Generated when all thresholds are rearmed for specific data collection item.\r\n")
+      _T("Parameters are accessible via %<...> and can have \"m\" or \"multipliers\" and \"u\" or \"units\" format modifiers for value formatting (for example %<{m,u}currentValue>).\r\n\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) dciName - Metric name\r\n")
+      _T("   2) dciDescription - Data collection item description\r\n")
+      _T("   3) dciId - Data collection item ID\r\n")
+      _T("   4) instance - Instance\r\n")
+      _T("   5) dciValue - Last collected DCI value\r\n")
+      _T("   6) instanceValue - Instance value\r\n")
+      _T("   7) instanceName - Instance name same as instance'")
+      _T(" WHERE event_code=30")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when table threshold is activated.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) dciName - Table DCI name\r\n")
+      _T("   2) dciDescription - Table DCI description\r\n")
+      _T("   3) dciId - Table DCI ID\r\n")
+      _T("   4) row - Table row\r\n")
+      _T("   5) instance - Instance'")
+      _T(" WHERE event_code=69")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when table threshold is deactivated.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) dciName - Table DCI name\r\n")
+      _T("   2) dciDescription - Table DCI description\r\n")
+      _T("   3) dciId - Table DCI ID\r\n")
+      _T("   4) row - Table row\r\n")
+      _T("   5) instance - Instance'")
+      _T(" WHERE event_code=70")));
+
+   CHK_EXEC(SetMinorSchemaVersion(9));
+   return true;
+}
+
+/**
  * Upgrade from 53.7 to 53.8
  */
 static bool H_UpgradeFromV7()
@@ -196,6 +278,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 8,  53, 9,  H_UpgradeFromV8  },
    { 7,  53, 8,  H_UpgradeFromV7  },
    { 6,  53, 7,  H_UpgradeFromV6  },
    { 5,  53, 6,  H_UpgradeFromV5  },
