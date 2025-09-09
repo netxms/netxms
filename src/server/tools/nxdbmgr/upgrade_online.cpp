@@ -29,7 +29,7 @@ bool ConvertTDataTables(int stage);
  */
 bool IsOnlineUpgradePending()
 {
-   TCHAR buffer[MAX_DB_STRING];
+   wchar_t buffer[MAX_DB_STRING];
    DBMgrMetaDataReadStr(_T("PendingOnlineUpgrades"), buffer, MAX_DB_STRING, _T(""));
    Trim(buffer);
    return buffer[0] != 0;
@@ -40,22 +40,22 @@ bool IsOnlineUpgradePending()
  */
 void RegisterOnlineUpgrade(int major, int minor)
 {
-   TCHAR id[16];
+   wchar_t id[16];
    _sntprintf(id, 16, _T("%X"), (major << 16) | minor);
 
-   TCHAR buffer[MAX_DB_STRING];
-   DBMgrMetaDataReadStr(_T("PendingOnlineUpgrades"), buffer, MAX_DB_STRING, _T(""));
+   wchar_t buffer[MAX_DB_STRING];
+   DBMgrMetaDataReadStr(L"PendingOnlineUpgrades", buffer, MAX_DB_STRING, L"");
    Trim(buffer);
 
    if (buffer[0] == 0)
    {
-      DBMgrMetaDataWriteStr(_T("PendingOnlineUpgrades"), id);
+      DBMgrMetaDataWriteStr(L"PendingOnlineUpgrades", id);
    }
    else
    {
-      _tcslcat(buffer, _T(","), MAX_DB_STRING);
-      _tcslcat(buffer, id, MAX_DB_STRING);
-      DBMgrMetaDataWriteStr(_T("PendingOnlineUpgrades"), buffer);
+      wcslcat(buffer, L",", MAX_DB_STRING);
+      wcslcat(buffer, id, MAX_DB_STRING);
+      DBMgrMetaDataWriteStr(L"PendingOnlineUpgrades", buffer);
    }
 }
 
@@ -64,11 +64,11 @@ void RegisterOnlineUpgrade(int major, int minor)
  */
 void UnregisterOnlineUpgrade(int major, int minor)
 {
-   TCHAR id[16];
+   wchar_t id[16];
    _sntprintf(id, 16, _T("%X"), (major << 16) | minor);
 
-   TCHAR buffer[MAX_DB_STRING];
-   DBMgrMetaDataReadStr(_T("PendingOnlineUpgrades"), buffer, MAX_DB_STRING, _T(""));
+   wchar_t buffer[MAX_DB_STRING];
+   DBMgrMetaDataReadStr(L"PendingOnlineUpgrades", buffer, MAX_DB_STRING, L"");
    Trim(buffer);
 
    bool changed = false;
@@ -146,8 +146,8 @@ static bool SetZoneUIN(const TCHAR *table, const TCHAR *idColumn, const TCHAR *o
       bool success = DBBegin(g_dbHandle);
       for(int i = 0; (i < count) && success; i++)
       {
-         UINT64 id = DBGetFieldUInt64(hResult, i, 0);
-         UINT32 objectId = DBGetFieldULong(hResult, i, 1);
+         uint64_t id = DBGetFieldUInt64(hResult, i, 0);
+         uint32_t objectId = DBGetFieldUInt32(hResult, i, 1);
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, objectId);
          DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, id);
          success = DBExecute(hStmt);
@@ -588,7 +588,7 @@ struct
  */
 void RunPendingOnlineUpgrades()
 {
-   TCHAR buffer[MAX_DB_STRING];
+   wchar_t buffer[MAX_DB_STRING];
    DBMgrMetaDataReadStr(_T("PendingOnlineUpgrades"), buffer, MAX_DB_STRING, _T(""));
    Trim(buffer);
    if (buffer[0] == 0)
@@ -599,17 +599,12 @@ void RunPendingOnlineUpgrades()
 
    // Check if database is locked
    bool locked = false;
-   TCHAR lockStatus[MAX_DB_STRING];
-   if (DBMgrMetaDataReadStr(_T("DBOnlineUpgradeLockStatus"), lockStatus, MAX_DB_STRING, _T("")))
-      locked = _tcscmp(lockStatus, _T("LOCKED")) == 0;
+   wchar_t lockStatus[MAX_DB_STRING];
+   if (DBMgrMetaDataReadStr(L"DBBackgroundUpgradeLock", lockStatus, MAX_DB_STRING, L""))
+      locked = wcscmp(lockStatus, L"LOCKED") == 0;
 
-   if (locked)
-   {
-      if (!GetYesNo(_T("Online upgrade is locked by another process\nAre you sure you want to start online upgrade?")))
-      {
-         return;
-      }
-   }
+   if (locked && !GetYesNo(_T("Background upgrade is locked by another process\nAre you sure you want to start background upgrade?")))
+      return;
 
    StringList upgradeList = String(buffer).split(_T(","));
    for(int i = 0; i < upgradeList.size(); i++)
@@ -630,7 +625,7 @@ void RunPendingOnlineUpgrades()
          }
          if (handler != nullptr)
          {
-            DBMgrMetaDataWriteStr(_T("DBOnlineUpgradeLockStatus"), _T("LOCKED"));
+            DBMgrMetaDataWriteStr(_T("DBBackgroundUpgradeLock"), _T("LOCKED"));
 
             _tprintf(_T("Running background upgrade procedure for version %d.%d\n"), major, minor);
             if (!handler())
