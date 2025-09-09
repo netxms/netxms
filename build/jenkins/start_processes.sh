@@ -45,7 +45,8 @@ if test -x "$BINDIR/nxdbmgr" -a -x "$BINDIR/netxmsd"; then
 	if [ $? -ne 0 ]; then
       echo "Failed to execute nxdbmgr check"
       exit 1
-   fi
+	fi
+	ulimit -c unlimited
 	$BINDIR/netxmsd$SUFFIX $NETXMSD_CONFIG -d -D6
 	SERVER_STARTED=yes
 fi
