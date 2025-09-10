@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016-2021 RadenSolutions
+ * Copyright (C) 2016-2025 RadenSolutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,17 +45,13 @@ public class BusinessServiceCheckFilter extends ViewerFilter implements Abstract
       if ((filterString == null) || (filterString.isEmpty()))
          return true;
 
-      BusinessServiceCheck check = (BusinessServiceCheck)element;      
-      
-      if (Long.toString(check.getId()).contains(filterString) || 
-            check.getDescription().contains(filterString) ||
-            labelProvider.getTypeName(check).contains(filterString) || 
-            labelProvider.getCheckStateText(check).contains(filterString) ||
-            labelProvider.getObjectName(check).contains(filterString) || 
-            labelProvider.getDciName(check).contains(filterString) || 
-            check.getFailureReason().contains(filterString))
-         return true;
-      return false;
+      BusinessServiceCheck check = (BusinessServiceCheck)element;
+      return check.getDescription().toLowerCase().contains(filterString) ||
+             labelProvider.getTypeName(check).toLowerCase().contains(filterString) ||
+             labelProvider.getCheckStateText(check).toLowerCase().contains(filterString) ||
+             labelProvider.getObjectName(check).toLowerCase().contains(filterString) ||
+             labelProvider.getDciName(check).toLowerCase().contains(filterString) ||
+             check.getFailureReason().toLowerCase().contains(filterString);
    }
 
    /**
