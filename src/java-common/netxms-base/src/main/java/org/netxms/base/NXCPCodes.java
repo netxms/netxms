@@ -1368,6 +1368,9 @@ public class NXCPCodes
    public static final long VID_SMTP_TLS_MODE = 864;
    public static final long VID_PEER_LAST_UPDATED = 865;
    public static final long VID_THRESHOLD_ENABLE_TIME = 866;
+   public static final long VID_FORCED_CONTEXT_OBJECT = 867;
+   public static final long VID_DASHBOARD_NAME_TEMPLATE = 868;
+   
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

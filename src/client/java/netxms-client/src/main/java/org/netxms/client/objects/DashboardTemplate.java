@@ -25,11 +25,9 @@ import org.netxms.client.NXCSession;
 /**
  * Dashboard object
  */
-public class Dashboard extends DashboardBase
+public class DashboardTemplate extends DashboardBase
 {
-
-   private int displayPriority;
-   private long forcedContextObjectId;
+   private String nameTemplate;
 
 	/**
 	 * Create from NXCP message.
@@ -37,31 +35,20 @@ public class Dashboard extends DashboardBase
 	 * @param msg NXCP message
 	 * @param session owning client session
 	 */
-	public Dashboard(NXCPMessage msg, NXCSession session)
+	public DashboardTemplate(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-      displayPriority = msg.getFieldAsInt32(NXCPCodes.VID_DISPLAY_PRIORITY);
-      forcedContextObjectId = msg.getFieldAsInt32(NXCPCodes.VID_FORCED_CONTEXT_OBJECT);
+      nameTemplate = msg.getFieldAsString(NXCPCodes.VID_DASHBOARD_NAME_TEMPLATE);
 	}
 
-	/**
-    * Get dashboard's display priority if it should be shown as object view.
-    *
-    * @return dashboard's display priority
-    */
-   public int getDisplayPriority()
-   {
-      return displayPriority;
-   }
-
    /**
-    * Get forced context object ID.
-    *
-    * @return forced context object ID or 0 if none
+    * Get name template
+    * 
+    * @return name template
     */
-   public long getForcedContextObjectId()
+   public String getNameTemplate()
    {
-      return forcedContextObjectId;
+      return nameTemplate;
    }
 
    /**
@@ -70,16 +57,6 @@ public class Dashboard extends DashboardBase
 	@Override
 	public String getObjectClassName()
 	{
-		return "Dashboard";
+		return "Dashboard Template";
 	}
-
-   /**
-    * Check if this dashboard is instance of template (has forced context object).
-    * 
-    * @return true if this dashboard is instance of template
-    */
-   public boolean isTemplateInstance()
-   {
-      return forcedContextObjectId != 0;
-   }
 }

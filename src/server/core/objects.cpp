@@ -326,6 +326,7 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
 			case OBJECT_VPNCONNECTOR:
 			case OBJECT_NETWORKMAPROOT:
 			case OBJECT_NETWORKMAPGROUP:
+         case OBJECT_DASHBOARDTEMPLATE:
 			case OBJECT_DASHBOARDROOT:
          case OBJECT_DASHBOARDGROUP:
 			case OBJECT_DASHBOARD:
@@ -504,6 +505,7 @@ void NetObjDeleteFromIndexes(const NetObj& object)
 		case OBJECT_VPNCONNECTOR:
 		case OBJECT_NETWORKMAPROOT:
 		case OBJECT_NETWORKMAPGROUP:
+      case OBJECT_DASHBOARDTEMPLATE:
 		case OBJECT_DASHBOARDROOT:
       case OBJECT_DASHBOARDGROUP:
 		case OBJECT_DASHBOARD:
@@ -1585,6 +1587,7 @@ bool LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("ospf_neighbors"), _T("node_id,router_id,if_index,ip_address"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("container_members"), _T("container_id,object_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("dashboards"), _T("id"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("dashboard_templates"), _T("id,"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("dashboard_elements"), _T("dashboard_id,element_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("dashboard_associations"), _T("object_id,dashboard_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("business_service_checks"), _T("id"), _T("*"), intColumns) &&
@@ -1746,6 +1749,7 @@ bool LoadObjects()
    LoadObjectsFromTable<TemplateGroup>(_T("template group"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_TEMPLATEGROUP));
    LoadObjectsFromTable<NetworkMapGroup>(_T("map group"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_NETWORKMAPGROUP));
    LoadObjectsFromTable<Dashboard>(_T("dashboard"), hdb, preparedStatements, _T("dashboards"));
+   LoadObjectsFromTable<DashboardTemplate>(_T("dashboard templates"), hdb, preparedStatements, _T("dashboard_templates"));
    LoadObjectsFromTable<DashboardGroup>(_T("dashboard group"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_DASHBOARDGROUP));
    LoadObjectsFromTable<BusinessService>(_T("business service"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_BUSINESSSERVICE));
    LoadObjectsFromTable<BusinessServicePrototype>(_T("business service prototype"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_BUSINESSSERVICEPROTO));
@@ -2169,10 +2173,11 @@ bool IsValidParentClass(int childClass, int parentClass)
          if ((childClass == OBJECT_NETWORKMAPGROUP) || (childClass == OBJECT_NETWORKMAP))
             return true;
          break;
+      case OBJECT_DASHBOARDTEMPLATE:
       case OBJECT_DASHBOARDROOT:
       case OBJECT_DASHBOARDGROUP:
       case OBJECT_DASHBOARD:
-         if ((childClass == OBJECT_DASHBOARDGROUP) || (childClass == OBJECT_DASHBOARD))
+         if ((childClass == OBJECT_DASHBOARDGROUP) || (childClass == OBJECT_DASHBOARD) || (childClass == OBJECT_DASHBOARDTEMPLATE))
             return true;
          break;
       case OBJECT_NODE:

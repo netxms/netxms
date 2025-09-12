@@ -140,10 +140,11 @@ public class ObjectSelectionFilterFactory
     */
    public Set<Integer> createDashboardSelectionFilter()
    {
-      HashSet<Integer> classFilter = new HashSet<Integer>(3);
+      HashSet<Integer> classFilter = new HashSet<Integer>(4);
       classFilter.add(AbstractObject.OBJECT_DASHBOARD);
       classFilter.add(AbstractObject.OBJECT_DASHBOARDROOT);
       classFilter.add(AbstractObject.OBJECT_DASHBOARDGROUP);
+      classFilter.add(AbstractObject.OBJECT_DASHBOARDTEMPLATE);
       return classFilter;
    }
 
@@ -284,6 +285,7 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_DASHBOARD);
       classFilter.add(AbstractObject.OBJECT_DASHBOARDGROUP);
       classFilter.add(AbstractObject.OBJECT_DASHBOARDROOT);
+      classFilter.add(AbstractObject.OBJECT_DASHBOARDTEMPLATE);
       classFilter.add(AbstractObject.OBJECT_NETWORKMAP);
       classFilter.add(AbstractObject.OBJECT_NETWORKMAPGROUP);
       classFilter.add(AbstractObject.OBJECT_NETWORKMAPROOT);

@@ -156,6 +156,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
+import org.netxms.client.objects.DashboardTemplate;
 import org.netxms.client.objects.DependentNode;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.GenericObject;
@@ -1604,6 +1605,9 @@ public class NXCSession
             break;
          case AbstractObject.OBJECT_DASHBOARDROOT:
             object = new DashboardRoot(msg, this);
+            break;
+         case AbstractObject.OBJECT_DASHBOARDTEMPLATE:
+            object = new DashboardTemplate(msg, this);
             break;
          case AbstractObject.OBJECT_INTERFACE:
             object = new Interface(msg, this);
@@ -6872,6 +6876,11 @@ public class NXCSession
             e.fillMessage(msg, fieldId);
             fieldId += 10;
          }
+      }
+
+      if (data.getDashboardNameTemplate() != null)
+      {
+         msg.setField(NXCPCodes.VID_DASHBOARD_NAME_TEMPLATE, data.getDashboardNameTemplate());
       }
 
       if (data.getUrls() != null)

@@ -93,6 +93,7 @@ public class ObjectCreateMenuManager extends MenuManager
    private Action actionCreateContainer;
    private Action actionCreateDashboard;
    private Action actionCreateDashboardGroup;
+   private Action actionCreateDashboardTemplate;
    private Action actionCreateInterface;
    private Action actionCreateNetworkService;
    private Action actionCreateMobileDevice;
@@ -137,6 +138,7 @@ public class ObjectCreateMenuManager extends MenuManager
       addAction(this, actionCreateContainer, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
       addAction(this, actionCreateDashboard, (AbstractObject o) -> (o instanceof DashboardGroup) || (o instanceof DashboardRoot));
       addAction(this, actionCreateDashboardGroup, (AbstractObject o) -> (o instanceof DashboardGroup) || (o instanceof DashboardRoot));
+      addAction(this, actionCreateDashboardTemplate, (AbstractObject o) -> (o instanceof DashboardGroup) || (o instanceof DashboardRoot));
       addAction(this, actionCreateInterface, (AbstractObject o) -> o instanceof Node);
       addAction(this, actionCreateNetworkService, (AbstractObject o) -> o instanceof Node);
       addAction(this, actionCreateMobileDevice, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
@@ -296,6 +298,7 @@ public class ObjectCreateMenuManager extends MenuManager
       actionCreateCollector = new GenericObjectCreationAction(i18n.tr("&Collector..."), AbstractObject.OBJECT_COLLECTOR, i18n.tr("Collector"));
       actionCreateContainer = new GenericObjectCreationAction(i18n.tr("&Container..."), AbstractObject.OBJECT_CONTAINER, i18n.tr("Container"));
       actionCreateDashboard = new GenericObjectCreationAction(i18n.tr("&Dashboard..."), AbstractObject.OBJECT_DASHBOARD, i18n.tr("Dashboard"));
+      actionCreateDashboardTemplate = new GenericObjectCreationAction(i18n.tr("&Dashboard template..."), AbstractObject.OBJECT_DASHBOARDTEMPLATE, i18n.tr("Dashboard Template"));
       actionCreateDashboardGroup = new GenericObjectCreationAction(i18n.tr("Dashboard &group..."), AbstractObject.OBJECT_DASHBOARDGROUP, i18n.tr("Dashboard Group"));
 
       actionCreateInterface = new Action(i18n.tr("&Interface...")) {

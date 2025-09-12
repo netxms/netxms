@@ -36,6 +36,8 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DashboardBase;
+import org.netxms.client.objects.DashboardTemplate;
 import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.DownloadServiceHandler;
 import org.netxms.nxmc.Registry;
@@ -47,6 +49,7 @@ import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfigFactory;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementLayout;
 import org.netxms.nxmc.modules.objects.actions.ObjectAction;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -55,7 +58,7 @@ import com.google.gson.Gson;
 /**
  * Export dashboard configuration
  */
-public class ExportDashboardAction extends ObjectAction<Dashboard>
+public class ExportDashboardAction extends ObjectAction<DashboardBase>
 {
    private final I18n i18n = LocalizationHelper.getI18n(ExportDashboardAction.class);
    private static final Logger logger = LoggerFactory.getLogger(ExportDashboardAction.class);
@@ -68,7 +71,7 @@ public class ExportDashboardAction extends ObjectAction<Dashboard>
     */
    public ExportDashboardAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(Dashboard.class, LocalizationHelper.getI18n(ExportDashboardAction.class).tr("&Export..."), viewPlacement, selectionProvider);
+      super(DashboardBase.class, LocalizationHelper.getI18n(ExportDashboardAction.class).tr("&Export..."), viewPlacement, selectionProvider);
       setImageDescriptor(ResourceManager.getImageDescriptor("icons/export.png"));
    }
 
@@ -76,9 +79,14 @@ public class ExportDashboardAction extends ObjectAction<Dashboard>
     * @see org.netxms.nxmc.modules.objects.actions.ObjectAction#run(java.util.List)
     */
    @Override
-   protected void run(List<Dashboard> selection)
+   protected void run(List<DashboardBase> selection)
    {
-      final Dashboard dashboard = selection.get(0);
+      final DashboardBase dashboard = selection.get(0);
+
+      if ((dashboard instanceof Dashboard) && ((Dashboard)dashboard).isTemplateInstance())
+         if (!MessageDialogHelper.openQuestion(getShell(), i18n.tr("Warning"), 
+               i18n.tr("This instance of a Template Dashboard will be exported as a regular Dashboard. Continue?")))
+            return;
       
 		final Set<Long> objects = new HashSet<Long>();
 		final Map<Long, Long> items = new HashMap<Long, Long>();
@@ -93,7 +101,27 @@ public class ExportDashboardAction extends ObjectAction<Dashboard>
       xml.append(dashboard.getAutoBindFlags());
       xml.append("</autoBindFlags>\n\t<autoBindFilter>");
       xml.append(dashboard.getAutoBindFilter().replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"));
-      xml.append("</autoBindFilter>\n\t<elements>\n");
+      xml.append("</autoBindFilter>\n");
+      
+      if (dashboard instanceof Dashboard)
+      {
+         xml.append("\t<isTemplate>");
+         xml.append(false);
+         xml.append("</isTemplate>\n\n");
+      }
+      else if (dashboard instanceof DashboardTemplate)
+      {
+         xml.append("\t<isTemplate>");
+         xml.append(true);
+         xml.append("</isTemplate>\n\n");
+         
+         String nameTemplate = ((DashboardTemplate)dashboard).getNameTemplate();
+         xml.append("\t<nameTemplate>");
+         xml.append(nameTemplate.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"));
+         xml.append("</nameTemplate>\n\n");
+      }
+
+      xml.append("\t<elements>\n");      
 		for(DashboardElement e : dashboard.getElements())
 		{
          Gson gson = new Gson();
@@ -209,6 +237,6 @@ public class ExportDashboardAction extends ObjectAction<Dashboard>
    @Override
    public boolean isValidForSelection(IStructuredSelection selection)
    {
-      return (selection.size() == 1) && (selection.getFirstElement() instanceof Dashboard);
+      return (selection.size() == 1) && (selection.getFirstElement() instanceof DashboardBase); 
    }
 }

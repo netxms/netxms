@@ -109,6 +109,8 @@ public abstract class AbstractObject
    public static final int OBJECT_CHASSIS = 35;
    public static final int OBJECT_DASHBOARDGROUP = 36;
    public static final int OBJECT_SENSOR = 37;
+   public static final int OBJECT_DASHBOARDTEMPLATE = 38;
+   
 	public static final int OBJECT_CUSTOM = 10000;
 
 	// Status calculation methods

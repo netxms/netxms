@@ -42,6 +42,7 @@ import org.netxms.client.objects.AssetRoot;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
+import org.netxms.client.objects.DashboardTemplate;
 import org.netxms.client.objects.Template;
 import org.netxms.client.objects.TemplateGroup;
 import org.netxms.client.objects.TemplateRoot;
@@ -516,7 +517,8 @@ public class StatusCalculation extends ObjectPropertyPage
    public boolean isVisible()
    {
       return !((object instanceof Asset) || (object instanceof AssetGroup) || (object instanceof AssetRoot) ||
-               (object instanceof Dashboard) || (object instanceof DashboardGroup) || (object instanceof DashboardRoot) || 
+               (object instanceof Dashboard) || (object instanceof DashboardGroup) || (object instanceof DashboardRoot) ||
+               (object instanceof DashboardTemplate) ||
                (object instanceof Template) || (object instanceof TemplateGroup) || (object instanceof TemplateRoot));
    }
 }

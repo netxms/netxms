@@ -485,6 +485,7 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
    vm->addConstant("DASHBOARD", vm->createValue(OBJECT_DASHBOARD));
    vm->addConstant("DASHBOARDGROUP", vm->createValue(OBJECT_DASHBOARDGROUP));
    vm->addConstant("DASHBOARDROOT", vm->createValue(OBJECT_DASHBOARDROOT));
+   vm->addConstant("DASHBOARDTEMPLATE", vm->createValue(OBJECT_DASHBOARDTEMPLATE));
    vm->addConstant("INTERFACE", vm->createValue(OBJECT_INTERFACE));
    vm->addConstant("MOBILEDEVICE", vm->createValue(OBJECT_MOBILEDEVICE));
    vm->addConstant("NETWORK", vm->createValue(OBJECT_NETWORK));

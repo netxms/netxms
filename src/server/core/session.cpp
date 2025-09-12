@@ -6255,6 +6255,10 @@ void ClientSession::createObject(const NXCPMessage& request)
                   object = make_shared<Dashboard>(objectName);
                   NetObjInsert(object, true, false);
                   break;
+               case OBJECT_DASHBOARDTEMPLATE:
+                  object = make_shared<DashboardTemplate>(objectName);
+                  NetObjInsert(object, true, false);
+                  break;
                case OBJECT_DASHBOARDGROUP:
                   object = make_shared<DashboardGroup>(objectName);
                   NetObjInsert(object, true, false);
@@ -11852,6 +11856,8 @@ void ClientSession::executeDashboardScript(const NXCPMessage& request)
 
    shared_ptr<NetObj> contextObject = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    shared_ptr<NetObj> dashboard = FindObjectById(request.getFieldAsUInt32(VID_DASHBOARD_ID), OBJECT_DASHBOARD);
+   if (dashboard == nullptr)
+      dashboard = FindObjectById(request.getFieldAsUInt32(VID_DASHBOARD_ID), OBJECT_DASHBOARDTEMPLATE);
    int elementIndex = request.getFieldAsUInt32(VID_ELEMENT_INDEX);
    if (dashboard != nullptr && contextObject != nullptr)
    {

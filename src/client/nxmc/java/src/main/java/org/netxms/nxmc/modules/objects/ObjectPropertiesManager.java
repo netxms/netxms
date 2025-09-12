@@ -47,6 +47,7 @@ import org.netxms.nxmc.modules.objects.propertypages.ConditionScript;
 import org.netxms.nxmc.modules.objects.propertypages.CustomAttributes;
 import org.netxms.nxmc.modules.objects.propertypages.DashboardElements;
 import org.netxms.nxmc.modules.objects.propertypages.DashboardObjectContext;
+import org.netxms.nxmc.modules.objects.propertypages.DashboardTemplateConfiguration;
 import org.netxms.nxmc.modules.objects.propertypages.Dashboards;
 import org.netxms.nxmc.modules.objects.propertypages.EtherNetIP;
 import org.netxms.nxmc.modules.objects.propertypages.ExpectedCapabilities;
@@ -115,6 +116,7 @@ public class ObjectPropertiesManager
       pageClasses.add(Dashboards.class);
       pageClasses.add(DashboardElements.class);
       pageClasses.add(DashboardObjectContext.class);
+      pageClasses.add(DashboardTemplateConfiguration.class);
       pageClasses.add(EtherNetIP.class);
       pageClasses.add(ExpectedCapabilities.class);
       pageClasses.add(ExternalResources.class);

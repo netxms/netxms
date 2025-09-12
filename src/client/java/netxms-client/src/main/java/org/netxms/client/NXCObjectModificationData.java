@@ -198,6 +198,7 @@ public class NXCObjectModificationData
    private Integer mapWidth;
    private Integer mapHeight;
    private Long expectedCapabilities;
+   private String dashboardNameTemplate;
 
    /**
     * Constructor for creating modification data for given object
@@ -2473,5 +2474,25 @@ public class NXCObjectModificationData
    public void setExpectedCapabilities(Long expectedCapabilities)
    {
       this.expectedCapabilities = expectedCapabilities;
+   }
+
+   /**
+    * Get dashboard name template
+    * 
+    * @return dashboard name template
+    */
+   public String getDashboardNameTemplate()
+   {
+      return dashboardNameTemplate;
+   }
+
+   /**
+    * Set dashboard name template
+    * 
+    * @param dashboardNameTemplate dashboard name template
+    */
+   public void setDashboardNameTemplate(String dashboardNameTemplate)
+   {
+      this.dashboardNameTemplate = dashboardNameTemplate;
    }
 }

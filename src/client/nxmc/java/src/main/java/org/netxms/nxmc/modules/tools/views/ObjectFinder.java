@@ -259,7 +259,9 @@ public class ObjectFinder extends View
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_COLLECTOR, "Collector"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_CONTAINER, "Container"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_DASHBOARD, "Dashboard"));
+      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_DASHBOARDGROUP, "Dashboard Group"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_DASHBOARDROOT, "Dashboard Root"));
+      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_DASHBOARDTEMPLATE, "Dashboard Template"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_INTERFACE, "Interface"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_MOBILEDEVICE, "Mobile Device"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_NETWORK, "Network"));

@@ -27,7 +27,8 @@ import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DashboardBase;
+import org.netxms.client.objects.DashboardTemplate;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ViewPlacement;
@@ -39,9 +40,9 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Action for linking asset to object
  */
-public class CloneDashboardAction extends ObjectAction<Dashboard>
+public class CloneAsDashboardTemplateAction extends ObjectAction<DashboardBase>
 {
-   private final I18n i18n = LocalizationHelper.getI18n(CloneDashboardAction.class);
+   private final I18n i18n = LocalizationHelper.getI18n(CloneAsDashboardTemplateAction.class);
 
    /**
     * Create action for linking asset to object.
@@ -49,39 +50,41 @@ public class CloneDashboardAction extends ObjectAction<Dashboard>
     * @param viewPlacement view placement information
     * @param selectionProvider associated selection provider
     */
-   public CloneDashboardAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
+   public CloneAsDashboardTemplateAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(Dashboard.class, LocalizationHelper.getI18n(CloneDashboardAction.class).tr("&Clone"), viewPlacement, selectionProvider);
+      super(DashboardBase.class, LocalizationHelper.getI18n(CloneAsDashboardTemplateAction.class).tr("&Clone as Dashboard &Template"), viewPlacement, selectionProvider);
    }
 
    /**
     * @see org.netxms.nxmc.modules.objects.actions.ObjectAction#run(java.util.List)
     */
    @Override
-   protected void run(List<Dashboard> objects)
+   protected void run(List<DashboardBase> objects)
    {
-      final Dashboard sourceObject = objects.get(0);
+      final DashboardBase sourceObject = objects.get(0);      
       final long parentId = sourceObject.getParentIdList()[0];
 
       final CreateObjectDialog dlg = new CreateObjectDialog(getShell(), i18n.tr("Clone dashboard"));
       if (dlg.open() == Window.OK)
       {
          final NXCSession session = Registry.getSession();
-         new Job(i18n.tr("Clone dashboard job"), null, getMessageArea())
+         new Job(i18n.tr("Clone as dashboard job"), null, getMessageArea())
          {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
-               NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_DASHBOARD, dlg.getObjectName(), parentId);
+               NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_DASHBOARDTEMPLATE, dlg.getObjectName(), parentId);
                cd.setObjectAlias(dlg.getObjectAlias());
                final long newDashboardId = session.createObject(cd);
 
                final NXCObjectModificationData md = new NXCObjectModificationData(newDashboardId);
                md.setDashboardElements(sourceObject.getElements());
                md.setColumnCount(sourceObject.getNumColumns());
-               md.setObjectFlags(sourceObject.getFlags());
+               md.setObjectFlags(sourceObject.getFlags() & ~DashboardBase.SHOW_CONTEXT_SELECTOR);
                md.setAutoBindFlags(sourceObject.getAutoBindFlags());
                md.setAutoBindFilter(sourceObject.getAutoBindFilter());
+               if (sourceObject instanceof DashboardTemplate)
+                  md.setDashboardNameTemplate(((DashboardTemplate)sourceObject).getNameTemplate());
 
                session.modifyObject(md);
             }
@@ -89,7 +92,7 @@ public class CloneDashboardAction extends ObjectAction<Dashboard>
             @Override
             protected String getErrorMessage()
             {
-               return String.format(i18n.tr("Failed to clone dashboard"), dlg.getObjectName());
+               return String.format(i18n.tr("Failed to clone as dashboard"), dlg.getObjectName());
             }
          }.start();
       }
@@ -101,6 +104,6 @@ public class CloneDashboardAction extends ObjectAction<Dashboard>
    @Override
    public boolean isValidForSelection(IStructuredSelection selection)
    {
-      return (selection.size() == 1) && (selection.getFirstElement() instanceof Dashboard);
+      return (selection.size() == 1) && (selection.getFirstElement() instanceof DashboardBase);
    }
 }

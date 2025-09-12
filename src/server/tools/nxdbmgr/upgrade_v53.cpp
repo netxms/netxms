@@ -22,6 +22,35 @@
 
 #include "nxdbmgr.h"
 
+
+
+/**
+ * Upgrade from 53.9 to 53.10
+ */
+static bool H_UpgradeFromV9()
+{
+   CreateTable(_T("CREATE TABLE dashboard_templates (")
+               _T("id INTEGER NOT NULL,")
+               _T("num_columns INTEGER NOT NULL,")
+               _T("template_name VARCHAR(255),")
+               _T("PRIMARY KEY(id))"));
+   CreateTable(_T("CREATE TABLE dashboard_template_instances (")
+               _T("dashboard_id INTEGER NOT NULL,")
+               _T("instance_object_id INTEGER NOT NULL,")
+               _T("instance_dashboard_id INTEGER NOT NULL,")
+               _T("PRIMARY KEY(dashboard_id,instance_object_id))"));
+
+   static const TCHAR *batch =
+      _T("ALTER TABLE dashboards ADD forced_context_object_id integer\n")
+      _T("UPDATE dashboards SET forced_context_object_id=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("dashboards"), _T("forced_context_object_id")));
+
+   CHK_EXEC(SetMinorSchemaVersion(10));
+   return true;
+}
+
 /**
  * Upgrade from 53.8 to 53.9
  */
@@ -278,6 +307,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 9,  53, 10, H_UpgradeFromV9  },
    { 8,  53, 9,  H_UpgradeFromV8  },
    { 7,  53, 8,  H_UpgradeFromV7  },
    { 6,  53, 7,  H_UpgradeFromV6  },
