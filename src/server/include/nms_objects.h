@@ -29,6 +29,7 @@
 #include <math.h>
 #include <gauge_helpers.h>
 #include "auth-token.h"
+#include <map>
 
 /**
  * Forward declarations of classes
@@ -5088,6 +5089,14 @@ public:
       m_data = nullptr;
       m_layout = nullptr;
    }
+
+   DashboardElement(const DashboardElement &element)
+   {
+      m_type = element.m_type;
+      m_data = MemCopyString(element.m_data);
+      m_layout = MemCopyString(element.m_layout);
+   }
+
    ~DashboardElement()
    {
       MemFree(m_data);
@@ -5111,32 +5120,28 @@ template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<DashboardElement>;
 /**
  * Dashboard object
  */
-class NXCORE_EXPORTABLE Dashboard : public AbstractContainer, public AutoBindTarget, public Pollable, public DelegateObject
+class NXCORE_EXPORTABLE DashboardBase : public AbstractContainer, public Pollable, public AutoBindTarget, public DelegateObject
 {
 protected:
    typedef AbstractContainer super;
 
 protected:
    int m_numColumns;
-   int m_displayPriority;
    ObjectArray<DashboardElement> m_elements;
 
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageUnlocked(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
 
-   virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
-
    void updateObjectAndDciList(DashboardElement *e);
 
 public:
-   Dashboard();
-   Dashboard(const TCHAR *name);
+   DashboardBase();
+   DashboardBase(const TCHAR *name);
+   DashboardBase(const TCHAR *name, DashboardBase *source);
 
-   shared_ptr<Dashboard> self() { return static_pointer_cast<Dashboard>(NObject::self()); }
-   shared_ptr<const Dashboard> self() const { return static_pointer_cast<const Dashboard>(NObject::self()); }
+   void updateFromTemplate(DashboardBase *source);
 
-   virtual int getObjectClass() const override { return OBJECT_DASHBOARD; }
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
@@ -5148,6 +5153,73 @@ public:
    virtual bool showThresholdSummary() const override;
    String getElementScript(int index) const;
    bool isElementContextObject(int index, uint32_t contextObject) const;
+};
+
+/**
+ * Dashboard object
+ */
+class NXCORE_EXPORTABLE Dashboard : public DashboardBase
+{
+protected:
+   typedef DashboardBase super;
+
+protected:
+   int m_displayPriority;
+   uint32_t m_forcedContextObjectId;// For Dashboards create form Dashboard Template
+
+   virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
+
+   virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+
+public:
+   Dashboard();
+   Dashboard(const TCHAR *name);
+   Dashboard(const TCHAR *name, uint32_t contextId, DashboardBase *source);
+
+   shared_ptr<Dashboard> self() { return static_pointer_cast<Dashboard>(NObject::self()); }
+   shared_ptr<const Dashboard> self() const { return static_pointer_cast<const Dashboard>(NObject::self()); }
+
+   virtual int getObjectClass() const override { return OBJECT_DASHBOARD; }
+
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
+
+   virtual json_t *toJson() override;
+};
+
+/**
+ * Dashboard object
+ */
+class NXCORE_EXPORTABLE DashboardTemplate : public DashboardBase
+{
+protected:
+   typedef DashboardBase super;
+
+protected:
+   std::map<uint32_t, uint32_t> m_instanceDashboards;
+   SharedString m_nameTemplate;
+
+   virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
+
+   virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+
+public:
+   DashboardTemplate();
+   DashboardTemplate(const TCHAR *name);
+
+   shared_ptr<DashboardTemplate> self() { return static_pointer_cast<DashboardTemplate>(NObject::self()); }
+   shared_ptr<const DashboardTemplate> self() const { return static_pointer_cast<const DashboardTemplate>(NObject::self()); }
+
+   virtual int getObjectClass() const override { return OBJECT_DASHBOARDTEMPLATE; }
+
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
+
+   virtual json_t *toJson() override;
 };
 
 /**

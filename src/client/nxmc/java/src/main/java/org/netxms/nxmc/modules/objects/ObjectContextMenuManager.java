@@ -47,7 +47,7 @@ import org.netxms.client.objects.Circuit;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DashboardBase;
 import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.DataCollectionTarget;
@@ -72,7 +72,8 @@ import org.netxms.nxmc.modules.assetmanagement.LinkAssetToObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.LinkObjectToAssetAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkAssetFromObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkObjectFromAssetAction;
-import org.netxms.nxmc.modules.dashboards.CloneDashboardAction;
+import org.netxms.nxmc.modules.dashboards.CloneAsDashboardAction;
+import org.netxms.nxmc.modules.dashboards.CloneAsDashboardTemplateAction;
 import org.netxms.nxmc.modules.dashboards.ExportDashboardAction;
 import org.netxms.nxmc.modules.dashboards.ImportDashboardAction;
 import org.netxms.nxmc.modules.filemanager.UploadFileToAgent;
@@ -151,7 +152,8 @@ public class ObjectContextMenuManager extends MenuManager
    private ObjectAction<?> actionUnlinkAssetFromObject;
    private ObjectAction<?> actionLinkObjectToAsset;
    private ObjectAction<?> actionUnlinkObjectFromAsset;
-   private ObjectAction<?> actionCloneDashboard;
+   private ObjectAction<?> actionCloneAsDashboard;
+   private ObjectAction<?> actionCloneAsDashboardTemplate;
    private ObjectAction<?> actionChangeZone;
    private ObjectAction<?> actionSendUserAgentNotification;
    private ObjectAction<?> actionExportDashboard;
@@ -463,7 +465,8 @@ public class ObjectContextMenuManager extends MenuManager
       actionUnlinkAssetFromObject = new UnlinkAssetFromObjectAction(viewPlacement, selectionProvider);
       actionLinkObjectToAsset = new LinkObjectToAssetAction(viewPlacement, selectionProvider);
       actionUnlinkObjectFromAsset = new UnlinkObjectFromAssetAction(viewPlacement, selectionProvider);
-      actionCloneDashboard = new CloneDashboardAction(viewPlacement, selectionProvider);
+      actionCloneAsDashboard = new CloneAsDashboardAction(viewPlacement, selectionProvider);
+      actionCloneAsDashboardTemplate = new CloneAsDashboardTemplateAction(viewPlacement, selectionProvider);
       actionChangeZone = new ChangeZoneAction(viewPlacement, selectionProvider);
       actionSendUserAgentNotification = new SendUserAgentNotificationAction(viewPlacement, selectionProvider);
       actionExportDashboard = new ExportDashboardAction(viewPlacement, selectionProvider);
@@ -539,9 +542,10 @@ public class ObjectContextMenuManager extends MenuManager
                add(actionUnlinkObjectFromAsset);
             add(new Separator());            
          }
-         if (object instanceof Dashboard)
+         if (object instanceof DashboardBase)
          {
-            add(actionCloneDashboard);
+            add(actionCloneAsDashboard);
+            add(actionCloneAsDashboardTemplate);
             add(actionExportDashboard);
             add(new Separator());           
          }
@@ -831,7 +835,8 @@ public class ObjectContextMenuManager extends MenuManager
             return false;
          int objectClass = ((AbstractObject)o).getObjectClass();
          if ((objectClass == AbstractObject.OBJECT_BUSINESSSERVICE) || (objectClass == AbstractObject.OBJECT_BUSINESSSERVICEPROTOTYPE) || (objectClass == AbstractObject.OBJECT_BUSINESSSERVICEROOT) ||
-             (objectClass == AbstractObject.OBJECT_DASHBOARD) || (objectClass == AbstractObject.OBJECT_DASHBOARDGROUP) || (objectClass == AbstractObject.OBJECT_DASHBOARDROOT) ||
+             (objectClass == AbstractObject.OBJECT_DASHBOARD) || (objectClass == AbstractObject.OBJECT_DASHBOARDGROUP) || (objectClass == AbstractObject.OBJECT_DASHBOARDROOT) || 
+             (objectClass == AbstractObject.OBJECT_DASHBOARDTEMPLATE) ||
              (objectClass == AbstractObject.OBJECT_NETWORKMAP) || (objectClass == AbstractObject.OBJECT_NETWORKMAPGROUP) || (objectClass == AbstractObject.OBJECT_NETWORKMAPROOT) ||
              (objectClass == AbstractObject.OBJECT_TEMPLATE) || (objectClass == AbstractObject.OBJECT_TEMPLATEGROUP) || (objectClass == AbstractObject.OBJECT_TEMPLATEROOT) ||
              (objectClass == AbstractObject.OBJECT_ASSET) || (objectClass == AbstractObject.OBJECT_ASSETGROUP) || (objectClass == AbstractObject.OBJECT_ASSETROOT) ||

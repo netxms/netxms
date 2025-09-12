@@ -140,15 +140,21 @@ public class ImportDashboardAction extends ObjectAction<AbstractObject>
 
 				if (doIdMapping(display, session, dashboardElements, root))
 				{
-					NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_DASHBOARD, objectName, parentId);
-					final long objectId = session.createObject(cd);
-
+               boolean isTemplate = getNodeValueAsBoolean(root, "isTemplate", false);
+					NXCObjectCreationData cd = new NXCObjectCreationData(isTemplate ? AbstractObject.OBJECT_DASHBOARDTEMPLATE : AbstractObject.OBJECT_DASHBOARD, objectName, parentId);
+					final long objectId = session.createObject(cd);					
 					NXCObjectModificationData md = new NXCObjectModificationData(objectId);
                md.setColumnCount(getNodeValueAsInt(root, "columns", 1));
                md.setObjectFlags(getNodeValueAsInt(root, "flags", 0));
                md.setAutoBindFlags(getNodeValueAsInt(root, "autoBindFlags", 0));
                md.setAutoBindFilter(getNodeValueAsString(root, "autoBindFilter", ""));
 					md.setDashboardElements(dashboardElements);
+               if (isTemplate)
+               {
+                  String nameTemplate = getNodeValueAsString(root, "nameTemplate", "");
+                  md.setDashboardNameTemplate(nameTemplate);
+               }
+					
 					session.modifyObject(md);
 				}
 			}
@@ -386,6 +392,26 @@ public class ImportDashboardAction extends ObjectAction<AbstractObject>
 			return defaultValue;
 		}
 	}
+
+   /**
+    * Get value of given node as boolean.
+    * 
+    * @param parent
+    * @param tag
+    * @param defaultValue
+    * @return
+    */
+   private static boolean getNodeValueAsBoolean(Element parent, String tag, boolean defaultValue)
+   {
+      NodeList l = parent.getElementsByTagName(tag);
+      if ((l.getLength() == 0) || (l.item(0).getNodeType() != Node.ELEMENT_NODE))
+         return defaultValue;
+
+      String v = ((Element)l.item(0)).getTextContent();
+      if (v.equals("1") || v.equalsIgnoreCase("true") || v.equalsIgnoreCase("yes"))
+         return true;
+      return false;
+   }
 
 	/**
 	 * Get node value as XML document.

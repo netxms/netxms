@@ -54,6 +54,7 @@ import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DashboardTemplate;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.NetworkMap;
@@ -137,7 +138,7 @@ public final class ObjectMenuFactory
          addPollMenuItem(menu, object, contextId, ObjectPollType.STATUS, viewPlacement);
          addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION_NORMAL, viewPlacement);
 		}
-      else if ((object instanceof Container) || (object instanceof Dashboard) || (object instanceof Template))
+      else if ((object instanceof Container) || (object instanceof Dashboard) || (object instanceof DashboardTemplate) || (object instanceof Template))
       {
          addPollMenuItem(menu, object, contextId, ObjectPollType.AUTOBIND, viewPlacement);
       }

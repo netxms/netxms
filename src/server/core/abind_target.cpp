@@ -245,7 +245,7 @@ AutoBindDecision AutoBindTarget::isApplicable(NXSL_VM **cachedFilterVM, const sh
       filter->setGlobalVariable("$map", m_this->createNXSLObject(filter));
    if (m_this->getObjectClass() == OBJECT_BUSINESSSERVICE)
       filter->setGlobalVariable("$service", m_this->createNXSLObject(filter));
-   if (m_this->getObjectClass() == OBJECT_TEMPLATE)
+   if (m_this->getObjectClass() == OBJECT_TEMPLATE || m_this->getObjectClass() == OBJECT_DASHBOARDTEMPLATE)
       filter->setGlobalVariable("$template", m_this->createNXSLObject(filter));
    if (dci != nullptr)
       filter->setGlobalVariable("$dci", dci->createNXSLObject(filter));

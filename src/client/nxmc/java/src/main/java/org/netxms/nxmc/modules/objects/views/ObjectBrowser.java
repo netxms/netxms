@@ -60,6 +60,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
+import org.netxms.client.objects.DashboardTemplate;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.NetworkMap;
@@ -437,6 +438,7 @@ public class ObjectBrowser extends NavigationView
             classFilter.add(AbstractObject.OBJECT_DASHBOARD);
             classFilter.add(AbstractObject.OBJECT_DASHBOARDGROUP);
             classFilter.add(AbstractObject.OBJECT_DASHBOARDROOT);
+            classFilter.add(AbstractObject.OBJECT_DASHBOARDTEMPLATE);
             break;
          case INFRASTRUCTURE:
             classFilter.add(AbstractObject.OBJECT_ACCESSPOINT);
@@ -573,7 +575,10 @@ public class ObjectBrowser extends NavigationView
                   (currentObject instanceof DashboardGroup)) &&
                  ((parentObject instanceof DashboardRoot) ||
                  (parentObject instanceof DashboardGroup) ||
-                 (parentObject instanceof Dashboard))) ? true : false;
+                 (parentObject instanceof Dashboard)) || 
+                 ((currentObject instanceof DashboardTemplate) &&
+                 ((parentObject instanceof DashboardRoot) || 
+                 (parentObject instanceof DashboardGroup)))) ? true : false;
          default:
             return false;
       }

@@ -68,6 +68,7 @@ public final class ObjectIcons
       images.put(AbstractObject.OBJECT_DASHBOARD, ResourceManager.getImage(display, "icons/objects/dashboard.png"));
       images.put(AbstractObject.OBJECT_DASHBOARDGROUP, ResourceManager.getImage(display, "icons/objects/dashboard_group.png"));
       images.put(AbstractObject.OBJECT_DASHBOARDROOT, ResourceManager.getImage(display, "icons/objects/dashboard_root.gif"));
+      images.put(AbstractObject.OBJECT_DASHBOARDTEMPLATE, ResourceManager.getImage(display, "icons/objects/dashboard.png")); //TODO: create image for dashboard template
       images.put(AbstractObject.OBJECT_INTERFACE, ResourceManager.getImage(display, "icons/objects/interface.png"));
       images.put(AbstractObject.OBJECT_MOBILEDEVICE, ResourceManager.getImage(display, "icons/objects/mobile_device.png"));
       images.put(AbstractObject.OBJECT_NETWORK, ResourceManager.getImage(display, "icons/objects/network.png"));

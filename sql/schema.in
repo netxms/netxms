@@ -2187,6 +2187,28 @@ CREATE TABLE dashboard_elements
 ) TABLE_TYPE;
 
 /**
+ * Dashboard templates
+ */
+CREATE TABLE dashboard_templates
+(
+  id integer not null,
+  num_columns integer not null,
+  name_template varchar(255),
+  PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * Dashboard template instances
+ */
+CREATE TABLE dashboard_template_instances
+(
+  dashboard_template_id integer not null,
+  instance_object_id integer not null,
+  instance_dashboard_id integer not null,
+  PRIMARY KEY(dashboard_template_id, instance_object_id)
+) TABLE_TYPE;
+
+/**
  * Associations between dashboards and other objects
  */
 CREATE TABLE dashboard_associations

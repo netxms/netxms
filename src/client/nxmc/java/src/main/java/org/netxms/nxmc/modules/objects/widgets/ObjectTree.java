@@ -69,6 +69,7 @@ import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.DashboardGroup;
+import org.netxms.client.objects.DashboardTemplate;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Rack;
@@ -809,7 +810,7 @@ public class ObjectTree extends Composite
                      filter = ObjectSelectionDialog.createBusinessServiceSelectionFilter();
                      break;
                   case DASHBOARDS:
-                     if (object instanceof DashboardGroup)
+                     if (object instanceof DashboardGroup || object instanceof DashboardTemplate)
                         filter = ObjectSelectionDialog.createDashboardGroupSelectionFilter();
                      else
                         filter = ObjectSelectionDialog.createDashboardSelectionFilter();

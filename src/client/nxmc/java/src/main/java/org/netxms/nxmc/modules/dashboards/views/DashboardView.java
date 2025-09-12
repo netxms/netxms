@@ -31,6 +31,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DashboardBase;
 import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.widgets.DashboardModifyListener;
@@ -74,7 +75,7 @@ public class DashboardView extends AbstractDashboardView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && (context instanceof Dashboard);
+      return (context != null) && (context instanceof DashboardBase);
    }
 
    /**
@@ -110,7 +111,7 @@ public class DashboardView extends AbstractDashboardView
             dbc.setEditMode(!dbc.isEditMode());
             actionEditMode.setChecked(dbc.isEditMode());
             if (!dbc.isEditMode())
-               rebuildDashboard((Dashboard)getObject(), null);
+               rebuildDashboard((DashboardBase)getObject(), null);
          }
       };
       actionEditMode.setImageDescriptor(SharedIcons.EDIT);
@@ -189,7 +190,8 @@ public class DashboardView extends AbstractDashboardView
       manager.add(actionAddColumn);
       manager.add(actionRemoveColumn);
       manager.add(new Separator());
-      manager.add(actionSelectContext);
+      if (getObject() instanceof Dashboard && !(((Dashboard)getObject()).isTemplateInstance()))
+         manager.add(actionSelectContext);
       manager.add(new Separator());
       super.fillLocalMenu(manager);
    }
@@ -201,7 +203,11 @@ public class DashboardView extends AbstractDashboardView
    protected void onObjectChange(AbstractObject object)
    {      
       readOnly = ((object.getEffectiveRights() & UserAccessRights.OBJECT_ACCESS_MODIFY) == 0);
-      rebuildDashboard((Dashboard)object, ((Dashboard)object).isShowContentSelector() ? selectedContext : null);
+      DashboardBase dashboard = (DashboardBase)object;
+      if ((object instanceof Dashboard) && (((Dashboard)object).isTemplateInstance()))
+         rebuildDashboard(dashboard, session.findObjectById(((Dashboard)dashboard).getForcedContextObjectId()));
+      else
+         rebuildDashboard(dashboard, dashboard.isShowContentSelector() ? selectedContext : null);
    }
 
    /**
@@ -210,16 +216,15 @@ public class DashboardView extends AbstractDashboardView
    @Override
    protected void rebuildCurrentDashboard()
    {
-      Dashboard dashboard = (Dashboard)getObject();
+      DashboardBase dashboard = (DashboardBase)getObject();
       rebuildDashboard(dashboard, dashboard.isShowContentSelector() ? selectedContext : null);
    }
 
    /**
-    * @see org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView#rebuildDashboard(org.netxms.client.objects.Dashboard,
-    *      org.netxms.client.objects.AbstractObject)
+    * @see org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView#rebuildDashboard(org.netxms.client.objects.DashboardBase, org.netxms.client.objects.AbstractObject)
     */
    @Override
-   protected void rebuildDashboard(Dashboard dashboard, AbstractObject dashboardContext)
+   protected void rebuildDashboard(DashboardBase dashboard, AbstractObject dashboardContext)
    {
       if (dashboard.isShowContentSelector())
       {
