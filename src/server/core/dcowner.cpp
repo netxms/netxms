@@ -825,7 +825,7 @@ shared_ptr<DCObject> DataCollectionOwner::getDCObjectByGUID(uuid guid, uint32_t 
 /**
  * Get all DC objects with matching name, description, and tag
  */
-NXSL_Value *DataCollectionOwner::getAllDCObjectsForNXSL(NXSL_VM *vm, const WCHAR *name, const WCHAR *description, const WCHAR *tag, uint32_t userID) const
+NXSL_Value *DataCollectionOwner::getAllDCObjectsForNXSL(NXSL_VM *vm, const wchar_t *name, const wchar_t *description, const wchar_t *tag, uint32_t relatedObjectId, uint32_t userID) const
 {
    NXSL_Array *list = new NXSL_Array(vm);
    readLockDciAccess();
@@ -835,6 +835,7 @@ NXSL_Value *DataCollectionOwner::getAllDCObjectsForNXSL(NXSL_VM *vm, const WCHAR
       if (((name == nullptr) || MatchString(name, curr->getName(), false)) &&
           ((description == nullptr) || MatchString(description, curr->getDescription(), false)) &&
           ((tag == nullptr) || MatchString(tag, curr->getUserTag(), false)) &&
+          ((relatedObjectId == 0) || (curr->getRelatedObject() == relatedObjectId)) &&
           curr->hasAccess(userID))
 		{
          list->set(list->size(), curr->createNXSLObject(vm));

@@ -249,11 +249,11 @@ static int F_FindDCIByTagPattern(int argc, NXSL_Value **argv, NXSL_Value **resul
 }
 
 /**
- * NXSL function: Find all DCIs with matching name, description, or tag
+ * NXSL function: Find all DCIs with matching name, description, tag, or related object
  */
 static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   if ((argc < 1) || (argc > 4))
+   if ((argc < 1) || (argc > 5))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
 	if (!argv[0]->isObject())
@@ -263,7 +263,8 @@ static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
    if (!object->getClass()->instanceOf(_T("DataCollectionTarget")))
       return NXSL_ERR_BAD_CLASS;
 
-   const WCHAR *nameFilter = nullptr, *descriptionFilter = nullptr, *tagFilter = nullptr;
+   const wchar_t *nameFilter = nullptr, *descriptionFilter = nullptr, *tagFilter = nullptr;
+   uint32_t relatedObjectId = 0;
    if (argc > 1)
    {
       if (!argv[1]->isNull())
@@ -290,12 +291,33 @@ static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
                   return NXSL_ERR_NOT_STRING;
                tagFilter = argv[3]->getValueAsCString();
             }
+
+            if (argc > 4)
+            {
+               if (!argv[4]->isNull())
+               {
+                  if (argv[4]->isObject(L"NetObj"))
+                  {
+                     NXSL_Object *o = argv[4]->getValueAsObject();
+                     shared_ptr<NetObj> relatedObject = *static_cast<shared_ptr<NetObj>*>(o->getData());
+                     relatedObjectId = relatedObject->getId();
+                  }
+                  else if (argv[4]->isInteger())
+                  {
+                     relatedObjectId = argv[4]->getValueAsUInt32();
+                  }
+                  else
+                  {
+                     return NXSL_ERR_NOT_INTEGER;
+                  }
+               }
+            }
          }
       }
    }
 
    shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
-	*result = node->getAllDCObjectsForNXSL(vm, nameFilter, descriptionFilter, tagFilter, 0);
+	*result = node->getAllDCObjectsForNXSL(vm, nameFilter, descriptionFilter, tagFilter, relatedObjectId, 0);
 	return 0;
 }
 
