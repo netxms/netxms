@@ -2757,7 +2757,7 @@ public:
    void cleanDCIData(DB_HANDLE hdb);
    void calculateDciCutoffTimes(time_t *cutoffTimeIData, time_t *cutoffTimeTData);
    void queueItemsForPolling();
-   bool processNewDCValue(const shared_ptr<DCObject>& dco, time_t currTime, const TCHAR *itemValue, const shared_ptr<Table>& tableValue);
+   bool processNewDCValue(const shared_ptr<DCObject>& dco, time_t currTime, const wchar_t *itemValue, const shared_ptr<Table>& tableValue);
    void scheduleItemDataCleanup(uint32_t dciId);
    void scheduleTableDataCleanup(uint32_t dciId);
    void queuePredictionEngineTraining();

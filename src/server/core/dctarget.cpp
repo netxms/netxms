@@ -971,7 +971,7 @@ uint32_t DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, uint32_t ba
 /**
  * Process new DCI value
  */
-bool DataCollectionTarget::processNewDCValue(const shared_ptr<DCObject>& dcObject, time_t currTime, const TCHAR *itemValue, const shared_ptr<Table>& tableValue)
+bool DataCollectionTarget::processNewDCValue(const shared_ptr<DCObject>& dcObject, time_t currTime, const wchar_t *itemValue, const shared_ptr<Table>& tableValue)
 {
    bool updateStatus;
 	bool success = (dcObject->getType() == DCO_TYPE_ITEM) ?

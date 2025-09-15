@@ -250,6 +250,13 @@ bool DCTable::processNewValue(time_t timestamp, const shared_ptr<Table>& value, 
       return false;
    }
 
+   if (timestamp == m_lastValueTimestamp)
+   {
+      // Duplicate value
+      unlock();
+      return false;
+   }
+
    // Transform input value
    // Cluster can have only aggregated data, and transformation
    // should not be used on aggregation
