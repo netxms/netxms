@@ -669,7 +669,7 @@ WebServiceCallResult *AgentConnectionEx::webServiceCustomRequest(HttpRequestMeth
 uint32_t AgentConnectionEx::processCollectedData(NXCPMessage *msg)
 {
    if (IsShutdownInProgress())
-      return ERR_INTERNAL_ERROR;
+      return ERR_RESOURCE_BUSY;
 
    if (m_nodeId == 0)
    {
@@ -751,7 +751,7 @@ uint32_t AgentConnectionEx::processCollectedData(NXCPMessage *msg)
    {
       case ERR_SUCCESS:
       {
-         TCHAR itemValue[MAX_RESULT_LENGTH];
+         wchar_t itemValue[MAX_RESULT_LENGTH];
          shared_ptr<Table> tableValue;
          switch(type)
          {
@@ -909,7 +909,7 @@ uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPM
          continue;
       }
 
-      TCHAR *value = request->getFieldAsString(fieldId + 5);
+      wchar_t *value = request->getFieldAsString(fieldId + 5);
       uint32_t statusCode = request->getFieldAsUInt32(fieldId + 6);
       debugPrintf(7, _T("AgentConnectionEx::processBulkCollectedData: processing DCI %s [%u] (type=%d) (status=%d) on object %s [%u] (element %d)"),
                   dcObject->getName().cstr(), dciId, type, statusCode, target->getName(), target->getId(), i);

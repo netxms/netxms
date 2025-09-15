@@ -710,7 +710,7 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
  *
  * @return true on success
  */
-bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, bool *updateStatus)
+bool DCItem::processNewValue(time_t timestamp, const wchar_t *originalValue, bool *updateStatus)
 {
    ItemValue rawValue, *pValue;
 
@@ -727,8 +727,15 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
       return false;
    }
 
+   if (timestamp == m_prevValueTimeStamp)
+   {
+      // Duplicate value, ignore
+      unlock();
+      return false;
+   }
+
    // Create new ItemValue object and transform it as needed
-   pValue = new ItemValue(originalValue, tmTimeStamp, false);
+   pValue = new ItemValue(originalValue, timestamp, false);
    if (m_prevValueTimeStamp == 0)
       m_prevRawValue = *pValue;  // Delta should be zero for first poll
    rawValue = *pValue;
@@ -737,7 +744,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
    // should not be used on aggregation
    if ((owner->getObjectClass() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
    {
-      if (!transform(*pValue, (tmTimeStamp > m_prevValueTimeStamp) ? (tmTimeStamp - m_prevValueTimeStamp) : 0))
+      if (!transform(*pValue, (timestamp > m_prevValueTimeStamp) ? (timestamp - m_prevValueTimeStamp) : 0))
       {
          unlock();
          delete pValue;
@@ -747,12 +754,12 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
 
    m_errorCount = 0;
 
-   if (isStatusDCO() && (tmTimeStamp > m_prevValueTimeStamp) && ((m_cacheSize == 0) || !m_cacheLoaded || (pValue->getUInt32() != m_ppValueCache[0]->getUInt32())))
+   if (isStatusDCO() && (timestamp > m_prevValueTimeStamp) && ((m_cacheSize == 0) || !m_cacheLoaded || (pValue->getUInt32() != m_ppValueCache[0]->getUInt32())))
    {
       *updateStatus = true;
    }
 
-   if (tmTimeStamp > m_prevValueTimeStamp)
+   if (timestamp > m_prevValueTimeStamp)
    {
       if (m_flags & DCF_DETECT_ANOMALIES)
       {
@@ -763,10 +770,10 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
       }
 
       m_prevRawValue = rawValue;
-      m_prevValueTimeStamp = tmTimeStamp;
+      m_prevValueTimeStamp = timestamp;
 
       // Save raw value into database
-      QueueRawDciDataUpdate(tmTimeStamp, m_id, originalValue, pValue->getString(), (m_cacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0, m_anomalyDetected);
+      QueueRawDciDataUpdate(timestamp, m_id, originalValue, pValue->getString(), (m_cacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0, m_anomalyDetected);
    }
 
 	// Check if user wants to collect all values or only changed values.
@@ -774,14 +781,14 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
    {
       //Save transformed value to database
       if (m_retentionType != DC_RETENTION_NONE)
-           QueueIDataInsert(tmTimeStamp, owner->getId(), m_id, originalValue, pValue->getString(), getStorageClass());
+           QueueIDataInsert(timestamp, owner->getId(), m_id, originalValue, pValue->getString(), getStorageClass());
 
       if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
       {
          // Operate on copy with this DCI unlocked to prevent deadlock if fan-out driver access owning object
          DCItem copy(this, false, false);
          unlock();
-         PerfDataStorageRequest(&copy, tmTimeStamp, pValue->getString());
+         PerfDataStorageRequest(&copy, timestamp, pValue->getString());
          lock();
       }
    }
@@ -791,12 +798,12 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
    {
       PredictionEngine *engine = FindPredictionEngine(m_predictionEngine);
       if (engine != nullptr)
-         engine->update(owner->getId(), m_id, getStorageClass(), tmTimeStamp, pValue->getDouble());
+         engine->update(owner->getId(), m_id, getStorageClass(), timestamp, pValue->getDouble());
    }
 
    // Check thresholds and add value to cache
-   if (m_cacheLoaded && (tmTimeStamp >= m_prevValueTimeStamp) &&
-       ((g_offlineDataRelevanceTime <= 0) || (tmTimeStamp > (time(nullptr) - g_offlineDataRelevanceTime))))
+   if (m_cacheLoaded && (timestamp >= m_prevValueTimeStamp) &&
+       ((g_offlineDataRelevanceTime <= 0) || (timestamp > (time(nullptr) - g_offlineDataRelevanceTime))))
    {
       if (hasScriptThresholds())
       {
@@ -867,12 +874,12 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
       }
    }
 
-   if ((m_cacheSize > 0) && (tmTimeStamp >= m_prevValueTimeStamp))
+   if ((m_cacheSize > 0) && (timestamp >= m_prevValueTimeStamp))
    {
       delete m_ppValueCache[m_cacheSize - 1];
       memmove(&m_ppValueCache[1], m_ppValueCache, sizeof(ItemValue *) * (m_cacheSize - 1));
       m_ppValueCache[0] = pValue;
-      m_lastValueTimestamp = tmTimeStamp;
+      m_lastValueTimestamp = timestamp;
    }
    else if (!m_cacheLoaded && (m_requiredCacheSize == 1))
    {
@@ -889,7 +896,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
 
       m_ppValueCache[0] = pValue;
       m_cacheLoaded = true;
-      m_lastValueTimestamp = tmTimeStamp;
+      m_lastValueTimestamp = timestamp;
    }
    else
    {

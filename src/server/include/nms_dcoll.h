@@ -583,7 +583,7 @@ public:
 
 	uint64_t getCacheMemoryUsage() const;
 
-   bool processNewValue(time_t nTimeStamp, const TCHAR *value, bool *updateStatus);
+   bool processNewValue(time_t timestamp, const wchar_t *value, bool *updateStatus);
 
    virtual void processNewError(bool noInstance, time_t now) override;
    virtual void saveStateBeforeMaintenance() override;
