@@ -72,7 +72,7 @@ public class AppearancePage extends PropertyPage
 
       checkShowWelcomePage = new Button(dialogArea, SWT.CHECK);
       checkShowWelcomePage.setText(i18n.tr("Show post-upgrade &welcome page on startup"));
-      checkShowWelcomePage.setSelection(!settings.getAsBoolean("WelcomePage.Disabled", false));
+      checkShowWelcomePage.setSelection(!settings.getAsBoolean("WelcomePage.Disabled", !Registry.getSession().getClientConfigurationHintAsBoolean("EnableWelcomePage", true)));
 
       if (!Registry.IS_WEB_CLIENT)
       {

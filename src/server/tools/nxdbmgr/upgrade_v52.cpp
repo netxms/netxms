@@ -24,6 +24,20 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 52.22 to 52.23
+ */
+static bool H_UpgradeFromV22()
+{
+   CHK_EXEC(CreateConfigParam(L"Client.EnableWelcomePage",
+            L"1",
+            L"Enable or disable welcome page in client application (shown when server is upgraded to new version and contains release notes).",
+            nullptr, 'B', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(23));
+   return true;
+}
+
+/**
  * Upgrade from 52.21 to 52.22
  */
 static bool H_UpgradeFromV21()
@@ -511,6 +525,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 22, 52, 23, H_UpgradeFromV22 },
    { 21, 52, 22, H_UpgradeFromV21 },
    { 20, 52, 21, H_UpgradeFromV20 },
    { 19, 52, 20, H_UpgradeFromV19 },
