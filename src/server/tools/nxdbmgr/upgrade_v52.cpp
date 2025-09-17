@@ -37,9 +37,9 @@ static bool H_UpgradeFromV23()
  */
 static bool H_UpgradeFromV22()
 {
-   CHK_EXEC(CreateConfigParam(L"Client.EnableWelcomeScreen",
+   CHK_EXEC(CreateConfigParam(L"Client.EnableWelcomePage",
             L"1",
-            L"Enable or disable welcome screen in client application (shown when server is upgraded to new version and contains release notes).",
+            L"Enable or disable welcome page in client application (shown when server is upgraded to new version and contains release notes).",
             nullptr, 'B', true, false, false, false));
 
    CHK_EXEC(SetMinorSchemaVersion(23));
