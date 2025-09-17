@@ -23,6 +23,25 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 53.9 to 53.10
+ */
+static bool H_UpgradeFromV9()
+{
+   if (GetSchemaLevelForMajorVersion(52) < 23)
+   {
+      CHK_EXEC(CreateConfigParam(L"Client.EnableWelcomeScreen",
+               L"1",
+               L"Enable or disable welcome screen in client application (shown when server is upgraded to new version and contains release notes).",
+               nullptr, 'B', true, false, false, false));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(52, 23));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(10));
+   return true;
+}
+
+/**
  * Upgrade from 53.8 to 53.9
  */
 static bool H_UpgradeFromV8()
@@ -278,6 +297,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 9,  53, 10, H_UpgradeFromV9  },
    { 8,  53, 9,  H_UpgradeFromV8  },
    { 7,  53, 8,  H_UpgradeFromV7  },
    { 6,  53, 7,  H_UpgradeFromV6  },

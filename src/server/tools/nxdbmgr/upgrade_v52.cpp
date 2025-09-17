@@ -24,11 +24,25 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 52.22 to 53.0
+ * Upgrade from 52.23 to 53.0
+ */
+static bool H_UpgradeFromV23()
+{
+   CHK_EXEC(SetMajorSchemaVersion(53, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 52.22 to 52.23
  */
 static bool H_UpgradeFromV22()
 {
-   CHK_EXEC(SetMajorSchemaVersion(53, 0));
+   CHK_EXEC(CreateConfigParam(L"Client.EnableWelcomeScreen",
+            L"1",
+            L"Enable or disable welcome screen in client application (shown when server is upgraded to new version and contains release notes).",
+            nullptr, 'B', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(23));
    return true;
 }
 
@@ -521,7 +535,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 22, 53, 0,  H_UpgradeFromV22 },
+   { 23, 53, 0,  H_UpgradeFromV23 },
+   { 22, 52, 23, H_UpgradeFromV22 },
    { 21, 52, 22, H_UpgradeFromV21 },
    { 20, 52, 21, H_UpgradeFromV20 },
    { 19, 52, 20, H_UpgradeFromV19 },

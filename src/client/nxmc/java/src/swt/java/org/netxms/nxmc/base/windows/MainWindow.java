@@ -299,11 +299,13 @@ public class MainWindow extends Window implements MessageAreaHolder
     */
    private void showWelcomePage()
    {
+      final NXCSession session = Registry.getSession();
+
       PreferenceStore ps = PreferenceStore.getInstance();
-      if (ps.getAsBoolean("WelcomePage.Disabled", false))
+      if (ps.getAsBoolean("WelcomePage.Disabled", !session.getClientConfigurationHintAsBoolean("EnableWelcomeScreen", true)))
          return;
 
-      String serverVersion = Registry.getSession().getServerVersion();
+      String serverVersion = session.getServerVersion();
       int dotCount = 0;
       for(int i = 0; i < serverVersion.length(); i++)
       {
