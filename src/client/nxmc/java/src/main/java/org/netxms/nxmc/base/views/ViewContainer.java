@@ -349,6 +349,12 @@ public abstract class ViewContainer extends Composite
          if (view != null)
             view.activate();
       }
+      else
+      {
+         View view = getActiveView();
+         if (view != null)
+            view.deactivate();
+      }
    }
 
    /**
