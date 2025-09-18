@@ -210,7 +210,20 @@ public abstract class Perspective
    public void hide()
    {
       if ((content != null) && !content.isDisposed())
+      {
          content.setVisible(false);
+
+         if (navigationFolder != null)
+            navigationFolder.setActive(false);
+         if (navigationArea != null)
+            navigationArea.setActive(false);
+         if (mainFolder != null)
+            mainFolder.setActive(false);
+         if (mainArea != null)
+            mainArea.setActive(false);
+         if (supplementaryFolder != null)
+            supplementaryFolder.setActive(false);
+      }
    }
 
    /**
@@ -229,11 +242,22 @@ public abstract class Perspective
       {
          content.setVisible(true);
       }
+      
+      if (navigationFolder != null)
+         navigationFolder.setActive(true);
+      if (navigationArea != null)
+         navigationArea.setActive(true);
+      if (mainFolder != null)
+         mainFolder.setActive(true);
+      if (mainArea != null)
+         mainArea.setActive(true);
+      if (supplementaryFolder != null)
+         supplementaryFolder.setActive(true);
 
       window.getShell().getDisplay().asyncExec(new Runnable() {
          @Override
          public void run()
-         {
+         {            
             if (navigationFolder != null)
             {
                navigationFolder.setFocus();

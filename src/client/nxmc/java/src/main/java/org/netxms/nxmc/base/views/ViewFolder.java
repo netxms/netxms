@@ -931,7 +931,7 @@ public class ViewFolder extends ViewContainer
    @Override
    public boolean isViewActive(View view)
    {
-      return !tabFolder.isDisposed() && (activeView == view);
+      return isActive && !tabFolder.isDisposed() && (activeView == view);
    }
 
    /**

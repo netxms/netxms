@@ -507,7 +507,7 @@ public class ViewStack extends ViewContainer
    @Override
    public boolean isViewActive(View view)
    {
-      return !views.empty() && (views.peek() == view);
+      return isActive && !views.empty() && (views.peek() == view);
    }
 
    /**
