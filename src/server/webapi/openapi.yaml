@@ -22,7 +22,7 @@ paths:
                     type: string
                     description: API version
       security: []
-  /server-info:
+  /v1/server-info:
     get:
       summary: Get server information
       description: Retrieve detailed server information including version, build, and configuration details.
@@ -48,7 +48,7 @@ paths:
           description: Unauthorized
       security:
         - BearerAuth: []
-  /status:
+  /v1/status:
     get:
       summary: Get server status
       description: Retrieve current server status and health information.
@@ -70,7 +70,7 @@ paths:
           description: Unauthorized
       security:
         - BearerAuth: []
-  /alarms:
+  /v1/alarms:
     get:
       summary: List Alarms
       description: Retrieve a list of alarms.
@@ -105,7 +105,7 @@ paths:
                       format: date-time
       security:
         - BearerAuth: []
-  /alarms/{alarm-id}:
+  /v1/alarms/{alarm-id}:
     get:
       summary: Get details of specific alarm
       parameters:
@@ -125,7 +125,7 @@ paths:
           description: Alarm with given ID does not exist
       security:
         - BearerAuth: []
-  /alarms/{alarm-id}/acknowledge:
+  /v1/alarms/{alarm-id}/acknowledge:
     post:
       summary: Acknowledge Alarm
       description: Acknowledge an alarm.
@@ -146,7 +146,7 @@ paths:
           description: Alarm with given ID does not exist
       security:
         - BearerAuth: []
-  /alarms/{alarm-id}/resolve:
+  /v1/alarms/{alarm-id}/resolve:
     post:
       summary: Resolve Alarm
       description: Resolve an alarm.
@@ -167,7 +167,7 @@ paths:
           description: Alarm with given ID does not exist
       security:
         - BearerAuth: []
-  /alarms/{alarm-id}/terminate:
+  /v1/alarms/{alarm-id}/terminate:
     post:
       summary: Terminate Alarm
       description: Terminate an alarm.
@@ -188,7 +188,7 @@ paths:
           description: Alarm with given ID does not exist
       security:
         - BearerAuth: []
-  /find/mac-address:
+  /v1/find/mac-address:
     get:
       summary: Find MAC address
       parameters:
@@ -257,7 +257,7 @@ paths:
           description: Unauthorized.
       security:
         - BearerAuth: []
-  /grafana/infinity/alarms:
+  /v1/grafana/infinity/alarms:
     post:
       summary: Retrieve alarms in format sutable Grafana Infinity
       description: Retrieve alarms in format sutable Grafana Infinity.
@@ -284,7 +284,7 @@ paths:
           description: Unauthorized.
       security:
         - BearerAuth: []
-  /grafana/infinity/object-query:
+  /v1/grafana/infinity/object-query:
     post:
       summary: Execute object query and return result in format sutable Grafana Infinity
       description: Execute object query and return result in  format sutable Grafana Infinity.
@@ -326,7 +326,7 @@ paths:
           description: Unauthorized.
       security:
         - BearerAuth: []
-  /grafana/infinity/summary-table:
+  /v1/grafana/infinity/summary-table:
     post:
       summary: Retrieve summary table in format sutable Grafana Infinity
       description: Retrieve summary table in format sutable Grafana Infinity.
@@ -357,7 +357,171 @@ paths:
           description: Unauthorized.
       security:
         - BearerAuth: []
-  /login:
+  /v1/grafana/objects/{object-id}/dci-list:
+    get:
+      summary: Get DCI list for Grafana
+      description: Retrieve data collection items (DCIs) for a specific object formatted for Grafana.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: Object ID
+      responses:
+        '200':
+          description: DCI list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: DCI ID
+                    name:
+                      type: string
+                      description: DCI name
+                    description:
+                      type: string
+                      description: DCI description
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+  /v1/grafana/objects-status:
+    post:
+      summary: Get objects status for Grafana
+      description: Retrieve status information for multiple objects formatted for Grafana.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                objects:
+                  type: array
+                  items:
+                    type: integer
+                  description: List of object IDs to retrieve status for
+      responses:
+        '200':
+          description: Objects status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: Object ID
+                    status:
+                      type: integer
+                      description: Object status
+                    name:
+                      type: string
+                      description: Object name
+        '401':
+          description: Unauthorized
+      security:
+        - BearerAuth: []
+  /v1/grafana/object-list:
+    get:
+      summary: Get object list for Grafana
+      description: Retrieve a list of objects formatted for Grafana with optional filtering.
+      parameters:
+        - name: filter
+          in: query
+          schema:
+            type: string
+            description: Filter type for objects (e.g., DataCollectionTarget, Summary, Alarm)
+      responses:
+        '200':
+          description: Object list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  objects:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: Object ID
+                        name:
+                          type: string
+                          description: Object name (may include alias)
+        '401':
+          description: Unauthorized
+      security:
+        - BearerAuth: []
+  /v1/grafana/summary-table-list:
+    get:
+      summary: Get summary table list for Grafana
+      description: Retrieve a list of available DCI summary tables formatted for Grafana.
+      responses:
+        '200':
+          description: Summary table list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: Summary table ID
+                    name:
+                      type: string
+                      description: Summary table name
+                    description:
+                      type: string
+                      description: Summary table description
+        '401':
+          description: Unauthorized
+      security:
+        - BearerAuth: []
+  /v1/grafana/query-list:
+    get:
+      summary: Get object query list for Grafana
+      description: Retrieve a list of available object queries formatted for Grafana.
+      responses:
+        '200':
+          description: Object query list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: Query ID
+                    name:
+                      type: string
+                      description: Query name
+                    description:
+                      type: string
+                      description: Query description
+        '401':
+          description: Unauthorized
+      security:
+        - BearerAuth: []
+  /v1/login:
     post:
       summary: User Login
       description: Authenticate a user and respond with a token.
@@ -408,6 +572,8 @@ paths:
                   graceLogins:
                     type: integer
                     description: Number of grace logins left if password change is required.
+        '400':
+          description: Bad Request - Invalid request body
         '401':
           description: Unauthorized.
           headers:
@@ -427,7 +593,7 @@ paths:
                     type: integer
                     description: Error code that can provide additional information on login failure reasons.
       security: []
-  /logout:
+  /v1/logout:
     post:
       summary: User Logout
       description: Logout a user and invalidate their token.
@@ -436,7 +602,7 @@ paths:
           description: Successful logout.
       security:
         - BearerAuth: []
-  /objects:
+  /v1/objects:
     get:
       summary: List objects
       description: Retrieve a list of objects (with optional filter).
@@ -464,7 +630,7 @@ paths:
           description: Unauthorized.
       security:
         - BearerAuth: []
-  /objects/{object-id}:
+  /v1/objects/{object-id}:
     get:
       summary: Get object details
       description: Retrieve specific object details. Contains data for object overview, alarms, and last values.
@@ -489,7 +655,7 @@ paths:
           description: Object with given ID does not exist
       security:
         - BearerAuth: []
-  /objects/{object-id}/execute-agent-command:
+  /v1/objects/{object-id}/execute-agent-command:
     post:
       summary: Execute command on agent
       parameters:
@@ -527,7 +693,7 @@ paths:
                       description: Textual description of agent error code (if applicable)
       security:
         - BearerAuth: []
-  /objects/{object-id}/execute-script:
+  /v1/objects/{object-id}/execute-script:
     post:
       summary: Execute script within context of given object
       parameters:
@@ -581,7 +747,7 @@ paths:
                     description: Failure reason
       security:
         - BearerAuth: []
-  /objects/{object-id}/data-collection/current-values:
+  /v1/objects/{object-id}/data-collection/current-values:
     get:
       summary: Get current DCI values
       description: Retrieve current values for all data collection items (DCIs) of a given object.
@@ -620,7 +786,7 @@ paths:
           description: Object with given ID does not exist
       security:
         - BearerAuth: []
-  /objects/{object-id}/data-collection/{dci-id}/history:
+  /v1/objects/{object-id}/data-collection/{dci-id}/history:
     get:
       summary: Get data collection history
       description: Retrieve historical data for a specific DCI (Data Collection Item).
@@ -684,7 +850,7 @@ paths:
           description: Object or DCI with given ID does not exist
       security:
         - BearerAuth: []
-  /objects/{object-id}/expand-text:
+  /v1/objects/{object-id}/expand-text:
     post:
       summary: Expand text macros
       description: Expand text containing NetXMS macros in the context of a given object.
@@ -737,7 +903,7 @@ paths:
       security:
         - BearerAuth: []
 
-  /objects/{object-id}/set-maintenance:
+  /v1/objects/{object-id}/set-maintenance:
     post:
       summary: Make object enter or leave maintenance mode
       parameters:
@@ -772,7 +938,7 @@ paths:
           description: Object with given ID does not exist
       security:
         - BearerAuth: []
-  /objects/{object-id}/set-managed:
+  /v1/objects/{object-id}/set-managed:
     post:
       summary: Manage or unmanage object
       parameters:
@@ -804,7 +970,7 @@ paths:
           description: Object with given ID does not exist
       security:
         - BearerAuth: []
-  /objects/{object-id}/take-screenshot:
+  /v1/objects/{object-id}/take-screenshot:
     get:
       summary: Take screenshot from remote system via NetXMS agent
       parameters:
@@ -836,7 +1002,40 @@ paths:
           description: Server side error (common reason is failed communication to agent). Response document may contain detailed failure reason.
       security:
         - BearerAuth: []
-  /objects/query:
+  /v1/objects/{object-id}/sub-tree:
+    get:
+      summary: Get object sub-tree
+      description: Retrieve a sub-tree of objects starting from the specified parent object.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: Parent object ID
+        - name: filter
+          in: query
+          schema:
+            type: string
+            description: Optional filter string. If provided, only objects with name or alias containing given string will be returned.
+      responses:
+        '200':
+          description: Object sub-tree retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ObjectSummary'
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+  /v1/objects/query:
     post:
       summary: Execute object query
       description: Execute object query (specialized NXSL script) and return all matching objects along with additional data fields.
@@ -885,7 +1084,7 @@ paths:
           description: Unauthorized.
       security:
         - BearerAuth: []
-  /objects/search:
+  /v1/objects/search:
     post:
       summary: Search objects
       description: Search for objects matching certain criteria. Multiple criterias will be combined with logical AND.
@@ -926,7 +1125,7 @@ paths:
           description: Unauthorized.
       security:
         - BearerAuth: []
-  /object-tools:
+  /v1/object-tools:
     get:
       summary: List available object tools
       description: Retrieve a list of object tools.
@@ -950,7 +1149,7 @@ paths:
                       type: string
       security:
         - BearerAuth: []
-  /dci-summary-tables:
+  /v1/dci-summary-tables:
     get:
       summary: List DCI summary tables
       description: Retrieve a list of available DCI summary tables.
@@ -977,7 +1176,7 @@ paths:
           description: Unauthorized
       security:
         - BearerAuth: []
-  /dci-summary-tables/{table-id}/query:
+  /v1/dci-summary-tables/{table-id}/query:
     post:
       summary: Query specific DCI summary table
       description: Execute a query on a specific DCI summary table.
@@ -1017,7 +1216,7 @@ paths:
           description: Summary table with given ID does not exist
       security:
         - BearerAuth: []
-  /dci-summary-tables/adhoc-query:
+  /v1/dci-summary-tables/adhoc-query:
     post:
       summary: Execute ad-hoc DCI summary table query
       description: Execute an ad-hoc query on DCI summary tables.
