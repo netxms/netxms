@@ -2786,6 +2786,35 @@ static inline int func(ssize_t v)
 ])
 AC_LANG_POP([C++])
 
+AC_MSG_CHECKING(if int8_t differs from char in overloads)
+AC_LANG_PUSH([C++])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+
+static inline int func(char v)
+{
+	return (int)v + 1;
+}
+
+static inline int func(int8_t v)
+{
+	return (int)v + 2;
+}
+]],[[
+	int8_t v = 1;
+	return func(v);
+]])
+],[
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(CAN_OVERLOAD_INT8_T,1,Define to 1 if int8_t can be used in overloads)
+],[
+        AC_MSG_RESULT(no)
+        AC_DEFINE(CAN_OVERLOAD_INT8_T,0,Define to 1 if int8_t can be used in overloads)
+])
+AC_LANG_POP([C++])
+
 AC_MSG_CHECKING(whether va_list is a pointer)
 AC_LANG_PUSH([C++])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
