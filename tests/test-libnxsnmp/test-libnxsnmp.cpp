@@ -218,7 +218,7 @@ static void TestVariableClass()
    AssertEquals(buffer, _T("Some long string that exceeds internal value buffer in variable class"));
 
    v7.getValueAsString(buffer, 256);
-   AssertEquals(buffer[0], 0);  // v7 should be in "empty" state after move
+   AssertEquals(static_cast<int32_t>(buffer[0]), 0);  // v7 should be in "empty" state after move
    EndTest();
 
    StartTest(_T("SNMP_Variable assignment operator"));
@@ -254,7 +254,7 @@ static void TestVariableClass()
    v10.getValueAsString(buffer, 256);
    AssertEquals(buffer, _T("Some long string that exceeds internal value buffer in variable class"));
    v12.getValueAsString(buffer, 256);
-   AssertEquals(buffer[0], 0);  // v12 should be in "empty" state after move
+   AssertEquals(static_cast<int32_t>(buffer[0]), 0);  // v12 should be in "empty" state after move
    EndTest();
 }
 
