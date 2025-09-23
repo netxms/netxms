@@ -750,6 +750,7 @@ AC_ARG_WITH(pcre,
 [AS_HELP_STRING(--with-pcre,specify PCRE location)],
 [
 	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno"; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
 		LDFLAGS="$LDFLAGS -L${withval}/lib"
 		CPPFLAGS="$CPPFLAGS -I${withval}/include"
 	fi
@@ -2750,9 +2751,9 @@ if test "x$DISABLE_SSH" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 		SUBAGENT_DIRS="$SUBAGENT_DIRS ssh"
 		AC_DEFINE(HAVE_LIBSSH, 1, Define to 1 if libssh is available)
 	else
-      if test "x$REQUIRE_SSH" = "xyes"; then
-		   AC_MSG_ERROR(libssh is required for SSH support)
-      fi
+		if test "x$REQUIRE_SSH" = "xyes"; then
+			AC_MSG_ERROR(libssh is required for SSH support)
+		fi
 	fi
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"
@@ -2868,9 +2869,9 @@ if test "x$DISABLE_LDAP" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 		fi
 	fi
 
-   if test "x$HAVE_LDAP" != "xyes" -a "x$REQUIRE_LDAP" = "xyes"; then
-      AC_MSG_ERROR(OpenLDAP is required for LDAP support)
-   fi
+	if test "x$HAVE_LDAP" != "xyes" -a "x$REQUIRE_LDAP" = "xyes"; then
+		AC_MSG_ERROR(OpenLDAP is required for LDAP support)
+	fi
 	LDAP_SUPPORT="$HAVE_LDAP"
 fi
 
@@ -4209,6 +4210,9 @@ if test $? = 0; then
 	LD_RUN_PATH="${JDK_LOCATION}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
 	LDFLAGS="$LDFLAGS -L${JDK_LOCATION}/lib"
 	CPPFLAGS="$CPPFLAGS -I${JDK_LOCATION}/include"
+	if test -d "${JDK_LOCATION}/include/aix"; then
+		CPPFLAGS="$CPPFLAGS -I${JDK_LOCATION}/include/aix"
+	fi
 	if test -d "${JDK_LOCATION}/include/darwin"; then
 		CPPFLAGS="$CPPFLAGS -I${JDK_LOCATION}/include/darwin"
 	fi
@@ -4394,7 +4398,7 @@ if test "x$DISABLE_MQTT" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 		CPPFLAGS="$CPPFLAGS $MQTT_CPPFLAGS"
 		LDFLAGS="$LDFLAGS $MQTT_LDFLAGS"
 	fi
-	
+
 	AC_CHECK_HEADER(mosquitto.h,[
       AC_CHECK_LIB(mosquitto, mosquitto_lib_init, [
          MQTT_LIBS="-lmosquitto"
@@ -5282,7 +5286,7 @@ if test "x${BUILD_AGENT}" = "xyes"; then
 	echo "Build Agent             : YES"
 	echo "Agent libs              :${AGENT_LIBS}"
 	echo "Agent extra components  : ${AGENT_DIRS}"
-	echo "Subagents list          : ${SUBAGENT_DIRS}"
+	echo "Subagent list           : ${SUBAGENT_DIRS}"
 	if test "x${SYSTEMD_SUPPORT}" = "xyes"; then
 		echo "Systemd support         : YES"
 		if test "x${HAVE_SDBUS}" = "xyes"; then
