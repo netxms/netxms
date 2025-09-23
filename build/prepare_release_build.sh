@@ -7,11 +7,18 @@ if [ ! -r configure.ac ]; then
 fi
 
 OS=`uname -s`
-if [ "$OS" = "SunOS" ]; then
-        SED="gsed"
-else
-        SED="sed"
-fi
+case "$OS" in
+	AIX)
+		SED="/opt/freeware/bin/sed"
+		;;
+	SunOS)
+		SED="gsed"
+		;;
+	*)
+		SED="sed"
+		;;
+
+esac
 
 set -e
 
@@ -40,4 +47,6 @@ if [ -x ./private/branding/build/prepare_release_build_hook.sh ]; then
 	./private/branding/build/prepare_release_build_hook.sh
 fi
 
-./reconf
+if [ "x$NO_RECONF" = "x" ]; then
+   ./reconf
+fi
