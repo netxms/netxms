@@ -120,7 +120,11 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Managet Agent Configs");
+      cell.setCellValue("Manage Agent Configs");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(columnIndex++);
+      cell.setCellValue("Manage Agent Tunnels");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -228,6 +232,10 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
+      cell.setCellValue("User Agent Notifications");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(columnIndex++);
       cell.setCellValue("Unlink Issues");
       cell.setCellStyle(headerStyle);
 
@@ -267,6 +275,12 @@ public class HbtfAclReport extends AbstractAclReport
       sheet.setColumnWidth(UsersSheetCells.ORIGIN.ordinal(), 2048);
       sheet.setColumnWidth(UsersSheetCells.GROUPS.ordinal(), 6144);
 
+      sheet.setColumnHidden(UsersSheetCells.DESCRIPTION.ordinal(), true);
+      sheet.setColumnHidden(UsersSheetCells.FULL_NAME.ordinal(), true);
+      sheet.setColumnHidden(UsersSheetCells.ID.ordinal(), true);
+      sheet.setColumnHidden(UsersSheetCells.ORIGIN.ordinal(), true);
+      sheet.setColumnHidden(UsersSheetCells.STATUS.ordinal(), true);
+
       AbstractUserObject[] userDatabaseObjects = session.getUserDatabaseObjects();
       Arrays.stream(userDatabaseObjects).filter(p -> p instanceof User).sorted(Comparator.comparing(AbstractUserObject::getName)).forEach(element -> {
          User user = (User)element;
@@ -304,6 +318,7 @@ public class HbtfAclReport extends AbstractAclReport
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_IMPORT_CONFIGURATION, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_ACTIONS, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_CFG, user);
+         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_TUNNELS, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_GEO_AREAS, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_IMAGE_LIB, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_MAPPING_TBLS, user);
@@ -330,6 +345,7 @@ public class HbtfAclReport extends AbstractAclReport
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SERVER_CONSOLE, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SETUP_TCP_PROXY, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SSH_KEY_CONFIGURATION, user);
+         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_UA_NOTIFICATIONS, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_USER_SCHEDULED_TASKS, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_ALL_ALARMS, user);
@@ -399,7 +415,11 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Managet Agent Configs");
+      cell.setCellValue("Manage Agent Configs");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(columnIndex++);
+      cell.setCellValue("Manage Agent Tunnels");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -451,7 +471,7 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Manage Device Login");
+      cell.setCellValue("Mobile Device Login");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -507,6 +527,10 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
+      cell.setCellValue("User Agent Notifications");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(columnIndex++);
       cell.setCellValue("Unlink Issues");
       cell.setCellStyle(headerStyle);
 
@@ -515,7 +539,7 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Vikew All Alarms");
+      cell.setCellValue("View All Alarms");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -542,6 +566,10 @@ public class HbtfAclReport extends AbstractAclReport
       sheet.setColumnWidth(GroupsSheetCells.NAME.ordinal(), 6144);
       sheet.setColumnWidth(GroupsSheetCells.DESCRIPTION.ordinal(), 6144);
       sheet.setColumnWidth(GroupsSheetCells.MEMBERS.ordinal(), 4096);
+
+      sheet.setColumnHidden(GroupsSheetCells.DESCRIPTION.ordinal(), true);
+      sheet.setColumnHidden(GroupsSheetCells.ID.ordinal(), true);
+      sheet.setColumnHidden(GroupsSheetCells.MEMBERS.ordinal(), true);
 
       Arrays.stream(session.getUserDatabaseObjects()).filter(p -> p instanceof UserGroup).sorted(Comparator.comparing(AbstractUserObject::getName)).forEach(element -> {
          UserGroup group = (UserGroup)element;
@@ -589,6 +617,7 @@ public class HbtfAclReport extends AbstractAclReport
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_IMPORT_CONFIGURATION, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_ACTIONS, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_CFG, group);
+         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_TUNNELS, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_GEO_AREAS, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_IMAGE_LIB, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_MAPPING_TBLS, group);
@@ -615,6 +644,7 @@ public class HbtfAclReport extends AbstractAclReport
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SERVER_CONSOLE, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SETUP_TCP_PROXY, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SSH_KEY_CONFIGURATION, group);
+         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_UA_NOTIFICATIONS, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_USER_SCHEDULED_TASKS, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_ALL_ALARMS, group);
