@@ -198,7 +198,7 @@ public class SourceProvider extends AbstractSourceProvider
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN, UA_MOBILE_DEVICE_LOGIN);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_OWN_SCHEDULED_TASKS, UA_OWN_SCHEDULED_TASKS);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_READ_SERVER_FILES, UA_READ_SERVER_FILES);
-      setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_REGISTER_AGENTS, UA_REGISTER_AGENTS);
+      setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_TUNNELS, UA_REGISTER_AGENTS);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_REPORTING_SERVER, UA_REPORTING_SERVER);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD, UA_SCHEDULE_FILE_UPLOAD);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_MAINTENANCE, UA_SCHEDULE_MAINTENANCE);
