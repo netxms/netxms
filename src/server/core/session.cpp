@@ -14771,7 +14771,7 @@ void ClientSession::getPredictedData(const NXCPMessage& request)
 void ClientSession::getAgentTunnels(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   if (m_systemAccessRights & SYSTEM_ACCESS_REGISTER_AGENTS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_TUNNELS)
    {
       GetAgentTunnels(&response);
       response.setField(VID_RCC, RCC_SUCCESS);
@@ -14791,7 +14791,7 @@ void ClientSession::getAgentTunnels(const NXCPMessage& request)
 void ClientSession::bindAgentTunnel(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   if (m_systemAccessRights & SYSTEM_ACCESS_REGISTER_AGENTS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_TUNNELS)
    {
       uint32_t nodeId = request.getFieldAsUInt32(VID_NODE_ID);
       uint32_t tunnelId = request.getFieldAsUInt32(VID_TUNNEL_ID);
@@ -14816,7 +14816,7 @@ void ClientSession::bindAgentTunnel(const NXCPMessage& request)
 void ClientSession::unbindAgentTunnel(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   if (m_systemAccessRights & SYSTEM_ACCESS_REGISTER_AGENTS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_TUNNELS)
    {
       uint32_t nodeId = request.getFieldAsUInt32(VID_NODE_ID);
       uint32_t rcc = UnbindAgentTunnel(nodeId, m_userId);
