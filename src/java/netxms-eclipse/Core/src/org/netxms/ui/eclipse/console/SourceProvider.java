@@ -72,7 +72,7 @@ public class SourceProvider extends AbstractSourceProvider
    public static final String UA_VIEW_REPOSITORIES     = "org.netxms.access.ViewRepositories"; //$NON-NLS-1$
    public static final String UA_VIEW_SYSLOG           = "org.netxms.access.ViewSyslog"; //$NON-NLS-1$
    public static final String UA_VIEW_TRAP_LOG         = "org.netxms.access.ViewTrapLog"; //$NON-NLS-1$
-	
+
 	private static final String[] PROVIDED_SOURCE_NAMES =
 	   { 
    	   UA_ALL_SCHEDULED_TASKS,
@@ -121,7 +121,7 @@ public class SourceProvider extends AbstractSourceProvider
 	private static final Map<String, Object> values = new HashMap<String, Object>(1);
 
 	private static SourceProvider instance = null;
-	
+
 	/**
 	 * Get source provider instance.
 	 * 
@@ -131,7 +131,7 @@ public class SourceProvider extends AbstractSourceProvider
 	{
 		return instance;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.AbstractSourceProvider#initialize(org.eclipse.ui.services.IServiceLocator)
 	 */
@@ -142,7 +142,7 @@ public class SourceProvider extends AbstractSourceProvider
 		instance = this;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.ui.ISourceProvider#getCurrentState()
 	 */
 	@SuppressWarnings("rawtypes")
@@ -152,7 +152,7 @@ public class SourceProvider extends AbstractSourceProvider
 		return values;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.ui.ISourceProvider#getProvidedSourceNames()
 	 */
 	@Override
@@ -161,7 +161,7 @@ public class SourceProvider extends AbstractSourceProvider
 		return PROVIDED_SOURCE_NAMES;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.ui.ISourceProvider#dispose()
 	 */
 	@Override
@@ -198,7 +198,7 @@ public class SourceProvider extends AbstractSourceProvider
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN, UA_MOBILE_DEVICE_LOGIN);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_OWN_SCHEDULED_TASKS, UA_OWN_SCHEDULED_TASKS);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_READ_SERVER_FILES, UA_READ_SERVER_FILES);
-      setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_REGISTER_AGENTS, UA_REGISTER_AGENTS);
+      setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_TUNNELS, UA_REGISTER_AGENTS);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_REPORTING_SERVER, UA_REPORTING_SERVER);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD, UA_SCHEDULE_FILE_UPLOAD);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_MAINTENANCE, UA_SCHEDULE_MAINTENANCE);
@@ -219,7 +219,7 @@ public class SourceProvider extends AbstractSourceProvider
 	   setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, UA_VIEW_TRAP_LOG);
 		fireSourceChanged(ISources.WORKBENCH, getCurrentState());
 	}
-	
+
 	/**
 	 * @param rights
 	 * @param bit

@@ -43,7 +43,7 @@ public final class UserAccessRights
 	public static final long SYSTEM_ACCESS_PERSISTENT_STORAGE      = 0x00000000010000L;
 	public static final long SYSTEM_ACCESS_SEND_NOTIFICATION       = 0x00000000020000L;
 	public static final long SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN     = 0x00000000040000L;
-	public static final long SYSTEM_ACCESS_REGISTER_AGENTS         = 0x00000000080000L;
+	public static final long SYSTEM_ACCESS_MANAGE_AGENT_TUNNELS    = 0x00000000080000L;
 	public static final long SYSTEM_ACCESS_READ_SERVER_FILES       = 0x00000000100000L;
 	public static final long SYSTEM_ACCESS_SERVER_CONSOLE          = 0x00000000200000L;
 	public static final long SYSTEM_ACCESS_MANAGE_SERVER_FILES     = 0x00000000400000L;
