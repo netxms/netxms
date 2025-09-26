@@ -28,7 +28,12 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netxms.mcp.resources.ServerResource;
 import com.netxms.mcp.tools.Alarms;
+import com.netxms.mcp.tools.ExecuteScript;
+import com.netxms.mcp.tools.GetLibraryScript;
+import com.netxms.mcp.tools.GetMetricHistory;
+import com.netxms.mcp.tools.GetServerStats;
 import com.netxms.mcp.tools.LastValues;
+import com.netxms.mcp.tools.ListLibraryScripts;
 import com.netxms.mcp.tools.ObjectDetails;
 import com.netxms.mcp.tools.ObjectList;
 import com.netxms.mcp.tools.ProcessList;
@@ -114,7 +119,12 @@ public class Startup
    {
       List<SyncToolSpecification> tools = new ArrayList<>();
       registerTool(tools, new Alarms());
+      registerTool(tools, new GetLibraryScript());
+      registerTool(tools, new GetMetricHistory());
+      registerTool(tools, new GetServerStats());
+      registerTool(tools, new ExecuteScript());
       registerTool(tools, new LastValues());
+      registerTool(tools, new ListLibraryScripts());
       registerTool(tools, new ObjectDetails());
       registerTool(tools, new ObjectList());
       registerTool(tools, new ProcessList());

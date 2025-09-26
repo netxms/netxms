@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Raden Solutions
+ * Copyright (C) 2003-2025 Reden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,30 +18,25 @@
  */
 package com.netxms.mcp.tools;
 
+import java.util.List;
 import java.util.Map;
 import org.netxms.client.NXCSession;
-import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.TextOutputListener;
 import org.netxms.client.objects.AbstractObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.netxms.mcp.Startup;
 
 /**
  * 
  */
-public class LastValues extends ObjectServerTool
+public class ExecuteScript extends ObjectServerTool
 {
-   private static final Logger logger = LoggerFactory.getLogger(LastValues.class);
-
    /**
     * @see com.netxms.mcp.tools.ServerTool#getName()
     */
    @Override
    public String getName()
    {
-      return "last-values";
+      return "execute-script";
    }
 
    /**
@@ -50,7 +45,7 @@ public class LastValues extends ObjectServerTool
    @Override
    public String getDescription()
    {
-      return "Returns last collected (current) values for metrics on given object.\nThis tool requires an object ID or name as a parameter.";
+      return "Execute NXSL script in context of given object.\nThis tool requires an object ID or name and script source code as parameters.\nTool output is the combined text output of the script.";
    }
 
    /**
@@ -60,8 +55,8 @@ public class LastValues extends ObjectServerTool
    public String getSchema()
    {
       return new SchemaBuilder()
-         .addArgument("object_id", "string", "ID or name of the object to retrieve metric values for", true)
-         .addArgument("filter", "string", "Optional filter to retrieve only specific metrics (with name or description containing filter string)", false)
+         .addArgument("object_id", "string", "ID or name of the node object to rename", true)
+            .addArgument("script_source_code", "string", "Script source code", true)
          .build();
    }
 
@@ -72,25 +67,30 @@ public class LastValues extends ObjectServerTool
    protected String execute(AbstractObject object, Map<String, Object> args) throws Exception
    {
       NXCSession session = Startup.getSession();
-      DciValue[] values = session.getLastValues(object.getObjectId());
-
-      String filter = (String)args.get("filter");
-      if (filter != null)
-         filter = filter.toLowerCase();
-
-      ObjectMapper mapper = new ObjectMapper();
-      ArrayNode list = mapper.createArrayNode();
-      for(DciValue v : values)
-      {
-         if (filter != null)
+      String scriptSourceCode = (String)args.get("script_source_code");
+      final StringBuilder output = new StringBuilder();
+      session.executeScript(object.getObjectId(), scriptSourceCode, List.of(), new TextOutputListener() {
+         @Override
+         public void messageReceived(String text)
          {
-            if (!v.getName().toLowerCase().contains(filter) && !v.getDescription().toLowerCase().contains(filter))
-               continue;
+            output.append(text);
          }
-         list.add(mapper.valueToTree(v));
-      }
 
-      logger.debug("LastValues.execute(): object={}, filter={}, result-size={}", object.getObjectName(), filter, list.size());
-      return mapper.writeValueAsString(list);
+         @Override
+         public void setStreamId(long streamId)
+         {
+         }
+
+         @Override
+         public void onSuccess()
+         {
+         }
+
+         @Override
+         public void onFailure(Exception exception)
+         {
+         }
+      });
+      return output.toString();
    }
 }
