@@ -65,7 +65,7 @@ public class SetObjectManagedState extends ObjectServerTool
    protected String execute(AbstractObject object, Map<String, Object> args) throws Exception
    {
       NXCSession session = Startup.getSession();
-      session.setObjectManaged(object.getObjectId(), Boolean.parseBoolean((String)args.get("state")));
+      session.setObjectManaged(object.getObjectId(), (Boolean)args.get("state"));
       return "Success";
    }
 }

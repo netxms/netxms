@@ -139,13 +139,13 @@ public class Startup
             (exchange, args) -> {
                try
                {
-                        String output = tool.execute(args);
-                        return new CallToolResult(output, Boolean.FALSE);
+                  String output = tool.execute(args);
+                  return new CallToolResult(output, Boolean.FALSE);
                }
                catch(Exception e)
                {
-                  logger.error("Error executing tool {}: {}", tool.getName(), e.getMessage());
-                  return new CallToolResult((e instanceof NXCException) ? e.getMessage() : "Internal error", Boolean.TRUE);
+                  logger.error("Error executing tool " + tool.getName() + ": " + e.getMessage(), e);
+                  return new CallToolResult((e instanceof NXCException) ? e.getMessage() : "Exception: " + e.getClass().getName() + "; Message: " + e.getMessage(), Boolean.TRUE);
                }
             }));
    }

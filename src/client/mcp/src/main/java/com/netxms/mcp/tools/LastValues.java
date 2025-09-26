@@ -22,6 +22,8 @@ import java.util.Map;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.netxms.mcp.Startup;
@@ -31,6 +33,8 @@ import com.netxms.mcp.Startup;
  */
 public class LastValues extends ObjectServerTool
 {
+   private static final Logger logger = LoggerFactory.getLogger(LastValues.class);
+
    /**
     * @see com.netxms.mcp.tools.ServerTool#getName()
     */
@@ -57,6 +61,7 @@ public class LastValues extends ObjectServerTool
    {
       return new SchemaBuilder()
          .addArgument("object_id", "string", "ID or name of the object to retrieve metric values for", true)
+         .addArgument("filter", "string", "Optional filter to retrieve only specific metrics (with name or description containing filter string)", false)
          .build();
    }
 
@@ -69,12 +74,23 @@ public class LastValues extends ObjectServerTool
       NXCSession session = Startup.getSession();
       DciValue[] values = session.getLastValues(object.getObjectId());
 
+      String filter = (String)args.get("filter");
+      if (filter != null)
+         filter = filter.toLowerCase();
+
       ObjectMapper mapper = new ObjectMapper();
       ArrayNode list = mapper.createArrayNode();
       for(DciValue v : values)
       {
+         if (filter != null)
+         {
+            if (!v.getName().toLowerCase().contains(filter) && !v.getDescription().toLowerCase().contains(filter))
+               continue;
+         }
          list.add(mapper.valueToTree(v));
       }
+
+      logger.debug("LastValues.execute(): object={}, filter={}, result-size={}", object.getObjectName(), filter, list.size());
       return mapper.writeValueAsString(list);
    }
 }
