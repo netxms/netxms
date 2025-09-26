@@ -38,7 +38,6 @@ public class MeasurementUnit
 
    private String name;
    private boolean binary;
-   private int multiplierPower;
 
    /**
     * Protected constructor for deserialization
@@ -47,32 +46,19 @@ public class MeasurementUnit
    {
       name = "";
       binary = false;
-      multiplierPower = 0;
    }
 
    /**
     * Create measurement unit from scratch
     * 
     * @param name unit name
-    * @param multiplierPower multiplier power (0 for automatically calculated)
-    */
-   public MeasurementUnit(String name, int multiplierPower)
-   {
-      this.name = name.replace(" (IEC)", "").replace(" (Metric)", "");
-      this.multiplierPower = multiplierPower;
-      this.binary = name.contains(" (IEC)");
-   }
-
-   /**
-    * Create measurement unit from scratch with automatically calculated multiplier power
-    * 
-    * @param name unit name
     */
    public MeasurementUnit(String name)
    {
-      this(name, 0);
+      this.name = name.replace(" (IEC)", "").replace(" (Metric)", "");
+      this.binary = name.contains(" (IEC)");
    }
-
+   
    /**
     * Create measurement unit object from NXCP message.
     *
@@ -81,7 +67,7 @@ public class MeasurementUnit
     */
    public MeasurementUnit(NXCPMessage msg, long baseId)
    {
-      this(msg.getFieldAsString(baseId), msg.getFieldAsInt32(baseId + 1));
+      this(msg.getFieldAsString(baseId));
    }   
 
    /**
@@ -103,16 +89,6 @@ public class MeasurementUnit
    {
       return binary;
    }
-
-   /**
-    * Get fixed multiplier power.
-    *
-    * @return fixed multiplier power or 0 if automatic multiplier power selection should be used
-    */
-   public int getMultipierPower()
-   {
-      return multiplierPower;
-   }
    
    /**
     * If small multipliers should be used for current unit
@@ -130,6 +106,6 @@ public class MeasurementUnit
    @Override
    public String toString()
    {
-      return "MeasurementUnit [name=" + name + ", binary=" + binary + ", multiplierPower=" + multiplierPower + "]";
+      return "MeasurementUnit [name=" + name + ", binary=" + binary + "]";
    }
 }

@@ -48,7 +48,7 @@ import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -127,7 +127,6 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
       GraphItem item = new GraphItem(nodeId, dci.getId(), null, settings.getRuntimeName(), "", settings.getType(), settings.isAutomaticColor() ? -1 : settings.getColorAsInt());
       item.setInverted(settings.isInvertedValues());
       item.setShowThresholds(settings.isShowThresholds());
-      item.setMeasurementUnit(dci.getMeasurementUnit());
       chart.addParameter(item);
 
 		addDisposeListener(new DisposeListener() {
@@ -232,7 +231,6 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
          GraphItem item = new GraphItem(nodeId, dci.getId(), null, settings.getRuntimeName(), "", settings.getType(), settings.isAutomaticColor() ? -1 : settings.getColorAsInt());
          item.setInverted(settings.isInvertedValues());
          item.setShowThresholds(settings.isShowThresholds());
-         item.setMeasurementUnit(dci.getMeasurementUnit());
          chart.addParameter(item);
 		}
 	}
@@ -278,7 +276,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 				final Date to = new Date(System.currentTimeMillis());
 				synchronized(items)
 				{
-					final DciData[] data = new DciData[items.size()];
+					final DataSeries[] data = new DataSeries[items.size()];
 	            final Threshold[][] thresholds = new Threshold[items.size()][];
 					for(int i = 0; i < data.length; i++)
 					{

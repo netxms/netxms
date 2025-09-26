@@ -254,7 +254,7 @@ public class LinkDciValueProvider
       {
          DciValue v = getDciLastValue(dciList[i].getDciId());
          if (v != null)
-            sb.append(v.format(dciList[i].getFormatString(), RegionalSettings.TIME_FORMATTER));
+            sb.append(v.getFormattedValue(dciList[i].getFormatString(), RegionalSettings.TIME_FORMATTER));
          if (++i != dciList.length)
             sb.append('\n');
       }
@@ -272,7 +272,7 @@ public class LinkDciValueProvider
       {
          DciValue v = getDciLastValue(dciList.get(i).getDciId()); 
          if (v != null)
-            sb.append(v.format(dciList.get(i).getFormatString(), RegionalSettings.TIME_FORMATTER));
+            sb.append(v.getFormattedValue(dciList.get(i).getFormatString(), RegionalSettings.TIME_FORMATTER));
          if (++i != dciList.size())
             sb.append('\n');
       }

@@ -43,7 +43,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.HistoricalDataType;
-import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
@@ -285,7 +285,7 @@ public class HistoricalDataView extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-			   final DciData data = tableCellHistory ?
+			   final DataSeries data = tableCellHistory ?
                   session.getCollectedTableData(nodeId, dciId, instance, column, timeFrom, timeTo, recordLimit) :
                   session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit, HistoricalDataType.RAW_AND_PROCESSED);
 
@@ -340,7 +340,7 @@ public class HistoricalDataView extends ViewPart
             for(DciDataRow r : list)
                session.deleteDciEntry(nodeId, dciId, r.getTimestamp().getTime() / 1000); // Convert back to seconds
 
-            final DciData data = tableCellHistory ?
+            final DataSeries data = tableCellHistory ?
                   session.getCollectedTableData(nodeId, dciId, instance, column, timeFrom, timeTo, recordLimit) :
                   session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit, HistoricalDataType.RAW_AND_PROCESSED);
 

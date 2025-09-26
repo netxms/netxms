@@ -35,7 +35,7 @@ import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
-import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
@@ -74,7 +74,7 @@ public class HistoricalData extends AbstractObjectHandler
       String timeInterval = query.get("timeInterval");
       String itemCount = query.get("itemCount");
 
-      DciData data = null;
+      DataSeries data = null;
       DataCollectionConfiguration dataCollectionConfiguration = session.openDataCollectionConfiguration(getObjectId());
       DataCollectionObject dataCollectionObject = dataCollectionConfiguration.findItem(dciId);
       HistoricalDataType valueType = HistoricalDataType.PROCESSED;
@@ -112,7 +112,7 @@ public class HistoricalData extends AbstractObjectHandler
    /**
     * Transforms Full historical table data into consumable JSON format
     */
-   private Object transformTableDataOutput(DciData data, String outputFormat) throws Exception
+   private Object transformTableDataOutput(DataSeries data, String outputFormat) throws Exception
    {
       HashMap<Object, Object> response = new HashMap<Object, Object>();
       DciDataRow[] tableValues = data.getValues();
@@ -296,7 +296,7 @@ public class HistoricalData extends AbstractObjectHandler
       if (requestPairs == null)
          throw new NXCException(RCC.INVALID_DCI_ID);
 
-      HashMap<Long, DciData> dciData = new HashMap<Long, DciData>();
+      HashMap<Long, DataSeries> dciData = new HashMap<Long, DataSeries>();
 
       for(int i = 0; i < requestPairs.length; i++)
       {
@@ -314,7 +314,7 @@ public class HistoricalData extends AbstractObjectHandler
          if (dciId == null || nodeId == null || !(session.findObjectById(parseLong(nodeId, 0)) instanceof DataCollectionTarget))
             throw new NXCException(RCC.INVALID_OBJECT_ID);
 
-         DciData collectedData = null;
+         DataSeries collectedData = null;
 
          if (!timeFrom.equals("0") || !timeTo.equals("0"))
          {

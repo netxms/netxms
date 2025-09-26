@@ -85,7 +85,7 @@ public class GaugeElement extends ComparisonChartElement
       chartConfig.setExpectedTextWidth(elementConfig.getExpectedTextWidth());
       chartConfig.setGaugeColorMode(elementConfig.getColorMode());
 
-      updateThresholds = (elementConfig.getColorMode() == GaugeColorMode.THRESHOLD.getValue());
+      //updateThresholds = (elementConfig.getColorMode() == GaugeColorMode.THRESHOLD.getValue());
 		switch(elementConfig.getGaugeType())
 		{
          case GaugeConfig.BAR:

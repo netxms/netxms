@@ -47,7 +47,7 @@ import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataCollectionObject;
-import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -606,7 +606,7 @@ public class DataComparisonView extends ViewPart
 				for(int i = 0; i < items.size(); i++)
 				{
 					GraphItem item = items.get(i);
-					DciData data = (item.getType() == DataCollectionObject.DCO_TYPE_ITEM) ? 
+					DataSeries data = (item.getType() == DataCollectionObject.DCO_TYPE_ITEM) ? 
 							session.getCollectedData(item.getNodeId(), item.getDciId(), null, null, 1, HistoricalDataType.PROCESSED) :
 							session.getCollectedTableData(item.getNodeId(), item.getDciId(), item.getInstance(), item.getDataColumn(), null, null, 1);
 					DciDataRow value = data.getLastValue();

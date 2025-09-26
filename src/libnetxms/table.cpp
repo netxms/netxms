@@ -1311,6 +1311,7 @@ TableColumnDefinition::TableColumnDefinition(const TCHAR *name, const TCHAR *dis
    m_instanceColumn = isInstance;
    m_unitName[0] = 0;
    m_multiplier = 0;
+   m_useMultiplier = 0;
 }
 
 /**
@@ -1326,6 +1327,7 @@ TableColumnDefinition::TableColumnDefinition(const NXCPMessage& msg, uint32_t ba
    m_instanceColumn = msg.getFieldAsBoolean(baseId + 3);
    m_unitName[0] = 0;
    m_multiplier = 0;
+   m_useMultiplier = 0;
 }
 
 /**
@@ -1339,6 +1341,7 @@ void TableColumnDefinition::fillMessage(NXCPMessage *msg, uint32_t baseId) const
    msg->setField(baseId + 3, m_instanceColumn);
    msg->setField(baseId + 4, m_unitName);
    msg->setField(baseId + 5, m_multiplier);
+   msg->setField(baseId + 6, m_useMultiplier);
 }
 
 /**
@@ -1353,6 +1356,7 @@ json_t *TableColumnDefinition::toJson() const
    json_object_set_new(json, "instanceColumn", json_boolean(m_instanceColumn));
    json_object_set_new(json, "unitName", json_string_t(m_unitName));
    json_object_set_new(json, "multiplier", json_integer(m_multiplier));
+   json_object_set_new(json, "useMultiplier", json_integer(m_useMultiplier));
    return json;
 }
 

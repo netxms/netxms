@@ -118,32 +118,35 @@ public abstract class DciValue
 		else
 			activeThreshold = null;
 	}
-
+   
    /**
-	 * Returns formated DCI value or string with format error and correct type of DCI value;
-	 * 
-	 * @param formatString the string into which will be placed DCI value 
-	 * @param formatter date/time formatter
-	 * @return The format
-	 */
-	public String format(String formatString, TimeFormatter formatter)
-	{     
-      return new DataFormatter(formatString, dataType, measurementUnit).format(value, formatter);
-	}
-
-   /**
-    * Returns formated DCI value or string with format error and correct type of DCI value;
+    * Get data formatter for this DCI value.
     * 
-    * @param useMultipliers the string into which will be placed DCI value 
-    * @param formatter date/time formatter
-    * @return The format
+    * @return data formatter
     */
-   public String getFormattedValue(boolean useMultipliers, TimeFormatter formatter)
-   {     
-      int selection = getMultipliersSelection();
-      String format = ((selection == DciValue.MULTIPLIERS_DEFAULT) && useMultipliers) || 
-            (selection == DciValue.MULTIPLIERS_YES) ? "%{m,u}s" : "%{u}s" ;
-      return new DataFormatter(format, dataType, measurementUnit).format(value, formatter);
+   public DataFormatter createDataFormatter()
+   {
+      return new DataFormatter(this);
+   }
+
+   /**
+    * @param timeFormatter
+    * @param useMultipliers
+    * @return
+    */
+   public String getFormattedValue(boolean useMultipliers, TimeFormatter timeFormatter)
+   {
+      return createDataFormatter().setDefaultForMultipliers(useMultipliers).format(value, timeFormatter);
+   }
+
+   /**
+    * @param formatString
+    * @param timeFormatter
+    * @return
+    */
+   public Object getFormattedValue(String formatString, TimeFormatter timeFormatter)
+   {
+      return createDataFormatter().setFormattString(formatString).format(value, timeFormatter);
    }
 
 	/**

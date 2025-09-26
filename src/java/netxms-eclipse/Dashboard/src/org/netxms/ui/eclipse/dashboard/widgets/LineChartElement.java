@@ -43,7 +43,7 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataCollectionObject;
-import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.Threshold;
@@ -202,7 +202,6 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
                }
             }
 
-            final Map<Long, MeasurementUnit> measurementUnits = session.getDciMeasurementUnits(runtimeDciList);
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -213,7 +212,6 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
                   for(ChartDciConfig dci : runtimeDciList)
                   {
                      GraphItem item = new GraphItem(dci);
-                     item.setMeasurementUnit(measurementUnits.get(dci.getDciId()));
                      chart.addParameter(item);
                   }
 
@@ -327,7 +325,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 			{
 				final Date from = new Date(System.currentTimeMillis() - config.getTimeRangeMillis());
 				final Date to = new Date(System.currentTimeMillis());
-            final DciData[] data = new DciData[runtimeDciList.size()];
+            final DataSeries[] data = new DataSeries[runtimeDciList.size()];
             final Threshold[][] thresholds = new Threshold[runtimeDciList.size()][];
             for(int i = 0; i < runtimeDciList.size(); i++)
             {
@@ -410,10 +408,10 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 	 */
 	public class DataCacheElement
 	{
-	   public DciData data;
+	   public DataSeries data;
 	   public String name;
 	   
-	   public DataCacheElement(ChartDciConfig config, DciData data)
+	   public DataCacheElement(ChartDciConfig config, DataSeries data)
 	   {
 	      this.name = config.getLabel();
 	      this.data = data;

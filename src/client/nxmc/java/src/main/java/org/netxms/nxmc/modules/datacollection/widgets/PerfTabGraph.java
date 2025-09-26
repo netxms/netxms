@@ -34,9 +34,8 @@ import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.PerfTabDci;
-import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.RefreshAction;
@@ -222,7 +221,6 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
          item.setColor(settings.getColorAsInt());
       item.invertValues = settings.isInvertedValues();
       item.showThresholds = settings.isShowThresholds();
-      item.measurementUnit = dci.getMeasurementUnit();
       return item;
    }
 
@@ -266,13 +264,11 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 				final Date to = new Date(System.currentTimeMillis());
 				synchronized(items)
 				{
-					final DciData[] data = new DciData[items.size()];
-               final Threshold[][] thresholds = new Threshold[items.size()][];
+					final DataSeries[] data = new DataSeries[items.size()];
 					for(int i = 0; i < data.length; i++)
 					{
 						currentDci = items.get(i);
 						data[i] = session.getCollectedData(nodeId, currentDci.getId(), from, to, 0, HistoricalDataType.PROCESSED);
-						thresholds[i] = session.getThresholds(nodeId, currentDci.getId());
 					}
                runInUIThread(() -> {
                   if (!chart.isDisposed())
@@ -280,7 +276,6 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
                      chart.setTimeRange(from, to);
                      for(int i = 0; i < data.length; i++)
                         chart.updateParameter(i, data[i], false);
-                     chart.setThresholds(thresholds);
                      chart.refresh();
 						}
                   updateInProgress = false;

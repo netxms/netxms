@@ -919,17 +919,6 @@ uint32_t DataCollectionTarget::getPerfTabDCIList(NXCPMessage *msg, uint32_t user
          msg->setField(fieldId+7, object->getInstanceName());
          shared_ptr<DCObject> src = getDCObjectById(object->getTemplateItemId(), userId, false);
          msg->setField(fieldId+8, (src != nullptr) ? src->getTemplateItemId() : 0);
-         if (object->getType() == DCO_TYPE_ITEM)
-         {
-            msg->setField(fieldId+9, ((DCItem*)object)->getUnitName());
-            msg->setField(fieldId+10, ((DCItem*)object)->getMultiplier());
-         }
-         else
-         if (object->getType() == DCO_TYPE_ITEM)
-         {
-            msg->setField(fieldId+9, _T(""));
-            msg->setField(fieldId+10, 0);
-         }
 
          fieldId+=50;
 			count++;
@@ -1829,6 +1818,8 @@ void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition
             tableData->getColumnDefinitions().get(i + offset)->setDataType(static_cast<DCItem*>(object)->getTransformedDataType());
             tableData->getColumnDefinitions().get(i + offset)->setUnitName(static_cast<DCItem*>(object)->getUnitName());
             tableData->getColumnDefinitions().get(i + offset)->setMultiplier(static_cast<DCItem*>(object)->getMultiplier());
+            tableData->getColumnDefinitions().get(i + offset)->setUseMultiplier(static_cast<DCItem*>(object)->getUseMultiplier());
+
             if (tableDefinition->getAggregationFunction() == DCI_AGG_LAST)
             {
                if (tc->m_flags & COLUMN_DEFINITION_MULTIVALUED)

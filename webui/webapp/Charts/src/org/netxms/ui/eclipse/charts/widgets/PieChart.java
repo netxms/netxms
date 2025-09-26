@@ -24,8 +24,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
-import org.netxms.client.datacollection.DataFormatter;
-import org.netxms.ui.eclipse.charts.api.DataSeries;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.ui.eclipse.compatibility.GraphItem;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.tools.ColorConverter;
@@ -170,7 +169,7 @@ public class PieChart extends GenericComparisonChart
 
       if (chart.getConfiguration().isShowTotal())
       {
-         String v = new DataFormatter(items.get(0).getDisplayFormat(), series.get(0).getDataType(), items.get(0).getMeasurementUnit()).format(Double.toString(total), RegionalSettings.TIME_FORMATTER);
+         String v = series.get(0).getDataFormatter().setFormattString(items.get(0).getDisplayFormat()).format(Double.toString(total), RegionalSettings.TIME_FORMATTER);
          int innerBoxSize = boxSize - boxSize / 6;
          gc.setFont(WidgetHelper.getBestFittingFont(gc, valueFonts, "00000000", innerBoxSize, innerBoxSize));
          Point ext = gc.textExtent(v);

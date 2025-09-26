@@ -69,6 +69,7 @@ public class HardwareComponentLabelProvider extends LabelProvider implements ITa
    public String getColumnText(Object element, int columnIndex)
    {
       HardwareComponent c = (HardwareComponent)element;
+      DataFormatter df = new DataFormatter().setFormattString("%{u,m}s").setDataType(DataType.UINT64);
       switch(columnIndex)
       {
          case HardwareInventory.COLUMN_CAPACITY:
@@ -78,11 +79,11 @@ public class HardwareComponentLabelProvider extends LabelProvider implements ITa
                   return Long.toString(c.getCapacity()) + " mWh"; 
                case MEMORY_DEVICE:
                case STORAGE_DEVICE:
-                  return new DataFormatter("%{u,m}s", DataType.UINT64, MeasurementUnit.BYTES_IEC).format(Long.toString(c.getCapacity()), RegionalSettings.TIME_FORMATTER);
+                  return df.setMeasurementUnit(MeasurementUnit.BYTES_IEC).format(Long.toString(c.getCapacity()), RegionalSettings.TIME_FORMATTER);
                case NETWORK_ADAPTER:
-                  return new DataFormatter("%{u,m}s", DataType.UINT64, MeasurementUnit.BPS_METRIC).format(Long.toString(c.getCapacity()), RegionalSettings.TIME_FORMATTER);
+                  return df.setMeasurementUnit(MeasurementUnit.BPS_METRIC).format(Long.toString(c.getCapacity()), RegionalSettings.TIME_FORMATTER);
                case PROCESSOR:
-                  return new DataFormatter("%{u,m}s", DataType.UINT64, MeasurementUnit.HZ).format(Long.toString(c.getCapacity() * 1000000L), RegionalSettings.TIME_FORMATTER);
+                  return df.setMeasurementUnit(MeasurementUnit.HZ).format(Long.toString(c.getCapacity() * 1000000L), RegionalSettings.TIME_FORMATTER);
                default:
                   break;
             }

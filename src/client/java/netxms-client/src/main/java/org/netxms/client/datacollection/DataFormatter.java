@@ -36,34 +36,140 @@ public class DataFormatter
    private String formatString;
    private DataType dataType;
    private MeasurementUnit unit;
+   private int multiplierPower;
+   private int useMultipliers; //  DciValue.MULTIPLIERS_DEFAULT, DciValue.MULTIPLIERS_ON, DciValue.MULTIPLIERS_OFF
+   private boolean useMultipliersByDefault = true;
+   private String defaultFormatStringWithMultipliers = "%{m,u}s";
+   private String defaultFormatStringWithoutMultipliers = "%{u}s";   
+
 
    /**
-    * Create new data formatter with binary multipliers option set to off.
-    * 
-    * @param formatString format string
-    * @param dataType data type
+    * Create new data formatter
     */
-   public DataFormatter(String formatString, DataType dataType)
+   public DataFormatter()
    {
-      this.formatString = formatString;
-      this.dataType = dataType;
+      this.formatString = null;
+      this.dataType = DataType.STRING;
       this.unit = null;
+      multiplierPower = 0;
+      useMultipliers = DciValue.MULTIPLIERS_DEFAULT;
+   }
+   
+   
+   /**
+    * Create new data formatter 
+    * 
+    * @param series data series
+    */
+   public DataFormatter(DataSeries series)
+   {
+      this.formatString = null;
+      this.dataType = series.getDataType();
+      this.unit = series.getMeasurementUnit();
+      this.multiplierPower = series.getMultiplierPower();
+      this.useMultipliers = series.getUseMultiplier();
    }
 
    /**
-    * Create new data formatter.
-    * 
-    * @param formatString format string
-    * @param dataType data type
-    * @param unit measurement unit
+    * @param dciValue
     */
-   public DataFormatter(String formatString, DataType dataType, MeasurementUnit unit)
+   public DataFormatter(DciValue dciValue)
+   {
+      this.formatString = null;
+      this.dataType = dciValue.getDataType();
+      this.unit = dciValue.getMeasurementUnit();
+      this.multiplierPower = dciValue.getMultiplier();
+      this.useMultipliers = dciValue.getMultipliersSelection();
+   }
+
+
+   /**
+    * Set format string
+    * 
+    * @param formatString the formatString to set
+    * @return this
+    */
+   public DataFormatter setFormattString(String formatString)
    {
       this.formatString = formatString;
+      return this;
+   }
+   
+   /**
+    * Set data type
+    * 
+    * @param dataType the dataType to set
+    * @return this
+    */
+   public DataFormatter setDataType(DataType dataType)
+   {
       this.dataType = dataType;
+      return this;
+   }
+   
+   /**
+    * Set measurement unit
+    * 
+    * @param unit the unit to set
+    * @return this
+    */
+   public DataFormatter setMeasurementUnit(MeasurementUnit unit)
+   {
       this.unit = unit;
-      if (formatString == null || formatString.isEmpty())
-         this.formatString = "%{m,u}s";
+      return this;
+   }
+   
+   /**
+    * Set multiplier power
+    * 
+    * @param multiplierPower the multiplierPower to set
+    * @return this
+    */
+   public DataFormatter setMultiplierPower(int multiplierPower)
+   {
+      this.multiplierPower = multiplierPower;
+      return this;
+   }
+   
+   /**
+    * Set multiplier usage flag
+    * 
+    * @param useMultipliers the useMultipliers to set
+    * @return this
+    */
+   public DataFormatter setUseMultipliers(int useMultipliers)
+   {
+      this.useMultipliers = useMultipliers;
+      return this;
+   }
+   
+   /**
+    * Set default for multipliers
+    * 
+    * @param useMultipliersByDefault the useMultipliersByDefault to set
+    * @return this
+    */
+   public DataFormatter setDefaultForMultipliers(boolean useMultipliersByDefault)
+   {
+      this.useMultipliersByDefault = useMultipliersByDefault;
+      return this;
+   }
+
+   /**
+    * Set default format strings
+    * 
+    * @param withoutMultipliers default format string without multipliers
+    * @param withMultipliers default format string with multipliers
+    * @return this
+    */
+   public DataFormatter setDefaultFormatString(String withoutMultipliers, String withMultipliers)
+   {
+      if (withoutMultipliers != null)
+         this.defaultFormatStringWithoutMultipliers = withoutMultipliers;
+
+      if (withMultipliers != null)
+         this.defaultFormatStringWithMultipliers = withMultipliers;
+      return this;
    }
 
    /**
@@ -71,15 +177,22 @@ public class DataFormatter
     *
     * @param value The value
     * @param formatter Date and time formatter 
-    * @return The format
+    * @return The formatted value
     */
    public String format(String value, TimeFormatter formatter)
    {
+      String str = formatString;
+      if (str == null || str.isEmpty())
+      {
+         str = ((useMultipliers == DciValue.MULTIPLIERS_DEFAULT) && useMultipliersByDefault) || 
+               (useMultipliers == DciValue.MULTIPLIERS_YES) ? defaultFormatStringWithMultipliers : defaultFormatStringWithoutMultipliers;
+      }
+      
       if (value == null || value.isEmpty())
          return "";
 
       StringBuilder sb = new StringBuilder();
-      char[] format = formatString.toCharArray();
+      char[] format = str.toCharArray();
 
       for(int i = 0; i < format.length; i++)
       {
@@ -92,7 +205,7 @@ public class DataFormatter
             }
             else
             {
-               boolean useMultipliers = false;
+               boolean useMultipliers = false; 
                boolean useUnits = false;
 
                if (format[i] == '*')
@@ -199,7 +312,7 @@ public class DataFormatter
       }
 
       boolean useBinaryMultipliers = (unit != null) && unit.isBinary();
-      int multiplierPower = (unit != null) ? unit.getMultipierPower() : 0;
+      int multiplierPower = (unit != null) ? this.multiplierPower : 0; 
       boolean isSmallNumber = ((d > -0.01) && (d < 0.01) && (d != 0) && (multiplierPower <= 0) && (unit != null) && unit.useMultiplierForUnit()) || (multiplierPower < 0);
       double[] multipliers = isSmallNumber ? DECIMAL_MULTIPLIERS_SMALL : useBinaryMultipliers ? BINARY_MULTIPLIERS : DECIMAL_MULTIPLIERS;
 

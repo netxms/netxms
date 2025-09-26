@@ -17,6 +17,8 @@ public class TableColumnDefinition
 	private DataType dataType;
 	private boolean instanceColumn;
    private MeasurementUnit measurementUnit;
+   private int useMultiplier = 0;  // DciValue.MULTIPLIERS_DEFAULT, DciValue.MULTIPLIERS_ON, DciValue.MULTIPLIERS_OFF
+   private int multiplierPower = 0;
 	
 	/**
 	 * @param name The name to set
@@ -46,6 +48,8 @@ public class TableColumnDefinition
 			displayName = name;
 		instanceColumn = msg.getFieldAsBoolean(baseId + 3);
       measurementUnit = new MeasurementUnit(msg, baseId + 4);
+      multiplierPower = msg.getFieldAsInt32(baseId + 5);
+      useMultiplier = msg.getFieldAsInt32(baseId + 6);
 	}
 
 	/**
@@ -98,5 +102,25 @@ public class TableColumnDefinition
    public MeasurementUnit getMeasurementUnit()
    {
       return measurementUnit;
+   }
+
+   /**
+    * Get multiplier usage setting
+    * 
+    * @return multiplier usage setting
+    */
+   public int getUseMultiplier()
+   {
+      return useMultiplier;
+   }
+
+   /**
+    * Get multiplier power
+    * 
+    * @return multiplier power
+    */
+   public int getMultiplierPower()
+   {
+      return multiplierPower;
    }
 }

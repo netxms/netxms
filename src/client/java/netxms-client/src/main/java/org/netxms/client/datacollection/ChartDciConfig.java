@@ -100,9 +100,6 @@ public class ChartDciConfig implements NodeItemPair
    @Element(required = false)
    public String displayFormat;
 
-   @Element(required = false)
-   public MeasurementUnit measurementUnit;
-
 	/**
 	 * Default constructor
 	 */
@@ -136,7 +133,6 @@ public class ChartDciConfig implements NodeItemPair
       instance = "";
       column = "";
       displayFormat = "";
-      measurementUnit = null;
    }
 
 	/**
@@ -165,7 +161,6 @@ public class ChartDciConfig implements NodeItemPair
 		this.instance = src.instance;
 		this.column = src.column;
 		this.displayFormat = src.displayFormat;
-      this.measurementUnit = src.measurementUnit;
 	}
 
    /**
@@ -193,7 +188,6 @@ public class ChartDciConfig implements NodeItemPair
       instance = "";
       column = "";
       displayFormat = "";
-      measurementUnit = dci.getMeasurementUnit();
    }
 
    /**
@@ -222,7 +216,6 @@ public class ChartDciConfig implements NodeItemPair
       this.instance = src.instance;
       this.column = src.column;
       this.displayFormat = src.displayFormat;
-      this.measurementUnit = dciValue.getMeasurementUnit();
 
       if (src.name.isEmpty())
       {
@@ -261,7 +254,6 @@ public class ChartDciConfig implements NodeItemPair
       this.instance = src.instance;
       this.column = src.column;
       this.displayFormat = src.displayFormat;
-      this.measurementUnit = dciValue.getMeasurementUnit();
 
       if (src.name.isEmpty())
       {
@@ -337,7 +329,6 @@ public class ChartDciConfig implements NodeItemPair
       instance = "";
       column = "";
       displayFormat = "";
-      measurementUnit = (dci instanceof DataCollectionItem) ? new MeasurementUnit(((DataCollectionItem)dci).getUnitName(), ((DataCollectionItem)dci).getMultiplier()) : null;
    }
 
    /**
@@ -467,7 +458,7 @@ public class ChartDciConfig implements NodeItemPair
       return "ChartDciConfig [nodeId=" + nodeId + ", dciId=" + dciId + ", dciName=" + dciName + ", dciDescription=" + dciDescription + ", dciTag=" + dciTag + ", type=" + type + ", color=" + color +
             ", name=" + name + ", lineWidth=" + lineWidth + ", lineChartType=" + lineChartType + ", displayType=" + displayType + ", showThresholds=" + showThresholds + ", invertValues=" +
             invertValues + ", useRawValues=" + useRawValues + ", multiMatch=" + multiMatch + ", regexMatch=" + regexMatch + ", instance=" + instance + ", column=" + column + ", displayFormat=" +
-            displayFormat + ", measurementUnit=" + measurementUnit + "]";
+            displayFormat + "]";
    }
 
    /**

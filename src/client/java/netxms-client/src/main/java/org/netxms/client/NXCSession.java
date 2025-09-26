@@ -85,15 +85,15 @@ import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.ObjectPollType;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.constants.Severity;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.datacollection.DCOStatusHolder;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
-import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.datacollection.DciLastValue;
@@ -5870,7 +5870,7 @@ public class NXCSession
     * @param data  Data object to add rows to
     * @return number of received data rows
     */
-   public int parseDataRows(final byte[] input, DciData data)
+   public int parseDataRows(final byte[] input, DataSeries data)
    {
       final NXCPDataInputStream inputStream = new NXCPDataInputStream(input);
       int rows = 0;
@@ -5945,7 +5945,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   private DciData getCollectedDataInternal(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to,
+   private DataSeries getCollectedDataInternal(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to,
          int maxRows, HistoricalDataType valueType, long delegateReadObject) throws IOException, NXCException
    {
       NXCPMessage msg;
@@ -5964,7 +5964,7 @@ public class NXCSession
       msg.setFieldInt16(NXCPCodes.VID_HISTORICAL_DATA_TYPE, valueType.getValue());
       msg.setFieldUInt32(NXCPCodes.VID_DELEGATE_OBJECT_ID, delegateReadObject);
 
-      DciData data = new DciData(nodeId, dciId);
+      DataSeries data = new DataSeries(nodeId, dciId);
 
       int timeFrom = (from != null) ? (int)(from.getTime() / 1000) : 0;
       int timeTo = (to != null) ? (int)(to.getTime() / 1000) : 0;
@@ -6000,9 +6000,22 @@ public class NXCSession
             msg.setFieldInt32(NXCPCodes.VID_TIME_TO, timeTo);
             sendMessage(msg);
 
-            waitForRCC(msg.getMessageId());
+            NXCPMessage response = waitForRCC(msg.getMessageId());
+            data.setActiveThresholdSeverity(Severity.getByValue(response.getFieldAsInt32(NXCPCodes.VID_CURRENT_SEVERITY)));
+            data.setMultiplier(response.getFieldAsInt32(NXCPCodes.VID_MULTIPLIER));
+            data.setUseMultiplier(response.getFieldAsInt32(NXCPCodes.VID_USE_MULTIPLIER));
+            data.setUnits(new MeasurementUnit(response.getFieldAsString(NXCPCodes.VID_UNITS_NAME)));            
 
-            NXCPMessage response = waitForMessage(NXCPCodes.CMD_DCI_DATA, msg.getMessageId());
+            int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_THRESHOLDS);
+            List<Threshold> thresholds = new ArrayList<Threshold>(count);
+            long fieldId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
+            for(int i = 0; i < count; i++, fieldId += 20)
+            {
+               thresholds.add(new Threshold(response, fieldId));
+            }
+            data.setThresholds(thresholds);
+
+            response = waitForMessage(NXCPCodes.CMD_DCI_DATA, msg.getMessageId());
             if (!response.isBinaryMessage())
                throw new NXCException(RCC.INTERNAL_ERROR);
 
@@ -6046,7 +6059,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DciData getCollectedData(long nodeId, long dciId, Date from, Date to, int maxRows, HistoricalDataType valueType, long delegateReadObject)
+   public DataSeries getCollectedData(long nodeId, long dciId, Date from, Date to, int maxRows, HistoricalDataType valueType, long delegateReadObject)
          throws IOException, NXCException
    {
       return getCollectedDataInternal(nodeId, dciId, null, null, from, to, maxRows, valueType, delegateReadObject);
@@ -6066,7 +6079,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DciData getCollectedData(long nodeId, long dciId, Date from, Date to, int maxRows, HistoricalDataType valueType)
+   public DataSeries getCollectedData(long nodeId, long dciId, Date from, Date to, int maxRows, HistoricalDataType valueType)
          throws IOException, NXCException
    {
       return getCollectedDataInternal(nodeId, dciId, null, null, from, to, maxRows, valueType, 0);
@@ -6088,7 +6101,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DciData getCollectedTableData(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to,
+   public DataSeries getCollectedTableData(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to,
          int maxRows, long delegateReadObject) throws IOException, NXCException
    {
       if (instance == null || dataColumn == null)
@@ -6111,7 +6124,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DciData getCollectedTableData(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to,
+   public DataSeries getCollectedTableData(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to,
          int maxRows) throws IOException, NXCException
    {
       if (instance == null || dataColumn == null)
@@ -13258,13 +13271,13 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DciData getPredictedData(long nodeId, long dciId, Date from, Date to) throws IOException, NXCException
+   public DataSeries getPredictedData(long nodeId, long dciId, Date from, Date to) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PREDICTED_DATA);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)dciId);
 
-      DciData data = new DciData(nodeId, dciId);
+      DataSeries data = new DataSeries(nodeId, dciId);
 
       int rowsReceived;
       int timeFrom = (int)(from.getTime() / 1000);
@@ -14646,78 +14659,6 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_DESCRIPTION, description);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
-   }
-
-   /**
-    * Get info for given DCI list
-    *
-    * @param nodeIds node identifiers
-    * @param dciIds DCI identifiers (length must match length of node identifiers list)
-    * @return map with DCI information
-    * @throws IOException if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public Map<Long, MeasurementUnit> getDciMeasurementUnits(List<Long> nodeIds, List<Long> dciIds) throws IOException, NXCException
-   {
-      if (nodeIds.isEmpty())
-         return new HashMap<Long, MeasurementUnit>();
-
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCI_MEASUREMENT_UNITS);
-      msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, nodeIds.size());
-      msg.setField(NXCPCodes.VID_NODE_LIST, nodeIds);
-      msg.setField(NXCPCodes.VID_DCI_LIST, dciIds);
-      sendMessage(msg);
-
-      final NXCPMessage response = waitForRCC(msg.getMessageId());
-      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
-      Map<Long, MeasurementUnit> result = new HashMap<Long, MeasurementUnit>(count);
-      long fieldId = NXCPCodes.VID_DCI_LIST_BASE;
-      for(int i = 0; i < count; i++)
-      {
-         result.put(response.getFieldAsInt64(fieldId++), new MeasurementUnit(response, fieldId));         
-         fieldId += 2;
-      }
-      return result;
-   }
-
-   /**
-    * Get measurement units for given DCI list
-    *
-    * @param dciList list of DCI chart configurations
-    * @return map with DCI information
-    * @throws IOException if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public Map<Long, MeasurementUnit> getDciMeasurementUnits(List<ChartDciConfig> dciList) throws IOException, NXCException
-   {
-      List<Long> nodeIds = new ArrayList<Long>(dciList.size());
-      List<Long> dciIds = new ArrayList<Long>(dciList.size());
-      for(ChartDciConfig dci : dciList)
-      {
-         nodeIds.add(dci.nodeId);
-         dciIds.add(dci.dciId);
-      }
-      return getDciMeasurementUnits(nodeIds, dciIds);
-   }
-
-   /**
-    * Get info for given DCI list
-    *
-    * @param dciList list of DCI chart configurations
-    * @return map with DCI information
-    * @throws IOException if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public Map<Long, MeasurementUnit> getDciMeasurementUnits(ChartDciConfig[] dciList) throws IOException, NXCException
-   {
-      List<Long> nodeIds = new ArrayList<Long>(dciList.length);
-      List<Long> dciIds = new ArrayList<Long>(dciList.length);
-      for(ChartDciConfig dci : dciList)
-      {
-         nodeIds.add(dci.nodeId);
-         dciIds.add(dci.dciId);
-      }
-      return getDciMeasurementUnits(nodeIds, dciIds);
    }
    
    /**

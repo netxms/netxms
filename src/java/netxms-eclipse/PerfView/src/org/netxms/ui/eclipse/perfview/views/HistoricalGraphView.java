@@ -23,7 +23,6 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -57,9 +56,8 @@ import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartConfigurationChangeListener;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.GraphDefinition;
-import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -386,19 +384,10 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final Map<Long, MeasurementUnit> measurementUnits = session.getDciMeasurementUnits(configuration.getDciList());
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
-                  int i = 0;
-                  for(ChartDciConfig dci : configuration.getDciList())
-                  {
-                     GraphItem item = chart.getItem(i);
-                     if (item != null)
-                        item.setMeasurementUnit(measurementUnits.get(dci.getDciId()));
-                     i++;
-                  }
                   chart.rebuild();
                   chartParent.layout(true, true);
                   updateChart();
@@ -468,7 +457,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             monitor.beginTask(getName(), dciList.length);
-            final DciData[] data = new DciData[dciList.length];
+            final DataSeries[] data = new DataSeries[dciList.length];
             final Threshold[][] thresholds = new Threshold[dciList.length][];
             for(int i = 0; i < dciList.length; i++)
             {
@@ -922,7 +911,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
     * @param data Retrieved DCI data
     * @param thresholds 
     */
-   private void setChartData(final DciData[] data, Threshold[][] thresholds)
+   private void setChartData(final DataSeries[] data, Threshold[][] thresholds)
    {
       for(int i = 0; i < data.length; i++)
          chart.updateParameter(i, data[i], false);

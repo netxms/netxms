@@ -45,11 +45,9 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
-import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.ChartConfiguration;
-import org.netxms.client.datacollection.DciData;
-import org.netxms.client.datacollection.DciDataRow;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
@@ -57,7 +55,6 @@ import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartType;
-import org.netxms.ui.eclipse.charts.api.DataSeries;
 import org.netxms.ui.eclipse.compatibility.GraphItem;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorCache;
@@ -542,12 +539,12 @@ public class Chart extends Composite
     * @param value parameter's value
     * @param updateChart if true, chart will be updated (repainted)
     */
-   public void updateParameter(int index, DciData values, boolean updateChart)
+   public void updateParameter(int index, DataSeries values, boolean updateChart)
    {
       if (index >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT)
          return;
       
-      dataSeries.set(index, new DataSeries(values));
+      dataSeries.set(index, values);
       if (updateChart)
          refresh();
    }
@@ -565,24 +562,6 @@ public class Chart extends Composite
          return;
       
       dataSeries.set(index, new DataSeries(value));
-      if (updateChart)
-         refresh();
-   }
-
-   /**
-    * Update value for parameter
-    * 
-    * @param index parameter's index (0 .. MAX_CHART_ITEMS-1)
-    * @param value parameter's value
-    * @param dataType DCI data type
-    * @param updateChart if true, chart will be updated (repainted)
-    */
-   public void updateParameter(int index, DciDataRow value, DataType dataType, boolean updateChart)
-   {
-      if (index >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT)
-         return;
-      
-      dataSeries.set(index, new DataSeries(value, dataType));
       if (updateChart)
          refresh();
    }

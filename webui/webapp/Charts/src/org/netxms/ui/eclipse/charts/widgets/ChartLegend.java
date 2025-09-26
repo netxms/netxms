@@ -43,8 +43,8 @@ import org.eclipse.swt.widgets.Label;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.DataFormatter;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.ui.eclipse.charts.api.ChartType;
-import org.netxms.ui.eclipse.charts.api.DataSeries;
 import org.netxms.ui.eclipse.compatibility.GraphItem;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.tools.ColorConverter;
@@ -341,9 +341,11 @@ public class ChartLegend extends Composite
       for(DataSeries s : chart.getDataSeries())
       {
          GraphItem item = chart.getItem(row);
-         String format = (item.getDisplayFormat() == null || item.getDisplayFormat().isEmpty()) ? 
-               ((useMultipliers) ? "%{m,u}.3f" : "%{u}.3f") :  item.getDisplayFormat();
-         DataFormatter formatter = new DataFormatter(format, DataType.FLOAT, item.getMeasurementUnit());
+         DataFormatter formatter = s.getDataFormatter()
+               .setDefaultFormatString("%{u}.3f", "%{m,u}.3f")
+               .setFormattString(item.getDisplayFormat())
+               .setDataType(DataType.FLOAT)
+               .setDefaultForMultipliers(useMultipliers);
          dataLabels[row][0].setText(formatter.format(s.getCurrentValueAsString(), RegionalSettings.TIME_FORMATTER));
          if (chart.getType() == ChartType.LINE)
          {

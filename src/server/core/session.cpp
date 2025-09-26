@@ -1411,9 +1411,6 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_DCI_INFO:
          getDCIInfo(*request);
          break;
-      case CMD_GET_DCI_MEASUREMENT_UNITS:
-         getDciMeasurementUnits(*request);
-         break;
       case CMD_GET_DCI_THRESHOLDS:
          sendDCIThresholds(*request);
          break;
@@ -5404,7 +5401,14 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
       // Send CMD_REQUEST_COMPLETED message
       response->setField(VID_RCC, RCC_SUCCESS);
       if (dciType == DCO_TYPE_ITEM)
-         static_cast<DCItem*>(dci.get())->fillMessageWithThresholds(response, false);
+      {
+         DCItem* dciItem = static_cast<DCItem*>(dci.get());
+         dciItem->fillMessageWithThresholds(response, false);
+         response->setField(VID_CURRENT_SEVERITY, dciItem->getThresholdSeverity());
+         response->setField(VID_UNITS_NAME, dciItem->getUnitName());
+         response->setField(VID_MULTIPLIER, dciItem->getMultiplier());
+         response->setField(VID_USE_MULTIPLIER, dciItem->getUseMultiplier());
+      }
       sendMessage(response);
 
       int16_t dataType;
@@ -5503,9 +5507,16 @@ read_from_db:
 		{
 			// Send CMD_REQUEST_COMPLETED message
 			response->setField(VID_RCC, RCC_SUCCESS);
-			if (dciType == DCO_TYPE_ITEM)
-			   static_cast<DCItem*>(dci.get())->fillMessageWithThresholds(response, false);
-			sendMessage(response);
+	      if (dciType == DCO_TYPE_ITEM)
+	      {
+	         DCItem* dciItem = static_cast<DCItem*>(dci.get());
+	         dciItem->fillMessageWithThresholds(response, false);
+	         response->setField(VID_CURRENT_SEVERITY, dciItem->getThresholdSeverity());
+	         response->setField(VID_UNITS_NAME, dciItem->getUnitName());
+	         response->setField(VID_MULTIPLIER, dciItem->getMultiplier());
+	         response->setField(VID_USE_MULTIPLIER, dciItem->getUseMultiplier());
+	      }
+	      sendMessage(response);
 
 			if (historicalDataType == HDT_FULL_TABLE)
             ProcessTableDataSelectResults(hResult, this, request.getId());
@@ -10738,67 +10749,6 @@ void ClientSession::getDCIInfo(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   sendMessage(response);
-}
-
-/**
- * Get DCI measurement units
- */
-void ClientSession::getDciMeasurementUnits(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-
-   size_t count = request.getFieldAsUInt32(VID_NUM_ITEMS);
-   Buffer<uint32_t> nodeList(count);
-   Buffer<uint32_t> dciList(count);
-   request.getFieldAsInt32Array(VID_NODE_LIST, count, nodeList);
-   request.getFieldAsInt32Array(VID_DCI_LIST, count, dciList);
-
-   uint32_t returnCount = 0;
-   uint32_t fieldId = VID_DCI_LIST_BASE;
-   for(size_t i = 0; i < count; i++)
-   {
-      shared_ptr<NetObj> object = FindObjectById(nodeList[i]);
-      if (object != nullptr && object->isDataCollectionTarget())
-      {
-         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
-         {
-            shared_ptr<DCObject> dci = static_cast<DataCollectionTarget&>(*object).getDCObjectById(dciList[i], m_userId);
-            if (dci != nullptr)
-            {
-               if (dci->getType() == DCO_TYPE_ITEM)
-               {
-                  response.setField(fieldId++, dciList[i]);
-                  response.setField(fieldId++, static_cast<DCItem&>(*dci).getUnitName());
-                  response.setField(fieldId++, static_cast<DCItem&>(*dci).getMultiplier());
-                  returnCount++;
-               }
-               else
-               {
-                  debugPrintf(4, _T("getDciMeasurementUnits: invalid DCI %d type at target %s [%d] not found"), dciList[i], object->getName(), object->getId());
-               }
-            }
-            else
-            {
-               response.setField(VID_RCC, RCC_INVALID_DCI_ID);
-               debugPrintf(4, _T("getDciMeasurementUnits: DCI %d at target %s [%d] not found"), dciList[i], object->getName(), object->getId());
-            }
-         }
-         else
-         {
-            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on getting DCI info"));
-         }
-      }
-      else
-      {
-         if (object == nullptr)
-            debugPrintf(6, _T("getDciMeasurementUnits: invalid object id %u"), nodeList[i]);
-         else
-            debugPrintf(6, _T("getDciMeasurementUnits: object %s [%u] is not a data collection target"), object->getName(), object->getId());
-      }
-   }
-   response.setField(VID_NUM_ITEMS, returnCount);
-   response.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(response);
 }
 

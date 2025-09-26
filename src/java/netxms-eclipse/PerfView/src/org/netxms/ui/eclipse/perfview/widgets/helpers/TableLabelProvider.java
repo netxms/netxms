@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Display;
 import org.netxms.client.TableColumnDefinition;
 import org.netxms.client.TableRow;
 import org.netxms.client.datacollection.DataFormatter;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 
 /**
@@ -89,7 +90,8 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
       if (columnIndex >= row.size())
          return null;
 
-      return new DataFormatter(useMultipliers ? "%{u,m}s" : "%{u}s", columns[columnIndex].getDataType(), columns[columnIndex].getMeasurementUnit()).format(row.get(columnIndex).getValue(), RegionalSettings.TIME_FORMATTER);
+      return new DataFormatter().setDataType(columns[columnIndex].getDataType()).setMeasurementUnit(columns[columnIndex].getMeasurementUnit())
+            .setUseMultipliers(useMultipliers ? DciValue.MULTIPLIERS_YES : DciValue.MULTIPLIERS_NO).format(row.get(columnIndex).getValue(), RegionalSettings.TIME_FORMATTER);
 	}
 
    /**

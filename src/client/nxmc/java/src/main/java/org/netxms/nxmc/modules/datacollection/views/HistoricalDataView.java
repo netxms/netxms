@@ -36,7 +36,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.HistoricalDataType;
-import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Memento;
@@ -314,7 +314,7 @@ public class HistoricalDataView extends ViewWithContext
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{            
-			   final DciData data;
+			   final DataSeries data;
 			   if (tableName != null)
 			      data = session.getCollectedTableData(ownerId, dciId, instance, column, timeFrom, timeTo, recordLimit);
 			   else
@@ -371,7 +371,7 @@ public class HistoricalDataView extends ViewWithContext
             for(DciDataRow r : list)
                session.deleteDciEntry(contextId, dciId, r.getTimestamp().getTime() / 1000); // Convert back to seconds
 
-            final DciData data;
+            final DataSeries data;
             if (tableName != null)
                data = session.getCollectedTableData(contextId, dciId, instance, column, timeFrom, timeTo, recordLimit);
             else

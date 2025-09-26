@@ -68,6 +68,7 @@ public class HardwareComponentLabelProvider extends LabelProvider implements ITa
    public String getColumnText(Object element, int columnIndex)
    {
       HardwareComponent c = (HardwareComponent)element;
+      DataFormatter df = new DataFormatter().setFormattString("%{u,m}s").setDataType(DataType.UINT64);
       switch(columnIndex)
       {
          case HardwareInventoryTable.COLUMN_CAPACITY:
@@ -77,11 +78,11 @@ public class HardwareComponentLabelProvider extends LabelProvider implements ITa
                   return Long.toString(c.getCapacity()) + " mWh"; 
                case MEMORY_DEVICE:
                case STORAGE_DEVICE:
-                  return new DataFormatter("%{u,m}s", DataType.UINT64, MeasurementUnit.BYTES_IEC).format(Long.toString(c.getCapacity()), null);
+                  return df.setMeasurementUnit(MeasurementUnit.BYTES_IEC).format(Long.toString(c.getCapacity()), null);
                case NETWORK_ADAPTER:
-                  return new DataFormatter("%{u,m}s", DataType.UINT64, MeasurementUnit.BPS_METRIC).format(Long.toString(c.getCapacity()), null);
+                  return df.setMeasurementUnit(MeasurementUnit.BPS_METRIC).format(Long.toString(c.getCapacity()), null);
                case PROCESSOR:
-                  return new DataFormatter("%{u,m}s", DataType.UINT64, MeasurementUnit.HZ).format(Long.toString(c.getCapacity() * 1000000L), null);
+                  return df.setMeasurementUnit(MeasurementUnit.HZ).format(Long.toString(c.getCapacity() * 1000000L), null);
                default:
                   break;
             }

@@ -581,6 +581,7 @@ public:
 	int getSampleCount() const { return m_sampleCount; }
 	const TCHAR *getPredictionEngine() const { return m_predictionEngine; }
 	int getMultiplier() const { return m_multiplier; }
+	int getUseMultiplier() const { return (m_flags & DCF_MULTIPLIERS_MASK) >> 16; }
 	SharedString getUnitName() const { return GetAttributeWithLock(m_unitName, m_mutex); }
 	bool isAnomalyDetected() const { return m_anomalyDetected; }
 

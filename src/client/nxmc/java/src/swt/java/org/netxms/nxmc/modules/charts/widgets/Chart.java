@@ -39,12 +39,9 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.client.constants.DataType;
-import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.datacollection.DciData;
-import org.netxms.client.datacollection.DciDataRow;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
@@ -53,7 +50,6 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.modules.charts.api.ChartColor;
 import org.netxms.nxmc.modules.charts.api.ChartType;
-import org.netxms.nxmc.modules.charts.api.DataSeries;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.dashboards.views.DrilldownDashboardView;
 import org.netxms.nxmc.modules.networkmaps.views.AdHocPredefinedMapView;
@@ -72,7 +68,6 @@ public class Chart extends Composite
    protected ChartColor[] palette = null;
    private List<ChartDciConfig> items = new ArrayList<ChartDciConfig>(ChartConfiguration.MAX_GRAPH_ITEM_COUNT);
    private List<DataSeries> dataSeries = new ArrayList<DataSeries>(ChartConfiguration.MAX_GRAPH_ITEM_COUNT);
-   private Threshold[][] thresholds;
    private long drillDownObjectId = 0;
    private ColorCache colorCache;
    private Label title;
@@ -511,16 +506,6 @@ public class Chart extends Composite
    }
 
    /**
-    * Set threshold configuraiton
-    * 
-    * @param thresholds
-    */
-   public void setThresholds(Threshold[][] thresholds)
-   {
-      this.thresholds = thresholds;
-   }
-
-   /**
     * Get threshold configuraiton for item
     * 
     * @param i time index
@@ -528,9 +513,7 @@ public class Chart extends Composite
     */
    public Threshold[] getThreshold(int i)
    {
-      if (thresholds == null)
-         return null;
-      return thresholds.length > i ? thresholds[i] : null;
+      return dataSeries.size() > i ? dataSeries.get(i).getThresholds() : null;
    }
 
    /**
@@ -540,7 +523,7 @@ public class Chart extends Composite
     * @param value parameter's value
     * @param updateChart if true, chart will be updated (repainted)
     */
-   public void updateParameter(int index, DciData values, boolean updateChart)
+   public void updateParameter(int index, DataSeries values, boolean updateChart)
    {
       if (index >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT)
          return;
@@ -565,49 +548,6 @@ public class Chart extends Composite
       dataSeries.set(index, new DataSeries(value));
       if (updateChart)
          refresh();
-   }
-
-   /**
-    * Update value for parameter
-    * 
-    * @param index parameter's index (0 .. MAX_CHART_ITEMS-1)
-    * @param value parameter's value
-    * @param dataType DCI data type
-    * @param updateChart if true, chart will be updated (repainted)
-    */
-   public void updateParameter(int index, DciDataRow value, DataType dataType, boolean updateChart)
-   {
-      if (index >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT)
-         return;
-      
-      dataSeries.set(index, new DataSeries(value, dataType));
-      if (updateChart)
-         refresh();
-   }
-
-   /**
-    * Update thresholds for parameter
-    * 
-    * @param index parameter's index (0 .. MAX_CHART_ITEMS-1)
-    * @param thresholds new thresholds
-    */
-   public void updateParameterThresholds(int index, Threshold[] thresholds)
-   {
-      if (index >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT)
-         return;
-
-      DataSeries series = dataSeries.get(index);
-      if (series != null)
-      {
-         Severity severity = Severity.NORMAL;
-         for(Threshold t : thresholds)
-            if (t.isActive())
-            {
-               severity = t.getCurrentSeverity();
-               break;
-            }
-         series.setActiveThresholdSeverity(severity);
-      }
    }
 
    /**

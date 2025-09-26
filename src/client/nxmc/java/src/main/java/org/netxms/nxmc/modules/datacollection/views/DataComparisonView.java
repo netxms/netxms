@@ -36,9 +36,8 @@ import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataCollectionObject;
-import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.DciDataRow;
-import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.actions.RefreshAction;
@@ -491,27 +490,14 @@ public class DataComparisonView extends AdHocObjectView
 				for(int i = 0; i < items.size(); i++)
 				{
                ChartDciConfig item = items.get(i);
-               DciData data = (item.type == DataCollectionObject.DCO_TYPE_ITEM) ?
+               DataSeries data = (item.type == DataCollectionObject.DCO_TYPE_ITEM) ?
 							session.getCollectedData(item.getNodeId(), item.getDciId(), null, null, 1, HistoricalDataType.PROCESSED) :
                      session.getCollectedTableData(item.getNodeId(), item.getDciId(), item.instance, item.column, null, null, 1);
 					DciDataRow value = data.getLastValue();
 					values[i] = (value != null) ? value.getValueAsDouble() : 0.0;
 				}
 
-				final Threshold[][] thresholds = new Threshold[items.size()][];
-            if ((chartType == ChartType.DIAL_GAUGE) || (chartType == ChartType.BAR_GAUGE) || (chartType == ChartType.CIRCULAR_GAUGE) || (chartType == ChartType.TEXT_GAUGE))
-				{
-					for(int i = 0; i < items.size(); i++)
-					{
-                  ChartDciConfig item = items.get(i);
-						thresholds[i] = session.getThresholds(item.getNodeId(), item.getDciId());
-					}
-				}
-
             runInUIThread(() -> {
-               if ((chartType == ChartType.DIAL_GAUGE) || (chartType == ChartType.BAR_GAUGE) || (chartType == ChartType.CIRCULAR_GAUGE) || (chartType == ChartType.TEXT_GAUGE))
-                  for(int i = 0; i < thresholds.length; i++)
-                     chart.updateParameterThresholds(i, thresholds[i]);
                setChartData(values);
                clearMessages();
                updateInProgress = false;

@@ -51,7 +51,6 @@ public abstract class ScriptedComparisonChartElement extends ElementWidget
    protected String script = null;
    protected long objectId = 0;
 	protected int refreshInterval = 30;
-	protected boolean updateThresholds = false;
 
 	private ViewRefreshController refreshController;
 	private boolean updateInProgress = false;

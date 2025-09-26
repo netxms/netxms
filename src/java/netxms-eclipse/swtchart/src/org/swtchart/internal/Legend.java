@@ -462,11 +462,11 @@ public class Legend extends Canvas implements ILegend, PaintListener
    {
       int shift = Util.getExtentInGC(getFont(), VALUE_PLACEHOLDER).x + EXT_COL_MARGIN;
       int x = r.x + extendedInfoOffset + MARGIN * 2;
-      String format = "%{u}.3f";
-      if (chart.isUseMultipliers())
-         format = "%{u,m}.3f";
-      DataFormatter formatter = new DataFormatter(format, DataType.FLOAT, series.getMeasurementUnit());
-
+      DataFormatter formatter = new DataFormatter()
+            .setDefaultFormatString("%{u}.3f", "%{m,u}.3f")
+            .setDataType(DataType.FLOAT)
+            .setDefaultForMultipliers(chart.isUseMultipliers());
+      
       gc.drawText(formatter.format(Double.toString(series.getCurY()), null), x, r.y, true);
       x += shift;
 

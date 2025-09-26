@@ -224,7 +224,7 @@ typedef struct
 #define CMD_EVENT_DB_UPDATE               0x0018
 #define CMD_TRAP_CFG_UPDATE               0x0019
 #define CMD_SET_EVENT_INFO                0x001A
-#define CMD_GET_DCI_MEASUREMENT_UNITS     0x001B
+//#define CMD_GET_DCI_MEASUREMENT_UNITS     0x001B
 #define CMD_LOAD_EVENT_DB                 0x001C
 #define CMD_REQUEST_COMPLETED             0x001D
 #define CMD_LOAD_USER_DB                  0x001E
@@ -1553,6 +1553,7 @@ typedef struct
 #define VID_THRESHOLD_ENABLE_TIME   ((uint32_t)866)
 #define VID_FORCED_CONTEXT_OBJECT   ((uint32_t)867)
 #define VID_DASHBOARD_NAME_TEMPLATE ((uint32_t)868)
+#define VID_USE_MULTIPLIER          ((uint32_t)869)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

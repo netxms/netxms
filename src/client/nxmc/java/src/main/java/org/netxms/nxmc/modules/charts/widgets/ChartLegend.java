@@ -42,10 +42,10 @@ import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataFormatter;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.TimeFormatter;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.modules.charts.api.ChartType;
-import org.netxms.nxmc.modules.charts.api.DataSeries;
 import org.netxms.nxmc.tools.ColorConverter;
 
 /**
@@ -336,9 +336,11 @@ public class ChartLegend extends Composite
       for(DataSeries s : chart.getDataSeries())
       {
          ChartDciConfig item = chart.getItem(row);
-         String format = (item.getDisplayFormat() == null || item.getDisplayFormat().isEmpty()) ? 
-               ((useMultipliers) ? "%{m,u}.3f" : "%{u}.3f") :  item.getDisplayFormat();
-         DataFormatter formatter = new DataFormatter(format, DataType.FLOAT, item.measurementUnit);
+         DataFormatter formatter = s.getDataFormatter()
+               .setDefaultFormatString("%{u}.3f", "%{m,u}.3f")
+               .setFormattString(item.getDisplayFormat())
+               .setDataType(DataType.FLOAT)
+               .setDefaultForMultipliers(useMultipliers);
          TimeFormatter timeFormatter = DateFormatFactory.getTimeFormatter();
          dataLabels[row][0].setText(formatter.format(s.getCurrentValueAsString(), timeFormatter));
          if (chart.getType() == ChartType.LINE)

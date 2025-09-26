@@ -67,7 +67,7 @@ import org.netxms.client.constants.RCC;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.events.Alarm;
@@ -843,7 +843,7 @@ public class AlarmDetails extends ViewPart
             {
                final Date from = new Date(System.currentTimeMillis() - 86400000);
                final Date to = new Date(System.currentTimeMillis());
-               final DciData data = session.getCollectedData(nodeId, dciId, from, to, 0, HistoricalDataType.PROCESSED);
+               final DataSeries data = session.getCollectedData(nodeId, dciId, from, to, 0, HistoricalDataType.PROCESSED);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
@@ -860,7 +860,7 @@ public class AlarmDetails extends ViewPart
             }
             else
             {
-               final DciData data = session.getCollectedData(nodeId, dciId, null, null, 20, HistoricalDataType.PROCESSED);
+               final DataSeries data = session.getCollectedData(nodeId, dciId, null, null, 20, HistoricalDataType.PROCESSED);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()

@@ -21,7 +21,6 @@ package org.netxms.nxmc.modules.dashboards.widgets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -38,10 +37,8 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataCollectionObject;
-import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.datacollection.MeasurementUnit;
-import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.RefreshAction;
@@ -225,14 +222,13 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
                }
             }
 
-            final Map<Long, MeasurementUnit> measurementUnits = session.getDciMeasurementUnits(runtimeDciList);
             runInUIThread(() -> {
                if (chart.isDisposed())
                   return;
+               
 
                for(ChartDciConfig dci : runtimeDciList)
                {
-                  dci.measurementUnit = measurementUnits.get(dci.getDciId());
                   chart.addParameter(new ChartDciConfig(dci));
                }
 
@@ -337,8 +333,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 			{
 				final Date from = new Date(System.currentTimeMillis() - config.getTimeRangeMillis());
 				final Date to = new Date(System.currentTimeMillis());
-            final DciData[] data = new DciData[runtimeDciList.size()];
-            final Threshold[][] thresholds = new Threshold[runtimeDciList.size()][];
+            final DataSeries[] data = new DataSeries[runtimeDciList.size()];
             for(int i = 0; i < runtimeDciList.size(); i++)
             {
                currentDci = runtimeDciList.get(i);
@@ -347,12 +342,10 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
                if (currentDci.type == ChartDciConfig.ITEM)
                {
                   data[i] = session.getCollectedData(currentDci.nodeId, currentDci.dciId, from, to, 0, HistoricalDataType.PROCESSED, dashboardId);
-                  thresholds[i] = session.getThresholds(currentDci.nodeId, currentDci.dciId,dashboardId);
                }
                else
                {
                   data[i] = session.getCollectedTableData(currentDci.nodeId, currentDci.dciId, currentDci.instance, currentDci.column, from, to, 0, dashboardId);
-                  thresholds[i] = null;
                }
             }
             runInUIThread(() -> {
@@ -365,7 +358,6 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
                      chart.updateParameter(i, data[i], false);
                      dataCache.add(new DataCacheElement(runtimeDciList.get(i), data[i]));
                   }
-                  chart.setThresholds(thresholds);
                   chart.refresh();
                   clearMessages();
                }
@@ -407,10 +399,10 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 	 */
 	public class DataCacheElement
 	{
-	   public DciData data;
+	   public DataSeries data;
 	   public String name;
 	   
-	   public DataCacheElement(ChartDciConfig config, DciData data)
+	   public DataCacheElement(ChartDciConfig config, DataSeries data)
 	   {
 	      this.name = config.getLabel();
 	      this.data = data;

@@ -35,7 +35,7 @@ import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataCollectionObject;
-import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.MeasurementUnit;
@@ -145,7 +145,6 @@ public abstract class ComparisonChartElement extends ElementWidget
                }
             }
 
-            final Map<Long, MeasurementUnit> measurementUnits = session.getDciMeasurementUnits(runtimeDciList);
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -156,7 +155,6 @@ public abstract class ComparisonChartElement extends ElementWidget
                   for(ChartDciConfig dci : runtimeDciList)
                   {
                      GraphItem item = new GraphItem(dci);
-                     item.setMeasurementUnit(measurementUnits.get(dci.getDciId()));
                      chart.addParameter(item);
                   }
 
@@ -209,7 +207,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-            final DciData[] data = new DciData[runtimeDciList.size()];
+            final DataSeries[] data = new DataSeries[runtimeDciList.size()];
             for(int i = 0; i < runtimeDciList.size(); i++)
 				{
                ChartDciConfig dci = runtimeDciList.get(i);
@@ -247,8 +245,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 
                   for(int i = 0; i < data.length; i++)
 						{
-                     DciDataRow lastValue = data[i].getLastValue();
-                     chart.updateParameter(i, (lastValue != null) ? lastValue : new DciDataRow(new Date(), 0.0), data[i].getDataType(), false);
+                     chart.updateParameter(i, data[i], false);
                      if (updateThresholds)
                         chart.updateParameterThresholds(i, thresholds[i]);
 						}

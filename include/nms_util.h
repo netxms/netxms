@@ -4001,6 +4001,7 @@ private:
    bool m_instanceColumn;
    TCHAR m_unitName[63];
    int m_multiplier;
+   int m_useMultiplier;
 
 public:
    TableColumnDefinition(const TCHAR *name, const TCHAR *displayName, int32_t dataType, bool isInstance);
@@ -4023,6 +4024,7 @@ public:
    void setDisplayName(const TCHAR *name);
    void setUnitName(const TCHAR *name);
    void setMultiplier(int multiplier) { m_multiplier = multiplier; }
+   void setUseMultiplier(int useMultiplier) { m_useMultiplier = useMultiplier; }
 };
 
 /**

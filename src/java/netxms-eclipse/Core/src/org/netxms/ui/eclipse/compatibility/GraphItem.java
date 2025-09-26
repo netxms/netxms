@@ -41,7 +41,6 @@ public class GraphItem
    private int lineWidth;
    private boolean showThresholds;
    private boolean inverted;
-   private MeasurementUnit measurementUnit;
 
 	/**
 	 * Create graph item object with default values
@@ -61,7 +60,6 @@ public class GraphItem
       lineWidth = 0;
       showThresholds = false;
       inverted = false;
-      measurementUnit = null;
 	}
 
 	/**
@@ -90,7 +88,6 @@ public class GraphItem
       this.lineWidth = 0;
       this.showThresholds = false;
       this.inverted = false;
-      this.measurementUnit = null;
 	}
 
    /**
@@ -127,7 +124,6 @@ public class GraphItem
    public GraphItem(DciValue dciValue, String displayFormat, int lineChartType, int color)
    {
       this(dciValue.getNodeId(), dciValue.getId(), dciValue.getName(), dciValue.getDescription(), displayFormat, lineChartType, color);
-      measurementUnit = dciValue.getMeasurementUnit();
    }
 
    /**
@@ -142,7 +138,6 @@ public class GraphItem
       this.inverted = dciConfig.invertValues;
       this.lineWidth = dciConfig.lineWidth;
       this.showThresholds = dciConfig.showThresholds;
-      this.measurementUnit = dciConfig.measurementUnit;
    }
 
    /**
@@ -393,26 +388,6 @@ public class GraphItem
    }
 
    /**
-    * Get configured measurement unit.
-    *
-    * @return measurement unit or null
-    */
-   public MeasurementUnit getMeasurementUnit()
-   {
-      return measurementUnit;
-   }
-
-   /**
-    * Set measurement unit to use.
-    *
-    * @param measurementUnit new measurement unit
-    */
-   public void setMeasurementUnit(MeasurementUnit measurementUnit)
-   {
-      this.measurementUnit = measurementUnit;
-   }
-
-   /**
     * @see java.lang.Object#toString()
     */
    @Override
@@ -420,6 +395,6 @@ public class GraphItem
    {
       return "GraphItem [nodeId=" + nodeId + ", dciId=" + dciId + ", type=" + type + ", name=" + name + ", description=" + description +
             ", displayFormat=" + displayFormat + ", dataColumn=" + dataColumn + ", instance=" + instance + ", lineChartType=" + lineChartType + ", color=" + color + ", lineWidth=" + lineWidth +
-            ", showThresholds=" + showThresholds + ", inverted=" + inverted + ", binaryUnit=" + ", measurementUnit=" + measurementUnit + "]";
+            ", showThresholds=" + showThresholds + ", inverted=" + inverted + "]";
    }
 }
