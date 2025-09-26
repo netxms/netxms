@@ -28,9 +28,15 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netxms.mcp.resources.ServerResource;
 import com.netxms.mcp.tools.Alarms;
+import com.netxms.mcp.tools.LastValues;
 import com.netxms.mcp.tools.ObjectDetails;
+import com.netxms.mcp.tools.ObjectList;
+import com.netxms.mcp.tools.ProcessList;
+import com.netxms.mcp.tools.RenameObject;
 import com.netxms.mcp.tools.ServerTool;
 import com.netxms.mcp.tools.ServerVersion;
+import com.netxms.mcp.tools.SetObjectManagedState;
+import com.netxms.mcp.tools.SoftwareInventory;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpServerFeatures.SyncResourceSpecification;
 import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification;
@@ -55,6 +61,11 @@ public class Startup
 
    private static NXCSession session = null;
 
+   /**
+    * Main entry point
+    *
+    * @param args command line arguments
+    */
    public static void main(String[] args)
    {
       for(String arg : args)
@@ -103,11 +114,23 @@ public class Startup
    {
       List<SyncToolSpecification> tools = new ArrayList<>();
       registerTool(tools, new Alarms());
+      registerTool(tools, new LastValues());
       registerTool(tools, new ObjectDetails());
+      registerTool(tools, new ObjectList());
+      registerTool(tools, new ProcessList());
+      registerTool(tools, new RenameObject());
       registerTool(tools, new ServerVersion());
+      registerTool(tools, new SetObjectManagedState());
+      registerTool(tools, new SoftwareInventory());
       return tools;
    }
 
+   /**
+    * Register single tool.
+    *
+    * @param tools list of tools
+    * @param tool tool to register
+    */
    private static void registerTool(List<SyncToolSpecification> tools, ServerTool tool)
    {
       tools.add(
@@ -135,10 +158,16 @@ public class Startup
    private static List<SyncResourceSpecification> createResources()
    {
       List<SyncResourceSpecification> resources = new ArrayList<>();
-      // registerResource(resources, new ServerVersion());
+      registerResource(resources, new com.netxms.mcp.resources.ServerVersion());
       return resources;
    }
 
+   /**
+    * Register single resource.
+    *
+    * @param resources list of resources
+    * @param resource resource to register
+    */
    private static void registerResource(List<SyncResourceSpecification> resources, ServerResource resource)
    {
       resources.add(
@@ -257,6 +286,11 @@ public class Startup
       }
    }
 
+   /**
+    * Get current communication session.
+    *
+    * @return current communication session
+    */
    public static NXCSession getSession()
    {
       return session;

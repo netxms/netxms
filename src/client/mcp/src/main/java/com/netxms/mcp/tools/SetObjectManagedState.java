@@ -19,12 +19,14 @@
 package com.netxms.mcp.tools;
 
 import java.util.Map;
+import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractObject;
 import com.netxms.mcp.Startup;
 
 /**
  * 
  */
-public class ServerVersion extends ServerTool
+public class SetObjectManagedState extends ObjectServerTool
 {
    /**
     * @see com.netxms.mcp.tools.ServerTool#getName()
@@ -32,7 +34,7 @@ public class ServerVersion extends ServerTool
    @Override
    public String getName()
    {
-      return "server-version";
+      return "set-object-managed-state";
    }
 
    /**
@@ -41,15 +43,29 @@ public class ServerVersion extends ServerTool
    @Override
    public String getDescription()
    {
-      return "Returns the version of the NetXMS server.\nThis tool does not require any parameters.";
+      return "Set object managed state (put object into managed or unmanaged state). Unmanaged objects are excluded from processing.\nThis tool requires an object ID or name as a parameter.";
    }
 
    /**
-    * @see com.netxms.mcp.tools.ServerTool#execute(java.util.Map)
+    * @see com.netxms.mcp.tools.ServerTool#getSchema()
     */
    @Override
-   public String execute(Map<String, Object> args) throws Exception
+   public String getSchema()
    {
-      return Startup.getSession().getServerVersion();
+      return new SchemaBuilder()
+         .addArgument("object_id", "string", "ID or name of the node object to change managed state for", true)
+         .addArgument("state", "boolean", "New managed state: true for managed, false for unmanaged", true)
+         .build();
+   }
+
+   /**
+    * @see com.netxms.mcp.tools.ObjectServerTool#execute(org.netxms.client.objects.AbstractObject, java.util.Map)
+    */
+   @Override
+   protected String execute(AbstractObject object, Map<String, Object> args) throws Exception
+   {
+      NXCSession session = Startup.getSession();
+      session.setObjectManaged(object.getObjectId(), Boolean.parseBoolean((String)args.get("state")));
+      return "Success";
    }
 }

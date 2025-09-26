@@ -1,22 +1,34 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2025 Reden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package com.netxms.mcp.tools;
 
 import java.util.Map;
-
-import org.netxms.client.NXCSession;
+import org.netxms.base.GeoLocation;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.netxms.mcp.Startup;
 
 /**
  * 
  */
-public class ObjectDetails extends ServerTool
+public class ObjectDetails extends ObjectServerTool
 {
    /**
     * @see com.netxms.mcp.tools.ServerTool#getName()
@@ -48,48 +60,30 @@ public class ObjectDetails extends ServerTool
    }
 
    /**
-    * @see com.netxms.mcp.tools.ServerTool#execute(java.util.Map)
+    * @see com.netxms.mcp.tools.ObjectServerTool#execute(org.netxms.client.objects.AbstractObject, java.util.Map)
     */
    @Override
-   public String execute(Map<String, Object> args) throws Exception
+   protected String execute(AbstractObject object, Map<String, Object> args) throws Exception
    {
-      NXCSession session = Startup.getSession();
-
-      String objectIdParam = (String) args.get("object_id");
-      if (objectIdParam == null || objectIdParam.trim().isEmpty())
-      {
-         throw new IllegalArgumentException("object_id parameter is required");
-      }
-
-      AbstractObject object = null;
-      
-      // Try to parse as long integer first
-      try
-      {
-         long objectId = Long.parseLong(objectIdParam.trim());
-         object = session.findObjectById(objectId);
-      }
-      catch (NumberFormatException e)
-      {
-         // If parsing as long fails, try to find by name
-         object = session.findObjectByName(objectIdParam.trim());
-      }
-
-      if (object == null)
-      {
-         throw new Exception("Object not found: " + objectIdParam);
-      }
-
       // Create JSON response with basic object details
       ObjectMapper mapper = new ObjectMapper();
       ObjectNode result = mapper.createObjectNode();
-      
+
       result.put("id", object.getObjectId());
       result.put("name", object.getObjectName());
       result.put("alias", object.getAlias() != null ? object.getAlias() : "");
       result.put("comments", object.getComments() != null ? object.getComments() : "");
       result.put("class", object.getObjectClassName());
       result.put("status", object.getStatus().toString());
+
+      GeoLocation location = object.getGeolocation();
+      if (location != null)
+      {
+         ObjectNode l = mapper.createObjectNode();
+         l.put("latitude", location.getLatitude());
+         l.put("longitude", location.getLongitude());
+         result.set("location", l);
+      }
 
       // Add Node-specific details if object is a Node
       if (object instanceof Node)
@@ -99,6 +93,12 @@ public class ObjectDetails extends ServerTool
          result.put("vendor", node.getHardwareVendor());
          result.put("model", node.getHardwareProductName());
          result.put("serial_number", node.getHardwareSerialNumber());
+         result.put("platform_name", node.getPlatformName());
+         result.put("system_description", node.getSystemDescription());
+         result.put("node_type", node.getNodeType().toString());
+         result.put("has_agent", node.hasAgent());
+         result.put("has_snmp_agent", node.hasSnmpAgent());
+         result.put("has_file_manager", node.hasFileManager());
       }
 
       return mapper.writeValueAsString(result);
