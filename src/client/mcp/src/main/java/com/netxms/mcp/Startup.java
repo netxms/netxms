@@ -18,6 +18,8 @@
  */
 package com.netxms.mcp;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import org.netxms.base.VersionInfo;
@@ -26,6 +28,11 @@ import org.netxms.client.NXCSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netxms.mcp.docbook.DocBookArticle;
+import com.netxms.mcp.docbook.DocBookGetArticle;
+import com.netxms.mcp.docbook.DocBookIndex;
+import com.netxms.mcp.docbook.DocBookLoader;
+import com.netxms.mcp.docbook.DocBookSearch;
 import com.netxms.mcp.resources.ServerResource;
 import com.netxms.mcp.tools.Alarms;
 import com.netxms.mcp.tools.ExecuteScript;
@@ -65,6 +72,10 @@ public class Startup
    private static final Logger logger = LoggerFactory.getLogger(Startup.class);
 
    private static NXCSession session = null;
+   private static String mainDocBookPath = null;
+   private static String nxslDocBookFilePath = null;
+   private static List<DocBookArticle> mainDocBookArticles = new ArrayList<>();
+   private static List<DocBookArticle> nxslDocBookArticles = new ArrayList<>();
 
    /**
     * Main entry point
@@ -79,9 +90,23 @@ public class Startup
          {
             System.out.println("Usage: java -jar mcp-server.jar [options]");
             System.out.println("Options:");
-            System.out.println("  -help, --help     Show this help message");
-            System.out.println("  -stdio, --stdio   Start server with stdio transport");
+            System.out.println("  -help, --help          Show this help message");
+            System.out.println("  -stdio, --stdio        Start server with stdio transport");
+            System.out.println("  -docbook=<path>        Load product DocBook XML files as knowledge base");
+            System.out.println("  -nxsl-docbook=<file>   Load NXSL DocBook XML file as knowledge base (single file)");
             return;
+         }
+         if (arg.startsWith("-docbook="))
+         {
+            int p = arg.indexOf('=');
+            if (p > 0)
+               mainDocBookPath = arg.substring(p + 1);
+         }
+         else if (arg.startsWith("-nxsl-docbook="))
+         {
+            int p = arg.indexOf('=');
+            if (p > 0)
+               nxslDocBookFilePath = arg.substring(p + 1);
          }
       }
 
@@ -90,6 +115,49 @@ public class Startup
       {
          logger.error("Failed to connect to NetXMS server. Exiting.");
          return;
+      }
+
+      // Load DocBook (optional)
+      if (mainDocBookPath != null)
+      {
+         try
+         {
+            Path f = Path.of(mainDocBookPath);
+            if (Files.isDirectory(f))
+            {
+               mainDocBookArticles = DocBookLoader.loadFromDirectory(f);
+               logger.info("Loaded {} DocBook knowledge articles from {}", mainDocBookArticles.size(), f.toAbsolutePath());
+            }
+            else
+            {
+               logger.warn("DocBook path not found: {}", f.toAbsolutePath());
+            }
+         }
+         catch(Exception e)
+         {
+            logger.error("Failed to load DocBook directory {} ({})", mainDocBookPath, e.getMessage());
+         }
+      }
+
+      if (nxslDocBookFilePath != null)
+      {
+         try
+         {
+            Path f = Path.of(nxslDocBookFilePath);
+            if (Files.isRegularFile(f))
+            {
+               nxslDocBookArticles = DocBookLoader.load(f);
+               logger.info("Loaded {} DocBook knowledge articles from {}", nxslDocBookArticles.size(), f.toAbsolutePath());
+            }
+            else
+            {
+               logger.warn("DocBook file not found: {}", f.toAbsolutePath());
+            }
+         }
+         catch(Exception e)
+         {
+            logger.error("Failed to load DocBook file {} ({})", nxslDocBookFilePath, e.getMessage());
+         }
       }
 
       try
@@ -132,6 +200,16 @@ public class Startup
       registerTool(tools, new ServerVersion());
       registerTool(tools, new SetObjectManagedState());
       registerTool(tools, new SoftwareInventory());
+      if (!mainDocBookArticles.isEmpty())
+      {
+         registerTool(tools, new DocBookSearch(mainDocBookArticles, "netxms", "NetXMS concepts and operation"));
+         registerTool(tools, new DocBookGetArticle(mainDocBookArticles, "netxms", "NetXMS concepts and operation"));
+      }
+      if (!nxslDocBookArticles.isEmpty())
+      {
+         registerTool(tools, new DocBookSearch(nxslDocBookArticles, "nxsl", "NetXMS Scripting Language (NXSL)"));
+         registerTool(tools, new DocBookGetArticle(nxslDocBookArticles, "nxsl", "NetXMS Scripting Language (NXSL)"));
+      }
       return tools;
    }
 
@@ -169,6 +247,14 @@ public class Startup
    {
       List<SyncResourceSpecification> resources = new ArrayList<>();
       registerResource(resources, new com.netxms.mcp.resources.ServerVersion());
+      if (!nxslDocBookArticles.isEmpty())
+      {
+         // Index first for discovery
+         registerResource(resources, new DocBookIndex(nxslDocBookArticles));
+         // Individual articles
+         for (DocBookArticle a : nxslDocBookArticles)
+            registerResource(resources, a);
+      }
       return resources;
    }
 

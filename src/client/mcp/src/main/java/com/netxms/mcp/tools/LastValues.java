@@ -76,15 +76,17 @@ public class LastValues extends ObjectServerTool
 
       String filter = (String)args.get("filter");
       if (filter != null)
-         filter = filter.toLowerCase();
+         filter = filter.trim();
 
       ObjectMapper mapper = new ObjectMapper();
       ArrayNode list = mapper.createArrayNode();
       for(DciValue v : values)
       {
-         if (filter != null)
+         if (filter != null && !filter.isEmpty())
          {
-            if (!v.getName().toLowerCase().contains(filter) && !v.getDescription().toLowerCase().contains(filter))
+            String name = v.getName();
+            String description = v.getDescription();
+            if (!fuzzyMatch(name, filter) && !fuzzyMatch(description, filter))
                continue;
          }
          list.add(mapper.valueToTree(v));

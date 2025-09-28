@@ -178,4 +178,75 @@ public abstract class ServerTool
    {
       return new SchemaBuilder();
    }
+
+   /**
+    * Fuzzy match implementation supporting: - direct case-insensitive substring - ordered subsequence (all pattern characters
+    * appear in order) - bounded Levenshtein distance (adaptive threshold)
+    */
+   protected boolean fuzzyMatch(String text, String pattern)
+   {
+      if (text == null || pattern == null)
+         return false;
+      String t = text.toLowerCase();
+      String p = pattern.toLowerCase();
+
+      // Direct substring
+      if (t.contains(p))
+         return true;
+
+      // Subsequence check
+      int pi = 0;
+      for(int i = 0; i < t.length() && pi < p.length(); i++)
+      {
+         if (t.charAt(i) == p.charAt(pi))
+            pi++;
+      }
+      if (pi == p.length())
+         return true;
+
+      // Bounded Levenshtein distance (early exit if distance exceeds threshold)
+      int threshold;
+      int plen = p.length();
+      if (plen <= 4)
+         threshold = 1;
+      else if (plen <= 8)
+         threshold = 2;
+      else if (plen <= 16)
+         threshold = 3;
+      else
+         threshold = 4;
+
+      if (Math.abs(t.length() - plen) > threshold)
+         return false; // cannot be within threshold
+
+      // Standard DP with pruning
+      int[] prev = new int[plen + 1];
+      int[] curr = new int[plen + 1];
+      for(int j = 0; j <= plen; j++)
+         prev[j] = j;
+
+      int bestInRow;
+      for(int i = 1; i <= t.length(); i++)
+      {
+         curr[0] = i;
+         bestInRow = curr[0];
+         char tc = t.charAt(i - 1);
+         for(int j = 1; j <= plen; j++)
+         {
+            int cost = (tc == p.charAt(j - 1)) ? 0 : 1;
+            int v = Math.min(Math.min(curr[j - 1] + 1, prev[j] + 1), prev[j - 1] + cost);
+            curr[j] = v;
+            if (v < bestInRow)
+               bestInRow = v;
+         }
+         if (curr[plen] <= threshold)
+            return true; // early success
+         if (bestInRow > threshold)
+            return false; // cannot get better
+         int[] tmp = prev;
+         prev = curr;
+         curr = tmp; // swap
+      }
+      return prev[plen] <= threshold;
+   }
 }
