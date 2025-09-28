@@ -39,6 +39,7 @@ import com.netxms.mcp.tools.ExecuteScript;
 import com.netxms.mcp.tools.GetLibraryScript;
 import com.netxms.mcp.tools.GetMetricHistory;
 import com.netxms.mcp.tools.GetServerStats;
+import com.netxms.mcp.tools.HardwareInventory;
 import com.netxms.mcp.tools.LastValues;
 import com.netxms.mcp.tools.ListLibraryScripts;
 import com.netxms.mcp.tools.ObjectDetails;
@@ -190,6 +191,7 @@ public class Startup
       registerTool(tools, new GetLibraryScript());
       registerTool(tools, new GetMetricHistory());
       registerTool(tools, new GetServerStats());
+      registerTool(tools, new HardwareInventory());
       registerTool(tools, new ExecuteScript());
       registerTool(tools, new LastValues());
       registerTool(tools, new ListLibraryScripts());
