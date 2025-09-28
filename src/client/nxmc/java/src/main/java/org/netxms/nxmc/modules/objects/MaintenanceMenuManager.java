@@ -208,8 +208,6 @@ public class MaintenanceMenuManager extends MenuManager
          actionMaintenance.add(createTimeMaintenanceAction(time, i));
       }
    }
-   
-
 
    /**
     * Create action for time acknowledge.
