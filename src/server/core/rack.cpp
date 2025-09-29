@@ -403,3 +403,11 @@ String RackPassiveElement::toString() const
    sb.append(_T(")"));
    return sb;
 }
+
+/**
+ * Called by client session handler to check if threshold summary should be shown for this object.
+ */
+bool Rack::showThresholdSummary() const
+{
+   return true;
+}

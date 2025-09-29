@@ -4370,6 +4370,8 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
 
+   virtual bool showThresholdSummary() const override;
+
    String getRackPasiveElementDescription(uint32_t id);
 
    virtual json_t *toJson() override;
