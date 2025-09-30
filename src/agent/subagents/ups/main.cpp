@@ -154,6 +154,10 @@ static bool AddDeviceFromConfig(const TCHAR *configString)
 								{
 									protocol = UPS_PROTOCOL_USB;
 								}
+								else if (!_tcsicmp(currField, _T("MEC0003")))
+								{
+									protocol = UPS_PROTOCOL_MEC0003;
+								}
 #endif
 								else
 								{
@@ -236,6 +240,9 @@ static bool AddDeviceFromConfig(const TCHAR *configString)
 #ifdef _WIN32
 			case UPS_PROTOCOL_USB:
 				m_deviceInfo[deviceIndex] = new USBInterface(port);
+				break;
+			case UPS_PROTOCOL_MEC0003:
+				m_deviceInfo[deviceIndex] = new MEC0003Interface(port);
 				break;
 #endif
 			default:
