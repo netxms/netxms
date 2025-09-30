@@ -378,6 +378,7 @@
     <ClCompile Include="bcmxcp.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="megatec.cpp" />
+    <ClCompile Include="mec0003.cpp" />
     <ClCompile Include="metasys.cpp" />
     <ClCompile Include="microdowell.cpp" />
     <ClCompile Include="serial.cpp" />

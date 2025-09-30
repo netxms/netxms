@@ -27,6 +27,9 @@
     <ClCompile Include="megatec.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="mec0003.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="metasys.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
