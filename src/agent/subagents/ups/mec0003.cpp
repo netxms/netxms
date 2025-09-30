@@ -28,24 +28,33 @@
 #define CMD_VENDOR   0x0C
 
 /**
- * Parse VID:PID from device string
+ * Extract instance ID from device path
+ * Device path format: \\?\hid#vid_0001&pid_0000#5&186144f5&0&0000#{...}
+ * We want to extract the instance ID part (e.g., "186144F5")
  */
-static bool ParseDeviceString(const TCHAR *device, WORD *vendorId, WORD *productId)
+static bool ExtractInstanceId(const TCHAR *devicePath, TCHAR *instanceId, size_t bufferSize)
 {
-   if (_tcsicmp(device, _T("ANY")) == 0)
-   {
-      *vendorId = 0x0001;
-      *productId = 0x0000;
-      return true;
-   }
-
-   TCHAR *end;
-   *vendorId = static_cast<WORD>(_tcstol(device, &end, 16));
-   if (*end != _T(':'))
+   const TCHAR *start = _tcsstr(devicePath, _T("&"));
+   if (start == nullptr)
       return false;
 
-   *productId = static_cast<WORD>(_tcstol(end + 1, &end, 16));
-   return *end == 0;
+   start = _tcsstr(start + 1, _T("&"));
+   if (start == nullptr)
+      return false;
+
+   start++;
+   const TCHAR *end = _tcsstr(start, _T("&"));
+   if (end == nullptr)
+      return false;
+
+   size_t len = end - start;
+   if (len >= bufferSize)
+      len = bufferSize - 1;
+
+   memcpy(instanceId, start, len * sizeof(TCHAR));
+   instanceId[len] = 0;
+
+   return true;
 }
 
 /**
@@ -54,13 +63,8 @@ static bool ParseDeviceString(const TCHAR *device, WORD *vendorId, WORD *product
 MEC0003Interface::MEC0003Interface(const TCHAR *device) : UPSInterface(device)
 {
    m_hDev = INVALID_HANDLE_VALUE;
+   m_instanceId = MemCopyString(device);
    m_packs = 0;
-
-   if (!ParseDeviceString(device, &m_vendorId, &m_productId))
-   {
-      m_vendorId = 0x0001;
-      m_productId = 0x0000;
-   }
 
    m_paramList[UPS_PARAM_MFG_DATE].flags |= UPF_NOT_SUPPORTED;
    m_paramList[UPS_PARAM_SERIAL].flags |= UPF_NOT_SUPPORTED;
@@ -74,6 +78,7 @@ MEC0003Interface::MEC0003Interface(const TCHAR *device) : UPSInterface(device)
 MEC0003Interface::~MEC0003Interface()
 {
    close();
+   MemFree(m_instanceId);
 }
 
 /**
@@ -128,6 +133,8 @@ bool MEC0003Interface::open()
    DWORD size;
    bool found = false;
    TCHAR errorText[256];
+   bool matchAny = (_tcsicmp(m_instanceId, _T("ANY")) == 0);
+   int deviceCount = 0;
 
    HidD_GetHidGuid(&hidGuid);
 
@@ -169,15 +176,27 @@ bool MEC0003Interface::open()
 
             if (HidD_GetAttributes(hDevice, &attrib))
             {
-               nxlog_debug_tag(UPS_DEBUG_TAG, 7, _T("MEC0003: checking device VID:0x%04X PID:0x%04X"), attrib.VendorID, attrib.ProductID);
-
-               if (attrib.VendorID == m_vendorId && attrib.ProductID == m_productId)
+               if (attrib.VendorID == 0x0001 && attrib.ProductID == 0x0000)
                {
-                  m_hDev = hDevice;
-                  found = true;
-                  free(detailData);
-                  nxlog_debug_tag(UPS_DEBUG_TAG, 4, _T("MEC0003: found matching device at %s"), detailData->DevicePath);
-                  break;
+                  TCHAR extractedInstanceId[256];
+                  if (ExtractInstanceId(detailData->DevicePath, extractedInstanceId, 256))
+                  {
+                     nxlog_debug_tag(UPS_DEBUG_TAG, 4, _T("MEC0003: found device with instance ID %s at %s"), extractedInstanceId, detailData->DevicePath);
+                     deviceCount++;
+
+                     if (matchAny || (_tcsicmp(m_instanceId, extractedInstanceId) == 0))
+                     {
+                        m_hDev = hDevice;
+                        found = true;
+                        nxlog_debug_tag(UPS_DEBUG_TAG, 4, _T("MEC0003: selected device with instance ID %s"), extractedInstanceId);
+                        free(detailData);
+                        break;
+                     }
+                  }
+                  else
+                  {
+                     nxlog_debug_tag(UPS_DEBUG_TAG, 7, _T("MEC0003: could not extract instance ID from path %s"), detailData->DevicePath);
+                  }
                }
             }
             CloseHandle(hDevice);
@@ -190,7 +209,10 @@ bool MEC0003Interface::open()
 
    if (!found)
    {
-      nxlog_debug_tag(UPS_DEBUG_TAG, 4, _T("MEC0003: device not found (VID:0x%04X PID:0x%04X)"), m_vendorId, m_productId);
+      if (deviceCount == 0)
+         nxlog_debug_tag(UPS_DEBUG_TAG, 4, _T("MEC0003: no devices found with VID:0x0001 PID:0x0000"));
+      else
+         nxlog_debug_tag(UPS_DEBUG_TAG, 4, _T("MEC0003: device with instance ID %s not found (%d device(s) total)"), m_instanceId, deviceCount);
       return false;
    }
 
@@ -350,4 +372,81 @@ void MEC0003Interface::queryDynamicData()
       }
       m_paramList[UPS_PARAM_ONLINE_STATUS].flags |= UPF_NULL_VALUE;
    }
+}
+
+/**
+ * Enumerate all MEC0003 devices
+ */
+void MEC0003Interface::enumerateDevices()
+{
+   GUID hidGuid;
+   HDEVINFO deviceInfo;
+   SP_DEVICE_INTERFACE_DATA interfaceData;
+   PSP_DEVICE_INTERFACE_DETAIL_DATA detailData = nullptr;
+   DWORD size;
+   TCHAR errorText[256];
+   int deviceCount = 0;
+
+   HidD_GetHidGuid(&hidGuid);
+
+   deviceInfo = SetupDiGetClassDevs(&hidGuid, nullptr, nullptr, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+   if (deviceInfo == INVALID_HANDLE_VALUE)
+   {
+      nxlog_debug_tag(UPS_DEBUG_TAG, 7, _T("MEC0003: SetupDiGetClassDevs failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 256));
+      return;
+   }
+
+   interfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
+
+   for (DWORD i = 0; SetupDiEnumDeviceInterfaces(deviceInfo, nullptr, &hidGuid, i, &interfaceData); i++)
+   {
+      SetupDiGetDeviceInterfaceDetail(deviceInfo, &interfaceData, nullptr, 0, &size, nullptr);
+
+      detailData = static_cast<PSP_DEVICE_INTERFACE_DETAIL_DATA>(malloc(size));
+      if (!detailData)
+         continue;
+
+      detailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+
+      if (SetupDiGetDeviceInterfaceDetail(deviceInfo, &interfaceData, detailData, size, nullptr, nullptr))
+      {
+         HANDLE hDevice = CreateFile(
+            detailData->DevicePath,
+            GENERIC_READ | GENERIC_WRITE,
+            FILE_SHARE_READ | FILE_SHARE_WRITE,
+            nullptr,
+            OPEN_EXISTING,
+            0,
+            nullptr
+         );
+
+         if (hDevice != INVALID_HANDLE_VALUE)
+         {
+            HIDD_ATTRIBUTES attrib;
+            attrib.Size = sizeof(HIDD_ATTRIBUTES);
+
+            if (HidD_GetAttributes(hDevice, &attrib))
+            {
+               if (attrib.VendorID == 0x0001 && attrib.ProductID == 0x0000)
+               {
+                  TCHAR extractedInstanceId[256];
+                  if (ExtractInstanceId(detailData->DevicePath, extractedInstanceId, 256))
+                  {
+                     nxlog_write_tag(NXLOG_INFO, UPS_DEBUG_TAG, _T("MEC0003 UPS device found: instance ID %s, path %s"), extractedInstanceId, detailData->DevicePath);
+                     deviceCount++;
+                  }
+               }
+            }
+            CloseHandle(hDevice);
+         }
+      }
+      free(detailData);
+   }
+
+   SetupDiDestroyDeviceInfoList(deviceInfo);
+
+   if (deviceCount == 0)
+      nxlog_debug_tag(UPS_DEBUG_TAG, 3, _T("MEC0003: no devices found with VID:0x0001 PID:0x0000"));
+   else
+      nxlog_write_tag(NXLOG_INFO, UPS_DEBUG_TAG, _T("MEC0003: enumeration complete, found %d device(s)"), deviceCount);
 }
