@@ -249,8 +249,7 @@ class MEC0003Interface : public UPSInterface
 {
 private:
    HANDLE m_hDev;
-   WORD m_vendorId;
-   WORD m_productId;
+   TCHAR *m_instanceId;
    double m_packs;
 
    void calculatePacks(double nominalVoltage, double actualVoltage);
@@ -269,6 +268,8 @@ public:
 
    virtual void queryStaticData() override;
    virtual void queryDynamicData() override;
+
+   static void enumerateDevices();
 };
 
 #endif

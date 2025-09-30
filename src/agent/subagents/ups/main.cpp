@@ -262,6 +262,11 @@ static bool SubAgentInit(Config *config)
 {
 	memset(m_deviceInfo, 0, sizeof(UPSInterface *) * MAX_UPS_DEVICES);
 
+	// Enumerate MEC0003 devices on startup
+#ifdef _WIN32
+	MEC0003Interface::enumerateDevices();
+#endif
+
 	// Parse configuration
 	ConfigEntry *devices = config->getEntry(_T("/UPS/Device"));
 	if (devices != nullptr)
