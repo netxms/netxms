@@ -258,7 +258,7 @@ static int MinMaxImpl(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
    if (argc == 0)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   NXSL_Value *selectedValue = argv[0];
+   NXSL_Value *selectedValue = nullptr;
    for(int i = 0; i < argc; i++)
    {
       if (argv[i]->isArray())
@@ -269,13 +269,13 @@ static int MinMaxImpl(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
             NXSL_Value *v = series->get(j);
             if (!v->isNumeric())
                return NXSL_ERR_NOT_NUMBER;
-            if (Comparator(v, selectedValue))
+            if ((selectedValue == nullptr) || Comparator(v, selectedValue))
                selectedValue = v;
          }
       }
       else if (argv[i]->isNumeric())
       {
-         if (Comparator(argv[i], selectedValue))
+         if ((selectedValue == nullptr) || Comparator(argv[i], selectedValue))
             selectedValue = argv[i];
       }
       else
