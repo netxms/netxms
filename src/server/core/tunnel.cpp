@@ -192,14 +192,25 @@ uint32_t UnbindAgentTunnel(uint32_t nodeId, uint32_t userId)
    if (node == nullptr)
       return RCC_INVALID_OBJECT_ID;
 
+   wchar_t userName[MAX_USER_NAME];
+   nxlog_debug_tag(DEBUG_TAG, 4, L"UnbindAgentTunnel: processing unbind request for node %s [%u] by user %s",
+            node->getName(), nodeId, ResolveUserId(userId, userName, true));
+
    if (static_cast<Node&>(*node).getTunnelId().isNull())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, L"UnbindAgentTunnel: node %s [%u] does not have assigned tunnel ID", node->getName(), nodeId);
+
+      // Node still can have active tunnel if it was attached by IP address
+      shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(nodeId);
+      if (tunnel != nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, L"UnbindAgentTunnel(%s): shutting down existing tunnel", node->getName());
+         tunnel->shutdown();
+      }
       return RCC_SUCCESS;  // tunnel is not set
+   }
 
-   TCHAR userName[MAX_USER_NAME];
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("UnbindAgentTunnel: processing unbind request for node %u by user %s"),
-            nodeId, ResolveUserId(userId, userName, true));
-
-   TCHAR subject[256];
+   wchar_t subject[256];
    _sntprintf(subject, 256, _T("OU=%s,CN=%s"), node->getGuid().toString().cstr(), static_cast<Node&>(*node).getTunnelId().toString().cstr());
    LogCertificateAction(REVOKE_CERTIFICATE, userId, nodeId, node->getGuid(), CERT_TYPE_AGENT,
             (static_cast<Node&>(*node).getAgentCertificateSubject() != nullptr) ? static_cast<Node&>(*node).getAgentCertificateSubject() : subject, 0);
@@ -209,7 +220,7 @@ uint32_t UnbindAgentTunnel(uint32_t nodeId, uint32_t userId)
    shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(nodeId);
    if (tunnel != nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("UnbindAgentTunnel(%s): shutting down existing tunnel"), node->getName());
+      nxlog_debug_tag(DEBUG_TAG, 4, L"UnbindAgentTunnel(%s): shutting down existing tunnel", node->getName());
       tunnel->shutdown();
    }
 
@@ -1678,13 +1689,13 @@ retry:
       X509_free(cert);
    }
 
-   if ((nodeId == 0) && ConfigReadBoolean(_T("AgentTunnels.BindByIPAddress"), false))
+   if ((nodeId == 0) && ConfigReadBoolean(L"AgentTunnels.BindByIPAddress", false))
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Attempt to find node by IP address"), debugPrefix);
+      nxlog_debug_tag(DEBUG_TAG, 4, L"SetupTunnel(%s): Attempt to find node by IP address", debugPrefix);
       shared_ptr<Node> node = FindNodeByIP(0, request->addr);
       if (node != nullptr)
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel attached to node %s [%u] using IP address"),
+         nxlog_debug_tag(DEBUG_TAG, 4, L"SetupTunnel(%s): Tunnel attached to node %s [%u] using IP address",
                debugPrefix, node->getName(), node->getId());
          nodeId = node->getId();
          zoneUIN = node->getZoneUIN();
