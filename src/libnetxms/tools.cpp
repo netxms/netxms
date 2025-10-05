@@ -3490,10 +3490,10 @@ int LIBNETXMS_EXPORTABLE GetSleepTime(int hour, int minute, int second)
 }
 
 /**
- * Parse timestamp (should be in form YYMMDDhhmmss or YYYYMMDDhhmmss), local time
+ * Parse timestamp (should be in form YYMMDDhhmmss or YYYYMMDDhhmmss), local or UTC time
  * If timestamp string is invalid returns default value
  */
-time_t LIBNETXMS_EXPORTABLE ParseDateTimeA(const char *text, time_t defaultValue)
+time_t LIBNETXMS_EXPORTABLE ParseDateTimeA(const char *text, time_t defaultValue, bool utc)
 {
 	size_t len = strlen(text);
 	if ((len != 12) && (len != 14))
@@ -3506,7 +3506,7 @@ time_t LIBNETXMS_EXPORTABLE ParseDateTimeA(const char *text, time_t defaultValue
 	curr = &buffer[len - 2];
 
 	memset(&t, 0, sizeof(struct tm));
-	t.tm_isdst = -1;
+	t.tm_isdst = utc ? 0 : -1;
 
 	// Disable incorrect warning, probably caused by gcc bug 106757
 	// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=106757
@@ -3549,7 +3549,7 @@ time_t LIBNETXMS_EXPORTABLE ParseDateTimeA(const char *text, time_t defaultValue
 #pragma GCC diagnostic pop
 #endif
 
-	return mktime(&t);
+	return utc ? timegm(&t) : mktime(&t);
 }
 
 /**
@@ -3557,12 +3557,12 @@ time_t LIBNETXMS_EXPORTABLE ParseDateTimeA(const char *text, time_t defaultValue
  * If timestamp string is invalid returns default value
  * (UNICODE version)
  */
-time_t LIBNETXMS_EXPORTABLE ParseDateTimeW(const WCHAR *text, time_t defaultValue)
+time_t LIBNETXMS_EXPORTABLE ParseDateTimeW(const WCHAR *text, time_t defaultValue, bool utc)
 {
    char buffer[16];
    wchar_to_mb(text, -1, buffer, 16);
    buffer[15] = 0;
-   return ParseDateTimeA(buffer, defaultValue);
+   return ParseDateTimeA(buffer, defaultValue, utc);
 }
 
 /**
