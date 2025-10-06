@@ -27,7 +27,7 @@ NetXMS is an open-source network and infrastructure monitoring and management so
 ### User interface
 
 * Choose between the desktop or web-based version, or use both simultaneously
-* Desktop version available for Windows, Max OS X, and Linux
+* Desktop version available for Windows, maсOS, and Linux
 * Offers graphical network maps and user-configurable dashboards
 * Can be integrated with [Grafana](https://grafana.com/)
 
