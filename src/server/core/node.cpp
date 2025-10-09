@@ -4066,31 +4066,37 @@ void Node::updatePrimaryIpAddr()
 
    InetAddress ipAddr = ResolveHostName(m_zoneUIN, m_primaryHostName);
    bool isLocalMgmtLoopback = ((m_capabilities & NC_IS_LOCAL_MGMT) && ipAddr.isLoopback());
-   bool forceUpdate = (!isLocalMgmtLoopback && ConfigReadBoolean(_T("Objects.Nodes.ForceUpdateIp"), true));
+   bool forceUpdate = (!isLocalMgmtLoopback && ConfigReadBoolean(_T("Objects.Nodes.ForcePrimaryIpUpdate"), false));
 
-   if ((!ipAddr.equals(getIpAddress()) && (ipAddr.isValidUnicast() || _tcscmp(m_primaryHostName, _T("0.0.0.0")) || isLocalMgmtLoopback)) || forceUpdate)
+   // Check and make sure this 'new' IP is not already the one used by this node
+   if(!ipAddr.equals(getIpAddress()))
    {
-      TCHAR buffer1[64], buffer2[64];
-      // Check that there is no node with same IP before we try to change, and if there is give it UNSPEC until DNS conflict disappears. Only when forceUpdate is true
-      if (forceUpdate && ((FindNodeByIP(m_zoneUIN, ipAddr) != nullptr) || (FindSubnetByIP(m_zoneUIN, ipAddr) != nullptr)))
+      if (((ipAddr.isValidUnicast() || _tcscmp(m_primaryHostName, _T("0.0.0.0")) || isLocalMgmtLoopback)) || forceUpdate)
       {
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Removing IP address information from node %s [%u] due to duplicate IP of %s"), m_name, m_id, ipAddr.toString(buffer2));
-         ipAddr = InetAddress();
+         TCHAR buffer1[64], buffer2[64];
+         // Check that there is no node with same IP before we try to change, and if there is give it UNSPEC until DNS conflict disappears.
+         // Only when Objects.Nodes.ForceUpdateIp is true
+         if (ConfigReadBoolean(_T("Objects.Nodes.ForcePrimaryIpRemoval"), false)
+            && ((FindNodeByIP(m_zoneUIN, ipAddr) != nullptr) || (FindSubnetByIP(m_zoneUIN, ipAddr) != nullptr)))
+         {
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 1, _T("Removing IP address information from node %s [%u] due to duplicate IP of %s"), m_name, m_id, ipAddr.toString(buffer2));
+            ipAddr = InetAddress();
+         }
+
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 1, _T("IP address for node %s [%u] changed from %s to %s"), m_name, m_id, m_ipAddress.toString(buffer1), ipAddr.toString(buffer2));
+         EventBuilder(EVENT_IP_ADDRESS_CHANGED, m_id)
+            .param(_T("newIpAddress"), ipAddr)
+            .param(_T("oldIpAddress"), m_ipAddress)
+            .post();
+
+         lockProperties();
+         setPrimaryIPAddress(ipAddr);
+         unlockProperties();
+
+         agentLock();
+         deleteAgentConnection();
+         agentUnlock();
       }
-
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("IP address for node %s [%u] changed from %s to %s"), m_name, m_id, m_ipAddress.toString(buffer1), ipAddr.toString(buffer2));
-      EventBuilder(EVENT_IP_ADDRESS_CHANGED, m_id)
-         .param(_T("newIpAddress"), ipAddr)
-         .param(_T("oldIpAddress"), m_ipAddress)
-         .post();
-
-      lockProperties();
-      setPrimaryIPAddress(ipAddr);
-      unlockProperties();
-
-      agentLock();
-      deleteAgentConnection();
-      agentUnlock();
    }
 }
 
