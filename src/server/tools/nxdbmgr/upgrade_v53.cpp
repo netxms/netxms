@@ -36,6 +36,12 @@ static bool H_UpgradeFromV5()
    CHK_EXEC(SQLBatch(batch));
    CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("items"), _T("thresholds_disable_end_time")));
    CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("dc_tables"), _T("thresholds_disable_end_time")));
+
+   CHK_EXEC(CreateConfigParam(L"Objects.Nodes.ForceUpdateIp",
+            L"0",
+            L"Always force the primary IP address to change during a DNS lookup even if it is invalid, useful for DHCP clients with random address when they release their DHCP lease.",
+            nullptr, 'B', true, false, false, false));
+
    CHK_EXEC(SetMinorSchemaVersion(6));
    return true;
 }
