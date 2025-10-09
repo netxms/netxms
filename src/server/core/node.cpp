@@ -4070,20 +4070,27 @@ void Node::updatePrimaryIpAddr()
 
    // Check and make sure this 'new' IP is not already the one used by this node
    if(!ipAddr.equals(getIpAddress()))
-   {
-      if (((ipAddr.isValidUnicast() || _tcscmp(m_primaryHostName, _T("0.0.0.0")) || isLocalMgmtLoopback)) || forceUpdate)
+   {      
+      TCHAR buffer1[64], buffer2[64];
+
+      if(ConfigReadBoolean(_T("Objects.Nodes.ForcePrimaryIpRemoval"), false))
       {
-         TCHAR buffer1[64], buffer2[64];
          // Check that there is no node with same IP before we try to change, and if there is give it UNSPEC until DNS conflict disappears.
          // Only when Objects.Nodes.ForceUpdateIp is true
-         if (ConfigReadBoolean(_T("Objects.Nodes.ForcePrimaryIpRemoval"), false)
-            && ((FindNodeByIP(m_zoneUIN, ipAddr) != nullptr) || (FindSubnetByIP(m_zoneUIN, ipAddr) != nullptr)))
+         shared_ptr<Node> foundNode = FindNodeByIP(m_zoneUIN, ipAddr);
+         uint32_t foundId = 0;
+         if(foundNode != nullptr) foundId = foundNode->getId();
+
+         if (foundId != m_id && foundId != 0)
          {
-            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 1, _T("Removing IP address information from node %s [%u] due to duplicate IP of %s"), m_name, m_id, ipAddr.toString(buffer2));
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Removing IP address information from node %s [%u] due to duplicate IP of %s on node id %u"), m_name, m_id, ipAddr.toString(buffer2), foundId);
             ipAddr = InetAddress();
          }
+      }
 
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 1, _T("IP address for node %s [%u] changed from %s to %s"), m_name, m_id, m_ipAddress.toString(buffer1), ipAddr.toString(buffer2));
+      if (((ipAddr.isValidUnicast() || _tcscmp(m_primaryHostName, _T("0.0.0.0")) || isLocalMgmtLoopback)) || forceUpdate)
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("IP address for node %s [%u] changed from %s to %s"), m_name, m_id, m_ipAddress.toString(buffer1), ipAddr.toString(buffer2));
          EventBuilder(EVENT_IP_ADDRESS_CHANGED, m_id)
             .param(_T("newIpAddress"), ipAddr)
             .param(_T("oldIpAddress"), m_ipAddress)
