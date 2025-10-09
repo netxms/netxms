@@ -2646,7 +2646,7 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rqId
 
    // Read capability expiration time and current time
    time_t capabilityExpirationTime = static_cast<time_t>(ConfigReadULong(_T("Objects.Nodes.CapabilityExpirationTime"), 604800));
-   time_t capabilityExpirationGracePeriod = static_cast<time_t>(ConfigReadULong(_T("Objects.Nodes.CapabilityExpirationTime"), 3600));
+   time_t capabilityExpirationGracePeriod = static_cast<time_t>(ConfigReadULong(_T("Objects.Nodes.CapabilityExpirationGracePeriod"), 3600));
    time_t now = time(nullptr);
 
    bool agentConnected = false;
