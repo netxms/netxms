@@ -24,10 +24,7 @@
 #include <netxms-version.h>
 #include <nxsde.h>
 
-
 #define DEBUG_TAG _T("websvc")
-
-#if HAVE_LIBCURL
 
 #include <nxlibcurl.h>
 
@@ -35,7 +32,6 @@
  * Global cache expiration time
  */
 extern uint32_t g_webSvcCacheExpirationTime;
-
 
 /**
  * HTTP request methods
@@ -564,39 +560,3 @@ void StartWebServiceHousekeeper()
 {
    ThreadPoolScheduleRelative(g_webSvcThreadPool, (MAX(g_webSvcCacheExpirationTime, 60) / 2) * 1000, WebServiceHousekeeper);
 }
-
-#else /* HAVE_LIBCURL */
-
-/**
- * Get parameters from web service
- */
-void QueryWebService(NXCPMessage* request, shared_ptr<AbstractCommSession> session)
-{
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("QueryWebService(): agent was compiled without libcurl"));
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
-   response.setField(VID_RCC, ERR_NOT_IMPLEMENTED);
-   session->sendMessage(&response);
-   delete request;
-}
-
-/**
- * Web service cusom request command executer
- */
-void WebServiceCustomRequest(NXCPMessage* request, shared_ptr<AbstractCommSession> session)
-{
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("WebServiceCustomRequest(): agent was compiled without libcurl"));
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
-   response.setField(VID_RCC, ERR_NOT_IMPLEMENTED);
-   session->sendMessage(&response);
-   delete request;
-}
-
-/**
- * Start web service housekeeper
- */
-void StartWebServiceHousekeeper()
-{
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("StartWebServiceHousekeeper(): agent was compiled without libcurl"));
-}
-
-#endif

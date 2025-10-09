@@ -23,8 +23,6 @@
 #ifndef _nxlibcurl_h_
 #define _nxlibcurl_h_
 
-#if HAVE_LIBCURL
-
 #include <curl/curl.h>
 
 #ifndef _WIN32
@@ -65,7 +63,5 @@ do \
 #define EnableLibCURLUnexpectedEOFWorkaround(curl)
 
 #endif
-
-#endif   /* HAVE_LIBCURL */
 
 #endif   /* _nxlibcurl_h_ */

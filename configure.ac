@@ -201,8 +201,6 @@ PYTHON_SUPPORT="no"
 PYTHON_CPPFLAGS=""
 PYTHON_LDFLAGS=""
 PYTHON_LIBS=""
-DISABLE_CURL="no"
-REQUIRE_CURL="no"
 LDAP_SUPPORT="no"
 DISABLE_LDAP="no"
 REQUIRE_LDAP="no"
@@ -484,13 +482,11 @@ AC_ARG_ENABLE(mqtt,
 ])
 
 AC_ARG_WITH(curl,
-[AS_HELP_STRING(--without-curl,build without curl)],
+[AS_HELP_STRING(--with-curl,specify libcurl location)],
 [
 	if test "x$withval" = "xno"; then
-		DISABLE_CURL="yes"
+		AC_MSG_ERROR(libcurl is required)
 	else
-		DISABLE_CURL="no"
-		REQUIRE_CURL="yes"
 		if test "x$withval" != "xyes"; then
 			CPPFLAGS="$CPPFLAGS -I$withval/include"
 			LDFLAGS="$LDFLAGS -L$withval/lib"
@@ -1039,7 +1035,7 @@ AC_ARG_WITH(dist,
 	TEST_MODULES="agent test-libnxcc test-libnxsl test-libnxsnmp"
 	AGENT_UNIT_TESTS="linux-cpu-usage-collector"
 	TOOLS="nxlptest"
-	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix informix oracle lmsensors darwin rpi java jmx opcua ubntlw bind9 netsvc db2 tuxedo mongodb ssh vmgr xen asterisk python"
+	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix informix oracle lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb ssh vmgr xen asterisk python"
 	AGENT_DIRS="libnxappc libnxtux"
 	NCDRV_MODULES="anysms googlechat kannel mattermost mqtt msteams mymobile nexmo nxagent slack smtp smseagle telegram text2reach twilio websms xmpp"
 	HDLINK_DIRS="jira redmine"
@@ -1048,7 +1044,7 @@ AC_ARG_WITH(dist,
 	SERVER_INCLUDE="include"
 	CONTRIB_MODULES="mibs backgrounds music oui templates"
 	CLIENT_COMPONENTS="java nxalarm nxevent nxmc nxnotify nxpush nxshell"
-	SERVER_COMPONENTS="nxreportd webapi wlcbridge"
+	SERVER_COMPONENTS="nxreportd webapi"
 	DIST_BUILD="yes"
 )
 
@@ -1311,7 +1307,7 @@ if test $? = 0; then
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music oui templates"
 	NCDRV_MODULES="$NCDRV_MODULES nxagent"
-	PDSDRV_DIRS="influxdb"
+	PDSDRV_DIRS="clickhouse influxdb"
 
 	check_substr "$COMPONENTS" "java"
 	if test $? = 0; then
@@ -2447,7 +2443,7 @@ if test "x$DISABLE_LMSENSORS" = "xno" -a "x$DIST_BUILD" != "xyes"; then
 	fi
 fi
 
-if test "x$DISABLE_CURL" = "xno" -a "x$DIST_BUILD" != "xyes"; then
+if test "x$DIST_BUILD" != "xyes"; then
 	AC_CHECK_HEADER(curl/curl.h,HAVE_LIBCURL=yes,HAVE_LIBCURL=no)
 	if test "x$HAVE_LIBCURL" = "xyes"; then
 		AC_CHECK_LIB(curl, curl_global_init, [
@@ -2459,16 +2455,11 @@ if test "x$DISABLE_CURL" = "xno" -a "x$DIST_BUILD" != "xyes"; then
 		])
 	fi
 
-	if test "x$HAVE_LIBCURL" != "xyes" -a "x$REQUIRE_CURL" = "xyes"; then
-		AC_MSG_ERROR(libcurl is required. Check that it is installed or use --without-curl option)
-	fi
-
 	if test "x$HAVE_LIBCURL" = "xyes"; then
-		SUBAGENT_DIRS="$SUBAGENT_DIRS bind9 netsvc"
 		NCDRV_MODULES="$NCDRV_MODULES anysms googlechat kannel mattermost msteams mymobile nexmo slack smtp smseagle telegram text2reach twilio websms"
 		HDLINK_DIRS="$HDLINK_DIRS redmine"
-		PDSDRV_DIRS="clickhouse $PDSDRV_DIRS"
-		AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
+	else
+		AC_MSG_ERROR(libcurl is required)
 	fi
 fi
 
@@ -4096,13 +4087,7 @@ if test $? = 0; then
 		AC_DEFINE(WITH_MICROHTTPD, 1, Define to 1 if microhttpd is supported)
 		COMPONENTS="$COMPONENTS microhttpd"
 		SERVER_COMPONENTS="webapi $SERVER_COMPONENTS"
-		if test "x$HAVE_LIBCURL" = "xyes"; then
-			HDLINK_DIRS="$HDLINK_DIRS jira"
-		fi
-	fi
-
-	if test "x$HAVE_LIBCURL" = "xyes"; then
-		SERVER_COMPONENTS="wlcbridge $SERVER_COMPONENTS"
+		HDLINK_DIRS="$HDLINK_DIRS jira"
 	fi
 
 	CPPFLAGS="$OLD_CPPFLAGS"
@@ -5139,11 +5124,6 @@ if test "x${PYTHON_LIBS}" != "x"; then
 	echo "Python LIBS             : ${PYTHON_LIBS}"
 fi
 
-if test "x${HAVE_LIBCURL}" = "xyes"; then
-	echo "cURL support            : YES"
-else
-	echo "cURL support            : NO"
-fi
 if test "x${HAVE_LIBJQ}" = "xyes"; then
 	echo "JQ support              : YES"
 else

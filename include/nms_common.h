@@ -274,7 +274,6 @@ typedef int bool;
 
 #define HAVE_STD_ATOMIC         1
 
-#define HAVE_LIBCURL                      1
 #define HAVE_LIBJQ                        1
 
 #define HAVE_DIRENT_D_TYPE                1

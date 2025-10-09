@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Development configuration helper
-** Copyright (C) 2003-2016 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -228,11 +228,7 @@ int main(int argc, char *argv[])
 				_tprintf(_T("%s\n"), g_tuxedoLdFlags);
 				return 0;
          case 'u':
-#if HAVE_LIBCURL
 				_tprintf(_T("-lcurl\n"));
-#else
-				_tprintf(_T("\n"));
-#endif
             return 0;
 			case 'U':
 				_tprintf(_T("%s\n"), g_tuxedoLibs);

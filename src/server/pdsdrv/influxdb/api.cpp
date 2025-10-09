@@ -2,7 +2,7 @@
  ** NetXMS - Network Management System
  ** Performance Data Storage Driver for InfluxDB
  ** Copyright (C) 2019 Sebastian YEPES FERNANDEZ & Julien DERIVIERE
- ** Copyright (C) 2021 Raden Solutions
+ ** Copyright (C) 2021-2025 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published by
@@ -34,8 +34,6 @@
 #include <netxms-version.h>
 
 #define MAX_URL_LENGTH  4096
-
-#if HAVE_LIBCURL
 
 /**
  * Constructor for Generic API sender
@@ -233,5 +231,3 @@ void APIv2Sender::addHeaders(curl_slist **headers)
       *headers = curl_slist_append(*headers, auth);
    }
 }
-
-#endif   /* HAVE_LIBCURL */

@@ -132,8 +132,6 @@ public:
    virtual ~UDPSender();
 };
 
-#if HAVE_LIBCURL
-
 /**
  * Generic API sender
  */
@@ -187,8 +185,6 @@ public:
    APIv2Sender(const Config& config);
    virtual ~APIv2Sender();
 };
-
-#endif
 
 /**
  * Driver class definition

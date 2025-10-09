@@ -26,8 +26,6 @@
 
 #define DEBUG_TAG _T("crypto.crl")
 
-#if HAVE_LIBCURL
-
 #include <curl/curl.h>
 
 #ifndef CURL_MAX_HTTP_HEADER
@@ -134,19 +132,6 @@ static bool DownloadFile(const TCHAR *file, const char *url)
 
    return success;
 }
-
-#else   /* HAVE_LIBCURL */
-
-/**
- * Download from from remote location - dummy implementation
- */
-static bool DownloadFile(const TCHAR *file, const char *url)
-{
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("DownloadFile(): agent was built without cURL support"));
-   return false;
-}
-
-#endif  /* HAVE_LIBCURL */
 
 /**
  * CRL descriptor
