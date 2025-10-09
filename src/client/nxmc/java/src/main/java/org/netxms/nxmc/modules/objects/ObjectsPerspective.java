@@ -601,7 +601,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
 
       updateObjectToolBar(object);
       updateObjectMenuBar(object);
-      updateContextDashboardsAndMaps(object);
+      updateContextDashboards(object);
 
       if (objectDetails != null)
          updateObjectDetails(object);
