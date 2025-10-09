@@ -49,6 +49,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
@@ -350,15 +351,32 @@ public class SelectSmclpDlg extends Dialog implements IParameterSelectionDialog
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final String value = session.queryMetric(queryObject.getObjectId(), DataOrigin.SMCLP, name);
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  MessageDialogHelper.openInformation(getShell(), i18n.tr("Current value"),
-                        String.format(i18n.tr("Current value is \"%s\""), value));
-               }
-            });
+            try
+            {
+               final String value = session.queryMetric(queryObject.getObjectId(), DataOrigin.SMCLP, name);
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     MessageDialogHelper.openInformation(getShell(), i18n.tr("Current value"),
+                           String.format(i18n.tr("Current value is \"%s\""), value));
+                  }
+               });
+            }
+            catch (NXCException e)
+            {
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+
+                     MessageDialogHelper.openInformation(getShell(), i18n.tr("Current value"),
+                           String.format(i18n.tr("Cannot get current parameter value: %s"), e.getMessage()));
+                     
+                  }
+               });
+               throw e;
+            }
          }
 
          @Override
