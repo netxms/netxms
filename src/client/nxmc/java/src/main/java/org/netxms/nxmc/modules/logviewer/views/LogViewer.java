@@ -129,9 +129,9 @@ public class LogViewer extends ViewWithContext
     * @param viewName view name
     * @param logName log name
     */
-   public LogViewer(String viewName, String logName)
+   public LogViewer(String viewName, String logName, String additionalId)
    {
-      super(viewName, ResourceManager.getImageDescriptor("icons/log-viewer/" + logName + ".png"), "LogViewer." + logName, false);
+      super(viewName, ResourceManager.getImageDescriptor("icons/log-viewer/" + logName + ".png"), "LogViewer." + logName + additionalId, false);
       this.logName = logName;
       recordDetailsViewer = LogRecordDetailsViewerRegistry.get(logName);
    }

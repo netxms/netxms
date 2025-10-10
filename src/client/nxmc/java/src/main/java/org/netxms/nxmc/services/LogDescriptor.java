@@ -104,7 +104,7 @@ public class LogDescriptor
     */
    public LogViewer createView()
    {
-      return new LogViewer(viewTitle, logName);
+      return new LogViewer(viewTitle, logName, "");
    }
 
    /**

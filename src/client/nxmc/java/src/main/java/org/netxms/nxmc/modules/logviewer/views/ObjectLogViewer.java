@@ -57,7 +57,7 @@ public class ObjectLogViewer extends LogViewer
     */
    public ObjectLogViewer(LogDescriptor logDescriptor, AbstractObject object, long contextId)
    {
-      super(logDescriptor.getViewTitle(), logDescriptor.getLogName());
+      super(logDescriptor.getViewTitle(), logDescriptor.getLogName(), Long.toString(object.getObjectId()));
       this.logDescriptor = logDescriptor;  
       this.contextId = contextId;
       this.object = object;
@@ -103,7 +103,7 @@ public class ObjectLogViewer extends LogViewer
    @Override
    protected String getContextName()
    {
-      return (object != null) ? object.toString() : "(null)";
+      return (object != null) ? object.getObjectName() : "(null)";
    }
 
    /**
