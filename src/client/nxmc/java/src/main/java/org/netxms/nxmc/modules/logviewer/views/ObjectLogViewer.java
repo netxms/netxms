@@ -103,7 +103,7 @@ public class ObjectLogViewer extends LogViewer
    @Override
    protected String getContextName()
    {
-      return object.getObjectName();
+      return (object != null) ? object.toString() : "(null)";
    }
 
    /**
