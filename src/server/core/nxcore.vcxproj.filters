@@ -201,6 +201,9 @@
     <ClCompile Include="interface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="iris.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="isc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

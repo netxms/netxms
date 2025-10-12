@@ -23,6 +23,7 @@
 #include "nxcore.h"
 #include <nxcore_ps.h>
 #include <netxms_maps.h>
+#include <iris.h>
 
 /**
  * Externals
@@ -2210,13 +2211,7 @@ static int F_QueryAIAssistant(int argc, NXSL_Value **argv, NXSL_Value **result, 
 
    char *prompt = UTF8StringFromWideString(argv[0]->getValueAsCString());
    NetObj *context = (argc == 2) ? static_cast<shared_ptr<NetObj>*>(argv[1]->getValueAsObject()->getData())->get() : nullptr;
-   char *answer = nullptr;
-   ENUMERATE_MODULES(pfProcessRequestToAiAssistant)
-   {
-      answer = CURRENT_MODULE.pfProcessRequestToAiAssistant(prompt, context, nullptr);
-      if (answer != nullptr)
-         break;
-   }
+   char *answer = ProcessRequestToAIAssistant(prompt, context, nullptr);
    MemFree(prompt);
 
    *result = (answer != nullptr) ? vm->createValue(answer) : vm->createValue();

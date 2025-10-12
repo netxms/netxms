@@ -112,6 +112,7 @@ void StopSnmpTrapReceiver();
 void CheckNodeCountRestrictions();
 void InitializeDeviceBackupInterface();
 void LoadWellKnownPortList();
+bool InitAIAssistant();
 
 void CheckUserAuthenticationTokens(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameters);
@@ -1232,13 +1233,7 @@ retry_db_lock:
       return false;   // Mandatory module not loaded
    InitializeDeviceBackupInterface();
    RegisterPredictionEngines();
-
-   // Check if AI assistant is available
-   ENUMERATE_MODULES(pfProcessRequestToAiAssistant)
-   {
-      RegisterComponent(L"AI-ASSISTANT");
-      break;
-   }
+   InitAIAssistant();
 
    // Load users and authentication methods
    LoadTwoFactorAuthenticationMethods();

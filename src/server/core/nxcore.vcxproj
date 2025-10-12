@@ -501,6 +501,7 @@
     <ClCompile Include="inaddr_index.cpp" />
     <ClCompile Include="index.cpp" />
     <ClCompile Include="interface.cpp" />
+    <ClCompile Include="iris.cpp" />
     <ClCompile Include="isc.cpp" />
     <ClCompile Include="layer2.cpp" />
     <ClCompile Include="ldap.cpp" />

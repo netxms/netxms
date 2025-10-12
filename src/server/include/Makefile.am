@@ -16,6 +16,7 @@ serverinclude_HEADERS = \
 	device-backup.h \
 	entity_mib.h \
 	hdlink.h \
+	iris.h \
 	local_admin.h \
 	nddrv.h \
 	netxms-editline.h \

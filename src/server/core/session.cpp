@@ -37,6 +37,7 @@
 #include <asset_management.h>
 #include <nms_users.h>
 #include <netxms-version.h>
+#include <iris.h>
 
 #ifdef _WIN32
 #include <psapi.h>
@@ -2668,13 +2669,7 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
       ConfigReadStr(_T("Server.MessageOfTheDay"), buffer, 1024, _T(""));
       response->setField(VID_MESSAGE_OF_THE_DAY, buffer);
 
-      bool aiAssistantAvailable = false;
-      ENUMERATE_MODULES(pfProcessRequestToAiAssistant)
-      {
-         aiAssistantAvailable = true;
-         break;
-      }
-      response->setField(VID_AI_ASSISTANT_AVAILABLE, aiAssistantAvailable);
+      response->setField(VID_AI_ASSISTANT_AVAILABLE, IsComponentRegistered(AI_ASSISTANT_COMPONENT));
 
       debugPrintf(3, _T("User %s authenticated (language=%s clientInfo=\"%s\")"), m_sessionName, m_language, m_clientInfo);
       writeAuditLog(AUDIT_SECURITY, true, 0, _T("User \"%s\" logged in (language: %s; client info: %s)"), m_loginInfo->loginName, m_language, m_clientInfo);
@@ -17889,21 +17884,8 @@ void ClientSession::clearPeerInterface(const NXCPMessage& request)
 void ClientSession::queryAiAssistant(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   char *prompt = nullptr, *answer = nullptr;
-   bool moduleFound = false;
-   ENUMERATE_MODULES(pfProcessRequestToAiAssistant)
-   {
-      moduleFound = true;
-      if (prompt == nullptr)
-      {
-         prompt = request.getFieldAsUtf8String(VID_MESSAGE);
-         if (prompt == nullptr)
-            break;
-      }
-      answer = CURRENT_MODULE.pfProcessRequestToAiAssistant(prompt, nullptr, this);
-      if (answer != nullptr)
-         break;
-   }
+   char *prompt = request.getFieldAsUtf8String(VID_MESSAGE);
+   char *answer = ProcessRequestToAIAssistant(prompt, nullptr, this);
    if (answer != nullptr)
    {
       response.setField(VID_RCC, RCC_SUCCESS);
@@ -17912,7 +17894,7 @@ void ClientSession::queryAiAssistant(const NXCPMessage& request)
    }
    else
    {
-      response.setField(VID_RCC, moduleFound ? RCC_SYSTEM_FAILURE : RCC_NOT_IMPLEMENTED);
+      response.setField(VID_RCC, RCC_SYSTEM_FAILURE);
    }
    MemFree(prompt);
    sendMessage(response);
@@ -17930,14 +17912,7 @@ void ClientSession::queryAiAssistant(const NXCPMessage& request)
 void ClientSession::clearAiAssistantChat(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   uint32_t rcc = RCC_NOT_IMPLEMENTED;
-   ENUMERATE_MODULES(pfProcessRequestToAiAssistant)
-   {
-      rcc = CURRENT_MODULE.pfClearAiAssistantChat(this);
-      if (rcc != RCC_NOT_IMPLEMENTED)
-         break;
-   }
-   response.setField(VID_RCC, rcc);
+   response.setField(VID_RCC, ClearAIAssistantChat(this));
    sendMessage(response);
 }
 
