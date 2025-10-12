@@ -115,6 +115,8 @@ public:
    void fillMessage(NXCPMessage *msg) const;
    json_t *toJson() const;
 
+   String requestAIAssistantComment() const;
+
    NXSL_Value *categoryListToNXSLArray(NXSL_VM *vm);
 
    void createInDatabase();
@@ -194,6 +196,28 @@ public:
    uint32_t getUserId() const { return m_userId; }
    const TCHAR *getText() const { return m_text; }
 };
+
+/**
+ * Alarm severity text from code
+ */
+static inline const char *AlarmSeverityTextFromCode(int code)
+{
+   switch(code)
+   {
+      case SEVERITY_CRITICAL:
+         return "critical";
+      case SEVERITY_MAJOR:
+         return "major";
+      case SEVERITY_MINOR:
+         return "minor";
+      case SEVERITY_NORMAL:
+         return "normal";
+      case SEVERITY_WARNING:
+         return "warning";
+      default:
+         return "unknown";
+   }
+}
 
 /**
  * Functions

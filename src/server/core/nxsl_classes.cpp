@@ -5098,6 +5098,17 @@ NXSL_METHOD_DEFINITION(Alarm, getComments)
 }
 
 /**
+ * Alarm::getComments() method
+ */
+NXSL_METHOD_DEFINITION(Alarm, requestAiAssistantComment)
+{
+   Alarm *alarm = static_cast<Alarm*>(object->getData());
+   String response = alarm->requestAIAssistantComment();
+   *result = !response.isEmpty() ? vm->createValue(response) : vm->createValue();
+   return 0;
+}
+
+/**
  * NXSL class Alarm: constructor
  */
 NXSL_AlarmClass::NXSL_AlarmClass() : NXSL_Class()
@@ -5109,6 +5120,7 @@ NXSL_AlarmClass::NXSL_AlarmClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(Alarm, terminate, -1);
    NXSL_REGISTER_METHOD(Alarm, addComment, -1);
    NXSL_REGISTER_METHOD(Alarm, getComments, 0);
+   NXSL_REGISTER_METHOD(Alarm, requestAiAssistantComment, 0);
 }
 
 /**

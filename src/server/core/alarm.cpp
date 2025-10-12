@@ -23,6 +23,7 @@
 #include "nxcore.h"
 #include <netxms-regex.h>
 #include <nms_users.h>
+#include <iris.h>
 
 #define DEBUG_TAG L"alarm"
 
@@ -889,6 +890,36 @@ json_t *Alarm::toJson() const
    json_object_set_new(root, "categories", m_alarmCategoryList.toJson());
 
    return root;
+}
+
+/**
+ * Get AI assistant comment for alarm
+ */
+String Alarm::requestAIAssistantComment() const
+{
+   shared_ptr<NetObj> object = FindObjectById(m_sourceObject);
+   if (object == nullptr)
+      return String();
+
+   StringBuffer prompt(L"Analyze the following alarm and provide a concise comment (max 500 characters) that could help a network administrator to understand and resolve the issue. ");
+   prompt.append(L"Do not include any disclaimers or apologies in your response. ");
+   prompt.append(L"If the alarm message does not provide enough information to make a meaningful comment, simply state that. ");
+   prompt.append(L"Do not include alarm message in your response.\n");
+   prompt.append(L"Here is the alarm information:\n");
+   prompt.append(L"Source object name: ").append(object->getName()).append("\n");
+   prompt.append(L"Source object ID: ").append(object->getId()).append("\n");
+   prompt.append(L"Severity: ").append(AlarmSeverityTextFromCode(m_currentSeverity)).append(L"\n");
+   prompt.append(L"Message: ").append(m_message).append(L"\n");
+   prompt.append(L"Last change time: ").append(FormatTimestamp(m_lastChangeTime)).append(L"\n");
+   char *promptUtf8 = UTF8StringFromWideString(prompt);
+   char *response = ProcessRequestToAIAssistant(promptUtf8, object.get(), nullptr);
+   MemFree(promptUtf8);
+   if (response == nullptr)
+      return String();
+   StringBuffer result;
+   result.appendUtf8String(response);
+   MemFree(response);
+   return result.trim();
 }
 
 /**
