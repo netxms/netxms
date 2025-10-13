@@ -50,6 +50,7 @@ public class EventProcessingPolicyRule
    public static final int NEGATED_TIME_FRAMES = 0x008000;
    public static final int START_DOWNTIME      = 0x010000;
    public static final int END_DOWNTIME        = 0x020000;
+   public static final int REQUEST_AI_COMMENT  = 0x040000;
 
    public static final int SEVERITY_ANY = SEVERITY_NORMAL | SEVERITY_WARNING | SEVERITY_MINOR | SEVERITY_MAJOR | SEVERITY_CRITICAL;
 

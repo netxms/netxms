@@ -1080,7 +1080,7 @@ uint32_t EPRule::generateAlarm(Event *event) const
 	   alarmId = CreateNewAlarm(m_guid, m_comments, message, key, impact,
                      (m_alarmSeverity == SEVERITY_FROM_EVENT) ? event->getSeverity() : m_alarmSeverity,
                      m_alarmTimeout, m_alarmTimeoutEvent, parentAlarmId, m_rcaScriptName, event, 0, m_alarmCategoryList,
-                     ((m_flags & RF_CREATE_TICKET) != 0) ? true : false);
+                     (m_flags & RF_CREATE_TICKET) != 0, (m_flags & RF_REQUEST_AI_COMMENT) != 0);
 	   event->setLastAlarmMessage(message);
 	}
 

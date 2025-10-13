@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map.Entry;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
-import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.util.LocalSelectionTransfer;
@@ -303,13 +301,7 @@ public class RuleEditor extends Composite
    {
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
-         {
-            editor.fillRuleContextMenu(mgr);
-         }
-      });
-
+      menuMgr.addMenuListener((m) -> editor.fillRuleContextMenu(m));
       for(Control c : controls)
       {
          Menu menu = menuMgr.createContextMenu(c);
@@ -344,7 +336,7 @@ public class RuleEditor extends Composite
       };
 
       header = new Composite(this, SWT.NONE);
-      header.setBackground(ThemeEngine.getBackgroundColor(rule.isDisabled() ? "RuleEditor.Title.Disabled" : "RuleEditor.Title.Normal"));
+      header.setBackground(ThemeEngine.getBackgroundColor((rule.isDisabled() || rule.isFilterEmpty()) ? "RuleEditor.Title.Disabled" : "RuleEditor.Title.Normal"));
       header.addMouseListener(headerMouseListener);
 
       GridLayout layout = new GridLayout();
@@ -359,6 +351,8 @@ public class RuleEditor extends Composite
       headerLabel = new Label(header, SWT.NONE);
       if (rule.isDisabled())
          headerLabel.setText(rule.getComments() + Messages.get().RuleEditor_DisabledSuffix);
+      else if (rule.isFilterEmpty())
+         headerLabel.setText(rule.getComments() + " (empty filter)");
       else
          headerLabel.setText(rule.getComments());
       headerLabel.setBackground(header.getBackground());
@@ -488,6 +482,12 @@ public class RuleEditor extends Composite
       GridLayout layout = new GridLayout();
       layout.verticalSpacing = 0;
       clientArea.setLayout(layout);
+
+      if (rule.isFilterEmpty())
+      {
+         createLabel(clientArea, 0, true, "SKIP", null);
+         return clientArea;
+      }
 
       boolean needAnd = false;
       if (((rule.getSources().size() > 0 || rule.getSourceExclusions().size() > 0) && rule.isSourceInverted())
@@ -776,10 +776,15 @@ public class RuleEditor extends Composite
                }
             }
          }
-         
+
          if ((rule.getFlags() & EventProcessingPolicyRule.CREATE_TICKET) != 0)
          {
-            createLabel(clientArea, 1, false, "creates helpdesk ticket", null);
+            createLabel(clientArea, 1, false, "and creates helpdesk ticket", null);
+         }
+
+         if ((rule.getFlags() & EventProcessingPolicyRule.REQUEST_AI_COMMENT) != 0)
+         {
+            createLabel(clientArea, 1, false, "and add AI assistant's comment", null);
          }
       }
 

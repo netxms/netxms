@@ -895,7 +895,7 @@ json_t *Alarm::toJson() const
 /**
  * Get AI assistant comment for alarm
  */
-String Alarm::requestAIAssistantComment() const
+String Alarm::requestAIAssistantComment(GenericClientSession *session) const
 {
    shared_ptr<NetObj> object = FindObjectById(m_sourceObject);
    if (object == nullptr)
@@ -912,7 +912,7 @@ String Alarm::requestAIAssistantComment() const
    prompt.append(L"Message: ").append(m_message).append(L"\n");
    prompt.append(L"Last change time: ").append(FormatTimestamp(m_lastChangeTime)).append(L"\n");
    char *promptUtf8 = UTF8StringFromWideString(prompt);
-   char *response = ProcessRequestToAIAssistant(promptUtf8, object.get(), nullptr);
+   char *response = ProcessRequestToAIAssistant(promptUtf8, object.get(), session);
    MemFree(promptUtf8);
    if (response == nullptr)
       return String();
@@ -1106,11 +1106,48 @@ void Alarm::updateParentAlarm(uint32_t parentAlarmId)
 }
 
 /**
+ * Add AI assistant comment to alarm
+ */
+static void AddAIAssistantComment(uint32_t alarmId)
+{
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("AddAIAssistantComment: requesting AI assistant comment for alarm %u"), alarmId);
+
+   Alarm *alarm = FindAlarmById(alarmId);
+   if (alarm == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("AddAIAssistantComment: alarm %u not found"), alarmId);
+      return;
+   }
+
+   String comment = alarm->requestAIAssistantComment();
+   if (!comment.isEmpty())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("AddAIAssistantComment: adding AI assistant comment to alarm %u (message=\"%s\")"), alarmId, alarm->getMessage());
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("AddAIAssistantComment: AI assistant comment: %s"), comment.cstr());
+      s_alarmList.lock();
+      Alarm *alarm = s_alarmList.find(alarmId);
+      if (alarm != nullptr)
+      {
+         uint32_t commentId;
+         alarm->updateAlarmComment(&commentId, comment, 0, true);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("AddAIAssistantComment: alarm %u not found in active alarm list"), alarmId);
+      }
+      s_alarmList.unlock();
+   }
+
+   // FindAlarmById creates a copy of the alarm, so we need to delete it here
+   delete alarm;
+}
+
+/**
  * Create new alarm
  */
 uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *ruleDescription, const TCHAR *message, const TCHAR *key, const TCHAR *impact,
          int severity, uint32_t timeout, uint32_t timeoutEvent, uint32_t parentAlarmId, const TCHAR *rcaScriptName, Event *event,
-         uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList, bool openHelpdeskIssue)
+         uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList, bool openHelpdeskIssue, bool addAiComment)
 {
    uint32_t alarmId = 0;
    bool newAlarm = true;
@@ -1185,6 +1222,7 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
             NotifyClients(NX_NOTIFY_ALARM_CHANGED, parent);
          }
       }
+
       if (event->getDciId() != 0)
       {
          shared_ptr<NetObj> object = FindObjectById(event->getSourceId());
@@ -1201,6 +1239,15 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
                }
             }
          }
+      }
+
+      if (addAiComment)
+      {
+         ThreadPoolExecute(g_mainThreadPool,
+            [alarmId] () -> void
+            {
+               AddAIAssistantComment(alarmId);
+            });
       }
 
       NotifyClients(NX_NOTIFY_NEW_ALARM, alarm);

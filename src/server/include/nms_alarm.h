@@ -115,7 +115,7 @@ public:
    void fillMessage(NXCPMessage *msg) const;
    json_t *toJson() const;
 
-   String requestAIAssistantComment() const;
+   String requestAIAssistantComment(GenericClientSession *session = nullptr) const;
 
    NXSL_Value *categoryListToNXSLArray(NXSL_VM *vm);
 
@@ -242,7 +242,7 @@ Alarm NXCORE_EXPORTABLE *LoadAlarmFromDatabase(uint32_t alarmId);
 
 uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, const TCHAR *rule_description, const TCHAR *message, const TCHAR *key, const TCHAR *impact,
          int severity, uint32_t timeout, uint32_t timeoutEvent, uint32_t parentAlarmId, const TCHAR *rcaScriptName, Event *event,
-         uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList, bool openHelpdeskIssue);
+         uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList, bool openHelpdeskIssue, bool addAiComment);
 uint32_t NXCORE_EXPORTABLE AckAlarmById(uint32_t dwAlarmId, GenericClientSession *session, bool sticky, uint32_t acknowledgmentActionTime, bool includeSubordinates);
 uint32_t NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, GenericClientSession *session, bool sticky, uint32_t acknowledgmentActionTime);
 uint32_t NXCORE_EXPORTABLE ResolveAlarmById(uint32_t alarmId, GenericClientSession *session, bool terminate, bool includeSubordinates);

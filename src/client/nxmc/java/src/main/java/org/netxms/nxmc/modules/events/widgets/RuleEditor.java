@@ -787,10 +787,15 @@ public class RuleEditor extends Composite
                }
             }
          }
-         
+
          if ((rule.getFlags() & EventProcessingPolicyRule.CREATE_TICKET) != 0)
          {
             createLabel(clientArea, 1, false, i18n.tr("and create helpdesk ticket"), listener);
+         }
+
+         if ((rule.getFlags() & EventProcessingPolicyRule.REQUEST_AI_COMMENT) != 0)
+         {
+            createLabel(clientArea, 1, false, i18n.tr("and add AI assistant's comment"), listener);
          }
       }
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ public class RuleAlarm extends PropertyPage
 	private static final int ALARM_CREATE = 1;
 	private static final int ALARM_RESOLVE = 2;
 	private static final int ALARM_TERMINATE = 3;
-	
+
 	private RuleEditor editor;
 	private EventProcessingPolicyRule rule;
 	private int alarmAction;
@@ -74,6 +74,7 @@ public class RuleAlarm extends PropertyPage
 	private LabeledText alarmKeyTerminate;
 	private Button checkTerminateWithRegexp;
 	private Button checkCreateHelpdeskTicket;
+   private Button checkRequestAiComment;
 
 	/**
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -273,6 +274,13 @@ public class RuleAlarm extends PropertyPage
       gd.horizontalAlignment = SWT.LEFT;
       checkCreateHelpdeskTicket.setLayoutData(gd);
 
+      checkRequestAiComment = new Button(alarmCreationGroup, SWT.CHECK);
+      checkRequestAiComment.setText("Add AI assistant's comment on alarm creation");
+      checkRequestAiComment.setSelection((rule.getFlags() & EventProcessingPolicyRule.REQUEST_AI_COMMENT) != 0);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.LEFT;
+      checkRequestAiComment.setLayoutData(gd);
+
 		alarmTerminationGroup = new Composite(dialogArea, SWT.NONE);
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -379,6 +387,10 @@ public class RuleAlarm extends PropertyPage
 				   rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.CREATE_TICKET);
 				else
                rule.setFlags(rule.getFlags() & ~EventProcessingPolicyRule.CREATE_TICKET);
+            if (checkRequestAiComment.getSelection())
+               rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.REQUEST_AI_COMMENT);
+            else
+               rule.setFlags(rule.getFlags() & ~EventProcessingPolicyRule.REQUEST_AI_COMMENT);
 				break;
 			case ALARM_RESOLVE:
 			case ALARM_TERMINATE:
