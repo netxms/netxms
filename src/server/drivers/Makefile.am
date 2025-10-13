@@ -11,7 +11,7 @@
 DRIVERS = at avaya cambium cisco dell-pwc dlink edgecore eltex etherwan \
 	extreme fortinet hirschmann hpe huawei ignitenet juniper mds \
 	mikrotik moxa net-snmp netonix ping3 qtech rittal saf siemens \
-	symbol-ws tb tplink ubnt westerstrand
+	symbol-ws tb tplink ubnt unifi westerstrand
 
 SUBDIRS = $(DRIVERS)
 
@@ -20,7 +20,7 @@ pkglib_LTLIBRARIES = at.la avaya.la cambium.la cisco.la dell-pwc.la \
 	hirschmann.la hpe.la huawei.la ignitenet.la juniper.la mds.la \
 	mikrotik.la moxa.la net-snmp.la netonix.la ping3.la qtech.la \
 	rittal.la saf.la siemens.la symbol-ws.la tb.la tplink.la ubnt.la \
-	westerstrand.la
+	unifi.la westerstrand.la
 
 at_la_SOURCES = at/at.cpp
 at_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
@@ -229,6 +229,13 @@ ubnt_la_SOURCES = ubnt/airmax.cpp ubnt/edgeswitch.cpp ubnt/ubnt.cpp
 ubnt_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 ubnt_la_LDFLAGS = -module -avoid-version
 ubnt_la_LIBADD = ../../libnetxms/libnetxms.la \
+	../../snmp/libnxsnmp/libnxsnmp.la \
+	../libnxsrv/libnxsrv.la
+
+unifi_la_SOURCES = unifi/unifi.cpp
+unifi_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
+unifi_la_LDFLAGS = -module -avoid-version
+unifi_la_LIBADD = ../../libnetxms/libnetxms.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../libnxsrv/libnxsrv.la
 
