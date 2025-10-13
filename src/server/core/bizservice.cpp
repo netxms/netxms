@@ -801,6 +801,9 @@ NXSL_Value *BusinessService::createNXSLObject(NXSL_VM *vm)
  */
 double GetServiceUptime(uint32_t serviceId, time_t from, time_t to)
 {
+   if ((to - from) <= 0)// prevent division by zero (or negative value)
+      return 100.0;
+
    double uptimePercentage = 0;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb,
