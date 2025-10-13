@@ -15091,6 +15091,23 @@ public class NXCSession
    }
 
    /**
+    * Request AI assistant comment for given alarm.
+    *
+    * @param alarmId alarm ID
+    * @return assistant comment
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public String requestAiAssistantComment(long alarmId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_REQUEST_AI_ASSISTANT_COMMENT);
+      msg.setFieldUInt32(NXCPCodes.VID_ALARM_ID, alarmId);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId(), commandTimeout * 10); // LLM response can take significant amount of time
+      return response.getFieldAsString(NXCPCodes.VID_MESSAGE);
+   }
+
+   /**
     * Get interface traffic DCIs
     * 
     * @param interfaceId interface id to find DCIs for

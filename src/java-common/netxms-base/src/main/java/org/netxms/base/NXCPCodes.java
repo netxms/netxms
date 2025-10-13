@@ -50,7 +50,7 @@ public class NXCPCodes
 	public static final int CMD_EVENT_DB_UPDATE = 0x0018;
 	public static final int CMD_TRAP_CFG_UPDATE = 0x0019;
 	public static final int CMD_SET_EVENT_INFO = 0x001A;
-//   public static final int CMD_GET_DCI_MEASUREMENT_UNITS = 0x001B;
+   public static final int CMD_REQUEST_AI_ASSISTANT_COMMENT = 0x001B;
 	public static final int CMD_LOAD_EVENT_DB = 0x001C;
 	public static final int CMD_REQUEST_COMPLETED = 0x001D;
 	public static final int CMD_LOAD_USER_DB = 0x001E;

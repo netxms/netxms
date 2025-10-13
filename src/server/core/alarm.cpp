@@ -901,10 +901,11 @@ String Alarm::requestAIAssistantComment(GenericClientSession *session) const
    if (object == nullptr)
       return String();
 
-   StringBuffer prompt(L"Analyze the following alarm and provide a concise comment (max 500 characters) that could help a network administrator to understand and resolve the issue. ");
+   StringBuffer prompt(L"Analyze the following alarm and provide a concise comment that could help a network administrator to understand and resolve the issue. ");
    prompt.append(L"Do not include any disclaimers or apologies in your response. ");
    prompt.append(L"If the alarm message does not provide enough information to make a meaningful comment, simply state that. ");
-   prompt.append(L"Do not include alarm message in your response.\n");
+   prompt.append(L"Do not include alarm message in your response. ");
+   prompt.append(L"Use additional tools and data sources if needed to enrich your analysis.\n");
    prompt.append(L"Here is the alarm information:\n");
    prompt.append(L"Source object name: ").append(object->getName()).append("\n");
    prompt.append(L"Source object ID: ").append(object->getId()).append("\n");

@@ -1085,6 +1085,7 @@ void ClientSession::processRequest(NXCPMessage *request)
          deleteEventTemplate(*request);
          break;
       case CMD_GENERATE_EVENT_CODE:
+
          generateEventCode(*request);
          break;
       case CMD_MODIFY_OBJECT:
@@ -2025,6 +2026,9 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_CLEAR_AI_ASSISTANT_CHAT:
          clearAiAssistantChat(*request);
+         break;
+      case CMD_REQUEST_AI_ASSISTANT_COMMENT:
+         requestAiAssistantComment(*request);
          break;
       default:
          if ((code >> 8) == 0x11)
@@ -17913,6 +17917,55 @@ void ClientSession::clearAiAssistantChat(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    response.setField(VID_RCC, ClearAIAssistantChat(this));
+   sendMessage(response);
+}
+
+/**
+ * Request AI assistant comment for given alarm
+ *
+ * Called by:
+ * CMD_REQUEST_AI_ASSISTANT_COMMENT
+ *
+ * Expected input parameters:
+ * VID_ALARM_ID     Alarm ID
+ *
+ * Return values:
+ * VID_RCC                          Request completion code
+ * VID_MESSAGE                      Comment text if request completed successfully
+ */
+void ClientSession::requestAiAssistantComment(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
+   Alarm *alarm = FindAlarmById(alarmId);
+   if (alarm != nullptr)
+   {
+      shared_ptr<NetObj> object = FindObjectById(alarm->getSourceObject());
+      if (object != nullptr && object->checkAccessRights(m_userId, OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_ALARMS))
+      {
+         String text = alarm->requestAIAssistantComment(this);
+         if (!text.isEmpty())
+         {
+            response.setField(VID_RCC, RCC_SUCCESS);
+            response.setField(VID_MESSAGE, text);
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_RESOURCE_NOT_AVAILABLE);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+      delete alarm; // FindAlarmById() creates copy of alarm
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_ALARM_ID);
+   }
+
    sendMessage(response);
 }
 

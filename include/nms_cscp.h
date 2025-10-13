@@ -224,7 +224,7 @@ typedef struct
 #define CMD_EVENT_DB_UPDATE               0x0018
 #define CMD_TRAP_CFG_UPDATE               0x0019
 #define CMD_SET_EVENT_INFO                0x001A
-//#define CMD_GET_DCI_MEASUREMENT_UNITS     0x001B
+#define CMD_REQUEST_AI_ASSISTANT_COMMENT  0x001B
 #define CMD_LOAD_EVENT_DB                 0x001C
 #define CMD_REQUEST_COMPLETED             0x001D
 #define CMD_LOAD_USER_DB                  0x001E

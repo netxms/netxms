@@ -19,6 +19,7 @@
 package org.netxms.nxmc.modules.alarms.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
@@ -33,24 +34,22 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Dialog box for editing alarm comments
+ * Dialog box for showing AI assistant comment for alarm
  */
-public class EditCommentDialog extends Dialog
+public class AssistantCommentDialog extends Dialog
 {
-   private I18n i18n = LocalizationHelper.getI18n(EditCommentDialog.class);
-   private static final String CONFIG_PREFIX = "EditCommentDialog";
-   
+   private I18n i18n = LocalizationHelper.getI18n(AssistantCommentDialog.class);
+   private static final String CONFIG_PREFIX = "AssistantCommentDialog";
+
 	private LabeledText textControl;
 	private String text;
-	private long noteID;
 
 	/**
 	 * @param parentShell
 	 */
-	public EditCommentDialog(Shell parentShell, long noteID, String text)
+   public AssistantCommentDialog(Shell parentShell, String text)
 	{
 		super(parentShell);
-		this.noteID = noteID;
 		this.text = text;
 	}
 
@@ -70,7 +69,7 @@ public class EditCommentDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(noteID != 0 ? i18n.tr("Edit Comment"): i18n.tr("Add comment"));
+      newShell.setText(i18n.tr("AI Assistant Comment"));
 
 		PreferenceStore settings = PreferenceStore.getInstance();
 		newShell.setSize(settings.getAsInteger(CONFIG_PREFIX + ".cx", 400), settings.getAsInteger(CONFIG_PREFIX + ".cy", 350));
@@ -88,10 +87,9 @@ public class EditCommentDialog extends Dialog
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		dialogArea.setLayout(layout);
-		textControl = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+      textControl = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.WRAP);
 		textControl.setLabel(i18n.tr("Comment"));
-      if (noteID != 0)
-		   textControl.setText(text);
+      textControl.setText(text);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.FILL;
@@ -101,6 +99,16 @@ public class EditCommentDialog extends Dialog
 
 		return dialogArea;
 	}
+
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createButtonsForButtonBar(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   protected void createButtonsForButtonBar(Composite parent)
+   {
+      createButton(parent, IDialogConstants.OK_ID, i18n.tr("&Add as comment"), true);
+      createButton(parent, IDialogConstants.CANCEL_ID, i18n.tr("Close"), false);
+   }
 
    /**
     * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()

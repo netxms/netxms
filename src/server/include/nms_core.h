@@ -969,6 +969,7 @@ private:
    void clearPeerInterface(const NXCPMessage& request);
    void queryAiAssistant(const NXCPMessage& request);
    void clearAiAssistantChat(const NXCPMessage& request);
+   void requestAiAssistantComment(const NXCPMessage& request);
    void getSmclpProperties(const NXCPMessage& request);
    void getInterfaceTrafficDcis(const NXCPMessage& request);
    void autoConnectNetworkMapNodes(const NXCPMessage& request);
