@@ -41,6 +41,11 @@ void NXCORE_EXPORTABLE RegisterAIAssistantFunction(const char *name, const char 
 std::string NXCORE_EXPORTABLE CallAIAssistantFunction(const char *name, json_t *arguments, uint32_t userId);
 
 /**
+ * Add custom prompt
+ */
+void NXCORE_EXPORTABLE AddAIAssistantPrompt(const char *text);
+
+/**
  * Clear chat history for given session
  */
 uint32_t NXCORE_EXPORTABLE ClearAIAssistantChat(GenericClientSession *session);

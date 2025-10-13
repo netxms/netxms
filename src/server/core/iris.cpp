@@ -58,6 +58,16 @@ static json_t *s_functionDeclarations = nullptr;
 static std::unordered_map<std::string, AssistantFunctionHandler> s_functionHandlers;
 
 /**
+ * System prompt
+ */
+static const char *s_systemPrompt = "You are a helpful assistant named Iris. You have knowledge about NetXMS and its components, including network management, monitoring, and administration tasks. You can assist users with questions related to these topics. Your responses should be concise, accurate, and helpful. You can access live information from the NetXMS server to provide real-time assistance. If you are unable to answer a question, you should politely inform the user that you do not have the information available. Avoid answering questions not related to monitoring and IT administration tasks, and do not provide personal opinions or advice. Your goal is to assist users in managing their IT infrastructure effectively.";
+
+/**
+ * Additional prompts
+ */
+static std::vector<std::string> s_prompts;
+
+/**
  * Initialize AI assistant
  */
 bool InitAIAssistant()
@@ -87,6 +97,15 @@ bool InitAIAssistant()
    nxlog_debug_tag(DEBUG_TAG, 2, L"%d functions registered", static_cast<int>(s_functionHandlers.size()));
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("AI assistant initialized"));
    return true;
+}
+
+/**
+ * Add custom prompt
+ */
+void NXCORE_EXPORTABLE AddAIAssistantPrompt(const char *text)
+{
+   if ((text != nullptr) && (text[0] != 0))
+      s_prompts.emplace_back(text);
 }
 
 /**
@@ -138,11 +157,6 @@ void NXCORE_EXPORTABLE RegisterAIAssistantFunction(const char *name, const char 
    json_array_append_new(s_functionDeclarations, tool);
    s_functionHandlers[name] = handler;
 }
-
-/**
- * System prompt
- */
-static const char *s_systemPrompt = "You are a helpful assistant named Iris. You have knowledge about NetXMS and its components, including network management, monitoring, and administration tasks. You can assist users with questions related to these topics. Your responses should be concise, accurate, and helpful. You can access live information from the NetXMS server to provide real-time assistance. If you are unable to answer a question, you should politely inform the user that you do not have the information available. Avoid answering questions not related to monitoring and IT administration tasks, and do not provide personal opinions or advice. Your goal is to assist users in managing their IT infrastructure effectively.";
 
 /**
  * Send request to Ollama server
@@ -328,6 +342,10 @@ char NXCORE_EXPORTABLE *ProcessRequestToAIAssistant(const char *prompt, NetObj *
          json_decref(json);
          AddMessage(messages, "system", jsonText);
          MemFree(jsonText);
+      }
+      for(const std::string& p : s_prompts)
+      {
+         AddMessage(messages, "system", p.c_str());
       }
    }
    s_chatsLock.unlock();
