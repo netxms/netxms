@@ -2030,6 +2030,12 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_REQUEST_AI_ASSISTANT_COMMENT:
          requestAiAssistantComment(*request);
          break;
+      case CMD_GET_AI_ASSISTANT_FUNCTIONS:
+         getAiAssistantFunctions(*request);
+         break;
+      case CMD_CALL_AI_ASSISTANT_FUNCTION:
+         callAiAssistantFunction(*request);
+         break;
       default:
          if ((code >> 8) == 0x11)
          {
@@ -17965,6 +17971,51 @@ void ClientSession::requestAiAssistantComment(const NXCPMessage& request)
    {
       response.setField(VID_RCC, RCC_INVALID_ALARM_ID);
    }
+
+   sendMessage(response);
+}
+
+/**
+ * Get list of AI assistant functions
+ */
+void ClientSession::getAiAssistantFunctions(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   FillAIAssistantFunctionListMessage(&response);
+   response.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(response);
+}
+
+/**
+ * Call AI assistant function
+ */
+void ClientSession::callAiAssistantFunction(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   char functionName[128];
+   request.getFieldAsUtf8String(VID_NAME, functionName, 128);
+
+   char *args = request.getFieldAsUtf8String(VID_ARGUMENTS);
+   if (args != nullptr)
+   {
+      json_t *arguments = json_loads(args, 0, nullptr);
+      if (arguments != nullptr)
+      {
+         response.setFieldFromUtf8String(VID_MESSAGE, CallAIAssistantFunction(functionName, arguments, m_userId).c_str());
+         response.setField(VID_RCC, RCC_SUCCESS);
+         json_decref(arguments);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+   }
+   MemFree(args);
 
    sendMessage(response);
 }

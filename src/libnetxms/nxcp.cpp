@@ -518,7 +518,9 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_SET_COMPONENT_TOKEN"),
       _T("CMD_CLEAR_AI_ASSISTANT_CHAT"),
       _T("CMD_LINK_NETWORK_MAP_NODES"),
-      _T("CMD_GET_DC_OBJECT")
+      _T("CMD_GET_DC_OBJECT"),
+      _T("CMD_GET_AI_ASSISTANT_FUNCTIONS"),
+      _T("CMD_CALL_AI_ASSISTANT_FUNCTION")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -531,7 +533,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_GET_DC_OBJECT))
+   if ((code >= CMD_LOGIN) && (code <= CMD_CALL_AI_ASSISTANT_FUNCTION))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

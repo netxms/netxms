@@ -970,6 +970,8 @@ private:
    void queryAiAssistant(const NXCPMessage& request);
    void clearAiAssistantChat(const NXCPMessage& request);
    void requestAiAssistantComment(const NXCPMessage& request);
+   void getAiAssistantFunctions(const NXCPMessage& request);
+   void callAiAssistantFunction(const NXCPMessage& request);
    void getSmclpProperties(const NXCPMessage& request);
    void getInterfaceTrafficDcis(const NXCPMessage& request);
    void autoConnectNetworkMapNodes(const NXCPMessage& request);

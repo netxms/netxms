@@ -116,9 +116,51 @@ std::string NXCORE_EXPORTABLE CallAIAssistantFunction(const char *name, json_t *
    auto it = s_functionHandlers.find(name);
    if (it != s_functionHandlers.end())
    {
+      if (json_is_string(arguments))
+      {
+         arguments = json_loads(json_string_value(arguments), 0, nullptr);
+         std::string response = it->second(arguments, userId);
+         json_decref(arguments);
+         return response;
+      }
       return it->second(arguments, userId);
    }
    return std::string("Error: function not found");
+}
+
+/**
+ * Fill message with registered function list
+ */
+void FillAIAssistantFunctionListMessage(NXCPMessage *msg)
+{
+   if (s_functionDeclarations == nullptr)
+   {
+      msg->setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(0));
+      return;
+   }
+
+   uint32_t count = 0;
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   json_t *e;
+   size_t i;
+   json_array_foreach(s_functionDeclarations, i, e)
+   {
+      json_t *function = json_object_get(e, "function");
+      if (json_is_object(function))
+      {
+         const char *name = json_object_get_string_utf8(function, "name", "");
+         const char *description = json_object_get_string_utf8(function, "description", "");
+         msg->setFieldFromUtf8String(fieldId++, name);
+         msg->setFieldFromUtf8String(fieldId++, description);
+         json_t *schema = json_object_get(function, "parameters");
+         char *schemaText = json_dumps(schema, 0);
+         msg->setFieldFromUtf8String(fieldId++, schemaText);
+         MemFree(schemaText);
+         count++;
+         fieldId += 7;
+      }
+   }
+   msg->setField(VID_NUM_ELEMENTS, count);
 }
 
 /**

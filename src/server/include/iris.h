@@ -41,6 +41,11 @@ void NXCORE_EXPORTABLE RegisterAIAssistantFunction(const char *name, const char 
 std::string NXCORE_EXPORTABLE CallAIAssistantFunction(const char *name, json_t *arguments, uint32_t userId);
 
 /**
+ * Fill message with registered function list
+ */
+void FillAIAssistantFunctionListMessage(NXCPMessage *msg);
+
+/**
  * Add custom prompt
  */
 void NXCORE_EXPORTABLE AddAIAssistantPrompt(const char *text);

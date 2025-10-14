@@ -494,6 +494,8 @@ public class NXCPCodes
    public static final int CMD_CLEAR_AI_ASSISTANT_CHAT = 0x01D9;
    public static final int CMD_LINK_NETWORK_MAP_NODES = 0x01DA;
    public static final int CMD_GET_DC_OBJECT = 0x01DB;
+   public static final int CMD_GET_AI_ASSISTANT_FUNCTIONS = 0x01DC;
+   public static final int CMD_CALL_AI_ASSISTANT_FUNCTION = 0x01DD;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1371,7 +1373,7 @@ public class NXCPCodes
    public static final long VID_FORCED_CONTEXT_OBJECT = 867;
    public static final long VID_DASHBOARD_NAME_TEMPLATE = 868;
    public static final long VID_USE_MULTIPLIER = 869;
-   
+   public static final long VID_ARGUMENTS = 870;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

@@ -22,7 +22,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.netxms.base.VersionInfo;
+import org.netxms.client.AiAssistantFunction;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.slf4j.Logger;
@@ -216,6 +218,47 @@ public class Startup
          registerTool(tools, new DocBookSearch(nxslDocBookArticles, "nxsl", "NetXMS Scripting Language (NXSL)"));
          registerTool(tools, new DocBookGetArticle(nxslDocBookArticles, "nxsl", "NetXMS Scripting Language (NXSL)"));
       }
+
+      try
+      {
+         List<AiAssistantFunction> serverFunctions = session.getAiAssistantFunctions();
+         logger.info("Registering {} AI assistant functions from server as tools", serverFunctions.size());
+         for(final AiAssistantFunction f : serverFunctions)
+         {
+            registerTool(tools, new ServerTool() {
+               @Override
+               public String getName()
+               {
+                  return "server_" + f.getName();
+               }
+
+               @Override
+               public String getDescription()
+               {
+                  return f.getDescription();
+               }
+
+               @Override
+               public String getSchema()
+               {
+                  return f.getSchema();
+               }
+
+               @Override
+               public String execute(Map<String, Object> args) throws Exception
+               {
+                  ObjectMapper mapper = new ObjectMapper();
+                  String json = mapper.writeValueAsString(args);
+                  return session.callAiAssistantFunction(f.getName(), json);
+               }
+            });
+         }
+      }
+      catch(Exception e)
+      {
+         logger.error("Cannot get AI assistant functions from server: {}", e.getMessage());
+      }
+
       return tools;
    }
 

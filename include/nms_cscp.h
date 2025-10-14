@@ -673,6 +673,8 @@ typedef struct
 #define CMD_CLEAR_AI_ASSISTANT_CHAT       0x01D9
 #define CMD_LINK_NETWORK_MAP_NODES        0x01DA
 #define CMD_GET_DC_OBJECT                 0x01DB
+#define CMD_GET_AI_ASSISTANT_FUNCTIONS    0x01DC
+#define CMD_CALL_AI_ASSISTANT_FUNCTION    0x01DD
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1554,6 +1556,7 @@ typedef struct
 #define VID_FORCED_CONTEXT_OBJECT   ((uint32_t)867)
 #define VID_DASHBOARD_NAME_TEMPLATE ((uint32_t)868)
 #define VID_USE_MULTIPLIER          ((uint32_t)869)
+#define VID_ARGUMENTS               ((uint32_t)870)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)
