@@ -54,6 +54,7 @@ import com.netxms.mcp.tools.ServerTool;
 import com.netxms.mcp.tools.ServerVersion;
 import com.netxms.mcp.tools.SetObjectManagedState;
 import com.netxms.mcp.tools.SoftwareInventory;
+import io.modelcontextprotocol.json.McpJsonMapper;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpServerFeatures.SyncResourceSpecification;
 import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification;
@@ -62,6 +63,7 @@ import io.modelcontextprotocol.server.transport.HttpServletSseServerTransportPro
 import io.modelcontextprotocol.server.transport.StdioServerTransportProvider;
 import io.modelcontextprotocol.spec.McpSchema;
 import io.modelcontextprotocol.spec.McpSchema.CallToolResult;
+import io.modelcontextprotocol.spec.McpSchema.JsonSchema;
 import io.modelcontextprotocol.spec.McpSchema.ReadResourceResult;
 import io.modelcontextprotocol.spec.McpSchema.Resource;
 import io.modelcontextprotocol.spec.McpSchema.ResourceContents;
@@ -173,7 +175,7 @@ public class Startup
                .serverInfo("NetXMS MCP Server", VersionInfo.version())
                .capabilities(serverCapabilities)
                .tools(createTools())
-               .resources(createResources())
+//               .resources(createResources())
                .build();
          logger.info("MCP server started");
       }
@@ -270,21 +272,34 @@ public class Startup
     */
    private static void registerTool(List<SyncToolSpecification> tools, ServerTool tool)
    {
-      tools.add(
-         new SyncToolSpecification(
-            new Tool(tool.getName(), tool.getDescription(), tool.getSchema()),
-            (exchange, args) -> {
-               try
-               {
-                  String output = tool.execute(args);
-                  return new CallToolResult(output, Boolean.FALSE);
-               }
-               catch(Exception e)
-               {
-                  logger.error("Error executing tool " + tool.getName() + ": " + e.getMessage(), e);
-                  return new CallToolResult((e instanceof NXCException) ? e.getMessage() : "Exception: " + e.getClass().getName() + "; Message: " + e.getMessage(), Boolean.TRUE);
-               }
-            }));
+      ObjectMapper mapper = new ObjectMapper();
+      try
+      {
+         JsonSchema schema = mapper.createParser(tool.getSchema()).readValueAs(JsonSchema.class);
+         tools.add(
+            new SyncToolSpecification(
+               Tool.builder()
+                  .name(tool.getName())
+                  .description(tool.getDescription())
+                  .inputSchema(schema)
+                  .build(),
+               (exchange, args) -> {
+                  try
+                  {
+                     String output = tool.execute(args);
+                     return new CallToolResult(output, Boolean.FALSE);
+                  }
+                  catch(Exception e)
+                  {
+                     logger.error("Error executing tool " + tool.getName() + ": " + e.getMessage(), e);
+                     return new CallToolResult((e instanceof NXCException) ? e.getMessage() : "Exception: " + e.getClass().getName() + "; Message: " + e.getMessage(), Boolean.TRUE);
+                  }
+               }));
+      }
+      catch(Exception e)
+      {
+         logger.error("Cannot parse schema for tool " + tool.getName() + ": " + e.getMessage(), e);
+      }
    }
 
    /**
@@ -345,10 +360,14 @@ public class Startup
          if (arg.equalsIgnoreCase("-stdio") || arg.equalsIgnoreCase("--stdio"))
          {
             logger.info("Starting MCP server with stdio transport");
-            return new StdioServerTransportProvider();
+            return new StdioServerTransportProvider(McpJsonMapper.createDefault());
          }
       }
-      return new HttpServletSseServerTransportProvider(new ObjectMapper(), "/msg", "/sse");
+      return HttpServletSseServerTransportProvider.builder()
+            .jsonMapper(McpJsonMapper.createDefault())
+            .messageEndpoint("/msg")
+            .sseEndpoint("/sse")
+            .build();
    }
 
    /**

@@ -87,7 +87,8 @@ public class AiAssistantChatView extends View
 
       chatOutput = new MarkdownViewer(parent, SWT.NONE);
       chatOutput.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-      chatOutput.setText("!v AI assistant chat is ready. Enter your query and press enter to get assistant's response.\n\n");
+      chatOutput.setText(
+            "!v Hello! I’m Iris, your AI assistant. I can help you with setting up your monitoring environment, day-to-day operations, and analyzing problems. Feel free to ask any questions!\n\n");
 
       Label separator = new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL);
       separator.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
