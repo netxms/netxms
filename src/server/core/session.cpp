@@ -5414,6 +5414,8 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
          response->setField(VID_MULTIPLIER, dciItem->getMultiplier());
          response->setField(VID_USE_MULTIPLIER, dciItem->getUseMultiplier());
       }
+      response->setField(VID_DCI_NAME, dci->getName());
+      response->setField(VID_DESCRIPTION, dci->getDescription());
       sendMessage(response);
 
       int16_t dataType;
@@ -5521,6 +5523,8 @@ read_from_db:
 	         response->setField(VID_MULTIPLIER, dciItem->getMultiplier());
 	         response->setField(VID_USE_MULTIPLIER, dciItem->getUseMultiplier());
 	      }
+	      response->setField(VID_DCI_NAME, dci->getName());
+	      response->setField(VID_DESCRIPTION, dci->getDescription());
 	      sendMessage(response);
 
 			if (historicalDataType == HDT_FULL_TABLE)

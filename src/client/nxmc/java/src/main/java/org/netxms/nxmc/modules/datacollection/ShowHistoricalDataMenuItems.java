@@ -194,7 +194,7 @@ public class ShowHistoricalDataMenuItems
          }
          else 
          {
-            view.openView(new HistoricalDataView(parent, getObjectId(dcObject), getDciId(dcObject), null, null, null));
+            view.openView(new HistoricalDataView(parent, getObjectId(dcObject), getDciId(dcObject)));
          }
       }
    }
