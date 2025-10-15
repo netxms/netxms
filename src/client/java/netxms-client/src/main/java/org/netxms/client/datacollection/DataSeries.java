@@ -31,6 +31,8 @@ public class DataSeries
 {
 	private long nodeId;
 	private long dciId;
+	private String dciDescription;
+	private String dciName;
 	private DataType dataType;
 	private ArrayList<DciDataRow> values = new ArrayList<DciDataRow>();
    private Severity activeThresholdSeverity;
@@ -83,6 +85,8 @@ public class DataSeries
    {
       this.nodeId = src.nodeId;
       this.dciId = src.dciId;
+      this.dciDescription = src.dciDescription;
+      this.dciName = src.dciName;
       this.dataType = src.dataType;
       this.values.addAll(src.values);
       this.activeThresholdSeverity = src.activeThresholdSeverity;
@@ -342,13 +346,34 @@ public class DataSeries
       return thresholds;
    }
 
+   public String getDciDescription()
+   {
+      return dciDescription;
+   }
+
+   public void setDciDescription(String dciDescription)
+   {
+      this.dciDescription = dciDescription;
+   }
+
+   public String getDciName()
+   {
+      return dciName;
+   }
+
+   public void setDciName(String dciName)
+   {
+      this.dciName = dciName;
+   }
+
    /**
     * @see java.lang.Object#toString()
     */
    @Override
    public String toString()
    {
-      return "DciData [nodeId=" + nodeId + ", dciId=" + dciId + ", dataType=" + dataType + ", valuesSize=" + values.size() +
+      return "DciData [nodeId=" + nodeId + ", dciId=" + dciId + ", dciName=" + dciName + ", dciDescription=" + dciDescription + 
+            ", dataType=" + dataType + ", valuesSize=" + values.size() +
             ", activeThresholdSeverity=" + activeThresholdSeverity + ", multiplierPower=" + multiplierPower + 
             ", useMultiplier=" + useMultiplier + ", measurementUnits=" + measurementUnits + ", thresholds= " + thresholds + "]";
    }

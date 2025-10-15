@@ -5977,11 +5977,13 @@ public class NXCSession
          msg.setFieldInt32(NXCPCodes.VID_TIME_TO, timeTo);
          sendMessage(msg);
 
-         waitForRCC(msg.getMessageId());
+         NXCPMessage response = waitForRCC(msg.getMessageId());
+         data.setDciName(response.getFieldAsString(NXCPCodes.VID_DCI_NAME));
+         data.setDciDescription(response.getFieldAsString(NXCPCodes.VID_DESCRIPTION));
 
          while(true)
          {
-            NXCPMessage response = waitForMessage(NXCPCodes.CMD_DCI_DATA, msg.getMessageId());
+            response = waitForMessage(NXCPCodes.CMD_DCI_DATA, msg.getMessageId());
             long timestamp = response.getFieldAsInt64(NXCPCodes.VID_TIMESTAMP) * 1000L; // Convert to milliseconds
             if (timestamp == 0)
                break; // End of value list indicator
@@ -6004,7 +6006,9 @@ public class NXCSession
             data.setActiveThresholdSeverity(Severity.getByValue(response.getFieldAsInt32(NXCPCodes.VID_CURRENT_SEVERITY)));
             data.setMultiplier(response.getFieldAsInt32(NXCPCodes.VID_MULTIPLIER));
             data.setUseMultiplier(response.getFieldAsInt32(NXCPCodes.VID_USE_MULTIPLIER));
-            data.setUnits(new MeasurementUnit(response.getFieldAsString(NXCPCodes.VID_UNITS_NAME)));            
+            data.setUnits(new MeasurementUnit(response.getFieldAsString(NXCPCodes.VID_UNITS_NAME)));  
+            data.setDciName(response.getFieldAsString(NXCPCodes.VID_DCI_NAME));
+            data.setDciDescription(response.getFieldAsString(NXCPCodes.VID_DESCRIPTION));
 
             int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_THRESHOLDS);
             List<Threshold> thresholds = new ArrayList<Threshold>(count);

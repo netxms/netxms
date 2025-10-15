@@ -32,7 +32,10 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.HistoricalDataType;
@@ -75,7 +78,7 @@ public class HistoricalDataView extends ViewWithContext
 	private String nodeName;
 	private String tableName;
 	private String instance;
-	private String column;
+	private String column;   
 	private SortableTableViewer viewer;
 	private Date timeFrom = null;
 	private Date timeTo = null;
@@ -85,6 +88,12 @@ public class HistoricalDataView extends ViewWithContext
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
 	private Action actionDeleteDciEntry;
+   private Composite infoArea;
+   private Label labelDciId;
+   private Label labelDciName;
+   private Label labelDciDescription;
+   private Label labelDciUnits;
+   private Label labelTableInfo;
 
    /**
     * Build view ID
@@ -126,6 +135,19 @@ public class HistoricalDataView extends ViewWithContext
     * Create new historical data view.
     *
     * @param contextObject context object
+    * @param ownerId DCI owner ID
+    * @param dciId DCI ID
+    */
+   public HistoricalDataView(AbstractObject contextObject, long ownerId, long dciId)
+   {
+      this(contextObject, ownerId, dciId, null, null, null);
+   }
+
+   /**
+    * Create new historical data view.
+    *
+    * @param contextObject context object
+    * @param ownerId DCI owner ID
     * @param dciId DCI ID
     * @param tableName table name
     * @param instance instance for table data
@@ -198,6 +220,22 @@ public class HistoricalDataView extends ViewWithContext
    @Override
    protected void createContent(Composite parent)
    {
+      GridLayout layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      parent.setLayout(layout);
+      
+      infoArea = new Composite(parent, SWT.NONE);
+      infoArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+      layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.numColumns = 5;
+      infoArea.setLayout(layout);
+      
+      labelDciId = new Label(infoArea, SWT.NONE);
+      labelDciId.setText(i18n.tr("DCI ID: ") + dciId);
+      
 		final String[] names = (tableName != null) ? 
          new String[] { i18n.tr("Timestamp"), i18n.tr("Value") } :
          new String[] { i18n.tr("Timestamp"), i18n.tr("Value"), i18n.tr("Raw value") };
@@ -208,6 +246,7 @@ public class HistoricalDataView extends ViewWithContext
 		viewer.setComparator(new HistoricalDataComparator());
 		HistoricalDataFilter filter = new HistoricalDataFilter();
       viewer.addFilter(filter);
+      viewer.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		setFilterClient(viewer, filter);
 
 		createActions();
@@ -323,9 +362,28 @@ public class HistoricalDataView extends ViewWithContext
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
-					{
+					{  
+                  labelDciName = new Label(infoArea, SWT.NONE);
+                  labelDciName.setText(i18n.tr("DCI Name: ") + data.getDciName());
+                  
+                  labelDciDescription = new Label(infoArea, SWT.NONE);
+                  labelDciDescription.setText(i18n.tr("Description: ") + data.getDciDescription());
+                  
+                  if (data.getMeasurementUnit() != null)
+                  {
+                     labelDciUnits = new Label(infoArea, SWT.NONE);
+                     labelDciUnits.setText(i18n.tr("Units: ") + data.getMeasurementUnit().getName());
+                  }
+                  
+                  if (tableName != null)
+                  {
+                     labelTableInfo = new Label(infoArea, SWT.NONE);
+                     labelTableInfo.setText(i18n.tr("Table: ") + tableName);
+                  }
+					   
 						viewer.setInput(data.getValues());
 						updateInProgress = false;
+				      infoArea.layout();				      
 					}
 				});
 			}
