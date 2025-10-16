@@ -21,6 +21,7 @@ package com.netxms.mcp.tools;
 import java.util.Map;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -99,6 +100,21 @@ public class ObjectDetails extends ObjectServerTool
          result.put("has_agent", node.hasAgent());
          result.put("has_snmp_agent", node.hasSnmpAgent());
          result.put("has_file_manager", node.hasFileManager());
+      }
+
+      if (object instanceof Interface)
+      {
+         Interface iface = (Interface)object;
+         result.put("ip_address_list", iface.getIpAddressListAsString());
+         result.put("mac_address", iface.getMacAddress().toString());
+         result.put("if_index", iface.getIfIndex());
+         result.put("type", iface.getIfTypeName());
+         result.put("speed", iface.getSpeed());
+         result.put("mtu", iface.getMtu());
+         result.put("is_physical", iface.isPhysicalPort());
+         result.put("is_loopback", iface.isLoopback());
+         result.put("admin_state", iface.getAdminStateAsText());
+         result.put("oper_state", iface.getOperStateAsText());
       }
 
       return mapper.writeValueAsString(result);
