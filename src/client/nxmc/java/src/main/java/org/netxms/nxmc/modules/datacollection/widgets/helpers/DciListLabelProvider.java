@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
-		return (columnIndex == DciList.COLUMN_ID) ? stateImages[((DciValue)element).getStatus()] : null;
+      return (columnIndex == DciList.COLUMN_ID) ? stateImages[((DciValue)element).getStatus().getValue()] : null;
 	}
 
    /**

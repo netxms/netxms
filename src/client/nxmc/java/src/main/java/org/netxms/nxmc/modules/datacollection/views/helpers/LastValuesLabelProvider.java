@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.DataCollectionObject;
@@ -87,7 +88,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
             AbstractObject object = session.findObjectById(((DciValue)element).getNodeId());
             return (object != null) ? objectLabelProvider.getImage(object) : null;
 			case BaseDataCollectionView.LV_COLUMN_ID:
-				return stateImages[((DciValue)element).getStatus()];
+            return stateImages[((DciValue)element).getStatus().getValue()];
 			case BaseDataCollectionView.LV_COLUMN_THRESHOLD:
             if (((DciValue)element).getThresholdDisableEndTime() != 0)
                return StatusDisplayInfo.getStatusImage(ObjectStatus.UNMANAGED);
@@ -219,7 +220,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	@Override
 	public Color getForeground(Object element, int columnIndex)
 	{
-		if (((DciValue)element).getStatus() == DataCollectionObject.DISABLED)
+      if (((DciValue)element).getStatus() == DataCollectionObjectStatus.DISABLED)
 			return StatusDisplayInfo.getStatusColor(ObjectStatus.UNMANAGED);
 		if (showErrors && ((DciValue)element).getErrorCount() > 0)
 			return StatusDisplayInfo.getStatusColor(ObjectStatus.CRITICAL);

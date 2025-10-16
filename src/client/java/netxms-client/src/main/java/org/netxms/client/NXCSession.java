@@ -79,6 +79,7 @@ import org.netxms.client.businessservices.BusinessServiceTicket;
 import org.netxms.client.constants.AggregationFunction;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.BackgroundTaskState;
+import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
@@ -735,7 +736,7 @@ public class NXCSession
                      }
                      sendNotification(new SessionNotification(SessionNotification.DCI_STATE_CHANGE,
                            msg.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID),
-                           new DCOStatusHolder(itemList, msg.getFieldAsInt32(NXCPCodes.VID_DCI_STATUS))));
+                           new DCOStatusHolder(itemList, DataCollectionObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_DCI_STATUS)))));
                      break;
                   case NXCPCodes.CMD_UPDATE_AGENT_POLICY:
                      sendNotification(new SessionNotification(SessionNotification.POLICY_MODIFIED,
@@ -8494,11 +8495,11 @@ public class NXCSession
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public long[] changeDCIStatus(final long ownerId, long[] items, int status) throws IOException, NXCException
+   public long[] changeDCIStatus(final long ownerId, long[] items, DataCollectionObjectStatus status) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_DCI_STATUS);
       msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, ownerId);
-      msg.setFieldInt16(NXCPCodes.VID_DCI_STATUS, status);
+      msg.setFieldInt16(NXCPCodes.VID_DCI_STATUS, status.getValue());
       msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, items.length);
       msg.setField(NXCPCodes.VID_ITEM_LIST, items);
       sendMessage(msg);

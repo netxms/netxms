@@ -20,6 +20,7 @@ package org.netxms.client.datacollection;
 
 import java.util.Date;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.Severity;
@@ -43,7 +44,7 @@ public abstract class DciValue
    protected String comments;
    protected DataOrigin source;  // data source (agent, SNMP, etc.)
 	protected DataType dataType;
-	protected int status;				// status (active, disabled, etc.)
+   protected DataCollectionObjectStatus status;
    protected int errorCount;
    protected int dcObjectType; // Data collection object type (item, table, etc.)
    protected Date timestamp;
@@ -102,7 +103,7 @@ public abstract class DciValue
 		dataType = DataType.getByValue(msg.getFieldAsInt32(fieldId++));
 		value = msg.getFieldAsString(fieldId++);
 		timestamp = msg.getFieldAsDate(fieldId++);
-		status = msg.getFieldAsInt32(fieldId++);
+      status = DataCollectionObjectStatus.getByValue(msg.getFieldAsInt32(fieldId++));
 		dcObjectType = msg.getFieldAsInt32(fieldId++);
 		errorCount = msg.getFieldAsInt32(fieldId++);
 		templateDciId = msg.getFieldAsInt64(fieldId++);
@@ -222,7 +223,7 @@ public abstract class DciValue
 	/**
 	 * @return the status
 	 */
-	public int getStatus()
+   public DataCollectionObjectStatus getStatus()
 	{
 		return status;
 	}

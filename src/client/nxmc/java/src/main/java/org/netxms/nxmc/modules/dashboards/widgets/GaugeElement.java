@@ -25,7 +25,6 @@ import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.nxmc.modules.charts.api.ChartColor;
 import org.netxms.nxmc.modules.charts.api.ChartType;
-import org.netxms.nxmc.modules.charts.api.GaugeColorMode;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.GaugeConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;

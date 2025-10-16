@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2018-2019 Raden Solutions
+ * Copyright (C) 2018-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,8 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.client.datacollection;
+
+import org.netxms.client.constants.DataCollectionObjectStatus;
 
 /**
  * Callback to notify View about object change
@@ -43,5 +45,5 @@ public interface RemoteChangeListener
     * @param id data collection object ID
     * @param status new status of data collection object
     */
-   void onStatusChange(long id, int status);
+   void onStatusChange(long id, DataCollectionObjectStatus status);
 }

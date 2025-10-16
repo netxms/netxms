@@ -1,12 +1,32 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2025 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.client.datacollection;
 
-/*
+import org.netxms.client.constants.DataCollectionObjectStatus;
+
+/**
  * Class that stores DCO id and new status. Used in update notifications.
  */
 public class DCOStatusHolder
 {
    private long[] items;
-   private int status;
+   private DataCollectionObjectStatus status;
 
    /**
     * Status holder constructor
@@ -14,7 +34,7 @@ public class DCOStatusHolder
     * @param items TODO
     * @param status TODO
     */
-   public DCOStatusHolder(long[] items, int status)
+   public DCOStatusHolder(long[] items, DataCollectionObjectStatus status)
    {
       super();
       this.items = items;
@@ -42,7 +62,7 @@ public class DCOStatusHolder
    /**
     * @return the status
     */
-   public int getStatus()
+   public DataCollectionObjectStatus getStatus()
    {
       return status;
    }
@@ -50,7 +70,7 @@ public class DCOStatusHolder
    /**
     * @param status the status to set
     */
-   public void setStatus(int status)
+   public void setStatus(DataCollectionObjectStatus status)
    {
       this.status = status;
    }

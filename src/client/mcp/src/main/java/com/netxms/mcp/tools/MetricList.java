@@ -26,14 +26,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.netxms.mcp.Startup;
 
 /**
- * 
+ * Tool for retrieving last collected values for all metrics on given object
  */
-public class LastValues extends ObjectServerTool
+public class MetricList extends ObjectServerTool
 {
-   private static final Logger logger = LoggerFactory.getLogger(LastValues.class);
+   private static final Logger logger = LoggerFactory.getLogger(MetricList.class);
 
    /**
     * @see com.netxms.mcp.tools.ServerTool#getName()
@@ -41,7 +42,7 @@ public class LastValues extends ObjectServerTool
    @Override
    public String getName()
    {
-      return "last-values";
+      return "metric-list";
    }
 
    /**
@@ -50,7 +51,7 @@ public class LastValues extends ObjectServerTool
    @Override
    public String getDescription()
    {
-      return "Returns last collected (current) values for metrics on given object.\nThis tool requires an object ID or name as a parameter.";
+      return "Returns list of metrics on given object along with last collected (current) values.\nThis function requires an object ID or name as a parameter.";
    }
 
    /**
@@ -89,7 +90,17 @@ public class LastValues extends ObjectServerTool
             if (!fuzzyMatch(name, filter) && !fuzzyMatch(description, filter))
                continue;
          }
-         list.add(mapper.valueToTree(v));
+         ObjectNode jv = mapper.createObjectNode();
+         jv.put("metric_id", v.getId());
+         jv.put("name", v.getName());
+         jv.put("description", v.getDescription());
+         jv.put("comments", v.getComments());
+         jv.put("value", v.getValue());
+         jv.put("data_type", v.getDataType().toString());
+         jv.put("status", v.getStatus().toString());
+         jv.put("timestamp", v.getTimestamp().getTime() / 1000);
+         jv.put("data_source", v.getSource().toString());
+         list.add(jv);
       }
 
       logger.debug("LastValues.execute(): object={}, filter={}, result-size={}", object.getObjectName(), filter, list.size());

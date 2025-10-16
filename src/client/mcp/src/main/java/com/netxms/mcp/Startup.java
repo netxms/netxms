@@ -43,7 +43,7 @@ import com.netxms.mcp.tools.GetLibraryScript;
 import com.netxms.mcp.tools.GetMetricHistory;
 import com.netxms.mcp.tools.GetServerStats;
 import com.netxms.mcp.tools.HardwareInventory;
-import com.netxms.mcp.tools.LastValues;
+import com.netxms.mcp.tools.MetricList;
 import com.netxms.mcp.tools.LeaveMaintenance;
 import com.netxms.mcp.tools.ListLibraryScripts;
 import com.netxms.mcp.tools.ObjectDetails;
@@ -58,7 +58,6 @@ import io.modelcontextprotocol.json.McpJsonMapper;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpServerFeatures.SyncResourceSpecification;
 import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification;
-import io.modelcontextprotocol.server.McpSyncServer;
 import io.modelcontextprotocol.server.transport.HttpServletSseServerTransportProvider;
 import io.modelcontextprotocol.server.transport.StdioServerTransportProvider;
 import io.modelcontextprotocol.spec.McpSchema;
@@ -169,15 +168,16 @@ public class Startup
 
       try
       {
-         McpSchema.ServerCapabilities serverCapabilities = McpSchema.ServerCapabilities.builder().tools(true).prompts(true).resources(true, true).build();
+         logger.info("MCP server is starting");
+         McpSchema.ServerCapabilities serverCapabilities = McpSchema.ServerCapabilities.builder().tools(true).resources(true, true).build();
          McpServerTransportProvider transport = createTransportProvider(args);
-         McpSyncServer server = McpServer.sync(transport)
+         McpServer.sync(transport)
                .serverInfo("NetXMS MCP Server", VersionInfo.version())
                .capabilities(serverCapabilities)
                .tools(createTools())
-//               .resources(createResources())
+               .resources(createResources())
                .build();
-         logger.info("MCP server started");
+         logger.info("MCP server has stopped");
       }
       catch(Exception e)
       {
@@ -200,7 +200,7 @@ public class Startup
       registerTool(tools, new GetServerStats());
       registerTool(tools, new HardwareInventory());
       registerTool(tools, new ExecuteScript());
-      registerTool(tools, new LastValues());
+      registerTool(tools, new MetricList());
       registerTool(tools, new LeaveMaintenance());
       registerTool(tools, new ListLibraryScripts());
       registerTool(tools, new ObjectDetails());
@@ -276,25 +276,25 @@ public class Startup
       try
       {
          JsonSchema schema = mapper.createParser(tool.getSchema()).readValueAs(JsonSchema.class);
-         tools.add(
-            new SyncToolSpecification(
-               Tool.builder()
-                  .name(tool.getName())
-                  .description(tool.getDescription())
-                  .inputSchema(schema)
-                  .build(),
-               (exchange, args) -> {
-                  try
-                  {
-                     String output = tool.execute(args);
-                     return new CallToolResult(output, Boolean.FALSE);
-                  }
-                  catch(Exception e)
-                  {
-                     logger.error("Error executing tool " + tool.getName() + ": " + e.getMessage(), e);
-                     return new CallToolResult((e instanceof NXCException) ? e.getMessage() : "Exception: " + e.getClass().getName() + "; Message: " + e.getMessage(), Boolean.TRUE);
-                  }
-               }));
+         tools.add(SyncToolSpecification.builder()
+            .tool(Tool.builder()
+               .name(tool.getName())
+               .description(tool.getDescription())
+               .inputSchema(schema)
+               .build())
+            .callHandler((exchange, args) -> {
+               try
+               {
+                  String output = tool.execute(args.arguments());
+                  return new CallToolResult(output, Boolean.FALSE);
+               }
+               catch(Exception e)
+               {
+                  logger.error("Error executing tool " + tool.getName() + ": " + e.getMessage(), e);
+                  return new CallToolResult((e instanceof NXCException) ? e.getMessage() : "Exception: " + e.getClass().getName() + "; Message: " + e.getMessage(), Boolean.TRUE);
+               }
+            })
+            .build());
       }
       catch(Exception e)
       {
@@ -310,13 +310,20 @@ public class Startup
    private static List<SyncResourceSpecification> createResources()
    {
       List<SyncResourceSpecification> resources = new ArrayList<>();
-      registerResource(resources, new com.netxms.mcp.resources.ServerVersion());
+      if (!mainDocBookArticles.isEmpty())
+      {
+         // Index first for discovery
+         registerResource(resources, new DocBookIndex(mainDocBookArticles));
+         // Individual articles
+         for(DocBookArticle a : mainDocBookArticles)
+            registerResource(resources, a);
+      }
       if (!nxslDocBookArticles.isEmpty())
       {
          // Index first for discovery
          registerResource(resources, new DocBookIndex(nxslDocBookArticles));
          // Individual articles
-         for (DocBookArticle a : nxslDocBookArticles)
+         for(DocBookArticle a : nxslDocBookArticles)
             registerResource(resources, a);
       }
       return resources;
@@ -331,8 +338,12 @@ public class Startup
    private static void registerResource(List<SyncResourceSpecification> resources, ServerResource resource)
    {
       resources.add(
-         new SyncResourceSpecification(
-            new Resource(resource.getUri(), resource.getName(), resource.getDescription(), resource.getMimeType(), null),
+         new SyncResourceSpecification(Resource.builder()
+               .uri(resource.getUri())
+               .name(resource.getName())
+               .description(resource.getDescription())
+               .mimeType(resource.getMimeType())
+               .build(),
             (exchange, request) -> {
                try
                {

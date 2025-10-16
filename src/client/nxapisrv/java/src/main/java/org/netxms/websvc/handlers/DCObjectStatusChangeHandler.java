@@ -20,30 +20,28 @@ package org.netxms.websvc.handlers;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.constants.RCC;
-import org.netxms.client.datacollection.DataCollectionObject;
 
 public class DCObjectStatusChangeHandler extends AbstractObjectHandler
 {
-   private static final int UNDEFINED = -1;
-
    /**
     * @see org.netxms.websvc.handlers.AbstractHandler#executeCommand(java.lang.String, org.json.JSONObject)
     */
    @Override
    protected Object executeCommand(String command, JSONObject data) throws Exception
    {
-      int status = UNDEFINED;
+      DataCollectionObjectStatus status = null;
       if (command.equals("activate"))
       {
-         status = DataCollectionObject.ACTIVE;
+         status = DataCollectionObjectStatus.ACTIVE;
       }
       else if (command.equals("disable"))
       {
-         status = DataCollectionObject.DISABLED;
+         status = DataCollectionObjectStatus.DISABLED;
       }
 
-      if (!data.has("dcis") || (status == UNDEFINED))
+      if (!data.has("dcis") || (status == null))
          return createErrorResponse(RCC.INVALID_ARGUMENT);
 
       JSONArray dciList = data.getJSONArray("dcis");
@@ -52,7 +50,6 @@ public class DCObjectStatusChangeHandler extends AbstractObjectHandler
       {
          items[i] = dciList.getLong(i);
       }
-      
 
       long[] result = getSession().changeDCIStatus(getObjectId(), items, status);
       if (result != null)

@@ -69,7 +69,6 @@ public class HardwareInventory extends ObjectServerTool
    protected String execute(AbstractObject object, Map<String, Object> args) throws Exception
    {
       NXCSession session = Startup.getSession();
-      // Attempt to get hardware components. Method name assumed; adjust if API differs.
       List<HardwareComponent> components = session.getNodeHardwareComponents(object.getObjectId());
 
       ObjectMapper mapper = new ObjectMapper();

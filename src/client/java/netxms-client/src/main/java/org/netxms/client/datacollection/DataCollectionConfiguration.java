@@ -27,6 +27,7 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.constants.RCC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -260,7 +261,7 @@ public class DataCollectionConfiguration
     * @param idList list of DCI identifiers
     * @param status new status
     */
-   private void updateItemStatusFromNotification(long[] idList, int status)
+   private void updateItemStatusFromNotification(long[] idList, DataCollectionObjectStatus status)
    {
       synchronized(items)
       {
@@ -438,11 +439,11 @@ public class DataCollectionConfiguration
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void setObjectStatus(long[] items, int status) throws IOException, NXCException
+   public void setObjectStatus(long[] items, DataCollectionObjectStatus status) throws IOException, NXCException
    {
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_SET_DCI_STATUS);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)ownerId);
-      msg.setFieldInt16(NXCPCodes.VID_DCI_STATUS, status);
+      msg.setFieldInt16(NXCPCodes.VID_DCI_STATUS, status.getValue());
       msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, items.length);
       msg.setField(NXCPCodes.VID_ITEM_LIST, items);
       session.sendMessage(msg);

@@ -77,7 +77,9 @@ public class GetMetricHistory extends ObjectServerTool
    @Override
    protected String execute(AbstractObject object, Map<String, Object> args) throws Exception
    {
-      long metricId = (Integer)args.get("metric_id");
+      Integer metricId = (Integer)args.get("metric_id");
+      if (metricId == null)
+         throw new Exception("Metric ID not provided");
 
       long from = (Integer)args.get("from");
       long to = (args.get("to") != null) ? (Integer)args.get("to") : System.currentTimeMillis() / 1000;

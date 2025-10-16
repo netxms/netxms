@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.datacollection.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
@@ -46,10 +47,10 @@ public class LastValuesFilter extends ViewerFilter implements AbstractViewerFilt
 	{
 		final DciValue value = (DciValue)element;
 
-		if (!showUnsupported && (value.getStatus() == DataCollectionObject.NOT_SUPPORTED))
+      if (!showUnsupported && (value.getStatus() == DataCollectionObjectStatus.UNSUPPORTED))
 			return false;
 
-		if (!showDisabled && (value.getStatus() == DataCollectionObject.DISABLED))
+      if (!showDisabled && (value.getStatus() == DataCollectionObjectStatus.DISABLED))
 			return false;
 
       if (!showHidden && ((value.getFlags() & DataCollectionObject.DCF_HIDE_ON_LAST_VALUES_PAGE) != 0))

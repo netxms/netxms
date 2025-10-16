@@ -31,8 +31,6 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -49,6 +47,7 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.datacollection.BulkDciUpdateElement;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
@@ -233,13 +232,7 @@ public class DataCollectionView extends BaseDataCollectionView
       WidgetHelper.restoreTableViewerSettings(viewer, configPrefix);
 
       viewer.addSelectionChangedListener(new DciSelectionChange());
-      viewer.addDoubleClickListener(new IDoubleClickListener() {
-         @Override
-         public void doubleClick(DoubleClickEvent event)
-         {
-            editSelectedObject();
-         }
-      });
+      viewer.addDoubleClickListener((e) -> editSelectedObject());
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
@@ -263,41 +256,26 @@ public class DataCollectionView extends BaseDataCollectionView
          @Override
          public void onUpdate(DataCollectionObject object)
          {
-            display.asyncExec(new Runnable() {
-               @Override
-               public void run()
-               {
-                  updateItems();
-               }
-            }); 
+            display.asyncExec(() -> updateItems());
          }
 
          @Override
          public void onDelete(long id)
          {
-            display.asyncExec(new Runnable() {
-               @Override
-               public void run()
-               {
-                  updateItems();
-               }
-            }); 
+            display.asyncExec(() -> updateItems());
          }
 
          @Override
-         public void onStatusChange(long id, int status)
+         public void onStatusChange(long id, DataCollectionObjectStatus status)
          {
-            display.asyncExec(new Runnable() {
-               @Override
-               public void run()
-               {
-                  viewer.refresh();
-               }
-            }); 
+            display.asyncExec(() -> viewer.refresh());
          }
       };   
    }
-   
+
+   /**
+    * Update items in the viewer from DCI configuration
+    */
    void updateItems()
    {
       final IStructuredSelection selection = viewer.getStructuredSelection();
@@ -318,7 +296,7 @@ public class DataCollectionView extends BaseDataCollectionView
       }   
       viewer.setSelection(new StructuredSelection(selected.toArray()));     
    }
-   
+
    /**
     * Actions to make after last values view was created
     * 
@@ -510,7 +488,7 @@ public class DataCollectionView extends BaseDataCollectionView
          @Override
          public void run()
          {
-            setItemStatus(DataCollectionObject.ACTIVE);
+            setItemStatus(DataCollectionObjectStatus.ACTIVE);
             actionActivate.setEnabled(false);
             actionDisable.setEnabled(true);
          }
@@ -521,7 +499,7 @@ public class DataCollectionView extends BaseDataCollectionView
          @Override
          public void run()
          {
-            setItemStatus(DataCollectionObject.DISABLED);
+            setItemStatus(DataCollectionObjectStatus.DISABLED);
             actionActivate.setEnabled(true);
             actionDisable.setEnabled(false);
          }
@@ -785,7 +763,7 @@ public class DataCollectionView extends BaseDataCollectionView
     * 
     * @param newStatus New status
     */
-   private void setItemStatus(final int newStatus)
+   private void setItemStatus(final DataCollectionObjectStatus newStatus)
    {
       final IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
@@ -1545,9 +1523,9 @@ public class DataCollectionView extends BaseDataCollectionView
                if (object instanceof DataCollectionObject) 
                {
                   DataCollectionObject dci = (DataCollectionObject)object;
-                  if (dci.getStatus() != DataCollectionObject.ACTIVE)
+                  if (dci.getStatus() != DataCollectionObjectStatus.ACTIVE)
                      canActivate = true;
-                  if (dci.getStatus() != DataCollectionObject.DISABLED)
+                  if (dci.getStatus() != DataCollectionObjectStatus.DISABLED)
                      canDisable = true;
                   if (dci.getThresholdDisableEndTime() != 0)
                      canActivateThresholds = true;
@@ -1557,9 +1535,9 @@ public class DataCollectionView extends BaseDataCollectionView
                else
                {
                   DciValue dci = (DciValue)object;
-                  if (dci.getStatus() != DataCollectionObject.ACTIVE)
+                  if (dci.getStatus() != DataCollectionObjectStatus.ACTIVE)
                      canActivate = true;
-                  if (dci.getStatus() != DataCollectionObject.DISABLED)
+                  if (dci.getStatus() != DataCollectionObjectStatus.DISABLED)
                      canDisable = true;
                   if (dci.getThresholdDisableEndTime() != 0)
                      canActivateThresholds = true;

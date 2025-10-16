@@ -26,6 +26,7 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.base.annotations.Internal;
 import org.netxms.client.constants.AgentCacheMode;
+import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.snmp.SnmpVersion;
 
@@ -38,11 +39,6 @@ public abstract class DataCollectionObject
 	public static final int DCO_TYPE_GENERIC = 0;
 	public static final int DCO_TYPE_ITEM    = 1;
 	public static final int DCO_TYPE_TABLE   = 2;
-
-	// data collection object status
-	public static final int ACTIVE = 0;
-	public static final int DISABLED = 1;
-	public static final int NOT_SUPPORTED = 2;
 
 	// common data collection flags
 	public static final int DCF_AGGREGATE_ON_CLUSTER     = 0x00080;
@@ -88,7 +84,7 @@ public abstract class DataCollectionObject
    protected int retentionType;
 	protected String retentionTime;
    protected DataOrigin origin;
-	protected int status;
+   protected DataCollectionObjectStatus status;
    protected int flags;
    protected int stateFlags;
 	protected String transformationScript;
@@ -131,7 +127,7 @@ public abstract class DataCollectionObject
 		retentionType = msg.getFieldAsInt32(NXCPCodes.VID_RETENTION_TYPE);
 		retentionTime = msg.getFieldAsString(NXCPCodes.VID_RETENTION_TIME);
       origin = DataOrigin.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_DCI_SOURCE_TYPE));
-		status = msg.getFieldAsInt32(NXCPCodes.VID_DCI_STATUS);
+      status = DataCollectionObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_DCI_STATUS));
 		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
       stateFlags = msg.getFieldAsInt32(NXCPCodes.VID_STATE_FLAGS);
 		transformationScript = msg.getFieldAsString(NXCPCodes.VID_TRANSFORMATION_SCRIPT);
@@ -189,7 +185,7 @@ public abstract class DataCollectionObject
 		retentionType = RETENTION_DEFAULT;
 		retentionTime = null;
       origin = DataOrigin.AGENT;
-		status = ACTIVE;
+      status = DataCollectionObjectStatus.ACTIVE;
 		flags = 0;
 		transformationScript = null;
 		perfTabSettings = null;
@@ -293,7 +289,7 @@ public abstract class DataCollectionObject
       msg.setFieldInt16(NXCPCodes.VID_RETENTION_TYPE, retentionType);
 		msg.setField(NXCPCodes.VID_RETENTION_TIME, retentionTime);
       msg.setFieldInt16(NXCPCodes.VID_DCI_SOURCE_TYPE, origin.getValue());
-		msg.setFieldInt16(NXCPCodes.VID_DCI_STATUS, status);
+      msg.setFieldInt16(NXCPCodes.VID_DCI_STATUS, status.getValue());
 		msg.setField(NXCPCodes.VID_NAME, name);
 		msg.setField(NXCPCodes.VID_DESCRIPTION, description);
 		msg.setField(NXCPCodes.VID_SYSTEM_TAG, systemTag);
@@ -509,7 +505,7 @@ public abstract class DataCollectionObject
 	/**
 	 * @return the status
 	 */
-	public int getStatus()
+   public DataCollectionObjectStatus getStatus()
 	{
 		return status;
 	}
@@ -517,7 +513,7 @@ public abstract class DataCollectionObject
 	/**
 	 * @param status the status to set
 	 */
-	public void setStatus(int status)
+   public void setStatus(DataCollectionObjectStatus status)
 	{
 		this.status = status;
 	}
