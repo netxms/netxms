@@ -30,9 +30,12 @@ import org.netxms.nxmc.resources.ResourceManager;
  */
 public class BaseFileLabelProvider extends LabelProvider
 {
-   private static Map<String, Image> images;
-
-   static
+   private Map<String, Image> images;
+   
+   /**
+    * Constructor
+    */
+   public BaseFileLabelProvider()
    {
       images = new HashMap<String, Image>();
       images.put("folder", ResourceManager.getImageDescriptor("icons/folder.png").createImage());
@@ -47,6 +50,18 @@ public class BaseFileLabelProvider extends LabelProvider
       images.put("mp4", ResourceManager.getImageDescriptor("icons/file-types/mp4.png").createImage());
       images.put("ac3", ResourceManager.getImageDescriptor("icons/file-types/audio.png").createImage());
       images.put("tar", ResourceManager.getImageDescriptor("icons/file-types/archive.png").createImage());
+   }
+   
+   /**
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      for(Image img : images.values())
+         img.dispose();
+      images.clear();
+      super.dispose();
    }
 
    /**
