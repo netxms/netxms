@@ -31,9 +31,12 @@ import org.netxms.nxmc.resources.ResourceManager;
  */
 public class BaseActionLabelProvider extends LabelProvider
 {
-   private static Map<ServerActionType, Image> images;
+   private Map<ServerActionType, Image> images;
 
-   static
+   /**
+    * Default constructor
+    */
+   public BaseActionLabelProvider()
    {
       images = new HashMap<ServerActionType, Image>();
       images.put(ServerActionType.LOCAL_COMMAND, ResourceManager.getImageDescriptor("icons/actions/exec_local.png").createImage());
@@ -42,6 +45,17 @@ public class BaseActionLabelProvider extends LabelProvider
       images.put(ServerActionType.NOTIFICATION, ResourceManager.getImageDescriptor("icons/actions/email.png").createImage());
       images.put(ServerActionType.FORWARD_EVENT, ResourceManager.getImageDescriptor("icons/actions/fwd_event.png").createImage());
       images.put(ServerActionType.NXSL_SCRIPT, ResourceManager.getImageDescriptor("icons/actions/exec_script.gif").createImage());
+   }
+   
+   /**
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      for(Image img : images.values())
+         img.dispose();
+      super.dispose();
    }
 
    /**
