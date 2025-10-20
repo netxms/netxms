@@ -211,5 +211,29 @@
             <build.finalName>${project.artifactId}</build.finalName>
          </properties>
       </profile>
+      <profile>
+         <id>central</id>
+         <distributionManagement>
+            <repository>
+               <id>central</id>
+               <url>https://central.sonatype.com/api/v1/publisher</url>
+            </repository>
+         </distributionManagement>
+         <build>
+            <plugins>
+               <plugin>
+                  <groupId>org.sonatype.central</groupId>
+                  <artifactId>central-publishing-maven-plugin</artifactId>
+                  <version>0.9.0</version>
+                  <extensions>true</extensions>
+                  <configuration>
+                     <publishingServerId>central</publishingServerId>
+                     <autoPublish>false</autoPublish>
+                     <waitUntil>published</waitUntil>
+                  </configuration>
+               </plugin>
+            </plugins>
+         </build>
+      </profile>
    </profiles>
 </project>

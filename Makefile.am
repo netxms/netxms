@@ -15,3 +15,7 @@ SUBDIRS += @TOP_LEVEL_MODULES@
 
 install-exec-hook:
 	if test "x@BUILD_SDK@" = "xyes"; then mkdir -p $(DESTDIR)$(includedir); cp config.h $(DESTDIR)$(includedir); mkdir -p $(DESTDIR)$(pkgdatadir)/sdk; cp libtool $(DESTDIR)$(pkgdatadir)/sdk; cp config/install-sh $(DESTDIR)$(pkgdatadir)/sdk; fi
+
+upload-jars-to-central:
+	mvn -f src/java-common/netxms-base/pom.xml deploy -Ppublish,central
+	mvn -f src/client/java/netxms-client/pom.xml deploy -Ppublish,central
