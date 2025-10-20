@@ -1,5 +1,0 @@
-Eclipse addons required for NetXMS development:
-
-* NetXMS Zest fork: http://www.netxms.org/eclipse/zest-rcp
-* Babel Project: https://download.eclipse.org/technology/babel/update-site/R0.19.2/2021-12/
-	Required locales: arabic, czech, french, german, hebrew, russian, portuguese (Brazil), spanish
