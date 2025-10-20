@@ -24,6 +24,7 @@
 #include <nxlibcurl.h>
 #include <netxms-version.h>
 #include <iris.h>
+#include <unordered_map>
 
 #define DEBUG_TAG _T("llm.iris")
 
