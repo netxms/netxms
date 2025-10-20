@@ -2377,6 +2377,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    {
       value = node->getHardwareComponentsForNXSL(vm);
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("hasServiceManager"))
+   {
+      value = vm->createValue(is_bit_set(node->getCapabilities(), NC_HAS_SERVICE_MANAGER));
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("hasWinPDH"))
    {
       value = vm->createValue(is_bit_set(node->getCapabilities(), NC_HAS_WINPDH));

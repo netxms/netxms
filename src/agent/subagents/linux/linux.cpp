@@ -419,6 +419,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.OS.Version"), H_OSInfo, _T("V"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_VERSION },
 
    { _T("System.ProcessCount"), H_SystemProcessCount, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_PROCESSCOUNT },
+   { _T("System.ServiceState(*)"), H_ServiceState, nullptr, DCI_DT_INT, DCIDESC_SYSTEM_SERVICESTATE },
    { _T("System.ThreadCount"), H_ThreadCount, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_THREADCOUNT },
 
    { _T("System.Uname"), H_Uname, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
@@ -445,7 +446,8 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
    { _T("System.IO.LogicalDevices"), H_IoLogicalDevices, nullptr },
    { _T("System.PowerZones"), H_PowerZoneList, nullptr },
    { _T("System.Processes"), H_ProcessList, _T("2") },
-   { _T("System.ProcessList"), H_ProcessList, _T("1") }
+   { _T("System.ProcessList"), H_ProcessList, _T("1") },
+   { _T("System.Services"), H_ServiceList, nullptr }
 };
 
 /**
@@ -466,7 +468,8 @@ static NETXMS_SUBAGENT_TABLE m_tables[] =
    { _T("System.ActiveUserSessions"), H_UserSessionTable, nullptr, _T("ID"), DCTDESC_SYSTEM_ACTIVE_USER_SESSIONS },
    { _T("System.InstalledProducts"), H_InstalledProducts, nullptr, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS },
    { _T("System.OpenFiles"), H_OpenFilesTable, nullptr, _T("PID,HANDLE"), DCTDESC_SYSTEM_OPEN_FILES },
-   { _T("System.Processes"), H_ProcessTable, nullptr, _T("PID"), DCTDESC_SYSTEM_PROCESSES }
+   { _T("System.Processes"), H_ProcessTable, nullptr, _T("PID"), DCTDESC_SYSTEM_PROCESSES },
+   { _T("System.Services"), H_ServiceTable, nullptr, _T("NAME"), _T("systemd services") }
 };
 
 /**
@@ -474,6 +477,10 @@ static NETXMS_SUBAGENT_TABLE m_tables[] =
  */
 static NETXMS_SUBAGENT_ACTION m_actions[] =
 {
+   { _T("Service.Reload"), H_ServiceControl, _T("L"), _T("Reload service") },
+   { _T("Service.Restart"), H_ServiceControl, _T("R"), _T("Restart service") },
+   { _T("Service.Start"), H_ServiceControl, _T("S"), _T("Start service") },
+   { _T("Service.Stop"), H_ServiceControl, _T("T"), _T("Stop service") },
    { _T("System.HardRestart"), H_HardShutdown, _T("R"), _T("Restart system (hard reset)") },
    { _T("System.HardShutdown"), H_HardShutdown, _T("S"), _T("Shutdown system (hard shutdown/power off)") },
    { _T("System.Restart"), H_SoftShutdown, _T("R"), _T("Restart system") },

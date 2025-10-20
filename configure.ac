@@ -239,6 +239,7 @@ LIBNXAGENT_LIBS=""
 LIBNXSRV_LIBS=""
 JAR_BUILD="yes"
 RELEASE_BUILD="no"
+SYSTEMD_LIBS=""
 
 
 #--------------------------------------------------------------------
@@ -2706,6 +2707,7 @@ if test "x$SYSTEMD_SUPPORT" = "xyes"; then
 	if test "x$HAVE_SDBUS" = "xyes"; then
 		AC_DEFINE(HAVE_SDBUS, 1, Define to 1 if you have Systemd SD-Bus libraries and headers)
 		AGENT_LIBS="$AGENT_LIBS -lsystemd"
+		SYSTEMD_LIBS="-lsystemd"
 	fi
 	AC_DEFINE(WITH_SYSTEMD, 1, Define to 1 to enable systemd support)
 fi
@@ -4743,6 +4745,7 @@ AC_SUBST(SQLFLAGS)
 AC_SUBST(STATIC_SUBAGENT_LIST)
 AC_SUBST(SUBAGENT_DIRS)
 AC_SUBST(SUBAGENT_LIBS)
+AC_SUBST(SYSTEMD_LIBS)
 AC_SUBST(TEST_MODULES)
 AC_SUBST(TOOLS)
 AC_SUBST(TOP_LEVEL_MODULES)

@@ -5469,6 +5469,40 @@ bool Node::confPollAgent()
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): AgentConnection::getSupportedParameters() failed: rcc=%u"), m_name, rcc);
       }
 
+      // Check for service manager support
+      StringList *services;
+      rcc = pAgentConn->getList(L"System.Services", &services);
+      if (rcc == ERR_SUCCESS)
+      {
+         delete services;
+
+         lockProperties();
+         if (!(m_capabilities & NC_HAS_SERVICE_MANAGER))
+         {
+            m_capabilities |= NC_HAS_SERVICE_MANAGER;
+            hasChanges = true;
+         }
+         unlockProperties();
+
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): service manager interface is supported by agent"), m_name);
+      }
+      else if (rcc == ERR_UNKNOWN_METRIC)
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): service manager interface is not supported by agent"), m_name);
+
+         lockProperties();
+         if (m_capabilities & NC_HAS_SERVICE_MANAGER)
+         {
+            m_capabilities &= ~NC_HAS_SERVICE_MANAGER;
+            hasChanges = true;
+         }
+         unlockProperties();
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): AgentConnection::getList(\"System.Services\") failed: rcc=%u"), m_name, rcc);
+      }
+
       // Get supported Windows Performance Counters
       if (!_tcsncmp(m_platformName, _T("windows-"), 8) && (!(m_flags & NF_DISABLE_PERF_COUNT)) &&
           !ConfigReadBoolean(_T("Objects.Nodes.ReadWinPerfCountersOnDemand"), true))

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
@@ -89,7 +88,7 @@ public class ServicesView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && (context instanceof Node) && ((Node)context).hasAgent() && ((Node)context).getPlatformName().startsWith("windows-");
+      return (context != null) && (context instanceof Node) && ((Node)context).hasAgent() && ((Node)context).hasServiceManager();
    }
 
    /**
@@ -202,12 +201,7 @@ public class ServicesView extends ObjectView
    {
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager manager)
-         {
-            fillContextMenu(manager);
-         }
-      });
+      menuMgr.addMenuListener((m) -> fillContextMenu(m));
 
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
       viewer.getControl().setMenu(menu);
@@ -220,15 +214,18 @@ public class ServicesView extends ObjectView
     */
    protected void fillContextMenu(IMenuManager manager)
    {
-      MenuManager startTypeMenu = new MenuManager("&Change start type");
-      startTypeMenu.add(actionSetAutoStart);
-      startTypeMenu.add(actionSetManualStart);
-      startTypeMenu.add(actionDisable);
-
       manager.add(actionStart);
       manager.add(actionStop);
-      manager.add(new Separator());
-      manager.add(startTypeMenu);
+
+      if (((Node)getObject()).getPlatformName().startsWith("windows-"))
+      {
+         MenuManager startTypeMenu = new MenuManager("&Change start type");
+         startTypeMenu.add(actionSetAutoStart);
+         startTypeMenu.add(actionSetManualStart);
+         startTypeMenu.add(actionDisable);
+         manager.add(new Separator());
+         manager.add(startTypeMenu);
+      }
    }
 
    /**
@@ -269,27 +266,17 @@ public class ServicesView extends ObjectView
                services[i] = service;
             }
 
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  if (!viewer.getControl().isDisposed())
-                     viewer.setInput(services);
-                  clearMessages();
-               }
+            runInUIThread(() -> {
+               if (!viewer.getControl().isDisposed())
+                  viewer.setInput(services);
+               clearMessages();
             });
          }
 
          @Override
          protected void jobFailureHandler(Exception e)
          {
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  viewer.setInput(new Object[0]);
-               }
-            });
+            runInUIThread(() -> viewer.setInput(new Object[0]));
          }
 
          @Override
@@ -322,13 +309,7 @@ public class ServicesView extends ObjectView
          {
             for(String s : services)
                session.executeAction(nodeId, action, new String[] { s });
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  refresh();
-               }
-            });
+            runInUIThread(() -> refresh());
          }
 
          @Override

@@ -227,6 +227,7 @@
 #define NC_IS_VNC                 _ULL(0x0080000000)  /* Node supports VNC connection from server or zone proxy */
 #define NC_IS_LOCAL_VNC           _ULL(0x0100000000)  /* Node supports VNC connection via local agent */
 #define NC_REGISTERED_FOR_BACKUP  _ULL(0x0200000000)  /* Node is registered for device configuration backup */
+#define NC_HAS_SERVICE_MANAGER    _ULL(0x0400000000)  /* Node has service manager accessible via NetXMS agent */
 
 /**
  * Node flags

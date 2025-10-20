@@ -92,6 +92,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public static final long NC_IS_VNC                 = 0x0080000000L;
    public static final long NC_IS_LOCAL_VNC           = 0x0100000000L;
    public static final long NC_REGISTERED_FOR_BACKUP  = 0x0200000000L;
+   public static final long NC_HAS_SERVICE_MANAGER    = 0x0400000000L;
 
 	// Node flags
    public static final int NF_DISABLE_SMCLP_PROPERTIES  = 0x00004000;
@@ -763,9 +764,10 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	}
 
 	/**
-	 * 
-	 * @return true if node supports spanning tree MIB
-	 */
+    * Check if node supports spanning tree MIB
+    * 
+    * @return true if node supports spanning tree MIB
+    */
 	public boolean isSpanningTreeSupported()
 	{
 		return (capabilities & NC_IS_STP) != 0;
@@ -818,6 +820,16 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	{
 		return (capabilities & NC_HAS_AGENT_IFXCOUNTERS) != 0;
 	}
+
+   /**
+    * Check if node has service manager accessible via agent
+    * 
+    * @return true if node has service manager accessible via agent
+    */
+   public boolean hasServiceManager()
+   {
+      return (capabilities & NC_HAS_SERVICE_MANAGER) != 0;
+   }
 
    /**
     * Check for bridge capabilities flag

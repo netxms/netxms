@@ -244,6 +244,11 @@ LONG H_UserSessionTable(const TCHAR *, const TCHAR *, Table *, AbstractCommSessi
 LONG H_SysMsgQueue(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_HardwareSystemInfo(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
 
+LONG H_ServiceList(const TCHAR*, const TCHAR*, StringList*, AbstractCommSession*);
+LONG H_ServiceTable(const TCHAR*, const TCHAR*, Table*, AbstractCommSession*);
+LONG H_ServiceState(const TCHAR*, const TCHAR*, TCHAR*, AbstractCommSession*);
+uint32_t H_ServiceControl(const shared_ptr<ActionExecutionContext>& context);
+
 uint32_t H_UninstallProduct(const shared_ptr<ActionExecutionContext>& context);
 
 void StartCpuUsageCollector();
