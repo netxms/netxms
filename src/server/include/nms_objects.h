@@ -5191,6 +5191,10 @@ public:
    virtual json_t *toJson() override;
 };
 
+#ifdef _WIN32
+template class NXCORE_TEMPLATE_EXPORTABLE std::map<uint32_t, uint32_t>;
+#endif
+
 /**
  * Dashboard object
  */
