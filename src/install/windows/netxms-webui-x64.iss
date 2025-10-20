@@ -70,7 +70,6 @@ Source: "web\jetty-base\*"; DestDir: "{app}\jetty-base"; Flags: onlyifdoesntexis
 Source: "web\launcher.conf"; DestDir: "{app}\etc"; Flags: onlyifdoesntexist; Components: webui
 Source: "web\lib\*"; DestDir: "{app}\jetty-base\lib"; Flags: ignoreversion recursesubdirs; Components: webui
 Source: "web\nxmc.war"; DestDir: "{app}\jetty-base\webapps"; Flags: ignoreversion; Components: webui
-Source: "web\nxmc-legacy.war"; DestDir: "{app}\jetty-base\webapps"; Flags: ignoreversion; Components: webui
 Source: "web\nxmc-{#VersionString}-standalone.jar"; DestDir: "{app}\jetty-base\webapps\ROOT"; Flags: ignoreversion; Components: webui
 Source: "web\readme.txt"; DestDir: "{app}"; Flags: ignoreversion; Components: webui
 ; Java Runtime
