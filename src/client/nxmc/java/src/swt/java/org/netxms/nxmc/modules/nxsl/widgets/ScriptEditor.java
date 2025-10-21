@@ -39,6 +39,7 @@ import org.eclipse.swt.custom.LineStyleListener;
 import org.eclipse.swt.custom.ST;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.custom.VerifyKeyListener;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.TransferData;
@@ -55,6 +56,7 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GlyphMetrics;
 import org.eclipse.swt.graphics.Image;
@@ -230,6 +232,29 @@ public class ScriptEditor extends CompositeWithMessageArea
 
       editor.setFont(JFaceResources.getTextFont());
       editor.setWordWrap(false);
+
+      editor.addVerifyKeyListener(new VerifyKeyListener() {
+         public void verifyKey(VerifyEvent e)
+         {
+            if (e.keyCode == SWT.TAB)
+            {
+               if ((e.stateMask & SWT.SHIFT) != 0)
+               {
+                  e.doit = onShiftTabPressed();
+               }
+               else
+               {
+                  e.doit = onTabPressed();
+               }
+            }
+         }
+      });
+      editor.addTraverseListener((e) -> {
+         if (e.detail == SWT.TRAVERSE_TAB_PREVIOUS)
+         {
+            e.doit = false; // allows verifyKey listener to fire
+         }
+      });
 
       if (showCompileButton)
       {
@@ -433,6 +458,113 @@ public class ScriptEditor extends CompositeWithMessageArea
       }
 
       e.styles = styles.toArray(new StyleRange[styles.size()]);
+   }
+
+   /**
+    * Handle Tab press
+    *
+    * @return true to continue with default processing, false to cancel it
+    */
+   private boolean onTabPressed()
+   {
+      int length = editor.getSelectionCount();
+      if (length == 0)
+         return true;
+
+      Point range = editor.getSelectionRange();
+      int start = range.x;
+
+      String txt = editor.getText();
+      while(start > 0 && txt.charAt(start - 1) != '\n')
+      {
+         start--;
+         length++;
+      }
+
+      int replaceLength = length;
+      editor.setSelectionRange(start, length);
+      editor.showSelection();
+
+      String selectedText = editor.getSelectionText();
+      String[] lines = selectedText.split("\n");
+      StringBuilder newText = new StringBuilder();
+
+      for(int x = 0; x < lines.length; x++)
+      {
+         if (x > 0)
+         {
+            newText.append('\n');
+         }
+         newText.append('\t');
+         length++;
+         newText.append(lines[x]);
+      }
+      newText.append('\n');
+
+      editor.replaceTextRange(start, replaceLength, newText.toString());
+      editor.setSelectionRange(start, length);
+      editor.showSelection();
+
+      return false;
+   }
+
+   /**
+    * Handle Shift+Tab press
+    *
+    * @return true to continue with default processing, false to cancel it
+    */
+   private boolean onShiftTabPressed()
+   {
+      int length = editor.getSelectionCount();
+      if (length == 0)
+         return true;
+
+      Point range = editor.getSelectionRange();
+      int start = range.x;
+
+      String txt = editor.getText();
+      while(start > 0 && txt.charAt(start - 1) != '\n')
+      {
+         --start;
+         ++length;
+      }
+
+      int replaceLength = length;
+      editor.setSelectionRange(start, length);
+      editor.showSelection();
+
+      String selectedText = editor.getSelectionText();
+      String[] lines = selectedText.split("\n");
+      StringBuilder newText = new StringBuilder();
+
+      for(int x = 0; x < lines.length; x++)
+      {
+         if (x > 0)
+         {
+            newText.append('\n');
+         }
+         if (lines[x].charAt(0) == '\t')
+         {
+            newText.append(lines[x].substring(1));
+            length--;
+         }
+         else if (lines[x].startsWith(" "))
+         {
+            newText.append(lines[x].substring(1));
+            length--;
+         }
+         else
+         {
+            newText.append(lines[x]);
+         }
+      }
+      newText.append('\n');
+
+      editor.replaceTextRange(start, replaceLength, newText.toString());
+      editor.setSelectionRange(start, length);
+      editor.showSelection();
+
+      return false;
    }
 
    /**
