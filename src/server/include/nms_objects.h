@@ -3462,7 +3462,7 @@ template class NXCORE_TEMPLATE_EXPORTABLE StructArray<OSPFArea>;
 template class NXCORE_TEMPLATE_EXPORTABLE StructArray<OSPFNeighbor>;
 #endif
 
-class ObjLink;
+struct ObjLink;
 
 /**
  * Status of device configuration backup job
@@ -5191,10 +5191,6 @@ public:
    virtual json_t *toJson() override;
 };
 
-#ifdef _WIN32
-template class NXCORE_TEMPLATE_EXPORTABLE std::map<uint32_t, uint32_t>;
-#endif
-
 /**
  * Dashboard object
  */
@@ -5203,10 +5199,18 @@ class NXCORE_EXPORTABLE DashboardTemplate : public DashboardBase
 protected:
    typedef DashboardBase super;
 
-protected:
+private:
+#ifdef _WIN32
+#pragma warning( push )
+#pragma warning( disable: 4251 )
+#endif
    std::map<uint32_t, uint32_t> m_instanceDashboards;
+#ifdef _WIN32
+#pragma warning( pop )
+#endif
    SharedString m_nameTemplate;
 
+protected:
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
 
