@@ -45,7 +45,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DashboardBase;
 import org.netxms.nxmc.DownloadServiceHandler;
 import org.netxms.nxmc.base.jobs.Job;
