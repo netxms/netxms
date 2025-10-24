@@ -316,7 +316,7 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
                time_t t = msg->getFieldAsTime(VID_TIMESTAMP);
                if (t == 0)
 			         t = time(nullptr);
-			      target->processNewDCValue(dci, t, value, shared_ptr<Table>());
+			      target->processNewDCValue(dci, t, value, shared_ptr<Table>(), true);
                if (t > dci->getLastPollTime())
 			         dci->setLastPollTime(t);
 		      }
@@ -706,13 +706,13 @@ uint32_t AgentConnectionEx::processCollectedData(NXCPMessage *msg)
       shared_ptr<NetObj> object = FindObjectByGUID(targetId, -1);
       if (object == nullptr)
       {
-         TCHAR buffer[64];
+         wchar_t buffer[64];
          debugPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find target node with GUID %s"), targetId.toString(buffer));
          return ERR_INTERNAL_ERROR;
       }
       if (!object->isDataCollectionTarget())
       {
-         TCHAR buffer[64];
+         wchar_t buffer[64];
          debugPrintf(5, _T("AgentConnectionEx::processCollectedData: object with GUID %s is not a data collection target"), targetId.toString(buffer));
          return ERR_INTERNAL_ERROR;
       }
@@ -727,7 +727,7 @@ uint32_t AgentConnectionEx::processCollectedData(NXCPMessage *msg)
    shared_ptr<DCObject> dcObject = target->getDCObjectById(dciId, 0);
    if (dcObject == nullptr)
    {
-      debugPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find DCI with ID %d on object %s [%d]"),
+      debugPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find DCI with ID %d on object %s [%u]"),
                   dciId, target->getName(), target->getId());
       return ERR_INTERNAL_ERROR;
    }
@@ -735,7 +735,7 @@ uint32_t AgentConnectionEx::processCollectedData(NXCPMessage *msg)
    int type = msg->getFieldAsInt16(VID_DCOBJECT_TYPE);
    if ((dcObject->getType() != type) || (dcObject->getDataSource() != origin) || (dcObject->getAgentCacheMode() != AGENT_CACHE_ON))
    {
-      debugPrintf(5, _T("AgentConnectionEx::processCollectedData: DCI %s [%d] on object %s [%d] configuration mismatch"),
+      debugPrintf(5, _T("AgentConnectionEx::processCollectedData: DCI %s [%u] on object %s [%u] configuration mismatch"),
                   dcObject->getName().cstr(), dciId, target->getName(), target->getId());
       return ERR_INTERNAL_ERROR;
    }
@@ -763,14 +763,14 @@ uint32_t AgentConnectionEx::processCollectedData(NXCPMessage *msg)
                static_cast<DCTable*>(dcObject.get())->updateResultColumns(tableValue);
                break;
             default:
-               debugPrintf(5, _T("AgentConnectionEx::processCollectedData: invalid type %d of DCI %s [%d] on object %s [%d]"),
+               debugPrintf(5, _T("AgentConnectionEx::processCollectedData: invalid type %d of DCI %s [%u] on object %s [%u]"),
                            type, dcObject->getName().cstr(), dciId, target->getName(), target->getId());
                return ERR_INTERNAL_ERROR;
          }
 
          if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
             dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
-         success = target->processNewDCValue(dcObject, t, itemValue, tableValue);
+         success = target->processNewDCValue(dcObject, t, itemValue, tableValue, false);
          if (t > dcObject->getLastPollTime())
             dcObject->setLastPollTime(t);
          break;
@@ -838,7 +838,7 @@ uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPM
    int64_t startTime = GetCurrentTimeMs();
    for(int i = 0; i < count; i++, fieldId += 10)
    {
-      uint32_t elapsed = static_cast<UINT32>(GetCurrentTimeMs() - startTime);
+      uint32_t elapsed = static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
       if ((agentTimeout > 0) && (elapsed >= agentTimeout)) // agent timeout 0 means that agent will not understand processing notifications
       {
          NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId(), getProtocolVersion());
@@ -869,7 +869,7 @@ uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPM
          shared_ptr<NetObj> object = FindObjectByGUID(targetId, -1);
          if (object == nullptr)
          {
-            TCHAR buffer[64];
+            wchar_t buffer[64];
             debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: cannot find target object with GUID %s (element %d)"),
                         targetId.toString(buffer), i);
             status[i] = BULK_DATA_REC_FAILURE;
@@ -877,7 +877,7 @@ uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPM
          }
          if (!object->isDataCollectionTarget())
          {
-            TCHAR buffer[64];
+            wchar_t buffer[64];
             debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: object with GUID %s (element %d) is not a data collection target"),
                         targetId.toString(buffer), i);
             status[i] = BULK_DATA_REC_FAILURE;
@@ -921,7 +921,7 @@ uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPM
          case ERR_SUCCESS:
             if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
                dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
-            success = target->processNewDCValue(dcObject, t, value, tableValue);
+            success = target->processNewDCValue(dcObject, t, value, tableValue, false);
             if (t > dcObject->getLastPollTime())
                dcObject->setLastPollTime(t);
             break;

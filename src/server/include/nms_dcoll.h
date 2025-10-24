@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -587,7 +587,7 @@ public:
 
 	uint64_t getCacheMemoryUsage() const;
 
-   bool processNewValue(time_t timestamp, const wchar_t *value, bool *updateStatus);
+   bool processNewValue(time_t timestamp, const wchar_t *value, bool *updateStatus, bool allowPastDataPoints);
 
    virtual void processNewError(bool noInstance, time_t now) override;
    virtual void saveStateBeforeMaintenance() override;
@@ -863,7 +863,7 @@ public:
    virtual void createExportRecord(TextFileWriter &xml) const override;
    virtual json_t *toJson() override;
 
-   bool processNewValue(time_t nTimeStamp, const shared_ptr<Table>& value, bool *updateStatus);
+   bool processNewValue(time_t timestamp, const shared_ptr<Table>& value, bool *updateStatus, bool allowPastDataPoints);
 
    virtual void fillLastValueSummaryMessage(NXCPMessage *bsg, uint32_t baseId,const TCHAR *column = nullptr, const TCHAR *instance = nullptr) override;
    virtual void fillLastValueMessage(NXCPMessage *msg) override;

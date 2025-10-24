@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -630,7 +630,7 @@ void MobileDeviceSession::pushData(NXCPMessage *request)
                MobileDataPushElement *v = values.get(i);
 			      if (_tcslen(v->value) >= MAX_DCI_STRING_VALUE)
 				      v->value[MAX_DCI_STRING_VALUE - 1] = 0;
-			      device->processNewDCValue(v->dci, t, v->value, shared_ptr<Table>());
+			      device->processNewDCValue(v->dci, t, v->value, shared_ptr<Table>(), false);
 			      v->dci->setLastPollTime(t);
             }
             msg.setField(VID_RCC, RCC_SUCCESS);

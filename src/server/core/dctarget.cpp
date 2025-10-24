@@ -960,12 +960,12 @@ uint32_t DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, uint32_t ba
 /**
  * Process new DCI value
  */
-bool DataCollectionTarget::processNewDCValue(const shared_ptr<DCObject>& dcObject, time_t currTime, const wchar_t *itemValue, const shared_ptr<Table>& tableValue)
+bool DataCollectionTarget::processNewDCValue(const shared_ptr<DCObject>& dcObject, time_t currTime, const wchar_t *itemValue, const shared_ptr<Table>& tableValue, bool allowPastDataPoints)
 {
    bool updateStatus;
 	bool success = (dcObject->getType() == DCO_TYPE_ITEM) ?
-	         static_cast<DCItem&>(*dcObject).processNewValue(currTime, itemValue, &updateStatus) :
-	         static_cast<DCTable&>(*dcObject).processNewValue(currTime, tableValue, &updateStatus);
+	         static_cast<DCItem&>(*dcObject).processNewValue(currTime, itemValue, &updateStatus, allowPastDataPoints) :
+	         static_cast<DCTable&>(*dcObject).processNewValue(currTime, tableValue, &updateStatus, allowPastDataPoints);
 	if (!success)
 	{
       // value processing failed, convert to data collection error
