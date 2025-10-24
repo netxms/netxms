@@ -58,6 +58,16 @@ static void DelayedTaskDelete(void *taskId)
    DeleteScheduledTask(CAST_FROM_POINTER(taskId, uint32_t), 0, SYSTEM_ACCESS_FULL);
 }
 
+/**
+ * Removes scheduled task from database by id
+ */
+static void DeleteScheduledTaskFromDB(uint64_t id)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   ExecuteQueryOnObject(hdb, id, L"DELETE FROM scheduled_tasks WHERE id=?");
+   DBConnectionPoolReleaseConnection(hdb);
+   NotifyClientSessions(NX_NOTIFY_SCHEDULE_UPDATE, 0);
+}
 
 /**
  * Callback definition for missing task handlers
@@ -295,6 +305,7 @@ void ScheduledTask::run(SchedulerCallback *callback)
             if (isSystemTask)
             {
                s_oneTimeTasks.remove(i);
+               DeleteScheduledTaskFromDB(id);
             }
             else
             {
@@ -654,17 +665,6 @@ uint32_t NXCORE_EXPORTABLE UpdateOneTimeScheduledTask(uint64_t id, const TCHAR *
    if (found)
       s_wakeupCondition.set();
    return rcc;
-}
-
-/**
- * Removes scheduled task from database by id
- */
-static void DeleteScheduledTaskFromDB(uint64_t id)
-{
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   ExecuteQueryOnObject(hdb, id, _T("DELETE FROM scheduled_tasks WHERE id=?"));
-	DBConnectionPoolReleaseConnection(hdb);
-	NotifyClientSessions(NX_NOTIFY_SCHEDULE_UPDATE,0);
 }
 
 /**
@@ -1303,7 +1303,7 @@ void InitializeTaskScheduler()
       for(int i = 0; i < count; i++)
       {
          ScheduledTask *task = new ScheduledTask(hResult, i);
-         if (!_tcscmp(task->getSchedule(), _T("")))
+         if (task->getSchedule().isEmpty())
          {
             nxlog_debug_tag(DEBUG_TAG, 7, _T("InitializeTaskScheduler: added one time task [%u] at ") INT64_FMT,
                      task->getId(), static_cast<int64_t>(task->getScheduledExecutionTime()));
