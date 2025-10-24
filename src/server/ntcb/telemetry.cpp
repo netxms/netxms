@@ -894,7 +894,7 @@ void TelemetryRecord::updateDevice()
                   (dci == nullptr) ? _T("does not exist") : _T("is of incompatible type"));
          continue;
       }
-      m_device->processNewDCValue(dci, m_timestamp, data->value, tableValue);
+      m_device->processNewDCValue(dci, m_timestamp, data->value, tableValue, false);
    }
 }
 

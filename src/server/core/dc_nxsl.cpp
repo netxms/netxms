@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -621,7 +621,7 @@ static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
    if ((dci != nullptr) && (dci->getDataSource() == DS_PUSH_AGENT) && (dci->getType() == DCO_TYPE_ITEM))
    {
       time_t t = time(nullptr);
-      success = node->processNewDCValue(dci, t, argv[2]->getValueAsCString(), shared_ptr<Table>());
+      success = node->processNewDCValue(dci, t, argv[2]->getValueAsCString(), shared_ptr<Table>(), false);
       if (success)
          dci->setLastPollTime(t);
    }

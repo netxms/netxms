@@ -707,10 +707,12 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
 /**
  * Process new collected value. Should return true on success.
  * If returns false, current poll result will be converted into data collection error.
+ * If allowPastDataPoints is false, data points with timestamp older than last stored one
+ * will be rejected.
  *
  * @return true on success
  */
-bool DCItem::processNewValue(time_t timestamp, const wchar_t *originalValue, bool *updateStatus)
+bool DCItem::processNewValue(time_t timestamp, const wchar_t *originalValue, bool *updateStatus, bool allowPastDataPoints)
 {
    ItemValue rawValue, *pValue;
 
@@ -727,9 +729,9 @@ bool DCItem::processNewValue(time_t timestamp, const wchar_t *originalValue, boo
       return false;
    }
 
-   if (timestamp == m_prevValueTimeStamp)
+   if ((timestamp == m_lastValueTimestamp) || (!allowPastDataPoints && (timestamp < m_lastValueTimestamp)))
    {
-      // Duplicate value, ignore
+      // Duplicate or old value, ignore
       unlock();
       return false;
    }

@@ -10114,7 +10114,7 @@ void ClientSession::pushDCIData(const NXCPMessage& request)
             ClientDataPushElement *e = values.get(i);
 				if (_tcslen(e->value) >= MAX_DCI_STRING_VALUE)
 					e->value[MAX_DCI_STRING_VALUE - 1] = 0;
-				e->dcTarget->processNewDCValue(e->dci, t, e->value, tableValue);
+				e->dcTarget->processNewDCValue(e->dci, t, e->value, tableValue, true);
             if (t > e->dci->getLastPollTime())
 				   e->dci->setLastPollTime(t);
          }

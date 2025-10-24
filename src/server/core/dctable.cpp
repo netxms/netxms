@@ -232,10 +232,12 @@ bool DCTable::deleteEntry(time_t timestamp)
 /**
  * Process new collected value. Should return true on success.
  * If returns false, current poll result will be converted into data collection error.
+ * If allowPastDataPoints is false, data points with timestamp older than last stored one
+ * will be rejected.
  *
  * @return true on success
  */
-bool DCTable::processNewValue(time_t timestamp, const shared_ptr<Table>& value, bool *updateStatus)
+bool DCTable::processNewValue(time_t timestamp, const shared_ptr<Table>& value, bool *updateStatus, bool allowPastDataPoints)
 {
    *updateStatus = false;
    lock();
@@ -249,9 +251,9 @@ bool DCTable::processNewValue(time_t timestamp, const shared_ptr<Table>& value, 
       return false;
    }
 
-   if (timestamp == m_lastValueTimestamp)
+   if ((timestamp == m_lastValueTimestamp) || (!allowPastDataPoints && (timestamp < m_lastValueTimestamp)))
    {
-      // Duplicate value
+      // Duplicate or old value, ignore
       unlock();
       return false;
    }

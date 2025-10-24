@@ -344,7 +344,7 @@ void DataCollector(const shared_ptr<DCObject>& dcObject)
             case DCE_SUCCESS:
                if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
                   dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
-               static_cast<DataCollectionTarget*>(dcObject->getOwner().get())->processNewDCValue(dcObject, currTime, value, table);
+               static_cast<DataCollectionTarget*>(dcObject->getOwner().get())->processNewDCValue(dcObject, currTime, value, table, false);
                break;
             case DCE_COLLECTION_ERROR:
                if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
