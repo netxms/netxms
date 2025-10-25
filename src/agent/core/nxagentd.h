@@ -151,6 +151,7 @@ struct ExternalTableDefinition
 {
    TCHAR *cmdLine;
    TCHAR separator;
+   bool mergeSeparators;
    int instanceColumnCount;
    TCHAR **instanceColumns;
    StringMap columnDataTypes;
@@ -159,6 +160,7 @@ struct ExternalTableDefinition
    {
       cmdLine = nullptr;
       separator = 0;
+      mergeSeparators = false;
       instanceColumnCount = 0;
       instanceColumns = nullptr;
    }
