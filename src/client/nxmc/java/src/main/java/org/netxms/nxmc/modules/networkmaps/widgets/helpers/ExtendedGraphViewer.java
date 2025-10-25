@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -90,7 +90,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ExtendedGraphViewer extends GraphViewer
 {
-	public static final double[] zoomLevels = { 0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00 };
+   public static final double[] zoomLevels = { 0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00 };
 
    private I18n i18n = LocalizationHelper.getI18n(ExtendedGraphViewer.class);
    private View view;
@@ -126,6 +126,8 @@ public class ExtendedGraphViewer extends GraphViewer
    private boolean showMapSize = false;
    private volatile int blockRefresh;
    private Point rightClickLocation = null;
+   private boolean backgroundDragActive = false;
+   private org.eclipse.draw2d.geometry.Point backgroundDragLast = null;
 
 	/**
 	 * @param composite
@@ -164,6 +166,84 @@ public class ExtendedGraphViewer extends GraphViewer
       backgroundFigure = new BackgroundFigure();
       backgroundFigure.setSize(-1, -1);
       backgroundLayer.add(backgroundFigure);
+      backgroundLayer.addMouseMotionListener(new MouseMotionListener() {
+         @Override
+         public void mouseMoved(MouseEvent me)
+         {
+         }
+
+         @Override
+         public void mouseHover(MouseEvent me)
+         {
+         }
+
+         @Override
+         public void mouseExited(MouseEvent me)
+         {
+         }
+
+         @Override
+         public void mouseEntered(MouseEvent me)
+         {
+         }
+
+         @Override
+         public void mouseDragged(MouseEvent me)
+         {
+            if (!backgroundDragActive)
+               return;
+
+            int dx = backgroundDragLast.x - me.x; // movement in figure coordinates
+            int dy = backgroundDragLast.y - me.y;
+            if ((dx == 0) && (dy == 0))
+               return;
+
+            org.eclipse.draw2d.geometry.Point newViewLocation = graph.getViewport().getViewLocation().getCopy().translate(new org.eclipse.draw2d.geometry.Point(dx, dy));
+            if (newViewLocation.x < 0)
+               newViewLocation.x = 0;
+            if (newViewLocation.y < 0)
+               newViewLocation.y = 0;
+
+            Dimension scaledSize = backgroundLayer.getSize();
+            scaledSize.performScale(getZoom());
+            org.eclipse.draw2d.geometry.Rectangle viewportArea = graph.getViewport().getClientArea();
+            if (newViewLocation.x > scaledSize.width - viewportArea.width)
+               newViewLocation.x = scaledSize.width - viewportArea.width;
+            if (newViewLocation.y > scaledSize.height - viewportArea.height)
+               newViewLocation.y = scaledSize.height - viewportArea.height;
+
+            graph.getViewport().setViewLocation(newViewLocation);
+            backgroundDragLast.setLocation(me.x, me.y);
+         }
+      });
+      backgroundLayer.addMouseListener(new MouseListener() {
+         @Override
+         public void mouseReleased(MouseEvent me)
+         {
+            if (me.button != 1)
+               return;
+
+            backgroundDragActive = false;
+            backgroundDragLast = null;
+            graph.setCursor(null);
+         }
+
+         @Override
+         public void mousePressed(MouseEvent me)
+         {
+            if (me.button != 1)
+               return;
+
+            backgroundDragActive = true;
+            backgroundDragLast = new org.eclipse.draw2d.geometry.Point(me.x, me.y);
+            graph.setCursor(graph.getDisplay().getSystemCursor(SWT.CURSOR_SIZEALL));
+         }
+
+         @Override
+         public void mouseDoubleClicked(MouseEvent me)
+         {
+         }
+      });
 
 		decorationLayer = new FreeformLayer();
 		decorationLayer.setOpaque(false);
