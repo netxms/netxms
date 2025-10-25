@@ -139,7 +139,7 @@ LONG H_ExternalList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstr
 void ParseExternalTableData(const ExternalTableDefinition& td, const StringList& data, Table *table)
 {
    int numColumns = 0;
-   TCHAR **columns = SplitString(data.get(0), td.separator, &numColumns);
+   TCHAR **columns = SplitString(data.get(0), td.separator, &numColumns, td.mergeSeparators);
    for(int n = 0; n < numColumns; n++)
    {
       bool instanceColumn = false;
@@ -159,7 +159,7 @@ void ParseExternalTableData(const ExternalTableDefinition& td, const StringList&
    {
       table->addRow();
       int count = 0;
-      TCHAR **values = SplitString(data.get(i), td.separator, &count);
+      TCHAR **values = SplitString(data.get(i), td.separator, &count, td.mergeSeparators);
       for(int n = 0; n < count; n++)
       {
          if (n < numColumns)
@@ -177,7 +177,8 @@ void ParseExternalTableData(const ExternalTableDefinition& td, const StringList&
 LONG H_ExternalTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
    const ExternalTableDefinition *td = reinterpret_cast<const ExternalTableDefinition*>(arg);
-   session->debugPrintf(4, _T("H_ExternalTable called for \"%s\" (separator=0x%04X mode=%c cmd=\"%s\""), cmd, td->separator, td->cmdLine[0], &td->cmdLine[1]);
+   session->debugPrintf(4, _T("H_ExternalTable called for \"%s\" (separator=0x%04X mergeSeparators=%s mode=%c cmd=\"%s\""),
+      cmd, td->separator, BooleanToString(td->mergeSeparators), td->cmdLine[0], &td->cmdLine[1]);
    StringList output;
    LONG status = RunExternal(cmd, td->cmdLine, &output);
    if (status == SYSINFO_RC_SUCCESS)

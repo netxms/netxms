@@ -2438,21 +2438,43 @@ uuid LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsGUIDA(const char *optString, 
 /**
  * Split string
  */
-TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings)
+TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings, bool mergeSeparators)
 {
 	TCHAR **strings;
-
-	*numStrings = NumChars(source, sep) + 1;
-	strings = (TCHAR **)MemAlloc(sizeof(TCHAR *) * (*numStrings));
+	if (mergeSeparators)
+   {
+	   // Count number of non-empty strings
+	   int count = 0;
+	   for(const TCHAR *p = source; *p != 0; p++)
+	   {
+	      if (*p == sep)
+         {
+            count++;
+            while(*(p + 1) == sep)
+               p++;
+         }
+	   }
+	   *numStrings = count + 1;
+   }
+	else
+	{
+	   *numStrings = NumChars(source, sep) + 1;
+	}
+	strings = MemAllocArray<TCHAR*>(*numStrings);
 	for(int n = 0, i = 0; n < *numStrings; n++, i++)
 	{
 		int start = i;
 		while((source[i] != sep) && (source[i] != 0))
 			i++;
 		int len = i - start;
-		strings[n] = (TCHAR *)MemAlloc(sizeof(TCHAR) * (len + 1));
+		strings[n] = MemAllocString(len + 1);
 		memcpy(strings[n], &source[start], len * sizeof(TCHAR));
 		strings[n][len] = 0;
+		if (mergeSeparators)
+      {
+         while(source[i + 1] == sep)
+            i++;
+      }
 	}
 	return strings;
 }

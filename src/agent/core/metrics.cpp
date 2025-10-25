@@ -929,6 +929,7 @@ bool AddExternalTable(TCHAR *config)
 
    ExternalTableDefinition *td = new ExternalTableDefinition();
    td->separator = separator[0];
+   td->mergeSeparators = ExtractNamedOptionValueAsBool(options, _T("mergeSeparators"), false);
    td->cmdLine = MemCopyString(cmdLine);
    td->instanceColumns = SplitString(instanceColumns, _T(','), &td->instanceColumnCount);
    if (ExtractNamedOptionValueAsBool(options, _T("backgroundPolling"), false))
@@ -973,6 +974,8 @@ bool AddExternalTable(ConfigEntry *config)
    }
    td->separator = separator[0];
    MemFree(separator);
+
+   td->mergeSeparators = config->getSubEntryValueAsBoolean(_T("MergeSeparators"), 0, false);
 
    td->cmdLine = MemCopyString(config->getSubEntryValue(_T("Command"), 0, _T("echo no command specified")));
    td->instanceColumns = SplitString(config->getSubEntryValue(_T("InstanceColumns"), 0, _T("")), _T(','), &td->instanceColumnCount);
