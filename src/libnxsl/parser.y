@@ -59,6 +59,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_FSTRING_BEGIN
 %token T_FUNCTION
 %token T_GLOBAL
+%token T_HAS
 %token T_IDIV
 %token T_IF
 %token T_IMPORT
@@ -98,6 +99,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %right ':'
 %left '?'
 %left T_CONCAT
+%left T_HAS
 %left T_OR
 %left T_AND
 %left '|'
@@ -763,6 +765,10 @@ Expression:
 |	Expression T_CONCAT Expression
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_CONCAT);
+}
+|	Expression T_HAS Expression
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_HAS_BITS);
 }
 |	Expression '?'
 {

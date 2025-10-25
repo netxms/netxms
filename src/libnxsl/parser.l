@@ -89,6 +89,7 @@ static inline uint32_t StringToUInt32(const char *s)
 <INITIAL,FEXPR>"foreach"  return T_FOREACH;
 <INITIAL,FEXPR>"function" return T_FUNCTION;
 <INITIAL,FEXPR>"global"   return T_GLOBAL;
+<INITIAL,FEXPR>"has"      return T_HAS;
 <INITIAL,FEXPR>"if"       return T_IF;
 <INITIAL,FEXPR>"ilike"    return T_ILIKE;
 <INITIAL,FEXPR>"imatch"   return T_IMATCH;

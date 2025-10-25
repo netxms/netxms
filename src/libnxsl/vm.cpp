@@ -138,7 +138,8 @@ static int SelectResultType(int dataTypeLeft, int dataTypeRight, int operation)
       {
          if ((operation == OPCODE_REM) || (operation == OPCODE_LSHIFT) ||
              (operation == OPCODE_RSHIFT) || (operation == OPCODE_BIT_AND) ||
-             (operation == OPCODE_BIT_OR) || (operation == OPCODE_BIT_XOR))
+             (operation == OPCODE_BIT_OR) || (operation == OPCODE_BIT_XOR) ||
+             (operation == OPCODE_HAS_BITS))
          {
             nType = NXSL_DT_NULL;   // Error
          }
@@ -1634,6 +1635,7 @@ void NXSL_VM::execute()
       case OPCODE_GE:
       case OPCODE_AND:
       case OPCODE_OR:
+      case OPCODE_HAS_BITS:
       case OPCODE_BIT_AND:
       case OPCODE_BIT_OR:
       case OPCODE_BIT_XOR:
@@ -2401,6 +2403,15 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                      case OPCODE_RSHIFT:
                         pRes = getNonSharedValue(pVal1);
                         pRes->rshift(pVal2->getValueAsInt32());
+                        pVal1 = nullptr;
+                        break;
+                     case OPCODE_HAS_BITS:
+                        pRes = getNonSharedValue(pVal1);
+                        pRes->bitAnd(pVal2);
+                        if (pRes->EQ(pVal2))
+                           pRes->convert(NXSL_DT_BOOLEAN);
+                        else
+                           pRes->set(false);
                         pVal1 = nullptr;
                         break;
                      case OPCODE_BIT_AND:

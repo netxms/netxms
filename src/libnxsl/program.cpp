@@ -59,7 +59,7 @@ static const char *s_nxslCommandMnemonic[] =
    "CASELT", "CASEGT", "CASEGT", "PUSH",
    "PUSH", "PUSH", "PUSH", "PUSH", "PUSH",
    "PUSH", "PUSH", "SPREAD", "ARGV", "APPEND",
-   "FSTR", "CALL", "CALLS"
+   "FSTR", "CALL", "CALLS", "HASBITS"
 };
 
 /**
