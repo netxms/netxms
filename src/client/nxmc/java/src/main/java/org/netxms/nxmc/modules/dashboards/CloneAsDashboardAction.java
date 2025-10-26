@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,7 +53,7 @@ public class CloneAsDashboardAction extends ObjectAction<DashboardBase>
     */
    public CloneAsDashboardAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(DashboardBase.class, LocalizationHelper.getI18n(CloneAsDashboardAction.class).tr("&Clone as &dashboard"), viewPlacement, selectionProvider);
+      super(DashboardBase.class, LocalizationHelper.getI18n(CloneAsDashboardAction.class).tr("Clone as &dashboard..."), viewPlacement, selectionProvider);
    }
 
    /**
@@ -68,15 +68,14 @@ public class CloneAsDashboardAction extends ObjectAction<DashboardBase>
          if (!MessageDialogHelper.openQuestion(getShell(), i18n.tr("Warning"), 
                i18n.tr("This instance of a template dashboard will be cloned as a regular Dashboard. Continue?")))
             return;
-      
+
       final long parentId = sourceObject.getParentIdList()[0];
 
-      final CreateObjectDialog dlg = new CreateObjectDialog(getShell(), i18n.tr("Clone dashboard"));
+      final CreateObjectDialog dlg = new CreateObjectDialog(getShell(), i18n.tr("Dashboard"));
       if (dlg.open() == Window.OK)
       {
          final NXCSession session = Registry.getSession();
-         new Job(i18n.tr("Cloning dashboard"), null, getMessageArea())
-         {
+         new Job(i18n.tr("Cloning dashboard"), null, getMessageArea()) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
@@ -97,7 +96,7 @@ public class CloneAsDashboardAction extends ObjectAction<DashboardBase>
             @Override
             protected String getErrorMessage()
             {
-               return i18n.tr("Failed to clone {0} dashboard", dlg.getObjectName());
+               return i18n.tr("Cannot clone dashboard {0}", dlg.getObjectName());
             }
          }.start();
       }

@@ -882,7 +882,17 @@ public abstract class AbstractObject
 	}
 
    /**
-    * Get  list of associated dashboards
+    * Get list of associated dashboard identifiers
+    * 
+    * @return set of the dashboard object identifiers
+    */
+   public Set<Long> getDashboardIdentifiers()
+   {
+      return new HashSet<Long>(dashboards);
+   }
+
+   /**
+    * Get list of associated dashboards
     * 
     * @param accessibleOnly if set to true, only accessible dashboards will be returned
     * @return list of the dashboard objects

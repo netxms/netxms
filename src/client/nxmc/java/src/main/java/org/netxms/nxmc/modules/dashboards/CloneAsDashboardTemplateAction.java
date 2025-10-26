@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ public class CloneAsDashboardTemplateAction extends ObjectAction<DashboardBase>
     */
    public CloneAsDashboardTemplateAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(DashboardBase.class, LocalizationHelper.getI18n(CloneAsDashboardTemplateAction.class).tr("&Clone as dashboard &template"), viewPlacement, selectionProvider);
+      super(DashboardBase.class, LocalizationHelper.getI18n(CloneAsDashboardTemplateAction.class).tr("Clone as dashboard &template..."), viewPlacement, selectionProvider);
    }
 
    /**
@@ -64,7 +64,7 @@ public class CloneAsDashboardTemplateAction extends ObjectAction<DashboardBase>
       final DashboardBase sourceObject = objects.get(0);      
       final long parentId = sourceObject.getParentIdList()[0];
 
-      final CreateObjectDialog dlg = new CreateObjectDialog(getShell(), i18n.tr("Clone dashboard"));
+      final CreateObjectDialog dlg = new CreateObjectDialog(getShell(), i18n.tr("Dashboard Template"));
       if (dlg.open() == Window.OK)
       {
          final NXCSession session = Registry.getSession();
@@ -92,7 +92,7 @@ public class CloneAsDashboardTemplateAction extends ObjectAction<DashboardBase>
             @Override
             protected String getErrorMessage()
             {
-               return i18n.tr("Failed to clone {0} dashboard", dlg.getObjectName());
+               return i18n.tr("Cannot clone dashboard {0}", dlg.getObjectName());
             }
          }.start();
       }
