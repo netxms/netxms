@@ -58,9 +58,9 @@ DB_RESULT LIBNXDBMGR_EXPORTABLE SQLSelect(const TCHAR *query);
 DB_RESULT LIBNXDBMGR_EXPORTABLE SQLSelectEx(DB_HANDLE hdb, const TCHAR *query);
 DB_UNBUFFERED_RESULT LIBNXDBMGR_EXPORTABLE SQLSelectUnbuffered(const TCHAR *query);
 bool LIBNXDBMGR_EXPORTABLE SQLExecute(DB_STATEMENT hStmt);
-bool LIBNXDBMGR_EXPORTABLE SQLQueryFormatted(const TCHAR *query, ...);
-bool LIBNXDBMGR_EXPORTABLE SQLQuery(const TCHAR *query, bool showOutput = false);
-bool LIBNXDBMGR_EXPORTABLE SQLBatch(const TCHAR *batch);
+bool LIBNXDBMGR_EXPORTABLE SQLQueryFormatted(const wchar_t *query, ...);
+bool LIBNXDBMGR_EXPORTABLE SQLQuery(const wchar_t *query, bool showOutput = false);
+bool LIBNXDBMGR_EXPORTABLE SQLBatch(const wchar_t *batch);
 
 // Confirmations
 bool LIBNXDBMGR_EXPORTABLE GetYesNo(const TCHAR *format, ...);

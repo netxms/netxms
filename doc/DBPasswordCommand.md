@@ -71,6 +71,6 @@ DebugTags = config:3
 
 ## Requirements
 
-- NetXMS version 5.3.0 or later
+- NetXMS version 6.0.0 or later
 - External command must be in PATH or use absolute path
 - Command must output password to stdout (stderr is ignored)

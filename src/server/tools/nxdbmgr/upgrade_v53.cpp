@@ -22,6 +22,14 @@
 
 #include "nxdbmgr.h"
 
+/**
+ * Upgrade from 53.11 to 60.0
+ */
+static bool H_UpgradeFromV11()
+{
+   CHK_EXEC(SetMajorSchemaVersion(60, 0));
+   return true;
+}
 
 /**
  * Upgrade from 53.10 to 53.11
@@ -325,7 +333,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 10,  53, 11, H_UpgradeFromV10  },
+   { 11, 60, 0,  H_UpgradeFromV11 },
+   { 10, 53, 11, H_UpgradeFromV10 },
    { 9,  53, 10, H_UpgradeFromV9  },
    { 8,  53, 9,  H_UpgradeFromV8  },
    { 7,  53, 8,  H_UpgradeFromV7  },
@@ -348,7 +357,7 @@ bool MajorSchemaUpgrade_V53()
    if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
       return false;
 
-   while ((major == 53) && (minor < DB_SCHEMA_VERSION_V53_MINOR))
+   while (major == 53)
    {
       // Find upgrade procedure
       int i;

@@ -175,11 +175,13 @@ void RSConnector::sendConfiguration()
    msg.setField(VID_DB_PASSWORD, g_szDbPassword);
 
    TCHAR jdbcOptions[MAX_DB_STRING];
-   ConfigReadStr(_T("ReportingServer.JDBC.Properties"), jdbcOptions, MAX_DB_STRING, _T(""));
+   ConfigReadStr(L"ReportingServer.JDBC.Properties", jdbcOptions, MAX_DB_STRING, L"");
    msg.setField(VID_JDBC_OPTIONS, jdbcOptions);
 
+   msg.setField(VID_RETENTION_TIME, ConfigReadULong(L"ReportingServer.ResultsRetentionTime", 90));
+
    TCHAR channelName[MAX_OBJECT_NAME];
-   if (ConfigReadStr(_T("DefaultNotificationChannel.SMTP.Text"), channelName, MAX_OBJECT_NAME, _T("SMTP-Text")))
+   if (ConfigReadStr(L"DefaultNotificationChannel.SMTP.Text", channelName, MAX_OBJECT_NAME, L"SMTP-Text"))
    {
       char *configuration = GetNotificationChannelConfiguration(channelName);
       if (configuration != nullptr)

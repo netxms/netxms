@@ -102,9 +102,9 @@ const TCHAR *g_sqlTypes[8][4] =
 /**
  * Execute SQL query from formatted string and print error message on screen if query failed
  */
-bool LIBNXDBMGR_EXPORTABLE SQLQueryFormatted(const TCHAR *query, ...)
+bool LIBNXDBMGR_EXPORTABLE SQLQueryFormatted(const wchar_t *query, ...)
 {
-   TCHAR formattedQuery[4096];
+   wchar_t formattedQuery[4096];
    va_list args;
    va_start(args, query);
    _vsntprintf(formattedQuery, 4096, query, args);
@@ -115,7 +115,7 @@ bool LIBNXDBMGR_EXPORTABLE SQLQueryFormatted(const TCHAR *query, ...)
 /**
  * Execute SQL query and print error message on screen if query failed
  */
-bool LIBNXDBMGR_EXPORTABLE SQLQuery(const TCHAR *query, bool showOutput)
+bool LIBNXDBMGR_EXPORTABLE SQLQuery(const wchar_t *query, bool showOutput)
 {
    if (*query == 0)
       return true;
@@ -167,7 +167,7 @@ bool LIBNXDBMGR_EXPORTABLE SQLQuery(const TCHAR *query, bool showOutput)
 /**
  * Execute SQL batch
  */
-bool LIBNXDBMGR_EXPORTABLE SQLBatch(const TCHAR *batchSource)
+bool LIBNXDBMGR_EXPORTABLE SQLBatch(const wchar_t *batchSource)
 {
    StringBuffer batch(batchSource);
    if (g_dbSyntax != DB_SYNTAX_UNKNOWN)
