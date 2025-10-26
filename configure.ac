@@ -1936,7 +1936,11 @@ AC_CHECK_LIB(socket, if_nameindex)
 AC_CHECK_LIB(dl, dlopen)
 AC_CHECK_LIB(kstat, kstat_open)
 
-# sockets/resolver
+
+#--------------------------------------------------------------------
+# Checks for resolver functions
+#--------------------------------------------------------------------
+
 AC_CHECK_FUNC(connect, , [AC_CHECK_LIB(socket, connect)])
 AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(resolv, gethostbyname)])
 AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(nsl, gethostbyname)])
@@ -1956,6 +1960,8 @@ if test "$ac_cv_lib_nsl_gethostbyname" = "$ac_cv_func_gethostbyname" ; then
 		AC_MSG_RESULT([success])
 	fi
 fi
+
+AC_CHECK_FUNCS([gethostbyaddr_r gethostbyname_r gethostbyname2_r getaddrinfo getnameinfo])
 
 
 #--------------------------------------------------------------------
@@ -2850,7 +2856,7 @@ AC_CHECK_FUNCS([gettimeofday memmem strcspn strrchr strlwr strtok_r strtoll strt
 AC_CHECK_FUNCS([strlcpy strlcat strcasestr setlocale strerror_r toupper])
 AC_CHECK_FUNCS([tolower if_nametoindex daemon mmap scandir uname poll])
 AC_CHECK_FUNCS([usleep nanosleep gmtime_r localtime_r stat64 fstat64 lstat64])
-AC_CHECK_FUNCS([strptime timegm gethostbyname2_r getaddrinfo rand_r])
+AC_CHECK_FUNCS([strptime timegm rand_r])
 AC_CHECK_FUNCS([isatty malloc_info malloc_trim utime tzset])
 AC_CHECK_FUNCS([getpwnam getpwuid getpwuid_r getgrnam getgrgid getgrgid_r])
 AC_CHECK_FUNCS([getpeereid sched_yield getpid localeconv])
