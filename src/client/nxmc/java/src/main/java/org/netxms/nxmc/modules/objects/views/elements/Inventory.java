@@ -80,6 +80,7 @@ public class Inventory extends TableElement
             Interface parentIface = iface.getParentInterface();
             if (parentIface != null)
                addPair(i18n.tr("Parent interface"), parentIface.getObjectName());
+            addPair(i18n.tr("Circuits"), iface.getAllParents(AbstractObject.OBJECT_CIRCUIT).stream().map(AbstractObject::getObjectName).reduce((a, b) -> a + ", " + b).orElse(i18n.tr("")), false);
             addPair(i18n.tr("Interface index"), Integer.toString(iface.getIfIndex()));
 				String typeName = iface.getIfTypeName();
             addPair(i18n.tr("Interface type"),
