@@ -10,7 +10,7 @@
 **
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the**
 ** GNU General Public License for more details.
 **
 ** You should have received a copy of the GNU Lesser General Public License
@@ -349,6 +349,7 @@ TCHAR *InetAddress::getHostByAddr(TCHAR *buffer, size_t buflen) const
       return nullptr;
 
 #ifdef _WIN32
+
    SOCKADDR_INET sa;
    memset(&sa, 0, sizeof(sa));
    if (m_family == AF_INET)
@@ -364,16 +365,79 @@ TCHAR *InetAddress::getHostByAddr(TCHAR *buffer, size_t buflen) const
    if (GetNameInfo(reinterpret_cast<SOCKADDR*>(&sa), SA_LEN(reinterpret_cast<SOCKADDR*>(&sa)),
          buffer, static_cast<DWORD>(buflen), nullptr, 0, NI_NAMEREQD) != 0)
       return nullptr;
-#else
-   struct hostent *hs = nullptr;
+
+#elif HAVE_GETNAMEINFO
+
+   // Use getnameinfo - thread-safe and modern approach
+   struct sockaddr_storage sa;
+   socklen_t saLen;
+   memset(&sa, 0, sizeof(sa));
+
    if (m_family == AF_INET)
    {
-      uint32_t addr = htonl(m_addr.v4);
-		hs = gethostbyaddr((const char *)&addr, 4, AF_INET);
+      struct sockaddr_in *sa4 = reinterpret_cast<struct sockaddr_in*>(&sa);
+      sa4->sin_family = AF_INET;
+      sa4->sin_addr.s_addr = htonl(m_addr.v4);
+      saLen = sizeof(struct sockaddr_in);
+   }
+   else if (m_family == AF_INET6)
+   {
+#ifdef WITH_IPV6
+      struct sockaddr_in6 *sa6 = reinterpret_cast<struct sockaddr_in6*>(&sa);
+      sa6->sin6_family = AF_INET6;
+      memcpy(sa6->sin6_addr.s6_addr, m_addr.v6, 16);
+      saLen = sizeof(struct sockaddr_in6);
+#else
+      return nullptr;
+#endif
    }
    else
    {
-		hs = gethostbyaddr((const char *)m_addr.v6, 16, AF_INET6);
+      return nullptr;
+   }
+
+   char hostBuffer[NI_MAXHOST];
+   if (getnameinfo(reinterpret_cast<struct sockaddr*>(&sa), saLen, 
+                   hostBuffer, sizeof(hostBuffer), nullptr, 0, NI_NAMEREQD) != 0)
+      return nullptr;
+
+#ifdef UNICODE
+   mb_to_wchar(hostBuffer, -1, buffer, buflen);
+   buffer[buflen - 1] = 0;
+#else
+   strlcpy(buffer, hostBuffer, buflen);
+#endif
+
+#else /* not _WIN32 && not HAVE_GETNAMEINFO */
+
+   struct hostent *hs = nullptr;
+#if HAVE_GETHOSTBYADDR_R
+   // Use gethostbyaddr_r - thread-safe reentrant version
+   struct hostent hostbuf;
+   char tempBuffer[1024];
+   int h_errnop;
+#endif
+
+   if (m_family == AF_INET)
+   {
+      uint32_t addr = htonl(m_addr.v4);
+#if HAVE_GETHOSTBYADDR_R
+      if (gethostbyaddr_r(reinterpret_cast<const char*>(&addr), 4, AF_INET, 
+                         &hostbuf, tempBuffer, sizeof(tempBuffer), &hs, &h_errnop) != 0)
+         hs = nullptr;
+#else
+      hs = gethostbyaddr((const char *)&addr, 4, AF_INET);
+#endif
+   }
+   else if (m_family == AF_INET6)
+   {
+#if HAVE_GETHOSTBYADDR_R
+      if (gethostbyaddr_r(reinterpret_cast<const char*>(m_addr.v6), 16, AF_INET6, 
+                         &hostbuf, tempBuffer, sizeof(tempBuffer), &hs, &h_errnop) != 0)
+         hs = nullptr;
+#else
+      hs = gethostbyaddr((const char *)m_addr.v6, 16, AF_INET6);
+#endif
    }
 
    if (hs == nullptr)
@@ -384,11 +448,12 @@ TCHAR *InetAddress::getHostByAddr(TCHAR *buffer, size_t buflen) const
       return nullptr;
 
 #ifdef UNICODE
-	mb_to_wchar(hs->h_name, -1, buffer, buflen);
-	buffer[buflen - 1] = 0;
+   mb_to_wchar(hs->h_name, -1, buffer, buflen);
+   buffer[buflen - 1] = 0;
 #else
    strlcpy(buffer, hs->h_name, buflen);
 #endif
+
 #endif   /* _WIN32 */
 
    return buffer;
