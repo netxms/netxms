@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,12 +63,11 @@ public class CloneDashboardAction extends ObjectAction<Dashboard>
       final Dashboard sourceObject = objects.get(0);
       final long parentId = sourceObject.getParentIdList()[0];
 
-      final CreateObjectDialog dlg = new CreateObjectDialog(getShell(), i18n.tr("Clone dashboard"));
+      final CreateObjectDialog dlg = new CreateObjectDialog(getShell(), i18n.tr("Dashboard"));
       if (dlg.open() == Window.OK)
       {
          final NXCSession session = Registry.getSession();
-         new Job(i18n.tr("Clone dashboard job"), null, getMessageArea())
-         {
+         new Job(i18n.tr("Cloning dashboard"), null, getMessageArea()) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
@@ -89,7 +88,7 @@ public class CloneDashboardAction extends ObjectAction<Dashboard>
             @Override
             protected String getErrorMessage()
             {
-               return String.format(i18n.tr("Failed to clone dashboard"), dlg.getObjectName());
+               return i18n.tr("Cannot clone dashboard {0}", dlg.getObjectName());
             }
          }.start();
       }

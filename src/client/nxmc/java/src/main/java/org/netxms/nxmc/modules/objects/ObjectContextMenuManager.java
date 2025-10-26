@@ -72,6 +72,7 @@ import org.netxms.nxmc.modules.assetmanagement.LinkAssetToObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.LinkObjectToAssetAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkAssetFromObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkObjectFromAssetAction;
+import org.netxms.nxmc.modules.dashboards.AssignDashboardAction;
 import org.netxms.nxmc.modules.dashboards.CloneDashboardAction;
 import org.netxms.nxmc.modules.dashboards.ExportDashboardAction;
 import org.netxms.nxmc.modules.dashboards.ImportDashboardAction;
@@ -156,6 +157,7 @@ public class ObjectContextMenuManager extends MenuManager
    private ObjectAction<?> actionSendUserAgentNotification;
    private ObjectAction<?> actionExportDashboard;
    private ObjectAction<?> actionImportDashboard;
+   private ObjectAction<?> actionAssignDashboard;
    private ObjectAction<?> actionCloneNetworkMap;
    private ObjectAction<?> actionNetworkMapPublicAccess;
    private ObjectAction<?> actionChangeInterfaceExpectedState;
@@ -468,6 +470,7 @@ public class ObjectContextMenuManager extends MenuManager
       actionSendUserAgentNotification = new SendUserAgentNotificationAction(viewPlacement, selectionProvider);
       actionExportDashboard = new ExportDashboardAction(viewPlacement, selectionProvider);
       actionImportDashboard = new ImportDashboardAction(viewPlacement, selectionProvider);
+      actionAssignDashboard = new AssignDashboardAction(viewPlacement, selectionProvider);
       actionCloneNetworkMap = new CloneNetworkMap(viewPlacement, selectionProvider);
       actionNetworkMapPublicAccess = new EnableNetworkMapPublicAccess(viewPlacement, selectionProvider);
       actionChangeInterfaceExpectedState = new ChangeInterfaceExpectedStateAction(viewPlacement, selectionProvider);
@@ -571,7 +574,7 @@ public class ObjectContextMenuManager extends MenuManager
             add(new Separator());
          }         
       }
-      
+
       if (isBindToMenuAllowed(selection))
       {
          add(actionBindTo);
@@ -585,6 +588,12 @@ public class ObjectContextMenuManager extends MenuManager
          add(actionAddToCircuit);
          if (singleObject)
             add(actionRemoveFromCircuit);
+         addObjectMoveActions(selection);
+         add(new Separator());
+      }
+      else if (isDashboardOnlySelection(selection))
+      {
+         add(actionAssignDashboard);
          addObjectMoveActions(selection);
          add(new Separator());
       }
@@ -670,7 +679,7 @@ public class ObjectContextMenuManager extends MenuManager
       }
       if (nodesWithAgent)
          add(actionDeployPackage);
-      
+
       if (actionUploadFileToAgent.isValidForSelection(selection))
       {
          add(actionUploadFileToAgent);
@@ -787,7 +796,7 @@ public class ObjectContextMenuManager extends MenuManager
       {
          add(actionClearInterfacePeer);
       }
-      
+
       if (actionCreateInterfaceDCI.isValidForSelection(selection))
       {
          add(actionCreateInterfaceDCI);
@@ -912,6 +921,22 @@ public class ObjectContextMenuManager extends MenuManager
       for(Object o : selection.toList())
       {
          if (!(o instanceof Interface))
+            return false;
+      }
+      return true;
+   }
+
+   /**
+    * Check if current selection contains only dashboards.
+    *
+    * @param selection current object selection
+    * @return true if only dashboards are selected
+    */
+   private static boolean isDashboardOnlySelection(IStructuredSelection selection)
+   {
+      for(Object o : selection.toList())
+      {
+         if (!(o instanceof DashboardBase))
             return false;
       }
       return true;
