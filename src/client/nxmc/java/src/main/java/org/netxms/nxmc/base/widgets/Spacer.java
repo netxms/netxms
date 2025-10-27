@@ -30,12 +30,30 @@ public class Spacer extends Composite
 {
    private int width;
 
+   /**
+    * Create spacer with given width.
+    *
+    * @param parent parent composite
+    * @param width spacer width
+    */
    public Spacer(Composite parent, int width)
+   {
+      this(parent, width, new GridData(SWT.CENTER, SWT.FILL, false, true));
+   }
+
+   /**
+    * Create spacer with given width and layout data.
+    *
+    * @param parent parent composite
+    * @param width spacer width
+    * @param layoutData layout data
+    */
+   public Spacer(Composite parent, int width, Object layoutData)
    {
       super(parent, SWT.NONE);
       this.width = width;
       setBackground(parent.getBackground());
-      setLayoutData(new GridData(SWT.CENTER, SWT.FILL, false, true));
+      setLayoutData(layoutData);
    }
 
    /**

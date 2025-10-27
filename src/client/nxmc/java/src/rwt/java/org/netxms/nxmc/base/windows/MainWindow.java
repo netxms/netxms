@@ -357,7 +357,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       title.setBackground(headerBackgroundColor);
       title.setForeground(headerForegroundColor);
       title.setData(RWT.CUSTOM_VARIANT, "MainWindowHeaderBold");
-      title.setText(BrandingManager.getProductName());
+      title.setText(BrandingManager.getProductName().toUpperCase());
 
       Label filler = new Label(headerArea, SWT.CENTER);
       filler.setBackground(headerBackgroundColor);
@@ -833,7 +833,7 @@ public class MainWindow extends Window implements MessageAreaHolder
     */
    private void createServerClockWidget()
    {
-      new Spacer(serverClockArea, 27); // 32 - layout horizontal spacing
+      new Spacer(serverClockArea, 27, null);
 
       serverClock = new ServerClock(serverClockArea, SWT.NONE);
       serverClock.setBackground(serverClockArea.getBackground());
