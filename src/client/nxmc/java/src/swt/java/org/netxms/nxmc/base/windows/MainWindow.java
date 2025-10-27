@@ -148,6 +148,7 @@ public class MainWindow extends Window implements MessageAreaHolder
    private HeaderButton helpMenuButton;
    private HelpMenuManager helpMenuManager;
    private Font headerFontBold;
+   private Font clockFont;
    private Action actionToggleFullScreen;
    private KeyBindingManager keyBindingManager;
    private List<Runnable> postOpenRunnables = new ArrayList<>();
@@ -227,7 +228,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       pinArea.saveState(m);
       ps.set(PreferenceStore.serverProperty(location.name()), m);      
    }
-   
+
    /**
     * Save pop out
     * 
@@ -354,7 +355,8 @@ public class MainWindow extends Window implements MessageAreaHolder
 
       Font perspectiveSwitcherFont = ThemeEngine.getFont("Window.PerspectiveSwitcher");
       Font headerFont = ThemeEngine.getFont("Window.Header");
-      headerFontBold = FontTools.createAdjustedFont(headerFont, 2, SWT.BOLD);
+      headerFontBold = FontTools.createAdjustedFont(headerFont, 20 - (int)headerFont.getFontData()[0].height, SWT.BOLD);
+      clockFont = FontTools.createAdjustedFont(headerFont, 2, SWT.BOLD);
 
       windowContent = new Composite(parent, SWT.NONE);
 
@@ -392,7 +394,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       title.setBackground(headerBackgroundColor);
       title.setForeground(headerForegroundColor);
       title.setFont(headerFontBold);
-      title.setText(BrandingManager.getProductName());
+      title.setText(BrandingManager.getProductName().toUpperCase());
 
       Label filler = new Label(headerArea, SWT.CENTER);
       filler.setBackground(headerBackgroundColor);
@@ -568,7 +570,10 @@ public class MainWindow extends Window implements MessageAreaHolder
       if ((motd != null) && !motd.isEmpty())
          addMessage(MessageArea.INFORMATION, session.getMessageOfTheDay());
 
-      getShell().addDisposeListener((e) -> headerFontBold.dispose());
+      getShell().addDisposeListener((e) -> {
+         headerFontBold.dispose();
+         clockFont.dispose();
+      });
 
       actionToggleFullScreen = new Action(i18n.tr("&Full screen"), Action.AS_CHECK_BOX) {
          @Override
@@ -883,12 +888,12 @@ public class MainWindow extends Window implements MessageAreaHolder
     */
    private void createServerClockWidget()
    {
-      new Spacer(serverClockArea, 27); // 32 - layout horizontal spacing
+      new Spacer(serverClockArea, 27, null);
 
       serverClock = new ServerClock(serverClockArea, SWT.NONE);
       serverClock.setBackground(serverClockArea.getBackground());
       serverClock.setForeground(ThemeEngine.getForegroundColor("Window.Header"));
-      serverClock.setFont(headerFontBold);
+      serverClock.setFont(clockFont);
       serverClock.setDisplayFormatChangeListener(() -> headerArea.layout());
    }
 
