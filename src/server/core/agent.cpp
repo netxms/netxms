@@ -251,7 +251,7 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
    if (IsShutdownInProgress())
       return;
 
-	TCHAR name[MAX_PARAM_NAME], value[MAX_RESULT_LENGTH];
+	wchar_t name[MAX_PARAM_NAME], value[MAX_RESULT_LENGTH];
 	msg->getFieldAsString(VID_NAME, name, MAX_PARAM_NAME);
 	msg->getFieldAsString(VID_VALUE, value, MAX_RESULT_LENGTH);
 
@@ -310,6 +310,11 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
          {
             debugPrintf(5, _T("%s: agent data push: %s=%s"), target->getName(), name, value);
 		      shared_ptr<DCObject> dci = target->getDCObjectByName(name, 0);
+		      if (dci == nullptr)
+		      {
+		         debugPrintf(5, _T("%s: agent data push: DCI not found for %s, trying to create one using instance discovery"), target->getName(), name);
+		         dci = target->createPushDciInstance(name);
+		      }
 		      if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM) && (dci->getDataSource() == DS_PUSH_AGENT) && (dci->getStatus() == ITEM_STATUS_ACTIVE))
 		      {
 		         debugPrintf(5, _T("%s: agent data push: found DCI %d"), target->getName(), dci->getId());

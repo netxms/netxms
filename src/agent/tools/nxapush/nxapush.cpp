@@ -156,8 +156,7 @@ static bool Startup()
  */
 static bool Send()
 {
-	NXCPMessage msg;
-	msg.setCode(CMD_PUSH_DCI_DATA);
+	NXCPMessage msg(CMD_PUSH_DCI_DATA, 0);
    msg.setField(VID_OBJECT_ID, s_optObjectId);
    msg.setField(VID_LOCAL_CACHE, s_localCache);
    msg.setFieldFromTime(VID_TIMESTAMP, s_timestamp);

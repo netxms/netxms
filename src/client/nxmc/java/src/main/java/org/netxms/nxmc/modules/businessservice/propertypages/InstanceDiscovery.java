@@ -192,6 +192,8 @@ public class InstanceDiscovery extends ObjectPropertyPage
          case DataCollectionObject.IDM_SMCLP_TARGETS:
          case DataCollectionObject.IDM_SMCLP_PROPERTIES:
             return i18n.tr("Target");
+         case DataCollectionObject.IDM_PUSH:
+            return i18n.tr("Pattern");
       }
       return "";
 	}

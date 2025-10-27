@@ -1165,6 +1165,7 @@ enum AggregationFunction
 #define IDM_INTERNAL_TABLE              8
 #define IDM_SMCLP_TARGETS               9
 #define IDM_SMCLP_PROPERTIES           10
+#define IDM_PUSH                       11
 
 /**
  * Event policy rule flags

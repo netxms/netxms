@@ -59,6 +59,7 @@ public abstract class DataCollectionObject
    public static final int IDM_INTERNAL_TABLE = 8;
    public static final int IDM_SMCLP_TARGETS = 9;
    public static final int IDM_SMCLP_PROPERTIES = 10;
+   public static final int IDM_PUSH = 11;
 
    // Polling schedule types
    public static final int POLLING_SCHEDULE_DEFAULT  = 0;

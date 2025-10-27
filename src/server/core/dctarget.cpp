@@ -25,6 +25,7 @@
 #include <nxcore_websvc.h>
 #include <netxms_maps.h>
 #include <nms_users.h>
+#include <netxms-regex.h>
 
 /**
  * Data collector thread pool
@@ -2711,9 +2712,9 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
          nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" found"),
                    m_name, m_id, root->getName().cstr(), root->getId(), dcoInstance.cstr());
          InstanceDiscoveryData *instanceObject = instances->get(dcoInstance);
-         const TCHAR *name = instanceObject->getInstanceName();
+         const wchar_t *name = instanceObject->getInstanceName();
          bool notify = false;
-         if (_tcscmp(name, object->getInstanceName()))
+         if (wcscmp(name, object->getInstanceName()))
          {
             object->setInstanceName(name);
             object->updateFromTemplate(root);
@@ -2725,7 +2726,7 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
             object->setInstanceGracePeriodStart(0);
             object->setStatus(ITEM_STATUS_ACTIVE, false);
          }
-         if(instanceObject->getRelatedObject() != object->getRelatedObject())
+         if (instanceObject->getRelatedObject() != object->getRelatedObject())
          {
             object->setRelatedObject(instanceObject->getRelatedObject());
             changed = true;
@@ -2774,6 +2775,78 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
 
    unlockDciAccess();
    return changed;
+}
+
+/**
+ * Create new push DCI instance. Returns shared_ptr to created DCI on success or nullptr when no matching instance discovery DCI is found.
+ */
+shared_ptr<DCObject> DataCollectionTarget::createPushDciInstance(const wchar_t *name)
+{
+   bool created = false;
+
+   // collect instance discovery DCIs
+   SharedObjectArray<DCObject> rootObjects;
+   readLockDciAccess();
+   for(int i = 0; i < m_dcObjects.size(); i++)
+   {
+      shared_ptr<DCObject> object = m_dcObjects.getShared(i);
+      if ((object->getInstanceDiscoveryMethod() == IDM_PUSH) && (object->getStatus() != ITEM_STATUS_DISABLED))
+      {
+         object->setBusyFlag();
+         rootObjects.add(object);
+      }
+   }
+   unlockDciAccess();
+
+   for(int i = 0; i < rootObjects.size(); i++)
+   {
+      shared_ptr<DCObject> object = rootObjects.getShared(i);
+      SharedString instanceData = object->getInstanceDiscoveryData();
+      if (!instanceData.isEmpty())
+      {
+         const char *eptr;
+         int eoffset;
+         PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(instanceData.cstr()), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+         if (preg != nullptr)
+         {
+            int ovector[30];
+            int rc = _pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(name), static_cast<int>(wcslen(name)), 0, 0, ovector, 30);
+            if (rc >= 2)
+            {
+               int len = ovector[3] - ovector[2];
+               wchar_t instanceName[MAX_DB_STRING];
+               wcsncpy(instanceName, &name[ovector[2]], len);
+               instanceName[len] = 0;
+
+               StringMap instances;
+               instances.set(instanceName, instanceName);
+               StringObjectMap<InstanceDiscoveryData> *filteredInstances = object->filterInstanceList(&instances);
+               if ((filteredInstances != nullptr) && !filteredInstances->isEmpty())
+               {
+                  nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 5, _T("DataCollectionTarget::createPushDciInstance(%s [%u]): creating new DCO \"%s\" (instance=\"%s\")"), m_name, m_id, name, instanceName);
+                  CreateInstanceDCOData data(object.get(), self());
+                  filteredInstances->forEach(CreateInstanceDCI, &data);
+                  created = true;
+               }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 5, _T("DataCollectionTarget::createPushDciInstance(%s [%u]): instance \"%s\" filtered out for IDM_PUSH DCO \"%s\""),
+                            m_name, m_id, instanceName, object->getName().cstr());
+               }
+               delete filteredInstances;
+            }
+            _pcre_free_t(preg);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 5, _T("DataCollectionTarget::createPushDciInstance(%s [%u]): cannot compile regex \"%s\" for IDM_PUSH DCO \"%s\""),
+                      m_name, m_id, instanceData.cstr(), object->getName().cstr());
+         }
+      }
+      object->clearBusyFlag();
+   }
+
+   return created ? getDCObjectByName(name, 0) : nullptr;
 }
 
 /**

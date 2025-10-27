@@ -2750,6 +2750,8 @@ public:
    double getProxyLoadFactor() const { return m_proxyLoadFactor.load(); }
    void findDcis(const SearchQuery &query, uint32_t userId, SharedObjectArray<DCObject> *result);
 
+   shared_ptr<DCObject> createPushDciInstance(const wchar_t *name);
+
    uint64_t getCacheMemoryUsage();
 
    void updateDciCache();

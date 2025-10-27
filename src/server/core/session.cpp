@@ -10138,9 +10138,14 @@ void ClientSession::pushDCIData(const NXCPMessage& request)
                   }
                   else
                   {
-                     TCHAR name[256];
+                     wchar_t name[256];
                      request.getFieldAsString(fieldId++, name, 256);
                      dci = static_cast<DataCollectionTarget&>(*object).getDCObjectByName(name, m_userId);
+                     if (dci == nullptr)
+                     {
+                        debugPrintf(5, _T("data push: DCI not found for %s, trying to create one using instance discovery"), object->getName(), name);
+                        dci = static_cast<DataCollectionTarget&>(*object).createPushDciInstance(name);
+                     }
                   }
 
                   if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
