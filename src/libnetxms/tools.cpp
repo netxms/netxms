@@ -1101,6 +1101,31 @@ TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer)
 }
 
 /**
+ * Format timestamp in milliseconds as yyyy-mm-dd HH:MM:SS.nnn.
+ * Provided buffer should be at least 25 characters long.
+ */
+TCHAR LIBNETXMS_EXPORTABLE *FormatTimestampMs(int64_t timestamp, TCHAR *buffer)
+{
+   if (timestamp != 0)
+   {
+      time_t t = static_cast<time_t>(timestamp / 1000);
+#if HAVE_LOCALTIME_R
+      struct tm ltmBuffer;
+      struct tm *loc = localtime_r(&t, &ltmBuffer);
+#else
+      struct tm *loc = localtime(&t);
+#endif
+      _tcsftime(buffer, 21, _T("%Y-%m-%d %H:%M:%S."), loc);
+      _sntprintf(&buffer[20], 5, _T("%03d"), static_cast<int>(timestamp % 1000));
+   }
+   else
+   {
+      _tcscpy(buffer, _T("never"));
+   }
+   return buffer;
+}
+
+/**
  * Get local system time zone. Returns pointer to buffer for convenience.
  */
 TCHAR LIBNETXMS_EXPORTABLE *GetSystemTimeZone(TCHAR *buffer, size_t size, bool withName, bool forceFullOffset)

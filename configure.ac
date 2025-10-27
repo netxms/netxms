@@ -240,6 +240,9 @@ LIBNXSRV_LIBS=""
 JAR_BUILD="yes"
 RELEASE_BUILD="no"
 SYSTEMD_LIBS=""
+REQUIRE_PROTOBUF="no"
+REQUIRE_MICROHTTPD="no"
+REQUIRE_SNAPPY="no"
 
 
 #--------------------------------------------------------------------
@@ -314,6 +317,15 @@ AC_ARG_WITH(agent,
 [AS_HELP_STRING(--with-agent,build agent)],
 [
 	COMPONENTS="$COMPONENTS sqlite ethernetip snmp agent sqlite_drv"
+])
+
+AC_ARG_WITH(prometheus,
+[AS_HELP_STRING(--with-prometheus,build Prometheus remote write support for agent)],
+[
+	COMPONENTS="$COMPONENTS prometheus"
+	REQUIRE_MICROHTTPD="yes"
+	REQUIRE_PROTOBUF="yes"
+	REQUIRE_SNAPPY="yes"
 ])
 
 AC_ARG_WITH(static-agent,
@@ -841,6 +853,36 @@ AC_ARG_WITH(microhttpd,
 	fi
 ])
 
+AC_ARG_WITH(abseil,
+[AS_HELP_STRING(--with-abseil,specify abseil-cpp location)],
+[
+	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno" ; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+		ABSEIL_LDFLAGS="$LDFLAGS -L${withval}/lib"
+		ABSEIL_CPPFLAGS="$CPPFLAGS -I${withval}/include"
+	fi
+])
+
+AC_ARG_WITH(protobuf,
+[AS_HELP_STRING(--with-protobuf,specify protobuf location)],
+[
+	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno" ; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+		PROTOBUF_LDFLAGS="$LDFLAGS -L${withval}/lib"
+		PROTOBUF_CPPFLAGS="$CPPFLAGS -I${withval}/include"
+	fi
+])
+
+AC_ARG_WITH(snappy,
+[AS_HELP_STRING(--with-snappy,specify libsnappy location)],
+[
+	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno" ; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+		SNAPPY_LDFLAGS="$LDFLAGS -L${withval}/lib"
+		SNAPPY_CPPFLAGS="$CPPFLAGS -I${withval}/include"
+	fi
+])
+
 AC_ARG_WITH(jemalloc,
 [AS_HELP_STRING(--with-jemalloc,specify libjemalloc location)],
 [
@@ -1036,7 +1078,7 @@ AC_ARG_WITH(dist,
 	TEST_MODULES="agent test-libnxcc test-libnxsl test-libnxsnmp"
 	AGENT_UNIT_TESTS="linux-cpu-usage-collector"
 	TOOLS="nxlptest"
-	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix informix oracle lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb ssh vmgr xen asterisk python"
+	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix informix oracle prometheus lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb ssh vmgr xen asterisk python"
 	AGENT_DIRS="libnxappc libnxtux"
 	NCDRV_MODULES="anysms googlechat kannel mattermost mqtt msteams mymobile nexmo nxagent slack smtp smseagle telegram text2reach twilio websms xmpp"
 	HDLINK_DIRS="jira redmine"
@@ -4067,7 +4109,7 @@ fi
 #--------------------------------------------------------------------
 
 check_substr "$COMPONENTS" "server"
-if test $? = 0; then
+if test $? = 0 -o "x$REQUIRE_MICROHTTPD" = "xyes"; then
 	OLD_CPPFLAGS="$CPPFLAGS"
 	OLD_LDFLAGS="$LDFLAGS"
 	OLD_LIBS="$LIBS"
@@ -4093,9 +4135,12 @@ if test $? = 0; then
 
 	if test "x$MICROHTTPD_SUPPORT" = "xyes"; then
 		AC_DEFINE(WITH_MICROHTTPD, 1, Define to 1 if microhttpd is supported)
-		COMPONENTS="$COMPONENTS microhttpd"
 		SERVER_COMPONENTS="webapi $SERVER_COMPONENTS"
 		HDLINK_DIRS="$HDLINK_DIRS jira"
+	else
+		if test "x$REQUIRE_MICROHTTPD" = "xyes"; then
+			AC_MSG_ERROR([*** libmicrohttpd is required ***])
+		fi
 	fi
 
 	CPPFLAGS="$OLD_CPPFLAGS"
@@ -4538,6 +4583,115 @@ fi
 
 
 #--------------------------------------------------------------------
+# protobuf
+#--------------------------------------------------------------------
+
+if test "x$REQUIRE_PROTOBUF" = "xyes"; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LIBS="$LIBS"
+
+	CPPFLAGS="$CPPFLAGS $PROTOBUF_CPPFLAGS $ABSEIL_CPPFLAGS"
+	LDFLAGS="$LDFLAGS $PROTOBUF_LDFLAGS $ABSEIL_LDFLAGS"
+
+	AC_CHECK_PROG(PROTOC, protoc, protoc)
+	if test "x$PROTOC" = "x"; then
+		if test "x$REQUIRE_PROTOBUF" = "xyes"; then
+			AC_MSG_ERROR([*** protoc compiler not found - check your protobuf installation ***])
+		else
+			COMPONENTS=`echo "$COMPONENTS" | sed 's/protobuf//'`
+		fi
+	else
+		PROTOBUF_SUPPORT="yes"
+		AC_LANG_PUSH(C++)
+		AC_CHECK_HEADER(google/protobuf/message.h, [], [
+			if test "x$REQUIRE_PROTOBUF" = "xyes"; then
+				AC_MSG_ERROR([*** Cannot find google/protobuf/message.h - check your protobuf installation ***])
+			else
+				PROTOBUF_SUPPORT="no"
+			fi
+		])
+		AC_CHECK_LIB(protobuf, main, [ PROTOBUF_LIBS="-lprotobuf" ], [
+			if test "x$REQUIRE_PROTOBUF" = "xyes"; then
+				AC_MSG_ERROR([*** libprotobuf is missing - check your protobuf installation ***])
+			else
+				PROTOBUF_SUPPORT="no"
+			fi
+		])
+		AC_LANG_POP(C++)
+
+		if test "x$PROTOBUF_SUPPORT" = "xyes"; then
+			AC_DEFINE(WITH_PROTOBUF, 1, Define to 1 if protobuf is supported)
+		else
+			if test "x$REQUIRE_PROTOBUF" = "xyes"; then
+				AC_MSG_ERROR([*** libprotobuf is required ***])
+			fi
+		fi
+	fi
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LIBS="$OLD_LIBS"
+fi
+
+
+#--------------------------------------------------------------------
+# snappy
+#--------------------------------------------------------------------
+
+if test "x$REQUIRE_SNAPPY" = "xyes"; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LIBS="$LIBS"
+
+	CPPFLAGS="$CPPFLAGS $SNAPPY_CPPFLAGS"
+	LDFLAGS="$LDFLAGS $SNAPPY_LDFLAGS"
+
+	SNAPPY_SUPPORT="yes"
+	AC_LANG_PUSH(C++)
+	AC_CHECK_HEADER(snappy.h, [], [
+		if test "x$REQUIRE_SNAPPY" = "xyes"; then
+			AC_MSG_ERROR([*** Cannot find snappy.h - check your libsnappy installation ***])
+		else
+			SNAPPY_SUPPORT="no"
+		fi
+	])
+	AC_CHECK_LIB(snappy, snappy_compress, [ SNAPPY_LIBS="-lsnappy" ], [
+		if test "x$REQUIRE_SNAPPY" = "xyes"; then
+			AC_MSG_ERROR([*** libsnappy is missing - check your libsnappy installation ***])
+		else
+			SNAPPY_SUPPORT="no"
+		fi
+	])
+	AC_LANG_POP(C++)
+
+	if test "x$SNAPPY_SUPPORT" = "xyes"; then
+		AC_DEFINE(WITH_SNAPPY, 1, Define to 1 if snappy is supported)
+	else
+		if test "x$REQUIRE_SNAPPY" = "xyes"; then
+			AC_MSG_ERROR([*** libsnappy is required ***])
+		fi
+	fi
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LIBS="$OLD_LIBS"
+fi
+
+
+#--------------------------------------------------------------------
+# Prometheus
+#--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "prometheus"
+if test $? = 0; then
+	AC_DEFINE(WITH_PROMETHEUS, 1, Define to 1 if Prometheus remote write support is enabled)
+	PROMETHEUS_LIBS="$MICROHTTPD_LIBS $PROTOBUF_LIBS $SNAPPY_LIBS"
+	SUBAGENT_DIRS="$SUBAGENT_DIRS prometheus"
+fi
+
+
+#--------------------------------------------------------------------
 # Other settings
 #--------------------------------------------------------------------
 
@@ -4670,6 +4824,8 @@ DB_DRIVERS_LTLIBRARIES=`echo $DB_DRIVERS|perl -nae 'my @out; for (@F) {push(@out
 # Substitute variables
 #--------------------------------------------------------------------
 
+AC_SUBST(ABSEIL_CPPFLAGS)
+AC_SUBST(ABSEIL_LDFLAGS)
 AC_SUBST(AGENT_DIRS)
 AC_SUBST(AGENT_LIBS)
 AC_SUBST(AGENT_UNIT_TESTS)
@@ -4739,9 +4895,16 @@ AC_SUBST(PDSDRV_DIRS)
 AC_SUBST(PGSQL_CPPFLAGS)
 AC_SUBST(PGSQL_LDFLAGS)
 AC_SUBST(PGSQL_LIBS)
+AC_SUBST(PROMETHEUS_LIBS)
+AC_SUBST(PROTOBUF_CPPFLAGS)
+AC_SUBST(PROTOBUF_LDFLAGS)
+AC_SUBST(PROTOBUF_LIBS)
 AC_SUBST(PYTHON_CPPFLAGS)
 AC_SUBST(PYTHON_LDFLAGS)
 AC_SUBST(PYTHON_LIBS)
+AC_SUBST(SNAPPY_CPPFLAGS)
+AC_SUBST(SNAPPY_LDFLAGS)
+AC_SUBST(SNAPPY_LIBS)
 AC_SUBST(SERVER_COMPONENTS)
 AC_SUBST(SERVER_INCLUDE)
 AC_SUBST(SERVER_LIBS)
@@ -4843,6 +5006,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/pgsql/Makefile
 	src/agent/subagents/ping/Makefile
 	src/agent/subagents/python/Makefile
+	src/agent/subagents/prometheus/Makefile
 	src/agent/subagents/redis/Makefile
 	src/agent/subagents/rpi/Makefile
 	src/agent/subagents/sms/Makefile

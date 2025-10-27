@@ -6153,6 +6153,7 @@ int LIBNETXMS_EXPORTABLE InflateFileStream(FILE *source, ByteStream *output, boo
 
 TCHAR LIBNETXMS_EXPORTABLE *GetSystemTimeZone(TCHAR *buffer, size_t size, bool withName = true, bool forceFullOffset = false);
 TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer);
+TCHAR LIBNETXMS_EXPORTABLE *FormatTimestampMs(int64_t timestamp, TCHAR *buffer);
 
 /**
  * Format timestamp as dd.mm.yyyy HH:MM:SS
@@ -6161,6 +6162,15 @@ static inline String FormatTimestamp(time_t t)
 {
    TCHAR buffer[32];
    return String(FormatTimestamp(t, buffer));
+}
+
+/**
+ * Format timestamp in milliseconds as yyyy-mm-dd HH:MM:SS.nnn
+ */
+static inline String FormatTimestampMs(int64_t t)
+{
+   TCHAR buffer[32];
+   return String(FormatTimestampMs(t, buffer));
 }
 
 String LIBNETXMS_EXPORTABLE GetEnvironmentVariableEx(const TCHAR *var);
