@@ -71,8 +71,9 @@ int H_GrafanaSummaryTablesList(Context *context);
 int H_TakeScreenshot(Context *context);
 
 /**
- * TCP port
+ * TCP address and port
  */
+static InetAddress s_listenerAddr = InetAddress::LOOPBACK;
 static uint16_t s_listenerPort = 8000;
 
 /**
@@ -164,6 +165,9 @@ static void Logger(void *context, const char *format, va_list args)
 {
    char buffer[8192];
    vsnprintf(buffer, 8192, format, args);
+   size_t last = strlen(buffer) - 1;
+   if (buffer[last] == '\n')
+      buffer[last] = 0;
    nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("MicroHTTPD: %hs"), buffer);
 }
 
@@ -172,7 +176,29 @@ static void Logger(void *context, const char *format, va_list args)
  */
 static bool InitModule(Config *config)
 {
-   s_listenerPort = static_cast<uint16_t>(config->getValueAsInt(_T("/WEBAPI/ListenerPort"), 8000));
+   const wchar_t *addr = config->getValue(L"/WEBAPI/Address", L"");
+   if (!wcsicmp(addr, L"loopback") || !wcsicmp(addr, L"localhost"))
+   {
+      s_listenerAddr = InetAddress::LOOPBACK;
+   }
+   else if (!wcsicmp(addr, L"any") || !wcscmp(addr, L"*"))
+   {
+      s_listenerAddr = InetAddress::NONE;  // Bind to all interfaces
+   }
+   else if (addr[0] != 0)
+   {
+      InetAddress a = InetAddress::parse(addr);
+      if (a.isValid())
+      {
+         s_listenerAddr = a;
+      }
+      else
+      {
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_WEBAPI, _T("Invalid web API listener address %s"), addr);
+         return false;
+      }
+   }
+   s_listenerPort = static_cast<uint16_t>(config->getValueAsInt(_T("/WEBAPI/Port"), 8000));
 
    RouteBuilder("")
       .GET(H_Root)
@@ -294,15 +320,35 @@ static bool InitModule(Config *config)
 static void OnServerStart()
 {
    nxlog_debug_tag(DEBUG_TAG_WEBAPI, 2, _T("Starting web API server"));
+
+   if (s_listenerAddr.isLoopback())
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 2, _T("Web API will listen on loopback address only"));
+   else if (s_listenerAddr.isAnyLocal())
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 2, _T("Web API will listen on all available interfaces"));
+   else
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 2, _T("Web API will listen on address %s"), s_listenerAddr.toString().cstr());
+
+   unsigned int flags = MHD_USE_INTERNAL_POLLING_THREAD | MHD_USE_POLL | MHD_USE_ERROR_LOG;
+#if MHD_VERSION < 0x00097706
+   if (s_listenerAddr.getFamily() == AF_INET6)
+      flags |= MHD_USE_IPv6;
+#endif
+
+   SockAddrBuffer sa;
+   s_listenerAddr.fillSockAddr(&sa, s_listenerPort);
    s_daemon = MHD_start_daemon(
-         MHD_USE_INTERNAL_POLLING_THREAD | MHD_USE_POLL | MHD_USE_ERROR_LOG,
-         s_listenerPort, nullptr, nullptr,
+         flags, s_listenerPort, nullptr, nullptr,
          ConnectionHandler, nullptr,
          MHD_OPTION_EXTERNAL_LOGGER, Logger, nullptr,
          MHD_OPTION_NOTIFY_COMPLETED, RequestCompleted, nullptr,
+#if MHD_VERSION >= 0x00097706
+         MHD_OPTION_SOCK_ADDR_LEN, SA_LEN(reinterpret_cast<struct sockaddr*>(&sa)), &sa,
+#else
+         MHD_OPTION_SOCK_ADDR, reinterpret_cast<struct sockaddr*>(&sa),
+#endif
          MHD_OPTION_END);
    if (s_daemon != nullptr)
-      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_WEBAPI, _T("Web API initialized on port %u"), s_listenerPort);
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_WEBAPI, _T("Web API initialized on %s:%u"), s_listenerAddr.toString().cstr(), s_listenerPort);
    else
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_WEBAPI, _T("Web API initialization failed (MicroHTTPD initialization error)"));
 
