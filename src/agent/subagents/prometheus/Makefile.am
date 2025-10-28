@@ -7,8 +7,8 @@ generated/%.pb.cc generated/%.pb.h: %.proto
 	@PROTOC@ --cpp_out=generated --proto_path=. $<
 
 pkglib_LTLIBRARIES = prometheus.la
-prometheus_la_SOURCES = main.cpp receiver.cpp handler.cpp printer.cpp \
-                        generated/remote.pb.cc generated/types.pb.cc
+prometheus_la_SOURCES = main.cpp receiver.cpp handler.cpp printer.cpp
+nodist_prometheus_la_SOURCES = generated/remote.pb.cc generated/types.pb.cc
 prometheus_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build \
                          -I$(srcdir)/generated @PROTOBUF_CPPFLAGS@ @MICROHTTPD_CPPFLAGS@ @SNAPPY_CPPFLAGS@ @ABSEIL_CPPFLAGS@
 prometheus_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
