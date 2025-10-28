@@ -2585,7 +2585,7 @@ void DataCollectionTarget::doInstanceDiscovery(uint32_t requestId)
    for(int i = 0; i < m_dcObjects.size(); i++)
    {
       shared_ptr<DCObject> object = m_dcObjects.getShared(i);
-      if ((object->getInstanceDiscoveryMethod() != IDM_NONE) && (object->getStatus() != ITEM_STATUS_DISABLED))
+      if ((object->getInstanceDiscoveryMethod() != IDM_NONE) && (object->getInstanceDiscoveryMethod() != IDM_PUSH) &&(object->getStatus() != ITEM_STATUS_DISABLED))
       {
          object->setBusyFlag();
          rootObjects.add(object);
