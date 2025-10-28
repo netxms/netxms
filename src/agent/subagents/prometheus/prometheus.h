@@ -50,7 +50,7 @@ const ObjectArray<MetricMapping>& GetMetricMappings();
 
 void PrintWriteRequest(const prometheus::WriteRequest& request);
 
-bool StartReceiver(const TCHAR *listen, uint16_t port, const TCHAR *endpoint);
+bool StartReceiver(const TCHAR *listenAddress, uint16_t port, const TCHAR *endpoint);
 void StopReceiver();
 
 #define DEBUG_TAG _T("prometheus")

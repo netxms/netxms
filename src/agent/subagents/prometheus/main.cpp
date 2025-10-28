@@ -111,7 +111,7 @@ static bool SubagentInit(Config *config)
    }
 
    const TCHAR *endpoint = config->getValue(_T("/Prometheus/Endpoint"), _T("/api/v1/write"));
-   const TCHAR *listen = config->getValue(_T("/Prometheus/Listen"), _T("127.0.0.1"));
+   const TCHAR *listen = config->getValue(_T("/Prometheus/Address"), _T("127.0.0.1"));
 
    LoadMetricMappings(config);
 

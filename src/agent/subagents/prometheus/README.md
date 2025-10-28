@@ -13,12 +13,12 @@ All configuration options are placed in the `[Prometheus]` section of the agent 
 ```ini
 [Prometheus]
 Port = 9090
-Listen = 127.0.0.1
+Address = 127.0.0.1
 Endpoint = /api/v1/write
 ```
 
 - **Port** (required) - TCP port to listen on for incoming Prometheus remote write requests
-- **Listen** (optional, default: 127.0.0.1) - IP address to bind to
+- **Address** (optional, default: 127.0.0.1) - IP address to bind to
 - **Endpoint** (optional, default: /api/v1/write) - HTTP endpoint path for receiving data
 
 ### Metric Mappings
@@ -93,7 +93,7 @@ Node.Uname(server1) = "Linux 5.14.0-570.17.1.el9_6.x86_64 #1 SMP PREEMPT_DYNAMIC
 ```ini
 [Prometheus]
 Port = 9090
-Listen = 0.0.0.0
+Address = 0.0.0.0
 Endpoint = /api/v1/write
 
 Metric=node_network_transmit_drop_total:Net.Interface.TxDrops:nodename,device

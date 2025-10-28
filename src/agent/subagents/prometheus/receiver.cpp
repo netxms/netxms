@@ -133,32 +133,57 @@ static MHD_Result HandleConnection(void *cls, struct MHD_Connection *connection,
 }
 
 /**
+ * Custom logger
+ */
+static void Logger(void *context, const char *format, va_list args)
+{
+   char buffer[8192];
+   vsnprintf(buffer, 8192, format, args);
+   size_t last = strlen(buffer) - 1;
+   if (buffer[last] == '\n')
+      buffer[last] = 0;
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("MicroHTTPD: %hs"), buffer);
+}
+
+/**
  * Start HTTP receiver
  */
-bool StartReceiver(const TCHAR *listen, uint16_t port, const TCHAR *endpoint)
+bool StartReceiver(const TCHAR *listenAddress, uint16_t port, const TCHAR *endpoint)
 {
    tchar_to_utf8(endpoint, -1, s_endpoint, 256);
 
-   InetAddress addr = InetAddress::parse(listen);
+   InetAddress addr = InetAddress::parse(listenAddress);
    if (!addr.isValid())
    {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Invalid listen address: %s"), listen);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Invalid listen address: %s"), listenAddress);
       return false;
    }
+
+   unsigned int flags = MHD_USE_INTERNAL_POLLING_THREAD | MHD_USE_POLL | MHD_USE_ERROR_LOG;
+#if MHD_VERSION < 0x00097706
+   if (addr.getFamily() == AF_INET6)
+      flags |= MHD_USE_IPv6;
+#endif
 
    SockAddrBuffer sa;
    addr.fillSockAddr(&sa, port);
-   s_daemon = MHD_start_daemon(MHD_USE_INTERNAL_POLLING_THREAD, port, nullptr, nullptr,
-                               &HandleConnection, nullptr,
-                               MHD_OPTION_SOCK_ADDR_LEN, SA_LEN(reinterpret_cast<struct sockaddr*>(&sa)), &sa,
-                               MHD_OPTION_END);
+   s_daemon = MHD_start_daemon(
+         flags, port, nullptr, nullptr,
+         &HandleConnection, nullptr,
+         MHD_OPTION_EXTERNAL_LOGGER, Logger, nullptr,
+#if MHD_VERSION >= 0x00097706
+         MHD_OPTION_SOCK_ADDR_LEN, SA_LEN(reinterpret_cast<struct sockaddr*>(&sa)), &sa,
+#else
+         MHD_OPTION_SOCK_ADDR, reinterpret_cast<struct sockaddr*>(&sa),
+#endif
+         MHD_OPTION_END);
    if (s_daemon == nullptr)
    {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Failed to start HTTP server on %s:%u"), listen, port);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Failed to start HTTP server on %s:%u"), listenAddress, port);
       return false;
    }
 
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Listening on http://%s:%u%s"), listen, port, endpoint);
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Listening on http://%s:%u%s"), listenAddress, port, endpoint);
    return true;
 }
 
