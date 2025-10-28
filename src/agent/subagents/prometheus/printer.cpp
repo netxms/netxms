@@ -117,11 +117,11 @@ void PrintWriteRequest(const prometheus::WriteRequest& request)
             nxlog_debug_tag(DEBUG_TAG, 9, _T("    [%s]"), FormatTimestampMs(histogram.timestamp(), timestampBuffer));
             nxlog_debug_tag(DEBUG_TAG, 9, _T("      Sum: %.2f"), histogram.sum());
 
-            if (histogram.has_count_int())
+            if (histogram.count_int() != 0)
             {
                nxlog_debug_tag(DEBUG_TAG, 9, _T("      Count: %llu"), (unsigned long long)histogram.count_int());
             }
-            else if (histogram.has_count_float())
+            else if (histogram.count_float() != 0)
             {
                nxlog_debug_tag(DEBUG_TAG, 9, _T("      Count: %.2f"), histogram.count_float());
             }
