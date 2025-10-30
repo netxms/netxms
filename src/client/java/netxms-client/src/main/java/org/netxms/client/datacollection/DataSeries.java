@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,8 @@ package org.netxms.client.datacollection;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+import org.netxms.base.NXCPCodes;
+import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.Severity;
 
@@ -40,7 +41,7 @@ public class DataSeries
    private int multiplierPower;
    private int useMultiplier = 0;  // 0 - auto, 1 - use, 2 - do not use
    private Threshold[] thresholds = null;
-   
+
    /**
     * Create empty data series
     */
@@ -97,8 +98,41 @@ public class DataSeries
    }
 
    /**
-	 * @return the nodeId
-	 */
+    * Update data series from NXCP message
+    * 
+    * @param msg NXCP message
+    */
+   public void updateFromMessage(NXCPMessage msg)
+   {
+      dciName = msg.getFieldAsString(NXCPCodes.VID_DCI_NAME);
+      dciDescription = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
+      activeThresholdSeverity = Severity.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_CURRENT_SEVERITY));
+      multiplierPower = msg.getFieldAsInt32(NXCPCodes.VID_MULTIPLIER);
+      useMultiplier = msg.getFieldAsInt32(NXCPCodes.VID_USE_MULTIPLIER);
+
+      String units = msg.getFieldAsString(NXCPCodes.VID_UNITS_NAME);
+      measurementUnits = ((units != null) && !units.isBlank()) ? new MeasurementUnit(units) : null;
+
+      int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_THRESHOLDS);
+      thresholds = new Threshold[count];
+      long fieldId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
+      for(int i = 0; i < count; i++, fieldId += 20)
+         thresholds[i] = new Threshold(msg, fieldId);
+   }
+
+   /**
+    * Set data type.
+    *
+    * @param dataType new data type
+    */
+   public void setDataType(DataType dataType)
+   {
+      this.dataType = dataType;
+   }
+
+   /**
+    * @return the nodeId
+    */
 	public long getNodeId()
 	{
 		return nodeId;
@@ -224,14 +258,6 @@ public class DataSeries
 	}
 
 	/**
-	 * @param dataType the dataType to set
-	 */
-	public void setDataType(DataType dataType)
-	{
-		this.dataType = dataType;
-	}
-	
-	/**
 	 * Invert values
 	 */
 	public void invert()
@@ -248,54 +274,6 @@ public class DataSeries
    public Severity getActiveThresholdSeverity()
    {
       return activeThresholdSeverity;
-   }
-
-   /**
-    * Set current threshold severity
-    * 
-    * @param activeThresholdSeverity the currentThresholdSeverity to set
-    */
-   public void setActiveThresholdSeverity(Severity activeThresholdSeverity)
-   {
-      this.activeThresholdSeverity = activeThresholdSeverity;
-   }
-
-   /**
-    * Set multiplier power
-    * 
-    * @param multiplierPower the multiplierPower to set
-    */
-   public void setMultiplier(int multiplierPower)
-   {
-      this.multiplierPower = multiplierPower;      
-   }
-
-   /**
-    * Set multiplier usage flag
-    * 
-    * @param useMultiplier the useMultiplier to set
-    */
-   public void setUseMultiplier(int useMultiplier)
-   {
-      this.useMultiplier = useMultiplier;
-   }
-
-   /**
-    * Set measurement units
-    * 
-    * @param measurementUnit the measurementUnit to set
-    */
-   public void setUnits(MeasurementUnit measurementUnit)
-   {
-      this.measurementUnits = measurementUnit;
-   }
-
-   /**
-    * @param thresholds
-    */
-   public void setThresholds(List<Threshold> thresholds)
-   {
-      this.thresholds = thresholds.toArray(new Threshold[thresholds.size()]);
    }
 
    /**
@@ -346,24 +324,24 @@ public class DataSeries
       return thresholds;
    }
 
+   /**
+    * Get DCI description.
+    *
+    * @return DCI description
+    */
    public String getDciDescription()
    {
       return dciDescription;
    }
 
-   public void setDciDescription(String dciDescription)
-   {
-      this.dciDescription = dciDescription;
-   }
-
+   /**
+    * Get DCI name.
+    *
+    * @return DCI name
+    */
    public String getDciName()
    {
       return dciName;
-   }
-
-   public void setDciName(String dciName)
-   {
-      this.dciName = dciName;
    }
 
    /**

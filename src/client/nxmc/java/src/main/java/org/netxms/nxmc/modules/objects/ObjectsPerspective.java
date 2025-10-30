@@ -55,7 +55,6 @@ import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ObjectFilter;
-import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
@@ -305,17 +304,13 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       }
 
       // Add session listener
-      session.addListener(new SessionListener() {
-         @Override
-         public void notificationHandler(SessionNotification n)
+      session.addListener((n) -> {
+         if (n.getCode() != SessionNotification.OBJECT_CHANGED)
+            return;
+         AbstractObject context = (AbstractObject)getContext();
+         if ((context != null) && (n.getSubCode() == context.getObjectId()))
          {
-            if (n.getCode() != SessionNotification.OBJECT_CHANGED)
-               return;
-            AbstractObject context = (AbstractObject)getContext();
-            if ((context != null) && (n.getSubCode() == context.getObjectId()))
-            {
-               getWindow().getShell().getDisplay().asyncExec(() -> updateContext(n.getObject()));
-            }
+            getWindow().getShell().getDisplay().asyncExec(() -> updateContext(n.getObject()));
          }
       });
    }

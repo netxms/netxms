@@ -86,7 +86,6 @@ import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.ObjectPollType;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.RCC;
-import org.netxms.client.constants.Severity;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.datacollection.DCOStatusHolder;
@@ -106,7 +105,6 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.datacollection.GraphFolder;
 import org.netxms.client.datacollection.InterfaceTrafficDcis;
-import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.datacollection.PredictionEngine;
 import org.netxms.client.datacollection.RemoteChangeListener;
@@ -5979,8 +5977,7 @@ public class NXCSession
          sendMessage(msg);
 
          NXCPMessage response = waitForRCC(msg.getMessageId());
-         data.setDciName(response.getFieldAsString(NXCPCodes.VID_DCI_NAME));
-         data.setDciDescription(response.getFieldAsString(NXCPCodes.VID_DESCRIPTION));
+         data.updateFromMessage(response);
 
          while(true)
          {
@@ -6004,21 +6001,7 @@ public class NXCSession
             sendMessage(msg);
 
             NXCPMessage response = waitForRCC(msg.getMessageId());
-            data.setActiveThresholdSeverity(Severity.getByValue(response.getFieldAsInt32(NXCPCodes.VID_CURRENT_SEVERITY)));
-            data.setMultiplier(response.getFieldAsInt32(NXCPCodes.VID_MULTIPLIER));
-            data.setUseMultiplier(response.getFieldAsInt32(NXCPCodes.VID_USE_MULTIPLIER));
-            data.setUnits(new MeasurementUnit(response.getFieldAsString(NXCPCodes.VID_UNITS_NAME)));  
-            data.setDciName(response.getFieldAsString(NXCPCodes.VID_DCI_NAME));
-            data.setDciDescription(response.getFieldAsString(NXCPCodes.VID_DESCRIPTION));
-
-            int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_THRESHOLDS);
-            List<Threshold> thresholds = new ArrayList<Threshold>(count);
-            long fieldId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
-            for(int i = 0; i < count; i++, fieldId += 20)
-            {
-               thresholds.add(new Threshold(response, fieldId));
-            }
-            data.setThresholds(thresholds);
+            data.updateFromMessage(response);
 
             response = waitForMessage(NXCPCodes.CMD_DCI_DATA, msg.getMessageId());
             if (!response.isBinaryMessage())
