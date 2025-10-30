@@ -887,6 +887,11 @@ template class LIBNXSNMP_EXPORTABLE ObjectArray<SNMP_Variable>;
 #endif
 
 /**
+ * Buffer for PDU encoding
+ */
+typedef Buffer<BYTE, 4096> SNMP_PDUBuffer;
+
+/**
  * SNMP PDU
  */
 class LIBNXSNMP_EXPORTABLE SNMP_PDU
@@ -945,7 +950,7 @@ public:
    ~SNMP_PDU();
 
    bool parse(const BYTE *rawData, size_t rawLength, SNMP_SecurityContext *securityContext, bool engineIdAutoupdate);
-   size_t encode(BYTE **outBuffer, SNMP_SecurityContext *securityContext);
+   size_t encode(SNMP_PDUBuffer *outBuffer, SNMP_SecurityContext *securityContext);
 
    SNMP_Command getCommand() const { return m_command; }
    int getNumVariables() const { return m_variables.size(); }

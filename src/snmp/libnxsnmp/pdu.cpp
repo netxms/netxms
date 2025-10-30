@@ -902,7 +902,7 @@ bool SNMP_PDU::parse(const BYTE *rawData, size_t rawLength, SNMP_SecurityContext
 /**
  * Create packet from PDU
  */
-size_t SNMP_PDU::encode(BYTE **outBuffer, SNMP_SecurityContext *securityContext)
+size_t SNMP_PDU::encode(SNMP_PDUBuffer *outBuffer, SNMP_SecurityContext *securityContext)
 {
    size_t bytes, varBindsSize, pduSize, packetSize;
 
@@ -1112,15 +1112,14 @@ size_t SNMP_PDU::encode(BYTE **outBuffer, SNMP_SecurityContext *securityContext)
 			packetSize += bytes;
 		}
 
-      // And final step: allocate buffer for entire datagramm and wrap packet
-      // into SEQUENCE
-      *outBuffer = MemAllocArrayNoInit<BYTE>(packetSize + 6);
-      bytes = BER_Encode(ASN_SEQUENCE, packet, packetSize, *outBuffer, packetSize + 6);
+      // And final step: allocate buffer for entire datagramm and wrap packet into SEQUENCE
+		outBuffer->realloc(packetSize + 6);
+      bytes = BER_Encode(ASN_SEQUENCE, packet, packetSize, outBuffer->buffer(), packetSize + 6);
 
 		// Sign message
 		if ((m_version == SNMP_VERSION_3) && securityContext->needAuthentication())
 		{
-			signMessage(*outBuffer, bytes, securityContext);
+			signMessage(outBuffer->buffer(), bytes, securityContext);
 		}
    }
    else

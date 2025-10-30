@@ -559,12 +559,11 @@ int SNMP_UDPTransport::readMessage(SNMP_PDU **pdu, uint32_t timeout, struct sock
 int SNMP_UDPTransport::sendMessage(SNMP_PDU *pdu, uint32_t timeout)
 {
    int bytes = 0;
-   BYTE *buffer;
+   Buffer<BYTE, 4096> buffer;
    size_t size = pdu->encode(&buffer, m_securityContext);
    if (size != 0)
    {
-      bytes = sendto(m_hSocket, (char *)buffer, (int)size, 0, &m_peerAddr.sa, SA_LEN(&m_peerAddr.sa));
-      MemFree(buffer);
+      bytes = sendto(m_hSocket, (char*)buffer.buffer(), (int)size, 0, &m_peerAddr.sa, SA_LEN(&m_peerAddr.sa));
    }
    return bytes;
 }
