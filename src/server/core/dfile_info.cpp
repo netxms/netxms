@@ -55,9 +55,9 @@ void ServerDownloadFileInfo::updatePackageDBInfo(const TCHAR *description, const
 /**
  * Closes file and changes it's date if required
  */
-void ServerDownloadFileInfo::close(bool success, bool deleteOnFailure)
+void ServerDownloadFileInfo::close(bool success)
 {
-   DownloadFileInfo::close(success, deleteOnFailure);
+   DownloadFileInfo::close(success);
    if (m_completionCallback != nullptr)
       m_completionCallback(m_fileName, m_uploadData, success);
 }
