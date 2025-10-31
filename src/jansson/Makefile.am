@@ -1,3 +1,5 @@
+LIBS = @JANSSON_LIBS@
+
 lib_LTLIBRARIES = libnxjansson.la
 libnxjansson_la_SOURCES = \
 	dump.c \
