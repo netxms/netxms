@@ -286,14 +286,12 @@ static void TestPDUEncoding()
    pdu.bindVariable(new SNMP_Variable(oid));
 
    SNMP_SecurityContext securityContext("public");
-   BYTE *encodedPDU = nullptr;
+   SNMP_PDUBuffer encodedPDU;
    size_t size = pdu.encode(&encodedPDU, &securityContext);
-   AssertNotNull(encodedPDU);
    AssertTrue(size > 0);
 
    SNMP_PDU pdu2;
    AssertTrue(pdu2.parse(encodedPDU, size, &securityContext, false));
-   MemFree(encodedPDU);
 
    AssertEquals(pdu.getCommand(), pdu2.getCommand());
    AssertEquals(pdu2.getCommunity(), "public");
