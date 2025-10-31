@@ -406,7 +406,7 @@ public:
    }
    virtual ~ServerDownloadFileInfo();
 
-   virtual void close(bool success);
+   virtual void close(bool success, bool deleteOnFailure = true) override;
 
    void setUploadData(uint32_t data) { m_uploadData = data; }
    void updatePackageDBInfo(const wchar_t *description, const wchar_t *pkgName, const wchar_t *pkgVersion, const wchar_t *pkgType,

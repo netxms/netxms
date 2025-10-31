@@ -2190,7 +2190,7 @@ struct InterfaceState
    uint32_t operState;
    uint32_t adminState;
    uint32_t dot1xPaeAuthState;
-   uint32_t dot1xBackendAuthState;;
+   uint32_t dot1xBackendAuthState;
    SpanningTreePortState stpPortState;
 };
 
