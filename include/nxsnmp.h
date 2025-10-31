@@ -452,6 +452,8 @@ size_t LIBNXSNMP_EXPORTABLE SnmpParseOID(const TCHAR *text, uint32_t *buffer, si
 bool LIBNXSNMP_EXPORTABLE SnmpIsCorrectOID(const TCHAR *oid);
 size_t LIBNXSNMP_EXPORTABLE SnmpGetOIDLength(const TCHAR *oid);
 
+#define SNMP_OID_INTERNAL_BUFFER_SIZE  32
+
 /**
  * Object identifier (OID)
  */
@@ -460,6 +462,7 @@ class LIBNXSNMP_EXPORTABLE SNMP_ObjectId
 private:
    size_t m_length;
    uint32_t *m_value;
+   uint32_t m_internalBuffer[SNMP_OID_INTERNAL_BUFFER_SIZE];
 
 public:
    /**
@@ -468,7 +471,7 @@ public:
    SNMP_ObjectId()
    {
       m_length = 0;
-      m_value = nullptr;
+      m_value = m_internalBuffer;
    }
 
    /**
@@ -477,7 +480,15 @@ public:
    SNMP_ObjectId(const SNMP_ObjectId& src)
    {
       m_length = src.m_length;
-      m_value = MemCopyArray(src.m_value, m_length);
+      if (m_length <= SNMP_OID_INTERNAL_BUFFER_SIZE)
+      {
+         m_value = m_internalBuffer;
+         memcpy(m_value, src.m_value, m_length * sizeof(uint32_t));
+      }
+      else
+      {
+         m_value = MemCopyArray(src.m_value, m_length);
+      }
    }
 
    /**
@@ -486,9 +497,17 @@ public:
    SNMP_ObjectId(SNMP_ObjectId&& src)
    {
       m_length = src.m_length;
-      m_value = src.m_value;
+      if (src.m_value != src.m_internalBuffer)
+      {
+         m_value = src.m_value;
+         src.m_value = src.m_internalBuffer;
+      }
+      else
+      {
+         m_value = m_internalBuffer;
+         memcpy(m_value, src.m_value, m_length * sizeof(uint32_t));
+      }
       src.m_length = 0;
-      src.m_value = nullptr;
    }
 
    SNMP_ObjectId(const SNMP_ObjectId &base, uint32_t suffix);
@@ -500,7 +519,15 @@ public:
    SNMP_ObjectId(const uint32_t *value, size_t length)
    {
       m_length = length;
-      m_value = (length > 0) ? MemCopyArray(value, length) : nullptr;
+      if (m_length <= SNMP_OID_INTERNAL_BUFFER_SIZE)
+      {
+         m_value = m_internalBuffer;
+         memcpy(m_value, value, length * sizeof(uint32_t));
+      }
+      else
+      {
+         m_value = MemCopyArray(value, length);
+      }
    }
 
    /**
@@ -511,8 +538,9 @@ public:
       m_length = value.size();
       if (m_length > 0)
       {
+         m_value = (m_length <= SNMP_OID_INTERNAL_BUFFER_SIZE) ? m_internalBuffer : MemAllocArrayNoInit<uint32_t>(m_length);
 #if __cpp_lib_nonmember_container_access
-         m_value = MemCopyArray(std::data(value), m_length);
+         memcpy(m_value, std::data(value), m_length * sizeof(uint32_t));
 #else
          m_value = MemAllocArrayNoInit<uint32_t>(m_length);
          uint32_t *p = m_value;
@@ -522,13 +550,14 @@ public:
       }
       else
       {
-         m_value = nullptr;
+         m_value = m_internalBuffer;
       }
    }
 
    ~SNMP_ObjectId()
    {
-      MemFree(m_value);
+      if (m_value != m_internalBuffer)
+         MemFree(m_value);
    }
 
    SNMP_ObjectId& operator =(const SNMP_ObjectId& src);
@@ -621,7 +650,11 @@ public:
    void extend(uint32_t subId);
    void extend(const uint32_t *subId, size_t length);
    void truncate(size_t count);
-   void changeElement(size_t pos, uint32_t value) { if (pos < m_length) m_value[pos] = value; }
+   void changeElement(size_t pos, uint32_t value)
+   {
+      if (pos < m_length)
+         m_value[pos] = value;
+   }
 
    static SNMP_ObjectId parse(const TCHAR *oid);
 };
