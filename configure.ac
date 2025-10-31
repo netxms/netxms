@@ -4768,6 +4768,8 @@ fi
 if test "x$CXX" = "xCC" ; then
 	# The following is needed to avoid load errors for modules (subagents, drivers, etc.)
 	# Add it here to avoid breaking configure tests
+	# Preserve original libs for libjansson build
+	JANSSON_LIBS="$LIBS"
 	LIBS="$LIBS -lCrunG3"
 fi
 
@@ -4847,6 +4849,7 @@ AC_SUBST(INFORMIX_CPPFLAGS)
 AC_SUBST(INFORMIX_LDFLAGS)
 AC_SUBST(INFORMIX_LIBS)
 AC_SUBST(INSTALL_LIBPATH)
+AC_SUBST(JANSSON_LIBS)
 AC_SUBST(LIBISOTREE_CPPFLAGS)
 AC_SUBST(LIBISOTREE_LDFLAGS)
 AC_SUBST(LIBNXAGENT_LIBS)
