@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -117,15 +117,17 @@ bool SNMP_Variable::decode(const BYTE *data, size_t varLength)
 
    bool success = false;
    SNMP_OID oid;
-   memset(&oid, 0, sizeof(SNMP_OID));
    if (BER_DecodeContent(type, pbCurrPos, length, (BYTE *)&oid))
    {
-      m_name.setValue(oid.value, (size_t)oid.length);
+      m_name.setValue(oid.value, oid.length);
       varLength -= length + dwIdLength;
       pbCurrPos += length;
       success = true;
+      if (oid.value != oid.internalBuffer)
+      {
+         MemFree(oid.value);
+      }
    }
-   MemFree(oid.value);
 
    if (success)
       success = decodeContent(pbCurrPos, varLength - length - dwIdLength, false);
@@ -151,16 +153,18 @@ bool SNMP_Variable::decodeContent(const BYTE *data, size_t dataLength, bool encl
    {
       case ASN_OBJECT_ID:
          SNMP_OID oid;
-         memset(&oid, 0, sizeof(SNMP_OID));
          if (BER_DecodeContent(m_type, pbCurrPos, length, reinterpret_cast<BYTE*>(&oid)))
          {
             m_valueLength = oid.length * sizeof(uint32_t);
-            m_value = reinterpret_cast<BYTE*>(oid.value);
+            if (oid.value != oid.internalBuffer)
+            {
+               m_value = reinterpret_cast<BYTE*>(oid.value);
+            }
+            else
+            {
+               m_value = MemCopyBlock(reinterpret_cast<BYTE*>(oid.value), m_valueLength);
+            }
             success = true;
-         }
-         else
-         {
-            MemFree(oid.value);
          }
          break;
       case ASN_INTEGER:
