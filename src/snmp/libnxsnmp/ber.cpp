@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -171,7 +171,7 @@ bool BER_DecodeContent(uint32_t type, const BYTE *data, size_t length, BYTE *buf
          if (length > 0)
          {
             SNMP_OID *oid = reinterpret_cast<SNMP_OID*>(buffer);
-            oid->value = MemAllocArrayNoInit<uint32_t>(length + 1);
+            oid->value = oid->internalBuffer;
 
             // First octet need special handling
             oid->value[0] = *data / 40;
@@ -196,11 +196,21 @@ bool BER_DecodeContent(uint32_t type, const BYTE *data, size_t length, BYTE *buf
                // Last octet in element
                if (length > 0)
                {
+                  if (oid->length == SNMP_OID_INTERNAL_BUFFER_SIZE)
+                  {
+                     // Need to allocate memory for OID
+                     oid->value = MemAllocArrayNoInit<uint32_t>(length + SNMP_OID_INTERNAL_BUFFER_SIZE);
+                     memcpy(oid->value, oid->internalBuffer, oid->length * sizeof(uint32_t));
+                  }
                   oid->value[oid->length++] = (value << 7) | *data;
                   data++;
                   length--;
                }
             }
+         }
+         else
+         {
+            bResult = false;  // Invalid length
          }
          break;
       default:    // For unknown types, simply move content to buffer

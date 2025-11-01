@@ -319,16 +319,17 @@ bool SNMP_PDU::parseTrapPDU(const BYTE *pData, size_t pduLength)
       if (dwType == ASN_OBJECT_ID)
       {
          SNMP_OID oid;
-         memset(&oid, 0, sizeof(SNMP_OID));
          if (BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&oid))
          {
             m_trapId.setValue(oid.value, oid.length);
             pduLength -= dwLength + idLength;
             pbCurrPos += dwLength;
-
             bResult = true;
+            if (oid.value != oid.internalBuffer)
+            {
+               MemFree(oid.value);
+            }
          }
-         MemFree(oid.value);
       }
    }
 
