@@ -545,11 +545,16 @@ void StringList::addAllFromMessage(const NXCPMessage& msg, uint32_t baseId, uint
    uint32_t id = baseId;
    for(int i = 0; i < count; i++)
    {
-      TCHAR *value = msg.getFieldAsString(id++);
-      if (value == nullptr)
-         add(_T(""));
+      TCHAR *value = msg.getFieldAsString(id++, &m_pool);
+      if (value != nullptr)
+      {
+         CHECK_ALLOCATION;
+         m_values[m_count++] = value;
+      }
       else
-         addPreallocated(value);
+      {
+         add(_T(""));
+      }
    }
 }
 
@@ -564,9 +569,12 @@ void StringList::addAllFromMessage(const NXCPMessage& msg, uint32_t fieldId)
    uint16_t count = in.readUInt16B();
    for(int i = 0; i < count; i++)
    {
-      TCHAR *item = in.readNXCPString(nullptr);
+      TCHAR *item = in.readNXCPString(&m_pool);
       if (item != nullptr)
-         addPreallocated(item);
+      {
+         CHECK_ALLOCATION;
+         m_values[m_count++] = item;
+      }
    }
 }
 

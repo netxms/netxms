@@ -4353,7 +4353,9 @@ bool Node::updateHardwareComponents(PollerInfo *poller, uint32_t requestId)
       setModified(MODIFY_HARDWARE_INVENTORY);
    }
    else if (components != nullptr)
+   {
       setModified(MODIFY_HARDWARE_INVENTORY);
+   }
 
    m_hardwareComponents = components;
    unlockProperties();
@@ -5313,7 +5315,7 @@ bool Node::confPollAgent()
          StringList secrets;
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT secret FROM shared_secrets WHERE zone=? OR zone=-1 ORDER BY zone DESC, id ASC"));
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_zoneUIN);
 
@@ -5321,8 +5323,9 @@ bool Node::confPollAgent()
             if (hResult != NULL)
             {
                int count = DBGetNumRows(hResult);
+               wchar_t secret[128];
                for(int i = 0; i < count; i++)
-                  secrets.addPreallocated(DBGetField(hResult, i, 0, NULL, 0));
+                  secrets.add(DBGetField(hResult, i, 0, secret, 128));
                DBFreeResult(hResult);
             }
             DBFreeStatement(hStmt);
