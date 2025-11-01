@@ -314,8 +314,9 @@ unique_ptr<StringList> SnmpGetKnownCommunities(int32_t zoneUIN)
       if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
+         wchar_t community[MAX_DB_STRING];
          for(int i = 0; i < count; i++)
-            communities->addPreallocated(DBGetField(hResult, i, 0, NULL, 0));
+            communities->add(DBGetField(hResult, i, 0, community, MAX_DB_STRING));
          DBFreeResult(hResult);
       }
       DBFreeStatement(hStmt);

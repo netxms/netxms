@@ -199,8 +199,9 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
               if (hResult != nullptr)
               {
                  int count = DBGetNumRows(hResult);
+                 wchar_t secret[128];
                  for(int i = 0; i < count; i++)
-                    secrets.addPreallocated(DBGetField(hResult, i, 0, nullptr, 0));
+                    secrets.add(DBGetField(hResult, i, 0, secret, 128));
                  DBFreeResult(hResult);
               }
               DBFreeStatement(hStmt);

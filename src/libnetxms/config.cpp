@@ -33,16 +33,14 @@
 /**
  * Expand value
  */
-static TCHAR *ExpandValue(const TCHAR *src, bool xmlFormat, bool expandEnv)
+static StringBuffer ExpandValue(const TCHAR *src, bool xmlFormat, bool expandEnv)
 {
    if (xmlFormat && !expandEnv)
-      return MemCopyString(src);
+      return StringBuffer(src);
 
-   size_t allocated = _tcslen(src) + 1;
-   TCHAR *buffer = MemAllocString(allocated);
+   StringBuffer out;
 
    const TCHAR *in = src;
-   TCHAR *out = buffer;
    bool squotes = false;
    bool dquotes = false;
    if ((*in == _T('"')) && !xmlFormat)
@@ -64,7 +62,7 @@ static TCHAR *ExpandValue(const TCHAR *src, bool xmlFormat, bool expandEnv)
          if (*(in + 1) == _T('\''))
          {
             in++;
-            *out++ = _T('\'');
+            out.append(_T('\''));
          }
       }
       else if (dquotes && (*in == _T('"')))
@@ -73,7 +71,7 @@ static TCHAR *ExpandValue(const TCHAR *src, bool xmlFormat, bool expandEnv)
          if (*(in + 1) == _T('"'))
          {
             in++;
-            *out++ = _T('"');
+            out.append(_T('"'));
          }
       }
       else if (!squotes && expandEnv && (*in == _T('$')))
@@ -94,13 +92,7 @@ static TCHAR *ExpandValue(const TCHAR *src, bool xmlFormat, bool expandEnv)
                String env = GetEnvironmentVariableEx(name);
                if (!env.isEmpty())
                {
-                  size_t len = _tcslen(env);
-                  allocated += len;
-                  size_t pos = out - buffer;
-                  buffer = (TCHAR *)realloc(buffer, allocated * sizeof(TCHAR));
-                  out = &buffer[pos];
-                  memcpy(out, env, len * sizeof(TCHAR));
-                  out += len;
+                  out.append(env);
                }
                in = end;
             }
@@ -112,16 +104,15 @@ static TCHAR *ExpandValue(const TCHAR *src, bool xmlFormat, bool expandEnv)
          }
          else
          {
-            *out++ = *in;
+            out.append(*in);
          }
       }
       else
       {
-         *out++ = *in;
+         out.append(*in);
       }
    }
-   *out = 0;
-   return buffer;
+   return out;
 }
 
 /**
@@ -1431,7 +1422,7 @@ bool Config::loadIniConfigFromMemory(const char *content, size_t length, const T
          {
             entry = new ConfigEntry(buffer, currentSection, this, fileName, sourceLine, 0);
          }
-         entry->addValuePreallocated(ExpandValue(ptr, false, m_allowMacroExpansion));
+         entry->addValue(ExpandValue(ptr, false, m_allowMacroExpansion));
       }
    }
    return ignoreErrors || validConfig;
@@ -1580,7 +1571,7 @@ static void EndElement(void *userData, const char *name)
       ps->level--;
       if (ps->trimValue[ps->level])
          ps->charData[ps->level].trim();
-      ps->stack[ps->level]->addValuePreallocated(ExpandValue(ps->charData[ps->level], true, ps->config->isExpansionAllowed()));
+      ps->stack[ps->level]->addValue(ExpandValue(ps->charData[ps->level], true, ps->config->isExpansionAllowed()));
    }
 }
 
