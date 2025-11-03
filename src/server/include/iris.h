@@ -26,6 +26,46 @@
 #define AI_ASSISTANT_COMPONENT   L"AI-ASSISTANT"
 
 /**
+ * AI task status
+ */
+enum class AITaskStatus
+{
+   SCHEDULED = 0,
+   RUNNING = 1,
+   COMPLETED = 2,
+   FAILED = 3
+};
+
+/**
+ * AI task
+ */
+class AITask
+{
+private:
+   uint32_t m_id;
+   uint32_t m_userId;
+   std::string m_prompt;
+   time_t m_lastExecutionTime;
+   time_t m_nextExecutionTime;
+   std::string m_memento;
+   StringBuffer m_explanation;
+   String m_description;
+   AITaskStatus m_status;
+
+public:
+   AITask(const wchar_t *descripion, uint32_t userId, const wchar_t *prompt);
+
+   void execute();
+
+   uint32_t getId() const { return m_id; }
+   uint32_t getUserId() const { return m_userId; }
+   const wchar_t *getDescription() const { return m_description.cstr(); }
+   AITaskStatus getStatus() const { return m_status; }
+   time_t getLastExecutionTime() const { return m_lastExecutionTime; }
+   time_t getNextExecutionTime() const { return m_nextExecutionTime; }
+};
+
+/**
  * AI assistant function handler
  */
 typedef std::string (*AssistantFunctionHandler)(json_t*, uint32_t);
@@ -58,6 +98,11 @@ uint32_t NXCORE_EXPORTABLE ClearAIAssistantChat(GenericClientSession *session);
 /**
  * Process assistant request
  */
-char NXCORE_EXPORTABLE *ProcessRequestToAIAssistant(const char *prompt, NetObj *context, GenericClientSession *session);
+char NXCORE_EXPORTABLE *ProcessRequestToAIAssistant(const char *prompt, NetObj *context, GenericClientSession *session, int maxIterations = 5);
+
+/**
+ * Register AI task
+ */
+uint32_t NXCORE_EXPORTABLE RegisterAITask(const wchar_t *description, uint32_t userId, const wchar_t *prompt);
 
 #endif

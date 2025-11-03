@@ -24,9 +24,10 @@
 #include <nxlibcurl.h>
 #include <netxms-version.h>
 #include <iris.h>
-#include <unordered_map>
 
 #define DEBUG_TAG _T("llm.iris")
+
+void AITaskSchedulerThread();
 
 /**
  * Loaded server config
@@ -93,6 +94,8 @@ bool InitAIAssistant()
    }
 
    RegisterComponent(AI_ASSISTANT_COMPONENT);
+
+   ThreadCreate(AITaskSchedulerThread);
 
    nxlog_debug_tag(DEBUG_TAG, 2, L"LLM service URL = \"%hs\", model = \"%hs\"", s_llmServiceURL, s_llmModel);
    nxlog_debug_tag(DEBUG_TAG, 2, L"%d functions registered", static_cast<int>(s_functionHandlers.size()));
@@ -366,7 +369,7 @@ static Mutex s_chatsLock;
 /**
  * Process request to assistant
  */
-char NXCORE_EXPORTABLE *ProcessRequestToAIAssistant(const char *prompt, NetObj *context, GenericClientSession *session)
+char NXCORE_EXPORTABLE *ProcessRequestToAIAssistant(const char *prompt, NetObj *context, GenericClientSession *session, int maxIterations)
 {
    json_t *messages;
    s_chatsLock.lock();
@@ -394,7 +397,7 @@ char NXCORE_EXPORTABLE *ProcessRequestToAIAssistant(const char *prompt, NetObj *
    s_chatsLock.unlock();
    AddMessage(messages, "user", prompt);
 
-   int iterations = 3;
+   int iterations = maxIterations;
    char *answer = nullptr;
    while(iterations-- > 0)
    {
@@ -442,6 +445,9 @@ char NXCORE_EXPORTABLE *ProcessRequestToAIAssistant(const char *prompt, NetObj *
                   std::string functionResult = CallAIAssistantFunction(name, json_object_get(function, "arguments"), (session != nullptr) ? session->getUserId() : 0);
                   if (!functionResult.empty())
                   {
+                     nxlog_debug_tag(DEBUG_TAG, 5, L"LLM function \"%hs\" executed, result length=%d", name, static_cast<int>(functionResult.length()));
+                     nxlog_debug_tag(DEBUG_TAG, 8, L"Function result: %hs", functionResult.c_str());
+
                      json_t *functionMessage = json_object();
                      json_object_set_new(functionMessage, "role", json_string("tool"));
                      json_object_set_new(functionMessage, "name", json_string(name));

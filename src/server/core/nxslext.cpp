@@ -2221,6 +2221,26 @@ static int F_QueryAIAssistant(int argc, NXSL_Value **argv, NXSL_Value **result, 
 }
 
 /**
+ * Register AI task
+ * Syntax:
+ *    RegisterAITask(taskDescription, prompt)
+ * where:
+ *     taskDescription - description of the AI task
+ *     prompt - prompt to send to AI assistant
+ * Return value:
+ *     registered task ID
+ */
+static int F_RegisterAITask(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString() || !argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   uint32_t taskId = RegisterAITask(argv[0]->getValueAsCString(), 0, argv[1]->getValueAsCString());
+   *result = vm->createValue(taskId);
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
  * Additional server functions to use within all scripts
  */
 static NXSL_ExtFunction m_nxslServerFunctions[] =
@@ -2285,6 +2305,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 	{ "PostEvent", F_PostEvent, -1 },
    { "PostEventEx", F_PostEventEx, -1 },
    { "QueryAIAssistant", F_QueryAIAssistant, -1 },
+   { "RegisterAITask", F_RegisterAITask, 2 },
 	{ "RenameObject", F_RenameObject, 2, true },
 	{ "SendMail", F_SendMail, -1, true },
 	{ "SendNotification", F_SendNotification, 4 },

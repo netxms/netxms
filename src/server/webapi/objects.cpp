@@ -55,8 +55,8 @@ int H_ObjectSearch(Context *context)
    uint32_t parentId = json_object_get_uint32(request, "parent");
    int32_t zoneUIN = json_object_get_int32(request, "zoneUIN");
 
-   TCHAR name[256];
-   utf8_to_tchar(json_object_get_string_utf8(request, "name", ""), -1, name, 256);
+   wchar_t name[256];
+   utf8_to_wchar(json_object_get_string_utf8(request, "name", ""), -1, name, 256);
 
    InetAddress ipAddressFilter;
    const char *ipAddressText = json_object_get_string_utf8(request, "ipAddress", nullptr);
