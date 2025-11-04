@@ -217,7 +217,7 @@ VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverDat
    }
 
    VlanList *vlans = new VlanList();
-   SNMP_ObjectId oid { 1, 3, 6, 1, 4, 1, 2636, 3, 40, 1, 5, 1, 5, 1 };
+   SNMP_ObjectId oid { 1, 3, 6, 1, 4, 1, 2636, 3, 40, 1, 5, 1, 5, 1, 5 };  // jnxExVlanTag
    const SNMP_Variable *v;
    while((v = vlanTable->getNext(oid)) != nullptr)
    {
@@ -225,7 +225,7 @@ VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverDat
       vlans->add(vlan);
 
       oid = v->getName();
-      oid.changeElement(oid.length() - 2, 2);   // VLAN name
+      oid.changeElement(oid.length() - 2, 2);   // jnxExVlanName
       const SNMP_Variable *name = vlanTable->get(oid);
       if (name != nullptr)
       {
@@ -234,9 +234,11 @@ VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverDat
       }
 
       // VLAN ports
-      uint32_t vlanId = oid.getElement(oid.length() - 1);
+      oid.changeElement(oid.length() - 2, 4);   // jnxExVlanPortGroupInstance
+      uint32_t vlanIndex = vlanTable->getAsUInt32(oid);
+
       SNMP_ObjectId baseOid { 1, 3, 6, 1, 4, 1, 2636, 3, 40, 1, 5, 1, 7, 1, 5, 0 };
-      baseOid.changeElement(baseOid.length() - 1, vlanId);
+      baseOid.changeElement(baseOid.length() - 1, vlanIndex);
       const SNMP_Variable *p = nullptr;
       while((p = portTable->getNext((p != nullptr) ? p->getName() : baseOid)) != nullptr)
       {
