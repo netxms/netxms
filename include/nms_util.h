@@ -2154,7 +2154,7 @@ private:
    }
 
 public:
-	IntegerArray(int initial = 0, int grow = 16) : Array(nullptr, initial, grow, sizeof(T)) { m_objectDestructor = destructor; m_storePointers = (sizeof(T) == sizeof(void *)); }
+	IntegerArray(int initial = 0, int grow = 1024 / sizeof(T)) : Array(nullptr, initial, grow, sizeof(T)) { m_objectDestructor = destructor; m_storePointers = (sizeof(T) == sizeof(void *)); }
    IntegerArray(const IntegerArray<T>& src) : Array(src) { }
    IntegerArray(IntegerArray<T>&& src) : Array(std::move(src)) { }
 	virtual ~IntegerArray() { }
