@@ -646,6 +646,27 @@ public:
       return (rc == OID_LONGER) || (rc == OID_EQUAL);
    }
 
+   bool follows(const TCHAR *oid) const
+   {
+      int rc = compare(oid);
+      return (rc == OID_LONGER) || (rc == OID_FOLLOWING);
+   }
+   bool follows(const uint32_t *oid, size_t length) const
+   {
+      int rc = compare(oid, length);
+      return (rc == OID_LONGER) || (rc == OID_FOLLOWING);
+   }
+   bool follows(std::initializer_list<uint32_t> oid) const
+   {
+      int rc = compare(oid);
+      return (rc == OID_LONGER) || (rc == OID_FOLLOWING);
+   }
+   bool follows(const SNMP_ObjectId& oid) const
+   {
+      int rc = compare(oid);
+      return (rc == OID_LONGER) || (rc == OID_FOLLOWING);
+   }
+
    void setValue(const uint32_t *value, size_t length);
    void extend(uint32_t subId);
    void extend(const uint32_t *subId, size_t length);
