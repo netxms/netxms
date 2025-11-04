@@ -1953,7 +1953,7 @@ private:
 	void *m_context;
 
 	bool internalRemove(int index, bool allowDestruction);
-	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object, this); }
+	void destroyObject(void *object) { if (object != nullptr) m_objectDestructor(object, this); }
 
 protected:
    bool m_storePointers;

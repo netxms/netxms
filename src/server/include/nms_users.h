@@ -423,6 +423,76 @@ public:
 };
 
 /**
+ * Group search path, used by Group::isMember
+ */
+class GroupSearchPath
+{
+private:
+   size_t m_size;
+   uint32_t m_buffer[256];
+   std::vector<uint32_t> *m_extendedBuffer;
+
+public:
+   GroupSearchPath()
+   {
+      m_size = 0;
+      m_extendedBuffer = nullptr;
+   }
+   ~GroupSearchPath()
+   {
+      delete m_extendedBuffer;
+   }
+
+   /**
+    * Add group ID to the search path
+    */
+   void add(uint32_t id)
+   {
+      if (m_size < sizeof(m_buffer) / sizeof(uint32_t))
+      {
+         m_buffer[m_size++] = id;
+      }
+      else
+      {
+         if (m_extendedBuffer == nullptr)
+            m_extendedBuffer = new std::vector<uint32_t>(m_buffer, m_buffer + m_size);
+         m_extendedBuffer->push_back(id);
+         m_size++;
+      }
+   }
+
+   /**
+    * Clear search path
+    */
+   void clear()
+   {
+      m_size = 0;
+      if (m_extendedBuffer != nullptr)
+         m_extendedBuffer->clear();
+   }
+
+   /**
+    * Check if given element is part of search path
+    */
+   bool contains(uint32_t id)
+   {
+      if (m_extendedBuffer != nullptr)
+      {
+         for(size_t i = 0; i < m_size; i++)
+            if (m_extendedBuffer->at(i) == id)
+               return true;
+      }
+      else
+      {
+         for(size_t i = 0; i < m_size; i++)
+            if (m_buffer[i] == id)
+               return true;
+      }
+      return false;
+   }
+};
+
+/**
  * Group object
  */
 class NXCORE_EXPORTABLE Group : public UserDatabaseObject
@@ -447,7 +517,7 @@ public:
 
    void addUser(uint32_t userId);
    void deleteUser(uint32_t userId);
-   bool isMember(uint32_t userId, IntegerArray<uint32_t> *searchPath = nullptr) const;
+   bool isMember(uint32_t userId, GroupSearchPath *searchPath = nullptr) const;
    const IntegerArray<uint32_t>& getMembers() const { return m_members; }
    int getMemberCount() const { return m_members.size(); }
 

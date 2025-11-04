@@ -109,7 +109,7 @@ static inline void RemoveDatabaseObject(UserDatabaseObject *object)
 static uint64_t GetEffectiveSystemRights(User *user)
 {
    uint64_t systemRights = user->getSystemRights();
-   IntegerArray<uint32_t> searchPath(32, 32);
+   GroupSearchPath searchPath;
    Iterator<UserDatabaseObject> it = s_userDatabase.begin();
    while(it.hasNext())
    {
@@ -164,7 +164,7 @@ static String GetEffectiveUIAccessRules(User *user)
    if ((r != nullptr) && (*r != 0))
       uiAccessRules.append(r);
 
-   IntegerArray<uint32_t> searchPath(32, 32);
+   GroupSearchPath searchPath;
    Iterator<UserDatabaseObject> it = s_userDatabase.begin();
    while(it.hasNext())
    {
@@ -654,7 +654,7 @@ bool NXCORE_EXPORTABLE ValidateUserId(uint32_t id, TCHAR *loginName, uint64_t *s
 /**
  * Check if user is a member of specific child group
  */
-bool CheckUserMembershipInternal(uint32_t userId, uint32_t groupId, IntegerArray<uint32_t> *searchPath)
+bool CheckUserMembershipInternal(uint32_t userId, uint32_t groupId, GroupSearchPath *searchPath)
 {
    Group *group = static_cast<Group*>(s_userDatabase.get(groupId));
    return (group != nullptr) ? group->isMember(userId, searchPath) : false;
@@ -672,7 +672,7 @@ bool NXCORE_EXPORTABLE CheckUserMembership(uint32_t userId, uint32_t groupId)
 		return true;
 
    bool result = false;
-   IntegerArray<uint32_t> searchPath(0, 32);
+   GroupSearchPath searchPath;
 
    s_userDatabaseLock.readLock();
 

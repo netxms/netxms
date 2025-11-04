@@ -2879,7 +2879,7 @@ uint32_t DataCollectionTarget::getDataCollectionSummary(NXCPMessage *msg, bool o
 /**
  * Get last (current) DCI values.
  */
-uint32_t DataCollectionTarget::getDataCollectionSummary(json_t *values, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId)
+uint32_t DataCollectionTarget::getDataCollectionSummary(json_t *values, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId, std::function<bool(DCObject*)> filter)
 {
    readLockDciAccess();
 
@@ -2889,7 +2889,8 @@ uint32_t DataCollectionTarget::getDataCollectionSummary(json_t *values, bool obj
       if ((object->hasValue() || includeNoValueObjects) &&
           (!objectTooltipOnly || object->isShowOnObjectTooltip()) &&
           (!overviewOnly || object->isShowInObjectOverview()) &&
-          object->hasAccess(userId))
+          object->hasAccess(userId) &&
+          (filter == nullptr || filter(object)))
       {
          json_array_append_new(values, static_cast<DCItem*>(object)->lastValueToJSON());
       }
