@@ -936,7 +936,7 @@ public class ObjectContextMenuManager extends MenuManager
    {
       for(Object o : selection.toList())
       {
-         if (!(o instanceof DashboardBase))
+         if (!(o instanceof Dashboard))
             return false;
       }
       return true;
