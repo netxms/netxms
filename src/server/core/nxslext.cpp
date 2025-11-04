@@ -1945,7 +1945,7 @@ static int F_CreateUserAgentNotification(int argc, NXSL_Value **argv, NXSL_Value
 
    uint32_t len = MAX_USER_AGENT_MESSAGE_SIZE;
    const TCHAR *message = argv[1]->getValueAsString(&len);
-   IntegerArray<uint32_t> idList(16,16);
+   IntegerArray<uint32_t> idList(64, 64);
    idList.add(static_cast<shared_ptr<NetObj>*>(object->getData())->get()->getId());
    time_t startTime = (time_t)argv[2]->getValueAsUInt64();
    time_t endTime = (time_t)argv[3]->getValueAsUInt64();

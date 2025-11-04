@@ -384,7 +384,7 @@ static uint32_t GetCommentCount(DB_HANDLE hdb, uint32_t alarmId)
  */
 Alarm::Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& ruleGuid, const TCHAR *ruleDescription,
          const TCHAR *message, const TCHAR *key, const TCHAR *impact, int severity, uint32_t timeout,
-         uint32_t timeoutEvent, uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList) : m_relatedEvents(16, 16), m_alarmCategoryList(alarmCategoryList)
+         uint32_t timeoutEvent, uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList) : m_relatedEvents(0, 64), m_alarmCategoryList(alarmCategoryList)
 {
    m_alarmId = CreateUniqueId(IDG_ALARM);
    m_parentAlarmId = parentAlarmId;
@@ -1914,7 +1914,7 @@ void NXCORE_EXPORTABLE DeleteAlarm(uint32_t alarmId, bool objectCleanup)
  */
 bool DeleteObjectAlarms(uint32_t objectId, DB_HANDLE hdb)
 {
-   IntegerArray<uint32_t> deleteList(0, 128);
+   IntegerArray<uint32_t> deleteList;
 
 	s_alarmList.lock();
 	s_alarmList.forEach(

@@ -15449,9 +15449,9 @@ void ClientSession::addUserAgentNotification(const NXCPMessage& request)
 
    if (m_systemAccessRights & SYSTEM_ACCESS_UA_NOTIFICATIONS)
    {
-      IntegerArray<UINT32> objectList(16, 16);
+      IntegerArray<uint32_t> objectList(64, 64);
       request.getFieldAsInt32Array(VID_UA_NOTIFICATION_BASE + 1, &objectList);
-      UINT32 rcc = RCC_SUCCESS;
+      uint32_t rcc = RCC_SUCCESS;
       for (int i = 0; i < objectList.size(); i++)
       {
          shared_ptr<NetObj> object = FindObjectById(objectList.get(i));
