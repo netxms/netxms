@@ -1250,7 +1250,7 @@ uint32_t DataCollectionOwner::getDataCollectionSummary(NXCPMessage *msg, bool ob
 /**
  * Get last (current) DCI values.
  */
-uint32_t DataCollectionOwner::getDataCollectionSummary(json_t *values, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId)
+uint32_t DataCollectionOwner::getDataCollectionSummary(json_t *values, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId, std::function<bool(DCObject*)> filter)
 {
    if (!includeNoValueObjects)
       return RCC_INCOMPATIBLE_OPERATION;
@@ -1262,7 +1262,8 @@ uint32_t DataCollectionOwner::getDataCollectionSummary(json_t *values, bool obje
       DCObject *object = m_dcObjects.get(i);
       if ((!objectTooltipOnly || object->isShowOnObjectTooltip()) &&
           (!overviewOnly || object->isShowInObjectOverview()) &&
-          object->hasAccess(userId))
+          object->hasAccess(userId) &&
+          (filter == nullptr || filter(object)))
       {
          json_array_append_new(values, static_cast<DCItem*>(object)->lastValueToJSON());
       }

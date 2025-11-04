@@ -1949,7 +1949,7 @@ public:
    virtual json_t *toJson() override;
 
    virtual uint32_t getDataCollectionSummary(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId);
-   virtual uint32_t getDataCollectionSummary(json_t *values, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId);
+   virtual uint32_t getDataCollectionSummary(json_t *values, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId, std::function<bool(DCObject*)> filter = nullptr);
 
    int getItemCount() const { return m_dcObjects.size(); }
    bool addDCObject(DCObject *object, bool alreadyLocked = false, bool notify = true);
@@ -2701,7 +2701,7 @@ public:
    NXSL_Array *getTemplatesForNXSL(NXSL_VM *vm);
 
    virtual uint32_t getDataCollectionSummary(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId) override;
-   virtual uint32_t getDataCollectionSummary(json_t *values, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId) override;
+   virtual uint32_t getDataCollectionSummary(json_t *values, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId, std::function<bool(DCObject*)> filter = nullptr) override;
 
    uint32_t getPerfTabDCIList(NXCPMessage *msg, uint32_t userId);
    uint32_t getTableLastValue(uint32_t dciId, NXCPMessage *msg);
