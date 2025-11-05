@@ -395,6 +395,7 @@
     <ClCompile Include="net.cpp" />
     <ClCompile Include="procinfo.cpp" />
     <ClCompile Include="prod.cpp" />
+    <ClCompile Include="registry.cpp" />
     <ClCompile Include="system.cpp" />
     <ClCompile Include="usb.cpp" />
   </ItemGroup>
