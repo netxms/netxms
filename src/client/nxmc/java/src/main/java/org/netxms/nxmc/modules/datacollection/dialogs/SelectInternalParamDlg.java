@@ -71,6 +71,7 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
       if ((object instanceof Template) || ((object instanceof AbstractNode) && ((AbstractNode)object).isManagementServer()))
       {
          list.add(new AgentTable("Server.EventProcessors", "Event processors", new String[] { "ID" }));
+         list.add(new AgentTable("Server.NotificationChannels", "Notification channels", new String[] { "NAME" }));
       }
 
       viewer.setInput(list.toArray());

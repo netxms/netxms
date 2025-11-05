@@ -1368,6 +1368,7 @@ void LoadNotificationChannels();
 void ShutdownNotificationChannels();
 void SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject, const TCHAR *message, uint32_t eventCode, uint64_t eventId, const uuid& ruleId);
 void GetNotificationChannels(NXCPMessage *msg);
+void GetNotificationChannels(Table *table);
 void GetNotificationDrivers(NXCPMessage *msg);
 char *GetNotificationChannelConfiguration(const TCHAR *name);
 bool IsNotificationChannelExists(const TCHAR *name);
