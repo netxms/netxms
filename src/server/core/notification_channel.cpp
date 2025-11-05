@@ -246,7 +246,9 @@ public:
 
    void send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, uint32_t eventCode, uint64_t eventId, const uuid& ruleId);
    void fillMessage(NXCPMessage *msg, uint32_t base);
-   const TCHAR *getName() const { return m_name; }
+   const wchar_t *getName() const { return m_name; }
+   const wchar_t *getDescription() const { return m_description; }
+   const wchar_t *getDriverName() const { return m_driverName; }
    const char *getConfiguration() const { return m_configuration; }
    void getStatus(NotificationChannelStatus *status);
 
@@ -825,6 +827,43 @@ void GetNotificationChannels(NXCPMessage *msg)
       shared_ptr<NotificationChannel> nc = *it.next()->value;
       nc->fillMessage(msg, fieldId);
       fieldId += 20;
+   }
+   s_channelListLock.unlock();
+}
+
+/**
+ * Get notification channels as table
+ */
+void GetNotificationChannels(Table *table)
+{
+   table->addColumn(L"NAME", DCI_DT_STRING, L"Name", true);
+   table->addColumn(L"DESCRIPTION", DCI_DT_STRING, L"Description");
+   table->addColumn(L"DRIVER", DCI_DT_STRING, L"Driver");
+   table->addColumn(L"HEALTH_CHECK_STATUS", DCI_DT_STRING, L"Health Check Status");
+   table->addColumn(L"MESSAGE_COUNT", DCI_DT_UINT, L"Message Count");
+   table->addColumn(L"FAILED_SEND_COUNT", DCI_DT_UINT, L"Failed Send Count");
+   table->addColumn(L"QUEUE_SIZE", DCI_DT_UINT, L"Queue Size");
+   table->addColumn(L"SEND_STATUS", DCI_DT_STRING, L"Send Status");
+   table->addColumn(L"LAST_MESSAGE_TIME", DCI_DT_UINT64, L"Last Message Time");
+
+   s_channelListLock.lock();
+   auto it = s_channelList.begin();
+   while(it.hasNext())
+   {
+      shared_ptr<NotificationChannel> nc = *it.next()->value;
+      table->addRow();
+      table->set(0, nc->getName());
+
+      NotificationChannelStatus status;
+      nc->getStatus(&status);
+      table->set(1, nc->getDescription());
+      table->set(2, nc->getDriverName());
+      table->set(3, status.healthCheckStatus ? L"OK" : L"FAILED");
+      table->set(4, status.messageCount);
+      table->set(5, status.failedSendCount);
+      table->set(6, status.queueSize);
+      table->set(7, (status.lastMessageTime > 0) ? (status.sendStatus ? L"OK" : L"FAILED") : L"NA");
+      table->set(8, static_cast<uint64_t>(status.lastMessageTime));
    }
    s_channelListLock.unlock();
 }

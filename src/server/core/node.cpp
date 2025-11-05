@@ -8421,6 +8421,12 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, shared_ptr<Table> 
 
          *result = table;
       }
+      else if (!_tcsicmp(name, _T("Server.NotificationChannels")))
+      {
+         auto table = make_shared<Table>();
+         GetNotificationChannels(table.get());
+         *result = table;
+      }
       else
       {
          rc = DCE_NOT_SUPPORTED;
@@ -8479,7 +8485,7 @@ static DataCollectionError GetEventProcessorStatistic(const TCHAR *param, int ty
  */
 static DataCollectionError GetNotificationChannelStatus(const TCHAR *metric, std::function<void (const NotificationChannelStatus&)> callback)
 {
-   TCHAR channel[64];
+   wchar_t channel[64];
    AgentGetParameterArg(metric, 1, channel, 64);
 
    NotificationChannelStatus status;
