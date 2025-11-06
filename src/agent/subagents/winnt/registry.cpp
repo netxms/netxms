@@ -190,10 +190,9 @@ LONG H_RegistryValue(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractC
       {
          case REG_BINARY:
             BinToStrW(buffer, MIN(MAX_RESULT_LENGTH / 2 - 1, size), value);
-            ret_string(value, reinterpret_cast<wchar_t*>(buffer));
             break;
          case REG_DWORD:
-            ret_uint(value, *reinterpret_cast<int32_t*>(buffer));
+            ret_int(value, *reinterpret_cast<int32_t*>(buffer));
             break;
          case REG_DWORD_BIG_ENDIAN:
             ret_uint(value, ntohl(*reinterpret_cast<uint32_t*>(buffer)));
@@ -202,7 +201,7 @@ LONG H_RegistryValue(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractC
             ret_string(value, reinterpret_cast<wchar_t*>(buffer));
             break;
          case REG_QWORD:
-            ret_uint(value, *reinterpret_cast<int64_t*>(buffer));
+            ret_int64(value, *reinterpret_cast<int64_t*>(buffer));
             break;
          case REG_SZ:
             ret_string(value, reinterpret_cast<wchar_t*>(buffer));
