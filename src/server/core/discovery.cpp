@@ -464,7 +464,7 @@ static bool AcceptNewNodeStage1(DiscoveredAddress *address)
    {
       if (!CURRENT_MODULE.pfAcceptNewNode(address->ipAddr, address->zoneUIN, address->macAddr))
       {
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage1(%s): rejected by module %s"), ipAddrText, CURRENT_MODULE.szName);
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage1(%s): rejected by module %s"), ipAddrText, CURRENT_MODULE.name);
          return false;  // filtered out by module
       }
    }

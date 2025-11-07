@@ -86,7 +86,7 @@ static bool LoadNetXMSModule(const wchar_t *name)
                   module.hModule = hModule;
                   module.metadata = static_cast<NXMODULE_METADATA*>(DLGetSymbolAddr(hModule, "NXM_metadata", errorText));
                   g_moduleList.add(module);
-                  nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Server module %s loaded successfully", module.szName);
+                  nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Server module %s loaded successfully", module.name);
                   success = true;
                }
                else

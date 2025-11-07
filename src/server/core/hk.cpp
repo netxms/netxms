@@ -578,7 +578,7 @@ static void HouseKeeper()
       // Call hooks in loaded modules
 		ENUMERATE_MODULES(pfHousekeeperHook)
 		{
-		   nxlog_debug_tag(DEBUG_TAG, 3, _T("Housekeeper: calling hook in module %s"), CURRENT_MODULE.szName);
+		   nxlog_debug_tag(DEBUG_TAG, 3, _T("Housekeeper: calling hook in module %s"), CURRENT_MODULE.name);
 		   CURRENT_MODULE.pfHousekeeperHook();
       }
 

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -122,13 +122,13 @@ void InitializeDeviceBackupInterface()
       if (status == DeviceBackupApiStatus::SUCCESS)
       {
          s_provider = CURRENT_MODULE.deviceBackupInterface;
-         providerName = CURRENT_MODULE.szName;
+         providerName = CURRENT_MODULE.name;
          break;
       }
       else
       {
          nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Network device backup interface provided by module %s cannot be initialized (%s)"),
-            CURRENT_MODULE.szName, GetDeviceBackupApiErrorMessage(status));
+            CURRENT_MODULE.name, GetDeviceBackupApiErrorMessage(status));
       }
    }
 

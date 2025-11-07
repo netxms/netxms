@@ -231,7 +231,7 @@ static bool ConsoleCommandHandler(const TCHAR *command, ServerConsole *console)
 extern "C" bool __EXPORT NXM_Register(NXMODULE *module, Config *config)
 {
    module->dwSize = sizeof(NXMODULE);
-   _tcscpy(module->szName, _T("NTCB"));
+   wcscpy(module->name, L"NTCB");
    module->pfInitialize = InitModule;
    module->pfServerStarted = OnServerStart;
    module->pfShutdown = ShutdownModule;

@@ -222,7 +222,7 @@ static bool Initialize(Config *config)
 extern "C" bool __EXPORT NXM_Register(NXMODULE *module, Config *config)
 {
    module->dwSize = sizeof(NXMODULE);
-   _tcscpy(module->szName, _T("WCC"));
+   wcscpy(module->name, L"WCC");
    module->pfInitialize = Initialize;
    module->pfServerStarted = OnServerStart;
    module->pfShutdown = OnShutdown;

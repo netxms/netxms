@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -138,7 +138,7 @@ static void ShutdownModule()
 {
    StopLeefSender();
    MemFreeAndNull(g_leefExtraData);
-   nxlog_debug_tag(DEBUG_TAG_LEEF, 2, _T("LEEF module shutdown completed"));
+   nxlog_debug_tag(DEBUG_TAG_LEEF, 2, L"LEEF module shutdown completed");
 }
 
 /**
@@ -159,7 +159,7 @@ static bool OnAgentMessage(NXCPMessage *msg, uint32_t nodeId)
 extern "C" bool __EXPORT NXM_Register(NXMODULE *module, Config *config)
 {
    module->dwSize = sizeof(NXMODULE);
-   _tcscpy(module->szName, _T("LEEF"));
+   wcscpy(module->name, L"LEEF");
    module->pfInitialize = InitModule;
    module->pfServerStarted = OnServerStart;
    module->pfShutdown = ShutdownModule;

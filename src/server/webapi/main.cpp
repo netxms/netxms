@@ -361,9 +361,9 @@ static void OnServerStart()
  */
 static void ShutdownModule()
 {
-   nxlog_debug_tag(DEBUG_TAG_WEBAPI, 2, _T("Waiting for web API server to stop"));
+   nxlog_debug_tag(DEBUG_TAG_WEBAPI, 2, L"Waiting for web API server to stop");
    MHD_stop_daemon(s_daemon);
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_WEBAPI, _T("Web API server stopped"));
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_WEBAPI, L"Web API server stopped");
 }
 
 /**
@@ -372,7 +372,7 @@ static void ShutdownModule()
 extern "C" bool __EXPORT NXM_Register(NXMODULE *module, Config *config)
 {
    module->dwSize = sizeof(NXMODULE);
-   _tcscpy(module->szName, _T("WEBAPI"));
+   wcscpy(module->name, L"WEBAPI");
    module->pfInitialize = InitModule;
    module->pfServerStarted = OnServerStart;
    module->pfShutdown = ShutdownModule;

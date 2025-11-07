@@ -1185,7 +1185,7 @@ DataCollectionError DataCollectionTarget::getInternalTable(const TCHAR *name, sh
 {
    ENUMERATE_MODULES(pfGetInternalTable)
    {
-      nxlog_debug_tag(DEBUG_TAG_DC_COLLECTOR, 5, _T("Calling GetInternalTable(\"%s\") in module %s"), name, CURRENT_MODULE.szName);
+      nxlog_debug_tag(DEBUG_TAG_DC_COLLECTOR, 5, _T("Calling GetInternalTable(\"%s\") in module %s"), name, CURRENT_MODULE.name);
       DataCollectionError rc = CURRENT_MODULE.pfGetInternalTable(this, name, result);
       if (rc != DCE_NOT_SUPPORTED)
          return rc;
@@ -1204,7 +1204,7 @@ DataCollectionError DataCollectionTarget::getInternalMetric(const TCHAR *name, T
 
    ENUMERATE_MODULES(pfGetInternalMetric)
    {
-      nxlog_debug_tag(DEBUG_TAG_DC_COLLECTOR, 5, _T("Calling GetInternalMetric(\"%s\") in module %s"), name, CURRENT_MODULE.szName);
+      nxlog_debug_tag(DEBUG_TAG_DC_COLLECTOR, 5, _T("Calling GetInternalMetric(\"%s\") in module %s"), name, CURRENT_MODULE.name);
       DataCollectionError rc = CURRENT_MODULE.pfGetInternalMetric(this, name, buffer, size);
       if (rc != DCE_NOT_SUPPORTED)
          return rc;

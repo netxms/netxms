@@ -107,8 +107,12 @@ AITask::AITask(const wchar_t *descripion, uint32_t userId, const wchar_t *prompt
       "'completed' attribute should be set to true if no further action is required, or false if task needs to be rescheduled. "
       "'next_execution_time' should be in number if seconds and indicate delay until next task execution if it is not completed. "
       "'memento' should contain any data that needs to be preserved between task executions. "
-      "'explanation' should provide a brief reasoning behind your decision. "
-      "\n<instructions>";
+      "'explanation' should provide a brief reasoning behind your decision. ";
+   ENUMERATE_MODULES(pfGetAIAgentInstructions)
+   {
+      m_prompt.append(CURRENT_MODULE.pfGetAIAgentInstructions());
+   }
+   m_prompt.append("\n<instructions>");
    char *mp = UTF8StringFromWideString(prompt);
    m_prompt.append(mp);
    MemFree(mp);

@@ -2589,7 +2589,7 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
       rcc = CURRENT_MODULE.pfAdditionalLoginCheck(m_userId, request);
       if (rcc != RCC_SUCCESS)
       {
-         debugPrintf(4, _T("Login blocked by module %s (rcc=%u)"), CURRENT_MODULE.szName, rcc);
+         debugPrintf(4, _T("Login blocked by module %s (rcc=%u)"), CURRENT_MODULE.name, rcc);
          break;
       }
    }
@@ -6213,7 +6213,7 @@ void ClientSession::createObject(const NXCPMessage& request)
                rcc = CURRENT_MODULE.pfValidateObjectCreation(objectClass, objectName, ipAddr, zoneUIN, request);
                if (rcc != RCC_SUCCESS)
                {
-                  debugPrintf(4, _T("Creation of object \"%s\" of class %d blocked by module %s (RCC=%u)"), objectName, objectClass, CURRENT_MODULE.szName, rcc);
+                  debugPrintf(4, _T("Creation of object \"%s\" of class %d blocked by module %s (RCC=%u)"), objectName, objectClass, CURRENT_MODULE.name, rcc);
                   break;
                }
             }

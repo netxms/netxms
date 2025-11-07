@@ -3630,7 +3630,7 @@ restart_status_poll:
    // Call hooks in loaded modules
    ENUMERATE_MODULES(pfStatusPollHook)
    {
-      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): calling hook in module %s"), m_name, m_id, CURRENT_MODULE.szName);
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): calling hook in module %s"), m_name, m_id, CURRENT_MODULE.name);
       CURRENT_MODULE.pfStatusPollHook(this, pSession, rqId, poller);
    }
 
@@ -4928,7 +4928,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
    // Call hooks in loaded modules
    ENUMERATE_MODULES(pfConfPollHook)
    {
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfigurationPoll(%s [%d]): calling hook in module %s"), m_name, m_id, CURRENT_MODULE.szName);
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfigurationPoll(%s [%d]): calling hook in module %s"), m_name, m_id, CURRENT_MODULE.name);
       if (CURRENT_MODULE.pfConfPollHook(this, session, rqId, poller))
          modified |= MODIFY_ALL;   // FIXME: change module call to get exact modifications
    }
@@ -11812,7 +11812,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
    poller->setStatus(_T("calling modules"));
    ENUMERATE_MODULES(pfTopologyPollHook)
    {
-      nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("TopologyPoll(%s [%d]): calling hook in module %s"), m_name, m_id, CURRENT_MODULE.szName);
+      nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("TopologyPoll(%s [%d]): calling hook in module %s"), m_name, m_id, CURRENT_MODULE.name);
       CURRENT_MODULE.pfTopologyPollHook(this, pSession, rqId, poller);
    }
 

@@ -1322,13 +1322,13 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
       else if (IsCommand(_T("MODULES"), szBuffer, 3))
       {
          ConsoleWrite(console, _T("Loaded server modules:\n"));
-         ENUMERATE_MODULES(szName)
+         ENUMERATE_MODULES(name)
          {
             NXMODULE_METADATA *m = CURRENT_MODULE.metadata;
             if (m != nullptr)
-               ConsolePrintf(console, _T("   %-24s %-12hs %hs\n"), CURRENT_MODULE.szName, m->moduleVersion, m->vendor);
+               ConsolePrintf(console, _T("   %-24s %-12hs %hs\n"), CURRENT_MODULE.name, m->moduleVersion, m->vendor);
             else
-               ConsolePrintf(console, _T("   %-24s (module metadata unavailable)\n"), CURRENT_MODULE.szName);
+               ConsolePrintf(console, _T("   %-24s (module metadata unavailable)\n"), CURRENT_MODULE.name);
          }
          ConsolePrintf(console, _T("%d modules loaded\n"), g_moduleList.size());
       }

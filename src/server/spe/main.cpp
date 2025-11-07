@@ -44,7 +44,7 @@ static ObjectArray<PredictionEngine> *GetPredictionEngines()
 extern "C" bool __EXPORT NXM_Register(NXMODULE *module, Config *config)
 {
    module->dwSize = sizeof(NXMODULE);
-   _tcscpy(module->szName, _T("SPE"));
+   _tcscpy(module->name, _T("SPE"));
    module->pfGetPredictionEngines = GetPredictionEngines;
    return true;
 }
