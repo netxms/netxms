@@ -24,6 +24,7 @@
 #include <nxlibcurl.h>
 #include <netxms-version.h>
 #include <iris.h>
+#include <unordered_map>
 
 #define DEBUG_TAG _T("llm.iris")
 
@@ -230,7 +231,7 @@ static json_t *OllamaApiRequest(json_t *requestData)
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, (long)0);
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Server/" NETXMS_VERSION_STRING_A);
 
-   char *postData = (requestData != nullptr) ? json_dumps(requestData, 0) : strdup("{}");
+   char *postData = (requestData != nullptr) ? json_dumps(requestData, 0) : MemCopyStringA("{}");
    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData);
    curl_easy_setopt(curl, CURLOPT_POST, (long)1);
 
@@ -337,7 +338,7 @@ static json_t *OllamaApiRequest(json_t *requestData)
 
    curl_slist_free_all(headers);
    curl_easy_cleanup(curl);
-   free(postData);
+   MemFree(postData);
    return response;
 }
 

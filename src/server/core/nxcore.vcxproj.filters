@@ -528,6 +528,9 @@
     <ClCompile Include="devbackup.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="aitask.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\dbdrv.h">

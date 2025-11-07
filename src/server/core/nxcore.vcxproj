@@ -430,6 +430,7 @@
     <ClCompile Include="admin.cpp" />
     <ClCompile Include="agent.cpp" />
     <ClCompile Include="agent_policy.cpp" />
+    <ClCompile Include="aitask.cpp" />
     <ClCompile Include="alarm.cpp" />
     <ClCompile Include="alarm_category.cpp" />
     <ClCompile Include="asset.cpp" />
