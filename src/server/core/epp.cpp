@@ -28,6 +28,8 @@
 void StartDowntime(uint32_t objectId, String tag);
 void EndDowntime(uint32_t objectId, String tag);
 
+void ProcessEventWithAIAssistant(Event *event, const shared_ptr<NetObj>& object, const wchar_t *instructions);
+
 /**
  * Default event policy rule constructor
  */
@@ -49,6 +51,7 @@ EPRule::EPRule(uint32_t id) : m_timeFrames(0, 16, Ownership::True), m_actions(0,
 	m_alarmTimeout = 0;
 	m_alarmTimeoutEvent = EVENT_ALARM_TIMEOUT;
 	m_downtimeTag[0] = 0;
+	m_aiAgentInstructions = nullptr;
 }
 
 /**
@@ -82,8 +85,8 @@ EPRule::EPRule(const ConfigEntry& config, bool nxslV5) : m_timeFrames(0, 16, Own
       unique_ptr<ObjectArray<ConfigEntry>> frames = timeFrameRoot->getSubEntries(_T("timeFrame#*"));
       for(int i = 0; i < frames->size(); i++)
       {
-         uint32_t time = frames->get(i)->getAttributeAsUInt(_T("time"));
-         uint64_t date = frames->get(i)->getAttributeAsUInt64(_T("date"));
+         uint32_t time = frames->get(i)->getAttributeAsUInt(L"time");
+         uint64_t date = frames->get(i)->getAttributeAsUInt64(L"date");
          m_timeFrames.add(new TimeFrame(time, date));
       }
    }
@@ -95,27 +98,28 @@ EPRule::EPRule(const ConfigEntry& config, bool nxslV5) : m_timeFrames(0, 16, Own
    m_alarmKey = MemCopyString(config.getSubEntryValue(_T("alarmKey")));
    m_alarmMessage = MemCopyString(config.getSubEntryValue(_T("alarmMessage")));
    m_alarmImpact = MemCopyString(config.getSubEntryValue(_T("alarmImpact")));
-   m_rcaScriptName = MemCopyString(config.getSubEntryValue(_T("rootCauseAnalysisScript")));
+   m_rcaScriptName = MemCopyString(config.getSubEntryValue(L"rootCauseAnalysisScript"));
+   m_aiAgentInstructions = MemCopyString(config.getSubEntryValue(L"aiAgentInstructions"));
 
-   _tcslcpy(m_downtimeTag, config.getSubEntryValue(_T("downtimeTag"), 0, _T("")), MAX_DOWNTIME_TAG_LENGTH);
+   wcslcpy(m_downtimeTag, config.getSubEntryValue(L"downtimeTag", 0, L""), MAX_DOWNTIME_TAG_LENGTH);
 
-   ConfigEntry *pStorageEntry = config.findEntry(_T("pStorageActions"));
+   ConfigEntry *pStorageEntry = config.findEntry(L"pStorageActions");
    if (pStorageEntry != nullptr)
    {
-      unique_ptr<ObjectArray<ConfigEntry>> tmp = pStorageEntry->getSubEntries(_T("set#*"));
+      unique_ptr<ObjectArray<ConfigEntry>> tmp = pStorageEntry->getSubEntries(L"set#*");
       for(int i = 0; i < tmp->size(); i++)
       {
-         m_pstorageSetActions.set(tmp->get(i)->getAttribute(_T("key")), tmp->get(i)->getValue());
+         m_pstorageSetActions.set(tmp->get(i)->getAttribute(L"key"), tmp->get(i)->getValue());
       }
 
-      tmp = pStorageEntry->getSubEntries(_T("delete#*"));
+      tmp = pStorageEntry->getSubEntries(L"delete#*");
       for(int i = 0; i < tmp->size(); i++)
       {
-         m_pstorageDeleteActions.add(tmp->get(i)->getAttribute(_T("key")));
+         m_pstorageDeleteActions.add(tmp->get(i)->getAttribute(L"key"));
       }
    }
 
-   ConfigEntry *customAttributeEntry = config.findEntry(_T("customAttributeActions"));
+   ConfigEntry *customAttributeEntry = config.findEntry(L"customAttributeActions");
    if (customAttributeEntry != nullptr)
    {
       unique_ptr<ObjectArray<ConfigEntry>> tmp = customAttributeEntry->getSubEntries(_T("set#*"));
@@ -139,7 +143,7 @@ EPRule::EPRule(const ConfigEntry& config, bool nxslV5) : m_timeFrames(0, 16, Own
       {
          for (int i = 0; i < categories->size(); i++)
          {
-            const TCHAR *name = categories->get(i)->getAttribute(_T("name"));
+            const TCHAR *name = categories->get(i)->getAttribute(L"name");
             const TCHAR *description = categories->get(i)->getValue();
 
             if ((name != nullptr) && (*name != 0))
@@ -198,10 +202,10 @@ EPRule::EPRule(const ConfigEntry& config, bool nxslV5) : m_timeFrames(0, 16, Own
       m_actionScript = nullptr;
    }
 
-   ConfigEntry *actionsRoot = config.findEntry(_T("actions"));
+   ConfigEntry *actionsRoot = config.findEntry(L"actions");
    if (actionsRoot != nullptr)
    {
-      unique_ptr<ObjectArray<ConfigEntry>> actions = actionsRoot->getSubEntries(_T("action#*"));
+      unique_ptr<ObjectArray<ConfigEntry>> actions = actionsRoot->getSubEntries(L"action#*");
       for(int i = 0; i < actions->size(); i++)
       {
          uuid guid = actions->get(i)->getSubEntryValueAsUUID(_T("guid"));
@@ -225,10 +229,10 @@ EPRule::EPRule(const ConfigEntry& config, bool nxslV5) : m_timeFrames(0, 16, Own
       }
    }
 
-   ConfigEntry *timerCancellationsRoot = config.findEntry(_T("timerCancellations"));
+   ConfigEntry *timerCancellationsRoot = config.findEntry(L"timerCancellations");
    if (timerCancellationsRoot != nullptr)
    {
-      ConfigEntry *keys = timerCancellationsRoot->findEntry(_T("timerKey"));
+      ConfigEntry *keys = timerCancellationsRoot->findEntry(L"timerKey");
       if (keys != nullptr)
       {
          for(int i = 0; i < keys->getValueCount(); i++)
@@ -245,7 +249,8 @@ EPRule::EPRule(const ConfigEntry& config, bool nxslV5) : m_timeFrames(0, 16, Own
  * Construct event policy rule from database record
  * Assuming the following field order:
  * rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,
- * alarm_timeout,alarm_timeout_event,rca_script_name,alarm_impact,action_script,downtime_tag
+ * alarm_timeout,alarm_timeout_event,rca_script_name,alarm_impact,action_script,
+ * downtime_tag,ai_instructions
  */
 EPRule::EPRule(DB_RESULT hResult, int row) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
 {
@@ -287,6 +292,7 @@ EPRule::EPRule(DB_RESULT hResult, int row) : m_timeFrames(0, 16, Ownership::True
       m_actionScript = nullptr;
    }
    DBGetField(hResult, row, 13, m_downtimeTag, MAX_DOWNTIME_TAG_LENGTH);
+   m_aiAgentInstructions = DBGetField(hResult, row, 14, nullptr, 0);
 }
 
 /**
@@ -315,10 +321,10 @@ EPRule::EPRule(const NXCPMessage& msg) : m_timeFrames(0, 16, Ownership::True), m
       for(int i = 0; i < count; i++)
       {
          uint32_t actionId = msg.getFieldAsUInt32(fieldId++);
-         TCHAR *timerDelay = msg.getFieldAsString(fieldId++);
-         TCHAR *timerKey = msg.getFieldAsString(fieldId++);
-         TCHAR *blockingTimerKey = msg.getFieldAsString(fieldId++);
-         TCHAR *snoozeTime = msg.getFieldAsString(fieldId++);
+         wchar_t *timerDelay = msg.getFieldAsString(fieldId++);
+         wchar_t *timerKey = msg.getFieldAsString(fieldId++);
+         wchar_t *blockingTimerKey = msg.getFieldAsString(fieldId++);
+         wchar_t *snoozeTime = msg.getFieldAsString(fieldId++);
          bool active = msg.getFieldAsBoolean(fieldId++);
          fieldId += 4;
          m_actions.add(new ActionExecutionConfiguration(actionId, timerDelay, snoozeTime, timerKey, blockingTimerKey, active));
@@ -387,6 +393,8 @@ EPRule::EPRule(const NXCPMessage& msg) : m_timeFrames(0, 16, Ownership::True), m
    {
       m_actionScript = nullptr;
    }
+
+   m_aiAgentInstructions = msg.getFieldAsString(VID_AI_AGENT_INSTRUCTIONS);
 }
 
 /**
@@ -403,6 +411,7 @@ EPRule::~EPRule()
    delete m_filterScript;
    MemFree(m_actionScriptSource);
    delete m_actionScript;
+   MemFree(m_aiAgentInstructions);
 }
 
 /**
@@ -597,6 +606,13 @@ void EPRule::createExportRecord(TextFileWriter& xml) const
       xml.append(category->getDescription());
       xml.appendUtf8String("</category>\n");
       delete category;
+   }
+
+   if ((m_aiAgentInstructions != nullptr) && (*m_aiAgentInstructions != 0))
+   {
+      xml.appendUtf8String("\t\t\t\t<aiAgentInstructions>");
+      xml.append(EscapeStringForXML2(m_aiAgentInstructions));
+      xml.appendUtf8String("</aiAgentInstructions>\n");
    }
 
    xml.appendUtf8String("\t\t\t</alarmCategories>\n\t\t</rule>\n");
@@ -1029,6 +1045,11 @@ bool EPRule::processEvent(Event *event) const
       ThreadPoolExecuteSerialized(g_mainThreadPool, _T("DOWNTIME"), EndDowntime, event->getSourceId(), tag);
    }
 
+   if ((m_aiAgentInstructions != nullptr) && (m_aiAgentInstructions[0] != 0))
+   {
+      ProcessEventWithAIAssistant(event, object, m_aiAgentInstructions);
+   }
+
    return (m_flags & RF_STOP_PROCESSING) ? true : false;
 }
 
@@ -1292,7 +1313,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
    // General attributes
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_impact,")
                                   _T("alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,rca_script_name,")
-                                  _T("action_script,downtime_tag) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+                                  _T("action_script,downtime_tag,ai_instructions) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -1309,6 +1330,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
       DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_rcaScriptName, DB_BIND_STATIC, MAX_DB_STRING);
       DBBind(hStmt, 13, DB_SQLTYPE_TEXT, m_actionScriptSource, DB_BIND_STATIC);
       DBBind(hStmt, 14, DB_SQLTYPE_VARCHAR, m_downtimeTag, DB_BIND_STATIC);
+      DBBind(hStmt, 15, DB_SQLTYPE_TEXT, m_aiAgentInstructions, DB_BIND_STATIC);
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -1508,6 +1530,7 @@ void EPRule::fillMessage(NXCPMessage *msg) const
    msg->setField(VID_RCA_SCRIPT_NAME, m_rcaScriptName);
    msg->setField(VID_DOWNTIME_TAG, m_downtimeTag);
    msg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
+   msg->setField(VID_AI_AGENT_INSTRUCTIONS, CHECK_NULL_EX(m_aiAgentInstructions));
    msg->setField(VID_NUM_ACTIONS, static_cast<uint32_t>(m_actions.size()));
    uint32_t fieldId = VID_ACTION_LIST_BASE;
    for(int i = 0; i < m_actions.size(); i++)
@@ -1597,6 +1620,7 @@ json_t *EPRule::toJson() const
    json_object_set_new(root, "pstorageDeleteActions", m_pstorageDeleteActions.toJson());
    json_object_set_new(root, "customAttributeSetActions", m_customAttributeSetActions.toJson());
    json_object_set_new(root, "customAttributeDeleteActions", m_customAttributeDeleteActions.toJson());
+   json_object_set_new(root, "aiAgentInstructions", json_string_t(m_aiAgentInstructions));
 
    return root;
 }
@@ -1621,9 +1645,10 @@ bool EventPolicy::loadFromDB()
    bool success = false;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   hResult = DBSelect(hdb, _T("SELECT rule_id,rule_guid,flags,comments,alarm_message,")
-                           _T("alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,")
-                           _T("rca_script_name,alarm_impact,action_script,downtime_tag FROM event_policy ORDER BY rule_id"));
+   hResult = DBSelect(hdb, L"SELECT rule_id,rule_guid,flags,comments,alarm_message,"
+                           L"alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,"
+                           L"rca_script_name,alarm_impact,action_script,downtime_tag,ai_instructions "
+                           L"FROM event_policy ORDER BY rule_id");
    if (hResult != nullptr)
    {
       success = true;
@@ -1653,15 +1678,15 @@ bool EventPolicy::saveToDB() const
    bool success = DBBegin(hdb);
    if (success)
    {
-      success = DBQuery(hdb, _T("DELETE FROM event_policy")) &&
-                DBQuery(hdb, _T("DELETE FROM policy_time_frame_list")) &&
-                DBQuery(hdb, _T("DELETE FROM policy_action_list")) &&
-                DBQuery(hdb, _T("DELETE FROM policy_timer_cancellation_list")) &&
-                DBQuery(hdb, _T("DELETE FROM policy_event_list")) &&
-                DBQuery(hdb, _T("DELETE FROM policy_source_list")) &&
-                DBQuery(hdb, _T("DELETE FROM policy_pstorage_actions")) &&
-                DBQuery(hdb, _T("DELETE FROM policy_cattr_actions")) &&
-                DBQuery(hdb, _T("DELETE FROM alarm_category_map"));
+      success = DBQuery(hdb, L"DELETE FROM event_policy") &&
+                DBQuery(hdb, L"DELETE FROM policy_time_frame_list") &&
+                DBQuery(hdb, L"DELETE FROM policy_action_list") &&
+                DBQuery(hdb, L"DELETE FROM policy_timer_cancellation_list") &&
+                DBQuery(hdb, L"DELETE FROM policy_event_list") &&
+                DBQuery(hdb, L"DELETE FROM policy_source_list") &&
+                DBQuery(hdb, L"DELETE FROM policy_pstorage_actions") &&
+                DBQuery(hdb, L"DELETE FROM policy_cattr_actions") &&
+                DBQuery(hdb, L"DELETE FROM alarm_category_map");
 
       if (success)
       {
@@ -1685,7 +1710,7 @@ bool EventPolicy::saveToDB() const
  */
 void EventPolicy::processEvent(Event *pEvent)
 {
-	nxlog_debug_tag(DEBUG_TAG, 7, _T("EPP: processing event ") UINT64_FMT, pEvent->getId());
+	nxlog_debug_tag(DEBUG_TAG, 7, L"EPP: processing event " UINT64_FMT, pEvent->getId());
    readLock();
    for(int i = 0; i < m_rules.size(); i++)
       if (m_rules.get(i)->processEvent(pEvent))

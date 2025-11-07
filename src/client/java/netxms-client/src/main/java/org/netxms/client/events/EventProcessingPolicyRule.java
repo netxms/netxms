@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,6 +76,7 @@ public class EventProcessingPolicyRule
    private List<String> persistentStorageDelete;
    private Map<String, String> customAttributeStorageSet;
    private List<String> customAttributeStorageDelete;
+   private String aiAgentInstructions;
    private String comments;
    private int ruleNumber;
 
@@ -106,6 +107,7 @@ public class EventProcessingPolicyRule
       persistentStorageDelete = new ArrayList<String>(0);
       customAttributeStorageSet = new HashMap<String, String>(0);
       customAttributeStorageDelete = new ArrayList<String>(0);
+      aiAgentInstructions = "";
       comments = "";
       ruleNumber = 0;
    }
@@ -143,6 +145,7 @@ public class EventProcessingPolicyRule
       persistentStorageDelete = new ArrayList<String>(src.persistentStorageDelete);
       customAttributeStorageSet = new HashMap<String, String>(src.customAttributeStorageSet);
       customAttributeStorageDelete = new ArrayList<String>(src.customAttributeStorageDelete);
+      aiAgentInstructions = src.aiAgentInstructions;
       comments = src.comments;
       ruleNumber = src.ruleNumber;
    }
@@ -177,6 +180,7 @@ public class EventProcessingPolicyRule
       rcaScriptName = msg.getFieldAsString(NXCPCodes.VID_RCA_SCRIPT_NAME);
       downtimeTag = msg.getFieldAsString(NXCPCodes.VID_DOWNTIME_TAG);
       actionScript = msg.getFieldAsString(NXCPCodes.VID_ACTION_SCRIPT);
+      aiAgentInstructions = msg.getFieldAsString(NXCPCodes.VID_AI_AGENT_INSTRUCTIONS);
       comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
 
       int actionCount = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ACTIONS);
@@ -239,6 +243,7 @@ public class EventProcessingPolicyRule
       msg.setField(NXCPCodes.VID_RCA_SCRIPT_NAME, rcaScriptName);
       msg.setField(NXCPCodes.VID_DOWNTIME_TAG, downtimeTag);
       msg.setField(NXCPCodes.VID_ACTION_SCRIPT, actionScript);
+      msg.setField(NXCPCodes.VID_AI_AGENT_INSTRUCTIONS, aiAgentInstructions);
 
       msg.setFieldsFromStringMap(persistentStorageSet, NXCPCodes.VID_PSTORAGE_SET_LIST_BASE, NXCPCodes.VID_NUM_SET_PSTORAGE);
       msg.setFieldsFromStringCollection(persistentStorageDelete, NXCPCodes.VID_PSTORAGE_DELETE_LIST_BASE, NXCPCodes.VID_NUM_DELETE_PSTORAGE);
@@ -712,5 +717,25 @@ public class EventProcessingPolicyRule
    public void setDowntimeTag(String downtimeTag)
    {
       this.downtimeTag = downtimeTag;
+   }
+
+   /**
+    * Get instructions for AI agent
+    *
+    * @return instructions for AI agent
+    */
+   public String getAiAgentInstructions()
+   {
+      return aiAgentInstructions;
+   }
+
+   /**
+    * Set instructions for AI agent
+    *
+    * @param aiAgentInstructions AI agent instructions to set
+    */
+   public void setAiAgentInstructions(String aiAgentInstructions)
+   {
+      this.aiAgentInstructions = aiAgentInstructions;
    }
 }

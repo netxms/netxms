@@ -53,6 +53,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
 import org.netxms.client.constants.Severity;
@@ -70,6 +71,7 @@ import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.propertypages.RuleAction;
 import org.netxms.nxmc.modules.events.propertypages.RuleActionScript;
+import org.netxms.nxmc.modules.events.propertypages.RuleAiAgentInstructions;
 import org.netxms.nxmc.modules.events.propertypages.RuleAlarm;
 import org.netxms.nxmc.modules.events.propertypages.RuleComments;
 import org.netxms.nxmc.modules.events.propertypages.RuleCondition;
@@ -929,7 +931,7 @@ public class RuleEditor extends Composite
          scriptEditor.getTextWidget().setEditable(false);
          scriptEditor.getTextWidget().addMouseListener(listener);
       }
-      
+
       /* timer cancellations */
       if (!rule.getTimerCancellations().isEmpty())
       {
@@ -941,6 +943,22 @@ public class RuleEditor extends Composite
             clabel.addMouseListener(listener);
             clabel.setText(tc);
          }
+      }
+
+      if (!rule.getAiAgentInstructions().isBlank())
+      {
+         final MouseListener listener = createMouseListener("AIAgentInstructions");
+         addActionGroupLabel(clientArea, i18n.tr("Instruct AI agent:"), editor.getImageExecute(), listener);
+
+         Text aiInstructions = new Text(clientArea, SWT.MULTI | SWT.WRAP);
+         GridData gd = new GridData();
+         gd.horizontalIndent = INDENT * 2;
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         aiInstructions.setLayoutData(gd);
+         aiInstructions.setText(rule.getAiAgentInstructions());
+         aiInstructions.setEditable(false);
+         aiInstructions.addMouseListener(listener);
       }
 
       /* flags */
@@ -1052,6 +1070,7 @@ public class RuleEditor extends Composite
       pm.addTo("Action", new PreferenceNode("ServerActions", new RuleServerActions(this)));
       pm.addTo("Action", new PreferenceNode("ActionScript", new RuleActionScript(this)));
       pm.addTo("Action", new PreferenceNode("TimerCancellations", new RuleTimerCancellations(this)));
+      pm.addTo("Action", new PreferenceNode("AIAgentInstructions", new RuleAiAgentInstructions(this)));
       pm.addToRoot(new PreferenceNode("Comments", new RuleComments(this)));
 
       PropertyDialog dlg = new PropertyDialog(editor.getWindow().getShell(), pm, String.format(i18n.tr("Edit Rule %d"), ruleNumber)) {

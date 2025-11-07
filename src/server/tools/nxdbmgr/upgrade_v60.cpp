@@ -23,6 +23,26 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 60.1 to 60.2
+ */
+static bool H_UpgradeFromV1()
+{
+   CHK_EXEC(CreateConfigParam(L"ThreadPool.AITasks.BaseSize",
+            L"4",
+            L"Base size for AI tasks thread pool.",
+            nullptr, 'I', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(L"ThreadPool.AITasks.MaxSize",
+            L"4",
+            L"Maximum size for AI tasks thread pool.",
+            nullptr, 'I', true, true, false, false));
+
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE event_policy ADD ai_instructions $SQL:TEXT")));
+
+   CHK_EXEC(SetMinorSchemaVersion(2));
+   return true;
+}
+
+/**
  * Upgrade from 60.0 to 60.1
  */
 static bool H_UpgradeFromV0()
@@ -46,6 +66,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 1,  60, 2,  H_UpgradeFromV1  },
    { 0,  60, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }
 };

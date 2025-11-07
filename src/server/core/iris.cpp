@@ -28,7 +28,7 @@
 
 #define DEBUG_TAG _T("llm.iris")
 
-void AITaskSchedulerThread();
+void AITaskSchedulerThread(ThreadPool *aiTaskThreadPool);
 
 /**
  * Loaded server config
@@ -48,7 +48,7 @@ static char s_llmModel[64] = "llama3.2";
 /**
  * Authentication token
  */
-static char s_llmAuthToken[64] = "";
+static char s_llmAuthToken[256] = "";
 
 /**
  * Prepared functions object for API requests
@@ -69,6 +69,11 @@ static const char *s_systemPrompt = "You are a helpful assistant named Iris. You
  * Additional prompts
  */
 static std::vector<std::string> s_prompts;
+
+/**
+ * Thread pool for AI tasks
+ */
+static ThreadPool *s_aiTaskThreadPool = nullptr;
 
 /**
  * Initialize AI assistant
@@ -96,7 +101,10 @@ bool InitAIAssistant()
 
    RegisterComponent(AI_ASSISTANT_COMPONENT);
 
-   ThreadCreate(AITaskSchedulerThread);
+   s_aiTaskThreadPool = ThreadPoolCreate(_T("AI-TASKS"),
+         ConfigReadInt(_T("ThreadPool.AITasks.BaseSize"), 4),
+         ConfigReadInt(_T("ThreadPool.AITasks.MaxSize"), 16));
+   ThreadCreate(AITaskSchedulerThread, s_aiTaskThreadPool);
 
    nxlog_debug_tag(DEBUG_TAG, 2, L"LLM service URL = \"%hs\", model = \"%hs\"", s_llmServiceURL, s_llmModel);
    nxlog_debug_tag(DEBUG_TAG, 2, L"%d functions registered", static_cast<int>(s_functionHandlers.size()));
@@ -245,7 +253,7 @@ static json_t *OllamaApiRequest(json_t *requestData)
    struct curl_slist *headers = curl_slist_append(nullptr, "Content-Type: application/json");
    if (s_llmAuthToken[0] != 0)
    {
-      char authHeader[256];
+      char authHeader[384];
       snprintf(authHeader, sizeof(authHeader), "Authorization: Bearer %s", s_llmAuthToken);
       curl_slist_append(headers, authHeader);
    }
@@ -368,9 +376,9 @@ static HashMap<session_id_t, json_t> s_chats(Ownership::True, DeleteChat);
 static Mutex s_chatsLock;
 
 /**
- * Process request to assistant
+ * Process request to assistant (actual internal implementation)
  */
-char NXCORE_EXPORTABLE *ProcessRequestToAIAssistant(const char *prompt, NetObj *context, GenericClientSession *session, int maxIterations)
+static char *ProcessRequestToAIAssistantEx(const char *prompt, NetObj *context, json_t *eventData, GenericClientSession *session, int maxIterations)
 {
    json_t *messages;
    s_chatsLock.lock();
@@ -387,6 +395,13 @@ char NXCORE_EXPORTABLE *ProcessRequestToAIAssistant(const char *prompt, NetObj *
          json_t *json = context->toJson();
          char *jsonText = json_dumps(json, 0);
          json_decref(json);
+         AddMessage(messages, "system", jsonText);
+         MemFree(jsonText);
+      }
+      if (eventData != nullptr)
+      {
+         AddMessage(messages, "system", "The following is the event data associated with this request:");
+         char *jsonText = json_dumps(eventData, 0);
          AddMessage(messages, "system", jsonText);
          MemFree(jsonText);
       }
@@ -411,7 +426,11 @@ char NXCORE_EXPORTABLE *ProcessRequestToAIAssistant(const char *prompt, NetObj *
       json_t *response = OllamaApiRequest(request);
       json_decref(request);
       if (response == nullptr)
+      {
+         if (session == nullptr)
+            json_decref(messages);  // if session is null, chat is not saved - delete it now
          return nullptr;
+      }
 
       json_t *message = json_object_get(response, "message");
       if (!json_is_object(message))
@@ -488,6 +507,40 @@ char NXCORE_EXPORTABLE *ProcessRequestToAIAssistant(const char *prompt, NetObj *
    if (session == nullptr)
       json_decref(messages);  // if session is null, chat is not saved - delete it now
    return answer;
+}
+
+/**
+ * Process request to assistant
+ */
+char NXCORE_EXPORTABLE *ProcessRequestToAIAssistant(const char *prompt, NetObj *context, GenericClientSession *session, int maxIterations)
+{
+   return ProcessRequestToAIAssistantEx(prompt, context, nullptr, session, maxIterations);
+}
+
+/**
+ * Process event with AI assistant
+ */
+void ProcessEventWithAIAssistant(Event *event, const shared_ptr<NetObj>& object, const wchar_t *instructions)
+{
+   char *prompt = event->expandText(instructions).getUTF8String();
+   json_t *eventData = event->toJson();
+   uint64_t eventId = event->getId();
+   ThreadPoolExecute(s_aiTaskThreadPool,
+      [prompt, object, eventData, eventId] () -> void
+      {
+         char *response = ProcessRequestToAIAssistantEx(prompt, object.get(), eventData, nullptr, 10);
+         if (response != nullptr)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, L"AI assistant response for event " UINT64_FMT L": %hs", eventId, response);
+            MemFree(response);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, L"AI assistant did not return response for event " UINT64_FMT, eventId);
+         }
+         MemFree(prompt);
+         json_decref(eventData);
+      });
 }
 
 /**

@@ -622,27 +622,29 @@ private:
    ObjectArray<TimeFrame> m_timeFrames;
    ObjectArray<ActionExecutionConfiguration> m_actions;
    StringList m_timerCancellations;
-   TCHAR *m_comments;
-   TCHAR *m_filterScriptSource;
+   wchar_t *m_comments;
+   wchar_t *m_filterScriptSource;
    NXSL_Program *m_filterScript;
-   TCHAR *m_actionScriptSource;
+   wchar_t *m_actionScriptSource;
    NXSL_Program *m_actionScript;
 
-   TCHAR *m_alarmMessage;
-   TCHAR *m_alarmImpact;
+   wchar_t *m_alarmMessage;
+   wchar_t *m_alarmImpact;
    int m_alarmSeverity;
-   TCHAR *m_alarmKey;
+   wchar_t *m_alarmKey;
    uint32_t m_alarmTimeout;
    uint32_t m_alarmTimeoutEvent;
 	IntegerArray<uint32_t> m_alarmCategoryList;
-	TCHAR *m_rcaScriptName;    // Name of library script used for root cause analysis
+	wchar_t *m_rcaScriptName;    // Name of library script used for root cause analysis
 
-	TCHAR m_downtimeTag[MAX_DOWNTIME_TAG_LENGTH];
+	wchar_t m_downtimeTag[MAX_DOWNTIME_TAG_LENGTH];
 
 	StringMap m_pstorageSetActions;
 	StringList m_pstorageDeleteActions;
    StringMap m_customAttributeSetActions;
    StringList m_customAttributeDeleteActions;
+
+   wchar_t *m_aiAgentInstructions;
 
    bool matchSource(const shared_ptr<NetObj>& object) const;
    bool matchEvent(uint32_t eventCode) const;
@@ -682,7 +684,7 @@ public:
    bool isCategoryInUse(uint32_t categoryId) const { return m_alarmCategoryList.contains(categoryId); }
 
    bool isUsingEvent(uint32_t eventCode) const { return m_events.contains(eventCode); }
-   const TCHAR *getComments() const { return m_comments; }
+   const wchar_t *getComments() const { return m_comments; }
 };
 
 /**

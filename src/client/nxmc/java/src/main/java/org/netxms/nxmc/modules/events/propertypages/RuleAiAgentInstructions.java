@@ -27,20 +27,20 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.widgets.RuleEditor;
 
 /**
- * "Comments" property page
+ * "AI Agent Instructions" property page
  */
-public class RuleComments extends RuleBasePropertyPage
+public class RuleAiAgentInstructions extends RuleBasePropertyPage
 {
-	private Text comments;
+	private Text instructions;
 
    /**
     * Create property page.
     *
     * @param editor rule editor
     */
-   public RuleComments(RuleEditor editor)
+   public RuleAiAgentInstructions(RuleEditor editor)
    {
-      super(editor, LocalizationHelper.getI18n(RuleComments.class).tr("Comments"));
+      super(editor, LocalizationHelper.getI18n(RuleAiAgentInstructions.class).tr("AI Agent Instructions"));
    }
 
    /**
@@ -52,19 +52,19 @@ public class RuleComments extends RuleBasePropertyPage
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		dialogArea.setLayout(new FillLayout());
 
-		comments = new Text(dialogArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
-		comments.setText(rule.getComments());
-		
+		instructions = new Text(dialogArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+      instructions.setText(rule.getAiAgentInstructions());
+
 		return dialogArea;
 	}
-	
+
    /**
     * @see org.netxms.nxmc.base.propertypages.PropertyPage#applyChanges(boolean)
     */
    @Override
    protected boolean applyChanges(final boolean isApply)
 	{
-		rule.setComments(comments.getText());
+      rule.setAiAgentInstructions(instructions.getText().trim());
 		editor.setModified(true);
       return true;
 	}

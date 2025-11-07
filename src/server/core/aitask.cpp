@@ -48,7 +48,7 @@ uint32_t NXCORE_EXPORTABLE RegisterAITask(const wchar_t *description, uint32_t u
 /**
  * AI task scheduler thread
  */
-void AITaskSchedulerThread()
+void AITaskSchedulerThread(ThreadPool *aiTaskThreadPool)
 {
    nxlog_debug_tag(DEBUG_TAG, 1, _T("AI task scheduler thread started"));
 
@@ -75,8 +75,7 @@ void AITaskSchedulerThread()
             break;
 
          nxlog_debug_tag(DEBUG_TAG, 5, _T("Executing AI task [%u] \"%s\""), task->getId(), task->getDescription());
-         // TODO: use thread pool
-         task->execute();
+         ThreadPoolExecute(aiTaskThreadPool, task, &AITask::execute);
       }
    }
 

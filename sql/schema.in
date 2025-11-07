@@ -1445,6 +1445,7 @@ CREATE TABLE event_policy
   downtime_tag varchar(15) null,
   rca_script_name varchar(255) null,
   action_script SQL_TEXT null,
+  ai_instructions SQL_TEXT null,
   PRIMARY KEY(rule_id)
 ) TABLE_TYPE;
 
