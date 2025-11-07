@@ -245,12 +245,15 @@ public:
    ~NotificationChannel();
 
    void send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, uint32_t eventCode, uint64_t eventId, const uuid& ruleId);
-   void fillMessage(NXCPMessage *msg, uint32_t base);
+
    const wchar_t *getName() const { return m_name; }
    const wchar_t *getDescription() const { return m_description; }
    const wchar_t *getDriverName() const { return m_driverName; }
    const char *getConfiguration() const { return m_configuration; }
    void getStatus(NotificationChannelStatus *status);
+
+   void fillMessage(NXCPMessage *msg, uint32_t base) const;
+   json_t *toJson() const;
 
    void update(const TCHAR *description, const TCHAR *driverName, const char *config);
    void updateName(const wchar_t *newName) { wcslcpy(m_name, newName, MAX_OBJECT_NAME); }
@@ -470,7 +473,7 @@ void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, con
 /**
  * Fill NXCPMessage with notification channel data
  */
-void NotificationChannel::fillMessage(NXCPMessage *msg, UINT32 base)
+void NotificationChannel::fillMessage(NXCPMessage *msg, uint32_t base) const
 {
    msg->setField(base, m_name);
    msg->setField(base + 1, m_description);
@@ -493,6 +496,36 @@ void NotificationChannel::fillMessage(NXCPMessage *msg, UINT32 base)
    msg->setFieldFromTime(base + 10, m_lastMessageTime);
    msg->setField(base + 11, m_messageCount);
    msg->setField(base + 12, m_failureCount);
+}
+
+/**
+ * Convert notification channel to JSON
+ */
+json_t *NotificationChannel::toJson() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "name", json_string_t(m_name));
+   json_object_set_new(root, "description", json_string_t(m_description));
+   json_object_set_new(root, "driverName", json_string_t(m_driverName));
+   json_object_set_new(root, "configuration", json_string_a(m_configuration));
+   json_object_set_new(root, "driverInitialized", json_boolean(m_driver != nullptr));
+   if (m_confTemplate != nullptr)
+   {
+      json_object_set_new(root, "needSubject", json_boolean(m_confTemplate->needSubject));
+      json_object_set_new(root, "needRecipient", json_boolean(m_confTemplate->needRecipient));
+   }
+   else
+   {
+      json_object_set_new(root, "needSubject", json_boolean(false));
+      json_object_set_new(root, "needRecipient", json_boolean(true));
+   }
+   json_object_set_new(root, "errorMessage", json_string_t(m_errorMessage));
+   json_object_set_new(root, "sendStatus", json_integer(static_cast<int16_t>(m_sendStatus)));
+   json_object_set_new(root, "healthCheckStatus", json_boolean(m_healthCheckStatus));
+   json_object_set_new(root, "lastMessageTime", json_time_string(m_lastMessageTime));
+   json_object_set_new(root, "messageCount", json_integer(m_messageCount));
+   json_object_set_new(root, "failureCount", json_integer(m_failureCount));
+   return root;
 }
 
 /**
@@ -661,7 +694,7 @@ bool DeleteNotificationChannel(const TCHAR *name)
 /**
  * Check if notification channel with given name exists
  */
-bool IsNotificationChannelExists(const TCHAR *name)
+bool NXCORE_EXPORTABLE IsNotificationChannelExists(const wchar_t *name)
 {
    s_channelListLock.lock();
    bool exist = s_channelList.contains(name);
@@ -816,7 +849,7 @@ void RenameNotificationChannel(TCHAR *name, TCHAR *newName)
 /**
  * Get notification channel list
  */
-void GetNotificationChannels(NXCPMessage *msg)
+void NXCORE_EXPORTABLE GetNotificationChannels(NXCPMessage *msg)
 {
    s_channelListLock.lock();
    uint32_t fieldId = VID_ELEMENT_LIST_BASE;
@@ -832,9 +865,37 @@ void GetNotificationChannels(NXCPMessage *msg)
 }
 
 /**
+ * Get notification channel list
+ */
+json_t NXCORE_EXPORTABLE *GetNotificationChannels(bool basicInfoOnly)
+{
+   json_t *channels = json_array();
+   s_channelListLock.lock();
+   auto it = s_channelList.begin();
+   while(it.hasNext())
+   {
+      shared_ptr<NotificationChannel> nc = *it.next()->value;
+      if (basicInfoOnly)
+      {
+         json_t *json = json_object();
+         json_object_set_new(json, "name", json_string_t(nc->getName()));
+         json_object_set_new(json, "description", json_string_t(nc->getDescription()));
+         json_object_set_new(json, "driverName", json_string_t(nc->getDriverName()));
+         json_array_append_new(channels, json);
+      }
+      else
+      {
+         json_array_append_new(channels, nc->toJson());
+      }
+   }
+   s_channelListLock.unlock();
+   return channels;
+}
+
+/**
  * Get notification channels as table
  */
-void GetNotificationChannels(Table *table)
+void NXCORE_EXPORTABLE GetNotificationChannels(Table *table)
 {
    table->addColumn(L"NAME", DCI_DT_STRING, L"Name", true);
    table->addColumn(L"DESCRIPTION", DCI_DT_STRING, L"Description");
@@ -892,7 +953,7 @@ bool GetNotificationChannelStatus(const TCHAR *name, NotificationChannelStatus *
 /**
  * Get notification driver list
  */
-void GetNotificationDrivers(NXCPMessage *msg)
+void NXCORE_EXPORTABLE GetNotificationDrivers(NXCPMessage *msg)
 {
    uint32_t base = VID_ELEMENT_LIST_BASE;
    StringList driverNames = s_driverList.keys();
@@ -907,7 +968,7 @@ void GetNotificationDrivers(NXCPMessage *msg)
 /**
  * Get configuration of given communication channel. Returned string is dynamically allocated and should be freed by caller.
  */
-char *GetNotificationChannelConfiguration(const TCHAR *name)
+char NXCORE_EXPORTABLE *GetNotificationChannelConfiguration(const TCHAR *name)
 {
    s_channelListLock.lock();
    NotificationChannel *nc = s_channelList.get(name);
@@ -919,7 +980,7 @@ char *GetNotificationChannelConfiguration(const TCHAR *name)
 /**
  * Send notification
  */
-void SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject, const TCHAR *message, uint32_t eventCode, uint64_t eventId, const uuid& ruleId)
+void NXCORE_EXPORTABLE SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject, const TCHAR *message, uint32_t eventCode, uint64_t eventId, const uuid& ruleId)
 {
    s_channelListLock.lock();
    NotificationChannel *nc = s_channelList.get(name);

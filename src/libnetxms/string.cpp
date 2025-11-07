@@ -122,6 +122,14 @@ String::String(const TCHAR *init, ssize_t len, Ownership takeOwnership)
  */
 String::String(const char *init, const char *codepage)
 {
+   if ((init == nullptr) || (init[0] == 0))
+   {
+      m_internalBuffer[0] = 0;
+      m_buffer = m_internalBuffer;
+      m_length = 0;
+      return;
+   }
+
    size_t len = strlen(init);
    m_buffer = (len < STRING_INTERNAL_BUFFER_SIZE) ? m_internalBuffer : MemAllocString(len + 1);
 #ifdef UNICODE

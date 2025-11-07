@@ -101,6 +101,26 @@ bool InitAIAssistant()
 
    RegisterComponent(AI_ASSISTANT_COMPONENT);
 
+   RegisterAIAssistantFunction(
+      "register-ai-task",
+      "Register new AI task for background execution. Use this function to create long running tasks that may require multiple executions to complete.",
+      {
+          { "description", "task description" },
+          { "prompt", "initial prompt for the task" }
+      },
+      [] (json_t *arguments, uint32_t userId) -> std::string
+      {
+         const char *description = json_object_get_string_utf8(arguments, "description", nullptr);
+         const char *prompt = json_object_get_string_utf8(arguments, "prompt", nullptr);
+         if ((description == nullptr) || (description[0] == 0))
+            return std::string("Error: task description must be provided");
+         if ((prompt == nullptr) || (prompt[0] == 0))
+            return std::string("Error: task prompt must be provided");
+
+         uint32_t taskId = RegisterAITask(String(description, "utf-8"), userId, String(prompt, "utf-8"));
+         return std::to_string(taskId);
+      });
+
    s_aiTaskThreadPool = ThreadPoolCreate(_T("AI-TASKS"),
          ConfigReadInt(_T("ThreadPool.AITasks.BaseSize"), 4),
          ConfigReadInt(_T("ThreadPool.AITasks.MaxSize"), 16));
