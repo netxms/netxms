@@ -2768,3 +2768,19 @@ shared_ptr<DCObjectInfo> DCItem::createDescriptorInternal() const
 
    return info;
 }
+
+/**
+ * Get all script dependencies for this object
+ */
+void DCItem::getScriptDependencies(StringSet *dependencies) const
+{
+   DCObject::getScriptDependencies(dependencies);
+
+   if (m_thresholds != nullptr)
+   {
+      for(int i = 0; i < m_thresholds->size(); i++)
+      {
+         m_thresholds->get(i)->getScriptDependencies(dependencies);
+      }
+   }
+}

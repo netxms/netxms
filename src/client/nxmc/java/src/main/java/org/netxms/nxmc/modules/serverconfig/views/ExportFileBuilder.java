@@ -19,12 +19,16 @@
 package org.netxms.nxmc.modules.serverconfig.views;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -47,6 +51,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.client.AgentPolicy;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
 import org.netxms.client.ServerAction;
@@ -104,6 +109,7 @@ import org.xnap.commons.i18n.I18n;
 public class ExportFileBuilder extends ConfigurationView
 {
    private final I18n i18n = LocalizationHelper.getI18n(ExportFileBuilder.class);
+   private static final Pattern SCRIPT_PATTERN = Pattern.compile("[^%]%\\[([a-zA-Z0-9:_]+)[./]?.*?\\]");
 
 	private NXCSession session = Registry.getSession();
 	private Composite content;
@@ -1245,13 +1251,61 @@ public class ExportFileBuilder extends ConfigurationView
 		dlg.enableMultiSelection(true);
 		if (dlg.open() == Window.OK)
 		{
+         Set<String> allMatches = new HashSet<>();
 			for(EventTemplate t : dlg.getSelectedEvents())
 			{
             events.put(t.getCode(), t);
+            Matcher m = SCRIPT_PATTERN.matcher(t.getMessage());
+            while (m.find()) 
+            {
+               allMatches.add(m.group(1));
+            }
 			}
+			addReferencedScripts(allMatches);			
 			eventViewer.setInput(events.values().toArray());
 			setModified();
 		}
+	}
+	
+	/**
+	 * Add referenced scripts
+	 * 
+	 * @param scriptNames list of script names
+	 */
+	void addReferencedScripts(Collection<String> scriptNames)
+	{
+      new Job(i18n.tr("Get script list"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final List<Script> scriptList = session.getScriptLibrary();
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  for(String scriptName : scriptNames)
+                  {
+                     for(Script s : scriptList)
+                     {
+                        if (s.getName().equalsIgnoreCase(scriptName))
+                        {
+                           scripts.put(s.getId(), s);
+                           break;
+                        }
+                     }
+                  }
+                  scriptViewer.setInput(scripts.values().toArray());
+                  setModified();
+               }
+            });
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot get script list from server");
+         }
+      }.start();	   
 	}
 
 	/**
@@ -1290,6 +1344,7 @@ public class ExportFileBuilder extends ConfigurationView
 				{
                final Set<Integer> eventCodes = new HashSet<>();
                final Map<Long, Script> scriptList = new HashMap<>();
+               Set<String> allMatches = new HashSet<>();
 					for(Long id : idList)
 					{
                   int[] e = session.getRelatedEvents(id);
@@ -1299,14 +1354,32 @@ public class ExportFileBuilder extends ConfigurationView
 								eventCodes.add(c);
 						}
 
-						for(Script s : session.getDataCollectionScripts(id))
+						for(Script s : session.getDataCollectionScripts(id)) 
 						   scriptList.put(s.getId(), s);
+						for (AgentPolicy entry : session.getAgentPolicyList(id).values())
+						{
+						   if (entry.getPolicyType().equals(AgentPolicy.AGENT_CONFIG) && 
+						         (entry.getFlags() & AgentPolicy.EXPAND_MACRO) != 0)
+						   {
+	                     Matcher m = SCRIPT_PATTERN.matcher(entry.getContent());
+	                     while (m.find()) 
+	                     {
+	                        allMatches.add(m.group(1));
+	                     }
+						   }
+						}
 					}
                runInUIThread(() -> {
                   for(EventTemplate e : session.findMultipleEventTemplates(eventCodes))
                   {
-                     events.put(e.getCode(), e);
+                     events.put(e.getCode(), e); 
+                     Matcher m = SCRIPT_PATTERN.matcher(e.getMessage());
+                     while (m.find()) 
+                     {
+                        allMatches.add(m.group(1));
+                     }
                   }
+                  addReferencedScripts(allMatches);
                   eventViewer.setInput(events.values().toArray());
 
                   scripts.putAll(scriptList);
@@ -1344,10 +1417,17 @@ public class ExportFileBuilder extends ConfigurationView
 			setModified();
 			if (eventCodes.size() > 0)
 			{
+	         Set<String> allMatches = new HashSet<>();
             for(EventTemplate t : session.findMultipleEventTemplates(eventCodes))
 				{
-				   events.put(t.getCode(), t);
+				   events.put(t.getCode(), t);  
+               Matcher m = SCRIPT_PATTERN.matcher(t.getMessage());
+               while (m.find()) 
+               {
+                  allMatches.add(m.group(1));
+               }
 				}
+            addReferencedScripts(allMatches);
 				eventViewer.setInput(events.values().toArray());
 			};
 		}
@@ -1361,6 +1441,7 @@ public class ExportFileBuilder extends ConfigurationView
 		RuleSelectionDialog dlg = new RuleSelectionDialog(getWindow().getShell(), rulesCache);
 		if (dlg.open() == Window.OK)
 		{
+         Set<String> allMatches = new HashSet<>();
          final Set<Integer> eventCodes = new HashSet<>();
          final Set<Long> actionCodes = new HashSet<>();
 			for(EventProcessingPolicyRule r : dlg.getSelectedRules())
@@ -1375,15 +1456,100 @@ public class ExportFileBuilder extends ConfigurationView
 				}
             for(ActionExecutionConfiguration ac : r.getActions())
                actionCodes.add(ac.getActionId());
+            
+            Matcher m = SCRIPT_PATTERN.matcher(r.getAlarmKey());
+            while (m.find()) 
+            {
+               allMatches.add(m.group(1));
+            }
+            m = SCRIPT_PATTERN.matcher(r.getAlarmMessage());
+            while (m.find()) 
+            {
+               allMatches.add(m.group(1));
+            }
+            m = SCRIPT_PATTERN.matcher(r.getDowntimeTag());
+            while (m.find()) 
+            {
+               allMatches.add(m.group(1));
+            }
+            for (Entry<String, String> entry : r.getPStorageSet().entrySet())
+            {
+               m = SCRIPT_PATTERN.matcher(entry.getKey());
+               while (m.find()) 
+               {
+                  allMatches.add(m.group(1));
+               }
+               m = SCRIPT_PATTERN.matcher(entry.getValue());
+               while (m.find()) 
+               {
+                  allMatches.add(m.group(1));
+               }
+            }
+            for (String entry : r.getPStorageDelete())
+            {
+               m = SCRIPT_PATTERN.matcher(entry);
+               while (m.find()) 
+               {
+                  allMatches.add(m.group(1));
+               }
+            }
+            for (Entry<String, String> entry : r.getCustomAttributeStorageSet().entrySet())
+            {
+               m = SCRIPT_PATTERN.matcher(entry.getKey());
+               while (m.find()) 
+               {
+                  allMatches.add(m.group(1));
+               }
+               m = SCRIPT_PATTERN.matcher(entry.getValue());
+               while (m.find()) 
+               {
+                  allMatches.add(m.group(1));
+               }
+            }
+            for (String entry : r.getCustomAttributeStorageDelete())
+            {
+               m = SCRIPT_PATTERN.matcher(entry);
+               while (m.find()) 
+               {
+                  allMatches.add(m.group(1));
+               }
+            }
+            for (ActionExecutionConfiguration entry : r.getActions())
+            {
+               m = SCRIPT_PATTERN.matcher(entry.getTimerKey());
+               while (m.find()) 
+               {
+                  allMatches.add(m.group(1));
+               }
+               m = SCRIPT_PATTERN.matcher(entry.getBlockingTimerKey());
+               while (m.find()) 
+               {
+                  allMatches.add(m.group(1));
+               }
+            }
+            for (String entry : r.getTimerCancellations())
+            {
+               m = SCRIPT_PATTERN.matcher(entry);
+               while (m.find()) 
+               {
+                  allMatches.add(m.group(1));
+               }
+            }
 			}
 			ruleViewer.setInput(rules.values().toArray());
 			setModified();
+			
          if (!eventCodes.isEmpty())
 			{
             for(EventTemplate t : session.findMultipleEventTemplates(eventCodes))
-				{
-				   events.put(t.getCode(), t);
-				}
+            {
+               events.put(t.getCode(), t);
+               Matcher m = SCRIPT_PATTERN.matcher(t.getMessage());
+               while (m.find()) 
+               {
+                  allMatches.add(m.group(1));
+               }
+            } 
 				eventViewer.setInput(events.values().toArray());
          }
          if (!actionCodes.isEmpty())
@@ -1395,12 +1561,28 @@ public class ExportFileBuilder extends ConfigurationView
                   if (action.getId() == actionId)
                   {
                      actions.put(actionId, action);
+                     Matcher m = SCRIPT_PATTERN.matcher(action.getEmailSubject());
+                     while (m.find()) 
+                     {
+                        allMatches.add(m.group(1));
+                     }    
+                     m = SCRIPT_PATTERN.matcher(action.getData());
+                     while (m.find()) 
+                     {
+                        allMatches.add(m.group(1));
+                     }  
+                     m = SCRIPT_PATTERN.matcher(action.getRecipientAddress());
+                     while (m.find()) 
+                     {
+                        allMatches.add(m.group(1));
+                     }  
                      break;
                   }
                }
             }
             actionViewer.setInput(actions.values().toArray());
          }
+         addReferencedScripts(allMatches);
 		}
 	}
 
@@ -1458,8 +1640,27 @@ public class ExportFileBuilder extends ConfigurationView
       ActionSelectionDialog dlg = new ActionSelectionDialog(getWindow().getShell());
       if (dlg.open() == Window.OK)
       {
+         Set<String> allMatches = new HashSet<>();
          for(ServerAction a : dlg.getSelection())
+         {
             actions.put(a.getId(), a);
+            Matcher m = SCRIPT_PATTERN.matcher(a.getEmailSubject());
+            while (m.find()) 
+            {
+               allMatches.add(m.group(1));
+            }    
+            m = SCRIPT_PATTERN.matcher(a.getData());
+            while (m.find()) 
+            {
+               allMatches.add(m.group(1));
+            }  
+            m = SCRIPT_PATTERN.matcher(a.getRecipientAddress());
+            while (m.find()) 
+            {
+               allMatches.add(m.group(1));
+            }         
+         }
+         addReferencedScripts(allMatches);
          actionViewer.setInput(actions.values().toArray());
          setModified();
       }

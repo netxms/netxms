@@ -3179,7 +3179,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
 }
 
 /**
- * Expand script macro (intended to be called from expandText)
+ * Expand script macro
  */
 void NetObj::expandScriptMacro(const wchar_t *scriptName, const Alarm *alarm, const Event *event, const shared_ptr<DCObjectInfo>& dci, StringBuffer *output)
 {

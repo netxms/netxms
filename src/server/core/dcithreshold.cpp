@@ -1109,3 +1109,14 @@ String Threshold::getTextualDefinition() const
    }
    return text;
 }
+
+/**
+ * Get script dependencies
+ */
+void Threshold::getScriptDependencies(StringSet *dependencies) const
+{
+   if (m_expandValue)
+   {
+      ExtractScriptNamesFromText(m_value.getString(), dependencies);
+   }
+}

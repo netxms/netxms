@@ -629,29 +629,8 @@ String DCObject::expandSchedule(const TCHAR *schedule)
          if (closingBracker != nullptr)
          {
             *closingBracker = 0;
-
-            NXSL_VM *vm = CreateServerScriptVM(scriptName, m_owner.lock(), createDescriptorInternal());
-            if (vm != nullptr)
-            {
-               if (vm->run(0, nullptr))
-               {
-                  NXSL_Value *result = vm->getResult();
-                  if (result != nullptr)
-                  {
-                     const TCHAR *temp = result->getValueAsCString();
-                     if (temp != nullptr)
-                     {
-                        nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 7, _T("DCObject::expandSchedule(%%[%s]) expanded to \"%s\""), scriptName, temp);
-                        expandedSchedule = temp;
-                     }
-                  }
-               }
-               else
-               {
-                  nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 4, _T("DCObject::expandSchedule(%%[%s]) script execution failed (%s)"), scriptName, vm->getErrorText());
-               }
-               delete vm;
-            }
+            StringBuffer output;
+            m_owner.lock()->expandScriptMacro(scriptName, nullptr, nullptr, createDescriptorInternal(), &expandedSchedule);
          }
          else
          {
@@ -1723,6 +1702,91 @@ static void AddScriptDependencies(StringSet *dependencies, const NXSL_Program *s
 }
 
 /**
+ * Extract script names from text
+ * Possible options:
+ * "%[name]",
+ * "%[name.function(123,"A textual parameter")]"
+ * "%[name/function(123,"A textual parameter")]"
+ */
+void ExtractScriptNamesFromText(const wchar_t *origin, StringSet *dependencies)
+{
+   wchar_t name[512];
+   wcslcpy(name, origin, 512);
+   TrimW(name);
+
+   TCHAR *searchStart = name;
+   while(true)
+   {
+      wchar_t *macroStart = wcschr(searchStart, L'%');
+      if (macroStart == nullptr || *(macroStart + 1) == 0)
+         break;
+
+      if (*(macroStart + 1) != L'[')
+      {
+         searchStart = macroStart + 2;
+         continue;
+      }
+
+      macroStart += 2;
+      wchar_t *macroEnd = wcschr(macroStart, L']');
+      if (macroEnd == nullptr)
+         break;
+
+      *macroEnd = 0;
+
+      wchar_t *p = wcschr(macroStart, L'(');
+      if (p != nullptr)
+      {
+         *p = 0;
+      }
+
+      char entryPoint[MAX_IDENTIFIER_LENGTH];
+      ExtractScriptEntryPoint(macroStart, entryPoint);
+
+      dependencies->add(macroStart);
+
+      searchStart = macroEnd + 1;
+   }
+}
+
+/**
+ * Extract script names from text
+ * Possible options:
+ * "%{script:name}"
+ */
+static void ExtractScriptNamesFromTextTemplateMacro(const wchar_t *name, StringSet *dependencies)
+{
+   const wchar_t *searchStart = name;
+   while(true)
+   {
+      const wchar_t *macroStart = wcschr(searchStart, L'%');
+      if (macroStart == nullptr || *(macroStart + 1) == 0)
+         break;
+
+      if (wcsnicmp(macroStart, L"%{script:", 9) != 0)
+      {
+         searchStart = macroStart + 2;
+         continue;
+      }
+
+      macroStart += 9;
+      const wchar_t *macroEnd = wcschr(macroStart, _T('}'));
+      if (macroEnd == nullptr)
+         break;
+
+      size_t len = macroEnd - macroStart;
+      wchar_t *scriptName = (wchar_t *)MemAlloc((len + 1) * sizeof(wchar_t));
+      wcsncpy(scriptName, macroStart, len);
+      scriptName[len] = 0;
+
+      dependencies->add(scriptName);
+      MemFree(scriptName);
+
+      searchStart = macroEnd + 1;
+   }
+}
+
+/**
  * Get all script dependencies for this object
  */
 void DCObject::getScriptDependencies(StringSet *dependencies) const
@@ -1735,6 +1799,33 @@ void DCObject::getScriptDependencies(StringSet *dependencies) const
 
    AddScriptDependencies(dependencies, m_transformationScript.get());
    AddScriptDependencies(dependencies, m_instanceFilter.get());
+
+   if (!m_retentionTimeSrc.isEmpty())
+   {
+      ExtractScriptNamesFromText(m_retentionTimeSrc, dependencies);
+   }
+
+   if (!m_pollingIntervalSrc.isEmpty())
+   {
+      ExtractScriptNamesFromText(m_pollingIntervalSrc, dependencies);
+   }
+
+   if (m_pollingScheduleType == DC_POLLING_SCHEDULE_ADVANCED)
+   {
+      if (m_schedules != nullptr)
+      {
+         for(int i = 0; i < m_schedules->size(); i++)
+         {
+            ExtractScriptNamesFromText(m_schedules->get(i), dependencies);
+         }
+      }
+   }
+   ExtractScriptNamesFromText(m_pollingIntervalSrc, dependencies);
+
+   ExtractScriptNamesFromTextTemplateMacro(m_name, dependencies);
+   ExtractScriptNamesFromTextTemplateMacro(m_description, dependencies);
+   ExtractScriptNamesFromTextTemplateMacro(m_instanceName, dependencies);
+   ExtractScriptNamesFromTextTemplateMacro(m_instanceDiscoveryData, dependencies);
 }
 
 /**

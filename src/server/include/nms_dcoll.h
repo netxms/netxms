@@ -202,6 +202,7 @@ public:
 	int getCurrentSeverity() const { return m_currentSeverity; }
 	bool needValueExpansion() const { return m_expandValue; }
 	String getTextualDefinition() const;
+	void getScriptDependencies(StringSet *dependencies) const;
 
 	void markLastEvent(int severity, const wchar_t *message);
    void saveStateBeforeMaintenance() { m_wasReachedBeforeMaint = m_isReached; }
@@ -615,6 +616,7 @@ public:
    virtual void getEventList(HashSet<uint32_t> *eventList) const override;
    virtual bool isUsingEvent(uint32_t eventCode) const override;
    virtual void createExportRecord(TextFileWriter& xml) const override;
+   virtual void getScriptDependencies(StringSet *dependencies) const;
    virtual json_t *toJson() override;
 
 	int getThresholdCount() const { return (m_thresholds != nullptr) ? m_thresholds->size() : 0; }
@@ -1032,6 +1034,7 @@ bool IsAnomalousValue(const DataCollectionTarget& dcTarget, const DCObject& dci,
 DataCollectionError GetQueueStatistic(const TCHAR *parameter, StatisticType type, TCHAR *value);
 
 uint64_t GetDCICacheMemoryUsage();
+void ExtractScriptNamesFromText(const wchar_t *origin, StringSet *dependencies);
 
 /**
  * DCI cache loader queue

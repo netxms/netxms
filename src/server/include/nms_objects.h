@@ -1287,8 +1287,6 @@ private:
    bool saveACLToDB(DB_HANDLE hdb);
    bool saveModuleData(DB_HANDLE hdb);
 
-   void expandScriptMacro(const wchar_t *scriptName, const Alarm *alarm, const Event *event, const shared_ptr<DCObjectInfo>& dci, StringBuffer *output);
-
 protected:
    time_t m_timestamp;           // Last change time stamp
    SharedString m_alias;         // Object's alias
@@ -1547,6 +1545,7 @@ public:
    {
       return expandText(textTemplate, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, nullptr);
    }
+   void expandScriptMacro(const wchar_t *scriptName, const Alarm *alarm, const Event *event, const shared_ptr<DCObjectInfo>& dci, StringBuffer *output);
 
    void updateGeoLocationHistory(GeoLocation location);
 
