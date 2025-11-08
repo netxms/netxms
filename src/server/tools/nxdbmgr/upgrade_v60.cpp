@@ -23,6 +23,60 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 60.2 to 60.3
+ */
+static bool H_UpgradeFromV2()
+{
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE ai_tasks ("
+      L"   id integer not null,"
+      L"   user_id integer not null,"
+      L"   description varchar(255) null,"
+      L"   prompt $SQL:TEXT null,"
+      L"   memento $SQL:TEXT null,"
+      L"   last_execution_time integer not null,"
+      L"   next_execution_time integer not null,"
+      L"   iteration integer not null,"
+      L"   PRIMARY KEY(id))"));
+
+   if (g_dbSyntax == DB_SYNTAX_TSDB)
+   {
+      CHK_EXEC(CreateTable(
+         L"CREATE TABLE ai_task_execution_log ("
+         L"   record_id $SQL:INT64 not null,"
+         L"   execution_timestamp timestamptz not null,"
+         L"   task_id integer not null,"
+         L"   task_description varchar(255) null,"
+         L"   user_id integer not null,"
+         L"   status char(1) not null,"
+         L"   iteration integer not null,"
+         L"   explanation $SQL:TEXT null,"
+         L"   PRIMARY KEY(record_id))"));
+      CHK_EXEC(SQLQuery(L"SELECT create_hypertable('ai_task_execution_log', 'execution_timestamp', chunk_time_interval => interval '86400 seconds')"));
+   }
+   else
+   {
+      CHK_EXEC(CreateTable(
+         L"CREATE TABLE ai_task_execution_log ("
+         L"   record_id $SQL:INT64 not null,"
+         L"   execution_timestamp integer not null,"
+         L"   task_id integer not null,"
+         L"   task_description varchar(255) null,"
+         L"   user_id integer not null,"
+         L"   status char(1) not null,"
+         L"   iteration integer not null,"
+         L"   explanation $SQL:TEXT null,"
+         L"   PRIMARY KEY(record_id))"));
+   }
+
+   CHK_EXEC(SQLQuery(L"CREATE INDEX idx_ai_task_exec_log_timestamp ON ai_task_execution_log(execution_timestamp)"));
+   CHK_EXEC(SQLQuery(L"CREATE INDEX idx_ai_task_exec_log_asset_id ON ai_task_execution_log(task_id)"));
+
+   CHK_EXEC(SetMinorSchemaVersion(3));
+   return true;
+}
+
+/**
  * Upgrade from 60.1 to 60.2
  */
 static bool H_UpgradeFromV1()
@@ -66,6 +120,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 2,  60, 3,  H_UpgradeFromV2  },
    { 1,  60, 2,  H_UpgradeFromV1  },
    { 0,  60, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }

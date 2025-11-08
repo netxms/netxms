@@ -6154,6 +6154,7 @@ int LIBNETXMS_EXPORTABLE InflateFileStream(FILE *source, ByteStream *output, boo
 TCHAR LIBNETXMS_EXPORTABLE *GetSystemTimeZone(TCHAR *buffer, size_t size, bool withName = true, bool forceFullOffset = false);
 TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer);
 TCHAR LIBNETXMS_EXPORTABLE *FormatTimestampMs(int64_t timestamp, TCHAR *buffer);
+std::string LIBNETXMS_EXPORTABLE FormatISO8601Timestamp(time_t t);
 
 /**
  * Format timestamp as dd.mm.yyyy HH:MM:SS

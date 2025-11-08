@@ -51,9 +51,13 @@ private:
    StringBuffer m_explanation;
    String m_description;
    AITaskStatus m_status;
+   uint32_t m_iteration;
+
+   void logExecution();
 
 public:
    AITask(const wchar_t *descripion, uint32_t userId, const wchar_t *prompt);
+   AITask(DB_RESULT hResult, int row);
 
    void execute();
 
@@ -63,6 +67,9 @@ public:
    AITaskStatus getStatus() const { return m_status; }
    time_t getLastExecutionTime() const { return m_lastExecutionTime; }
    time_t getNextExecutionTime() const { return m_nextExecutionTime; }
+
+   void saveToDatabase() const;
+   void deleteFromDatabase();
 };
 
 /**
@@ -98,7 +105,7 @@ uint32_t NXCORE_EXPORTABLE ClearAIAssistantChat(GenericClientSession *session);
 /**
  * Process assistant request
  */
-char NXCORE_EXPORTABLE *ProcessRequestToAIAssistant(const char *prompt, NetObj *context, GenericClientSession *session, int maxIterations = 5);
+char NXCORE_EXPORTABLE *ProcessRequestToAIAssistant(const char *prompt, NetObj *context, GenericClientSession *session, int maxIterations = 32);
 
 /**
  * Register AI task

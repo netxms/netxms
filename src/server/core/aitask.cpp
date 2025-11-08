@@ -31,6 +31,49 @@
 static SharedHashMap<uint32_t, AITask> s_aiTasks;
 static Mutex s_aiTasksLock;
 static VolatileCounter s_taskId = 0; // Last used task ID
+static VolatileCounter64 s_logRecordId = 0;
+
+/**
+ * Initialize AI tasks
+ */
+void InitAITasks()
+{
+   s_taskId = ConfigReadInt(_T("AITask.LastTaskId"), 0);
+   s_logRecordId = ConfigReadInt64(_T("AITask.LastLogRecordId"), 0);
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(record_id) FROM ai_task_execution_log"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_logRecordId = std::max(DBGetFieldInt64(hResult, 0, 0), static_cast<int64_t>(s_logRecordId));
+      DBFreeResult(hResult);
+   }
+
+   // Load tasks from database
+   hResult = DBSelect(hdb, _T("SELECT id,description,prompt,memento,last_execution_time,next_execution_time,iteration,user_id FROM ai_tasks ORDER BY id"));
+   if (hResult != nullptr)
+   {
+      uint32_t maxId = 0;
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         shared_ptr<AITask> task = make_shared<AITask>(hResult, i);
+         s_aiTasks.set(task->getId(), task);
+         if (task->getId() > maxId)
+            maxId = task->getId();
+      }
+      DBFreeResult(hResult);
+
+      if (maxId > s_taskId)
+         s_taskId = maxId;
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+
+   nxlog_debug_tag(DEBUG_TAG, 2, L"Last AI task ID=%u, last AI task log record ID=" INT64_FMT, s_taskId, s_logRecordId);
+}
 
 /**
  * Register AI task
@@ -42,6 +85,7 @@ uint32_t NXCORE_EXPORTABLE RegisterAITask(const wchar_t *description, uint32_t u
    s_aiTasks.set(task->getId(), task);
    s_aiTasksLock.unlock();
    nxlog_debug_tag(DEBUG_TAG, 4, L"Registered AI task [%u] \"%s\"", task->getId(), description);
+   ConfigWriteInt(L"AITask.LastTaskId", s_taskId, true, false, true);
    return task->getId();
 }
 
@@ -91,6 +135,7 @@ AITask::AITask(const wchar_t *descripion, uint32_t userId, const wchar_t *prompt
    m_status = AITaskStatus::SCHEDULED;
    m_lastExecutionTime = 0;
    m_nextExecutionTime = time(nullptr);
+   m_iteration = 0;
    m_userId = userId;
    m_prompt =
       "Follow the instructions below to perform requested task. "
@@ -116,12 +161,27 @@ AITask::AITask(const wchar_t *descripion, uint32_t userId, const wchar_t *prompt
    m_prompt.append(mp);
    MemFree(mp);
    m_prompt.append("</instructions>");
-   if (!m_memento.empty())
-   {
-      m_prompt.append("\n<memento>");
-      m_prompt.append(m_memento);
-      m_prompt.append("</memento>\n");
-   }
+}
+
+/**
+ * AITask constructor from database row
+ * Expected column order:
+ * id,description,prompt,memento,last_execution_time,next_execution_time,iteration,user_id
+ */
+AITask::AITask(DB_RESULT hResult, int row) : m_description(DBGetFieldAsString(hResult, row, 1))
+{
+   m_id = DBGetFieldUInt32(hResult, row, 0);
+   char *prompt = DBGetFieldUTF8(hResult, row, 2, nullptr, 0);
+   m_prompt = prompt;
+   MemFree(prompt);
+   char *memento = DBGetFieldUTF8(hResult, row, 3, nullptr, 0);
+   m_memento = memento;
+   MemFree(memento);
+   m_lastExecutionTime = DBGetFieldUInt32(hResult, row, 4);
+   m_nextExecutionTime = DBGetFieldUInt32(hResult, row, 5);
+   m_iteration = DBGetFieldUInt32(hResult, row, 6);
+   m_userId = DBGetFieldUInt32(hResult, row, 7);
+   m_status = (m_nextExecutionTime == 0) ? AITaskStatus::COMPLETED : AITaskStatus::SCHEDULED;
 }
 
 /**
@@ -130,7 +190,19 @@ AITask::AITask(const wchar_t *descripion, uint32_t userId, const wchar_t *prompt
 void AITask::execute()
 {
    m_status = AITaskStatus::RUNNING;
-   char *response = ProcessRequestToAIAssistant(m_prompt.c_str(), nullptr, nullptr, 16);
+   std::string prompt = m_prompt;
+   prompt.append("\n<current_time>");
+   prompt.append(FormatISO8601Timestamp(time(nullptr)));
+   prompt.append("</current_time>\n<iteration>");
+   prompt.append(std::to_string(++m_iteration));
+   prompt.append("</iteration>");
+   if (!m_memento.empty())
+   {
+      prompt.append("\n<memento>");
+      prompt.append(m_memento);
+      prompt.append("</memento>\n");
+   }
+   char *response = ProcessRequestToAIAssistant(prompt.c_str(), nullptr, nullptr, 64);
    if (response != nullptr)
    {
       json_t *json = json_loads(response, 0, nullptr);
@@ -183,4 +255,106 @@ void AITask::execute()
       m_status = AITaskStatus::FAILED;
       nxlog_debug_tag(DEBUG_TAG, 5, L"AI task [%u] \"%s\" execution failed (no response from assistant)", m_id, m_description.cstr());
    }
+
+   logExecution();
+
+   if (m_status == AITaskStatus::SCHEDULED)
+   {
+      saveToDatabase();
+   }
+   else
+   {
+      deleteFromDatabase();
+   }
+}
+
+/**
+ * Log AI task execution to database
+ */
+void AITask::logExecution()
+{
+   DB_HANDLE db = DBConnectionPoolAcquireConnection();
+
+   // Generate unique record ID
+   uint64_t recordId = InterlockedIncrement64(&s_logRecordId);
+
+   // Determine status character based on current task status
+   wchar_t status[2];
+   switch (m_status)
+   {
+      case AITaskStatus::COMPLETED:
+         status[0] = 'C';
+         break;
+      case AITaskStatus::FAILED:
+         status[0] = 'F';
+         break;
+      case AITaskStatus::SCHEDULED:
+         status[0] = 'S';
+         break;
+      case AITaskStatus::RUNNING:
+         status[0] = 'R';
+         break;
+      default:
+         status[0] = 'U'; // Unknown
+         break;
+   }
+   status[1] = 0;
+
+   DB_STATEMENT hStmt = DBPrepare(db, 
+      g_dbSyntax == DB_SYNTAX_TSDB ?
+         L"INSERT INTO ai_task_execution_log (record_id,execution_timestamp,task_id,task_description,user_id,status,iteration,explanation) VALUES (?,to_timestamp(?),?,?,?,?,?,?)" :
+         L"INSERT INTO ai_task_execution_log (record_id,execution_timestamp,task_id,task_description,user_id,status,iteration,explanation) VALUES (?,?,?,?,?,?,?,?)");
+
+   if (hStmt != nullptr)
+   {
+      time_t now = time(nullptr);
+      DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, recordId);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(now));
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_userId);
+      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, status, DB_BIND_STATIC);
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_iteration);
+      DBBind(hStmt, 8, DB_SQLTYPE_TEXT, m_explanation, DB_BIND_STATIC);
+      DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
+
+   DBConnectionPoolReleaseConnection(db);
+}
+
+/**
+ * Save AI task to database
+ */
+void AITask::saveToDatabase() const
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   
+   const wchar_t *mergeColumns[] = { L"user_id", L"description", L"prompt", L"memento", L"last_execution_time", L"next_execution_time", L"iteration", nullptr };
+   DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"ai_tasks", L"id", m_id, mergeColumns);
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_userId);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC, 255);
+      DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, m_prompt.c_str(), DB_BIND_STATIC);
+      DBBind(hStmt, 4, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, m_memento.c_str(), DB_BIND_STATIC);
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastExecutionTime));
+      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_nextExecutionTime));
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_iteration);
+      DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
+      DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
+   
+   DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Delete AI task from database
+ */
+void AITask::deleteFromDatabase()
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM ai_task_execution_log WHERE task_id=?"));
+   DBConnectionPoolReleaseConnection(hdb);
 }

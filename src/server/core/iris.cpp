@@ -28,6 +28,7 @@
 
 #define DEBUG_TAG _T("llm.iris")
 
+void InitAITasks();
 void AITaskSchedulerThread(ThreadPool *aiTaskThreadPool);
 
 /**
@@ -121,6 +122,7 @@ bool InitAIAssistant()
          return std::to_string(taskId);
       });
 
+   InitAITasks();
    s_aiTaskThreadPool = ThreadPoolCreate(_T("AI-TASKS"),
          ConfigReadInt(_T("ThreadPool.AITasks.BaseSize"), 4),
          ConfigReadInt(_T("ThreadPool.AITasks.MaxSize"), 16));

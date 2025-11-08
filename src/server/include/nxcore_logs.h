@@ -46,6 +46,7 @@
 #define LC_ATM_TXN_CODE       15
 #define LC_ASSET_OPERATION    16
 #define LC_DEPLOYMENT_STATUS  17
+#define LC_AI_TASK_STATUS     18
 
 /**
  * Column filter types

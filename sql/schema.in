@@ -2891,3 +2891,46 @@ CREATE TABLE downtime_log
    downtime_tag varchar(15) not null,
    PRIMARY KEY(object_id,start_time,downtime_tag)
 ) TABLE_TYPE;
+
+/**
+ * Active AI tasks
+ */
+CREATE TABLE ai_tasks
+(
+   id integer not null,
+   user_id integer not null,
+   description varchar(255),
+   prompt SQL_TEXT,
+   memento SQL_TEXT,
+   last_execution_time integer not null,
+   next_execution_time integer not null,
+   iteration integer not null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * AI task execution log
+ */
+CREATE_TABLE ai_task_execution_log
+(
+   record_id SQL_INT64 not null,
+#ifdef DB_TSDB
+   execution_timestamp timestamptz not null,
+#else
+   execution_timestamp integer not null,
+#endif
+   task_id integer not null,
+   task_description varchar(255),
+   user_id integer not null,
+   status char(1) not null, // C=completed, F=failed, S=scheduled
+   iteration integer not null,
+   explanation SQL_TEXT,
+   PRIMARY KEY(record_id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_ai_task_exec_log_timestamp ON ai_task_execution_log(execution_timestamp);
+CREATE INDEX idx_ai_task_exec_log_asset_id ON ai_task_execution_log(task_id);
+
+#ifdef DB_TSDB
+SELECT create_hypertable('ai_task_execution_log', 'execution_timestamp', chunk_time_interval => interval '86400 seconds');
+#endif

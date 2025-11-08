@@ -364,7 +364,7 @@ uint64_t GetLastAssetChangeLogId()
 }
 
 /**
- * Initialize trap handling
+ * Initialize asset change log ID
  */
 static void InitAssetChangeLogId()
 {

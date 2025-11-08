@@ -28,6 +28,19 @@
  */
 static NXCORE_LOG s_logs[] =
 {
+   { L"AITaskLog", L"ai_task_execution_log", L"record_id", nullptr, SYSTEM_ACCESS_VIEW_EVENT_LOG,
+      {
+         { L"record_id", L"Record ID", LC_INTEGER, LCF_RECORD_ID },
+         { L"execution_timestamp", L"Timestamp", LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
+         { L"task_id", L"Task", LC_INTEGER, 0 },
+         { L"task_description", L"Task Description", LC_TEXT, 0 },
+         { L"user_id", L"User", LC_USER_ID, 0 },
+         { L"status", L"Status", LC_AI_TASK_STATUS, 0 },
+         { L"iteration", L"Iteration", LC_INTEGER, 0 },
+         { L"explanation", L"Explanation", LC_TEXT_DETAILS, 0 },
+         { nullptr, nullptr, 0, 0 }
+      }
+   },
 	{ L"AlarmLog", L"alarms", L"alarm_id", L"source_object_id", SYSTEM_ACCESS_VIEW_EVENT_LOG,
 		{
 			{ L"alarm_id", L"Alarm ID", LC_INTEGER, 0 },
