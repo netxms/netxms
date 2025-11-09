@@ -63,6 +63,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_IDIV
 %token T_IF
 %token T_IMPORT
+%token T_META
 %token T_NEW
 %token T_NULL
 %token T_OPTIONAL
@@ -136,7 +137,16 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %%
 
 Script:
-	Module
+	MetadataHeader ScriptBody
+;
+
+MetadataHeader:
+	MetadataStatement MetadataHeader
+|
+;
+
+ScriptBody:
+	ModuleComponent ModuleBody
 {
 	char szErrorText[256];
 
@@ -180,9 +190,14 @@ Script:
 }
 ;
 
-Module:
-	ModuleComponent Module
-|	ModuleComponent
+ModuleBody:
+	ModuleBodyComponent ModuleBody
+|
+;
+
+ModuleBodyComponent:
+	ModuleComponent
+|	MetadataStatement
 ;
 
 ModuleComponent:
@@ -370,6 +385,10 @@ WithAssignment:
 }	
 ;
 
+MetadataStatement:
+    T_META '(' MetadataValues ')'
+;
+
 Metadata:
 	'(' MetadataValues ')'
 |
@@ -384,15 +403,26 @@ MetadataValue:
 	T_IDENTIFIER '=' Constant
 {
    TCHAR key[1024];
+   if (builder->getCurrentMetadataPrefix().length > 0)
+   {
 #ifdef UNICODE
-   size_t l = utf8_to_wchar(builder->getCurrentMetadataPrefix().value, -1, key, 1024);
-	key[l - 1] = L'.';
-   utf8_to_wchar($1.v, -1, &key[l], 1024 - l);
+      size_t l = utf8_to_wchar(builder->getCurrentMetadataPrefix().value, -1, key, 1024);
+	   key[l - 1] = L'.';
+      utf8_to_wchar($1.v, -1, &key[l], 1024 - l);
 #else
-	strlcpy(key, builder->getCurrentMetadataPrefix().value, 1024);
-	strlcat(key, ".", 1024);
-	strlcat(key, $1.v, 1024);
+	   strlcpy(key, builder->getCurrentMetadataPrefix().value, 1024);
+	   strlcat(key, ".", 1024);
+	   strlcat(key, $1.v, 1024);
 #endif
+   }
+   else
+   {
+#ifdef UNICODE
+      utf8_to_wchar($1.v, -1, key, 1024);
+#else
+      strlcpy(key, $1.v, 1024);
+#endif
+   }
    builder->setMetadata(key, $3->getValueAsCString());
 	builder->destroyValue($3);
 	$3 = nullptr;
