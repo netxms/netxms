@@ -75,12 +75,12 @@ public:
 /**
  * AI assistant function handler
  */
-typedef std::string (*AssistantFunctionHandler)(json_t*, uint32_t);
+typedef std::function<std::string(json_t*, uint32_t)> AssistantFunctionHandler;
 
 /**
- * Register assistant function
+ * Register assistant function. This function intended to be called only during server core or module initialization.
  */
-void NXCORE_EXPORTABLE RegisterAIAssistantFunction(const char *name, const char *description, const std::vector<std::pair<const char*, const char*>>& properties, AssistantFunctionHandler handler);
+void NXCORE_EXPORTABLE RegisterAIAssistantFunction(const char *name, const char *description, const std::vector<std::pair<std::string, std::string>>& parameters, AssistantFunctionHandler handler);
 
 /**
  * Call AI assistant function (intended for MCP bridge)

@@ -25,6 +25,8 @@
 
 #define DEBUG_TAG L"llm.aitask"
 
+char *ProcessRequestToAIAssistantEx(const char *prompt, const char *systemPrompt, NetObj *context, json_t *eventData, GenericClientSession *session, int maxIterations);
+
 /**
  * AI Task management
  */
@@ -32,6 +34,7 @@ static SharedHashMap<uint32_t, AITask> s_aiTasks;
 static Mutex s_aiTasksLock;
 static VolatileCounter s_taskId = 0; // Last used task ID
 static VolatileCounter64 s_logRecordId = 0;
+static std::string s_systemPrompt;
 
 /**
  * Initialize AI tasks
@@ -71,6 +74,35 @@ void InitAITasks()
    }
 
    DBConnectionPoolReleaseConnection(hdb);
+
+   s_systemPrompt =
+      "You are an AI agent integrated with NetXMS, a network management system. "
+      "You are capable of performing background tasks that may require multiple executions to complete. "
+      "You have access to various functions that allow you to retrieve data from the NetXMS system and perform actions as needed. "
+      "You are operating autonomously without user interaction. "
+      "Never stop to ask for user input or confirmation. "
+      "Perform requested task according to instructions below after <instructions> tag. "
+      "Task could be long running and may require multiple executions to complete. "
+      "Use available functions to retrieve necessary data from NetXMS system or perform actions. "
+      "Provide structured execution report in JSON format, use only clean JSON without any additional text. "
+      "Do not use markdown formatting or code blocks. "
+      "If task is long or inifinite, respond with completed=false and provide next_execution_time for rescheduling. "
+      "This is background task, so do not ask for any user input. "
+      "If different instructions are needed for next execution, provide them in the instructions field in response. "
+      "If data need to be preserved between executions, use memento field for that purpose. "
+      "Memento content will be passed back to you during next execution inside <memento> tag. "
+      "Memento can also be used to provide instructions or context for next execution. "
+      "<iteration> tag indicates current execution iteration starting from 1. "
+      "Answer should have the following fields: completed, next_execution_time, instructions, memento, and explanation. "
+      "'completed' attribute should be set to true if no further action is required, or false if task needs to be rescheduled. "
+      "'next_execution_time' should be in number if seconds and indicate delay until next task execution if it is not completed. "
+      "'instructions' should contain updated instructions for next execution (will replace current instructions). "
+      "'memento' should contain any data that needs to be preserved between task executions. "
+      "'explanation' should provide a brief reasoning behind your decision. ";
+   ENUMERATE_MODULES(pfGetAIAgentInstructions)
+   {
+      s_systemPrompt.append(CURRENT_MODULE.pfGetAIAgentInstructions());
+   }
 
    nxlog_debug_tag(DEBUG_TAG, 2, L"Last AI task ID=%u, last AI task log record ID=" INT64_FMT, s_taskId, s_logRecordId);
 }
@@ -137,30 +169,9 @@ AITask::AITask(const wchar_t *descripion, uint32_t userId, const wchar_t *prompt
    m_nextExecutionTime = time(nullptr);
    m_iteration = 0;
    m_userId = userId;
-   m_prompt =
-      "Follow the instructions below to perform requested task. "
-      "Task could be long running and may require multiple executions to complete. "
-      "Use available functions to retrieve necessary data from NetXMS system or perform actions. "
-      "Provide structured execution report in JSON format, use only clean JSON without any additional text. "
-      "Do not use markdown formatting or code blocks. "
-      "If task is long or inifinite, respond with completed=false and provide next_execution_time for rescheduling. "
-      "If data need to be preserved between executions, use memento field for that purpose. "
-      "Memento content will be passed back to you during next execution. "
-      "Memento can also be used to provide instructions or context for next execution. "
-      "Answer should have the following fields: completed, next_execution_time, memento, and explanation. "
-      "'completed' attribute should be set to true if no further action is required, or false if task needs to be rescheduled. "
-      "'next_execution_time' should be in number if seconds and indicate delay until next task execution if it is not completed. "
-      "'memento' should contain any data that needs to be preserved between task executions. "
-      "'explanation' should provide a brief reasoning behind your decision. ";
-   ENUMERATE_MODULES(pfGetAIAgentInstructions)
-   {
-      m_prompt.append(CURRENT_MODULE.pfGetAIAgentInstructions());
-   }
-   m_prompt.append("\n<instructions>");
    char *mp = UTF8StringFromWideString(prompt);
-   m_prompt.append(mp);
+   m_prompt = mp;
    MemFree(mp);
-   m_prompt.append("</instructions>");
 }
 
 /**
@@ -190,8 +201,8 @@ AITask::AITask(DB_RESULT hResult, int row) : m_description(DBGetFieldAsString(hR
 void AITask::execute()
 {
    m_status = AITaskStatus::RUNNING;
-   std::string prompt = m_prompt;
-   prompt.append("\n<current_time>");
+   std::string prompt(m_prompt);
+   prompt.append("</instructions>\n<current_time>");
    prompt.append(FormatISO8601Timestamp(time(nullptr)));
    prompt.append("</current_time>\n<iteration>");
    prompt.append(std::to_string(++m_iteration));
@@ -202,7 +213,7 @@ void AITask::execute()
       prompt.append(m_memento);
       prompt.append("</memento>\n");
    }
-   char *response = ProcessRequestToAIAssistant(prompt.c_str(), nullptr, nullptr, 64);
+   char *response = ProcessRequestToAIAssistantEx(prompt.c_str(), s_systemPrompt.c_str(), nullptr, nullptr, nullptr, 64);
    if (response != nullptr)
    {
       json_t *json = json_loads(response, 0, nullptr);
@@ -226,12 +237,33 @@ void AITask::execute()
                nxlog_debug_tag(DEBUG_TAG, 5, L"AI task [%u] \"%s\" scheduled for next execution at %s", m_id, m_description.cstr(),
                   FormatTimestamp(m_nextExecutionTime).cstr());
 
-               m_memento.clear();
-               const char *memento = json_object_get_string_utf8(json, "memento", "");
-               if (*memento != 0)
+               const char *newInstructions = json_object_get_string_utf8(json, "instructions", nullptr);
+               if ((newInstructions != nullptr) && (*newInstructions != 0))
                {
-                  m_memento = memento;
-                  nxlog_debug_tag(DEBUG_TAG, 6, L"AI task [%u] memento: %hs", m_id, memento);
+                  m_prompt = newInstructions;
+                  nxlog_debug_tag(DEBUG_TAG, 6, L"AI task [%u] new instructions: %hs", m_id, newInstructions);
+               }
+
+               m_memento.clear();
+               json_t *mementoElement = json_object_get(json, "memento");
+               if (json_is_string(mementoElement))
+               {
+                  const char *memento = json_string_value(mementoElement);
+                  if (*memento != 0)
+                  {
+                     m_memento = memento;
+                     nxlog_debug_tag(DEBUG_TAG, 6, L"AI task [%u] memento: %hs", m_id, memento);
+                  }
+               }
+               else if (json_is_object(mementoElement) || json_is_array(mementoElement))
+               {
+                  char *memento = json_dumps(mementoElement, JSON_COMPACT);
+                  if (memento != nullptr)
+                  {
+                     m_memento = memento;
+                     nxlog_debug_tag(DEBUG_TAG, 6, L"AI task [%u] memento: %hs", m_id, memento);
+                     MemFree(memento);
+                  }
                }
             }
             nxlog_debug_tag(DEBUG_TAG, 6, L"AI task [%u] explanation: %s", m_id, m_explanation.cstr());
@@ -355,6 +387,6 @@ void AITask::saveToDatabase() const
 void AITask::deleteFromDatabase()
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM ai_task_execution_log WHERE task_id=?"));
+   ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM ai_tasks WHERE id=?"));
    DBConnectionPoolReleaseConnection(hdb);
 }

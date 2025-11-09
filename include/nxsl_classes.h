@@ -1297,6 +1297,14 @@ public:
    const TCHAR *getError() const { return m_diag.errorText.cstr(); }
 
    NXSL_Program *getProgram() const { return m_program; }
+   const TCHAR *getMetadataEntry(const TCHAR *key) const { return (m_program != nullptr) ? m_program->getMetadataEntry(key) : nullptr; }
+   bool getMetadataEntryAsBoolean(const TCHAR *key) const
+   {
+      const TCHAR *v = getMetadataEntry(key);
+      if (v == nullptr)
+         return false;
+      return !_tcsicmp(v, _T("true")) || !_tcsicmp(v, _T("yes"));
+   }
 
    void fillMessage(NXCPMessage *msg, uint32_t base) const;
    void fillMessage(NXCPMessage *msg) const;

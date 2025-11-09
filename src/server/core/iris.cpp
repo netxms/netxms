@@ -31,6 +31,20 @@
 void InitAITasks();
 void AITaskSchedulerThread(ThreadPool *aiTaskThreadPool);
 
+struct AssistantFunction
+{
+   std::string name;
+   std::string description;
+   std::vector<std::pair<std::string, std::string>> parameters;
+   AssistantFunctionHandler handler;
+
+   AssistantFunction(const std::string& name, const std::string& description,
+      const std::vector<std::pair<std::string, std::string>>& parameters, AssistantFunctionHandler handler)
+      : name(name), description(description), parameters(parameters), handler(handler)
+   {
+   }
+};
+
 /**
  * Loaded server config
  */
@@ -57,14 +71,42 @@ static char s_llmAuthToken[256] = "";
 static json_t *s_functionDeclarations = nullptr;
 
 /**
- * Function handlers
+ * Functions
  */
-static std::unordered_map<std::string, AssistantFunctionHandler> s_functionHandlers;
+static std::unordered_map<std::string, AssistantFunction> s_functions;
+
+/**
+ * Mutex for functions
+ */
+static Mutex s_functionsMutex(MutexType::FAST);
 
 /**
  * System prompt
  */
-static const char *s_systemPrompt = "You are a helpful assistant named Iris. You have knowledge about NetXMS and its components, including network management, monitoring, and administration tasks. You can assist users with questions related to these topics. Your responses should be concise, accurate, and helpful. You can access live information from the NetXMS server to provide real-time assistance. If you are unable to answer a question, you should politely inform the user that you do not have the information available. Avoid answering questions not related to monitoring and IT administration tasks, and do not provide personal opinions or advice. Your goal is to assist users in managing their IT infrastructure effectively.";
+static const char *s_systemPrompt =
+         "You are a helpful assistant named Iris. "
+         "You have knowledge about NetXMS and its components, including network management, monitoring, and administration tasks. "
+         "You can assist users with questions related to these topics. "
+         "Your responses should be concise, accurate, and helpful. "
+         "You can access live information from the NetXMS server to provide real-time assistance. "
+         "If you are unable to answer a question, you should politely inform the user that you do not have the information available. "
+         "Avoid answering questions not related to monitoring and IT administration tasks, and do not provide personal opinions or advice. "
+         "Your goal is to assist users in managing their IT infrastructure effectively.";
+
+/**
+ * System prompt for background requests
+ */
+static const char *s_systemPromptBackground =
+         "You are a helpful assistant named Iris. "
+         "You have knowledge about NetXMS and its components, including network management, monitoring, and administration tasks. "
+         "You can assist users with questions related to these topics. "
+         "Your responses should be concise, accurate, and helpful. "
+         "You can access live information from the NetXMS server to provide real-time assistance. "
+         "If you are unable to answer a question, you should politely inform the user that you do not have the information available. "
+         "Avoid answering questions not related to monitoring and IT administration tasks, and do not provide personal opinions or advice. "
+         "You are operating autonomously without user interaction. "
+         "Never stop to ask for user input or confirmation. "
+         "You can create background tasks that may require multiple executions to complete if necessary. ";
 
 /**
  * Additional prompts
@@ -75,6 +117,153 @@ static std::vector<std::string> s_prompts;
  * Thread pool for AI tasks
  */
 static ThreadPool *s_aiTaskThreadPool = nullptr;
+
+/**
+ * Rebuild function declarations JSON object
+ */
+static void RebuildFunctionDeclarations()
+{
+   s_functionsMutex.lock();
+
+   if (s_functionDeclarations != nullptr)
+      json_decref(s_functionDeclarations);
+
+   s_functionDeclarations = json_array();
+   for(const auto& pair : s_functions)
+   {
+      const AssistantFunction& function = pair.second;
+      json_t *tool = json_object();
+      json_object_set_new(tool, "type", json_string("function"));
+      json_t *functionObject = json_object();
+      json_object_set_new(functionObject, "name", json_string(function.name.c_str()));
+      json_object_set_new(functionObject, "description", json_string(function.description.c_str()));
+      json_t *parametersObject = json_object();
+      json_object_set_new(parametersObject, "type", json_string("object"));
+      json_t *propObject = json_object();
+      for(std::pair<std::string, std::string> p : function.parameters)
+      {
+         json_t *propData = json_object();
+         json_object_set_new(propData, "description", json_string(p.second.c_str()));
+         json_object_set_new(propData, "type", json_string("string"));
+         json_object_set_new(propObject, p.first.c_str(), propData);
+      }
+      json_object_set_new(parametersObject, "properties", propObject);
+      json_object_set_new(parametersObject, "required", json_array());
+      json_object_set_new(functionObject, "parameters", parametersObject);
+      json_object_set_new(tool, "function", functionObject);
+      json_array_append_new(s_functionDeclarations, tool);
+   }
+
+   s_functionsMutex.unlock();
+}
+
+/**
+ * Find object by its name or ID
+ */
+static shared_ptr<NetObj> FindObjectByNameOrId(const char *name)
+{
+   char *eptr;
+   uint32_t id = strtoul(name, &eptr, 0);
+   if (*eptr == 0)
+   {
+      shared_ptr<NetObj> object = FindObjectById(id);
+      if (object != nullptr)
+         return object;
+   }
+
+   wchar_t nameW[MAX_OBJECT_NAME];
+   utf8_to_wchar(name, -1, nameW, MAX_OBJECT_NAME);
+   nameW[MAX_OBJECT_NAME - 1] = 0;
+   return FindObjectByName(nameW);
+}
+
+/**
+ * Register AI assistant function handler from NXSL script
+ */
+static void RegisterAIFunctionHandlerFromScript(const NXSL_LibraryScript *script)
+{
+   String scriptName(script->getName());
+   bool objectContext = script->getMetadataEntryAsBoolean(L"object_context");
+
+   AssistantFunctionHandler handler =
+      [scriptName, objectContext] (json_t *arguments, uint32_t userId) -> std::string
+   {
+      shared_ptr<NetObj> object;
+      const char *objectIdStr = json_object_get_string_utf8(arguments, "object", "");
+      if (objectIdStr[0] != 0)
+         object = FindObjectByNameOrId(objectIdStr);
+
+      if (objectContext && (object == nullptr))
+         return std::string("Error: invalid or missing object context; valid object must be provided for this tool");
+
+      ScriptVMHandle vm = CreateServerScriptVM(scriptName, nullptr, shared_ptr<DCObjectInfo>());
+      if (!vm.isValid())
+         return std::string("Error: cannot create script VM");
+
+      ObjectRefArray<NXSL_Value> args(0, 16);
+      if (arguments != nullptr)
+      {
+         const char *argListStr = json_object_get_string_utf8(arguments, "args", "");
+         if (argListStr[0] != 0)
+         {
+            wchar_t *argListWStr = WideStringFromUTF8String(argListStr);
+            wchar_t *p = argListWStr;
+            if (!ParseValueList(vm, &p, args, false))
+            {
+               MemFree(argListWStr);
+               return std::string("Error: cannot parse argument list");
+            }
+            MemFree(argListWStr);
+         }
+      }
+
+      std::string output;
+      if (vm->run(args))
+      {
+         NXSL_Value *result = vm->getResult();
+         if ((result != nullptr) && !result->isNull())
+         {
+            char *text = UTF8StringFromWideString(result->getValueAsCString());
+            output = text;
+            MemFree(text);
+         }
+         else
+         {
+            output = "Script executed successfully but did not provide any output";
+         }
+      }
+      else
+      {
+         output = "Script execution failed: ";
+         char text[256];
+         wchar_to_utf8(vm->getErrorText(), -1, text, 256);
+         output.append(text);
+      }
+      vm.destroy();
+      return output;
+   };
+
+   char *toolName = StringBuffer(L"nxsl-").append(script->getName()).getUTF8String();
+   for(int i = 0; toolName[i] != 0; i++)
+   {
+      if (toolName[i] == ':')
+         toolName[i] = '_';
+   }
+   char *d = UTF8StringFromWideString(script->getMetadataEntry(L"description"));
+   std::string description = (d != nullptr) ? d : "No description provided.";
+   MemFree(d);
+   std::vector<std::pair<std::string, std::string>> args;
+   args.emplace_back("args", "optional argument list as a single string (description should define expected arguments)");
+   if (objectContext)
+   {
+      args.emplace_back("object", "ID or name of NetXMS object providing context for this function");
+      description.append(" This function requires object context; provide object ID or name using 'object' parameter.");
+   }
+   RegisterAIAssistantFunction(toolName, description.c_str(), args, handler);
+   MemFree(toolName);
+
+   nxlog_debug_tag(DEBUG_TAG, 4, L"Registered AI function handler from script \"%s\"", script->getName());
+}
 
 /**
  * Initialize AI assistant
@@ -94,7 +283,20 @@ bool InitAIAssistant()
       return false;
    }
 
-   if (s_functionDeclarations == nullptr)
+   NXSL_Library *scriptLibrary = GetServerScriptLibrary();
+   scriptLibrary->lock();
+   scriptLibrary->forEach(
+      [] (const NXSL_LibraryScript *script) -> void
+      {
+         const wchar_t *aiTool = script->getMetadataEntry(L"ai_tool");
+         if ((aiTool != nullptr) && (!wcsicmp(aiTool, L"true") || !wcsicmp(aiTool, L"yes")))
+         {
+            RegisterAIFunctionHandlerFromScript(script);
+         }
+      });
+   scriptLibrary->unlock();
+
+   if (s_functions.empty())
    {
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("AI assistant disabled (no functions registered)"));
       return true;  // No functions registered
@@ -122,6 +324,8 @@ bool InitAIAssistant()
          return std::to_string(taskId);
       });
 
+   RebuildFunctionDeclarations();
+
    InitAITasks();
    s_aiTaskThreadPool = ThreadPoolCreate(_T("AI-TASKS"),
          ConfigReadInt(_T("ThreadPool.AITasks.BaseSize"), 4),
@@ -129,7 +333,7 @@ bool InitAIAssistant()
    ThreadCreate(AITaskSchedulerThread, s_aiTaskThreadPool);
 
    nxlog_debug_tag(DEBUG_TAG, 2, L"LLM service URL = \"%hs\", model = \"%hs\"", s_llmServiceURL, s_llmModel);
-   nxlog_debug_tag(DEBUG_TAG, 2, L"%d functions registered", static_cast<int>(s_functionHandlers.size()));
+   nxlog_debug_tag(DEBUG_TAG, 2, L"%d functions registered", static_cast<int>(s_functions.size()));
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("AI assistant initialized"));
    return true;
 }
@@ -148,17 +352,17 @@ void NXCORE_EXPORTABLE AddAIAssistantPrompt(const char *text)
  */
 std::string NXCORE_EXPORTABLE CallAIAssistantFunction(const char *name, json_t *arguments, uint32_t userId)
 {
-   auto it = s_functionHandlers.find(name);
-   if (it != s_functionHandlers.end())
+   auto it = s_functions.find(name);
+   if (it != s_functions.end())
    {
       if (json_is_string(arguments))
       {
          arguments = json_loads(json_string_value(arguments), 0, nullptr);
-         std::string response = it->second(arguments, userId);
+         std::string response = it->second.handler(arguments, userId);
          json_decref(arguments);
          return response;
       }
-      return it->second(arguments, userId);
+      return it->second.handler(arguments, userId);
    }
    return std::string("Error: function not found");
 }
@@ -199,46 +403,22 @@ void FillAIAssistantFunctionListMessage(NXCPMessage *msg)
 }
 
 /**
- * Register AI assistant function
+ * Register AI assistant function. This function intended to be called only during server core or module initialization.
  */
-void NXCORE_EXPORTABLE RegisterAIAssistantFunction(const char *name, const char *description, const std::vector<std::pair<const char*, const char*>>& properties, AssistantFunctionHandler handler)
+void NXCORE_EXPORTABLE RegisterAIAssistantFunction(const char *name, const char *description, const std::vector<std::pair<std::string, std::string>>& parameters, AssistantFunctionHandler handler)
 {
-   if (s_functionHandlers.find(name) != s_functionHandlers.end())
+   if (s_functions.find(name) != s_functions.end())
    {
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"AI assistant function \"%hs\" already registered", name);
       return;
    }
-
-   json_t *tool = json_object();
-   json_object_set_new(tool, "type", json_string("function"));
-   json_t *function = json_object();
-   json_object_set_new(function, "name", json_string(name));
-   json_object_set_new(function, "description", json_string(description));
-   json_t *parameters = json_object();
-   json_object_set_new(parameters, "type", json_string("object"));
-   json_t *propObject = json_object();
-   for(std::pair<const char*, const char*> p : properties)
-   {
-      json_t *propData = json_object();
-      json_object_set_new(propData, "description", json_string(p.second));
-      json_object_set_new(propData, "type", json_string("string"));
-      json_object_set_new(propObject, p.first, propData);
-   }
-   json_object_set_new(parameters, "properties", propObject);
-   json_object_set_new(parameters, "required", json_array());
-   json_object_set_new(function, "parameters", parameters);
-   json_object_set_new(tool, "function", function);
-
-   if (s_functionDeclarations == nullptr)
-      s_functionDeclarations = json_array();
-   json_array_append_new(s_functionDeclarations, tool);
-   s_functionHandlers[name] = handler;
+   s_functions.emplace(name, AssistantFunction(name, description, parameters, handler));
 }
 
 /**
- * Send request to Ollama server
+ * Send request to Ollama or OpenAI server
  */
-static json_t *OllamaApiRequest(json_t *requestData)
+static json_t *DoApiRequest(json_t *requestData)
 {
    if (IsShutdownInProgress())
       return nullptr;
@@ -337,14 +517,14 @@ static json_t *OllamaApiRequest(json_t *requestData)
             }
             nxlog_debug_tag(DEBUG_TAG, 7, L"Error response document: %hs", data);
          }
-         nxlog_debug_tag(DEBUG_TAG, 5, L"Error response from Ollama server: %d (%hs)", static_cast<int>(httpStatusCode), errorMessage);
+         nxlog_debug_tag(DEBUG_TAG, 5, L"Error response from LLM: %d (%hs)", static_cast<int>(httpStatusCode), errorMessage);
          success = false;
       }
    }
 
    if (success && responseData.size() <= 0)
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, L"Empty response from Ollama server");
+      nxlog_debug_tag(DEBUG_TAG, 5, L"Empty response from LLM");
       success = false;
    }
 
@@ -357,7 +537,7 @@ static json_t *OllamaApiRequest(json_t *requestData)
       response = json_loads(data, 0, &error);
       if (response != nullptr)
       {
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("Successful response from Ollama server: %hs"), data);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Successful response from LLM: %hs"), data);
       }
       else
       {
@@ -381,6 +561,7 @@ static inline void AddMessage(json_t *messages, const char *role, const char *co
    json_object_set_new(message, "role", json_string(role));
    json_object_set_new(message, "content", json_string(content));
    json_array_append_new(messages, message);
+   nxlog_debug_tag(DEBUG_TAG, 8, L"Added message to chat: role=\"%hs\", content=\"%hs\"", role, content);
 }
 
 /**
@@ -400,7 +581,7 @@ static Mutex s_chatsLock;
 /**
  * Process request to assistant (actual internal implementation)
  */
-static char *ProcessRequestToAIAssistantEx(const char *prompt, NetObj *context, json_t *eventData, GenericClientSession *session, int maxIterations)
+char *ProcessRequestToAIAssistantEx(const char *prompt, const char *systemPrompt, NetObj *context, json_t *eventData, GenericClientSession *session, int maxIterations)
 {
    json_t *messages;
    s_chatsLock.lock();
@@ -410,7 +591,7 @@ static char *ProcessRequestToAIAssistantEx(const char *prompt, NetObj *context, 
       messages = json_array();
       if (session != nullptr)
          s_chats.set(session->getId(), messages);
-      AddMessage(messages, "system", s_systemPrompt);
+      AddMessage(messages, "system", (systemPrompt != nullptr) ? systemPrompt : s_systemPrompt);
       if (context != nullptr)
       {
          AddMessage(messages, "system", "This request is made in the context of the following object:");
@@ -445,7 +626,7 @@ static char *ProcessRequestToAIAssistantEx(const char *prompt, NetObj *context, 
       json_object_set(request, "tools", s_functionDeclarations);
       json_object_set(request, "messages", messages);
 
-      json_t *response = OllamaApiRequest(request);
+      json_t *response = DoApiRequest(request);
       json_decref(request);
       if (response == nullptr)
       {
@@ -488,7 +669,7 @@ static char *ProcessRequestToAIAssistantEx(const char *prompt, NetObj *context, 
                   if (!functionResult.empty())
                   {
                      nxlog_debug_tag(DEBUG_TAG, 5, L"LLM function \"%hs\" executed, result length=%d", name, static_cast<int>(functionResult.length()));
-                     nxlog_debug_tag(DEBUG_TAG, 8, L"Function result: %hs", functionResult.c_str());
+                     nxlog_debug_tag(DEBUG_TAG, 7, L"Function result: %hs", functionResult.c_str());
 
                      json_t *functionMessage = json_object();
                      json_object_set_new(functionMessage, "role", json_string("tool"));
@@ -536,7 +717,7 @@ static char *ProcessRequestToAIAssistantEx(const char *prompt, NetObj *context, 
  */
 char NXCORE_EXPORTABLE *ProcessRequestToAIAssistant(const char *prompt, NetObj *context, GenericClientSession *session, int maxIterations)
 {
-   return ProcessRequestToAIAssistantEx(prompt, context, nullptr, session, maxIterations);
+   return ProcessRequestToAIAssistantEx(prompt, nullptr, context, nullptr, session, maxIterations);
 }
 
 /**
@@ -550,7 +731,7 @@ void ProcessEventWithAIAssistant(Event *event, const shared_ptr<NetObj>& object,
    ThreadPoolExecute(s_aiTaskThreadPool,
       [prompt, object, eventData, eventId] () -> void
       {
-         char *response = ProcessRequestToAIAssistantEx(prompt, object.get(), eventData, nullptr, 10);
+         char *response = ProcessRequestToAIAssistantEx(prompt, s_systemPromptBackground, object.get(), eventData, nullptr, 10);
          if (response != nullptr)
          {
             nxlog_debug_tag(DEBUG_TAG, 4, L"AI assistant response for event " UINT64_FMT L": %hs", eventId, response);
