@@ -4483,11 +4483,32 @@ NXSL_Value *NXSL_TemplateClass::getAttr(NXSL_Object *object, const NXSL_Identifi
 }
 
 /**
+ * Tunnel::bind(node)
+ */
+NXSL_METHOD_DEFINITION(Tunnel, bind)
+{
+   if (!argv[0]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
+
+   NXSL_Object *node = argv[0]->getValueAsObject();
+   if (!node->getClass()->instanceOf(_T("Node")))
+      return NXSL_ERR_BAD_CLASS;
+
+   shared_ptr<AgentTunnel> tunnel = *static_cast<shared_ptr<AgentTunnel>*>(object->getData());
+   uint32_t nodeId = (*static_cast<shared_ptr<Node>*>(node->getData()))->getId();
+   uint32_t rcc = tunnel->bind(nodeId, 0);
+   *result = vm->createValue(rcc);
+   return 0;
+}
+
+/**
  * NXSL class Tunnel: constructor
  */
 NXSL_TunnelClass::NXSL_TunnelClass() : NXSL_Class()
 {
    setName(_T("Tunnel"));
+
+   NXSL_REGISTER_METHOD(Tunnel, bind, 1);
 }
 
 /**
