@@ -117,7 +117,8 @@ public:
 
    String requestAIAssistantComment(GenericClientSession *session = nullptr) const;
 
-   NXSL_Value *categoryListToNXSLArray(NXSL_VM *vm);
+   NXSL_Value *categoryListToNXSLArray(NXSL_VM *vm) const;
+   NXSL_Value *relatedEventsToNXSLArray(NXSL_VM *vm) const;
 
    void createInDatabase();
    void updateInDatabase();

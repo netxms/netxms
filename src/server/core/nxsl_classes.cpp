@@ -5220,6 +5220,10 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
    {
       value = vm->createValue(alarm->getParentAlarmId());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("relatedEvents"))
+   {
+      value = alarm->relatedEventsToNXSLArray(vm);
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("repeatCount"))
    {
       value = vm->createValue(alarm->getRepeatCount());
@@ -5235,7 +5239,7 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("ruleGuid"))
    {
-      TCHAR buffer[64];
+      wchar_t buffer[64];
       value = vm->createValue(alarm->getRuleGuid().toString(buffer));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("ruleDescription"))

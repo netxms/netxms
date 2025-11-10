@@ -610,6 +610,19 @@ void Alarm::removeSubordinateAlarm(uint32_t alarmId)
 }
 
 /**
+ * Get list of related event identifiers as NXSL array
+ */
+NXSL_Value *Alarm::relatedEventsToNXSLArray(NXSL_VM *vm) const
+{
+   NXSL_Array *a = new NXSL_Array(vm);
+   for(int i = 0; i < m_relatedEvents.size(); i++)
+   {
+      a->append(vm->createValue(m_relatedEvents.get(i)));
+   }
+   return vm->createValue(a);
+}
+
+/**
  * Convert alarm category list to string
  */
 StringBuffer Alarm::categoryListToString()
@@ -627,7 +640,7 @@ StringBuffer Alarm::categoryListToString()
 /**
  * Convert alarm category list to NXSL array
  */
-NXSL_Value *Alarm::categoryListToNXSLArray(NXSL_VM *vm)
+NXSL_Value *Alarm::categoryListToNXSLArray(NXSL_VM *vm) const
 {
    NXSL_Array *a = new NXSL_Array(vm);
    for(int i = 0; i < m_alarmCategoryList.size(); i++)
