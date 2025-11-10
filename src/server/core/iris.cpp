@@ -73,7 +73,7 @@ static json_t *s_functionDeclarations = nullptr;
 /**
  * Functions
  */
-static std::unordered_map<std::string, AssistantFunction> s_functions;
+static std::unordered_map<std::string, shared_ptr<AssistantFunction>> s_functions;
 
 /**
  * Mutex for functions
@@ -119,19 +119,37 @@ static std::vector<std::string> s_prompts;
 static ThreadPool *s_aiTaskThreadPool = nullptr;
 
 /**
- * Rebuild function declarations JSON object
+ * Find object by its name or ID
+ */
+static shared_ptr<NetObj> FindObjectByNameOrId(const char *name)
+{
+   char *eptr;
+   uint32_t id = strtoul(name, &eptr, 0);
+   if (*eptr == 0)
+   {
+      shared_ptr<NetObj> object = FindObjectById(id);
+      if (object != nullptr)
+         return object;
+   }
+
+   wchar_t nameW[MAX_OBJECT_NAME];
+   utf8_to_wchar(name, -1, nameW, MAX_OBJECT_NAME);
+   nameW[MAX_OBJECT_NAME - 1] = 0;
+   return FindObjectByName(nameW);
+}
+
+/**
+ * Rebuild function declarations JSON object. Functions mutex must be locked before calling this function.
  */
 static void RebuildFunctionDeclarations()
 {
-   s_functionsMutex.lock();
-
    if (s_functionDeclarations != nullptr)
       json_decref(s_functionDeclarations);
 
    s_functionDeclarations = json_array();
    for(const auto& pair : s_functions)
    {
-      const AssistantFunction& function = pair.second;
+      const AssistantFunction& function = *pair.second;
       json_t *tool = json_object();
       json_object_set_new(tool, "type", json_string("function"));
       json_t *functionObject = json_object();
@@ -153,95 +171,87 @@ static void RebuildFunctionDeclarations()
       json_object_set_new(tool, "function", functionObject);
       json_array_append_new(s_functionDeclarations, tool);
    }
-
-   s_functionsMutex.unlock();
 }
 
 /**
- * Find object by its name or ID
+ * Register AI assistant function. This function intended to be called only during server core or module initialization.
  */
-static shared_ptr<NetObj> FindObjectByNameOrId(const char *name)
+void NXCORE_EXPORTABLE RegisterAIAssistantFunction(const char *name, const char *description, const std::vector<std::pair<std::string, std::string>>& parameters, AssistantFunctionHandler handler)
 {
-   char *eptr;
-   uint32_t id = strtoul(name, &eptr, 0);
-   if (*eptr == 0)
+   if (s_functions.find(name) != s_functions.end())
    {
-      shared_ptr<NetObj> object = FindObjectById(id);
-      if (object != nullptr)
-         return object;
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"AI assistant function \"%hs\" already registered", name);
+      return;
+   }
+   s_functions.emplace(name, make_shared<AssistantFunction>(name, description, parameters, handler));
+}
+
+/**
+ * Handler for AI assistant function provided by NXSL script
+ */
+static std::string ScriptFunctionHandler(const wchar_t *scriptName, bool objectContext, json_t *arguments, uint32_t userId)
+{
+   shared_ptr<NetObj> object;
+   const char *objectIdStr = json_object_get_string_utf8(arguments, "object", "");
+   if (objectIdStr[0] != 0)
+      object = FindObjectByNameOrId(objectIdStr);
+
+   if (objectContext && (object == nullptr))
+      return std::string("Error: invalid or missing object context; valid object must be provided for this tool");
+
+   ScriptVMHandle vm = CreateServerScriptVM(scriptName, nullptr, shared_ptr<DCObjectInfo>());
+   if (!vm.isValid())
+      return std::string("Error: cannot create script VM");
+
+   ObjectRefArray<NXSL_Value> args(0, 16);
+   if (arguments != nullptr)
+   {
+      const char *argListStr = json_object_get_string_utf8(arguments, "args", "");
+      if (argListStr[0] != 0)
+      {
+         wchar_t *argListWStr = WideStringFromUTF8String(argListStr);
+         wchar_t *p = argListWStr;
+         if (!ParseValueList(vm, &p, args, false))
+         {
+            MemFree(argListWStr);
+            return std::string("Error: cannot parse argument list");
+         }
+         MemFree(argListWStr);
+      }
    }
 
-   wchar_t nameW[MAX_OBJECT_NAME];
-   utf8_to_wchar(name, -1, nameW, MAX_OBJECT_NAME);
-   nameW[MAX_OBJECT_NAME - 1] = 0;
-   return FindObjectByName(nameW);
-}
-
-/**
- * Register AI assistant function handler from NXSL script
- */
-static void RegisterAIFunctionHandlerFromScript(const NXSL_LibraryScript *script)
-{
-   String scriptName(script->getName());
-   bool objectContext = script->getMetadataEntryAsBoolean(L"object_context");
-
-   AssistantFunctionHandler handler =
-      [scriptName, objectContext] (json_t *arguments, uint32_t userId) -> std::string
+   std::string output;
+   if (vm->run(args))
    {
-      shared_ptr<NetObj> object;
-      const char *objectIdStr = json_object_get_string_utf8(arguments, "object", "");
-      if (objectIdStr[0] != 0)
-         object = FindObjectByNameOrId(objectIdStr);
-
-      if (objectContext && (object == nullptr))
-         return std::string("Error: invalid or missing object context; valid object must be provided for this tool");
-
-      ScriptVMHandle vm = CreateServerScriptVM(scriptName, nullptr, shared_ptr<DCObjectInfo>());
-      if (!vm.isValid())
-         return std::string("Error: cannot create script VM");
-
-      ObjectRefArray<NXSL_Value> args(0, 16);
-      if (arguments != nullptr)
+      NXSL_Value *result = vm->getResult();
+      if ((result != nullptr) && !result->isNull())
       {
-         const char *argListStr = json_object_get_string_utf8(arguments, "args", "");
-         if (argListStr[0] != 0)
-         {
-            wchar_t *argListWStr = WideStringFromUTF8String(argListStr);
-            wchar_t *p = argListWStr;
-            if (!ParseValueList(vm, &p, args, false))
-            {
-               MemFree(argListWStr);
-               return std::string("Error: cannot parse argument list");
-            }
-            MemFree(argListWStr);
-         }
-      }
-
-      std::string output;
-      if (vm->run(args))
-      {
-         NXSL_Value *result = vm->getResult();
-         if ((result != nullptr) && !result->isNull())
-         {
-            char *text = UTF8StringFromWideString(result->getValueAsCString());
-            output = text;
-            MemFree(text);
-         }
-         else
-         {
-            output = "Script executed successfully but did not provide any output";
-         }
+         char *text = UTF8StringFromWideString(result->getValueAsCString());
+         output = text;
+         MemFree(text);
       }
       else
       {
-         output = "Script execution failed: ";
-         char text[256];
-         wchar_to_utf8(vm->getErrorText(), -1, text, 256);
-         output.append(text);
+         output = "Script executed successfully but did not provide any output";
       }
-      vm.destroy();
-      return output;
-   };
+   }
+   else
+   {
+      output = "Script execution failed: ";
+      char text[256];
+      wchar_to_utf8(vm->getErrorText(), -1, text, 256);
+      output.append(text);
+   }
+   vm.destroy();
+   return output;
+}
+
+/**
+ * Register AI assistant function handler provided by NXSL script
+ */
+void RegisterAIFunctionScriptHandler(const NXSL_LibraryScript *script, bool runtimeChange)
+{
+   bool objectContext = script->getMetadataEntryAsBoolean(L"object_context");
 
    char *toolName = StringBuffer(L"nxsl-").append(script->getName()).getUTF8String();
    for(int i = 0; toolName[i] != 0; i++)
@@ -259,92 +269,50 @@ static void RegisterAIFunctionHandlerFromScript(const NXSL_LibraryScript *script
       args.emplace_back("object", "ID or name of NetXMS object providing context for this function");
       description.append(" This function requires object context; provide object ID or name using 'object' parameter.");
    }
-   RegisterAIAssistantFunction(toolName, description.c_str(), args, handler);
+
+   if (runtimeChange)
+      s_functionsMutex.lock();
+
+   String scriptName(script->getName());
+   RegisterAIAssistantFunction(toolName, description.c_str(), args,
+      [scriptName, objectContext] (json_t *arguments, uint32_t userId) -> std::string
+      {
+         return ScriptFunctionHandler(scriptName, objectContext, arguments, userId);
+      });
+
+   if (runtimeChange)
+   {
+      RebuildFunctionDeclarations();
+      s_functionsMutex.unlock();
+   }
+
    MemFree(toolName);
 
-   nxlog_debug_tag(DEBUG_TAG, 4, L"Registered AI function handler from script \"%s\"", script->getName());
+   nxlog_debug_tag(DEBUG_TAG, 4, L"Registered AI function handler provided by script \"%s\"", script->getName());
 }
 
 /**
- * Initialize AI assistant
+ * Unregister AI assistant function handler provided by NXSL script
  */
-bool InitAIAssistant()
+void UnregisterAIFunctionScriptHandler(const NXSL_LibraryScript *script)
 {
-   NX_CFG_TEMPLATE configTemplate[] =
+   char toolName[256];
+   snprintf(toolName, 256, "nxsl-%ls", script->getName());
+   for(int i = 0; toolName[i] != 0; i++)
    {
-      { _T("Model"), CT_MB_STRING, 0, 0, sizeof(s_llmModel), 0, s_llmModel },
-      { _T("Token"), CT_MB_STRING, 0, 0, sizeof(s_llmAuthToken), 0, s_llmAuthToken },
-      { _T("URL"), CT_MB_STRING, 0, 0, sizeof(s_llmServiceURL), 0, s_llmServiceURL },
-      { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
-   };
-   if (!g_serverConfig.parseTemplate(L"IRIS", configTemplate))
-   {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("AI assistant initialization failed (cannot parse module configuration)"));
-      return false;
+      if (toolName[i] == ':')
+         toolName[i] = '_';
    }
 
-   NXSL_Library *scriptLibrary = GetServerScriptLibrary();
-   scriptLibrary->lock();
-   scriptLibrary->forEach(
-      [] (const NXSL_LibraryScript *script) -> void
-      {
-         const wchar_t *aiTool = script->getMetadataEntry(L"ai_tool");
-         if ((aiTool != nullptr) && (!wcsicmp(aiTool, L"true") || !wcsicmp(aiTool, L"yes")))
-         {
-            RegisterAIFunctionHandlerFromScript(script);
-         }
-      });
-   scriptLibrary->unlock();
-
-   if (s_functions.empty())
+   s_functionsMutex.lock();
+   auto it = s_functions.find(toolName);
+   if (it != s_functions.end())
    {
-      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("AI assistant disabled (no functions registered)"));
-      return true;  // No functions registered
+      s_functions.erase(it);
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Unregistered AI function handler from script \"%s\"", script->getName());
+      RebuildFunctionDeclarations();
    }
-
-   RegisterComponent(AI_ASSISTANT_COMPONENT);
-
-   RegisterAIAssistantFunction(
-      "register-ai-task",
-      "Register new AI task for background execution. Use this function to create long running tasks that may require multiple executions to complete.",
-      {
-          { "description", "task description" },
-          { "prompt", "initial prompt for the task" }
-      },
-      [] (json_t *arguments, uint32_t userId) -> std::string
-      {
-         const char *description = json_object_get_string_utf8(arguments, "description", nullptr);
-         const char *prompt = json_object_get_string_utf8(arguments, "prompt", nullptr);
-         if ((description == nullptr) || (description[0] == 0))
-            return std::string("Error: task description must be provided");
-         if ((prompt == nullptr) || (prompt[0] == 0))
-            return std::string("Error: task prompt must be provided");
-
-         uint32_t taskId = RegisterAITask(String(description, "utf-8"), userId, String(prompt, "utf-8"));
-         return std::to_string(taskId);
-      });
-
-   RebuildFunctionDeclarations();
-
-   InitAITasks();
-   s_aiTaskThreadPool = ThreadPoolCreate(_T("AI-TASKS"),
-         ConfigReadInt(_T("ThreadPool.AITasks.BaseSize"), 4),
-         ConfigReadInt(_T("ThreadPool.AITasks.MaxSize"), 16));
-   ThreadCreate(AITaskSchedulerThread, s_aiTaskThreadPool);
-
-   nxlog_debug_tag(DEBUG_TAG, 2, L"LLM service URL = \"%hs\", model = \"%hs\"", s_llmServiceURL, s_llmModel);
-   nxlog_debug_tag(DEBUG_TAG, 2, L"%d functions registered", static_cast<int>(s_functions.size()));
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("AI assistant initialized"));
-   return true;
-}
-
-/**
- * Add custom prompt
- */
-void NXCORE_EXPORTABLE AddAIAssistantPrompt(const char *text)
-{
-   if ((text != nullptr) && (text[0] != 0))
-      s_prompts.emplace_back(text);
+   s_functionsMutex.unlock();
 }
 
 /**
@@ -352,18 +320,22 @@ void NXCORE_EXPORTABLE AddAIAssistantPrompt(const char *text)
  */
 std::string NXCORE_EXPORTABLE CallAIAssistantFunction(const char *name, json_t *arguments, uint32_t userId)
 {
+   s_functionsMutex.lock();
    auto it = s_functions.find(name);
    if (it != s_functions.end())
    {
+      shared_ptr<AssistantFunction> function = it->second;
+      s_functionsMutex.unlock();
       if (json_is_string(arguments))
       {
          arguments = json_loads(json_string_value(arguments), 0, nullptr);
-         std::string response = it->second.handler(arguments, userId);
+         std::string response = function->handler(arguments, userId);
          json_decref(arguments);
          return response;
       }
-      return it->second.handler(arguments, userId);
+      return function->handler(arguments, userId);
    }
+   s_functionsMutex.unlock();
    return std::string("Error: function not found");
 }
 
@@ -372,47 +344,26 @@ std::string NXCORE_EXPORTABLE CallAIAssistantFunction(const char *name, json_t *
  */
 void FillAIAssistantFunctionListMessage(NXCPMessage *msg)
 {
-   if (s_functionDeclarations == nullptr)
-   {
-      msg->setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(0));
-      return;
-   }
+   LockGuard lockGuard(s_functionsMutex);
 
-   uint32_t count = 0;
-   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
-   json_t *e;
-   size_t i;
-   json_array_foreach(s_functionDeclarations, i, e)
+   msg->setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(s_functions.size()));
+
+   uint32_t baseFieldId = VID_ELEMENT_LIST_BASE;
+   for(auto f : s_functions)
    {
-      json_t *function = json_object_get(e, "function");
-      if (json_is_object(function))
+      const AssistantFunction& function = *f.second;
+      uint32_t fieldId = baseFieldId;
+      msg->setFieldFromUtf8String(fieldId++, function.name.c_str());
+      msg->setFieldFromUtf8String(fieldId++, function.description.c_str());
+      fieldId += 7;
+      msg->setField(fieldId++, static_cast<uint32_t>(function.parameters.size()));
+      for(const auto& p : function.parameters)
       {
-         const char *name = json_object_get_string_utf8(function, "name", "");
-         const char *description = json_object_get_string_utf8(function, "description", "");
-         msg->setFieldFromUtf8String(fieldId++, name);
-         msg->setFieldFromUtf8String(fieldId++, description);
-         json_t *schema = json_object_get(function, "parameters");
-         char *schemaText = json_dumps(schema, 0);
-         msg->setFieldFromUtf8String(fieldId++, schemaText);
-         MemFree(schemaText);
-         count++;
-         fieldId += 7;
+         msg->setFieldFromUtf8String(fieldId++, p.first.c_str());
+         msg->setFieldFromUtf8String(fieldId++, p.second.c_str());
       }
+      baseFieldId += 0x100;
    }
-   msg->setField(VID_NUM_ELEMENTS, count);
-}
-
-/**
- * Register AI assistant function. This function intended to be called only during server core or module initialization.
- */
-void NXCORE_EXPORTABLE RegisterAIAssistantFunction(const char *name, const char *description, const std::vector<std::pair<std::string, std::string>>& parameters, AssistantFunctionHandler handler)
-{
-   if (s_functions.find(name) != s_functions.end())
-   {
-      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"AI assistant function \"%hs\" already registered", name);
-      return;
-   }
-   s_functions.emplace(name, AssistantFunction(name, description, parameters, handler));
 }
 
 /**
@@ -623,11 +574,18 @@ char *ProcessRequestToAIAssistantEx(const char *prompt, const char *systemPrompt
       json_t *request = json_object();
       json_object_set_new(request, "model", json_string(s_llmModel));
       json_object_set_new(request, "stream", json_boolean(false));
+      s_functionsMutex.lock();
       json_object_set(request, "tools", s_functionDeclarations);
+      s_functionsMutex.unlock();
       json_object_set(request, "messages", messages);
 
       json_t *response = DoApiRequest(request);
+
+      // Request should be cleared with mutex held because functions (tools) object is part of it
+      s_functionsMutex.lock();
       json_decref(request);
+      s_functionsMutex.unlock();
+
       if (response == nullptr)
       {
          if (session == nullptr)
@@ -756,4 +714,83 @@ uint32_t NXCORE_EXPORTABLE ClearAIAssistantChat(GenericClientSession *session)
    s_chatsLock.unlock();
    nxlog_debug_tag(DEBUG_TAG, 5, L"Chat history for session %d cleared", session->getId());
    return RCC_SUCCESS;
+}
+
+/**
+ * Add custom prompt
+ */
+void NXCORE_EXPORTABLE AddAIAssistantPrompt(const char *text)
+{
+   if ((text != nullptr) && (text[0] != 0))
+      s_prompts.emplace_back(text);
+}
+
+/**
+ * Initialize AI assistant
+ */
+bool InitAIAssistant()
+{
+   NX_CFG_TEMPLATE configTemplate[] =
+   {
+      { _T("Model"), CT_MB_STRING, 0, 0, sizeof(s_llmModel), 0, s_llmModel },
+      { _T("Token"), CT_MB_STRING, 0, 0, sizeof(s_llmAuthToken), 0, s_llmAuthToken },
+      { _T("URL"), CT_MB_STRING, 0, 0, sizeof(s_llmServiceURL), 0, s_llmServiceURL },
+      { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
+   };
+   if (!g_serverConfig.parseTemplate(L"IRIS", configTemplate))
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("AI assistant initialization failed (cannot parse module configuration)"));
+      return false;
+   }
+
+   NXSL_Library *scriptLibrary = GetServerScriptLibrary();
+   scriptLibrary->lock();
+   scriptLibrary->forEach(
+      [] (const NXSL_LibraryScript *script) -> void
+      {
+         if (script->getMetadataEntryAsBoolean(L"ai_tool"))
+            RegisterAIFunctionScriptHandler(script, false);
+      });
+   scriptLibrary->unlock();
+
+   if (s_functions.empty())
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("AI assistant disabled (no functions registered)"));
+      return true;  // No functions registered
+   }
+
+   RegisterComponent(AI_ASSISTANT_COMPONENT);
+
+   RegisterAIAssistantFunction(
+      "register-ai-task",
+      "Register new AI task for background execution. Use this function to create long running tasks that may require multiple executions to complete.",
+      {
+          { "description", "task description" },
+          { "prompt", "initial prompt for the task" }
+      },
+      [] (json_t *arguments, uint32_t userId) -> std::string
+      {
+         const char *description = json_object_get_string_utf8(arguments, "description", nullptr);
+         const char *prompt = json_object_get_string_utf8(arguments, "prompt", nullptr);
+         if ((description == nullptr) || (description[0] == 0))
+            return std::string("Error: task description must be provided");
+         if ((prompt == nullptr) || (prompt[0] == 0))
+            return std::string("Error: task prompt must be provided");
+
+         uint32_t taskId = RegisterAITask(String(description, "utf-8"), userId, String(prompt, "utf-8"));
+         return std::to_string(taskId);
+      });
+
+   RebuildFunctionDeclarations();
+
+   InitAITasks();
+   s_aiTaskThreadPool = ThreadPoolCreate(_T("AI-TASKS"),
+         ConfigReadInt(_T("ThreadPool.AITasks.BaseSize"), 4),
+         ConfigReadInt(_T("ThreadPool.AITasks.MaxSize"), 16));
+   ThreadCreate(AITaskSchedulerThread, s_aiTaskThreadPool);
+
+   nxlog_debug_tag(DEBUG_TAG, 2, L"LLM service URL = \"%hs\", model = \"%hs\"", s_llmServiceURL, s_llmModel);
+   nxlog_debug_tag(DEBUG_TAG, 2, L"%d functions registered", static_cast<int>(s_functions.size()));
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("AI assistant initialized"));
+   return true;
 }
