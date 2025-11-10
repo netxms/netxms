@@ -2911,7 +2911,7 @@ CREATE TABLE ai_tasks
 /**
  * AI task execution log
  */
-CREATE_TABLE ai_task_execution_log
+CREATE TABLE ai_task_execution_log
 (
    record_id SQL_INT64 not null,
 #ifdef DB_TSDB
