@@ -2115,6 +2115,21 @@ NXSL_METHOD_DEFINITION(Node, setIfXTableUsageMode)
 }
 
 /**
+ * Node::setPollCountForStatusChange(count) method
+ */
+NXSL_METHOD_DEFINITION(Node, setPollCountForStatusChange)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   int count = argv[0]->getValueAsInt32();
+   if (count >= 0)
+      static_cast<shared_ptr<Node>*>(object->getData())->get()->setRequiredPollCount(count);
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
  * NXSL class Node: constructor
  */
 NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
@@ -2156,6 +2171,7 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, readWebServiceParameter, 1);
    NXSL_REGISTER_METHOD(Node, setExpectedCapabilities, 1);
    NXSL_REGISTER_METHOD(Node, setIfXTableUsageMode, 1);
+   NXSL_REGISTER_METHOD(Node, setPollCountForStatusChange, 1);
 }
 
 /**
@@ -2594,6 +2610,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    {
       value = vm->createValue(node->getPlatformName());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("pollCountForStatusChange"))
+   {
+      value = vm->createValue(node->getRequiredPollCount());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("primaryHostName"))
    {
       value = vm->createValue(node->getPrimaryHostName());
@@ -2898,6 +2918,21 @@ NXSL_METHOD_DEFINITION(Interface, setIncludeInIcmpPoll)
 }
 
 /**
+ * Interface::setPollCountForStatusChange(count) method
+ */
+NXSL_METHOD_DEFINITION(Interface, setPollCountForStatusChange)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   int count = argv[0]->getValueAsInt32();
+   if (count >= 0)
+      static_cast<shared_ptr<Interface>*>(object->getData())->get()->setRequiredPollCount(count);
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
  * NXSL class Interface: constructor
  */
 NXSL_InterfaceClass::NXSL_InterfaceClass() : NXSL_NetObjClass()
@@ -2911,6 +2946,7 @@ NXSL_InterfaceClass::NXSL_InterfaceClass() : NXSL_NetObjClass()
    NXSL_REGISTER_METHOD(Interface, setExcludeFromTopology, 1);
    NXSL_REGISTER_METHOD(Interface, setExpectedState, 1);
    NXSL_REGISTER_METHOD(Interface, setIncludeInIcmpPoll, 1);
+   NXSL_REGISTER_METHOD(Interface, setPollCountForStatusChange, 1);
 }
 
 /**
@@ -3194,6 +3230,10 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("pic"))
    {
       value = vm->createValue(iface->getPIC());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("pollCountForStatusChange"))
+   {
+      value = vm->createValue(iface->getRequiredPollCount());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("port"))
    {
@@ -4491,7 +4531,7 @@ NXSL_METHOD_DEFINITION(Tunnel, bind)
       return NXSL_ERR_NOT_OBJECT;
 
    NXSL_Object *node = argv[0]->getValueAsObject();
-   if (!node->getClass()->instanceOf(_T("Node")))
+   if (!node->getClass()->instanceOf(L"Node"))
       return NXSL_ERR_BAD_CLASS;
 
    shared_ptr<AgentTunnel> tunnel = *static_cast<shared_ptr<AgentTunnel>*>(object->getData());

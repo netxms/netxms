@@ -2355,6 +2355,9 @@ public:
    uint64_t getLastDownEventId() const { return m_lastDownEventId; }
    void setLastDownEventId(uint64_t id) { m_lastDownEventId = id; }
 
+   int32_t getRequiredPollCount() const { return m_requiredPollCount; }
+   void setRequiredPollCount(int32_t count) { m_requiredPollCount = count; markAsModified(MODIFY_INTERFACE_PROPERTIES); }
+
    void setMacAddress(const MacAddress& macAddr, bool updateMacDB);
    void setIpAddress(const InetAddress& addr);
    void addIpAddress(const InetAddress& addr);
@@ -3991,6 +3994,7 @@ public:
    bool getLldpLocalPortInfo(uint32_t localPortNumber, LLDP_LOCAL_PORT_INFO *port) const;
    void showLLDPInfo(ServerConsole *console) const;
 
+   void setRequiredPollCount(uint32_t count) { m_requiredPollCount = count; markAsModified(MODIFY_NODE_PROPERTIES); }
    void setRecheckCapsFlag() { lockProperties(); m_runtimeFlags |= NDF_RECHECK_CAPABILITIES; unlockProperties(); }
    void resolveVlanPorts(VlanList *vlanList);
    void updateInterfaceNames(ClientSession *pSession, UINT32 dwRqId);
