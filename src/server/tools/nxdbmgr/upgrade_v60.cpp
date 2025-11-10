@@ -51,7 +51,7 @@ static bool H_UpgradeFromV2()
          L"   status char(1) not null,"
          L"   iteration integer not null,"
          L"   explanation $SQL:TEXT null,"
-         L"   PRIMARY KEY(record_id))"));
+         L"   PRIMARY KEY(record_id,execution_timestamp))"));
       CHK_EXEC(SQLQuery(L"SELECT create_hypertable('ai_task_execution_log', 'execution_timestamp', chunk_time_interval => interval '86400 seconds')"));
    }
    else

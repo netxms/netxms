@@ -2925,7 +2925,11 @@ CREATE TABLE ai_task_execution_log
    status char(1) not null, // C=completed, F=failed, S=scheduled
    iteration integer not null,
    explanation SQL_TEXT,
+#ifdef DB_TSDB
+  PRIMARY KEY(record_id,operation_timestamp)
+#else
    PRIMARY KEY(record_id)
+#endif
 ) TABLE_TYPE;
 
 CREATE INDEX idx_ai_task_exec_log_timestamp ON ai_task_execution_log(execution_timestamp);
