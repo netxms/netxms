@@ -276,7 +276,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   11) pollCount - Threshold''s required poll count' CONCAT CRLF CONCAT
 		'   12) thresholdDefinition - Threshold''s textual definition' CONCAT CRLF CONCAT
 		'   13) instanceValue - Instance value' CONCAT CRLF CONCAT
-		'   14) instanceName - Instance name same as instance'
+		'   14) instanceName - Instance name same as instance' CONCAT CRLF CONCAT
+		'   15) thresholdId - Threshold''s ID'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -298,7 +299,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   10) pollCount - Threshold''s required poll count' CONCAT CRLF CONCAT
 		'   11) thresholdDefinition - Threshold''s textual definition' CONCAT CRLF CONCAT
 		'   12) instanceValue - Instance value' CONCAT CRLF CONCAT
-		'   13) instanceName - Instance name same as instance'
+		'   13) instanceName - Instance name same as instance' CONCAT CRLF CONCAT
+		'   14) thresholdId - Threshold''s ID'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
         (

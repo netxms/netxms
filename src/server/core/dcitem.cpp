@@ -474,6 +474,7 @@ void DCItem::checkThresholds(ItemValue &value, const shared_ptr<DCObject>& origi
                   .param(_T("thresholdDefinition"), t->getTextualDefinition())
                   .param(_T("instanceValue"), m_instanceDiscoveryData)
                   .param(_T("instanceName"), m_instanceName)
+                  .param(_T("thresholdId"), thresholdId)
                   .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
             }
             if (!(m_flags & DCF_ALL_THRESHOLDS))
@@ -499,6 +500,7 @@ void DCItem::checkThresholds(ItemValue &value, const shared_ptr<DCObject>& origi
                   .param(_T("thresholdDefinition"), t->getTextualDefinition())
                   .param(_T("instanceValue"), m_instanceDiscoveryData)
                   .param(_T("instanceName"), m_instanceName)
+                  .param(_T("thresholdId"), thresholdId)
                   .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, SEVERITY_NORMAL, nullptr); });
             }
             if (!(m_flags & DCF_ALL_THRESHOLDS))
@@ -533,6 +535,7 @@ void DCItem::checkThresholds(ItemValue &value, const shared_ptr<DCObject>& origi
 		               .param(_T("thresholdDefinition"), t->getTextualDefinition())
 	                  .param(_T("instanceValue"), m_instanceDiscoveryData)
 	                  .param(_T("instanceName"), m_instanceName)
+	                  .param(_T("thresholdId"), thresholdId)
 		               .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
 				   }
             }
