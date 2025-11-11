@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,8 +27,6 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ViewerRow;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -109,18 +107,12 @@ public abstract class BaseTableValueViewer extends Composite
 
       final PreferenceStore ds = PreferenceStore.getInstance(); 
       labelProvider.setUseMultipliers(ds.getAsBoolean(configId + ".useMultipliers", false));
-      
+
       if (saveTableSettings)
       {
-         viewer.getTable().addDisposeListener(new DisposeListener() {
-            @Override
-            public void widgetDisposed(DisposeEvent e)
-            {
-               WidgetHelper.saveTableViewerSettings(viewer, configId);
-            }
-         });
+         viewer.getTable().addDisposeListener((e) -> WidgetHelper.saveTableViewerSettings(viewer, configId));
       }
-      
+
       createActions();
       createPopupMenu();
    }
@@ -183,7 +175,7 @@ public abstract class BaseTableValueViewer extends Composite
       manager.add(actionUseMultipliers);
       manager.add(new Separator());
    }
-   
+
    /**
     * Set initial sorting column and direction
     * 
@@ -195,7 +187,7 @@ public abstract class BaseTableValueViewer extends Composite
       sortColumn = columnName;
       sortDirection = direction;
    }
-   
+
    /**
     * Update viewer with fresh table data
     * 
@@ -231,14 +223,10 @@ public abstract class BaseTableValueViewer extends Composite
 
          if (saveTableSettings)
             WidgetHelper.restoreTableViewerSettings(viewer, configId); 
-         viewer.getTable().addDisposeListener(new DisposeListener() {
-            @Override
-            public void widgetDisposed(DisposeEvent e)
-            {
-               if (saveTableSettings)
-                  WidgetHelper.saveTableViewerSettings(viewer, configId); 
-               ds.set(configId + ".useMultipliers", labelProvider.areMultipliersUsed());
-            }
+         viewer.getTable().addDisposeListener((e) -> {
+            if (saveTableSettings)
+               WidgetHelper.saveTableViewerSettings(viewer, configId);
+            ds.set(configId + ".useMultipliers", labelProvider.areMultipliersUsed());
          });
          viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));
 
