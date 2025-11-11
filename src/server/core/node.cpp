@@ -8427,6 +8427,12 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, shared_ptr<Table> 
          GetNotificationChannels(table.get());
          *result = table;
       }
+      else if (!_tcsicmp(name, _T("Server.Queues")))
+      {
+         auto table = make_shared<Table>();
+         GetAllQueueStatistics(table.get());
+         *result = table;
+      }
       else
       {
          rc = DCE_NOT_SUPPORTED;
@@ -8768,7 +8774,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       }
       else if (MatchString(_T("Server.ClientSessions.Authenticated(*)"), name, false))
       {
-         TCHAR loginName[256];
+         wchar_t loginName[256];
          AgentGetParameterArg(name, 1, loginName, 256);
          IntegerToString(GetSessionCount(true, false, -1, loginName), buffer);
       }
@@ -8778,7 +8784,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       }
       else if (MatchString(_T("Server.ClientSessions.Desktop(*)"), name, false))
       {
-         TCHAR loginName[256];
+         wchar_t loginName[256];
          AgentGetParameterArg(name, 1, loginName, 256);
          IntegerToString(GetSessionCount(true, false, CLIENT_TYPE_DESKTOP, loginName), buffer);
       }
@@ -8788,7 +8794,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       }
       else if (MatchString(_T("Server.ClientSessions.Mobile(*)"), name, false))
       {
-         TCHAR loginName[256];
+         wchar_t loginName[256];
          AgentGetParameterArg(name, 1, loginName, 256);
          IntegerToString(GetSessionCount(true, false, CLIENT_TYPE_MOBILE, loginName), buffer);
       }
@@ -9028,19 +9034,19 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       }
       else if (MatchString(_T("Server.QueueSize.Average(*)"), name, false))
       {
-         rc = GetQueueStatistic(name, StatisticType::AVERAGE, buffer);
+         rc = GetQueueStatistics(name, StatisticType::AVERAGE, buffer);
       }
       else if (MatchString(_T("Server.QueueSize.Current(*)"), name, false))
       {
-         rc = GetQueueStatistic(name, StatisticType::CURRENT, buffer);
+         rc = GetQueueStatistics(name, StatisticType::CURRENT, buffer);
       }
       else if (MatchString(_T("Server.QueueSize.Max(*)"), name, false))
       {
-         rc = GetQueueStatistic(name, StatisticType::MAX, buffer);
+         rc = GetQueueStatistics(name, StatisticType::MAX, buffer);
       }
       else if (MatchString(_T("Server.QueueSize.Min(*)"), name, false))
       {
-         rc = GetQueueStatistic(name, StatisticType::MIN, buffer);
+         rc = GetQueueStatistics(name, StatisticType::MIN, buffer);
       }
       else if (!_tcsicmp(name, _T("Server.ReceivedSNMPTraps")))
       {

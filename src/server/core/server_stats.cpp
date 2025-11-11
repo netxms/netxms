@@ -167,9 +167,9 @@ void ServerStatCollector()
 /**
  * Get queue statistic for internal parameter
  */
-DataCollectionError GetQueueStatistic(const TCHAR *parameter, StatisticType type, TCHAR *value)
+DataCollectionError GetQueueStatistics(const wchar_t *parameter, StatisticType type, wchar_t *value)
 {
-   TCHAR name[MAX_GAUGE_NAME_LEN];
+   wchar_t name[MAX_GAUGE_NAME_LEN];
    if (!AgentGetParameterArg(parameter, 1, name, MAX_GAUGE_NAME_LEN))
       return DCE_NOT_SUPPORTED;
 
@@ -236,4 +236,30 @@ int F_GetServerQueueNames(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
    *result = vm->createValue(new NXSL_Array(vm, s_queues.keys()));
    s_queuesLock.unlock();
    return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * Get stats of all queues as a table
+ */
+void GetAllQueueStatistics(Table *table)
+{
+   table->addColumn(L"NAME", DCI_DT_STRING, L"Queue name", true);
+   table->addColumn(L"CURRENT", DCI_DT_UINT64, L"Current size");
+   table->addColumn(L"MIN", DCI_DT_UINT64, L"Minimum size");
+   table->addColumn(L"MAX", DCI_DT_UINT64, L"Maximum size");
+   table->addColumn(L"AVERAGE", DCI_DT_FLOAT, L"Average size");
+
+   s_queuesLock.lock();
+   s_queues.forEach(
+      [table] (const TCHAR *key, const Gauge64 *gauge) -> EnumerationCallbackResult
+      {
+         table->addRow();
+         table->set(0, key);
+         table->set(1, static_cast<uint64_t>(gauge->getCurrent()));
+         table->set(2, static_cast<uint64_t>(gauge->getMin()));
+         table->set(3, static_cast<uint64_t>(gauge->getMax()));
+         table->set(4, gauge->getAverage());
+         return _CONTINUE;
+      });
+   s_queuesLock.unlock();
 }

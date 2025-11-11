@@ -1031,7 +1031,8 @@ void CalculateItemValueMax(ItemValue *result, int dataType, const ItemValue *con
 unique_ptr<StructArray<ScoredDciValue>> DetectAnomalies(const DataCollectionTarget& dcTarget, uint32_t dciId, time_t timeFrom, time_t timeTo, double threshold = 0.75);
 bool IsAnomalousValue(const DataCollectionTarget& dcTarget, const DCObject& dci, double value, double threshold, int period, int depth, int width);
 
-DataCollectionError GetQueueStatistic(const TCHAR *parameter, StatisticType type, TCHAR *value);
+DataCollectionError GetQueueStatistics(const wchar_t *parameter, StatisticType type, wchar_t *value);
+void GetAllQueueStatistics(Table *table);
 
 uint64_t GetDCICacheMemoryUsage();
 void FindScriptMacrosInText(const wchar_t *origin, StringSet *dependencies);

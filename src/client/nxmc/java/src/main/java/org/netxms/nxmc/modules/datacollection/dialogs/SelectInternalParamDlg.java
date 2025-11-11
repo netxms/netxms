@@ -72,6 +72,7 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
       {
          list.add(new AgentTable("Server.EventProcessors", "Event processors", new String[] { "ID" }));
          list.add(new AgentTable("Server.NotificationChannels", "Notification channels", new String[] { "NAME" }));
+         list.add(new AgentTable("Server.Queues", "Server queues", new String[] { "NAME" }));
       }
 
       viewer.setInput(list.toArray());
