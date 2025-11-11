@@ -1117,6 +1117,6 @@ void Threshold::getScriptDependencies(StringSet *dependencies) const
 {
    if (m_expandValue)
    {
-      ExtractScriptNamesFromText(m_value.getString(), dependencies);
+      FindScriptMacrosInText(m_value.getString(), dependencies);
    }
 }

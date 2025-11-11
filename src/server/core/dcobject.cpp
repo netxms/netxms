@@ -1708,7 +1708,7 @@ static void AddScriptDependencies(StringSet *dependencies, const NXSL_Program *s
  * "%[name.function(123,"A textual parameter")]"
  * "%[name/function(123,"A textual parameter")]"
  */
-void ExtractScriptNamesFromText(const wchar_t *origin, StringSet *dependencies)
+void FindScriptMacrosInText(const wchar_t *origin, StringSet *dependencies)
 {
    wchar_t name[512];
    wcslcpy(name, origin, 512);
@@ -1754,7 +1754,7 @@ void ExtractScriptNamesFromText(const wchar_t *origin, StringSet *dependencies)
  * Possible options:
  * "%{script:name}"
  */
-static void ExtractScriptNamesFromTextTemplateMacro(const wchar_t *name, StringSet *dependencies)
+static void FindScriptTemplateMacrosInText(const wchar_t *name, StringSet *dependencies)
 {
    const wchar_t *searchStart = name;
    while(true)
@@ -1802,12 +1802,12 @@ void DCObject::getScriptDependencies(StringSet *dependencies) const
 
    if (!m_retentionTimeSrc.isEmpty())
    {
-      ExtractScriptNamesFromText(m_retentionTimeSrc, dependencies);
+      FindScriptMacrosInText(m_retentionTimeSrc, dependencies);
    }
 
    if (!m_pollingIntervalSrc.isEmpty())
    {
-      ExtractScriptNamesFromText(m_pollingIntervalSrc, dependencies);
+      FindScriptMacrosInText(m_pollingIntervalSrc, dependencies);
    }
 
    if (m_pollingScheduleType == DC_POLLING_SCHEDULE_ADVANCED)
@@ -1816,16 +1816,16 @@ void DCObject::getScriptDependencies(StringSet *dependencies) const
       {
          for(int i = 0; i < m_schedules->size(); i++)
          {
-            ExtractScriptNamesFromText(m_schedules->get(i), dependencies);
+            FindScriptMacrosInText(m_schedules->get(i), dependencies);
          }
       }
    }
-   ExtractScriptNamesFromText(m_pollingIntervalSrc, dependencies);
+   FindScriptMacrosInText(m_pollingIntervalSrc, dependencies);
 
-   ExtractScriptNamesFromTextTemplateMacro(m_name, dependencies);
-   ExtractScriptNamesFromTextTemplateMacro(m_description, dependencies);
-   ExtractScriptNamesFromTextTemplateMacro(m_instanceName, dependencies);
-   ExtractScriptNamesFromTextTemplateMacro(m_instanceDiscoveryData, dependencies);
+   FindScriptTemplateMacrosInText(m_name, dependencies);
+   FindScriptTemplateMacrosInText(m_description, dependencies);
+   FindScriptTemplateMacrosInText(m_instanceName, dependencies);
+   FindScriptTemplateMacrosInText(m_instanceDiscoveryData, dependencies);
 }
 
 /**

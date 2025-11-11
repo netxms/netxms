@@ -1034,7 +1034,7 @@ bool IsAnomalousValue(const DataCollectionTarget& dcTarget, const DCObject& dci,
 DataCollectionError GetQueueStatistic(const TCHAR *parameter, StatisticType type, TCHAR *value);
 
 uint64_t GetDCICacheMemoryUsage();
-void ExtractScriptNamesFromText(const wchar_t *origin, StringSet *dependencies);
+void FindScriptMacrosInText(const wchar_t *origin, StringSet *dependencies);
 
 /**
  * DCI cache loader queue
