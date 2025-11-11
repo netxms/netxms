@@ -25,7 +25,6 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 
 /**
@@ -44,40 +43,31 @@ public class CellSelectionHighlighter
 		this.viewer = viewer;
 		this.manager = manager;
 
-		viewer.getControl().addListener(SWT.PaintItem, new Listener() {
-			public void handleEvent(Event event)
-			{
-				ViewerCell focusCell = getFocusCell();
-				ViewerRow row = CellSelectionHighlighter.this.viewer.getViewerRowFromItem(event.item);
-				ViewerCell cell = row.getCell(event.index);
+      // Disable native table selection completely
+      viewer.getTable().addListener(SWT.Selection, (e) -> viewer.getTable().deselectAll());
 
-				if (cell.equals(focusCell))
-					markFocusedCell(event, cell);
-            event.gc.setForeground(cell.getControl().getDisplay().getSystemColor(CellSelectionHighlighter.this.manager.isCellSelected(cell) ? SWT.COLOR_LIST_SELECTION_TEXT : SWT.COLOR_LIST_FOREGROUND));
-				
-				event.detail &= ~SWT.FOCUSED;
-			}
+      viewer.getControl().addListener(SWT.PaintItem, (event) -> {
+         ViewerCell focusCell = getFocusCell();
+         ViewerRow row = CellSelectionHighlighter.this.viewer.getViewerRowFromItem(event.item);
+         ViewerCell cell = row.getCell(event.index);
+
+         if (cell.equals(focusCell))
+            markFocusedCell(event, cell);
+         event.gc.setForeground(cell.getControl().getDisplay().getSystemColor(CellSelectionHighlighter.this.manager.isCellSelected(cell) ? SWT.COLOR_LIST_SELECTION_TEXT : SWT.COLOR_LIST_FOREGROUND));
+
+         event.detail &= ~SWT.FOCUSED;
 		});
 
-		viewer.getControl().addListener(SWT.EraseItem, new Listener() {
-			@Override
-			public void handleEvent(Event event)
-			{
-				ViewerRow row = CellSelectionHighlighter.this.viewer.getViewerRowFromItem(event.item);
-				ViewerCell cell = row.getCell(event.index);
-				drawCellBackground(event, cell, CellSelectionHighlighter.this.manager.isCellSelected(cell));
-				event.detail &= ~(SWT.SELECTED | SWT.FOCUSED | SWT.HOT);
-			}
+      viewer.getControl().addListener(SWT.EraseItem, (event) -> {
+         ViewerRow row = CellSelectionHighlighter.this.viewer.getViewerRowFromItem(event.item);
+         ViewerCell cell = row.getCell(event.index);
+         drawCellBackground(event, cell, CellSelectionHighlighter.this.manager.isCellSelected(cell));
+         event.detail &= ~(SWT.SELECTED | SWT.FOCUSED | SWT.HOT | SWT.BACKGROUND);
 		});
 
-		viewer.getControl().addListener(SWT.MeasureItem, new Listener() {
-			@Override
-			public void handleEvent(Event event)
-			{
-			}
-		});
+      viewer.getControl().addListener(SWT.MeasureItem, (e) -> {});
 	}
-	
+
 	/**
 	 * @param event
 	 * @param cell
