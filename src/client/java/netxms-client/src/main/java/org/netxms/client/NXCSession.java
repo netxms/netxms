@@ -4375,12 +4375,13 @@ public class NXCSession
     *           properties explicitly listed in <code>properties</code> parameter
     * @param limit limit number of records (0 for unlimited)
     * @param progressCallback optional progress callback
+    * @param metadata optional map to receive query metadata (can be null)
     * @return list of matching objects
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public List<ObjectQueryResult> queryObjectDetails(String query, long rootObjectId, List<String> properties, List<String> orderBy, Map<String, String> inputFields, long contextObjectId,
-         boolean readAllComputedProperties, int limit, Consumer<Integer> progressCallback) throws IOException, NXCException
+         boolean readAllComputedProperties, int limit, Consumer<Integer> progressCallback, Map<String, String> metadata) throws IOException, NXCException
    {
       NXCPMessage request = newMessage(NXCPCodes.CMD_QUERY_OBJECT_DETAILS);
       request.setField(NXCPCodes.VID_QUERY, query);
@@ -4425,6 +4426,11 @@ public class NXCSession
                results.add(new ObjectQueryResult(object, values));
             }
             fieldId += values.size() * 2 + 1;
+         }
+         if (metadata != null)
+         {
+            metadata.clear();
+            metadata.putAll(response.getStringMapFromFields(NXCPCodes.VID_METADATA_BASE, NXCPCodes.VID_METADATA_SIZE));
          }
          return results;
       }

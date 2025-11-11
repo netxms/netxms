@@ -1374,6 +1374,7 @@ public class NXCPCodes
    public static final long VID_DASHBOARD_NAME_TEMPLATE = 868;
    public static final long VID_USE_MULTIPLIER = 869;
    public static final long VID_ARGUMENTS = 870;
+   public static final long VID_METADATA_SIZE = 871;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1499,4 +1500,5 @@ public class NXCPCodes
    public static final long VID_WARNING_LIST_BASE = 0x38000000L;
    public static final long VID_PARTIAL_OBJECT_INFO_BASE = 0x10000000L;
    public static final long VID_UNIT_NAMES_BASE = 0x10000000L;
+   public static final long VID_METADATA_BASE = 0x1F000000L;
 }

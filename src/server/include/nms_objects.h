@@ -5769,10 +5769,10 @@ IntegerArray<uint32_t> CheckSubnetOverlap(const InetAddress &addr, int32_t uin);
 template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<ObjectQueryResult>;
 #endif
 
-unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const TCHAR *query, uint32_t rootObjectId, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
+unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const wchar_t *query, uint32_t rootObjectId, uint32_t userId, wchar_t *errorMessage, size_t errorMessageLen,
          std::function<void(int)> progressCallback = nullptr, bool readAllComputedFields = false, const StringList *fields = nullptr, const StringList *orderBy = nullptr,
-         const StringMap *inputFields = nullptr, uint32_t contextObjectId = 0, uint32_t limit = 0);
-unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE FindAndExecuteObjectQueries(uint32_t queryId, uint32_t rootObjectId, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
+         const StringMap *inputFields = nullptr, uint32_t contextObjectId = 0, uint32_t limit = 0, StringMap *metadata = nullptr);
+unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE FindAndExecuteObjectQueries(uint32_t queryId, uint32_t rootObjectId, uint32_t userId, wchar_t *errorMessage, size_t errorMessageLen,
    std::function<void(int)> progressCallback, bool readAllComputedFields, const StringList *fields, const StringList *orderBy,
    const StringMap *inputFields, uint32_t contextObjectId = 0, uint32_t limit = 0);
 uint32_t GetObjectQueries(NXCPMessage *msg);

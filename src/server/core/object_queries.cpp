@@ -438,7 +438,7 @@ static inline const wchar_t *GetVariableMetadata(NXSL_VM *vm, const NXSL_Identif
 /**
  * Get all configured object queries
  */
-unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE FindAndExecuteObjectQueries(uint32_t queryId, uint32_t rootObjectId, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
+unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE FindAndExecuteObjectQueries(uint32_t queryId, uint32_t rootObjectId, uint32_t userId, wchar_t *errorMessage, size_t errorMessageLen,
    std::function<void(int)> progressCallback, bool readAllComputedFields, const StringList *fields, const StringList *orderBy,
    const StringMap *inputFields, uint32_t contextObjectId, uint32_t limit)
 {
@@ -455,17 +455,21 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE FindAndExecuteObjec
 /**
  * Query objects
  */
-unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const TCHAR *query, uint32_t rootObjectId, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
+unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const wchar_t *query, uint32_t rootObjectId, uint32_t userId, wchar_t *errorMessage, size_t errorMessageLen,
       std::function<void(int)> progressCallback, bool readAllComputedFields, const StringList *fields, const StringList *orderBy,
-      const StringMap *inputFields, uint32_t contextObjectId, uint32_t limit)
+      const StringMap *inputFields, uint32_t contextObjectId, uint32_t limit, StringMap *metadata)
 {
    NXSL_CompilationDiagnostic diag;
    NXSL_VM *vm = NXSLCompileAndCreateVM(query, new NXSL_ServerEnv(), &diag);
    if (vm == nullptr)
    {
-      _tcslcpy(errorMessage, diag.errorText, errorMessageLen);
+      wcslcpy(errorMessage, diag.errorText, errorMessageLen);
       return unique_ptr<ObjectArray<ObjectQueryResult>>();
    }
+
+   // Return all metadata set at compile time
+   if (metadata != nullptr)
+      metadata->addAll(vm->getMetadata());
 
    bool readFields = readAllComputedFields || (fields != nullptr);
 

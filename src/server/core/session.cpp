@@ -3161,14 +3161,15 @@ void ClientSession::queryObjectDetails(const NXCPMessage& request)
          sendMessage(msg);
       } : std::function<void(int)>();
 
-   TCHAR *query = request.getFieldAsString(VID_QUERY);
+   wchar_t *query = request.getFieldAsString(VID_QUERY);
    StringList fields(request, VID_FIELD_LIST_BASE, VID_FIELDS);
    StringList orderBy(request, VID_ORDER_FIELD_LIST_BASE, VID_ORDER_FIELDS);
    StringMap inputFields(request, VID_INPUT_FIELD_BASE, VID_INPUT_FIELD_COUNT);
-   TCHAR errorMessage[1024];
+   wchar_t errorMessage[1024];
+   StringMap metadata;
    unique_ptr<ObjectArray<ObjectQueryResult>> objects = QueryObjects(query, request.getFieldAsUInt32(VID_ROOT), m_userId,
       errorMessage, 1024, progressCallback, request.getFieldAsBoolean(VID_READ_ALL_FIELDS), &fields, &orderBy, &inputFields,
-      request.getFieldAsUInt32(VID_CONTEXT_OBJECT_ID), request.getFieldAsUInt32(VID_RECORD_LIMIT));
+      request.getFieldAsUInt32(VID_CONTEXT_OBJECT_ID), request.getFieldAsUInt32(VID_RECORD_LIMIT), &metadata);
    if (objects != nullptr)
    {
       Buffer<uint32_t, 1024> idList(objects->size());
@@ -3181,6 +3182,7 @@ void ClientSession::queryObjectDetails(const NXCPMessage& request)
          fieldId += curr->values->size() * 2 + 1;
       }
       response.setFieldFromInt32Array(VID_OBJECT_LIST, objects->size(), idList);
+      metadata.fillMessage(&response, VID_METADATA_BASE, VID_METADATA_SIZE);
    }
    else
    {

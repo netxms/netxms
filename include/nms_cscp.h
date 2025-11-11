@@ -1557,6 +1557,7 @@ typedef struct
 #define VID_DASHBOARD_NAME_TEMPLATE ((uint32_t)868)
 #define VID_USE_MULTIPLIER          ((uint32_t)869)
 #define VID_ARGUMENTS               ((uint32_t)870)
+#define VID_METADATA_SIZE           ((uint32_t)871)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)
@@ -1825,5 +1826,7 @@ typedef struct
 #define VID_WARNING_LIST_BASE       ((uint32_t)0x38000000)
 
 #define VID_UNIT_NAMES_BASE         ((uint32_t)0x10000000)
+
+#define VID_METADATA_BASE           ((uint32_t)0x1F000000)
 
 #endif   /* _nms_cscp_h_ */
