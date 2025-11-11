@@ -5213,6 +5213,10 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
       // Cast UID to signed to represent invalid UID as -1
       value = vm->createValue(static_cast<int32_t>(alarm->getAckByUser()));
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ackByUser"))
+   {
+      value = GetUserDBObjectForNXSL(alarm->getAckByUser(), vm);
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("categories"))
    {
       value = alarm->categoryListToNXSLArray(vm);
@@ -5294,6 +5298,10 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
       // Cast UID to signed to represent invalid UID as -1
       value = vm->createValue(static_cast<int32_t>(alarm->getResolvedByUser()));
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("resolvedByUser"))
+   {
+      value = GetUserDBObjectForNXSL(alarm->getResolvedByUser(), vm);
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("rcaScriptName"))
    {
       value = vm->createValue(alarm->getRcaScriptName());
@@ -5357,6 +5365,10 @@ NXSL_Value *NXSL_AlarmCommentClass::getAttr(NXSL_Object *object, const NXSL_Iden
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("changeTime"))
    {
       value = vm->createValue((INT64)alarmComment->getChangeTime());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("user"))
+   {
+      value = GetUserDBObjectForNXSL(alarmComment->getUserId(), vm);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("userId"))
    {
