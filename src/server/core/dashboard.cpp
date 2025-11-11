@@ -111,7 +111,7 @@ bool DashboardBase::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *p
    for(int i = 0; i < count; i++)
    {
       DashboardElement *e = new DashboardElement;
-      e->m_type = (int)DBGetFieldLong(hResult, i, 0);
+      e->m_type = DBGetFieldInt32(hResult, i, 0);
       e->m_data = DBGetField(hResult, i, 1, nullptr, 0);
       e->m_layout = DBGetField(hResult, i, 2, nullptr, 0);
       m_elements.add(e);

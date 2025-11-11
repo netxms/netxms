@@ -34,7 +34,7 @@ public class DashboardElement
 	public static final int STATUS_INDICATOR = 6;
 	public static final int DASHBOARD = 7;
 	public static final int NETWORK_MAP = 8;
-	public static final int CUSTOM = 9;
+   // deprecated: public static final int CUSTOM = 9;
 	public static final int GEO_MAP = 10;
 	public static final int ALARM_VIEWER = 11;
 	public static final int AVAILABLITY_CHART = 12;

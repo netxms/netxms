@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,8 +68,6 @@ public class DashboardElementConfigFactory
             case DashboardElement.BAR_CHART:
             case DashboardElement.TUBE_CHART:
                return XMLTools.createFromXml(BarChartConfig.class, element.getData());
-            case DashboardElement.CUSTOM:
-               return XMLTools.createFromXml(CustomWidgetConfig.class, element.getData());
             case DashboardElement.DASHBOARD:
                return EmbeddedDashboardConfig.createFromXmlOrJson(element.getData());
             case DashboardElement.DCI_SUMMARY_TABLE:
@@ -155,8 +153,6 @@ public class DashboardElementConfigFactory
             case DashboardElement.BAR_CHART:
             case DashboardElement.TUBE_CHART:
                return new Gson().fromJson(element.getData(), BarChartConfig.class);
-            case DashboardElement.CUSTOM:
-               return new Gson().fromJson(element.getData(), CustomWidgetConfig.class);
             case DashboardElement.DASHBOARD:
                return EmbeddedDashboardConfig.createFromXmlOrJson(element.getData());
             case DashboardElement.DCI_SUMMARY_TABLE:

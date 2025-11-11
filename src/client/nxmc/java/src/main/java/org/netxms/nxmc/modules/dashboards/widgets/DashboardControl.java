@@ -196,9 +196,6 @@ public class DashboardControl extends Composite
          case DashboardElement.TUBE_CHART:
             w = new BarChartElement(this, e, view);
          	break;
-         case DashboardElement.CUSTOM:
-            w = new CustomWidgetElement(this, e, view);
-         	break;
          case DashboardElement.DASHBOARD:
             w = new EmbeddedDashboardElement(this, e, view);
          	break;

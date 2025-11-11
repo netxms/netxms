@@ -5085,15 +5085,15 @@ public:
 /**
  * Dashboard element
  */
-class NXCORE_EXPORTABLE DashboardElement
+struct NXCORE_EXPORTABLE DashboardElement
 {
-public:
    int m_type;
-   TCHAR *m_data;
-   TCHAR *m_layout;
+   wchar_t *m_data;
+   wchar_t *m_layout;
 
    DashboardElement()
    {
+      m_type = 0;
       m_data = nullptr;
       m_layout = nullptr;
    }
