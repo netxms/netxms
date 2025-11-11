@@ -5389,6 +5389,44 @@ NXSL_METHOD_DEFINITION(DCI, forcePoll)
 }
 
 /**
+ * Implementation of "DataPoint" class: constructor
+ */
+NXSL_DataPointClass::NXSL_DataPointClass() : NXSL_Class()
+{
+   setName(_T("DataPoint"));
+}
+
+/**
+ * Implementation of "DataPoint" class: object destructor
+ */
+void NXSL_DataPointClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<std::pair<time_t, String>*>(object->getData());
+}
+
+/**
+ * Implementation of "DataPoint" class: get attribute
+ */
+NXSL_Value *NXSL_DataPointClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto dp = static_cast<std::pair<time_t, String>*>(object->getData());
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("timestamp"))
+   {
+      value = vm->createValue(static_cast<int64_t>(dp->first));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("value"))
+   {
+      value = vm->createValue(dp->second);
+   }
+   return value;
+}
+
+/**
  * Implementation of "DCI" class: constructor
  */
 NXSL_DciClass::NXSL_DciClass() : NXSL_Class()
@@ -5399,7 +5437,7 @@ NXSL_DciClass::NXSL_DciClass() : NXSL_Class()
 }
 
 /**
- * Object destructor
+ * Implementation of "DCI" class: object destructor
  */
 void NXSL_DciClass::onObjectDelete(NXSL_Object *object)
 {
@@ -7516,6 +7554,7 @@ NXSL_ClientSessionClass g_nxslClientSessionClass;
 NXSL_ClusterClass g_nxslClusterClass;
 NXSL_CollectorClass g_nxslCollectorClass;
 NXSL_ContainerClass g_nxslContainerClass;
+NXSL_DataPointClass g_nxslDataPointClass;
 NXSL_DciClass g_nxslDciClass;
 NXSL_DCTargetClass g_nxslDCTargetClass;
 NXSL_DowntimeInfoClass g_nxslDowntimeInfoClass;

@@ -329,6 +329,18 @@ public:
 };
 
 /**
+ * NXSL "DataPoint" class
+ */
+class NXSL_DataPointClass : public NXSL_Class
+{
+public:
+   NXSL_DataPointClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
+/**
  * NXSL "DCI" class
  */
 class NXSL_DciClass : public NXSL_Class
@@ -698,6 +710,7 @@ extern NXSL_ClientSessionClass g_nxslClientSessionClass;
 extern NXSL_ClusterClass g_nxslClusterClass;
 extern NXSL_CollectorClass g_nxslCollectorClass;
 extern NXSL_ContainerClass g_nxslContainerClass;
+extern NXSL_DataPointClass g_nxslDataPointClass;
 extern NXSL_DciClass g_nxslDciClass;
 extern NXSL_DowntimeInfoClass g_nxslDowntimeInfoClass;
 extern NXSL_EventClass g_nxslEventClass;

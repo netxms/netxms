@@ -439,13 +439,10 @@ static int F_GetSumDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 }
 
 /**
- * Get all DCI values for period
- * Format: GetDCIValues(node, dciId, startTime, endTime, rawValue)
- * Raw value indicator is optional (default is false)
- * End time is optional (default is current time)
- * Returns NULL if DCI not found or array of DCI values (ordered from latest to earliest)
+ * Get all DCI values for period (common implementation for GetDCIValues and GetDCIValuesEx).
+ * If asDataPoints is true, return array of data points (timestamp + value).
  */
-static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int GetDCIValuesImpl(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm, bool asDataPoints)
 {
    if ((argc < 3) || (argc > 5))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -464,7 +461,7 @@ static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
 	if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
 	{
-      StringBuffer query(_T("SELECT "));
+      StringBuffer query(asDataPoints ? L"SELECT idata_timestamp," : L"SELECT ");
       query.append(((argc > 4) && argv[4]->isTrue()) ? _T("raw_value") : _T("idata_value"));
       if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
       {
@@ -498,13 +495,22 @@ static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 			DB_RESULT hResult = DBSelectPrepared(hStmt);
 			if (hResult != nullptr)
 			{
+            wchar_t buffer[MAX_RESULT_LENGTH];
             NXSL_Array *result = new NXSL_Array(vm);
             int count = DBGetNumRows(hResult);
             for(int i = 0; i < count; i++)
             {
-               TCHAR buffer[MAX_RESULT_LENGTH];
-               DBGetField(hResult, i, 0, buffer, MAX_RESULT_LENGTH);
-               result->set(i, vm->createValue(buffer));
+               if (asDataPoints)
+               {
+                  time_t t = DBGetFieldInt64(hResult, i, 0);
+                  auto data = new std::pair<time_t, String>(t, DBGetFieldAsString(hResult, i, 1));
+                  result->set(i, vm->createValue(vm->createObject(&g_nxslDataPointClass, data)));
+               }
+               else
+               {
+                  DBGetField(hResult, i, 0, buffer, MAX_RESULT_LENGTH);
+                  result->set(i, vm->createValue(buffer));
+               }
             }
 				*ppResult = vm->createValue(result);
 				DBFreeResult(hResult);
@@ -528,6 +534,30 @@ static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	}
 
 	return 0;
+}
+
+/**
+ * Get all DCI values for period.
+ * Format: GetDCIValues(node, dciId, startTime, endTime, rawValue)
+ * Raw value indicator is optional (default is false)
+ * End time is optional (default is current time)
+ * Returns NULL if DCI not found or array of DCI values (ordered from latest to earliest)
+ */
+static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+   return GetDCIValuesImpl(argc, argv, ppResult, vm, false);
+}
+
+/**
+ * Get all DCI values for period as data points (timestamp + values).
+ * Format: GetDCIValues(node, dciId, startTime, endTime, rawValue)
+ * Raw value indicator is optional (default is false)
+ * End time is optional (default is current time)
+ * Returns NULL if DCI not found or array of DCI values (ordered from latest to earliest)
+ */
+static int F_GetDCIValuesEx(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+   return GetDCIValuesImpl(argc, argv, ppResult, vm, true);
 }
 
 /**
@@ -711,6 +741,7 @@ static NXSL_ExtFunction m_nxslDCIFunctions[] =
    { "GetDCIRawValue", F_GetDCIRawValue, 2 },
    { "GetDCIValue", F_GetDCIValue, 2 },
    { "GetDCIValues", F_GetDCIValues, -1 },
+   { "GetDCIValuesEx", F_GetDCIValuesEx, -1 },
    { "GetDCIValueByDescription", F_GetDCIValueByDescription, 2 },
    { "GetDCIValueByName", F_GetDCIValueByName, 2 },
    { "GetDCIValueByTag", F_GetDCIValueByTag, 2 },
