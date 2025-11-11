@@ -222,7 +222,7 @@ public class PieChart extends GenericComparisonChart
 
       if (chart.getConfiguration().isShowTotal())
       {
-         String v = series.get(0).getDataFormatter().setFormattString(items.get(0).getDisplayFormat()).format(Double.toString(total),
+         String v = series.get(0).getDataFormatter().setFormatString(items.get(0).getDisplayFormat()).format(Double.toString(total),
                DateFormatFactory.getTimeFormatter()); 
          int innerBoxSize = boxSize - boxSize / 6;
          gc.setFont(WidgetHelper.getBestFittingFont(gc, valueFonts, "00000000", innerBoxSize, innerBoxSize));
@@ -279,7 +279,7 @@ public class PieChart extends GenericComparisonChart
                StringBuilder sb = new StringBuilder();
                sb.append(item.getLabel());
                sb.append("\n");
-               DataFormatter df = s.getDataFormatter().setFormattString(chart.getItem(i).getDisplayFormat());
+               DataFormatter df = s.getDataFormatter().setFormatString(chart.getItem(i).getDisplayFormat());
                String v = df.format(s.getCurrentValueAsString(), DateFormatFactory.getTimeFormatter());
                sb.append(v);
                sb.append(" (");

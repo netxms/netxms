@@ -68,7 +68,7 @@ public class HardwareComponentLabelProvider extends LabelProvider implements ITa
    public String getColumnText(Object element, int columnIndex)
    {
       HardwareComponent c = (HardwareComponent)element;
-      DataFormatter df = new DataFormatter().setFormattString("%{u,m}s").setDataType(DataType.UINT64);
+      DataFormatter df = new DataFormatter().setFormatString("%{u,m}s").setDataType(DataType.UINT64);
       switch(columnIndex)
       {
          case HardwareInventoryTable.COLUMN_CAPACITY:

@@ -67,9 +67,11 @@ public class HistoricalDataView extends ViewWithContext
    private final I18n i18n = LocalizationHelper.getI18n(HistoricalDataView.class);
 
 	// Columns
-   public static final int COLUMN_TIME = 0;
-   public static final int COLUMN_DATA = 1;
-	
+   public static final int COLUMN_TIMESTAMP = 0;
+   public static final int COLUMN_VALUE = 1;
+   public static final int COLUMN_FORMATTED_VALUE = 2;
+   public static final int COLUMN_RAW_VALUE = 3;
+
    private NXCSession session;
 	private long contextId;
    private long ownerId;
@@ -248,8 +250,8 @@ public class HistoricalDataView extends ViewWithContext
 
 		final String[] names = (tableName != null) ? 
          new String[] { i18n.tr("Timestamp"), i18n.tr("Value") } :
-         new String[] { i18n.tr("Timestamp"), i18n.tr("Value"), i18n.tr("Raw value") };
-		final int[] widths = { 150, 400, 400 };
+         new String[] { i18n.tr("Timestamp"), i18n.tr("Value"), i18n.tr("Formatted value"), i18n.tr("Raw value") };
+      final int[] widths = { 150, 400, 400, 400 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new HistoricalDataLabelProvider());
@@ -390,6 +392,7 @@ public class HistoricalDataView extends ViewWithContext
                   labelTableInfo.setText(tableName);
                }
 
+               ((HistoricalDataLabelProvider)viewer.getLabelProvider()).setDataFormatter(data.getDataFormatter());
                viewer.setInput(data.getValues());
                updateInProgress = false;
                infoArea.layout();

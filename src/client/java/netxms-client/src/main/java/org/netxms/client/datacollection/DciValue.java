@@ -147,7 +147,7 @@ public abstract class DciValue
     */
    public Object getFormattedValue(String formatString, TimeFormatter timeFormatter)
    {
-      return createDataFormatter().setFormattString(formatString).format(value, timeFormatter);
+      return createDataFormatter().setFormatString(formatString).format(value, timeFormatter);
    }
 
 	/**

@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2025 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.nxmc.modules.datacollection.views.helpers;
 
 import org.eclipse.jface.viewers.TableViewer;
@@ -24,11 +42,15 @@ public class HistoricalDataComparator extends ViewerComparator
       int rc;
       switch((Integer)sortColumn.getData("ID"))
       {
-         case HistoricalDataView.COLUMN_TIME:
+         case HistoricalDataView.COLUMN_TIMESTAMP:
             rc = Long.signum(((DciDataRow)e1).getTimestamp().getTime() - ((DciDataRow)e2).getTimestamp().getTime());
             break;
-         case HistoricalDataView.COLUMN_DATA:
+         case HistoricalDataView.COLUMN_VALUE:
+         case HistoricalDataView.COLUMN_FORMATTED_VALUE:
             rc = NaturalOrderComparator.compare(((DciDataRow)e1).getValueAsString(), ((DciDataRow)e2).getValueAsString());
+            break;
+         case HistoricalDataView.COLUMN_RAW_VALUE:
+            rc = NaturalOrderComparator.compare(((DciDataRow)e1).getRawValue(), ((DciDataRow)e2).getRawValue());
             break;
          default:
             rc = 0;

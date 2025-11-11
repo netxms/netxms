@@ -338,7 +338,7 @@ public class ChartLegend extends Composite
          ChartDciConfig item = chart.getItem(row);
          DataFormatter formatter = s.getDataFormatter()
                .setDefaultFormatString("%{u}.3f", "%{m,u}.3f")
-               .setFormattString(item.getDisplayFormat())
+               .setFormatString(item.getDisplayFormat())
                .setDataType(DataType.FLOAT)
                .setDefaultForMultipliers(useMultipliers);
          TimeFormatter timeFormatter = DateFormatFactory.getTimeFormatter();

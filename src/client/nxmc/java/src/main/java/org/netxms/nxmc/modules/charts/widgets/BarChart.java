@@ -424,7 +424,7 @@ public class BarChart extends GenericComparisonChart
             StringBuilder sb = new StringBuilder();
             sb.append(item.getLabel());
             sb.append("\n");
-            DataFormatter df = s.getDataFormatter().setFormattString(chart.getItem(i).getDisplayFormat());
+            DataFormatter df = s.getDataFormatter().setFormatString(chart.getItem(i).getDisplayFormat());
             String v = df.format(s.getCurrentValueAsString(), DateFormatFactory.getTimeFormatter());
             sb.append(v);
             sb.append(" (");

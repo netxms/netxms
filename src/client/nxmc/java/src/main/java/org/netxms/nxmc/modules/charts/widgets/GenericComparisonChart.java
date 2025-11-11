@@ -139,6 +139,6 @@ public abstract class GenericComparisonChart extends Canvas implements PlotArea
     */
    protected String getValueAsDisplayString(ChartDciConfig dci, DataSeries data)
    {
-      return data.getDataFormatter().setFormattString(dci.getDisplayFormat()).format(data.getCurrentValueAsString(), DateFormatFactory.getTimeFormatter()); 
+      return data.getDataFormatter().setFormatString(dci.getDisplayFormat()).format(data.getCurrentValueAsString(), DateFormatFactory.getTimeFormatter()); 
    }
 }

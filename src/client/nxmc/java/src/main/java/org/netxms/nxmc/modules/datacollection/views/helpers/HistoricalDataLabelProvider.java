@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,14 +21,20 @@ package org.netxms.nxmc.modules.datacollection.views.helpers;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.DciDataRow;
+import org.netxms.client.datacollection.TimeFormatter;
 import org.netxms.nxmc.localization.DateFormatFactory;
+import org.netxms.nxmc.modules.datacollection.views.HistoricalDataView;
 
 /**
  * Label provider for historical data view
  */
 public class HistoricalDataLabelProvider extends LabelProvider implements ITableLabelProvider
 {
+   private DataFormatter dataFormatter = new DataFormatter();
+   private TimeFormatter timeFormatter = DateFormatFactory.getTimeFormatter();
+
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
@@ -46,13 +52,25 @@ public class HistoricalDataLabelProvider extends LabelProvider implements ITable
    {
       switch(columnIndex)
       {
-         case 0:
+         case HistoricalDataView.COLUMN_TIMESTAMP:
             return DateFormatFactory.getDateTimeFormat().format(((DciDataRow)element).getTimestamp());
-         case 1:
+         case HistoricalDataView.COLUMN_VALUE:
             return ((DciDataRow)element).getValueAsString();
-         case 2:
+         case HistoricalDataView.COLUMN_RAW_VALUE:
             return ((DciDataRow)element).getRawValue();
+         case HistoricalDataView.COLUMN_FORMATTED_VALUE:
+            return dataFormatter.format(((DciDataRow)element).getValueAsString(), timeFormatter);
       }
       return null;
+   }
+
+   /**
+    * Set data formatter.
+    *
+    * @param dataFormatter new data formatter
+    */
+   public void setDataFormatter(DataFormatter dataFormatter)
+   {
+      this.dataFormatter = dataFormatter;
    }
 }

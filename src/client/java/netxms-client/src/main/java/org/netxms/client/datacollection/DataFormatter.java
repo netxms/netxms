@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -89,7 +89,7 @@ public class DataFormatter
     * @param formatString the formatString to set
     * @return this
     */
-   public DataFormatter setFormattString(String formatString)
+   public DataFormatter setFormatString(String formatString)
    {
       this.formatString = formatString;
       return this;
@@ -142,7 +142,7 @@ public class DataFormatter
       this.useMultipliers = useMultipliers;
       return this;
    }
-   
+
    /**
     * Set default for multipliers
     * 
@@ -176,10 +176,10 @@ public class DataFormatter
     * Format value
     *
     * @param value The value
-    * @param formatter Date and time formatter 
+    * @param timeFormatter Date and time formatter
     * @return The formatted value
     */
-   public String format(String value, TimeFormatter formatter)
+   public String format(String value, TimeFormatter timeFormatter)
    {
       String str = formatString;
       if (str == null || str.isEmpty())
@@ -251,11 +251,11 @@ public class DataFormatter
 
                if (useUnits && unit.getName().equals("Uptime"))
                {      
-                  sb.append(formatter.formatUptime((long)Double.parseDouble(value)));   
+                  sb.append(timeFormatter.formatUptime((long)Double.parseDouble(value)));
                }
                else if (useUnits && unit.getName().equals("Epoch time"))
                {
-                  sb.append(formatter.formatDateAndTime((long)Double.parseDouble(value)));
+                  sb.append(timeFormatter.formatDateAndTime((long)Double.parseDouble(value)));
                }
                else
                {
