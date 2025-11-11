@@ -109,7 +109,7 @@ import org.xnap.commons.i18n.I18n;
 public class ExportFileBuilder extends ConfigurationView
 {
    private final I18n i18n = LocalizationHelper.getI18n(ExportFileBuilder.class);
-   private static final Pattern SCRIPT_PATTERN = Pattern.compile("[^%]%\\[([a-zA-Z0-9:_]+)[./]?.*?\\]");
+   private static final Pattern SCRIPT_PATTERN = Pattern.compile("(?<!%)%\\[([a-zA-Z0-9:_]+)[./]?.*?\\]");
 
 	private NXCSession session = Registry.getSession();
 	private Composite content;
