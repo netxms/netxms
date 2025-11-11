@@ -21,8 +21,8 @@ package org.netxms.nxmc.base.widgets;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusAdapter;
-import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
@@ -33,6 +33,8 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.nxmc.base.widgets.events.HyperlinkAdapter;
@@ -292,7 +294,7 @@ public class MessageArea extends Canvas implements MessageAreaHolder
       final Rectangle bounds = buttonShowAll.getBounds();
       final Point p = toDisplay(new Point(bounds.x + bounds.width, bounds.y + bounds.height + 2));
 
-      popupListShell = new Shell(getDisplay(), SWT.TOOL | SWT.ON_TOP | SWT.MODELESS);
+      popupListShell = new Shell(getDisplay(), SWT.TOOL | SWT.ON_TOP);
 
       GridLayout layout = new GridLayout();
       layout.marginHeight = MARGIN_HEIGHT;
@@ -328,23 +330,28 @@ public class MessageArea extends Canvas implements MessageAreaHolder
          messageComposite.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       }
 
-      popupListShell.addFocusListener(new FocusAdapter() {
-         @Override
-         public void focusLost(FocusEvent e)
+      popupListShell.addListener(SWT.Activate, (event) -> {
+         popupListShell.forceFocus();
+      });
+
+      popupListShell.addListener(SWT.Deactivate, (event) -> {
+         popupListShell.close();
+         popupListShell = null;
+      });
+
+      popupListShell.addListener(SWT.KeyDown, (event) -> {
+         if (event.keyCode == SWT.ESC)
          {
             popupListShell.close();
             popupListShell = null;
          }
-      });
-      popupListShell.addListener(SWT.Deactivate, (event) -> {
-         popupListShell.close();
-         popupListShell = null;
       });
 
       popupListShell.pack();
       popupListShell.open();
 
       popupListShell.setLocation(p.x - popupListShell.getBounds().width, p.y);
+      popupListShell.setFocus();
       popupListShell.forceFocus();
    }
 
@@ -502,7 +509,49 @@ public class MessageArea extends Canvas implements MessageAreaHolder
          });
 
          addPaintListener(this);
-      }      
+
+         // Handle ESC key to close message popup
+         addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e)
+            {
+               if (e.keyCode == SWT.ESC)
+               {
+                  // Forward ESC key to parent composite
+                  Composite parent = getParent();
+                  parent.notifyListeners(SWT.KeyDown, new Event() {
+                     {
+                        keyCode = SWT.ESC;
+                        type = SWT.KeyDown;
+                        widget = parent;
+                     }
+                  });
+               }
+            }
+         });
+
+         // Also add key listener to all child controls to ensure ESC is handled
+         Control[] children = getChildren();
+         for(Control child : children)
+         {
+            child.addKeyListener(new KeyAdapter() {
+               @Override
+               public void keyPressed(KeyEvent e)
+               {
+                  if (e.keyCode == SWT.ESC)
+                  {
+                     MessageComposite.this.notifyListeners(SWT.KeyDown, new Event() {
+                        {
+                           keyCode = SWT.ESC;
+                           type = SWT.KeyDown;
+                           widget = MessageComposite.this;
+                        }
+                     });
+                  }
+               }
+            });
+         }
+      }
 
       /**
        * @see org.eclipse.swt.widgets.Widget#dispose()
