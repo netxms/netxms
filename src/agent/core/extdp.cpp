@@ -469,11 +469,20 @@ LONG StructuredMetricProvider::getValue(const TCHAR *name, TCHAR *buffer)
    LONG rc = SYSINFO_RC_UNKNOWN;
 
    lock();
-
-   StructuredExtractorParameterDefinition *defenition = m_parameters->get(name);
+   const TCHAR *bracketPos = _tcschr(name, _T('('));
+   String cleanName = (bracketPos != nullptr) ? String(name, bracketPos - name) : String(name);
+   StructuredExtractorParameterDefinition *defenition = m_parameters->get(cleanName);
    if (defenition != nullptr)
    {
-      rc = m_dataExtractor.getMetric(defenition->query, buffer, MAX_RESULT_LENGTH);
+      if (bracketPos != nullptr && defenition->isParametrized)
+      {
+         StringBuffer cmdLine = SubstituteCommandArguments(defenition->query, name);
+         rc = m_dataExtractor.getMetric(cmdLine, buffer, MAX_RESULT_LENGTH);
+      }
+      else
+      {
+         rc = m_dataExtractor.getMetric(defenition->query, buffer, MAX_RESULT_LENGTH);
+      }
    }
    else if (MatchString(m_genericParamName, name, false))
    {
@@ -519,7 +528,16 @@ void StructuredMetricProvider::listParameters(NXCPMessage *msg, uint32_t *baseId
    m_parameters->forEach(
       [msg, baseId, count] (const TCHAR *key, StructuredExtractorParameterDefinition *value)
       {
-         msg->setField((*baseId)++, key);
+         if(value->isParametrized)
+         {
+            StringBuffer paramName(key);
+            paramName.append(_T("(*)"));
+            msg->setField((*baseId)++, paramName);
+         }
+         else
+         {
+            msg->setField((*baseId)++, key);
+         }
          msg->setField((*baseId)++, value->description);
          msg->setField((*baseId)++, static_cast<uint16_t>(value->dataType));
          (*count)++;
@@ -540,7 +558,22 @@ void StructuredMetricProvider::listParameters(NXCPMessage *msg, uint32_t *baseId
 void StructuredMetricProvider::listParameters(StringList *list)
 {
    lock();
-   list->addAll(m_parameters->keys());
+   m_parameters->forEach(
+      [list] (const TCHAR *key, StructuredExtractorParameterDefinition *value)
+      {
+         if(value->isParametrized)
+         {
+            StringBuffer paramName(key);
+            paramName.append(_T("(*)"));
+            list->add(paramName);
+         }
+         else
+         {
+            list->add(key);
+         }
+         return _CONTINUE;
+
+      });
    list->add(m_genericParamName);
    unlock();
 }

@@ -157,6 +157,63 @@ done:
 }
 
 /**
+ * Substitute command arguments
+ */
+String SubstituteCommandArguments(const TCHAR *cmdTemplate, const TCHAR *param)
+{
+   StringBuffer cmdLine;
+   cmdLine.setAllocationStep(1024);
+
+   for (const TCHAR *sptr = cmdTemplate; *sptr != 0; sptr++)
+   {
+      if (*sptr == _T('$'))
+      {
+         sptr++;
+         if (*sptr == 0)
+            break;   // Single $ character at the end of line
+         if ((*sptr >= _T('1')) && (*sptr <= _T('9')))
+         {
+            TCHAR buffer[1024];
+            if (AgentGetParameterArg(param, *sptr - '0', buffer, 1024))
+            {
+               cmdLine.append(buffer);
+            }
+         }
+         else
+         {
+            cmdLine.append(*sptr);
+         }
+      }
+      else
+      {
+         cmdLine.append(*sptr);
+      }
+   }
+   return cmdLine;
+}
+/**
+ * Check if command is parameterized (contains $1, $2, etc.)
+ */
+bool IsParametrizedCommand(const TCHAR *command)
+{
+   bool isParameterized = false;
+   while (true)
+   {
+      const TCHAR *p = _tcschr(command, _T('$'));
+      if (p == nullptr)
+         break;
+      p++;
+      if ((*p >= '1') && (*p <= '9'))
+      {
+         isParameterized = true;
+         break;
+      }
+      command = p;
+   }
+   return isParameterized;
+}
+
+/**
  * Set time of local system
  */
 void SetLocalSystemTime(int64_t newTime)

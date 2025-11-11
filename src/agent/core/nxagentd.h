@@ -174,6 +174,8 @@ struct ExternalTableDefinition
    }
 };
 
+bool IsParametrizedCommand(const TCHAR *command);
+
 /**
  * External table definition
  */
@@ -182,10 +184,12 @@ struct StructuredExtractorParameterDefinition
    String query;
    String description;
    uint16_t dataType;
+   bool isParametrized;
 
    StructuredExtractorParameterDefinition(const TCHAR *q, const TCHAR *d, uint16_t dt) : query(q), description(d)
    {
       dataType = dt;
+      isParametrized = IsParametrizedCommand(q);
    }
 };
 
@@ -884,6 +888,8 @@ void RegisterApplicationAgent(const TCHAR *name);
 UINT32 GetParameterValueFromAppAgent(const TCHAR *name, TCHAR *buffer);
 
 bool WaitForProcess(const TCHAR *name);
+
+String SubstituteCommandArguments(const TCHAR *cmdTemplate, const TCHAR *param);
 
 uint32_t UpgradeAgent(const TCHAR *pkgFile);
 

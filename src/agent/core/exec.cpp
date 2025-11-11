@@ -38,34 +38,8 @@ static LONG RunExternal(const TCHAR *param, const TCHAR *arg, StringList *value,
    nxlog_debug_tag(EXEC_DEBUG_TAG, 4, _T("RunExternal called for \"%s\" \"%s\""), param, arg);
 
    // Substitute $1 .. $9 with actual arguments
-   StringBuffer cmdLine;
-   cmdLine.setAllocationStep(1024);
+   StringBuffer cmdLine = SubstituteCommandArguments(arg, param);
 
-   for (const TCHAR *sptr = arg; *sptr != 0; sptr++)
-   {
-      if (*sptr == _T('$'))
-      {
-         sptr++;
-         if (*sptr == 0)
-            break;   // Single $ character at the end of line
-         if ((*sptr >= _T('1')) && (*sptr <= _T('9')))
-         {
-            TCHAR buffer[1024];
-            if (AgentGetParameterArg(param, *sptr - '0', buffer, 1024))
-            {
-               cmdLine.append(buffer);
-            }
-         }
-         else
-         {
-            cmdLine.append(*sptr);
-         }
-      }
-      else
-      {
-         cmdLine.append(*sptr);
-      }
-   }
    nxlog_debug_tag(EXEC_DEBUG_TAG, 4, _T("RunExternal: command line is \"%s\""), cmdLine.cstr());
 
    LineOutputProcessExecutor executor(cmdLine);
