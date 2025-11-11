@@ -175,11 +175,10 @@ public class TableValueViewer extends BaseTableValueViewer
          final String instance = buildInstanceString(cells[i].getViewerRow());
          final String tableName = column.getDisplayName() + ": " + instance.replace("~~~", " / ");
          AbstractObject object = session.findObjectById(objectId);
-         
          view.openView(new HistoricalDataView(object, object.getObjectId(), dciId, tableName, instance, column.getName()));
       }
    }
-   
+
    /**
     * Show line chart
     */

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.datacollection.views;
 
 import java.util.UUID;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -40,7 +41,7 @@ import org.xnap.commons.i18n.I18n;
 public class TableLastValuesView extends ObjectView
 {
    private final I18n i18n = LocalizationHelper.getI18n(TableLastValuesView.class);
-   
+
 	private long contextId;
    private long ownerId;
 	private long dciId;
@@ -143,12 +144,23 @@ public class TableLastValuesView extends ObjectView
 	}
 
    /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      manager.add(actionExportAllToCsv);
+      super.fillLocalMenu(manager);
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(IToolBarManager)
     */
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
    {
 		manager.add(actionExportAllToCsv);
+      super.fillLocalToolBar(manager);
 	}
 
 	/**
@@ -157,13 +169,9 @@ public class TableLastValuesView extends ObjectView
 	@Override
 	public void refresh()
 	{
-		viewer.refresh(new Runnable() {	
-			@Override
-			public void run()
-			{
-				setName(viewer.getTitle()); 
-				fullName = viewer.getObjectName() + ": " + viewer.getTitle();
-			}
+      viewer.refresh(() -> {
+         setName(viewer.getTitle());
+         fullName = viewer.getObjectName() + ": " + viewer.getTitle();
 		});
 	}
 
