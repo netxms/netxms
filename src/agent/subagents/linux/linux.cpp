@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2024 Raden Solutions
+** Copyright (C) 2004-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -223,10 +223,11 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Net.Interface.Description(*)"), H_NetIfInfoFromIOCTL, (TCHAR *)IF_INFO_DESCRIPTION, DCI_DT_STRING, DCIDESC_NET_INTERFACE_DESCRIPTION },
    { _T("Net.Interface.InErrors(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_ERRORS_IN, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_INERRORS },
    { _T("Net.Interface.Link(*)"), H_NetIfInfoFromIOCTL, (TCHAR *)IF_INFO_OPER_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_LINK },
+   { _T("Net.Interface.MaxSpeed(*)"), H_NetIfInfoSpeed, _T("M"), DCI_DT_UINT64, DCIDESC_NET_INTERFACE_MAXSPEED },
    { _T("Net.Interface.OutErrors(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_ERRORS_OUT, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_OUTERRORS },
    { _T("Net.Interface.PacketsIn(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_PACKETS_IN, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSIN },
    { _T("Net.Interface.PacketsOut(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_PACKETS_OUT, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSOUT },
-   { _T("Net.Interface.Speed(*)"), H_NetIfInfoSpeed, nullptr, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_SPEED },
+   { _T("Net.Interface.Speed(*)"), H_NetIfInfoSpeed, _T("S"), DCI_DT_UINT64, DCIDESC_NET_INTERFACE_SPEED },
    { _T("Net.IP.Forwarding"), H_NetIpForwarding, (TCHAR*)4, DCI_DT_INT, DCIDESC_NET_IP_FORWARDING },
    { _T("Net.IP6.Forwarding"), H_NetIpForwarding, (TCHAR*)6, DCI_DT_INT, DCIDESC_NET_IP6_FORWARDING },
 

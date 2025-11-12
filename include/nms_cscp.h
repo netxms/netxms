@@ -1558,6 +1558,7 @@ typedef struct
 #define VID_USE_MULTIPLIER          ((uint32_t)869)
 #define VID_ARGUMENTS               ((uint32_t)870)
 #define VID_METADATA_SIZE           ((uint32_t)871)
+#define VID_MAX_SPEED               ((uint32_t)872)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

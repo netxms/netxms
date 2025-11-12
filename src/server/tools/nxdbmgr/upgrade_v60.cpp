@@ -21,6 +21,49 @@
 **/
 
 #include "nxdbmgr.h"
+#include <nxevent.h>
+
+/**
+ * Upgrade from 60.4 to 60.5
+ */
+static bool H_UpgradeFromV4()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE interfaces ADD max_speed $SQL:INT64\n")
+      _T("UPDATE interfaces SET max_speed=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("interfaces"), _T("max_speed")));
+
+   CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET "
+      L"description='Generated when system detects interface speed change.\r\n"
+      L"Parameters:\r\n"
+      L"   1) ifIndex - Interface index\r\n"
+      L"   2) ifName - Interface name\r\n"
+      L"   3) oldSpeed - Old speed in bps\r\n"
+      L"   4) oldSpeedText - Old speed in bps with optional multiplier (kbps, Mbps, etc.)\r\n"
+      L"   5) newSpeed - New speed in bps\r\n"
+      L"   6) newSpeedText - New speed in bps with optional multiplier (kbps, Mbps, etc.)\r\n"
+      L"   7) maxSpeed - Maximum speed in bps\r\n"
+      L"   8) maxSpeedText - Maximum speed in bps with optional multiplier (kbps, Mbps, etc.)'"
+      L" WHERE event_code=141"));   // SYS_IF_SPEED_CHANGED
+
+   CHK_EXEC(CreateEventTemplate(EVENT_IF_SPEED_BELOW_MAXIMUM, _T("SYS_IF_SPEED_BELOW_MAXIMUM"),
+         EVENT_SEVERITY_WARNING, EF_LOG, _T("c020c587-ab9f-4834-ba3c-91583c2871b1"),
+         _T("Interface %<ifName> speed %<speedText> is below maximum %<maxSpeedText>"),
+         _T("Generated when system detects that interface speed is below maximum.\r\n")
+         _T("Parameters:\r\n")
+         _T("   1) ifIndex - Interface index\r\n")
+         _T("   2) ifName - Interface name\r\n")
+         _T("   3) speed - Current speed in bps\r\n")
+         _T("   4) speedText - Current speed in bps with optional multiplier (kbps, Mbps, etc.)\r\n")
+         _T("   5) maxSpeed - Maximum speed in bps\r\n")
+         _T("   6) maxSpeedText - Maximum speed in bps with optional multiplier (kbps, Mbps, etc.)")
+      ));
+
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
 
 /**
  * Upgrade from 60.3 to 60.4
@@ -170,6 +213,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 4,  60, 5,  H_UpgradeFromV4  },
    { 3,  60, 4,  H_UpgradeFromV3  },
    { 2,  60, 3,  H_UpgradeFromV2  },
    { 1,  60, 2,  H_UpgradeFromV1  },

@@ -1375,6 +1375,7 @@ public class NXCPCodes
    public static final long VID_USE_MULTIPLIER = 869;
    public static final long VID_ARGUMENTS = 870;
    public static final long VID_METADATA_SIZE = 871;
+   public static final long VID_MAX_SPEED = 872;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

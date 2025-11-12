@@ -2216,6 +2216,7 @@ protected:
    uint32_t m_type;
    uint32_t m_mtu;
    uint64_t m_speed;
+   uint64_t m_maxSpeed;
    int32_t m_inboundUtilization;
    int32_t m_outboundUtilization;
    uint32_t m_bridgePortNumber;       // 802.1D port number
@@ -2306,6 +2307,7 @@ public:
    uint32_t getIfType() const { return m_type; }
    uint32_t getMTU() const { return m_mtu; }
    uint64_t getSpeed() const { return m_speed; }
+   uint64_t getMaxSpeed() const { return m_maxSpeed; }
    int32_t getInboundUtilization() const { return m_inboundUtilization; }
    int32_t getOutboundUtilization() const { return m_outboundUtilization; }
    uint32_t getBridgePortNumber() const { return m_bridgePortNumber; }
@@ -2440,6 +2442,11 @@ public:
    void setSpeed(uint64_t speed)
    {
       m_speed = speed;
+      setModified(MODIFY_INTERFACE_PROPERTIES);
+   }
+   void setMaxSpeed(uint64_t speed)
+   {
+      m_maxSpeed = speed;
       setModified(MODIFY_INTERFACE_PROPERTIES);
    }
    void setIfType(uint32_t type)
@@ -2800,7 +2807,7 @@ struct MobileDeviceInfo
  */
 struct MobileDeviceStatus
 {
-   const TCHAR *commProtocol;
+   const wchar_t *commProtocol;
    GeoLocation geoLocation;
    int32_t altitude;
    float speed;
@@ -2811,7 +2818,7 @@ struct MobileDeviceStatus
 
    MobileDeviceStatus()
    {
-      commProtocol = _T("UNKNOWN");
+      commProtocol = L"UNKNOWN";
       altitude = 0;
       speed = -1;
       direction = -1;
@@ -2829,7 +2836,7 @@ private:
    typedef DataCollectionTarget super;
 
 protected:
-   TCHAR m_commProtocol[32];
+   wchar_t m_commProtocol[32];
    time_t m_lastReportTime;
    SharedString m_deviceId;
    SharedString m_vendor;
@@ -2870,7 +2877,7 @@ public:
    void updateSystemInfo(const MobileDeviceInfo& deviceInfo);
    void updateStatus(const MobileDeviceStatus& status);
 
-   const TCHAR *getCommProtocol() const { return m_commProtocol; }
+   const wchar_t *getCommProtocol() const { return m_commProtocol; }
    time_t getLastReportTime() const { return GetAttributeWithLock(m_lastReportTime, m_mutexProperties); }
    SharedString getDeviceId() const { return GetAttributeWithLock(m_deviceId, m_mutexProperties); }
    SharedString getVendor() const { return GetAttributeWithLock(m_vendor, m_mutexProperties); }

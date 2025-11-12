@@ -922,6 +922,8 @@ InterfaceList *AgentConnection::parseInterfaceTable(Table *data)
    int cMTU = data->getColumnIndex(_T("MTU"));
    int cMAC = data->getColumnIndex(_T("MAC_ADDRESS"));
    int cIPList = data->getColumnIndex(_T("IP_ADDRESSES"));
+   int cSpeed = data->getColumnIndex(_T("SPEED"));
+   int cMaxSpeed = data->getColumnIndex(_T("MAX_SPEED"));
 
    if ((cIndex == -1) || (cName == -1) || (cMAC == -1) || (cIPList == -1))
       return nullptr;
@@ -935,12 +937,16 @@ InterfaceList *AgentConnection::parseInterfaceTable(Table *data)
          continue;
 
       auto iface = new InterfaceInfo(ifIndex);
-      _tcslcpy(iface->name, data->getAsString(i, cName, _T("")), MAX_DB_STRING);
-      _tcslcpy(iface->alias, data->getAsString(i, cAlias, _T("")), MAX_DB_STRING);
+      wcslcpy(iface->name, data->getAsString(i, cName, L""), MAX_DB_STRING);
+      wcslcpy(iface->alias, data->getAsString(i, cAlias, L""), MAX_DB_STRING);
       iface->type = data->getAsUInt(i, cType);
       if (iface->type == 0)
          iface->type = IFTYPE_OTHER;
       iface->mtu = data->getAsUInt(i, cMTU);
+      if (cSpeed != -1)
+         iface->speed = data->getAsUInt64(i, cSpeed);
+      if (cMaxSpeed != -1)
+         iface->maxSpeed = data->getAsUInt64(i, cMaxSpeed);
       StrToBin(data->getAsString(i, cMAC, _T("000000000000")), iface->macAddr, MAC_ADDR_LENGTH);
 
       StringBuffer::split(data->getAsString(i, cIPList, _T("")), _T(","), true,

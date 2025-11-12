@@ -140,7 +140,9 @@ public class ObjectState extends TableElement
             }
             if (iface.getMtu() > 0)
                addPair(i18n.tr("MTU"), Integer.toString(iface.getMtu()));
-            if (iface.getSpeed() > 0)
+            if (iface.getMaxSpeed() > 0)
+               addPair(i18n.tr("Max speed"), InterfaceListLabelProvider.ifSpeedTotext(iface.getMaxSpeed()));
+            if ((iface.getOperState() == Interface.OPER_STATE_UP) && (iface.getSpeed() > 0))
                addPair(i18n.tr("Speed"), InterfaceListLabelProvider.ifSpeedTotext(iface.getSpeed()));
             if (iface.getInboundUtilization() >= 0)
                addPair(i18n.tr("Inbound utilization"), formatUtilizationValue(iface.getInboundUtilization()));

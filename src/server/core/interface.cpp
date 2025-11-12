@@ -33,6 +33,7 @@ Interface::Interface() : super(), m_macAddress(MacAddress::ZERO), m_beforeMainte
    m_type = IFTYPE_OTHER;
    m_mtu = 0;
    m_speed = 0;
+   m_maxSpeed = 0;
    m_inboundUtilization = -1;
    m_outboundUtilization = -1;
 	m_bridgePortNumber = 0;
@@ -80,6 +81,7 @@ Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyn
    m_type = IFTYPE_OTHER;
    m_mtu = 0;
    m_speed = 0;
+   m_maxSpeed = 0;
    m_inboundUtilization = -1;
    m_outboundUtilization = -1;
 	m_bridgePortNumber = 0;
@@ -129,6 +131,7 @@ Interface::Interface(const TCHAR *objectName, const TCHAR *ifName, const TCHAR *
    m_type = ifType;
    m_mtu = 0;
    m_speed = 0;
+   m_maxSpeed = 0;
    m_inboundUtilization = -1;
    m_outboundUtilization = -1;
    m_ipAddressList.add(addrList);
@@ -184,10 +187,11 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepa
       return false;
 
 	DB_STATEMENT hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_INTERFACE,
-		_T("SELECT if_type,if_index,node_id,mac_addr,required_polls,bridge_port,phy_chassis,phy_module,")
-		_T("phy_pic,phy_port,peer_node_id,peer_if_id,description,if_name,if_alias,dot1x_pae_state,dot1x_backend_state,")
-		_T("admin_state,oper_state,peer_proto,mtu,speed,parent_iface,last_known_oper_state,last_known_admin_state,")
-      _T("ospf_area,ospf_if_type,ospf_if_state,stp_port_state,peer_last_updated,iftable_suffix,state_before_maintenance FROM interfaces WHERE id=?"));
+		L"SELECT if_type,if_index,node_id,mac_addr,required_polls,bridge_port,phy_chassis,phy_module,"
+		L"phy_pic,phy_port,peer_node_id,peer_if_id,description,if_name,if_alias,dot1x_pae_state,dot1x_backend_state,"
+		L"admin_state,oper_state,peer_proto,mtu,speed,parent_iface,last_known_oper_state,last_known_admin_state,"
+      L"ospf_area,ospf_if_type,ospf_if_state,stp_port_state,peer_last_updated,max_speed,iftable_suffix,"
+      L"state_before_maintenance FROM interfaces WHERE id=?");
 	if (hStmt == nullptr)
 		return false;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -229,9 +233,10 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepa
       m_ospfState = static_cast<OSPFInterfaceState>(DBGetFieldLong(hResult, 0, 27));
       m_stpPortState = static_cast<SpanningTreePortState>(DBGetFieldLong(hResult, 0, 28));
       m_peerLastUpdated = static_cast<time_t>(DBGetFieldInt64(hResult, 0, 29));
+      m_maxSpeed = DBGetFieldUInt64(hResult, 0, 30);
 
       wchar_t suffixText[128];
-      DBGetField(hResult, 0, 30, suffixText, 128);
+      DBGetField(hResult, 0, 31, suffixText, 128);
       Trim(suffixText);
       if (suffixText[0] == 0)
       {
@@ -244,27 +249,27 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepa
          }
       }
 
-      //Parse data in format: nodeId:status:operState:adminState:dot1xPaeAuthState:dot1xBackendAuthState:stpPortState;...
-      String beforeMaintenaceData = DBGetFieldAsString(hResult, 0, 31);
+      // Parse data in format: nodeId:status:operState:adminState:dot1xPaeAuthState:dot1xBackendAuthState:stpPortState;...
+      String beforeMaintenaceData = DBGetFieldAsString(hResult, 0, 32);
       if (!beforeMaintenaceData.isEmpty())
       {
-         StringList nodes = beforeMaintenaceData.split(_T(";"));
+         StringList nodes = beforeMaintenaceData.split(L";");
          for (int i = 0; i < nodes.size(); i++)
          {
-            StringList fields = String(nodes.get(i)).split(_T(":"));
+            StringList fields = String(nodes.get(i)).split(L":");
             if (fields.size() >= 7)
             {
-               uint32_t nodeId = _tcstoul(fields.get(0), nullptr, 0);
+               uint32_t nodeId = wcstoul(fields.get(0), nullptr, 0);
                if (nodeId == 0)
                   continue; // skip empty nodeId
 
                InterfaceState *state = new InterfaceState();
-               state->status = _tcstoul(fields.get(1), nullptr, 0);
-               state->operState = _tcstoul(fields.get(2), nullptr, 0);
-               state->adminState = _tcstoul(fields.get(3), nullptr, 0);
-               state->dot1xPaeAuthState = _tcstoul(fields.get(4), nullptr, 0);
-               state->dot1xBackendAuthState = _tcstoul(fields.get(5), nullptr, 0);
-               state->stpPortState = static_cast<SpanningTreePortState>(_tcstoul(fields.get(6), nullptr, 0));
+               state->status = wcstoul(fields.get(1), nullptr, 0);
+               state->operState = wcstoul(fields.get(2), nullptr, 0);
+               state->adminState = wcstoul(fields.get(3), nullptr, 0);
+               state->dot1xPaeAuthState = wcstoul(fields.get(4), nullptr, 0);
+               state->dot1xBackendAuthState = wcstoul(fields.get(5), nullptr, 0);
+               state->stpPortState = static_cast<SpanningTreePortState>(wcstoul(fields.get(6), nullptr, 0));
 
                m_beforeMaintenaceData.set(nodeId, state);
             }
@@ -295,7 +300,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepa
    DBFreeResult(hResult);
 
 	// Read VLANs
-   hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_IF_VLANS, _T("SELECT vlan_id FROM interface_vlan_list WHERE iface_id=? ORDER BY vlan_id"));
+   hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_IF_VLANS, L"SELECT vlan_id FROM interface_vlan_list WHERE iface_id=? ORDER BY vlan_id");
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -376,7 +381,8 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          L"description", L"admin_state", L"oper_state", L"dot1x_pae_state", L"dot1x_backend_state",
          L"peer_proto", L"mtu", L"speed", L"parent_iface", L"iftable_suffix", L"last_known_oper_state",
          L"last_known_admin_state", L"if_alias", L"ospf_area", L"ospf_if_type", L"ospf_if_state",
-         L"stp_port_state", L"if_name", L"peer_last_updated", L"state_before_maintenance", nullptr
+         L"stp_port_state", L"if_name", L"peer_last_updated", L"max_speed", L"state_before_maintenance",
+         nullptr
       };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"interfaces", L"id", m_id, columns);
@@ -428,6 +434,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_stpPortState));
          DBBind(hStmt, 30, DB_SQLTYPE_VARCHAR, m_ifName, DB_BIND_STATIC, MAX_DB_STRING - 1);
          DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_peerLastUpdated));
+         DBBind(hStmt, 32, DB_SQLTYPE_BIGINT, m_maxSpeed);
 
          //Serialize data in format: nodeId:status:operState:adminState:dot1xPaeAuthState:dot1xBackendAuthState:stpPortState;...
          StringBuffer dataBeforeMaintenance;
@@ -437,9 +444,9 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
                state->dot1xPaeAuthState, state->dot1xBackendAuthState, state->stpPortState);
             return EnumerationCallbackResult::_CONTINUE;
          });
-         DBBind(hStmt, 32, DB_SQLTYPE_VARCHAR, dataBeforeMaintenance.cstr(), DB_BIND_STATIC, MAX_DB_STRING - 1);
+         DBBind(hStmt, 33, DB_SQLTYPE_VARCHAR, dataBeforeMaintenance.cstr(), DB_BIND_STATIC, MAX_DB_STRING - 1);
 
-         DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 34, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -546,11 +553,11 @@ bool Interface::deleteFromDatabase(DB_HANDLE hdb)
 {
    bool success = super::deleteFromDatabase(hdb);
    if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM interfaces WHERE id=?"));
+      success = executeQueryOnObject(hdb, L"DELETE FROM interfaces WHERE id=?");
    if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM interface_address_list WHERE iface_id=?"));
+      success = executeQueryOnObject(hdb, L"DELETE FROM interface_address_list WHERE iface_id=?");
    if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM interface_vlan_list WHERE iface_id=?"));
+      success = executeQueryOnObject(hdb, L"DELETE FROM interface_vlan_list WHERE iface_id=?");
    return success;
 }
 
@@ -688,8 +695,8 @@ void Interface::generateEventsAfterMaintenace(uint32_t parentId)
       if (m_dot1xPaeAuthState == PAE_STATE_FORCE_UNAUTH)
       {
          EventBuilder(EVENT_8021X_PAE_FORCE_UNAUTH, parentId)
-            .param(_T("interfaceIndex"), m_id)
-            .param(_T("interfaceName"), m_name)
+            .param(L"interfaceIndex", m_id)
+            .param(L"interfaceName", m_name)
             .post();
       }
    }
@@ -979,7 +986,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 	}
 	uint64_t oldSpeed = m_speed;
 	if (m_speed != speed)
-	{
+   {
 	   m_speed = speed;
       setModified(MODIFY_INTERFACE_PROPERTIES);
 	}
@@ -997,7 +1004,21 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
             .param(_T("oldSpeedText"), FormatNumber(static_cast<double>(oldSpeed), false, 0, -3, _T("bps")))
             .param(_T("newSpeed"), speed)
             .param(_T("newSpeedText"), FormatNumber(static_cast<double>(speed), false, 0, -3, _T("bps")))
+            .param(_T("maxSpeed"), m_maxSpeed)
+            .param(_T("maxSpeedText"), FormatNumber(static_cast<double>(m_maxSpeed), false, 0, -3, _T("bps")))
             .post();
+
+         if ((speed != 0) && (m_maxSpeed != 0) && (speed < m_maxSpeed))
+         {
+            EventBuilder(EVENT_IF_SPEED_BELOW_MAXIMUM, parent->getId())
+               .param(_T("ifIndex"), m_index)
+               .param(_T("ifName"), m_name)
+               .param(_T("speed"), speed)
+               .param(_T("speedText"), FormatNumber(static_cast<double>(speed), false, 0, -3, _T("bps")))
+               .param(_T("maxSpeed"), m_maxSpeed)
+               .param(_T("maxSpeedText"), FormatNumber(static_cast<double>(m_maxSpeed), false, 0, -3, _T("bps")))
+               .post();
+         }
       }
       unlockParentList();
    }
@@ -1267,6 +1288,7 @@ void Interface::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_IF_TYPE, m_type);
    msg->setField(VID_MTU, m_mtu);
    msg->setField(VID_SPEED, m_speed);
+   msg->setField(VID_MAX_SPEED, m_maxSpeed);
    msg->setField(VID_INBOUND_UTILIZATION, m_inboundUtilization);
    msg->setField(VID_OUTBOUND_UTILIZATION, m_outboundUtilization);
    msg->setField(VID_PHY_CHASSIS, m_physicalLocation.chassis);
@@ -1921,6 +1943,7 @@ json_t *Interface::toJson()
    json_object_set_new(root, "type", json_integer(m_type));
    json_object_set_new(root, "mtu", json_integer(m_mtu));
    json_object_set_new(root, "speed", json_integer(m_speed));
+   json_object_set_new(root, "maxSpeed", json_integer(m_maxSpeed));
    json_object_set_new(root, "inboundUtilization", json_integer(m_inboundUtilization));
    json_object_set_new(root, "outboundUtilization", json_integer(m_outboundUtilization));
    json_object_set_new(root, "bridgePortNumber", json_integer(m_bridgePortNumber));

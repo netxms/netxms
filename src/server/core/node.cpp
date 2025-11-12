@@ -4705,14 +4705,14 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
    }
 
    // Update system description
-   TCHAR buffer[MAX_RESULT_LENGTH] = { 0 };
+   wchar_t buffer[MAX_RESULT_LENGTH] = { 0 };
    if ((m_capabilities & NC_IS_NATIVE_AGENT) && !(m_flags & NF_DISABLE_NXCP))
    {
-      getMetricFromAgent(_T("System.Uname"), buffer, MAX_RESULT_LENGTH);
+      getMetricFromAgent(L"System.Uname", buffer, MAX_RESULT_LENGTH);
    }
    else if ((m_capabilities & NC_IS_SNMP) && !(m_flags & NF_DISABLE_SNMP))
    {
-      getMetricFromSNMP(m_snmpPort, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.1.0"), buffer, MAX_RESULT_LENGTH, SNMP_RAWTYPE_NONE);
+      getMetricFromSNMP(m_snmpPort, SNMP_VERSION_DEFAULT, L"1.3.6.1.2.1.1.1.0", buffer, MAX_RESULT_LENGTH, SNMP_RAWTYPE_NONE);
    }
 
    if (buffer[0] != _T('\0'))
@@ -6621,7 +6621,7 @@ bool Node::deleteDuplicateInterfaces(uint32_t requestId)
    for(int i = 0; i < deleteList.size(); i++)
    {
       Interface *iface = deleteList.get(i);
-      sendPollerMsg(POLLER_WARNING _T("   Duplicate interface \"%s\" deleted\r\n"), iface->getName());
+      sendPollerMsg(POLLER_WARNING L"   Duplicate interface \"%s\" deleted\r\n", iface->getName());
       deleteInterface(iface);
    }
 
@@ -6633,7 +6633,7 @@ bool Node::deleteDuplicateInterfaces(uint32_t requestId)
  */
 bool Node::updateInterfaceConfiguration(uint32_t requestId)
 {
-   sendPollerMsg(_T("Checking interface configuration...\r\n"));
+   sendPollerMsg(L"Checking interface configuration...\r\n");
 
    bool hasChanges = deleteDuplicateInterfaces(requestId);
 
@@ -6721,21 +6721,21 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                   if (memcmp(ifInfo->macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) &&
                       !pInterface->getMacAddress().equals(ifInfo->macAddr, MAC_ADDR_LENGTH))
                   {
-                     TCHAR szOldMac[64], szNewMac[64];
-                     pInterface->getMacAddress().toString(szOldMac);
-                     MACToStr(ifInfo->macAddr, szNewMac);
+                     wchar_t macAddrTextOld[64], macAddrTextNew[64];
+                     pInterface->getMacAddress().toString(macAddrTextOld);
+                     MACToStr(ifInfo->macAddr, macAddrTextNew);
                      EventBuilder(EVENT_MAC_ADDR_CHANGED, m_id)
-                        .param(_T("interfaceObjectId"), pInterface->getId(), EventBuilder::OBJECT_ID_FORMAT)
-                        .param(_T("interfaceIndex"), pInterface->getIfIndex())
-                        .param(_T("interfaceObjectId"), pInterface->getName())
-                        .param(_T("oldMacAddress"), szOldMac)
-                        .param(_T("newMacAddress"), szNewMac)
+                        .param(L"interfaceObjectId", pInterface->getId(), EventBuilder::OBJECT_ID_FORMAT)
+                        .param(L"interfaceIndex", pInterface->getIfIndex())
+                        .param(L"interfaceName", pInterface->getName())
+                        .param(L"oldMacAddress", macAddrTextOld)
+                        .param(L"newMacAddress", macAddrTextNew)
                         .post();
 
                      pInterface->setMacAddress(MacAddress(ifInfo->macAddr, MAC_ADDR_LENGTH), true);
                      interfaceUpdated = true;
                   }
-                  TCHAR expandedName[MAX_OBJECT_NAME];
+                  wchar_t expandedName[MAX_OBJECT_NAME];
                   pInterface->expandName(ifObjectName, expandedName);
                   if (_tcscmp(expandedName, pInterface->getName()))
                   {
@@ -6789,6 +6789,15 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                          std::min(ifInfo->ifTableSuffixLength, pInterface->getIfTableSuffixLen())))
                   {
                      pInterface->setIfTableSuffix(ifInfo->ifTableSuffixLength, ifInfo->ifTableSuffix);
+                     interfaceUpdated = true;
+                  }
+                  if (ifInfo->maxSpeed != pInterface->getMaxSpeed())
+                  {
+                     pInterface->setMaxSpeed(ifInfo->maxSpeed);
+                     if ((ifInfo->maxSpeed > 0) && (pInterface->getSpeed() < ifInfo->maxSpeed))
+                     {
+                        pInterface->setSpeed(0); // reset current speed to force check against max speed at next status poll
+                     }
                      interfaceUpdated = true;
                   }
 

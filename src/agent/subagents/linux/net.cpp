@@ -1,6 +1,6 @@
 /* 
  ** NetXMS subagent for GNU/Linux
- ** Copyright (C) 2004-2024 Raden Solutions
+ ** Copyright (C) 2004-2025 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -239,6 +239,145 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pVa
 }
 
 /**
+ * Get interface speed using ethtool
+ */
+static bool GetInterfaceSpeed(const char *ifName, uint64_t *speed, uint64_t *maxSpeed)
+{
+   struct ifreq ifr;
+   struct ethtool_cmd edata;
+   int sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
+   if (sock == -1)
+      return false;
+
+   strlcpy(ifr.ifr_name, ifName, sizeof(ifr.ifr_name));
+   ifr.ifr_data = reinterpret_cast<caddr_t>(&edata);
+   edata.cmd = ETHTOOL_GSET;
+   if (ioctl(sock, SIOCETHTOOL, &ifr) < 0)
+   {
+      close(sock);
+      return false;
+   }
+
+   // Calculate maximum speed from supported link modes
+   *maxSpeed = 0;
+   uint32_t supported = edata.supported;
+
+   // Check supported speeds (from highest to lowest)
+#ifdef SUPPORTED_40000baseCR4_Full
+   if (supported & SUPPORTED_40000baseCR4_Full)
+      *maxSpeed = _ULL(40000000000);
+   else
+#endif
+#ifdef SUPPORTED_40000baseSR4_Full
+   if (supported & SUPPORTED_40000baseSR4_Full)
+      *maxSpeed = _ULL(40000000000);
+   else
+#endif
+#ifdef SUPPORTED_40000baseLR4_Full
+   if (supported & SUPPORTED_40000baseLR4_Full)
+      *maxSpeed = _ULL(40000000000);
+   else
+#endif
+#ifdef SUPPORTED_20000baseMLD2_Full
+   if (supported & SUPPORTED_20000baseMLD2_Full)
+      *maxSpeed = _ULL(20000000000);
+   else
+#endif
+#ifdef SUPPORTED_20000baseKR2_Full
+   if (supported & SUPPORTED_20000baseKR2_Full)
+      *maxSpeed = _ULL(20000000000);
+   else
+#endif
+#ifdef SUPPORTED_10000baseT_Full
+   if (supported & SUPPORTED_10000baseT_Full)
+      *maxSpeed = _ULL(10000000000);
+   else
+#endif
+#ifdef SUPPORTED_10000baseKX4_Full
+   if (supported & SUPPORTED_10000baseKX4_Full)
+      *maxSpeed = _ULL(10000000000);
+   else
+#endif
+#ifdef SUPPORTED_10000baseKR_Full
+   if (supported & SUPPORTED_10000baseKR_Full)
+      *maxSpeed = _ULL(10000000000);
+   else
+#endif
+#ifdef SUPPORTED_10000baseCR_Full
+   if (supported & SUPPORTED_10000baseCR_Full)
+      *maxSpeed = _ULL(10000000000);
+   else
+#endif
+#ifdef SUPPORTED_10000baseSR_Full
+   if (supported & SUPPORTED_10000baseSR_Full)
+      *maxSpeed = _ULL(10000000000);
+   else
+#endif
+#ifdef SUPPORTED_10000baseLR_Full
+   if (supported & SUPPORTED_10000baseLR_Full)
+      *maxSpeed = _ULL(10000000000);
+   else
+#endif
+#ifdef SUPPORTED_2500baseX_Full
+   if (supported & SUPPORTED_2500baseX_Full)
+      *maxSpeed = _ULL(2500000000);
+   else
+#endif
+   if (supported & SUPPORTED_1000baseT_Full)
+      *maxSpeed = _ULL(1000000000);
+   else if (supported & SUPPORTED_1000baseKX_Full)
+      *maxSpeed = _ULL(1000000000);
+   else if (supported & SUPPORTED_1000baseT_Half)
+      *maxSpeed = _ULL(1000000000);
+   else if (supported & SUPPORTED_100baseT_Full)
+      *maxSpeed = _ULL(100000000);
+   else if (supported & SUPPORTED_100baseT_Half)
+      *maxSpeed = _ULL(100000000);
+   else if (supported & SUPPORTED_10baseT_Full)
+      *maxSpeed = _ULL(10000000);
+   else if (supported & SUPPORTED_10baseT_Half)
+      *maxSpeed = _ULL(10000000);
+
+   uint32_t speedMbps = ethtool_cmd_speed(&edata);
+   *speed = (speedMbps != 0xFFFFFFFF) ? speedMbps * _ULL(1000000) : 0;
+
+   close(sock);
+   return true;
+}
+
+/**
+ * Handler for Net.Interface.Speed(*) and Net.Interface.MaxSpeed(*)parameters
+ */
+LONG H_NetIfInfoSpeed(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   char buffer[256];
+   if (!AgentGetParameterArgA(param, 1, buffer, 256))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   // Check if we have interface name or index
+   char *eptr, name[IFNAMSIZ];
+   uint32_t index = strtol(buffer, &eptr, 10);
+   if (*eptr == 0)
+   {
+      // Index passed as argument, convert to name
+      if (if_indextoname(index, name) == nullptr)
+         return SYSINFO_RC_ERROR;
+   }
+   else
+   {
+      // Name passed as argument
+      strlcpy(name, buffer, IFNAMSIZ);
+   }
+
+   uint64_t speed, maxSpeed;
+   if (!GetInterfaceSpeed(name, &speed, &maxSpeed))
+      return SYSINFO_RC_ERROR;
+
+   ret_uint64(value, (*arg == 'M') ? maxSpeed : speed);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Netlink request
  */
 typedef struct
@@ -270,13 +409,12 @@ static int SendMessage(int socket, unsigned short type)
       .iov_len = request.header.nlmsg_len
    };
 
-   msghdr message = {
-      .msg_name = &kernel,
-      .msg_namelen = sizeof(kernel),
-      .msg_iov = &io,
-      .msg_iovlen = 1
-   };
-
+   msghdr message;
+   memset(&message, 0, sizeof(msghdr));
+   message.msg_name = &kernel;
+   message.msg_namelen = sizeof(kernel);
+   message.msg_iov = &io;
+   message.msg_iovlen = 1;
    return sendmsg(socket, &message, 0);
 }
 
@@ -294,13 +432,12 @@ static int ReceiveMessage(int socket, char *replyBuffer, size_t replyBufferSize)
       .iov_len = replyBufferSize
    };
 
-   msghdr reply = {
-      .msg_name = &kernel,
-      .msg_namelen = sizeof(kernel),
-      .msg_iov = &io,
-      .msg_iovlen = 1
-   };
-
+   msghdr reply;
+   memset(&reply, 0, sizeof(msghdr));
+   reply.msg_name = &kernel;
+   reply.msg_namelen = sizeof(kernel);
+   reply.msg_iov = &io;
+   reply.msg_iovlen = 1;
    return recvmsg(socket, &reply, 0);
 }
 
@@ -653,6 +790,8 @@ LONG H_NetIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCo
    value->addColumn(_T("MTU"), DCI_DT_UINT, _T("MTU"));
    value->addColumn(_T("MAC_ADDRESS"), DCI_DT_STRING, _T("MAC address"));
    value->addColumn(_T("IP_ADDRESSES"), DCI_DT_STRING, _T("IP addresses"));
+   value->addColumn(_T("SPEED"), DCI_DT_UINT64, _T("Speed"));
+   value->addColumn(_T("MAX_SPEED"), DCI_DT_UINT64, _T("Max speed"));
 
    TCHAR macAddr[32];
    for(int i = 0; i < ifList->size(); i++)
@@ -678,6 +817,13 @@ LONG H_NetIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCo
          sb.append(addr->getMaskBits());
       }
       value->set(6, sb);
+
+      uint64_t speed, maxSpeed;
+      if (GetInterfaceSpeed(iface->name, &speed, &maxSpeed))
+      {
+         value->set(7, speed);
+         value->set(8, maxSpeed);
+      }
    }
 
    delete ifList;
@@ -1064,53 +1210,6 @@ LONG H_NetIfInfoFromProc(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
    }
 
    return nRet;
-}
-
-/**
- * Handler for Net.Interface.Speed(*) parameter
- */
-LONG H_NetIfInfoSpeed(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session)
-{
-   char buffer[256];
-   if (!AgentGetParameterArgA(param, 1, buffer, 256))
-      return SYSINFO_RC_UNSUPPORTED;
-
-   // Check if we have interface name or index
-   char *eptr, name[IFNAMSIZ];
-   uint32_t index = strtol(buffer, &eptr, 10);
-   if (*eptr == 0)
-   {
-      // Index passed as argument, convert to name
-      if (if_indextoname(index, name) == nullptr)
-         return SYSINFO_RC_ERROR;
-   }
-   else
-   {
-      // Name passed as argument
-      strlcpy(name, buffer, IFNAMSIZ);
-   }
-
-   struct ifreq ifr;
-   struct ethtool_cmd edata;
-   int sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
-   if (sock == -1)
-      return SYSINFO_RC_ERROR;
-
-   strlcpy(ifr.ifr_name, name, sizeof(ifr.ifr_name));
-   ifr.ifr_data = reinterpret_cast<caddr_t>(&edata);
-   edata.cmd = ETHTOOL_GSET;
-   LONG rc;
-   if (ioctl(sock, SIOCETHTOOL, &ifr) >= 0)
-   {
-      ret_uint64(value, edata.speed * _ULL(1000000));
-      rc = SYSINFO_RC_SUCCESS;
-   }
-   else
-   {
-      rc = SYSINFO_RC_ERROR;
-   }
-   close(sock);
-   return rc;
 }
 
 #define ND_RTA(r)  ((struct rtattr*)(((char*)(r)) + NLMSG_ALIGN(sizeof(struct ndmsg))))

@@ -446,6 +446,7 @@ static inline bool ValidateComponentToken(const AgentComponentToken *token, cons
 #define DCIDESC_NET_INTERFACE_DESCRIPTION            _T("Description of interface {instance}")
 #define DCIDESC_NET_INTERFACE_INERRORS               _T("Number of input errors on interface {instance}")
 #define DCIDESC_NET_INTERFACE_LINK                   _T("Link status for interface {instance}")
+#define DCIDESC_NET_INTERFACE_MAXSPEED               _T("Maximum speed of interface {instance}")
 #define DCIDESC_NET_INTERFACE_MTU                    _T("MTU for interface {instance}")
 #define DCIDESC_NET_INTERFACE_OPERSTATUS             _T("Operational status of interface {instance}")
 #define DCIDESC_NET_INTERFACE_OUTERRORS              _T("Number of output errors on interface {instance}")

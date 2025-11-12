@@ -649,6 +649,7 @@ CREATE TABLE interfaces
   if_index integer not null,
   mtu integer not null,
   speed SQL_INT64 not null,
+  max_speed SQL_INT64 not null,
   bridge_port integer not null,
   phy_chassis integer not null,
   phy_module integer not null,

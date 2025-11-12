@@ -86,6 +86,9 @@ public class InterfaceListComparator extends ViewerComparator
          case InterfacesView.COLUMN_MAC_ADDRESS:
             result = iface1.getMacAddress().compareTo(iface2.getMacAddress());
             break;
+         case InterfacesView.COLUMN_MAX_SPEED:
+            result = Long.signum(iface1.getMaxSpeed() - iface2.getMaxSpeed());
+            break;
          case InterfacesView.COLUMN_MTU:
             result = iface1.getMtu() - iface2.getMtu();
             break;

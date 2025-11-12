@@ -331,6 +331,7 @@ private:
       type = IFTYPE_OTHER;
       mtu = 0;
       speed = 0;
+      maxSpeed = 0;
       bridgePort = 0;
       memset(macAddr, 0, sizeof(macAddr));
       isPhysicalPort = false;
@@ -345,6 +346,7 @@ public:
 	uint32_t type;
 	uint32_t mtu;
    uint64_t speed;  // interface speed in bits/sec
+   uint64_t maxSpeed;
    uint32_t bridgePort;
 	InterfacePhysicalLocation location;
    InetAddressList ipAddrList;
