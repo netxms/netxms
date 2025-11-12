@@ -306,4 +306,15 @@ public class TableValueViewer extends BaseTableValueViewer
    {
       return String.format(i18n.tr("Cannot get data for table DCI %d"), dciId);
    }
+
+   /**
+    * Reset columns to default state
+    */
+   public void resetColumns()
+   {
+      if (currentData == null)
+         return;
+      currentData.deleteAllRows();
+      viewer.reset();
+   }
 }

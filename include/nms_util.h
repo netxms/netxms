@@ -1991,6 +1991,7 @@ public:
 	void shrinkBy(int count) { if (count >= m_size) clear(); else shrinkTo(m_size - count); }
    void sort(int (*cb)(const void *, const void *));
    void sort(int (*cb)(void *, const void *, const void *), void *context);
+   void swap(int index1, int index2);
 
    void swap(Array& other);
 
@@ -4121,7 +4122,9 @@ public:
    ~TableRow() = default;
 
    void addColumn() { m_cells.add(new TableCell); }
+   void insertColumn(int index) { m_cells.insert(index, new TableCell); }
    void deleteColumn(int index) { m_cells.remove(index); }
+   void swapColumns(int column1, int column2) { m_cells.swap(column1, column2); }
 
    void set(int index, const TCHAR *value, int status, uint32_t objectId)
    {
@@ -4240,6 +4243,8 @@ public:
    void setSource(int source) { m_source = source; }
    int addColumn(const TCHAR *name, int32_t dataType = 0, const TCHAR *displayName = nullptr, bool isInstance = false);
    int addColumn(const TableColumnDefinition& d);
+   void insertColumn(int index, const TCHAR *name, int32_t dataType, const TCHAR *displayName, bool isInstance);
+   void swapColumns(int column1, int column2);
    void setColumnDataType(int col, int32_t dataType)
    {
       if ((col >= 0) && (col < m_columns.size()))

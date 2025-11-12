@@ -1050,20 +1050,32 @@ void DCTable::updateResultColumns(const shared_ptr<Table>& t) const
    for(int i = 0; i < m_columns->size(); i++)
    {
       DCTableColumn *col = m_columns->get(i);
-      int index = t->getColumnIndex(col->getName());
-      if (index != -1)
+      if(_tcscmp(t->getColumnName(i), col->getName()) != 0)
       {
-         TableColumnDefinition *cd = t->getColumnDefinitions().get(index);
+         int index = t->getColumnIndex(col->getName());
+         if (index == -1)
+            t->insertColumn(i, col->getName(), col->getDataType(), col->getDisplayName(), col->isInstanceColumn());
+         else
+         {
+            t->swapColumns(i, index);
+            TableColumnDefinition *cd = t->getColumnDefinitions().get(i);
+            if (cd != nullptr)
+            {
+               cd->setDataType(col->getDataType());
+               cd->setInstanceColumn(col->isInstanceColumn());
+               cd->setDisplayName(col->getDisplayName());
+            }
+         }
+      }
+      else
+      {
+         TableColumnDefinition *cd = t->getColumnDefinitions().get(i);
          if (cd != nullptr)
          {
             cd->setDataType(col->getDataType());
             cd->setInstanceColumn(col->isInstanceColumn());
             cd->setDisplayName(col->getDisplayName());
          }
-      }
-      else
-      {
-         t->addColumn(col->getName(), col->getDataType(), col->getDisplayName(), col->isInstanceColumn());
       }
    }
    unlock();

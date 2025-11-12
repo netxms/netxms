@@ -786,6 +786,28 @@ int Table::addColumn(const TableColumnDefinition& d)
 }
 
 /**
+ * Add new column
+ */
+void Table::insertColumn(int index, const TCHAR *name, int32_t dataType, const TCHAR *displayName, bool isInstance)
+{
+   m_columns.insert(index, new TableColumnDefinition(name, displayName, dataType, isInstance));
+   for(int i = 0; i < m_data.size(); i++)
+      m_data.get(i)->insertColumn(index);
+}
+
+/**
+ * Swap two columns
+ */
+void Table::swapColumns(int column1, int column2)
+{
+   m_columns.swap(column1, column2);
+   for(int i = 0; i < m_data.size(); i++)
+   {
+      m_data.get(i)->swapColumns(column1, column2);
+   }
+}
+
+/**
  * Get column index by name
  *
  * @param name column name

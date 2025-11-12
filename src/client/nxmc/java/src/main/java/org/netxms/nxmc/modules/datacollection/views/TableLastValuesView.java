@@ -132,7 +132,6 @@ public class TableLastValuesView extends ObjectView
 		createActions();
 
 		viewer.setObject(ownerId, dciId);
-		refresh();
 	}
 
 	/**
@@ -169,6 +168,7 @@ public class TableLastValuesView extends ObjectView
 	@Override
 	public void refresh()
 	{
+	   viewer.resetColumns();
       viewer.refresh(() -> {
          setName(viewer.getTitle());
          fullName = viewer.getObjectName() + ": " + viewer.getTitle();
