@@ -64,7 +64,7 @@ bool GenericCiscoDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_Obje
 InterfaceList *GenericCiscoDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
 {
    // Get interface list from standard MIB
-   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+   InterfaceList *ifList = CiscoDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
    if (ifList == nullptr)
       return nullptr;
 
@@ -110,5 +110,6 @@ InterfaceList *GenericCiscoDriver::getInterfaces(SNMP_Transport *snmp, NObject *
 
    _pcre_free_t(reBase);
    _pcre_free_t(reFex);
+
    return ifList;
 }

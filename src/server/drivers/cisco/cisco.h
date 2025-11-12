@@ -35,6 +35,7 @@ class CiscoDeviceDriver : public NetworkDeviceDriver
 {
 public:
    virtual const TCHAR *getVersion() override;
+   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
 	virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual StructArray<ForwardingDatabaseEntry> *getForwardingDatabase(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
 };

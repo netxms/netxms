@@ -112,7 +112,7 @@ InterfaceList *CatalystDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
    InterfaceList *ifList = CiscoDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
    if (ifList == nullptr)
       return nullptr;
-	
+
    // Set slot and port number for physical interfaces
    SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.5.1.4.1.1.11"), HandlerPortList, ifList);
 
