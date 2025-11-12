@@ -441,6 +441,9 @@ public class DataCollectionConfiguration
     */
    public void setObjectStatus(long[] items, DataCollectionObjectStatus status) throws IOException, NXCException
    {
+      if (localChangeListener != null)
+         localChangeListener.onObjectChange();
+      
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_SET_DCI_STATUS);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)ownerId);
       msg.setFieldInt16(NXCPCodes.VID_DCI_STATUS, status.getValue());
