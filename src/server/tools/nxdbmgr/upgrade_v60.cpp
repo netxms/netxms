@@ -24,6 +24,20 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 60.5 to 60.6
+ */
+static bool H_UpgradeFromV5()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE nodes ADD last_events varchar(255)\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
+
+/**
  * Upgrade from 60.4 to 60.5
  */
 static bool H_UpgradeFromV4()
@@ -213,6 +227,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 5,  60, 6,  H_UpgradeFromV5  },
    { 4,  60, 5,  H_UpgradeFromV4  },
    { 3,  60, 4,  H_UpgradeFromV3  },
    { 2,  60, 3,  H_UpgradeFromV2  },

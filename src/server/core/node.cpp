@@ -446,7 +446,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
       _T("cip_status,cip_state,eip_proxy,eip_port,hardware_id,cip_vendor_code,agent_cert_mapping_method,")
       _T("agent_cert_mapping_data,snmp_engine_id,ssh_port,ssh_key_id,syslog_codepage,snmp_codepage,ospf_router_id,")
       _T("mqtt_proxy,modbus_proxy,modbus_tcp_port,modbus_unit_id,snmp_context_engine_id,vnc_password,vnc_port,")
-      _T("vnc_proxy,path_check_reason,path_check_node_id,path_check_iface_id,expected_capabilities FROM nodes WHERE id=?"));
+      _T("vnc_proxy,path_check_reason,path_check_node_id,path_check_iface_id,expected_capabilities,last_events FROM nodes WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -634,6 +634,9 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
       m_pathCheckResult.rootCauseInterfaceId = DBGetFieldUInt32(hResult, 0, 88);
    }
    m_expectedCapabilities = DBGetFieldUInt64(hResult, 0, 89);
+   StringList elements = DBGetFieldAsString(hResult, 0, 90).split(L";");
+   for (i = 0; i < MIN(elements.size(), MAX_LAST_EVENTS); i++)
+      m_lastEvents[i] = _tcstoul(elements.get(i), nullptr, 10);
 
    DBFreeResult(hResult);
 
@@ -1085,7 +1088,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          _T("agent_cert_mapping_method"), _T("agent_cert_mapping_data"), _T("snmp_engine_id"), _T("snmp_context_engine_id"),
          _T("syslog_codepage"), _T("snmp_codepage"), _T("ospf_router_id"), _T("mqtt_proxy"), _T("modbus_proxy"), _T("modbus_tcp_port"),
          _T("modbus_unit_id"), _T("vnc_password"), _T("vnc_port"), _T("vnc_proxy"), _T("path_check_reason"), _T("path_check_node_id"),
-         _T("path_check_iface_id"), L"expected_capabilities", nullptr
+         _T("path_check_iface_id"), L"expected_capabilities", L"last_events", nullptr
       };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"nodes", L"id", m_id, columns);
@@ -1227,7 +1230,13 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 88, DB_SQLTYPE_INTEGER, m_pathCheckResult.rootCauseNodeId);
          DBBind(hStmt, 89, DB_SQLTYPE_INTEGER, m_pathCheckResult.rootCauseInterfaceId);
          DBBind(hStmt, 90, DB_SQLTYPE_BIGINT, m_expectedCapabilities);
-         DBBind(hStmt, 91, DB_SQLTYPE_INTEGER, m_id);
+         StringList lastEvents;
+         for (int i = 0; i < MAX_LAST_EVENTS; i++)
+         {
+            lastEvents.add(m_lastEvents[i]);
+         }
+         DBBind(hStmt, 91, DB_SQLTYPE_VARCHAR, lastEvents.join(L";"), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 92, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
