@@ -1,165 +1,222 @@
 
-# NetXMS — enterprise-grade monitoring
+# NetXMS — Enterprise-Grade Monitoring
 
-NetXMS is an open-source network and infrastructure monitoring and management solution, providing performance and availability monitoring with flexible event processing, alerting, reporting and graphing for all layers of IT infrastructure. It’s a solution for every type of device — it can monitor and manage your entire IT infrastructure — from network switches to apps — all in one place.
+[![Build Status](https://github.com/netxms/netxms/actions/workflows/build_and_test.yaml/badge.svg)](https://github.com/netxms/netxms/actions)
+[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
+[![Design Contributions Welcome](https://contribute.design/api/shield/netxms/netxms)](https://contribute.design/)
 
-## Architecture
+NetXMS is an open-source network and infrastructure monitoring and management solution that provides comprehensive performance and availability monitoring with flexible event processing, alerting, reporting, and graphing for all layers of IT infrastructure. It's a unified solution that can monitor and manage your entire IT infrastructure — from network switches to applications — all in one place.
+
+## 🚀 Quick Start
+
+- **[Docker Setup](https://github.com/netxms/docker)** - Fastest way to get started 
+- **[Download](https://www.netxms.org/download/)** - Get the latest release
+- **[Documentation](https://www.netxms.org/documentation/adminguide/)** - Complete administration guide
+- **[Ubuntu installation video](https://www.youtube.com/watch?v=jOVKc6y1dpE)** - Video tutorials and webinars
+- **[Demo](https://www.youtube.com/watch?v=QhHznyOXEFk)** - NetXMS demo
+
+## 🏗️ Architecture
 
 ![Architecture](doc/Architecture.png)
 
-## Features
+NetXMS follows a distributed architecture with a central management server, monitoring agents, and web/desktop clients. The system supports multiple deployment scenarios from single-server setups to large distributed environments.
 
-### Network monitoring
+## ✨ Key Features
 
-* Builds network topology and maps automatically
-* Collects information via ARP caches, routing tables, LLDP, CDP, STP, switch forwarding databases
-* Automatically updates peer information for all registered hosts and devices
-* Provides searches for specific MAC or IP address and information about wireless access points and wireless clients
-* Offers easy access to routing tables, MAC tables, and VLAN information
-* Visualises IP routes
-* Enables topology-based event correlations
-* Supports all SNMP versions
-* Has configurable routing change detection
-* Provides a mechanism for handling vendor- or device-specific information and presenting it in a unified way
-* Collects data via SSH
-* Collects data via web services in XML, JSON and plain text format.
+### 🌐 Network Monitoring
 
-### User interface
+* **Auto-discovery**: Automatically discovers and adds network devices to NetXMS 
+* **Protocol support**: SNMP (all versions), SSH, web services (XML, JSON, plain text)
+* **Data collection**: Collects information via ARP caches, routing tables, switch forwarding databases, LLDP, CDP, STP
+* **Real-time updates**: Automatically updates peer information for all registered hosts and devices
+* **Advanced search**: Provides searches for specific MAC or IP addresses, wireless access points, and wireless clients
+* **Network visualization**: Easy access to routing tables, MAC tables, VLAN information, IP route visualization, and network maps based on discovered data
+* **Event correlation**: Topology-based event correlations for intelligent alerting
+* **Change detection**: Configurable routing change detection
+* **Device drivers**: Vendor-specific information handling and unified presentation
 
-* Choose between the desktop or web-based version, or use both simultaneously
-* Desktop version available for Windows, Max OS X, and Linux
-* Offers graphical network maps and user-configurable dashboards
-* Can be integrated with [Grafana](https://grafana.com/)
+### 🖥️ User Interface
 
-### Server and workstation monitoring
+* **Multi-platform clients**: Desktop version available for Windows, macOS, and Linux
+* **Web interface**: Full-featured web-based console
+* **Flexible visualization**: Graphical network maps and user-configurable dashboards
+* **Third-party integration**: REST API and Java library enable integration with external tools like [Grafana](https://grafana.com/), plus built-in fanout drivers for InfluxDB, ClickHouse
 
-* Provides agents for all popular platforms and operating systems — centralises configuration and upgrades, uses the minimum system resources, acts as proxy for other agents and SNMP devices if necessary, communicates in a firewall-friendly way, offers local cache for unstable connections
-* Monitors log file contents
-* Wide range of metrics out of the box: 
-   * network and I/O performance; 
-   * process, CPU, and memory consumption; 
-   * network services; 
-   * hardware sensors; 
-   * application-level metrics for various applications; 
-   * and many others
-* File transfer capabilities built into the NetXMS agent
-* Can be utilised for user support — a low-footprint application that presents users with preconfigured actions and basic information for helpdesk, configurable actions via NetXMS policies, screenshots and screencast
+### 🖥️ Server and Workstation Monitoring
 
-### Distributed monitoring
+* **Universal agents**: Available for all popular platforms and operating systems
+* **Centralized management**: Configuration and upgrades, minimal system resources usage
+* **Proxy capabilities**: Acts as proxy for other agents and SNMP devices
+* **Network-friendly**: Two connection options with agents outbound or inbound, single TCP port, encrypted communication with local cache for unstable connections
+* **Log monitoring**: Real-time log file content analysis
+* **Comprehensive metrics**: 
+   * Network and I/O performance
+   * Process, CPU, and memory consumption
+   * Network services monitoring
+   * Hardware sensors
+   * Application-level metrics
+   * Custom metrics support
+   * And more...
+* **Remote control**: Integrated remote desktop, file transfer, and command execution
+* **User support tools**: Low-footprint helpdesk application with configurable actions, screenshots, and screencasts
 
-* Divides networks into zones with overlapping subnets and proxy agents for logical grouping or distributing data collection load
-* Ensures automatic load balancing and failover with multiple proxy agents for each zone
-* Continues to collect data in autonomous mode when the central management server is not available
-* Receives syslog messages and SNMP traps from monitored devices to forward them to the central management server or local storage if the connection is down
-* Eliminates the need to connect directly to each device in remote locations — a single TCP port open in either direction is enough for server-to-proxy-agent communication
+### 🌍 Distributed Monitoring
 
-### Built-in scripting engine 
+* **Zone-based architecture**: Divides networks into zones with overlapping subnets and proxy agents
+* **High availability**: Automatic load balancing and failover with multiple proxy agents per zone
+* **Autonomous operation**: Continues data collection when central management server is unavailable
+* **Event forwarding**: Receives syslog messages and SNMP traps for forwarding or local storage
+* **Remote monitoring**: Single TCP port connectivity for server-to-proxy-agent communication
 
-* Allows for advanced automation and management
-* “Hook” scripts can be called from many places within the system for custom processing
-* Can be used for data transformation, complex thresholds, complex event processing rules, SNMP trap transformation, and many other purposes
-* Uses easy-to-earn non-strict typed interpreted language
-* Optimised for speed and low memory footprint so that a server can run hundreds of scripts simultaneously
-* Each script runs inside its own VM with no access to anything outside the server process other than through well-defined APIs
-* Additional security mechanisms are available to prevent unauthorised data access via scripts
+### 🔧 Built-in Scripting Engine (NXSL)
 
-### Integration
+* **Advanced automation**: Enables sophisticated automation and management capabilities
+* **Hook scripts**: Callable from multiple system locations for custom processing
+* **Versatile applications**: Data transformation, complex thresholds, event processing, SNMP trap transformation
+* **Easy-to-learn**: Non-strict typed interpreted language optimized for speed and low memory footprint
+* **Secure execution**: Each script runs in isolated VM with controlled access
+* **High performance**: Supports hundreds of simultaneous script executions
 
-* Full Java API allows users to do everything that can be done from UI
-* Permits partial or complete replacement of UI
-* Rest API provides access to collected data and NetXMS configuration
-* Has modular agents and servers so that their functionality can be extended by writing additional modules (plugins)
-* Python-based scripting language provides access to full Java API
-* Built-in integration with helpdesk systems
+### 🔗 Integration Capabilities
 
-### Security
+* **Java API**: Complete Java API for full system control and UI replacement
+* **REST API**: Access to collected data and NetXMS configuration
+* **Modular architecture**: Extensible agents and servers via plugins
+* **Python scripting**: Access to full Java API through Python
+* **Helpdesk integration**: Built-in integration with helpdesk systems
 
-* Offers an internal user database or integration with an external directory using LDAP (both can be used simultaneously)
-* Supports authentication with passwords, X.509 certificates, smart cards, RADIUS or LDAP server
-* Uses two-factor authentication with TOTP or one-time codes sent via SMS or instant message
-* Encrypts all communications
-* Enables fine-grained access control configuration
-* Offers an extensive audit log with optional sending to an external system
+### 🔐 Security Features
 
-### Data and event processing
+* **Flexible authentication**: Internal database or external LDAP directory integration
+* **Multiple auth methods**: Passwords, X.509 certificates, smart cards, RADIUS, or LDAP
+* **Two-factor authentication**: TOTP or one-time codes via SMS/instant messaging
+* **Encrypted communications**: All network communications are encrypted
+* **Access control**: Fine-grained access control configuration
+* **Audit logging**: Extensive audit logs with optional external system integration
 
-* Offers flexible policy-based event processing
-* Enables alarm creation and termination, internal script execution, command execution on a management server or on a remote host via a NetXMS agent and other configurable commands
-* Supports notifications via email, MS Teams, Telegram, Slack, SMS via GSM modem or SMS gateway
-* Offers support for problem escalation
-* Has a flexible threshold system for data collection
-* Configurable with templates for simplified management of large networks
+### 📊 Data and Event Processing
 
-### Business services
+* **Policy-based processing**: Flexible event processing with customizable policies
+* **Automated responses**: Alarm creation/termination, script execution, command execution
+* **Multi-channel notifications**: Email, MS Teams, Telegram, Slack, SMS via GSM modem or gateway
+* **Escalation support**: Configurable problem escalation workflows
+* **Threshold management**: Flexible threshold system for data collection
+* **Template-based configuration**: Simplified management of large networks
 
-* Translates metrics collected by NetXMS to business language.
-* View vital SLA information at a glance.
-* The status of the service is determined based on the status of monitored objects (servers, network devices, etc.) or metric thresholds.
-* Calculate business service availability for the arbitrary time range.
-* View detailed information about business service downtime, including start time, end time and cause.
+### 💼 Business Services
 
-## Installation
+* **Business metrics translation**: Converts technical metrics to business language
+* **SLA monitoring**: View vital SLA information at a glance
+* **Service status calculation**: Based on monitored objects status or metric thresholds
+* **Availability reporting**: Calculate business service availability for arbitrary time ranges
+* **Downtime analysis**: Detailed downtime information including start/end times and causes
 
-Full installation information is available [there](https://www.netxms.org/documentation/adminguide/installation.html#).
+## 📦 Installation
 
-### Installing from deb repository
+> **Note**: Full installation documentation is available in our [Administration Guide](https://www.netxms.org/documentation/adminguide/installation.html).
 
-We host public APT repository http://packages.netxms.org/ for all deb-based distributions (Debian, Ubuntu, Mint, Raspbian, etc.). Packages are signed, and you’ll need to install additional encryption key for signature verification.
+### Quick Installation (Debian/Ubuntu)
 
-1. Download and install netxms-release-latest.deb package, which contain source list file of the repository as well as signing key:
+We provide a public APT repository at http://packages.netxms.org/ for all Debian-based distributions. All packages are signed for security.
 
+1. **Add NetXMS repository**:
+   ```bash
+   wget http://packages.netxms.org/netxms-release-latest.deb
+   sudo dpkg -i netxms-release-latest.deb
+   sudo apt-get update
+   ```
+
+2. **Install NetXMS components** (example for PostgreSQL):
+   ```bash
+   sudo apt-get install netxms-server netxms-dbdrv-pgsql
+   ```
+
+3. **Configure database connection** in `/etc/netxmsd.conf`
+
+4. **Initialize database schema**:
+   ```bash
+   nxdbmgr init
+   ```
+
+5. **Start NetXMS server**:
+   ```bash
+   sudo systemctl start netxmsd
+   sudo systemctl enable netxmsd
+   ```
+
+### Other Platforms
+
+Installers for Windows, AIX, Solaris, and other platforms are available on [netxms.org](https://www.netxms.org/download/).
+
+### Docker
+
+```bash
+# Quick start with Docker Compose
+git clone https://github.com/netxms/netxms.git
+cd netxms/contrib/docker
+docker-compose up -d
 ```
-wget http://packages.netxms.org/netxms-release-latest.deb
-sudo dpkg -i netxms-release-latest.deb
-sudo apt-get update
-```
-
-2. Then you can install the required components, e.g. to install NetXMS server for use with PostgreSQL:
-
-```
-sudo apt-get install netxms-server netxms-dbdrv-pgsql
-```
-
-3. Amend database connection details in server configuration file (/etc/netxmsd.conf).
-
-4. Initialize database schema. 
-
-```
-nxdbmgr init
-```
-
-5. Start the NetXMS server
-
-```
-sudo systemctl start netxmsd
-```
-
-### Other options
-
-Installers for other platforms (Windows, Aix, Solaris...) are available on [netxms.org](https://www.netxms.org/download/).
 
 
-## Documentaion 
+## 📚 Documentation 
 
-* [Administration Guide](https://www.netxms.org/documentation/adminguide/)
-* [Change log](https://github.com/netxms/changelog/blob/master/ChangeLog)
-* [NetXMS Scripting Language](https://www.netxms.org/documentation/nxsl-latest/)
-* [Data dictionary](https://www.netxms.org/documentation/datadictionary-latest/)
-* [Javadoc (NxShell and Java API)](https://www.netxms.org/documentation/javadoc/latest/)
+* **[Administration Guide](https://www.netxms.org/documentation/adminguide/)** - Complete setup and configuration guide
+* **[Change Log](https://github.com/netxms/changelog/blob/master/ChangeLog.md)** - Latest changes and updates
+* **[NetXMS Scripting Language (NXSL)](https://www.netxms.org/documentation/nxsl-latest/)** - Scripting reference
+* **[Data Dictionary](https://www.netxms.org/documentation/datadictionary-latest/)** - Complete data reference
+* **[Java API Documentation](https://www.netxms.org/documentation/javadoc/latest/)** - NxShell and Java API reference
+* **[YouTube Channel](https://www.youtube.com/@netxms)** - Video tutorials and webinars
 
 
-## Support
+## 🆘 Support
 
-Community support: 
+### Community Support
 
-* [Forum](https://www.netxms.org/forum)
-* [Telegram](https://telegram.me/netxms)
-* [Issue tracker](https://dev.raden.solutions/projects/netxms/)
-    
-Commercial support: [Raden Solutions](https://www.radensolutions.com/)
-Additional professional services: [Raden Solutions](https://www.radensolutions.com/)
+* **[Forum](https://www.netxms.org/forum/index.php)** - Community discussions and help
+* **[Telegram](https://telegram.me/netxms)** - Real-time chat support
+* **[Issue Tracker](https://github.com/netxms/netxms/issues)** - Bug reports and feature requests
 
-## License 
+### Commercial Support
 
-Most parts of NetXMS are licensed under the GNU General Public License version 2, but there are some exclusions. See [COPYING](COPYING) for more information.
+* **[Raden Solutions](https://netxms.com/commercial-support)** - Professional support and services
+
+## 🤝 Contributing
+
+We welcome contributions from the community! NetXMS follows an **issue-first** approach and values privacy, performance, and modular architecture.
+
+**Before contributing, please read our guides:**
+
+* **[CONTRIBUTING.md](CONTRIBUTING.md)** - Complete developer contribution guide
+* **[DESIGN.md](DESIGN.md)** - Design contribution guidelines and resources
+
+**CONTRIBUTING.md includes:**
+* Project vision and core values
+* Development priorities and guidelines
+* Required issue-first workflow
+* Code standards and testing requirements
+* Development setup instructions
+
+**DESIGN.md includes:**
+* UI/UX design guidelines and resources
+* Core UX Issues Needing Attention
+* Target Audience 
+
+Quick links for contributors:
+* **[Report bugs](https://github.com/netxms/netxms/issues)** - Use our issue tracker
+* **[Join discussions](https://www.netxms.org/forum/index.php)** - Community forum
+* **[Get help](https://telegram.me/netxms)** - Real-time chat support
+
+## 📄 License 
+
+Most parts of NetXMS are licensed under the GNU General Public License, with some exclusions. See [COPYING](COPYING) for detailed information.
+
+---
+
+<div align="center">
+
+**[Website](https://www.netxms.org) • [Download](https://www.netxms.org/download/) • [Documentation](https://www.netxms.org/documentation/) • [Demo](https://www.youtube.com/watch?v=QhHznyOXEFk)**
+
+Made with ❤️ by the NetXMS community
+
+</div>
 
