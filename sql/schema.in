@@ -2927,7 +2927,7 @@ CREATE TABLE ai_task_execution_log
    iteration integer not null,
    explanation SQL_TEXT,
 #ifdef DB_TSDB
-  PRIMARY KEY(record_id,operation_timestamp)
+  PRIMARY KEY(record_id,execution_timestamp)
 #else
    PRIMARY KEY(record_id)
 #endif
