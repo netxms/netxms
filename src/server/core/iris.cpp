@@ -781,7 +781,8 @@ bool InitAIAssistant()
             return std::string("Error: task prompt must be provided");
 
          uint32_t taskId = RegisterAITask(String(description, "utf-8"), userId, String(prompt, "utf-8"));
-         return std::to_string(taskId);
+         char buffer[32];
+         return std::string(IntegerToString(taskId, buffer));
       });
 
    RebuildFunctionDeclarations();

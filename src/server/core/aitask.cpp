@@ -205,7 +205,8 @@ void AITask::execute()
    prompt.append("</instructions>\n<current_time>");
    prompt.append(FormatISO8601Timestamp(time(nullptr)));
    prompt.append("</current_time>\n<iteration>");
-   prompt.append(std::to_string(++m_iteration));
+   char buffer[32];
+   prompt.append(IntegerToString(++m_iteration, buffer));
    prompt.append("</iteration>");
    if (!m_memento.empty())
    {
