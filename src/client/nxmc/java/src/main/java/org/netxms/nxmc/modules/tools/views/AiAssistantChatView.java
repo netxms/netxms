@@ -28,6 +28,8 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
@@ -138,17 +140,14 @@ public class AiAssistantChatView extends View
 
       Composite commandArea = new Composite(parent, SWT.NONE);
       layout = new GridLayout();
-      layout.numColumns = 2;
       layout.marginHeight = 8;
+      layout.numColumns = 2;
       commandArea.setLayout(layout);
       commandArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
-      Label label = new Label(commandArea, SWT.NONE);
-      label.setText(i18n.tr("Query:"));
-      label.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
-
-      chatInput = new Text(commandArea, SWT.BORDER);
-      chatInput.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      chatInput = new Text(commandArea, SWT.NONE);
+      chatInput.setMessage(i18n.tr("Write a message..."));
+      chatInput.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       chatInput.addKeyListener(new KeyListener() {
          @Override
          public void keyReleased(KeyEvent e)
@@ -160,6 +159,20 @@ public class AiAssistantChatView extends View
          {
             if (e.keyCode == 13)
                sendQuery();
+         }
+      });
+      commandArea.setBackground(chatInput.getBackground());
+
+      Label sendButton = new Label(commandArea, SWT.NONE);
+      sendButton.setImage(SharedIcons.IMG_SEND);
+      sendButton.setToolTipText(i18n.tr("Send"));
+      sendButton.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
+      sendButton.setBackground(commandArea.getBackground());
+      sendButton.addMouseListener(new MouseAdapter() {
+         @Override
+         public void mouseUp(MouseEvent e)
+         {
+            sendQuery();
          }
       });
 

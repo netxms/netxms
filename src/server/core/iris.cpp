@@ -89,6 +89,8 @@ static const char *s_systemPrompt =
          "You can assist users with questions related to these topics. "
          "Your responses should be concise, accurate, and helpful. "
          "You can access live information from the NetXMS server to provide real-time assistance. "
+         "If you need to perform delayed or recurrent actions, you can create background tasks to handle them using function register-ai-task. "
+         "You can create background tasks that may require multiple executions to complete if necessary. "
          "If you are unable to answer a question, you should politely inform the user that you do not have the information available. "
          "Avoid answering questions not related to monitoring and IT administration tasks, and do not provide personal opinions or advice. "
          "Your goal is to assist users in managing their IT infrastructure effectively.";
@@ -106,6 +108,7 @@ static const char *s_systemPromptBackground =
          "Avoid answering questions not related to monitoring and IT administration tasks, and do not provide personal opinions or advice. "
          "You are operating autonomously without user interaction. "
          "Never stop to ask for user input or confirmation. "
+         "If you need to perform delayed or recurrent actions, you can create background tasks to handle them using function register-ai-task. "
          "You can create background tasks that may require multiple executions to complete if necessary. ";
 
 /**
@@ -765,8 +768,8 @@ bool InitAIAssistant()
       "register-ai-task",
       "Register new AI task for background execution. Use this function to create long running tasks that may require multiple executions to complete.",
       {
-          { "description", "task description" },
-          { "prompt", "initial prompt for the task" }
+          { "description", "Task description" },
+          { "prompt", "Initial prompt for the task, it will be evaluated immediately" }
       },
       [] (json_t *arguments, uint32_t userId) -> std::string
       {
