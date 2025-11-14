@@ -32,6 +32,9 @@ public class DefaultDarkTheme extends Theme
    {
       super("Dark [built-in]");
       elements.put(".", new ThemeElement(null, null, null, 0));
+      elements.put("AiAssistant.AssistantMessage", new ThemeElement(new RGB(42, 42, 45), new RGB(230, 230, 230)));
+      elements.put("AiAssistant.ChatView", new ThemeElement(new RGB(53, 53, 53), null));
+      elements.put("AiAssistant.UserMessage", new ThemeElement(new RGB(35, 50, 65), new RGB(185, 205, 225)));
       elements.put("Card.Title", new ThemeElement(new RGB(53, 80, 9), new RGB(240, 240, 240)));
       elements.put("Chart.Base", new ThemeElement(new RGB(53, 53, 53), new RGB(240, 240, 240)));
       elements.put("Chart.Data.1", new ThemeElement(null, new RGB(51, 160, 44)));

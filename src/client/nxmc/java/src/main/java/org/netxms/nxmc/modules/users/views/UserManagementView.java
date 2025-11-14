@@ -207,24 +207,18 @@ public class UserManagementView extends ConfigurationView
       if (session.isUserDatabaseSynchronized())
          return;
 
-      Job job = new Job(i18n.tr("Synchronize users"), this) {
+      Job job = new Job(i18n.tr("Synchronizing users"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             session.syncUserDatabase();
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {                      
-                  viewer.setInput(session.getUserDatabaseObjects());
-               }
-            });
+            runInUIThread(() -> viewer.setInput(session.getUserDatabaseObjects()));
          }
 
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot synchronize user database";
+            return i18n.tr("Cannot synchronize user database");
          }
       };
       job.setUser(false);

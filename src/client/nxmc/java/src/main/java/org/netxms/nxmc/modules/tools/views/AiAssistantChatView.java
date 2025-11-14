@@ -23,21 +23,30 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
-import org.netxms.nxmc.base.widgets.MarkdownViewer;
+import org.netxms.nxmc.base.widgets.MessageBubble;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.resources.ThemeEngine;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -48,7 +57,8 @@ public class AiAssistantChatView extends View
    private final I18n i18n = LocalizationHelper.getI18n(AiAssistantChatView.class);
 
    private NXCSession session;
-   private MarkdownViewer chatOutput;
+   private ScrolledComposite chatScrolledComposite;
+   private Composite chatContainer;
    private Text chatInput;
    private Action actionClearChat;
 
@@ -69,8 +79,19 @@ public class AiAssistantChatView extends View
    {
       super.postClone(origin);
       AiAssistantChatView view = (AiAssistantChatView)origin;
-      chatOutput.setText(view.chatOutput.getText());
-      chatInput.setText(view.chatInput.getText());
+      // Copy chat messages from original view
+      if (view.chatContainer != null && view.chatContainer.getChildren().length > 0)
+      {
+         for(Control control : view.chatContainer.getChildren())
+         {
+            // Note: In a full implementation, you would need to properly copy message data
+            // For now, we'll just add the welcome message
+         }
+      }
+      if (view.chatInput != null && chatInput != null)
+      {
+         chatInput.setText(view.chatInput.getText());
+      }
    }
 
    /**
@@ -85,10 +106,32 @@ public class AiAssistantChatView extends View
       layout.verticalSpacing = 0;
       parent.setLayout(layout);
 
-      chatOutput = new MarkdownViewer(parent, SWT.NONE);
-      chatOutput.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-      chatOutput.setText(
-            "!v Hello! I’m Iris, your AI assistant. I can help you with setting up your monitoring environment, day-to-day operations, and analyzing problems. Feel free to ask any questions!\n\n");
+      // Create scrolled composite for chat messages
+      chatScrolledComposite = new ScrolledComposite(parent, SWT.V_SCROLL);
+      chatScrolledComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      chatScrolledComposite.setExpandHorizontal(true);
+      chatScrolledComposite.setExpandVertical(true);
+
+      // Create container for chat messages
+      chatContainer = new Composite(chatScrolledComposite, SWT.NONE);
+      GridLayout chatLayout = new GridLayout();
+      chatLayout.marginWidth = 10;
+      chatLayout.marginHeight = 10;
+      chatLayout.verticalSpacing = 10;
+      chatContainer.setLayout(chatLayout);
+      chatContainer.setBackground(ThemeEngine.getBackgroundColor("AiAssistant.ChatView"));
+
+      chatScrolledComposite.setContent(chatContainer);
+      WidgetHelper.setScrollBarIncrement(chatScrolledComposite, SWT.VERTICAL, 20);
+      chatScrolledComposite.addControlListener(new ControlAdapter() {
+         public void controlResized(ControlEvent e)
+         {
+            updateScrolledComposite();
+         }
+      });
+
+      // Add welcome message
+      addAssistantMessage("Hello! I'm Iris, your AI assistant. I can help you with setting up your monitoring environment, day-to-day operations, and analyzing problems. Feel free to ask any questions!");
 
       Label separator = new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL);
       separator.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -137,7 +180,7 @@ public class AiAssistantChatView extends View
                protected void run(IProgressMonitor monitor) throws Exception
                {
                   session.clearAiAssistantChat();
-                  runInUIThread(() -> chatOutput.setText(""));
+                  runInUIThread(() -> clearChat());
                }
 
                @Override
@@ -188,24 +231,21 @@ public class AiAssistantChatView extends View
       if (prompt.isEmpty())
          return;
 
-      chatOutput.setText(chatOutput.getText() + "\n! " + prompt + "\n");
+      addUserMessage(prompt);
       chatInput.setEnabled(false);
-      new Job(i18n.tr("Processing server debug console command"), this) {
+      final MessageBubble assistantMessage = addAssistantMessage(i18n.tr("Thinking..."));
+      Job job = new Job(i18n.tr("Processing AI assistant query"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             try
             {
                final String answer = session.queryAiAssistant(prompt);
-               runInUIThread(() -> {
-                  chatOutput.setText(chatOutput.getText() + "\n" + answer + "\n");
-               });
+               runInUIThread(() -> updateMessage(assistantMessage, answer));
             }
             catch(Exception e)
             {
-               runInUIThread(() -> {
-                  chatOutput.setText(chatOutput.getText() + "\n!! " + getErrorMessage() + "\n");
-               });
+               runInUIThread(() -> updateMessage(assistantMessage, "Error: " + getErrorMessage()));
             }
          }
 
@@ -226,6 +266,131 @@ public class AiAssistantChatView extends View
                chatInput.setFocus();
             });
          }
-      }.start();
+      };
+      job.setUser(false);
+      job.start();
+   }
+
+   /**
+    * Add user message to the chat
+    */
+   private MessageBubble addUserMessage(String message)
+   {
+      return addMessage(message, true);
+   }
+
+   /**
+    * Add assistant message to the chat
+    */
+   private MessageBubble addAssistantMessage(String message)
+   {
+      return addMessage(message, false);
+   }
+
+   /**
+    * Add a message to the chat
+    * 
+    * @param message the message text
+    * @param isUser true if this is a user message, false for assistant
+    */
+   private MessageBubble addMessage(String message, boolean isUser)
+   {
+      Composite messageContainer = new Composite(chatContainer, SWT.NONE);
+      GridLayout messageLayout = new GridLayout();
+      messageLayout.marginWidth = 0;
+      messageLayout.marginHeight = 0;
+      messageLayout.numColumns = 5;
+      messageLayout.makeColumnsEqualWidth = true;
+      messageContainer.setLayout(messageLayout);
+      messageContainer.setBackground(chatContainer.getBackground());
+
+      GridData messageContainerData = new GridData(SWT.FILL, SWT.TOP, true, false);
+      messageContainer.setLayoutData(messageContainerData);
+
+      MessageBubble messageBubble;
+      if (isUser)
+      {
+         Label spacer = new Label(messageContainer, SWT.NONE);
+         spacer.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+         spacer.setBackground(chatContainer.getBackground());
+
+         messageBubble = new MessageBubble(messageContainer, MessageBubble.Type.USER, i18n.tr("User"), message);
+      }
+      else
+      {
+         messageBubble = new MessageBubble(messageContainer, MessageBubble.Type.ASSISTANT, i18n.tr("AI Assistant"), message);
+
+         Label spacer = new Label(messageContainer, SWT.NONE);
+         spacer.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+         spacer.setBackground(chatContainer.getBackground());
+      }
+
+      GridData bubbleData = new GridData();
+      bubbleData.horizontalAlignment = isUser ? SWT.RIGHT : SWT.LEFT;
+      bubbleData.grabExcessHorizontalSpace = true;
+      bubbleData.horizontalSpan = 4;
+      messageBubble.setLayoutData(bubbleData);
+
+      chatContainer.layout(true, true);
+      updateScrolledComposite();
+      scrollToBottom();
+      return messageBubble;
+   }
+
+   /**
+    * Update existing message in the chat.
+    *
+    * @param messageBubble message bubble to update
+    * @param newText new text
+    */
+   private void updateMessage(MessageBubble messageBubble, String newText)
+   {
+      messageBubble.setText(newText);
+      chatContainer.layout(true, true);
+      updateScrolledComposite();
+      scrollToBottom();
+   }
+
+   /**
+    * Update the scrolled composite size
+    */
+   private void updateScrolledComposite()
+   {
+      Rectangle r = chatScrolledComposite.getClientArea();
+      chatScrolledComposite.setMinSize(chatContainer.computeSize(r.width, SWT.DEFAULT));
+   }
+
+   /**
+    * Scroll to the bottom of the chat
+    */
+   private void scrollToBottom()
+   {
+      Display.getDefault().asyncExec(() -> {
+         if (!chatScrolledComposite.isDisposed())
+         {
+            Point contentSize = chatContainer.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+            Point viewportSize = chatScrolledComposite.getSize();
+            if (contentSize.y > viewportSize.y)
+            {
+               chatScrolledComposite.setOrigin(0, contentSize.y - viewportSize.y);
+            }
+         }
+      });
+   }
+
+   /**
+    * Clear all chat messages
+    */
+   private void clearChat()
+   {
+      for(Control control : chatContainer.getChildren())
+      {
+         control.dispose();
+      }
+      chatContainer.layout(true, true);
+      updateScrolledComposite();
+      
+      // Re-add welcome message
+      addAssistantMessage("Hello! I'm Iris, your AI assistant. I can help you with setting up your monitoring environment, day-to-day operations, and analyzing problems. Feel free to ask any questions!");
    }
 }

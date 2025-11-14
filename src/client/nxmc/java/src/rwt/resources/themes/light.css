@@ -2345,6 +2345,20 @@ Button.DashboardEditorButton[PUSH]:pressed {
   background-image: url( themes/light.resources/toolbar/dotted_white.gif );
 }
 
+Composite.MessageBubble_ASSISTANT {
+   background-color: #ffffff;
+   border: 1px solid #B3B3B3;
+   border-radius: 8px;
+   padding: 8px 12px;
+}
+
+Composite.MessageBubble_USER {
+   background-color: #f0f8ff;
+   border: 1px solid #B3B3B3;
+   border-radius: 8px;
+   padding: 8px 12px;
+}
+
 /* FileUpload */
 
 FileUpload {

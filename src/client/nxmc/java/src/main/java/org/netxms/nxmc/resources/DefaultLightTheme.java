@@ -32,6 +32,9 @@ public class DefaultLightTheme extends Theme
    {
       super("Light [built-in]");
       elements.put(".", new ThemeElement(null, null, null, 0));
+      elements.put("AiAssistant.AssistantMessage", new ThemeElement(new RGB(255, 255, 255), new RGB(192, 192, 192)));
+      elements.put("AiAssistant.ChatView", new ThemeElement(new RGB(240, 240, 240), null));
+      elements.put("AiAssistant.UserMessage", new ThemeElement(new RGB(223, 235, 247), new RGB(136, 192, 247)));
       elements.put("Card.Title", new ThemeElement(new RGB(153, 180, 209), new RGB(0, 0, 0)));
       elements.put("Chart.Base", new ThemeElement(new RGB(255, 255, 255), new RGB(64, 66, 68)));
       elements.put("Chart.Data.1", new ThemeElement(null, new RGB(51, 160, 44)));
