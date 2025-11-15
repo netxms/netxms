@@ -599,31 +599,6 @@ NXSL_Variable *NXSL_VM::findVariable(const NXSL_Identifier& name, NXSL_VariableS
       return var;
    }
 
-   var = m_globalVariables->find(name);
-   if (var != nullptr)
-   {
-      if (vs != nullptr)
-         *vs = m_globalVariables;
-      return var;
-   }
-
-   if (m_context != nullptr)
-   {
-      NXSL_Object *object = m_context->getValueAsObject();
-      NXSL_Value *value = object->getClass()->getAttr(object, name);
-      if (value != nullptr)
-      {
-         var = m_contextVariables->find(name);
-         if (var != nullptr)
-            var->setValue(value);
-         else
-            var = m_contextVariables->create(name, value);
-         if (vs != nullptr)
-            *vs = m_contextVariables;
-         return var;
-      }
-   }
-
    var = m_localVariables->find(name);
    if (var != nullptr)
    {
@@ -643,6 +618,33 @@ NXSL_Variable *NXSL_VM::findVariable(const NXSL_Identifier& name, NXSL_VariableS
       }
    }
 
+   if (m_context != nullptr)
+   {
+      // Create context variable from object attribute
+      // to improve performance of subsequent accesses
+      NXSL_Object *object = m_context->getValueAsObject();
+      NXSL_Value *value = object->getClass()->getAttr(object, name);
+      if (value != nullptr)
+      {
+         var = m_contextVariables->find(name);
+         if (var != nullptr)
+            var->setValue(value);
+         else
+            var = m_contextVariables->create(name, value);
+         if (vs != nullptr)
+            *vs = m_contextVariables;
+         return var;
+      }
+   }
+
+   var = m_globalVariables->find(name);
+   if (var != nullptr)
+   {
+      if (vs != nullptr)
+         *vs = m_globalVariables;
+      return var;
+   }
+
    return nullptr;
 }
 
@@ -657,6 +659,19 @@ NXSL_Variable *NXSL_VM::findOrCreateVariable(const NXSL_Identifier& name, NXSL_V
       var = m_localVariables->create(name);
       if (vs != nullptr)
          *vs = m_localVariables;
+   }
+   return var;
+}
+
+/**
+ * Find local variable or create if does not exist
+ */
+NXSL_Variable *NXSL_VM::findOrCreateLocalVariable(const NXSL_Identifier& name)
+{
+   NXSL_Variable *var = m_localVariables->find(name);
+   if (var == nullptr)
+   {
+      var = m_localVariables->create(name);
    }
    return var;
 }
@@ -1883,7 +1898,7 @@ void NXSL_VM::execute()
 					NXSL_Iterator *it = pValue->getValueAsIterator();
 					NXSL_Value *next = it->next();
 					m_dataStack.push(createValue(next != nullptr));
-					NXSL_Variable *var = findOrCreateVariable(it->getVariableName());
+					NXSL_Variable *var = findOrCreateLocalVariable(it->getVariableName());
 					if (!var->isConstant())
 					{
 						var->setValue((next != nullptr) ? createValueRef(next) : createValue());

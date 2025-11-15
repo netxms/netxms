@@ -1478,6 +1478,7 @@ protected:
 
    NXSL_Variable *findVariable(const NXSL_Identifier& name, NXSL_VariableSystem **vs = nullptr);
    NXSL_Variable *findOrCreateVariable(const NXSL_Identifier& name, NXSL_VariableSystem **vs = nullptr);
+   NXSL_Variable *findOrCreateLocalVariable(const NXSL_Identifier& name);
 	NXSL_Variable *createVariable(const NXSL_Identifier& name);
 	bool isDefinedConstant(const NXSL_Identifier& name);
 
