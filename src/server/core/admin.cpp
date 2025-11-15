@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -217,7 +217,7 @@ static void ProcessingThread(SOCKET sock)
          }
          else if (request->getCode() == CMD_LOGIN)
          {
-            TCHAR loginName[MAX_USER_NAME], password[MAX_PASSWORD];
+            wchar_t loginName[MAX_USER_NAME], password[MAX_PASSWORD];
             request->getFieldAsString(VID_LOGIN_NAME, loginName, MAX_USER_NAME);
             request->getFieldAsString(VID_PASSWORD, password, MAX_PASSWORD);
 
