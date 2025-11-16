@@ -93,6 +93,7 @@ bool LockDatabase(InetAddress *lockAddr, wchar_t *lockInfo)
    lockInfo[0] = 0;
 
    // Check current database lock status
+   int retryCount = 10;
 retry:
    wchar_t buffer[256];
    ReadLockStatus(buffer);
@@ -100,6 +101,13 @@ retry:
 
 	if (!wcscmp(buffer, L"UNLOCKED"))
    {
+	   if (--retryCount < 0)
+	   {
+	      wcscpy(lockInfo, L"LOCK ERROR");
+	      nxlog_debug_tag(L"db.lock", 1, L"Failed to acquire database lock after multiple attempts");
+         return false;
+	   }
+
       if (ReadLockFlag() != 0)
       {
          nxlog_debug_tag(L"db.lock", 6, L"Another instance is in the process of acquiring lock");
@@ -108,7 +116,9 @@ retry:
       }
 
       // First phase of double lock - set temporary flag
-      int32_t lockFlag = rand() % 0x7FFFFFFE + 1;
+      int32_t lockFlag;
+      RAND_bytes((BYTE *)&lockFlag, sizeof(int32_t));
+      lockFlag &= 0x7FFFFFFF;  // Ensure positive value
       ConfigWriteInt(L"DBLockFlag", lockFlag, true, false, false);
       ThreadSleepMs(500);  // Small delay to ensure that if other instance also writes flag, we will read updated value
       int32_t checkFlag = ReadLockFlag();

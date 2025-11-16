@@ -1708,7 +1708,8 @@ static bool LockDatabase()
    DBMgrConfigReadStr(_T("DBLockStatus"), buffer, MAX_DB_STRING, _T("ERROR"));
    if (_tcscmp(buffer, _T("ERROR")))
    {
-      bool locked = _tcscmp(buffer, _T("UNLOCKED"));
+      int32_t lockFlag = DBMgrConfigReadInt32(_T("DBLockFlag"), 0);
+      bool locked = _tcscmp(buffer, _T("UNLOCKED")) || (lockFlag != 0);
 
       if (locked)
       {
@@ -1722,6 +1723,7 @@ static bool LockDatabase()
       if (!locked)
       {
          CreateConfigParam(_T("DBLockStatus"), _T("NXDBMGR Check"), false, true, true);
+         CreateConfigParam(_T("DBLockFlag"), _T("0"), false, true, true);
          GetLocalHostName(buffer, MAX_DB_STRING, false);
          CreateConfigParam(_T("DBLockInfo"), buffer, false, false, true);
          _sntprintf(buffer, 64, _T("%u"), GetCurrentProcessId());
