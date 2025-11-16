@@ -1313,7 +1313,7 @@ bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel);
 void ExecuteDatabasePasswordCommand();
 void RetrieveDatabaseCredentialsFromVault();
 
-bool LockDatabase(InetAddress *lockAddr, TCHAR *lockInfo);
+bool LockDatabase(InetAddress *lockAddr, wchar_t *lockInfo);
 void NXCORE_EXPORTABLE UnlockDatabase();
 
 void NXCORE_EXPORTABLE Shutdown();
