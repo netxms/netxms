@@ -68,7 +68,7 @@ public abstract class BaseTableValueViewer extends Composite
    protected Action actionUseMultipliers;
    protected Action actionShowFilter;
    protected boolean saveTableSettings;
-   protected String sortColumn = 0;
+   protected String sortColumn = null;
    protected int sortDirection = SWT.UP;
 
    /**
