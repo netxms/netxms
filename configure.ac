@@ -5131,6 +5131,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/net-snmp/Makefile
 	src/server/drivers/netonix/Makefile
 	src/server/drivers/ping3/Makefile
+	src/server/drivers/planet/Makefile
 	src/server/drivers/qtech/Makefile
 	src/server/drivers/rittal/Makefile
 	src/server/drivers/saf/Makefile

@@ -1,7 +1,7 @@
 /* 
  ** NetXMS - Network Management System
  ** Driver for Mikrotik routers
- ** Copyright (C) 2003-2024 Victor Kirhenshtein
+ ** Copyright (C) 2003-2025 Victor Kirhenshtein
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -34,15 +34,15 @@
 class MikrotikDriver : public NetworkDeviceDriver
 {
 public:
-   virtual const TCHAR *getName() override;
-   virtual const TCHAR *getVersion() override;
+   virtual const wchar_t *getName() override;
+   virtual const wchar_t *getVersion() override;
 
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
    virtual void analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData) override;
    virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
    virtual InterfaceList* getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
-   virtual bool lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id) override;
+   virtual bool lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const wchar_t *lldpName, InterfaceId *id) override;
    virtual bool isFdbUsingIfIndex(const NObject *node, DriverData *driverData) override;
    virtual bool isWirelessAccessPoint(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual StructArray<RadioInterfaceInfo> *getRadioInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;

@@ -10,17 +10,17 @@
 
 DRIVERS = at avaya cambium cisco dell-pwc dlink edgecore eltex etherwan \
 	extreme fortinet hirschmann hpe huawei ignitenet juniper mds \
-	mikrotik moxa net-snmp netonix ping3 qtech rittal saf siemens \
-	symbol-ws tb tplink ubnt westerstrand
+	mikrotik moxa net-snmp netonix ping3 planet qtech rittal saf \
+	siemens symbol-ws tb tplink ubnt westerstrand
 
 SUBDIRS = $(DRIVERS)
 
 pkglib_LTLIBRARIES = at.la avaya.la cambium.la cisco.la dell-pwc.la \
 	dlink.la edgecore.la eltex.la etherwan.la extreme.la fortinet.la \
 	hirschmann.la hpe.la huawei.la ignitenet.la juniper.la mds.la \
-	mikrotik.la moxa.la net-snmp.la netonix.la ping3.la qtech.la \
-	rittal.la saf.la siemens.la symbol-ws.la tb.la tplink.la ubnt.la \
-	westerstrand.la
+	mikrotik.la moxa.la net-snmp.la netonix.la ping3.la planet.la \
+	qtech.la rittal.la saf.la siemens.la symbol-ws.la tb.la tplink.la \
+	ubnt.la westerstrand.la
 
 at_la_SOURCES = at/at.cpp
 at_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
@@ -173,6 +173,13 @@ ping3_la_SOURCES = ping3/ping3.cpp
 ping3_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 ping3_la_LDFLAGS = -module -avoid-version
 ping3_la_LIBADD = ../../libnetxms/libnetxms.la \
+	../../snmp/libnxsnmp/libnxsnmp.la \
+	../libnxsrv/libnxsrv.la
+
+planet_la_SOURCES = planet/lansw.cpp planet/planet.cpp
+planet_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
+planet_la_LDFLAGS = -module -avoid-version
+planet_la_LIBADD = ../../libnetxms/libnetxms.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../libnxsrv/libnxsrv.la
 

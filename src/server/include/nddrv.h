@@ -156,11 +156,11 @@ struct NDD_MODULE_LAYOUT
  */
 struct DeviceHardwareInfo
 {
-   TCHAR vendor[128];
-   TCHAR productCode[32];
-   TCHAR productName[128];
-   TCHAR productVersion[16];
-   TCHAR serialNumber[32];
+   wchar_t vendor[128];
+   wchar_t productCode[32];
+   wchar_t productName[128];
+   wchar_t productVersion[16];
+   wchar_t serialNumber[32];
 };
 
 /**
@@ -174,7 +174,7 @@ struct DeviceHardwareInfo
  */
 struct DeviceViewImage
 {
-   const TCHAR *name;
+   const wchar_t *name;
    size_t size;
    const BYTE *data;
 };
@@ -505,7 +505,7 @@ struct LinkLayerNeighborInfo
 {
    uint32_t ifLocal;           // Local interface index
    InterfaceId ifRemote;       // Remote interface identification
-   TCHAR remoteName[192];      // sysName or DNS host name of connected object
+   wchar_t remoteName[192];    // sysName or DNS host name of connected object
    InetAddress remoteIP;       // IP address of connected object
    MacAddress remoteMAC;       // MAC address of connected object
    bool isPtToPt;              // true if this is point-to-point link
@@ -538,10 +538,10 @@ public:
    NetworkDeviceDriver();
    virtual ~NetworkDeviceDriver();
 
-   virtual const TCHAR *getName();
-   virtual const TCHAR *getVersion();
+   virtual const wchar_t *getName();
+   virtual const wchar_t *getVersion();
 
-   virtual const TCHAR *getCustomTestOID();
+   virtual const wchar_t *getCustomTestOID();
    virtual int isPotentialDevice(const SNMP_ObjectId& oid);
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid);
    virtual void analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData);
