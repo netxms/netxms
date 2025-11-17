@@ -68,7 +68,7 @@ public abstract class BaseTableValueViewer extends Composite
    protected Action actionUseMultipliers;
    protected Action actionShowFilter;
    protected boolean saveTableSettings;
-   protected String sortColumn;
+   protected String sortColumn = null;
    protected int sortDirection = SWT.UP;
 
    /**
@@ -215,8 +215,8 @@ public abstract class BaseTableValueViewer extends Composite
          int columnIndex = 0;
          if (sortColumn != null)
          {
-            columnIndex = table.getColumnIndex(sortColumn);            
-            if(columnIndex == -1)
+            columnIndex = table.getColumnIndex(sortColumn);
+            if (columnIndex == -1)
                columnIndex = 0; // fallback to first column
          }
          viewer.createColumns(names, widths, columnIndex, sortDirection);
