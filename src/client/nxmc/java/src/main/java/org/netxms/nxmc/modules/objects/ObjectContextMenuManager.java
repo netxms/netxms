@@ -83,6 +83,7 @@ import org.netxms.nxmc.modules.networkmaps.views.InternalTopologyMapView;
 import org.netxms.nxmc.modules.networkmaps.views.L2TopologyMapView;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.actions.ChangeInterfaceExpectedStateAction;
+import org.netxms.nxmc.modules.objects.actions.ChangeMacAddressAction;
 import org.netxms.nxmc.modules.objects.actions.ChangeZoneAction;
 import org.netxms.nxmc.modules.objects.actions.ClearInterfacePeerInformation;
 import org.netxms.nxmc.modules.objects.actions.CloneNetworkMap;
@@ -163,6 +164,7 @@ public class ObjectContextMenuManager extends MenuManager
    private ObjectAction<?> actionCloneNetworkMap;
    private ObjectAction<?> actionNetworkMapPublicAccess;
    private ObjectAction<?> actionChangeInterfaceExpectedState;
+   private ObjectAction<?> actionChangeMacAddress;
    private ObjectAction<?> actionUploadFileToAgent;
    private ObjectAction<?> actionSetInterfacePeer;
    private ObjectAction<?> actionClearInterfacePeer;
@@ -477,6 +479,7 @@ public class ObjectContextMenuManager extends MenuManager
       actionCloneNetworkMap = new CloneNetworkMap(viewPlacement, selectionProvider);
       actionNetworkMapPublicAccess = new EnableNetworkMapPublicAccess(viewPlacement, selectionProvider);
       actionChangeInterfaceExpectedState = new ChangeInterfaceExpectedStateAction(viewPlacement, selectionProvider);
+      actionChangeMacAddress = new ChangeMacAddressAction(viewPlacement, selectionProvider);
       actionSetInterfacePeer = new SetInterfacePeerInformation(viewPlacement, selectionProvider);
       actionClearInterfacePeer = new ClearInterfacePeerInformation(viewPlacement, selectionProvider);
       actionUploadFileToAgent = new UploadFileToAgent(viewPlacement, selectionProvider);
@@ -799,6 +802,11 @@ public class ObjectContextMenuManager extends MenuManager
       if (actionClearInterfacePeer.isValidForSelection(selection))
       {
          add(actionClearInterfacePeer);
+      }
+
+      if (actionChangeMacAddress.isValidForSelection(selection))
+      {
+         add(actionChangeMacAddress);
       }
 
       if (actionCreateInterfaceDCI.isValidForSelection(selection))

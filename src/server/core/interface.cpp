@@ -1322,6 +1322,19 @@ void Interface::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
  */
 uint32_t Interface::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
+   if (msg.isFieldExist(VID_MAC_ADDR))
+   {
+      if (isManuallyCreated())
+      {
+         m_macAddress = msg.getFieldAsMacAddress(VID_MAC_ADDR);
+         setModified(MODIFY_COMMON_PROPERTIES);
+      }
+      else
+      {
+         return RCC_INCOMPATIBLE_OPERATION;
+      }
+   }
+
    // Number of required polls
    if (msg.isFieldExist(VID_REQUIRED_POLLS))
       m_requiredPollCount = msg.getFieldAsInt16(VID_REQUIRED_POLLS);
