@@ -426,7 +426,7 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
       portView.setNodeId(getObjectId());
       scroller.setMinSize(portView.computeSize(SWT.DEFAULT, SWT.DEFAULT));
       labelProvider.setSelectedPort(null);
-      
+
       final String objectName = session.getObjectName(getObjectId());
       final boolean syncChildren = !objectsFullySync && !session.areChildrenSynchronized(getObjectId());
       new Job(i18n.tr("Reading VLAN list from node"), this) {

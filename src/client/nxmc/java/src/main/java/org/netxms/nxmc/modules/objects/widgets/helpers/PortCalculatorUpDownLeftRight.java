@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,32 +20,32 @@ package org.netxms.nxmc.modules.objects.widgets.helpers;
 
 import org.eclipse.swt.graphics.Point;
 
-/* 
+/**
  * Calculates port tab port layout
  * up-down, then left-to-right:
  *  1 3 5 7
  *  2 4 6 8
  */
-public class PortCalculatorUpDownLeftRight implements PortCalculator
+public class PortCalculatorUpDownLeftRight extends PortCalculator
 {   
    private int x;
    private int y;
    private int rowCount;
    private int row = 0;
-   
+
    /**
-    * @param nameSize
+    * @param baseX
     * @param rowCount
     */
-   public PortCalculatorUpDownLeftRight(int nameSize, int rowCount)
+   public PortCalculatorUpDownLeftRight(int baseX, int rowCount)
    {
-      x = HORIZONTAL_MARGIN + HORIZONTAL_SPACING + nameSize;
-      y = VERTICAL_MARGIN;
+      this.x = HORIZONTAL_MARGIN + HORIZONTAL_SPACING + baseX;
+      this.y = VERTICAL_MARGIN;
       this.rowCount = rowCount;
    }
-   
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.topology.widgets.helpers.PortCalculator#calculateNextPos()
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.widgets.helpers.PortCalculator#calculateNextPos()
     */
    @Override
    public Point calculateNextPos()
@@ -55,7 +55,7 @@ public class PortCalculatorUpDownLeftRight implements PortCalculator
          row++;
          return new Point(x, y);
       }
-      
+
       if (row == rowCount)
       {
          row = 0;
@@ -63,10 +63,11 @@ public class PortCalculatorUpDownLeftRight implements PortCalculator
          x += HORIZONTAL_SPACING + PORT_WIDTH;
       }
       else
+      {
          y += VERTICAL_SPACING + PORT_HEIGHT;
-      
+      }
+
       row++;
-      
       return new Point(x, y);
    }
 }

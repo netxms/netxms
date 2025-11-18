@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,13 +20,10 @@ package org.netxms.nxmc.modules.objects.widgets.helpers;
 
 import org.eclipse.swt.graphics.Point;
 
-/*
- * Interface to calculate
- * port coordinates in
- * port objecttab for different
- * layouts
+/**
+ * Base class for port display coordinates calculator in port view widget
  */
-public interface PortCalculator
+public abstract class PortCalculator
 {
    public static final int HORIZONTAL_MARGIN = 20;
    public static final int VERTICAL_MARGIN = 10;
@@ -34,9 +31,9 @@ public interface PortCalculator
    public static final int VERTICAL_SPACING = 10;
    public static final int PORT_WIDTH = 44;
    public static final int PORT_HEIGHT = 30;
-   
+
    /**
     * Calculates next position of port
     */
-   public Point calculateNextPos();
+   public abstract Point calculateNextPos();
 }

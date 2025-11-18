@@ -5720,7 +5720,16 @@ int LIBNETXMS_EXPORTABLE __daemon(int nochdir, int noclose);
 #define daemon __daemon
 #endif
 
-#ifndef _WIN32
+#ifdef _WIN32
+
+#define nx_wprintf wprintf
+#define nx_fwprintf fwprintf
+#define nx_swprintf swprintf
+#define nx_vwprintf vwprintf
+#define nx_vfwprintf vfwprintf
+#define nx_vswprintf vswprintf
+
+#else
 
 bool LIBNETXMS_EXPORTABLE SetDefaultCodepage(const char *cp);
 
@@ -5728,19 +5737,19 @@ DWORD LIBNETXMS_EXPORTABLE GetEnvironmentVariable(const TCHAR *var, TCHAR *buffe
 BOOL LIBNETXMS_EXPORTABLE SetEnvironmentVariable(const TCHAR *var, const TCHAR *value);
 
 #ifdef UNICODE
-int LIBNETXMS_EXPORTABLE nx_wprintf(const WCHAR *format, ...);
-int LIBNETXMS_EXPORTABLE nx_fwprintf(FILE *fp, const WCHAR *format, ...);
-int LIBNETXMS_EXPORTABLE nx_swprintf(WCHAR *buffer, size_t size, const WCHAR *format, ...);
-int LIBNETXMS_EXPORTABLE nx_vwprintf(const WCHAR *format, va_list args);
-int LIBNETXMS_EXPORTABLE nx_vfwprintf(FILE *fp, const WCHAR *format, va_list args);
-int LIBNETXMS_EXPORTABLE nx_vswprintf(WCHAR *buffer, size_t size, const WCHAR *format, va_list args);
+int LIBNETXMS_EXPORTABLE nx_wprintf(const wchar_t *format, ...);
+int LIBNETXMS_EXPORTABLE nx_fwprintf(FILE *fp, const wchar_t *format, ...);
+int LIBNETXMS_EXPORTABLE nx_swprintf(wchar_t *buffer, size_t size, const wchar_t *format, ...);
+int LIBNETXMS_EXPORTABLE nx_vwprintf(const wchar_t *format, va_list args);
+int LIBNETXMS_EXPORTABLE nx_vfwprintf(FILE *fp, const wchar_t *format, va_list args);
+int LIBNETXMS_EXPORTABLE nx_vswprintf(wchar_t *buffer, size_t size, const wchar_t *format, va_list args);
 
-int LIBNETXMS_EXPORTABLE nx_wscanf(const WCHAR *format, ...);
-int LIBNETXMS_EXPORTABLE nx_fwscanf(FILE *fp, const WCHAR *format, ...);
-int LIBNETXMS_EXPORTABLE nx_swscanf(const WCHAR *str, const WCHAR *format, ...);
-int LIBNETXMS_EXPORTABLE nx_vwscanf(const WCHAR *format, va_list args);
-int LIBNETXMS_EXPORTABLE nx_vfwscanf(FILE *fp, const WCHAR *format, va_list args);
-int LIBNETXMS_EXPORTABLE nx_vswscanf(const WCHAR *str, const WCHAR *format, va_list args);
+int LIBNETXMS_EXPORTABLE nx_wscanf(const wchar_t *format, ...);
+int LIBNETXMS_EXPORTABLE nx_fwscanf(FILE *fp, const wchar_t *format, ...);
+int LIBNETXMS_EXPORTABLE nx_swscanf(const wchar_t *str, const wchar_t *format, ...);
+int LIBNETXMS_EXPORTABLE nx_vwscanf(const wchar_t *format, va_list args);
+int LIBNETXMS_EXPORTABLE nx_vfwscanf(FILE *fp, const wchar_t *format, va_list args);
+int LIBNETXMS_EXPORTABLE nx_vswscanf(const wchar_t *str, const wchar_t *format, va_list args);
 #endif
 
 #endif	/* _WIN32 */

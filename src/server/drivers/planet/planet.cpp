@@ -27,6 +27,7 @@
  * Driver module entry point
  */
 NDD_BEGIN_DRIVER_LIST
+NDD_DRIVER(PlanetIndustrialSwDriver)
 NDD_DRIVER(PlanetLanSwDriver)
 NDD_END_DRIVER_LIST
 DECLARE_NDD_MODULE_ENTRY_POINT

@@ -61,6 +61,7 @@ private:
    StringMap m_oidCache;
    time_t m_cacheTimestamp = 0;
    Mutex m_cacheLock;
+
    void updateDeviceInfoInternal(SNMP_Transport *snmp);
    uint32_t metricInfoWalkCallback(SNMP_Variable *v, SNMP_Transport *snmp);
 

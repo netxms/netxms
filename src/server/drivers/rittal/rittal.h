@@ -89,7 +89,7 @@ public:
 
    void updateDeviceInfo(SNMP_Transport *snmp);
    void registerMetrics(ObjectArray<AgentParameterDefinition> *metrics);
-   bool getMetric(const TCHAR *name, SNMP_Transport *snmp, RittalMetric *metric);
+   bool getMetric(const wchar_t *name, SNMP_Transport *snmp, RittalMetric *metric);
 };
 
 /**
@@ -98,14 +98,14 @@ public:
 class RittalDriver : public NetworkDeviceDriver
 {
 public:
-	virtual const TCHAR *getName() override;
-	virtual const TCHAR *getVersion() override;
+	virtual const wchar_t *getName() override;
+	virtual const wchar_t *getVersion() override;
 
 	virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
 	virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
    virtual void analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData) override;
    virtual bool hasMetrics() override;
-   virtual DataCollectionError getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size) override;
+   virtual DataCollectionError getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const wchar_t *name, wchar_t *value, size_t size) override;
    virtual ObjectArray<AgentParameterDefinition> *getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
 };
 

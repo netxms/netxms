@@ -127,6 +127,9 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
       WidgetHelper.attachMouseTrackListener(this, this);
 	}
 
+   /**
+    * @see org.eclipse.swt.widgets.Widget#dispose()
+    */
 	@Override
    public void dispose()
    {
@@ -152,32 +155,45 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
 	{
 		e.gc.drawText(slotName, HORIZONTAL_MARGIN, (getSize().y - nameSize.y) / 2);
 
-		PortCalculator portCalculator = null;
-		switch(numberingScheme)
-		{
-		   case NDD_PN_DU_LR:
-		      portCalculator = new PortCalculatorDownUpLeftRight(nameSize.x, rowCount);
-		      break;
-		   case NDD_PN_LR_UD:
-		      portCalculator = new PortCalculatorLeftRightUpDown(nameSize.x, ports.size(), rowCount);
-		      break;
-		   case NDD_PN_LR_DU:
-		      portCalculator = new PortCalculatorLeftRightDownUp(nameSize.x, ports.size(), rowCount);
-		      break;
-		   case NDD_PN_CUSTOM:
-		      break;
-         case NDD_PN_UNKNOWN:
-         case NDD_PN_UD_LR:
-		   default:
-            portCalculator = new PortCalculatorUpDownLeftRight(nameSize.x, rowCount);
-            break;
-		}
-
+      int pic = 0;
+      Point pos = null;
+      PortCalculator portCalculator = createPortCalculator(nameSize.x);
 		for(PortInfo p : ports)
 		{
-			drawPort(p, portCalculator.calculateNextPos(), e.gc);
+         if (p.getPIC() != pic)
+         {
+            pic = p.getPIC();
+            if (pos != null)
+               portCalculator = createPortCalculator(pos.x + PORT_WIDTH);
+         }
+         pos = portCalculator.calculateNextPos();
+         drawPort(p, pos, e.gc);
 		}
 	}
+
+   /**
+    * Create new port calculator based on numbering scheme
+    *
+    * @param baseX base X coordinate
+    * @return port calculator
+    */
+   private PortCalculator createPortCalculator(int baseX)
+   {
+      switch(numberingScheme)
+      {
+         case NDD_PN_DU_LR:
+            return new PortCalculatorDownUpLeftRight(baseX, rowCount);
+         case NDD_PN_LR_UD:
+            return new PortCalculatorLeftRightUpDown(baseX, ports.size(), rowCount);
+         case NDD_PN_LR_DU:
+            return new PortCalculatorLeftRightDownUp(baseX, ports.size(), rowCount);
+         case NDD_PN_CUSTOM:
+         case NDD_PN_UNKNOWN:
+         case NDD_PN_UD_LR:
+         default:
+            return new PortCalculatorUpDownLeftRight(baseX, rowCount);
+      }
+   }
 
 	/**
 	 * Draw single port
@@ -266,8 +282,30 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
-		return new Point(((ports.size() + rowCount - 1) / rowCount) * (PORT_WIDTH + HORIZONTAL_SPACING) + HORIZONTAL_MARGIN * 2 + nameSize.x,
-				rowCount * PORT_HEIGHT + (rowCount - 1) * VERTICAL_SPACING + VERTICAL_MARGIN * 2);
+      int pic = 0;
+      int maxX = 0;
+      int maxY = 0;
+      Point pos = null;
+      PortCalculator portCalculator = createPortCalculator(nameSize.x);
+      for(PortInfo p : ports)
+      {
+         if (p.getPIC() != pic)
+         {
+            pic = p.getPIC();
+            if (pos != null)
+               portCalculator = createPortCalculator(pos.x + PORT_WIDTH);
+         }
+         pos = portCalculator.calculateNextPos();
+         if (pos.x > maxX)
+            maxX = pos.x;
+         if (pos.y > maxY)
+            maxY = pos.y;
+      }
+
+      return new Point(maxX + PORT_WIDTH + HORIZONTAL_MARGIN, maxY + PORT_HEIGHT + VERTICAL_MARGIN);
+
+//      return new Point(((ports.size() + rowCount - 1) / rowCount) * (PORT_WIDTH + HORIZONTAL_SPACING) + HORIZONTAL_MARGIN * 2 + nameSize.x,
+//            rowCount * PORT_HEIGHT + (rowCount - 1) * VERTICAL_SPACING + VERTICAL_MARGIN * 2);
 	}
 
 	/**
@@ -424,13 +462,13 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
 	   {
 	      rectangleComparator = new Comparator<Rectangle>() {
             @Override
-            public int compare(Rectangle arg0, Rectangle arg1)
+            public int compare(Rectangle r1, Rectangle r2)
             {
-               return arg0.x - arg1.x;
+               return r1.x - r2.x;
             }
 	      };
 	   }
-	   
+
 	   /**
 	    * Add port and its rectangle to the map
 	    * @param rect

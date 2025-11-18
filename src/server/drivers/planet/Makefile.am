@@ -1,3 +1,3 @@
 EXTRA_DIST = \
-	planet.h planet.cpp lansw.cpp \
+	planet.h planet.cpp isw.cpp lansw.cpp \
 	planet.vcxproj planet.vcxproj.filters

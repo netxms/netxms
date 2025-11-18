@@ -176,7 +176,7 @@ ping3_la_LIBADD = ../../libnetxms/libnetxms.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../libnxsrv/libnxsrv.la
 
-planet_la_SOURCES = planet/lansw.cpp planet/planet.cpp
+planet_la_SOURCES = planet/isw.cpp planet/lansw.cpp planet/planet.cpp
 planet_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 planet_la_LDFLAGS = -module -avoid-version
 planet_la_LIBADD = ../../libnetxms/libnetxms.la \
