@@ -9,8 +9,6 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EXTRA_DIST = \
-	coding_style.txt \
-	dci_perftab.txt \
 	event_code_ranges.txt \
 	nxcp_command_ranges.txt \
 	unicode.txt
