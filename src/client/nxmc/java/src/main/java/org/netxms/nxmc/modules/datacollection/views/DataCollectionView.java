@@ -99,6 +99,8 @@ public class DataCollectionView extends BaseDataCollectionView
    private static final Logger logger = LoggerFactory.getLogger(DataCollectionView.class);
 
    private final I18n i18n = LocalizationHelper.getI18n(DataCollectionView.class);
+   
+   public static final String VIEW_ID = "objects.data-collection";
 
    // Columns for "data collection configuration" mode
    public static final int DC_COLUMN_ID = 0;
@@ -150,7 +152,7 @@ public class DataCollectionView extends BaseDataCollectionView
     */
    public DataCollectionView()
    {
-      super(LocalizationHelper.getI18n(DataCollectionView.class).tr("Data Collection"), "objects.data-collection", true);
+      super(LocalizationHelper.getI18n(DataCollectionView.class).tr("Data Collection"), VIEW_ID, true);
    }
 
    /**
@@ -1466,8 +1468,7 @@ public class DataCollectionView extends BaseDataCollectionView
                {
                   if (item.getId() == dciId)
                      viewer.setSelection(new StructuredSelection(item), true); 
-               }
-               
+               }            
             }
          }
       });
@@ -1529,7 +1530,7 @@ public class DataCollectionView extends BaseDataCollectionView
                      canDisable = true;
                   if (dci.getThresholdDisableEndTime() != 0)
                      canActivateThresholds = true;
-                  if (dci.getTemplateId() != 0 && dci.getTemplateId() != getObjectId())
+                  if (dci.getTemplateId() != 0)
                      hasTemplate = true;    
                }
                else

@@ -872,9 +872,9 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       if (!objectBrowser.selectObject(object))
          return false;
 
-      if ((dciId != 0) && showMainView("DataCollection"))
+      if ((dciId != 0) && showMainView(DataCollectionView.VIEW_ID))
       {
-         View dataCollectionView = findMainView("DataCollection");
+         View dataCollectionView = findMainView(DataCollectionView.VIEW_ID);
          ((DataCollectionView)dataCollectionView).selectDci(dciId);
       }
       return true;

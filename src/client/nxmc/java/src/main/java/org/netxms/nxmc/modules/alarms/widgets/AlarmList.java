@@ -142,6 +142,7 @@ public class AlarmList extends CompositeWithMessageArea
 	private Action actionStickyAcknowledge;
 	private Action actionTerminate;
 	private Action actionGoToObject;
+	private Action actionGoToDci;
    private Action actionCreateIssue;
    private Action actionShowIssue;
    private Action actionUnlinkIssue;
@@ -545,7 +546,7 @@ public class AlarmList extends CompositeWithMessageArea
          }
       };
       
-      actionGoToObject = new Action(i18n.tr("Go to &object")) {
+      actionGoToObject = new Action(i18n.tr("&Go to object")) {
 			@Override
 			public void run()
 			{
@@ -558,6 +559,21 @@ public class AlarmList extends CompositeWithMessageArea
 			}
 		};
       actionGoToObject.setId("AlarmList.GoToObject");
+      
+      actionGoToDci = new Action(i18n.tr("Go to &DCI")) {
+         @Override
+         public void run()
+         {
+            IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
+            if (selection.size() != 1)
+               return;
+            
+            final long objectId = ((Alarm)selection.getFirstElement()).getSourceObjectId();
+            final long dciId = ((Alarm)selection.getFirstElement()).getDciId();
+            MainWindow.switchToObject(objectId, dciId);
+         }
+      };
+      actionGoToDci.setId("AlarmList.GoToDci");
 
       actionExportToCsv = new ExportToCsvAction(view, alarmViewer, true);
 
@@ -758,6 +774,8 @@ public class AlarmList extends CompositeWithMessageArea
          // manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_TOOLS));
 			manager.add(new Separator());
 			manager.add(actionGoToObject);
+			if (((Alarm)selection.getFirstElement()).getDciId() != 0)
+            manager.add(actionGoToDci);
 			manager.add(new Separator());
 		}
 
