@@ -360,7 +360,8 @@ static StringObjectMap<SNMP_Variable> *ReadLLDPRemoteTable(Node *node, bool lldp
          [connections] (SNMP_Variable *v) -> uint32_t
          {
             wchar_t buffer[1024];
-            connections->set(v->getName().toString(buffer, 1024), new SNMP_Variable(std::move(*v)));
+            v->getName().toString(buffer, 1024);
+            connections->set(buffer, new SNMP_Variable(std::move(*v)));
             return SNMP_ERR_SUCCESS;
          });
       if (connections->size() > 0)
