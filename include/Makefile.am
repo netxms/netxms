@@ -60,6 +60,7 @@ include_HEADERS = \
 	nxtask.h \
 	nxtools.h \
 	nxtux.h \
+	nxvault.h \
 	pugiconfig.h \
 	pugixml.h \
 	rwlock.h \
