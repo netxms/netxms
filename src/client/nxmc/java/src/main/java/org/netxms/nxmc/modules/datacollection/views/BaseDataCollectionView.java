@@ -515,7 +515,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
       comparator.setShowErrors(showErrors);
 
       lvFilter.setShowDisabled(ds.getAsBoolean(configPrefix + ".showDisabled", false));
-      lvFilter.setShowUnsupported(ds.getAsBoolean(configPrefix + ".showUnsupported", false));
+      lvFilter.setShowUnsupported(ds.getAsBoolean(configPrefix + ".showUnsupported", true));
       lvFilter.setShowHidden(ds.getAsBoolean(configPrefix + ".showHidden", false));
       
       createContextMenu();

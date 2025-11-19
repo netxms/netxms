@@ -36,7 +36,7 @@ public class LastValuesFilter extends ViewerFilter implements AbstractViewerFilt
    private NXCSession session = Registry.getSession();
 	private String filterString = null;
 	private boolean showDisabled = false;
-	private boolean showUnsupported = false;
+	private boolean showUnsupported = true;
    private boolean showHidden = false;
 
    /**
