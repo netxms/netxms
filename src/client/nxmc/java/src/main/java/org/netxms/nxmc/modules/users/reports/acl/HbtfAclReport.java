@@ -100,6 +100,10 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
+      cell.setCellValue("Asset Mgmt Attributes");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(columnIndex++);
       cell.setCellValue("SNMP Traps");
       cell.setCellStyle(headerStyle);
 
@@ -252,6 +256,10 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
+      cell.setCellValue("Asset Change Log");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(columnIndex++);
       cell.setCellValue("Audit Log");
       cell.setCellStyle(headerStyle);
 
@@ -265,6 +273,10 @@ public class HbtfAclReport extends AbstractAclReport
 
       cell = headerRow.createCell(columnIndex++);
       cell.setCellValue("Syslog");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(columnIndex++);
+      cell.setCellValue("SNMP Trap Log");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -315,6 +327,7 @@ public class HbtfAclReport extends AbstractAclReport
 
          int aclColumnIndex = UsersSheetCells.ACL_START_COLUMN.ordinal();
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_ALL_SCHEDULED_TASKS, user);
+         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_CONFIGURE_TRAPS, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_EPP, user);
@@ -353,10 +366,12 @@ public class HbtfAclReport extends AbstractAclReport
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_USER_SCHEDULED_TASKS, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_ALL_ALARMS, user);
+         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_ASSET_CHANGE_LOG, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_AUDIT_LOG, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_DB, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_LOG, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_SYSLOG, user);
+         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS, user);
       });
    }
@@ -392,6 +407,10 @@ public class HbtfAclReport extends AbstractAclReport
 
       cell = headerRow.createCell(columnIndex++);
       cell.setCellValue("All Scheduled tasks");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(columnIndex++);
+      cell.setCellValue("Asset Mgmt Attributes");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -547,6 +566,10 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
+      cell.setCellValue("Asset Change Log");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(columnIndex++);
       cell.setCellValue("Audit Log");
       cell.setCellStyle(headerStyle);
 
@@ -560,6 +583,10 @@ public class HbtfAclReport extends AbstractAclReport
 
       cell = headerRow.createCell(columnIndex++);
       cell.setCellValue("Syslog");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(columnIndex++);
+      cell.setCellValue("SNMP Trap Log");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -614,6 +641,7 @@ public class HbtfAclReport extends AbstractAclReport
 
          int aclColumnIndex = GroupsSheetCells.ACL_START_COLUMN.ordinal();
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_ALL_SCHEDULED_TASKS, group);
+         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_CONFIGURE_TRAPS, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_EPP, group);
@@ -652,10 +680,12 @@ public class HbtfAclReport extends AbstractAclReport
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_USER_SCHEDULED_TASKS, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_ALL_ALARMS, group);
+         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_ASSET_CHANGE_LOG, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_AUDIT_LOG, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_DB, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_LOG, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_SYSLOG, group);
+         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS, group);
       });
    }
