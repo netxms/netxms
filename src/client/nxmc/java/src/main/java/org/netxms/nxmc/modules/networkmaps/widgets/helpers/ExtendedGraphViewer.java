@@ -52,6 +52,7 @@ import org.eclipse.gef4.zest.core.widgets.zooming.ZoomListener;
 import org.eclipse.gef4.zest.core.widgets.zooming.ZoomManager;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -74,6 +75,7 @@ import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapTextBox;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.networkmaps.algorithms.ManualLayout;
 import org.netxms.nxmc.modules.worldmap.tools.MapLoader;
@@ -1428,5 +1430,66 @@ public class ExtendedGraphViewer extends GraphViewer
    public int getVerticalBarSelection()
    {
       return graph.getVerticalBar().getSelection();
-   }  
+   }
+
+   /**
+    * Find and select node by text 
+    * 
+    * @param text text to search for
+    */
+   public void findNodeByText(String text)
+   {
+      List<?> nodes = graph.getNodes();
+      int startIndex = 0;
+
+      if (graph.getSelection().size() == 1)
+      {
+         Object selected = graph.getSelection().get(0);
+         startIndex = nodes.indexOf(selected) + 1;
+         if (startIndex >= nodes.size())
+         {
+            startIndex = 0;
+         }
+      }
+
+      boolean found = false;
+      boolean wrapped = false;
+      int i = startIndex;
+      do
+      {
+         Object o = nodes.get(i);
+         if (o instanceof CGraphNode)
+         {
+            CGraphNode n = (CGraphNode)o;
+            MapLabelProvider lp = (MapLabelProvider)getLabelProvider();
+            String label = lp.getText(((ObjectFigure)n.getFigure()).getMapElement());
+            if (label != null && label.toUpperCase().contains(text.toUpperCase()))
+            {
+               found = true;
+               setSelection(new StructuredSelection(((ObjectFigure)n.getFigure()).getMapElement()), true);
+
+               org.eclipse.draw2d.geometry.Point center = new org.eclipse.draw2d.geometry.Rectangle(n.getLocation(), n.getSize()).getCenter();
+               center.performScale(getZoom());
+               org.eclipse.draw2d.geometry.Point newViewLocation = center.getTranslated(-graph.getViewport().getClientArea().width / 2, -graph.getViewport().getClientArea().height / 2);
+               graph.getViewport().setViewLocation(newViewLocation.x, newViewLocation.y);
+              
+               if (wrapped)
+               {
+                  view.addMessage(MessageArea.INFORMATION, i18n.tr("Reached the end of map, continuing search from the beginning."));
+               }
+               
+               break;
+            }
+         }
+         i = (i + 1) % nodes.size();
+         if (i == 0 && startIndex != 0)
+            wrapped = true;
+      } while(i != startIndex);
+
+      if (!found)
+      {
+         setSelection(null);
+         view.addMessage(MessageArea.INFORMATION, i18n.tr("No matching objects found on the map."));
+      }
+   }
 }

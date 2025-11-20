@@ -54,8 +54,18 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
@@ -79,6 +89,7 @@ import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView;
@@ -133,6 +144,10 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	private static final int SELECTION_ELEMENTS = 3;
 	private static final int SELECTION_LINKS = 4;
 
+	private Composite searchBar;
+	private Composite mainContent;
+   private LabeledText queryEditor; 
+   private Button startButton;
 	protected NetworkMapPage mapPage;
 	protected ExtendedGraphViewer viewer;
 	protected MapLabelProvider labelProvider;
@@ -179,6 +194,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    protected Action actionVSpanIncrease;
    protected Action actionVSpanDecrease;
    protected Action actionShowLineChart;
+   protected Action actionFindObject;
 
 	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
 	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
@@ -220,10 +236,61 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	@Override
    public final void createContent(Composite parent)
 	{
-		FillLayout layout = new FillLayout();
-		parent.setLayout(layout);
+      parent.setLayout(new FormLayout());
+      
+	   searchBar = new Composite(parent, SWT.NONE);
+      GridLayout gridLayout = new GridLayout();
+      gridLayout.numColumns = 2;
+      searchBar.setLayout(gridLayout);
+      
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      searchBar.setLayoutData(fd);
+      
+      queryEditor = new LabeledText(searchBar, SWT.NONE);
+      queryEditor.setLabel("Search string");      
+      queryEditor.getTextControl().addKeyListener(new KeyListener() {
+         @Override
+         public void keyReleased(KeyEvent e)
+         {
+         }
 
-      viewer = new ExtendedGraphViewer(parent, SWT.NONE, this, new FigureChangeCallback() {         
+         @Override
+         public void keyPressed(KeyEvent e)
+         {
+            if (e.stateMask == 0 && e.keyCode == 13)
+            {
+               viewer.findNodeByText(queryEditor.getText());
+            }
+         }
+      });
+      queryEditor.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+      startButton = new Button(searchBar, SWT.PUSH);
+      startButton.setImage(SharedIcons.IMG_FIND);
+      startButton.setText("Find");
+      startButton.setToolTipText("Find/Find next node by text");
+      startButton.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            viewer.findNodeByText(queryEditor.getText());
+         }
+      });
+      startButton.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, false, false));
+      
+      mainContent = new Composite(parent, SWT.NONE);
+      mainContent.setLayout(new FillLayout());
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(searchBar);
+      fd.right = new FormAttachment(100, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      mainContent.setLayoutData(fd);   
+
+      viewer = new ExtendedGraphViewer(mainContent, SWT.NONE, this, new FigureChangeCallback() {         
          @Override
          public void onMove(NetworkMapElement element)
          {
@@ -241,12 +308,11 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		viewer.setLabelProvider(labelProvider);
       viewer.setBackgroundColor(parent.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND).getRGB());
 
-      loadZoom(getObject());
 		viewer.getGraphControl().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            saveZoom(getObject());
+            savePreferences();
          }
       });
 
@@ -336,6 +402,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 
 		createActions();
 		createContextMenu();
+      loadPreferences();
 
 		if (automaticLayoutEnabled)
 		{
@@ -897,9 +964,59 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          }
       };
       addKeyBinding("M1+M3+L", actionShowLineChart);
+      
+
+      actionFindObject = new Action("&Find object", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            activateFindObjectMode(actionFindObject.isChecked());
+         }
+      };
+      addKeyBinding("M1+F2", actionFindObject); 
+      actionFindObject.setImageDescriptor(SharedIcons.FIND);      
 	}
 
 	/**
+	 * Activate find object mode
+	 * 
+    * @param checked true to enable
+    */
+   protected void activateFindObjectMode(boolean checked)
+   {
+      if (checked)
+      {     
+         searchBar.setVisible(true);
+         startButton.setEnabled(true);
+         queryEditor.setEnabled(true);
+         queryEditor.setFocus();
+         
+         FormData fd = new FormData();
+         fd.left = new FormAttachment(0, 0);
+         fd.top = new FormAttachment(searchBar);
+         fd.right = new FormAttachment(100, 0);
+         fd.bottom = new FormAttachment(100, 0);
+         mainContent.setLayoutData(fd);
+         
+         mainContent.getParent().layout();
+      }
+      else
+      {
+         startButton.setEnabled(false);
+         queryEditor.setEnabled(false);         
+         searchBar.setVisible(false);
+         
+         FormData fd = new FormData();
+         fd.left = new FormAttachment(0, 0);
+         fd.top = new FormAttachment(0, 0);
+         fd.right = new FormAttachment(100, 0);
+         mainContent.setLayoutData(fd);
+
+         mainContent.getParent().layout();
+      }
+   }
+
+   /**
 	 * Enable edit mode
 	 * 
 	 * @param checked true to enable
@@ -999,6 +1116,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       manager.add(actionSaveImage);
       manager.add(new Separator());
       manager.add(actionSelectAllObjects);
+      manager.add(actionFindObject);
 	}
 
    /**
@@ -1007,6 +1125,8 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
 	{
+      manager.add(actionFindObject);
+      manager.add(new Separator());
       manager.add(actionZoomIn);
       manager.add(actionZoomOut);
       manager.add(actionZoomFit);
@@ -1145,6 +1265,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       manager.add(actionHideLinks);
       manager.add(new Separator());
       manager.add(actionSelectAllObjects);
+      manager.add(actionFindObject);
 	}
 
 	/**
@@ -1574,24 +1695,24 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    }
    
    /**
-    * Save network map zoom
-    * 
-    * @return map id for saved settrings names
+    * Save preferences like zoom level and find mode
     */
-   protected void saveZoom(AbstractObject object)
+   private void savePreferences() 
    {
       final PreferenceStore settings = PreferenceStore.getInstance();
+      settings.set(getBaseId() + ".find", actionFindObject.isChecked());
       settings.set(getBaseId() + ".zoom", viewer.getZoom());
    }
    
    /**
-    * Update zoom from storage
-    * 
-    * @return map id for saved settrings names
+    * Load preferences like zoom level and find mode
     */
-   protected void loadZoom(AbstractObject object)
+   private void loadPreferences()
    {
       final PreferenceStore settings = PreferenceStore.getInstance();
       viewer.zoomTo(settings.getAsDouble(getBaseId() + ".zoom", 1.0));
+      boolean findMode = settings.getAsBoolean(getBaseId() + ".find", false);
+      actionFindObject.setChecked(findMode);
+      activateFindObjectMode(findMode);
    }
 }
