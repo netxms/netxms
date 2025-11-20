@@ -665,7 +665,7 @@ public:
    EPRule(uint32_t id);
    EPRule(DB_RESULT hResult, int row);
    EPRule(const NXCPMessage& msg);
-   EPRule(const ConfigEntry& config, bool nxslV5);
+   EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5);
    ~EPRule();
 
    uint32_t getId() const { return m_id; }

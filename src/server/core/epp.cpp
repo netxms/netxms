@@ -57,7 +57,7 @@ EPRule::EPRule(uint32_t id) : m_timeFrames(0, 16, Ownership::True), m_actions(0,
 /**
  * Create rule from config entry
  */
-EPRule::EPRule(const ConfigEntry& config, bool nxslV5) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
+EPRule::EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
 {
    m_id = 0;
    m_guid = config.getSubEntryValueAsUUID(_T("guid"));
@@ -75,6 +75,13 @@ EPRule::EPRule(const ConfigEntry& config, bool nxslV5) : m_timeFrames(0, 16, Own
          if (e != nullptr)
          {
             m_events.add(e->getCode());
+         }
+         else
+         {
+            context->log(NXLOG_WARNING, _T("EPRule::EPRule()"),
+               _T("Event processing policy rule import: rule \"%s\" refers to unknown event template \"%s\""),
+               m_guid.toString().cstr(),
+               events->get(i)->getSubEntryValue(_T("name"), 0, _T("<unknown>")));
          }
       }
    }
