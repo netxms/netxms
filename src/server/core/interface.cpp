@@ -24,6 +24,46 @@
 #include <ieee8021x.h>
 
 /**
+ * Convert interface admin state to text
+ */
+static const char *InterfaceAdminStateToText(InterfaceAdminState state)
+{
+   switch(state)
+   {
+      case IF_ADMIN_STATE_UP:
+         return "UP";
+      case IF_ADMIN_STATE_DOWN:
+         return "DOWN";
+      case IF_ADMIN_STATE_TESTING:
+         return "TESTING";
+      default:
+         return "UNKNOWN";
+   }
+}
+
+/**
+ * Convert interface operational state to text
+ */
+static const char *InterfaceOperStateToText(InterfaceOperState state)
+{
+   switch(state)
+   {
+      case IF_OPER_STATE_UP:
+         return "UP";
+      case IF_OPER_STATE_DOWN:
+         return "DOWN";
+      case IF_OPER_STATE_TESTING:
+         return "TESTING";
+      case IF_OPER_STATE_DORMANT:
+         return "DORMANT";
+      case IF_OPER_STATE_NOT_PRESENT:
+         return "NOT_PRESENT";
+      default:
+         return "UNKNOWN";
+   }
+}
+
+/**
  * Default constructor for Interface object
  */
 Interface::Interface() : super(), m_macAddress(MacAddress::ZERO), m_beforeMaintenaceData(Ownership::True)
@@ -609,7 +649,7 @@ static uint32_t statusToEventInverted[] =
 };
 
 /**
- * Pae state text
+ * PAE state text
  */
 static const TCHAR *paeStateText[] =
 {
@@ -639,7 +679,6 @@ static const TCHAR *backendStateText[] =
 };
 #define PAE_STATE_TEXT(x) ((((int)(x) <= PAE_STATE_RESTART) && ((int)(x) >= 0)) ? paeStateText[(int)(x)] : paeStateText[0])
 #define BACKEND_STATE_TEXT(x) ((((int)(x) <= BACKEND_STATE_IGNORE) && ((int)(x) >= 0)) ? backendStateText[(int)(x)] : backendStateText[0])
-
 
 /**
  * Generate events for interface after maintenance end.
@@ -1963,9 +2002,13 @@ json_t *Interface::toJson()
    json_object_set_new(root, "peerNodeId", json_integer(m_peerNodeId));
    json_object_set_new(root, "peerInterfaceId", json_integer(m_peerInterfaceId));
    json_object_set_new(root, "peerDiscoveryProtocol", json_integer(m_peerDiscoveryProtocol));
+   json_object_set_new(root, "peerDiscoveryProtocolText", json_string_t(GetLinkLayerProtocolName(m_peerDiscoveryProtocol)));
    json_object_set_new(root, "adminState", json_integer(m_adminState));
+   json_object_set_new(root, "adminStateText", json_string(InterfaceAdminStateToText(static_cast<InterfaceAdminState>(m_adminState))));
    json_object_set_new(root, "operState", json_integer(m_operState));
+   json_object_set_new(root, "operStateText", json_string(InterfaceOperStateToText(static_cast<InterfaceOperState>(m_operState))));
    json_object_set_new(root, "stpPortState", json_integer(static_cast<json_int_t>(m_stpPortState)));
+   json_object_set_new(root, "stpPortStateText", json_string_t(STPPortStateToText(m_stpPortState)));
    json_object_set_new(root, "lastKnownOperState", json_integer(m_lastKnownOperState));
    json_object_set_new(root, "lastKnownAdminState", json_integer(m_lastKnownAdminState));
    json_object_set_new(root, "pendingOperState", json_integer(m_pendingOperState));

@@ -3991,7 +3991,7 @@ NetworkPathCheckResult Node::checkNetworkPath(uint32_t requestId)
    if (result.rootCauseFound)
       return result;
 
-   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): will do second pass"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%u]): will do second pass"), m_name, m_id);
 
    result = checkNetworkPathLayer2(requestId, true);
    if (result.rootCauseFound)
@@ -4034,10 +4034,10 @@ void Node::checkAgentPolicyBinding(const shared_ptr<AgentConnectionEx>& conn)
          {
             sendPollerMsg(_T("      Removing policy %s from agent\r\n"), guid.toString().cstr());
             auto data = make_shared<AgentPolicyRemovalData>(self(), guid, ap->getType(i), isNewPolicyTypeFormatSupported());
-            _sntprintf(data->debugId, 256, L"%s [%u] from %s/%s", getName(), getId(), L"unknown", guid.toString().cstr());
+            nx_swprintf(data->debugId, 256, L"%s [%u] from %s/%s", getName(), getId(), L"unknown", guid.toString().cstr());
 
             wchar_t key[64];
-            _sntprintf(key, 64, L"AgentPolicyDeployment_%u", m_id);
+            nx_swprintf(key, 64, L"AgentPolicyDeployment_%u", m_id);
             ThreadPoolExecuteSerialized(g_pollerThreadPool, key, RemoveAgentPolicy, data);
          }
 
@@ -13471,6 +13471,18 @@ void Node::populateInternalCommunicationTopologyMap(NetworkMapObjectList *map, u
 }
 
 /**
+ * Node type names
+ */
+static const char *s_nodeTypeNames[] =
+{
+   "Unknown",
+   "Physical",
+   "Virtual",
+   "Controller",
+   "Container"
+};
+
+/**
  * Serialize object to JSON
  */
 json_t *Node::toJson()
@@ -13480,9 +13492,63 @@ json_t *Node::toJson()
    json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
    json_object_set_new(root, "primaryName", json_string_t(m_primaryHostName));
    json_object_set_new(root, "tunnelId", m_tunnelId.toJson());
+
+   // Capability flags JSON object with boolean attributes
+   json_t *capabilities = json_object();
+   json_object_set_new(capabilities, "isSnmp", json_boolean(m_capabilities & NC_IS_SNMP));
+   json_object_set_new(capabilities, "isNativeAgent", json_boolean(m_capabilities & NC_IS_NATIVE_AGENT));
+   json_object_set_new(capabilities, "isBridge", json_boolean(m_capabilities & NC_IS_BRIDGE));
+   json_object_set_new(capabilities, "isRouter", json_boolean(m_capabilities & NC_IS_ROUTER));
+   json_object_set_new(capabilities, "isLocalMgmt", json_boolean(m_capabilities & NC_IS_LOCAL_MGMT));
+   json_object_set_new(capabilities, "isPrinter", json_boolean(m_capabilities & NC_IS_PRINTER));
+   json_object_set_new(capabilities, "isOspf", json_boolean(m_capabilities & NC_IS_OSPF));
+   json_object_set_new(capabilities, "isSsh", json_boolean(m_capabilities & NC_IS_SSH));
+   json_object_set_new(capabilities, "isCdp", json_boolean(m_capabilities & NC_IS_CDP));
+   json_object_set_new(capabilities, "isNdp", json_boolean(m_capabilities & NC_IS_NDP));
+   json_object_set_new(capabilities, "isLldp", json_boolean(m_capabilities & NC_IS_LLDP));
+   json_object_set_new(capabilities, "isVrrp", json_boolean(m_capabilities & NC_IS_VRRP));
+   json_object_set_new(capabilities, "hasVlans", json_boolean(m_capabilities & NC_HAS_VLANS));
+   json_object_set_new(capabilities, "is8021x", json_boolean(m_capabilities & NC_IS_8021X));
+   json_object_set_new(capabilities, "isStp", json_boolean(m_capabilities & NC_IS_STP));
+   json_object_set_new(capabilities, "hasEntityMib", json_boolean(m_capabilities & NC_HAS_ENTITY_MIB));
+   json_object_set_new(capabilities, "hasIfxTable", json_boolean(m_capabilities & NC_HAS_IFXTABLE));
+   json_object_set_new(capabilities, "hasAgentIfxCounters", json_boolean(m_capabilities & NC_HAS_AGENT_IFXCOUNTERS));
+   json_object_set_new(capabilities, "hasWinPdh", json_boolean(m_capabilities & NC_HAS_WINPDH));
+   json_object_set_new(capabilities, "isWifiController", json_boolean(m_capabilities & NC_IS_WIFI_CONTROLLER));
+   json_object_set_new(capabilities, "isSmclp", json_boolean(m_capabilities & NC_IS_SMCLP));
+   json_object_set_new(capabilities, "isNewPolicyTypes", json_boolean(m_capabilities & NC_IS_NEW_POLICY_TYPES));
+   json_object_set_new(capabilities, "hasUserAgent", json_boolean(m_capabilities & NC_HAS_USER_AGENT));
+   json_object_set_new(capabilities, "isEthernetIp", json_boolean(m_capabilities & NC_IS_ETHERNET_IP));
+   json_object_set_new(capabilities, "isModbusTcp", json_boolean(m_capabilities & NC_IS_MODBUS_TCP));
+   json_object_set_new(capabilities, "isProfinet", json_boolean(m_capabilities & NC_IS_PROFINET));
+   json_object_set_new(capabilities, "hasFileManager", json_boolean(m_capabilities & NC_HAS_FILE_MANAGER));
+   json_object_set_new(capabilities, "lldpV2Mib", json_boolean(m_capabilities & NC_LLDP_V2_MIB));
+   json_object_set_new(capabilities, "emulatedEntityMib", json_boolean(m_capabilities & NC_EMULATED_ENTITY_MIB));
+   json_object_set_new(capabilities, "deviceView", json_boolean(m_capabilities & NC_DEVICE_VIEW));
+   json_object_set_new(capabilities, "isWifiAp", json_boolean(m_capabilities & NC_IS_WIFI_AP));
+   json_object_set_new(capabilities, "isVnc", json_boolean(m_capabilities & NC_IS_VNC));
+   json_object_set_new(capabilities, "isLocalVnc", json_boolean(m_capabilities & NC_IS_LOCAL_VNC));
+   json_object_set_new(capabilities, "registeredForBackup", json_boolean(m_capabilities & NC_REGISTERED_FOR_BACKUP));
+   json_object_set_new(capabilities, "hasServiceManager", json_boolean(m_capabilities & NC_HAS_SERVICE_MANAGER));
+   json_object_set_new(root, "capabilities", capabilities);
+
+   // State flags JSON object with boolean attributes
+   json_t *state = json_object();
+   json_object_set_new(state, "agentUnreachable", json_boolean(m_state & NSF_AGENT_UNREACHABLE));
+   json_object_set_new(state, "snmpUnreachable", json_boolean(m_state & NSF_SNMP_UNREACHABLE));
+   json_object_set_new(state, "ethernetIpUnreachable", json_boolean(m_state & NSF_ETHERNET_IP_UNREACHABLE));
+   json_object_set_new(state, "cacheModeNotSupported", json_boolean(m_state & NSF_CACHE_MODE_NOT_SUPPORTED));
+   json_object_set_new(state, "snmpTrapFlood", json_boolean(m_state & NSF_SNMP_TRAP_FLOOD));
+   json_object_set_new(state, "icmpUnreachable", json_boolean(m_state & NSF_ICMP_UNREACHABLE));
+   json_object_set_new(state, "sshUnreachable", json_boolean(m_state & NSF_SSH_UNREACHABLE));
+   json_object_set_new(state, "modbusUnreachable", json_boolean(m_state & NSF_MODBUS_UNREACHABLE));
+   json_object_set_new(state, "unreachable", json_boolean(m_state & DCSF_UNREACHABLE));
+   json_object_set_new(state, "networkPathProblem", json_boolean(m_state & DCSF_NETWORK_PATH_PROBLEM));
+   json_object_set_new(root, "state", state);
+
    json_object_set_new(root, "capabilityFlags", json_integer(m_capabilities));
    json_object_set_new(root, "stateFlags", json_integer(m_state));
-   json_object_set_new(root, "type", json_integer(m_type));
+   json_object_set_new(root, "type", json_string(s_nodeTypeNames[(int)m_type]));
    json_object_set_new(root, "subType", json_string_t(m_subType));
    json_object_set_new(root, "pendingState", json_integer(m_pendingState));
    json_object_set_new(root, "pollCountSNMP", json_integer(m_pollCountSNMP));
@@ -13509,10 +13575,10 @@ json_t *Node::toJson()
    json_object_set_new(root, "driverName", json_string_t(m_driver->getName()));
    json_object_set_new(root, "downSince", json_time_string(m_downSince));
    json_object_set_new(root, "bootTime", json_time_string(m_bootTime));
-   json_object_set_new(root, "pollerNode", json_integer(m_pollerNode));
-   json_object_set_new(root, "agentProxy", json_integer(m_agentProxy));
-   json_object_set_new(root, "snmpProxy", json_integer(m_snmpProxy));
-   json_object_set_new(root, "icmpProxy", json_integer(m_icmpProxy));
+   json_object_set_new(root, "pollerNodeId", json_integer(m_pollerNode));
+   json_object_set_new(root, "agentProxyNodeId", json_integer(m_agentProxy));
+   json_object_set_new(root, "snmpProxyNodeId", json_integer(m_snmpProxy));
+   json_object_set_new(root, "icmpProxyNodeId", json_integer(m_icmpProxy));
    json_object_set_new(root, "lastEvents", json_integer_array(m_lastEvents, MAX_LAST_EVENTS));
    char baseBridgeAddrText[64];
    json_object_set_new(root, "baseBridgeAddress", json_string_a(BinToStrA(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseBridgeAddrText)));
@@ -13537,7 +13603,7 @@ json_t *Node::toJson()
    json_object_set_new(root, "syslogCodepage", json_string_a(m_syslogCodepage));
    json_object_set_new(root, "modbusUnitId", json_integer(m_modbusUnitId));
    json_object_set_new(root, "modbusTCPPort", json_integer(m_modbusTcpPort));
-   json_object_set_new(root, "modbusProxy", json_integer(m_modbusProxy));
+   json_object_set_new(root, "modbusProxyNodeId", json_integer(m_modbusProxy));
    json_object_set_new(root, "vncPassword", json_string_t(m_vncPassword));
    json_object_set_new(root, "vncPort", json_integer(m_vncPort));
    json_object_set_new(root, "vncProxy", json_integer(m_vncProxy));

@@ -5295,4 +5295,90 @@ String LIBNETXMS_EXPORTABLE FormatDCIValue(const TCHAR *unitName, const TCHAR *v
    return result;
 }
 
+/**
+ * Calculate Levenshtein distance between two strings
+ * @return Edit distance (number of single-character edits required to transform one string into another)
+ */
+size_t LIBNETXMS_EXPORTABLE CalculateLevenshteinDistance(const TCHAR *s1, size_t len1, const TCHAR *s2, size_t len2, bool ignoreCase)
+{
+   // If one string is empty, distance is the length of the other
+   if (len1 == 0)
+      return len2;
+   if (len2 == 0)
+      return len1;
 
+   // Create distance matrix
+   std::vector<std::vector<size_t>> matrix(len1 + 1, std::vector<size_t>(len2 + 1));
+
+   // Initialize first row and column
+   for (size_t i = 0; i <= len1; i++)
+      matrix[i][0] = i;
+   for (size_t j = 0; j <= len2; j++)
+      matrix[0][j] = j;
+
+   // Fill the matrix
+   for (size_t i = 1; i <= len1; i++)
+   {
+      for (size_t j = 1; j <= len2; j++)
+      {
+         size_t cost = ((s1[i - 1] == s2[j - 1]) || (ignoreCase && (_totupper(s1[i - 1]) == _totupper(s2[j - 1])))) ? 0 : 1;
+         matrix[i][j] = std::min({
+            matrix[i - 1][j] + 1,      // deletion
+            matrix[i][j - 1] + 1,      // insertion
+            matrix[i - 1][j - 1] + cost // substitution
+         });
+      }
+   }
+
+   return matrix[len1][len2];
+}
+
+/**
+ * Fuzzy string comparison
+ * @param s1 first string
+ * @param s2 second string
+ * @param threshold matching threshold (0.0 - exact match, 1.0 - any strings match)
+ * @return true if strings match according to specified threshold
+ */
+bool LIBNETXMS_EXPORTABLE FuzzyMatchStrings(const TCHAR *s1, const TCHAR *s2, double threshold)
+{
+   if (threshold <= 0.0)
+      return _tcscmp(s1, s2) == 0;
+
+   if (threshold >= 1.0)
+      return true;
+
+   size_t len1 = _tcslen(s1);
+   size_t len2 = _tcslen(s2);
+   if (len1 == 0 && len2 == 0)
+      return true;
+
+   size_t editDistance = CalculateLevenshteinDistance(s1, len1, s2, len2, false);
+   double similarity = 1.0 - (static_cast<double>(editDistance) / std::max(len1, len2));
+   return similarity >= (1.0 - threshold);
+}
+
+/**
+ * Fuzzy string comparison ignoring case
+ * @param s1 first string
+ * @param s2 second string
+ * @param threshold matching threshold (0.0 - exact match, 1.0 - any strings match)
+ * @return true if strings match according to specified threshold
+ */
+bool LIBNETXMS_EXPORTABLE FuzzyMatchStringsIgnoreCase(const TCHAR *s1, const TCHAR *s2, double threshold)
+{
+   if (threshold <= 0.0)
+      return _tcsicmp(s1, s2) == 0;
+
+   if (threshold >= 1.0)
+      return true;
+
+   size_t len1 = _tcslen(s1);
+   size_t len2 = _tcslen(s2);
+   if (len1 == 0 && len2 == 0)
+      return true;
+
+   size_t editDistance = CalculateLevenshteinDistance(s1, len1, s2, len2, true);
+   double similarity = 1.0 - (static_cast<double>(editDistance) / std::max(len1, len2));
+   return similarity >= (1.0 - threshold);
+}

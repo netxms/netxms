@@ -332,6 +332,29 @@ bool String::equalsIgnoreCase(const TCHAR *s) const
 }
 
 /**
+ * Check that two strings are equal using fuzzy matching (Levenshtein distance)
+ * @param s String to compare with
+ * @param threshold Maximum allowed edit distance (0.0 = exact match, 1.0 = completely different)
+ * @return true if strings are similar within the threshold
+ */
+bool String::equalsFuzzyImpl(const String& s, double threshold, bool ignoreCase) const
+{
+   if (threshold <= 0.0)
+      return equals(s);
+   
+   if (threshold >= 1.0)
+      return true;
+   
+   size_t maxLen = std::max(m_length, s.m_length);
+   if (maxLen == 0)
+      return true;  // Both strings are empty
+   
+   size_t editDistance = CalculateLevenshteinDistance(m_buffer, m_length, s.m_buffer, s.m_length, ignoreCase);
+   double similarity = 1.0 - (static_cast<double>(editDistance) / maxLen);
+   return similarity >= (1.0 - threshold);
+}
+
+/**
  * Check that this string starts with given sub-string
  */
 bool String::startsWith(const String& s) const
@@ -348,7 +371,7 @@ bool String::startsWith(const String& s) const
  */
 bool String::startsWith(const TCHAR *s) const
 {
-   if (s == NULL)
+   if (s == nullptr)
       return false;
    size_t l = _tcslen(s);
    if (l > m_length)

@@ -1089,3 +1089,17 @@ int F_FormatMetricPrefix(int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_
    *result = vm->createValue(FormatNumber(inVal, useBinaryPrefixes, 0, precision));
    return NXSL_ERR_SUCCESS;
 }
+
+/**
+ * Calculate Levenshtein distance between two strings
+ */
+int F_LevenshteinDistance(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString() || !argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   const TCHAR *s1 = argv[0]->getValueAsCString();
+   const TCHAR *s2 = argv[1]->getValueAsCString();
+   *result = vm->createValue(CalculateLevenshteinDistance(s1, s2));
+   return NXSL_ERR_SUCCESS;
+}

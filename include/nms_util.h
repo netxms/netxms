@@ -1252,6 +1252,8 @@ protected:
 
    bool isInternalBuffer() { return m_buffer == m_internalBuffer; }
 
+   bool equalsFuzzyImpl(const String& s, double threshold, bool ignoreCase) const;
+
 public:
    static const ssize_t npos;
    static const String empty;
@@ -1288,6 +1290,22 @@ public:
 	bool equals(const TCHAR *s) const;
    bool equalsIgnoreCase(const String& s) const;
    bool equalsIgnoreCase(const TCHAR *s) const;
+   bool equalsFuzzy(const String& s, double threshold) const
+   {
+      return equalsFuzzyImpl(s, threshold, false);
+   }
+   bool equalsFuzzy(const TCHAR *s, double threshold) const
+   {
+      return (s != nullptr) ? equalsFuzzyImpl(String(s), threshold, false) : false;
+   }
+   bool equalsFuzzyIgnoreCase(const String& s, double threshold) const
+   {
+      return equalsFuzzyImpl(s, threshold, true);
+   }
+   bool equalsFuzzyIgnoreCase(const TCHAR *s, double threshold) const
+   {
+      return (s != nullptr) ? equalsFuzzyImpl(String(s), threshold, true) : false;
+   }
    bool startsWith(const String& s) const;
    bool startsWith(const TCHAR *s) const;
    bool endsWith(const String& s) const;
@@ -5609,6 +5627,16 @@ bool LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *str, const WCHAR *expr, bool
 #else
 #define RegexpMatch RegexpMatchA
 #endif
+
+size_t LIBNETXMS_EXPORTABLE CalculateLevenshteinDistance(const TCHAR *s1, size_t len1, const TCHAR *s2, size_t len2, bool ignoreCase);
+static inline size_t CalculateLevenshteinDistance(const TCHAR *s1, const TCHAR *s2, bool ignoreCase = false)
+{
+   size_t len1 = _tcslen(s1);
+   size_t len2 = _tcslen(s2);
+   return CalculateLevenshteinDistance(s1, len1, s2, len2, ignoreCase);
+}
+bool LIBNETXMS_EXPORTABLE FuzzyMatchStrings(const TCHAR *s1, const TCHAR *s2, double threshold = 0.2);
+bool LIBNETXMS_EXPORTABLE FuzzyMatchStringsIgnoreCase(const TCHAR *s1, const TCHAR *s2, double threshold = 0.2);
 
 const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize, bool allowShellCommands);
 String LIBNETXMS_EXPORTABLE ShortenFilePathForDisplay(const TCHAR *path, size_t maxLen);

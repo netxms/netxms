@@ -1341,13 +1341,29 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(std::function<bool (NetObj*)> co
 /**
  * Find object by name
  */
-shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByName(const TCHAR *name, int objectClassHint)
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByName(const wchar_t *name, int objectClassHint)
 {
 	return FindObject(
 	   [name, objectClassHint] (NetObj *object) -> bool
 	   {
-         return ((objectClassHint == -1) || (objectClassHint == object->getObjectClass())) && !object->isDeleted() && !_tcsicmp(object->getName(), name);
+         return ((objectClassHint == -1) || (objectClassHint == object->getObjectClass())) && !object->isDeleted() && !wcsicmp(object->getName(), name);
 	   }, objectClassHint);
+}
+
+/**
+ * Find object by name using fuzzy search (case insensitive)
+ */
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByFuzzyName(const wchar_t *name, int objectClassHint)
+{
+   return FindObject(
+      [name, objectClassHint] (NetObj *object) -> bool
+      {
+         if (object->isDeleted())
+            return false;
+         if (objectClassHint != -1 && objectClassHint != object->getObjectClass())
+            return false;
+         return FuzzyMatchStringsIgnoreCase(name, object->getName());
+      }, objectClassHint);
 }
 
 /**
