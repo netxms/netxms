@@ -232,7 +232,8 @@ Run the client:
 Run the web client:
 
    ```bash
-   mvn -f ./src/client/nxmc/java/pom.xml clean jetty:run -Pweb
+   mvn -f ./src/client/nxmc/java/pom.xml clean package -Pweb -Dnetxms.build.disablePlatformProfile=true
+   mvn -f ./src/client/nxmc/java/pom.xml jetty:run -Pweb -Dnetxms.build.disablePlatformProfile=true
    ```
 
 ### Development Environment
