@@ -337,21 +337,21 @@ bool String::equalsIgnoreCase(const TCHAR *s) const
  * @param threshold Maximum allowed edit distance (0.0 = exact match, 1.0 = completely different)
  * @return true if strings are similar within the threshold
  */
-bool String::equalsFuzzyImpl(const String& s, double threshold, bool ignoreCase) const
+bool String::fuzzyEqualsImpl(const String& s, double threshold, bool ignoreCase) const
 {
-   if (threshold <= 0.0)
-      return equals(s);
-   
    if (threshold >= 1.0)
+      return equals(s);
+
+   if (threshold <= 0.0)
       return true;
-   
+
    size_t maxLen = std::max(m_length, s.m_length);
    if (maxLen == 0)
       return true;  // Both strings are empty
-   
+
    size_t editDistance = CalculateLevenshteinDistance(m_buffer, m_length, s.m_buffer, s.m_length, ignoreCase);
    double similarity = 1.0 - (static_cast<double>(editDistance) / maxLen);
-   return similarity >= (1.0 - threshold);
+   return similarity >= threshold;
 }
 
 /**

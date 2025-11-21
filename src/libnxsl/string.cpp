@@ -148,6 +148,44 @@ static int SM_equalsIgnoreCase(NXSL_Value* thisString, int argc, NXSL_Value** ar
 }
 
 /**
+ * Check if two strings are equal using fuzzy comparison
+ */
+static int SM_fuzzyEquals(NXSL_Value* thisString, int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_VM *vm)
+{
+   if ((argc < 1) || (argc > 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   double threshold = (argc == 2) ? argv[1]->getValueAsReal() : 0.2;
+
+   const TCHAR *s1 = thisString->getValueAsCString();
+   const TCHAR *s2 = argv[0]->getValueAsCString();
+   *result = vm->createValue(FuzzyMatchStrings(s1, s2, threshold));
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * Check if two strings are equal in case-insensitive mode using fuzzy comparison
+ */
+static int SM_fuzzyEqualsIgnoreCase(NXSL_Value* thisString, int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_VM *vm)
+{
+   if ((argc < 1) || (argc > 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   double threshold = (argc == 2) ? argv[1]->getValueAsReal() : 0.2;
+
+   const TCHAR *s1 = thisString->getValueAsCString();
+   const TCHAR *s2 = argv[0]->getValueAsCString();
+   *result = vm->createValue(FuzzyMatchStringsIgnoreCase(s1, s2, threshold));
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
  * Common implementation for indexOf and lastIndexOf methods
  */
 static int IndexOfCommon(NXSL_Value* thisString, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm, bool reverse)
@@ -518,6 +556,8 @@ static struct
    { NXSL_Identifier("endsWith"), SM_endsWith, 1 },
    { NXSL_Identifier("equals"), SM_equals, 1 },
    { NXSL_Identifier("equalsIgnoreCase"), SM_equalsIgnoreCase, 1 },
+   { NXSL_Identifier("fuzzyEquals"), SM_fuzzyEquals, -1 },
+   { NXSL_Identifier("fuzzyEqualsIgnoreCase"), SM_fuzzyEqualsIgnoreCase, -1 },
    { NXSL_Identifier("indexOf"), SM_indexOf, -1 },
    { NXSL_Identifier("lastIndexOf"), SM_lastIndexOf, -1 },
    { NXSL_Identifier("left"), SM_left, -1 },

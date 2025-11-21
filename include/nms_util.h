@@ -1252,7 +1252,7 @@ protected:
 
    bool isInternalBuffer() { return m_buffer == m_internalBuffer; }
 
-   bool equalsFuzzyImpl(const String& s, double threshold, bool ignoreCase) const;
+   bool fuzzyEqualsImpl(const String& s, double threshold, bool ignoreCase) const;
 
 public:
    static const ssize_t npos;
@@ -1290,21 +1290,21 @@ public:
 	bool equals(const TCHAR *s) const;
    bool equalsIgnoreCase(const String& s) const;
    bool equalsIgnoreCase(const TCHAR *s) const;
-   bool equalsFuzzy(const String& s, double threshold) const
+   bool fuzzyEquals(const String& s, double threshold) const
    {
-      return equalsFuzzyImpl(s, threshold, false);
+      return fuzzyEqualsImpl(s, threshold, false);
    }
-   bool equalsFuzzy(const TCHAR *s, double threshold) const
+   bool fuzzyEquals(const TCHAR *s, double threshold) const
    {
-      return (s != nullptr) ? equalsFuzzyImpl(String(s), threshold, false) : false;
+      return (s != nullptr) ? fuzzyEqualsImpl(String(s), threshold, false) : false;
    }
-   bool equalsFuzzyIgnoreCase(const String& s, double threshold) const
+   bool fuzzyEqualsIgnoreCase(const String& s, double threshold) const
    {
-      return equalsFuzzyImpl(s, threshold, true);
+      return fuzzyEqualsImpl(s, threshold, true);
    }
-   bool equalsFuzzyIgnoreCase(const TCHAR *s, double threshold) const
+   bool fuzzyEqualsIgnoreCase(const TCHAR *s, double threshold) const
    {
-      return (s != nullptr) ? equalsFuzzyImpl(String(s), threshold, true) : false;
+      return (s != nullptr) ? fuzzyEqualsImpl(String(s), threshold, true) : false;
    }
    bool startsWith(const String& s) const;
    bool startsWith(const TCHAR *s) const;
@@ -5635,8 +5635,8 @@ static inline size_t CalculateLevenshteinDistance(const TCHAR *s1, const TCHAR *
    size_t len2 = _tcslen(s2);
    return CalculateLevenshteinDistance(s1, len1, s2, len2, ignoreCase);
 }
-bool LIBNETXMS_EXPORTABLE FuzzyMatchStrings(const TCHAR *s1, const TCHAR *s2, double threshold = 0.2);
-bool LIBNETXMS_EXPORTABLE FuzzyMatchStringsIgnoreCase(const TCHAR *s1, const TCHAR *s2, double threshold = 0.2);
+bool LIBNETXMS_EXPORTABLE FuzzyMatchStrings(const TCHAR *s1, const TCHAR *s2, double threshold = 0.8);
+bool LIBNETXMS_EXPORTABLE FuzzyMatchStringsIgnoreCase(const TCHAR *s1, const TCHAR *s2, double threshold = 0.8);
 
 const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize, bool allowShellCommands);
 String LIBNETXMS_EXPORTABLE ShortenFilePathForDisplay(const TCHAR *path, size_t maxLen);

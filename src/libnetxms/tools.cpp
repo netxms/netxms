@@ -5342,10 +5342,10 @@ size_t LIBNETXMS_EXPORTABLE CalculateLevenshteinDistance(const TCHAR *s1, size_t
  */
 bool LIBNETXMS_EXPORTABLE FuzzyMatchStrings(const TCHAR *s1, const TCHAR *s2, double threshold)
 {
-   if (threshold <= 0.0)
+   if (threshold >= 1.0)
       return _tcscmp(s1, s2) == 0;
 
-   if (threshold >= 1.0)
+   if (threshold <= 0.0)
       return true;
 
    size_t len1 = _tcslen(s1);
@@ -5355,7 +5355,7 @@ bool LIBNETXMS_EXPORTABLE FuzzyMatchStrings(const TCHAR *s1, const TCHAR *s2, do
 
    size_t editDistance = CalculateLevenshteinDistance(s1, len1, s2, len2, false);
    double similarity = 1.0 - (static_cast<double>(editDistance) / std::max(len1, len2));
-   return similarity >= (1.0 - threshold);
+   return similarity >= threshold;
 }
 
 /**
@@ -5367,10 +5367,10 @@ bool LIBNETXMS_EXPORTABLE FuzzyMatchStrings(const TCHAR *s1, const TCHAR *s2, do
  */
 bool LIBNETXMS_EXPORTABLE FuzzyMatchStringsIgnoreCase(const TCHAR *s1, const TCHAR *s2, double threshold)
 {
-   if (threshold <= 0.0)
+   if (threshold >= 1.0)
       return _tcsicmp(s1, s2) == 0;
 
-   if (threshold >= 1.0)
+   if (threshold <= 0.0)
       return true;
 
    size_t len1 = _tcslen(s1);
@@ -5380,5 +5380,5 @@ bool LIBNETXMS_EXPORTABLE FuzzyMatchStringsIgnoreCase(const TCHAR *s1, const TCH
 
    size_t editDistance = CalculateLevenshteinDistance(s1, len1, s2, len2, true);
    double similarity = 1.0 - (static_cast<double>(editDistance) / std::max(len1, len2));
-   return similarity >= (1.0 - threshold);
+   return similarity >= threshold;
 }

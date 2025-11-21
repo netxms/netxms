@@ -1095,11 +1095,39 @@ int F_FormatMetricPrefix(int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_
  */
 int F_LevenshteinDistance(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
+   if ((argc < 2) || (argc > 3))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
    if (!argv[0]->isString() || !argv[1]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   const TCHAR *s1 = argv[0]->getValueAsCString();
-   const TCHAR *s2 = argv[1]->getValueAsCString();
-   *result = vm->createValue(CalculateLevenshteinDistance(s1, s2));
+   bool ignoreCase = (argc == 3) ? argv[2]->isTrue() : false;
+
+   uint32_t l1, l2;
+   const TCHAR *s1 = argv[0]->getValueAsString(&l1);
+   const TCHAR *s2 = argv[1]->getValueAsString(&l2);
+   *result = vm->createValue(CalculateLevenshteinDistance(s1, l1, s2, l2, ignoreCase));
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * Calculate similarity score for two strings using Levenshtein distance.
+ * Score is in range 0.0 - 1.0, where 1.0 means identical strings.
+ */
+int F_SimilarityScore(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if ((argc < 2) || (argc > 3))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString() || !argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   bool ignoreCase = (argc == 3) ? argv[2]->isTrue() : false;
+
+   uint32_t l1, l2;
+   const TCHAR *s1 = argv[0]->getValueAsString(&l1);
+   const TCHAR *s2 = argv[1]->getValueAsString(&l2);
+   size_t distance = CalculateLevenshteinDistance(s1, l1, s2, l2, ignoreCase);
+   *result = vm->createValue(1.0 - static_cast<double>(distance) / static_cast<double>(std::max(l1, l2)));
    return NXSL_ERR_SUCCESS;
 }

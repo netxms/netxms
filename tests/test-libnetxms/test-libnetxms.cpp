@@ -674,20 +674,20 @@ static void TestString()
    AssertTrue(s1.equalsIgnoreCase(_T("Alpha Beta Gamma")));
    EndTest();
 
-   StartTest(_T("String - equalsFuzzy"));
-   AssertTrue(String(_T("hello")).equalsFuzzy(String(_T("hello")), 0.0));
-   AssertFalse(String(_T("hello")).equalsFuzzy(String(_T("world")), 0.0));
-   AssertTrue(String(_T("hello")).equalsFuzzy(String(_T("world")), 1.0));
-   AssertTrue(String(_T("hello")).equalsFuzzy(String(_T("hallo")), 0.2));  // 1 substitution out of 5
-   AssertFalse(String(_T("hello")).equalsFuzzy(String(_T("hallo")), 0.1)); // Distance too high
-   AssertTrue(String(_T("hello")).equalsFuzzy(String(_T("helo")), 0.2));  // 1 deletion
-   AssertTrue(String(_T("hello")).equalsFuzzy(String(_T("helllo")), 0.2));  // 1 insertion
-   AssertTrue(String(_T("kitten")).equalsFuzzy(String(_T("sitting")), 0.5)); // 3 edits out of 7 chars
-   AssertFalse(String(_T("kitten")).equalsFuzzy(String(_T("sitting")), 0.3));  // Too many edits
-   AssertFalse(String(_T("a")).equalsFuzzy(String(_T("b")), 0.99)); // 100% different
-   AssertTrue(String(_T("a")).equalsFuzzy(String(_T("b")), 1.0));  // Threshold allows it
-   AssertTrue(String(_T("programming")).equalsFuzzy(String(_T("programing")), 0.1));
-   AssertTrue(String(_T("algorithm")).equalsFuzzy(String(_T("algoritm")), 0.15));
+   StartTest(_T("String - fuzzyEquals"));
+   AssertTrue(String(_T("hello")).fuzzyEquals(String(_T("hello")), 1.0));
+   AssertFalse(String(_T("hello")).fuzzyEquals(String(_T("world")), 1.0));
+   AssertTrue(String(_T("hello")).fuzzyEquals(String(_T("world")), 0.0));
+   AssertTrue(String(_T("hello")).fuzzyEquals(String(_T("hallo")), 0.8));  // 1 substitution out of 5
+   AssertFalse(String(_T("hello")).fuzzyEquals(String(_T("hallo")), 0.9)); // Distance too high
+   AssertTrue(String(_T("hello")).fuzzyEquals(String(_T("helo")), 0.8));  // 1 deletion
+   AssertTrue(String(_T("hello")).fuzzyEquals(String(_T("helllo")), 0.8));  // 1 insertion
+   AssertTrue(String(_T("kitten")).fuzzyEquals(String(_T("sitting")), 0.5)); // 3 edits out of 7 chars
+   AssertFalse(String(_T("kitten")).fuzzyEquals(String(_T("sitting")), 0.7));  // Too many edits
+   AssertFalse(String(_T("a")).fuzzyEquals(String(_T("b")), 0.01)); // 100% different
+   AssertTrue(String(_T("a")).fuzzyEquals(String(_T("b")), 0.0));  // Threshold allows it
+   AssertTrue(String(_T("programming")).fuzzyEquals(String(_T("programing")), 0.9));
+   AssertTrue(String(_T("algorithm")).fuzzyEquals(String(_T("algoritm")), 0.85));
    EndTest();
 
    StartTest(_T("String - append"));
