@@ -78,8 +78,6 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
    
 	private static final int HORIZONTAL_MARGIN = 20;
 	private static final int VERTICAL_MARGIN = 10;
-	private static final int HORIZONTAL_SPACING = 10;
-	private static final int VERTICAL_SPACING = 10;
 	private static final int PORT_WIDTH = 44;
 	private static final int PORT_HEIGHT = 30;
 
@@ -303,9 +301,6 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
       }
 
       return new Point(maxX + PORT_WIDTH + HORIZONTAL_MARGIN, maxY + PORT_HEIGHT + VERTICAL_MARGIN);
-
-//      return new Point(((ports.size() + rowCount - 1) / rowCount) * (PORT_WIDTH + HORIZONTAL_SPACING) + HORIZONTAL_MARGIN * 2 + nameSize.x,
-//            rowCount * PORT_HEIGHT + (rowCount - 1) * VERTICAL_SPACING + VERTICAL_MARGIN * 2);
 	}
 
 	/**
