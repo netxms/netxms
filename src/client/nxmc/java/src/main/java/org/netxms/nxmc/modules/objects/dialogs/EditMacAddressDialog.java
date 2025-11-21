@@ -118,5 +118,4 @@ public class EditMacAddressDialog extends Dialog
    {
       return macAddress;
    }
-
 }

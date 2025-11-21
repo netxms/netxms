@@ -24,6 +24,27 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 60.6 to 60.7
+ */
+static bool H_UpgradeFromV6()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_INTERFACE_UNMANAGED, _T("SYS_IF_UNMANAGED"),
+         EVENT_SEVERITY_NORMAL, EF_LOG, _T("dd449241-1886-41e3-a279-9a084ff64cec"),
+         _T("Interface \"%<interfaceName>\" changed state to UNMANAGED (IP Addr: %<interfaceIpAddress>/%<interfaceNetMask>, IfIndex: %<interfaceIndex>)"),
+         _T("Generated when interface status changed to unmanaged.\r\n")
+         _T("Parameters:\r\n")
+         _T("   1) interfaceObjectId - Interface object ID\r\n")
+         _T("   2) interfaceName - Interface name\r\n")
+         _T("   3) interfaceIpAddress - Interface IP address\r\n")
+         _T("   4) interfaceNetMask - Interface netmask\r\n")
+         _T("   5) interfaceIndex - Interface index")
+      ));
+
+   CHK_EXEC(SetMinorSchemaVersion(7));
+   return true;
+}
+
+/**
  * Upgrade from 60.5 to 60.6
  */
 static bool H_UpgradeFromV5()
@@ -227,6 +248,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 6,  60, 7,  H_UpgradeFromV6  },
    { 5,  60, 6,  H_UpgradeFromV5  },
    { 4,  60, 5,  H_UpgradeFromV4  },
    { 3,  60, 4,  H_UpgradeFromV3  },

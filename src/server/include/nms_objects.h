@@ -1486,7 +1486,8 @@ public:
 
    virtual void postModify();
 
-   virtual bool setMgmtStatus(bool bIsManaged);
+   virtual bool setMgmtStatus(bool bIsManaged) final;
+   virtual void onMgmtStatusChange(bool isManaged, int oldStatus);
    virtual void calculateCompoundStatus(bool forcedRecalc = false);
 
    uint32_t getUserRights(uint32_t userId) const;
@@ -1573,8 +1574,7 @@ public:
  * Object find functions
  */
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(uint32_t id, int objectClassHint = -1);
-shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByName(const wchar_t *name, int objectClassHint = -1);
-shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByFuzzyName(const wchar_t *name, int objectClassHint = -1);
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByName(const TCHAR *name, int objectClassHint = -1);
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByGUID(const uuid& guid, int objectClassHint = -1);
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(bool (*comparator)(NetObj*, void*), void *context, int objectClassHint = -1);
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(std::function<bool (NetObj*)> comparator, int objectClassHint = -1);
@@ -2294,7 +2294,7 @@ public:
 
    virtual int32_t getZoneUIN() const override { return m_zoneUIN; }
 
-   virtual bool setMgmtStatus(bool isManaged) override;
+   virtual void onMgmtStatusChange(bool isManaged, int oldStatus) override;
 
    virtual json_t *toJson() override;
 
@@ -3250,7 +3250,7 @@ class Subnet;
 struct ProxyInfo;
 
 /**
- * Node types
+ * Node subtypes
  */
 enum NodeType
 {
@@ -4013,7 +4013,7 @@ public:
 
    void forceConfigurationPoll() { lockProperties(); m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL; unlockProperties(); }
 
-   virtual bool setMgmtStatus(bool isManaged) override;
+   void onMgmtStatusChange(bool isManaged, int oldStatus) override;
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
    bool checkAgentTrapId(uint64_t id);

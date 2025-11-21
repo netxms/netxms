@@ -631,7 +631,7 @@ static uint32_t statusToEvent[] =
    EVENT_INTERFACE_DOWN,     // Major
    EVENT_INTERFACE_DOWN,     // Critical
    EVENT_INTERFACE_UNKNOWN,  // Unknown
-   EVENT_INTERFACE_UNKNOWN,  // Unmanaged
+   EVENT_INTERFACE_UNMANAGED,// Unmanaged
    EVENT_INTERFACE_DISABLED, // Disabled
    EVENT_INTERFACE_TESTING   // Testing
 };
@@ -642,10 +642,10 @@ static uint32_t statusToEventInverted[] =
    EVENT_INTERFACE_EXPECTED_DOWN, // Minor
    EVENT_INTERFACE_UNEXPECTED_UP, // Major
    EVENT_INTERFACE_UNEXPECTED_UP, // Critical
-   EVENT_INTERFACE_UNKNOWN,  // Unknown
-   EVENT_INTERFACE_UNKNOWN,  // Unmanaged
-   EVENT_INTERFACE_DISABLED, // Disabled
-   EVENT_INTERFACE_TESTING   // Testing
+   EVENT_INTERFACE_UNKNOWN,       // Unknown
+   EVENT_INTERFACE_UNMANAGED,     // Unmanaged
+   EVENT_INTERFACE_DISABLED,      // Disabled
+   EVENT_INTERFACE_TESTING        // Testing
 };
 
 /**
@@ -1963,17 +1963,25 @@ void Interface::clearOSPFInformation()
 /**
  * Set object's management status
  */
-bool Interface::setMgmtStatus(bool isManaged)
+void Interface::onMgmtStatusChange(bool isManaged, int oldStatus)
 {
-   if (!super::setMgmtStatus(isManaged))
-      return false;
+   const InetAddress& addr = m_ipAddressList.getFirstUnicastAddress();
+   for(const std::shared_ptr<NetObj> parent : getParentList())
+   {
+      EventBuilder(isManaged ? EVENT_INTERFACE_UNKNOWN : EVENT_INTERFACE_UNMANAGED, parent->getId())
+                    .param(_T("interfaceObjectId"), m_id)
+                    .param(_T("interfaceName"), m_name)
+                    .param(_T("interfaceIpAddress"), addr)
+                    .param(_T("interfaceNetMask"), addr.getMaskBits())
+                    .param(_T("interfaceIndex"), m_index)
+                    .post();
+   }
 
    if (!isManaged && ConfigReadBoolean(_T("Objects.Interfaces.ClearPeerOnUnmanage"), false))
    {
       ClearPeer(getPeerInterfaceId());
       ClearPeer(getId());
    }
-   return true;
 }
 
 /**

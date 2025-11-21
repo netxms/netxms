@@ -200,6 +200,7 @@
 #define EVENT_RESPONSIBLE_USER_REMOVED              146
 #define EVENT_RESPONSIBLE_USER_MODIFIED             147
 #define EVENT_IF_SPEED_BELOW_MAXIMUM                148
+#define EVENT_INTERFACE_UNMANAGED                   149
 
 #define EVENT_SNMP_UNMATCHED_TRAP                   500
 #define EVENT_SNMP_COLD_START                       501

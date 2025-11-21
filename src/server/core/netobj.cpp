@@ -1698,7 +1698,7 @@ void NetObj::dropUserAccess(uint32_t userId)
  */
 bool NetObj::setMgmtStatus(bool isManaged)
 {
-   int oldStatus;
+   int oldStatus = m_status;
 
    lockProperties();
 
@@ -1708,17 +1708,12 @@ bool NetObj::setMgmtStatus(bool isManaged)
       return false;  // Status is already correct
    }
 
-   oldStatus = m_status;
    m_status = (isManaged ? STATUS_UNKNOWN : STATUS_UNMANAGED);
 
    setModified(MODIFY_COMMON_PROPERTIES);
    unlockProperties();
 
-   // Generate event if current object is a node
-   if (getObjectClass() == OBJECT_NODE)
-      EventBuilder(isManaged ? EVENT_NODE_UNKNOWN : EVENT_NODE_UNMANAGED, m_id)
-         .param(_T("previousNodeStatus"), oldStatus)
-         .post();
+   onMgmtStatusChange(isManaged, oldStatus);
 
    // Change status for child objects also
    readLockChildList();
@@ -1732,6 +1727,12 @@ bool NetObj::setMgmtStatus(bool isManaged)
       getParentList().get(i)->calculateCompoundStatus();
    unlockParentList();
    return true;
+}
+
+
+void NetObj::onMgmtStatusChange(bool isManaged, int oldStatus)
+{
+   //Default implementation does nothing
 }
 
 /**

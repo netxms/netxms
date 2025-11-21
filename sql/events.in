@@ -1831,6 +1831,19 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   6) objectName - Object name' CONCAT CRLF CONCAT
 		'   7) operator - Operator (user who made change to the object)'
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
+	(
+		EVENT_INTERFACE_UNMANAGED, 'SYS_IF_UNMANAGED', 'dd449241-1886-41e3-a279-9a084ff64cec',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Interface "%<interfaceName>" changed state to UNMANAGED (IP Addr: %<interfaceIpAddress>/%<interfaceNetMask>, IfIndex: %<interfaceIndex>)',
+		'Generated when interface status changed to unmanaged.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
+		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
+		'   5) interfaceIndex - Interface index'
+	);
 
 /*
 ** SNMP traps

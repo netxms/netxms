@@ -2421,10 +2421,12 @@ void Node::deleteInterface(Interface *iface)
 /**
  * Set object's management status
  */
-bool Node::setMgmtStatus(bool isManaged)
+void Node::onMgmtStatusChange(bool isManaged, int oldStatus)
 {
-   if (!super::setMgmtStatus(isManaged))
-      return false;
+   // Generate event if current object is a node
+   EventBuilder(isManaged ? EVENT_NODE_UNKNOWN : EVENT_NODE_UNMANAGED, m_id)
+      .param(_T("previousNodeStatus"), oldStatus)
+      .post();
 
    if (IsZoningEnabled())
    {
@@ -2440,7 +2442,6 @@ bool Node::setMgmtStatus(bool isManaged)
    onDataCollectionChange();
 
    CALL_ALL_MODULES(pfOnNodeMgmtStatusChange, (self(), isManaged));
-   return true;
 }
 
 /**
