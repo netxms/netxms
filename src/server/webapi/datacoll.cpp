@@ -173,20 +173,20 @@ int H_DataCollectionHistory(Context *context)
       }
    }
 
-   TCHAR condition[256] = _T("");
+   wchar_t condition[256] = L"";
    if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
    {
       if (timeFrom != 0)
-         _tcscpy(condition, _T(" AND idata_timestamp>=to_timestamp(?)"));
+         wcscpy(condition, L" AND idata_timestamp>=to_timestamp(?)");
       if (timeTo != 0)
-         _tcscat(condition, _T(" AND idata_timestamp<=to_timestamp(?)"));
+         wcscat(condition, L" AND idata_timestamp<=to_timestamp(?)");
    }
    else
    {
       if (timeFrom != 0)
-         _tcscpy(condition, _T(" AND idata_timestamp>=?"));
+         wcscpy(condition, L" AND idata_timestamp>=?");
       if (timeTo != 0)
-         _tcscat(condition, _T(" AND idata_timestamp<=?"));
+         wcscat(condition, L" AND idata_timestamp<=?");
    }
 
    bool success = false;

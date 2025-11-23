@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -253,6 +253,24 @@ void SoftwarePackage::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 	msg->setField(fieldId++, CHECK_NULL_EX(m_url));
 	msg->setField(fieldId++, CHECK_NULL_EX(m_description));
    msg->setField(fieldId++, CHECK_NULL_EX(m_uninstallKey));
+}
+
+/**
+ * Serialize to JSON
+ */
+json_t *SoftwarePackage::toJson() const
+{
+   json_t *root = json_object();
+
+   json_object_set_new(root, "name", json_string_t(m_name));
+   json_object_set_new(root, "version", json_string_t(m_version));
+   json_object_set_new(root, "vendor", json_string_t(m_vendor));
+   json_object_set_new(root, "date", json_integer(static_cast<json_int_t>(m_date)));
+   json_object_set_new(root, "url", json_string_t(m_url));
+   json_object_set_new(root, "description", json_string_t(m_description));
+   json_object_set_new(root, "uninstallKey", json_string_t(m_uninstallKey));
+
+   return root;
 }
 
 /**

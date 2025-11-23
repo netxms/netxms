@@ -30,6 +30,8 @@
 
 void InitAITasks();
 void AITaskSchedulerThread(ThreadPool *aiTaskThreadPool);
+std::string F_AITaskList(json_t *arguments, uint32_t userId);
+std::string F_DeleteAITask(json_t *arguments, uint32_t userId);
 
 struct AssistantFunction
 {
@@ -329,13 +331,23 @@ std::string NXCORE_EXPORTABLE CallAIAssistantFunction(const char *name, json_t *
    {
       shared_ptr<AssistantFunction> function = it->second;
       s_functionsMutex.unlock();
+
       if (json_is_string(arguments))
       {
+         nxlog_debug_tag(DEBUG_TAG, 7, L"AI assistant function \"%hs\" called with arguments %hs", name, json_string_value(arguments));
          arguments = json_loads(json_string_value(arguments), 0, nullptr);
          std::string response = function->handler(arguments, userId);
          json_decref(arguments);
          return response;
       }
+
+      if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 7)
+      {
+         char *argsStr = json_dumps(arguments, JSON_INDENT(3) | JSON_PRESERVE_ORDER);
+         nxlog_debug_tag(DEBUG_TAG, 7, L"AI assistant function \"%hs\" called with arguments %hs", name, argsStr);
+         MemFree(argsStr);
+      }
+
       return function->handler(arguments, userId);
    }
    s_functionsMutex.unlock();
@@ -491,7 +503,7 @@ static json_t *DoApiRequest(json_t *requestData)
       response = json_loads(data, 0, &error);
       if (response != nullptr)
       {
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("Successful response from LLM: %hs"), data);
+         nxlog_debug_tag(DEBUG_TAG, 8, _T("Successful response from LLM: %hs"), data);
       }
       else
       {
@@ -769,7 +781,8 @@ bool InitAIAssistant()
       "Register new AI task for background execution. Use this function to create long running tasks that may require multiple executions to complete.",
       {
           { "description", "Task description" },
-          { "prompt", "Initial prompt for the task, it will be evaluated immediately" }
+          { "prompt", "Initial prompt for the task" },
+          { "delay", "Optional delay in seconds before first execution" }
       },
       [] (json_t *arguments, uint32_t userId) -> std::string
       {
@@ -780,10 +793,24 @@ bool InitAIAssistant()
          if ((prompt == nullptr) || (prompt[0] == 0))
             return std::string("Error: task prompt must be provided");
 
-         uint32_t taskId = RegisterAITask(String(description, "utf-8"), userId, String(prompt, "utf-8"));
+         uint32_t delay = json_object_get_uint32(arguments, "delay", 0);
+         time_t startTime = (delay > 0) ? time(nullptr) + delay : 0;
+         uint32_t taskId = RegisterAITask(String(description, "utf-8"), userId, String(prompt, "utf-8"), startTime);
          char buffer[32];
          return std::string(IntegerToString(taskId, buffer));
       });
+   RegisterAIAssistantFunction(
+      "ai-task-list",
+      "Get list of registered AI tasks.",
+      { },
+      F_AITaskList);
+   RegisterAIAssistantFunction(
+      "delete-ai-task",
+      "Delete registered AI task.",
+      {
+         { "task_id", "ID of the task to delete" }
+      },
+      F_DeleteAITask);
 
    RebuildFunctionDeclarations();
 

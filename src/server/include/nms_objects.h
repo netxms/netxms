@@ -660,13 +660,13 @@ enum ChangeCode
 class SoftwarePackage
 {
 private:
-   TCHAR *m_name;
-   TCHAR *m_version;
-   TCHAR *m_vendor;
+   wchar_t *m_name;
+   wchar_t *m_version;
+   wchar_t *m_vendor;
    time_t m_date;
-   TCHAR *m_url;
-   TCHAR *m_description;
-   TCHAR *m_uninstallKey;
+   wchar_t *m_url;
+   wchar_t *m_description;
+   wchar_t *m_uninstallKey;
    ChangeCode m_changeCode;
 
    SoftwarePackage();
@@ -681,14 +681,16 @@ public:
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
    bool saveToDatabase(DB_STATEMENT hStmt) const;
 
-   const TCHAR *getName() const { return m_name; }
-   const TCHAR *getVersion() const { return m_version; }
-   const TCHAR* getVendor() const { return m_vendor; }
+   const wchar_t *getName() const { return m_name; }
+   const wchar_t *getVersion() const { return m_version; }
+   const wchar_t* getVendor() const { return m_vendor; }
    time_t getDate() const { return m_date; }
-   const TCHAR* getUrl() const { return m_url; }
-   const TCHAR* getDescription() const { return m_description; }
-   const TCHAR* getUninstallKey() const { return m_uninstallKey; }
+   const wchar_t* getUrl() const { return m_url; }
+   const wchar_t* getDescription() const { return m_description; }
+   const wchar_t* getUninstallKey() const { return m_uninstallKey; }
    ChangeCode getChangeCode() const { return m_changeCode; }
+
+   json_t *toJson() const;
 
    void setChangeCode(ChangeCode c) { m_changeCode = c; }
 
@@ -719,17 +721,17 @@ private:
    ChangeCode m_changeCode;
    uint32_t m_index;
    uint64_t m_capacity;
-   TCHAR *m_type;
-   TCHAR *m_vendor;
-   TCHAR *m_model;
-   TCHAR *m_partNumber;
-   TCHAR *m_serialNumber;
-   TCHAR *m_location;
-   TCHAR *m_description;
+   wchar_t *m_type;
+   wchar_t *m_vendor;
+   wchar_t *m_model;
+   wchar_t *m_partNumber;
+   wchar_t *m_serialNumber;
+   wchar_t *m_location;
+   wchar_t *m_description;
 
 public:
-   HardwareComponent(HardwareComponentCategory category, uint32_t index, const TCHAR *type,
-            const TCHAR *vendor, const TCHAR *model, const TCHAR *partNumber, const TCHAR *serialNumber);
+   HardwareComponent(HardwareComponentCategory category, uint32_t index, const wchar_t *type,
+            const wchar_t *vendor, const wchar_t *model, const wchar_t *partNumber, const wchar_t *serialNumber);
    HardwareComponent(DB_RESULT result, int row);
    HardwareComponent(HardwareComponentCategory category, const Table& table, int row);
    HardwareComponent(const HardwareComponent& src);
@@ -740,16 +742,18 @@ public:
 
    ChangeCode getChangeCode() const { return m_changeCode; };
    HardwareComponentCategory getCategory() const { return m_category; };
-   const TCHAR *getCategoryName() const;
+   const wchar_t *getCategoryName() const;
    uint32_t getIndex() const { return m_index; }
    uint64_t getCapacity() const { return m_capacity; }
-   const TCHAR *getType() const { return CHECK_NULL_EX(m_type); };
-   const TCHAR *getVendor() const { return CHECK_NULL_EX(m_vendor); };
-   const TCHAR *getModel() const { return CHECK_NULL_EX(m_model); };
-   const TCHAR *getLocation() const { return CHECK_NULL_EX(m_location); };
-   const TCHAR *getPartNumber() const { return CHECK_NULL_EX(m_partNumber); };
-   const TCHAR *getSerialNumber() const { return CHECK_NULL_EX(m_serialNumber); };
-   const TCHAR *getDescription() const { return CHECK_NULL_EX(m_description); };
+   const wchar_t *getType() const { return CHECK_NULL_EX(m_type); };
+   const wchar_t *getVendor() const { return CHECK_NULL_EX(m_vendor); };
+   const wchar_t *getModel() const { return CHECK_NULL_EX(m_model); };
+   const wchar_t *getLocation() const { return CHECK_NULL_EX(m_location); };
+   const wchar_t *getPartNumber() const { return CHECK_NULL_EX(m_partNumber); };
+   const wchar_t *getSerialNumber() const { return CHECK_NULL_EX(m_serialNumber); };
+   const wchar_t *getDescription() const { return CHECK_NULL_EX(m_description); };
+
+   json_t *toJson() const;
 
    void setIndex(int index) { m_index = index; }
    void setChangeCode(ChangeCode code) { m_changeCode = code; }
@@ -4050,6 +4054,9 @@ public:
    NXSL_Value* getSoftwarePackagesForNXSL(NXSL_VM* vm);
    NXSL_Value *getOSPFAreasForNXSL(NXSL_VM *vm);
    NXSL_Value *getOSPFNeighborsForNXSL(NXSL_VM *vm);
+
+   json_t *getHardwareComponentsAsJSON();
+   json_t *getSoftwarePackagesAsJSON();
 
    ObjectArray<AgentParameterDefinition> *openParamList(int origin);
    void closeParamList() { unlockProperties(); }

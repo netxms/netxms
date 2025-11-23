@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,17 +27,17 @@
 /**
  * Spanning tree state as text
  */
-const TCHAR *STPPortStateToText(SpanningTreePortState state)
+const wchar_t NXCORE_EXPORTABLE *STPPortStateToText(SpanningTreePortState state)
 {
-   static const TCHAR *stpStateText[] =
+   static const wchar_t *stpStateText[] =
    {
-      _T("UNKNOWN"),
-      _T("DISABLED"),
-      _T("BLOCKING"),
-      _T("LISTENING"),
-      _T("LEARNING"),
-      _T("FORWARDING"),
-      _T("BROKEN")
+      L"UNKNOWN",
+      L"DISABLED",
+      L"BLOCKING",
+      L"LISTENING",
+      L"LEARNING",
+      L"FORWARDING",
+      L"BROKEN"
    };
    int index = static_cast<int>(state);
    return (index <= static_cast<int>(SpanningTreePortState::BROKEN)) && (index >= 0) ? stpStateText[index] : stpStateText[0];

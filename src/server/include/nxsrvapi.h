@@ -210,6 +210,24 @@ enum DataCollectionError
 };
 
 /**
+ * Get textual representation of DataCollectionError value
+ */
+static inline const wchar_t *DataCollectionErrorToText(DataCollectionError e)
+{
+   switch(e)
+   {
+      case DCE_SUCCESS: return L"Success";
+      case DCE_COMM_ERROR: return L"Communication error";
+      case DCE_NOT_SUPPORTED: return L"Not supported";
+      case DCE_IGNORE: return L"Ignore";
+      case DCE_NO_SUCH_INSTANCE: return L"No such instance";
+      case DCE_COLLECTION_ERROR: return L"Collection error";
+      case DCE_ACCESS_DENIED: return L"Access denied";
+      default: return L"Unknown error";
+   }
+}
+
+/**
  * Agent action output callback events
  */
 enum ActionCallbackEvent

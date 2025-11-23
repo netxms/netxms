@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -461,7 +461,7 @@ void AddCDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 void AddSTPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 String BuildLldpId(uint32_t type, const BYTE *data, size_t length);
 
-const TCHAR *STPPortStateToText(SpanningTreePortState state);
+const wchar_t NXCORE_EXPORTABLE *STPPortStateToText(SpanningTreePortState state);
 
 VrrpInfo *GetVRRPInfo(Node *node);
 

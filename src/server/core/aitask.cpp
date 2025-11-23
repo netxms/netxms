@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <iris.h>
+#include <nms_users.h>
 
 #define DEBUG_TAG L"llm.aitask"
 
@@ -110,15 +111,71 @@ void InitAITasks()
 /**
  * Register AI task
  */
-uint32_t NXCORE_EXPORTABLE RegisterAITask(const wchar_t *description, uint32_t userId, const wchar_t *prompt)
+uint32_t NXCORE_EXPORTABLE RegisterAITask(const wchar_t *description, uint32_t userId, const wchar_t *prompt, time_t nextExecutionTime)
 {
    shared_ptr<AITask> task = make_shared<AITask>(description, userId, prompt);
    s_aiTasksLock.lock();
+   if (nextExecutionTime > 0)
+      task->setNextExecutionTime(nextExecutionTime);
    s_aiTasks.set(task->getId(), task);
    s_aiTasksLock.unlock();
    nxlog_debug_tag(DEBUG_TAG, 4, L"Registered AI task [%u] \"%s\"", task->getId(), description);
    ConfigWriteInt(L"AITask.LastTaskId", s_taskId, true, false, true);
    return task->getId();
+}
+
+/**
+ * AI assistant function: ai-task-list
+ */
+std::string F_AITaskList(json_t *arguments, uint32_t userId)
+{
+   bool accessAllTasks = ((GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_MANAGE_AI_TASKS) != 0);
+
+   json_t *output = json_array();
+
+   s_aiTasksLock.lock();
+   s_aiTasks.forEach(
+      [&output, userId, accessAllTasks] (const uint32_t& key, const shared_ptr<AITask>& task) -> EnumerationCallbackResult
+      {
+         if (accessAllTasks || (task->getUserId() == userId))
+            json_array_append_new(output, task->toJson());
+         return _CONTINUE;
+      });
+   s_aiTasksLock.unlock();
+
+   return JsonToString(output);
+}
+
+/**
+ * AI assistant function: delete-ai-task
+ */
+std::string F_DeleteAITask(json_t *arguments, uint32_t userId)
+{
+   uint32_t taskId = json_object_get_uint32(arguments, "task_id", 0);
+   if (taskId == 0)
+      return std::string("Error: task_id parameter is required");
+
+   bool accessAllTasks = ((GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_MANAGE_AI_TASKS) != 0);
+
+   s_aiTasksLock.lock();
+   shared_ptr<AITask> task = s_aiTasks.getShared(taskId);
+   if (task == nullptr)
+   {
+      s_aiTasksLock.unlock();
+      return std::string("Error: AI task not found");
+   }
+
+   if (!accessAllTasks && (task->getUserId() != userId))
+   {
+      s_aiTasksLock.unlock();
+      return std::string("Error: access denied");
+   }
+
+   s_aiTasks.remove(taskId);
+   s_aiTasksLock.unlock();
+
+   nxlog_debug_tag(DEBUG_TAG, 4, L"Deleted AI task [%u] \"%s\"", task->getId(), task->getDescription());
+   return std::string("OK");
 }
 
 /**
@@ -357,6 +414,21 @@ void AITask::logExecution()
 }
 
 /**
+ * Set next execution time
+ */
+void AITask::setNextExecutionTime(time_t t)
+{
+   if (m_status == AITaskStatus::RUNNING)
+      return;
+
+   m_nextExecutionTime = t;
+   if (m_nextExecutionTime == 0)
+      m_status = AITaskStatus::COMPLETED;
+   else
+      m_status = AITaskStatus::SCHEDULED;
+}
+
+/**
  * Save AI task to database
  */
 void AITask::saveToDatabase() const
@@ -390,4 +462,39 @@ void AITask::deleteFromDatabase()
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM ai_tasks WHERE id=?"));
    DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Serialize AITask to JSON
+ */
+json_t *AITask::toJson() const
+{
+   json_t *taskObject = json_object();
+   json_object_set_new(taskObject, "id", json_integer(m_id));
+   json_object_set_new(taskObject, "description", json_string_t(m_description));
+   const char *status;
+   switch(m_status)
+   {
+      case AITaskStatus::SCHEDULED:
+         status = "SCHEDULED";
+         break;
+      case AITaskStatus::RUNNING:
+         status = "RUNNING";
+         break;
+      case AITaskStatus::COMPLETED:
+         status = "COMPLETED";
+         break;
+      case AITaskStatus::FAILED:
+         status = "FAILED";
+         break;
+      default:
+         status = "UNKNOWN";
+         break;
+   }
+   json_object_set_new(taskObject, "status", json_string(status));
+   json_object_set_new(taskObject, "lastExecutionTime", (m_lastExecutionTime > 0) ? json_time_string(m_lastExecutionTime) : json_string("never"));
+   json_object_set_new(taskObject, "nextExecutionTime", (m_nextExecutionTime > 0) ? json_time_string(m_nextExecutionTime) : json_string("never"));
+   json_object_set_new(taskObject, "iteration", json_integer(m_iteration));
+   json_object_set_new(taskObject, "userId", json_integer(m_userId));
+   return taskObject;
 }

@@ -12378,6 +12378,46 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 rqId)
 }
 
 /**
+ * Get list of hardware components as JSON array
+ */
+json_t *Node::getHardwareComponentsAsJSON()
+{
+   json_t *componentsArray = nullptr;
+   lockProperties();
+   if (m_hardwareComponents != nullptr)
+   {
+      componentsArray = json_array();
+      int hcSize = m_hardwareComponents->size();
+      for (int i = 0; i < hcSize; i++)
+      {
+         json_array_append_new(componentsArray, m_hardwareComponents->get(i)->toJson());
+      }
+   }
+   unlockProperties();
+   return componentsArray;
+}
+
+/**
+ * Get list of software packages as JSON array
+ */
+json_t *Node::getSoftwarePackagesAsJSON()
+{
+   json_t *packagesArray = nullptr;
+   lockProperties();
+   if (m_softwarePackages != nullptr)
+   {
+      packagesArray = json_array();
+      int spSize = m_softwarePackages->size();
+      for (int i = 0; i < spSize; i++)
+      {
+         json_array_append_new(packagesArray, m_softwarePackages->get(i)->toJson());
+      }
+   }
+   unlockProperties();
+   return packagesArray;
+}
+
+/**
  * Get list of parent objects for NXSL script
  */
 NXSL_Value *Node::getParentsForNXSL(NXSL_VM *vm)

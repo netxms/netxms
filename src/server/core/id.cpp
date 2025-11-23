@@ -441,7 +441,7 @@ bool InitIdTable()
 /**
  * Create unique ID
  */
-uint32_t CreateUniqueId(int group)
+uint32_t NXCORE_EXPORTABLE CreateUniqueId(int group)
 {
    uint32_t id;
    s_mutexTableAccess.lock();

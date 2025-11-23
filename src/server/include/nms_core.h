@@ -103,7 +103,7 @@
 
 /**** ID functions *****/
 bool InitIdTable();
-uint32_t CreateUniqueId(int group);
+uint32_t NXCORE_EXPORTABLE CreateUniqueId(int group);
 void SaveCurrentFreeId();
 
 

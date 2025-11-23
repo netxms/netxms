@@ -67,9 +67,14 @@ public:
    AITaskStatus getStatus() const { return m_status; }
    time_t getLastExecutionTime() const { return m_lastExecutionTime; }
    time_t getNextExecutionTime() const { return m_nextExecutionTime; }
+   uint32_t getIteration() const { return m_iteration; }
 
    void saveToDatabase() const;
    void deleteFromDatabase();
+
+   json_t *toJson() const;
+
+   void setNextExecutionTime(time_t t);
 };
 
 /**
@@ -110,6 +115,18 @@ char NXCORE_EXPORTABLE *ProcessRequestToAIAssistant(const char *prompt, NetObj *
 /**
  * Register AI task
  */
-uint32_t NXCORE_EXPORTABLE RegisterAITask(const wchar_t *description, uint32_t userId, const wchar_t *prompt);
+uint32_t NXCORE_EXPORTABLE RegisterAITask(const wchar_t *description, uint32_t userId, const wchar_t *prompt, time_t nextExecutionTime = 0);
+
+/**
+ * Convert JSON object to std::string and consume JSON object
+ */
+static inline std::string JsonToString(json_t *json)
+{
+   char *jsonText = json_dumps(json, 0);
+   json_decref(json);
+   std::string result(jsonText);
+   MemFree(jsonText);
+   return result;
+}
 
 #endif

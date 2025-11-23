@@ -381,7 +381,8 @@ public class AiAssistantChatView extends View
       Display.getDefault().asyncExec(() -> {
          if (!chatScrolledComposite.isDisposed())
          {
-            Point contentSize = chatContainer.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+            Rectangle r = chatScrolledComposite.getClientArea();
+            Point contentSize = chatContainer.computeSize(r.width, SWT.DEFAULT);
             Point viewportSize = chatScrolledComposite.getSize();
             if (contentSize.y > viewportSize.y)
             {
