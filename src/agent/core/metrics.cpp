@@ -1044,8 +1044,9 @@ bool AddExternalStructuredDataProvider(ConfigEntry *config)
          _tcscpy(tmp, name);
          _tcscat(tmp, _T(".dataType"));
          int dataType = TextToDataType(metricRoot->getSubEntryValue(tmp, 0 , _T("")));
+         String cleanedName = name.endsWith(_T("(*)")) ? name.substring(0, name.length() - 3) : name;
 
-         metricDefenitions->set(e->getName(), new StructuredExtractorParameterDefinition(e->getValue(), description, (dataType == -1) ? DCI_DT_STRING : dataType));
+         metricDefenitions->set(cleanedName, new StructuredExtractorParameterDefinition(e->getValue(), description, (dataType == -1) ? DCI_DT_STRING : dataType));
       }
    }
 
