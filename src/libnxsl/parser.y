@@ -63,6 +63,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_IDIV
 %token T_IF
 %token T_IMPORT
+%token T_LOCAL
 %token T_META
 %token T_NEW
 %token T_NULL
@@ -974,6 +975,7 @@ BuiltinStatement:
 |	SelectStatement
 |	ArrayStatement
 |	GlobalStatement
+|	LocalStatement
 |	T_BREAK ';'
 {
 	if (compiler->canUseBreak())
@@ -1363,6 +1365,26 @@ GlobalVariableDeclarationStart:
 	T_IDENTIFIER { builder->setCurrentMetadataPrefix($1); } Metadata
 {
 	$$ = $1;
+}
+;
+
+LocalStatement:
+	T_LOCAL LocalVariableList ';'
+;
+
+LocalVariableList:
+	LocalVariableDeclaration ',' LocalVariableList
+|	LocalVariableDeclaration
+;
+
+LocalVariableDeclaration:
+	T_IDENTIFIER
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_LOCAL, $1, 0);
+}
+|	T_IDENTIFIER '=' Expression
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_LOCAL, $1, 1);
 }
 ;
 

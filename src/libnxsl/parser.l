@@ -100,6 +100,7 @@ static inline uint32_t StringToUInt32(const char *s)
 <INITIAL,FEXPR>"int32"     return T_TYPE_INT32;
 <INITIAL,FEXPR>"int64"     return T_TYPE_INT64;
 <INITIAL,FEXPR>"like"      return T_LIKE;
+<INITIAL,FEXPR>"local"     return T_LOCAL;
 <INITIAL,FEXPR>"match"     return T_MATCH;
 <INITIAL,FEXPR>"new"       return T_NEW;
 <INITIAL,FEXPR>"not"       return T_NOT;

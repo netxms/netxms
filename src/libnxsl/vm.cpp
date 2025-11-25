@@ -1038,6 +1038,41 @@ void NXSL_VM::execute()
             }
          }
 			break;
+      case OPCODE_LOCAL:
+         // Check if variable already exist
+         pVar = m_localVariables->find(*cp->m_operand.m_identifier);
+         if (pVar == nullptr)
+         {
+            if (cp->m_stackItems > 0)  // with initialization
+            {
+               pValue = m_dataStack.pop();
+               if (pValue != nullptr)
+               {
+                  m_localVariables->create(*cp->m_operand.m_identifier, pValue);
+               }
+               else
+               {
+                  error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+               }
+            }
+            else
+            {
+               m_localVariables->create(*cp->m_operand.m_identifier, createValue());
+            }
+         }
+         else if (cp->m_stackItems > 0)   // process initialization block as assignment
+         {
+            pValue = m_dataStack.pop();
+            if (pValue != nullptr)
+            {
+               pVar->setValue(pValue);
+            }
+            else
+            {
+               error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+            }
+         }
+         break;
 		case OPCODE_GET_RANGE:
 		   pValue = m_dataStack.pop();
 		   if (pValue != nullptr)
