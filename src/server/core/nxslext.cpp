@@ -2690,12 +2690,12 @@ void NXSL_ClientSessionEnv::trace(int level, const TCHAR *text)
 /**
  * Call hook script
  */
-NXSL_VM *FindHookScript(const TCHAR *hookName, shared_ptr<NetObj> object)
+ScriptVMHandle NXCORE_EXPORTABLE FindHookScript(const wchar_t *hookName, shared_ptr<NetObj> object)
 {
-   TCHAR scriptName[MAX_PATH] = _T("Hook::");
-   _tcslcpy(&scriptName[6], hookName, MAX_PATH - 6);
-   NXSL_VM *vm = CreateServerScriptVM(scriptName, object);
-   if (vm == nullptr)
-      nxlog_debug_tag(_T("nxsl.hooks"), 7, _T("FindHookScript: hook script \"%s\" not found"), scriptName);
+   wchar_t scriptName[MAX_PATH] = L"Hook::";
+   wcslcpy(&scriptName[6], hookName, MAX_PATH - 6);
+   ScriptVMHandle vm = CreateServerScriptVM(scriptName, object);
+   if (!vm.isValid())
+      nxlog_debug_tag(L"nxsl.hooks", 7, L"FindHookScript: cannot load hook script \"%s\" (%s)", hookName, vm.failureReasonText());
    return vm;
 }

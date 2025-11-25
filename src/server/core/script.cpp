@@ -745,7 +745,7 @@ void ExecuteScheduledScript(const shared_ptr<ScheduledTaskParameters>& parameter
 /**
  * Parse value list. This function may modify data pointed by "start".
  */
-bool ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args, bool hasBrackets)
+bool NXCORE_EXPORTABLE ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args, bool hasBrackets)
 {
    TCHAR *p = *start;
 

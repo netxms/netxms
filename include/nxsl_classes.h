@@ -1608,8 +1608,16 @@ private:
    ScriptVMFailureReason m_failureReason;
 
 public:
-   ScriptVMHandle(NXSL_VM *vm) { m_vm = vm; m_failureReason = ScriptVMFailureReason::SUCCESS; }
-   ScriptVMHandle(ScriptVMFailureReason failureReason) { m_vm = nullptr; m_failureReason = failureReason; }
+   ScriptVMHandle(NXSL_VM *vm)
+   {
+      m_vm = vm;
+      m_failureReason = ScriptVMFailureReason::SUCCESS;
+   }
+   ScriptVMHandle(ScriptVMFailureReason failureReason)
+   {
+      m_vm = nullptr;
+      m_failureReason = failureReason;
+   }
 
    operator NXSL_VM *() { return m_vm; }
    NXSL_VM *operator->() { return m_vm; }
