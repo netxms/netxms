@@ -50,7 +50,7 @@ public final class UserAccessRights
 	public static final long SYSTEM_ACCESS_MANAGE_MAPPING_TBLS     = 0x00000000800000L;
    public static final long SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS     = 0x00000001000000L;
    public static final long SYSTEM_ACCESS_REPORTING_SERVER        = 0x00000002000000L;
-   //public static final long SYSTEM_ACCESS_XMPP_COMMANDS         = 0x00000004000000L; reserved for future reuse
+   public static final long SYSTEM_ACCESS_MANAGE_AI_TASKS         = 0x00000004000000L;
    public static final long SYSTEM_ACCESS_MANAGE_IMAGE_LIB        = 0x00000008000000L;
    public static final long SYSTEM_ACCESS_UNLINK_ISSUES           = 0x00000010000000L;
    public static final long SYSTEM_ACCESS_VIEW_SYSLOG             = 0x00000020000000L;

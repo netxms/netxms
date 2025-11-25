@@ -757,9 +757,10 @@ enum SessionState
 #define RCC_REMOTE_CONNECT_FAILED         ((uint32_t)172)
 #define RCC_DOMAIN_MEMBER_ALREADY         ((uint32_t)173)
 #define RCC_CONTROLLER_UNAVAILABLE        ((uint32_t)174)
-#define RCC_PARTIAL_FAIL                  ((uint32_t)175)
+#define RCC_PARTIAL_FAILURE               ((uint32_t)175)
 #define RCC_AGENT_ACCESS_DENIED           ((uint32_t)176)
 #define RCC_TCP_PROXY_DISABLED            ((uint32_t)177)
+#define RCC_INVALID_TASK_ID               ((uint32_t)178)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

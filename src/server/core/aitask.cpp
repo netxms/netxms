@@ -125,6 +125,65 @@ uint32_t NXCORE_EXPORTABLE RegisterAITask(const wchar_t *description, uint32_t u
 }
 
 /**
+ * Fill NXCP message with AI agent task list
+ */
+void FillAIAgentTaskListMessage(NXCPMessage *msg, uint32_t userId)
+{
+   bool accessAllTasks = ((GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_MANAGE_AI_TASKS) != 0);
+
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   s_aiTasksLock.lock();
+   s_aiTasks.forEach(
+      [msg, &fieldId, userId, accessAllTasks] (const uint32_t& key, const shared_ptr<AITask>& task) -> EnumerationCallbackResult
+      {
+         if (accessAllTasks || (task->getUserId() == userId))
+         {
+            msg->setField(fieldId++, task->getId());
+            msg->setField(fieldId++, task->getUserId());
+            msg->setField(fieldId++, task->getDescription());
+            msg->setFieldFromUtf8String(fieldId++, task->getPrompt().c_str());
+            msg->setField(fieldId++, static_cast<uint16_t>(task->getState()));
+            msg->setFieldFromTime(fieldId++, task->getLastExecutionTime());
+            msg->setFieldFromTime(fieldId++, task->getNextExecutionTime());
+            msg->setField(fieldId++, task->getIteration());
+            msg->setField(fieldId++, task->getExplanation());
+            fieldId += 11;
+         }
+         return _CONTINUE;
+      });
+   msg->setField(VID_NUM_ELEMENTS, s_aiTasks.size());
+   s_aiTasksLock.unlock();
+}
+
+/**
+ * Delete AI task
+ */
+uint32_t NXCORE_EXPORTABLE DeleteAITask(uint32_t taskId, uint32_t userId)
+{
+   bool accessAllTasks = ((GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_MANAGE_AI_TASKS) != 0);
+
+   s_aiTasksLock.lock();
+   shared_ptr<AITask> task = s_aiTasks.getShared(taskId);
+   if (task == nullptr)
+   {
+      s_aiTasksLock.unlock();
+      return RCC_INVALID_TASK_ID;
+   }
+
+   if (!accessAllTasks && (task->getUserId() != userId))
+   {
+      s_aiTasksLock.unlock();
+      return RCC_ACCESS_DENIED;
+   }
+
+   s_aiTasks.remove(taskId);
+   s_aiTasksLock.unlock();
+
+   nxlog_debug_tag(DEBUG_TAG, 4, L"Deleted AI task [%u] \"%s\"", task->getId(), task->getDescription());
+   return RCC_SUCCESS;
+}
+
+/**
  * AI assistant function: ai-task-list
  */
 std::string F_AITaskList(json_t *arguments, uint32_t userId)
@@ -194,7 +253,7 @@ void AITaskSchedulerThread(ThreadPool *aiTaskThreadPool)
       s_aiTasksLock.lock();
       for(const shared_ptr<AITask>& task : s_aiTasks)
       {
-         if ((task->getStatus() == AITaskStatus::SCHEDULED) && (task->getNextExecutionTime() <= now))
+         if ((task->getState() == AITaskState::SCHEDULED) && (task->getNextExecutionTime() <= now))
          {
             tasksToExecute.push_back(task);
          }
@@ -221,7 +280,7 @@ void AITaskSchedulerThread(ThreadPool *aiTaskThreadPool)
 AITask::AITask(const wchar_t *descripion, uint32_t userId, const wchar_t *prompt) : m_description(descripion)
 {
    m_id = InterlockedIncrement(&s_taskId);
-   m_status = AITaskStatus::SCHEDULED;
+   m_state = AITaskState::SCHEDULED;
    m_lastExecutionTime = 0;
    m_nextExecutionTime = time(nullptr);
    m_iteration = 0;
@@ -249,7 +308,7 @@ AITask::AITask(DB_RESULT hResult, int row) : m_description(DBGetFieldAsString(hR
    m_nextExecutionTime = DBGetFieldUInt32(hResult, row, 5);
    m_iteration = DBGetFieldUInt32(hResult, row, 6);
    m_userId = DBGetFieldUInt32(hResult, row, 7);
-   m_status = (m_nextExecutionTime == 0) ? AITaskStatus::COMPLETED : AITaskStatus::SCHEDULED;
+   m_state = (m_nextExecutionTime == 0) ? AITaskState::COMPLETED : AITaskState::SCHEDULED;
 }
 
 /**
@@ -257,7 +316,7 @@ AITask::AITask(DB_RESULT hResult, int row) : m_description(DBGetFieldAsString(hR
  */
 void AITask::execute()
 {
-   m_status = AITaskStatus::RUNNING;
+   m_state = AITaskState::RUNNING;
    std::string prompt(m_prompt);
    prompt.append("</instructions>\n<current_time>");
    prompt.append(FormatISO8601Timestamp(time(nullptr)));
@@ -285,13 +344,13 @@ void AITask::execute()
             if (json_boolean_value(completed))
             {
                m_nextExecutionTime = 0;
-               m_status = AITaskStatus::COMPLETED;
+               m_state = AITaskState::COMPLETED;
                nxlog_debug_tag(DEBUG_TAG, 5, L"AI task [%u] \"%s\" marked as completed", m_id, m_description.cstr());
             }
             else
             {
                m_nextExecutionTime = time(nullptr) + json_object_get_time(json, "next_execution_time", 0);
-               m_status = AITaskStatus::SCHEDULED;
+               m_state = AITaskState::SCHEDULED;
                nxlog_debug_tag(DEBUG_TAG, 5, L"AI task [%u] \"%s\" scheduled for next execution at %s", m_id, m_description.cstr(),
                   FormatTimestamp(m_nextExecutionTime).cstr());
 
@@ -328,27 +387,27 @@ void AITask::execute()
          }
          else
          {
-            m_status = AITaskStatus::FAILED;
+            m_state = AITaskState::FAILED;
             nxlog_debug_tag(DEBUG_TAG, 5, L"AI task [%u] \"%s\" execution failed (cannot parse JSON response)", m_id, m_description.cstr());
          }
          json_decref(json);
       }
       else
       {
-         m_status = AITaskStatus::FAILED;
+         m_state = AITaskState::FAILED;
          nxlog_debug_tag(DEBUG_TAG, 5, L"AI task [%u] \"%s\" execution failed (cannot parse JSON response)", m_id, m_description.cstr());
       }
       MemFree(response);
    }
    else
    {
-      m_status = AITaskStatus::FAILED;
+      m_state = AITaskState::FAILED;
       nxlog_debug_tag(DEBUG_TAG, 5, L"AI task [%u] \"%s\" execution failed (no response from assistant)", m_id, m_description.cstr());
    }
 
    logExecution();
 
-   if (m_status == AITaskStatus::SCHEDULED)
+   if (m_state == AITaskState::SCHEDULED)
    {
       saveToDatabase();
    }
@@ -370,18 +429,18 @@ void AITask::logExecution()
 
    // Determine status character based on current task status
    wchar_t status[2];
-   switch (m_status)
+   switch (m_state)
    {
-      case AITaskStatus::COMPLETED:
+      case AITaskState::COMPLETED:
          status[0] = 'C';
          break;
-      case AITaskStatus::FAILED:
+      case AITaskState::FAILED:
          status[0] = 'F';
          break;
-      case AITaskStatus::SCHEDULED:
+      case AITaskState::SCHEDULED:
          status[0] = 'S';
          break;
-      case AITaskStatus::RUNNING:
+      case AITaskState::RUNNING:
          status[0] = 'R';
          break;
       default:
@@ -418,14 +477,14 @@ void AITask::logExecution()
  */
 void AITask::setNextExecutionTime(time_t t)
 {
-   if (m_status == AITaskStatus::RUNNING)
+   if (m_state == AITaskState::RUNNING)
       return;
 
    m_nextExecutionTime = t;
    if (m_nextExecutionTime == 0)
-      m_status = AITaskStatus::COMPLETED;
+      m_state = AITaskState::COMPLETED;
    else
-      m_status = AITaskStatus::SCHEDULED;
+      m_state = AITaskState::SCHEDULED;
 }
 
 /**
@@ -473,18 +532,18 @@ json_t *AITask::toJson() const
    json_object_set_new(taskObject, "id", json_integer(m_id));
    json_object_set_new(taskObject, "description", json_string_t(m_description));
    const char *status;
-   switch(m_status)
+   switch(m_state)
    {
-      case AITaskStatus::SCHEDULED:
+      case AITaskState::SCHEDULED:
          status = "SCHEDULED";
          break;
-      case AITaskStatus::RUNNING:
+      case AITaskState::RUNNING:
          status = "RUNNING";
          break;
-      case AITaskStatus::COMPLETED:
+      case AITaskState::COMPLETED:
          status = "COMPLETED";
          break;
-      case AITaskStatus::FAILED:
+      case AITaskState::FAILED:
          status = "FAILED";
          break;
       default:

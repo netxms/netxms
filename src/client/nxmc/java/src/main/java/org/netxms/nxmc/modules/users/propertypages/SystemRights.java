@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -87,6 +87,7 @@ public class SystemRights extends PropertyPage
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_2FA_METHODS, i18n.tr("Manage two-factor authentication methods")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_ACTIONS, i18n.tr("Configure server actions")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_CFG, i18n.tr("Manage agent configurations")));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_AI_TASKS, i18n.tr("Manage AI tasks")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_GEO_AREAS, "Manage geographical areas"));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_IMAGE_LIB, i18n.tr("Manage Image Library")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_MAPPING_TBLS, i18n.tr("Manage mapping tables")));

@@ -26,9 +26,9 @@
 #define AI_ASSISTANT_COMPONENT   L"AI-ASSISTANT"
 
 /**
- * AI task status
+ * AI task state
  */
-enum class AITaskStatus
+enum class AITaskState
 {
    SCHEDULED = 0,
    RUNNING = 1,
@@ -50,7 +50,7 @@ private:
    std::string m_memento;
    StringBuffer m_explanation;
    String m_description;
-   AITaskStatus m_status;
+   AITaskState m_state;
    uint32_t m_iteration;
 
    void logExecution();
@@ -64,10 +64,12 @@ public:
    uint32_t getId() const { return m_id; }
    uint32_t getUserId() const { return m_userId; }
    const wchar_t *getDescription() const { return m_description.cstr(); }
-   AITaskStatus getStatus() const { return m_status; }
+   const std::string& getPrompt() const { return m_prompt; }
+   AITaskState getState() const { return m_state; }
    time_t getLastExecutionTime() const { return m_lastExecutionTime; }
    time_t getNextExecutionTime() const { return m_nextExecutionTime; }
    uint32_t getIteration() const { return m_iteration; }
+   const wchar_t *getExplanation() const { return m_explanation.cstr(); }
 
    void saveToDatabase() const;
    void deleteFromDatabase();
@@ -116,6 +118,11 @@ char NXCORE_EXPORTABLE *ProcessRequestToAIAssistant(const char *prompt, NetObj *
  * Register AI task
  */
 uint32_t NXCORE_EXPORTABLE RegisterAITask(const wchar_t *description, uint32_t userId, const wchar_t *prompt, time_t nextExecutionTime = 0);
+
+/**
+ * Delete AI task
+ */
+uint32_t NXCORE_EXPORTABLE DeleteAITask(uint32_t taskId, uint32_t userId);
 
 /**
  * Convert JSON object to std::string and consume JSON object

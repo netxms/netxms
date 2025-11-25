@@ -675,6 +675,9 @@ typedef struct
 #define CMD_GET_DC_OBJECT                 0x01DB
 #define CMD_GET_AI_ASSISTANT_FUNCTIONS    0x01DC
 #define CMD_CALL_AI_ASSISTANT_FUNCTION    0x01DD
+#define CMD_GET_AI_AGENT_TASKS            0x01DE
+#define CMD_DELETE_AI_AGENT_TASK          0x01DF
+#define CMD_ADD_AI_AGENT_TASK             0x01E0
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1559,6 +1562,7 @@ typedef struct
 #define VID_ARGUMENTS               ((uint32_t)870)
 #define VID_METADATA_SIZE           ((uint32_t)871)
 #define VID_MAX_SPEED               ((uint32_t)872)
+#define VID_PROMPT                  ((uint32_t)873)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

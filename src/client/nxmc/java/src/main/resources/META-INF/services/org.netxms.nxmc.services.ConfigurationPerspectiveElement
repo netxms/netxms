@@ -1,4 +1,5 @@
 org.netxms.nxmc.modules.actions.ActionsConfigurationElement
+org.netxms.nxmc.modules.ai.AiTasksConfigurationElement
 org.netxms.nxmc.modules.agentmanagement.AgentConfigurationManagerElement
 org.netxms.nxmc.modules.agentmanagement.DeploymentJobManagerElement
 org.netxms.nxmc.modules.agentmanagement.PackagesConfigurationElement

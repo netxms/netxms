@@ -120,6 +120,8 @@ uint32_t CompileMibFiles(ClientSession *session, uint32_t requestId);
 
 uint64_t StartFileUploadToAgent(const shared_ptr<Node>& node, const TCHAR *localFile, const TCHAR *remoteFile, uint32_t userId);
 
+void FillAIAgentTaskListMessage(NXCPMessage *msg, uint32_t userId);
+
 #if WITH_PRIVATE_EXTENSIONS || (defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD))
 int GetMaxAllowedNodeCount();
 #endif
@@ -2035,6 +2037,15 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_CALL_AI_ASSISTANT_FUNCTION:
          callAiAssistantFunction(*request);
+         break;
+      case CMD_GET_AI_AGENT_TASKS:
+         getAiAgentTasks(*request);
+         break;
+      case CMD_DELETE_AI_AGENT_TASK:
+         deleteAiAgentTask(*request);
+         break;
+      case CMD_ADD_AI_AGENT_TASK:
+         addAiAgentTask(*request);
          break;
       default:
          if ((code >> 8) == 0x11)
@@ -4629,7 +4640,7 @@ void ClientSession::changeDCIStatus(const NXCPMessage& request)
                }
                else
                {
-                  response.setField(VID_RCC, RCC_PARTIAL_FAIL);
+                  response.setField(VID_RCC, RCC_PARTIAL_FAILURE);
                }
                response.setFieldFromInt32Array(VID_ITEM_LIST, result.get());
             }
@@ -18028,6 +18039,61 @@ void ClientSession::callAiAssistantFunction(const NXCPMessage& request)
    }
    MemFree(args);
 
+   sendMessage(response);
+}
+
+/**
+ * Get AI agent tasks
+ */
+void ClientSession::getAiAgentTasks(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   FillAIAgentTaskListMessage(&response, m_userId);
+   response.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(response);
+}
+
+/**
+ * Delete AI agent task
+ */
+void ClientSession::deleteAiAgentTask(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t taskId = request.getFieldAsUInt32(VID_TASK_ID);
+   uint32_t rcc = DeleteAITask(taskId, m_userId);
+   response.setField(VID_RCC, rcc);
+   if (rcc == RCC_SUCCESS)
+   {
+      writeAuditLog(AUDIT_SYSCFG, true, 0, _T("AI agent task %u deleted"), taskId);
+   }
+   else if (rcc == RCC_ACCESS_DENIED)
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting AI agent task %u"), taskId);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Add AI agent task
+ */
+void ClientSession::addAiAgentTask(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   wchar_t *description = request.getFieldAsString(VID_DESCRIPTION);
+   wchar_t *prompt = request.getFieldAsString(VID_PROMPT);
+   if ((description != nullptr) && (prompt != nullptr) && (description[0] != 0) && (prompt[0] != 0))
+   {
+      uint32_t taskId = RegisterAITask(description, m_userId, prompt);
+      response.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_TASK_ID, taskId);
+      writeAuditLog(AUDIT_SYSCFG, true, 0, _T("AI agent task %u added"), taskId);
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+   }
+   MemFree(description);
+   MemFree(prompt);
    sendMessage(response);
 }
 

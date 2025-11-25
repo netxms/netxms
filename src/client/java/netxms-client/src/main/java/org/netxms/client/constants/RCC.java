@@ -207,6 +207,10 @@ public final class RCC
    public static final int REMOTE_CONNECT_FAILED = 172;
    public static final int DOMAIN_MEMBER_ALREADY = 173;
    public static final int CONTROLLER_UNAVAILABLE = 174;
+   public static final int PARTIAL_FAILURE = 175;
+   public static final int AGENT_ACCESS_DENIED = 176;
+   public static final int TCP_PROXY_DISABLED = 177;
+   public static final int INVALID_TASK_ID = 178;
 
    // Client-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

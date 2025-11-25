@@ -73,6 +73,8 @@ import org.netxms.base.NXCPMsgWaitQueue;
 import org.netxms.base.VersionInfo;
 import org.netxms.client.agent.config.AgentConfiguration;
 import org.netxms.client.agent.config.AgentConfigurationHandle;
+import org.netxms.client.ai.AiAgentTask;
+import org.netxms.client.ai.AiAssistantFunction;
 import org.netxms.client.asset.AssetAttribute;
 import org.netxms.client.businessservices.BusinessServiceCheck;
 import org.netxms.client.businessservices.BusinessServiceTicket;
@@ -15141,6 +15143,63 @@ public class NXCSession
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.getFieldAsString(NXCPCodes.VID_MESSAGE);
+   }
+
+   /**
+    * Get list of AI agent tasks.
+    * 
+    * @return list of AI agent tasks
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<AiAgentTask> getAiAgentTasks() throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AI_AGENT_TASKS);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<AiAgentTask> tasks = new ArrayList<>(count);
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         tasks.add(new AiAgentTask(response, fieldId));
+         fieldId += 20;
+      }
+      return tasks;
+   }
+
+   /**
+    * Delete AI agent task.
+    * 
+    * @param taskId task ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteAiAgentTask(long taskId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_AI_AGENT_TASK);
+      msg.setFieldUInt32(NXCPCodes.VID_TASK_ID, taskId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Create AI agent task.
+    *
+    * @param description task description
+    * @param prompt task prompt
+    * @return created task ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public long createAiAgentTask(String description, String prompt) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_AI_AGENT_TASK);
+      msg.setField(NXCPCodes.VID_DESCRIPTION, description);
+      msg.setField(NXCPCodes.VID_PROMPT, prompt);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getFieldAsInt64(NXCPCodes.VID_TASK_ID);
    }
 
    /**

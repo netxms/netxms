@@ -261,9 +261,10 @@ const TCHAR LIBNXCLIENT_EXPORTABLE *NXCGetErrorText(uint32_t error)
       _T("Controller unavailable"),
       _T("Partial command fail"),
       _T("Agent access denied"),
-      _T("TCP proxy function is disabled")
+      _T("TCP proxy function is disabled"),
+      _T("Invalid task ID")
    };
-	return (error <= RCC_TCP_PROXY_DISABLED) ? errorText[error] : _T("No message for this error");
+	return (error <= RCC_INVALID_TASK_ID) ? errorText[error] : _T("No message for this error");
 }
 
 #ifdef _WIN32

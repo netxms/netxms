@@ -496,6 +496,9 @@ public class NXCPCodes
    public static final int CMD_GET_DC_OBJECT = 0x01DB;
    public static final int CMD_GET_AI_ASSISTANT_FUNCTIONS = 0x01DC;
    public static final int CMD_CALL_AI_ASSISTANT_FUNCTION = 0x01DD;
+   public static final int CMD_GET_AI_AGENT_TASKS = 0x01DE;
+   public static final int CMD_DELETE_AI_AGENT_TASK = 0x01DF;
+   public static final int CMD_ADD_AI_AGENT_TASK = 0x01E0;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1376,6 +1379,7 @@ public class NXCPCodes
    public static final long VID_ARGUMENTS = 870;
    public static final long VID_METADATA_SIZE = 871;
    public static final long VID_MAX_SPEED = 872;
+   public static final long VID_PROMPT = 873;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

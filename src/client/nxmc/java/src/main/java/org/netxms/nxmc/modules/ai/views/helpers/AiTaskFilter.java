@@ -16,22 +16,22 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.actions.views.helpers;
+package org.netxms.nxmc.modules.ai.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.client.ServerAction;
+import org.netxms.client.ai.AiAgentTask;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
- * Filter for action manager
+ * Filter for AI task manager
  */
-public final class ActionManagerFilter extends ViewerFilter implements AbstractViewerFilter
+public final class AiTaskFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private String filterString;
-   private ActionLabelProvider labelProvider;
-   
-   public ActionManagerFilter(ActionLabelProvider labelProvider)
+   private AiTaskLabelProvider labelProvider;
+
+   public AiTaskFilter(AiTaskLabelProvider labelProvider)
    {
       this.labelProvider = labelProvider;
    }
@@ -44,30 +44,23 @@ public final class ActionManagerFilter extends ViewerFilter implements AbstractV
    {
       if ((filterString == null) || (filterString.isEmpty()))
          return true;
-      
-      final ServerAction action = (ServerAction)element;
-      if (action.getName().toLowerCase().contains(filterString) ||
-          labelProvider.actionType[action.getType().getValue()].toLowerCase().contains(filterString) ||
-          action.getRecipientAddress().toLowerCase().contains(filterString) ||
-          action.getEmailSubject().toLowerCase().contains(filterString) ||
-          action.getData().toLowerCase().contains(filterString) ||
-          action.getChannelName().toLowerCase().contains(filterString))
+
+      final AiAgentTask task = (AiAgentTask)element;
+      if (task.getDescription().toLowerCase().contains(filterString) ||
+          labelProvider.stateNames[task.getState().getValue()].toLowerCase().contains(filterString) ||
+          task.getExplanation().toLowerCase().contains(filterString))
       {
          return true;
       }
       return false;
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.AbstractViewerFilter#setFilterString(java.lang.String)
+    */
+   @Override
    public void setFilterString(String text)
    {
       filterString = text.toLowerCase();
-   }
-
-   /**
-    * @return the filterString
-    */
-   public String getFilterString()
-   {
-      return filterString;
    }
 }
