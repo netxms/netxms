@@ -228,10 +228,10 @@ LONG H_StorageDeviceTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abst
       value->set(3, BusTypeToString(dev->BusType, temp));
       value->set(4, dev->RemovableMedia);
       value->set(5, size);
-      value->set(6, &buffer[dev->VendorIdOffset]);
-      value->set(7, &buffer[dev->ProductIdOffset]);
-      value->set(8, &buffer[dev->ProductRevisionOffset]);
-      value->set(9, &buffer[dev->SerialNumberOffset]);
+      value->set(6, (dev->VendorIdOffset != 0) ? &buffer[dev->VendorIdOffset] : "");
+      value->set(7, (dev->ProductIdOffset != 0) ? &buffer[dev->ProductIdOffset] : "");
+      value->set(8, (dev->ProductRevisionOffset != 0) ? &buffer[dev->ProductRevisionOffset] : "");
+      value->set(9, (dev->SerialNumberOffset != 0) ? &buffer[dev->SerialNumberOffset] : "");
    }
 
    return SYSINFO_RC_SUCCESS;
@@ -275,19 +275,19 @@ LONG H_StorageDeviceInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
          ret_string(value, BusTypeToString(dev->BusType, temp));
          break;
       case 'M':
-         ret_mbstring(value, &buffer[dev->VendorIdOffset]);
+         ret_mbstring(value, (dev->VendorIdOffset != 0) ? &buffer[dev->VendorIdOffset] : "");
          break;
       case 'P':
-         ret_mbstring(value, &buffer[dev->ProductIdOffset]);
+         ret_mbstring(value, (dev->ProductIdOffset != 0) ? &buffer[dev->ProductIdOffset] : "");
          break;
       case 'R':
-         ret_mbstring(value, &buffer[dev->ProductRevisionOffset]);
+         ret_mbstring(value, (dev->ProductRevisionOffset != 0) ? &buffer[dev->ProductRevisionOffset] : "");
          break;
       case 'r':
          ret_int(value, dev->RemovableMedia);
          break;
       case 'S':
-         ret_mbstring(value, &buffer[dev->SerialNumberOffset]);
+         ret_mbstring(value, (dev->SerialNumberOffset != 0) ? &buffer[dev->SerialNumberOffset] : "");
          break;
       case 'T':
          ret_int(value, dev->DeviceType);
