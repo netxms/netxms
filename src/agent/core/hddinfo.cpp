@@ -72,12 +72,61 @@ static void LogSmartCtlMessages(json_t *root, const TCHAR *prefix)
 }
 
 /**
+ * Validates device parameter to prevent command injection
+ *
+ * @param device Device name to validate
+ * @returns true if device name is valid, false otherwise
+ */
+static bool ValidateDeviceName(const TCHAR *device)
+{
+   if (device == nullptr || *device == 0)
+      return false;
+
+   // Check length
+   size_t len = _tcslen(device);
+   if (len > 128)  // Reasonable maximum device name length
+      return false;
+
+   // Unix device validation; smartctl on Windows uses UNIX naming convention for devices
+   // Allow: letters, digits, slash, underscore, hyphen, dot
+   for (size_t i = 0; i < len; i++)
+   {
+      TCHAR c = device[i];
+      if (!(_istalnum(c) || c == _T('/') || c == _T('_') || c == _T('-') || c == _T('.')))
+         return false;
+   }
+
+   // Must start with slash (absolute path) or letter
+   if (!(device[0] == _T('/') || _istalpha(device[0])))
+      return false;
+
+   // Prevent command injection patterns
+   if (_tcsstr(device, _T("..")) != nullptr ||  // Directory traversal
+       _tcsstr(device, _T(";")) != nullptr ||   // Command separator
+       _tcsstr(device, _T("&")) != nullptr ||   // Command separator
+       _tcsstr(device, _T("|")) != nullptr ||   // Pipe
+       _tcsstr(device, _T("`")) != nullptr ||   // Command substitution
+       _tcsstr(device, _T("$(")) != nullptr ||  // Command substitution
+       _tcsstr(device, _T("${")) != nullptr)    // Variable expansion
+      return false;
+
+   return true;
+}
+
+/**
  * Executes smartctl command for given device
  *
  * @returns smartctl output as json_t object or nullptr on failure
  */
 static json_t *RunSmartCtl(const TCHAR *device, bool detailed)
 {
+   // Validate device name to prevent command injection
+   if (!ValidateDeviceName(device))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("RunSmartCtl: Invalid device name \"%s\""), device);
+      return nullptr;
+   }
+
    TCHAR cmd[MAX_PATH];
 #ifdef _WIN32
    TCHAR binDir[MAX_PATH];
