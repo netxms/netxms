@@ -433,6 +433,10 @@ public:
       m_type = type;
    }
 
+   shared_ptr<NetObj> getOwner() const { return m_owner; }
+   shared_ptr<NetObj> getConnectionPoint() const { return m_connectionPoint; }
+   int getType() const { return m_type; }
+
    void fillMessage(NXCPMessage* msg, uint32_t base) const;
    void fillJson(json_t *json, uint32_t userId, bool includeObject, std::function<json_t* (const NetObj& object)> createObjectSummary) const;
 };
