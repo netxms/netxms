@@ -15,12 +15,18 @@ paths:
               schema:
                 type: object
                 properties:
-                  name:
+                  description:
                     type: string
-                    description: API name
+                    description: API description
                   version:
                     type: string
-                    description: API version
+                    description: NetXMS version
+                  build:
+                    type: string
+                    description: Build tag
+                  apiVersion:
+                    type: integer
+                    description: API version number
       security: []
   /v1/server-info:
     get:
@@ -39,33 +45,77 @@ paths:
                     description: Server version
                   build:
                     type: string
-                    description: Build information
-                  serverTime:
+                    description: Build tag
+                  id:
+                    type: integer
+                    description: Server ID
+                  name:
                     type: string
-                    format: date-time
-                    description: Current server time
+                    description: Server name
+                  color:
+                    type: string
+                    description: Server color (for UI theming)
+                  messageOfTheDay:
+                    type: string
+                    description: Message of the day
+                  tz:
+                    type: string
+                    description: Server timezone
+                  options:
+                    type: object
+                    properties:
+                      zoningEnabled:
+                        type: boolean
+                      strictAlarmStatusFlow:
+                        type: boolean
+                      timedAlarmAckEnabled:
+                        type: boolean
+                      helpdeskLinkActive:
+                        type: boolean
+                      tileServerURL:
+                        type: string
+                  dateTimeFormat:
+                    type: object
+                    properties:
+                      date:
+                        type: string
+                        description: Date format string
+                      timeLong:
+                        type: string
+                        description: Long time format string
+                      timeShort:
+                        type: string
+                        description: Short time format string
+                  components:
+                    type: array
+                    items:
+                      type: object
+                    description: Registered server components
         '401':
           description: Unauthorized
       security:
         - BearerAuth: []
   /v1/status:
     get:
-      summary: Get server status
-      description: Retrieve current server status and health information.
+      summary: Get session status
+      description: Retrieve current session status including user information.
       responses:
         '200':
-          description: Server status retrieved successfully
+          description: Session status retrieved successfully
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  status:
-                    type: string
-                    description: Server status
-                  uptime:
+                  userId:
                     type: integer
-                    description: Server uptime in seconds
+                    description: Current user ID
+                  userName:
+                    type: string
+                    description: Current user login name
+                  systemAccessRights:
+                    type: integer
+                    description: User's system access rights bitmask
         '401':
           description: Unauthorized
       security:
@@ -80,6 +130,11 @@ paths:
           schema:
             type: integer
             description: ID of root object for alarm retrieval (0 to retrieve all alarms)
+        - name: includeObjectDetails
+          in: query
+          schema:
+            type: boolean
+            description: If true, include full source object details in response
       responses:
         '200':
           description: Successful retrieval of alarms.
@@ -286,8 +341,8 @@ paths:
         - BearerAuth: []
   /v1/grafana/infinity/object-query:
     post:
-      summary: Execute object query and return result in format sutable Grafana Infinity
-      description: Execute object query and return result in  format sutable Grafana Infinity.
+      summary: Execute object query and return result in format suitable for Grafana Infinity
+      description: Execute object query and return result in format suitable for Grafana Infinity.
       requestBody:
         required: true
         content:
@@ -297,31 +352,30 @@ paths:
               properties:
                 rootObjectId:
                   type: integer
-                  description: ID of root object for alarm retrieval (0 to retrieve all alarms)
-                query:
+                  description: ID of root object for query execution
+                queryId:
                   type: integer
                   description: ID of object query to be executed
                 limit:
                   type: integer
                   description: Optional limit on number of retrieved objects. Limit is applied after ordering.
                 inputFields:
-                  type: array
-                  description: List of user input fields (will be available in query script via global variable $INPUT).
-                  items:
-                    type: object
-                    additionalProperties:
-                      type: string
-                      description: Set of key-value pairs where key is input field name and value is actual value provided by user.
+                  type: object
+                  description: User input fields (will be available in query script via global variable $INPUT).
+                  additionalProperties:
+                    type: string
       responses:
         '200':
-          description: Successful retrieval of alarms.
+          description: Successful retrieval of query results.
           content:
             application/json:
               schema:
                 type: array
                 items:
                   type: object
-                  description: One row of result set with single object query result, fileds depend on query definition
+                  description: One row of result set with single object query result, fields depend on query definition
+        '400':
+          description: Query error
         '401':
           description: Unauthorized.
       security:
@@ -374,19 +428,21 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                      description: DCI ID
-                    name:
-                      type: string
-                      description: DCI name
-                    description:
-                      type: string
-                      description: DCI description
+                type: object
+                properties:
+                  objects:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: DCI ID
+                        name:
+                          type: string
+                          description: DCI description
+        '400':
+          description: Object is not data collection target
         '401':
           description: Unauthorized
         '403':
@@ -398,7 +454,7 @@ paths:
   /v1/grafana/objects-status:
     post:
       summary: Get objects status for Grafana
-      description: Retrieve status information for multiple objects formatted for Grafana.
+      description: Retrieve status information for child objects of a root object formatted for Grafana.
       requestBody:
         required: true
         content:
@@ -406,11 +462,11 @@ paths:
             schema:
               type: object
               properties:
-                objects:
-                  type: array
-                  items:
-                    type: integer
-                  description: List of object IDs to retrieve status for
+                rootObjectId:
+                  type: integer
+                  description: Root object ID to retrieve children status for
+              required:
+                - rootObjectId
       responses:
         '200':
           description: Objects status retrieved successfully
@@ -421,17 +477,20 @@ paths:
                 items:
                   type: object
                   properties:
-                    id:
-                      type: integer
-                      description: Object ID
-                    status:
+                    Name:
+                      type: string
+                      description: Object name (may include alias in parentheses)
+                    Status:
                       type: integer
                       description: Object status
-                    name:
-                      type: string
-                      description: Object name
+        '400':
+          description: Invalid root object ID
         '401':
           description: Unauthorized
+        '403':
+          description: User does not have read access to root object
+        '404':
+          description: Root object with given ID does not exist
       security:
         - BearerAuth: []
   /v1/grafana/object-list:
@@ -477,21 +536,23 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                      description: Summary table ID
-                    name:
-                      type: string
-                      description: Summary table name
-                    description:
-                      type: string
-                      description: Summary table description
+                type: object
+                properties:
+                  objects:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: Summary table ID
+                        name:
+                          type: string
+                          description: Summary table name
         '401':
           description: Unauthorized
+        '403':
+          description: User does not have required system access rights
       security:
         - BearerAuth: []
   /v1/grafana/query-list:
@@ -504,21 +565,23 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                      description: Query ID
-                    name:
-                      type: string
-                      description: Query name
-                    description:
-                      type: string
-                      description: Query description
+                type: object
+                properties:
+                  objects:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: Query ID
+                        name:
+                          type: string
+                          description: Query name
         '401':
           description: Unauthorized
+        '403':
+          description: User does not have required system access rights
       security:
         - BearerAuth: []
   /v1/login:
@@ -803,23 +866,26 @@ paths:
           schema:
             type: integer
             description: DCI (Data Collection Item) ID
-        - name: from
+        - name: timeFrom
           in: query
           schema:
-            type: string
-            format: date-time
-            description: Start time for data retrieval
-        - name: to
+            type: integer
+            description: Start time for data retrieval (Unix timestamp)
+        - name: timeTo
           in: query
           schema:
-            type: string
-            format: date-time
-            description: End time for data retrieval
-        - name: maxDataPoints
+            type: integer
+            description: End time for data retrieval (Unix timestamp)
+        - name: maxRows
           in: query
           schema:
             type: integer
             description: Maximum number of data points to return
+        - name: historicalDataType
+          in: query
+          schema:
+            type: integer
+            description: Type of historical data (0=raw, 1=processed, 2=full table, 3=raw and processed)
       responses:
         '200':
           description: Data collection history retrieved successfully
@@ -828,10 +894,13 @@ paths:
               schema:
                 type: object
                 properties:
-                  dciId:
-                    type: integer
-                    description: DCI ID
-                  data:
+                  description:
+                    type: string
+                    description: DCI description
+                  unitName:
+                    type: string
+                    description: Unit name for the value
+                  values:
                     type: array
                     items:
                       type: object
@@ -842,12 +911,16 @@ paths:
                         value:
                           type: string
                           description: Data value
+        '400':
+          description: Object is not data collection target or DCI type not supported
         '401':
           description: Unauthorized
         '403':
           description: User does not have read access to given object
         '404':
           description: Object or DCI with given ID does not exist
+        '500':
+          description: Database failure
       security:
         - BearerAuth: []
   /v1/objects/{object-id}/expand-text:
@@ -1311,28 +1384,28 @@ components:
           type: integer
           description: Alarm ID
         Severity:
-          type: integer
-          description: Alarm severity
+          type: string
+          description: Alarm severity name (Normal, Warning, Minor, Major, Critical, etc.)
         State:
-          type: integer
-          description: Alarm state
+          type: string
+          description: Alarm state name (Outstanding, Acknowledged, Resolved, Terminated)
         Source:
-          type: integer
-          description: Source object ID
+          type: string
+          description: Source object name (may include alias in parentheses)
         Message:
           type: string
           description: Alarm message
         Count:
           type: integer
           description: Alarm repeat count
-        Ack/Resolve by: 
+        Ack/Resolve by:
           type: string
           description: User who acknowledged/resolved the alarm
         Created:
           type: string
           format: date-time
           description: Alarm creation time
-        lastChangeTime:
+        Last Change:
           type: string
           format: date-time
           description: Last change time of the alarm
