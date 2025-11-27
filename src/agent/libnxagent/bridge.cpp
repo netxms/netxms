@@ -240,6 +240,6 @@ void LIBNXAGENT_EXPORTABLE AgentUnregisterProblem(const TCHAR *key)
  */
 void LIBNXAGENT_EXPORTABLE AgentSetTimer(uint32_t delay, std::function<void()> callback)
 {
-   if (s_timerThreadPool != nullptr)
+   if (s_timerThreadPool != nullptr && !IsShutdownInProgress())
       ThreadPoolScheduleRelative(s_timerThreadPool, delay, callback);
 }
