@@ -34,11 +34,12 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			tools.cpp topology_builder.cpp tracert.cpp tunnel.cpp \
 			ua_notification_item.cpp uniroot.cpp userdb.cpp userdb_objects.cpp \
 			vnc.cpp vobject.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
+			webapi.cpp webapi_auth.cpp webapi_context.cpp webapi_router.cpp \
 			websvc.cpp winevent.cpp winperf.cpp wireless_domain.cpp zone.cpp
 libnxcore_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build -I@top_srcdir@/src/server/include -DNXCORE_EXPORTS \
-	@MQTT_CPPFLAGS@ @PYTHON_CPPFLAGS@ @LIBMODBUS_CPPFLAGS@ @LIBISOTREE_CPPFLAGS@
+	@MQTT_CPPFLAGS@ @PYTHON_CPPFLAGS@ @LIBMODBUS_CPPFLAGS@ @LIBISOTREE_CPPFLAGS@ @MICROHTTPD_CPPFLAGS@
 libnxcore_la_CXXFLAGS = -I@top_srcdir@/@CUSTOM_INCLUDE@
-libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) @MQTT_LDFLAGS@ @PYTHON_LDFLAGS@ @LIBMODBUS_LDFLAGS@ @LIBISOTREE_LDFLAGS@
+libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) @MQTT_LDFLAGS@ @PYTHON_LDFLAGS@ @LIBMODBUS_LDFLAGS@ @LIBISOTREE_LDFLAGS@ @MICROHTTPD_LDFLAGS@
 libnxcore_la_LIBADD = \
 	../libnxsrv/libnxsrv.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
@@ -48,6 +49,7 @@ libnxcore_la_LIBADD = \
 	../../libnxsl/libnxsl.la \
 	../../agent/libnxagent/libnxagent.la \
 	../../libnetxms/libnetxms.la \
+	 @MICROHTTPD_LIBS@ \
 	@SERVER_LIBS@
 if USE_INTERNAL_JANSSON
 libnxcore_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la

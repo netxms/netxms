@@ -20,7 +20,8 @@
 **
 **/
 
-#include "webapi.h"
+#include "nxcore.h"
+#include <netxms-webapi.h>
 #include <nxcore_2fa.h>
 #include <nms_users.h>
 
@@ -136,7 +137,7 @@ static int Process2FAResponse(Context *context)
 }
 
 /**
- * Handler for /login
+ * Handler for /v1/login
  */
 int H_Login(Context *context)
 {
@@ -266,7 +267,7 @@ int H_Login(Context *context)
 }
 
 /**
- * Handler for /logout
+ * Handler for /v1/logout
  */
 int H_Logout(Context *context)
 {

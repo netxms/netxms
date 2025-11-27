@@ -4114,10 +4114,10 @@ if test $? = 0 -o "x$REQUIRE_MICROHTTPD" = "xyes"; then
 	OLD_LDFLAGS="$LDFLAGS"
 	OLD_LIBS="$LIBS"
 
-   CPPFLAGS="$CPPFLAGS $MICROHTTPD_CPPFLAGS"
-   LDFLAGS="$LDFLAGS $MICROHTTPD_LDFLAGS"
+	CPPFLAGS="$CPPFLAGS $MICROHTTPD_CPPFLAGS"
+	LDFLAGS="$LDFLAGS $MICROHTTPD_LDFLAGS"
 
-   MICROHTTPD_SUPPORT="yes"
+	MICROHTTPD_SUPPORT="yes"
 	AC_CHECK_HEADER(microhttpd.h, [], [
 		if test "x$REQUIRE_MICROHTTPD" = "xyes"; then
 			AC_MSG_ERROR([*** Cannot find microhttpd.h - check your libmicrohttpd installation ***])
@@ -4138,9 +4138,7 @@ if test $? = 0 -o "x$REQUIRE_MICROHTTPD" = "xyes"; then
 		SERVER_COMPONENTS="webapi $SERVER_COMPONENTS"
 		HDLINK_DIRS="$HDLINK_DIRS jira"
 	else
-		if test "x$REQUIRE_MICROHTTPD" = "xyes"; then
-			AC_MSG_ERROR([*** libmicrohttpd is required ***])
-		fi
+		AC_MSG_ERROR([*** libmicrohttpd is required ***])
 	fi
 
 	CPPFLAGS="$OLD_CPPFLAGS"

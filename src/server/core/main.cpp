@@ -137,6 +137,10 @@ void LoadAssetManagementSchema();
 void StartPackageDeploymentManager();
 void StopPackageDeploymentManager();
 
+bool InitWebAPI();
+void StartWebAPI();
+void ShutdownWebAPI();
+
 /**
  * Syslog server control
  */
@@ -1190,6 +1194,9 @@ retry_db_lock:
       return false;
 #endif
 
+   if (!InitWebAPI())
+      return false;
+
    // Create thread pools
    nxlog_debug_tag(DEBUG_TAG_STARTUP, 2, _T("Creating thread pools"));
    g_mainThreadPool = ThreadPoolCreate(_T("MAIN"),
@@ -1414,6 +1421,9 @@ retry_db_lock:
    InitMobileDeviceListeners();
    s_mobileDeviceListenerThread = ThreadCreateEx(MobileDeviceListenerThread);
 
+   // Start web server
+   StartWebAPI();
+
    StartPackageDeploymentManager();
 
    // Validate scripts in script library
@@ -1459,6 +1469,8 @@ void NXCORE_EXPORTABLE Shutdown()
       if (g_moduleList.get(i)->pfShutdown != nullptr)
          g_moduleList.get(i)->pfShutdown();
    }
+
+   ShutdownWebAPI();
 
    ThreadJoin(s_statCollectorThread);
 

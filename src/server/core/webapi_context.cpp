@@ -16,11 +16,12 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: context.cpp
+** File: webapi_context.cpp
 **
 **/
 
-#include "webapi.h"
+#include "nxcore.h"
+#include <netxms-webapi.h>
 
 /**
  * Get request JSON document.
