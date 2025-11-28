@@ -47,19 +47,22 @@ static Route *s_root = nullptr;
  */
 void RouteBuilder::build()
 {
-   StringBuffer methods;
-   if (m_handlers[(int)Method::GET] != nullptr)
-      methods.append(_T("GET "));
-   if (m_handlers[(int)Method::POST] != nullptr)
-      methods.append(_T("POST "));
-   if (m_handlers[(int)Method::PUT] != nullptr)
-      methods.append(_T("PUT "));
-   if (m_handlers[(int)Method::PATCH] != nullptr)
-      methods.append(_T("PATCH "));
-   if (m_handlers[(int)Method::DELETE] != nullptr)
-      methods.append(_T("DELETE "));
-   methods.trim();
-   nxlog_debug_tag(DEBUG_TAG_WEBAPI, 4, _T("Registering endpoint /%hs [%s]%s"), m_path, methods.cstr(), m_auth ? _T("") : _T(" (no auth)"));
+   if (nxlog_get_debug_level_tag(DEBUG_TAG_WEBAPI) >= 4)
+   {
+      StringBuffer methods;
+      if (m_handlers[(int)Method::GET] != nullptr)
+         methods.append(_T("GET "));
+      if (m_handlers[(int)Method::POST] != nullptr)
+         methods.append(_T("POST "));
+      if (m_handlers[(int)Method::PUT] != nullptr)
+         methods.append(_T("PUT "));
+      if (m_handlers[(int)Method::PATCH] != nullptr)
+         methods.append(_T("PATCH "));
+      if (m_handlers[(int)Method::DELETE] != nullptr)
+         methods.append(_T("DELETE "));
+      methods.trim();
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 4, _T("Registering endpoint /%hs [%s]%s"), m_path, methods.cstr(), m_auth ? _T("") : _T(" (no auth)"));
+   }
 
    if (s_root == nullptr)
    {
@@ -117,11 +120,7 @@ void RouteBuilder::build()
       curr->sub = r;
    }
 
-   for (int i = 0; i < 5; i++)
-   {
-      if (m_handlers[i] != nullptr)
-         r->handlers[i] = m_handlers[i];
-   }
+   memcpy(r->handlers, m_handlers, sizeof(m_handlers));
    r->auth = m_auth;
 }
 
