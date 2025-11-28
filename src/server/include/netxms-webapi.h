@@ -49,7 +49,7 @@
 /**
  * Request method
  */
-enum Method
+enum class Method
 {
    DELETE = 0,
    GET = 1,
@@ -65,16 +65,16 @@ enum Method
 static inline Method MethodFromSymbolicName(const char *method)
 {
    if (!strcmp(method, "GET"))
-      return GET;
+      return Method::GET;
    if (!strcmp(method, "POST"))
-      return POST;
+      return Method::POST;
    if (!strcmp(method, "DELETE"))
-      return DELETE;
+      return Method::DELETE;
    if (!strcmp(method, "PUT"))
-      return PUT;
+      return Method::PUT;
    if (!strcmp(method, "PATCH"))
-      return PATCH;
-   return UNKNOWN;
+      return Method::PATCH;
+   return Method::UNKNOWN;
 }
 
 /**
@@ -109,31 +109,31 @@ public:
 
    RouteBuilder& GET(RouteHandler handler)
    {
-      m_handlers[Method::GET] = handler;
+      m_handlers[(int)Method::GET] = handler;
       return *this;
    }
 
    RouteBuilder& POST(RouteHandler handler)
    {
-      m_handlers[Method::POST] = handler;
+      m_handlers[(int)Method::POST] = handler;
       return *this;
    }
 
    RouteBuilder& PUT(RouteHandler handler)
    {
-      m_handlers[Method::PUT] = handler;
+      m_handlers[(int)Method::PUT] = handler;
       return *this;
    }
 
    RouteBuilder& PATCH(RouteHandler handler)
    {
-      m_handlers[Method::PATCH] = handler;
+      m_handlers[(int)Method::PATCH] = handler;
       return *this;
    }
 
    RouteBuilder& DELETE(RouteHandler handler)
    {
-      m_handlers[Method::DELETE] = handler;
+      m_handlers[(int)Method::DELETE] = handler;
       return *this;
    }
 
@@ -243,7 +243,7 @@ public:
 
    bool isDataRequired() const
    {
-      return (m_method == POST) || (m_method == PATCH) || (m_method == PUT);
+      return (m_method == Method::POST) || (m_method == Method::PATCH) || (m_method == Method::PUT);
    }
 
    bool hasRequestData() const

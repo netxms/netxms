@@ -156,8 +156,13 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
    }
 
    Method methodId = MethodFromSymbolicName(method);
+   if (methodId == Method::UNKNOWN)
+   {
+      *responseCode = 405; // method not allowed
+      return nullptr;
+   }
 
-   RouteHandler handler = curr->handlers[methodId];
+   RouteHandler handler = curr->handlers[(int)methodId];
    if (handler == nullptr)
    {
       *responseCode = 405; // method not allowed
@@ -165,7 +170,7 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
    }
 
    // Check content type if content is expected
-   if ((methodId == POST) || (methodId == PUT) || (methodId == PATCH))
+   if ((methodId == Method::POST) || (methodId == Method::PUT) || (methodId == Method::PATCH))
    {
       const char *contentType = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_CONTENT_TYPE);
       if ((contentType == nullptr) || (strcmp(contentType, "application/json") && strncmp(contentType, "application/json;", 17)))
