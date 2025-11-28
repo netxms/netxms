@@ -103,13 +103,26 @@ void RouteBuilder::build()
       p = s + 1;
    }
 
-   Route *r = MemAllocStruct<Route>();
-   r->path = MemCopyStringA(p);
-   r->len = strlen(p);
-   memcpy(r->handlers, m_handlers, sizeof(m_handlers));
+   Route *r;
+   for(r = curr->sub; r != nullptr; r = r->next)
+      if (!strcmp(r->path, p))
+         break;
+
+   if (r == nullptr)
+   {
+      r = MemAllocStruct<Route>();
+      r->path = MemCopyStringA(p);
+      r->len = strlen(p);
+      r->next = curr->sub;
+      curr->sub = r;
+   }
+
+   for (int i = 0; i < 5; i++)
+   {
+      if (m_handlers[i] != nullptr)
+         r->handlers[i] = m_handlers[i];
+   }
    r->auth = m_auth;
-   r->next = curr->sub;
-   curr->sub = r;
 }
 
 /**
