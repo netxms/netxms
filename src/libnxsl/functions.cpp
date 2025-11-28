@@ -1106,7 +1106,7 @@ int F_LevenshteinDistance(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
    uint32_t l1, l2;
    const TCHAR *s1 = argv[0]->getValueAsString(&l1);
    const TCHAR *s2 = argv[1]->getValueAsString(&l2);
-   *result = vm->createValue(CalculateLevenshteinDistance(s1, l1, s2, l2, ignoreCase));
+   *result = vm->createValue(static_cast<uint32_t>(CalculateLevenshteinDistance(s1, l1, s2, l2, ignoreCase)));
    return NXSL_ERR_SUCCESS;
 }
 
