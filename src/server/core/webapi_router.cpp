@@ -47,6 +47,20 @@ static Route *s_root = nullptr;
  */
 void RouteBuilder::build()
 {
+   StringBuffer methods;
+   if (m_handlers[(int)Method::GET] != nullptr)
+      methods.append(_T("GET "));
+   if (m_handlers[(int)Method::POST] != nullptr)
+      methods.append(_T("POST "));
+   if (m_handlers[(int)Method::PUT] != nullptr)
+      methods.append(_T("PUT "));
+   if (m_handlers[(int)Method::PATCH] != nullptr)
+      methods.append(_T("PATCH "));
+   if (m_handlers[(int)Method::DELETE] != nullptr)
+      methods.append(_T("DELETE "));
+   methods.trim();
+   nxlog_debug_tag(DEBUG_TAG_WEBAPI, 4, _T("Registering endpoint /%hs [%s]%s"), m_path, methods.cstr(), m_auth ? _T("") : _T(" (no auth)"));
+
    if (s_root == nullptr)
    {
       s_root = MemAllocStruct<Route>();
