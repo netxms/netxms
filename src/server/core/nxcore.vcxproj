@@ -196,7 +196,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;libcurl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;libcurl.lib;libmicrohttpd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
@@ -225,7 +225,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;libcurl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;libcurl.lib;libmicrohttpd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
@@ -254,7 +254,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;libcurl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;libcurl.lib;libmicrohttpd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
     </Link>
@@ -276,7 +276,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;libcurl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;libcurl.lib;libmicrohttpd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -302,7 +302,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;libcurl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;libcurl.lib;libmicrohttpd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -330,7 +330,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;libcurl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;libcurl.lib;libmicrohttpd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -357,7 +357,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;libcurl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;libcurl.lib;libmicrohttpd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -385,7 +385,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;libcurl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;libcurl.lib;libmicrohttpd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -412,7 +412,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;libcurl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;pcre.lib;pcre16.lib;isotree.lib;zlib.lib;libcurl.lib;libmicrohttpd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -586,6 +586,10 @@
     <ClCompile Include="vpnconn.cpp" />
     <ClCompile Include="vrrp.cpp" />
     <ClCompile Include="watchdog.cpp" />
+    <ClCompile Include="webapi.cpp" />
+    <ClCompile Include="webapi_auth.cpp" />
+    <ClCompile Include="webapi_context.cpp" />
+    <ClCompile Include="webapi_router.cpp" />
     <ClCompile Include="websvc.cpp" />
     <ClCompile Include="windll.cpp" />
     <ClCompile Include="winevent.cpp" />

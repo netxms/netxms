@@ -102,7 +102,7 @@ static int StartApp(int argc, char *argv[])
       }
    }
 
-   if (_isatty(_fileno(stdin)) && _isatty(fileno(stdout)))
+   if (_isatty(_fileno(stdin)) && _isatty(_fileno(stdout)))
    {
       vmOptions.addMBString("-Dnxshell.interactive=true");
    }

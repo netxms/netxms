@@ -326,8 +326,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="alarms.cpp" />
-    <ClCompile Include="auth.cpp" />
-    <ClCompile Include="context.cpp" />
     <ClCompile Include="datacoll.cpp" />
     <ClCompile Include="dcst.cpp" />
     <ClCompile Include="find.cpp" />
@@ -336,7 +334,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="objects.cpp" />
     <ClCompile Include="objtools.cpp" />
-    <ClCompile Include="router.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\nms_common.h" />
