@@ -5635,6 +5635,7 @@ static inline size_t CalculateLevenshteinDistance(const TCHAR *s1, const TCHAR *
    size_t len2 = _tcslen(s2);
    return CalculateLevenshteinDistance(s1, len1, s2, len2, ignoreCase);
 }
+double LIBNETXMS_EXPORTABLE CalculateStringSimilarity(const TCHAR *s1, const TCHAR *s2, bool ignoreCase);
 bool LIBNETXMS_EXPORTABLE FuzzyMatchStrings(const TCHAR *s1, const TCHAR *s2, double threshold = 0.8);
 bool LIBNETXMS_EXPORTABLE FuzzyMatchStringsIgnoreCase(const TCHAR *s1, const TCHAR *s2, double threshold = 0.8);
 

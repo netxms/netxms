@@ -1104,49 +1104,49 @@ bool AdjustSubnetBaseAddress(InetAddress& baseAddr, int32_t zoneUIN)
 }
 
 /**
+ * Select appropriate object index based on object class
+ *
+ * @param objectClassHint Object class to get index for
+ * @return Pointer to the appropriate index
+ */
+static ObjectIndex* GetObjectIndexByClass(int objectClassHint)
+{
+   switch(objectClassHint)
+   {
+      case OBJECT_ACCESSPOINT:
+         return &g_idxAccessPointById;
+      case OBJECT_ASSET:
+         return &g_idxAssetById;
+      case OBJECT_BUSINESSSERVICE:
+      case OBJECT_BUSINESSSERVICEPROTO:
+         return &g_idxBusinessServicesById;
+      case OBJECT_CIRCUIT:
+         return &g_idxCircuitById;
+      case OBJECT_CLUSTER:
+         return &g_idxClusterById;
+      case OBJECT_COLLECTOR:
+         return &g_idxCollectorById;
+      case OBJECT_MOBILEDEVICE:
+         return &g_idxMobileDeviceById;
+      case OBJECT_NODE:
+         return &g_idxNodeById;
+      case OBJECT_SENSOR:
+         return &g_idxSensorById;
+      case OBJECT_SUBNET:
+         return &g_idxSubnetById;
+      case OBJECT_ZONE:
+         return &g_idxZoneByUIN;
+      default:
+         return &g_idxObjectById;
+   }
+}
+
+/**
  * Find object by ID
  */
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(uint32_t id, int objectClassHint)
 {
-   ObjectIndex *index;
-   switch(objectClassHint)
-   {
-      case OBJECT_ACCESSPOINT:
-         index = &g_idxAccessPointById;
-         break;
-      case OBJECT_ASSET:
-         index = &g_idxAssetById;
-         break;
-      case OBJECT_BUSINESSSERVICE:
-      case OBJECT_BUSINESSSERVICEPROTO:
-         index = &g_idxBusinessServicesById;
-         break;
-      case OBJECT_CIRCUIT:
-         index = &g_idxCircuitById;
-         break;
-      case OBJECT_CLUSTER:
-         index = &g_idxClusterById;
-         break;
-      case OBJECT_COLLECTOR:
-         index = &g_idxCollectorById;
-         break;
-      case OBJECT_MOBILEDEVICE:
-         index = &g_idxMobileDeviceById;
-         break;
-      case OBJECT_NODE:
-         index = &g_idxNodeById;
-         break;
-      case OBJECT_SENSOR:
-         index = &g_idxSensorById;
-         break;
-      case OBJECT_SUBNET:
-         index = &g_idxSubnetById;
-         break;
-      default:
-         index = &g_idxObjectById;
-         break;
-   }
-
+   ObjectIndex *index = GetObjectIndexByClass(objectClassHint);
    shared_ptr<NetObj> object = index->get(id);
 	if ((object == nullptr) || (objectClassHint == -1))
 		return object;
@@ -1184,45 +1184,7 @@ unique_ptr<SharedObjectArray<NetObj>> NXCORE_EXPORTABLE FindObjectsByRegex(const
    if (preg == nullptr)
       return unique_ptr<SharedObjectArray<NetObj>>();
 
-   ObjectIndex *index;
-   switch(objectClassHint)
-   {
-      case OBJECT_ACCESSPOINT:
-         index = &g_idxAccessPointById;
-         break;
-      case OBJECT_ASSET:
-         index = &g_idxAssetById;
-         break;
-      case OBJECT_BUSINESSSERVICE:
-      case OBJECT_BUSINESSSERVICEPROTO:
-         index = &g_idxBusinessServicesById;
-         break;
-      case OBJECT_CIRCUIT:
-         index = &g_idxCircuitById;
-         break;
-      case OBJECT_CLUSTER:
-         index = &g_idxClusterById;
-         break;
-      case OBJECT_COLLECTOR:
-         index = &g_idxCollectorById;
-         break;
-      case OBJECT_MOBILEDEVICE:
-         index = &g_idxMobileDeviceById;
-         break;
-      case OBJECT_NODE:
-         index = &g_idxNodeById;
-         break;
-      case OBJECT_SENSOR:
-         index = &g_idxSensorById;
-         break;
-      case OBJECT_SUBNET:
-         index = &g_idxSubnetById;
-         break;
-      default:
-         index = &g_idxObjectById;
-         break;
-   }
-
+   ObjectIndex *index = GetObjectIndexByClass(objectClassHint);
    std::pair<int, PCRE*> context(objectClassHint, preg);
    unique_ptr<SharedObjectArray<NetObj>> result = index->getObjects(ObjectNameRegexAndClassFilter, &context);
    _pcre_free_t(preg);
@@ -1243,47 +1205,7 @@ const wchar_t NXCORE_EXPORTABLE *GetObjectName(uint32_t id, const wchar_t *defau
  */
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(bool (*comparator)(NetObj*, void*), void *context, int objectClassHint)
 {
-   ObjectIndex *index;
-   switch(objectClassHint)
-   {
-      case OBJECT_ACCESSPOINT:
-         index = &g_idxAccessPointById;
-         break;
-      case OBJECT_ASSET:
-         index = &g_idxAssetById;
-         break;
-      case OBJECT_BUSINESSSERVICE:
-      case OBJECT_BUSINESSSERVICEPROTO:
-         index = &g_idxBusinessServicesById;
-         break;
-      case OBJECT_CIRCUIT:
-         index = &g_idxCircuitById;
-         break;
-      case OBJECT_CLUSTER:
-         index = &g_idxClusterById;
-         break;
-      case OBJECT_COLLECTOR:
-         index = &g_idxCollectorById;
-         break;
-      case OBJECT_MOBILEDEVICE:
-         index = &g_idxMobileDeviceById;
-         break;
-      case OBJECT_NODE:
-         index = &g_idxNodeById;
-         break;
-      case OBJECT_ZONE:
-         index = &g_idxZoneByUIN;
-         break;
-      case OBJECT_SENSOR:
-         index = &g_idxSensorById;
-         break;
-      case OBJECT_SUBNET:
-         index = &g_idxSubnetById;
-         break;
-      default:
-         index = &g_idxObjectById;
-         break;
-   }
+   ObjectIndex *index = GetObjectIndexByClass(objectClassHint);
    shared_ptr<NetObj> object = index->find(comparator, context);
    return ((object == nullptr) || (objectClassHint == -1)) ? object : ((object->getObjectClass() == objectClassHint) ? object : shared_ptr<NetObj>());
 }
@@ -1293,47 +1215,7 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(bool (*comparator)(NetObj*, void
  */
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(std::function<bool (NetObj*)> comparator, int objectClassHint)
 {
-   ObjectIndex *index;
-   switch(objectClassHint)
-   {
-      case OBJECT_ACCESSPOINT:
-         index = &g_idxAccessPointById;
-         break;
-      case OBJECT_ASSET:
-         index = &g_idxAssetById;
-         break;
-      case OBJECT_BUSINESSSERVICE:
-      case OBJECT_BUSINESSSERVICEPROTO:
-         index = &g_idxBusinessServicesById;
-         break;
-      case OBJECT_CIRCUIT:
-         index = &g_idxCircuitById;
-         break;
-      case OBJECT_CLUSTER:
-         index = &g_idxClusterById;
-         break;
-      case OBJECT_COLLECTOR:
-         index = &g_idxCollectorById;
-         break;
-      case OBJECT_MOBILEDEVICE:
-         index = &g_idxMobileDeviceById;
-         break;
-      case OBJECT_NODE:
-         index = &g_idxNodeById;
-         break;
-      case OBJECT_ZONE:
-         index = &g_idxZoneByUIN;
-         break;
-      case OBJECT_SENSOR:
-         index = &g_idxSensorById;
-         break;
-      case OBJECT_SUBNET:
-         index = &g_idxSubnetById;
-         break;
-      default:
-         index = &g_idxObjectById;
-         break;
-   }
+   ObjectIndex *index = GetObjectIndexByClass(objectClassHint);
    shared_ptr<NetObj> object = index->find(comparator);
    return ((object == nullptr) || (objectClassHint == -1)) ? object : ((object->getObjectClass() == objectClassHint) ? object : shared_ptr<NetObj>());
 }
@@ -1355,15 +1237,25 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByName(const wchar_t *name, int o
  */
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByFuzzyName(const wchar_t *name, int objectClassHint)
 {
-   return FindObject(
-      [name, objectClassHint] (NetObj *object) -> bool
+   double similarity = 0.79999;  // minimum similarity threshold
+   shared_ptr<NetObj> bestMatch = nullptr;
+   ObjectIndex *index = GetObjectIndexByClass(objectClassHint);
+   index->forEach(
+      [name, objectClassHint, &similarity, &bestMatch] (NetObj *object) -> EnumerationCallbackResult
       {
          if (object->isDeleted())
-            return false;
+            return _CONTINUE;
          if (objectClassHint != -1 && objectClassHint != object->getObjectClass())
-            return false;
-         return FuzzyMatchStringsIgnoreCase(name, object->getName());
-      }, objectClassHint);
+            return _CONTINUE;
+         double s = CalculateStringSimilarity(name, object->getName(), true);
+         if (s > similarity)
+         {
+            similarity = s;
+            bestMatch = object->self();
+         }
+         return s < 1.0 ? _CONTINUE : _STOP;
+      });
+   return bestMatch;
 }
 
 /**
@@ -2412,41 +2304,7 @@ static EnumerationCallbackResult CreateObjectAccessSnapshot_Callback(NetObj *obj
  */
 bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(uint32_t userId, int objClass)
 {
-   ObjectIndex *index;
-   switch(objClass)
-   {
-      case OBJECT_ACCESSPOINT:
-         index = &g_idxAccessPointById;
-         break;
-      case OBJECT_BUSINESSSERVICE:
-      case OBJECT_BUSINESSSERVICEPROTO:
-         index = &g_idxBusinessServicesById;
-         break;
-      case OBJECT_CIRCUIT:
-         index = &g_idxCircuitById;
-         break;
-      case OBJECT_CLUSTER:
-         index = &g_idxClusterById;
-         break;
-      case OBJECT_COLLECTOR:
-         index = &g_idxCollectorById;
-         break;
-      case OBJECT_MOBILEDEVICE:
-         index = &g_idxMobileDeviceById;
-         break;
-      case OBJECT_NODE:
-         index = &g_idxNodeById;
-         break;
-      case OBJECT_ZONE:
-         index = &g_idxZoneByUIN;
-         break;
-      case OBJECT_SENSOR:
-         index = &g_idxSensorById;
-         break;
-      default:
-         index = &g_idxObjectById;
-         break;
-   }
+   ObjectIndex *index = GetObjectIndexByClass(objClass);
 
    StructArray<ACL_ELEMENT> accessList;
    CreateObjectAccessSnapshot_CallbackData data;

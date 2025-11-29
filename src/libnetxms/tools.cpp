@@ -5334,6 +5334,24 @@ size_t LIBNETXMS_EXPORTABLE CalculateLevenshteinDistance(const TCHAR *s1, size_t
 }
 
 /**
+ * Calculate string similarity (1.0 - exact match, 0.0 - completely different)
+ * @param s1 first string
+ * @param s2 second string
+ * @param ignoreCase true to ignore case during comparison
+ * @return similarity value
+ */
+double LIBNETXMS_EXPORTABLE CalculateStringSimilarity(const TCHAR *s1, const TCHAR *s2, bool ignoreCase)
+{
+   size_t len1 = _tcslen(s1);
+   size_t len2 = _tcslen(s2);
+   if (len1 == 0 && len2 == 0)
+      return 1.0;
+
+   size_t editDistance = CalculateLevenshteinDistance(s1, len1, s2, len2, ignoreCase);
+   return 1.0 - (static_cast<double>(editDistance) / std::max(len1, len2));
+}
+
+/**
  * Fuzzy string comparison
  * @param s1 first string
  * @param s2 second string
@@ -5348,14 +5366,7 @@ bool LIBNETXMS_EXPORTABLE FuzzyMatchStrings(const TCHAR *s1, const TCHAR *s2, do
    if (threshold <= 0.0)
       return true;
 
-   size_t len1 = _tcslen(s1);
-   size_t len2 = _tcslen(s2);
-   if (len1 == 0 && len2 == 0)
-      return true;
-
-   size_t editDistance = CalculateLevenshteinDistance(s1, len1, s2, len2, false);
-   double similarity = 1.0 - (static_cast<double>(editDistance) / std::max(len1, len2));
-   return similarity >= threshold;
+   return CalculateStringSimilarity(s1, s2, false) >= threshold;
 }
 
 /**
@@ -5373,12 +5384,5 @@ bool LIBNETXMS_EXPORTABLE FuzzyMatchStringsIgnoreCase(const TCHAR *s1, const TCH
    if (threshold <= 0.0)
       return true;
 
-   size_t len1 = _tcslen(s1);
-   size_t len2 = _tcslen(s2);
-   if (len1 == 0 && len2 == 0)
-      return true;
-
-   size_t editDistance = CalculateLevenshteinDistance(s1, len1, s2, len2, true);
-   double similarity = 1.0 - (static_cast<double>(editDistance) / std::max(len1, len2));
-   return similarity >= threshold;
+   return CalculateStringSimilarity(s1, s2, true) >= threshold;
 }
