@@ -12401,7 +12401,7 @@ json_t *Node::getHardwareComponentsAsJSON()
 /**
  * Get list of software packages as JSON array
  */
-json_t *Node::getSoftwarePackagesAsJSON()
+json_t *Node::getSoftwarePackagesAsJSON(const wchar_t *filter)
 {
    json_t *packagesArray = nullptr;
    lockProperties();
@@ -12411,7 +12411,9 @@ json_t *Node::getSoftwarePackagesAsJSON()
       int spSize = m_softwarePackages->size();
       for (int i = 0; i < spSize; i++)
       {
-         json_array_append_new(packagesArray, m_softwarePackages->get(i)->toJson());
+         SoftwarePackage *pkg = m_softwarePackages->get(i);
+         if ((filter == nullptr) || (wcsistr(pkg->getName(), filter) != nullptr) || (wcsistr(pkg->getDescription(), filter) != nullptr))
+            json_array_append_new(packagesArray, pkg->toJson());
       }
    }
    unlockProperties();

@@ -84,13 +84,17 @@ struct NetworkPathElement
    InetAddress nextHop;          // Next hop address
    InetAddress route;            // Route used (UNSPEC for VPN connectors and direct access)
    uint32_t ifIndex;             // Interface index or object ID
-   TCHAR name[MAX_OBJECT_NAME];
+   wchar_t name[MAX_OBJECT_NAME];
 };
+
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE ObjectArray<NetworkPathElement>;
+#endif
 
 /**
  * Network path trace
  */
-class NetworkPath
+class NXCORE_EXPORTABLE NetworkPath
 {
 private:
    InetAddress m_sourceAddress;
@@ -111,6 +115,7 @@ public:
    NetworkPathElement *getHopInfo(int index) const { return m_path.get(index); }
 
    void fillMessage(NXCPMessage *msg) const;
+   json_t *toJson() const;
    void print(ServerConsole *console, int padding) const;
 };
 
@@ -449,7 +454,7 @@ class NetworkMapObjectList;
 class NetworkMapElement;
 class NetworkMapLink;
 
-shared_ptr<NetworkPath> TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest);
+shared_ptr<NetworkPath> NXCORE_EXPORTABLE TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest);
 const ROUTE *SelectBestRoute(const RoutingTable& routes, const InetAddress& destination);
 void BuildL2Topology(NetworkMapObjectList &topology, Node *root, NetworkMap *filterProvider, int depth, bool includeEndNodes, bool useL1Topology);
 shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type);

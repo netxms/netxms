@@ -4057,7 +4057,7 @@ public:
    NXSL_Value *getOSPFNeighborsForNXSL(NXSL_VM *vm);
 
    json_t *getHardwareComponentsAsJSON();
-   json_t *getSoftwarePackagesAsJSON();
+   json_t *getSoftwarePackagesAsJSON(const wchar_t *filter = nullptr);
 
    ObjectArray<AgentParameterDefinition> *openParamList(int origin);
    void closeParamList() { unlockProperties(); }
