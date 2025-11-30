@@ -155,6 +155,7 @@ struct ExternalTableDefinition
    int instanceColumnCount;
    TCHAR **instanceColumns;
    StringMap columnDataTypes;
+   int defaultColumnDataType;
 
    ExternalTableDefinition()
    {
@@ -163,6 +164,7 @@ struct ExternalTableDefinition
       mergeSeparators = false;
       instanceColumnCount = 0;
       instanceColumns = nullptr;
+      defaultColumnDataType = DCI_DT_INT;
    }
 
    ~ExternalTableDefinition()

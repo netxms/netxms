@@ -927,11 +927,20 @@ bool AddExternalTable(TCHAR *config)
       }
    }
 
+   TCHAR dataType[16] = _T("");
+   ExtractNamedOptionValue(options, _T("defaultColumnDataType"), dataType, 16);
+
    ExternalTableDefinition *td = new ExternalTableDefinition();
    td->separator = separator[0];
    td->mergeSeparators = ExtractNamedOptionValueAsBool(options, _T("mergeSeparators"), false);
    td->cmdLine = MemCopyString(cmdLine);
    td->instanceColumns = SplitString(instanceColumns, _T(','), &td->instanceColumnCount);
+   if (dataType[0] != 0)
+   {
+      td->defaultColumnDataType = TextToDataType(dataType);
+      if (td->defaultColumnDataType == -1)
+         td->defaultColumnDataType = DCI_DT_INT;
+   }
    if (ExtractNamedOptionValueAsBool(options, _T("backgroundPolling"), false))
    {
       uint32_t pollingInterval = ExtractNamedOptionValueAsUInt(options, _T("pollingInterval"), 60);
@@ -974,6 +983,10 @@ bool AddExternalTable(ConfigEntry *config)
    }
    td->separator = separator[0];
    MemFree(separator);
+
+   td->defaultColumnDataType = TextToDataType(config->getSubEntryValue(_T("DefaultColumnDataType"), 0, _T("string")));
+   if (td->defaultColumnDataType == -1)
+      td->defaultColumnDataType = DCI_DT_INT;
 
    td->mergeSeparators = config->getSubEntryValueAsBoolean(_T("MergeSeparators"), 0, false);
 
