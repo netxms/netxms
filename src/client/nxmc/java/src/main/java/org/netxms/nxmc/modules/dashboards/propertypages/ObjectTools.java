@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,8 +29,8 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -63,6 +63,7 @@ public class ObjectTools extends DashboardElementPropertyPage
    private List<Tool> tools;
    private TableViewer viewer;
    private Button addButton;
+   private Button editButton;
    private Button deleteButton;
    private Button upButton;
    private Button downButton;
@@ -150,6 +151,7 @@ public class ObjectTools extends DashboardElementPropertyPage
       gd.grabExcessVerticalSpace = true;
       gd.heightHint = 0;
       viewer.getTable().setLayoutData(gd);
+      viewer.addDoubleClickListener(event -> editTool());
 
       tools = new ArrayList<Tool>();
       if (config.getTools() != null)
@@ -190,13 +192,7 @@ public class ObjectTools extends DashboardElementPropertyPage
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       upButton.setLayoutData(rd);
-      upButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      upButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -210,13 +206,7 @@ public class ObjectTools extends DashboardElementPropertyPage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       downButton.setLayoutData(rd);
-      downButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      downButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -242,13 +232,7 @@ public class ObjectTools extends DashboardElementPropertyPage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
-      addButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      addButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -256,18 +240,26 @@ public class ObjectTools extends DashboardElementPropertyPage
          }
       });
 
+      editButton = new Button(rightButtons, SWT.PUSH);
+      editButton.setText(i18n.tr("&Edit..."));
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      editButton.setLayoutData(rd);
+      editButton.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            editTool();
+         }
+      });
+      editButton.setEnabled(false);
+
       deleteButton = new Button(rightButtons, SWT.PUSH);
       deleteButton.setText(i18n.tr("&Delete"));
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
-      deleteButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      deleteButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -281,6 +273,7 @@ public class ObjectTools extends DashboardElementPropertyPage
          public void selectionChanged(SelectionChangedEvent event)
          {
             IStructuredSelection selection = viewer.getStructuredSelection();
+            editButton.setEnabled(selection.size() == 1);
             deleteButton.setEnabled(selection.size() > 0);
             upButton.setEnabled(selection.size() == 1);
             downButton.setEnabled(selection.size() == 1);
@@ -349,6 +342,23 @@ public class ObjectTools extends DashboardElementPropertyPage
       {
          tools.add(dlg.getTool());
          viewer.setInput(tools.toArray());
+      }
+   }
+
+   /**
+    * Edit currently selected tool
+    */
+   protected void editTool()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      Tool tool = (Tool)selection.getFirstElement();
+      EditToolDialog dlg = new EditToolDialog(getShell(), tool);
+      if (dlg.open() == Window.OK)
+      {
+         viewer.refresh();
       }
    }
 

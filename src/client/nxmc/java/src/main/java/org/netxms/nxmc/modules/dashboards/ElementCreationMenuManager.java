@@ -99,7 +99,7 @@ public class ElementCreationMenuManager extends MenuManager
       addTypeToSelectionMenu(othersMenu, i18n.tr("Status indicator"), DashboardElement.STATUS_INDICATOR);
       addTypeToSelectionMenu(othersMenu, i18n.tr("Port view"), DashboardElement.PORT_VIEW);
       addTypeToSelectionMenu(othersMenu, i18n.tr("Rack diagram"), DashboardElement.RACK_DIAGRAM);
-      addTypeToSelectionMenu(othersMenu, i18n.tr("Object Tools"), DashboardElement.OBJECT_TOOLS);
+      addTypeToSelectionMenu(othersMenu, i18n.tr("Object tools"), DashboardElement.OBJECT_TOOLS);
       addTypeToSelectionMenu(othersMenu, i18n.tr("Custom widget"), DashboardElement.CUSTOM);
       add(othersMenu);
 
