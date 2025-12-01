@@ -24,11 +24,35 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 52.23 to 53.0
+ * Upgrade from 52.24 to 53.0
+ */
+static bool H_UpgradeFromV24()
+{
+   CHK_EXEC(SetMajorSchemaVersion(53, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 52.23 to 52.24
  */
 static bool H_UpgradeFromV23()
 {
-   CHK_EXEC(SetMajorSchemaVersion(53, 0));
+   if (g_dbSyntax == DB_SYNTAX_PGSQL)
+   {
+      if (DBMgrMetaDataReadInt32(L"PostgreSQL.SkipPrimaryKeyUpdate", 0) == 0)
+      {
+         static const TCHAR *batch =
+            _T("UPDATE metadata SET var_value='CREATE INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp DESC)' WHERE var_name='IDataIndexCreationCommand_0'\n")
+            _T("UPDATE metadata SET var_value='CREATE INDEX idx_tdata_%d ON tdata_%d(item_id,tdata_timestamp)' WHERE var_name='TDataIndexCreationCommand_0'\n")
+            _T("<END>");
+         CHK_EXEC(SQLBatch(batch));
+
+         RegisterOnlineUpgrade(52, 24);
+      }
+      CHK_EXEC(SQLQuery(_T("DELETE FROM metadata WHERE var_name='PostgreSQL.SkipPrimaryKeyUpdate'")));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(24));
    return true;
 }
 
@@ -101,19 +125,13 @@ static bool H_UpgradeFromV20()
 
    if (g_dbSyntax == DB_SYNTAX_PGSQL)
    {
-      static const TCHAR *batch =
-         _T("UPDATE metadata SET var_value='ALTER TABLE idata_%d ADD PRIMARY KEY (item_id,idata_timestamp)' WHERE var_name='IDataIndexCreationCommand_0'\n")
-         _T("UPDATE metadata SET var_value='ALTER TABLE tdata_%d ADD PRIMARY KEY (item_id,tdata_timestamp)' WHERE var_name='TDataIndexCreationCommand_0'\n")
-         _T("<END>");
-      CHK_EXEC(SQLBatch(batch));
-
-      RegisterOnlineUpgrade(52, 21);
+      // Previous upgrade code was removed; PostgreSQL.SkipPrimaryKeyUpdate is an indicator that no changes were made to data tables
+      DBMgrMetaDataWriteInt32(L"PostgreSQL.SkipPrimaryKeyUpdate", 1);
    }
 
    CHK_EXEC(SetMinorSchemaVersion(21));
    return true;
 }
-
 
 /**
  * Upgrade from 52.19 to 52.20
@@ -535,7 +553,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 23, 53, 0,  H_UpgradeFromV23 },
+   { 24, 53, 0,  H_UpgradeFromV24 },
+   { 23, 52, 24, H_UpgradeFromV23 },
    { 22, 52, 23, H_UpgradeFromV22 },
    { 21, 52, 22, H_UpgradeFromV21 },
    { 20, 52, 21, H_UpgradeFromV20 },

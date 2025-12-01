@@ -742,9 +742,9 @@ bool DCItem::processNewValue(time_t timestamp, const wchar_t *originalValue, boo
       return false;
    }
 
-   if ((timestamp == m_lastValueTimestamp) || (!allowPastDataPoints && (timestamp < m_lastValueTimestamp)))
+   if (!allowPastDataPoints && (timestamp < m_lastValueTimestamp))
    {
-      // Duplicate or old value, ignore
+      // Old value, ignore
       unlock();
       return false;
    }

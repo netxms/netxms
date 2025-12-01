@@ -221,13 +221,8 @@ static bool H_UpgradeFromV6()
 
       if (g_dbSyntax == DB_SYNTAX_PGSQL)
       {
-         static const TCHAR *batch =
-            _T("UPDATE metadata SET var_value='ALTER TABLE idata_%d ADD PRIMARY KEY (item_id,idata_timestamp)' WHERE var_name='IDataIndexCreationCommand_0'\n")
-            _T("UPDATE metadata SET var_value='ALTER TABLE tdata_%d ADD PRIMARY KEY (item_id,tdata_timestamp)' WHERE var_name='TDataIndexCreationCommand_0'\n")
-            _T("<END>");
-         CHK_EXEC(SQLBatch(batch));
-
-         RegisterOnlineUpgrade(52, 21);
+         // Previous upgrade code was removed; PostgreSQL.SkipPrimaryKeyUpdate is an indicator that no changes were made to data tables
+         DBMgrMetaDataWriteInt32(L"PostgreSQL.SkipPrimaryKeyUpdate", 1);
       }
 
       CHK_EXEC(SetSchemaLevelForMajorVersion(52, 21));

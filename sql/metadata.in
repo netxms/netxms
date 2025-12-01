@@ -20,9 +20,6 @@ INSERT INTO metadata (var_name,var_value)
 #if defined(DB_MSSQL)
 INSERT INTO metadata (var_name,var_value)
 	VALUES ('IDataIndexCreationCommand_0','CREATE CLUSTERED INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp)');
-#elif defined(DB_POSTGRESQL)
-INSERT INTO metadata (var_name,var_value)
-	VALUES ('IDataIndexCreationCommand_0','ALTER TABLE idata_%d ADD PRIMARY KEY (item_id,idata_timestamp)');
 #else
 INSERT INTO metadata (var_name,var_value)
 	VALUES ('IDataIndexCreationCommand_0','CREATE INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp DESC)');
@@ -33,9 +30,6 @@ INSERT INTO metadata (var_name,var_value)
 #if defined(DB_MSSQL)
 INSERT INTO metadata (var_name,var_value)
 	VALUES ('TDataIndexCreationCommand_0','CREATE CLUSTERED INDEX idx_tdata_%d ON tdata_%d(item_id,tdata_timestamp)');
-#elif defined(DB_POSTGRESQL)
-INSERT INTO metadata (var_name,var_value)
-	VALUES ('TDataIndexCreationCommand_0','ALTER TABLE tdata_%d ADD PRIMARY KEY (item_id,tdata_timestamp)');
 #else
 INSERT INTO metadata (var_name,var_value)
 	VALUES ('TDataIndexCreationCommand_0','CREATE INDEX idx_tdata_%d ON tdata_%d(item_id,tdata_timestamp)');
