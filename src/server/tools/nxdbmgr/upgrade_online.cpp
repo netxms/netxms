@@ -590,6 +590,71 @@ static bool Upgrade_52_21()
 }
 
 /**
+ * Remove primary key from data tables for objects selected by given query
+ */
+static bool RemovePKFromDataTables(const wchar_t *query)
+{
+   bool success = false;
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult != nullptr)
+   {
+      success = true;
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         uint32_t id = DBGetFieldULong(hResult, i, 0);
+
+         if (IsDataTableExist(L"idata_%u", id))
+         {
+            wchar_t table[64], query[256];
+            _sntprintf(table, 64, L"idata_%u", id);
+            DBDropPrimaryKey(g_dbHandle, table);
+
+            _sntprintf(query, 256, L"CREATE INDEX idx_idata_%u_id_timestamp ON idata_%u(item_id,idata_timestamp DESC)", id, id);
+            SQLQuery(query);
+         }
+
+         if (IsDataTableExist(L"tdata_%u", id))
+         {
+            wchar_t table[64], query[256];
+            _sntprintf(table, 64, L"tdata_%u", id);
+            DBDropPrimaryKey(g_dbHandle, table);
+
+            _sntprintf(query, 256, L"CREATE INDEX idx_tdata_%u ON tdata_%u(item_id,tdata_timestamp)", id, id);
+            SQLQuery(query);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   return success;
+}
+
+/**
+ * Remove primary key from all data tables for given object class
+ */
+static bool RemovePKFromClassDataTables(const wchar_t *className)
+{
+   wchar_t query[1024];
+   _sntprintf(query, 256, L"SELECT id FROM %s", className);
+   return AddPKForDataTables(query);
+}
+
+/**
+ * Online upgrade for version 52.24
+ */
+static bool Upgrade_52_24()
+{
+   CHK_EXEC_NO_SP(RemovePKFromClassDataTables(L"nodes"));
+   CHK_EXEC_NO_SP(RemovePKFromClassDataTables(L"clusters"));
+   CHK_EXEC_NO_SP(RemovePKFromClassDataTables(L"mobile_devices"));
+   CHK_EXEC_NO_SP(RemovePKFromClassDataTables(L"access_points"));
+   CHK_EXEC_NO_SP(RemovePKFromClassDataTables(L"chassis"));
+   CHK_EXEC_NO_SP(RemovePKFromClassDataTables(L"sensors"));
+   CHK_EXEC_NO_SP(RemovePKFromDataTables(L"SELECT id FROM object_containers WHERE object_class=29 OR object_class=30"));
+   return true;
+}
+
+/**
  * Online upgrade registry
  */
 struct
@@ -599,6 +664,7 @@ struct
    bool (*handler)();
 } s_handlers[] =
 {
+   { 52, 24, Upgrade_52_24 },
    { 52, 21, Upgrade_52_21 },
    { 43, 9,  Upgrade_43_9  },
    { 35, 2,  Upgrade_35_2  },
