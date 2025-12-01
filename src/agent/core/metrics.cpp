@@ -984,7 +984,7 @@ bool AddExternalTable(ConfigEntry *config)
    td->separator = separator[0];
    MemFree(separator);
 
-   td->defaultColumnDataType = TextToDataType(config->getSubEntryValue(_T("DefaultColumnDataType"), 0, _T("string")));
+   td->defaultColumnDataType = TextToDataType(config->getSubEntryValue(_T("DefaultColumnDataType"), 0, _T("int32")));
    if (td->defaultColumnDataType == -1)
       td->defaultColumnDataType = DCI_DT_INT;
 
