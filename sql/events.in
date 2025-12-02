@@ -1831,7 +1831,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   6) objectName - Object name' CONCAT CRLF CONCAT
 		'   7) operator - Operator (user who made change to the object)'
 	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_INTERFACE_UNMANAGED, 'SYS_IF_UNMANAGED', 'dd449241-1886-41e3-a279-9a084ff64cec',
 		EVENT_SEVERITY_NORMAL, 1,
