@@ -81,7 +81,7 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
    m_retentionTime = 0;
    m_source = DS_INTERNAL;
    m_status = ITEM_STATUS_NOT_SUPPORTED;
-   m_lastPoll = 0;
+   m_lastPollTime = 0;
    m_lastValueTimestamp = 0;
    m_nextPollTime = 0;
    m_schedules = nullptr;
@@ -129,7 +129,7 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
    m_retentionTime = src->m_retentionTime;
    m_source = src->m_source;
    m_status = src->m_status;
-   m_lastPoll = shadowCopy ? src->m_lastPoll : 0;
+   m_lastPollTime = shadowCopy ? src->m_lastPollTime : 0;
    m_lastValueTimestamp = shadowCopy ? src->m_lastValueTimestamp : 0;
    m_nextPollTime = shadowCopy ? src->m_nextPollTime : 0;
    m_tLastCheck = shadowCopy ? src->m_tLastCheck : 0;
@@ -172,7 +172,7 @@ DCObject::DCObject(uint32_t id, const TCHAR *name, int source, BYTE scheduleType
    m_status = ITEM_STATUS_ACTIVE;
    m_busy = 0;
    m_scheduledForDeletion = 0;
-   m_lastPoll = 0;
+   m_lastPollTime = 0;
    m_lastValueTimestamp = 0;
    m_nextPollTime = 0;
    m_flags = 0;
@@ -240,7 +240,7 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_status = config->getSubEntryValueAsBoolean(_T("isDisabled")) ? ITEM_STATUS_DISABLED : ITEM_STATUS_ACTIVE;
    m_busy = 0;
    m_scheduledForDeletion = 0;
-   m_lastPoll = 0;
+   m_lastPollTime = 0;
    m_lastValueTimestamp = 0;
    m_nextPollTime = 0;
    m_tLastCheck = 0;
@@ -481,7 +481,7 @@ bool DCObject::deleteAllData()
 /**
  * Delete single DCI entry
  */
-bool DCObject::deleteEntry(time_t timestamp)
+bool DCObject::deleteEntry(int64_t timestamp)
 {
    return false;
 }
@@ -734,9 +734,9 @@ bool DCObject::isReadyForPolling(time_t currTime)
       else
       {
 			if (m_status == ITEM_STATUS_NOT_SUPPORTED)
-		      result = ((m_lastPoll + getEffectivePollingInterval() * 10 <= currTime) && (m_startTime <= currTime));
+		      result = ((m_lastPollTime / 1000 + getEffectivePollingInterval() * 10 <= currTime) && (m_startTime <= currTime));
 			else
-		      result = ((m_lastPoll + getEffectivePollingInterval() <= currTime) && (m_startTime <= currTime));
+		      result = ((m_lastPollTime / 1000 + getEffectivePollingInterval() <= currTime) && (m_startTime <= currTime));
       }
    }
    else
@@ -1092,16 +1092,7 @@ void DCObject::updateFromTemplate(DCObject *src)
 /**
  * Process new data collection error
  */
-void DCObject::processNewError(bool noInstance)
-{
-   time_t now = time(nullptr);
-   processNewError(noInstance, now);
-}
-
-/**
- * Process new data collection error
- */
-void DCObject::processNewError(bool noInstance, time_t now)
+void DCObject::processNewError(bool noInstance, int64_t timestamp)
 {
 }
 
@@ -1574,7 +1565,7 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "description", json_string_w(m_description));
    json_object_set_new(root, "systemTag", json_string_w(m_systemTag));
    json_object_set_new(root, "userTag", json_string_w(m_userTag));
-   json_object_set_new(root, "lastPoll", json_time_string(m_lastPoll));
+   json_object_set_new(root, "lastPollTime", json_time_string_ms(m_lastPollTime));
    json_object_set_new(root, "pollingInterval", json_string_w(m_pollingIntervalSrc));
    json_object_set_new(root, "retentionTime", json_string_w(m_retentionTimeSrc));
    json_object_set_new(root, "source", json_integer(m_source));
@@ -1920,7 +1911,7 @@ DCObjectInfo::DCObjectInfo(const DCObject& object) : m_pollingSchedules(object.g
    m_errorCount = object.m_errorCount;
    m_pollingInterval = object.getEffectivePollingInterval();
    m_pollingScheduleType = object.m_pollingScheduleType;
-   m_lastPollTime = object.m_lastPoll;
+   m_lastPollTime = object.m_lastPollTime;
    m_lastCollectionTime = object.m_lastValueTimestamp;
    m_hasActiveThreshold = false;
    m_thresholdSeverity = SEVERITY_NORMAL;

@@ -102,7 +102,7 @@ public abstract class DciValue
       source = DataOrigin.getByValue(msg.getFieldAsInt32(fieldId++));
 		dataType = DataType.getByValue(msg.getFieldAsInt32(fieldId++));
 		value = msg.getFieldAsString(fieldId++);
-		timestamp = msg.getFieldAsDate(fieldId++);
+      timestamp = msg.getFieldAsTimestamp(fieldId++);
       status = DataCollectionObjectStatus.getByValue(msg.getFieldAsInt32(fieldId++));
 		dcObjectType = msg.getFieldAsInt32(fieldId++);
 		errorCount = msg.getFieldAsInt32(fieldId++);

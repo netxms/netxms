@@ -5509,11 +5509,11 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const NXSL_Identifier& a
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastCollectionTime"))
    {
-      value = vm->createValue(static_cast<int64_t>(dci->getLastCollectionTime()));
+      value = vm->createValue(dci->getLastCollectionTime());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastPollTime"))
    {
-		value = vm->createValue(static_cast<int64_t>(dci->getLastPollTime()));
+		value = vm->createValue(dci->getLastPollTime());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("name"))
    {

@@ -92,19 +92,19 @@ private:
    double m_double;
    int64_t m_int64;
    uint64_t m_uint64;
-   time_t m_timestamp;
+   int64_t m_timestamp;
    wchar_t m_string[MAX_DB_STRING];
 
    void parseStringValue(bool parseSuffix);
 
 public:
    ItemValue();
-   ItemValue(const wchar_t *value, time_t timestamp, bool parseSuffix);
-   ItemValue(DB_RESULT hResult, int row, int column, time_t timestamp, bool parseSuffix);
+   ItemValue(const wchar_t *value, int64_t timestamp, bool parseSuffix);
+   ItemValue(DB_RESULT hResult, int row, int column, int64_t timestamp, bool parseSuffix);
    ItemValue(const ItemValue& src) = default;
 
-   void setTimeStamp(time_t timestamp) { m_timestamp = timestamp; }
-   time_t getTimeStamp() const { return m_timestamp; }
+   void setTimeStamp(int64_t timestamp) { m_timestamp = timestamp; }
+   int64_t getTimeStamp() const { return m_timestamp; }
 
    int32_t getInt32() const { return static_cast<int32_t>(m_int64); }
    uint32_t getUInt32() const { return static_cast<uint32_t>(m_uint64); }
@@ -291,8 +291,8 @@ protected:
    SharedString m_description;
    SharedString m_systemTag;
    SharedString m_userTag;
-   time_t m_lastPoll;           // Last poll time
-   time_t m_lastValueTimestamp; // Timestamp of last obtained value
+   int64_t m_lastValueTimestamp; // Timestamp of last obtained value, in milliseconds
+   int64_t m_lastPollTime;       // Last poll time, in milliseconds
    time_t m_nextPollTime;       // If set, do not poll earlier than given time
    int32_t m_pollingInterval;   // Polling interval in seconds
    int32_t m_retentionTime;     // Retention time in days
@@ -375,8 +375,12 @@ public:
    virtual bool loadThresholdsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatements);
    virtual void loadCache() = 0;
 
-   void processNewError(bool noInstance);
-   virtual void processNewError(bool noInstance, time_t now);
+   virtual void processNewError(bool noInstance, int64_t timestamp);
+   void processNewError(bool noInstance)
+   {
+      processNewError(noInstance, GetCurrentTimeMs());
+   }
+
    virtual void saveStateBeforeMaintenance() = 0;
    virtual void generateEventsAfterMaintenance() = 0;
 
@@ -405,8 +409,8 @@ public:
    uint32_t getTemplateItemId() const { return m_templateItemId; }
    uint32_t getResourceId() const { return m_resourceId; }
    uint32_t getSourceNode() const { return m_sourceNode; }
-	time_t getLastPollTime() const { return m_lastPoll; }
-   time_t getLastValueTimestamp() const { return m_lastValueTimestamp; }
+	int64_t getLastPollTime() const { return m_lastPollTime; }
+   int64_t getLastValueTimestamp() const { return m_lastValueTimestamp; }
    uint32_t getErrorCount() const { return m_errorCount; }
 	uint16_t getSnmpPort() const { return m_snmpPort; }
    SNMP_Version getSnmpVersion() const { return m_snmpVersion; }
@@ -433,7 +437,7 @@ public:
 	bool matchClusterResource();
    bool isReadyForPolling(time_t currTime);
 	bool isScheduledForDeletion() const { return m_scheduledForDeletion ? true : false; }
-   void setLastPollTime(time_t lastPoll) { m_lastPoll = lastPoll; }
+   void setLastPollTime(int64_t lastPollTime) { m_lastPollTime = lastPollTime; }
    void setStatus(int status, bool generateEvent, bool userChange = false);
    void setBusyFlag() { m_busy = 1; }
    void clearBusyFlag() { m_busy = 0; }
@@ -448,7 +452,7 @@ public:
    virtual void changeBinding(uint32_t newId, shared_ptr<DataCollectionOwner> newOwner, bool doMacroExpansion);
 
 	virtual bool deleteAllData();
-	virtual bool deleteEntry(time_t timestamp);
+	virtual bool deleteEntry(int64_t timestamp);
 
    virtual void getEventList(HashSet<uint32_t> *eventList) const = 0;
    virtual bool isUsingEvent(uint32_t eventCode) const = 0;
@@ -511,7 +515,7 @@ protected:
    ItemValue **m_ppValueCache;
    ItemValue m_prevRawValue;     // Previous raw value (used for delta calculation)
    uint64_t m_prevDeltaValue;    // Previous delta value for counter types
-   time_t m_prevValueTimeStamp;
+   int64_t m_prevValueTimeStamp;
    bool m_cacheLoaded;
    bool m_anomalyDetected;
 	int m_multiplier;
@@ -588,9 +592,9 @@ public:
 
 	uint64_t getCacheMemoryUsage() const;
 
-   bool processNewValue(time_t timestamp, const wchar_t *value, bool *updateStatus, bool allowPastDataPoints);
+   bool processNewValue(int64_t timestamp, const wchar_t *value, bool *updateStatus, bool allowPastDataPoints);
 
-   virtual void processNewError(bool noInstance, time_t now) override;
+   virtual void processNewError(bool noInstance, int64_t timestamp) override;
    virtual void saveStateBeforeMaintenance() override;
    virtual void generateEventsAfterMaintenance() override;
 
@@ -611,7 +615,7 @@ public:
    virtual void changeBinding(uint32_t newId, shared_ptr<DataCollectionOwner> newOwner, bool doMacroExpansion) override;
 
 	virtual bool deleteAllData() override;
-   virtual bool deleteEntry(time_t timestamp) override;
+   virtual bool deleteEntry(int64_t timestamp) override;
 
    virtual void getEventList(HashSet<uint32_t> *eventList) const override;
    virtual bool isUsingEvent(uint32_t eventCode) const override;
@@ -850,7 +854,7 @@ public:
    virtual void deleteFromDatabase() override;
    virtual void loadCache() override;
 
-   virtual void processNewError(bool noInstance, time_t now) override;
+   virtual void processNewError(bool noInstance, int64_t timestamp) override;
    virtual void saveStateBeforeMaintenance() override;
    virtual void generateEventsAfterMaintenance() override;
 
@@ -858,14 +862,14 @@ public:
    virtual void updateFromMessage(const NXCPMessage& msg) override;
 
 	virtual bool deleteAllData() override;
-   virtual bool deleteEntry(time_t timestamp) override;
+   virtual bool deleteEntry(int64_t timestamp) override;
 
    virtual void getEventList(HashSet<uint32_t> *eventList) const override;
    virtual bool isUsingEvent(uint32_t eventCode) const override;
    virtual void createExportRecord(TextFileWriter &xml) const override;
    virtual json_t *toJson() override;
 
-   bool processNewValue(time_t timestamp, const shared_ptr<Table>& value, bool *updateStatus, bool allowPastDataPoints);
+   bool processNewValue(int64_t timestamp, const shared_ptr<Table>& value, bool *updateStatus, bool allowPastDataPoints);
 
    virtual void fillLastValueSummaryMessage(NXCPMessage *bsg, uint32_t baseId,const TCHAR *column = nullptr, const TCHAR *instance = nullptr) override;
    virtual void fillLastValueMessage(NXCPMessage *msg) override;
@@ -914,8 +918,8 @@ private:
    int32_t m_pollingInterval;
    int32_t m_pollingScheduleType;
    StringList m_pollingSchedules;
-   time_t m_lastPollTime;
-   time_t m_lastCollectionTime;
+   int64_t m_lastPollTime;
+   int64_t m_lastCollectionTime;
    bool m_hasActiveThreshold;
    int m_thresholdSeverity;
    uint32_t m_relatedObject;
@@ -946,8 +950,8 @@ public:
    int32_t getPollingInterval() const { return m_pollingInterval; }
    int32_t getPollingScheduleType() const { return m_pollingScheduleType; }
    const StringList& getPollingSchedules() const { return m_pollingSchedules; }
-   time_t getLastPollTime() const { return m_lastPollTime; }
-   time_t getLastCollectionTime() const { return m_lastCollectionTime; }
+   int64_t getLastPollTime() const { return m_lastPollTime; }
+   int64_t getLastCollectionTime() const { return m_lastCollectionTime; }
    uint32_t getOwnerId() const { return m_ownerId; }
    bool hasActiveThreshold() const { return m_hasActiveThreshold; }
    int getThresholdSeverity() const { return m_thresholdSeverity; }
@@ -962,7 +966,7 @@ public:
  */
 struct ScoredDciValue
 {
-   time_t timestamp;
+   int64_t timestamp;
    double value;
    double score;
 };

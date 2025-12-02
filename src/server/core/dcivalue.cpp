@@ -30,27 +30,27 @@ ItemValue::ItemValue()
    m_int64 = 0;
    m_uint64 = 0;
    m_double = 0;
-   m_timestamp = time(nullptr);
+   m_timestamp = GetCurrentTimeMs();
 }
 
 /**
  * Construct value object from string value
  */
-ItemValue::ItemValue(const wchar_t *value, time_t timestamp, bool parseSuffix)
+ItemValue::ItemValue(const wchar_t *value, int64_t timestamp, bool parseSuffix)
 {
    wcslcpy(m_string, value, MAX_DB_STRING);
    parseStringValue(parseSuffix);
-   m_timestamp = (timestamp == 0) ? time(nullptr) : timestamp;
+   m_timestamp = (timestamp == 0) ? GetCurrentTimeMs() : timestamp;
 }
 
 /**
  * Construct value object from database field
  */
-ItemValue::ItemValue(DB_RESULT hResult, int row, int column, time_t timestamp, bool parseSuffix)
+ItemValue::ItemValue(DB_RESULT hResult, int row, int column, int64_t timestamp, bool parseSuffix)
 {
    DBGetField(hResult, row, column, m_string, MAX_DB_STRING);
    parseStringValue(parseSuffix);
-   m_timestamp = (timestamp == 0) ? time(nullptr) : timestamp;
+   m_timestamp = (timestamp == 0) ? GetCurrentTimeMs() : timestamp;
 }
 
 /**

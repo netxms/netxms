@@ -197,8 +197,8 @@ uint32_t g_mapUpdatePollingInterval;
 uint32_t g_icmpPingSize;
 uint32_t g_icmpPingTimeout = 1500;    // ICMP ping timeout (milliseconds)
 uint32_t g_auditFlags;
-uint32_t g_offlineDataRelevanceTime = 86400;
 uint32_t g_pollsBetweenPrimaryIpUpdate = 1;
+int64_t g_offlineDataRelevanceTime = 86400000;  // Default offline data relevance time (milliseconds)
 PrimaryIPUpdateMode g_primaryIpUpdateMode = PrimaryIPUpdateMode::NEVER;
 NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdDataDir[MAX_PATH]) = _T("");
 NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdLibDir[MAX_PATH]) = _T("");
@@ -579,7 +579,7 @@ static void LoadGlobalConfig()
    g_agentRestartWaitTime = ConfigReadInt(_T("Agent.RestartWaitTime"), 0);
    g_thresholdRepeatInterval = ConfigReadInt(_T("DataCollection.ThresholdRepeatInterval"), 0);
    g_requiredPolls = ConfigReadInt(_T("Objects.PollCountForStatusChange"), 1);
-   g_offlineDataRelevanceTime = ConfigReadInt(_T("DataCollection.OfflineDataRelevanceTime"), 86400);
+   g_offlineDataRelevanceTime = ConfigReadInt(_T("DataCollection.OfflineDataRelevanceTime"), 86400) * 1000L; // Config value is in seconds
    g_instanceRetentionTime = ConfigReadInt(_T("DataCollection.InstanceRetentionTime"), 7); // Config values are in days
    g_snmpTrapStormCountThreshold = ConfigReadInt(_T("SNMP.Traps.RateLimit.Threshold"), 0);
    g_snmpTrapStormDurationThreshold = ConfigReadInt(_T("SNMP.Traps.RateLimit.Duration"), 15);

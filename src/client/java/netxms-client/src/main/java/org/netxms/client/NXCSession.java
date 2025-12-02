@@ -5892,7 +5892,7 @@ public class NXCSession
 
          for(int i = 0; i < rows; i++)
          {
-            long timestamp = inputStream.readUnsignedInt() * 1000; // convert to milliseconds
+            long timestamp = inputStream.readLong();
             Object value;
             switch(dataType)
             {
@@ -5973,15 +5973,15 @@ public class NXCSession
 
       DataSeries data = new DataSeries(nodeId, dciId);
 
-      int timeFrom = (from != null) ? (int)(from.getTime() / 1000) : 0;
-      int timeTo = (to != null) ? (int)(to.getTime() / 1000) : 0;
+      long timeFrom = (from != null) ? from.getTime() : 0;
+      long timeTo = (to != null) ? to.getTime() : 0;
 
       // If full table values are requested, each value will be sent in separate message
       if (valueType == HistoricalDataType.FULL_TABLE)
       {
          msg.setFieldInt32(NXCPCodes.VID_MAX_ROWS, maxRows);
-         msg.setFieldInt32(NXCPCodes.VID_TIME_FROM, timeFrom);
-         msg.setFieldInt32(NXCPCodes.VID_TIME_TO, timeTo);
+         msg.setFieldInt64(NXCPCodes.VID_TIME_FROM, timeFrom);
+         msg.setFieldInt64(NXCPCodes.VID_TIME_TO, timeTo);
          sendMessage(msg);
 
          NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -5990,7 +5990,7 @@ public class NXCSession
          while(true)
          {
             response = waitForMessage(NXCPCodes.CMD_DCI_DATA, msg.getMessageId());
-            long timestamp = response.getFieldAsInt64(NXCPCodes.VID_TIMESTAMP) * 1000L; // Convert to milliseconds
+            long timestamp = response.getFieldAsInt64(NXCPCodes.VID_TIMESTAMP_MS);
             if (timestamp == 0)
                break; // End of value list indicator
 
@@ -6004,8 +6004,8 @@ public class NXCSession
          {
             msg.setMessageId(requestId.getAndIncrement());
             msg.setFieldInt32(NXCPCodes.VID_MAX_ROWS, maxRows);
-            msg.setFieldInt32(NXCPCodes.VID_TIME_FROM, timeFrom);
-            msg.setFieldInt32(NXCPCodes.VID_TIME_TO, timeTo);
+            msg.setFieldInt64(NXCPCodes.VID_TIME_FROM, timeFrom);
+            msg.setFieldInt64(NXCPCodes.VID_TIME_TO, timeTo);
             sendMessage(msg);
 
             NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -6029,9 +6029,9 @@ public class NXCSession
                   DciDataRow row = data.getLastValue();
                   if (row != null)
                   {
-                     // There should be only one value per second, so we set
-                     // last row's timestamp - 1 second as new boundary
-                     timeTo = (int)(row.getTimestamp().getTime() / 1000) - 1;
+                     // There should be only one value per millisecond, so we set
+                     // last row's timestamp - 1 millisecond as new boundary
+                     timeTo = row.getTimestamp().getTime() - 1;
                   }
                }
             }
@@ -6159,7 +6159,7 @@ public class NXCSession
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_DCI_ENTRY);
       msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       msg.setFieldUInt32(NXCPCodes.VID_DCI_ID, dciId);
-      msg.setFieldUInt32(NXCPCodes.VID_TIMESTAMP, timestamp);
+      msg.setFieldUInt32(NXCPCodes.VID_TIMESTAMP_MS, timestamp);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }

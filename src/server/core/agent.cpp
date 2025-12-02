@@ -318,9 +318,11 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
 		      if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM) && (dci->getDataSource() == DS_PUSH_AGENT) && (dci->getStatus() == ITEM_STATUS_ACTIVE))
 		      {
 		         debugPrintf(5, _T("%s: agent data push: found DCI %d"), target->getName(), dci->getId());
-               time_t t = msg->getFieldAsTime(VID_TIMESTAMP);
+               int64_t t = msg->getFieldAsInt64(VID_TIMESTAMP_MS);
                if (t == 0)
-			         t = time(nullptr);
+                  t = TimeToMs(msg->getFieldAsTime(VID_TIMESTAMP));
+               if (t == 0)
+			         t = GetCurrentTimeMs();
 			      target->processNewDCValue(dci, t, value, shared_ptr<Table>(), true);
                if (t > dci->getLastPollTime())
 			         dci->setLastPollTime(t);
@@ -745,7 +747,9 @@ uint32_t AgentConnectionEx::processCollectedData(NXCPMessage *msg)
       return ERR_INTERNAL_ERROR;
    }
 
-   time_t t = msg->getFieldAsTime(VID_TIMESTAMP);
+   int64_t t = msg->getFieldAsInt64(VID_TIMESTAMP_MS);
+   if (t == 0)
+      t = TimeToMs(msg->getFieldAsTime(VID_TIMESTAMP));
    uint32_t status = msg->getFieldAsUInt32(VID_STATUS);
    bool success = true;
 
@@ -918,7 +922,9 @@ uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPM
       uint32_t statusCode = request->getFieldAsUInt32(fieldId + 6);
       debugPrintf(7, _T("AgentConnectionEx::processBulkCollectedData: processing DCI %s [%u] (type=%d) (status=%d) on object %s [%u] (element %d)"),
                   dcObject->getName().cstr(), dciId, type, statusCode, target->getName(), target->getId(), i);
-      time_t t = request->getFieldAsTime(fieldId + 4);
+      int64_t t = request->getFieldAsInt64(fieldId + 7);
+      if (t == 0)
+         t = TimeToMs(request->getFieldAsTime(fieldId + 4));
       bool success = true;
 
       switch(statusCode)

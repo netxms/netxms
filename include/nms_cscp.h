@@ -1563,6 +1563,7 @@ typedef struct
 #define VID_METADATA_SIZE           ((uint32_t)871)
 #define VID_MAX_SPEED               ((uint32_t)872)
 #define VID_PROMPT                  ((uint32_t)873)
+#define VID_TIMESTAMP_MS            ((uint32_t)874)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

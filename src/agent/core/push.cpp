@@ -33,7 +33,7 @@ static VolatileCounter s_requestIdLow = 0;
 /**
  * Push parameter's data
  */
-bool PushData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, time_t timestamp)
+bool PushData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, int64_t timestamp)
 {
 	bool success = false;
 
@@ -43,7 +43,8 @@ bool PushData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, tim
 	msg.setField(VID_NAME, parameter);
 	msg.setField(VID_VALUE, value);
    msg.setField(VID_OBJECT_ID, objectId);
-   msg.setFieldFromTime(VID_TIMESTAMP, timestamp);
+   msg.setField(VID_TIMESTAMP_MS, timestamp);
+   msg.setFieldFromTime(VID_TIMESTAMP, static_cast<time_t>(timestamp / 1000));   // for compatibility with older servers
    msg.setField(VID_REQUEST_ID, s_requestIdHigh | static_cast<uint64_t>(InterlockedIncrement(&s_requestIdLow)));
 
    if (g_dwFlags & AF_SUBAGENT_LOADER)
@@ -72,10 +73,10 @@ bool PushData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, tim
  */
 struct PushDataEntry
 {
-   time_t timestamp;
+   int64_t timestamp;
    TCHAR value[MAX_RESULT_LENGTH];
 
-   PushDataEntry(time_t t, const TCHAR *v)
+   PushDataEntry(int64_t t, const TCHAR *v)
    {
       timestamp = t;
       _tcscpy(value, v);
@@ -92,7 +93,7 @@ static Mutex s_localCacheLock(MutexType::FAST);
 /**
  * Store pushed data locally
  */
-static void StoreLocalData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, time_t timestamp)
+static void StoreLocalData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, int64_t timestamp)
 {
    nxlog_debug_tag(DEBUG_TAG, 6, _T("StoreLocalData: \"%s\" = \"%s\""), parameter, value);
    s_localCacheLock.lock();
@@ -113,21 +114,23 @@ static void ProcessPushRequest(NamedPipe *pipe, void *arg)
 	{
       MessageReceiverResult result;
 		NXCPMessage *msg = receiver.readMessage(5000, &result);
-		if (msg == NULL)
+		if (msg == nullptr)
 			break;
 		nxlog_debug_tag(DEBUG_TAG, 6, _T("ProcessPushRequest: received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
 		if (msg->getCode() == CMD_PUSH_DCI_DATA)
 		{
-         UINT32 objectId = msg->getFieldAsUInt32(VID_OBJECT_ID);
-			UINT32 count = msg->getFieldAsUInt32(VID_NUM_ITEMS);
-         time_t timestamp = msg->getFieldAsTime(VID_TIMESTAMP);
+         uint32_t objectId = msg->getFieldAsUInt32(VID_OBJECT_ID);
+         uint32_t count = msg->getFieldAsUInt32(VID_NUM_ITEMS);
+         int64_t timestamp = msg->getFieldAsInt64(VID_TIMESTAMP_MS);
+         if (timestamp == 0)
+            timestamp = TimeToMs(msg->getFieldAsTime(VID_TIMESTAMP));
          bool localCache = msg->getFieldAsBoolean(VID_LOCAL_CACHE);
-			UINT32 varId = VID_PUSH_DCI_DATA_BASE;
-			for(DWORD i = 0; i < count; i++)
+         uint32_t fieldId = VID_PUSH_DCI_DATA_BASE;
+			for(uint32_t i = 0; i < count; i++)
 			{
 				TCHAR name[MAX_RUNTIME_PARAM_NAME], value[MAX_RESULT_LENGTH];
-				msg->getFieldAsString(varId++, name, MAX_RUNTIME_PARAM_NAME);
-				msg->getFieldAsString(varId++, value, MAX_RESULT_LENGTH);
+				msg->getFieldAsString(fieldId++, name, MAX_RUNTIME_PARAM_NAME);
+				msg->getFieldAsString(fieldId++, value, MAX_RESULT_LENGTH);
 				if (localCache)
 				   StoreLocalData(name, value, objectId, timestamp);
 				else

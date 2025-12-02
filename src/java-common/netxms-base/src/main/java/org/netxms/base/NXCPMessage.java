@@ -768,6 +768,18 @@ public class NXCPMessage
 		return (var != null) ? new Date(var.getAsInteger() * 1000) : null;
 	}
 
+   /**
+    * Get field as date, assuming received value is in milliseconds
+    * 
+    * @param fieldId field ID
+    * @return field value as Date object
+    */
+   public Date getFieldAsTimestamp(final long fieldId)
+   {
+      final NXCPMessageField var = findField(fieldId);
+      return (var != null) ? new Date(var.getAsInteger()) : null;
+   }
+
 	/**
     * Create binary NXCP message
     * 

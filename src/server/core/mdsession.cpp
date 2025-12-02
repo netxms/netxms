@@ -602,11 +602,11 @@ void MobileDeviceSession::pushData(NXCPMessage *request)
          // If all items was checked OK, push data
          if (ok)
          {
-            time_t t = 0;
+            int64_t t = 0;
             int ft = request->getFieldType(VID_TIMESTAMP);
             if (ft == NXCP_DT_INT32)
             {
-               t = (time_t)request->getFieldAsUInt32(VID_TIMESTAMP);
+               t = request->getFieldAsInt64(VID_TIMESTAMP) * _LL(1000);
             }
             else if ((ft == NXCP_DT_STRING) || (ft == NXCP_DT_UTF8_STRING))
             {
@@ -617,12 +617,12 @@ void MobileDeviceSession::pushData(NXCPMessage *request)
                if (strptime(ts, "%Y/%m/%d %H:%M:%S", &timeBuff) != nullptr)
                {
                   timeBuff.tm_isdst = -1;
-                  t = timegm(&timeBuff);
+                  t = static_cast<int64_t>(timegm(&timeBuff)) * _LL(1000);
                }
             }
             if (t == 0)
             {
-               time(&t);
+               t = GetCurrentTimeMs();
             }
 
             for(i = 0; i < values.size(); i++)

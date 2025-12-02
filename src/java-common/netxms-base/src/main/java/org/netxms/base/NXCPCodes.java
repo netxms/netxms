@@ -1380,6 +1380,7 @@ public class NXCPCodes
    public static final long VID_METADATA_SIZE = 871;
    public static final long VID_MAX_SPEED = 872;
    public static final long VID_PROMPT = 873;
+   public static final long VID_TIMESTAMP_MS = 874;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

@@ -24,6 +24,7 @@ BEGIN TRANSACTION;
 #endif
 
 // Actual SQL queries
+#include "functions.in"
 #include "schema.in"
 #include "metadata.in"
 

@@ -961,7 +961,7 @@ uint32_t DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, uint32_t ba
 /**
  * Process new DCI value
  */
-bool DataCollectionTarget::processNewDCValue(const shared_ptr<DCObject>& dcObject, time_t currTime, const wchar_t *itemValue, const shared_ptr<Table>& tableValue, bool allowPastDataPoints)
+bool DataCollectionTarget::processNewDCValue(const shared_ptr<DCObject>& dcObject, int64_t currTime, const wchar_t *itemValue, const shared_ptr<Table>& tableValue, bool allowPastDataPoints)
 {
    bool updateStatus;
 	bool success = (dcObject->getType() == DCO_TYPE_ITEM) ?
@@ -2129,7 +2129,7 @@ void DataCollectionTarget::addProxyDataCollectionElement(ProxyInfo *info, const 
       info->msg->setField(info->baseInfoFieldId++, dco->getName());
    }
    info->msg->setField(info->baseInfoFieldId++, dco->getEffectivePollingInterval());
-   info->msg->setFieldFromTime(info->baseInfoFieldId++, dco->getLastPollTime());
+   info->msg->setField(info->baseInfoFieldId++, dco->getLastPollTime() / 1000); // convert to seconds for compatibility with older agents
    info->msg->setField(info->baseInfoFieldId++, m_guid);
    info->msg->setField(info->baseInfoFieldId++, dco->getSnmpPort());
    if (dco->getType() == DCO_TYPE_ITEM)
@@ -2137,6 +2137,8 @@ void DataCollectionTarget::addProxyDataCollectionElement(ProxyInfo *info, const 
    else
       info->msg->setField(info->baseInfoFieldId++, static_cast<int16_t>(0));
    info->msg->setField(info->baseInfoFieldId++, primaryProxyId);
+
+   info->msg->setField(info->extraInfoFieldId + 1, dco->getLastPollTime()); // in milliseconds
 
    if (dco->getDataSource() == DS_SNMP_AGENT)
    {

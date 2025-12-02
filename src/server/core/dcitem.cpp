@@ -151,9 +151,9 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
          {
             TCHAR szBuffer[MAX_DB_STRING];
             m_prevRawValue = DBGetField(hTempResult, 0, 0, szBuffer, MAX_DB_STRING);
-            m_prevValueTimeStamp = DBGetFieldUInt32(hTempResult, 0, 1);
+            m_prevValueTimeStamp = DBGetFieldInt64(hTempResult, 0, 1);
             m_anomalyDetected = (DBGetFieldInt32(hTempResult, 0, 2) != 0);
-            m_lastPoll = m_lastValueTimestamp = m_prevValueTimeStamp;
+            m_lastPollTime = m_lastValueTimestamp = m_prevValueTimeStamp;
          }
          DBFreeResult(hTempResult);
       }
@@ -416,8 +416,8 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_prevRawValue.getString(), DB_BIND_STATIC, 255);
-         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int64_t>(m_prevValueTimeStamp));
-         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<int64_t>((m_cacheLoaded  && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0));
+         DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, m_prevValueTimeStamp);
+         DBBind(hStmt, 4, DB_SQLTYPE_BIGINT, (m_cacheLoaded  && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0);
          DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_anomalyDetected ? L"1" : L"0", DB_BIND_STATIC);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -725,7 +725,7 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
  *
  * @return true on success
  */
-bool DCItem::processNewValue(time_t timestamp, const wchar_t *originalValue, bool *updateStatus, bool allowPastDataPoints)
+bool DCItem::processNewValue(int64_t timestamp, const wchar_t *originalValue, bool *updateStatus, bool allowPastDataPoints)
 {
    ItemValue rawValue, *pValue;
 
@@ -792,9 +792,9 @@ bool DCItem::processNewValue(time_t timestamp, const wchar_t *originalValue, boo
    }
 
 	// Check if user wants to collect all values or only changed values.
-   if (!isStoreChangesOnly() || (m_cacheLoaded && (m_cacheSize > 0) && _tcscmp(pValue->getString(), m_ppValueCache[0]->getString())))
+   if (!isStoreChangesOnly() || (m_cacheLoaded && (m_cacheSize > 0) && wcscmp(pValue->getString(), m_ppValueCache[0]->getString())))
    {
-      //Save transformed value to database
+      // Save transformed value to database
       if (m_retentionType != DC_RETENTION_NONE)
            QueueIDataInsert(timestamp, owner->getId(), m_id, originalValue, pValue->getString(), getStorageClass());
 
@@ -817,9 +817,9 @@ bool DCItem::processNewValue(time_t timestamp, const wchar_t *originalValue, boo
    }
 
    // Check thresholds
-   time_t now = time(nullptr);
+   int64_t now = GetCurrentTimeMs();
    if (m_cacheLoaded && (timestamp >= m_prevValueTimeStamp) &&
-       ((m_thresholdDisableEndTime == 0) || (m_thresholdDisableEndTime > 0 && m_thresholdDisableEndTime < timestamp)) &&
+       ((m_thresholdDisableEndTime == 0) || (m_thresholdDisableEndTime > 0 && m_thresholdDisableEndTime < static_cast<time_t>(timestamp / 1000))) &&
        ((g_offlineDataRelevanceTime <= 0) || (timestamp > (now - g_offlineDataRelevanceTime))))
    {
       if (hasScriptThresholds())
@@ -849,7 +849,7 @@ bool DCItem::processNewValue(time_t timestamp, const wchar_t *originalValue, boo
          checkThresholds(*pValue, nullptr);
       }
 
-      if ((m_thresholdDisableEndTime > 0) && (m_thresholdDisableEndTime < now))
+      if ((m_thresholdDisableEndTime > 0) && (m_thresholdDisableEndTime < static_cast<time_t>(now / 1000)))
       {
          // Thresholds were disabled, reset disable end time
          m_thresholdDisableEndTime = 0;
@@ -936,7 +936,7 @@ bool DCItem::processNewValue(time_t timestamp, const wchar_t *originalValue, boo
 /**
  * Process new data collection error
  */
-void DCItem::processNewError(bool noInstance, time_t now)
+void DCItem::processNewError(bool noInstance, int64_t timestamp)
 {
    lock();
 
@@ -1006,7 +1006,7 @@ void DCItem::processNewError(bool noInstance, time_t now)
             {
    				// Check if we need to re-sent threshold violation event
                time_t repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : static_cast<time_t>(t->getRepeatInterval());
-				   if ((repeatInterval != 0) && (t->getLastEventTimestamp() + repeatInterval < now))
+				   if ((repeatInterval != 0) && (t->getLastEventTimestamp() + repeatInterval < static_cast<time_t>(timestamp / 1000)))
 				   {
 	               shared_ptr<DCObject> sharedThis(shared_from_this());
 		            EventBuilder(t->getEventCode(), m_ownerId)
@@ -1633,8 +1633,8 @@ void DCItem::reloadCache(bool forceReload)
       case DB_SYNTAX_TSDB:
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,date_part('epoch',idata_timestamp)::int FROM idata_sc_%s ")
-                              _T("WHERE item_id=%u AND idata_timestamp >= (SELECT to_timestamp(cache_timestamp) FROM raw_dci_values WHERE item_id=%u) ORDER BY idata_timestamp DESC LIMIT %u"),
+            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,timestamptz_to_ms(idata_timestamp) FROM idata_sc_%s ")
+                              _T("WHERE item_id=%u AND idata_timestamp >= (SELECT ms_to_timestamptz(cache_timestamp) FROM raw_dci_values WHERE item_id=%u) ORDER BY idata_timestamp DESC LIMIT %u"),
                     getStorageClassName(getStorageClass()), m_id, m_id, m_requiredCacheSize);
          }
          else
@@ -1700,7 +1700,7 @@ void DCItem::reloadCache(bool forceReload)
             if (moreData)
             {
                DBGetField(hResult, 0, szBuffer, MAX_DB_STRING);
-               m_ppValueCache[i] = new ItemValue(szBuffer, DBGetFieldULong(hResult, 1), false);
+               m_ppValueCache[i] = new ItemValue(szBuffer, DBGetFieldInt64(hResult, 1), false);
             }
             else
             {
@@ -1711,7 +1711,7 @@ void DCItem::reloadCache(bool forceReload)
          // Fill up cache with empty values if we don't have enough values in database
          if (i < m_requiredCacheSize)
          {
-            nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 8, _T("DCItem::reloadCache(dci=\"%s\", node=%s [%d]): %d values missing in DB"),
+            nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 8, _T("DCItem::reloadCache(dci=\"%s\", node=%s [%u]): %d values missing in DB"),
                      m_name.cstr(), getOwnerName(), m_ownerId, m_requiredCacheSize - i);
             for(; i < m_requiredCacheSize; i++)
                m_ppValueCache[i] = new ItemValue(L"", 1, false);
@@ -1760,14 +1760,14 @@ void DCItem::fillLastValueMessage(NXCPMessage *msg)
       msg->setField(VID_DCI_DATA_TYPE, static_cast<uint16_t>(getTransformedDataType()));
       msg->setField(VID_VALUE, m_ppValueCache[0]->getString());
       msg->setField(VID_RAW_VALUE, m_prevRawValue.getString());
-      msg->setFieldFromTime(VID_TIMESTAMP, m_ppValueCache[0]->getTimeStamp());
+      msg->setField(VID_TIMESTAMP_MS, m_ppValueCache[0]->getTimeStamp());
    }
    else
    {
       msg->setField(VID_DCI_DATA_TYPE, static_cast<uint16_t>(DCI_DT_NULL));
-      msg->setField(VID_VALUE, _T(""));
-      msg->setField(VID_RAW_VALUE, _T(""));
-      msg->setField(VID_TIMESTAMP, static_cast<uint32_t>(0));
+      msg->setField(VID_VALUE, L"");
+      msg->setField(VID_RAW_VALUE, L"");
+      msg->setField(VID_TIMESTAMP_MS, static_cast<int64_t>(0));
    }
    unlock();
 }
@@ -1788,13 +1788,13 @@ void DCItem::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId, cons
    {
       msg->setField(baseId++, static_cast<uint16_t>(getTransformedDataType()));
       msg->setField(baseId++, m_ppValueCache[0]->getString());
-      msg->setFieldFromTime(baseId++, m_ppValueCache[0]->getTimeStamp());
+      msg->setField(baseId++, m_ppValueCache[0]->getTimeStamp());
    }
    else
    {
       msg->setField(baseId++, static_cast<uint16_t>(DCI_DT_NULL));
-      msg->setField(baseId++, _T(""));
-      msg->setField(baseId++, static_cast<uint32_t>(0));
+      msg->setField(baseId++, L"");
+      msg->setField(baseId++, static_cast<int64_t>(0));
    }
    msg->setField(baseId++, static_cast<uint16_t>(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
 	msg->setField(baseId++, static_cast<uint16_t>(getType()));
@@ -2096,7 +2096,7 @@ TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, t
             break;
          case DB_SYNTAX_TSDB:
             _sntprintf(query, 1024,
-                  _T("SELECT %s(idata_value::double precision) FROM idata_sc_%s WHERE item_id=? AND idata_timestamp BETWEEN to_timestamp(?) AND to_timestamp(?) AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$'"),
+                  _T("SELECT %s(idata_value::double precision) FROM idata_sc_%s WHERE item_id=? AND idata_timestamp BETWEEN ms_to_timestamptz(?) AND ms_to_timestamptz(?) AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$'"),
                   functions[func], getStorageClassName(getStorageClass()));
             break;
          case DB_SYNTAX_MYSQL:
@@ -2157,8 +2157,8 @@ TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, t
 	if (hStmt != nullptr)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<int32_t>(periodStart));
-		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int32_t>(periodEnd));
+		DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, static_cast<int64_t>(periodStart) * 1000L);
+		DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, static_cast<int64_t>(periodEnd) * 1000L);
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
 		if (hResult != nullptr)
 		{
@@ -2207,7 +2207,7 @@ bool DCItem::deleteAllData()
 /**
  * Delete single collected data entry
  */
-bool DCItem::deleteEntry(time_t timestamp)
+bool DCItem::deleteEntry(int64_t timestamp)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    lock();
@@ -2217,18 +2217,17 @@ bool DCItem::deleteEntry(time_t timestamp)
    {
       if (g_dbSyntax == DB_SYNTAX_TSDB)
       {
-         _sntprintf(query, 256, _T("DELETE FROM idata_sc_%s WHERE item_id=%u AND idata_timestamp=to_timestamp(") UINT64_FMT _T(")"),
-                  getStorageClassName(getStorageClass()), m_id, static_cast<uint64_t>(timestamp));
+         _sntprintf(query, 256, _T("DELETE FROM idata_sc_%s WHERE item_id=%u AND idata_timestamp=ms_to_timestamptz(") INT64_FMT _T(")"),
+                  getStorageClassName(getStorageClass()), m_id, timestamp);
       }
       else
       {
-         _sntprintf(query, 256, _T("DELETE FROM idata WHERE item_id=%d AND idata_timestamp=") UINT64_FMT, m_id, static_cast<uint64_t>(timestamp));
+         _sntprintf(query, 256, _T("DELETE FROM idata WHERE item_id=%d AND idata_timestamp=") INT64_FMT, m_id, timestamp);
       }
    }
    else
    {
-      _sntprintf(query, 256, _T("DELETE FROM idata_%d WHERE item_id=%d AND idata_timestamp=") UINT64_FMT,
-               m_ownerId, m_id, static_cast<uint64_t>(timestamp));
+      _sntprintf(query, 256, _T("DELETE FROM idata_%d WHERE item_id=%d AND idata_timestamp=") INT64_FMT, m_ownerId, m_id, timestamp);
    }
    unlock();
 
@@ -2678,7 +2677,7 @@ json_t *DCItem::toJson()
 void DCItem::prepareForRecalc()
 {
    m_prevValueTimeStamp = 0;
-   m_lastPoll = 0;
+   m_lastPollTime = 0;
    updateCacheSizeInternal(false);
 }
 
@@ -2715,7 +2714,7 @@ void DCItem::recalculateValue(ItemValue &value)
       m_ppValueCache[0] = new ItemValue(value);
    }
 
-   m_lastPoll = value.getTimeStamp();
+   m_lastPollTime = value.getTimeStamp();
 }
 
 /**

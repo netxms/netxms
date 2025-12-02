@@ -317,12 +317,12 @@ void DataCollector(const shared_ptr<DCObject>& dcObject)
       }
    }
 
-   time_t currTime = time(nullptr);
+   int64_t currTime = GetCurrentTimeMs();
    if (target != nullptr)
    {
       if (!IsShutdownInProgress())
       {
-         TCHAR value[MAX_RESULT_LENGTH];
+         wchar_t value[MAX_RESULT_LENGTH];
          shared_ptr<Table> table;
          uint32_t error;
          switch(dcObject->getType())

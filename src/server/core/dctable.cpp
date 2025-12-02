@@ -201,7 +201,7 @@ bool DCTable::deleteAllData()
 /**
  * Delete single DCI entry
  */
-bool DCTable::deleteEntry(time_t timestamp)
+bool DCTable::deleteEntry(int64_t timestamp)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -211,17 +211,17 @@ bool DCTable::deleteEntry(time_t timestamp)
    {
       if (g_dbSyntax == DB_SYNTAX_TSDB)
       {
-         _sntprintf(query, 256, _T("DELETE FROM tdata_sc_%s WHERE item_id=%u AND tdata_timestamp=to_timestamp(")  UINT64_FMT _T(")"),
-                  getStorageClassName(getStorageClass()), m_id, static_cast<uint64_t>(timestamp));
+         _sntprintf(query, 256, _T("DELETE FROM tdata_sc_%s WHERE item_id=%u AND tdata_timestamp=ms_to_timestamptz(")  INT64_FMT _T(")"),
+                  getStorageClassName(getStorageClass()), m_id, timestamp);
       }
       else
       {
-         _sntprintf(query, 256, _T("DELETE FROM tdata WHERE item_id=%u AND tdata_timestamp=") UINT64_FMT, m_id, static_cast<uint64_t>(timestamp));
+         _sntprintf(query, 256, _T("DELETE FROM tdata WHERE item_id=%u AND tdata_timestamp=") INT64_FMT, m_id, timestamp);
       }
    }
    else
    {
-      _sntprintf(query, 256, _T("DELETE FROM tdata_%u WHERE item_id=%u AND tdata_timestamp=") UINT64_FMT, m_ownerId, m_id, static_cast<uint64_t>(timestamp));
+      _sntprintf(query, 256, _T("DELETE FROM tdata_%u WHERE item_id=%u AND tdata_timestamp=") INT64_FMT, m_ownerId, m_id, timestamp);
    }
    bool success = DBQuery(hdb, query);
    unlock();
@@ -238,7 +238,7 @@ bool DCTable::deleteEntry(time_t timestamp)
  *
  * @return true on success
  */
-bool DCTable::processNewValue(time_t timestamp, const shared_ptr<Table>& value, bool *updateStatus, bool allowPastDataPoints)
+bool DCTable::processNewValue(int64_t timestamp, const shared_ptr<Table>& value, bool *updateStatus, bool allowPastDataPoints)
 {
    *updateStatus = false;
    lock();
@@ -321,7 +321,7 @@ bool DCTable::processNewValue(time_t timestamp, const shared_ptr<Table>& value, 
 	   if (hStmt != nullptr)
 	   {
 		   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, tableId);
-		   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)timestamp);
+		   DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, timestamp);
 		   DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, value->toPackedXML(), DB_BIND_DYNAMIC);
 	      success = DBExecute(hStmt);
 		   DBFreeStatement(hStmt);
@@ -335,7 +335,7 @@ bool DCTable::processNewValue(time_t timestamp, const shared_ptr<Table>& value, 
 	   DBConnectionPoolReleaseConnection(hdb);
    }
 
-   time_t now = time(nullptr);
+   int64_t now = GetCurrentTimeMs();
    if (((g_offlineDataRelevanceTime <= 0) || (timestamp > (now - g_offlineDataRelevanceTime))) &&
        ((m_thresholdDisableEndTime == 0) || (m_thresholdDisableEndTime > 0 && m_thresholdDisableEndTime < timestamp)))
    {
@@ -492,7 +492,7 @@ void DCTable::checkThresholds(Table *value)
 /**
  * Process new data collection error
  */
-void DCTable::processNewError(bool noInstance, time_t now)
+void DCTable::processNewError(bool noInstance, int64_t timestamp)
 {
 	m_errorCount++;
 }
@@ -803,12 +803,12 @@ void DCTable::fillLastValueMessage(NXCPMessage *msg)
    lock();
 	if (m_lastValue != nullptr)
 	{
-      msg->setFieldFromTime(VID_TIMESTAMP, m_lastValueTimestamp);
+      msg->setField(VID_TIMESTAMP_MS, m_lastValueTimestamp);
       m_lastValue->fillMessage(msg, 0, -1);
 	}
 	else
 	{
-      msg->setFieldFromTime(VID_TIMESTAMP, static_cast<uint32_t>(0));
+      msg->setField(VID_TIMESTAMP_MS, static_cast<int64_t>(0));
 	}
    unlock();
 }
@@ -857,7 +857,7 @@ void DCTable::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t fieldId, co
       msg->setField(fieldId++, static_cast<uint16_t>(DCI_DT_NULL));  // compatibility: data type
       msg->setField(fieldId++, _T(""));             // compatibility: value
    }
-   msg->setFieldFromTime(fieldId++, m_lastPoll);
+   msg->setField(fieldId++, m_lastPollTime);
    msg->setField(fieldId++, static_cast<uint16_t>(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
    msg->setField(fieldId++, static_cast<uint16_t>(getType()));
    msg->setField(fieldId++, m_errorCount);

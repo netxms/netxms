@@ -13000,8 +13000,9 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
             msg.setField(baseInfoFieldId++, static_cast<int16_t>(dco->getDataSource()));
             msg.setField(baseInfoFieldId++, dco->getName());
             msg.setField(baseInfoFieldId++, dco->getEffectivePollingInterval());
-            msg.setFieldFromTime(baseInfoFieldId++, dco->getLastPollTime());
+            msg.setField(baseInfoFieldId++, dco->getLastPollTime() / 1000); // convert to seconds for compatibility with older agents
             baseInfoFieldId += 4;
+            msg.setField(extraInfoFieldId + 1, dco->getLastPollTime());
             extraInfoFieldId += 1000;
             if (dco->isAdvancedSchedule())
             {

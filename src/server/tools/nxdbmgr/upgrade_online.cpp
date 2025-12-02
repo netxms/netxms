@@ -636,7 +636,7 @@ static bool RemovePKFromClassDataTables(const wchar_t *className)
 {
    wchar_t query[1024];
    _sntprintf(query, 256, L"SELECT id FROM %s", className);
-   return AddPKForDataTables(query);
+   return RemovePKFromDataTables(query);
 }
 
 /**

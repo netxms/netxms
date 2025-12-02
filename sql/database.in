@@ -52,8 +52,8 @@
 #define SQL_BLOB_TEXT   'blob'
 #define SQL_TEXT        varchar
 #define SQL_TEXT_TEXT   'varchar'
-#define SQL_INT64       number(20)
-#define SQL_INT64_TEXT  'number(20)'
+#define SQL_INT64       bigint
+#define SQL_INT64_TEXT  'bigint'
 #define TABLE_TYPE
 #define CRLF            char(13,10)
 #define CONCAT          ||

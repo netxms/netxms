@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2023 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -157,7 +157,7 @@ private:
    uint16_t m_snmpPort;
    SNMP_Version m_snmpVersion;
 	uuid m_snmpTargetGuid;
-   time_t m_lastPollTime;
+	int64_t m_lastPollTime;
    uint32_t m_backupProxyId;
    ObjectArray<SNMPTableColumnDefinition> *m_tableColumns;
    StringList m_schedules;
@@ -181,7 +181,7 @@ public:
    SNMP_Version getSnmpVersion() const { return m_snmpVersion; }
    int getSnmpRawValueType() const { return (int)m_snmpRawValueType; }
    uint32_t getPollingInterval() const { return static_cast<uint32_t>(m_pollingInterval); }
-   time_t getLastPollTime() { return m_lastPollTime; }
+   int64_t getLastPollTime() { return m_lastPollTime; }
    uint32_t getBackupProxyId() const { return m_backupProxyId; }
    const ObjectArray<SNMPTableColumnDefinition> *getColumns() const { return m_tableColumns; }
 
@@ -201,9 +201,9 @@ public:
       if (m_busy) // being polled now - time to next poll should not be less than full polling interval
          return m_pollingInterval;
 
-      if(m_scheduleType == ScheduleType::NONE)
+      if (m_scheduleType == ScheduleType::NONE)
       {
-         time_t diff = now - m_lastPollTime;
+         time_t diff = now - m_lastPollTime / 1000; // convert milliseconds to seconds
          return (diff >= m_pollingInterval) ? 0 : m_pollingInterval - static_cast<uint32_t>(diff);
       }
       else
@@ -272,7 +272,6 @@ DataCollectionItem::DataCollectionItem(uint64_t serverId, const NXCPMessage& msg
    m_origin = static_cast<uint8_t>(msg.getFieldAsUInt16(baseId + 2));
    m_name = msg.getFieldAsString(baseId + 3);
    m_pollingInterval = msg.getFieldAsInt32(baseId + 4);
-   m_lastPollTime = msg.getFieldAsTime(baseId + 5);
    m_snmpTargetGuid = msg.getFieldAsGUID(baseId + 6);
    m_snmpPort = msg.getFieldAsUInt16(baseId + 7);
    m_snmpRawValueType = static_cast<uint8_t>(msg.getFieldAsUInt16(baseId + 8));
@@ -280,6 +279,21 @@ DataCollectionItem::DataCollectionItem(uint64_t serverId, const NXCPMessage& msg
    m_busy = false;
    m_disabled = false;
    m_tLastCheck = 0;
+
+   // Starting with version 6.0, last poll time in milliseconds will be stored at extBaseId + 1
+   if (hasExtraData)
+   {
+      m_lastPollTime = msg.getFieldAsInt64(extBaseId + 1);
+      if (m_lastPollTime == 0)
+      {
+         // For backward compatibility, if last poll time in milliseconds is not set, use time in seconds
+         m_lastPollTime = TimeToMs(msg.getFieldAsTime(baseId + 5));
+      }
+   }
+   else
+   {
+      m_lastPollTime = TimeToMs(msg.getFieldAsTime(baseId + 5));
+   }
 
    if (hasExtraData && (m_origin == DS_SNMP_AGENT))
    {
@@ -336,7 +350,7 @@ DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
    m_origin = static_cast<uint8_t>(DBGetFieldULong(hResult, row, 3));
    m_name = DBGetField(hResult, row, 4, nullptr, 0);
    m_pollingInterval = DBGetFieldULong(hResult, row, 5);
-   m_lastPollTime = static_cast<time_t>(DBGetFieldULong(hResult, row, 6));
+   m_lastPollTime = DBGetFieldInt64(hResult, row, 6);
    m_snmpPort = DBGetFieldULong(hResult, row, 7);
    m_snmpTargetGuid = DBGetFieldGUID(hResult, row, 8);
    m_snmpRawValueType = static_cast<uint8_t>(DBGetFieldULong(hResult, row, 9));
@@ -538,7 +552,7 @@ void DataCollectionItem::saveToDatabase(bool newObject, DB_HANDLE hdb, DataColle
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (int32_t)m_origin);
 	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_pollingInterval);
-	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (uint32_t)m_lastPollTime);
+	DBBind(hStmt, 5, DB_SQLTYPE_BIGINT, m_lastPollTime);
 	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (int32_t)m_snmpPort);
    DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_snmpTargetGuid);
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (int32_t)m_snmpRawValueType);
@@ -660,7 +674,7 @@ void DataCollectionItem::deleteFromDatabase(DB_HANDLE hdb, DataCollectionStateme
 /**
  * Set last poll time for item
  */
-void DataCollectionItem::setLastPollTime(time_t time)
+void DataCollectionItem::setLastPollTime(int64_t time)
 {
    m_lastPollTime = time;
    s_pollTimeChanged = true;
@@ -674,7 +688,7 @@ class DataElement
 private:
    uint64_t m_serverId;
    uint32_t m_dciId;
-   time_t m_timestamp;
+   int64_t m_timestamp;
    int m_origin;
    int m_type;
    uint32_t m_statusCode;
@@ -690,7 +704,7 @@ public:
    {
       m_serverId = dci.getServerId();
       m_dciId = dci.getId();
-      m_timestamp = time(nullptr);
+      m_timestamp = GetCurrentTimeMs();
       m_origin = dci.getOrigin();
       m_type = DCO_TYPE_ITEM;
       m_statusCode = status;
@@ -702,7 +716,7 @@ public:
    {
       m_serverId = dci.getServerId();
       m_dciId = dci.getId();
-      m_timestamp = time(nullptr);
+      m_timestamp = GetCurrentTimeMs();
       m_origin = dci.getOrigin();
       m_type = DCO_TYPE_TABLE;
       m_statusCode = status;
@@ -718,7 +732,7 @@ public:
    {
       m_serverId = DBGetFieldUInt64(hResult, row, 0);
       m_dciId = DBGetFieldULong(hResult, row, 1);
-      m_timestamp = (time_t)DBGetFieldInt64(hResult, row, 6);
+      m_timestamp = DBGetFieldInt64(hResult, row, 6);
       m_origin = DBGetFieldLong(hResult, row, 3);
       m_type = DBGetFieldLong(hResult, row, 2);
       m_statusCode = DBGetFieldLong(hResult, row, 4);
@@ -762,7 +776,7 @@ public:
       }
    }
 
-   time_t getTimestamp() const { return m_timestamp; }
+   int64_t getTimestamp() const { return m_timestamp; }
    uint64_t getServerId() const { return m_serverId; }
    uint32_t getDciId() const { return m_dciId; }
    int getType() const { return m_type; }
@@ -779,12 +793,12 @@ public:
 void DataElement::saveToDatabase(DB_STATEMENT hStmt) const
 {
    DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, m_serverId);
-   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_dciId);
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dciId);
    DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_type);
    DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)m_origin);
-   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_statusCode);
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_statusCode);
    DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_snmpNode);
-   DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_timestamp);
+   DBBind(hStmt, 7, DB_SQLTYPE_BIGINT, m_timestamp);
    switch(m_type)
    {
       case DCO_TYPE_ITEM:
@@ -825,7 +839,8 @@ bool DataElement::sendToServer(bool reconciliation) const
    msg.setField(VID_DCOBJECT_TYPE, (INT16)m_type);
    msg.setField(VID_STATUS, m_statusCode);
    msg.setField(VID_NODE_ID, m_snmpNode);
-   msg.setFieldFromTime(VID_TIMESTAMP, m_timestamp);
+   msg.setField(VID_TIMESTAMP_MS, m_timestamp);
+   msg.setField(VID_TIMESTAMP, m_timestamp / 1000); // for backward compatibility
    msg.setField(VID_RECONCILIATION, (INT16)(reconciliation ? 1 : 0));
    switch(m_type)
    {
@@ -853,9 +868,10 @@ void DataElement::fillReconciliationMessage(NXCPMessage *msg, uint32_t baseId) c
    msg->setField(baseId + 1, (INT16)m_origin);
    msg->setField(baseId + 2, (INT16)m_type);
    msg->setField(baseId + 3, m_snmpNode);
-   msg->setFieldFromTime(baseId + 4, m_timestamp);
+   msg->setField(baseId + 4, m_timestamp / 1000); // for backward compatibility
    msg->setField(baseId + 5, m_value.item);
    msg->setField(baseId + 6, m_statusCode);
+   msg->setField(baseId + 7, m_timestamp);
 }
 
 /**
@@ -865,13 +881,13 @@ struct ServerSyncStatus
 {
    uint64_t serverId;
    int32_t queueSize;
-   time_t lastSync;
+   int64_t lastSync;
 
    ServerSyncStatus(uint64_t sid)
    {
       serverId = sid;
       queueSize = 0;
-      lastSync = time(nullptr);
+      lastSync = GetCurrentTimeMs();
    }
 };
 
@@ -1048,7 +1064,7 @@ static void ReconciliationThread()
                   if (e->sendToServer(true))
                   {
                      status->queueSize--;
-                     status->lastSync = time(nullptr);
+                     status->lastSync = GetCurrentTimeMs();
                      deleteList.add(e);
                   }
                   else
@@ -1113,7 +1129,7 @@ static void ReconciliationThread()
                               delete e;
                            }
                         }
-                        serverSyncStatus->lastSync = time(nullptr);
+                        serverSyncStatus->lastSync = GetCurrentTimeMs();
 
                         s_serverSyncStatusLock.unlock();
                      }
@@ -1157,7 +1173,7 @@ static void ReconciliationThread()
                   DataElement *e = deleteList.get(i);
                   DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, e->getServerId());
                   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, e->getDciId());
-                  DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, static_cast<int64_t>(e->getTimestamp()));
+                  DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, e->getTimestamp());
                   DBExecute(hStmt);
                }
                DBCommit(hdb);
@@ -1598,12 +1614,12 @@ static void LoadState()
          uint64_t serverId = DBGetFieldUInt64(hResult, i, 0);
          ServerSyncStatus *s = new ServerSyncStatus(serverId);
          s->queueSize = DBGetFieldLong(hResult, i, 1);
-         s->lastSync = static_cast<time_t>(DBGetFieldInt64(hResult, i, 2));
+         s->lastSync = DBGetFieldInt64(hResult, i, 2);
          s_serverSyncStatus.set(serverId, s);
          nxlog_debug_tag(DEBUG_TAG, 2, _T("%d elements in queue for server ID ") UINT64X_FMT(_T("016")), s->queueSize, serverId);
 
          TCHAR ts[64];
-         nxlog_debug_tag(DEBUG_TAG, 2, _T("Oldest timestamp is %s for server ID ") UINT64X_FMT(_T("016")), FormatTimestamp(s->lastSync, ts), serverId);
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Oldest timestamp is %s for server ID ") UINT64X_FMT(_T("016")), FormatTimestampMs(s->lastSync, ts), serverId);
       }
       DBFreeResult(hResult);
    }
@@ -1622,7 +1638,7 @@ static void ClearStalledOfflineData()
    IntegerArray<uint64_t> deleteList;
 
    s_serverSyncStatusLock.lock();
-   time_t expirationTime = time(nullptr) - g_dcOfflineExpirationTime * 86400;
+   int64_t expirationTime = GetCurrentTimeMs() - g_dcOfflineExpirationTime * _LL(86400000);
    Iterator<ServerSyncStatus> it = s_serverSyncStatus.begin();
    while(it.hasNext())
    {

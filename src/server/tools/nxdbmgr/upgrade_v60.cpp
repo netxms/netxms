@@ -24,6 +24,155 @@
 #include <nxevent.h>
 
 /**
+ * Add primary key for data tables for objects selected by given query
+ */
+static bool ConvertDataTables(const wchar_t *query, bool dataTablesWithPK)
+{
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult == nullptr)
+      return false;
+
+   bool success = true;
+   int count = DBGetNumRows(hResult);
+   for(int i = 0; i < count; i++)
+   {
+      uint32_t id = DBGetFieldULong(hResult, i, 0);
+
+      if (IsDataTableExist(L"idata_%u", id))
+      {
+         WriteToTerminalEx(L"Converting table \x1b[1midata_%u\x1b[0m\n", id);
+
+         wchar_t table[64];
+         nx_swprintf(table, 64, L"idata_%u", id);
+
+         if (dataTablesWithPK)
+         {
+            CHK_EXEC_NO_SP(DBDropPrimaryKey(g_dbHandle, table));
+         }
+         else
+         {
+            wchar_t index[64];
+            nx_swprintf(index, 64, L"idx_idata_%u_id_timestamp", id);
+            DBDropIndex(g_dbHandle, table, index);
+         }
+
+         CHK_EXEC_NO_SP(ConvertColumnToInt64(table, L"idata_timestamp"));
+         CHK_EXEC_NO_SP(SQLQueryFormatted(L"UPDATE %s SET idata_timestamp = idata_timestamp * 1000", table));
+         DBAddPrimaryKey(g_dbHandle,table, _T("item_id,idata_timestamp"));
+      }
+
+      if (IsDataTableExist(L"tdata_%u", id))
+      {
+         WriteToTerminalEx(L"Converting table \x1b[1mtdata_%u\x1b[0m\n", id);
+
+         wchar_t table[64];
+         nx_swprintf(table, 64, L"tdata_%u", id);
+
+         if (dataTablesWithPK)
+         {
+            CHK_EXEC_NO_SP(DBDropPrimaryKey(g_dbHandle, table));
+         }
+         else
+         {
+            wchar_t index[64];
+            nx_swprintf(index, 64, L"idx_tdata_%u", id);
+            DBDropIndex(g_dbHandle, table, index);
+         }
+
+         CHK_EXEC_NO_SP(ConvertColumnToInt64(table, L"tdata_timestamp"));
+         CHK_EXEC_NO_SP(SQLQueryFormatted(L"UPDATE %s SET tdata_timestamp = tdata_timestamp * 1000", table));
+         DBAddPrimaryKey(g_dbHandle,table, L"item_id,tdata_timestamp");
+      }
+   }
+   DBFreeResult(hResult);
+   return success;
+}
+
+/**
+ * Add primary key to all data tables for given object class
+ */
+static bool ConvertDataTablesForClass(const wchar_t *className, bool dataTablesWithPK)
+{
+   wchar_t query[1024];
+   nx_swprintf(query, 256, L"SELECT id FROM %s", className);
+   return ConvertDataTables(query, dataTablesWithPK);
+}
+
+/**
+ * Upgrade from 60.7 to 60.8
+ */
+static bool H_UpgradeFromV7()
+{
+   if ((g_dbSyntax == DB_SYNTAX_PGSQL) || (g_dbSyntax == DB_SYNTAX_TSDB))
+   {
+      CHK_EXEC(SQLQuery(
+         L"CREATE OR REPLACE FUNCTION ms_to_timestamptz(ms_timestamp BIGINT) "
+         L"RETURNS TIMESTAMPTZ AS $$ "
+         L"    SELECT timestamp 'epoch' + ms_timestamp * interval '1 millisecond'; "
+         L"$$ LANGUAGE sql IMMUTABLE;"));
+      CHK_EXEC(SQLQuery(
+         L"CREATE OR REPLACE FUNCTION timestamptz_to_ms(t timestamptz) "
+         L"RETURNS BIGINT AS $$ "
+         L"    SELECT (EXTRACT(epoch FROM t) * 1000)::bigint; "
+         L"$$ LANGUAGE sql IMMUTABLE;"));
+   }
+
+   // Convert raw_dci_values timestamp columns to INT64 milliseconds
+   CHK_EXEC(ConvertColumnToInt64(L"raw_dci_values", L"last_poll_time"));
+   CHK_EXEC(ConvertColumnToInt64(L"raw_dci_values", L"cache_timestamp"));
+   CHK_EXEC(SQLQuery(L"UPDATE raw_dci_values SET last_poll_time = last_poll_time * 1000, cache_timestamp = CASE WHEN cache_timestamp > 1 THEN cache_timestamp * 1000 ELSE cache_timestamp END"));
+
+   // Check if idata_/tdata_ tables already use PKs
+   bool dataTablesWithPK = false;
+   if (g_dbSyntax == DB_SYNTAX_PGSQL)
+   {
+      if (IsOnlineUpgradePending())
+      {
+         WriteToTerminal(L"Pending online upgrades must be completed before this step\n");
+         return false;
+      }
+
+      int schemaV52 = GetSchemaLevelForMajorVersion(52);
+      if ((schemaV52 >= 21) && (schemaV52 < 24))
+      {
+         // idata/tdata tables already converted to PKs
+         dataTablesWithPK = true;
+      }
+   }
+
+   // Convert idata/tdata timestamp columns to INT64 milliseconds
+   if (g_dbSyntax != DB_SYNTAX_TSDB)
+   {
+      CHK_EXEC(ConvertColumnToInt64(L"idata", L"idata_timestamp"));
+      CHK_EXEC(ConvertColumnToInt64(L"tdata", L"tdata_timestamp"));
+      CHK_EXEC(SQLBatch(
+         _T("UPDATE idata SET idata_timestamp = idata_timestamp * 1000\n")
+         _T("UPDATE tdata SET tdata_timestamp = tdata_timestamp * 1000\n")
+         _T("<END>")));
+   }
+
+   // Update metadata for idata_nnn/tdata_nnn table creation
+   wchar_t query[256];
+   nx_swprintf(query, 256, L"CREATE TABLE idata_%%d (item_id integer not null,idata_timestamp %s not null,idata_value varchar(255) null,raw_value varchar(255) null)", GetSQLTypeName(SQL_TYPE_INT64));
+   CHK_EXEC(DBMgrMetaDataWriteStr(L"IDataTableCreationCommand", query));
+   nx_swprintf(query, 256, L"CREATE TABLE tdata_%%d (item_id integer not null,tdata_timestamp %s not null,tdata_value %s null)",
+         GetSQLTypeName(SQL_TYPE_INT64), GetSQLTypeName(SQL_TYPE_TEXT));
+   CHK_EXEC(DBMgrMetaDataWriteStr(L"TDataTableCreationCommand_0", query));
+
+   // Convert all idata_nnn/tdata_nnn tables to INT64 milliseconds
+   CHK_EXEC_NO_SP(ConvertDataTablesForClass(L"nodes", dataTablesWithPK));
+   CHK_EXEC_NO_SP(ConvertDataTablesForClass(L"clusters", dataTablesWithPK));
+   CHK_EXEC_NO_SP(ConvertDataTablesForClass(L"mobile_devices", dataTablesWithPK));
+   CHK_EXEC_NO_SP(ConvertDataTablesForClass(L"access_points", dataTablesWithPK));
+   CHK_EXEC_NO_SP(ConvertDataTablesForClass(L"chassis", dataTablesWithPK));
+   CHK_EXEC_NO_SP(ConvertDataTablesForClass(L"sensors", dataTablesWithPK));
+   CHK_EXEC_NO_SP(ConvertDataTables(L"SELECT id FROM object_containers WHERE object_class=29 OR object_class=30", dataTablesWithPK));
+
+   CHK_EXEC(SetMinorSchemaVersion(8));
+   return true;
+}
+
+/**
  * Upgrade from 60.6 to 60.7
  */
 static bool H_UpgradeFromV6()
@@ -248,6 +397,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 7,  60, 8,  H_UpgradeFromV7  },
    { 6,  60, 7,  H_UpgradeFromV6  },
    { 5,  60, 6,  H_UpgradeFromV5  },
    { 4,  60, 5,  H_UpgradeFromV4  },

@@ -1070,8 +1070,8 @@ CREATE TABLE raw_dci_values
   item_id integer not null,
   raw_value varchar(255) null,
   transformed_value varchar(255) null,
-  last_poll_time integer not null,
-  cache_timestamp integer not null,
+  last_poll_time SQL_INT64 not null,
+  cache_timestamp SQL_INT64 not null,
   anomaly_detected char(1) not null,
   PRIMARY KEY(item_id)
 ) TABLE_TYPE;
@@ -1174,7 +1174,7 @@ CREATE VIEW idata AS
 CREATE TABLE idata
 (
    item_id integer not null,
-   idata_timestamp integer not null,
+   idata_timestamp SQL_INT64 not null,
    idata_value varchar(255) null,
    raw_value varchar(255) null,
    PRIMARY KEY(item_id,idata_timestamp)
@@ -1260,7 +1260,7 @@ CREATE VIEW tdata AS
 CREATE TABLE tdata
 (
    item_id integer not null,
-   tdata_timestamp integer not null,
+   tdata_timestamp SQL_INT64 not null,
    tdata_value SQL_TEXT null,
    PRIMARY KEY(item_id,tdata_timestamp)
 ) TABLE_TYPE;
@@ -1319,17 +1319,6 @@ CREATE INDEX idx_event_log_source ON event_log(event_source);
 #if defined(DB_POSTGRESQL) || defined(DB_TSDB)
 CREATE INDEX idx_event_log_root_id ON event_log(root_event_id) WHERE root_event_id > 0;
 #elif defined(DB_ORACLE)
-CREATE OR REPLACE FUNCTION zero_to_null(id NUMBER)
-RETURN NUMBER
-DETERMINISTIC
-AS BEGIN
-   IF id > 0 THEN
-      RETURN id;
-   ELSE
-      RETURN NULL;
-   END IF;
-END;
-/
 CREATE INDEX idx_event_log_root_id ON event_log(zero_to_null(root_event_id));
 #else
 CREATE INDEX idx_event_log_root_id ON event_log(root_event_id);

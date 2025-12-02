@@ -45,7 +45,7 @@ static const char *s_optHost = nullptr;
 static const char *s_optUser = "guest";
 static const char *s_optPassword = "";
 static int s_optBatchSize = 0;
-static time_t s_timestamp = 0;
+static int64_t s_timestamp = 0;
 static bool s_ignoreProtocolVersion = false;
 
 /**
@@ -488,10 +488,10 @@ int main(int argc, char *argv[])
             s_ignoreProtocolVersion = true;
             break;
 		   case 't': // timestamp as UNIX time
-			   s_timestamp = (time_t)strtoull(optarg, NULL, 0);
+			   s_timestamp = TimeToMs((time_t)strtoull(optarg, NULL, 0));
 			   break;
 		   case 'T': // timestamp as YYYYMMDDhhmmss
-			   s_timestamp = ParseDateTimeA(optarg, 0);
+			   s_timestamp = TimeToMs(ParseDateTimeA(optarg, 0));
 			   break;
 		   case 'u': // user
 			   s_optUser = optarg;

@@ -4813,7 +4813,7 @@ void ClientSession::deleteDCIEntry(const NXCPMessage& request)
             shared_ptr<DCObject> dci = static_cast<DataCollectionOwner&>(*object).getDCObjectById(dciId, m_userId);
             if (dci != nullptr)
             {
-               msg.setField(VID_RCC, dci->deleteEntry(request.getFieldAsUInt32(VID_TIMESTAMP)) ? RCC_SUCCESS : RCC_DB_FAILURE);
+               msg.setField(VID_RCC, dci->deleteEntry(request.getFieldAsInt64(VID_TIMESTAMP_MS)) ? RCC_SUCCESS : RCC_DB_FAILURE);
                debugPrintf(4, _T("DeleteDCIEntry: DCI %d at node %d"), dciId, object->getId());
                writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Collected data entry for DCI \"%s\" [%d] on object \"%s\" [%d] was deleted"),
                         dci->getDescription().cstr(), dci->getId(), object->getName(), object->getId());
@@ -5126,7 +5126,7 @@ static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, uint32_t nodeId, int dciTyp
                      tablePrefix, condition, tablePrefix, maxRows);
             break;
          case DB_SYNTAX_TSDB:
-            _sntprintf(query, 512, _T("SELECT date_part('epoch',%s_timestamp)::int,%s%s FROM %s_sc_%s WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %u"),
+            _sntprintf(query, 512, _T("SELECT timestamptz_to_ms(%s_timestamp),%s%s FROM %s_sc_%s WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %u"),
                      tablePrefix, SELECTION_COLUMNS,
                      tablePrefix, DCObject::getStorageClassName(storageClass), condition, tablePrefix, maxRows);
             break;
@@ -5206,7 +5206,7 @@ static void ProcessDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientSession
    while(DBFetch(hResult))
    {
       rows++;
-      data.writeB(DBGetFieldULong(hResult, 0));
+      data.writeB(DBGetFieldInt64(hResult, 0));
       if (dci->getType() == DCO_TYPE_ITEM)
       {
          switch(dataType)
@@ -5302,7 +5302,7 @@ static void ProcessTableDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientSe
          Table *table = Table::createFromPackedXML(encodedTable);
          if (table != nullptr)
          {
-            msg.setField(VID_TIMESTAMP, DBGetFieldULong(hResult, 0));
+            msg.setField(VID_TIMESTAMP_MS, DBGetFieldInt64(hResult, 0));
             table->fillMessage(&msg, 0, -1);
             delete table;
             session->sendMessage(msg);
@@ -5312,7 +5312,7 @@ static void ProcessTableDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientSe
       }
    }
 
-   msg.setField(VID_TIMESTAMP, static_cast<uint32_t>(0));   // End of data indicator
+   msg.setField(VID_TIMESTAMP_MS, static_cast<int64_t>(0));   // End of data indicator
    session->sendMessage(msg);
 }
 
@@ -5354,8 +5354,8 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
 
 	// Get request parameters
 	uint32_t maxRows = request.getFieldAsUInt32(VID_MAX_ROWS);
-	uint32_t timeFrom = request.getFieldAsUInt32(VID_TIME_FROM);
-	uint32_t timeTo = request.getFieldAsUInt32(VID_TIME_TO);
+	int64_t timeFrom = request.getFieldAsInt64(VID_TIME_FROM);
+	int64_t timeTo = request.getFieldAsInt64(VID_TIME_TO);
 
 	if ((maxRows == 0) || (maxRows > MAX_DCI_DATA_RECORDS))
 		maxRows = MAX_DCI_DATA_RECORDS;
@@ -5450,7 +5450,7 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
       data.writeB(dataType);
       data.writeB(static_cast<uint16_t>(0));   // Options
 
-      data.writeB(static_cast<uint32_t>(dci->getLastPollTime()));
+      data.writeB(dci->getLastPollTime());
       switch(dataType)
       {
          case DCI_DT_INT:
@@ -5490,9 +5490,9 @@ read_from_db:
 	if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
 	{
       if (timeFrom != 0)
-         _tcscpy(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND tdata_timestamp>=to_timestamp(?)") : _T(" AND idata_timestamp>=to_timestamp(?)"));
+         _tcscpy(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND tdata_timestamp>=ms_to_timestamptz(?)") : _T(" AND idata_timestamp>=ms_to_timestamptz(?)"));
       if (timeTo != 0)
-         _tcscat(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND tdata_timestamp<=to_timestamp(?)") : _T(" AND idata_timestamp<=to_timestamp(?)"));
+         _tcscat(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND tdata_timestamp<=ms_to_timestamptz(?)") : _T(" AND idata_timestamp<=ms_to_timestamptz(?)"));
 	}
 	else
 	{
@@ -5518,9 +5518,9 @@ read_from_db:
          request.getFieldAsString(VID_INSTANCE, instance, 256);
 		}
 		if (timeFrom != 0)
-			DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, timeFrom);
+			DBBind(hStmt, pos++, DB_SQLTYPE_BIGINT, timeFrom);
 		if (timeTo != 0)
-			DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, timeTo);
+			DBBind(hStmt, pos++, DB_SQLTYPE_BIGINT, timeTo);
 
 		DB_UNBUFFERED_RESULT hResult = DBSelectPreparedUnbuffered(hStmt);
 		if (hResult != nullptr)
@@ -10085,7 +10085,7 @@ struct ClientDataPushElement
 {
    shared_ptr<DataCollectionTarget> dcTarget;
    shared_ptr<DCObject> dci;
-   TCHAR *value;
+   wchar_t *value;
 
    ClientDataPushElement(const shared_ptr<DataCollectionTarget>& _dcTarget, const shared_ptr<DCObject> &_dci, TCHAR *_value) : dcTarget(_dcTarget), dci(_dci)
    {
@@ -10201,14 +10201,16 @@ void ClientSession::pushDCIData(const NXCPMessage& request)
       // If all items was checked OK, push data
       if (bOK)
       {
-         time_t t = request.getFieldAsTime(VID_TIMESTAMP);
+         int64_t t = request.getFieldAsInt64(VID_TIMESTAMP_MS);
          if (t == 0)
-            t = time(nullptr);
+            t = request.getFieldAsInt64(VID_TIMESTAMP) * _LL(1000);
+         if (t == 0)
+            t = GetCurrentTimeMs();
          shared_ptr<Table> tableValue; // Empty pointer to pass to processNewDCValue()
          for(int i = 0; i < values.size(); i++)
          {
             ClientDataPushElement *e = values.get(i);
-				if (_tcslen(e->value) >= MAX_DCI_STRING_VALUE)
+				if (wcslen(e->value) >= MAX_DCI_STRING_VALUE)
 					e->value[MAX_DCI_STRING_VALUE - 1] = 0;
 				e->dcTarget->processNewDCValue(e->dci, t, e->value, tableValue, true);
             if (t > e->dci->getLastPollTime())

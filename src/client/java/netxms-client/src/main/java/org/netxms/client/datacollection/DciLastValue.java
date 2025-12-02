@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ public class DciLastValue
    {
       dciType = msg.getFieldAsInt32(NXCPCodes.VID_DCOBJECT_TYPE);
       dataOrigin = DataOrigin.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_DCI_SOURCE_TYPE));
-      timestamp = msg.getFieldAsDate(NXCPCodes.VID_TIMESTAMP);
+      timestamp = msg.getFieldAsTimestamp(NXCPCodes.VID_TIMESTAMP_MS);
       if (dciType == DataCollectionObject.DCO_TYPE_TABLE)
       {
          tableValue = new Table(msg);

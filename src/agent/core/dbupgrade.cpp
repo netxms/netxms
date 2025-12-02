@@ -37,6 +37,16 @@ bool g_ignoreAgentDbErrors = FALSE;
  */
 static DB_HANDLE s_db = NULL;
 
+/**
+ * Upgrade from V16 to V17
+ */
+static BOOL H_UpgradeFromV16(int currVersion, int newVersion)
+{
+   CHK_EXEC(Query(_T("UPDATE dc_config SET last_poll=last_poll*1000")));
+   CHK_EXEC(Query(_T("UPDATE dc_queue SET timestamp=timestamp*1000")));
+   CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 17));
+   return TRUE;
+}
 
 /**
  * Upgrade from V15 to V16
@@ -528,6 +538,7 @@ static struct
    { 13, 14, H_UpgradeFromV13 },
    { 14, 15, H_UpgradeFromV14 },
    { 15, 16, H_UpgradeFromV15 },
+   { 16, 17, H_UpgradeFromV16 },
    { 0, 0, nullptr }
 };
 

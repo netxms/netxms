@@ -44,7 +44,7 @@ static StringMap *s_data = new StringMap;
  */
 static int s_optVerbose = 1;
 static uint32_t s_optObjectId = 0;
-static time_t s_timestamp = 0;
+static int64_t s_timestamp = 0;
 static bool s_localCache = false;
 static bool s_statsiteFormat = false;
 
@@ -159,7 +159,7 @@ static bool Send()
 	NXCPMessage msg(CMD_PUSH_DCI_DATA, 0);
    msg.setField(VID_OBJECT_ID, s_optObjectId);
    msg.setField(VID_LOCAL_CACHE, s_localCache);
-   msg.setFieldFromTime(VID_TIMESTAMP, s_timestamp);
+   msg.setField(VID_TIMESTAMP_MS, s_timestamp);
    s_data->fillMessage(&msg, VID_PUSH_DCI_DATA_BASE, VID_NUM_ITEMS);
 
 	// Send message to pipe
@@ -299,10 +299,10 @@ int main(int argc, char *argv[])
             s_statsiteFormat = true;
             break;
 		   case 't': // timestamp as UNIX time
-			   s_timestamp = (time_t)strtoull(optarg, nullptr, 0);
+			   s_timestamp = TimeToMs((time_t)strtoull(optarg, nullptr, 0));
 			   break;
 		   case 'T': // timestamp as YYYYMMDDhhmmss
-			   s_timestamp = ParseDateTimeA(optarg, 0);
+			   s_timestamp = TimeToMs(ParseDateTimeA(optarg, 0));
 			   break;
 		   case 'v': // verbose
 			   s_optVerbose++;
