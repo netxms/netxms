@@ -1142,6 +1142,24 @@ std::string LIBNETXMS_EXPORTABLE FormatISO8601Timestamp(time_t t)
 }
 
 /**
+ * Format milliseconds timestamp in ISO 8601 format
+ */
+std::string LIBNETXMS_EXPORTABLE FormatISO8601TimestampMs(int64_t t)
+{
+   time_t seconds = static_cast<time_t>(t / 1000);
+   struct tm utcTime;
+#if HAVE_GMTIME_R
+   gmtime_r(&seconds, &utcTime);
+#else
+   memcpy(&utcTime, gmtime(&seconds), sizeof(struct tm));
+#endif
+   char text[64];
+   strftime(text, 64, "%Y-%m-%dT%H:%M:%S.", &utcTime);
+   snprintf(&text[20], 44, "%03dZ", static_cast<int>(t % 1000));
+   return std::string(text);
+}
+
+/**
  * Get local system time zone. Returns pointer to buffer for convenience.
  */
 TCHAR LIBNETXMS_EXPORTABLE *GetSystemTimeZone(TCHAR *buffer, size_t size, bool withName, bool forceFullOffset)
@@ -3955,6 +3973,14 @@ String LIBNETXMS_EXPORTABLE EscapeStringForJSON(const TCHAR *s)
 json_t LIBNETXMS_EXPORTABLE *json_time_string(time_t t)
 {
    return (t == 0) ? json_null() : json_string(FormatISO8601Timestamp(t).c_str());
+}
+
+/**
+ * Convert UNIX timestamp in milliseconds to JSON string in ISO 8601 format
+ */
+json_t LIBNETXMS_EXPORTABLE *json_time_string_ms(int64_t t)
+{
+   return (t == 0) ? json_null() : json_string(FormatISO8601TimestampMs(t).c_str());
 }
 
 /**

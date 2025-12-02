@@ -4367,6 +4367,11 @@ template class LIBNETXMS_TEMPLATE_EXPORTABLE shared_ptr<Table>;
 json_t LIBNETXMS_EXPORTABLE *json_time_string(time_t t);
 
 /**
+ * Convert UNIX timestamp expressed in milliseconds to JSON string in ISO 8601 format
+ */
+json_t LIBNETXMS_EXPORTABLE *json_time_string_ms(int64_t t);
+
+/**
  * Create JSON string with null check
  */
 static inline json_t *json_string_a(const char *s)
@@ -5499,6 +5504,14 @@ void LIBNETXMS_EXPORTABLE QSort(void *base, size_t nmemb, size_t size, int (*com
 #endif
 
 /**
+ * Convert time_t to timestamp in milliseconds
+ */
+static inline int64_t TimeToMs(time_t t)
+{
+   return static_cast<int64_t>(t) * _LL(1000);
+}
+
+/**
  * Get current time in milliseconds
  */
 static inline int64_t GetCurrentTimeMs()
@@ -6198,6 +6211,7 @@ TCHAR LIBNETXMS_EXPORTABLE *GetSystemTimeZone(TCHAR *buffer, size_t size, bool w
 TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer);
 TCHAR LIBNETXMS_EXPORTABLE *FormatTimestampMs(int64_t timestamp, TCHAR *buffer);
 std::string LIBNETXMS_EXPORTABLE FormatISO8601Timestamp(time_t t);
+std::string LIBNETXMS_EXPORTABLE FormatISO8601TimestampMs(int64_t t);
 
 /**
  * Format timestamp as dd.mm.yyyy HH:MM:SS
