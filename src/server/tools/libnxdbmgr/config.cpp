@@ -114,7 +114,7 @@ bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataWriteStr(const TCHAR *variable, const TC
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
    }
-   bool success = DBExecute(hStmt);
+   bool success = SQLExecute(hStmt);
    DBFreeStatement(hStmt);
    return success;
 }
