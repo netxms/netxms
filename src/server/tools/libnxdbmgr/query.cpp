@@ -73,7 +73,7 @@ DB_UNBUFFERED_RESULT LIBNXDBMGR_EXPORTABLE SQLSelectUnbuffered(const TCHAR *quer
  */
 bool LIBNXDBMGR_EXPORTABLE SQLExecute(DB_STATEMENT hStmt)
 {
-   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   wchar_t errorText[DBDRV_MAX_ERROR_TEXT];
 
    if (g_queryTrace)
       ShowQuery(DBGetStatementSource(hStmt));
@@ -87,17 +87,27 @@ bool LIBNXDBMGR_EXPORTABLE SQLExecute(DB_STATEMENT hStmt)
 /**
  * Non-standard SQL data type names
  */
-const TCHAR *g_sqlTypes[8][4] =
+const wchar_t *g_sqlTypes[8][4] =
 {
-   { _T("longtext"),     _T("text"),           _T("bigint"),     _T("longblob")       }, // MySQL
-   { _T("text"),         _T("varchar(4000)"),  _T("bigint"),     _T("bytea")          }, // PostgreSQL
-   { _T("varchar(max)"), _T("varchar(4000)"),  _T("bigint"),     _T("varbinary(max)") }, // Microsoft SQL
-   { _T("clob"),         _T("varchar(4000)"),  _T("number(20)"), _T("blob")           }, // Oracle
-   { _T("varchar"),      _T("varchar(4000)"),  _T("number(20)"), _T("blob")           }, // SQLite
-   { _T("long varchar"), _T("varchar(4000)"),  _T("bigint"),     _T("blob")           }, // DB/2
-   { _T("text"),         _T("lvarchar(4000)"), _T("bigint"),     _T("blob")           }, // Informix
-   { _T("text"),         _T("varchar(4000)"),  _T("bigint"),     _T("bytea")          }  // TimescaleDB
+   { L"longtext",     L"text",           L"bigint",     L"longblob"       }, // MySQL
+   { L"text",         L"varchar(4000)",  L"bigint",     L"bytea"          }, // PostgreSQL
+   { L"varchar(max)", L"varchar(4000)",  L"bigint",     L"varbinary(max)" }, // Microsoft SQL
+   { L"clob",         L"varchar(4000)",  L"number(20)", L"blob"           }, // Oracle
+   { L"varchar",      L"varchar(4000)",  L"bigint",     L"blob"           }, // SQLite
+   { L"long varchar", L"varchar(4000)",  L"bigint",     L"blob"           }, // DB/2
+   { L"text",         L"lvarchar(4000)", L"bigint",     L"blob"           }, // Informix
+   { L"text",         L"varchar(4000)",  L"bigint",     L"bytea"          }  // TimescaleDB
 };
+
+/**
+ * Get SQL data type name for current database syntax
+ */
+const wchar_t LIBNXDBMGR_EXPORTABLE *GetSQLTypeName(int type)
+{
+   if ((type < 0) || (type >= 4))
+      return L"ERROR";
+   return g_sqlTypes[g_dbSyntax][type];
+}
 
 /**
  * Execute SQL query from formatted string and print error message on screen if query failed
@@ -125,18 +135,18 @@ bool LIBNXDBMGR_EXPORTABLE SQLQuery(const wchar_t *query, bool showOutput)
 
    if (g_dbSyntax != DB_SYNTAX_UNKNOWN)
    {
-      realQuery.replace(_T("$SQL:BLOB"), g_sqlTypes[g_dbSyntax][SQL_TYPE_BLOB]);
-      realQuery.replace(_T("$SQL:TEXT"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT]);
-      realQuery.replace(_T("$SQL:TXT4K"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT4K]);
-      realQuery.replace(_T("$SQL:INT64"), g_sqlTypes[g_dbSyntax][SQL_TYPE_INT64]);
+      realQuery.replace(L"$SQL:BLOB", g_sqlTypes[g_dbSyntax][SQL_TYPE_BLOB]);
+      realQuery.replace(L"$SQL:TEXT", g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT]);
+      realQuery.replace(L"$SQL:TXT4K", g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT4K]);
+      realQuery.replace(L"$SQL:INT64", g_sqlTypes[g_dbSyntax][SQL_TYPE_INT64]);
    }
 
    if (g_queryTrace)
       ShowQuery(realQuery);
 
-   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   wchar_t errorText[DBDRV_MAX_ERROR_TEXT];
    bool success;
-   if (!_tcsnicmp(realQuery, _T("SELECT "), 7))
+   if (!wcsnicmp(realQuery, L"SELECT ", 7))
    {
       DB_RESULT hResult = DBSelectEx(g_dbHandle, realQuery, errorText);
       if (hResult != nullptr)
@@ -160,7 +170,7 @@ bool LIBNXDBMGR_EXPORTABLE SQLQuery(const wchar_t *query, bool showOutput)
       success = DBQueryEx(g_dbHandle, realQuery, errorText);
    }
    if (!success)
-      WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, (const TCHAR *)realQuery);
+      WriteToTerminalEx(L"SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n", errorText, (const TCHAR *)realQuery);
    return success;
 }
 
@@ -172,10 +182,10 @@ bool LIBNXDBMGR_EXPORTABLE SQLBatch(const wchar_t *batchSource)
    StringBuffer batch(batchSource);
    if (g_dbSyntax != DB_SYNTAX_UNKNOWN)
    {
-      batch.replace(_T("$SQL:BLOB"), g_sqlTypes[g_dbSyntax][SQL_TYPE_BLOB]);
-      batch.replace(_T("$SQL:TEXT"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT]);
-      batch.replace(_T("$SQL:TXT4K"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT4K]);
-      batch.replace(_T("$SQL:INT64"), g_sqlTypes[g_dbSyntax][SQL_TYPE_INT64]);
+      batch.replace(L"$SQL:BLOB", g_sqlTypes[g_dbSyntax][SQL_TYPE_BLOB]);
+      batch.replace(L"$SQL:TEXT", g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT]);
+      batch.replace(L"$SQL:TXT4K", g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT4K]);
+      batch.replace(L"$SQL:INT64", g_sqlTypes[g_dbSyntax][SQL_TYPE_INT64]);
    }
 
    bool success = true;
