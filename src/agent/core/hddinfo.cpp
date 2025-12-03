@@ -278,6 +278,35 @@ LONG H_PhysicalDiskInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 
    LONG rc;
    json_t *element = json_object_get_by_path_a(root, jsonPath);
+   if ((element == nullptr) && (arg[0] == 'A'))
+   {
+      // check for attribute name in ata_smart_attributes
+      json_t *attributes = json_object_get_by_path_a(root, "ata_smart_attributes/table");
+      if (json_is_array(attributes))
+      {
+         size_t i;
+         json_t *attr;
+         json_array_foreach(attributes, i, attr)
+         {
+            const char *name = json_object_get_string_utf8(attr, "name", nullptr);
+            if ((name != nullptr) && (strcmp(name, jsonPath) == 0))
+            {
+               element = json_object_get_by_path_a(attr, "value");
+               break;
+            }
+         }
+      }
+
+      // check for attribute name in nvme_smart_health_information_log
+      if (element == nullptr)
+      {
+         json_t *nvmeLog = json_object_get_by_path_a(root, "nvme_smart_health_information_log");
+         if (json_is_object(nvmeLog))
+         {
+            element = json_object_get(nvmeLog, jsonPath);
+         }
+      }
+   }
    if ((element != nullptr) && !json_is_null(element))
    {
       GetValueFromJson(element, value);
