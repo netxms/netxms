@@ -36,10 +36,10 @@
 struct DatabaseInfo
 {
    TCHAR id[MAX_STR];
-   TCHAR server[MAX_STR];
+   char server[MAX_STR];
    uint16_t port;
-   TCHAR user[MAX_STR];
-   TCHAR password[MAX_PASSWORD];
+   char user[MAX_STR];
+   char password[MAX_PASSWORD];
    int database;
    uint32_t connectionTTL;
 };
@@ -54,14 +54,13 @@ private:
    redisContext *m_redis;
    THREAD m_pollerThread;
    bool m_connected;
-   StringMap *m_data;
+   StringMap m_data;
    Mutex m_dataLock;
    Mutex m_connLock;
    Condition m_stopCondition;
    int64_t m_lastPollTime;
 
-   static THREAD_RESULT THREAD_CALL pollerThreadStarter(void *arg);
-   void pollerThreadMain();
+   void pollerThread();
    bool connect();
    void disconnect();
    bool poll();

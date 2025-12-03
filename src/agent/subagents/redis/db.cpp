@@ -46,38 +46,39 @@ bool AddRedisFromConfig(const ConfigEntry *config)
    memset(&info, 0, sizeof(info));
 
    _tcslcpy(info.id, config->getName(), MAX_STR);
-   _tcslcpy(info.server, config->getSubEntryValue(_T("server"), 0, _T("127.0.0.1")), MAX_STR);
+   tchar_to_utf8(config->getSubEntryValue(_T("server"), 0, _T("127.0.0.1")), -1, info.server, MAX_STR);
    info.port = config->getSubEntryValueAsInt(_T("port"), 0, REDIS_DEFAULT_PORT);
    info.database = config->getSubEntryValueAsInt(_T("database"), 0, 0);
    info.connectionTTL = config->getSubEntryValueAsInt(_T("connectionTTL"), 0, 3600);
-   _tcslcpy(info.user, config->getSubEntryValue(_T("user"), 0, _T("")), MAX_STR);
-   StringBuffer password = config->getSubEntryValue(_T("password"), 0, _T(""));
-   if (!password.isEmpty())
+   tchar_to_utf8(config->getSubEntryValue(_T("user"), 0, _T("")), -1, info.user, MAX_STR);
+   const TCHAR *password = config->getSubEntryValue(_T("password"), 0, _T(""));
+   if ((password != nullptr) && (password[0] != 0))
    {
-      TCHAR decrypted[MAX_PASSWORD];
-      DecryptPassword(_T("netxms"), password, decrypted, MAX_PASSWORD);
-      _tcslcpy(info.password, decrypted, MAX_PASSWORD);
+#ifdef UNICODE
+      char passwordBuffer[MAX_PASSWORD];
+      wchar_to_utf8(password, -1, passwordBuffer, MAX_PASSWORD);
+      DecryptPasswordA("netxms", passwordBuffer, info.password, MAX_PASSWORD);
+#else
+      DecryptPasswordA("netxms", password, info.password, MAX_PASSWORD);
+#endif
    }
 
    RedisInstance *instance = new RedisInstance(&info);
    g_instances->add(instance);
 
-   nxlog_debug_tag(DEBUG_TAG, 2, _T("Added Redis instance: %s (server=%s:%d, db=%d)"),
-                   info.id, info.server, info.port, info.database);
-
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Added Redis instance: %s (server=%hs:%d, db=%d)"), info.id, info.server, info.port, info.database);
    return true;
 }
 
 /**
  * Constructor
  */
-RedisInstance::RedisInstance(DatabaseInfo *dbInfo) : m_stopCondition(true)
+RedisInstance::RedisInstance(DatabaseInfo *dbInfo) : m_dataLock(MutexType::FAST), m_stopCondition(true)
 {
    memcpy(&m_info, dbInfo, sizeof(m_info));
    m_redis = nullptr;
    m_pollerThread = INVALID_THREAD_HANDLE;
    m_connected = false;
-   m_data = new StringMap();
    m_lastPollTime = 0;
 }
 
@@ -88,7 +89,6 @@ RedisInstance::~RedisInstance()
 {
    stop();
    disconnect();
-   delete m_data;
 }
 
 /**
@@ -104,14 +104,10 @@ bool RedisInstance::connect()
       m_redis = nullptr;
    }
 
-   char *server = UTF8StringFromWideString(m_info.server);
-
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("Redis %s: connecting to %s:%d"), m_info.id, m_info.server, m_info.port);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Redis %s: connecting to %hs:%d"), m_info.id, m_info.server, m_info.port);
 
    struct timeval timeout = {1, 500000};
-   m_redis = redisConnectWithTimeout(server, m_info.port, timeout);
-   MemFree(server);
-
+   m_redis = redisConnectWithTimeout(m_info.server, m_info.port, timeout);
    if (m_redis == nullptr || m_redis->err)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Redis %s: connection failed - %hs"), m_info.id, m_redis ? m_redis->errstr : "allocation error");
@@ -127,20 +123,15 @@ bool RedisInstance::connect()
 
    if (m_info.password[0] != 0)
    {
-      char *password = UTF8StringFromWideString(m_info.password);
       redisReply *reply;
       if (m_info.user[0] != 0)
       {
-         char *user = UTF8StringFromWideString(m_info.user);
-         reply = (redisReply *)redisCommand(m_redis, "AUTH %s %s", user, password);
-         MemFree(user);
+         reply = (redisReply *)redisCommand(m_redis, "AUTH %s %s", m_info.user, m_info.password);
       }
       else
       {
-         reply = (redisReply *)redisCommand(m_redis, "AUTH %s", password);
+         reply = (redisReply *)redisCommand(m_redis, "AUTH %s", m_info.password);
       }
-      SecureZeroMemory(password, strlen(password));
-      MemFree(password);
       if (reply == nullptr || reply->type == REDIS_REPLY_ERROR)
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Redis %s: authentication failed"), m_info.id);
@@ -200,7 +191,7 @@ void RedisInstance::disconnect()
 void RedisInstance::setDataFromMB(const TCHAR *key, const char *value)
 {
    TCHAR *tvalue = TStringFromUTF8String(value);
-   m_data->set(key, tvalue);
+   m_data.set(key, tvalue);
    MemFree(tvalue);
 }
 
@@ -211,7 +202,7 @@ void RedisInstance::setDataFromMBPair(const char *mbKey, const char *mbValue)
 {
    TCHAR *tkey = TStringFromUTF8String(mbKey);
    TCHAR *tvalue = TStringFromUTF8String(mbValue);
-   m_data->set(tkey, tvalue);
+   m_data.set(tkey, tvalue);
    MemFree(tkey);
    MemFree(tvalue);
 }
@@ -282,7 +273,7 @@ void RedisInstance::parseServerInfo(const char *infoData)
  */
 void RedisInstance::parseClientsInfo(const char *infoData)
 {
-   char *lines = strdup(infoData);
+   char *lines = MemCopyStringA(infoData);
    char *line = strtok(lines, "\r\n");
 
    while (line != nullptr)
@@ -298,8 +289,8 @@ void RedisInstance::parseClientsInfo(const char *infoData)
       line = strtok(nullptr, "\r\n");
    }
 
-   const TCHAR *connectedClients = m_data->get(_T("connected_clients"));
-   const TCHAR *maxClients = m_data->get(_T("maxclients"));
+   const TCHAR *connectedClients = m_data.get(_T("connected_clients"));
+   const TCHAR *maxClients = m_data.get(_T("maxclients"));
    if (connectedClients != nullptr && maxClients != nullptr)
    {
       uint64_t conn = _tcstoull(connectedClients, nullptr, 10);
@@ -309,11 +300,11 @@ void RedisInstance::parseClientsInfo(const char *infoData)
          double perc = (double)conn * 100.0 / (double)max;
          TCHAR buffer[32];
          _sntprintf(buffer, 32, _T("%.2f"), perc);
-         m_data->set(_T("connected_clients_perc"), buffer);
+         m_data.set(_T("connected_clients_perc"), buffer);
       }
    }
 
-   free(lines);
+   MemFree(lines);
 }
 
 /**
@@ -321,7 +312,7 @@ void RedisInstance::parseClientsInfo(const char *infoData)
  */
 void RedisInstance::parseMemoryInfo(const char *infoData)
 {
-   char *lines = strdup(infoData);
+   char *lines = MemCopyStringA(infoData);
    char *line = strtok(lines, "\r\n");
 
    while (line != nullptr)
@@ -342,8 +333,8 @@ void RedisInstance::parseMemoryInfo(const char *infoData)
       line = strtok(nullptr, "\r\n");
    }
 
-   const TCHAR *usedMemory = m_data->get(_T("used_memory"));
-   const TCHAR *maxMemory = m_data->get(_T("maxmemory"));
+   const TCHAR *usedMemory = m_data.get(_T("used_memory"));
+   const TCHAR *maxMemory = m_data.get(_T("maxmemory"));
    if (usedMemory != nullptr && maxMemory != nullptr)
    {
       uint64_t usedMem = _tcstoull(usedMemory, nullptr, 10);
@@ -353,15 +344,15 @@ void RedisInstance::parseMemoryInfo(const char *infoData)
          double perc = (double)usedMem * 100.0 / (double)maxMem;
          TCHAR buffer[32];
          _sntprintf(buffer, 32, _T("%.2f"), perc);
-         m_data->set(_T("used_memory_perc"), buffer);
+         m_data.set(_T("used_memory_perc"), buffer);
       }
       else
       {
-         m_data->set(_T("used_memory_perc"), _T("0.00"));
+         m_data.set(_T("used_memory_perc"), _T("0.00"));
       }
    }
 
-   free(lines);
+   MemFree(lines);
 }
 
 /**
@@ -369,7 +360,7 @@ void RedisInstance::parseMemoryInfo(const char *infoData)
  */
 void RedisInstance::parsePersistenceInfo(const char *infoData)
 {
-   char *lines = strdup(infoData);
+   char *lines = MemCopyStringA(infoData);
    char *line = strtok(lines, "\r\n");
 
    while (line != nullptr)
@@ -390,7 +381,7 @@ void RedisInstance::parsePersistenceInfo(const char *infoData)
       line = strtok(nullptr, "\r\n");
    }
 
-   free(lines);
+   MemFree(lines);
 }
 
 /**
@@ -398,7 +389,7 @@ void RedisInstance::parsePersistenceInfo(const char *infoData)
  */
 void RedisInstance::parseStatsInfo(const char *infoData)
 {
-   char *lines = strdup(infoData);
+   char *lines = MemCopyStringA(infoData);
    char *line = strtok(lines, "\r\n");
 
    while (line != nullptr)
@@ -421,8 +412,8 @@ void RedisInstance::parseStatsInfo(const char *infoData)
       line = strtok(nullptr, "\r\n");
    }
 
-   const TCHAR *hits = m_data->get(_T("keyspace_hits"));
-   const TCHAR *misses = m_data->get(_T("keyspace_misses"));
+   const TCHAR *hits = m_data.get(_T("keyspace_hits"));
+   const TCHAR *misses = m_data.get(_T("keyspace_misses"));
    if (hits != nullptr && misses != nullptr)
    {
       uint64_t h = _tcstoull(hits, nullptr, 10);
@@ -432,15 +423,15 @@ void RedisInstance::parseStatsInfo(const char *infoData)
          double ratio = (double)h * 100.0 / (double)(h + m);
          TCHAR buffer[32];
          _sntprintf(buffer, 32, _T("%.2f"), ratio);
-         m_data->set(_T("keyspace_hit_ratio"), buffer);
+         m_data.set(_T("keyspace_hit_ratio"), buffer);
       }
       else
       {
-         m_data->set(_T("keyspace_hit_ratio"), _T("0.00"));
+         m_data.set(_T("keyspace_hit_ratio"), _T("0.00"));
       }
    }
 
-   free(lines);
+   MemFree(lines);
 }
 
 /**
@@ -448,7 +439,7 @@ void RedisInstance::parseStatsInfo(const char *infoData)
  */
 void RedisInstance::parseReplicationInfo(const char *infoData)
 {
-   char *lines = strdup(infoData);
+   char *lines = MemCopyStringA(infoData);
    char *line = strtok(lines, "\r\n");
 
    bool isMaster = false;
@@ -477,12 +468,12 @@ void RedisInstance::parseReplicationInfo(const char *infoData)
       line = strtok(nullptr, "\r\n");
    }
 
-   if (isMaster && m_data->get(_T("master_link_status")) == nullptr)
+   if (isMaster && m_data.get(_T("master_link_status")) == nullptr)
    {
-      m_data->set(_T("master_link_status"), _T("N/A"));
+      m_data.set(_T("master_link_status"), _T("N/A"));
    }
 
-   free(lines);
+   MemFree(lines);
 }
 
 /**
@@ -496,7 +487,7 @@ void RedisInstance::parseKeyspaceInfo(const char *infoData)
 
    if (infoData != nullptr && *infoData != 0)
    {
-      char *lines = strdup(infoData);
+      char *lines = MemCopyStringA(infoData);
       char *line = strtok(lines, "\r\n");
 
       while (line != nullptr)
@@ -525,8 +516,7 @@ void RedisInstance::parseKeyspaceInfo(const char *infoData)
                   TCHAR dbKey[64];
                   _sntprintf(dbKey, 64, _T("keys_%hs"), line);
                   TCHAR tvalue[32];
-                  _sntprintf(tvalue, 32, _T("%llu"), (unsigned long long)count);
-                  m_data->set(dbKey, tvalue);
+                  m_data.set(dbKey, IntegerToString(count, tvalue));
                   nxlog_debug_tag(DEBUG_TAG, 5, _T("Redis %s: stored %s = %s"), m_info.id, dbKey, tvalue);
                }
             }
@@ -534,12 +524,11 @@ void RedisInstance::parseKeyspaceInfo(const char *infoData)
          line = strtok(nullptr, "\r\n");
       }
 
-      free(lines);
+      MemFree(lines);
    }
 
    TCHAR buffer[32];
-   _sntprintf(buffer, 32, _T("%llu"), (unsigned long long)totalKeys);
-   m_data->set(_T("total_keys"), buffer);
+   m_data.set(_T("total_keys"), IntegerToString(totalKeys, buffer));
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Redis %s: stored total_keys = %s"), m_info.id, buffer);
 }
 
@@ -579,7 +568,7 @@ bool RedisInstance::poll()
 
    nxlog_debug_tag(DEBUG_TAG, 6, _T("Redis %s: raw INFO response (first 200 chars): %.200hs"), m_info.id, reply->str);
 
-   char *info = strdup(reply->str);
+   char *info = MemCopyStringA(reply->str);
    char *saveptr = nullptr;
    char *line = strtok_r(info, "\r\n", &saveptr);
    char currentSection[64] = "";
@@ -607,8 +596,7 @@ bool RedisInstance::poll()
          char *sectionName = line + 1;
          while (*sectionName == ' ')
             sectionName++;
-         strncpy(currentSection, sectionName, 63);
-         currentSection[63] = 0;
+         strlcpy(currentSection, sectionName, 64);
 
          for (char *p = currentSection; *p; p++)
             *p = tolower(*p);
@@ -650,7 +638,7 @@ bool RedisInstance::poll()
          free(sectionData);
    }
 
-   free(info);
+   MemFree(info);
    freeReplyObject(reply);
 
    m_lastPollTime = GetCurrentTimeMs();
@@ -660,18 +648,9 @@ bool RedisInstance::poll()
 }
 
 /**
- * Poller thread starter
- */
-THREAD_RESULT THREAD_CALL RedisInstance::pollerThreadStarter(void *arg)
-{
-   ((RedisInstance *)arg)->pollerThreadMain();
-   return THREAD_OK;
-}
-
-/**
  * Poller thread
  */
-void RedisInstance::pollerThreadMain()
+void RedisInstance::pollerThread()
 {
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Redis %s: poller thread started"), m_info.id);
 
@@ -696,7 +675,7 @@ void RedisInstance::pollerThreadMain()
  */
 void RedisInstance::run()
 {
-   m_pollerThread = ThreadCreateEx(pollerThreadStarter, 0, this);
+   m_pollerThread = ThreadCreateEx(this, &RedisInstance::pollerThread);
 }
 
 /**
@@ -706,6 +685,7 @@ void RedisInstance::stop()
 {
    m_stopCondition.set();
    ThreadJoin(m_pollerThread);
+   m_pollerThread = INVALID_THREAD_HANDLE;
 }
 
 /**
@@ -713,17 +693,15 @@ void RedisInstance::stop()
  */
 bool RedisInstance::getData(const TCHAR *tag, TCHAR *value)
 {
-   m_dataLock.lock();
-   const TCHAR *result = m_data->get(tag);
+   LockGuard lockGuard(m_dataLock);
+   const TCHAR *result = m_data.get(tag);
    if (result != nullptr)
    {
-      _tcslcpy(value, result, MAX_RESULT_LENGTH);
+      ret_string(value, result);
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Redis %s: getData(%s) = %s"), m_info.id, tag, result);
-      m_dataLock.unlock();
       return true;
    }
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Redis %s: getData(%s) = NOT FOUND"), m_info.id, tag);
-   m_dataLock.unlock();
    return false;
 }
 
@@ -739,15 +717,13 @@ LONG RedisInstance::getKeyspaceData(const TCHAR *param, const TCHAR *arg, TCHAR 
    TCHAR key[64];
    _sntprintf(key, 64, _T("keys_db%s"), dbNum);
 
-   m_dataLock.lock();
-   const TCHAR *result = m_data->get(key);
+   LockGuard lockGuard(m_dataLock);
+   const TCHAR *result = m_data.get(key);
    if (result != nullptr)
    {
-      _tcslcpy(value, result, MAX_RESULT_LENGTH);
-      m_dataLock.unlock();
+      ret_string(value, result);
       return SYSINFO_RC_SUCCESS;
    }
-   m_dataLock.unlock();
 
    ret_uint64(value, 0);
    return SYSINFO_RC_SUCCESS;
