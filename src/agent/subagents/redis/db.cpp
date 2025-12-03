@@ -46,21 +46,27 @@ bool AddRedisFromConfig(const ConfigEntry *config)
    memset(&info, 0, sizeof(info));
 
    _tcslcpy(info.id, config->getName(), MAX_STR);
-   _tcslcpy(info.server, config->getSubEntryValue(_T("server"), 0, _T("127.0.0.1")), MAX_STR);
+   tchar_to_utf8(config->getSubEntryValue(_T("server"), 0, _T("127.0.0.1")), -1, info.server, MAX_STR);
    info.port = config->getSubEntryValueAsInt(_T("port"), 0, REDIS_DEFAULT_PORT);
    info.database = config->getSubEntryValueAsInt(_T("database"), 0, 0);
    info.connectionTTL = config->getSubEntryValueAsInt(_T("connectionTTL"), 0, 3600);
-   _tcslcpy(info.user, config->getSubEntryValue(_T("user"), 0, _T("")), MAX_STR);
+   tchar_to_utf8(config->getSubEntryValue(_T("user"), 0, _T("")), -1, info.user, MAX_STR);
    const TCHAR *password = config->getSubEntryValue(_T("password"), 0, _T(""));
    if ((password != nullptr) && (password[0] != 0))
    {
-      DecryptPassword(_T("netxms"), password, info.password, MAX_PASSWORD);
+#ifdef UNICODE
+      char passwordBuffer[MAX_PASSWORD];
+      wchar_to_utf8(password, -1, passwordBuffer, MAX_PASSWORD);
+      DecryptPasswordA("netxms", passwordBuffer, info.password, MAX_PASSWORD);
+#else
+      DecryptPasswordA("netxms", password, info.password, MAX_PASSWORD);
+#endif
    }
 
    RedisInstance *instance = new RedisInstance(&info);
    g_instances->add(instance);
 
-   nxlog_debug_tag(DEBUG_TAG, 2, _T("Added Redis instance: %s (server=%s:%d, db=%d)"), info.id, info.server, info.port, info.database);
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Added Redis instance: %s (server=%hs:%d, db=%d)"), info.id, info.server, info.port, info.database);
    return true;
 }
 
@@ -98,14 +104,10 @@ bool RedisInstance::connect()
       m_redis = nullptr;
    }
 
-   char *server = UTF8StringFromWideString(m_info.server);
-
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("Redis %s: connecting to %s:%d"), m_info.id, m_info.server, m_info.port);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Redis %s: connecting to %hs:%d"), m_info.id, m_info.server, m_info.port);
 
    struct timeval timeout = {1, 500000};
-   m_redis = redisConnectWithTimeout(server, m_info.port, timeout);
-   MemFree(server);
-
+   m_redis = redisConnectWithTimeout(m_info.server, m_info.port, timeout);
    if (m_redis == nullptr || m_redis->err)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Redis %s: connection failed - %hs"), m_info.id, m_redis ? m_redis->errstr : "allocation error");
@@ -121,20 +123,15 @@ bool RedisInstance::connect()
 
    if (m_info.password[0] != 0)
    {
-      char *password = UTF8StringFromWideString(m_info.password);
       redisReply *reply;
       if (m_info.user[0] != 0)
       {
-         char *user = UTF8StringFromWideString(m_info.user);
-         reply = (redisReply *)redisCommand(m_redis, "AUTH %s %s", user, password);
-         MemFree(user);
+         reply = (redisReply *)redisCommand(m_redis, "AUTH %s %s", m_info.user, m_info.password);
       }
       else
       {
-         reply = (redisReply *)redisCommand(m_redis, "AUTH %s", password);
+         reply = (redisReply *)redisCommand(m_redis, "AUTH %s", m_info.password);
       }
-      SecureZeroMemory(password, strlen(password));
-      MemFree(password);
       if (reply == nullptr || reply->type == REDIS_REPLY_ERROR)
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Redis %s: authentication failed"), m_info.id);

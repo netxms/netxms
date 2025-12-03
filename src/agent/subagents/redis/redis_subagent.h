@@ -36,10 +36,10 @@
 struct DatabaseInfo
 {
    TCHAR id[MAX_STR];
-   TCHAR server[MAX_STR];
+   char server[MAX_STR];
    uint16_t port;
-   TCHAR user[MAX_STR];
-   TCHAR password[MAX_PASSWORD];
+   char user[MAX_STR];
+   char password[MAX_PASSWORD];
    int database;
    uint32_t connectionTTL;
 };
