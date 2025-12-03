@@ -50,6 +50,7 @@ bool AddRedisFromConfig(const ConfigEntry *config)
    info.port = config->getSubEntryValueAsInt(_T("port"), 0, REDIS_DEFAULT_PORT);
    info.database = config->getSubEntryValueAsInt(_T("database"), 0, 0);
    info.connectionTTL = config->getSubEntryValueAsInt(_T("connectionTTL"), 0, 3600);
+   _tcslcpy(info.user, config->getSubEntryValue(_T("user"), 0, _T("")), MAX_STR);
    StringBuffer password = config->getSubEntryValue(_T("password"), 0, _T(""));
    if (!password.isEmpty())
    {
@@ -127,8 +128,17 @@ bool RedisInstance::connect()
    if (m_info.password[0] != 0)
    {
       char *password = UTF8StringFromWideString(m_info.password);
-
-      redisReply *reply = (redisReply *)redisCommand(m_redis, "AUTH %s", password);
+      redisReply *reply;
+      if (m_info.user[0] != 0)
+      {
+         char *user = UTF8StringFromWideString(m_info.user);
+         reply = (redisReply *)redisCommand(m_redis, "AUTH %s %s", user, password);
+         MemFree(user);
+      }
+      else
+      {
+         reply = (redisReply *)redisCommand(m_redis, "AUTH %s", password);
+      }
       SecureZeroMemory(password, strlen(password));
       MemFree(password);
       if (reply == nullptr || reply->type == REDIS_REPLY_ERROR)
