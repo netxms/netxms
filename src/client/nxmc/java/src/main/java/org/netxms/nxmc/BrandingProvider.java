@@ -114,4 +114,11 @@ public interface BrandingProvider
     * @return true if extended help menu is enabled, false if disabled, or null to leave decision to other providers
     */
    public Boolean isExtendedHelpMenuEnabled();
+
+   /**
+    * Control if welcome page is enabled.
+    * 
+    * @return true if welcome page is enabled, false if disabled, or null to leave decision to other providers
+    */
+   public Boolean isWelcomePageEnabled();
 }
