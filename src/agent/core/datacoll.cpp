@@ -149,7 +149,7 @@ private:
    uint16_t m_snmpPort;
    SNMP_Version m_snmpVersion;
 	uuid m_snmpTargetGuid;
-	int64_t m_lastPollTime;
+	Timestamp m_lastPollTime;
    uint32_t m_backupProxyId;
    ObjectArray<SNMPTableColumnDefinition> *m_tableColumns;
    StringList m_schedules;
@@ -173,14 +173,14 @@ public:
    SNMP_Version getSnmpVersion() const { return m_snmpVersion; }
    int getSnmpRawValueType() const { return (int)m_snmpRawValueType; }
    uint32_t getPollingInterval() const { return static_cast<uint32_t>(m_pollingInterval); }
-   int64_t getLastPollTime() { return m_lastPollTime; }
+   Timestamp getLastPollTime() { return m_lastPollTime; }
    uint32_t getBackupProxyId() const { return m_backupProxyId; }
    const ObjectArray<SNMPTableColumnDefinition> *getColumns() const { return m_tableColumns; }
 
    bool updateAndSave(const shared_ptr<DataCollectionItem>& item, bool txnOpen, DB_HANDLE hdb, DataCollectionStatementSet *statements);
    void saveToDatabase(bool newObject, DB_HANDLE hdb, DataCollectionStatementSet *statements);
    void deleteFromDatabase(DB_HANDLE hdb, DataCollectionStatementSet *statements);
-   void setLastPollTime(int64_t time)
+   void setLastPollTime(Timestamp time)
    {
       m_lastPollTime = time;
       s_pollTimeChanged = true;
@@ -199,7 +199,7 @@ public:
 
       if (m_scheduleType == ScheduleType::NONE)
       {
-         time_t diff = now - m_lastPollTime / 1000; // convert milliseconds to seconds
+         time_t diff = now - m_lastPollTime.asTime();
          return (diff >= m_pollingInterval) ? 0 : m_pollingInterval - static_cast<uint32_t>(diff);
       }
       else
@@ -279,16 +279,16 @@ DataCollectionItem::DataCollectionItem(uint64_t serverId, const NXCPMessage& msg
    // Starting with version 6.0, last poll time in milliseconds will be stored at extBaseId + 1
    if (hasExtraData)
    {
-      m_lastPollTime = msg.getFieldAsInt64(extBaseId + 1);
-      if (m_lastPollTime == 0)
+      m_lastPollTime = msg.getFieldAsTimestamp(extBaseId + 1);
+      if (m_lastPollTime.isNull())
       {
          // For backward compatibility, if last poll time in milliseconds is not set, use time in seconds
-         m_lastPollTime = TimeToMs(msg.getFieldAsTime(baseId + 5));
+         m_lastPollTime = Timestamp::fromTime(msg.getFieldAsTime(baseId + 5));
       }
    }
    else
    {
-      m_lastPollTime = TimeToMs(msg.getFieldAsTime(baseId + 5));
+      m_lastPollTime = Timestamp::fromTime(msg.getFieldAsTime(baseId + 5));
    }
 
    if (hasExtraData && (m_origin == DS_SNMP_AGENT))
@@ -341,18 +341,18 @@ DataCollectionItem::DataCollectionItem(uint64_t serverId, const NXCPMessage& msg
 DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
 {
    m_serverId = DBGetFieldUInt64(hResult, row, 0);
-   m_id = DBGetFieldULong(hResult, row, 1);
-   m_type = static_cast<uint8_t>(DBGetFieldULong(hResult, row, 2));
-   m_origin = static_cast<uint8_t>(DBGetFieldULong(hResult, row, 3));
+   m_id = DBGetFieldUInt32(hResult, row, 1);
+   m_type = static_cast<uint8_t>(DBGetFieldUInt32(hResult, row, 2));
+   m_origin = static_cast<uint8_t>(DBGetFieldUInt32(hResult, row, 3));
    m_name = DBGetField(hResult, row, 4, nullptr, 0);
    m_pollingInterval = DBGetFieldULong(hResult, row, 5);
-   m_lastPollTime = DBGetFieldInt64(hResult, row, 6);
-   m_snmpPort = DBGetFieldULong(hResult, row, 7);
+   m_lastPollTime = DBGetFieldTimestamp(hResult, row, 6);
+   m_snmpPort = DBGetFieldUInt32(hResult, row, 7);
    m_snmpTargetGuid = DBGetFieldGUID(hResult, row, 8);
    m_snmpRawValueType = static_cast<uint8_t>(DBGetFieldULong(hResult, row, 9));
-   m_backupProxyId = DBGetFieldULong(hResult, row, 10);
+   m_backupProxyId = DBGetFieldUInt32(hResult, row, 10);
    m_snmpVersion = SNMP_VersionFromInt(DBGetFieldLong(hResult, row, 11));
-   m_scheduleType = static_cast<ScheduleType>(DBGetFieldLong(hResult, row, 12));
+   m_scheduleType = static_cast<ScheduleType>(DBGetFieldInt32(hResult, row, 12));
    m_busy = false;
    m_disabled = false;
    m_tLastCheck = 0;
@@ -997,8 +997,8 @@ static void ReconciliationThread()
             TCHAR query[256];
             for(shared_ptr<DataCollectionItem> dci : s_items)
             {
-               _sntprintf(query, 256, _T("UPDATE dc_config SET last_poll=") UINT64_FMT _T(" WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d"),
-                          (uint64_t)dci->getLastPollTime(), (uint64_t)dci->getServerId(), dci->getId());
+               _sntprintf(query, 256, _T("UPDATE dc_config SET last_poll=") INT64_FMT _T(" WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d"),
+                          dci->getLastPollTime().asMilliseconds(), dci->getServerId(), dci->getId());
                DBQuery(hdb, query);
             }
             DBCommit(hdb);
@@ -1299,7 +1299,7 @@ static void LocalDataCollectionCallback(const shared_ptr<DataCollectionItem>& dc
          nxlog_debug_tag(DEBUG_TAG, 6, _T("DataCollector: collection error for DCI %d \"%s\""), dci->getId(), dci->getName());
       }
    }
-   dci->setLastPollTime(time(nullptr));
+   dci->setLastPollTime(Timestamp::now());
    dci->finishDataCollection();
 }
 
@@ -1320,7 +1320,7 @@ static void SnmpDataCollectionCallback(const shared_ptr<DataCollectionItem>& dci
          nxlog_debug_tag(DEBUG_TAG, 6, _T("DataCollector: collection error for DCI %d \"%s\""), dci->getId(), dci->getName());
       }
    }
-   dci->setLastPollTime(time(nullptr));
+   dci->setLastPollTime(Timestamp::now());
    dci->finishDataCollection();
 }
 
@@ -1375,7 +1375,7 @@ static uint32_t DataCollectionSchedulerRun()
             else
             {
                nxlog_debug_tag(DEBUG_TAG, 7, _T("DataCollector: unsupported origin %d"), dci->getOrigin());
-               dci->setLastPollTime(time(nullptr));
+               dci->setLastPollTime(Timestamp::now());
             }
          }
 

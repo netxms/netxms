@@ -826,10 +826,10 @@ bool LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iC
 /**
  * Get field's value as GUID
  */
-uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int iRow, int iColumn)
+uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int row, int column)
 {
    TCHAR buffer[256];
-   TCHAR *value = DBGetField(hResult, iRow, iColumn, buffer, 256);
+   TCHAR *value = DBGetField(hResult, row, column, buffer, 256);
    return (value == nullptr) ? uuid::NULL_UUID : uuid::parse(value);
 }
 
@@ -1524,6 +1524,14 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const I
 {
    TCHAR buffer[64];
    DBBind(hStmt, pos, sqlType, DB_CTYPE_STRING, value.toString(buffer), DB_BIND_TRANSIENT);
+}
+
+/**
+ * Bind timestamp
+ */
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, Timestamp value)
+{
+   DBBind(hStmt, pos, sqlType, value.asMilliseconds());
 }
 
 /**

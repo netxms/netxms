@@ -147,6 +147,7 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, double 
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const uuid& value);
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const InetAddress& value);
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const MacAddress& value);
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, Timestamp value);
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, json_t *value, int allocType);
 bool LIBNXDB_EXPORTABLE DBExecute(DB_STATEMENT hStmt);
 bool LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText);
@@ -185,11 +186,16 @@ InetAddress LIBNXDB_EXPORTABLE DBGetFieldInetAddr(DB_RESULT hResult, int row, in
 MacAddress LIBNXDB_EXPORTABLE DBGetFieldMacAddr(DB_RESULT hResult, int row, int column);
 bool LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iColumn, int *pnArray, size_t size, int defaultValue);
 bool LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iColumn, BYTE *data, size_t size, BYTE defaultValue);
-uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int iRow, int iColumn);
+uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int row, int column);
 
 static inline time_t DBGetFieldTime(DB_RESULT hResult, int row, int column)
 {
    return static_cast<time_t>(DBGetFieldInt64(hResult, row, column));
+}
+
+static inline Timestamp DBGetFieldTimestamp(DB_RESULT hResult, int row, int column)
+{
+   return Timestamp::fromMilliseconds(DBGetFieldInt64(hResult, row, column));
 }
 
 DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectUnbuffered(DB_HANDLE hConn, const TCHAR *szQuery);
@@ -217,6 +223,11 @@ uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_UNBUFFERED_RESULT hResult, int column)
 static inline time_t DBGetFieldTime(DB_UNBUFFERED_RESULT hResult, int column)
 {
    return static_cast<time_t>(DBGetFieldInt64(hResult, column));
+}
+
+static inline Timestamp DBGetFieldTimestamp(DB_UNBUFFERED_RESULT hResult, int column)
+{
+   return Timestamp::fromMilliseconds(DBGetFieldInt64(hResult, column));
 }
 
 bool LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn);

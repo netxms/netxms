@@ -33,7 +33,7 @@ static VolatileCounter s_requestIdLow = 0;
 /**
  * Push parameter's data
  */
-bool PushData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, int64_t timestamp)
+bool PushData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, Timestamp timestamp)
 {
 	bool success = false;
 
@@ -44,7 +44,7 @@ bool PushData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, int
 	msg.setField(VID_VALUE, value);
    msg.setField(VID_OBJECT_ID, objectId);
    msg.setField(VID_TIMESTAMP_MS, timestamp);
-   msg.setFieldFromTime(VID_TIMESTAMP, static_cast<time_t>(timestamp / 1000));   // for compatibility with older servers
+   msg.setFieldFromTime(VID_TIMESTAMP, timestamp.asTime());   // for compatibility with older servers
    msg.setField(VID_REQUEST_ID, s_requestIdHigh | static_cast<uint64_t>(InterlockedIncrement(&s_requestIdLow)));
 
    if (g_dwFlags & AF_SUBAGENT_LOADER)
@@ -73,12 +73,11 @@ bool PushData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, int
  */
 struct PushDataEntry
 {
-   int64_t timestamp;
+   Timestamp timestamp;
    TCHAR value[MAX_RESULT_LENGTH];
 
-   PushDataEntry(int64_t t, const TCHAR *v)
+   PushDataEntry(Timestamp t, const TCHAR *v) : timestamp(t)
    {
-      timestamp = t;
       _tcscpy(value, v);
    }
 };
@@ -93,7 +92,7 @@ static Mutex s_localCacheLock(MutexType::FAST);
 /**
  * Store pushed data locally
  */
-static void StoreLocalData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, int64_t timestamp)
+static void StoreLocalData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, Timestamp timestamp)
 {
    nxlog_debug_tag(DEBUG_TAG, 6, _T("StoreLocalData: \"%s\" = \"%s\""), parameter, value);
    s_localCacheLock.lock();
@@ -121,9 +120,9 @@ static void ProcessPushRequest(NamedPipe *pipe, void *arg)
 		{
          uint32_t objectId = msg->getFieldAsUInt32(VID_OBJECT_ID);
          uint32_t count = msg->getFieldAsUInt32(VID_NUM_ITEMS);
-         int64_t timestamp = msg->getFieldAsInt64(VID_TIMESTAMP_MS);
-         if (timestamp == 0)
-            timestamp = TimeToMs(msg->getFieldAsTime(VID_TIMESTAMP));
+         Timestamp timestamp = msg->getFieldAsTimestamp(VID_TIMESTAMP_MS);
+         if (timestamp.isNull())
+            timestamp = Timestamp::fromTime(msg->getFieldAsTime(VID_TIMESTAMP));
          bool localCache = msg->getFieldAsBoolean(VID_LOCAL_CACHE);
          uint32_t fieldId = VID_PUSH_DCI_DATA_BASE;
 			for(uint32_t i = 0; i < count; i++)

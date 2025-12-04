@@ -201,7 +201,7 @@ bool DCTable::deleteAllData()
 /**
  * Delete single DCI entry
  */
-bool DCTable::deleteEntry(int64_t timestamp)
+bool DCTable::deleteEntry(Timestamp timestamp)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -212,16 +212,16 @@ bool DCTable::deleteEntry(int64_t timestamp)
       if (g_dbSyntax == DB_SYNTAX_TSDB)
       {
          _sntprintf(query, 256, _T("DELETE FROM tdata_sc_%s WHERE item_id=%u AND tdata_timestamp=ms_to_timestamptz(")  INT64_FMT _T(")"),
-                  getStorageClassName(getStorageClass()), m_id, timestamp);
+                  getStorageClassName(getStorageClass()), m_id, timestamp.asMilliseconds());
       }
       else
       {
-         _sntprintf(query, 256, _T("DELETE FROM tdata WHERE item_id=%u AND tdata_timestamp=") INT64_FMT, m_id, timestamp);
+         _sntprintf(query, 256, _T("DELETE FROM tdata WHERE item_id=%u AND tdata_timestamp=") INT64_FMT, m_id, timestamp.asMilliseconds());
       }
    }
    else
    {
-      _sntprintf(query, 256, _T("DELETE FROM tdata_%u WHERE item_id=%u AND tdata_timestamp=") INT64_FMT, m_ownerId, m_id, timestamp);
+      _sntprintf(query, 256, _T("DELETE FROM tdata_%u WHERE item_id=%u AND tdata_timestamp=") INT64_FMT, m_ownerId, m_id, timestamp.asMilliseconds());
    }
    bool success = DBQuery(hdb, query);
    unlock();
@@ -238,7 +238,7 @@ bool DCTable::deleteEntry(int64_t timestamp)
  *
  * @return true on success
  */
-bool DCTable::processNewValue(int64_t timestamp, const shared_ptr<Table>& value, bool *updateStatus, bool allowPastDataPoints)
+bool DCTable::processNewValue(Timestamp timestamp, const shared_ptr<Table>& value, bool *updateStatus, bool allowPastDataPoints)
 {
    *updateStatus = false;
    lock();
@@ -335,13 +335,13 @@ bool DCTable::processNewValue(int64_t timestamp, const shared_ptr<Table>& value,
 	   DBConnectionPoolReleaseConnection(hdb);
    }
 
-   int64_t now = GetCurrentTimeMs();
+   Timestamp now = Timestamp::now();
    if (((g_offlineDataRelevanceTime <= 0) || (timestamp > (now - g_offlineDataRelevanceTime))) &&
-       ((m_thresholdDisableEndTime == 0) || (m_thresholdDisableEndTime > 0 && m_thresholdDisableEndTime < timestamp)))
+       ((m_thresholdDisableEndTime == 0) || (m_thresholdDisableEndTime > 0 && m_thresholdDisableEndTime < timestamp.asTime())))
    {
       checkThresholds(value.get());
 
-      if ((m_thresholdDisableEndTime > 0) && (m_thresholdDisableEndTime < now))
+      if ((m_thresholdDisableEndTime > 0) && (m_thresholdDisableEndTime < now.asTime()))
       {
          // Thresholds were disabled, reset disable end time
          m_thresholdDisableEndTime = 0;
@@ -492,7 +492,7 @@ void DCTable::checkThresholds(Table *value)
 /**
  * Process new data collection error
  */
-void DCTable::processNewError(bool noInstance, int64_t timestamp)
+void DCTable::processNewError(bool noInstance, Timestamp timestamp)
 {
 	m_errorCount++;
 }
@@ -1392,7 +1392,7 @@ void DCTable::loadCache()
    }
 
    char *encodedTable = nullptr;
-   time_t timestamp = 0;
+   Timestamp timestamp = Timestamp::fromMilliseconds(0);
    if (query[0] != 0)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -1402,7 +1402,7 @@ void DCTable::loadCache()
          if (DBGetNumRows(hResult) > 0)
          {
             encodedTable = DBGetFieldUTF8(hResult, 0, 0, nullptr, 0);
-            timestamp = DBGetFieldULong(hResult, 0, 1);
+            timestamp = DBGetFieldTimestamp(hResult, 0, 1);
          }
          DBFreeResult(hResult);
       }

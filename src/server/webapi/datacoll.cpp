@@ -143,8 +143,8 @@ int H_DataCollectionHistory(Context *context)
 
    HistoricalDataType historicalDataType = static_cast<HistoricalDataType>(context->getQueryParameterAsInt32("historicalDataType", HDT_PROCESSED));
    uint32_t maxRows = context->getQueryParameterAsUInt32("maxRows");
-   time_t timeFrom = context->getQueryParameterAsTime("timeFrom");
-   time_t timeTo = context->getQueryParameterAsTime("timeTo");
+   Timestamp timeFrom = Timestamp::fromTime(context->getQueryParameterAsTime("timeFrom"));
+   Timestamp timeTo = Timestamp::fromTime(context->getQueryParameterAsTime("timeTo"));
 
    if ((maxRows == 0) || (maxRows > MAX_DCI_DATA_RECORDS))
       maxRows = MAX_DCI_DATA_RECORDS;
@@ -157,13 +157,13 @@ int H_DataCollectionHistory(Context *context)
    json_object_set_new(response, "values", values);
 
    // If only last value requested, try to get it from cache first
-   if ((maxRows == 1) && (timeTo == 0) && (historicalDataType == HDT_PROCESSED))
+   if ((maxRows == 1) && timeTo.isNull() && (historicalDataType == HDT_PROCESSED))
    {
       ItemValue *v = static_cast<DCItem&>(*dci).getInternalLastValue();
       if (v != nullptr)
       {
          json_t *dataPoint = json_object();
-         json_object_set_new(dataPoint, "timestamp", json_time_string(v->getTimeStamp()));
+         json_object_set_new(dataPoint, "timestamp", v->getTimeStamp().asJson());
          json_object_set_new(dataPoint, "value", json_string_t(v->getString()));
          json_array_append_new(values, dataPoint);
          delete v;
@@ -176,16 +176,16 @@ int H_DataCollectionHistory(Context *context)
    wchar_t condition[256] = L"";
    if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
    {
-      if (timeFrom != 0)
-         wcscpy(condition, L" AND idata_timestamp>=to_timestamp(?)");
-      if (timeTo != 0)
-         wcscat(condition, L" AND idata_timestamp<=to_timestamp(?)");
+      if (!timeFrom.isNull())
+         wcscpy(condition, L" AND idata_timestamp>=ms_to_timestamptz(?)");
+      if (!timeTo.isNull())
+         wcscat(condition, L" AND idata_timestamp<=ms_to_timestamptz(?)");
    }
    else
    {
-      if (timeFrom != 0)
+      if (!timeFrom.isNull())
          wcscpy(condition, L" AND idata_timestamp>=?");
-      if (timeTo != 0)
+      if (!timeTo.isNull())
          wcscat(condition, L" AND idata_timestamp<=?");
    }
 
@@ -196,10 +196,10 @@ int H_DataCollectionHistory(Context *context)
    {
       int pos = 1;
       DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, dci->getId());
-      if (timeFrom != 0)
-         DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(timeFrom));
-      if (timeTo != 0)
-         DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(timeTo));
+      if (!timeFrom.isNull())
+         DBBind(hStmt, pos++, DB_SQLTYPE_BIGINT, timeFrom);
+      if (!timeTo.isNull())
+         DBBind(hStmt, pos++, DB_SQLTYPE_BIGINT, timeTo);
 
       DB_UNBUFFERED_RESULT hResult = DBSelectPreparedUnbuffered(hStmt);
       if (hResult != nullptr)
@@ -208,7 +208,7 @@ int H_DataCollectionHistory(Context *context)
          while(DBFetch(hResult))
          {
             json_t *dataPoint = json_object();
-            json_object_set_new(dataPoint, "timestamp", json_time_string(DBGetFieldULong(hResult, 0)));
+            json_object_set_new(dataPoint, "timestamp", DBGetFieldTimestamp(hResult, 0).asJson());
             json_object_set_new(dataPoint, "value", json_string_t(DBGetField(hResult, 1, textBuffer, MAX_DCI_STRING_VALUE)));
             json_array_append_new(values, dataPoint);
          }

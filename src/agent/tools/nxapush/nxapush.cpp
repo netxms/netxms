@@ -44,7 +44,7 @@ static StringMap *s_data = new StringMap;
  */
 static int s_optVerbose = 1;
 static uint32_t s_optObjectId = 0;
-static int64_t s_timestamp = 0;
+static Timestamp s_timestamp = Timestamp::fromMilliseconds(0);
 static bool s_localCache = false;
 static bool s_statsiteFormat = false;
 
@@ -299,10 +299,10 @@ int main(int argc, char *argv[])
             s_statsiteFormat = true;
             break;
 		   case 't': // timestamp as UNIX time
-			   s_timestamp = TimeToMs((time_t)strtoull(optarg, nullptr, 0));
+			   s_timestamp = Timestamp::fromTime((time_t)strtoull(optarg, nullptr, 0));
 			   break;
 		   case 'T': // timestamp as YYYYMMDDhhmmss
-			   s_timestamp = TimeToMs(ParseDateTimeA(optarg, 0));
+			   s_timestamp = Timestamp::fromTime(ParseDateTimeA(optarg, 0));
 			   break;
 		   case 'v': // verbose
 			   s_optVerbose++;

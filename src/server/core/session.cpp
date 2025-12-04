@@ -4813,7 +4813,7 @@ void ClientSession::deleteDCIEntry(const NXCPMessage& request)
             shared_ptr<DCObject> dci = static_cast<DataCollectionOwner&>(*object).getDCObjectById(dciId, m_userId);
             if (dci != nullptr)
             {
-               msg.setField(VID_RCC, dci->deleteEntry(request.getFieldAsInt64(VID_TIMESTAMP_MS)) ? RCC_SUCCESS : RCC_DB_FAILURE);
+               msg.setField(VID_RCC, dci->deleteEntry(request.getFieldAsTimestamp(VID_TIMESTAMP_MS)) ? RCC_SUCCESS : RCC_DB_FAILURE);
                debugPrintf(4, _T("DeleteDCIEntry: DCI %d at node %d"), dciId, object->getId());
                writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Collected data entry for DCI \"%s\" [%d] on object \"%s\" [%d] was deleted"),
                         dci->getDescription().cstr(), dci->getId(), object->getName(), object->getId());
@@ -5450,7 +5450,7 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
       data.writeB(dataType);
       data.writeB(static_cast<uint16_t>(0));   // Options
 
-      data.writeB(dci->getLastPollTime());
+      data.writeB(dci->getLastPollTime().asMilliseconds());
       switch(dataType)
       {
          case DCI_DT_INT:
@@ -10126,9 +10126,9 @@ void ClientSession::pushDCIData(const NXCPMessage& request)
          }
          else
          {
-            TCHAR name[256];
+            wchar_t name[256];
             request.getFieldAsString(fieldId++, name, 256);
-				if (name[0] == _T('@'))
+				if (name[0] == L'@')
 				{
                InetAddress ipAddr = InetAddress::resolveHostName(&name[1]);
 					object = FindNodeByIP(0, ipAddr);
@@ -10201,11 +10201,11 @@ void ClientSession::pushDCIData(const NXCPMessage& request)
       // If all items was checked OK, push data
       if (bOK)
       {
-         int64_t t = request.getFieldAsInt64(VID_TIMESTAMP_MS);
-         if (t == 0)
-            t = request.getFieldAsInt64(VID_TIMESTAMP) * _LL(1000);
-         if (t == 0)
-            t = GetCurrentTimeMs();
+         Timestamp t = request.getFieldAsTimestamp(VID_TIMESTAMP_MS);
+         if (t.isNull())
+            t = Timestamp::fromTime(request.getFieldAsTime(VID_TIMESTAMP));
+         if (t.isNull())
+            t = Timestamp::now();
          shared_ptr<Table> tableValue; // Empty pointer to pass to processNewDCValue()
          for(int i = 0; i < values.size(); i++)
          {

@@ -823,7 +823,7 @@ uint32_t Cluster::collectAggregatedData(const DCItem& dci, TCHAR *buffer)
          {
             // Immediately after server startup cache may be filled with placeholder values
             // They can be identified by timestamp equals 1
-            if (v->getTimeStamp() > 1)
+            if (v->getTimeStamp().asMilliseconds() > 1)
                values.add(v);
             else
                delete v;

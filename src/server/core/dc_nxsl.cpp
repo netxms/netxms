@@ -672,7 +672,7 @@ static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
 	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
    if ((dci != nullptr) && (dci->getDataSource() == DS_PUSH_AGENT) && (dci->getType() == DCO_TYPE_ITEM))
    {
-      time_t t = time(nullptr);
+      Timestamp t = Timestamp::now();
       success = node->processNewDCValue(dci, t, argv[2]->getValueAsCString(), shared_ptr<Table>(), false);
       if (success)
          dci->setLastPollTime(t);

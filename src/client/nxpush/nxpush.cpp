@@ -45,7 +45,7 @@ static const char *s_optHost = nullptr;
 static const char *s_optUser = "guest";
 static const char *s_optPassword = "";
 static int s_optBatchSize = 0;
-static int64_t s_timestamp = 0;
+static Timestamp s_timestamp = Timestamp::fromMilliseconds(0);
 static bool s_ignoreProtocolVersion = false;
 
 /**
@@ -301,15 +301,15 @@ static BOOL Send()
 			}
 		}
 
-      UINT32 dwResult = ((DataCollectionController *)(s_session->getController(CONTROLLER_DATA_COLLECTION)))->pushData(&s_data, s_timestamp, &errIdx);
-		if (dwResult != RCC_SUCCESS)
+      uint32_t rcc = ((DataCollectionController *)(s_session->getController(CONTROLLER_DATA_COLLECTION)))->pushData(&s_data, s_timestamp, &errIdx);
+		if (rcc != RCC_SUCCESS)
 		{
 			if (s_optVerbose > 0)
 			{
 				_tprintf(_T("Push failed at record #%d (#%d in batch): %s.\n"),
 					(i * s_optBatchSize) + errIdx + 1,
 					errIdx + 1,
-					NXCGetErrorText(dwResult));
+					NXCGetErrorText(rcc));
 			}
 
 			ret = FALSE;
@@ -332,10 +332,7 @@ static BOOL Send()
  */
 static BOOL Teardown()
 {
-	if (s_session != NULL)
-	{
-      delete s_session;
-	}
+   delete s_session;
 
 	for(int i = 0; i < s_data.size(); i++)
 	{
@@ -488,10 +485,10 @@ int main(int argc, char *argv[])
             s_ignoreProtocolVersion = true;
             break;
 		   case 't': // timestamp as UNIX time
-			   s_timestamp = TimeToMs((time_t)strtoull(optarg, NULL, 0));
+			   s_timestamp = Timestamp::fromTime((time_t)strtoull(optarg, NULL, 0));
 			   break;
 		   case 'T': // timestamp as YYYYMMDDhhmmss
-			   s_timestamp = TimeToMs(ParseDateTimeA(optarg, 0));
+			   s_timestamp = Timestamp::fromTime(ParseDateTimeA(optarg, 0));
 			   break;
 		   case 'u': // user
 			   s_optUser = optarg;

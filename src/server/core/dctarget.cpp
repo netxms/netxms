@@ -961,12 +961,12 @@ uint32_t DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, uint32_t ba
 /**
  * Process new DCI value
  */
-bool DataCollectionTarget::processNewDCValue(const shared_ptr<DCObject>& dcObject, int64_t currTime, const wchar_t *itemValue, const shared_ptr<Table>& tableValue, bool allowPastDataPoints)
+bool DataCollectionTarget::processNewDCValue(const shared_ptr<DCObject>& dcObject, Timestamp timestamp, const wchar_t *itemValue, const shared_ptr<Table>& tableValue, bool allowPastDataPoints)
 {
    bool updateStatus;
 	bool success = (dcObject->getType() == DCO_TYPE_ITEM) ?
-	         static_cast<DCItem&>(*dcObject).processNewValue(currTime, itemValue, &updateStatus, allowPastDataPoints) :
-	         static_cast<DCTable&>(*dcObject).processNewValue(currTime, tableValue, &updateStatus, allowPastDataPoints);
+	         static_cast<DCItem&>(*dcObject).processNewValue(timestamp, itemValue, &updateStatus, allowPastDataPoints) :
+	         static_cast<DCTable&>(*dcObject).processNewValue(timestamp, tableValue, &updateStatus, allowPastDataPoints);
 	if (!success)
 	{
       // value processing failed, convert to data collection error
@@ -2129,7 +2129,7 @@ void DataCollectionTarget::addProxyDataCollectionElement(ProxyInfo *info, const 
       info->msg->setField(info->baseInfoFieldId++, dco->getName());
    }
    info->msg->setField(info->baseInfoFieldId++, dco->getEffectivePollingInterval());
-   info->msg->setField(info->baseInfoFieldId++, dco->getLastPollTime() / 1000); // convert to seconds for compatibility with older agents
+   info->msg->setFieldFromTime(info->baseInfoFieldId++, dco->getLastPollTime().asTime()); // convert to seconds for compatibility with older agents
    info->msg->setField(info->baseInfoFieldId++, m_guid);
    info->msg->setField(info->baseInfoFieldId++, dco->getSnmpPort());
    if (dco->getType() == DCO_TYPE_ITEM)

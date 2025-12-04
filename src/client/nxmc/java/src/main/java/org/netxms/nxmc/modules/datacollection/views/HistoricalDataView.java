@@ -251,7 +251,7 @@ public class HistoricalDataView extends ViewWithContext
 		final String[] names = (tableName != null) ? 
          new String[] { i18n.tr("Timestamp"), i18n.tr("Value") } :
          new String[] { i18n.tr("Timestamp"), i18n.tr("Value"), i18n.tr("Formatted value"), i18n.tr("Raw value") };
-      final int[] widths = { 150, 400, 400, 400 };
+      final int[] widths = { 180, 400, 400, 400 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new HistoricalDataLabelProvider());

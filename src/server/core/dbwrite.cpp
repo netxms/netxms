@@ -41,7 +41,7 @@ struct DELAYED_SQL_REQUEST
  */
 struct DELAYED_IDATA_INSERT
 {
-   int64_t timestamp;
+   Timestamp timestamp;
    uint32_t nodeId;
    uint32_t dciId;
    TCHAR *transformedValue;
@@ -54,8 +54,8 @@ struct DELAYED_IDATA_INSERT
 struct DELAYED_RAW_DATA_UPDATE
 {
    UT_hash_handle hh;
-   int64_t timestamp;
-   int64_t cacheTimestamp;
+   Timestamp timestamp;
+   Timestamp cacheTimestamp;
    uint32_t dciId;
    bool anomalyDetected;
    bool deleteFlag;
@@ -227,7 +227,7 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *s
 /**
  * Queue INSERT request for idata_xxx table
  */
-void QueueIDataInsert(int64_t timestamp, uint32_t nodeId, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, DCObjectStorageClass storageClass)
+void QueueIDataInsert(Timestamp timestamp, uint32_t nodeId, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, DCObjectStorageClass storageClass)
 {
    if (s_queueMonitorDiscardFlag)
       return;
@@ -260,7 +260,7 @@ void QueueIDataInsert(int64_t timestamp, uint32_t nodeId, uint32_t dciId, const 
 /**
  * Queue UPDATE request for raw_dci_values table
  */
-void QueueRawDciDataUpdate(int64_t timestamp, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, int64_t cacheTimestamp, bool anomalyDetected)
+void QueueRawDciDataUpdate(Timestamp timestamp, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, Timestamp cacheTimestamp, bool anomalyDetected)
 {
    size_t rawValueLength = _tcslen(rawValue);
    size_t transformedValueLength = _tcslen(transformedValue);
@@ -566,7 +566,7 @@ static void QueryPrepareThread_PostgreSQL(IDataWriter *writer, ObjectQueue<Prepa
          query.append(rq->dciId);
          if (convertTimestamps)
          {
-            query.append(L",ms_to_timestamptz(", 14);
+            query.append(L",ms_to_timestamptz(", 19);
             query.append(rq->timestamp);
             query.append(L"),", 2);
          }

@@ -5627,7 +5627,7 @@ NXSL_Value *NXSL_ScoredDciValueClass::getAttr(NXSL_Object *object, const NXSL_Id
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("timestamp"))
    {
-      value = vm->createValue(static_cast<int64_t>(v->timestamp));
+      value = vm->createValue(v->timestamp);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("value"))
    {

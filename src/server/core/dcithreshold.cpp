@@ -115,7 +115,7 @@ Threshold::Threshold(const Threshold& src, bool shadowCopy) : m_value(src.m_valu
  *        repeat_interval,current_severity,last_event_timestamp,match_count,
  *        state_before_maint,last_checked_value,last_event_message,is_disabled FROM thresholds
  */
-Threshold::Threshold(DB_RESULT hResult, int row, DCItem *relatedItem) : m_value(hResult, row, 1, 0, true)
+Threshold::Threshold(DB_RESULT hResult, int row, DCItem *relatedItem) : m_value(hResult, row, 1, Timestamp::fromMilliseconds(0), true)
 {
    wchar_t textBuffer[MAX_EVENT_MSG_LENGTH];
 
@@ -274,14 +274,14 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    switch(m_function)
    {
       case F_DIFF:
-         if (ppPrevValues[0]->getTimeStamp() == 1) // Timestamp 1 means placeholder value inserted by cache loader
+         if (ppPrevValues[0]->getTimeStamp().asMilliseconds() == 1) // Timestamp 1 means placeholder value inserted by cache loader
             return m_isReached ? ThresholdCheckResult::ALREADY_ACTIVE : ThresholdCheckResult::ALREADY_INACTIVE;
          break;
       case F_AVERAGE:
       case F_SUM:
       case F_MEAN_DEVIATION:
          for(int i = 0; i < m_sampleCount - 1; i++)
-            if (ppPrevValues[i]->getTimeStamp() == 1) // Timestamp 1 means placeholder value inserted by cache loader
+            if (ppPrevValues[i]->getTimeStamp().asMilliseconds() == 1) // Timestamp 1 means placeholder value inserted by cache loader
                return m_isReached ? ThresholdCheckResult::ALREADY_ACTIVE : ThresholdCheckResult::ALREADY_INACTIVE;
          break;
       default:

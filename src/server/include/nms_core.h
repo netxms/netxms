@@ -1332,8 +1332,8 @@ void SaveObjects(DB_HANDLE hdb, uint32_t watchdogId, bool saveRuntimeData);
 
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query);
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *sqlTypes, const TCHAR **values);
-void QueueIDataInsert(int64_t timestamp, uint32_t nodeId, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, DCObjectStorageClass storageClass);
-void QueueRawDciDataUpdate(int64_t timestamp, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, int64_t cacheTimestamp, bool anomalyDetected);
+void QueueIDataInsert(Timestamp timestamp, uint32_t nodeId, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, DCObjectStorageClass storageClass);
+void QueueRawDciDataUpdate(Timestamp timestamp, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, Timestamp cacheTimestamp, bool anomalyDetected);
 void QueueRawDciDataDelete(uint32_t dciId);
 int64_t GetIDataWriterQueueSize();
 int64_t GetRawDataWriterQueueSize();
@@ -1343,8 +1343,8 @@ void StopDBWriter();
 void OnDBWriterMaxQueueSizeChange();
 void ClearDBWriterData(ServerConsole *console, const TCHAR *component);
 
-void PerfDataStorageRequest(DCItem *dci, time_t timestamp, const TCHAR *value);
-void PerfDataStorageRequest(DCTable *dci, time_t timestamp, Table *value);
+void PerfDataStorageRequest(DCItem *dci, Timestamp timestamp, const TCHAR *value);
+void PerfDataStorageRequest(DCTable *dci, Timestamp timestamp, Table *value);
 
 bool SnmpTestRequest(SNMP_Transport *snmp, const StringList &testOids, bool separateRequests);
 SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipAddr, SNMP_Version *version,

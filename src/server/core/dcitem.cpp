@@ -44,7 +44,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy, bool copyThresholds) : DCObje
    {
       m_ppValueCache = nullptr;
    }
-   m_prevValueTimeStamp = shadowCopy ? src->m_prevValueTimeStamp : 0;
+   m_prevValueTimeStamp = shadowCopy ? src->m_prevValueTimeStamp : Timestamp::fromMilliseconds(0);
    m_prevDeltaValue = shadowCopy ? src->m_prevDeltaValue : 0;
    m_cacheLoaded = shadowCopy ? src->m_cacheLoaded : false;
    m_anomalyDetected = shadowCopy ? src->m_anomalyDetected : false;
@@ -101,7 +101,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
    m_cacheSize = 0;
    m_requiredCacheSize = 0;
    m_ppValueCache = nullptr;
-   m_prevValueTimeStamp = 0;
+   m_prevValueTimeStamp = Timestamp::fromMilliseconds(0);
    m_prevDeltaValue = 0;
    m_cacheLoaded = false;
    m_anomalyDetected = false;
@@ -151,7 +151,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
          {
             TCHAR szBuffer[MAX_DB_STRING];
             m_prevRawValue = DBGetField(hTempResult, 0, 0, szBuffer, MAX_DB_STRING);
-            m_prevValueTimeStamp = DBGetFieldInt64(hTempResult, 0, 1);
+            m_prevValueTimeStamp = DBGetFieldTimestamp(hTempResult, 0, 1);
             m_anomalyDetected = (DBGetFieldInt32(hTempResult, 0, 2) != 0);
             m_lastPollTime = m_lastValueTimestamp = m_prevValueTimeStamp;
          }
@@ -182,7 +182,7 @@ DCItem::DCItem(uint32_t id, const TCHAR *name, int source, int dataType, BYTE sc
    m_cacheSize = 0;
    m_requiredCacheSize = 0;
    m_ppValueCache = nullptr;
-   m_prevValueTimeStamp = 0;
+   m_prevValueTimeStamp = Timestamp::fromMilliseconds(0);
    m_prevDeltaValue = 0;
    m_cacheLoaded = false;
    m_anomalyDetected = false;
@@ -206,7 +206,7 @@ DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner
    m_cacheSize = 0;
    m_requiredCacheSize = 0;
    m_ppValueCache = nullptr;
-   m_prevValueTimeStamp = 0;
+   m_prevValueTimeStamp = Timestamp::fromMilliseconds(0);
    m_prevDeltaValue = 0;
    m_cacheLoaded = false;
    m_anomalyDetected = false;
@@ -417,7 +417,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_prevRawValue.getString(), DB_BIND_STATIC, 255);
          DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, m_prevValueTimeStamp);
-         DBBind(hStmt, 4, DB_SQLTYPE_BIGINT, (m_cacheLoaded  && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0);
+         DBBind(hStmt, 4, DB_SQLTYPE_BIGINT, (m_cacheLoaded  && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : Timestamp::fromMilliseconds(0));
          DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_anomalyDetected ? L"1" : L"0", DB_BIND_STATIC);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -725,7 +725,7 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
  *
  * @return true on success
  */
-bool DCItem::processNewValue(int64_t timestamp, const wchar_t *originalValue, bool *updateStatus, bool allowPastDataPoints)
+bool DCItem::processNewValue(Timestamp timestamp, const wchar_t *originalValue, bool *updateStatus, bool allowPastDataPoints)
 {
    ItemValue rawValue, *pValue;
 
@@ -751,7 +751,7 @@ bool DCItem::processNewValue(int64_t timestamp, const wchar_t *originalValue, bo
 
    // Create new ItemValue object and transform it as needed
    pValue = new ItemValue(originalValue, timestamp, false);
-   if (m_prevValueTimeStamp == 0)
+   if (m_prevValueTimeStamp.isNull())
       m_prevRawValue = *pValue;  // Delta should be zero for first poll
    rawValue = *pValue;
 
@@ -788,7 +788,8 @@ bool DCItem::processNewValue(int64_t timestamp, const wchar_t *originalValue, bo
       m_prevValueTimeStamp = timestamp;
 
       // Save raw value into database
-      QueueRawDciDataUpdate(timestamp, m_id, originalValue, pValue->getString(), (m_cacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0, m_anomalyDetected);
+      QueueRawDciDataUpdate(timestamp, m_id, originalValue, pValue->getString(),
+         (m_cacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : Timestamp::fromMilliseconds(0), m_anomalyDetected);
    }
 
 	// Check if user wants to collect all values or only changed values.
@@ -817,9 +818,9 @@ bool DCItem::processNewValue(int64_t timestamp, const wchar_t *originalValue, bo
    }
 
    // Check thresholds
-   int64_t now = GetCurrentTimeMs();
+   Timestamp now = Timestamp::now();
    if (m_cacheLoaded && (timestamp >= m_prevValueTimeStamp) &&
-       ((m_thresholdDisableEndTime == 0) || (m_thresholdDisableEndTime > 0 && m_thresholdDisableEndTime < static_cast<time_t>(timestamp / 1000))) &&
+       ((m_thresholdDisableEndTime == 0) || (m_thresholdDisableEndTime > 0 && m_thresholdDisableEndTime < timestamp.asTime())) &&
        ((g_offlineDataRelevanceTime <= 0) || (timestamp > (now - g_offlineDataRelevanceTime))))
    {
       if (hasScriptThresholds())
@@ -849,7 +850,7 @@ bool DCItem::processNewValue(int64_t timestamp, const wchar_t *originalValue, bo
          checkThresholds(*pValue, nullptr);
       }
 
-      if ((m_thresholdDisableEndTime > 0) && (m_thresholdDisableEndTime < static_cast<time_t>(now / 1000)))
+      if ((m_thresholdDisableEndTime > 0) && (m_thresholdDisableEndTime < now.asTime()))
       {
          // Thresholds were disabled, reset disable end time
          m_thresholdDisableEndTime = 0;
@@ -936,7 +937,7 @@ bool DCItem::processNewValue(int64_t timestamp, const wchar_t *originalValue, bo
 /**
  * Process new data collection error
  */
-void DCItem::processNewError(bool noInstance, int64_t timestamp)
+void DCItem::processNewError(bool noInstance, Timestamp timestamp)
 {
    lock();
 
@@ -1006,7 +1007,7 @@ void DCItem::processNewError(bool noInstance, int64_t timestamp)
             {
    				// Check if we need to re-sent threshold violation event
                time_t repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : static_cast<time_t>(t->getRepeatInterval());
-				   if ((repeatInterval != 0) && (t->getLastEventTimestamp() + repeatInterval < static_cast<time_t>(timestamp / 1000)))
+				   if ((repeatInterval != 0) && (t->getLastEventTimestamp() + repeatInterval < timestamp.asTime()))
 				   {
 	               shared_ptr<DCObject> sharedThis(shared_from_this());
 		            EventBuilder(t->getEventCode(), m_ownerId)
@@ -1554,7 +1555,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad)
          // will not read data from database, fill cache with empty values
          m_ppValueCache = MemReallocArray(m_ppValueCache, m_requiredCacheSize);
          for(uint32_t i = m_cacheSize; i < m_requiredCacheSize; i++)
-            m_ppValueCache[i] = new ItemValue(_T(""), 1, false);
+            m_ppValueCache[i] = new ItemValue(_T(""), Timestamp::fromMilliseconds(1), false);
          nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 7, _T("Cache load skipped for parameter %s [%u]"), m_name.cstr(), m_id);
          m_cacheSize = m_requiredCacheSize;
          m_cacheLoaded = true;
@@ -1700,11 +1701,11 @@ void DCItem::reloadCache(bool forceReload)
             if (moreData)
             {
                DBGetField(hResult, 0, szBuffer, MAX_DB_STRING);
-               m_ppValueCache[i] = new ItemValue(szBuffer, DBGetFieldInt64(hResult, 1), false);
+               m_ppValueCache[i] = new ItemValue(szBuffer, DBGetFieldTimestamp(hResult, 1), false);
             }
             else
             {
-               m_ppValueCache[i] = new ItemValue(L"", 1, false);   // Empty value
+               m_ppValueCache[i] = new ItemValue(L"", Timestamp::fromMilliseconds(1), false);   // Empty value
             }
          }
 
@@ -1714,7 +1715,7 @@ void DCItem::reloadCache(bool forceReload)
             nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 8, _T("DCItem::reloadCache(dci=\"%s\", node=%s [%u]): %d values missing in DB"),
                      m_name.cstr(), getOwnerName(), m_ownerId, m_requiredCacheSize - i);
             for(; i < m_requiredCacheSize; i++)
-               m_ppValueCache[i] = new ItemValue(L"", 1, false);
+               m_ppValueCache[i] = new ItemValue(L"", Timestamp::fromMilliseconds(1), false);
          }
          DBFreeResult(hResult);
       }
@@ -1722,7 +1723,7 @@ void DCItem::reloadCache(bool forceReload)
       {
          // Error reading data from database, fill cache with empty values
          for(uint32_t i = 0; i < m_requiredCacheSize; i++)
-            m_ppValueCache[i] = new ItemValue(L"", 1, false);
+            m_ppValueCache[i] = new ItemValue(L"", Timestamp::fromMilliseconds(1), false);
       }
 
       m_cacheSize = m_requiredCacheSize;
@@ -1869,13 +1870,13 @@ json_t *DCItem::lastValueToJSON()
    {
       json_object_set_new(data, "dataType", json_integer(getTransformedDataType()));
       json_object_set_new(data, "value", json_string_t(m_ppValueCache[0]->getString()));
-      json_object_set_new(data, "timestamp", json_integer(m_ppValueCache[0]->getTimeStamp()));
+      json_object_set_new(data, "timestamp", m_ppValueCache[0]->getTimeStamp().asJson());
    }
    else
    {
       json_object_set_new(data, "dataType", json_integer(DCI_DT_NULL));
       json_object_set_new(data, "value", json_string(""));
-      json_object_set_new(data, "timestamp", json_integer(0));
+      json_object_set_new(data, "timestamp", json_null());
    }
 
    // Show resource-bound DCIs as inactive if cluster resource is not on this node
@@ -1989,7 +1990,7 @@ NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int function, int sampleCount)
    {
       case F_LAST:
          // cache placeholders will have timestamp 1
-         value = (m_cacheLoaded && (m_cacheSize > 0) && (m_ppValueCache[0]->getTimeStamp() != 1)) ? vm->createValue(m_ppValueCache[0]->getString()) : vm->createValue();
+         value = (m_cacheLoaded && (m_cacheSize > 0) && (m_ppValueCache[0]->getTimeStamp().asMilliseconds() != 1)) ? vm->createValue(m_ppValueCache[0]->getString()) : vm->createValue();
          CastNXSLValue(value, getTransformedDataType());
          break;
       case F_DIFF:
@@ -2207,7 +2208,7 @@ bool DCItem::deleteAllData()
 /**
  * Delete single collected data entry
  */
-bool DCItem::deleteEntry(int64_t timestamp)
+bool DCItem::deleteEntry(Timestamp timestamp)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    lock();
@@ -2218,16 +2219,16 @@ bool DCItem::deleteEntry(int64_t timestamp)
       if (g_dbSyntax == DB_SYNTAX_TSDB)
       {
          _sntprintf(query, 256, _T("DELETE FROM idata_sc_%s WHERE item_id=%u AND idata_timestamp=ms_to_timestamptz(") INT64_FMT _T(")"),
-                  getStorageClassName(getStorageClass()), m_id, timestamp);
+                  getStorageClassName(getStorageClass()), m_id, timestamp.asMilliseconds());
       }
       else
       {
-         _sntprintf(query, 256, _T("DELETE FROM idata WHERE item_id=%d AND idata_timestamp=") INT64_FMT, m_id, timestamp);
+         _sntprintf(query, 256, _T("DELETE FROM idata WHERE item_id=%d AND idata_timestamp=") INT64_FMT, m_id, timestamp.asMilliseconds());
       }
    }
    else
    {
-      _sntprintf(query, 256, _T("DELETE FROM idata_%d WHERE item_id=%d AND idata_timestamp=") INT64_FMT, m_ownerId, m_id, timestamp);
+      _sntprintf(query, 256, _T("DELETE FROM idata_%d WHERE item_id=%d AND idata_timestamp=") INT64_FMT, m_ownerId, m_id, timestamp.asMilliseconds());
    }
    unlock();
 
@@ -2661,7 +2662,7 @@ json_t *DCItem::toJson()
    json_object_set_new(root, "sampleCount", json_integer(m_sampleCount));
    json_object_set_new(root, "thresholds", json_object_array(m_thresholds));
    json_object_set_new(root, "prevRawValue", json_string_t(m_prevRawValue));
-   json_object_set_new(root, "prevValueTimeStamp", json_integer(m_prevValueTimeStamp));
+   json_object_set_new(root, "prevValueTimeStamp", m_prevValueTimeStamp.asJson());
    json_object_set_new(root, "multiplier", json_integer(m_multiplier));
    json_object_set_new(root, "unitName", json_string_t(m_unitName));
    json_object_set_new(root, "snmpRawValueType", json_integer(m_snmpRawValueType));
@@ -2676,8 +2677,8 @@ json_t *DCItem::toJson()
  */
 void DCItem::prepareForRecalc()
 {
-   m_prevValueTimeStamp = 0;
-   m_lastPollTime = 0;
+   m_prevValueTimeStamp = Timestamp::fromMilliseconds(0);
+   m_lastPollTime = Timestamp::fromMilliseconds(0);
    updateCacheSizeInternal(false);
 }
 
@@ -2686,7 +2687,7 @@ void DCItem::prepareForRecalc()
  */
 void DCItem::recalculateValue(ItemValue &value)
 {
-   if (m_prevValueTimeStamp == 0)
+   if (m_prevValueTimeStamp.isNull())
       m_prevRawValue = value;  // Delta should be zero for first poll
    ItemValue rawValue = value;
 

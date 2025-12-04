@@ -54,6 +54,7 @@
 #include <functional>
 #include <array>
 #include <vector>
+#include <string>
 
 /*** Byte swapping ***/
 #if WORDS_BIGENDIAN
@@ -451,6 +452,167 @@ static inline void MultiByteToWideCharSysLocale(const char *src, WCHAR *dst, siz
 
 /******* end of UNICODE related conversion and helper functions *******/
 
+
+/******* Timestamp formatting functions *******/
+TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer);
+TCHAR LIBNETXMS_EXPORTABLE *FormatTimestampMs(int64_t timestamp, TCHAR *buffer);
+std::string LIBNETXMS_EXPORTABLE FormatISO8601Timestamp(time_t t);
+std::string LIBNETXMS_EXPORTABLE FormatISO8601TimestampMs(int64_t t);
+
+/**
+ * Get current time in milliseconds
+ */
+static inline int64_t GetCurrentTimeMs()
+{
+#ifdef _WIN32
+   FILETIME ft;
+   GetSystemTimeAsFileTime(&ft);
+   LARGE_INTEGER li;
+   li.LowPart  = ft.dwLowDateTime;
+   li.HighPart = ft.dwHighDateTime;
+   return (li.QuadPart - EPOCHFILETIME) / 10000;  // Offset to the Epoch time and convert to milliseconds
+#else
+   struct timeval tv;
+   gettimeofday(&tv, nullptr);
+   return (int64_t)tv.tv_sec * 1000 + (int64_t)(tv.tv_usec / 1000);
+#endif
+}
+
+/**
+ * Get number of milliseconds counted by monotonic clock since some
+ * unspecified point in the past (system boot time on most systems)
+ */
+static inline int64_t GetMonotonicClockTime()
+{
+#if defined(_WIN32)
+   return static_cast<int64_t>(GetTickCount64());
+#elif defined(__sun)
+   return static_cast<int64_t>(gethrtime() / _LL(1000000));
+#else
+   struct timespec ts;
+   clock_gettime(CLOCK_MONOTONIC, &ts);
+   return static_cast<int64_t>(ts.tv_sec) * _LL(1000) + static_cast<int64_t>(ts.tv_nsec) / _LL(1000000);
+#endif
+}
+
+/**
+ * Timestamp class - holds timestamp in milliseconds
+ */
+class Timestamp
+{
+private:
+   int64_t v;
+
+   Timestamp(int64_t t)
+   {
+      v = t;
+   }
+
+public:
+   Timestamp() = default;
+
+   static Timestamp now()
+   {
+      return Timestamp(GetCurrentTimeMs());
+   }
+
+   static Timestamp fromMilliseconds(int64_t ms)
+   {
+      return Timestamp(ms);
+   }
+
+   static Timestamp fromTime(time_t t)
+   {
+      return Timestamp(static_cast<int64_t>(t) * 1000);
+   }
+
+   bool isNull() const
+   {
+      return v == 0;
+   }
+
+   int64_t asMilliseconds() const
+   {
+      return v;
+   }
+
+   int64_t asMicroseconds() const
+   {
+      return v * _LL(1000);
+   }
+
+   int64_t asNanoseconds() const
+   {
+      return v * _LL(1000000);
+   }
+
+   time_t asTime() const
+   {
+      return static_cast<time_t>(v / 1000);
+   }
+
+   json_t *asJson() const
+   {
+      return (v == 0) ? json_null() : json_string(FormatISO8601TimestampMs(v).c_str());
+   }
+
+   bool operator==(const Timestamp& other) const
+   {
+      return v == other.v;
+   }
+
+   bool operator!=(const Timestamp& other) const
+   {
+      return v != other.v;
+   }
+
+   bool operator<(const Timestamp& other) const
+   {
+      return v < other.v;
+   }
+
+   bool operator<=(const Timestamp& other) const
+   {
+      return v <= other.v;
+   }
+
+   bool operator>(const Timestamp& other) const
+   {
+      return v > other.v;
+   }
+
+   bool operator>=(const Timestamp& other) const
+   {
+      return v >= other.v;
+   }
+
+   int64_t operator-(const Timestamp& other) const
+   {
+      return v - other.v;
+   }
+
+   Timestamp operator-(int64_t milliseconds) const
+   {
+      return Timestamp(v - milliseconds);
+   }
+
+   Timestamp& operator-=(int64_t milliseconds)
+   {
+      v -= milliseconds;
+      return *this;
+   }
+
+   Timestamp operator+(int64_t milliseconds) const
+   {
+      return Timestamp(v + milliseconds);
+   }
+
+   Timestamp& operator+=(int64_t milliseconds)
+   {
+      v += milliseconds;
+      return *this;
+   }
+};
 
 /**
  * Class for serial communications
@@ -1489,6 +1651,7 @@ public:
    StringBuffer& append(uint64_t n, const TCHAR *format = nullptr) { insert(m_length, n, format); return *this; }
    StringBuffer& append(double d, const TCHAR *format = nullptr) { insert(m_length, d, format); return *this; }
    StringBuffer& append(const uuid& guid) { insert(m_length, guid); return *this; }
+   StringBuffer& append(Timestamp t) { insert(m_length, t); return *this; }
 
    StringBuffer& appendPreallocated(TCHAR *str)
    {
@@ -1519,6 +1682,7 @@ public:
    void insert(size_t index, uint64_t n, const TCHAR *format = nullptr);
    void insert(size_t index, double d, const TCHAR *format = nullptr);
    void insert(size_t index, const uuid& guid);
+   void insert(size_t index, Timestamp t) { insert(index, t.asMilliseconds()); }
 
    void insertPreallocated(size_t index, TCHAR *str) { if (str != nullptr) { insert(index, str); MemFree(str); } }
 
@@ -4364,12 +4528,18 @@ template class LIBNETXMS_TEMPLATE_EXPORTABLE shared_ptr<Table>;
 /**
  * Convert UNIX timestamp to JSON string in ISO 8601 format
  */
-json_t LIBNETXMS_EXPORTABLE *json_time_string(time_t t);
+static inline json_t *json_time_string(time_t t)
+{
+   return (t == 0) ? json_null() : json_string(FormatISO8601Timestamp(t).c_str());
+}
 
 /**
  * Convert UNIX timestamp expressed in milliseconds to JSON string in ISO 8601 format
  */
-json_t LIBNETXMS_EXPORTABLE *json_time_string_ms(int64_t t);
+static inline json_t *json_time_string_ms(int64_t t)
+{
+   return (t == 0) ? json_null() : json_string(FormatISO8601TimestampMs(t).c_str());
+}
 
 /**
  * Create JSON string with null check
@@ -5503,50 +5673,6 @@ void LIBNETXMS_EXPORTABLE __strupr(char *in);
 void LIBNETXMS_EXPORTABLE QSort(void *base, size_t nmemb, size_t size, int (*compare)(void *, const void *, const void *), void *context);
 #endif
 
-/**
- * Convert time_t to timestamp in milliseconds
- */
-static inline int64_t TimeToMs(time_t t)
-{
-   return static_cast<int64_t>(t) * _LL(1000);
-}
-
-/**
- * Get current time in milliseconds
- */
-static inline int64_t GetCurrentTimeMs()
-{
-#ifdef _WIN32
-   FILETIME ft;
-   GetSystemTimeAsFileTime(&ft);
-   LARGE_INTEGER li;
-   li.LowPart  = ft.dwLowDateTime;
-   li.HighPart = ft.dwHighDateTime;
-   return (li.QuadPart - EPOCHFILETIME) / 10000;  // Offset to the Epoch time and convert to milliseconds
-#else
-   struct timeval tv;
-   gettimeofday(&tv, nullptr);
-   return (int64_t)tv.tv_sec * 1000 + (int64_t)(tv.tv_usec / 1000);
-#endif
-}
-
-/**
- * Get number of milliseconds counted by monotonic clock since some
- * unspecified point in the past (system boot time on most systems)
- */
-static inline int64_t GetMonotonicClockTime()
-{
-#if defined(_WIN32)
-   return static_cast<int64_t>(GetTickCount64());
-#elif defined(__sun)
-   return static_cast<int64_t>(gethrtime() / _LL(1000000));
-#else
-   struct timespec ts;
-   clock_gettime(CLOCK_MONOTONIC, &ts);
-   return static_cast<int64_t>(ts.tv_sec) * _LL(1000) + static_cast<int64_t>(ts.tv_nsec) / _LL(1000000);
-#endif
-}
-
 uint64_t LIBNETXMS_EXPORTABLE FileSizeW(const wchar_t *pszFileName);
 uint64_t LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName);
 #ifdef UNICODE
@@ -6208,10 +6334,6 @@ bool LIBNETXMS_EXPORTABLE InflateFile(const TCHAR *inputFile, ByteStream *output
 int LIBNETXMS_EXPORTABLE InflateFileStream(FILE *source, ByteStream *output, bool gzipFormat);
 
 TCHAR LIBNETXMS_EXPORTABLE *GetSystemTimeZone(TCHAR *buffer, size_t size, bool withName = true, bool forceFullOffset = false);
-TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer);
-TCHAR LIBNETXMS_EXPORTABLE *FormatTimestampMs(int64_t timestamp, TCHAR *buffer);
-std::string LIBNETXMS_EXPORTABLE FormatISO8601Timestamp(time_t t);
-std::string LIBNETXMS_EXPORTABLE FormatISO8601TimestampMs(int64_t t);
 
 /**
  * Format timestamp as dd.mm.yyyy HH:MM:SS

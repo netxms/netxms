@@ -128,7 +128,7 @@ void TimeSeriesRegressionEngine::train(UINT32 nodeId, UINT32 dciId, DCObjectStor
  * @param timestamp timestamp of new value
  * @param value new value
  */
-void TimeSeriesRegressionEngine::update(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass, time_t timestamp, double value)
+void TimeSeriesRegressionEngine::update(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass, Timestamp timestamp, double value)
 {
 }
 

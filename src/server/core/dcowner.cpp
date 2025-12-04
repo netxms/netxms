@@ -346,7 +346,7 @@ bool DataCollectionOwner::addDCObject(DCObject *object, bool alreadyLocked, bool
    if (i == m_dcObjects.size())     // Add new item
    {
 		m_dcObjects.add(object);
-      object->setLastPollTime(0);    // Cause item to be polled immediately
+      object->setLastPollTime(Timestamp::fromMilliseconds(0));    // Cause item to be polled immediately
       if (object->getStatus() != ITEM_STATUS_DISABLED)
          object->setStatus(ITEM_STATUS_ACTIVE, false);
       object->clearBusyFlag();

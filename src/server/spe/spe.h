@@ -138,7 +138,7 @@ public:
     * @param timestamp timestamp of new value
     * @param value new value
     */
-   virtual void update(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass, time_t timestamp, double value) override;
+   virtual void update(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass, Timestamp timestamp, double value) override;
 
    /**
     * Reset internal model for given DCI

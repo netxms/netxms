@@ -33,7 +33,7 @@
  */
 struct DciValue
 {
-   time_t timestamp;
+   Timestamp timestamp;
    double value;
 };
 
@@ -102,7 +102,7 @@ public:
     * @param timestamp timestamp of new value
     * @param value new value
     */
-   virtual void update(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass, int64_t timestamp, double value) = 0;
+   virtual void update(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass, Timestamp timestamp, double value) = 0;
 
    /**
     * Reset internal model for given DCI
@@ -122,7 +122,7 @@ public:
     * @param timestamp timestamp of interest
     * @return predicted value
     */
-   virtual double getPredictedValue(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass, int64_t timestamp) = 0;
+   virtual double getPredictedValue(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass, time_t timestamp) = 0;
 
    /**
     * Get series of predicted values starting with current time. Default implementation

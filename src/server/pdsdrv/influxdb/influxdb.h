@@ -205,7 +205,7 @@ public:
    virtual const wchar_t *getName() override;
    virtual bool init(Config *config) override;
    virtual void shutdown() override;
-   virtual bool saveDCItemValue(DCItem *dcObject, time_t timestamp, const wchar_t *value) override;
+   virtual bool saveDCItemValue(DCItem *dcObject, Timestamp timestamp, const wchar_t *value) override;
    virtual DataCollectionError getInternalMetric(const wchar_t *metric, wchar_t *value) override;
 };
 

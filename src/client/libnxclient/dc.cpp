@@ -26,7 +26,7 @@
 /**
  * Push data
  */
-uint32_t DataCollectionController::pushData(ObjectArray<NXCPushData> *data, int64_t timestamp, uint32_t *failedIndex)
+uint32_t DataCollectionController::pushData(ObjectArray<NXCPushData> *data, Timestamp timestamp, uint32_t *failedIndex)
 {
    NXCPMessage request(CMD_PUSH_DCI_DATA, m_session->createMessageId());
    request.setField(VID_TIMESTAMP_MS, timestamp);

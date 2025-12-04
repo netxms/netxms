@@ -281,7 +281,7 @@ void DataCollector(const shared_ptr<DCObject>& dcObject)
             dcObject->getId(), dcObjectName.cstr());
 
       // Update item's last poll time and clear busy flag so item can be polled again
-      dcObject->setLastPollTime(time(nullptr));
+      dcObject->setLastPollTime(Timestamp::now());
       dcObject->clearBusyFlag();
       return;
    }
@@ -317,7 +317,7 @@ void DataCollector(const shared_ptr<DCObject>& dcObject)
       }
    }
 
-   int64_t currTime = GetCurrentTimeMs();
+   Timestamp currTime = Timestamp::now();
    if (target != nullptr)
    {
       if (!IsShutdownInProgress())

@@ -34,7 +34,7 @@ bool RecalculateDCIValues(DataCollectionTarget *object, DCItem *dci, BackgroundT
    {
       if (g_dbSyntax == DB_SYNTAX_TSDB)
       {
-         _sntprintf(query, 256, L"SELECT date_part('epoch',idata_timestamp)::int,raw_value FROM idata_sc_%s WHERE item_id=%u ORDER BY idata_timestamp",
+         _sntprintf(query, 256, L"SELECT timestamptz_to_ms(idata_timestamp),raw_value FROM idata_sc_%s WHERE item_id=%u ORDER BY idata_timestamp",
                   DCObject::getStorageClassName(dci->getStorageClass()), dci->getId());
       }
       else
@@ -62,7 +62,7 @@ bool RecalculateDCIValues(DataCollectionTarget *object, DCItem *dci, BackgroundT
       {
          if (g_dbSyntax == DB_SYNTAX_TSDB)
          {
-            _sntprintf(query, 256, L"UPDATE idata_sc_%s SET idata_value=? WHERE item_id=? AND idata_timestamp=to_timestamp(?)",
+            _sntprintf(query, 256, L"UPDATE idata_sc_%s SET idata_value=? WHERE item_id=? AND idata_timestamp=ms_to_timestamptz(?)",
                      DCObject::getStorageClassName(dci->getStorageClass()));
             hStmt = DBPrepare(hdb, query);
          }
@@ -82,13 +82,13 @@ bool RecalculateDCIValues(DataCollectionTarget *object, DCItem *dci, BackgroundT
          DBBegin(hdb);
          for(int i = 0; i < count; i++)
          {
-            time_t timestamp = static_cast<time_t>(DBGetFieldInt64(hResult, i, 0));
+            Timestamp timestamp = DBGetFieldTimestamp(hResult, i, 0);
             ItemValue value(hResult, i, 1, timestamp, false);
             dci->recalculateValue(value);
 
             DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, value.getString(), DB_BIND_STATIC);
             DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, dci->getId());
-            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(value.getTimeStamp()));
+            DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, value.getTimeStamp());
             DBExecute(hStmt);
 
             if (i % 10 == 0)

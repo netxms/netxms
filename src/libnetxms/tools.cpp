@@ -3968,22 +3968,6 @@ String LIBNETXMS_EXPORTABLE EscapeStringForJSON(const TCHAR *s)
 }
 
 /**
- * Convert UNIX timestamp to JSON string in ISO 8601 format
- */
-json_t LIBNETXMS_EXPORTABLE *json_time_string(time_t t)
-{
-   return (t == 0) ? json_null() : json_string(FormatISO8601Timestamp(t).c_str());
-}
-
-/**
- * Convert UNIX timestamp in milliseconds to JSON string in ISO 8601 format
- */
-json_t LIBNETXMS_EXPORTABLE *json_time_string_ms(int64_t t)
-{
-   return (t == 0) ? json_null() : json_string(FormatISO8601TimestampMs(t).c_str());
-}
-
-/**
  * Convert JSON string in ISO 8601 format or integer to UNIX timestamp
  */
 time_t LIBNETXMS_EXPORTABLE json_object_get_time(json_t *object, const char *tag, time_t defval)

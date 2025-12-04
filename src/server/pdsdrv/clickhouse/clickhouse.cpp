@@ -272,7 +272,7 @@ bool ClickHouseStorageDriver::getTagsFromObject(const NetObj& object, MetricReco
 /**
  * Build and queue metric from item DCI's
  */
-bool ClickHouseStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const wchar_t *value)
+bool ClickHouseStorageDriver::saveDCItemValue(DCItem *dci, Timestamp timestamp, const wchar_t *value)
 {
    if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 8)
    {
@@ -280,7 +280,7 @@ bool ClickHouseStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, con
                _T("Raw metric: OwnerName:%s DataSource:%i Type:%i Name:%s Description: %s Instance:%s DataType:%i DeltaCalculationMethod:%i RelatedObject:%i Value:%s timestamp:") INT64_FMT,
                dci->getOwnerName(), dci->getDataSource(), dci->getType(), dci->getName().cstr(), dci->getDescription().cstr(),
                dci->getInstanceName().cstr(), dci->getTransformedDataType(), dci->getDeltaCalculationMethod(), dci->getRelatedObject(),
-               value, static_cast<int64_t>(timestamp));
+               value, timestamp.asMilliseconds());
    }
 
    // Don't try to send empty values

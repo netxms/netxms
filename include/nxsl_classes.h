@@ -746,6 +746,7 @@ protected:
    NXSL_Value(uint64_t uValue);
    NXSL_Value(double dValue);
    NXSL_Value(bool bValue);
+   NXSL_Value(Timestamp value);
    NXSL_Value(const TCHAR *value);
    NXSL_Value(const TCHAR *value, size_t len);
 #ifdef UNICODE
@@ -794,6 +795,7 @@ public:
    uint32_t getValueAsUInt32() { return getValueAsIntegerType<uint32_t>(); }
    int64_t getValueAsInt64() { return getValueAsIntegerType<int64_t>(); }
    uint64_t getValueAsUInt64() { return getValueAsIntegerType<uint64_t>(); }
+   Timestamp getValueAsTimestamp() { return Timestamp::fromMilliseconds(getValueAsIntegerType<int64_t>()); }
    double getValueAsReal();
    bool getValueAsBoolean() { return isTrue(); }
    NXSL_Object *getValueAsObject() { return (m_dataType == NXSL_DT_OBJECT) ? m_value.object : nullptr; }
@@ -870,6 +872,7 @@ public:
    NXSL_Value *createValue(uint64_t n) { return new(m_values.allocate()) NXSL_Value(n); }
    NXSL_Value *createValue(double d) { return new(m_values.allocate()) NXSL_Value(d); }
    NXSL_Value *createValue(bool b) { return new(m_values.allocate()) NXSL_Value(b); }
+   NXSL_Value *createValue(Timestamp t) { return new(m_values.allocate()) NXSL_Value(t); }
    NXSL_Value *createValue(const TCHAR *s) { return new(m_values.allocate()) NXSL_Value(s); }
    NXSL_Value *createValue(const TCHAR *s, size_t l) { return new(m_values.allocate()) NXSL_Value(s, l); }
 #ifdef UNICODE
