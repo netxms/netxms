@@ -762,7 +762,10 @@ public:
    SNMPTableColumnDefinition(const NXCPMessage& msg, uint32_t baseId);
    SNMPTableColumnDefinition(DB_RESULT hResult, int row);
    SNMPTableColumnDefinition(const SNMPTableColumnDefinition *src);
-   ~SNMPTableColumnDefinition();
+   ~SNMPTableColumnDefinition()
+   {
+      MemFree(m_displayName);
+   }
 
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getDisplayName() const { return (m_displayName != nullptr) ? m_displayName : m_name; }

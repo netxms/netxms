@@ -111,14 +111,6 @@ SNMPTableColumnDefinition::SNMPTableColumnDefinition(const SNMPTableColumnDefini
 }
 
 /**
- * Column object destructor
- */
-SNMPTableColumnDefinition::~SNMPTableColumnDefinition()
-{
-   MemFree(m_displayName);
-}
-
-/**
  * Statement set
  */
 struct DataCollectionStatementSet
@@ -188,7 +180,11 @@ public:
    bool updateAndSave(const shared_ptr<DataCollectionItem>& item, bool txnOpen, DB_HANDLE hdb, DataCollectionStatementSet *statements);
    void saveToDatabase(bool newObject, DB_HANDLE hdb, DataCollectionStatementSet *statements);
    void deleteFromDatabase(DB_HANDLE hdb, DataCollectionStatementSet *statements);
-   void setLastPollTime(time_t time);
+   void setLastPollTime(int64_t time)
+   {
+      m_lastPollTime = time;
+      s_pollTimeChanged = true;
+   }
 
    void startDataCollection() { m_busy = true; }
    void finishDataCollection() { m_busy = false; }
@@ -669,15 +665,6 @@ void DataCollectionItem::deleteFromDatabase(DB_HANDLE hdb, DataCollectionStateme
    {
       nxlog_debug_tag(DEBUG_TAG, 6, _T("DataCollectionItem::deleteFromDatabase: object(serverId=") UINT64X_FMT(_T("016")) _T(",dciId=%d) removed from database"), m_serverId, m_id);
    }
-}
-
-/**
- * Set last poll time for item
- */
-void DataCollectionItem::setLastPollTime(int64_t time)
-{
-   m_lastPollTime = time;
-   s_pollTimeChanged = true;
 }
 
 /**
