@@ -231,4 +231,20 @@ public final class BrandingManager
       }
       return true;
    }
+
+   /**
+    * Control if welcome page is enabled.
+    *
+    * @return true if welcome page is enabled
+    */
+   public static boolean isWelcomePageEnabled()
+   {
+      for(BrandingProvider p : providers)
+      {
+         Boolean enabled = p.isWelcomePageEnabled();
+         if (enabled != null)
+            return enabled;
+      }
+      return true;
+   }
 }

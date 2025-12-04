@@ -268,6 +268,9 @@ public class MainWindow extends Window implements MessageAreaHolder
    {
       final NXCSession session = Registry.getSession();
 
+      if (!BrandingManager.isWelcomePageEnabled())
+         return;
+
       PreferenceStore ps = PreferenceStore.getInstance();
       if (ps.getAsBoolean("WelcomePage.Disabled", !session.getClientConfigurationHintAsBoolean("EnableWelcomePage", true)))
          return;
