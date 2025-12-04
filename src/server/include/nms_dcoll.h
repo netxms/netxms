@@ -620,7 +620,7 @@ public:
    virtual void getEventList(HashSet<uint32_t> *eventList) const override;
    virtual bool isUsingEvent(uint32_t eventCode) const override;
    virtual void createExportRecord(TextFileWriter& xml) const override;
-   virtual void getScriptDependencies(StringSet *dependencies) const;
+   virtual void getScriptDependencies(StringSet *dependencies) const override;
    virtual json_t *toJson() override;
 
 	int getThresholdCount() const { return (m_thresholds != nullptr) ? m_thresholds->size() : 0; }
