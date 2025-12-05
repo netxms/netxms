@@ -505,10 +505,10 @@ static bool Upgrade_43_9()
 /**
  * Delete duplicate records from data table
  */
-static void DeleteDuplicateRecords(const wchar_t *tableType, uint32_t objectId)
+void DeleteDuplicateDataRecords(const wchar_t *tableType, uint32_t objectId)
 {
    wchar_t query[1024];
-   _sntprintf(query, 1024,
+   nx_swprintf(query, 1024,
       L"DELETE FROM %s_%u a "
       L"USING ("
       L"    SELECT item_id, %s_timestamp, MIN(ctid) as min_ctid"
@@ -539,7 +539,7 @@ static bool AddPKForDataTables(const wchar_t *query)
 
          if (IsDataTableExist(L"idata_%u", id))
          {
-            DeleteDuplicateRecords(L"idata", id);
+            DeleteDuplicateDataRecords(L"idata", id);
 
             wchar_t table[64], index[64];
             _sntprintf(table, 64, L"idata_%u", id);
@@ -550,7 +550,7 @@ static bool AddPKForDataTables(const wchar_t *query)
 
          if (IsDataTableExist(L"tdata_%u", id))
          {
-            DeleteDuplicateRecords(L"tdata", id);
+            DeleteDuplicateDataRecords(L"tdata", id);
 
             wchar_t table[64], index[64];
             _sntprintf(table, 64, L"tdata_%u", id);

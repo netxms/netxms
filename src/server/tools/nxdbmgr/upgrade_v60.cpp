@@ -23,6 +23,8 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+void DeleteDuplicateDataRecords(const wchar_t *tableType, uint32_t objectId);
+
 /**
  * Add primary key for data tables for objects selected by given query
  */
@@ -51,6 +53,8 @@ static bool ConvertDataTables(const wchar_t *query, bool dataTablesWithPK)
          }
          else
          {
+            DeleteDuplicateDataRecords(L"idata", id);
+
             wchar_t index[64];
             nx_swprintf(index, 64, L"idx_idata_%u_id_timestamp", id);
             DBDropIndex(g_dbHandle, table, index);
@@ -74,6 +78,8 @@ static bool ConvertDataTables(const wchar_t *query, bool dataTablesWithPK)
          }
          else
          {
+            DeleteDuplicateDataRecords(L"tdata", id);
+
             wchar_t index[64];
             nx_swprintf(index, 64, L"idx_tdata_%u", id);
             DBDropIndex(g_dbHandle, table, index);
