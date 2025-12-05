@@ -41,13 +41,8 @@ static bool H_UpgradeFromV23()
    {
       if (DBMgrMetaDataReadInt32(L"PostgreSQL.SkipPrimaryKeyUpdate", 0) == 0)
       {
-         static const TCHAR *batch =
-            _T("UPDATE metadata SET var_value='CREATE INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp DESC)' WHERE var_name='IDataIndexCreationCommand_0'\n")
-            _T("UPDATE metadata SET var_value='CREATE INDEX idx_tdata_%d ON tdata_%d(item_id,tdata_timestamp)' WHERE var_name='TDataIndexCreationCommand_0'\n")
-            _T("<END>");
-         CHK_EXEC(SQLBatch(batch));
-
-         RegisterOnlineUpgrade(52, 24);
+         // Previous upgrade code was removed; PostgreSQL.DataTablesHavePK is an indicator that data tables already converted to use PK
+         DBMgrMetaDataWriteInt32(L"PostgreSQL.DataTablesHavePK", 1);
       }
       CHK_EXEC(SQLQuery(_T("DELETE FROM metadata WHERE var_name='PostgreSQL.SkipPrimaryKeyUpdate'")));
    }

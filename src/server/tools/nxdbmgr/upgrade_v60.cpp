@@ -139,7 +139,7 @@ static bool H_UpgradeFromV7()
       }
 
       int schemaV52 = GetSchemaLevelForMajorVersion(52);
-      if ((schemaV52 >= 21) && (schemaV52 < 24))
+      if (((schemaV52 >= 21) && (schemaV52 < 24)) || (DBMgrMetaDataReadInt32(L"PostgreSQL.DataTablesHavePK", 0) == 1))
       {
          // idata/tdata tables already converted to PKs
          dataTablesWithPK = true;
