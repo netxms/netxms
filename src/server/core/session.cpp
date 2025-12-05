@@ -122,6 +122,9 @@ uint64_t StartFileUploadToAgent(const shared_ptr<Node>& node, const TCHAR *local
 
 void FillAIAgentTaskListMessage(NXCPMessage *msg, uint32_t userId);
 
+void ExportSyslogParserRulesJSON(const NXCPMessage& request, long countFieldId, long baseId, json_t *object);
+void ExportWinlogParserRulesJSON(const NXCPMessage& request, long countFieldId, long baseId, json_t *object);
+
 #if WITH_PRIVATE_EXTENSIONS || (defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD))
 int GetMaxAllowedNodeCount();
 #endif
@@ -7826,14 +7829,19 @@ void ClientSession::editTrap(const NXCPMessage& request, int operation)
             rcc = CreateNewTrapMapping(&trapMappingId);
             response.setField(VID_RCC, rcc);
             if (rcc == RCC_SUCCESS)
+            {
                response.setField(VID_TRAP_ID, trapMappingId);   // Send id of new trap mapping to client
+               //TODO: witre audit log
+            }
             break;
          case TRAP_UPDATE:
             response.setField(VID_RCC, UpdateTrapMappingFromMsg(request));
+            //TODO: witre audit log
             break;
          case TRAP_DELETE:
             trapMappingId = request.getFieldAsUInt32(VID_TRAP_ID);
             response.setField(VID_RCC, DeleteTrapMapping(trapMappingId));
+            //TODO: witre audit log
             break;
          default:
 				response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
@@ -7844,6 +7852,7 @@ void ClientSession::editTrap(const NXCPMessage& request, int operation)
    {
       // Current user has no rights for trap management
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on trap configuration update"));
    }
 
    sendMessage(response);
@@ -10491,7 +10500,7 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
    wchar_t exportFileName[MAX_PATH];
    bool success = false;
 
-   if (checkSystemAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_VIEW_EVENT_DB | SYSTEM_ACCESS_EPP))
+   if (checkSystemAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_VIEW_EVENT_DB | SYSTEM_ACCESS_EPP | SYSTEM_ACCESS_SERVER_CONFIG))
    {
       IntegerArray<uint32_t> templateList;
       request.getFieldAsInt32Array(VID_OBJECT_LIST, &templateList);
@@ -10528,137 +10537,211 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
          GetNetXMSDirectory(nxDirData, exportFileName);
          wcslcat(exportFileName, FS_PATH_SEPARATOR L"export-", MAX_PATH);
          IntegerToString(GetCurrentTimeMs(), &exportFileName[wcslen(exportFileName)]);
-         wcslcat(exportFileName, L".xml", MAX_PATH);
+         wcslcat(exportFileName, L".json", MAX_PATH);
 
          FILE *out = _wfopen(exportFileName, L"w");
          if (out != nullptr)
          {
-            TextFileWriter writer(out);
-
+            json_t *root = json_object();
+            
+            // Set format version to 6 (JSON format)
+            json_object_set_new(root, "formatVersion", json_integer(6));
+            json_object_set_new(root, "nxslVersionV5", json_boolean(true));
+            
+            // Server information
+            json_t *server = json_object();
+            json_object_set_new(server, "version", json_string(NETXMS_VERSION_STRING_A));
+            json_object_set_new(server, "buildTag", json_string(NETXMS_BUILD_TAG_A));
+            
             wchar_t osVersion[256];
             GetOSVersionString(osVersion, 256);
-
-            writer.appendUtf8String("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration>\n\t<formatVersion>5</formatVersion>\n\t<nxslVersionV5>true</nxslVersionV5>\n\t<server>\n\t\t<version>"
-                     NETXMS_VERSION_STRING_A "</version>\n\t\t<buildTag>" NETXMS_BUILD_TAG_A "</buildTag>\n\t\t<operatingSystem>");
-            writer.appendPreallocated(EscapeStringForXML(osVersion, -1));
-            writer.appendUtf8String("</operatingSystem>\n\t</server>\n\t<description>");
+#ifdef UNICODE
+            json_object_set_new(server, "operatingSystem", json_string_t(osVersion));
+#else
+            json_object_set_new(server, "operatingSystem", json_string(osVersion));
+#endif
+            json_object_set_new(root, "server", server);
+            
+            // Description
             wchar_t *description = request.getFieldAsString(VID_DESCRIPTION);
-            writer.appendPreallocated(EscapeStringForXML(description, -1));
+            json_object_set_new(root, "description", description ? json_string_t(description) : json_string(""));
             MemFree(description);
-            writer.appendUtf8String("</description>\n");
-
-            // Write events
-            writer.appendUtf8String("\t<events>\n");
+            
+            // Export events
+            json_t *events = json_array();
             uint32_t count = request.getFieldAsUInt32(VID_NUM_EVENTS);
             uint32_t *idList = MemAllocArray<uint32_t>(count);
             request.getFieldAsInt32Array(VID_EVENT_LIST, count, idList);
-            for(i = 0; i < count; i++)
-               CreateEventTemplateExportRecord(writer, idList[i]);
+            for(int i = 0; i < count; i++)
+            {
+               CreateEventTemplateExportRecord(events, idList[i]);
+            }
             MemFree(idList);
-            writer.appendUtf8String("\t</events>\n");
-
-            // Write templates
-            writer.appendUtf8String("\t<templates>\n");
-            for(i = 0; i < templateList.size(); i++)
+            json_object_set_new(root, "events", events);
+            
+            // Export templates
+            json_t *templates = json_array();
+            for(int i = 0; i < templateList.size(); i++)
             {
                shared_ptr<NetObj> object = FindObjectById(templateList.get(i));
-               if (object != nullptr)
+               if ((object != nullptr) && (object->getObjectClass() == OBJECT_TEMPLATE))
                {
-                  static_cast<Template&>(*object).createExportRecord(writer);
+                  static_cast<Template*>(object.get())->createExportRecord(templates);
                }
             }
-            writer.appendUtf8String("\t</templates>\n");
-
-            // Write traps
-            writer.appendUtf8String("\t<traps>\n");
+            json_object_set_new(root, "templates", templates);
+            
+            // Export traps
+            json_t *traps = json_array();
             count = request.getFieldAsUInt32(VID_NUM_TRAPS);
             idList = MemAllocArray<uint32_t>(count);
             request.getFieldAsInt32Array(VID_TRAP_LIST, count, idList);
-            for(i = 0; i < count; i++)
-               CreateTrapMappingExportRecord(writer, idList[i]);
+            for(int i = 0; i < count; i++)
+            {
+               json_t *trap = CreateTrapMappingExportRecord(idList[i]);
+               if (trap != nullptr)
+               {
+                  json_array_append_new(traps, trap);
+               }
+            }
             MemFree(idList);
-            writer.appendUtf8String("\t</traps>\n");
-
-            // Write rules
+            json_object_set_new(root, "traps", traps);
+            
+            // Export rules using request UUIDs  
+            json_t *rules = json_array();
             EventProcessingPolicy *epp = GetEventProcessingPolicy();
-            writer.appendUtf8String("\t<rules>\n");
             count = request.getFieldAsUInt32(VID_NUM_RULES);
-            uint32_t fieldId = VID_RULE_LIST_BASE;
-            uuid_t guid;
-            for(i = 0; i < count; i++)
+            if (count > 0)
             {
-               request.getFieldAsBinary(fieldId++, guid, UUID_LENGTH);
-               epp->exportRule(writer, guid);
+               uint32_t fieldId = VID_RULE_LIST_BASE;
+               for(uint32_t i = 0; i < count; i++)
+               {
+                  uuid_t guid;
+                  request.getFieldAsBinary(fieldId++, guid, UUID_LENGTH);
+                  
+                  // Use new JSON export method
+                  json_t *ruleObj = epp->exportRule(uuid(guid));
+                  if (ruleObj != nullptr)
+                  {
+                     json_array_append_new(rules, ruleObj);
+                  }
+               }
             }
-            writer.appendUtf8String("\t</rules>\n");
-
-            if (count > 0) //add rule order information if at least one rule is exported
+            json_object_set_new(root, "rules", rules);
+            
+            // Export rule ordering only if there are rules to export
+            if (json_array_size(rules) > 0)
             {
-               writer.appendUtf8String("\t<ruleOrdering>\n");
-               epp->exportRuleOrgering(writer);
-               writer.appendUtf8String("\t</ruleOrdering>\n");
+               json_t *ruleOrdering = epp->exportRuleOrdering();
+               if (ruleOrdering != nullptr)
+               {
+                  json_object_set_new(root, "ruleOrdering", ruleOrdering);
+               }
+               else
+               {
+                  json_object_set_new(root, "ruleOrdering", json_array());
+               }
             }
-
-            // Write scripts
-            writer.appendUtf8String("\t<scripts>\n");
+            
+            // Export scripts
+            json_t *scripts = json_array();
             count = request.getFieldAsUInt32(VID_NUM_SCRIPTS);
             idList = MemAllocArray<uint32_t>(count);
             request.getFieldAsInt32Array(VID_SCRIPT_LIST, count, idList);
-            for(i = 0; i < count; i++)
-               CreateScriptExportRecord(writer, idList[i]);
+            for(int i = 0; i < count; i++)
+            {
+               json_t *script = CreateScriptExportRecord(idList[i]);
+               if (script != nullptr)
+               {
+                  json_array_append_new(scripts, script);
+               }
+            }
             MemFree(idList);
-            writer.appendUtf8String("\t</scripts>\n");
-
-            // Write object tools
-            writer.appendUtf8String("\t<objectTools>\n");
+            json_object_set_new(root, "scripts", scripts);
+            
+            // Export object tools
+            json_t *objectTools = json_array();
             count = request.getFieldAsUInt32(VID_NUM_TOOLS);
             idList = MemAllocArray<uint32_t>(count);
             request.getFieldAsInt32Array(VID_TOOL_LIST, count, idList);
-            for(i = 0; i < count; i++)
-               CreateObjectToolExportRecord(writer, idList[i]);
+            for(int i = 0; i < count; i++)
+            {
+               json_t *tool = CreateObjectToolExportRecord(idList[i]);
+               if (tool != nullptr)
+               {
+                  json_array_append_new(objectTools, tool);
+               }
+            }
             MemFree(idList);
-            writer.appendUtf8String("\t</objectTools>\n");
-
-            // Write DCI summary tables
-            writer.appendUtf8String("\t<dciSummaryTables>\n");
+            json_object_set_new(root, "objectTools", objectTools);
+            
+            // Export DCI summary tables
+            json_t *dciSummaryTables = json_array();
             count = request.getFieldAsUInt32(VID_NUM_SUMMARY_TABLES);
-            idList = MemAllocArray<UINT32>(count);
+            idList = MemAllocArray<uint32_t>(count);
             request.getFieldAsInt32Array(VID_SUMMARY_TABLE_LIST, count, idList);
-            for(i = 0; i < count; i++)
-               CreateSummaryTableExportRecord(idList[i], writer);
+            for(int i = 0; i < count; i++)
+            {
+               CreateSummaryTableExportRecord(idList[i], dciSummaryTables);
+            }
             MemFree(idList);
-            writer.appendUtf8String("\t</dciSummaryTables>\n");
-
-            // Write actions
-            writer.appendUtf8String("\t<actions>\n");
+            json_object_set_new(root, "dciSummaryTables", dciSummaryTables);
+            
+            // Export actions
+            json_t *actions = json_array();
             count = request.getFieldAsUInt32(VID_NUM_ACTIONS);
             idList = MemAllocArray<uint32_t>(count);
             request.getFieldAsInt32Array(VID_ACTION_LIST, count, idList);
-            for(i = 0; i < count; i++)
-               CreateActionExportRecord(writer, idList[i]);
+            for(int i = 0; i < count; i++)
+            {
+               json_t *action = CreateActionExportRecord(idList[i]);
+               if (action != nullptr)
+               {
+                  json_array_append_new(actions, action);
+               }
+            }
             MemFree(idList);
-            writer.appendUtf8String("\t</actions>\n");
-
-            // Write web service definition
-            writer.appendUtf8String("\t<webServiceDefinitions>\n");
+            json_object_set_new(root, "actions", actions);
+            
+            // Export web service definitions
+            json_t *webServiceDefinitions = json_array();
             count = request.getFieldAsUInt32(VID_WEB_SERVICE_DEF_COUNT);
             idList = MemAllocArray<uint32_t>(count);
             request.getFieldAsInt32Array(VID_WEB_SERVICE_DEF_LIST, count, idList);
-            CreateWebServiceDefinitionExportRecord(writer, count, idList);
+            CreateWebServiceDefinitionExportRecord(webServiceDefinitions, count, idList);
             MemFree(idList);
-            writer.appendUtf8String("\t</webServiceDefinitions>\n");
+            json_object_set_new(root, "webServiceDefinitions", webServiceDefinitions);
+            
+            // Export asset management schema
+            json_t *assetManagementSchema = json_array();
+            StringList assetAttributeNames(request, VID_ASSET_ATTRIBUTE_NAMES);
+            ExportAssetManagementSchema(assetManagementSchema, assetAttributeNames);
+            json_object_set_new(root, "assetManagementSchema", assetManagementSchema);
+            
+            // Export log parser rules - separate sections like XML
+            json_t *syslog = json_object();
+            ExportSyslogParserRulesJSON(request, VID_SYSLOG_NUM_RECORDS, VID_SYSLOG_RULES_LIST_BASE, syslog);
+            json_object_set_new(root, "syslog", syslog);
+            
+            json_t *winlog = json_object();
+            ExportWinlogParserRulesJSON(request, VID_WIN_LOG_NUM_RECORDS, VID_WIN_EVENT_RULES_LIST_BASE, winlog);
+            json_object_set_new(root, "winlog", winlog);
 
-            // Asset management schema
-            writer.appendUtf8String("\t<assetManagementSchema>\n");
-            StringList names(request, VID_ASSET_ATTRIBUTE_NAMES);
-            ExportAssetManagementSchema(writer, names);
-            writer.appendUtf8String("\t</assetManagementSchema>\n");
-
-            // Close document
-            writer.appendUtf8String("</configuration>\n");
-
-            response.setField(VID_RCC, RCC_SUCCESS);
-            success = true;
+            // Write JSON to file
+            char *jsonString = json_dumps(root, JSON_INDENT(2) | JSON_PRESERVE_ORDER);
+            if (jsonString != nullptr)
+            {
+               fputs(jsonString, out);
+               MemFree(jsonString);
+               response.setField(VID_RCC, RCC_SUCCESS);
+               success = true;
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_INTERNAL_ERROR);
+            }
+            json_decref(root);
+            fclose(out);
          }
          else
          {
@@ -10693,15 +10776,10 @@ void ClientSession::importConfiguration(const NXCPMessage& request)
       char *content = request.getFieldAsUtf8String(VID_NXMP_CONTENT);
       if (content != nullptr)
       {
-         Config config(false);
-         if (config.loadXmlConfigFromMemory(content, strlen(content), nullptr, "configuration", false))
-         {
-            finalizeConfigurationImport(config, request.getFieldAsUInt32(VID_FLAGS), &response);
-         }
-         else
-         {
-            response.setField(VID_RCC, RCC_CONFIG_PARSE_ERROR);
-         }
+         uint32_t flags = request.getFieldAsUInt32(VID_FLAGS);
+         
+         finalizeConfigurationImport(content, flags, &response);
+         
          MemFree(content);
       }
       else
@@ -10739,14 +10817,33 @@ void ClientSession::importConfigurationFromFile(const NXCPMessage& request)
 
             NXCPMessage response2(CMD_REQUEST_COMPLETED, requestId);
 
-            Config config(false);
-            if (config.loadXmlConfig(fileName, "configuration", false))
+            // Read file content
+            FILE *file = _tfopen(fileName, _T("r"));
+            if (file != nullptr)
             {
-               finalizeConfigurationImport(config, uploadData, &response2);
+               fseek(file, 0, SEEK_END);
+               long size = ftell(file);
+               fseek(file, 0, SEEK_SET);
+               
+               char *content = (char*)malloc(size + 1);
+               if (content != nullptr)
+               {
+                  size_t bytesRead = fread(content, 1, size, file);
+                  content[bytesRead] = 0;
+                  
+                  finalizeConfigurationImport(content, uploadData, &response2);
+                  
+                  MemFree(content);
+               }
+               else
+               {
+                  response2.setField(VID_RCC, RCC_OUT_OF_MEMORY);
+               }
+               fclose(file);
             }
             else
             {
-               response2.setField(VID_RCC, RCC_CONFIG_PARSE_ERROR);
+               response2.setField(VID_RCC, RCC_IO_ERROR);
             }
 
             sendMessage(response2);
@@ -10772,9 +10869,9 @@ void ClientSession::importConfigurationFromFile(const NXCPMessage& request)
 }
 
 /**
- * Finalize configuration import after successful transfer
+ * Finalize configuration import after successful transfer - supports both JSON and XML formats
  */
-void ClientSession::finalizeConfigurationImport(const Config& config, uint32_t flags, NXCPMessage *response)
+void ClientSession::finalizeConfigurationImport(const char* content, uint32_t flags, NXCPMessage *response)
 {
    // Lock all required components
    TCHAR lockInfo[MAX_SESSION_NAME];
@@ -10782,9 +10879,10 @@ void ClientSession::finalizeConfigurationImport(const Config& config, uint32_t f
    {
       InterlockedOr(&m_flags, CSF_EPP_LOCKED);
 
-      // Validate and import configuration
+      // Use ImportConfigFromContent which auto-detects format (JSON vs XML)
       StringBuffer *log;
-      uint32_t result = ImportConfig(config, flags, &log);
+      uint32_t result = ImportConfigFromContent(content, flags, &log);
+      
       if (result == RCC_SUCCESS)
          response->setField(VID_EXECUTION_RESULT, log->cstr());
       else
@@ -11217,7 +11315,7 @@ void ClientSession::setPstorageValue(const NXCPMessage& request)
 		request.getFieldAsString(VID_PSTORAGE_KEY, key, 256);
 		value = request.getFieldAsString(VID_PSTORAGE_VALUE);
 		SetPersistentStorageValue(key, value);
-		free(value);
+		MemFree(value);
       response.setField(VID_RCC, RCC_SUCCESS);
 	}
 	else

@@ -4569,6 +4569,18 @@ static inline json_t *json_string_w(const WCHAR *s)
 #endif
 
 /**
+ * Create JSON string with base64-encoded content
+ */
+static inline json_t *json_base64_string(const void *data, size_t len)
+{  
+   char *out;
+   base64_encode_alloc(reinterpret_cast<const char*>(data), len, &out);
+   json_t *js = json_string(out);
+   MemFree(out);
+   return js;
+}
+
+/**
  * Create JSON array from integer array
  */
 template<typename T> static inline json_t *json_integer_array(const T *values, size_t size)
@@ -4705,6 +4717,15 @@ static inline char *json_object_get_string_a(json_t *object, const char *tag, co
 #else
 #define json_object_get_string_t json_object_get_string_a
 #endif
+
+/**
+ * Get string value from object
+ */
+static inline String json_object_get_string(json_t *object, const char *tag, const TCHAR *defval)
+{
+   json_t *value = json_object_get(object, tag);
+   return json_is_string(value) ? String(json_string_value(value), "utf8") : String(defval);
+}
 
 /**
  * Get string value from object

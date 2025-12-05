@@ -876,37 +876,28 @@ void NXCORE_EXPORTABLE ResendEvents(ObjectQueue<Event> *queue)
 }
 
 /**
- * Create export record for event template
+ * Create event template JSON export record
  */
-void CreateEventTemplateExportRecord(TextFileWriter& str, uint32_t eventCode)
+void CreateEventTemplateExportRecord(json_t *array, uint32_t eventCode)
 {
-   String strText, strDescr;
-
    s_eventTemplatesLock.readLock();
 
    // Find event template
    EventTemplate *e = s_eventTemplates.get(eventCode);
    if (e != nullptr)
    {
-      str.append(_T("\t\t<event id=\""));
-      str.append(e->getCode());
-      str.append(_T("\">\n\t\t\t<guid>"));
-      str.append(e->getGuid().toString());
-      str.append(_T("</guid>\n\t\t\t<name>"));
-      str.append(EscapeStringForXML2(e->getName()));
-      str.append(_T("</name>\n\t\t\t<code>"));
-      str.append(e->getCode());
-      str.append(_T("</code>\n\t\t\t<description>"));
-      str.append(EscapeStringForXML2(e->getDescription()));
-      str.append(_T("</description>\n\t\t\t<severity>"));
-      str.append(e->getSeverity());
-      str.append(_T("</severity>\n\t\t\t<flags>"));
-      str.append(e->getFlags());
-      str.append(_T("</flags>\n\t\t\t<message>"));
-      str.append(EscapeStringForXML2(e->getMessageTemplate()));
-      str.append(_T("</message>\n\t\t\t<tags>"));
-      str.append(EscapeStringForXML2(e->getTags()));
-      str.append(_T("</tags>\n\t\t</event>\n"));
+      json_t *eventObj = json_object();
+      
+      json_object_set_new(eventObj, "guid", json_string_t(e->getGuid().toString()));
+      json_object_set_new(eventObj, "name", json_string_t(e->getName()));
+      json_object_set_new(eventObj, "code", json_integer(e->getCode()));
+      json_object_set_new(eventObj, "description", json_string_t(e->getDescription()));
+      json_object_set_new(eventObj, "severity", json_integer(e->getSeverity()));
+      json_object_set_new(eventObj, "flags", json_integer(e->getFlags()));
+      json_object_set_new(eventObj, "message", json_string_t(e->getMessageTemplate()));
+      json_object_set_new(eventObj, "tags", json_string_t(e->getTags()));
+      
+      json_array_append_new(array, eventObj);
    }
 
    s_eventTemplatesLock.unlock();

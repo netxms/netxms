@@ -104,6 +104,50 @@ AssetAttribute::AssetAttribute(const wchar_t *name, const ConfigEntry& entry, bo
 }
 
 /**
+ * Create asset attribute from JSON
+ */
+AssetAttribute::AssetAttribute(json_t *json)
+{
+   m_name = json_object_get_string_t(json, "name", _T(""));
+   m_displayName = json_object_get_string_t(json, "displayName", _T(""));
+   m_dataType = static_cast<AMDataType>(json_object_get_int32(json, "dataType", 0));
+   m_isMandatory = json_object_get_boolean(json, "isMandatory", false);
+   m_isUnique = json_object_get_boolean(json, "isUnique", false);
+   m_isHidden = json_object_get_boolean(json, "isHidden", false);
+   m_autofillScriptSource = nullptr;
+   m_autofillScript = nullptr;
+   
+   TCHAR *script = json_object_get_string_t(json, "autofillScript", _T(""));
+   setScript(script);
+   
+   m_rangeMin = json_object_get_int32(json, "rangeMin", 0);
+   m_rangeMax = json_object_get_int32(json, "rangeMax", 0);
+   m_systemType = static_cast<AMSystemType>(json_object_get_int32(json, "systemType", 0));
+
+   // Handle enumMap (object with key-value pairs)
+   json_t *enumMap = json_object_get(json, "enumMap");
+   if (enumMap != nullptr && json_is_object(enumMap))
+   {
+      const char *key;
+      json_t *value;
+      json_object_foreach(enumMap, key, value)
+      {
+         if (json_is_string(value))
+         {
+            TCHAR *keyStr = TStringFromUTF8String(key);
+            TCHAR *valueStr = TStringFromUTF8String(json_string_value(value));
+            if (keyStr != nullptr && valueStr != nullptr)
+            {
+               m_enumValues.set(keyStr, valueStr);
+            }
+            MemFree(keyStr);
+            MemFree(valueStr);
+         }
+      }
+   }
+}
+
+/**
  * Asset attribute destructor
  */
 AssetAttribute::~AssetAttribute()
@@ -297,6 +341,7 @@ json_t *AssetAttribute::toJson() const
    json_object_set_new(root, "dataType", json_integer(static_cast<uint32_t>(m_dataType)));
    json_object_set_new(root, "isMandatory", json_boolean(m_isMandatory));
    json_object_set_new(root, "isUnique", json_boolean(m_isUnique));
+   json_object_set_new(root, "isHidden", json_boolean(m_isHidden));
    json_object_set_new(root, "autofillScript", json_string_t(m_autofillScriptSource));
    json_object_set_new(root, "rangeMin", json_integer(m_rangeMin));
    json_object_set_new(root, "rangeMax", json_integer(m_rangeMax));
@@ -308,46 +353,14 @@ json_t *AssetAttribute::toJson() const
 /**
  * Create asset attribute entry in export XML document
  */
-void AssetAttribute::createExportRecord(TextFileWriter& xml)
+/**
+ * Create JSON export record for asset attribute
+ */
+void AssetAttribute::createExportRecord(json_t *array)
 {
-   xml.append(_T("\t\t<attribute>\n\t\t\t<name>"));
-   xml.append(m_name);
-   xml.append(_T("</name>\n\t\t\t<displayName>"));
-   xml.append(m_displayName);
-   xml.append(_T("</displayName>\n\t\t\t<dataType>"));
-   xml.append(static_cast<int32_t>(m_dataType));
-   xml.append(_T("</dataType>\n\t\t\t<mandatory>"));
-   xml.append(m_isMandatory);
-   xml.append(_T("</mandatory>\n\t\t\t<unique>"));
-   xml.append(m_isUnique);
-   xml.append(_T("</unique>\n\t\t\t<hidden>"));
-   xml.append(m_isHidden);
-   xml.append(_T("</hidden>\n\t\t\t<script>"));
-   xml.append(m_autofillScriptSource);
-   xml.append(_T("</script>\n\t\t\t<rangeMin>"));
-   xml.append(m_rangeMin);
-   xml.append(_T("</rangeMin>\n\t\t\t<rangeMax>"));
-   xml.append(m_rangeMax);
-   xml.append(_T("</rangeMax>\n\t\t\t<systemType>"));
-   xml.append(static_cast<int32_t>(m_systemType));
-   xml.append(_T("</systemType>\n"));
-
-   if (m_enumValues.size() > 0)
-   {
-      xml.append(_T("\t\t\t<enumValues>\n"));
-      for(KeyValuePair<const TCHAR> *v : m_enumValues)
-      {
-         xml.append(_T("\t\t\t\t<enumValue>\n\t\t\t\t\t<name>"));
-         xml.append(v->key);
-         xml.append(_T("</name>\n\t\t\t\t\t<value>"));
-         xml.append(v->value);
-         xml.append(_T("</value>\n"));
-         xml.append(_T("\t\t\t\t</enumValue>\n"));
-      }
-      xml.append(_T("\t\t\t</enumValues>\n"));
-   }
-
-   xml.append(_T("\t\t</attribute>\n"));
+   json_t *attributeObj = toJson();
+   if (attributeObj != nullptr)
+      json_array_append_new(array, attributeObj);
 }
 
 /**
@@ -1278,9 +1291,9 @@ void UpdateAssetLinkage(NetObj *object, bool matchByMacAllowed)
 }
 
 /**
- * Export asset management schema
+ * Export asset management schema to JSON
  */
-void ExportAssetManagementSchema(TextFileWriter& xml, const StringList& attributeNames)
+void ExportAssetManagementSchema(json_t *array, const StringList& attributeNames)
 {
    s_schemaLock.readLock();
    for (int i = 0; i < attributeNames.size(); i++)
@@ -1288,7 +1301,7 @@ void ExportAssetManagementSchema(TextFileWriter& xml, const StringList& attribut
       AssetAttribute *attribute = s_schema.get(attributeNames.get(i));
       if (attribute != nullptr)
       {
-         attribute->createExportRecord(xml);
+         attribute->createExportRecord(array);
       }
    }
    s_schemaLock.unlock();
@@ -1342,6 +1355,72 @@ void ImportAssetManagementSchema(const ConfigEntry& root, bool overwrite, Import
       else
       {
          context->log(NXLOG_INFO, _T("ImportAssetManagementSchema()"), _T("Found existing asset attribute \"%s\" (skipping)"), name);
+      }
+   }
+
+   s_schemaLock.unlock();
+}
+
+/**
+ * Import asset management schema from JSON
+ */
+void ImportAssetManagementSchema(json_t *root, bool overwrite, ImportContext *context)
+{
+   s_schemaLock.writeLock();
+
+   if (json_is_array(root))
+   {
+      size_t index;
+      json_t *attribute;
+      json_array_foreach(root, index, attribute)
+      {
+         if (!json_is_object(attribute))
+            continue;
+            
+         String name = json_object_get_string(attribute, "name", _T(""));
+         if (name.isEmpty())
+         {
+            context->log(NXLOG_ERROR, _T("ImportAssetManagementSchema()"), _T("No name specified for asset attribute"));
+            continue;
+         }
+         else if (!RegexpMatch(name, _T("^[A-Za-z$_][A-Za-z0-9$_]*$"), true))
+         {
+            context->log(NXLOG_ERROR, _T("ImportAssetManagementSchema()"), _T("Invalid name format for asset attribute \"%s\""), name.cstr());
+            continue;
+         }
+
+         AssetAttribute *existingAttribute = s_schema.get(name);
+         if (existingAttribute == nullptr || overwrite)
+         {
+            if (existingAttribute == nullptr)
+            {
+               context->log(NXLOG_INFO, _T("ImportAssetManagementSchema()"), _T("Asset attribute \"%s\" created"), name.cstr());
+            }
+            else
+            {
+               context->log(NXLOG_INFO, _T("ImportAssetManagementSchema()"), _T("Asset attribute \"%s\" updated"), name.cstr());
+            }
+
+            auto newAttribute = new AssetAttribute(attribute);
+            
+            if (newAttribute->saveToDatabase())
+            {
+               s_schema.set(name, newAttribute);
+
+               NXCPMessage notificationMessage(CMD_UPDATE_ASSET_ATTRIBUTE, 0);
+               newAttribute->fillMessage(&notificationMessage, VID_AM_ATTRIBUTES_BASE);
+               NotifyClientSessions(notificationMessage);
+            }
+            else
+            {
+               delete newAttribute;
+               context->log(NXLOG_ERROR, _T("ImportAssetManagementSchema()"), _T("Failed to save asset attribute \"%s\" to database"), name.cstr());
+            }
+         }
+         else
+         {
+            context->log(NXLOG_INFO, _T("ImportAssetManagementSchema()"), _T("Found existing asset attribute \"%s\" (skipping)"), name.cstr());
+         }
       }
    }
 

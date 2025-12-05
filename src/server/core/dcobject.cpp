@@ -300,6 +300,76 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
 
    updateTimeIntervalsInternal();
 }
+/**
+ * Create DCObject from imported JSON configuration
+ */
+DCObject::DCObject(json_t *json, const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner), m_mutex(MutexType::RECURSIVE), m_accessList(0, 16)
+{
+   m_id = CreateUniqueId(IDG_ITEM);
+   m_guid = json_object_get_uuid(json, "guid");
+   if (m_guid.isNull())
+      m_guid = uuid::generate();
+   m_ownerId = (owner != nullptr) ? owner->getId() : 0;
+   m_templateId = 0;
+   m_templateItemId = 0;
+   m_name = json_object_get_string(json, "name", _T("unnamed"));
+   m_description = json_object_get_string(json, "description", m_name);
+   m_systemTag = json_object_get_string(json, "systemTag", nullptr);
+   m_userTag = json_object_get_string(json, "userTag", nullptr);
+   m_source = static_cast<BYTE>(json_object_get_int32(json, "origin"));
+   m_flags = json_object_get_int32(json, "flags");
+   m_pollingIntervalSrc = json_object_get_string(json, "interval", _T(""));
+   m_pollingScheduleType = json_object_get_int32(json, "scheduleType", (m_pollingIntervalSrc.isEmpty() || !_tcscmp(m_pollingIntervalSrc, _T("0"))) ? DC_POLLING_SCHEDULE_DEFAULT : DC_POLLING_SCHEDULE_CUSTOM);
+   m_retentionTimeSrc = json_object_get_string(json, "retention", _T(""));
+   m_retentionType = json_object_get_int32(json, "retentionType", (m_retentionTimeSrc.isEmpty() || !_tcscmp(m_retentionTimeSrc, _T("0"))) ? DC_RETENTION_DEFAULT : DC_RETENTION_CUSTOM);
+   m_status = json_object_get_int32(json, "isDisabled") ? ITEM_STATUS_DISABLED : ITEM_STATUS_ACTIVE;
+   m_busy = 0;
+   m_scheduledForDeletion = 0;
+   m_lastPollTime = Timestamp::fromMilliseconds(0);
+   m_lastValueTimestamp = Timestamp::fromMilliseconds(0);
+   m_nextPollTime = 0;
+   m_tLastCheck = 0;
+   m_errorCount = 0;
+   m_resourceId = 0;
+   m_sourceNode = 0;
+   m_perfTabSettings = json_object_get_string(json, "perfTabSettings", _T(""));
+   m_snmpPort = static_cast<uint16_t>(json_object_get_int32(json, "snmpPort"));
+   m_snmpVersion = static_cast<SNMP_Version>(json_object_get_int32(json, "snmpVersion", SNMP_VERSION_DEFAULT));
+   m_schedules = nullptr;
+   m_lastScriptErrorReport = 0;
+   m_comments = json_object_get_string(json, "comments", _T(""));
+   m_doForcePoll = false;
+   m_pollingSession = nullptr;
+   setTransformationScript(json_object_get_string(json, "transformation", _T("")));
+
+   json_t *schedulesArray = json_object_get(json, "schedules");
+   if (json_is_array(schedulesArray))
+   {
+      m_schedules = new StringList();
+      size_t index;
+      json_t *scheduleJson;
+      json_array_foreach(schedulesArray, index, scheduleJson)
+      {
+         if (json_is_string(scheduleJson))
+         {
+            m_schedules->addMBString(json_string_value(scheduleJson));
+         }
+      }
+   }
+
+   m_instanceDiscoveryMethod = static_cast<WORD>(json_object_get_int32(json, "instanceDiscoveryMethod"));
+   m_instanceDiscoveryData = json_object_get_string(json, "instanceDiscoveryData", _T(""));
+   setInstanceFilter(json_object_get_string(json, "instanceFilter", _T("")));
+   m_instanceName = json_object_get_string(json, "instance", _T(""));
+   m_instanceRetentionTime = json_object_get_int32(json, "instanceRetentionTime", -1);
+   m_instanceGracePeriodStart = 0;
+   m_startTime = 0;
+   m_thresholdDisableEndTime = 0;
+   m_relatedObject = 0;
+
+   updateTimeIntervalsInternal();
+}
+
 
 /**
  * Destructor
@@ -2039,4 +2109,91 @@ String DCObjectInfo::formatValue(const TCHAR *value, const StringList *parameter
    }
 
    return result;
+}
+
+/**
+ * Update DCObject from imported JSON configuration
+ */
+void DCObject::updateFromImport(json_t *json)
+{
+   lock();
+
+   m_name = json_object_get_string(json, "name", _T("unnamed"));
+   m_description = json_object_get_string(json, "description", m_name);
+   m_systemTag = json_object_get_string(json, "systemTag", nullptr);
+   m_userTag = json_object_get_string(json, "userTag", nullptr);
+   m_source = static_cast<BYTE>(json_object_get_int32(json, "origin"));
+   m_flags = json_object_get_int32(json, "flags");
+   m_perfTabSettings = json_object_get_string(json, "perfTabSettings", nullptr);
+   m_snmpPort = static_cast<uint16_t>(json_object_get_int32(json, "snmpPort"));
+   m_snmpVersion = static_cast<SNMP_Version>(json_object_get_int32(json, "snmpVersion", SNMP_VERSION_DEFAULT));
+   
+   json_t *isDisabledObj = json_object_get(json, "isDisabled");
+   if (json_is_true(isDisabledObj))
+      m_status = ITEM_STATUS_DISABLED;
+
+   m_pollingIntervalSrc = json_object_get_string(json, "interval", nullptr);
+   json_t *scheduleTypeObj = json_object_get(json, "scheduleType");
+   if (scheduleTypeObj != nullptr)
+   {
+      m_pollingScheduleType = json_integer_value(scheduleTypeObj);
+   }
+   else
+   {
+      m_pollingScheduleType = (m_pollingIntervalSrc.isEmpty() || !_tcscmp(m_pollingIntervalSrc, _T("0"))) ? DC_POLLING_SCHEDULE_DEFAULT : DC_POLLING_SCHEDULE_CUSTOM;
+      if (m_flags & 1)  // for compatibility with old format
+         m_pollingScheduleType = DC_POLLING_SCHEDULE_ADVANCED;
+   }
+   
+   m_retentionTimeSrc = json_object_get_string(json, "retention", nullptr);
+   json_t *retentionTypeObj = json_object_get(json, "retentionType");
+   if (retentionTypeObj != nullptr)
+   {
+      m_retentionType = json_integer_value(retentionTypeObj);
+   }
+   else
+   {
+      m_retentionType = (m_retentionTimeSrc.isEmpty() || !_tcscmp(m_retentionTimeSrc, _T("0"))) ? DC_RETENTION_DEFAULT : DC_RETENTION_CUSTOM;
+      if (m_flags & 0x200) // for compatibility with old format
+         m_retentionType = DC_RETENTION_NONE;
+   }
+
+   updateTimeIntervalsInternal();
+
+   String transformation = json_object_get_string(json, "transformation", _T(""));
+   setTransformationScript(transformation);
+
+   json_t *schedulesArray = json_object_get(json, "schedules");
+   if (json_is_array(schedulesArray))
+   {
+      if (m_schedules != nullptr)
+         m_schedules->clear();
+      else
+         m_schedules = new StringList();
+
+      size_t index;
+      json_t *scheduleItem;
+      json_array_foreach(schedulesArray, index, scheduleItem)
+      {
+         if (json_is_string(scheduleItem))
+         {
+            m_schedules->addMBString(json_string_value(scheduleItem));
+         }
+      }
+   }
+   else
+   {
+      delete_and_null(m_schedules);
+   }
+
+   m_instanceDiscoveryMethod = static_cast<WORD>(json_object_get_int32(json, "instanceDiscoveryMethod"));
+   m_instanceDiscoveryData = json_object_get_string(json, "instanceDiscoveryData", nullptr);
+
+   String instanceFilter = json_object_get_string(json, "instanceFilter", _T(""));
+   setInstanceFilter(instanceFilter);
+   
+   m_instanceName = json_object_get_string(json, "instance", nullptr);
+   m_instanceRetentionTime = json_object_get_int32(json, "instanceRetentionTime", -1);
+
+   unlock();
 }

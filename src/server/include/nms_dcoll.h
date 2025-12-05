@@ -182,6 +182,7 @@ public:
    Threshold(const Threshold& src, bool shadowCopy);
    Threshold(DB_RESULT hResult, int row, DCItem *relatedItem);
 	Threshold(ConfigEntry *config, DCItem *parentItem, bool nxslV5);
+   Threshold(json_t *json, DCItem *parentItem);
    ~Threshold();
 
    void bindToItem(uint32_t itemId, uint32_t targetId) { m_itemId = itemId; m_targetId = targetId; }
@@ -221,7 +222,7 @@ public:
 
    bool equals(const Threshold& t) const;
 
-   void createExportRecord(TextFileWriter& xml, int index) const;
+   json_t *createExportRecord() const;
    json_t *toJson() const;
 
 	void associate(DCItem *pItem);
@@ -358,6 +359,7 @@ protected:
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
 	DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5);
+	DCObject(json_t *json, const shared_ptr<DataCollectionOwner>& owner);
    DCObject(const DCObject *src, bool shadowCopy);
 
 public:
@@ -456,9 +458,9 @@ public:
 
    virtual void getEventList(HashSet<uint32_t> *eventList) const = 0;
    virtual bool isUsingEvent(uint32_t eventCode) const = 0;
-   virtual void createExportRecord(TextFileWriter& xml) const = 0;
    virtual void getScriptDependencies(StringSet *dependencies) const;
    virtual json_t *toJson();
+   virtual void updateFromImport(json_t *json);
 
    NXSL_Value *createNXSLObject(NXSL_VM *vm) const;
 
@@ -495,6 +497,8 @@ public:
 
    virtual SharedString getText() const override;
    virtual SharedString getAttribute(const TCHAR *attribute) const override;
+   
+   virtual json_t *createExportRecord() const = 0;
 };
 
 /**
@@ -553,6 +557,7 @@ public:
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
 	DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5);
+   DCItem(json_t *json, const shared_ptr<DataCollectionOwner>& owner);
    virtual ~DCItem();
 
    virtual DCObject *clone() const override;
@@ -561,6 +566,7 @@ public:
 
    virtual void updateFromTemplate(DCObject *dcObject) override;
    virtual void updateFromImport(ConfigEntry *config, bool nxslV5) override;
+   virtual void updateFromImport(json_t *json) override;
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual void deleteFromDatabase() override;
@@ -619,9 +625,9 @@ public:
 
    virtual void getEventList(HashSet<uint32_t> *eventList) const override;
    virtual bool isUsingEvent(uint32_t eventCode) const override;
-   virtual void createExportRecord(TextFileWriter& xml) const override;
    virtual void getScriptDependencies(StringSet *dependencies) const override;
    virtual json_t *toJson() override;
+   virtual json_t *createExportRecord() const override;
 
 	int getThresholdCount() const { return (m_thresholds != nullptr) ? m_thresholds->size() : 0; }
    uint32_t getAllThresholdRearmEvent() const { return m_allThresholdsRearmEvent; }
@@ -654,6 +660,7 @@ public:
 	DCTableColumn(const NXCPMessage& msg, uint32_t baseId);
 	DCTableColumn(DB_RESULT hResult, int row);
    DCTableColumn(ConfigEntry *e);
+   DCTableColumn(json_t *json);
 	~DCTableColumn();
 
 	const TCHAR *getName() const { return m_name; }
@@ -666,8 +673,8 @@ public:
    bool isConvertSnmpStringToHex() const { return (m_flags & TCF_SNMP_HEX_STRING) != 0; }
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
-   void createExportRecord(TextFileWriter& xml, int id) const;
    json_t *toJson() const;
+   json_t *createExportRecord() const;
 };
 
 /**
@@ -692,6 +699,7 @@ public:
    const TCHAR *getValue() const { return m_value.getString(); }
 
    json_t *toJson() const;
+   json_t *createExportRecord() const;
 
    bool equals(DCTableCondition *c) const;
 };
@@ -709,6 +717,7 @@ public:
    DCTableConditionGroup(const NXCPMessage& msg, uint32_t *baseId);
    DCTableConditionGroup(DCTableConditionGroup *src);
    DCTableConditionGroup(ConfigEntry *e);
+   DCTableConditionGroup(json_t *json);
    ~DCTableConditionGroup();
 
    void addCondition(DCTableCondition *c) { m_conditions->add(c); }
@@ -717,6 +726,7 @@ public:
 
    uint32_t fillMessage(NXCPMessage *msg, uint32_t baseId) const;
    json_t *toJson() const;
+   json_t *createExportRecord() const;
 
    bool equals(DCTableConditionGroup *g) const;
 
@@ -786,6 +796,7 @@ public:
    DCTableThreshold(const NXCPMessage& msg, uint32_t *baseId);
    DCTableThreshold(const DCTableThreshold *src, bool shadowCopy);
    DCTableThreshold(ConfigEntry *e);
+   DCTableThreshold(json_t *json);
 
    void copyState(DCTableThreshold *src);
 
@@ -797,7 +808,7 @@ public:
    bool saveToDatabase(DB_HANDLE hdb, uint32_t tableId, int seq) const;
    uint32_t fillMessage(NXCPMessage *msg, uint32_t baseId) const;
 
-   void createExportRecord(TextFileWriter& xml, int id) const;
+   json_t *createExportRecord() const;
    json_t *toJson() const;
 
    bool equals(const DCTableThreshold *t) const;
@@ -841,6 +852,7 @@ public:
          const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
    DCTable(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay);
    DCTable(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5);
+   DCTable(json_t *json, const shared_ptr<DataCollectionOwner>& owner);
 	virtual ~DCTable();
 
 	virtual DCObject *clone() const override;
@@ -849,6 +861,7 @@ public:
 
    virtual void updateFromTemplate(DCObject *dcObject) override;
    virtual void updateFromImport(ConfigEntry *config, bool nxslV5) override;
+   virtual void updateFromImport(json_t *json) override;
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual void deleteFromDatabase() override;
@@ -866,8 +879,8 @@ public:
 
    virtual void getEventList(HashSet<uint32_t> *eventList) const override;
    virtual bool isUsingEvent(uint32_t eventCode) const override;
-   virtual void createExportRecord(TextFileWriter &xml) const override;
    virtual json_t *toJson() override;
+   virtual json_t *createExportRecord() const override;
 
    bool processNewValue(Timestamp timestamp, const shared_ptr<Table>& value, bool *updateStatus, bool allowPastDataPoints);
 

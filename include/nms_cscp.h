@@ -1569,6 +1569,8 @@ typedef struct
 #define VID_PROMPT                  ((uint32_t)873)
 #define VID_TIMESTAMP_MS            ((uint32_t)874)
 #define VID_CHAT_ID                 ((uint32_t)875)
+#define VID_SYSLOG_NUM_RECORDS      ((uint32_t)876)
+#define VID_WIN_LOG_NUM_RECORDS     ((uint32_t)877)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)
@@ -1777,6 +1779,8 @@ typedef struct
 #define VID_RADIO_LIST_BASE         ((uint32_t)0x34000000)
 
 #define VID_RULE_LIST_BASE          ((uint32_t)0x10000000)
+#define VID_SYSLOG_RULES_LIST_BASE  ((uint32_t)0x20000000)
+#define VID_WIN_EVENT_RULES_LIST_BASE ((uint32_t)0x30000000)
 
 #define VID_EXTENSION_LIST_BASE     ((uint32_t)0x10000000)
 

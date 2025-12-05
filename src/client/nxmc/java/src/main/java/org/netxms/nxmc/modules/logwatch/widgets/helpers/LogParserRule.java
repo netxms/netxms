@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.logwatch.widgets.helpers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import org.netxms.nxmc.modules.logwatch.widgets.LogParserRuleEditor;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -32,6 +33,9 @@ import org.simpleframework.xml.Root;
 @Root(name="rule", strict=false)
 public class LogParserRule
 {
+   @Attribute(required=false)
+   private UUID guid;
+   
    @Attribute(required=false)
    private String name = null;
 
@@ -97,6 +101,22 @@ public class LogParserRule
 	private LogParserRuleEditor editor;
 
 	/**
+    * @return the guid
+    */
+	public UUID getGuid()
+   {
+      return guid;
+   }
+	
+   /**
+    * @param guid the guid to set
+    */
+   public void setGuid(UUID guid)
+   {
+      this.guid = guid;
+   }
+
+   /**
     * @return the name
     */
    public String getName()
@@ -462,5 +482,13 @@ public class LogParserRule
    private static String integerToString(Integer n)
    {
       return (n != null) ? n.toString() : "";
+   }
+
+   /**
+    * @return
+    */
+   public String getEffectiveDisplayName()
+   {
+      return ((name != null && !name.isEmpty()) ? name : "") + " / " + match.getMatch();
    }
 }

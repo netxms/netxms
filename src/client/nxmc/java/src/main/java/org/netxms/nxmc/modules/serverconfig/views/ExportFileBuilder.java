@@ -52,6 +52,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.AgentPolicy;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
 import org.netxms.client.ServerAction;
@@ -82,6 +83,9 @@ import org.netxms.nxmc.modules.datacollection.dialogs.SelectWebServiceDlg;
 import org.netxms.nxmc.modules.events.dialogs.EventSelectionDialog;
 import org.netxms.nxmc.modules.events.dialogs.RuleSelectionDialog;
 import org.netxms.nxmc.modules.events.widgets.helpers.BaseEventTemplateLabelProvider;
+import org.netxms.nxmc.modules.logwatch.dialogs.SelectLogParserRuleDlg;
+import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParser;
+import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParserRule;
 import org.netxms.nxmc.modules.nxsl.dialogs.SelectScriptDialog;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
@@ -124,6 +128,8 @@ public class ExportFileBuilder extends ConfigurationView
 	private TableViewer trapViewer;
    private TableViewer webServiceViewer;
    private TableViewer assetAttributeViewer;
+   private TableViewer syslogLogParserViewer;
+   private TableViewer windowsLogParserViewer;
 	private Action actionExport;
 	private Action actionClear;
    private Map<Long, ServerAction> actions = new HashMap<>();
@@ -136,10 +142,14 @@ public class ExportFileBuilder extends ConfigurationView
 	private Map<Long, SnmpTrap> traps = new HashMap<Long, SnmpTrap>();
    private Map<Integer, WebServiceDefinition> webServices = new HashMap<>();
    private Map<String, AssetAttribute> assetAttributes = new HashMap<>();
+   private Map<UUID, LogParserRule> syslogLogParsers = new HashMap<>();
+   private Map<UUID, LogParserRule> windowsLogParsers = new HashMap<>();
 	private boolean modified = false;
 	private List<SnmpTrap> snmpTrapCache = null;
 	private List<EventProcessingPolicyRule> rulesCache = null;
    private List<ServerAction> actionsCache = null;
+   private LogParser syslogLogParserCache = null;
+   private LogParser windowsLogParserCache = null;
 
    /**
     * Create configuration export view
@@ -187,6 +197,8 @@ public class ExportFileBuilder extends ConfigurationView
       createActionsSection();
       createWebServiceSection();
       createAssetAttributesSection();
+      createSyslogSection();
+      createWindowsEventLogSection();
 		createActions();
 	}
 
@@ -1057,6 +1069,222 @@ public class ExportFileBuilder extends ConfigurationView
          }
       });
    }
+   
+   /**
+    * Create syslog selection section
+    */
+   private void createSyslogSection()
+   {
+      Section section = new Section(content, i18n.tr("Syslog Rules"), false);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      section.setLayoutData(gd);
+      
+      Composite clientArea = section.getClient();
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      clientArea.setLayout(layout);
+      clientArea.setBackground(content.getBackground());
+      
+      syslogLogParserViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      gd.heightHint = 200;
+      gd.verticalSpan = 2;
+      syslogLogParserViewer.getTable().setLayoutData(gd);
+      syslogLogParserViewer.setContentProvider(new ArrayContentProvider());
+      syslogLogParserViewer.setLabelProvider(new LabelProvider() {
+         @Override
+         public String getText(Object element)
+         {         
+            return ((LogParserRule)element).getEffectiveDisplayName();
+         }
+      });
+      syslogLogParserViewer.setComparator(new ViewerComparator() {
+         @Override
+         public int compare(Viewer viewer, Object e1, Object e2)
+         {
+            return ((LogParserRule)e1).getEffectiveDisplayName().compareToIgnoreCase(((LogParserRule)e2).getEffectiveDisplayName());
+         }
+      });
+      syslogLogParserViewer.getTable().setSortDirection(SWT.UP);
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
+      linkAdd.setText(i18n.tr("Add..."));
+      linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(clientArea.getBackground());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkAdd.setLayoutData(gd);
+      linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            if (syslogLogParserCache == null)
+            {
+               new Job(i18n.tr("Loading syslog log parsers"), ExportFileBuilder.this) {
+                  @Override
+                  protected void run(IProgressMonitor monitor) throws Exception
+                  {
+                     try
+                     {
+                        String content = session.getServerConfigClob("SyslogParser");
+                        syslogLogParserCache = LogParser.createFromXml(content);
+                     }
+                     catch(NXCException e) 
+                     {
+                        syslogLogParserCache = new LogParser();
+                     }
+                     
+                     runInUIThread(() -> addSyslogRules());
+                  }
+
+                  @Override
+                  protected String getErrorMessage()
+                  {
+                     return i18n.tr("Cannot load syslog log parsers");
+                  }
+               }.start();
+            }
+            else
+            {
+               addSyslogRules();
+            }
+         }
+      });
+
+      final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
+      linkRemove.setText(i18n.tr("Remove"));
+      linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(clientArea.getBackground());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkRemove.setLayoutData(gd);
+      linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            IStructuredSelection selection = (IStructuredSelection)syslogLogParserViewer.getSelection();
+            if (selection.size() > 0)
+            {
+               removeObjects(syslogLogParserViewer, syslogLogParsers);
+            }
+         }
+      });
+   }
+   
+   /**
+    * Create Windows Event Log selection section
+    */
+   private void createWindowsEventLogSection()
+   {
+      Section section = new Section(content, i18n.tr("Windows Event Log Rules"), false);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      section.setLayoutData(gd);
+
+      Composite clientArea = section.getClient();
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      clientArea.setLayout(layout);
+      clientArea.setBackground(content.getBackground());
+
+      windowsLogParserViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      gd.heightHint = 200;
+      gd.verticalSpan = 2;
+      windowsLogParserViewer.getTable().setLayoutData(gd);
+      windowsLogParserViewer.setContentProvider(new ArrayContentProvider());
+      windowsLogParserViewer.setLabelProvider(new LabelProvider() {
+         @Override
+         public String getText(Object element)
+         {
+            return ((LogParserRule)element).getEffectiveDisplayName();
+         }
+      });
+      windowsLogParserViewer.setComparator(new ViewerComparator() {
+         @Override
+         public int compare(Viewer viewer, Object e1, Object e2)
+         {
+            return ((LogParserRule)e1).getEffectiveDisplayName().compareToIgnoreCase(((LogParserRule)e2).getEffectiveDisplayName());
+         }
+      });
+      windowsLogParserViewer.getTable().setSortDirection(SWT.UP);
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
+      linkAdd.setText(i18n.tr("Add..."));
+      linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(clientArea.getBackground());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkAdd.setLayoutData(gd);
+      linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            if (windowsLogParserCache == null)
+            {
+               new Job(i18n.tr("Loading Windows Event Log parsers"), ExportFileBuilder.this) {
+                  @Override
+                  protected void run(IProgressMonitor monitor) throws Exception
+                  {
+                     try
+                     {
+                        String content = session.getServerConfigClob("WindowsEventParser");
+                        windowsLogParserCache = LogParser.createFromXml(content);
+                     }
+                     catch(NXCException e) 
+                     {
+                        windowsLogParserCache = new LogParser();
+                     }
+                     
+                     runInUIThread(() -> addWindowsLogRules());
+                  }
+
+                  @Override
+                  protected String getErrorMessage()
+                  {
+                     return i18n.tr("Cannot load Windows Event Log parsers");
+                  }
+               }.start();
+            }
+            else
+            {
+               addWindowsLogRules();
+            }
+         }
+      });
+
+      final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
+      linkRemove.setText(i18n.tr("Remove"));
+      linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(clientArea.getBackground());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkRemove.setLayoutData(gd);
+      linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            IStructuredSelection selection = (IStructuredSelection)windowsLogParserViewer.getSelection();
+            if (selection.size() > 0)
+            {
+               removeObjects(windowsLogParserViewer, windowsLogParsers);
+            }
+         }
+      });
+   }
 
 	/**
 	 * Create actions
@@ -1159,6 +1387,16 @@ public class ExportFileBuilder extends ConfigurationView
       i = 0;
       for(AssetAttribute a : assetAttributes.values())
          assetAttributesList[i++] = a.getName();
+      
+      final UUID[] syslogList = new UUID[syslogLogParsers.size()];
+      i = 0;
+      for(LogParserRule r : syslogLogParsers.values())
+         syslogList[i++] = r.getGuid();
+      
+      final UUID[] windowsEventList = new UUID[windowsLogParsers.size()];
+      i = 0;
+      for(LogParserRule r : windowsLogParsers.values())
+         windowsEventList[i++] = r.getGuid();
 
       final String descriptionText = description.getText();
 
@@ -1166,9 +1404,9 @@ public class ExportFileBuilder extends ConfigurationView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final File xml = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList, actionList, webServiceList,
-                  assetAttributesList);
-            runInUIThread(() -> completionHandler.exportCompleted(xml));
+            final File json = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList, actionList, webServiceList,
+                  assetAttributesList, syslogList, windowsEventList);
+            runInUIThread(() -> completionHandler.exportCompleted(json));
          }
 
          @Override
@@ -1187,9 +1425,9 @@ public class ExportFileBuilder extends ConfigurationView
 	{
 	   doExport(new ExportCompletionHandler() {
          @Override
-         public void exportCompleted(final File xml)
+         public void exportCompleted(final File json)
          {
-            WidgetHelper.saveTemporaryFile(ExportFileBuilder.this, "export.xml", new String[] { "*.xml", "*.*" }, new String[] { i18n.tr("XML files"), i18n.tr("All files") }, xml, "application/xml");
+            WidgetHelper.saveTemporaryFile(ExportFileBuilder.this, "export.json", new String[] { "*.json", "*.*" }, new String[] { i18n.tr("JSON files"), i18n.tr("All files") }, json, "application/json");
             modified = false;
          }
       });
@@ -1221,6 +1459,8 @@ public class ExportFileBuilder extends ConfigurationView
          return ((WebServiceDefinition)o).getId();
       if (o instanceof AssetAttribute)
          return ((AssetAttribute)o).getName();
+      if (o instanceof LogParserRule)
+         return ((LogParserRule)o).getGuid();
       return null;
 	}
 
@@ -1695,6 +1935,36 @@ public class ExportFileBuilder extends ConfigurationView
          setModified();
       }
    }
+   
+   /**
+    * Add syslog parser to list
+    */
+   private void addSyslogRules()
+   {
+      SelectLogParserRuleDlg dlg = new SelectLogParserRuleDlg(getWindow().getShell(), syslogLogParserCache, "SyslogParser");
+      if (dlg.open() == Window.OK)
+      {
+         for(LogParserRule service : dlg.getSelectedRules())
+            syslogLogParsers.put(service.getGuid(), service);
+         syslogLogParserViewer.setInput(syslogLogParsers.values().toArray());
+         setModified();
+      }
+   }
+   
+   /**
+    * Add windows log parser to list
+    */
+   private void addWindowsLogRules()
+   {
+      SelectLogParserRuleDlg dlg = new SelectLogParserRuleDlg(getWindow().getShell(), windowsLogParserCache, "WindowsEventParser");
+      if (dlg.open() == Window.OK)
+      {
+         for(LogParserRule service : dlg.getSelectedRules())
+            windowsLogParsers.put(service.getGuid(), service);
+         windowsLogParserViewer.setInput(windowsLogParsers.values().toArray());
+         setModified();
+      }
+   }
 
    /**
     * Clear configuration
@@ -1713,6 +1983,8 @@ public class ExportFileBuilder extends ConfigurationView
       tools.clear();
       webServices.clear();
       assetAttributes.clear();
+      syslogLogParsers.clear();
+      windowsLogParsers.clear();
 
       actionViewer.setInput(new Object[0]);
       eventViewer.setInput(new Object[0]);
@@ -1724,6 +1996,8 @@ public class ExportFileBuilder extends ConfigurationView
       trapViewer.setInput(new Object[0]);
       webServiceViewer.setInput(new Object[0]);
       assetAttributeViewer.setInput(new Object[0]);
+      syslogLogParserViewer.setInput(new Object[0]);
+      windowsLogParserViewer.setInput(new Object[0]);
 
       modified = false;
       actionExport.setEnabled(false);
@@ -1737,9 +2011,9 @@ public class ExportFileBuilder extends ConfigurationView
       /**
        * Called when export is complete
        * 
-       * @param xml resulting XML document
+       * @param json resulting JSON document
        */
-      public void exportCompleted(final File xml);
+      public void exportCompleted(final File json);
    }
 
    /**

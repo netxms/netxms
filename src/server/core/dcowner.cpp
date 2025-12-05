@@ -1085,6 +1085,114 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config, ImportContext *c
 }
 
 /**
+ * Update data collection owner from imported JSON configuration
+ */
+void DataCollectionOwner::updateFromImport(json_t *data, ImportContext *context)
+{
+   // Update basic properties (name, flags, comments)
+   lockProperties();
+   String name = json_object_get_string(data, "name", _T("Unnamed Object"));
+   wcslcpy(m_name, name, MAX_OBJECT_NAME);
+   
+   json_t *flagsObj = json_object_get(data, "flags");
+   if (json_is_integer(flagsObj))
+      m_flags = static_cast<uint32_t>(json_integer_value(flagsObj));
+   unlockProperties();
+   
+   String comments = json_object_get_string(data, "comments", _T(""));
+   setComments(comments.isEmpty() ? nullptr : comments.cstr());
+
+   // Data collection items and tables
+   ObjectArray<uuid> guidList(32, 32, Ownership::True);
+
+   writeLockDciAccess();
+   json_t *dataCollectionObj = json_object_get(data, "dataCollection");
+   if (json_is_object(dataCollectionObj))
+   {
+      // Handle DCIs (data collection items)
+      json_t *dcisArray = json_object_get(dataCollectionObj, "dcis");
+      if (json_is_array(dcisArray))
+      {
+         size_t index;
+         json_t *dciJson;
+         json_array_foreach(dcisArray, index, dciJson)
+         {
+            if (!json_is_object(dciJson))
+               continue;
+               
+            uuid guid = json_object_get_uuid(dciJson, "guid");
+            shared_ptr<DCObject> curr = !guid.isNull() ? getDCObjectByGUID(guid, 0, false) : shared_ptr<DCObject>();
+            if ((curr != nullptr) && (curr->getType() == DCO_TYPE_ITEM))
+            {
+               curr->updateFromImport(dciJson);
+            }
+            else
+            {
+               auto dci = make_shared<DCItem>(dciJson, self());
+               m_dcObjects.add(dci);
+               guid = dci->getGuid();  // For case when export file does not contain valid GUID
+            }
+            guidList.add(new uuid(guid));
+         }
+      }
+
+      // Handle DCTables (data collection tables)
+      json_t *dctablesArray = json_object_get(dataCollectionObj, "dctables");
+      if (json_is_array(dctablesArray))
+      {
+         size_t index;
+         json_t *dctableJson;
+         json_array_foreach(dctablesArray, index, dctableJson)
+         {
+            if (!json_is_object(dctableJson))
+               continue;
+               
+            uuid guid = json_object_get_uuid(dctableJson, "guid");
+            shared_ptr<DCObject> curr = !guid.isNull() ? getDCObjectByGUID(guid, 0, false) : shared_ptr<DCObject>();
+            if ((curr != nullptr) && (curr->getType() == DCO_TYPE_TABLE))
+            {
+               curr->updateFromImport(dctableJson);
+            }
+            else
+            {
+               auto dci = make_shared<DCTable>(dctableJson, self());
+               m_dcObjects.add(dci);
+               guid = dci->getGuid();  // For case when export file does not contain valid GUID
+            }
+            guidList.add(new uuid(guid));
+         }
+      }
+   }
+
+   // Delete DCIs missing in import
+   IntegerArray<uint32_t> deleteList;
+   for(int i = 0; i < m_dcObjects.size(); i++)
+   {
+      bool found = false;
+      for(int j = 0; j < guidList.size(); j++)
+      {
+         if (guidList.get(j)->equals(m_dcObjects.get(i)->getGuid()))
+         {
+            found = true;
+            break;
+         }
+      }
+
+      if (!found)
+      {
+         deleteList.add(m_dcObjects.get(i)->getId());
+      }
+   }
+
+   for(int i = 0; i < deleteList.size(); i++)
+      deleteDCObject(deleteList.get(i), false);
+
+   unlockDciAccess();
+
+   queueUpdate();
+}
+
+/**
  * Serialize object to JSON
  */
 json_t *DataCollectionOwner::toJson()
