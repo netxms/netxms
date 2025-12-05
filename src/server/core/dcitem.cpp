@@ -240,6 +240,54 @@ DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner
 }
 
 /**
+ * Create DCItem from imported JSON configuration
+ */
+DCItem::DCItem(json_t *json, const shared_ptr<DataCollectionOwner>& owner) : DCObject(json, owner)
+{
+   m_dataType = static_cast<BYTE>(json_object_get_int32(json, "dataType"));
+   m_transformedDataType = static_cast<BYTE>(json_object_get_int32(json, "transformedDataType", DCI_DT_NULL));
+   m_deltaCalculation = static_cast<BYTE>(json_object_get_int32(json, "delta"));
+   m_sampleCount = static_cast<BYTE>(json_object_get_int32(json, "samples"));
+   m_cacheSize = 0;
+   m_requiredCacheSize = 0;
+   m_ppValueCache = nullptr;
+   m_prevValueTimeStamp = 0;
+   m_prevDeltaValue = 0;
+   m_cacheLoaded = false;
+   m_anomalyDetected = false;
+   m_multiplier = json_object_get_int32(json, "multiplier");
+   m_snmpRawValueType = static_cast<uint16_t>(json_object_get_int32(json, "snmpRawValueType"));
+   m_allThresholdsRearmEvent = json_object_get_int32(json, "allThresholdsRearmEvent");
+   
+   String predictionEngine = json_object_get_string(json, "predictionEngine", _T(""));
+   _tcslcpy(m_predictionEngine, predictionEngine, MAX_NPE_NAME_LEN);
+   
+   m_unitName = json_object_get_string(json, "unitName", _T(""));
+
+   json_t *thresholdsArray = json_object_get(json, "thresholds");
+   if (json_is_array(thresholdsArray))
+   {
+      size_t count = json_array_size(thresholdsArray);
+      m_thresholds = new ObjectArray<Threshold>(count, 8, Ownership::True);
+      size_t index;
+      json_t *thresholdJson;
+      json_array_foreach(thresholdsArray, index, thresholdJson)
+      {
+         if (json_is_object(thresholdJson))
+         {
+            m_thresholds->add(new Threshold(thresholdJson, this));
+         }
+      }
+   }
+   else
+   {
+      m_thresholds = nullptr;
+   }
+
+   updateCacheSizeInternal(false);
+}
+
+/**
  * Destructor
  */
 DCItem::~DCItem()
@@ -2343,125 +2391,85 @@ bool DCItem::isUsingEvent(uint32_t eventCode) const
 }
 
 /**
- * Create management pack record
+ * Create JSON configuration export record
  */
-void DCItem::createExportRecord(TextFileWriter& xml) const
+json_t *DCItem::createExportRecord() const
 {
-   lock();
+   json_t *root = json_object();
+   
+   json_object_set_new(root, "id", json_integer(m_id));
+   json_object_set_new(root, "guid", m_guid.toJson());
+   json_object_set_new(root, "name", json_string_t(m_name));
+   json_object_set_new(root, "description", json_string_t(m_description));
+   json_object_set_new(root, "dataType", json_integer(m_dataType));
+   json_object_set_new(root, "transformedDataType", json_integer(m_transformedDataType));
+   json_object_set_new(root, "samples", json_integer(m_sampleCount));
+   json_object_set_new(root, "origin", json_integer(m_source));
+   json_object_set_new(root, "scheduleType", json_integer(m_pollingScheduleType));
+   json_object_set_new(root, "interval", json_string_t(m_pollingIntervalSrc));
+   json_object_set_new(root, "retentionType", json_integer(m_retentionType));
+   json_object_set_new(root, "retention", json_string_t(m_retentionTimeSrc));
+   json_object_set_new(root, "systemTag", json_string_t(m_systemTag));
+   json_object_set_new(root, "userTag", json_string_t(m_userTag));
+   json_object_set_new(root, "delta", json_integer(m_deltaCalculation));
+   json_object_set_new(root, "flags", json_integer(m_flags));
+   json_object_set_new(root, "snmpRawValueType", json_integer(m_snmpRawValueType));
+   json_object_set_new(root, "snmpPort", json_integer(m_snmpPort));
+   json_object_set_new(root, "snmpVersion", json_integer(static_cast<int32_t>(m_snmpVersion)));
+   json_object_set_new(root, "instanceDiscoveryMethod", json_integer(m_instanceDiscoveryMethod));
+   json_object_set_new(root, "instanceRetentionTime", json_integer(m_instanceRetentionTime));
+   json_object_set_new(root, "comments", json_string_t(m_comments));
+   json_object_set_new(root, "isDisabled", json_boolean(m_status == ITEM_STATUS_DISABLED));
+   json_object_set_new(root, "unitName", json_string_t(m_unitName));
+   json_object_set_new(root, "multiplier", json_integer(m_multiplier));
+   json_object_set_new(root, "allThresholdsRearmEvent", json_integer(m_allThresholdsRearmEvent));
 
-   xml.append(_T("\t\t\t\t<dci id=\""));
-   xml.append(m_id);
-   xml.append(_T("\">\n\t\t\t\t\t<guid>"));
-   xml.append(m_guid);
-   xml.append(_T("</guid>\n\t\t\t\t\t<name>"));
-   xml.append(EscapeStringForXML2(m_name));
-   xml.append(_T("</name>\n\t\t\t\t\t<description>"));
-   xml.append(EscapeStringForXML2(m_description));
-   xml.append(_T("</description>\n\t\t\t\t\t<dataType>"));
-   xml.append(static_cast<int32_t>(m_dataType));
-   xml.append(_T("</dataType>\n\t\t\t\t\t<transformedDataType>"));
-   xml.append(static_cast<int32_t>(m_transformedDataType));
-   xml.append(_T("</transformedDataType>\n\t\t\t\t\t<samples>"));
-   xml.append(m_sampleCount);
-   xml.append(_T("</samples>\n\t\t\t\t\t<origin>"));
-   xml.append(static_cast<int32_t>(m_source));
-   xml.append(_T("</origin>\n\t\t\t\t\t<scheduleType>"));
-   xml.append(static_cast<int32_t>(m_pollingScheduleType));
-   xml.append(_T("</scheduleType>\n\t\t\t\t\t<interval>"));
-   xml.append(EscapeStringForXML2(m_pollingIntervalSrc));
-   xml.append(_T("</interval>\n\t\t\t\t\t<retentionType>"));
-   xml.append(static_cast<int32_t>(m_retentionType));
-   xml.append(_T("</retentionType>\n\t\t\t\t\t<retention>"));
-   xml.append(EscapeStringForXML2(m_retentionTimeSrc));
-   xml.append(_T("</retention>\n\t\t\t\t\t<systemTag>"));
-   xml.append(EscapeStringForXML2(m_systemTag));
-   xml.append(_T("</systemTag>\n\t\t\t\t\t<userTag>"));
-   xml.append(EscapeStringForXML2(m_userTag));
-   xml.append(_T("</userTag>\n\t\t\t\t\t<delta>"));
-   xml.append(static_cast<int32_t>(m_deltaCalculation));
-   xml.append(_T("</delta>\n\t\t\t\t\t<flags>"));
-   xml.append(m_flags);
-   xml.append(_T("</flags>\n\t\t\t\t\t<snmpRawValueType>"));
-   xml.append(m_snmpRawValueType);
-   xml.append(_T("</snmpRawValueType>\n\t\t\t\t\t<snmpPort>"));
-   xml.append(m_snmpPort);
-   xml.append(_T("</snmpPort>\n\t\t\t\t\t<snmpVersion>"));
-   xml.append(static_cast<int32_t>(m_snmpVersion));
-   xml.append(_T("</snmpVersion>\n\t\t\t\t\t<instanceDiscoveryMethod>"));
-   xml.append(m_instanceDiscoveryMethod);
-   xml.append(_T("</instanceDiscoveryMethod>\n\t\t\t\t\t<instanceRetentionTime>"));
-   xml.append(m_instanceRetentionTime);
-   xml.append(_T("</instanceRetentionTime>\n\t\t\t\t\t<comments>"));
-   xml.append(EscapeStringForXML2(m_comments));
-   xml.append(_T("</comments>\n\t\t\t\t\t<isDisabled>"));
-   xml.append(BooleanToString(m_status == ITEM_STATUS_DISABLED));
-   xml.append(_T("</isDisabled>\n\t\t\t\t\t<unitName>"));
-   xml.append(EscapeStringForXML2(m_unitName));
-   xml.append(_T("</unitName>\n\t\t\t\t\t<multiplier>"));
-   xml.append(m_multiplier);
-   xml.append(_T("</multiplier>\n\t\t\t\t\t<allThresholdsRearmEvent>"));
-   xml.append(m_allThresholdsRearmEvent);
-   xml.append(_T("</allThresholdsRearmEvent>\n"));
-
-	if (!m_transformationScriptSource.isBlank())
-	{
-		xml.append(_T("\t\t\t\t\t<transformation>"));
-		xml.appendPreallocated(EscapeStringForXML(m_transformationScriptSource, -1));
-		xml.append(_T("</transformation>\n"));
-	}
-
-	if ((m_schedules != nullptr) && !m_schedules->isEmpty())
+   if (!m_transformationScriptSource.isBlank())
    {
-      xml.append(_T("\t\t\t\t\t<schedules>\n"));
+      json_object_set_new(root, "transformation", json_string_t(m_transformationScriptSource));
+   }
+
+   if ((m_schedules != nullptr) && !m_schedules->isEmpty())
+   {
+      json_t *schedules = json_array();
       for(int i = 0; i < m_schedules->size(); i++)
       {
-         xml.append(_T("\t\t\t\t\t\t<schedule>"));
-         xml.appendPreallocated(EscapeStringForXML(m_schedules->get(i), -1));
-         xml.append(_T("</schedule>\n"));
+         json_array_append_new(schedules, json_string_t(m_schedules->get(i)));
       }
-      xml.append(_T("\t\t\t\t\t</schedules>\n"));
+      json_object_set_new(root, "schedules", schedules);
    }
 
-	if (m_thresholds != nullptr)
-	{
-	   xml.append(_T("\t\t\t\t\t<thresholds>\n"));
-		for(int i = 0; i < m_thresholds->size(); i++)
-		{
-			m_thresholds->get(i)->createExportRecord(xml, i + 1);
-		}
-	   xml.append(_T("\t\t\t\t\t</thresholds>\n"));
-	}
-
-	if (!m_perfTabSettings.isEmpty())
-	{
-		xml.append(_T("\t\t\t\t\t<perfTabSettings>"));
-		xml.appendPreallocated(EscapeStringForXML(m_perfTabSettings, -1));
-		xml.append(_T("</perfTabSettings>\n"));
-	}
-
-   if (m_instanceName != nullptr)
+   if (m_thresholds != nullptr)
    {
-      xml.append(_T("\t\t\t\t\t<instance>"));
-      xml.appendPreallocated(EscapeStringForXML(m_instanceName, -1));
-      xml.append(_T("</instance>\n"));
+      json_t *thresholds = json_array();
+      for(int i = 0; i < m_thresholds->size(); i++)
+      {
+         json_array_append_new(thresholds, m_thresholds->get(i)->createExportRecord());
+      }
+      json_object_set_new(root, "thresholds", thresholds);
    }
 
-   if (m_instanceDiscoveryData != nullptr)
-	{
-		xml.append(_T("\t\t\t\t\t<instanceDiscoveryData>"));
-		xml.appendPreallocated(EscapeStringForXML(m_instanceDiscoveryData, -1));
-		xml.append(_T("</instanceDiscoveryData>\n"));
-	}
+   if (!m_perfTabSettings.isEmpty())
+   {
+      json_object_set_new(root, "perfTabSettings", json_string_t(m_perfTabSettings));
+   }
+
+   if (!m_instanceName.isBlank())
+   {
+      json_object_set_new(root, "instance", json_string_t(m_instanceName));
+   }
+
+   if (!m_instanceDiscoveryData.isBlank())
+   {
+      json_object_set_new(root, "instanceDiscoveryData", json_string_t(m_instanceDiscoveryData));
+   }
 
    if (!m_instanceFilterSource.isBlank())
-	{
-		xml.append(_T("\t\t\t\t\t<instanceFilter>"));
-		xml.appendPreallocated(EscapeStringForXML(m_instanceFilterSource, -1));
-		xml.append(_T("</instanceFilter>\n"));
-	}
-
-   unlock();
-   xml.append(_T("\t\t\t\t</dci>\n"));
+   {
+      json_object_set_new(root, "instanceFilter", json_string_t(m_instanceFilterSource));
+   }
+   
+   return root;
 }
 
 /**
@@ -2640,6 +2648,51 @@ void DCItem::updateFromImport(ConfigEntry *config, bool nxslV5)
    updateCacheSizeInternal(true);
    unlock();
 }
+
+/**
+ * Update DCItem from imported JSON configuration
+ */
+void DCItem::updateFromImport(json_t *json)
+{
+   DCObject::updateFromImport(json);
+
+   lock();
+   m_dataType = static_cast<BYTE>(json_object_get_int32(json, "dataType"));
+   m_transformedDataType = static_cast<BYTE>(json_object_get_int32(json, "transformedDataType", DCI_DT_NULL));
+   m_deltaCalculation = static_cast<BYTE>(json_object_get_int32(json, "delta"));
+   m_sampleCount = static_cast<BYTE>(json_object_get_int32(json, "samples"));
+   m_snmpRawValueType = static_cast<uint16_t>(json_object_get_int32(json, "snmpRawValueType"));
+   m_unitName = json_object_get_string(json, "unitName", _T(""));
+   m_multiplier = json_object_get_int32(json, "multiplier");
+   m_allThresholdsRearmEvent = json_object_get_int32(json, "allThresholdsRearmEvent");
+
+   json_t *thresholdsArray = json_object_get(json, "thresholds");
+   if (json_is_array(thresholdsArray))
+   {
+      if (m_thresholds != nullptr)
+         m_thresholds->clear();
+      else
+         m_thresholds = new ObjectArray<Threshold>(json_array_size(thresholdsArray), 8, Ownership::True);
+         
+      size_t index;
+      json_t *thresholdJson;
+      json_array_foreach(thresholdsArray, index, thresholdJson)
+      {
+         if (json_is_object(thresholdJson))
+         {
+            m_thresholds->add(new Threshold(thresholdJson, this));
+         }
+      }
+   }
+   else
+   {
+      delete_and_null(m_thresholds);
+   }
+
+   updateCacheSizeInternal(true);
+   unlock();
+}
+
 
 /*
  * Clone DCI

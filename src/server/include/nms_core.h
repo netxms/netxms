@@ -788,7 +788,9 @@ private:
    void getPerfTabDCIList(const NXCPMessage& request);
    void exportConfiguration(const NXCPMessage& request);
    void importConfiguration(const NXCPMessage& request);
+   void importConfigurationLegacy(const NXCPMessage& request);
    void importConfigurationFromFile(const NXCPMessage& request);
+   void finalizeConfigurationImport(const char* content, uint32_t flags, NXCPMessage *response);
    void getGraph(const NXCPMessage& request);
 	void getGraphList(const NXCPMessage& request);
 	void saveGraph(const NXCPMessage& request);
@@ -984,7 +986,7 @@ private:
    void sendObjectUpdates();
 
    void finalizeFileTransferToAgent(shared_ptr<AgentConnection> conn, uint32_t requestId);
-   void finalizeConfigurationImport(const Config& config, uint32_t flags, NXCPMessage *response);
+
    uint32_t resolveDCIName(uint32_t nodeId, uint32_t dciId, WCHAR *name, WCHAR *description, WCHAR *tag);
 
 public:
@@ -1109,6 +1111,7 @@ public:
    SNMPTrapParameterMapping();
    SNMPTrapParameterMapping(DB_RESULT mapResult, int row);
    SNMPTrapParameterMapping(ConfigEntry *entry);
+   SNMPTrapParameterMapping(json_t *json);
    SNMPTrapParameterMapping(const NXCPMessage& msg, uint32_t base);
    ~SNMPTrapParameterMapping();
 
@@ -1145,6 +1148,7 @@ public:
    SNMPTrapMapping();
    SNMPTrapMapping(DB_RESULT trapResult, DB_HANDLE hdb, DB_STATEMENT stmt, int row);
    SNMPTrapMapping(const ConfigEntry& entry, const uuid& guid, uint32_t id, uint32_t eventCode, bool nxslV5);
+   SNMPTrapMapping(json_t *json, const uuid& guid, uint32_t id, uint32_t eventCode, bool nxslV5);
    SNMPTrapMapping(const NXCPMessage& msg);
    ~SNMPTrapMapping();
 
@@ -1163,6 +1167,9 @@ public:
    const TCHAR *getDescription() const { return m_description; }
    const TCHAR *getScriptSource() const { return m_scriptSource; }
    const NXSL_Program *getScript() const { return m_script; }
+
+   json_t *createExportRecord() const;
+   json_t *toJson() const;
 };
 
 /**
@@ -1301,6 +1308,7 @@ bool NXCORE_EXPORTABLE ConfigWriteInt64(const TCHAR *variable, int64_t value, bo
 bool NXCORE_EXPORTABLE ConfigWriteUInt64(const TCHAR *variable, uint64_t value, bool create, bool isVisible = true, bool needRestart = false);
 bool NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *variable, int *value, size_t size, bool create, bool isVisible = true, bool needRestart = false);
 TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *varariable, const TCHAR *defaultValue);
+char NXCORE_EXPORTABLE *ConfigReadCLOBUTF8(const TCHAR *variable, const char *defaultValue);
 bool NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *variable, const TCHAR *value, bool create);
 bool NXCORE_EXPORTABLE ConfigDelete(const wchar_t *variable);
 
@@ -1440,7 +1448,7 @@ void CreateTrapMappingMessage(NXCPMessage *msg);
 uint32_t CreateNewTrapMapping(uint32_t *trapId);
 uint32_t UpdateTrapMappingFromMsg(const NXCPMessage& msg);
 uint32_t DeleteTrapMapping(uint32_t id);
-void CreateTrapMappingExportRecord(TextFileWriter& xml, uint32_t id);
+json_t *CreateTrapMappingExportRecord(uint32_t id);
 uint32_t ResolveTrapMappingGuid(const uuid& guid);
 void AddTrapMappingToList(const shared_ptr<SNMPTrapMapping>& tm);
 shared_ptr<SNMPTrapMapping> FindBestMatchTrapMapping(const SNMP_ObjectId& oid);
@@ -1451,8 +1459,9 @@ uint32_t ExecuteTableTool(uint32_t toolId, const shared_ptr<Node>& node, uint32_
 uint32_t DeleteObjectToolFromDB(uint32_t toolId);
 uint32_t ChangeObjectToolStatus(uint32_t toolId, bool enabled);
 uint32_t UpdateObjectToolFromMessage(const NXCPMessage& msg);
-void CreateObjectToolExportRecord(TextFileWriter& xml, uint32_t id);
+json_t *CreateObjectToolExportRecord(uint32_t id);
 bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *context);
+bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context);
 uint32_t GetObjectToolsIntoMessage(NXCPMessage *msg, uint32_t userId, bool fullAccess);
 uint32_t GetObjectToolDetailsIntoMessage(uint32_t toolId, NXCPMessage *msg);
 json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAccess);
@@ -1460,8 +1469,9 @@ json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAcces
 uint32_t ModifySummaryTable(const NXCPMessage& msg, uint32_t *newId);
 uint32_t NXCORE_EXPORTABLE DeleteSummaryTable(uint32_t tableId);
 Table NXCORE_EXPORTABLE *QuerySummaryTable(uint32_t tableId, SummaryTable *adHocDefinition, uint32_t baseObjectId, uint32_t userId, uint32_t *rcc);
-bool CreateSummaryTableExportRecord(uint32_t id, TextFileWriter& xml);
+bool CreateSummaryTableExportRecord(uint32_t id, json_t *array);
 bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *context, bool nxslV5);
+bool ImportSummaryTable(json_t *config, bool overwrite, ImportContext *context);
 json_t NXCORE_EXPORTABLE *GetSummaryTablesList();
 
 void FullCommunityListToMessage(uint32_t userId, NXCPMessage *msg);
@@ -1509,6 +1519,8 @@ void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool is
          session_id_t sessionId, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, va_list args);
 
 uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log);
+uint32_t ImportConfigFromContent(const char* content, uint32_t flags, StringBuffer **log);
+uint32_t ImportConfigFromJson(const char* content, uint32_t flags, StringBuffer **log);
 void ReportConfigurationError(const wchar_t *subsystem, const wchar_t *tag, const wchar_t *descriptionFormat, ...);
 
 X509 *CertificateFromLoginMessage(const NXCPMessage& msg);

@@ -9794,13 +9794,15 @@ public class NXCSession
     * @param actions List of action codes
     * @param webServices List of web service definition id's
     * @param assetAttributes List of asset management atributes to be exported
+    * @param syslogList List of Syslog processing rule GUIDs
+    * @param windowsEventList List of Windows Event Log processing rule GUIDs
     * @return file with resulting XML document
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public File exportConfiguration(String description, long[] events, long[] traps, long[] templates, UUID[] rules,
          long[] scripts, long[] objectTools, long[] dciSummaryTables, long[] actions, long[] webServices,
-         String[] assetAttributes) throws IOException, NXCException
+         String[] assetAttributes, UUID[] syslogList, UUID[] windowsEventList) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXPORT_CONFIGURATION);
       msg.setField(NXCPCodes.VID_DESCRIPTION, description);
@@ -9827,6 +9829,19 @@ public class NXCSession
       for(int i = 0; i < rules.length; i++)
       {
          msg.setField(varId++, rules[i]);
+      }
+      
+      msg.setFieldInt32(NXCPCodes.VID_SYSLOG_NUM_RECORDS, syslogList.length);
+      varId = NXCPCodes.VID_SYSLOG_RULES_LIST_BASE;
+      for(int i = 0; i < syslogList.length; i++)
+      {
+         msg.setField(varId++, syslogList[i]);
+      }
+      msg.setFieldInt32(NXCPCodes.VID_WIN_LOG_NUM_RECORDS, windowsEventList.length);
+      varId = NXCPCodes.VID_WIN_EVENT_RULES_LIST_BASE;
+      for(int i = 0; i < windowsEventList.length; i++)
+      {  
+         msg.setField(varId++, windowsEventList[i]);
       }
 
       sendMessage(msg);

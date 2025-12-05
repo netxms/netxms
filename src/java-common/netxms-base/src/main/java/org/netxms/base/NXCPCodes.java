@@ -1380,6 +1380,8 @@ public class NXCPCodes
    public static final long VID_METADATA_SIZE = 871;
    public static final long VID_MAX_SPEED = 872;
    public static final long VID_PROMPT = 873;
+   public static final long VID_SYSLOG_NUM_RECORDS = 874;
+   public static final long VID_WIN_LOG_NUM_RECORDS = 875;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1475,6 +1477,8 @@ public class NXCPCodes
    public static final long VID_RADIO_LIST_BASE = 0x34000000L;
 	public static final long VID_UUID_LIST_BASE = 0x10000000L;
 	public static final long VID_RULE_LIST_BASE = 0x10000000L;
+	public static final long VID_SYSLOG_RULES_LIST_BASE = 0x20000000L;
+	public static final long VID_WIN_EVENT_RULES_LIST_BASE = 0x30000000L;
 	public static final long VID_EXTENSION_LIST_BASE = 0x10000000L;
    public static final long VID_LOC_LIST_BASE = 0x10000000L;
    public static final long VID_SCHEDULE_LIST_BASE = 0x10000000L;

@@ -483,6 +483,7 @@ CREATE TABLE nodes
   modbus_proxy integer not null,
   modbus_tcp_port integer not null,
   modbus_unit_id integer not null,
+  last_events varchar(255) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

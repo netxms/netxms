@@ -877,7 +877,7 @@ public:
    SummaryTableColumn(json_t *json);
    SummaryTableColumn(TCHAR *configStr);
 
-   void createExportRecord(TextFileWriter& xml, uint32_t id) const;
+   json_t *createExportRecord() const;
 };
 
 #ifdef _WIN32
@@ -924,7 +924,7 @@ public:
    bool isMultiInstance() const { return is_bit_set(m_flags, SUMMARY_TABLE_MULTI_INSTANCE); }
    bool isTableDciSource() const { return is_bit_set(m_flags, SUMMARY_TABLE_TABLE_DCI_SOURCE); }
 
-   void createExportRecord(TextFileWriter& xml) const;
+   void createExportRecord(json_t *array) const;
 };
 
 /**
@@ -1776,6 +1776,7 @@ protected:
 
    void toJson(json_t *root);
    void updateFromImport(ConfigEntry *config);
+   void updateFromImport(json_t *data);
 
 public:
    VersionableObject(NetObj *_this);
@@ -1813,9 +1814,10 @@ protected:
    bool saveToDatabase(DB_HANDLE hdb);
    bool deleteFromDatabase(DB_HANDLE hdb);
    void updateFromImport(const ConfigEntry& config, bool defaultAutoBindFlag, bool nxslV5);
+   void updateFromImport(json_t *data);
 
    void toJson(json_t *root);
-   void createExportRecord(TextFileWriter& xml);
+   json_t *createExportRecord();
 
    unique_ptr<SharedObjectArray<NetObj>> getObjectsForAutoBind(const TCHAR *configurationSuffix);
 
@@ -1946,6 +1948,7 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
 
    virtual void updateFromImport(ConfigEntry *config, ImportContext *context, bool nxslV5);
+   virtual void updateFromImport(json_t *data, ImportContext *context);
 
    virtual void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const;
 
@@ -2049,8 +2052,9 @@ protected:
    Mutex m_contentLock;
 
    virtual bool createDeploymentMessage(NXCPMessage *msg, char *content, bool newTypeFormatSupported);
-   virtual void exportAdditionalData(TextFileWriter& xml);
    virtual void importAdditionalData(const ConfigEntry *config, ImportContext *context);
+   virtual void importAdditionalData(json_t *data, ImportContext *context);
+   virtual void exportAdditionalData(json_t *root) const;
 
 public:
    GenericAgentPolicy(const uuid& guid, const TCHAR *type, uint32_t ownerId);
@@ -2072,11 +2076,12 @@ public:
    virtual uint32_t modifyFromMessage(const NXCPMessage& request);
 
    virtual void updateFromImport(const ConfigEntry *config, ImportContext *context);
-   virtual void createExportRecord(TextFileWriter& xml, uint32_t recordId);
+   virtual void updateFromImport(json_t *data, ImportContext *context);
    virtual void getEventList(HashSet<uint32_t> *eventList) const {}
    virtual bool isUsingEvent(uint32_t eventCode) const { return false; }
 
-   virtual json_t *toJson();
+   virtual json_t *createExportRecord() const;
+   virtual json_t *toJson() const;
 
    virtual void deploy(shared_ptr<AgentPolicyDeploymentData> data);
    virtual void validate();
@@ -2088,8 +2093,9 @@ public:
 class NXCORE_EXPORTABLE FileDeliveryPolicy : public GenericAgentPolicy
 {
 protected:
-   virtual void exportAdditionalData(TextFileWriter& xml) override;
    virtual void importAdditionalData(const ConfigEntry *config, ImportContext *context) override;
+   virtual void importAdditionalData(json_t *data, ImportContext *context) override;
+   virtual void exportAdditionalData(json_t *root) const;
 
 public:
    FileDeliveryPolicy(const uuid& guid, uint32_t ownerId) : GenericAgentPolicy(guid, _T("FileDelivery"), ownerId) { }
@@ -2167,11 +2173,12 @@ public:
    virtual void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const override;
 
    virtual void updateFromImport(ConfigEntry *config, ImportContext *context, bool nxslV5) override;
+   virtual void updateFromImport(json_t *data, ImportContext *context) override;
    virtual json_t *toJson() override;
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
-   void createExportRecord(TextFileWriter& xml);
+   void createExportRecord(json_t *array);
    virtual HashSet<uint32_t> *getRelatedEventsList() const override;
 
    bool hasPolicy(const uuid& guid) const;

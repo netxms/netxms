@@ -190,6 +190,53 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem, bool nxslV5)
 }
 
 /**
+ * Create threshold from JSON
+ */
+Threshold::Threshold(json_t *json, DCItem *parentItem)
+{
+   createId();
+   m_itemId = parentItem->getId();
+   m_targetId = parentItem->getOwnerId();
+   
+   String activationEvent = json_object_get_string(json, "activationEvent", _T("SYS_THRESHOLD_REACHED"));
+   m_eventCode = EventCodeFromName(activationEvent, EVENT_THRESHOLD_REACHED);
+   
+   String deactivationEvent = json_object_get_string(json, "deactivationEvent", _T("SYS_THRESHOLD_REARMED"));
+   m_rearmEventCode = EventCodeFromName(deactivationEvent, EVENT_THRESHOLD_REARMED);
+   
+   m_function = static_cast<BYTE>(json_object_get_int32(json, "function", F_LAST));
+   m_operation = static_cast<BYTE>(json_object_get_int32(json, "condition", OP_EQ));
+   m_dataType = parentItem->getTransformedDataType();
+   
+   String value = json_object_get_string(json, "value", _T(""));
+   m_value.set(value, true);
+   m_expandValue = (NumChars(m_value, '%') > 0);
+   
+   // Handle both sampleCount and param1 for compatibility
+   json_t *sampleCountObj = json_object_get(json, "sampleCount");
+   if (sampleCountObj != nullptr)
+      m_sampleCount = json_integer_value(sampleCountObj);
+   else
+      m_sampleCount = json_object_get_int32(json, "param1", 1);
+   
+   m_scriptSource = nullptr;
+   m_script = nullptr;
+   m_lastScriptErrorReport = 0;
+   
+   String script = json_object_get_string(json, "script", _T(""));
+   setScript(MemCopyString(script));
+   
+   m_isReached = false;
+   m_wasReachedBeforeMaint = false;
+   m_disabled = false;
+   m_currentSeverity = SEVERITY_NORMAL;
+   m_repeatInterval = json_object_get_int32(json, "repeatInterval", -1);
+   m_lastEventTimestamp = 0;
+   m_lastEventMessage = nullptr;
+   m_numMatches = 0;
+}
+
+/**
  * Destructor
  */
 Threshold::~Threshold()
@@ -974,34 +1021,42 @@ bool Threshold::equals(const Threshold& t) const
 }
 
 /**
- * Create management pack record
+ * Create configuration export record (simplified structure matching XML export)
  */
-void Threshold::createExportRecord(TextFileWriter& xml, int index) const
+json_t *Threshold::createExportRecord() const
 {
-   TCHAR activationEvent[MAX_EVENT_NAME], deactivationEvent[MAX_EVENT_NAME];
-
-   EventNameFromCode(m_eventCode, activationEvent);
-   EventNameFromCode(m_rearmEventCode, deactivationEvent);
-   xml.appendFormattedString(_T("\t\t\t\t\t\t<threshold id=\"%d\">\n")
-                          _T("\t\t\t\t\t\t\t<function>%d</function>\n")
-                          _T("\t\t\t\t\t\t\t<condition>%d</condition>\n")
-                          _T("\t\t\t\t\t\t\t<value>%s</value>\n")
-                          _T("\t\t\t\t\t\t\t<activationEvent>%s</activationEvent>\n")
-                          _T("\t\t\t\t\t\t\t<deactivationEvent>%s</deactivationEvent>\n")
-                          _T("\t\t\t\t\t\t\t<sampleCount>%d</sampleCount>\n")
-                          _T("\t\t\t\t\t\t\t<repeatInterval>%d</repeatInterval>\n"),
-								  index, m_function, m_operation,
-								  EscapeStringForXML2(m_value.getString()).cstr(),
-                          EscapeStringForXML2(activationEvent).cstr(),
-								  EscapeStringForXML2(deactivationEvent).cstr(),
-								  m_sampleCount, m_repeatInterval);
-   if (m_scriptSource != nullptr)
+   json_t *root = json_object();
+   json_object_set_new(root, "id", json_integer(m_id));
+   json_object_set_new(root, "function", json_integer(m_function));
+   json_object_set_new(root, "condition", json_integer(m_operation));
+   json_object_set_new(root, "value", json_string_t(m_value));
+   
+   // Convert event codes to event names
+   TCHAR activationEventName[MAX_EVENT_NAME];
+   if (EventNameFromCode(m_eventCode, activationEventName))
    {
-      xml.appendUtf8String("\t\t\t\t\t\t\t<script>");
-      xml.append(EscapeStringForXML2(m_scriptSource));
-      xml.appendUtf8String("</script>\n");
+      json_object_set_new(root, "activationEvent", json_string_t(activationEventName));
    }
-   xml.appendUtf8String("\t\t\t\t\t\t</threshold>\n");
+   else
+   {
+      json_object_set_new(root, "activationEvent", json_string("UNKNOWN_EVENT"));
+   }
+   
+   TCHAR deactivationEventName[MAX_EVENT_NAME];
+   if (EventNameFromCode(m_rearmEventCode, deactivationEventName))
+   {
+      json_object_set_new(root, "deactivationEvent", json_string_t(deactivationEventName));
+   }
+   else
+   {
+      json_object_set_new(root, "deactivationEvent", json_string("UNKNOWN_EVENT"));
+   }
+   
+   json_object_set_new(root, "sampleCount", json_integer(m_sampleCount));
+   json_object_set_new(root, "repeatInterval", json_integer(m_repeatInterval));
+   json_object_set_new(root, "script", json_string_t(CHECK_NULL_EX(m_scriptSource)));
+   
+   return root;
 }
 
 /**

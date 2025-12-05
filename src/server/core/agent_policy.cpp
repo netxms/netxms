@@ -288,7 +288,7 @@ void GenericAgentPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
 /**
  * Serialize object to JSON
  */
-json_t *GenericAgentPolicy::toJson()
+json_t *GenericAgentPolicy::toJson() const
 {
    json_t *root = json_object();
    json_object_set_new(root, "guid", json_string_t(m_guid.toString()));
@@ -296,6 +296,16 @@ json_t *GenericAgentPolicy::toJson()
    json_object_set_new(root, "type", json_string_t(m_type));
    json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "content", json_string(CHECK_NULL_EX_A(m_content)));
+   return root;
+}
+
+/**
+ * Create configuration export record
+ */
+json_t *GenericAgentPolicy::createExportRecord() const
+{
+   json_t *root = toJson();
+   exportAdditionalData(root);
    return root;
 }
 
@@ -314,40 +324,38 @@ void GenericAgentPolicy::updateFromImport(const ConfigEntry *config, ImportConte
 }
 
 /**
- * Create export record
+ * Update policy from imported JSON configuration
  */
-void GenericAgentPolicy::createExportRecord(TextFileWriter& xml, uint32_t recordId)
+void GenericAgentPolicy::updateFromImport(json_t *data, ImportContext *context)
 {
-   xml.appendUtf8String("\t\t\t\t<agentPolicy id=\"");
-   xml.append(recordId);
-   xml.appendUtf8String("\">\n\t\t\t\t\t<guid>");
-   xml.append(m_guid);
-   xml.appendUtf8String("</guid>\n\t\t\t\t\t<name>");
-   xml.append(EscapeStringForXML2(m_name));
-   xml.appendUtf8String("</name>\n\t\t\t\t\t<type>");
-   xml.append(m_type);
-   xml.appendUtf8String("</type>\n\t\t\t\t\t<flags>");
-   xml.append(m_flags);
-   xml.appendUtf8String("</flags>\n\t\t\t\t\t<content>");
-   TCHAR *content = TStringFromUTF8String(CHECK_NULL_EX_A(m_content));
-   xml.append(EscapeStringForXML2(content));
-   MemFree(content);
-   xml.appendUtf8String("</content>\n");
-   exportAdditionalData(xml);
-   xml.appendUtf8String("\t\t\t\t</agentPolicy>\n");
-}
-
-/**
- * Export additional data.
- */
-void GenericAgentPolicy::exportAdditionalData(TextFileWriter& xml)
-{
+   String name = json_object_get_string(data, "name", _T("Unnamed"));
+   _tcslcpy(m_name, name, MAX_OBJECT_NAME);
+   String type = json_object_get_string(data, "type", _T("Unknown"));
+   _tcslcpy(m_type, type, MAX_POLICY_TYPE_LEN);
+   m_flags = json_object_get_uint32(data, "flags", 0);
+   MemFree(m_content);
+   m_content = MemCopyStringA(json_object_get_string_utf8(data, "content", ""));
+   importAdditionalData(data, context);
 }
 
 /**
  * Import additional data.
  */
 void GenericAgentPolicy::importAdditionalData(const ConfigEntry *config, ImportContext *context)
+{
+}
+
+/**
+ * Import additional data from JSON.
+ */
+void GenericAgentPolicy::importAdditionalData(json_t *data, ImportContext *context)
+{
+}
+
+/**
+ * Export additional data to JSON.
+ */
+void GenericAgentPolicy::exportAdditionalData(json_t *root) const
 {
 }
 
@@ -454,100 +462,6 @@ static unique_ptr<ObjectArray<FileInfo>> GetFilesFromConfig(const char* content)
 }
 
 /**
- * Adds files in base64 coding to export xml record
- */
-void FileDeliveryPolicy::exportAdditionalData(TextFileWriter& xml)
-{
-   xml.appendUtf8String("\t\t\t\t\t<files>\n");
-   m_contentLock.lock();
-   unique_ptr<ObjectArray<FileInfo>> files = GetFilesFromConfig(m_content);
-   m_contentLock.unlock();
-   for (int i = 0; i < files->size(); i++)
-   {
-      StringBuffer fileName = _T("FileDelivery-");
-      fileName.append(files->get(i)->guid.toString());
-      StringBuffer fullPath = g_netxmsdDataDir;
-      fullPath.append(DDIR_FILES FS_PATH_SEPARATOR);
-      fullPath.append(fileName);
-
-      uint64_t fileSize = FileSize(fullPath.cstr());
-      uint64_t maxFileSize = ConfigReadULong(_T("AgentPolicy.MaxFileSize"), 128 * 1024 * 1024);
-      if (fileSize < maxFileSize)
-      {
-         int fd = _topen(fullPath.cstr(), O_BINARY | O_RDONLY);
-         if (fd != -1)
-         {
-            auto fileContent = MemAllocArrayNoInit<BYTE>(fileSize);
-            if (_read(fd, fileContent, static_cast<unsigned int>(fileSize)) == static_cast<ssize_t>(fileSize))
-            {
-               xml.appendUtf8String("\t\t\t\t\t\t<file>\n\t\t\t\t\t\t\t<name>");
-               xml.append(EscapeStringForXML2(fileName));
-               xml.appendUtf8String("</name>\n\t\t\t\t\t\t\t<size>");
-               xml.append(fileSize);
-               xml.appendUtf8String("</size>\n");
-
-               uLong compressedFileSize = compressBound(static_cast<uLong>(fileSize));
-               auto compressedFileContent = MemAllocArrayNoInit<BYTE>(compressedFileSize);
-               BYTE *encodedInput;
-               uint64_t encodedInputSize;
-               if (compress(compressedFileContent, &compressedFileSize, fileContent, static_cast<uLong>(fileSize)) == Z_OK)
-               {
-                  if (compressedFileSize < fileSize)
-                  {
-                     xml.appendUtf8String("\t\t\t\t\t\t\t<compression>true</compression>\n");
-                     encodedInput = compressedFileContent;
-                     encodedInputSize = compressedFileSize;
-                     MemFree(fileContent);
-                  }
-                  else
-                  {
-                     encodedInput = fileContent;
-                     encodedInputSize = fileSize;
-                     MemFree(compressedFileContent);
-                  }
-               }
-               else
-               {
-                  encodedInput = fileContent;
-                  encodedInputSize = fileSize;
-                  MemFree(compressedFileContent);
-               }
-
-               xml.appendUtf8String("\t\t\t\t\t\t\t<data blob-id=\"");
-               xml.append(uuid::generate());
-               xml.appendUtf8String("\">");
-               xml.appendAsBase64String(encodedInput, encodedInputSize);
-               MemFree(encodedInput);
-               xml.appendUtf8String("</data>\n\t\t\t\t\t\t\t<hash>");
-
-               BYTE hash[MD5_DIGEST_SIZE];
-               CalculateFileMD5Hash(fullPath, hash);
-               xml.appendAsHexString(hash, MD5_DIGEST_SIZE);
-               xml.appendUtf8String("</hash>\n\t\t\t\t\t\t</file>\n");
-            }
-            else
-            {
-               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot read file %s for export of policy %s in template %s [%u] (%s)"),
-                  fileName.cstr(), m_name, GetObjectName(m_ownerId, _T("Unknown")), m_ownerId, _tcserror(errno));
-            }
-            _close(fd);
-         }
-         else
-         {
-            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot open file %s for export of policy %s in template %s [%u] (%s)"),
-               fileName.cstr(), m_name, GetObjectName(m_ownerId, _T("Unknown")), m_ownerId, _tcserror(errno));
-         }
-      }
-      else
-      {
-         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("File %s in policy %s in template %s [%u] is too big (%u bytes with limit %u bytes) and will not be exported"),
-            fileName.cstr(), m_name, GetObjectName(m_ownerId, _T("Unknown")), m_ownerId, static_cast<unsigned int>(fileSize), static_cast<unsigned int>(maxFileSize));
-      }
-   }
-   xml.appendUtf8String("\t\t\t\t\t</files>\n");
-}
-
-/**
  * Loads files in base64 coding from imported config
  */
 void FileDeliveryPolicy::importAdditionalData(const ConfigEntry *config, ImportContext *context)
@@ -622,6 +536,233 @@ void FileDeliveryPolicy::importAdditionalData(const ConfigEntry *config, ImportC
    for (int i = 0; i < configFiles->size(); i++)
    {
       context->log(NXLOG_WARNING, _T("ImportFileData()"), _T("File with GUID %s missing from policy %s"), configFiles->get(i)->guid.toString().cstr(), m_name);
+   }
+}
+
+/**
+ * Export additional data for FileDeliveryPolicy (files)
+ */
+void FileDeliveryPolicy::exportAdditionalData(json_t *root) const
+{
+   unique_ptr<ObjectArray<FileInfo>> configFiles = GetFilesFromConfig(m_content);
+   if ((configFiles != nullptr) && (configFiles->size() > 0))
+   {
+      json_t *files = json_array();
+      
+      for (int i = 0; i < configFiles->size(); i++)
+      {
+         FileInfo *file = configFiles->get(i);
+         
+         StringBuffer fileName = _T("FileDelivery-");
+         fileName.append(file->guid.toString());
+         
+         StringBuffer fullPath = g_netxmsdDataDir;
+         fullPath.append(DDIR_FILES FS_PATH_SEPARATOR);
+         fullPath.append(fileName.cstr());
+         
+         uint64_t fileSize = FileSize(fullPath.cstr());
+         if (fileSize != 0)
+         {
+            uint64_t maxFileSize = ConfigReadULong(_T("AgentPolicy.MaxFileSize"), 128 * 1024 * 1024);
+            if (fileSize < maxFileSize)
+            {               
+               // Read file content
+               int fd = _topen(fullPath.cstr(), O_RDONLY | O_BINARY);
+               if (fd != -1)
+               {
+                  BYTE *fileContent = MemAllocArrayNoInit<BYTE>(fileSize);
+                  if (_read(fd, fileContent, static_cast<unsigned int>(fileSize)) == static_cast<ssize_t>(fileSize))
+                  {
+                     json_t *fileData = json_object();               
+                     json_object_set_new(fileData, "name", json_string_t(fileName.cstr()));
+                     json_object_set_new(fileData, "size", json_integer(fileSize));
+
+                     uLong compressedFileSize = compressBound(static_cast<uLong>(fileSize));
+                     auto compressedFileContent = MemAllocArrayNoInit<BYTE>(compressedFileSize);
+                     BYTE *encodedInput;
+                     uint64_t encodedInputSize;
+
+                     if (compress(compressedFileContent, &compressedFileSize, fileContent, static_cast<uLong>(fileSize)) == Z_OK)
+                     {
+                        if (compressedFileSize < fileSize) 
+                        {
+                           json_object_set_new(fileData, "compression", json_true());
+                           encodedInput = compressedFileContent;
+                           encodedInputSize = compressedFileSize;
+                           MemFree(fileContent);
+                        }
+                        else
+                        {
+                           encodedInput = fileContent;
+                           encodedInputSize = fileSize;
+                           MemFree(compressedFileContent);
+                        }
+                     }
+                     else
+                     {
+                        encodedInput = fileContent;
+                        encodedInputSize = fileSize;
+                        MemFree(compressedFileContent);
+                     }
+
+                     json_object_set_new(fileData, "data", json_base64_string(encodedInput, encodedInputSize));                    
+                     // Add MD5 hash
+                     BYTE hash[MD5_DIGEST_SIZE];
+                     CalculateFileMD5Hash(fullPath, hash);
+                     json_object_set_new(fileData, "hash", json_base64_string(hash, MD5_DIGEST_SIZE));
+                        
+                     json_array_append_new(files, fileData);                     
+                     MemFree(encodedInput);
+                  }
+                  else
+                  {
+                     nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot read file %s for export of policy %s in template %s [%u] (%s)"),
+                        fileName.cstr(), m_name, GetObjectName(m_ownerId, _T("Unknown")), m_ownerId, _tcserror(errno));
+                  }                 
+                  MemFree(fileContent);
+                  _close(fd);
+               }
+               else
+               {
+                  nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot open file %s for export of policy %s in template %s [%u] (%s)"),
+                     fileName.cstr(), m_name, GetObjectName(m_ownerId, _T("Unknown")), m_ownerId, _tcserror(errno));
+               }
+            }
+            else
+            {
+               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("File %s in policy %s in template %s [%u] is too big (%llu bytes with limit %llu bytes) and will not be exported"),
+                  fileName.cstr(), m_name, GetObjectName(m_ownerId, _T("Unknown")), m_ownerId, 
+                  static_cast<unsigned long long>(fileSize), static_cast<unsigned long long>(maxFileSize));
+            }
+         }
+      }
+      
+      if (json_array_size(files) > 0)
+      {
+         json_object_set_new(root, "files", files);
+      }
+      else
+      {
+         json_decref(files);
+      }
+   }
+}
+
+/**
+ * Loads files in base64 coding from imported config
+ */
+void FileDeliveryPolicy::importAdditionalData(json_t *data, ImportContext *context)
+{
+   json_t *files = json_object_get(data, "files");
+   if (json_is_array(files))
+   {
+      unique_ptr<ObjectArray<FileInfo>> configFiles = GetFilesFromConfig(m_content);
+      
+      size_t arraySize = json_array_size(files);
+      for (size_t i = 0; i < arraySize; i++)
+      {
+         json_t *file = json_array_get(files, i);
+         if (!json_is_object(file))
+            continue;
+            
+         const char *fileName = json_object_get_string_utf8(file, "name", "");
+         if (*fileName == 0)
+            continue;
+            
+         StringBuffer fullPath = g_netxmsdDataDir;
+         fullPath.append(DDIR_FILES FS_PATH_SEPARATOR);
+         fullPath.append(fileName);
+         
+         int fd = _topen(fullPath.cstr(), O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
+         if (fd != -1)
+         {
+            const char *base64Data = json_object_get_string_utf8(file, "data", "");
+            uint64_t fileSize = json_object_get_uint64(file, "size", 0);
+            bool compressed = json_object_get_boolean(file, "compression", false);
+            
+            char* fileContent;
+            size_t decodedFileSize;
+            if (base64_decode_alloc(base64Data, strlen(base64Data), &fileContent, &decodedFileSize) == 0)
+            {
+               if (compressed && fileSize > 0)
+               {
+                  auto buffer = MemAllocArrayNoInit<char>(fileSize);
+                  uLongf uncompressedSize = static_cast<uLongf>(fileSize);
+                  if (uncompress(reinterpret_cast<BYTE*>(buffer), &uncompressedSize, reinterpret_cast<BYTE*>(fileContent), static_cast<uLong>(decodedFileSize)) == Z_OK)
+                  {
+                     MemFree(fileContent);
+                     fileContent = buffer;
+                     decodedFileSize = uncompressedSize;
+                  }
+                  else
+                  {
+                     MemFree(buffer);
+                     MemFree(fileContent);
+                     context->log(NXLOG_WARNING, _T("ImportFileData()"), _T("Failed to decompress file %hs while importing policy %s"), fileName, m_name);
+                     continue;  // Skip to next file since this one failed
+                  }
+               }
+               
+               bool success = (_write(fd, fileContent, static_cast<unsigned int>(decodedFileSize)) == static_cast<ssize_t>(decodedFileSize));
+               _close(fd);
+               
+               if (success)
+               {
+                  // Verify hash if provided
+                  const char *expectedHash = json_object_get_string_utf8(file, "hash", nullptr);
+                  if (expectedHash != nullptr && strlen(expectedHash) == MD5_DIGEST_SIZE * 2)
+                  {
+                     BYTE originalHash[MD5_DIGEST_SIZE];
+                     StrToBin(TStringFromUTF8String(expectedHash), originalHash, MD5_DIGEST_SIZE);
+                     BYTE calculatedHash[MD5_DIGEST_SIZE];
+                     CalculateFileMD5Hash(fullPath, calculatedHash);
+                     if (memcmp(originalHash, calculatedHash, MD5_DIGEST_SIZE))
+                     {
+                        context->log(NXLOG_WARNING, _T("ImportFileData()"), _T("Hash mismatch for file %hs while importing policy %s"), fileName, m_name);
+                        _tremove(fullPath.cstr());
+                     }
+                  }
+               }
+               else
+               {
+                  context->log(NXLOG_WARNING, _T("ImportFileData()"), _T("Cannot write to file %hs while importing policy %s (%s)"), fileName, m_name, _tcserror(errno));
+                  _tremove(fullPath.cstr());
+               }
+               
+               MemFree(fileContent);
+            }
+            else
+            {
+               context->log(NXLOG_WARNING, _T("ImportFileData()"), _T("Cannot decode base64 data for file %hs while importing policy %s"), fileName, m_name);
+               _close(fd);
+               _tremove(fullPath.cstr());
+            }
+         }
+         else
+         {
+            context->log(NXLOG_WARNING, _T("ImportFileData()"), _T("Cannot create file %hs while importing policy %s (%s)"), fileName, m_name, _tcserror(errno));
+         }
+         
+         // Remove from expected files list
+         if (strlen(fileName) > 13) // "FileDelivery-" prefix
+         {
+            String guid = TStringFromUTF8String(&fileName[13]);
+            for (int j = 0; j < configFiles->size(); j++)
+            {
+               if (configFiles->get(j)->guid.equals(uuid::parse(guid)))
+               {
+                  configFiles->remove(j);
+                  break;
+               }
+            }
+         }
+      }
+      
+      // Warn about missing files
+      for (int i = 0; i < configFiles->size(); i++)
+      {
+         context->log(NXLOG_WARNING, _T("ImportFileData()"), _T("File with GUID %s missing from policy %s"), configFiles->get(i)->guid.toString().cstr(), m_name);
+      }
    }
 }
 

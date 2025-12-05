@@ -100,6 +100,18 @@ void VersionableObject::updateFromImport(ConfigEntry *config)
 }
 
 /**
+ * Update object from imported JSON configuration
+ */
+void VersionableObject::updateFromImport(json_t *data)
+{
+   json_t *versionObj = json_object_get(data, "version");
+   if (json_is_integer(versionObj))
+   {
+      m_version = static_cast<uint32_t>(json_integer_value(versionObj));
+   }
+}
+
+/**
  * Serialize object to JSON
  */
 void VersionableObject::toJson(json_t *root)

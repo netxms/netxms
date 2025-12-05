@@ -285,31 +285,33 @@ void AutoBindTarget::toJson(json_t *root)
 }
 
 /**
- * Create export record
+ * Create configuration export record
  */
-void AutoBindTarget::createExportRecord(TextFileWriter& xml)
+json_t *AutoBindTarget::createExportRecord()
 {
+   json_t *filters = json_object();
    internalLock();
    for(int i = 0; i < MAX_AUTOBIND_TARGET_FILTERS; i++)
    {
       if (m_autoBindFilterSources[i] == nullptr)
          continue;
 
-      xml.appendUtf8String("\t\t\t<filter");
-      if (i > 0)
-         xml.append(i + 1);
-      xml.appendUtf8String(" autoBind=\"");
-      xml.append(isAutoBindEnabled(i));
-      xml.appendUtf8String("\" autoUnbind=\"");
-      xml.append(isAutoUnbindEnabled(i));
-      xml.appendUtf8String("\">");
-      xml.appendPreallocated(EscapeStringForXML(m_autoBindFilterSources[i], -1));
-      xml.appendUtf8String("</filter");
-      if (i > 0)
-         xml.append(i + 1);
-      xml.appendUtf8String(">\n");
+      json_t *filter = json_object();
+      json_object_set_new(filter, "autoBind", json_boolean(isAutoBindEnabled(i)));
+      json_object_set_new(filter, "autoUnbind", json_boolean(isAutoUnbindEnabled(i)));
+      json_object_set_new(filter, "source", json_string_t(m_autoBindFilterSources[i]));
+      
+      // Use filter naming convention: "filter", "filter2", "filter3", etc.
+      char filterName[16];
+      if (i == 0)
+         strcpy(filterName, "filter");
+      else
+         snprintf(filterName, sizeof(filterName), "filter%d", i + 1);
+      
+      json_object_set_new(filters, filterName, filter);
    }
    internalUnlock();
+   return filters;
 }
 
 /**
@@ -340,6 +342,43 @@ void AutoBindTarget::updateFromImport(const ConfigEntry& config, bool defaultAut
       {
          setAutoBindFilter(i, nullptr);
          setAutoBindMode(i, false, false);
+      }
+   }
+}
+
+/**
+ * Update from import JSON record
+ */
+void AutoBindTarget::updateFromImport(json_t *data)
+{
+   // Handle autoBind object structure: autoBind.filter, autoBind.filter2, etc.
+   json_t *autoBindObj = json_object_get(data, "autoBind");
+   if (json_is_object(autoBindObj))
+   {
+      for(int i = 0; i < MAX_AUTOBIND_TARGET_FILTERS; i++)
+      {
+         char filterName[16];
+         if (i == 0)
+            strcpy(filterName, "filter");
+         else
+            snprintf(filterName, sizeof(filterName), "filter%d", i + 1);
+            
+         json_t *filterObj = json_object_get(autoBindObj, filterName);
+         if (json_is_object(filterObj))
+         {
+            TCHAR *filter = json_object_get_string_t(filterObj, "source", nullptr);
+            setAutoBindFilter(i, filter);
+            MemFree(filter);
+            
+            setAutoBindMode(i, 
+               json_object_get_boolean(filterObj, "autoBind", false), 
+               json_object_get_boolean(filterObj, "autoUnbind", false));
+         }
+         else
+         {
+            setAutoBindFilter(i, nullptr);
+            setAutoBindMode(i, false, false);
+         }
       }
    }
 }

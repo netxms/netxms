@@ -253,6 +253,252 @@ EPRule::EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5) :
 }
 
 /**
+ * Create rule from JSON object
+ */
+EPRule::EPRule(json_t *json, ImportContext *context) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
+{
+   m_id = 0;
+   m_guid = json_object_get_uuid(json, "guid");
+   if (m_guid.isNull())
+      m_guid = uuid::generate(); // generate random GUID if rule was imported without GUID
+   m_flags = json_object_get_uint32(json, "flags");
+
+   // Import events - JSON format uses event objects with name property
+   json_t *eventsArray = json_object_get(json, "events");
+   if (json_is_array(eventsArray))
+   {
+      size_t index;
+      json_t *eventItem;
+      json_array_foreach(eventsArray, index, eventItem)
+      {
+         if (json_is_object(eventItem))
+         {
+            const TCHAR *eventName = json_object_get_string(eventItem, "name", nullptr);
+            if (eventName != nullptr)
+            {
+               uint32_t eventCode = EventCodeFromName(eventName, 0);
+               if (eventCode != 0)
+               {
+                  m_events.add(eventCode);
+               }
+               else
+               {
+                  context->log(NXLOG_WARNING, _T("EPRule::EPRule()"),
+                     _T("Event processing policy rule import: rule \"%s\" refers to unknown event \"%s\""),
+                     m_guid.toString().cstr(), eventName);
+               }
+            }
+         }
+      }
+   }
+
+   //TODO: Import sources 
+   //TODO: Import source exclusions 
+
+   // Import time frames
+   json_t *timeFramesArray = json_object_get(json, "timeFrames");
+   if (json_is_array(timeFramesArray))
+   {
+      size_t index;
+      json_t *timeFrame;
+      json_array_foreach(timeFramesArray, index, timeFrame)
+      {
+         if (json_is_object(timeFrame))
+         {
+            uint32_t time = json_object_get_uint32(timeFrame, "time");
+            uint64_t date = json_object_get_uint64(timeFrame, "date");
+            m_timeFrames.add(new TimeFrame(time, date));
+         }
+      }
+   }
+
+   // Import actions
+   json_t *actionsArray = json_object_get(json, "actions");
+   if (json_is_array(actionsArray))
+   {
+      size_t index;
+      json_t *action;
+      json_array_foreach(actionsArray, index, action)
+      {
+         if (json_is_object(action))
+         {
+            uint32_t actionId = json_object_get_uint32(action, "id");
+            String timerDelay = json_object_get_string(action, "timerDelay", _T(""));
+            String timerKey = json_object_get_string(action, "timerKey", _T(""));
+            String blockingTimerKey = json_object_get_string(action, "blockingTimerKey", _T(""));
+            String snoozeTime = json_object_get_string(action, "snoozeTime", _T(""));
+            bool active = json_object_get_boolean(action, "active", true);
+            if (IsValidActionId(actionId))
+               m_actions.add(new ActionExecutionConfiguration(actionId, 
+                  timerDelay.isEmpty() ? nullptr : MemCopyString(timerDelay),
+                  snoozeTime.isEmpty() ? nullptr : MemCopyString(snoozeTime),
+                  timerKey.isEmpty() ? nullptr : MemCopyString(timerKey),
+                  blockingTimerKey.isEmpty() ? nullptr : MemCopyString(blockingTimerKey),
+                  active));
+         }
+      }
+   }
+
+   // Import timer cancellations
+   json_t *timerCancellationsArray = json_object_get(json, "timerCancellations");
+   if (json_is_array(timerCancellationsArray))
+   {
+      size_t index;
+      json_t *timerKey;
+      json_array_foreach(timerCancellationsArray, index, timerKey)
+      {
+         if (json_is_string(timerKey))
+         {
+            const char *keyStr = json_string_value(timerKey);
+            if (keyStr != nullptr && *keyStr != 0)
+            {
+#ifdef UNICODE
+               WCHAR *key = WideStringFromUTF8String(keyStr);
+               m_timerCancellations.add(key);
+               MemFree(key);
+#else
+               m_timerCancellations.add(keyStr);
+#endif
+            }
+         }
+      }
+   }
+
+   // Import basic properties
+   m_comments = MemCopyString(json_object_get_string(json, "comments", _T("")));
+   m_alarmSeverity = json_object_get_int32(json, "alarmSeverity");
+   m_alarmTimeout = json_object_get_uint32(json, "alarmTimeout");
+   
+   // Import alarm timeout event - JSON format uses event name
+   const TCHAR *alarmTimeoutEventName = json_object_get_string(json, "alarmTimeoutEvent", _T("SYS_ALARM_TIMEOUT"));
+   m_alarmTimeoutEvent = EventCodeFromName(alarmTimeoutEventName, EVENT_ALARM_TIMEOUT);
+   
+   m_alarmKey = MemCopyString(json_object_get_string(json, "alarmKey", _T("")));
+   m_alarmMessage = MemCopyString(json_object_get_string(json, "alarmMessage", _T("")));
+   m_alarmImpact = MemCopyString(json_object_get_string(json, "alarmImpact", _T("")));
+   
+   const char *rcaScript = json_object_get_string_utf8(json, "rootCauseAnalysisScript", "");
+#ifdef UNICODE
+   m_rcaScriptName = WideStringFromUTF8String(rcaScript);
+#else
+   m_rcaScriptName = MemCopyStringA(rcaScript);
+#endif
+   
+   m_aiAgentInstructions = MemCopyString(json_object_get_string(json, "aiAgentInstructions", _T("")));
+   
+   String downtimeTag = json_object_get_string(json, "downtimeTag", _T(""));
+   wcslcpy(m_downtimeTag, downtimeTag, MAX_DOWNTIME_TAG_LENGTH);
+
+   // Import alarm categories
+   json_t *categoriesArray = json_object_get(json, "alarmCategories");
+   if (json_is_array(categoriesArray))
+   {
+      size_t index;
+      json_t *categoryId;
+      json_array_foreach(categoriesArray, index, categoryId)
+      {
+         if (json_is_integer(categoryId))
+         {
+            m_alarmCategoryList.add(static_cast<uint32_t>(json_integer_value(categoryId)));
+         }
+      }
+   }
+
+   // Import persistent storage actions
+   json_t *pstorageSetActionsObj = json_object_get(json, "pstorageSetActions");
+   if (json_is_object(pstorageSetActionsObj))
+   {
+      m_pstorageSetActions.addAllFromJson(pstorageSetActionsObj);
+   }
+
+   json_t *pstorageDeleteActionsArray = json_object_get(json, "pstorageDeleteActions");
+   if (json_is_array(pstorageDeleteActionsArray))
+   {
+      size_t index;
+      json_t *deleteKey;
+      json_array_foreach(pstorageDeleteActionsArray, index, deleteKey)
+      {
+         if (json_is_string(deleteKey))
+         {
+            const char *keyStr = json_string_value(deleteKey);
+            if (keyStr != nullptr && *keyStr != 0)
+            {
+#ifdef UNICODE
+               WCHAR *key = WideStringFromUTF8String(keyStr);
+               m_pstorageDeleteActions.add(key);
+               MemFree(key);
+#else
+               m_pstorageDeleteActions.add(keyStr);
+#endif
+            }
+         }
+      }
+   }
+
+   // Import custom attribute actions
+   json_t *customAttributeSetActionsObj = json_object_get(json, "customAttributeSetActions");
+   if (json_is_object(customAttributeSetActionsObj))
+   {
+      m_customAttributeSetActions.addAllFromJson(customAttributeSetActionsObj);
+   }
+
+   json_t *customAttributeDeleteActionsArray = json_object_get(json, "customAttributeDeleteActions");
+   if (json_is_array(customAttributeDeleteActionsArray))
+   {
+      size_t index;
+      json_t *deleteKey;
+      json_array_foreach(customAttributeDeleteActionsArray, index, deleteKey)
+      {
+         if (json_is_string(deleteKey))
+         {
+            const char *keyStr = json_string_value(deleteKey);
+            if (keyStr != nullptr && *keyStr != 0)
+            {
+#ifdef UNICODE
+               WCHAR *key = WideStringFromUTF8String(keyStr);
+               m_customAttributeDeleteActions.add(key);
+               MemFree(key);
+#else
+               m_customAttributeDeleteActions.add(keyStr);
+#endif
+            }
+         }
+      }
+   }
+
+   // Import and compile scripts
+   String filterScriptSource = json_object_get_string(json, "filterScript", _T(""));
+   m_filterScriptSource = MemCopyString(filterScriptSource);
+   if ((m_filterScriptSource != nullptr) && (*m_filterScriptSource != 0))
+   {
+      m_filterScript = CompileServerScript(m_filterScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Filter::%u"), m_id + 1);
+      if (m_filterScript == nullptr)
+      {
+         context->log(NXLOG_ERROR, _T("EPRule::EPRule()"), _T("Failed to compile evaluation script for event processing policy rule %s"), m_guid.toString().cstr());
+      }
+   }
+   else
+   {
+      m_filterScript = nullptr;
+   }
+
+   String actionScriptSource = json_object_get_string(json, "actionScript", _T(""));
+   m_actionScriptSource = MemCopyString(actionScriptSource);
+   if ((m_actionScriptSource != nullptr) && (*m_actionScriptSource != 0))
+   {
+      m_actionScript = CompileServerScript(m_actionScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Action::%u"), m_id + 1);
+      if (m_actionScript == nullptr)
+      {
+         context->log(NXLOG_ERROR, _T("EPRule::EPRule()"), _T("Failed to compile action script for event processing policy rule %s"), m_guid.toString().cstr());
+      }
+   }
+   else
+   {
+      m_actionScript = nullptr;
+   }
+}
+
+/**
  * Construct event policy rule from database record
  * Assuming the following field order:
  * rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,
@@ -421,209 +667,9 @@ EPRule::~EPRule()
    MemFree(m_aiAgentInstructions);
 }
 
-/**
- * Create rule ordering entry
- */
-void EPRule::createOrderingExportRecord(TextFileWriter& xml) const
-{
-   xml.appendUtf8String("\t\t<rule id=\"");
-   xml.append(m_id + 1);
-   xml.appendUtf8String("\">");
-   xml.append(m_guid.toString());
-   xml.appendUtf8String("</rule>\n");
-}
 
-/**
- * Create management pack record
- */
-void EPRule::createExportRecord(TextFileWriter& xml) const
-{
-   xml.appendUtf8String("\t\t<rule id=\"");
-   xml.append(m_id + 1);
-   xml.appendUtf8String("\">\n\t\t\t<guid>");
-   xml.append(m_guid);
-   xml.appendUtf8String("</guid>\n\t\t\t<flags>");
-   xml.append(m_flags);
-   xml.appendUtf8String("</flags>\n\t\t\t<alarmMessage>");
-   xml.append(EscapeStringForXML2(m_alarmMessage));
-   xml.appendUtf8String("</alarmMessage>\n\t\t\t<alarmImpact>");
-   xml.append(EscapeStringForXML2(m_alarmImpact));
-   xml.appendUtf8String("</alarmImpact>\n\t\t\t<alarmKey>");
-   xml.append(EscapeStringForXML2(m_alarmKey));
-   xml.appendUtf8String("</alarmKey>\n\t\t\t<rootCauseAnalysisScript>");
-   xml.append(EscapeStringForXML2(m_rcaScriptName));
-   xml.appendUtf8String("</rootCauseAnalysisScript>\n\t\t\t<alarmSeverity>");
-   xml.append(m_alarmSeverity);
-   xml.appendUtf8String("</alarmSeverity>\n\t\t\t<alarmTimeout>");
-   xml.append(m_alarmTimeout);
-   xml.appendUtf8String("</alarmTimeout>\n\t\t\t<alarmTimeoutEvent>");
-   xml.append(m_alarmTimeoutEvent);
-   xml.appendUtf8String("</alarmTimeoutEvent>\n\t\t\t<downtimeTag>");
-   xml.append(EscapeStringForXML2(m_downtimeTag));
-   xml.appendUtf8String("</downtimeTag>\n\t\t\t<script>");
-   xml.append(EscapeStringForXML2(m_filterScriptSource));
-   xml.appendUtf8String("</script>\n\t\t\t<actionScript>");
-   xml.append(EscapeStringForXML2(m_actionScriptSource));
-   xml.appendUtf8String("</actionScript>\n\t\t\t<comments>");
-   xml.append(EscapeStringForXML2(m_comments));
-   xml.appendUtf8String("</comments>\n\t\t\t<sources>\n");
 
-   for(int i = 0; i < m_sources.size(); i++)
-   {
-      shared_ptr<NetObj> object = FindObjectById(m_sources.get(i));
-      if (object != nullptr)
-      {
-         xml.appendUtf8String("\t\t\t\t<source id=\"");
-         xml.append(object->getId());
-         xml.appendUtf8String("\">\n\t\t\t\t\t<name>");
-         xml.append(EscapeStringForXML2(object->getName()));
-         xml.appendUtf8String("</name>\n\t\t\t\t\t<guid>");
-         xml.append(object->getGuid());
-         xml.appendUtf8String("</guid>\n\t\t\t\t\t<class>");
-         xml.append(object->getObjectClass());
-         xml.appendUtf8String("</class>\n\t\t\t\t</source>\n");
-      }
-   }
-   xml.appendUtf8String("\t\t\t</sources>\n\t\t\t<sourceExclusions>\n");
 
-   for(int i = 0; i < m_sourceExclusions.size(); i++)
-   {
-      shared_ptr<NetObj> object = FindObjectById(m_sourceExclusions.get(i));
-      if (object != nullptr)
-      {
-         xml.appendUtf8String("\t\t\t\t<sourceExclusion id=\"");
-         xml.append(object->getId());
-         xml.appendUtf8String("\">\n\t\t\t\t\t<name>");
-         xml.append(EscapeStringForXML2(object->getName()));
-         xml.appendUtf8String("</name>\n\t\t\t\t\t<guid>");
-         xml.append(object->getGuid());
-         xml.appendUtf8String("</guid>\n\t\t\t\t\t<class>");
-         xml.append(object->getObjectClass());
-         xml.appendUtf8String("</class>\n\t\t\t\t</sourceExclusion>\n");
-      }
-   }
-
-   xml.appendUtf8String("\t\t\t</sourceExclusions>\n\t\t\t<events>\n");
-
-   for(int i = 0; i < m_events.size(); i++)
-   {
-      xml.appendUtf8String("\t\t\t\t<event id=\"");
-      xml.append(m_events.get(i));
-      xml.appendUtf8String("\">\n\t\t\t\t\t<name>");
-      wchar_t eventName[MAX_EVENT_NAME];
-      EventNameFromCode(m_events.get(i), eventName);
-      xml.append(EscapeStringForXML2(eventName));
-      xml.appendUtf8String("</name>\n\t\t\t\t</event>\n");
-   }
-
-   xml.appendUtf8String("\t\t\t</events>\n\t\t\t<timeFrames>\n");
-
-   for(int i = 0; i < m_timeFrames.size(); i++)
-   {
-      TimeFrame *timeFrame = m_timeFrames.get(i);
-      xml.appendUtf8String("\t\t\t\t<timeFrame id=\"");
-      xml.append(i + 1);
-      xml.appendUtf8String("\" time=\"");
-      xml.append(timeFrame->getTimeFilter());
-      xml.appendUtf8String("\" date=\"");
-      xml.append(timeFrame->getDateFilter());
-      xml.appendUtf8String("\" />\n");
-   }
-
-   xml.appendUtf8String("\t\t\t</timeFrames>\n\t\t\t<actions>\n");
-   for(int i = 0; i < m_actions.size(); i++)
-   {
-      xml.append(_T("\t\t\t\t<action id=\""));
-      const ActionExecutionConfiguration *a = m_actions.get(i);
-      xml.append(a->actionId);
-      xml.appendUtf8String("\">\n\t\t\t\t\t<guid>");
-      xml.append(GetActionGUID(a->actionId));
-      xml.appendUtf8String("</guid>\n\t\t\t\t\t<timerDelay>");
-      xml.append(EscapeStringForXML2(a->timerDelay));
-      xml.appendUtf8String("</timerDelay>\n\t\t\t\t\t<timerKey>");
-      xml.append(EscapeStringForXML2(a->timerKey));
-      xml.appendUtf8String("</timerKey>\n\t\t\t\t\t<blockingTimerKey>");
-      xml.append(EscapeStringForXML2(a->blockingTimerKey));
-      xml.appendUtf8String("</blockingTimerKey>\n\t\t\t\t\t<snoozeTime>");
-      xml.append(EscapeStringForXML2(a->snoozeTime));
-      xml.appendUtf8String("</snoozeTime>\n\t\t\t\t\t<active>");
-      xml.append(a->active);
-      xml.appendUtf8String("</active>\n\t\t\t\t</action>\n");
-   }
-
-   xml.appendUtf8String("\t\t\t</actions>\n\t\t\t<timerCancellations>\n");
-   for(int i = 0; i < m_timerCancellations.size(); i++)
-   {
-      xml.appendUtf8String("\t\t\t\t<timerKey>");
-      xml.append(EscapeStringForXML2(m_timerCancellations.get(i)));
-      xml.appendUtf8String("</timerKey>\n");
-   }
-
-   xml.appendUtf8String("\t\t\t</timerCancellations>\n\t\t\t<pStorageActions>\n");
-   int id = 0;
-   for(KeyValuePair<const wchar_t> *action : m_pstorageSetActions)
-   {
-      xml.appendUtf8String("\t\t\t\t<set id=\"");
-      xml.append(++id);
-      xml.appendUtf8String("\" key=\"");
-      xml.append(EscapeStringForXML2(action->key));
-      xml.appendUtf8String("\">");
-      xml.append(EscapeStringForXML2(action->value));
-      xml.appendUtf8String("</set>\n");
-   }
-   for(int i = 0; i < m_pstorageDeleteActions.size(); i++)
-   {
-      xml.appendUtf8String("\t\t\t\t<delete id=\"");
-      xml.append(i + 1);
-      xml.appendUtf8String("\" key=\"");
-      xml.append(EscapeStringForXML2(m_pstorageDeleteActions.get(i)));
-      xml.appendUtf8String("\"/>\n");
-   }
-
-   xml.appendUtf8String("\t\t\t</pStorageActions>\n\t\t\t<customAttributeActions>\n");
-   id = 0;
-   for(KeyValuePair<const wchar_t> *action : m_customAttributeSetActions)
-   {
-      xml.appendUtf8String("\t\t\t\t<set id=\"");
-      xml.append(++id);
-      xml.appendUtf8String("\" name=\"");
-      xml.append(EscapeStringForXML2(action->key));
-      xml.appendUtf8String("\">");
-      xml.append(EscapeStringForXML2(action->value));
-      xml.appendUtf8String("</set>\n");
-   }
-   for(int i = 0; i < m_customAttributeDeleteActions.size(); i++)
-   {
-      xml.appendUtf8String("\t\t\t\t<delete id=\"");
-      xml.append(i + 1);
-      xml.appendUtf8String("\" name=\"");
-      xml.append(EscapeStringForXML2(m_customAttributeDeleteActions.get(i)));
-      xml.appendUtf8String("\"/>\n");
-   }
-
-   xml.appendUtf8String("\t\t\t</customAttributeActions>\n\t\t\t<alarmCategories>\n");
-   for(int i = 0; i < m_alarmCategoryList.size(); i++)
-   {
-      AlarmCategory *category = GetAlarmCategory(m_alarmCategoryList.get(i));
-      xml.appendUtf8String("\t\t\t\t<category id=\"");
-      xml.append(category->getId());
-      xml.appendUtf8String("\" name=\"");
-      xml.append(EscapeStringForXML2(category->getName()));
-      xml.appendUtf8String("\">");
-      xml.append(category->getDescription());
-      xml.appendUtf8String("</category>\n");
-      delete category;
-   }
-
-   if ((m_aiAgentInstructions != nullptr) && (*m_aiAgentInstructions != 0))
-   {
-      xml.appendUtf8String("\t\t\t\t<aiAgentInstructions>");
-      xml.append(EscapeStringForXML2(m_aiAgentInstructions));
-      xml.appendUtf8String("</aiAgentInstructions>\n");
-   }
-
-   xml.appendUtf8String("\t\t\t</alarmCategories>\n\t\t</rule>\n");
-}
 
 /**
  * Validate rule configuration
@@ -1573,16 +1619,145 @@ void EPRule::fillMessage(NXCPMessage *msg) const
 }
 
 /**
+ * Create configuration export record
+ */
+json_t *EPRule::createExportRecord() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "id", json_integer(m_id + 1));
+   json_object_set_new(root, "guid", m_guid.toJson());
+   
+   json_object_set_new(root, "flags", json_integer(m_flags));
+   
+   // Export sources with full object information
+   json_t *sources = json_array();
+   for(int i = 0; i < m_sources.size(); i++)
+   {
+      shared_ptr<NetObj> object = FindObjectById(m_sources.get(i));
+      if (object != nullptr)
+      {
+         json_t *source = json_object();
+         json_object_set_new(source, "id", json_integer(object->getId()));
+         json_object_set_new(source, "name", json_string_w(object->getName()));
+         json_object_set_new(source, "guid", object->getGuid().toJson());
+         json_object_set_new(source, "class", json_integer(object->getObjectClass()));
+         json_array_append_new(sources, source);
+      }
+   }
+   json_object_set_new(root, "sources", sources);
+   
+   // Export source exclusions with full object information  
+   json_t *sourceExclusions = json_array();
+   for(int i = 0; i < m_sourceExclusions.size(); i++)
+   {
+      shared_ptr<NetObj> object = FindObjectById(m_sourceExclusions.get(i));
+      if (object != nullptr)
+      {
+         json_t *sourceExclusion = json_object();
+         json_object_set_new(sourceExclusion, "id", json_integer(object->getId()));
+         json_object_set_new(sourceExclusion, "name", json_string_w(object->getName()));
+         json_object_set_new(sourceExclusion, "guid", object->getGuid().toJson());
+         json_object_set_new(sourceExclusion, "class", json_integer(object->getObjectClass()));
+         json_array_append_new(sourceExclusions, sourceExclusion);
+      }
+   }
+   json_object_set_new(root, "sourceExclusions", sourceExclusions);
+   
+   // Export events with names (XML-compatible structure)
+   json_t *events = json_array();
+   for(int i = 0; i < m_events.size(); i++)
+   {
+      uint32_t eventCode = m_events.get(i);
+      json_t *event = json_object();
+      
+      TCHAR eventName[MAX_EVENT_NAME];
+      if (EventNameFromCode(eventCode, eventName))
+      {
+         json_object_set_new(event, "name", json_string_t(eventName));
+      }
+      else
+      {
+         json_object_set_new(event, "name", json_string("UNKNOWN_EVENT"));
+      }
+      
+      json_array_append_new(events, event);
+   }
+   json_object_set_new(root, "events", events);
+   
+   json_t *timeFrames = json_array();
+   for(TimeFrame *frame : m_timeFrames)
+   {
+      json_t *timeFrame = json_object();
+      json_object_set_new(timeFrame, "time", json_integer(frame->getTimeFilter()));
+      json_object_set_new(timeFrame, "date", json_integer(frame->getDateFilter()));
+      json_array_append_new(timeFrames, timeFrame);
+   }
+   json_object_set_new(root, "timeFrames", timeFrames);
+   json_t *actions = json_array();
+   for(int i = 0; i < m_actions.size(); i++)
+   {
+      const ActionExecutionConfiguration *d = m_actions.get(i);
+      json_t *action = json_object();
+      json_object_set_new(action, "id", json_integer(d->actionId));
+      json_object_set_new(action, "guid", GetActionGUID(d->actionId).toJson());
+      json_object_set_new(action, "timerDelay", json_string_t(d->timerDelay));
+      json_object_set_new(action, "timerKey", json_string_t(d->timerKey));
+      json_object_set_new(action, "blockingTimerKey", json_string_t(d->blockingTimerKey));
+      json_object_set_new(action, "snoozeTime", json_string_t(d->snoozeTime));
+      json_object_set_new(action, "active", json_boolean(d->active));
+      json_array_append_new(actions, action);
+   }
+   json_object_set_new(root, "actions", actions);
+   json_t *timerCancellations = json_array();
+   for(int i = 0; i < m_timerCancellations.size(); i++)
+   {
+      json_array_append_new(timerCancellations, json_string_t(m_timerCancellations.get(i)));
+   }
+   json_object_set_new(root, "timerCancellations", timerCancellations);
+   json_object_set_new(root, "comments", json_string_t(m_comments));
+   json_object_set_new(root, "downtimeTag", json_string_w(m_downtimeTag));
+   json_object_set_new(root, "filterScript", json_string_t(m_filterScriptSource));
+   json_object_set_new(root, "actionScript", json_string_t(m_actionScriptSource));
+   json_object_set_new(root, "alarmMessage", json_string_t(m_alarmMessage));
+   json_object_set_new(root, "alarmImpact", json_string_t(m_alarmImpact));
+   json_object_set_new(root, "alarmSeverity", json_integer(m_alarmSeverity));
+   json_object_set_new(root, "alarmKey", json_string_t(m_alarmKey));
+   json_object_set_new(root, "alarmTimeout", json_integer(m_alarmTimeout));
+   
+   // Export alarm timeout event by name
+   TCHAR alarmTimeoutEventName[MAX_EVENT_NAME];
+   if (EventNameFromCode(m_alarmTimeoutEvent, alarmTimeoutEventName))
+   {
+      json_object_set_new(root, "alarmTimeoutEvent", json_string_t(alarmTimeoutEventName));
+   }
+   else
+   {
+      json_object_set_new(root, "alarmTimeoutEvent", json_string("UNKNOWN_EVENT"));
+   }
+   
+   json_object_set_new(root, "rootCauseAnalysisScript", json_string_t(m_rcaScriptName));
+   json_object_set_new(root, "alarmCategories", m_alarmCategoryList.toJson());
+   json_object_set_new(root, "pstorageSetActions", m_pstorageSetActions.toJson());
+   json_object_set_new(root, "pstorageDeleteActions", m_pstorageDeleteActions.toJson());
+   json_object_set_new(root, "customAttributeSetActions", m_customAttributeSetActions.toJson());
+   json_object_set_new(root, "customAttributeDeleteActions", m_customAttributeDeleteActions.toJson());
+   json_object_set_new(root, "aiAgentInstructions", json_string_t(m_aiAgentInstructions));
+
+   return root;
+}
+
+/**
  * Serialize rule to JSON
  */
 json_t *EPRule::toJson() const
 {
    json_t *root = json_object();
-   json_object_set_new(root, "guid", m_guid.toJson());
+   json_object_set_new(root, "guid", m_guid.toJson());   
    json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "sources", m_sources.toJson());
    json_object_set_new(root, "sourceExclusions", m_sourceExclusions.toJson());
    json_object_set_new(root, "events", m_events.toJson());
+
    json_t *timeFrames = json_array();
    for(TimeFrame *frame : m_timeFrames)
    {
@@ -1613,6 +1788,7 @@ json_t *EPRule::toJson() const
    }
    json_object_set_new(root, "timerCancellations", timerCancellations);
    json_object_set_new(root, "comments", json_string_t(m_comments));
+   json_object_set_new(root, "downtimeTag", json_string_w(m_downtimeTag));
    json_object_set_new(root, "filterScript", json_string_t(m_filterScriptSource));
    json_object_set_new(root, "actionScript", json_string_t(m_actionScriptSource));
    json_object_set_new(root, "alarmMessage", json_string_t(m_alarmMessage));
@@ -1623,6 +1799,7 @@ json_t *EPRule::toJson() const
    json_object_set_new(root, "alarmTimeoutEvent", json_integer(m_alarmTimeoutEvent));
    json_object_set_new(root, "rcaScriptName", json_string_t(m_rcaScriptName));
    json_object_set_new(root, "categories", m_alarmCategoryList.toJson());
+   json_object_set_new(root, "rootCauseAnalysisScript", json_string_t(m_rcaScriptName));
    json_object_set_new(root, "pstorageSetActions", m_pstorageSetActions.toJson());
    json_object_set_new(root, "pstorageDeleteActions", m_pstorageDeleteActions.toJson());
    json_object_set_new(root, "customAttributeSetActions", m_customAttributeSetActions.toJson());
@@ -1817,34 +1994,42 @@ bool EventPolicy::isCategoryInUse(uint32_t categoryId) const
    return bResult;
 }
 
+
+
+
+
 /**
- * Export rule
+ * Export rule to JSON
  */
-void EventPolicy::exportRule(TextFileWriter& xml, const uuid& guid) const
+json_t *EventPolicy::exportRule(const uuid& guid) const
 {
+   json_t *rule = nullptr;
    readLock();
    for(int i = 0; i < m_rules.size(); i++)
    {
       if (guid.equals(m_rules.get(i)->getGuid()))
       {
-         m_rules.get(i)->createExportRecord(xml);
+         rule = m_rules.get(i)->createExportRecord();
          break;
       }
    }
    unlock();
+   return rule;
 }
 
 /**
- * Export rules ordering
+ * Export rules ordering to JSON
  */
-void EventPolicy::exportRuleOrgering(TextFileWriter& xml) const
+json_t *EventPolicy::exportRuleOrdering() const
 {
+   json_t *ordering = json_array();
    readLock();
    for(int i = 0; i < m_rules.size(); i++)
    {
-      m_rules.get(i)->createOrderingExportRecord(xml);
+      json_array_append_new(ordering, json_string_t(m_rules.get(i)->getGuid().toString()));
    }
    unlock();
+   return ordering;
 }
 
 /**

@@ -94,6 +94,7 @@ public:
    AssetAttribute(const NXCPMessage &msg);
    AssetAttribute(DB_RESULT result, int row);
    AssetAttribute(const wchar_t *name, const ConfigEntry& entry, bool nxslV5);
+   AssetAttribute(json_t *json);
    ~AssetAttribute();
 
    void loadEnumValues(DB_RESULT result);
@@ -103,7 +104,7 @@ public:
    bool deleteFromDatabase();
 
    json_t *toJson() const;
-   void createExportRecord(TextFileWriter& xml);
+   void createExportRecord(json_t *array);
 
    const wchar_t *getName() const { return m_name; }
    AMDataType getDataType() const { return m_dataType; }
@@ -171,8 +172,9 @@ std::pair<uint32_t, String> UpdateAssetIdentification(Asset *asset, NetObj *obje
 void LinkAsset(Asset *asset, NetObj *object, ClientSession *session);
 void UnlinkAsset(Asset *asset, ClientSession *session);
 void UpdateAssetLinkage(NetObj *object, bool matchByMacAllowed = true);
-void ExportAssetManagementSchema(TextFileWriter& xml, const StringList& attributeNames);
+void ExportAssetManagementSchema(json_t *array, const StringList& attributeNames);
 void ImportAssetManagementSchema(const ConfigEntry& root, bool overwrite, ImportContext *context,bool nxslV5);
+void ImportAssetManagementSchema(json_t *root, bool overwrite, ImportContext *context);
 void WriteAssetChangeLog(uint32_t assetId, const TCHAR *attributeName, AssetOperation operation, const TCHAR *oldValue, const TCHAR *newValue, uint32_t userId, uint32_t objectId);
 
 /**

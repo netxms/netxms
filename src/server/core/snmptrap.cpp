@@ -106,6 +106,50 @@ SNMPTrapMapping::SNMPTrapMapping(DB_RESULT trapResult, DB_HANDLE hdb, DB_STATEME
 }
 
 /**
+ * Create SNMP trap mapping from JSON
+ */
+SNMPTrapMapping::SNMPTrapMapping(json_t *json, const uuid& guid, uint32_t id, uint32_t eventCode, bool nxslV5) : m_mappings(8, 8, Ownership::True)
+{
+   if (id == 0)
+      m_id = CreateUniqueId(IDG_SNMP_TRAP);
+   else
+      m_id = id;
+
+   m_guid = guid;
+   
+   TCHAR *oidStr = json_object_get_string_t(json, "oid", _T(""));
+   m_objectId = SNMP_ObjectId::parse(oidStr);
+   MemFree(oidStr);
+
+   m_eventCode = eventCode;
+   
+   m_description = json_object_get_string_t(json, "description", _T(""));   
+   m_eventTag = json_object_get_string_t(json, "eventTag", nullptr);   
+   m_scriptSource = json_object_get_string_t(json, "transformationScript", _T(""));
+   
+   m_script = nullptr;
+
+   json_t *parametersArray = json_object_get(json, "parameters");
+   if (json_is_array(parametersArray))
+   {
+      size_t index;
+      json_t *param;
+      json_array_foreach(parametersArray, index, param)
+      {
+         if (json_is_object(param))
+         {
+            SNMPTrapParameterMapping *paramMapping = new SNMPTrapParameterMapping(param);
+            if (!paramMapping->isPositional() && !paramMapping->getOid()->isValid())
+               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Invalid trap parameter OID for trap %u in trap mapping table"), m_id);
+            m_mappings.add(paramMapping);
+         }
+      }
+   }
+
+   compileScript();
+}
+
+/**
  * Create SNMP trap mapping object from config entry
  */
 SNMPTrapMapping::SNMPTrapMapping(const ConfigEntry& entry, const uuid& guid, uint32_t id, uint32_t eventCode, bool nxslV5) : m_mappings(8, 8, Ownership::True)
@@ -297,6 +341,99 @@ void SNMPTrapMapping::notifyOnTrapCfgChange(uint32_t code)
 }
 
 /**
+ * Create configuration export record
+ */
+json_t *SNMPTrapMapping::createExportRecord() const
+{
+   json_t *trap = json_object();
+   TCHAR szBuffer[1024];
+   
+   json_object_set_new(trap, "id", json_integer(m_id));
+   json_object_set_new(trap, "guid", json_string_t(m_guid.toString()));
+   json_object_set_new(trap, "oid", json_string_t(m_objectId.toString()));
+   json_object_set_new(trap, "description", json_string_t(m_description));
+   json_object_set_new(trap, "eventTag", json_string_t(m_eventTag));
+   
+   EventNameFromCode(m_eventCode, szBuffer);
+   json_object_set_new(trap, "event", json_string_t(szBuffer));
+   
+   json_object_set_new(trap, "transformationScript", json_string_t(m_scriptSource));
+   
+   if (m_mappings.size() > 0)
+   {
+      json_t *parameters = json_array();
+      for(int i = 0; i < m_mappings.size(); i++)
+      {
+         const SNMPTrapParameterMapping *pm = m_mappings.get(i);
+         json_t *parameter = json_object();
+         
+         json_object_set_new(parameter, "id", json_integer(i + 1));
+         json_object_set_new(parameter, "flags", json_integer(pm->getFlags()));
+         json_object_set_new(parameter, "description", json_string_t(pm->getDescription()));
+         
+         if (!pm->isPositional())
+         {
+            json_object_set_new(parameter, "oid", json_string_t(pm->getOid()->toString(szBuffer, 1024)));
+         }
+         else
+         {
+            json_object_set_new(parameter, "position", json_integer(pm->getPosition()));
+         }
+         
+         json_array_append_new(parameters, parameter);
+      }
+      json_object_set_new(trap, "parameters", parameters);
+   }
+   
+   return trap;
+}
+
+/**
+ * Serialize object to JSON (for audit purposes)
+ */
+json_t *SNMPTrapMapping::toJson() const
+{
+   json_t *trap = json_object();
+   TCHAR szBuffer[1024];
+   
+   json_object_set_new(trap, "id", json_integer(m_id));
+   json_object_set_new(trap, "guid", json_string_t(m_guid.toString()));
+   json_object_set_new(trap, "oid", json_string_t(m_objectId.toString()));
+   json_object_set_new(trap, "description", json_string_t(m_description));
+   json_object_set_new(trap, "eventTag", json_string_t(m_eventTag));
+   json_object_set_new(trap, "event", json_integer(m_eventCode));   
+   json_object_set_new(trap, "transformationScript", json_string_t(m_scriptSource));
+   
+   if (m_mappings.size() > 0)
+   {
+      json_t *parameters = json_array();
+      for(int i = 0; i < m_mappings.size(); i++)
+      {
+         const SNMPTrapParameterMapping *pm = m_mappings.get(i);
+         json_t *parameter = json_object();
+         
+         json_object_set_new(parameter, "id", json_integer(i + 1));
+         json_object_set_new(parameter, "flags", json_integer(pm->getFlags()));
+         json_object_set_new(parameter, "description", json_string_t(pm->getDescription()));
+         
+         if (!pm->isPositional())
+         {
+            json_object_set_new(parameter, "oid", json_string_t(pm->getOid()->toString(szBuffer, 1024)));
+         }
+         else
+         {
+            json_object_set_new(parameter, "position", json_integer(pm->getPosition()));
+         }
+         
+         json_array_append_new(parameters, parameter);
+      }
+      json_object_set_new(trap, "parameters", parameters);
+   }
+   
+   return trap;
+}
+
+/**
  * SNMP trap parameter map default constructor
  */
 SNMPTrapParameterMapping::SNMPTrapParameterMapping()
@@ -331,7 +468,32 @@ SNMPTrapParameterMapping::SNMPTrapParameterMapping(DB_RESULT mapResult, int row)
 }
 
 /**
- * Create SNMP trap parameter map object from config entry
+ * Create SNMP trap parameter mapping from JSON
+ */
+SNMPTrapParameterMapping::SNMPTrapParameterMapping(json_t *json)
+{
+   json_t *positionObj = json_object_get(json, "position");
+   if (json_is_integer(positionObj) && (json_integer_value(positionObj) > 0))
+   {
+      m_objectId = nullptr;
+      m_position = (uint32_t)json_integer_value(positionObj);
+   }
+   else
+   {
+      TCHAR *oidStr = json_object_get_string_t(json, "oid", _T(""));
+      m_objectId = new SNMP_ObjectId(SNMP_ObjectId::parse(oidStr));
+      m_position = 0;
+      MemFree(oidStr);
+   }
+
+   m_description = json_object_get_string_t(json, "description", _T(""));
+
+   json_t *flagsObj = json_object_get(json, "flags");
+   m_flags = json_is_integer(flagsObj) ? (uint32_t)json_integer_value(flagsObj) : 0;
+}
+
+/**
+ * Create SNMP trap parameter map object from ConfigEntry
  */
 SNMPTrapParameterMapping::SNMPTrapParameterMapping(ConfigEntry *entry)
 {
@@ -609,11 +771,12 @@ uint32_t UpdateTrapMappingFromMsg(const NXCPMessage& msg)
 }
 
 /**
- * Create trap record in NXMP file
+ * Create trap record as JSON object
  */
-void CreateTrapMappingExportRecord(TextFileWriter& xml, uint32_t id)
+json_t *CreateTrapMappingExportRecord(uint32_t id)
 {
-	TCHAR szBuffer[1024];
+   json_t *trap = nullptr;
+   TCHAR szBuffer[1024];
 
    LockGuard lockGuard(s_trapMappingLock);
 
@@ -622,53 +785,47 @@ void CreateTrapMappingExportRecord(TextFileWriter& xml, uint32_t id)
       SNMPTrapMapping *tm = s_trapMappings.get(i);
       if (tm->getId() == id)
       {
-         xml.append(_T("\t\t<trap id=\""));
-         xml.append(id);
-         xml.append(_T("\">\n\t\t\t<guid>"));
-         xml.append(tm->getGuid());
-         xml.append(_T("</guid>\n\t\t\t<oid>"));
-         xml.append(tm->getOid().toString());
-         xml.append(_T("</oid>\n\t\t\t<description>"));
-         xml.append(EscapeStringForXML2(tm->getDescription()));
-         xml.append(_T("</description>\n\t\t\t<eventTag>"));
-         xml.append(EscapeStringForXML2(tm->getEventTag()));
-         xml.append(_T("</eventTag>\n\t\t\t<event>"));
+         trap = json_object();
+         json_object_set_new(trap, "id", json_integer(id));
+         json_object_set_new(trap, "guid", json_string_t(tm->getGuid().toString()));
+         json_object_set_new(trap, "oid", json_string_t(tm->getOid().toString()));
+         json_object_set_new(trap, "description", json_string_t(tm->getDescription()));
+         json_object_set_new(trap, "eventTag", json_string_t(tm->getEventTag()));
+         
          EventNameFromCode(tm->getEventCode(), szBuffer);
-         xml.append(EscapeStringForXML2(szBuffer));
-         xml.append(_T("</event>\n\t\t\t<transformationScript>"));
-         xml.append(EscapeStringForXML2(tm->getScriptSource()));
-         xml.append(_T("</transformationScript>\n"));
-			if (tm->getParameterMappingCount() > 0)
-			{
-            xml.append(_T("\t\t\t<parameters>\n"));
-				for(int j = 0; j < tm->getParameterMappingCount(); j++)
-				{
-				   const SNMPTrapParameterMapping *pm = tm->getParameterMapping(j);
-					xml.appendFormattedString(_T("\t\t\t\t<parameter id=\"%d\">\n")
-			                             _T("\t\t\t\t\t<flags>%d</flags>\n")
-					                       _T("\t\t\t\t\t<description>%s</description>\n"),
-												  j + 1, pm->getFlags(),
-												  (const TCHAR *)EscapeStringForXML2(pm->getDescription()));
+         json_object_set_new(trap, "event", json_string_t(szBuffer));
+         
+         json_object_set_new(trap, "transformationScript", json_string_t(tm->getScriptSource()));
+         
+         if (tm->getParameterMappingCount() > 0)
+         {
+            json_t *parameters = json_array();
+            for(int j = 0; j < tm->getParameterMappingCount(); j++)
+            {
+               const SNMPTrapParameterMapping *pm = tm->getParameterMapping(j);
+               json_t *parameter = json_object();
+               
+               json_object_set_new(parameter, "flags", json_integer(pm->getFlags()));
+               json_object_set_new(parameter, "description", json_string_t(pm->getDescription()));
+               
                if (!pm->isPositional())
-					{
-						xml.appendUtf8String("\t\t\t\t\t<oid>");
-                  xml.append(pm->getOid()->toString(szBuffer, 1024));
-                  xml.appendUtf8String("</oid>\n");
-					}
-					else
-					{
-						xml.appendUtf8String("\t\t\t\t\t<position>");
-                  xml.append(pm->getPosition());
-                  xml.appendUtf8String("</position>\n");
-					}
-               xml.appendUtf8String("\t\t\t\t</parameter>\n");
-				}
-            xml.appendUtf8String("\t\t\t</parameters>\n");
-			}
-         xml.appendUtf8String("\t\t</trap>\n");
-			break;
-		}
-	}
+               {
+                  json_object_set_new(parameter, "oid", json_string_t(pm->getOid()->toString(szBuffer, 1024)));
+               }
+               else
+               {
+                  json_object_set_new(parameter, "position", json_integer(pm->getPosition()));
+               }
+               
+               json_array_append_new(parameters, parameter);
+            }
+            json_object_set_new(trap, "parameters", parameters);
+         }
+         break;
+      }
+   }
+   
+   return trap;
 }
 
 /**

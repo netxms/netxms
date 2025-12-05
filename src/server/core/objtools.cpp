@@ -1099,95 +1099,306 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *contex
 }
 
 /**
- * Create export records for object tool columns
+ * Import object tool from JSON
  */
-static void CreateObjectToolColumnExportRecords(DB_HANDLE hdb, TextFileWriter& xml, uint32_t id)
+bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context)
 {
+   String guid = json_object_get_string(config, "guid", _T(""));
+   if (guid.isEmpty())
+   {
+      context->log(NXLOG_ERROR, _T("ImportObjectTool()"), _T("Missing object tool GUID"));
+      return false;
+   }
+
+   uuid_t temp;
+   if (_uuid_parse(guid, temp) == -1)
+   {
+      context->log(NXLOG_ERROR, _T("ImportObjectTool()"), _T("Object tool GUID %s is invalid"), (const TCHAR *)guid);
+      return false;
+   }
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   // Step 1: find existing tool ID by GUID
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT tool_id FROM object_tools WHERE guid=?"));
+   if (hStmt == nullptr)
+      return ImportFailure(hdb, nullptr, context);
+
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid, DB_BIND_STATIC);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult == nullptr)
+      return ImportFailure(hdb, hStmt, context);
+
+   uint32_t toolId;
+   if (DBGetNumRows(hResult) > 0)
+   {
+      toolId = DBGetFieldULong(hResult, 0, 0);
+   }
+   else
+   {
+      toolId = 0;
+   }
+   DBFreeResult(hResult);
+   DBFreeStatement(hStmt);
+
+   if ((toolId != 0) && !overwrite)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return true;
+   }
+
+   // Step 2: create or update tool record
+	if (!DBBegin(hdb))
+      return ImportFailure(hdb, nullptr, context);
+
+   if (toolId != 0)
+   {
+      hStmt = DBPrepare(hdb, _T("UPDATE object_tools SET tool_name=?,tool_type=?,")
+                             _T("tool_data=?,description=?,flags=?,")
+                             _T("tool_filter=?,confirmation_text=?,command_name=?,")
+                             _T("command_short_name=?,icon=?,remote_port=? ")
+                             _T("WHERE tool_id=?"));
+   }
+   else
+   {
+      hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools (tool_name,tool_type,")
+                             _T("tool_data,description,flags,tool_filter,")
+                             _T("confirmation_text,command_name,command_short_name,")
+                             _T("icon,remote_port,tool_id,guid) VALUES ")
+                             _T("(?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+   }
+   if (hStmt == nullptr)
+      return ImportFailure(hdb, nullptr, context);
+
+   String name = json_object_get_string(config, "name", _T(""));
+   String data = json_object_get_string(config, "data", _T(""));
+   String description = json_object_get_string(config, "description", _T(""));
+   String filter = json_object_get_string(config, "filter", _T(""));
+   String confirmation = json_object_get_string(config, "confirmation", _T(""));
+   String commandName = json_object_get_string(config, "commandName", _T(""));
+   String commandShortName = json_object_get_string(config, "commandShortName", _T(""));
+   String image = json_object_get_string(config, "image", _T(""));
+
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, json_object_get_int32(config, "type", 0));
+   DBBind(hStmt, 3, DB_SQLTYPE_TEXT, data, DB_BIND_STATIC);
+   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, description, DB_BIND_STATIC);
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, json_object_get_uint32(config, "flags", 0));
+   DBBind(hStmt, 6, DB_SQLTYPE_TEXT, filter, DB_BIND_STATIC);
+   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, confirmation, DB_BIND_STATIC);
+   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, commandName, DB_BIND_STATIC);
+   DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, commandShortName, DB_BIND_STATIC);
+   DBBind(hStmt, 10, DB_SQLTYPE_TEXT, image, DB_BIND_STATIC);
+   DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, json_object_get_int32(config, "remotePort", 0));
+   if (toolId == 0)
+   {
+      toolId = CreateUniqueId(IDG_OBJECT_TOOL);
+      DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, toolId);
+      DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, guid, DB_BIND_STATIC);
+   }
+   else
+   {
+      DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, toolId);
+   }
+
+   if (!DBExecute(hStmt))
+      return ImportFailure(hdb, hStmt, context);
+   DBFreeStatement(hStmt);
+
+   // Update ACL
+   if (!ExecuteQueryOnObject(hdb, toolId, _T("DELETE FROM object_tools_acl WHERE tool_id=?")))
+      return ImportFailure(hdb, nullptr, context);
+
+   // Default ACL for imported tools - accessible by everyone
+   hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (?,?)"));
+   if (hStmt == nullptr)
+      return ImportFailure(hdb, nullptr, context);
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, GROUP_EVERYONE);
+   if (!DBExecute(hStmt))
+      return ImportFailure(hdb, hStmt, context);
+   DBFreeStatement(hStmt);
+
+   // Update columns configuration
+   if (!ExecuteQueryOnObject(hdb, toolId, _T("DELETE FROM object_tools_table_columns WHERE tool_id=?")))
+      return ImportFailure(hdb, nullptr, context);
+
+   int toolType = json_object_get_int32(config, "type", 0);
+   if ((toolType == TOOL_TYPE_SNMP_TABLE) || (toolType == TOOL_TYPE_AGENT_LIST))
+   {
+   	json_t *columns = json_object_get(config, "columns");
+	   if (json_is_array(columns))
+	   {
+         if (json_array_size(columns) > 0)
+         {
+            hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_table_columns (tool_id,")
+                                   _T("col_number,col_name,col_oid,col_format,col_substr) ")
+                                   _T("VALUES (?,?,?,?,?,?)"));
+            if (hStmt == nullptr)
+               return ImportFailure(hdb, hStmt, context);
+
+            size_t index;
+            json_t *c;
+            json_array_foreach(columns, index, c)
+            {
+               if (!json_is_object(c))
+                  continue;
+
+               String colName = json_object_get_string(c, "name", _T(""));
+               String colOid = json_object_get_string(c, "oid", _T(""));
+
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (int32_t)index);
+               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, colName, DB_BIND_STATIC);
+               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, colOid, DB_BIND_STATIC);
+               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, json_object_get_int32(c, "format", 0));
+               DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, json_object_get_int32(c, "captureGroup", 0));
+
+               if (!DBExecute(hStmt))
+                  return ImportFailure(hdb, hStmt, context);
+            }
+            DBFreeStatement(hStmt);
+         }
+      }
+   }
+
+   // Update input fields
+   if (!ExecuteQueryOnObject(hdb, toolId, _T("DELETE FROM input_fields WHERE category='T' AND owner_id=?")))
+      return ImportFailure(hdb, nullptr, context);
+
+	json_t *inputFields = json_object_get(config, "inputFields");
+   if (json_is_array(inputFields))
+   {
+      if (json_array_size(inputFields) > 0)
+      {
+         hStmt = DBPrepare(hdb, _T("INSERT INTO input_fields (category,owner_id,name,input_type,display_name,flags,sequence_num) VALUES ('T',?,?,?,?,?,?)"));
+         if (hStmt == nullptr)
+            return ImportFailure(hdb, nullptr, context);
+
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
+         size_t index;
+         json_t *c;
+         json_array_foreach(inputFields, index, c)
+         {
+            if (!json_is_object(c))
+               continue;
+
+            String fieldName = json_object_get_string(c, "name", _T(""));
+            String displayName = json_object_get_string(c, "displayName", _T(""));
+
+            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, fieldName, DB_BIND_STATIC);
+            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, json_object_get_int32(c, "type", 0));
+            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, displayName, DB_BIND_STATIC);
+            DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, json_object_get_int32(c, "flags", 0));
+            DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (int32_t)(index + 1));
+
+            if (!DBExecute(hStmt))
+               return ImportFailure(hdb, hStmt, context);
+         }
+         DBFreeStatement(hStmt);
+      }
+   }
+
+   DBCommit(hdb);
+	DBConnectionPoolReleaseConnection(hdb);
+   NotifyClientSessions(NX_NOTIFY_OBJTOOLS_CHANGED, toolId);
+   return true;
+}
+
+/**
+ * Create export records for object tool columns as JSON array
+ */
+static json_t *CreateObjectToolColumnExportRecords(DB_HANDLE hdb, uint32_t id)
+{
+   json_t *columns = json_array();
+   
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT col_number,col_name,col_oid,col_format,col_substr FROM object_tools_table_columns WHERE tool_id=?"));
    if (hStmt == nullptr)
-      return;
+      return columns;
 
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
    DB_RESULT hResult = DBSelectPrepared(hStmt);
    if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
-      if (count > 0)
+      for(int i = 0; i < count; i++)
       {
-         xml.append(_T("\t\t\t<columns>\n"));
-         for(int i = 0; i < count; i++)
-         {
-            xml.append(_T("\t\t\t\t<column id=\""));
-            xml.append(DBGetFieldLong(hResult, i, 0) + 1);
-            xml.append(_T("\">\n\t\t\t\t\t<name>"));
-            xml.appendPreallocated(DBGetFieldForXML(hResult, i, 1));
-            xml.append(_T("</name>\n\t\t\t\t\t<oid>"));
-            xml.appendPreallocated(DBGetFieldForXML(hResult, i, 2));
-            xml.append(_T("</oid>\n\t\t\t\t\t<format>"));
-            xml.append(DBGetFieldLong(hResult, i, 3));
-            xml.append(_T("</format>\n\t\t\t\t\t<captureGroup>"));
-            xml.append(DBGetFieldLong(hResult, i, 4));
-            xml.append(_T("</captureGroup>\n\t\t\t\t</column>\n"));
-         }
-         xml.append(_T("\t\t\t</columns>\n"));
+         json_t *column = json_object();
+         json_object_set_new(column, "id", json_integer(DBGetFieldLong(hResult, i, 0) + 1));
+         
+         TCHAR *name = DBGetField(hResult, i, 1, nullptr, 0);
+         json_object_set_new(column, "name", json_string_t(name));
+         MemFree(name);
+         
+         TCHAR *oid = DBGetField(hResult, i, 2, nullptr, 0);
+         json_object_set_new(column, "oid", json_string_t(oid));
+         MemFree(oid);
+         
+         json_object_set_new(column, "format", json_integer(DBGetFieldLong(hResult, i, 3)));
+         json_object_set_new(column, "captureGroup", json_integer(DBGetFieldLong(hResult, i, 4)));
+         json_array_append_new(columns, column);
       }
       DBFreeResult(hResult);
    }
 
    DBFreeStatement(hStmt);
+   return columns;
 }
 
 /**
- * Create export records for object tool input fields
+ * Create export records for object tool input fields as JSON array
  */
-static void CreateObjectToolInputFieldExportRecords(DB_HANDLE hdb, TextFileWriter& xml, uint32_t id)
+static json_t *CreateObjectToolInputFieldExportRecords(DB_HANDLE hdb, uint32_t id)
 {
+   json_t *inputFields = json_array();
+   
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,input_type,display_name,flags FROM input_fields WHERE category='T' AND owner_id=?"));
    if (hStmt == nullptr)
-      return;
+      return inputFields;
 
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
    DB_RESULT hResult = DBSelectPrepared(hStmt);
    if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
-      if (count > 0)
+      for(int i = 0; i < count; i++)
       {
-         xml.append(_T("\t\t\t<inputFields>\n"));
-         for(int i = 0; i < count; i++)
-         {
-            xml.append(_T("\t\t\t\t<inputField id=\""));
-            xml.append(i + 1);
-            xml.append(_T("\">\n\t\t\t\t\t<name>"));
-            xml.appendPreallocated(DBGetFieldForXML(hResult, i, 0));
-            xml.append(_T("</name>\n\t\t\t\t\t<type>"));
-            xml.append(DBGetFieldLong(hResult, i, 1));
-            xml.append(_T("</type>\n\t\t\t\t\t<displayName>"));
-            xml.appendPreallocated(DBGetFieldForXML(hResult, i, 2));
-            xml.append(_T("</displayName>\n\t\t\t\t\t<flags>"));
-            xml.append(DBGetFieldLong(hResult, i, 3));
-            xml.append(_T("</flags>\n\t\t\t\t</inputField>\n"));
-         }
-         xml.append(_T("\t\t\t</inputFields>\n"));
+         json_t *inputField = json_object();
+         
+         TCHAR *name = DBGetField(hResult, i, 0, nullptr, 0);
+         json_object_set_new(inputField, "name", json_string_t(name));
+         MemFree(name);
+         
+         json_object_set_new(inputField, "type", json_integer(DBGetFieldLong(hResult, i, 1)));
+         
+         TCHAR *displayName = DBGetField(hResult, i, 2, nullptr, 0);
+         json_object_set_new(inputField, "displayName", json_string_t(displayName));
+         MemFree(displayName);
+         
+         json_object_set_new(inputField, "flags", json_integer(DBGetFieldLong(hResult, i, 3)));
+         json_array_append_new(inputFields, inputField);
       }
       DBFreeResult(hResult);
    }
 
    DBFreeStatement(hStmt);
+   return inputFields;
 }
 
 /**
- * Create export record for given object tool
+ * Create export record for given object tool as JSON object
  */
-void CreateObjectToolExportRecord(TextFileWriter& xml, uint32_t id)
+json_t *CreateObjectToolExportRecord(uint32_t id)
 {
+   json_t *tool = nullptr;
+   
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT tool_name,guid,tool_type,tool_data,description,flags,tool_filter,confirmation_text,command_name,command_short_name,icon,remote_port FROM object_tools WHERE tool_id=?"));
    if (hStmt == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
-      return;
+      return nullptr;
    }
 
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
@@ -1196,42 +1407,62 @@ void CreateObjectToolExportRecord(TextFileWriter& xml, uint32_t id)
    {
       if (DBGetNumRows(hResult) > 0)
       {
-         xml.append(_T("\t\t<objectTool id=\""));
-         xml.append(id);
-         xml.append(_T("\">\n\t\t\t<name>"));
-         xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 0));
-         xml.append(_T("</name>\n\t\t\t<guid>"));
-         xml.appendPreallocated(DBGetField(hResult, 0, 1, nullptr, 0));
-         xml.append(_T("</guid>\n\t\t\t<type>"));
-         xml.append(DBGetFieldLong(hResult, 0, 2));
-         xml.append(_T("</type>\n\t\t\t<data>"));
-         xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 3));
-         xml.append(_T("</data>\n\t\t\t<description>"));
-         xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 4));
-         xml.append(_T("</description>\n\t\t\t<flags>"));
-         xml.append(DBGetFieldLong(hResult, 0, 5));
-         xml.append(_T("</flags>\n\t\t\t<filter>"));
-         xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 6));
-         xml.append(_T("</filter>\n\t\t\t<confirmation>"));
-         xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 7));
-         xml.append(_T("</confirmation>\n\t\t\t<commandName>"));
-         xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 8));
-         xml.append(_T("</commandName>\n\t\t\t<commandShortName>"));
-         xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 9));
-         xml.append(_T("</commandShortName>\n\t\t\t<image>"));
-         xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 10));
-         xml.append(_T("</image>\n\t\t\t<remotePort>"));
-         xml.append(DBGetFieldLong(hResult, 0, 11));
-         xml.append(_T("</remotePort>\n"));
-         CreateObjectToolColumnExportRecords(hdb, xml, id);
-         CreateObjectToolInputFieldExportRecords(hdb, xml, id);
-         xml.append(_T("\t\t</objectTool>\n"));
+         tool = json_object();
+         json_object_set_new(tool, "id", json_integer(id));
+         
+         // Get string fields and ensure proper memory cleanup
+         TCHAR *name = DBGetField(hResult, 0, 0, nullptr, 0);
+         json_object_set_new(tool, "name", json_string_t(name));
+         MemFree(name);
+         
+         TCHAR *guid = DBGetField(hResult, 0, 1, nullptr, 0);
+         json_object_set_new(tool, "guid", json_string_t(guid));
+         MemFree(guid);
+         
+         json_object_set_new(tool, "type", json_integer(DBGetFieldLong(hResult, 0, 2)));
+         
+         TCHAR *data = DBGetField(hResult, 0, 3, nullptr, 0);
+         json_object_set_new(tool, "data", json_string_t(data));
+         MemFree(data);
+         
+         TCHAR *description = DBGetField(hResult, 0, 4, nullptr, 0);
+         json_object_set_new(tool, "description", json_string_t(description));
+         MemFree(description);
+         
+         json_object_set_new(tool, "flags", json_integer(DBGetFieldLong(hResult, 0, 5)));
+         
+         TCHAR *filter = DBGetField(hResult, 0, 6, nullptr, 0);
+         json_object_set_new(tool, "filter", json_string_t(filter));
+         MemFree(filter);
+         
+         TCHAR *confirmation = DBGetField(hResult, 0, 7, nullptr, 0);
+         json_object_set_new(tool, "confirmation", json_string_t(confirmation));
+         MemFree(confirmation);
+         
+         TCHAR *commandName = DBGetField(hResult, 0, 8, nullptr, 0);
+         json_object_set_new(tool, "commandName", json_string_t(commandName));
+         MemFree(commandName);
+         
+         TCHAR *commandShortName = DBGetField(hResult, 0, 9, nullptr, 0);
+         json_object_set_new(tool, "commandShortName", json_string_t(commandShortName));
+         MemFree(commandShortName);
+         
+         TCHAR *image = DBGetField(hResult, 0, 10, nullptr, 0);
+         json_object_set_new(tool, "image", json_string_t(image));
+         MemFree(image);
+         
+         json_object_set_new(tool, "remotePort", json_integer(DBGetFieldLong(hResult, 0, 11)));
+         
+         json_object_set_new(tool, "columns", CreateObjectToolColumnExportRecords(hdb, id));
+         json_object_set_new(tool, "inputFields", CreateObjectToolInputFieldExportRecords(hdb, id));
       }
       DBFreeResult(hResult);
    }
 
    DBFreeStatement(hStmt);
    DBConnectionPoolReleaseConnection(hdb);
+   
+   return tool;
 }
 
 /**

@@ -169,22 +169,19 @@ SummaryTableColumn::SummaryTableColumn(TCHAR *configStr)
    _tcslcpy(m_name, configStr, MAX_DB_STRING);
 }
 
+
+
 /**
- * Create export record for column
+ * Create config export record for column
  */
-void SummaryTableColumn::createExportRecord(TextFileWriter& xml, uint32_t id) const
+json_t *SummaryTableColumn::createExportRecord() const
 {
-   xml.appendUtf8String("\t\t\t\t<column id=\"");
-   xml.append(id);
-   xml.appendUtf8String("\">\n\t\t\t\t\t<name>");
-   xml.append(EscapeStringForXML2(m_name));
-   xml.appendUtf8String("</name>\n\t\t\t\t\t<dci>");
-   xml.append(EscapeStringForXML2(m_dciName));
-   xml.appendUtf8String("</dci>\n\t\t\t\t\t<flags>");
-   xml.append(m_flags);
-   xml.appendUtf8String("</flags>\n\t\t\t\t\t<separator>");
-   xml.append(m_separator);
-   xml.appendUtf8String("</separator>\n\t\t\t\t</column>\n");
+   json_t *columnObj = json_object();
+   json_object_set_new(columnObj, "name", json_string_t(m_name));
+   json_object_set_new(columnObj, "dci", json_string_t(m_dciName));
+   json_object_set_new(columnObj, "flags", json_integer(m_flags));
+   json_object_set_new(columnObj, "separator", json_string_t(m_separator));
+   return columnObj;
 }
 
 /**
@@ -398,30 +395,29 @@ Table *SummaryTable::createEmptyResultTable() const
 }
 
 /**
- * Create export record
+ * Create JSON export record
  */
-void SummaryTable::createExportRecord(TextFileWriter& xml) const
+void SummaryTable::createExportRecord(json_t *array) const
 {
-   xml.appendUtf8String("\t\t<table id=\"");
-   xml.append(m_id);
-   xml.appendUtf8String("\">\n\t\t\t<guid>");
-   xml.append(m_guid);
-   xml.appendUtf8String("</guid>\n\t\t\t<title>");
-   xml.append(EscapeStringForXML2(m_title));
-   xml.appendUtf8String("</title>\n\t\t\t<flags>");
-   xml.append(m_flags);
-   xml.appendUtf8String("</flags>\n\t\t\t<path>");
-   xml.append(EscapeStringForXML2(m_menuPath));
-   xml.appendUtf8String("</path>\n\t\t\t<filter>");
-   xml.append(EscapeStringForXML2(m_filterSource));
-   xml.appendUtf8String("</filter>\n\t\t\t<tableDci>");
-   xml.append(EscapeStringForXML2(m_tableDciName));
-   xml.appendUtf8String("</tableDci>\n\t\t\t<columns>\n");
+   json_t *tableObj = json_object();
+   json_object_set_new(tableObj, "id", json_integer(m_id));
+   json_object_set_new(tableObj, "guid", json_string_t(m_guid.toString()));
+   json_object_set_new(tableObj, "title", json_string_t(m_title));
+   json_object_set_new(tableObj, "flags", json_integer(m_flags));
+   json_object_set_new(tableObj, "path", json_string_t(m_menuPath));
+   json_object_set_new(tableObj, "filter", json_string_t(m_filterSource ? m_filterSource : _T("")));
+   json_object_set_new(tableObj, "tableDci", json_string_t(m_tableDciName));
+   
+   json_t *columnsArray = json_array();
    for(int i = 0; i < m_columns.size(); i++)
    {
-      m_columns.get(i)->createExportRecord(xml, i + 1);
+      json_t *columnObj = m_columns.get(i)->createExportRecord();
+      if (columnObj != nullptr)
+         json_array_append_new(columnsArray, columnObj);
    }
-   xml.appendUtf8String("\t\t\t</columns>\n\t\t</table>\n");
+   json_object_set_new(tableObj, "columns", columnsArray);
+   
+   json_array_append_new(array, tableObj);
 }
 
 /**
@@ -484,15 +480,15 @@ Table NXCORE_EXPORTABLE *QuerySummaryTable(uint32_t tableId, SummaryTable *adHoc
 }
 
 /**
- * Create export record for summary table
+ * Create JSON export record for summary table
  */
-bool CreateSummaryTableExportRecord(uint32_t id, TextFileWriter& xml)
+bool CreateSummaryTableExportRecord(uint32_t id, json_t *array)
 {
    uint32_t rcc;
    SummaryTable *t = SummaryTable::loadFromDB(id, &rcc);
    if (t == nullptr)
       return false;
-   t->createExportRecord(xml);
+   t->createExportRecord(array);
    delete t;
    return true;
 }
@@ -626,6 +622,118 @@ bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *cont
 
    DBFreeStatement(hStmt);
    DBConnectionPoolReleaseConnection(hdb);
+   return true;
+}
+
+/**
+ * Import summary table from JSON
+ */
+bool ImportSummaryTable(json_t *config, bool overwrite, ImportContext *context)
+{
+   uuid guid = json_object_get_uuid(config, "guid");
+   if (guid.isNull())
+   {
+      context->log(NXLOG_ERROR, _T("ImportSummaryTable()"), _T("Missing summary table GUID"));
+      return false;
+   }
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   // Step 1: find existing table ID by GUID
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id FROM dci_summary_tables WHERE guid=?"));
+   if (hStmt == nullptr)
+   {
+      return ImportFailure(hdb, nullptr, context);
+   }
+
+   TCHAR guidStr[64];
+   guid.toString(guidStr);
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guidStr, DB_BIND_STATIC);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult == nullptr)
+   {
+      return ImportFailure(hdb, hStmt, context);
+   }
+
+   uint32_t id;
+   if (DBGetNumRows(hResult) > 0)
+   {
+      id = DBGetFieldULong(hResult, 0, 0);
+   }
+   else
+   {
+      id = 0;
+   }
+   DBFreeResult(hResult);
+   DBFreeStatement(hStmt);
+
+   // Step 2: create or update summary table configuration record
+   if (id == 0)
+   {
+      id = CreateUniqueId(IDG_DCI_SUMMARY_TABLE);
+      hStmt = DBPrepare(hdb, _T("INSERT INTO dci_summary_tables (menu_path,title,node_filter,flags,columns,guid,id) VALUES (?,?,?,?,?,?,?)"));
+   }
+   else
+   {
+      if (!overwrite)
+      {
+         DBConnectionPoolReleaseConnection(hdb);
+         context->log(NXLOG_INFO, _T("ImportSummaryTable()"), _T("Summary table with GUID %s already exists (skipping)"), guidStr);
+         return true;
+      }
+      hStmt = DBPrepare(hdb, _T("UPDATE dci_summary_tables SET menu_path=?,title=?,node_filter=?,flags=?,columns=?,guid=? WHERE id=?"));
+   }
+   if (hStmt == nullptr)
+   {
+      return ImportFailure(hdb, nullptr, context);
+   }
+
+   String menuPath = json_object_get_string(config, "path", _T(""));
+   String title = json_object_get_string(config, "title", _T(""));
+   String nodeFilter = json_object_get_string(config, "filter", _T(""));
+   uint32_t flags = json_object_get_uint32(config, "flags");
+   
+   // Build column list from JSON
+   StringBuffer columnList;
+   json_t *columns = json_object_get(config, "columns");
+   if (json_is_array(columns))
+   {
+      size_t index;
+      json_t *column;
+      json_array_foreach(columns, index, column)
+      {
+         if (json_is_object(column))
+         {
+            if (index > 0)
+               columnList.append(_T("^~^"));
+            String name = json_object_get_string(column, "name", _T(""));
+            String dciName = json_object_get_string(column, "dci", _T(""));
+            String separator = json_object_get_string(column, "separator", _T(";"));
+            uint32_t flags = json_object_get_uint32(column, "flags");
+            columnList.appendFormattedString(_T("%s^#^%s^#^%d^#^%s"), name.cstr(), dciName.cstr(), flags, separator.cstr());
+         }
+      }
+   }
+
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, menuPath, DB_BIND_STATIC);
+   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, title, DB_BIND_STATIC);
+   DBBind(hStmt, 3, DB_SQLTYPE_TEXT, nodeFilter, DB_BIND_STATIC);
+   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, flags);
+   DBBind(hStmt, 5, DB_SQLTYPE_TEXT, columnList, DB_BIND_STATIC);
+   DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, guidStr, DB_BIND_STATIC);
+   DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, id);
+
+   if (!DBExecute(hStmt))
+   {
+      return ImportFailure(hdb, hStmt, context);
+   }
+
+   NotifyClientSessions(NX_NOTIFY_DCISUMTBL_CHANGED, (UINT32)id);
+
+   DBFreeStatement(hStmt);
+   DBConnectionPoolReleaseConnection(hdb);
+   
+   context->log(NXLOG_INFO, _T("ImportSummaryTable()"), _T("Summary table \"%s\" imported"), title.cstr());
    return true;
 }
 
