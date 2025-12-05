@@ -22,6 +22,92 @@
 
 #include "nxdbmgr.h"
 #include <nxevent.h>
+#include <netxms-xml.h>
+
+/**
+ * Update log parser XML by adding GUID to each parser
+ */
+static bool UpdateLogXML(const TCHAR *logName)
+{
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("SELECT var_value FROM config_clob WHERE var_name='%s'"), logName);
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      if (count > 0)
+      {
+         char *text = DBGetFieldUTF8(hResult, 0, 0, nullptr, 0);
+         if (text != nullptr)
+         {
+            pugi::xml_document xml;
+            if (!xml.load_buffer(text, strlen(text)))
+            {
+               _tprintf(_T("Failed to load XML. Ignore \"%s\" log parsed\n"), logName);
+               MemFree(text);
+               DBFreeResult(hResult);
+               return false;
+            }
+
+            pugi::xml_node node = xml.select_node("/parser/rules").node();
+            for (pugi::xml_node child : node.children())
+            {
+               uuid guid = uuid::generate();
+               char *guidAttr = guid.toString().getUTF8String();
+               child.append_attribute("guid").set_value(guidAttr);
+               MemFree(guidAttr);
+            }
+
+            xml_string_writer writer;
+            xml.print(writer);
+
+            DB_STATEMENT hStmt = DBPrepare(g_dbHandle, L"UPDATE config_clob SET var_value=? WHERE var_name=?");
+            if (hStmt != nullptr)
+            {
+               DBBind(hStmt, 1, DB_SQLTYPE_TEXT, writer.result, DB_BIND_STATIC);
+               DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, logName, DB_BIND_STATIC);
+               if (DBExecute(hStmt))
+               {
+                  DBFreeStatement(hStmt);
+               }
+               else
+               {
+                  MemFree(text);
+                  DBFreeResult(hResult);
+                  DBFreeStatement(hStmt);
+                  return false;
+               }
+            }
+            else
+            {
+               MemFree(text);
+               DBFreeResult(hResult);
+               return false;
+            }
+            MemFree(text);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      return false;
+   }
+
+   return true;
+}
+
+/**
+ * Upgrade from 60.7 to 60.8
+ */
+static bool H_UpgradeFromV7()
+{
+   CHK_EXEC(UpdateLogXML(_T("SyslogParser")));
+   CHK_EXEC(UpdateLogXML(_T("WindowsEventParser")));
+
+   CHK_EXEC(SetMinorSchemaVersion(8));
+   return true;
+}
 
 /**
  * Upgrade from 60.6 to 60.7
@@ -248,6 +334,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 7,  60, 8,  H_UpgradeFromV7  },
    { 6,  60, 7,  H_UpgradeFromV6  },
    { 5,  60, 6,  H_UpgradeFromV5  },
    { 4,  60, 5,  H_UpgradeFromV4  },

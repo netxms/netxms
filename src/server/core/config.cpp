@@ -1352,6 +1352,32 @@ TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *variable, const TCHAR *defa
 }
 
 /**
+ * Read large string (clob) value from configuration table as UTF8 string
+ */
+char NXCORE_EXPORTABLE *ConfigReadCLOBUTF8(const TCHAR *variable, const char *defaultValue)
+{
+   char *result = nullptr;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT var_value FROM config_clob WHERE var_name=?");
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            result = DBGetFieldUTF8(hResult, 0, 0, nullptr, 0);
+         }
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   return (result != nullptr) ? result : MemCopyStringA(defaultValue);
+}
+
+/**
  * Write large string (clob) value to configuration table
  */
 bool NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *variable, const TCHAR *value, bool create)

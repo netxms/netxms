@@ -124,7 +124,7 @@ public class LogParserRuleEditor extends DashboardComposite
       gd.horizontalAlignment = SWT.RIGHT;
       controlBar.setLayoutData(gd);
       fillControlBar(controlBar);
-
+      
       name = new LabeledText(this, SWT.NONE);
       name.setLabel("Name");
       name.setBackground(parent.getBackground());

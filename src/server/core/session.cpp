@@ -122,6 +122,8 @@ uint64_t StartFileUploadToAgent(const shared_ptr<Node>& node, const TCHAR *local
 
 void FillAIAgentTaskListMessage(NXCPMessage *msg, uint32_t userId);
 
+void ExportLogParserRule(const NXCPMessage& request, long countFieldId, long baseId, TextFileWriter *writer, wchar_t *logName, wchar_t *xmlTagName);
+
 #if WITH_PRIVATE_EXTENSIONS || (defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD))
 int GetMaxAllowedNodeCount();
 #endif
@@ -10419,7 +10421,7 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
    wchar_t exportFileName[MAX_PATH];
    bool success = false;
 
-   if (checkSystemAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_VIEW_EVENT_DB | SYSTEM_ACCESS_EPP))
+   if (checkSystemAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_VIEW_EVENT_DB | SYSTEM_ACCESS_EPP | SYSTEM_ACCESS_SERVER_CONFIG))
    {
       IntegerArray<uint32_t> templateList;
       request.getFieldAsInt32Array(VID_OBJECT_LIST, &templateList);
@@ -10580,6 +10582,10 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
             StringList names(request, VID_ASSET_ATTRIBUTE_NAMES);
             ExportAssetManagementSchema(writer, names);
             writer.appendUtf8String("\t</assetManagementSchema>\n");
+
+            //Log parsing rules
+            ExportLogParserRule(request, VID_SYSLOG_NUM_RECORDS, VID_SYSLOG_RULES_LIST_BASE, &writer, L"SyslogParser", L"syslog");
+            ExportLogParserRule(request, VID_WIN_LOG_NUM_RECORDS, VID_WIN_EVENT_RULES_LIST_BASE, &writer, L"WindowsEventParser", L"winlog");
 
             // Close document
             writer.appendUtf8String("</configuration>\n");
