@@ -320,9 +320,18 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
 		         debugPrintf(5, _T("%s: agent data push: found DCI %d"), target->getName(), dci->getId());
                Timestamp t = msg->getFieldAsTimestamp(VID_TIMESTAMP_MS);
                if (t.isNull())
+               {
                   t = Timestamp::fromTime(msg->getFieldAsTime(VID_TIMESTAMP));
-               if (t.isNull())
-			         t = Timestamp::now();
+                  if (t.isNull())
+                  {
+                     t = Timestamp::now();
+                     if (dci->getLastValueTimestamp() == t)
+                     {
+                        ThreadSleepMs(1);  // Ensure 1 ms difference between two consecutive values
+                        t = Timestamp::now();
+                     }
+                  }
+               }
 			      target->processNewDCValue(dci, t, value, shared_ptr<Table>(), true);
                if (t > dci->getLastPollTime())
 			         dci->setLastPollTime(t);

@@ -10201,17 +10201,29 @@ void ClientSession::pushDCIData(const NXCPMessage& request)
       // If all items was checked OK, push data
       if (bOK)
       {
+         bool localTimestamp = false;
          Timestamp t = request.getFieldAsTimestamp(VID_TIMESTAMP_MS);
          if (t.isNull())
+         {
             t = Timestamp::fromTime(request.getFieldAsTime(VID_TIMESTAMP));
-         if (t.isNull())
-            t = Timestamp::now();
+            if (t.isNull())
+            {
+               t = Timestamp::now();
+               localTimestamp = true;
+            }
+         }
          shared_ptr<Table> tableValue; // Empty pointer to pass to processNewDCValue()
          for(int i = 0; i < values.size(); i++)
          {
             ClientDataPushElement *e = values.get(i);
 				if (wcslen(e->value) >= MAX_DCI_STRING_VALUE)
 					e->value[MAX_DCI_STRING_VALUE - 1] = 0;
+				if (localTimestamp && e->dci->getLastValueTimestamp() == t)
+            {
+               // Prevent multiple values with the same timestamp
+				   ThreadSleepMs(1);
+               t = Timestamp::now();
+            }
 				e->dcTarget->processNewDCValue(e->dci, t, e->value, tableValue, true);
             if (t > e->dci->getLastPollTime())
 				   e->dci->setLastPollTime(t);
