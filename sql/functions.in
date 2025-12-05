@@ -24,7 +24,7 @@ END;
 
 CREATE OR REPLACE FUNCTION ms_to_timestamptz(ms_timestamp BIGINT)
 RETURNS TIMESTAMPTZ AS $$
-    SELECT timestamp 'epoch' + ms_timestamp * interval '1 millisecond';
+    SELECT timestamptz 'epoch' + ms_timestamp * interval '1 millisecond';
 $$ LANGUAGE sql IMMUTABLE;
 /
 

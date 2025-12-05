@@ -114,7 +114,7 @@ static bool H_UpgradeFromV7()
       CHK_EXEC(SQLQuery(
          L"CREATE OR REPLACE FUNCTION ms_to_timestamptz(ms_timestamp BIGINT) "
          L"RETURNS TIMESTAMPTZ AS $$ "
-         L"    SELECT timestamp 'epoch' + ms_timestamp * interval '1 millisecond'; "
+         L"    SELECT timestamptz 'epoch' + ms_timestamp * interval '1 millisecond'; "
          L"$$ LANGUAGE sql IMMUTABLE;"));
       CHK_EXEC(SQLQuery(
          L"CREATE OR REPLACE FUNCTION timestamptz_to_ms(t timestamptz) "
