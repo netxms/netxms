@@ -59,6 +59,7 @@ public class AiAssistantChatView extends View
    private final I18n i18n = LocalizationHelper.getI18n(AiAssistantChatView.class);
 
    private NXCSession session;
+   private long chatId;
    private ScrolledComposite chatScrolledComposite;
    private Composite chatContainer;
    private Text chatInput;
@@ -80,20 +81,24 @@ public class AiAssistantChatView extends View
    protected void postClone(View origin)
    {
       super.postClone(origin);
-      AiAssistantChatView view = (AiAssistantChatView)origin;
-      // Copy chat messages from original view
-      if (view.chatContainer != null && view.chatContainer.getChildren().length > 0)
-      {
-         for(Control control : view.chatContainer.getChildren())
+
+      // FIXME: clone chat session on server side
+      Job job = new Job(i18n.tr("Creating AI assistant chat"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
          {
-            // Note: In a full implementation, you would need to properly copy message data
-            // For now, we'll just add the welcome message
+            chatId = session.createAiAssistantChat();
+            runInUIThread(() -> chatInput.setEnabled(true));
          }
-      }
-      if (view.chatInput != null && chatInput != null)
-      {
-         chatInput.setText(view.chatInput.getText());
-      }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot create AI assistant chat");
+         }
+      };
+      job.setUser(false);
+      job.start();
    }
 
    /**
@@ -148,6 +153,7 @@ public class AiAssistantChatView extends View
       chatInput = new Text(commandArea, SWT.NONE);
       chatInput.setMessage(i18n.tr("Write a message..."));
       chatInput.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      chatInput.setEnabled(false); // Disable input until chat creation confirmation is received
       chatInput.addKeyListener(new KeyListener() {
          @Override
          public void keyReleased(KeyEvent e)
@@ -180,6 +186,30 @@ public class AiAssistantChatView extends View
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#postContentCreate()
+    */
+   @Override
+   protected void postContentCreate()
+   {
+      Job job = new Job(i18n.tr("Creating AI assistant chat"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            chatId = session.createAiAssistantChat();
+            runInUIThread(() -> chatInput.setEnabled(true));
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot create AI assistant chat");
+         }
+      };
+      job.setUser(false);
+      job.start();
+   }
+
+   /**
     * Create actions
     */
    private void createActions()
@@ -192,7 +222,7 @@ public class AiAssistantChatView extends View
                @Override
                protected void run(IProgressMonitor monitor) throws Exception
                {
-                  session.clearAiAssistantChat();
+                  session.clearAiAssistantChat(chatId);
                   runInUIThread(() -> clearChat());
                }
 
@@ -239,12 +269,12 @@ public class AiAssistantChatView extends View
     */
    private void sendQuery()
    {
-      final String prompt = chatInput.getText().trim();
+      final String message = chatInput.getText().trim();
       chatInput.setText("");
-      if (prompt.isEmpty())
+      if (message.isEmpty())
          return;
 
-      addUserMessage(prompt);
+      addUserMessage(message);
       chatInput.setEnabled(false);
       final MessageBubble assistantMessage = addAssistantMessage(i18n.tr("Thinking..."));
       Job job = new Job(i18n.tr("Processing AI assistant query"), this) {
@@ -253,7 +283,7 @@ public class AiAssistantChatView extends View
          {
             try
             {
-               final String answer = session.queryAiAssistant(prompt);
+               final String answer = session.updateAiAssistantChat(chatId, message);
                runInUIThread(() -> updateMessage(assistantMessage, answer));
             }
             catch(Exception e)

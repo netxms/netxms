@@ -26,6 +26,33 @@
 #define AI_ASSISTANT_COMPONENT   L"AI-ASSISTANT"
 
 /**
+ * AI assistant function handler
+ */
+typedef std::function<std::string(json_t*, uint32_t)> AssistantFunctionHandler;
+
+/**
+ * Assistant function descriptor
+ */
+struct AssistantFunction
+{
+   std::string name;
+   std::string description;
+   std::vector<std::pair<std::string, std::string>> parameters;
+   AssistantFunctionHandler handler;
+
+   AssistantFunction(const std::string& name, const std::string& description,
+      const std::vector<std::pair<std::string, std::string>>& parameters, AssistantFunctionHandler handler)
+      : name(name), description(description), parameters(parameters), handler(handler)
+   {
+   }
+};
+
+/**
+ * Set of AI assistant functions
+ */
+typedef std::unordered_map<std::string, shared_ptr<AssistantFunction>> AssistantFunctionSet;
+
+/**
  * AI task state
  */
 enum class AITaskState
@@ -80,9 +107,54 @@ public:
 };
 
 /**
- * AI assistant function handler
+ * Chat with AI assistant
  */
-typedef std::function<std::string(json_t*, uint32_t)> AssistantFunctionHandler;
+class Chat
+{
+private:
+   uint32_t m_id;
+   uint32_t m_userId;
+   Mutex m_mutex;
+   json_t *m_messages;
+   size_t m_initialMessageCount;
+   AssistantFunctionSet m_functions;
+   json_t *m_functionDeclarations;
+   time_t m_creationTime;
+   time_t m_lastUpdateTime;
+
+   void addMessage(const char *role, const char *content)
+   {
+      json_t *message = json_object();
+      json_object_set_new(message, "role", json_string(role));
+      json_object_set_new(message, "content", json_string(content));
+      json_array_append_new(m_messages, message);
+      nxlog_debug_tag(L"llm.chat", 8, L"Added message to chat: role=\"%hs\", content=\"%hs\"", role, content);
+   }
+
+   std::string callFunction(const char *name, json_t *arguments);
+
+public:
+   Chat(NetObj *context = nullptr, json_t *eventData = nullptr, uint32_t userId = 0, const char *systemPrompt = nullptr);
+   ~Chat();
+
+   uint32_t getId() const { return m_id; }
+   uint32_t getUserId() const { return m_userId; }
+
+   char *sendRequest(const char *prompt, int maxIterations);
+
+   void clear();
+};
+
+/**
+ * AI assistant skill
+ */
+struct AssistantSkill
+{
+   std::string name;
+   std::string description;
+   std::string prompt;
+   std::vector<AssistantFunction> functions;
+};
 
 /**
  * Register assistant function. This function intended to be called only during server core or module initialization.
@@ -90,9 +162,9 @@ typedef std::function<std::string(json_t*, uint32_t)> AssistantFunctionHandler;
 void NXCORE_EXPORTABLE RegisterAIAssistantFunction(const char *name, const char *description, const std::vector<std::pair<std::string, std::string>>& parameters, AssistantFunctionHandler handler);
 
 /**
- * Call AI assistant function (intended for MCP bridge)
+ * Call globally registered AI assistant function (intended for MCP bridge)
  */
-std::string NXCORE_EXPORTABLE CallAIAssistantFunction(const char *name, json_t *arguments, uint32_t userId);
+std::string NXCORE_EXPORTABLE CallGlobalAIAssistantFunction(const char *name, json_t *arguments, uint32_t userId);
 
 /**
  * Fill message with registered function list
@@ -105,14 +177,29 @@ void FillAIAssistantFunctionListMessage(NXCPMessage *msg);
 void NXCORE_EXPORTABLE AddAIAssistantPrompt(const char *text);
 
 /**
- * Clear chat history for given session
+ * Create new chat
  */
-uint32_t NXCORE_EXPORTABLE ClearAIAssistantChat(GenericClientSession *session);
+shared_ptr<Chat> NXCORE_EXPORTABLE CreateAIAssistantChat(uint32_t userId, uint32_t *rcc);
 
 /**
- * Process assistant request
+ * Get chat with given ID
  */
-char NXCORE_EXPORTABLE *ProcessRequestToAIAssistant(const char *prompt, NetObj *context, GenericClientSession *session, int maxIterations = 32);
+shared_ptr<Chat> NXCORE_EXPORTABLE GetAIAssistantChat(uint32_t chatId, uint32_t userId, uint32_t *rcc);
+
+/**
+ * Clear history for given chat session
+ */
+uint32_t NXCORE_EXPORTABLE ClearAIAssistantChat(uint32_t chatId, uint32_t userId);
+
+/**
+ * Delete chat
+ */
+uint32_t NXCORE_EXPORTABLE DeleteAIAssistantChat(uint32_t chatId, uint32_t userId);
+
+/**
+ * Send single idependent query to AI assistant
+ */
+char NXCORE_EXPORTABLE *QueryAIAssistant(const char *prompt, NetObj *context, int maxIterations = 32);
 
 /**
  * Register AI task

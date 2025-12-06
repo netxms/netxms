@@ -26,8 +26,6 @@
 
 #define DEBUG_TAG L"llm.aitask"
 
-char *ProcessRequestToAIAssistantEx(const char *prompt, const char *systemPrompt, NetObj *context, json_t *eventData, GenericClientSession *session, int maxIterations);
-
 /**
  * AI Task management
  */
@@ -330,7 +328,9 @@ void AITask::execute()
       prompt.append(m_memento);
       prompt.append("</memento>\n");
    }
-   char *response = ProcessRequestToAIAssistantEx(prompt.c_str(), s_systemPrompt.c_str(), nullptr, nullptr, nullptr, 64);
+
+   Chat chat(nullptr, nullptr, m_userId, s_systemPrompt.c_str());
+   char *response = chat.sendRequest(prompt.c_str(), 64);
    if (response != nullptr)
    {
       json_t *json = json_loads(response, 0, nullptr);

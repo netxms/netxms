@@ -499,6 +499,8 @@ public class NXCPCodes
    public static final int CMD_GET_AI_AGENT_TASKS = 0x01DE;
    public static final int CMD_DELETE_AI_AGENT_TASK = 0x01DF;
    public static final int CMD_ADD_AI_AGENT_TASK = 0x01E0;
+   public static final int CMD_CREATE_AI_ASSISTANT_CHAT = 0x01E1;
+   public static final int CMD_DELETE_AI_ASSISTANT_CHAT = 0x01E2;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1381,6 +1383,7 @@ public class NXCPCodes
    public static final long VID_MAX_SPEED = 872;
    public static final long VID_PROMPT = 873;
    public static final long VID_TIMESTAMP_MS = 874;
+   public static final long VID_CHAT_ID = 875;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

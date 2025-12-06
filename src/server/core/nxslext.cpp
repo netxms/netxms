@@ -2211,7 +2211,7 @@ static int F_QueryAIAssistant(int argc, NXSL_Value **argv, NXSL_Value **result, 
 
    char *prompt = UTF8StringFromWideString(argv[0]->getValueAsCString());
    NetObj *context = (argc == 2) ? static_cast<shared_ptr<NetObj>*>(argv[1]->getValueAsObject()->getData())->get() : nullptr;
-   char *answer = ProcessRequestToAIAssistant(prompt, context, nullptr);
+   char *answer = QueryAIAssistant(prompt, context);
    MemFree(prompt);
 
    *result = (answer != nullptr) ? vm->createValue(answer) : vm->createValue();

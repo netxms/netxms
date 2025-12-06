@@ -262,9 +262,10 @@ const TCHAR LIBNXCLIENT_EXPORTABLE *NXCGetErrorText(uint32_t error)
       _T("Partial command fail"),
       _T("Agent access denied"),
       _T("TCP proxy function is disabled"),
-      _T("Invalid task ID")
+      _T("Invalid task ID"),
+      _T("Invalid chat ID")
    };
-	return (error <= RCC_INVALID_TASK_ID) ? errorText[error] : _T("No message for this error");
+	return (error <= RCC_INVALID_CHAT_ID) ? errorText[error] : _T("No message for this error");
 }
 
 #ifdef _WIN32

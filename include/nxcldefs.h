@@ -761,6 +761,7 @@ enum SessionState
 #define RCC_AGENT_ACCESS_DENIED           ((uint32_t)176)
 #define RCC_TCP_PROXY_DISABLED            ((uint32_t)177)
 #define RCC_INVALID_TASK_ID               ((uint32_t)178)
+#define RCC_INVALID_CHAT_ID               ((uint32_t)179)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

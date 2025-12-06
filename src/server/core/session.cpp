@@ -2026,8 +2026,14 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_QUERY_AI_ASSISTANT:
          queryAiAssistant(*request);
          break;
+      case CMD_CREATE_AI_ASSISTANT_CHAT:
+         createAiAssistantChat(*request);
+         break;
       case CMD_CLEAR_AI_ASSISTANT_CHAT:
          clearAiAssistantChat(*request);
+         break;
+      case CMD_DELETE_AI_ASSISTANT_CHAT:
+         deleteAiAssistantChat(*request);
          break;
       case CMD_REQUEST_AI_ASSISTANT_COMMENT:
          requestAiAssistantComment(*request);
@@ -17930,19 +17936,59 @@ void ClientSession::clearPeerInterface(const NXCPMessage& request)
 void ClientSession::queryAiAssistant(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   char *prompt = request.getFieldAsUtf8String(VID_MESSAGE);
-   char *answer = ProcessRequestToAIAssistant(prompt, nullptr, this);
-   if (answer != nullptr)
+
+   uint32_t chatId = request.getFieldAsUInt32(VID_CHAT_ID);
+   char *userMessage = request.getFieldAsUtf8String(VID_MESSAGE);
+   uint32_t rcc;
+   shared_ptr<Chat> chat = GetAIAssistantChat(chatId, m_userId, &rcc);
+   if (chat != nullptr)
    {
-      response.setField(VID_RCC, RCC_SUCCESS);
-      response.setFieldFromUtf8String(VID_MESSAGE, answer);
-      MemFree(answer);
+      char *answer = chat->sendRequest(userMessage, 16);
+      if (answer != nullptr)
+      {
+         response.setField(VID_RCC, RCC_SUCCESS);
+         response.setFieldFromUtf8String(VID_MESSAGE, answer);
+         MemFree(answer);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_SYSTEM_FAILURE);
+      }
    }
    else
    {
-      response.setField(VID_RCC, RCC_SYSTEM_FAILURE);
+      response.setField(VID_RCC, rcc);
    }
-   MemFree(prompt);
+
+   sendMessage(response);
+}
+
+/**
+ * Create new AI assistant chat
+ *
+ * Called by:
+ * CMD_CREATE_AI_ASSISTANT_CHAT
+ *
+ * Return values:
+ * VID_RCC                          Request completion code
+ * VID_CHAT_ID                      Created chat ID
+ */
+void ClientSession::createAiAssistantChat(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t rcc;
+   shared_ptr<Chat> chat = CreateAIAssistantChat(m_userId, &rcc);
+   if (chat != nullptr)
+   {
+      response.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_CHAT_ID, chat->getId());
+   }
+   else
+   {
+      response.setField(VID_RCC, rcc);
+   }
+
    sendMessage(response);
 }
 
@@ -17952,13 +17998,37 @@ void ClientSession::queryAiAssistant(const NXCPMessage& request)
  * Called by:
  * CMD_CLEAR_AI_ASSISTANT_CHAT
  *
+ * Expected input parameters:
+ * VID_CHAT_ID     Chat ID
+ *
  * Return values:
  * VID_RCC                          Request completion code
  */
 void ClientSession::clearAiAssistantChat(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   response.setField(VID_RCC, ClearAIAssistantChat(this));
+   uint32_t chatId = request.getFieldAsUInt32(VID_CHAT_ID);
+   response.setField(VID_RCC, ClearAIAssistantChat(chatId, m_userId));
+   sendMessage(response);
+}
+
+/**
+ * Delete AI assistant chat
+ *
+ * Called by:
+ * CMD_DELETE_AI_ASSISTANT_CHAT
+ *
+ * Expected input parameters:
+ * VID_CHAT_ID     Chat ID
+ *
+ * Return values:
+ * VID_RCC                          Request completion code
+ */
+void ClientSession::deleteAiAssistantChat(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t chatId = request.getFieldAsUInt32(VID_CHAT_ID);
+   response.setField(VID_RCC, DeleteAIAssistantChat(chatId, m_userId));
    sendMessage(response);
 }
 
@@ -18038,7 +18108,7 @@ void ClientSession::callAiAssistantFunction(const NXCPMessage& request)
       json_t *arguments = json_loads(args, 0, nullptr);
       if (arguments != nullptr)
       {
-         response.setFieldFromUtf8String(VID_MESSAGE, CallAIAssistantFunction(functionName, arguments, m_userId).c_str());
+         response.setFieldFromUtf8String(VID_MESSAGE, CallGlobalAIAssistantFunction(functionName, arguments, m_userId).c_str());
          response.setField(VID_RCC, RCC_SUCCESS);
          json_decref(arguments);
       }

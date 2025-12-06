@@ -968,7 +968,9 @@ private:
    void updatePeerInterface(const NXCPMessage& request);
    void clearPeerInterface(const NXCPMessage& request);
    void queryAiAssistant(const NXCPMessage& request);
+   void createAiAssistantChat(const NXCPMessage& request);
    void clearAiAssistantChat(const NXCPMessage& request);
+   void deleteAiAssistantChat(const NXCPMessage& request);
    void requestAiAssistantComment(const NXCPMessage& request);
    void getAiAssistantFunctions(const NXCPMessage& request);
    void callAiAssistantFunction(const NXCPMessage& request);

@@ -34,23 +34,6 @@ std::string F_AITaskList(json_t *arguments, uint32_t userId);
 std::string F_DeleteAITask(json_t *arguments, uint32_t userId);
 
 /**
- * Assistant function descriptor
- */
-struct AssistantFunction
-{
-   std::string name;
-   std::string description;
-   std::vector<std::pair<std::string, std::string>> parameters;
-   AssistantFunctionHandler handler;
-
-   AssistantFunction(const std::string& name, const std::string& description,
-      const std::vector<std::pair<std::string, std::string>>& parameters, AssistantFunctionHandler handler)
-      : name(name), description(description), parameters(parameters), handler(handler)
-   {
-   }
-};
-
-/**
  * Loaded server config
  */
 extern Config g_serverConfig;
@@ -71,19 +54,16 @@ static char s_llmModel[64] = "llama3.2";
 static char s_llmAuthToken[256] = "";
 
 /**
- * Prepared functions object for API requests
- */
-static json_t *s_functionDeclarations = nullptr;
-
-/**
  * Functions
  */
-static std::unordered_map<std::string, shared_ptr<AssistantFunction>> s_functions;
+static AssistantFunctionSet s_globalFunctions;
+static Mutex s_globalFunctionsMutex(MutexType::FAST);
 
 /**
- * Mutex for functions
+ * Skills
  */
-static Mutex s_functionsMutex(MutexType::FAST);
+static std::unordered_map<std::string, shared_ptr<AssistantSkill>> s_skills;
+static Mutex s_skillsMutex(MutexType::FAST);
 
 /**
  * System prompt
@@ -187,13 +167,10 @@ static shared_ptr<NetObj> FindObjectByNameOrId(const char *name)
 /**
  * Rebuild function declarations JSON object. Functions mutex must be locked before calling this function.
  */
-static void RebuildFunctionDeclarations()
+static json_t *RebuildFunctionDeclarations(const std::unordered_map<std::string, shared_ptr<AssistantFunction>>& functions)
 {
-   if (s_functionDeclarations != nullptr)
-      json_decref(s_functionDeclarations);
-
-   s_functionDeclarations = json_array();
-   for(const auto& pair : s_functions)
+   json_t *functionDeclarations = json_array();
+   for(const auto& pair : functions)
    {
       const AssistantFunction& function = *pair.second;
       json_t *tool = json_object();
@@ -215,21 +192,22 @@ static void RebuildFunctionDeclarations()
       json_object_set_new(parametersObject, "required", json_array());
       json_object_set_new(functionObject, "parameters", parametersObject);
       json_object_set_new(tool, "function", functionObject);
-      json_array_append_new(s_functionDeclarations, tool);
+      json_array_append_new(functionDeclarations, tool);
    }
+   return functionDeclarations;
 }
 
 /**
- * Register AI assistant function. This function intended to be called only during server core or module initialization.
+ * Register global AI assistant function. This function intended to be called only during server core or module initialization.
  */
 void NXCORE_EXPORTABLE RegisterAIAssistantFunction(const char *name, const char *description, const std::vector<std::pair<std::string, std::string>>& parameters, AssistantFunctionHandler handler)
 {
-   if (s_functions.find(name) != s_functions.end())
+   if (s_globalFunctions.find(name) != s_globalFunctions.end())
    {
-      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"AI assistant function \"%hs\" already registered", name);
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Global AI assistant function \"%hs\" already registered", name);
       return;
    }
-   s_functions.emplace(name, make_shared<AssistantFunction>(name, description, parameters, handler));
+   s_globalFunctions.emplace(name, make_shared<AssistantFunction>(name, description, parameters, handler));
 }
 
 /**
@@ -317,7 +295,7 @@ void RegisterAIFunctionScriptHandler(const NXSL_LibraryScript *script, bool runt
    }
 
    if (runtimeChange)
-      s_functionsMutex.lock();
+      s_globalFunctionsMutex.lock();
 
    String scriptName(script->getName());
    RegisterAIAssistantFunction(toolName, description.c_str(), args,
@@ -327,10 +305,7 @@ void RegisterAIFunctionScriptHandler(const NXSL_LibraryScript *script, bool runt
       });
 
    if (runtimeChange)
-   {
-      RebuildFunctionDeclarations();
-      s_functionsMutex.unlock();
-   }
+      s_globalFunctionsMutex.unlock();
 
    MemFree(toolName);
 
@@ -350,48 +325,54 @@ void UnregisterAIFunctionScriptHandler(const NXSL_LibraryScript *script)
          toolName[i] = '_';
    }
 
-   s_functionsMutex.lock();
-   auto it = s_functions.find(toolName);
-   if (it != s_functions.end())
+   s_globalFunctionsMutex.lock();
+   auto it = s_globalFunctions.find(toolName);
+   if (it != s_globalFunctions.end())
    {
-      s_functions.erase(it);
+      s_globalFunctions.erase(it);
       nxlog_debug_tag(DEBUG_TAG, 4, L"Unregistered AI function handler from script \"%s\"", script->getName());
-      RebuildFunctionDeclarations();
    }
-   s_functionsMutex.unlock();
+   s_globalFunctionsMutex.unlock();
 }
 
 /**
  * Call registered function
  */
-std::string NXCORE_EXPORTABLE CallAIAssistantFunction(const char *name, json_t *arguments, uint32_t userId)
+static std::string CallAIAssistantFunction(shared_ptr<AssistantFunction> function, const char *name, json_t *arguments, uint32_t userId)
 {
-   s_functionsMutex.lock();
-   auto it = s_functions.find(name);
-   if (it != s_functions.end())
+   if (json_is_string(arguments))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, L"AI assistant function \"%hs\" called with arguments %hs", name, json_string_value(arguments));
+      arguments = json_loads(json_string_value(arguments), 0, nullptr);
+      std::string response = function->handler(arguments, userId);
+      json_decref(arguments);
+      return response;
+   }
+
+   if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 7)
+   {
+      char *argsStr = json_dumps(arguments, JSON_INDENT(3) | JSON_PRESERVE_ORDER);
+      nxlog_debug_tag(DEBUG_TAG, 7, L"AI assistant function \"%hs\" called with arguments %hs", name, argsStr);
+      MemFree(argsStr);
+   }
+
+   return function->handler(arguments, userId);
+}
+
+/**
+ * Call registered function
+ */
+std::string NXCORE_EXPORTABLE CallGlobalAIAssistantFunction(const char *name, json_t *arguments, uint32_t userId)
+{
+   s_globalFunctionsMutex.lock();
+   auto it = s_globalFunctions.find(name);
+   if (it != s_globalFunctions.end())
    {
       shared_ptr<AssistantFunction> function = it->second;
-      s_functionsMutex.unlock();
-
-      if (json_is_string(arguments))
-      {
-         nxlog_debug_tag(DEBUG_TAG, 7, L"AI assistant function \"%hs\" called with arguments %hs", name, json_string_value(arguments));
-         arguments = json_loads(json_string_value(arguments), 0, nullptr);
-         std::string response = function->handler(arguments, userId);
-         json_decref(arguments);
-         return response;
-      }
-
-      if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 7)
-      {
-         char *argsStr = json_dumps(arguments, JSON_INDENT(3) | JSON_PRESERVE_ORDER);
-         nxlog_debug_tag(DEBUG_TAG, 7, L"AI assistant function \"%hs\" called with arguments %hs", name, argsStr);
-         MemFree(argsStr);
-      }
-
-      return function->handler(arguments, userId);
+      s_globalFunctionsMutex.unlock();
+      return CallAIAssistantFunction(function, name, arguments, userId);
    }
-   s_functionsMutex.unlock();
+   s_globalFunctionsMutex.unlock();
    return std::string("Error: function not found");
 }
 
@@ -400,12 +381,12 @@ std::string NXCORE_EXPORTABLE CallAIAssistantFunction(const char *name, json_t *
  */
 void FillAIAssistantFunctionListMessage(NXCPMessage *msg)
 {
-   LockGuard lockGuard(s_functionsMutex);
+   LockGuard lockGuard(s_globalFunctionsMutex);
 
-   msg->setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(s_functions.size()));
+   msg->setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(s_globalFunctions.size()));
 
    uint32_t baseFieldId = VID_ELEMENT_LIST_BASE;
-   for(auto f : s_functions)
+   for(auto f : s_globalFunctions)
    {
       const AssistantFunction& function = *f.second;
       uint32_t fieldId = baseFieldId;
@@ -560,69 +541,98 @@ static json_t *DoApiRequest(json_t *requestData)
 }
 
 /**
- * Add message to messages array
+ * Saved chat sessions
  */
-static inline void AddMessage(json_t *messages, const char *role, const char *content)
+static std::unordered_map<uint32_t, shared_ptr<Chat>> s_chats;
+static Mutex s_chatsLock;
+static VolatileCounter s_nextChatId = 0;
+
+/**
+ * Chat constructor
+ */
+Chat::Chat(NetObj *context, json_t *eventData, uint32_t userId, const char *systemPrompt)
 {
-   json_t *message = json_object();
-   json_object_set_new(message, "role", json_string(role));
-   json_object_set_new(message, "content", json_string(content));
-   json_array_append_new(messages, message);
-   nxlog_debug_tag(DEBUG_TAG, 8, L"Added message to chat: role=\"%hs\", content=\"%hs\"", role, content);
+   m_id = InterlockedIncrement(&s_nextChatId);
+
+   s_globalFunctionsMutex.lock();
+   for (const auto& pair : s_globalFunctions)
+      m_functions.emplace(pair.first, pair.second);
+   s_globalFunctionsMutex.unlock();
+   m_functionDeclarations = RebuildFunctionDeclarations(m_functions);
+
+   m_messages = json_array();
+   addMessage("system", (systemPrompt != nullptr) ? systemPrompt : s_systemPrompt);
+   addMessage("system", s_concepts);
+   if (context != nullptr)
+   {
+      addMessage("system", "This request is made in the context of the following object:");
+      json_t *json = context->toJson();
+      char *jsonText = json_dumps(json, 0);
+      json_decref(json);
+      addMessage("system", jsonText);
+      MemFree(jsonText);
+   }
+   if (eventData != nullptr)
+   {
+      addMessage("system", "The following is the event data associated with this request:");
+      char *jsonText = json_dumps(eventData, 0);
+      addMessage("system", jsonText);
+      MemFree(jsonText);
+   }
+   for(const std::string& p : s_prompts)
+   {
+      addMessage("system", p.c_str());
+   }
+   m_initialMessageCount = json_array_size(m_messages);
+
+   m_userId = userId;
+   m_creationTime = m_lastUpdateTime = time(nullptr);
 }
 
 /**
  * Chat destructor
  */
-static void DeleteChat(void *chat, HashMapBase *map)
+Chat::~Chat()
 {
-   json_decref(static_cast<json_t*>(chat));
+   json_decref(m_messages);
+   json_decref(m_functionDeclarations);
 }
 
 /**
- * Saved chat sessions
+ * Clear chat history
  */
-static HashMap<session_id_t, json_t> s_chats(Ownership::True, DeleteChat);
-static Mutex s_chatsLock;
+void Chat::clear()
+{
+   LockGuard lockGuard(m_mutex);
+
+   m_functions.clear();
+
+   s_globalFunctionsMutex.lock();
+   for (const auto& pair : s_globalFunctions)
+      m_functions.emplace(pair.first, pair.second);
+   s_globalFunctionsMutex.unlock();
+
+   json_decref(m_functionDeclarations);
+   m_functionDeclarations = RebuildFunctionDeclarations(m_functions);
+
+   json_t *messages = json_array();
+   for(size_t i = 0; i < m_initialMessageCount; i++)
+   {
+      json_array_append(messages, json_array_get(m_messages, i));
+   }
+   json_decref(m_messages);
+   m_messages = messages;
+   m_lastUpdateTime = time(nullptr);
+}
 
 /**
- * Process request to assistant (actual internal implementation)
+ * Send request to assistant
  */
-char *ProcessRequestToAIAssistantEx(const char *prompt, const char *systemPrompt, NetObj *context, json_t *eventData, GenericClientSession *session, int maxIterations)
+char *Chat::sendRequest(const char *prompt, int maxIterations)
 {
-   json_t *messages;
-   s_chatsLock.lock();
-   messages = (session != nullptr) ? s_chats.get(session->getId()) : nullptr;
-   if (messages == nullptr)
-   {
-      messages = json_array();
-      if (session != nullptr)
-         s_chats.set(session->getId(), messages);
-      AddMessage(messages, "system", (systemPrompt != nullptr) ? systemPrompt : s_systemPrompt);
-      AddMessage(messages, "system", s_concepts);
-      if (context != nullptr)
-      {
-         AddMessage(messages, "system", "This request is made in the context of the following object:");
-         json_t *json = context->toJson();
-         char *jsonText = json_dumps(json, 0);
-         json_decref(json);
-         AddMessage(messages, "system", jsonText);
-         MemFree(jsonText);
-      }
-      if (eventData != nullptr)
-      {
-         AddMessage(messages, "system", "The following is the event data associated with this request:");
-         char *jsonText = json_dumps(eventData, 0);
-         AddMessage(messages, "system", jsonText);
-         MemFree(jsonText);
-      }
-      for(const std::string& p : s_prompts)
-      {
-         AddMessage(messages, "system", p.c_str());
-      }
-   }
-   s_chatsLock.unlock();
-   AddMessage(messages, "user", prompt);
+   LockGuard lockGuard(m_mutex);
+
+   addMessage("user", prompt);
 
    int iterations = maxIterations;
    char *answer = nullptr;
@@ -631,24 +641,15 @@ char *ProcessRequestToAIAssistantEx(const char *prompt, const char *systemPrompt
       json_t *request = json_object();
       json_object_set_new(request, "model", json_string(s_llmModel));
       json_object_set_new(request, "stream", json_boolean(false));
-      s_functionsMutex.lock();
-      json_object_set(request, "tools", s_functionDeclarations);
-      s_functionsMutex.unlock();
-      json_object_set(request, "messages", messages);
+      json_object_set(request, "tools", m_functionDeclarations);
+      json_object_set(request, "messages", m_messages);
 
       json_t *response = DoApiRequest(request);
-
-      // Request should be cleared with mutex held because functions (tools) object is part of it
-      s_functionsMutex.lock();
       json_decref(request);
-      s_functionsMutex.unlock();
+      m_lastUpdateTime = time(nullptr);
 
       if (response == nullptr)
-      {
-         if (session == nullptr)
-            json_decref(messages);  // if session is null, chat is not saved - delete it now
          return nullptr;
-      }
 
       json_t *message = json_object_get(response, "message");
       if (!json_is_object(message))
@@ -666,7 +667,7 @@ char *ProcessRequestToAIAssistantEx(const char *prompt, const char *systemPrompt
 
       if (json_is_object(message))
       {
-         json_array_append(messages, message);
+         json_array_append(m_messages, message);
          json_t *toolCalls = json_object_get(message, "tool_calls");
          if (toolCalls != nullptr)
          {
@@ -680,7 +681,7 @@ char *ProcessRequestToAIAssistantEx(const char *prompt, const char *systemPrompt
                   json_t *toolCallId = json_object_get(tool, "id");
                   const char *name = json_object_get_string_utf8(function, "name", "");
                   nxlog_debug_tag(DEBUG_TAG, 5, L"LLM function call requested: %hs", name);
-                  std::string functionResult = CallAIAssistantFunction(name, json_object_get(function, "arguments"), (session != nullptr) ? session->getUserId() : 0);
+                  std::string functionResult = callFunction(name, json_object_get(function, "arguments"));
                   if (!functionResult.empty())
                   {
                      nxlog_debug_tag(DEBUG_TAG, 5, L"LLM function \"%hs\" executed, result length=%d", name, static_cast<int>(functionResult.length()));
@@ -694,7 +695,7 @@ char *ProcessRequestToAIAssistantEx(const char *prompt, const char *systemPrompt
                      {
                         json_object_set(functionMessage, "tool_call_id", toolCallId);
                      }
-                     json_array_append_new(messages, functionMessage);
+                     json_array_append_new(m_messages, functionMessage);
                   }
                }
             }
@@ -722,17 +723,30 @@ char *ProcessRequestToAIAssistantEx(const char *prompt, const char *systemPrompt
       json_decref(response);
    }
    nxlog_debug_tag(DEBUG_TAG, 5, L"Final LLM response %s", (answer != nullptr) ? L"received" : L"not received");
-   if (session == nullptr)
-      json_decref(messages);  // if session is null, chat is not saved - delete it now
    return answer;
 }
 
 /**
- * Process request to assistant
+ * Call function from chat context
  */
-char NXCORE_EXPORTABLE *ProcessRequestToAIAssistant(const char *prompt, NetObj *context, GenericClientSession *session, int maxIterations)
+std::string Chat::callFunction(const char *name, json_t *arguments)
 {
-   return ProcessRequestToAIAssistantEx(prompt, nullptr, context, nullptr, session, maxIterations);
+   auto it = m_functions.find(name);
+   if (it != m_functions.end())
+   {
+      shared_ptr<AssistantFunction> function = it->second;
+      return CallAIAssistantFunction(function, name, arguments, m_userId);
+   }
+   return std::string("Error: function not found");
+}
+
+/**
+ * Send single independent request to AI assistant
+ */
+char NXCORE_EXPORTABLE *QueryAIAssistant(const char *prompt, NetObj *context, int maxIterations)
+{
+   Chat chat(context);
+   return chat.sendRequest(prompt, maxIterations);
 }
 
 /**
@@ -746,7 +760,8 @@ void ProcessEventWithAIAssistant(Event *event, const shared_ptr<NetObj>& object,
    ThreadPoolExecute(s_aiTaskThreadPool,
       [prompt, object, eventData, eventId] () -> void
       {
-         char *response = ProcessRequestToAIAssistantEx(prompt, s_systemPromptBackground, object.get(), eventData, nullptr, 10);
+         Chat chat(object.get(), eventData, 0, s_systemPromptBackground);
+         char *response = chat.sendRequest(prompt, 10);
          if (response != nullptr)
          {
             nxlog_debug_tag(DEBUG_TAG, 4, L"AI assistant response for event " UINT64_FMT L": %hs", eventId, response);
@@ -762,15 +777,105 @@ void ProcessEventWithAIAssistant(Event *event, const shared_ptr<NetObj>& object,
 }
 
 /**
- * Clear chat history for given session
+ * Create new chat
  */
-uint32_t NXCORE_EXPORTABLE ClearAIAssistantChat(GenericClientSession *session)
+shared_ptr<Chat> NXCORE_EXPORTABLE CreateAIAssistantChat(uint32_t userId, uint32_t *rcc)
+{
+   shared_ptr<Chat> chat = make_shared<Chat>(nullptr, nullptr, userId, nullptr);
+
+   s_chatsLock.lock();
+   s_chats.emplace(chat->getId(), chat);
+   s_chatsLock.unlock();
+
+   nxlog_debug_tag(DEBUG_TAG, 5, L"New chat [%u] created for user [%u]", chat->getId(), userId);
+   *rcc = RCC_SUCCESS;
+   return chat;
+}
+
+/**
+ * Get chat with given ID
+ */
+shared_ptr<Chat> NXCORE_EXPORTABLE GetAIAssistantChat(uint32_t chatId, uint32_t userId, uint32_t *rcc)
 {
    s_chatsLock.lock();
-   s_chats.remove(session->getId());
+   auto it = s_chats.find(chatId);
+   if (it != s_chats.end())
+   {
+      if ((userId == 0) || (it->second->getUserId() == userId))
+      {
+         *rcc = RCC_SUCCESS;
+         s_chatsLock.unlock();
+         return it->second;
+      }
+      else
+      {
+         *rcc = RCC_ACCESS_DENIED;
+      }
+   }
+   else
+   {
+      *rcc = RCC_INVALID_CHAT_ID;
+   }
    s_chatsLock.unlock();
-   nxlog_debug_tag(DEBUG_TAG, 5, L"Chat history for session %d cleared", session->getId());
-   return RCC_SUCCESS;
+   return nullptr;
+}
+
+/**
+ * Clear history for given chat
+ */
+uint32_t NXCORE_EXPORTABLE ClearAIAssistantChat(uint32_t chatId, uint32_t userId)
+{
+   uint32_t rcc;
+   s_chatsLock.lock();
+   auto it = s_chats.find(chatId);
+   if (it != s_chats.end())
+   {
+      if ((userId == 0) || (it->second->getUserId() == userId))
+      {
+         it->second->clear();
+         nxlog_debug_tag(DEBUG_TAG, 5, L"History for chat [%u] cleared", chatId);
+         rcc = RCC_SUCCESS;
+      }
+      else
+      {
+         rcc = RCC_ACCESS_DENIED;
+      }
+   }
+   else
+   {
+      rcc = RCC_INVALID_CHAT_ID;
+   }
+   s_chatsLock.unlock();
+   return rcc;
+}
+
+/**
+ * Delete chat
+ */
+uint32_t NXCORE_EXPORTABLE DeleteAIAssistantChat(uint32_t chatId, uint32_t userId)
+{
+   uint32_t rcc;
+   s_chatsLock.lock();
+   auto it = s_chats.find(chatId);
+   if (it != s_chats.end())
+   {
+      if ((userId == 0) || (it->second->getUserId() == userId))
+      {
+         s_chats.erase(it);
+         nxlog_debug_tag(DEBUG_TAG, 5, L"Chat [%u] deleted", chatId);
+         rcc = RCC_SUCCESS;
+      }
+      else
+      {
+         rcc = RCC_ACCESS_DENIED;
+      }
+   }
+   else
+   {
+      rcc = RCC_INVALID_CHAT_ID;
+   }
+   s_chatsLock.unlock();
+   return rcc;
 }
 
 /**
@@ -810,10 +915,10 @@ bool InitAIAssistant()
       });
    scriptLibrary->unlock();
 
-   if (s_functions.empty())
+   if (s_globalFunctions.empty() && s_skills.empty())
    {
-      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("AI assistant disabled (no functions registered)"));
-      return true;  // No functions registered
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("AI assistant disabled (no functions or skills registered)"));
+      return true;
    }
 
    RegisterComponent(AI_ASSISTANT_COMPONENT);
@@ -854,8 +959,6 @@ bool InitAIAssistant()
       },
       F_DeleteAITask);
 
-   RebuildFunctionDeclarations();
-
    InitAITasks();
    s_aiTaskThreadPool = ThreadPoolCreate(_T("AI-TASKS"),
          ConfigReadInt(_T("ThreadPool.AITasks.BaseSize"), 4),
@@ -863,7 +966,8 @@ bool InitAIAssistant()
    ThreadCreate(AITaskSchedulerThread, s_aiTaskThreadPool);
 
    nxlog_debug_tag(DEBUG_TAG, 2, L"LLM service URL = \"%hs\", model = \"%hs\"", s_llmServiceURL, s_llmModel);
-   nxlog_debug_tag(DEBUG_TAG, 2, L"%d functions registered", static_cast<int>(s_functions.size()));
+   nxlog_debug_tag(DEBUG_TAG, 2, L"%d global functions registered", static_cast<int>(s_globalFunctions.size()));
+   nxlog_debug_tag(DEBUG_TAG, 2, L"%d skills registered", static_cast<int>(s_skills.size()));
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("AI assistant initialized"));
    return true;
 }

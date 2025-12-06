@@ -926,7 +926,7 @@ String Alarm::requestAIAssistantComment(GenericClientSession *session) const
    prompt.append(L"Message: ").append(m_message).append(L"\n");
    prompt.append(L"Last change time: ").append(FormatTimestamp(m_lastChangeTime)).append(L"\n");
    char *promptUtf8 = UTF8StringFromWideString(prompt);
-   char *response = ProcessRequestToAIAssistant(promptUtf8, object.get(), session);
+   char *response = QueryAIAssistant(promptUtf8, object.get());
    MemFree(promptUtf8);
    if (response == nullptr)
       return String();

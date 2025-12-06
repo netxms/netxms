@@ -678,6 +678,8 @@ typedef struct
 #define CMD_GET_AI_AGENT_TASKS            0x01DE
 #define CMD_DELETE_AI_AGENT_TASK          0x01DF
 #define CMD_ADD_AI_AGENT_TASK             0x01E0
+#define CMD_CREATE_AI_ASSISTANT_CHAT      0x01E1
+#define CMD_DELETE_AI_ASSISTANT_CHAT      0x01E2
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1564,6 +1566,7 @@ typedef struct
 #define VID_MAX_SPEED               ((uint32_t)872)
 #define VID_PROMPT                  ((uint32_t)873)
 #define VID_TIMESTAMP_MS            ((uint32_t)874)
+#define VID_CHAT_ID                 ((uint32_t)875)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

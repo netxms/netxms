@@ -211,6 +211,7 @@ public final class RCC
    public static final int AGENT_ACCESS_DENIED = 176;
    public static final int TCP_PROXY_DISABLED = 177;
    public static final int INVALID_TASK_ID = 178;
+   public static final int INVALID_CHAT_ID = 179;
 
    // Client-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

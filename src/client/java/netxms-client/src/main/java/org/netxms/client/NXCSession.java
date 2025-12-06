@@ -15058,16 +15058,34 @@ public class NXCSession
    }
 
    /**
-    * Send query to AI assistant.
-    * 
-    * @param prompt user prompt
+    * Create new AI assistant chat.
+    *
+    * @return chat ID
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public String queryAiAssistant(String prompt) throws IOException, NXCException
+   public long createAiAssistantChat() throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_AI_ASSISTANT_CHAT);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getFieldAsInt64(NXCPCodes.VID_CHAT_ID);
+   }
+
+   /**
+    * Send message to AI assistant within existing chat.
+    *
+    * @param chatId chat ID
+    * @param message new user message
+    * @return assistant response
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public String updateAiAssistantChat(long chatId, String message) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_AI_ASSISTANT);
-      msg.setField(NXCPCodes.VID_MESSAGE, prompt);
+      msg.setFieldUInt32(NXCPCodes.VID_CHAT_ID, chatId);
+      msg.setField(NXCPCodes.VID_MESSAGE, message);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId(), commandTimeout * 10);   // LLM response can take significant amount of time
       return response.getFieldAsString(NXCPCodes.VID_MESSAGE);
@@ -15076,12 +15094,29 @@ public class NXCSession
    /**
     * Clear AI assistant chat history.
     * 
+    * @param chatId chat ID
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void clearAiAssistantChat() throws IOException, NXCException
+   public void clearAiAssistantChat(long chatId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_CLEAR_AI_ASSISTANT_CHAT);
+      msg.setFieldUInt32(NXCPCodes.VID_CHAT_ID, chatId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Delete AI assistant chat.
+    * 
+    * @param chatId chat ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteAiAssistantChat(long chatId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_AI_ASSISTANT_CHAT);
+      msg.setFieldUInt32(NXCPCodes.VID_CHAT_ID, chatId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
