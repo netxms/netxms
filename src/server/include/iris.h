@@ -131,7 +131,9 @@ private:
       nxlog_debug_tag(L"llm.chat", 8, L"Added message to chat: role=\"%hs\", content=\"%hs\"", role, content);
    }
 
+   void initializeFunctions();
    std::string callFunction(const char *name, json_t *arguments);
+   std::string loadSkill(const char *skillName);
 
 public:
    Chat(NetObj *context = nullptr, json_t *eventData = nullptr, uint32_t userId = 0, const char *systemPrompt = nullptr);
@@ -154,6 +156,16 @@ struct AssistantSkill
    std::string description;
    std::string prompt;
    std::vector<AssistantFunction> functions;
+
+   AssistantSkill(const std::string& _name, const std::string& _description, const std::string& _prompt) :
+      name(_name), description(_description), prompt(_prompt)
+   {
+   }
+
+   AssistantSkill(const std::string& _name, const std::string& _description, const std::string& _prompt, const std::vector<AssistantFunction>& _functions) :
+      name(_name), description(_description), prompt(_prompt), functions(_functions)
+   {
+   }
 };
 
 /**
@@ -170,6 +182,16 @@ std::string NXCORE_EXPORTABLE CallGlobalAIAssistantFunction(const char *name, js
  * Fill message with registered function list
  */
 void FillAIAssistantFunctionListMessage(NXCPMessage *msg);
+
+/**
+ * Register AI assistant skill. This function intended to be called only during server core or module initialization.
+ */
+void NXCORE_EXPORTABLE RegisterAIAssistantSkill(const char *name, const char *description, const char *prompt);
+
+/**
+ * Register AI assistant skill with functions. This function intended to be called only during server core or module initialization.
+ */
+void NXCORE_EXPORTABLE RegisterAIAssistantSkill(const char *name, const char *description, const char *prompt, const std::vector<AssistantFunction>& functions);
 
 /**
  * Add custom prompt

@@ -26,12 +26,16 @@
 #include <iris.h>
 #include <unordered_map>
 
-#define DEBUG_TAG _T("llm.iris")
+#define DEBUG_TAG _T("ai.assistant")
 
 void InitAITasks();
 void AITaskSchedulerThread(ThreadPool *aiTaskThreadPool);
+
+size_t GetRegisteredSkillCount();
+
 std::string F_AITaskList(json_t *arguments, uint32_t userId);
 std::string F_DeleteAITask(json_t *arguments, uint32_t userId);
+std::string F_GetRegisteredSkills(json_t *arguments, uint32_t userId);
 
 /**
  * Loaded server config
@@ -60,12 +64,6 @@ static AssistantFunctionSet s_globalFunctions;
 static Mutex s_globalFunctionsMutex(MutexType::FAST);
 
 /**
- * Skills
- */
-static std::unordered_map<std::string, shared_ptr<AssistantSkill>> s_skills;
-static Mutex s_skillsMutex(MutexType::FAST);
-
-/**
  * System prompt
  */
 static const char *s_systemPrompt =
@@ -83,6 +81,12 @@ static const char *s_systemPrompt =
          "- Provide context about NetXMS-specific features\n"
          "- Use function calls to access real-time data when possible\n"
          "- Create background tasks for complex or time-consuming operations\n\n"
+         "SKILL MANAGEMENT:\n"
+         "- Use get-available-skills function to discover what skills are available\n"
+         "- Load relevant skills using load-skill function when encountering tasks that require specialized capabilities\n"
+         "- Skills extend your functionality for specific domains or complex operations\n"
+         "- Always check available skills before stating you cannot perform a task\n"
+         "- Load skills proactively when you recognize a need for specialized knowledge or capabilities\n\n"
          "Your responses should be accurate, concise, and helpful for network administrators managing IT infrastructure through NetXMS.";
 
 /**
@@ -105,6 +109,12 @@ static const char *s_systemPromptBackground =
          "- Consider object relationships and dependencies\n"
          "- Take preventive actions when appropriate\n"
          "- Document significant findings or actions taken\n\n"
+         "SKILL MANAGEMENT:\n"
+         "- Use get-available-skills function to discover what skills are available\n"
+         "- Load relevant skills using load-skill function when encountering tasks that require specialized capabilities\n"
+         "- Skills extend your functionality for specific domains or complex operations\n"
+         "- Always check available skills before stating you cannot perform a task\n"
+         "- Load skills proactively when you recognize a need for specialized knowledge or capabilities\n\n"
          "Focus on network management, monitoring, and IT administration tasks within the NetXMS framework.";
 
 static const char *s_concepts =
@@ -554,11 +564,7 @@ Chat::Chat(NetObj *context, json_t *eventData, uint32_t userId, const char *syst
 {
    m_id = InterlockedIncrement(&s_nextChatId);
 
-   s_globalFunctionsMutex.lock();
-   for (const auto& pair : s_globalFunctions)
-      m_functions.emplace(pair.first, pair.second);
-   s_globalFunctionsMutex.unlock();
-   m_functionDeclarations = RebuildFunctionDeclarations(m_functions);
+   initializeFunctions();
 
    m_messages = json_array();
    addMessage("system", (systemPrompt != nullptr) ? systemPrompt : s_systemPrompt);
@@ -599,6 +605,31 @@ Chat::~Chat()
 }
 
 /**
+ * Initialize functions for chat
+ */
+void Chat::initializeFunctions()
+{
+   s_globalFunctionsMutex.lock();
+   for (const auto& pair : s_globalFunctions)
+      m_functions.emplace(pair.first, pair.second);
+   s_globalFunctionsMutex.unlock();
+
+   m_functions.emplace("load-skill", make_shared<AssistantFunction>(
+      "load-skill",
+      "Load AI assistant skill by name. Returns skill prompt on success or error message on failure.",
+      std::vector<std::pair<std::string, std::string>>{
+         {"name", "Name of the skill to load"}
+      },
+      [this] (json_t *arguments, uint32_t userId) -> std::string
+      {
+         return this->loadSkill(json_object_get_string_utf8(arguments, "name", ""));
+      }
+   ));
+
+   m_functionDeclarations = RebuildFunctionDeclarations(m_functions);
+}
+
+/**
  * Clear chat history
  */
 void Chat::clear()
@@ -606,14 +637,8 @@ void Chat::clear()
    LockGuard lockGuard(m_mutex);
 
    m_functions.clear();
-
-   s_globalFunctionsMutex.lock();
-   for (const auto& pair : s_globalFunctions)
-      m_functions.emplace(pair.first, pair.second);
-   s_globalFunctionsMutex.unlock();
-
    json_decref(m_functionDeclarations);
-   m_functionDeclarations = RebuildFunctionDeclarations(m_functions);
+   initializeFunctions();
 
    json_t *messages = json_array();
    for(size_t i = 0; i < m_initialMessageCount; i++)
@@ -915,7 +940,7 @@ bool InitAIAssistant()
       });
    scriptLibrary->unlock();
 
-   if (s_globalFunctions.empty() && s_skills.empty())
+   if (s_globalFunctions.empty() && (GetRegisteredSkillCount() == 0))
    {
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("AI assistant disabled (no functions or skills registered)"));
       return true;
@@ -958,6 +983,11 @@ bool InitAIAssistant()
          { "task_id", "ID of the task to delete" }
       },
       F_DeleteAITask);
+   RegisterAIAssistantFunction(
+      "get-available-skills",
+      "Get list of available AI assistant skills with brief descriptions. Skills can be used to extend assistant capabilities for specific tasks.",
+      { },
+      F_GetRegisteredSkills);
 
    InitAITasks();
    s_aiTaskThreadPool = ThreadPoolCreate(_T("AI-TASKS"),
@@ -967,7 +997,7 @@ bool InitAIAssistant()
 
    nxlog_debug_tag(DEBUG_TAG, 2, L"LLM service URL = \"%hs\", model = \"%hs\"", s_llmServiceURL, s_llmModel);
    nxlog_debug_tag(DEBUG_TAG, 2, L"%d global functions registered", static_cast<int>(s_globalFunctions.size()));
-   nxlog_debug_tag(DEBUG_TAG, 2, L"%d skills registered", static_cast<int>(s_skills.size()));
+   nxlog_debug_tag(DEBUG_TAG, 2, L"%d skills registered", static_cast<int>(GetRegisteredSkillCount()));
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("AI assistant initialized"));
    return true;
 }

@@ -17959,6 +17959,7 @@ void ClientSession::queryAiAssistant(const NXCPMessage& request)
    {
       response.setField(VID_RCC, rcc);
    }
+   MemFree(userMessage);
 
    sendMessage(response);
 }

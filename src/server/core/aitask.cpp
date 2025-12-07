@@ -24,7 +24,7 @@
 #include <iris.h>
 #include <nms_users.h>
 
-#define DEBUG_TAG L"llm.aitask"
+#define DEBUG_TAG L"ai.tasks"
 
 /**
  * AI Task management
