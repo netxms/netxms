@@ -114,7 +114,6 @@ json_t *NetworkPath::toJson() const
             if (e->ifIndex != 0)
             {
                json_object_set_new(jsonHop, "ifIndex", json_integer(e->ifIndex));
-               json_object_set_new(jsonHop, "ifName", json_string_t(GetObjectName(e->ifIndex, L"unknown")));
             }
             json_object_set_new(jsonHop, "nextHop", e->nextHop.toJson());
             json_object_set_new(jsonHop, "route", e->route.toJson());

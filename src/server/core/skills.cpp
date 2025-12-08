@@ -26,6 +26,8 @@
 
 #define DEBUG_TAG _T("ai.skills")
 
+json_t *RebuildFunctionDeclarations(const std::unordered_map<std::string, shared_ptr<AssistantFunction>>& functions);
+
 /**
  * Skills
  */
@@ -103,7 +105,7 @@ void NXCORE_EXPORTABLE RegisterAIAssistantSkill(const char *name, const char *de
       std::string fileContent = LoadSkillFile(&prompt[1]);
       if (fileContent.empty())
          return;
-      s_skills.emplace(name, make_shared<AssistantSkill>(name, description, fileContent));
+      s_skills.emplace(name, make_shared<AssistantSkill>(name, description, fileContent, functions));
       return;
    }
 
@@ -145,14 +147,17 @@ std::string Chat::loadSkill(const char *skillName)
    }
 
    const AssistantSkill& skill = *it->second;
-   addMessage("system", skill.prompt.c_str());
 
    // Register skill functions
    for(const AssistantFunction& function : skill.functions)
    {
       m_functions.emplace(function.name, make_shared<AssistantFunction>(function));
+      nxlog_debug_tag(DEBUG_TAG, 6, L"Loaded AI assistant function \"%s\" from skill \"%s\"", function.name.c_str(), skill.name.c_str());
    }
    s_skillsMutex.unlock();
 
-   return std::string("OK");
+   json_decref(m_functionDeclarations);
+   m_functionDeclarations = RebuildFunctionDeclarations(m_functions);
+
+   return skill.prompt;
 }
