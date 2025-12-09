@@ -182,6 +182,7 @@ public:
    Threshold(const Threshold& src, bool shadowCopy);
    Threshold(DB_RESULT hResult, int row, DCItem *relatedItem);
 	Threshold(ConfigEntry *config, DCItem *parentItem, bool nxslV5);
+   Threshold(json_t *json, DCItem *parentItem, bool nxslV5);
    ~Threshold();
 
    void bindToItem(uint32_t itemId, uint32_t targetId) { m_itemId = itemId; m_targetId = targetId; }
@@ -358,6 +359,7 @@ protected:
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
 	DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5);
+	DCObject(json_t *json, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5);
    DCObject(const DCObject *src, bool shadowCopy);
 
 public:
@@ -455,6 +457,7 @@ public:
    virtual void createExportRecord(TextFileWriter& xml) const = 0;
    virtual void getScriptDependencies(StringSet *dependencies) const;
    virtual json_t *toJson();
+   virtual void updateFromImport(json_t *json, bool nxslV5);
 
    NXSL_Value *createNXSLObject(NXSL_VM *vm) const;
 
@@ -549,6 +552,7 @@ public:
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
 	DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5);
+   DCItem(json_t *json, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5);
    virtual ~DCItem();
 
    virtual DCObject *clone() const override;
@@ -557,6 +561,7 @@ public:
 
    virtual void updateFromTemplate(DCObject *dcObject) override;
    virtual void updateFromImport(ConfigEntry *config, bool nxslV5) override;
+   virtual void updateFromImport(json_t *json, bool nxslV5);
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual void deleteFromDatabase() override;
@@ -650,6 +655,7 @@ public:
 	DCTableColumn(const NXCPMessage& msg, uint32_t baseId);
 	DCTableColumn(DB_RESULT hResult, int row);
    DCTableColumn(ConfigEntry *e);
+   DCTableColumn(json_t *json);
 	~DCTableColumn();
 
 	const TCHAR *getName() const { return m_name; }
@@ -705,6 +711,7 @@ public:
    DCTableConditionGroup(const NXCPMessage& msg, uint32_t *baseId);
    DCTableConditionGroup(DCTableConditionGroup *src);
    DCTableConditionGroup(ConfigEntry *e);
+   DCTableConditionGroup(json_t *json);
    ~DCTableConditionGroup();
 
    void addCondition(DCTableCondition *c) { m_conditions->add(c); }
@@ -782,6 +789,7 @@ public:
    DCTableThreshold(const NXCPMessage& msg, uint32_t *baseId);
    DCTableThreshold(const DCTableThreshold *src, bool shadowCopy);
    DCTableThreshold(ConfigEntry *e);
+   DCTableThreshold(json_t *json);
 
    void copyState(DCTableThreshold *src);
 
@@ -837,6 +845,7 @@ public:
          const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
    DCTable(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay);
    DCTable(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5);
+   DCTable(json_t *json, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5);
 	virtual ~DCTable();
 
 	virtual DCObject *clone() const override;
@@ -845,6 +854,7 @@ public:
 
    virtual void updateFromTemplate(DCObject *dcObject) override;
    virtual void updateFromImport(ConfigEntry *config, bool nxslV5) override;
+   virtual void updateFromImport(json_t *json, bool nxslV5);
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual void deleteFromDatabase() override;

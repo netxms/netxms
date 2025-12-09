@@ -17,71 +17,88 @@
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
 ** File: import.cpp
+** JSON-based import functions
 **
 **/
 
 #include "nxcore.h"
 #include <nxcore_websvc.h>
 #include <asset_management.h>
+#include <jansson.h>
 
 #define DEBUG_TAG _T("import")
+
+void DeleteEmptyTemplateGroup(const shared_ptr<NetObj>& parent);
 
 /**
  * Check if given event exist either in server configuration or in configuration being imported
  */
-static bool IsEventExist(const TCHAR *name, const Config& config)
+static bool IsEventExist(const TCHAR *name, json_t *root)
 {
    if (name == nullptr)
       return false;
 
+   // Check if event exists in server configuration
    shared_ptr<EventTemplate> e = FindEventTemplateByName(name);
-	if (e != nullptr)
-		return true;
+   if (e != nullptr)
+      return true;
 
-	ConfigEntry *eventsRoot = config.getEntry(_T("/events"));
-	if (eventsRoot != nullptr)
-	{
-      unique_ptr<ObjectArray<ConfigEntry>> events = eventsRoot->getSubEntries(_T("event#*"));
-      for (int i = 0; i < events->size(); i++)
+   // Check if event exists in JSON configuration being imported
+   json_t *events = json_object_get(root, "events");
+   if (json_is_array(events))
+   {
+      size_t count = json_array_size(events);
+      for (size_t i = 0; i < count; i++)
       {
-         ConfigEntry *event = events->get(i);
-         if (!_tcsicmp(event->getSubEntryValue(_T("name"), 0, _T("<unnamed>")), name))
-            return true;
+         json_t *event = json_array_get(events, i);
+         if (json_is_object(event))
+         {
+            json_t *nameObj = json_object_get(event, "name");
+            if (json_is_string(nameObj))
+            {
+               String eventName = json_object_get_string(event, "name", _T("<unnamed>"));
+               return (!eventName.isEmpty()) && (_tcsicmp(eventName, name) == 0);
+            }
+         }
       }
    }
    return false;
 }
 
 /**
- * Validate DCI from template
+ * Validate DCI thresholds from JSON template
  */
-static bool ValidateDci(const Config& config, const ConfigEntry *dci, const TCHAR *templateName, ImportContext *context)
+static bool ValidateDci(json_t *root, json_t *dci, const TCHAR *templateName, ImportContext *context)
 {
-	ConfigEntry *thresholdsRoot = dci->findEntry(_T("thresholds"));
-	if (thresholdsRoot == nullptr)
-		return true;
+   json_t *thresholds = json_object_get(dci, "thresholds");
+   if (!json_is_array(thresholds))
+      return true;
 
-	bool success = true;
-   unique_ptr<ObjectArray<ConfigEntry>> thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
-   for (int i = 0; i < thresholds->size(); i++)
+   bool success = true;
+   int count = json_array_size(thresholds);
+   for (int i = 0; i < count; i++)
    {
-      ConfigEntry *threshold = thresholds->get(i);
+      json_t *threshold = json_array_get(thresholds, i);
+      if (!json_is_object(threshold))
+         continue;
 
-      const TCHAR *eventName = threshold->getSubEntryValue(_T("activationEvent"));
-      if ((eventName != nullptr) && (*eventName != 0) && !IsEventExist(eventName, config))
+      // Check activation event
+      String activationEventName = json_object_get_string(threshold, "activationEvent", nullptr);
+      if (!activationEventName.isEmpty() && !IsEventExist(activationEventName, root))
       {
          context->log(NXLOG_ERROR, _T("ValidateDci()"),
             _T("Template \"%s\" DCI \"%s\" threshold %d attribute \"activationEvent\" refers to unknown event"),
-            templateName, dci->getSubEntryValue(_T("description"), 0, _T("<unnamed>")), i + 1);
+            templateName, json_object_get_string(dci, "description", _T("<unnamed>")).cstr(), (i + 1));
          success = false;
       }
 
-      eventName = threshold->getSubEntryValue(_T("deactivationEvent"));
-      if ((eventName != nullptr) && (*eventName != 0) && !IsEventExist(eventName, config))
+      // Check deactivation event
+      String deactivationEventName = json_object_get_string(threshold, "deactivationEvent", nullptr);
+      if (!deactivationEventName.isEmpty() && !IsEventExist(deactivationEventName, root))
       {
          context->log(NXLOG_ERROR, _T("ValidateDci()"),
             _T("Template \"%s\" DCI \"%s\" threshold %d attribute \"deactivationEvent\" refers to unknown event"),
-            templateName, dci->getSubEntryValue(_T("description"), 0, _T("<unnamed>")), i + 1);
+            templateName, json_object_get_string(dci, "description", _T("<unnamed>")).cstr(), (i + 1));
          success = false;
       }
    }
@@ -91,31 +108,46 @@ static bool ValidateDci(const Config& config, const ConfigEntry *dci, const TCHA
 /**
  * Validate template
  */
-static bool ValidateTemplate(const Config& config, const ConfigEntry *root, ImportContext *context)
+static bool ValidateTemplate(json_t *root, json_t *templateObj, ImportContext *context)
 {
-   context->log(NXLOG_INFO, _T("ValidateConfig()"), _T("Validating template \"%s\""), root->getSubEntryValue(_T("name"), 0, _T("<unnamed>")));
-	ConfigEntry *dcRoot = root->findEntry(_T("dataCollection"));
-	if (dcRoot == nullptr)
-		return true;
+   context->log(NXLOG_INFO, _T("ValidateConfig()"), _T("Validating template \"%s\""), json_object_get_string(templateObj, "name", _T("<unnamed>")).cstr());
 
-	bool success = true;
-	const TCHAR *name = root->getSubEntryValue(_T("name"), 0, _T("<unnamed>"));
+   json_t *dataCollection = json_object_get(templateObj, "dataCollection");
+   if (!json_is_object(dataCollection))
+      return true;
 
-   unique_ptr<ObjectArray<ConfigEntry>> dcis = dcRoot->getSubEntries(_T("dci#*"));
-   for (int i = 0; i < dcis->size(); i++)
+   bool success = true;
+   String templateName = json_object_get_string(templateObj, "name", _T("<unnamed>"));
+
+   // Validate DCIs
+   json_t *dcis = json_object_get(dataCollection, "dcis");
+   if (json_is_array(dcis))
    {
-      if (!ValidateDci(config, dcis->get(i), name, context))
+      size_t count = json_array_size(dcis);
+      for (size_t i = 0; i < count; i++)
       {
-         success = false;
+         json_t *dci = json_array_get(dcis, i);
+         if (json_is_object(dci))
+         {
+            if (!ValidateDci(root, dci, templateName, context))
+               success = false;
+         }
       }
    }
 
-   unique_ptr<ObjectArray<ConfigEntry>> dctables = dcRoot->getSubEntries(_T("dctable#*"));
-   for (int i = 0; i < dctables->size(); i++)
+   // Validate DC Tables
+   json_t *dcTables = json_object_get(dataCollection, "dcTables");
+   if (json_is_array(dcTables))
    {
-      if (!ValidateDci(config, dctables->get(i), name, context))
+      size_t count = json_array_size(dcTables);
+      for (size_t i = 0; i < count; i++)
       {
-         success = false;
+         json_t *dctable = json_array_get(dcTables, i);
+         if (json_is_object(dctable))
+         {
+            if (!ValidateDci(root, dctable, templateName, context))
+               success = false;
+         }
       }
    }
    return success;
@@ -124,138 +156,201 @@ static bool ValidateTemplate(const Config& config, const ConfigEntry *root, Impo
 /**
  * Validate configuration before import
  */
-bool ValidateConfig(const Config& config, uint32_t flags, ImportContext *context)
+static bool ValidateConfig(json_t *root, uint32_t flags, ImportContext *context)
 {
-   ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot;
    bool success = true;
 
-	nxlog_debug_tag(DEBUG_TAG, 4, _T("ValidateConfig() called, flags = 0x%04X"), flags);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("ValidateConfig() called, flags = 0x%04X"), flags);
 
    // Validate events
-	eventsRoot = config.getEntry(_T("/events"));
-	if (eventsRoot != nullptr)
-	{
-      unique_ptr<ObjectArray<ConfigEntry>> events = eventsRoot->getSubEntries(_T("event#*"));
-      for (int i = 0; i < events->size(); i++)
+   json_t *events = json_object_get(root, "events");
+   if (json_is_array(events))
+   {
+      size_t count = json_array_size(events);
+      for (size_t i = 0; i < count; i++)
       {
-         ConfigEntry *event = events->get(i);
-         context->log(NXLOG_INFO, _T("ValidateConfig()"), _T("Validating event \"%s\""), event->getSubEntryValue(_T("name"), 0, _T("<unnamed>")));
+         json_t *event = json_array_get(events, i);
+         if (!json_is_object(event))
+            continue;
 
-         uint32_t code = event->getSubEntryValueAsUInt(_T("code"));
-			if ((code >= FIRST_USER_EVENT_ID) || (code == 0))
-			{
-				ConfigEntry *e = event->findEntry(_T("name"));
-				if (e == nullptr)
-				{
-				   context->log(NXLOG_ERROR, _T("ValidateConfig()"), _T("Mandatory attribute \"name\" missing for event template"));
-					success = false;
-				}
-			}
+         context->log(NXLOG_INFO, _T("ValidateConfig()"), _T("Validating event \"%s\""), json_object_get_string(event, "name", _T("<unnamed>")).cstr());
+
+         uint32_t code = json_object_get_uint32(event, "code");         
+         if ((code >= FIRST_USER_EVENT_ID) || (code == 0))
+         {
+            json_t *nameObj = json_object_get(event, "name");
+            if (nameObj == nullptr || !json_is_string(nameObj) || (json_string_value(nameObj)[0] == 0))
+            {
+               context->log(NXLOG_ERROR, _T("ValidateConfig()"), _T("Mandatory attribute \"name\" missing for event template"));
+               success = false;
+            }
+         }
       }
    }
 
    // Validate traps
-   trapsRoot = config.getEntry(_T("/traps"));
-	if (trapsRoot != nullptr)
-	{
-      unique_ptr<ObjectArray<ConfigEntry>> traps = trapsRoot->getSubEntries(_T("trap#*"));
-      for (int i = 0; i < traps->size(); i++)
+   json_t *traps = json_object_get(root, "traps");
+   if (json_is_array(traps))
+   {
+      size_t count = json_array_size(traps);
+      for (size_t i = 0; i < count; i++)
       {
-         ConfigEntry *trap = traps->get(i);
-         context->log(NXLOG_INFO, _T("ValidateConfig()"), _T("Validating SNMP trap definition \"%s\""), trap->getSubEntryValue(_T("description"), 0, _T("<unnamed>")));
-         if (!IsEventExist(trap->getSubEntryValue(_T("event")), config))
-			{
-            context->log(NXLOG_ERROR, _T("ValidateConfig()"), _T("SNMP trap definition \"%s\" refers to unknown event"), trap->getSubEntryValue(_T("description"), 0, _T("")));
-            success = false;
-			}
+         json_t *trap = json_array_get(traps, i);
+         if (!json_is_object(trap))
+            continue;
+
+         context->log(NXLOG_INFO, _T("ValidateConfig()"), _T("Validating SNMP trap definition \"%s\""), json_object_get_string(trap, "description", _T("<unnamed>")).cstr());
+
+         json_t *eventObj = json_object_get(trap, "event");
+         if (json_is_string(eventObj))
+         {
+            String eventName = json_object_get_string(trap, "event", _T("<unnamed>"));
+            if (!eventName.isEmpty())
+            {
+               if (!IsEventExist(eventName, root))
+               {
+                  context->log(NXLOG_ERROR, _T("ValidateConfig()"), _T("SNMP trap definition \"%s\" refers to unknown event"), json_object_get_string(trap, "description", _T("")).cstr());
+                  success = false;
+               }
+            }
+         }
       }
    }
 
    // Validate templates
-   templatesRoot = config.getEntry(_T("/templates"));
-	if (templatesRoot != nullptr)
-	{
-      unique_ptr<ObjectArray<ConfigEntry>> templates = templatesRoot->getSubEntries(_T("template#*"));
-      for (int i = 0; i < templates->size(); i++)
+   json_t *templates = json_object_get(root, "templates");
+   if (json_is_array(templates))
+   {
+      size_t count = json_array_size(templates);
+      for (size_t i = 0; i < count; i++)
       {
-         if (!ValidateTemplate(config, templates->get(i), context))
-            success = false;
+         json_t *templateObj = json_array_get(templates, i);
+         if (json_is_object(templateObj))
+         {
+            if (!ValidateTemplate(root, templateObj, context))
+               success = false;
+         }
       }
    }
 
-	context->log(NXLOG_INFO, _T("ValidateConfig()"), _T("Validation %s"), success ? _T("successfully finished") : _T("failed"));
+   context->log(NXLOG_INFO, _T("ValidateConfig()"), _T("Validation %s"), success ? _T("successfully finished") : _T("failed"));
    return success;
+}
+
+/**
+ * Configuration format types
+ */
+enum ConfigurationFormat
+{
+   CONFIG_FORMAT_UNKNOWN = 0,
+   CONFIG_FORMAT_XML = 1,
+   CONFIG_FORMAT_JSON = 2
+};
+
+/**
+ * Detect configuration format from content
+ * @param content Configuration file content (null-terminated string)
+ * @return Configuration format type
+ */
+static ConfigurationFormat DetectConfigurationFormat(const char* content)
+{
+   if (content == nullptr || *content == 0)
+      return CONFIG_FORMAT_UNKNOWN;
+      
+   // Skip leading whitespace
+   const char* ptr = content;
+   while (isspace(*ptr))
+      ptr++;
+      
+   if (*ptr == 0)
+      return CONFIG_FORMAT_UNKNOWN;
+      
+   // Check first non-whitespace character
+   switch (*ptr)
+   {
+      case '{':
+         return CONFIG_FORMAT_JSON;
+      case '<':
+         return CONFIG_FORMAT_XML;
+      default:
+         return CONFIG_FORMAT_UNKNOWN;
+   }
 }
 
 /**
  * Import event
  */
-static uint32_t ImportEvent(const ConfigEntry *event, bool overwrite, ImportContext *context)
+static uint32_t ImportEvent(json_t *event, bool overwrite, ImportContext *context)
 {
-	const TCHAR *name = event->getSubEntryValue(_T("name"));
-	if (name == nullptr)
-		return RCC_INTERNAL_ERROR;
+   String name = json_object_get_string(event, "name", _T("<unnamed>"));
 
-	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-	UINT32 code = 0;
-	bool checkByName = false;
-	uuid guid = event->getSubEntryValueAsUUID(_T("guid"));
-	if (!guid.isNull())
-	{
-	   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT event_code FROM event_cfg WHERE guid=?"));
-	   if (hStmt == nullptr)
-	   {
-	      DBConnectionPoolReleaseConnection(hdb);
-	      return RCC_DB_FAILURE;
-	   }
-	   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
-	   DB_RESULT hResult = DBSelectPrepared(hStmt);
-	   if (hResult != nullptr)
-	   {
-	      if (DBGetNumRows(hResult) > 0)
-	         code = DBGetFieldULong(hResult, 0, 0);
-	      DBFreeResult(hResult);
-	   }
-	   DBFreeStatement(hStmt);
-	   if (code != 0)
-	   {
-	      context->log(NXLOG_INFO, _T("ImportEvent()"), _T("Found existing event template with code %d and GUID %s"), code, guid.toString().cstr());
-	   }
-	   else
-	   {
-	      context->log(NXLOG_INFO, _T("ImportEvent()"), _T("Event template with GUID %s not found"), guid.toString().cstr());
-	   }
-	}
-	else
-	{
-	   checkByName = true;
-	   code = event->getSubEntryValueAsUInt(_T("code"), 0, 0);
-	   if (code >= FIRST_USER_EVENT_ID)
-	   {
-	      context->log(NXLOG_WARNING, _T("ImportEvent()"), _T("Event template without GUID and code %d is not in system range"), code);
+   UINT32 code = 0;
+   bool checkByName = false;
+   
+   uuid guid = json_object_get_uuid(event, "guid");
+   
+   if (!guid.isNull())
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT event_code FROM event_cfg WHERE guid=?"));
+      if (hStmt == nullptr)
+      {
+         DBConnectionPoolReleaseConnection(hdb);
+         return RCC_DB_FAILURE;
+      }
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         if (DBGetNumRows(hResult) > 0)
+            code = DBGetFieldULong(hResult, 0, 0);
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+      if (code != 0)
+      {
+         context->log(NXLOG_INFO, _T("ImportEvent()"), _T("Found existing event template with code %d and GUID %s"), code, guid.toString().cstr());
+      }
+      else
+      {
+         context->log(NXLOG_INFO, _T("ImportEvent()"), _T("Event template with GUID %s not found"), guid.toString().cstr());
+      }
+   }
+   else
+   {
+      checkByName = true;
+         code = json_object_get_uint32(event, "code");
+         
+      if (code >= FIRST_USER_EVENT_ID)
+      {
+         context->log(NXLOG_WARNING, _T("ImportEvent()"), _T("Event template without GUID and code %d is not in system range"), code);
          code = 0;
-	   }
-	   else
-	   {
-	      context->log(NXLOG_INFO, _T("ImportEvent()"), _T("Using provided event code %d"), code);
-	   }
-	}
+      }
+      else
+      {
+         context->log(NXLOG_INFO, _T("ImportEvent()"), _T("Using provided event code %d"), code);
+      }
+   }
 
-	// Create or update event template in database
-   const TCHAR *msg = event->getSubEntryValue(_T("message"), 0, name);
-   const TCHAR *descr = event->getSubEntryValue(_T("description"));
-   const TCHAR *tags = event->getSubEntryValue(_T("tags"));
-	TCHAR query[8192];
+   // Get other event properties
+   String msg = json_object_get_string(event, "message", name);
+   String descr = json_object_get_string(event, "description", _T(""));
+   String tags = json_object_get_string(event, "tags", _T(""));
+   int severity = json_object_get_int32(event, "severity", EVENT_SEVERITY_NORMAL);
+   int flags = json_object_get_int32(event, "flags", 0);
+
+   TCHAR query[8192];
    if ((code != 0) && IsDatabaseRecordExist(hdb, _T("event_cfg"), _T("event_code"), code))
    {
       context->log(NXLOG_INFO, _T("ImportEvent()"), _T("Found existing event with code %d (%s)"), code, overwrite ? _T("updating") : _T("skipping"));
       if (overwrite)
       {
          _sntprintf(query, 8192, _T("UPDATE event_cfg SET event_name=%s,severity=%d,flags=%d,message=%s,description=%s,tags=%s WHERE event_code=%d"),
-                    (const TCHAR *)DBPrepareString(hdb, name), event->getSubEntryValueAsInt(_T("severity")),
-                    event->getSubEntryValueAsInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
-                    (const TCHAR *)DBPrepareString(hdb, descr), (const TCHAR *)DBPrepareString(hdb, tags), code);
+                    (const TCHAR *)DBPrepareString(hdb, name), severity, flags,
+                    (const TCHAR *)DBPrepareString(hdb, msg),
+                    (const TCHAR *)DBPrepareString(hdb, descr),
+                    (const TCHAR *)DBPrepareString(hdb, tags));
       }
       else
       {
@@ -268,9 +363,10 @@ static uint32_t ImportEvent(const ConfigEntry *event, bool overwrite, ImportCont
       if (overwrite)
       {
          _sntprintf(query, 8192, _T("UPDATE event_cfg SET severity=%d,flags=%d,message=%s,description=%s,tags=%s WHERE event_name=%s"),
-                    event->getSubEntryValueAsInt(_T("severity")),
-                    event->getSubEntryValueAsInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
-                    (const TCHAR *)DBPrepareString(hdb, descr), (const TCHAR *)DBPrepareString(hdb, tags), (const TCHAR *)DBPrepareString(hdb, name));
+                    severity, flags, (const TCHAR *)DBPrepareString(hdb, msg),
+                    (const TCHAR *)DBPrepareString(hdb, descr),
+                    (const TCHAR *)DBPrepareString(hdb, tags),
+                    (const TCHAR *)DBPrepareString(hdb, name));
       }
       else
       {
@@ -285,28 +381,60 @@ static uint32_t ImportEvent(const ConfigEntry *event, bool overwrite, ImportCont
          code = CreateUniqueId(IDG_EVENT);
       _sntprintf(query, 8192, _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,")
                               _T("message,description,guid,tags) VALUES (%d,%s,%d,%d,%s,%s,'%s',%s)"),
-                 code, (const TCHAR *)DBPrepareString(hdb, name), event->getSubEntryValueAsInt(_T("severity")),
-					  event->getSubEntryValueAsInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
-					  (const TCHAR *)DBPrepareString(hdb, descr), (const TCHAR *)guid.toString(), (const TCHAR *)DBPrepareString(hdb, tags));
+                 code, (const TCHAR *)DBPrepareString(hdb, name), severity, flags,
+                 (const TCHAR *)DBPrepareString(hdb, msg),
+                 (const TCHAR *)DBPrepareString(hdb, descr),
+                 (const TCHAR *)guid.toString(),
+                 (const TCHAR *)DBPrepareString(hdb, tags));
       context->log(NXLOG_INFO, _T("ImportEvent()"), _T("Added new event: code=%d, name=%s, guid=%s"), code, name, (const TCHAR *)guid.toString());
    }
-	uint32_t rcc = (query[0] != 0) ? (DBQuery(hdb, query) ? RCC_SUCCESS : RCC_DB_FAILURE) : RCC_SUCCESS;
+   
+   uint32_t rcc = (query[0] != 0) ? (DBQuery(hdb, query) ? RCC_SUCCESS : RCC_DB_FAILURE) : RCC_SUCCESS;
 
-	DBConnectionPoolReleaseConnection(hdb);
-	return rcc;
+   DBConnectionPoolReleaseConnection(hdb);
+   return rcc;
 }
 
 /**
- * Import SNMP trap mappimg
+ * Import JSON events directly
  */
-static uint32_t ImportTrapMapping(const ConfigEntry& trap, bool overwrite, ImportContext *context, bool nxslV5) // TODO transactions needed?
+static uint32_t ImportJsonEvents(json_t *events, uint32_t flags, ImportContext *context)
 {
-   uint32_t rcc = RCC_INTERNAL_ERROR;
-   shared_ptr<EventTemplate> eventTemplate = FindEventTemplateByName(trap.getSubEntryValue(_T("event"), 0, _T("")));
-	if (eventTemplate == nullptr)
-		return rcc;
+   int count = json_array_size(events);
+   context->log(NXLOG_INFO, _T("ImportJsonEvents()"), _T("%d event templates to import"), count);
+   
+   for (int i = 0; i < count; i++)
+   {
+      json_t *event = json_array_get(events, i);
+      if (!json_is_object(event))
+         continue;
+         
+      uint32_t rcc = ImportEvent(event, (flags & CFG_IMPORT_REPLACE_EVENTS) != 0, context);
+      if (rcc != RCC_SUCCESS)
+         return rcc;
+   }
+   
+   if (count > 0)
+   {
+      ReloadEvents();
+      NotifyClientSessions(NX_NOTIFY_RELOAD_EVENT_DB, 0);
+   }
+   context->log(NXLOG_INFO, _T("ImportJsonEvents()"), _T("Event templates import completed"));
+   return RCC_SUCCESS;
+}
 
-	uuid guid = trap.getSubEntryValueAsUUID(_T("guid"));
+/**
+ * Import trap from JSON object - completely without ConfigEntry
+ */
+static uint32_t ImportTrap(json_t *trap, bool overwrite, ImportContext *context, bool nxslV5)
+{
+   shared_ptr<EventTemplate> eventTemplate = FindEventTemplateByName(json_object_get_string(trap, "event", _T("")));
+   if (eventTemplate == nullptr)
+      return RCC_INTERNAL_ERROR;
+
+   // Get GUID
+   uuid guid = json_object_get_uuid(trap, "guid");
+   
    if (guid.isNull())
    {
       guid = uuid::generate();
@@ -319,14 +447,16 @@ static uint32_t ImportTrapMapping(const ConfigEntry& trap, bool overwrite, Impor
       return RCC_SUCCESS;
    }
 
-	auto trapMapping = make_shared<SNMPTrapMapping>(trap, guid, id, eventTemplate->getCode(), nxslV5);
-	if (!trapMapping->getOid().isValid())
+   // Create trap mapping using JSON constructor
+   auto trapMapping = make_shared<SNMPTrapMapping>(trap, guid, id, eventTemplate->getCode(), nxslV5);
+   if (!trapMapping->getOid().isValid())
 	{
       context->log(NXLOG_ERROR, _T("ImportTrap()"), _T("SNMP trap mapping %s refers to invalid OID"), guid.toString().cstr());
-		return rcc;
+		return RCC_INTERNAL_ERROR;
 	}
 
-	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   uint32_t rcc = RCC_INTERNAL_ERROR;
+  	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	DB_STATEMENT hStmt = (id == 0) ?
 	   DBPrepare(hdb, _T("INSERT INTO snmp_trap_cfg (snmp_oid,event_code,description,user_tag,transformation_script,trap_id,guid) VALUES (?,?,?,?,?,?,?)")) :
 	   DBPrepare(hdb, _T("UPDATE snmp_trap_cfg SET snmp_oid=?,event_code=?,description=?,user_tag=?,transformation_script=? WHERE trap_id=?"));
@@ -369,26 +499,31 @@ static uint32_t ImportTrapMapping(const ConfigEntry& trap, bool overwrite, Impor
 	{
 	   rcc = RCC_DB_FAILURE;
 	}
-
-	DBConnectionPoolReleaseConnection(hdb);
-
-	return rcc;
+   
+   return rcc;
 }
 
 /**
- * Find (and create as necessary) parent object for imported template
+ * Find (and create as necessary) parent object for imported template (JSON version)
  */
-static shared_ptr<NetObj> FindTemplateRoot(const ConfigEntry *config)
+static shared_ptr<NetObj> FindTemplateRootJson(json_t *templateJson)
 {
-	const ConfigEntry *pathRoot = config->findEntry(_T("path"));
-	if (pathRoot == nullptr)
+   json_t *pathArray = json_object_get(templateJson, "path");
+   if (!json_is_array(pathArray) || json_array_size(pathArray) == 0)
       return g_templateRoot;  // path not specified in config
 
    shared_ptr<NetObj> parent = g_templateRoot;
-   unique_ptr<ObjectArray<ConfigEntry>> path = pathRoot->getSubEntries(_T("element#*"));
-   for (int i = 0; i < path->size(); i++)
+   size_t pathSize = json_array_size(pathArray);
+   for (size_t i = 0; i < pathSize; i++)
    {
-      const TCHAR *name = path->get(i)->getValue();
+      json_t *pathElement = json_array_get(pathArray, i);
+      if (!json_is_string(pathElement))
+         continue;
+         
+      TCHAR *name = TStringFromUTF8String(json_string_value(pathElement));
+      if (name == nullptr)
+         continue;
+         
       shared_ptr<NetObj> o = parent->findChildObject(name, OBJECT_TEMPLATEGROUP);
       if (o == nullptr)
       {
@@ -399,264 +534,464 @@ static shared_ptr<NetObj> FindTemplateRoot(const ConfigEntry *config)
          o->calculateCompoundStatus();	// Force status change to NORMAL
       }
       parent = o;
+      MemFree(name);
    }
    return parent;
 }
 
 /**
- * Fill rule ordering array
+ * Import JSON templates directly
  */
-static ObjectArray<uuid> *GetRuleOrdering(const ConfigEntry *ruleOrdering)
+static uint32_t ImportJsonTemplates(json_t *templates, uint32_t flags, ImportContext *context, bool nxslV5)
+{
+   size_t count = json_array_size(templates);
+   context->log(NXLOG_INFO, _T("ImportJsonTemplates()"), _T("%d templates to import"), (int)count);
+   
+   for (size_t i = 0; i < count; i++)
+   {
+      json_t *templateJson = json_array_get(templates, i);
+      if (!json_is_object(templateJson))
+         continue;
+         
+      // Get template GUID and name
+      uuid guid = json_object_get_uuid(templateJson, "guid");
+      String name = json_object_get_string(templateJson, "name", _T("<unnamed>"));
+      
+      shared_ptr<Template> templateObj;
+      if (guid.isNull())
+         guid = uuid::generate();
+      else
+         templateObj = static_pointer_cast<Template>(FindObjectByGUID(guid, OBJECT_TEMPLATE));
+         
+      if (templateObj != nullptr)
+      {
+         if (flags & CFG_IMPORT_REPLACE_TEMPLATES)
+         {
+            context->log(NXLOG_INFO, _T("ImportJsonTemplates()"), _T("Updating existing template %s [%u] with GUID %s"), 
+                        templateObj->getName(), templateObj->getId(), guid.toString().cstr());
+            templateObj->updateFromImport(templateJson, context, nxslV5);
+         }
+         else
+         {
+            context->log(NXLOG_INFO, _T("ImportJsonTemplates()"), _T("Existing template %s [%u] with GUID %s skipped"), 
+                        templateObj->getName(), templateObj->getId(), guid.toString().cstr());
+         }
+
+         if (flags & CFG_IMPORT_REPLACE_TEMPLATE_NAMES_LOCATIONS)
+         {
+            context->log(NXLOG_INFO, _T("ImportJsonTemplates()"), _T("Existing template %s [%u] with GUID %s renamed to %s"), 
+                        templateObj->getName(), templateObj->getId(), guid.toString().cstr(), name.cstr());
+
+            templateObj->setName(name);
+            shared_ptr<NetObj> newParent = FindTemplateRootJson(templateJson);
+            if (!newParent->isChild(templateObj->getId()))
+            {
+               context->log(NXLOG_INFO, _T("ImportJsonTemplates()"), _T("Existing template %s [%u] with GUID %s moved to template group \"%s\""), 
+                           templateObj->getName(), templateObj->getId(), guid.toString().cstr(), newParent->getName());
+               unique_ptr<SharedObjectArray<NetObj>> parents = templateObj->getParents(OBJECT_TEMPLATEGROUP);
+               if (parents->size() > 0)
+               {
+                  shared_ptr<NetObj> currParent = parents->getShared(0);
+                  NetObj::unlinkObjects(currParent.get(), templateObj.get());
+                  if (flags & CFG_IMPORT_DELETE_EMPTY_TEMPLATE_GROUPS)
+                  {
+                     DeleteEmptyTemplateGroup(currParent);
+                  }
+               }
+               NetObj::linkObjects(newParent, templateObj);
+            }
+         }
+      }
+      else
+      {
+         context->log(NXLOG_INFO, _T("ImportJsonTemplates()"), _T("Template with GUID %s not found"), guid.toString().cstr());
+         shared_ptr<NetObj> parent = FindTemplateRootJson(templateJson);
+         templateObj = make_shared<Template>(name, guid);
+         NetObjInsert(templateObj, true, true);
+         templateObj->updateFromImport(templateJson, context, nxslV5);
+         NetObj::linkObjects(parent, templateObj);
+         templateObj->unhide();
+         context->log(NXLOG_INFO, _T("ImportJsonTemplates()"), _T("New template \"%s\" added"), templateObj->getName());
+      }
+   }
+   
+   context->log(NXLOG_INFO, _T("ImportJsonTemplates()"), _T("Templates import completed"));
+   return RCC_SUCCESS;
+}
+
+/**
+ * Get rule ordering array from JSON
+ */
+static ObjectArray<uuid> *GetRuleOrderingFromJson(json_t *root)
 {
    ObjectArray<uuid> *ordering = nullptr;
-   if(ruleOrdering != nullptr)
+   json_t *ruleOrderingArray = json_object_get(root, "ruleOrdering");
+   if (json_is_array(ruleOrderingArray))
    {
-      unique_ptr<ObjectArray<ConfigEntry>> rules = ruleOrdering->getOrderedSubEntries(_T("rule#*"));
-      if (rules->size() > 0)
+      size_t count = json_array_size(ruleOrderingArray);
+      if (count > 0)
       {
          ordering = new ObjectArray<uuid>(0, 16, Ownership::True);
-         for(int i = 0; i < rules->size(); i++)
+         for(size_t i = 0; i < count; i++)
          {
-            ordering->add(new uuid(uuid::parse(rules->get(i)->getValue())));
+            json_t *guidObj = json_array_get(ruleOrderingArray, i);
+            if (json_is_string(guidObj))
+            {
+               String guidStr(json_string_value(guidObj), "utf8");
+               if (!guidStr.isEmpty())
+               {
+                  ordering->add(new uuid(uuid::parse(guidStr)));
+               }
+            }
          }
       }
    }
-
    return ordering;
 }
 
 /**
- * Delete template group if it is empty
+ * Import JSON rules directly
  */
-static void DeleteEmptyTemplateGroup(shared_ptr<NetObj> templateGroup)
+static uint32_t ImportJsonRules(json_t *rules, json_t *root, uint32_t flags, ImportContext *context, bool nxslV5)
 {
-   if (templateGroup->getChildCount() != 0)
-      return;
+   size_t count = json_array_size(rules);
+   context->log(NXLOG_INFO, _T("ImportJsonRules()"), _T("%d event processing rules to import"), (int)count);
+   
+   if (count == 0)
+   {
+      context->log(NXLOG_INFO, _T("ImportJsonRules()"), _T("Event processing rules import completed"));
+      return RCC_SUCCESS;
+   }
+   
+   // Get rule ordering from the root JSON object
+   ObjectArray<uuid> *ruleOrdering = GetRuleOrderingFromJson(root);
+   
+   for (size_t i = 0; i < count; i++)
+   {
+      json_t *rule = json_array_get(rules, i);
+      if (!json_is_object(rule))
+         continue;
+         
+      // Get rule GUID
+      uuid guid = json_object_get_uuid(rule, "guid");
+      
+      if (guid.isNull())
+         guid = uuid::generate();
 
-   shared_ptr<NetObj> parent = templateGroup->getParents(OBJECT_TEMPLATEGROUP)->getShared(0);
-   templateGroup->deleteObject();
-   if (parent != nullptr)
-      DeleteEmptyTemplateGroup(parent);
-
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): template group %s [%d] with GUID %s deleted because it was empty"), templateGroup->getName(), templateGroup->getId());
+      context->log(NXLOG_INFO, _T("ImportJsonRules()"), _T("Processing event processing rule with GUID %s"), guid.toString().cstr());
+      auto newRule = make_shared<EPRule>(rule, context, nxslV5);
+      g_pEventPolicy->importRule(newRule.get(), (flags & CFG_IMPORT_REPLACE_EPP_RULES) != 0, ruleOrdering);
+   }
+   
+   // Clean up rule ordering
+   delete ruleOrdering;
+   
+   // Save policy to database
+   if (!g_pEventPolicy->saveToDB())
+   {
+      context->log(NXLOG_ERROR, _T("ImportJsonRules()"), _T("Unable to save event processing policy rules to database"));
+      return RCC_DB_FAILURE;
+   }
+   
+   context->log(NXLOG_INFO, _T("ImportJsonRules()"), _T("Event processing rules import completed"));
+   return RCC_SUCCESS;
 }
 
 /**
- * Import configuration
+ * Import JSON scripts directly
  */
-uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
+static uint32_t ImportJsonScripts(json_t *scripts, uint32_t flags, ImportContext *context, bool nxslV5)
+{
+   size_t count = json_array_size(scripts);
+   context->log(NXLOG_INFO, _T("ImportJsonScripts()"), _T("%d scripts to import"), (int)count);
+   
+   for (size_t i = 0; i < count; i++)
+   {
+      json_t *script = json_array_get(scripts, i);
+      if (!json_is_object(script))
+         continue;
+         
+      ImportScript(script, (flags & CFG_IMPORT_REPLACE_SCRIPTS) != 0, context, nxslV5);
+   }
+   
+   context->log(NXLOG_INFO, _T("ImportJsonScripts()"), _T("Scripts import completed"));
+   return RCC_SUCCESS;
+}
+
+/**
+ * Import JSON actions directly
+ */
+static uint32_t ImportJsonActions(json_t *actions, uint32_t flags, ImportContext *context)
+{
+   size_t count = json_array_size(actions);
+   context->log(NXLOG_INFO, _T("ImportJsonActions()"), _T("%d actions to import"), (int)count);
+   
+   for (size_t i = 0; i < count; i++)
+   {
+      json_t *action = json_array_get(actions, i);
+      if (!json_is_object(action))
+         continue;
+         
+      if (!ImportAction(action, (flags & CFG_IMPORT_REPLACE_ACTIONS) != 0, context))
+         return RCC_INTERNAL_ERROR;
+   }
+   
+   context->log(NXLOG_INFO, _T("ImportJsonActions()"), _T("Actions import completed"));
+   return RCC_SUCCESS;
+}
+
+/**
+ * Import JSON object tools directly
+ */
+static uint32_t ImportJsonObjectTools(json_t *tools, uint32_t flags, ImportContext *context)
+{
+   size_t count = json_array_size(tools);
+   context->log(NXLOG_INFO, _T("ImportJsonObjectTools()"), _T("%d object tools to import"), (int)count);
+   
+   for (size_t i = 0; i < count; i++)
+   {
+      json_t *tool = json_array_get(tools, i);
+      if (!json_is_object(tool))
+         continue;
+         
+      if (!ImportObjectTool(tool, (flags & CFG_IMPORT_REPLACE_OBJECT_TOOLS) != 0, context))
+         return RCC_INTERNAL_ERROR;
+   }
+   
+   context->log(NXLOG_INFO, _T("ImportJsonObjectTools()"), _T("Object tools import completed"));
+   return RCC_SUCCESS;
+}
+
+/**
+ * Import JSON traps directly
+ */
+static uint32_t ImportJsonTraps(json_t *traps, uint32_t flags, ImportContext *context, bool nxslV5)
+{
+   size_t count = json_array_size(traps);
+   context->log(NXLOG_INFO, _T("ImportJsonTraps()"), _T("%d SNMP traps to import"), (int)count);
+   
+   for (size_t i = 0; i < count; i++)
+   {
+      json_t *trap = json_array_get(traps, i);
+      if (!json_is_object(trap))
+         continue;
+         
+      uint32_t rcc = ImportTrap(trap, (flags & CFG_IMPORT_REPLACE_TRAPS) != 0, context, nxslV5);
+      if (rcc != RCC_SUCCESS)
+         return rcc;
+   }
+   
+   context->log(NXLOG_INFO, _T("ImportJsonTraps()"), _T("SNMP traps import completed"));
+   return RCC_SUCCESS;
+}
+
+/**
+ * Import configuration from JSON content  
+ * @param content JSON configuration content
+ * @param flags Import flags  
+ * @param log Import log buffer
+ * @return RCC status code
+ */
+uint32_t ImportConfigFromJson(const char* content, uint32_t flags, StringBuffer **log)
 {
    ImportContext *context = new ImportContext();
    *log = context;
-   if (!ValidateConfig(config, flags, context))
+   
+   json_error_t error;
+   json_t* root = json_loads(content, 0, &error);
+   if (root == nullptr)
    {
+      context->log(NXLOG_ERROR, _T("ImportConfigFromJson()"), 
+         _T("JSON parse error: %hs at line %d column %d"), error.text, error.line, error.column);
+      return RCC_CONFIG_PARSE_ERROR;
+   }
+
+   // Validate root object structure
+   if (!json_is_object(root))
+   {
+      context->log(NXLOG_ERROR, _T("ImportConfigFromJson()"), _T("JSON root is not an object"));
+      json_decref(root);
+      return RCC_CONFIG_PARSE_ERROR;
+   }
+
+   // Validate configuration before import
+   if (!ValidateConfig(root, flags, context))
+   {
+      context->log(NXLOG_ERROR, _T("ImportConfigFromJson()"), _T("Configuration validation failed"));
+      json_decref(root);
       return RCC_CONFIG_VALIDATION_ERROR;
    }
 
-   ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot, *rulesRoot,
-      *scriptsRoot, *objectToolsRoot, *summaryTablesRoot, *webServiceDefRoot,
-      *actionsRoot, *assetsRoot;
-
-   bool nxslV5 = config.getValueAsBoolean(_T("/nxslVersionV5"), false);
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportConfig() called, flags=0x%04X, nxslV5=%s"), flags, nxslV5 ? _T("Yes") : _T("No"));
+   // Get NXSL version flag
+   bool nxslV5 = json_object_get_boolean(root, "nxslVersionV5");
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportConfigFromJson() called, flags=0x%04X, nxslV5=%s"), flags, nxslV5 ? _T("Yes") : _T("No"));
 
    uint32_t rcc = RCC_SUCCESS;
+   json_t *events, *traps, *templates, *actions, *rules, *scripts, *objectTools, *summaryTables, *webServices, *assets;
+   
    // Import events
-	eventsRoot = config.getEntry(_T("/events"));
-	if (eventsRoot != nullptr)
-	{
-      unique_ptr<ObjectArray<ConfigEntry>> events = eventsRoot->getSubEntries(_T("event#*"));
-      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("%d event templates to import"), events->size());
-      for (int i = 0; i < events->size(); i++)
-      {
-			rcc = ImportEvent(events->get(i), (flags & CFG_IMPORT_REPLACE_EVENTS) != 0, context);
-			if (rcc != RCC_SUCCESS)
-				goto stop_processing;
-		}
-
-		if (events->size() > 0)
-		{
-			ReloadEvents();
-			NotifyClientSessions(NX_NOTIFY_RELOAD_EVENT_DB, 0);
-		}
-		context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Event templates import completed"));
-	}
-
-	// Import traps
-	trapsRoot = config.getEntry(_T("/traps"));
-	if (trapsRoot != nullptr)
-	{
-      unique_ptr<ObjectArray<ConfigEntry>> traps = trapsRoot->getSubEntries(_T("trap#*"));
-      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("%d SNMP traps to import"), traps->size());
-      for (int i = 0; i < traps->size(); i++)
-      {
-			rcc = ImportTrapMapping(*traps->get(i), (flags & CFG_IMPORT_REPLACE_TRAPS) != 0, context, nxslV5);
-			if (rcc != RCC_SUCCESS)
-				goto stop_processing;
-		}
-      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("SNMP traps import completed"));
-	}
-
-	// Import templates
-	templatesRoot = config.getEntry(_T("/templates"));
-	if (templatesRoot != nullptr)
-	{
-      unique_ptr<ObjectArray<ConfigEntry>> templates = templatesRoot->getSubEntries(_T("template#*"));
-      for (int i = 0; i < templates->size(); i++)
-      {
-         ConfigEntry *tc = templates->get(i);
-		   uuid guid = tc->getSubEntryValueAsUUID(_T("guid"));
-		   shared_ptr<Template> object = shared_ptr<Template>();
-		   if (guid.isNull())
-		      guid = uuid::generate();
-		   else
-		      object = static_pointer_cast<Template>(FindObjectByGUID(guid, OBJECT_TEMPLATE));
-		   if (object != nullptr)
-		   {
-		      if (flags & CFG_IMPORT_REPLACE_TEMPLATES)
-		      {
-		         context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Updating existing template %s [%u] with GUID %s"), object->getName(), object->getId(), guid.toString().cstr());
-		         object->updateFromImport(tc, context, nxslV5);
-		      }
-		      else
-		      {
-		         context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Existing template %s [%u] with GUID %s skipped"), object->getName(), object->getId(), guid.toString().cstr());
-		      }
-
-            if (flags & CFG_IMPORT_REPLACE_TEMPLATE_NAMES_LOCATIONS)
-            {
-               context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Existing template %s [%u] with GUID %s renamed to %s"), object->getName(), object->getId(), guid.toString().cstr(), tc->getSubEntryValue(_T("name")));
-
-               object->setName(tc->getSubEntryValue(_T("name")));
-               shared_ptr<NetObj> newParent = FindTemplateRoot(tc);
-               if (!newParent->isChild(object->getId()))
-               {
-                  context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Existing template %s [%u] with GUID %s moved to template group \"%s\""), object->getName(), object->getId(), guid.toString().cstr(), newParent->getName());
-                  unique_ptr<SharedObjectArray<NetObj>> parents = object->getParents(OBJECT_TEMPLATEGROUP);
-                  if (parents->size() > 0)
-                  {
-                     shared_ptr<NetObj> currParent = parents->getShared(0);
-                     NetObj::unlinkObjects(currParent.get(), object.get());
-                     if (flags & CFG_IMPORT_DELETE_EMPTY_TEMPLATE_GROUPS)
-                     {
-                        DeleteEmptyTemplateGroup(currParent);
-                     }
-                  }
-                  NetObj::linkObjects(newParent, object);
-               }
-            }
-		   }
-		   else
-		   {
-		      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Template with GUID %s not found"), guid.toString().cstr());
-            shared_ptr<NetObj> parent = FindTemplateRoot(tc);
-            object = make_shared<Template>(tc->getSubEntryValue(_T("name"), 0, _T("Unnamed Object")), guid);
-            NetObjInsert(object, true, true);
-            object->updateFromImport(tc, context, nxslV5);
-            NetObj::linkObjects(parent, object);
-            object->unhide();
-            context->log(NXLOG_INFO, _T("ImportConfig()"), _T("New template \"%s\" added"), object->getName());
-		   }
-      }
-      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Templates import completed"));
-	}
-
-   // Import actions
-   actionsRoot = config.getEntry(_T("/actions"));
-   if (actionsRoot != nullptr)
+   events = json_object_get(root, "events");
+   if (json_is_array(events))
    {
-      unique_ptr<ObjectArray<ConfigEntry>> actions = actionsRoot->getSubEntries(_T("action#*"));
-      for(int i = 0; i < actions->size(); i++)
-      {
-         ImportAction(actions->get(i), (flags & CFG_IMPORT_REPLACE_ACTIONS) != 0, context);
-      }
-      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Actions import completed"));
+      rcc = ImportJsonEvents(events, flags, context);
+      if (rcc != RCC_SUCCESS)
+         goto cleanup;
    }
 
-	// Import rules
-	rulesRoot = config.getEntry(_T("/rules"));
-	if (rulesRoot != nullptr)
-	{
-      unique_ptr<ObjectArray<ConfigEntry>> rules = rulesRoot->getOrderedSubEntries(_T("rule#*"));
-      if (rules->size() > 0)
-      {
-         //get rule ordering
-		   ObjectArray<uuid> *ruleOrdering = GetRuleOrdering(config.getEntry(_T("/ruleOrdering")));
-         for(int i = 0; i < rules->size(); i++)
-         {
-            EPRule *rule = new EPRule(*rules->get(i), context, nxslV5);
-            g_pEventPolicy->importRule(rule, (flags & CFG_IMPORT_REPLACE_EPP_RULES) != 0, ruleOrdering);
-         }
-         delete ruleOrdering;
-         if (!g_pEventPolicy->saveToDB())
-         {
-            context->log(NXLOG_ERROR, _T("ImportConfig()"), _T("Unable to import event processing policy rules"));
-            rcc = RCC_DB_FAILURE;
-            goto stop_processing;
-         }
-      }
-      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Event processing policy import completed"));
-	}
-
-	// Import scripts
-	scriptsRoot = config.getEntry(_T("/scripts"));
-	if (scriptsRoot != nullptr)
-	{
-      unique_ptr<ObjectArray<ConfigEntry>> scripts = scriptsRoot->getSubEntries(_T("script#*"));
-      for (int i = 0; i < scripts->size(); i++)
-      {
-         ImportScript(scripts->get(i), (flags & CFG_IMPORT_REPLACE_SCRIPTS) != 0, context, nxslV5);
-      }
-      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Script import completed"));
-	}
-
-	// Import object tools
-	objectToolsRoot = config.getEntry(_T("/objectTools"));
-	if (objectToolsRoot != nullptr)
-	{
-      unique_ptr<ObjectArray<ConfigEntry>> objectTools = objectToolsRoot->getSubEntries(_T("objectTool#*"));
-      for (int i = 0; i < objectTools->size(); i++)
-      {
-         ImportObjectTool(objectTools->get(i), (flags & CFG_IMPORT_REPLACE_OBJECT_TOOLS) != 0, context);
-      }
-      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Object tools import completed"));
-	}
-
-	// Import summary tables
-	summaryTablesRoot = config.getEntry(_T("/dciSummaryTables"));
-	if (summaryTablesRoot != nullptr)
-	{
-      unique_ptr<ObjectArray<ConfigEntry>> summaryTables = summaryTablesRoot->getSubEntries(_T("table#*"));
-      for (int i = 0; i < summaryTables->size(); i++)
-      {
-         ImportSummaryTable(summaryTables->get(i), (flags & CFG_IMPORT_REPLACE_SUMMARY_TABLES) != 0, context, nxslV5);
-      }
-      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("DCI summary tables import completed"));
-	}
-
-	// Import web service definitions
-   webServiceDefRoot = config.getEntry(_T("/webServiceDefinitions"));
-   if (webServiceDefRoot != nullptr)
+   // Import traps  
+   traps = json_object_get(root, "traps");
+   if (json_is_array(traps))
    {
-      unique_ptr<ObjectArray<ConfigEntry>> webServiceDef = webServiceDefRoot->getSubEntries(_T("webServiceDefinition#*"));
-      for(int i = 0; i < webServiceDef->size(); i++)
+      rcc = ImportJsonTraps(traps, flags, context, nxslV5);
+      if (rcc != RCC_SUCCESS)
+         goto cleanup;
+   }
+
+   // Import templates
+   templates = json_object_get(root, "templates");
+   if (json_is_array(templates))
+   {
+      rcc = ImportJsonTemplates(templates, flags, context, nxslV5);
+      if (rcc != RCC_SUCCESS)
+         goto cleanup;
+   }
+
+   // Import actions
+   actions = json_object_get(root, "actions");
+   if (json_is_array(actions))
+   {
+      rcc = ImportJsonActions(actions, flags, context);
+      if (rcc != RCC_SUCCESS)
+         goto cleanup;
+   }
+
+   // Import rules
+   rules = json_object_get(root, "rules");
+   if (json_is_array(rules))
+   {
+      rcc = ImportJsonRules(rules, root, flags, context, nxslV5);
+      if (rcc != RCC_SUCCESS)
+         goto cleanup;
+   }
+
+   // Import scripts
+   scripts = json_object_get(root, "scripts");
+   if (json_is_array(scripts))
+   {
+      rcc = ImportJsonScripts(scripts, flags, context, nxslV5);
+      if (rcc != RCC_SUCCESS)
+         goto cleanup;
+   }
+
+   // Import object tools
+   objectTools = json_object_get(root, "objectTools");
+   if (json_is_array(objectTools))
+   {
+      rcc = ImportJsonObjectTools(objectTools, flags, context);
+      if (rcc != RCC_SUCCESS)
+         goto cleanup;
+   }
+
+   // Import DCI summary tables
+   summaryTables = json_object_get(root, "dciSummaryTables");
+   if (json_is_array(summaryTables))
+   {
+      size_t count = json_array_size(summaryTables);
+      context->log(NXLOG_INFO, _T("ImportConfigFromJson()"), _T("%d DCI summary tables to import"), (int)count);
+      
+      for (size_t i = 0; i < count; i++)
       {
-         ImportWebServiceDefinition(*webServiceDef->get(i), (flags & CFG_IMPORT_REPLACE_WEB_SVCERVICE_DEFINITIONS) != 0, context);
+         json_t *table = json_array_get(summaryTables, i);
+         if (json_is_object(table))
+         {
+            if (!ImportSummaryTable(table, (flags & CFG_IMPORT_REPLACE_SUMMARY_TABLES) != 0, context))
+            {
+               context->log(NXLOG_ERROR, _T("ImportConfigFromJson()"), _T("Failed to import DCI summary table"));
+            }
+         }
       }
-      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Web service definitions import completed"));
+      context->log(NXLOG_INFO, _T("ImportConfigFromJson()"), _T("DCI summary tables import completed"));
+   }
+
+   // Import web service definitions
+   webServices = json_object_get(root, "webServiceDefinitions");
+   if (json_is_array(webServices))
+   {
+      size_t count = json_array_size(webServices);
+      context->log(NXLOG_INFO, _T("ImportConfigFromJson()"), _T("%d web service definitions to import"), (int)count);
+      
+      for (size_t i = 0; i < count; i++)
+      {
+         json_t *service = json_array_get(webServices, i);
+         if (json_is_object(service))
+         {
+            if (!ImportWebServiceDefinition(service, (flags & CFG_IMPORT_REPLACE_WEB_SVCERVICE_DEFINITIONS) != 0, context))
+            {
+               context->log(NXLOG_ERROR, _T("ImportConfigFromJson()"), _T("Failed to import web service definition"));
+            }
+         }
+      }
+      context->log(NXLOG_INFO, _T("ImportConfigFromJson()"), _T("Web service definitions import completed"));
    }
 
    // Import asset management schema
-   assetsRoot = config.getEntry(_T("/assetManagementSchema"));
-   if (assetsRoot != nullptr)
+   assets = json_object_get(root, "assetManagementSchema");
+   if (json_is_object(assets))
    {
-      ImportAssetManagementSchema(*assetsRoot, (flags & CFG_IMPORT_REPLACE_AM_DEFINITIONS) != 0, context, nxslV5);
-      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Asset management schema import completed"));
+      context->log(NXLOG_INFO, _T("ImportConfigFromJson()"), _T("Importing asset management schema"));
+      ImportAssetManagementSchema(assets, (flags & CFG_IMPORT_REPLACE_EPP_RULES) != 0, context);
+      context->log(NXLOG_INFO, _T("ImportConfigFromJson()"), _T("Asset management schema import completed"));
    }
+   
+   context->log(NXLOG_INFO, _T("ImportConfigFromJson()"), _T("JSON configuration import completed"));
 
-stop_processing:
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportConfig() finished, rcc = %u"), rcc);
+cleanup:
+   json_decref(root);
    return rcc;
+}
+
+/**
+ * Import configuration from raw content (auto-detect format)
+ * @param content Configuration content
+ * @param flags Import flags
+ * @param log Import log buffer  
+ * @return RCC status code
+ */
+uint32_t ImportConfigFromContent(const char* content, uint32_t flags, StringBuffer **log)
+{
+   ConfigurationFormat format = DetectConfigurationFormat(content);
+   
+   switch (format)
+   {
+      case CONFIG_FORMAT_JSON:
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Importing JSON configuration"));
+         return ImportConfigFromJson(content, flags, log);
+         
+      case CONFIG_FORMAT_XML:
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Importing XML configuration (legacy)"));
+            Config config(false);
+            if (config.loadXmlConfigFromMemory(content, strlen(content), nullptr, "configuration", false))
+            {
+               return ImportConfig(config, flags, log);
+            }
+            else
+            {
+               ImportContext *context = new ImportContext();
+               *log = context;
+               context->log(NXLOG_ERROR, _T("ImportConfigFromContent()"), _T("XML configuration parse error"));
+               return RCC_CONFIG_PARSE_ERROR;
+            }
+         }
+         
+      default:
+         {
+            ImportContext *context = new ImportContext();
+            *log = context;
+            context->log(NXLOG_ERROR, _T("ImportConfigFromContent()"), _T("Unknown configuration format"));
+            return RCC_CONFIG_PARSE_ERROR;
+         }
+   }
 }
 
 /**
@@ -679,19 +1014,43 @@ void ImportLocalConfiguration(bool overwrite)
       struct _tdirent *f;
       while((f = _treaddir(dir)) != nullptr)
       {
-         if (MatchString(_T("*.xml"), f->d_name, FALSE))
+         if (MatchString(_T("*.xml"), f->d_name, FALSE) || MatchString(_T("*.json"), f->d_name, FALSE))
          {
             _tcscpy(&path[insPos], f->d_name);
-            Config config(false);
-            if (config.loadXmlConfig(path, "configuration"))
+            
+            // Read file content
+            FILE *file = _tfopen(path, _T("r"));
+            if (file != nullptr)
             {
-               StringBuffer *log;
-               ImportConfig(config, overwrite ? CFG_IMPORT_REPLACE_EVERYTHING : 0, &log);
-               delete log;
+               fseek(file, 0, SEEK_END);
+               long size = ftell(file);
+               fseek(file, 0, SEEK_SET);
+               
+               char *content = (char*)malloc(size + 1);
+               if (content != nullptr)
+               {
+                  size_t bytesRead = fread(content, 1, size, file);
+                  content[bytesRead] = 0;
+                  
+                  StringBuffer *log;
+                  uint32_t result = ImportConfigFromContent(content, overwrite ? CFG_IMPORT_REPLACE_EVERYTHING : 0, &log);
+                  if (result != RCC_SUCCESS)
+                  {
+                     nxlog_debug_tag(DEBUG_TAG, 1, _T("Error importing configuration from %s (RCC=%u)"), path, result);
+                  }
+                  else
+                  {
+                     count++;
+                     nxlog_debug_tag(DEBUG_TAG, 3, _T("Configuration imported from %s"), path);
+                  }
+                  delete log;
+                  free(content);
+               }
+               fclose(file);
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG, 1, _T("Error loading configuration from %s"), path);
+               nxlog_debug_tag(DEBUG_TAG, 1, _T("Error opening configuration file %s"), path);
             }
          }
       }

@@ -1418,3 +1418,82 @@ void DCTable::loadCache()
    unlock();
    MemFree(encodedTable);
 }
+
+/**
+ * Create DCTable from imported JSON configuration
+ */
+DCTable::DCTable(json_t *json, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5) : DCObject(json, owner, nxslV5)
+{
+   m_columns = new ObjectArray<DCTableColumn>(0, 8, Ownership::True);
+   m_thresholds = new ObjectArray<DCTableThreshold>(0, 8, Ownership::True);
+   
+   json_t *columnsArray = json_object_get(json, "columns");
+   if (json_is_array(columnsArray))
+   {
+      size_t count = json_array_size(columnsArray);
+      for(size_t i = 0; i < count; i++)
+      {
+         json_t *columnJson = json_array_get(columnsArray, i);
+         if (json_is_object(columnJson))
+         {
+            m_columns->add(new DCTableColumn(columnJson));
+         }
+      }
+   }
+
+   json_t *thresholdsArray = json_object_get(json, "thresholds");
+   if (json_is_array(thresholdsArray))
+   {
+      size_t count = json_array_size(thresholdsArray);
+      for(size_t i = 0; i < count; i++)
+      {
+         json_t *thresholdJson = json_array_get(thresholdsArray, i);
+         if (json_is_object(thresholdJson))
+         {
+            m_thresholds->add(new DCTableThreshold(thresholdJson));
+         }
+      }
+   }
+}
+
+/**
+ * Update DCTable from imported JSON configuration
+ */
+void DCTable::updateFromImport(json_t *json, bool nxslV5)
+{
+   DCObject::updateFromImport(json, nxslV5);
+
+   lock();
+   
+   m_columns->clear();
+   json_t *columnsArray = json_object_get(json, "columns");
+   if (json_is_array(columnsArray))
+   {
+      size_t count = json_array_size(columnsArray);
+      for(size_t i = 0; i < count; i++)
+      {
+         json_t *columnJson = json_array_get(columnsArray, i);
+         if (json_is_object(columnJson))
+         {
+            m_columns->add(new DCTableColumn(columnJson));
+         }
+      }
+   }
+
+   m_thresholds->clear();
+   json_t *thresholdsArray = json_object_get(json, "thresholds");
+   if (json_is_array(thresholdsArray))
+   {
+      size_t count = json_array_size(thresholdsArray);
+      for(size_t i = 0; i < count; i++)
+      {
+         json_t *thresholdJson = json_array_get(thresholdsArray, i);
+         if (json_is_object(thresholdJson))
+         {
+            m_thresholds->add(new DCTableThreshold(thresholdJson));
+         }
+      }
+   }
+   
+   unlock();
+}

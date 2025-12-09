@@ -106,6 +106,116 @@ SNMPTrapMapping::SNMPTrapMapping(DB_RESULT trapResult, DB_HANDLE hdb, DB_STATEME
 }
 
 /**
+ * Create SNMP trap mapping from JSON
+ */
+SNMPTrapMapping::SNMPTrapMapping(json_t *json, const uuid& guid, uint32_t id, uint32_t eventCode, bool nxslV5) : m_mappings(8, 8, Ownership::True)
+{
+   if (id == 0)
+      m_id = CreateUniqueId(IDG_SNMP_TRAP);
+   else
+      m_id = id;
+
+   m_guid = guid;
+   
+   json_t *oidObj = json_object_get(json, "oid");
+   if (json_is_string(oidObj))
+   {
+      TCHAR *oidStr = TStringFromUTF8String(json_string_value(oidObj));
+      if (oidStr != nullptr)
+      {
+         m_objectId = SNMP_ObjectId::parse(oidStr);
+         MemFree(oidStr);
+      }
+      else
+      {
+         m_objectId = SNMP_ObjectId();
+      }
+   }
+   else
+   {
+      m_objectId = SNMP_ObjectId();
+   }
+   
+   m_eventCode = eventCode;
+   
+   json_t *descObj = json_object_get(json, "description");
+   if (json_is_string(descObj))
+   {
+      m_description = TStringFromUTF8String(json_string_value(descObj));
+   }
+   else
+   {
+      m_description = MemCopyString(_T(""));
+   }
+   
+   json_t *eventTagObj = json_object_get(json, "eventTag");
+   if (json_is_string(eventTagObj))
+   {
+      m_eventTag = TStringFromUTF8String(json_string_value(eventTagObj));
+   }
+   else
+   {
+      json_t *userTagObj = json_object_get(json, "userTag");
+      if (json_is_string(userTagObj))
+      {
+         m_eventTag = TStringFromUTF8String(json_string_value(userTagObj));
+      }
+      else
+      {
+         m_eventTag = MemCopyString(_T(""));
+      }
+   }
+   
+   json_t *scriptObj = json_object_get(json, "transformationScript");
+   if (json_is_string(scriptObj))
+   {
+      TCHAR *scriptStr = TStringFromUTF8String(json_string_value(scriptObj));
+      if (scriptStr != nullptr)
+      {
+         if (nxslV5)
+         {
+            m_scriptSource = scriptStr;
+         }
+         else
+         {
+            StringBuffer output = NXSLConvertToV5(scriptStr);
+            m_scriptSource = MemCopyString(output);
+            MemFree(scriptStr);
+         }
+      }
+      else
+      {
+         m_scriptSource = MemCopyString(_T(""));
+      }
+   }
+   else
+   {
+      m_scriptSource = MemCopyString(_T(""));
+   }
+   
+   m_script = nullptr;
+
+   json_t *parametersArray = json_object_get(json, "parameters");
+   if (json_is_array(parametersArray))
+   {
+      size_t paramCount = json_array_size(parametersArray);
+      for (size_t i = 0; i < paramCount; i++)
+      {
+         json_t *param = json_array_get(parametersArray, i);
+         if (json_is_object(param))
+         {
+            SNMPTrapParameterMapping *paramMapping = new SNMPTrapParameterMapping(param);
+            if (!paramMapping->isPositional() && !paramMapping->getOid()->isValid())
+               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Invalid trap parameter OID for trap %u in trap mapping table"), m_id);
+            m_mappings.add(paramMapping);
+         }
+      }
+   }
+
+   compileScript();
+}
+
+/**
  * Create SNMP trap mapping object from config entry
  */
 SNMPTrapMapping::SNMPTrapMapping(const ConfigEntry& entry, const uuid& guid, uint32_t id, uint32_t eventCode, bool nxslV5) : m_mappings(8, 8, Ownership::True)
@@ -331,7 +441,55 @@ SNMPTrapParameterMapping::SNMPTrapParameterMapping(DB_RESULT mapResult, int row)
 }
 
 /**
- * Create SNMP trap parameter map object from config entry
+ * Create SNMP trap parameter mapping from JSON
+ */
+SNMPTrapParameterMapping::SNMPTrapParameterMapping(json_t *json)
+{
+   json_t *positionObj = json_object_get(json, "position");
+   if (json_is_integer(positionObj) && (json_integer_value(positionObj) > 0))
+   {
+      m_objectId = nullptr;
+      m_position = (uint32_t)json_integer_value(positionObj);
+   }
+   else
+   {
+      json_t *oidObj = json_object_get(json, "oid");
+      if (json_is_string(oidObj))
+      {
+         TCHAR *oidStr = TStringFromUTF8String(json_string_value(oidObj));
+         if (oidStr != nullptr)
+         {
+            m_objectId = new SNMP_ObjectId(SNMP_ObjectId::parse(oidStr));
+            MemFree(oidStr);
+         }
+         else
+         {
+            m_objectId = new SNMP_ObjectId();
+         }
+      }
+      else
+      {
+         m_objectId = new SNMP_ObjectId();
+      }
+      m_position = 0;
+   }
+
+   json_t *descObj = json_object_get(json, "description");
+   if (json_is_string(descObj))
+   {
+      m_description = TStringFromUTF8String(json_string_value(descObj));
+   }
+   else
+   {
+      m_description = MemCopyString(_T(""));
+   }
+
+   json_t *flagsObj = json_object_get(json, "flags");
+   m_flags = json_is_integer(flagsObj) ? (uint32_t)json_integer_value(flagsObj) : 0;
+}
+
+/**
+ * Create SNMP trap parameter map object from ConfigEntry
  */
 SNMPTrapParameterMapping::SNMPTrapParameterMapping(ConfigEntry *entry)
 {

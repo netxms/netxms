@@ -967,6 +967,80 @@ bool ImportAction(ConfigEntry *config, bool overwrite, ImportContext *context)
 }
 
 /**
+ * Import single action from JSON (follows legacy XML import pattern)
+ */
+bool ImportAction(json_t *action, bool overwrite, ImportContext *context)
+{
+   String name = json_object_get_string(action, "name", _T(""));
+   if (name.isEmpty())
+   {
+      context->log(NXLOG_ERROR, _T("ImportAction()"), _T("Missing action name"));
+      return false;
+   }
+
+   const uuid guid = json_object_get_uuid(action, "guid");
+   shared_ptr<Action> actionObj = !guid.isNull() ? s_actions.findElement(ActionGUIDComparator, &guid) : shared_ptr<Action>();
+   if (actionObj == nullptr)
+   {
+      if (s_actions.findElement(ActionNameComparator, name.cstr()) != NULL)
+      {
+         context->log(NXLOG_ERROR, _T("ImportAction()"), _T("Action with name \"%s\" already exists"), (const TCHAR *)name);
+         return false;
+      }
+
+      actionObj = make_shared<Action>(name);
+      actionObj->isDisabled = false;
+      if (!guid.isNull())
+         actionObj->guid = guid;
+      s_updateCode = NX_NOTIFY_ACTION_CREATED;
+   }
+   else
+   {
+      TCHAR guidText[64];
+      if (!overwrite)
+      {
+         context->log(NXLOG_INFO, _T("ImportAction()"), _T("Found existing action \"%s\" with GUID %s (skipping)"),
+                  actionObj->name, actionObj->guid.toString(guidText));
+         return true;
+      }
+      context->log(NXLOG_INFO, _T("ImportAction()"), _T("Found existing action \"%s\" with GUID %s"), actionObj->name, actionObj->guid.toString(guidText));
+      _tcslcpy(actionObj->name, name, MAX_OBJECT_NAME);
+      s_updateCode = NX_NOTIFY_ACTION_MODIFIED;
+      actionObj = make_shared<Action>(*actionObj);
+   }
+
+   // Set action properties from JSON
+   actionObj->type = static_cast<ServerActionType>(json_object_get_int32(action, "type", static_cast<int32_t>(ServerActionType::LOCAL_COMMAND)));
+   
+   String emailSubject = json_object_get_string(action, "emailSubject", _T(""));
+   if (emailSubject.isEmpty())
+      actionObj->emailSubject[0] = 0;
+   else
+      _tcslcpy(actionObj->emailSubject, emailSubject, MAX_EMAIL_SUBJECT_LEN);
+      
+   String rcptAddr = json_object_get_string(action, "recipientAddress", _T(""));
+   if (rcptAddr.isEmpty())
+      actionObj->rcptAddr[0] = 0;
+   else
+      _tcslcpy(actionObj->rcptAddr, rcptAddr, MAX_RCPT_ADDR_LEN);
+      
+   String channelName = json_object_get_string(action, "channelName", _T(""));
+   if (channelName.isEmpty())
+      actionObj->channelName[0] = 0;
+   else
+      _tcslcpy(actionObj->channelName, channelName, MAX_OBJECT_NAME);
+      
+   String data = json_object_get_string(action, "data", _T(""));
+   actionObj->data = MemCopyString(data.isEmpty() ? nullptr : data.cstr());
+   
+   actionObj->saveToDatabase();
+   EnumerateClientSessions(SendActionDBUpdate, actionObj.get());
+   s_actions.set(actionObj->id, actionObj);
+
+   return true;
+}
+
+/**
  * Task handler for scheduled action execution
  */
 void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameters)

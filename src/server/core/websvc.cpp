@@ -85,6 +85,68 @@ WebServiceDefinition::WebServiceDefinition(const ConfigEntry& config, uint32_t i
 }
 
 /**
+ * Create web service definition from JSON
+ */
+WebServiceDefinition::WebServiceDefinition(json_t *config, uint32_t id)
+{
+   m_id = id;
+   if (m_id == 0)
+      m_id = CreateUniqueId(IDG_WEBSVC_DEFINITION);
+   
+   m_guid = json_object_get_uuid(config, "guid");
+   if (m_guid.isNull())
+      m_guid = uuid::generate();
+   
+   m_name = json_object_get_string_t(config, "name", _T(""));
+   m_description = json_object_get_string_t(config, "description", _T(""));
+   m_url = json_object_get_string_t(config, "url", _T(""));
+   m_httpRequestMethod = HttpRequestMethodFromInt(json_object_get_int32(config, "httpRequestMethod", 0));
+   m_requestData = json_object_get_string_t(config, "requestData", _T(""));
+   m_authType = WebServiceAuthTypeFromInt(json_object_get_int32(config, "authType", 0));
+   m_login = json_object_get_string_t(config, "login", _T(""));
+   m_password = json_object_get_string_t(config, "password", _T(""));
+   m_cacheRetentionTime = json_object_get_uint32(config, "cacheRetentionTime");
+   m_requestTimeout = json_object_get_uint32(config, "requestTimeout", 30000);
+   m_flags = json_object_get_uint32(config, "flags");
+
+   // Parse headers
+   json_t *headers = json_object_get(config, "headers");
+   if (json_is_array(headers))
+   {
+      size_t count = json_array_size(headers);
+      for (size_t i = 0; i < count; i++)
+      {
+         json_t *header = json_array_get(headers, i);
+         if (json_is_object(header))
+         {
+            String headerName = json_object_get_string(header, "name", _T(""));
+            String headerValue = json_object_get_string(header, "value", _T(""));
+            if (!headerName.isEmpty())
+            {
+               m_headers.set(headerName, headerValue);
+            }
+         }
+      }
+   }
+   else if (json_is_object(headers))
+   {
+      const char *key;
+      json_t *value;
+      json_object_foreach(headers, key, value)
+      {
+         if (json_is_string(value))
+         {
+            TCHAR *keyStr = TStringFromUTF8String(key);
+            TCHAR *valueStr = TStringFromUTF8String(json_string_value(value));
+            m_headers.set(keyStr, valueStr);
+            MemFree(keyStr);
+            MemFree(valueStr);
+         }
+      }
+   }
+}
+
+/**
  * Create web service definition from database record.
  * Expected field order:
  *    id,guid,name,url,http_request_method,request_data,auth_type,login,password,cache_retention_time,request_timeout,description,flags
@@ -652,6 +714,67 @@ bool ImportWebServiceDefinition(const ConfigEntry& config, bool overwrite, Impor
    else
    {
       context->log(NXLOG_INFO, _T("ImportWebServiceDefinition()"), _T("Found existing web service definition \"%s\" with GUID %s (skipping)"), service->getName(), guid.toString(guidText));
+   }
+
+   return success;
+}
+
+/**
+ * Import web service definition from JSON
+ */
+bool ImportWebServiceDefinition(json_t *config, bool overwrite, ImportContext *context)
+{
+   String name = json_object_get_string(config, "name", _T(""));
+   if (name.isEmpty())
+   {
+      context->log(NXLOG_ERROR, _T("ImportWebServiceDefinition()"), _T("Missing web service definition name"));
+      return false;
+   }
+
+   bool success = false;
+   uuid guid = json_object_get_uuid(config, "guid");
+   shared_ptr<WebServiceDefinition> service = FindWebServiceDefinition(guid);
+   TCHAR guidText[64];
+   if (service == nullptr)
+   {
+      // Check for duplicate name
+      if (FindWebServiceDefinition(name) == nullptr)
+      {
+         auto definition = make_shared<WebServiceDefinition>(config, 0);
+         uint32_t rcc = ModifyWebServiceDefinition(definition);
+         if (rcc == RCC_SUCCESS)
+         {
+            context->log(NXLOG_INFO, _T("ImportWebServiceDefinition()"), _T("Web service definition \"%s\" created"), name.cstr());
+            success = true;
+         }
+         else
+         {
+            context->log(NXLOG_ERROR, _T("ImportWebServiceDefinition()"), _T("Cannot create web service definition \"%s\" (RCC=%u)"), name.cstr(), rcc);
+         }
+      }
+      else
+      {
+         context->log(NXLOG_ERROR, _T("ImportWebServiceDefinition()"), _T("Web service definition with name \"%s\" already exists"), name.cstr());
+      }
+   }
+   else if (overwrite)
+   {
+      auto definition = make_shared<WebServiceDefinition>(config, service->getId());
+      uint32_t rcc = ModifyWebServiceDefinition(definition);
+      if (rcc == RCC_SUCCESS)
+      {
+         context->log(NXLOG_INFO, _T("ImportWebServiceDefinition()"), _T("Found existing web service definition \"%s\" with GUID %s (overwrite)"), service->getName(), guid.toString(guidText));
+         success = true;
+      }
+      else
+      {
+         context->log(NXLOG_ERROR, _T("ImportWebServiceDefinition()"), _T("Cannot update existing web service definition \"%s\" (error %u)"), service->getName(), rcc);
+      }
+   }
+   else
+   {
+      context->log(NXLOG_INFO, _T("ImportWebServiceDefinition()"), _T("Found existing web service definition \"%s\" with GUID %s (skipping)"), service->getName(), guid.toString(guidText));
+      success = true;
    }
 
    return success;

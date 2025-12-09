@@ -1776,6 +1776,7 @@ protected:
 
    void toJson(json_t *root);
    void updateFromImport(ConfigEntry *config);
+   void updateFromImport(json_t *data);
 
 public:
    VersionableObject(NetObj *_this);
@@ -1813,6 +1814,7 @@ protected:
    bool saveToDatabase(DB_HANDLE hdb);
    bool deleteFromDatabase(DB_HANDLE hdb);
    void updateFromImport(const ConfigEntry& config, bool defaultAutoBindFlag, bool nxslV5);
+   void updateFromImport(json_t *data, bool defaultAutoBindFlag, bool nxslV5);
 
    void toJson(json_t *root);
    void createExportRecord(TextFileWriter& xml);
@@ -1946,6 +1948,7 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
 
    virtual void updateFromImport(ConfigEntry *config, ImportContext *context, bool nxslV5);
+   virtual void updateFromImport(json_t *data, ImportContext *context, bool nxslV5);
 
    virtual void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const;
 
@@ -2051,6 +2054,7 @@ protected:
    virtual bool createDeploymentMessage(NXCPMessage *msg, char *content, bool newTypeFormatSupported);
    virtual void exportAdditionalData(TextFileWriter& xml);
    virtual void importAdditionalData(const ConfigEntry *config, ImportContext *context);
+   virtual void importAdditionalData(json_t *data, ImportContext *context);
 
 public:
    GenericAgentPolicy(const uuid& guid, const TCHAR *type, uint32_t ownerId);
@@ -2072,6 +2076,7 @@ public:
    virtual uint32_t modifyFromMessage(const NXCPMessage& request);
 
    virtual void updateFromImport(const ConfigEntry *config, ImportContext *context);
+   virtual void updateFromImport(json_t *data, ImportContext *context);
    virtual void createExportRecord(TextFileWriter& xml, uint32_t recordId);
    virtual void getEventList(HashSet<uint32_t> *eventList) const {}
    virtual bool isUsingEvent(uint32_t eventCode) const { return false; }
@@ -2090,6 +2095,7 @@ class NXCORE_EXPORTABLE FileDeliveryPolicy : public GenericAgentPolicy
 protected:
    virtual void exportAdditionalData(TextFileWriter& xml) override;
    virtual void importAdditionalData(const ConfigEntry *config, ImportContext *context) override;
+   virtual void importAdditionalData(json_t *data, ImportContext *context);
 
 public:
    FileDeliveryPolicy(const uuid& guid, uint32_t ownerId) : GenericAgentPolicy(guid, _T("FileDelivery"), ownerId) { }
@@ -2167,6 +2173,7 @@ public:
    virtual void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const override;
 
    virtual void updateFromImport(ConfigEntry *config, ImportContext *context, bool nxslV5) override;
+   virtual void updateFromImport(json_t *data, ImportContext *context, bool nxslV5) override;
    virtual json_t *toJson() override;
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;

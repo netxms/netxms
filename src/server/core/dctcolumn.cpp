@@ -89,6 +89,27 @@ DCTableColumn::DCTableColumn(ConfigEntry *e)
 /**
  * Destructor
  */
+
+/**
+ * Create from JSON record
+ */
+DCTableColumn::DCTableColumn(json_t *json)
+{
+   String name = json_object_get_string(json, "name", _T(""));
+   _tcslcpy(m_name, name, MAX_COLUMN_NAME);
+   
+   m_flags = static_cast<UINT16>(json_object_get_int32(json, "flags"));
+   
+   String displayName = json_object_get_string(json, "displayName", _T(""));
+   m_displayName = _tcsdup(displayName);
+
+   String oidStr = json_object_get_string(json, "snmpOid", _T(""));
+   if (!oidStr.isEmpty())
+   {
+      m_snmpOid = SNMP_ObjectId::parse(oidStr);
+   }
+}
+
 DCTableColumn::~DCTableColumn()
 {
    MemFree(m_displayName);

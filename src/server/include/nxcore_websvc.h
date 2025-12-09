@@ -57,6 +57,7 @@ private:
 public:
    WebServiceDefinition(const NXCPMessage& msg);
    WebServiceDefinition(const ConfigEntry& config, uint32_t id);
+   WebServiceDefinition(json_t *config, uint32_t id);
    WebServiceDefinition(DB_HANDLE hdb, DB_RESULT hResult, int row);
    ~WebServiceDefinition();
 
@@ -95,5 +96,6 @@ uint32_t ModifyWebServiceDefinition(shared_ptr<WebServiceDefinition> definition)
 uint32_t DeleteWebServiceDefinition(uint32_t id);
 void CreateWebServiceDefinitionExportRecord(TextFileWriter &xml, uint32_t count, uint32_t *list);
 bool ImportWebServiceDefinition(const ConfigEntry& config, bool overwrite, ImportContext *context);
+bool ImportWebServiceDefinition(json_t *config, bool overwrite, ImportContext *context);
 
 #endif

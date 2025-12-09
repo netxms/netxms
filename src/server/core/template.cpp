@@ -481,6 +481,88 @@ void Template::updateFromImport(ConfigEntry *config, ImportContext *context, boo
 }
 
 /**
+ * Update object from imported JSON configuration
+ */
+void Template::updateFromImport(json_t *data, ImportContext *context, bool nxslV5)
+{
+   // Call base class implementation first for common properties (name, flags, comments, data collection)
+   super::updateFromImport(data, context, nxslV5);
+   
+   // Templates exported by older server version will have auto bind flags in separate field
+   // In that case, bit 0 in flags will be set to 1
+   json_t *flagsObj = json_object_get(data, "flags");
+   uint32_t flags = json_is_integer(flagsObj) ? static_cast<uint32_t>(json_integer_value(flagsObj)) : 0;
+   
+   // Update auto-bind configuration using AutoBindTarget's JSON method
+   AutoBindTarget::updateFromImport(data, (flags & 1) != 0, nxslV5);
+
+   // Update version using VersionableObject's JSON method
+   VersionableObject::updateFromImport(data);
+
+   // Handle agent policies
+   lockProperties();
+   m_policyList.clear();
+   json_t *policiesArray = json_object_get(data, "agentPolicies");
+   if (json_is_array(policiesArray))
+   {
+      size_t policyCount = json_array_size(policiesArray);
+      for (size_t i = 0; i < policyCount; i++)
+      {
+         json_t *policyJson = json_array_get(policiesArray, i);
+         if (!json_is_object(policyJson))
+            continue;
+            
+         uuid guid = json_object_get_uuid(policyJson, "guid");
+         String policyType = json_object_get_string(policyJson, "type", _T("Unknown"));
+         
+         GenericAgentPolicy *policy = CreatePolicy(guid, policyType, m_id);
+         if (policy != nullptr)
+         {
+            // Use JSON updateFromImport method
+            policy->updateFromImport(policyJson, context);
+            bool found = false;
+            for (int j = 0; j < m_policyList.size(); j++)
+            {
+               if (m_policyList.get(j)->getGuid().equals(guid))
+               {
+                  m_policyList.replace(j, policy);
+                  found = true;
+                  break;
+               }
+            }
+            if (!found)
+               m_policyList.add(policy);
+         }
+      }
+   }
+
+   // Handle custom attributes
+   json_t *customAttrsObj = json_object_get(data, "customAttributes");
+   if (json_is_object(customAttrsObj))
+   {
+      const char *key;
+      json_t *value;
+      json_object_foreach(customAttrsObj, key, value)
+      {
+         if (json_is_string(value))
+         {
+            TCHAR *attrName = TStringFromUTF8String(key);
+            TCHAR *attrValue = TStringFromUTF8String(json_string_value(value));
+            if (attrName != nullptr && attrValue != nullptr)
+            {
+               setCustomAttribute(attrName, SharedString(attrValue), StateChange::CLEAR);
+            }
+            MemFree(attrName);
+            MemFree(attrValue);
+         }
+      }
+   }
+
+   setModified(MODIFY_ALL);
+   unlockProperties();
+}
+
+/**
  * Serialize object to JSON
  */
 json_t *Template::toJson()

@@ -345,6 +345,110 @@ void AutoBindTarget::updateFromImport(const ConfigEntry& config, bool defaultAut
 }
 
 /**
+ * Update from import JSON record
+ */
+void AutoBindTarget::updateFromImport(json_t *data, bool defaultAutoBindFlag, bool nxslV5)
+{
+   // Handle autoBindFilters array
+   json_t *filtersArray = json_object_get(data, "autoBindFilters");
+   if (json_is_array(filtersArray))
+   {
+      size_t filterCount = json_array_size(filtersArray);
+      for (int i = 0; i < MAX_AUTOBIND_TARGET_FILTERS; i++)
+      {
+         if (i < filterCount)
+         {
+            json_t *filterObj = json_array_get(filtersArray, i);
+            if (json_is_object(filterObj))
+            {
+               // Get filter source
+               json_t *sourceObj = json_object_get(filterObj, "source");
+               const char *filterSource = json_is_string(sourceObj) ? json_string_value(sourceObj) : nullptr;
+               
+               if (filterSource != nullptr && *filterSource != 0)
+               {
+                  // Convert to TCHAR and set filter
+                  TCHAR *filter = TStringFromUTF8String(filterSource);
+                  if (filter != nullptr)
+                  {
+                     if (nxslV5)
+                        setAutoBindFilter(i, filter);
+                     else
+                     {
+                        StringBuffer output = NXSLConvertToV5(filter);
+                        setAutoBindFilter(i, output);
+                     }
+                     MemFree(filter);
+                  }
+                  else
+                  {
+                     setAutoBindFilter(i, nullptr);
+                  }
+               }
+               else
+               {
+                  setAutoBindFilter(i, nullptr);
+               }
+               
+               // Get bind/unbind flags
+               json_t *autoBindObj = json_object_get(filterObj, "autoBind");
+               json_t *autoUnbindObj = json_object_get(filterObj, "autoUnbind");
+               
+               bool autoBind = json_is_boolean(autoBindObj) ? json_boolean_value(autoBindObj) : defaultAutoBindFlag;
+               bool autoUnbind = json_is_boolean(autoUnbindObj) ? json_boolean_value(autoUnbindObj) : false;
+               
+               setAutoBindMode(i, autoBind, autoUnbind);
+            }
+            else
+            {
+               setAutoBindFilter(i, nullptr);
+               setAutoBindMode(i, false, false);
+            }
+         }
+         else
+         {
+            setAutoBindFilter(i, nullptr);
+            setAutoBindMode(i, false, false);
+         }
+      }
+   }
+   else
+   {
+      // Handle legacy single filter format for compatibility
+      json_t *filterObj = json_object_get(data, "autoBindFilter");
+      if (json_is_string(filterObj))
+      {
+         const char *filterSource = json_string_value(filterObj);
+         if (filterSource != nullptr && *filterSource != 0)
+         {
+            TCHAR *filter = TStringFromUTF8String(filterSource);
+            if (filter != nullptr)
+            {
+               if (nxslV5)
+                  setAutoBindFilter(0, filter);
+               else
+               {
+                  StringBuffer output = NXSLConvertToV5(filter);
+                  setAutoBindFilter(0, output);
+               }
+               MemFree(filter);
+            }
+         }
+         setAutoBindMode(0, true, false);  // Default to auto-bind enabled for compatibility
+      }
+      
+      // Handle autoBindFlags for compatibility
+      json_t *flagsObj = json_object_get(data, "autoBindFlags");
+      if (json_is_integer(flagsObj))
+      {
+         internalLock();
+         m_autoBindFlags = static_cast<uint32_t>(json_integer_value(flagsObj));
+         internalUnlock();
+      }
+   }
+}
+
+/**
  * Class filter data for object selection for Container and Collector, Template autobind
  */
 struct AutoBindClassFilterData

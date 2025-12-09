@@ -666,6 +666,7 @@ public:
    EPRule(DB_RESULT hResult, int row);
    EPRule(const NXCPMessage& msg);
    EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5);
+   EPRule(json_t *json, ImportContext *context, bool nxslV5);
    ~EPRule();
 
    uint32_t getId() const { return m_id; }

@@ -336,6 +336,36 @@ DCTableConditionGroup::DCTableConditionGroup(ConfigEntry *e)
 /**
  * Condition group destructor
  */
+
+/**
+ * Create condition group from JSON record
+ */
+DCTableConditionGroup::DCTableConditionGroup(json_t *json)
+{
+   json_t *conditionsArray = json_object_get(json, "conditions");
+   if (json_is_array(conditionsArray))
+   {
+      size_t count = json_array_size(conditionsArray);
+      m_conditions = new ObjectArray<DCTableCondition>(count, 4, Ownership::True);
+      
+      for(size_t i = 0; i < count; i++)
+      {
+         json_t *conditionJson = json_array_get(conditionsArray, i);
+         if (json_is_object(conditionJson))
+         {
+            String column = json_object_get_string(conditionJson, "column", _T(""));
+            String value = json_object_get_string(conditionJson, "value", _T(""));
+            int operation = json_object_get_int32(conditionJson, "operation");
+            m_conditions->add(new DCTableCondition(column, operation, value));
+         }
+      }
+   }
+   else
+   {
+      m_conditions = new ObjectArray<DCTableCondition>(8, 8, Ownership::True);
+   }
+}
+
 DCTableConditionGroup::~DCTableConditionGroup()
 {
    delete m_conditions;
@@ -490,6 +520,37 @@ DCTableThreshold::DCTableThreshold(ConfigEntry *e) : m_groups(0, 8, Ownership::T
 /**
  * Load conditions from database
  */
+
+/**
+ * Create DCTableThreshold from JSON record
+ */
+DCTableThreshold::DCTableThreshold(json_t *json) : m_groups(0, 8, Ownership::True), m_instances(Ownership::True), m_instancesBeforeMaint(Ownership::True)
+{
+   m_id = CreateUniqueId(IDG_THRESHOLD);
+   
+   String activationEvent = json_object_get_string(json, "activationEvent", _T("SYS_TABLE_THRESHOLD_ACTIVATED"));
+   m_activationEvent = EventCodeFromName(activationEvent);
+   
+   String deactivationEvent = json_object_get_string(json, "deactivationEvent", _T("SYS_TABLE_THRESHOLD_DEACTIVATED"));
+   m_deactivationEvent = EventCodeFromName(deactivationEvent);
+   
+   m_sampleCount = json_object_get_int32(json, "sampleCount", 1);
+
+   json_t *groupsArray = json_object_get(json, "groups");
+   if (json_is_array(groupsArray))
+   {
+      size_t count = json_array_size(groupsArray);
+      for (size_t i = 0; i < count; i++)
+      {
+         json_t *groupJson = json_array_get(groupsArray, i);
+         if (json_is_object(groupJson))
+         {
+            m_groups.add(new DCTableConditionGroup(groupJson));
+         }
+      }
+   }
+}
+
 void DCTableThreshold::loadConditions(DB_HANDLE hdb)
 {
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT group_id,column_name,check_operation,check_value FROM dct_threshold_conditions WHERE threshold_id=? ORDER BY group_id,sequence_number"));

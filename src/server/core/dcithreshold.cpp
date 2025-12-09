@@ -192,6 +192,62 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem, bool nxslV5)
 /**
  * Destructor
  */
+
+/**
+ * Create threshold from JSON
+ */
+Threshold::Threshold(json_t *json, DCItem *parentItem, bool nxslV5)
+{
+   createId();
+   m_itemId = parentItem->getId();
+   m_targetId = parentItem->getOwnerId();
+   
+   String activationEvent = json_object_get_string(json, "activationEvent", _T("SYS_THRESHOLD_REACHED"));
+   m_eventCode = EventCodeFromName(activationEvent, EVENT_THRESHOLD_REACHED);
+   
+   String deactivationEvent = json_object_get_string(json, "deactivationEvent", _T("SYS_THRESHOLD_REARMED"));
+   m_rearmEventCode = EventCodeFromName(deactivationEvent, EVENT_THRESHOLD_REARMED);
+   
+   m_function = static_cast<BYTE>(json_object_get_int32(json, "function", F_LAST));
+   m_operation = static_cast<BYTE>(json_object_get_int32(json, "condition", OP_EQ));
+   m_dataType = parentItem->getTransformedDataType();
+   
+   String value = json_object_get_string(json, "value", _T(""));
+   m_value.set(value, true);
+   m_expandValue = (NumChars(m_value, '%') > 0);
+   
+   // Handle both sampleCount and param1 for compatibility
+   json_t *sampleCountObj = json_object_get(json, "sampleCount");
+   if (sampleCountObj != nullptr)
+      m_sampleCount = json_integer_value(sampleCountObj);
+   else
+      m_sampleCount = json_object_get_int32(json, "param1", 1);
+   
+   m_scriptSource = nullptr;
+   m_script = nullptr;
+   m_lastScriptErrorReport = 0;
+   
+   String script = json_object_get_string(json, "script", _T(""));
+   if (nxslV5)
+   {
+      setScript(MemCopyString(script));
+   }
+   else
+   {
+      StringBuffer output = NXSLConvertToV5(script);
+      setScript(MemCopyString(output));
+   }
+   
+   m_isReached = false;
+   m_wasReachedBeforeMaint = false;
+   m_disabled = false;
+   m_currentSeverity = SEVERITY_NORMAL;
+   m_repeatInterval = json_object_get_int32(json, "repeatInterval", -1);
+   m_lastEventTimestamp = 0;
+   m_lastEventMessage = nullptr;
+   m_numMatches = 0;
+}
+
 Threshold::~Threshold()
 {
    MemFree(m_scriptSource);

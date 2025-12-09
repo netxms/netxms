@@ -4534,6 +4534,15 @@ static inline char *json_object_get_string_a(json_t *object, const char *tag, co
 /**
  * Get string value from object
  */
+static inline String json_object_get_string(json_t *object, const char *tag, const TCHAR *defval)
+{
+   json_t *value = json_object_get(object, tag);
+   return json_is_string(value) ? String(json_string_value(value), "utf8") : String(defval);
+}
+
+/**
+ * Get string value from object
+ */
 static inline const char *json_object_get_string_utf8(json_t *object, const char *tag, const char *defval)
 {
    json_t *value = json_object_get(object, tag);

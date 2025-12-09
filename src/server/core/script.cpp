@@ -659,6 +659,81 @@ void ImportScript(ConfigEntry *config, bool overwrite, ImportContext *context, b
       context->log(NXLOG_ERROR, _T("ImportScript()"), _T("Script name \"%s\" is invalid"), name);
    }
 }
+/**
+ * Import single script from JSON
+ */
+void ImportScript(json_t *script, bool overwrite, ImportContext *context, bool nxslV5)
+{
+   // Get script name
+   String name = json_object_get_string(script, "name", _T("<unnamed>"));
+   if (!json_is_string(json_object_get(script, "name")) || name.isEmpty())
+   {
+      context->log(NXLOG_ERROR, _T("ImportScript()"), _T("Script name missing"));
+      return;
+   }
+
+   // Get GUID
+   uuid guid = json_object_get_uuid(script, "guid");
+   
+   if (guid.isNull())
+   {
+      guid = uuid::generate();
+      context->log(NXLOG_INFO, _T("ImportScript()"), _T("GUID script \"%s\" not found in configuration file, generated new GUID %s"), name.cstr(), guid.toString().cstr());
+   }
+
+   if (json_object_get(script, "code") == nullptr)
+   {
+      context->log(NXLOG_ERROR, _T("ImportScript()"), _T("Missing source code for script \"%s\""), name.cstr());
+      return;
+   }
+
+   String code = json_object_get_string(script, "code", _T(""));
+
+   if (IsValidScriptName(name))
+   {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DB_STATEMENT hStmt;
+
+      bool newScript = false;
+      uint32_t id = ResolveScriptGuid(guid);
+      if (id == 0) // Create new script
+      {
+         id = CreateUniqueId(IDG_SCRIPT);
+         hStmt = DBPrepare(hdb, _T("INSERT INTO script_library (script_name,script_code,script_id,guid) VALUES (?,?,?,?)"));
+         newScript = true;
+      }
+      else // Update existing script
+      {
+         if (!overwrite)
+         {
+            DBConnectionPoolReleaseConnection(hdb);
+            return;
+         }
+         hStmt = DBPrepare(hdb, _T("UPDATE script_library SET script_name=?,script_code=? WHERE script_id=?"));
+      }
+
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_TEXT, code, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, id);
+         if (newScript)
+            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, guid);
+
+         if (DBExecute(hStmt))
+         {
+            context->log(NXLOG_INFO, _T("ImportScript()"), _T("Script \"%s\" successfully imported"), name.cstr());
+            ReloadScript(id);
+         }
+         DBFreeStatement(hStmt);
+      }
+      DBConnectionPoolReleaseConnection(hdb);
+   }
+   else
+   {
+      context->log(NXLOG_ERROR, _T("ImportScript()"), _T("Script name \"%s\" is invalid"), name.cstr());
+   }
+}
 
 /**
  * Execute library script from scheduler

@@ -104,6 +104,40 @@ AssetAttribute::AssetAttribute(const wchar_t *name, const ConfigEntry& entry, bo
 }
 
 /**
+ * Create asset attribute from JSON
+ */
+AssetAttribute::AssetAttribute(json_t *json)
+{
+   m_name = MemCopyString(json_object_get_string(json, "name", _T("")));
+   m_displayName = MemCopyString(json_object_get_string(json, "displayName", _T("")));
+   m_dataType = static_cast<AMDataType>(json_object_get_int32(json, "dataType", 0));
+   m_isMandatory = json_object_get_boolean(json, "mandatory", false);
+   m_isUnique = json_object_get_boolean(json, "unique", false);
+   m_isHidden = json_object_get_boolean(json, "hidden", false);
+   m_autofillScriptSource = nullptr;
+   m_autofillScript = nullptr;
+   
+   String scriptStr = json_object_get_string(json, "script", _T(""));
+   setScript(MemCopyString(scriptStr));
+   
+   m_rangeMin = json_object_get_int32(json, "rangeMin", 0);
+   m_rangeMax = json_object_get_int32(json, "rangeMax", 0);
+   m_systemType = static_cast<AMSystemType>(json_object_get_int32(json, "systemType", 0));
+
+   json_t *enumValues = json_object_get(json, "enumValues");
+   if (enumValues != nullptr && json_is_array(enumValues))
+   {
+      for(size_t i = 0; i < json_array_size(enumValues); i++)
+      {
+         json_t *enumValue = json_array_get(enumValues, i);
+         String name = json_object_get_string(enumValue, "name", _T(""));
+         String value = json_object_get_string(enumValue, "value", _T(""));
+         m_enumValues.set(name, value);
+      }
+   }
+}
+
+/**
  * Asset attribute destructor
  */
 AssetAttribute::~AssetAttribute()
@@ -1342,6 +1376,73 @@ void ImportAssetManagementSchema(const ConfigEntry& root, bool overwrite, Import
       else
       {
          context->log(NXLOG_INFO, _T("ImportAssetManagementSchema()"), _T("Found existing asset attribute \"%s\" (skipping)"), name);
+      }
+   }
+
+   s_schemaLock.unlock();
+}
+
+/**
+ * Import asset management schema from JSON
+ */
+void ImportAssetManagementSchema(json_t *root, bool overwrite, ImportContext *context)
+{
+   s_schemaLock.writeLock();
+
+   json_t *attributes = json_object_get(root, "attributes");
+   if (json_is_array(attributes))
+   {
+      size_t count = json_array_size(attributes);
+      for (size_t i = 0; i < count; i++)
+      {
+         json_t *attribute = json_array_get(attributes, i);
+         if (!json_is_object(attribute))
+            continue;
+            
+         String name = json_object_get_string(attribute, "name", _T(""));
+         if (name.isEmpty())
+         {
+            context->log(NXLOG_ERROR, _T("ImportAssetManagementSchema()"), _T("No name specified for asset attribute"));
+            continue;
+         }
+         else if (!RegexpMatch(name, _T("^[A-Za-z$_][A-Za-z0-9$_]*$"), true))
+         {
+            context->log(NXLOG_ERROR, _T("ImportAssetManagementSchema()"), _T("Invalid name format for asset attribute \"%s\""), name.cstr());
+            continue;
+         }
+
+         AssetAttribute *existingAttribute = s_schema.get(name);
+         if (existingAttribute == nullptr || overwrite)
+         {
+            if (existingAttribute == nullptr)
+            {
+               context->log(NXLOG_INFO, _T("ImportAssetManagementSchema()"), _T("Asset attribute \"%s\" created"), name.cstr());
+            }
+            else
+            {
+               context->log(NXLOG_INFO, _T("ImportAssetManagementSchema()"), _T("Asset attribute \"%s\" updated"), name.cstr());
+            }
+
+            auto newAttribute = new AssetAttribute(attribute);
+            
+            if (newAttribute->saveToDatabase())
+            {
+               s_schema.set(name, newAttribute);
+
+               NXCPMessage notificationMessage(CMD_UPDATE_ASSET_ATTRIBUTE, 0);
+               newAttribute->fillMessage(&notificationMessage, VID_AM_ATTRIBUTES_BASE);
+               NotifyClientSessions(notificationMessage);
+            }
+            else
+            {
+               delete newAttribute;
+               context->log(NXLOG_ERROR, _T("ImportAssetManagementSchema()"), _T("Failed to save asset attribute \"%s\" to database"), name.cstr());
+            }
+         }
+         else
+         {
+            context->log(NXLOG_INFO, _T("ImportAssetManagementSchema()"), _T("Found existing asset attribute \"%s\" (skipping)"), name.cstr());
+         }
       }
    }
 

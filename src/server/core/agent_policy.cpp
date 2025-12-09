@@ -314,6 +314,39 @@ void GenericAgentPolicy::updateFromImport(const ConfigEntry *config, ImportConte
 }
 
 /**
+ * Update policy from imported JSON configuration
+ */
+void GenericAgentPolicy::updateFromImport(json_t *data, ImportContext *context)
+{
+   // Update name
+   String name = json_object_get_string(data, "name", _T("Unnamed"));
+   _tcslcpy(m_name, name, MAX_OBJECT_NAME);
+   
+   // Update type
+   String type = json_object_get_string(data, "type", _T("Unknown"));
+   _tcslcpy(m_type, type, MAX_POLICY_TYPE_LEN);
+   
+   // Update flags
+   json_t *flagsObj = json_object_get(data, "flags");
+   if (json_is_integer(flagsObj))
+   {
+      m_flags = static_cast<uint32_t>(json_integer_value(flagsObj));
+   }
+   
+   // Update content
+   json_t *contentObj = json_object_get(data, "content");
+   if (json_is_string(contentObj))
+   {
+      const char *contentStr = json_string_value(contentObj);
+      MemFree(m_content);
+      m_content = MemCopyStringA(contentStr);
+   }
+   
+   // Call additional data import for subclasses
+   importAdditionalData(data, context);
+}
+
+/**
  * Create export record
  */
 void GenericAgentPolicy::createExportRecord(TextFileWriter& xml, uint32_t recordId)
@@ -348,6 +381,13 @@ void GenericAgentPolicy::exportAdditionalData(TextFileWriter& xml)
  * Import additional data.
  */
 void GenericAgentPolicy::importAdditionalData(const ConfigEntry *config, ImportContext *context)
+{
+}
+
+/**
+ * Import additional data from JSON.
+ */
+void GenericAgentPolicy::importAdditionalData(json_t *data, ImportContext *context)
 {
 }
 
@@ -623,6 +663,23 @@ void FileDeliveryPolicy::importAdditionalData(const ConfigEntry *config, ImportC
    {
       context->log(NXLOG_WARNING, _T("ImportFileData()"), _T("File with GUID %s missing from policy %s"), configFiles->get(i)->guid.toString().cstr(), m_name);
    }
+}
+
+/**
+ * Import additional data from JSON for FileDeliveryPolicy
+ */
+void FileDeliveryPolicy::importAdditionalData(json_t *data, ImportContext *context)
+{
+   // For JSON import, the file data structure is expected to be in the same format as the XML
+   // but serialized as JSON. For now, we'll implement basic handling.
+   // The actual file delivery data is typically handled by the content field in the base class
+   // and the file management is done through separate mechanisms.
+   
+   // This is a placeholder for future implementation of JSON file data import
+   // The FileDelivery policy file handling is quite complex and would need
+   // a comprehensive JSON structure design to match the XML version
+   context->log(NXLOG_INFO, _T("FileDeliveryPolicy::importAdditionalData(JSON)"), 
+                _T("JSON file data import not yet fully implemented for policy %s"), m_name);
 }
 
 /**

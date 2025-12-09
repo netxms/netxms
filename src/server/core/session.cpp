@@ -10626,15 +10626,17 @@ void ClientSession::importConfiguration(const NXCPMessage& request)
       char *content = request.getFieldAsUtf8String(VID_NXMP_CONTENT);
       if (content != nullptr)
       {
-         Config config(false);
-         if (config.loadXmlConfigFromMemory(content, strlen(content), nullptr, "configuration", false))
-         {
-            finalizeConfigurationImport(config, request.getFieldAsUInt32(VID_FLAGS), &response);
-         }
+         uint32_t flags = request.getFieldAsUInt32(VID_FLAGS);
+         StringBuffer *log;
+         uint32_t result = ImportConfigFromContent(content, flags, &log);
+         
+         if (result == RCC_SUCCESS)
+            response.setField(VID_EXECUTION_RESULT, log->cstr());
          else
-         {
-            response.setField(VID_RCC, RCC_CONFIG_PARSE_ERROR);
-         }
+            response.setField(VID_ERROR_TEXT, log->cstr());
+         response.setField(VID_RCC, result);
+         
+         delete log;
          MemFree(content);
       }
       else

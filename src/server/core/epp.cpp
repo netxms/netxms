@@ -253,6 +253,266 @@ EPRule::EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5) :
 }
 
 /**
+ * Create rule from JSON object
+ */
+EPRule::EPRule(json_t *json, ImportContext *context, bool nxslV5) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
+{
+   m_id = 0;
+   m_guid = json_object_get_uuid(json, "guid");
+   if (m_guid.isNull())
+      m_guid = uuid::generate(); // generate random GUID if rule was imported without GUID
+   m_flags = json_object_get_uint32(json, "flags");
+
+   // Import events
+   json_t *eventsArray = json_object_get(json, "events");
+   if (json_is_array(eventsArray))
+   {
+      size_t eventsCount = json_array_size(eventsArray);
+      for(size_t i = 0; i < eventsCount; i++)
+      {
+         json_t *eventCode = json_array_get(eventsArray, i);
+         if (json_is_integer(eventCode))
+         {
+            m_events.add(static_cast<uint32_t>(json_integer_value(eventCode)));
+         }
+      }
+   }
+
+   // Import sources
+   json_t *sourcesArray = json_object_get(json, "sources");
+   if (json_is_array(sourcesArray))
+   {
+      size_t sourcesCount = json_array_size(sourcesArray);
+      for(size_t i = 0; i < sourcesCount; i++)
+      {
+         json_t *sourceId = json_array_get(sourcesArray, i);
+         if (json_is_integer(sourceId))
+         {
+            m_sources.add(static_cast<uint32_t>(json_integer_value(sourceId)));
+         }
+      }
+   }
+
+   // Import source exclusions
+   json_t *sourceExclusionsArray = json_object_get(json, "sourceExclusions");
+   if (json_is_array(sourceExclusionsArray))
+   {
+      size_t exclusionsCount = json_array_size(sourceExclusionsArray);
+      for(size_t i = 0; i < exclusionsCount; i++)
+      {
+         json_t *exclusionId = json_array_get(sourceExclusionsArray, i);
+         if (json_is_integer(exclusionId))
+         {
+            m_sourceExclusions.add(static_cast<uint32_t>(json_integer_value(exclusionId)));
+         }
+      }
+   }
+
+   // Import time frames
+   json_t *timeFramesArray = json_object_get(json, "timeFrames");
+   if (json_is_array(timeFramesArray))
+   {
+      size_t framesCount = json_array_size(timeFramesArray);
+      for(size_t i = 0; i < framesCount; i++)
+      {
+         json_t *timeFrame = json_array_get(timeFramesArray, i);
+         if (json_is_object(timeFrame))
+         {
+            uint32_t time = json_object_get_uint32(timeFrame, "time");
+            uint64_t date = json_object_get_uint64(timeFrame, "date");
+            m_timeFrames.add(new TimeFrame(time, date));
+         }
+      }
+   }
+
+   // Import actions
+   json_t *actionsArray = json_object_get(json, "actions");
+   if (json_is_array(actionsArray))
+   {
+      size_t actionsCount = json_array_size(actionsArray);
+      for(size_t i = 0; i < actionsCount; i++)
+      {
+         json_t *action = json_array_get(actionsArray, i);
+         if (json_is_object(action))
+         {
+            uint32_t actionId = json_object_get_uint32(action, "id");
+            String timerDelay = json_object_get_string(action, "timerDelay", _T(""));
+            String timerKey = json_object_get_string(action, "timerKey", _T(""));
+            String blockingTimerKey = json_object_get_string(action, "blockingTimerKey", _T(""));
+            String snoozeTime = json_object_get_string(action, "snoozeTime", _T(""));
+            bool active = json_object_get_boolean(action, "active", true);
+            if (IsValidActionId(actionId))
+               m_actions.add(new ActionExecutionConfiguration(actionId, 
+                  timerDelay.isEmpty() ? nullptr : MemCopyString(timerDelay),
+                  snoozeTime.isEmpty() ? nullptr : MemCopyString(snoozeTime),
+                  timerKey.isEmpty() ? nullptr : MemCopyString(timerKey),
+                  blockingTimerKey.isEmpty() ? nullptr : MemCopyString(blockingTimerKey),
+                  active));
+         }
+      }
+   }
+
+   // Import timer cancellations
+   json_t *timerCancellationsArray = json_object_get(json, "timerCancellations");
+   if (json_is_array(timerCancellationsArray))
+   {
+      size_t cancellationsCount = json_array_size(timerCancellationsArray);
+      for(size_t i = 0; i < cancellationsCount; i++)
+      {
+         json_t *timerKey = json_array_get(timerCancellationsArray, i);
+         if (json_is_string(timerKey))
+         {
+            const char *keyStr = json_string_value(timerKey);
+            if (keyStr != nullptr && *keyStr != 0)
+            {
+#ifdef UNICODE
+               WCHAR *key = WideStringFromUTF8String(keyStr);
+               m_timerCancellations.add(key);
+               MemFree(key);
+#else
+               m_timerCancellations.add(keyStr);
+#endif
+            }
+         }
+      }
+   }
+
+   // Import basic properties
+   m_comments = MemCopyString(json_object_get_string(json, "comments", _T("")));
+   m_alarmSeverity = json_object_get_int32(json, "alarmSeverity");
+   m_alarmTimeout = json_object_get_uint32(json, "alarmTimeout");
+   m_alarmTimeoutEvent = json_object_get_uint32(json, "alarmTimeoutEvent", EVENT_ALARM_TIMEOUT);
+   m_alarmKey = MemCopyString(json_object_get_string(json, "alarmKey", _T("")));
+   m_alarmMessage = MemCopyString(json_object_get_string(json, "alarmMessage", _T("")));
+   m_alarmImpact = MemCopyString(json_object_get_string(json, "alarmImpact", _T("")));
+   m_rcaScriptName = MemCopyString(json_object_get_string(json, "rcaScriptName", _T("")));
+   m_aiAgentInstructions = MemCopyString(json_object_get_string(json, "aiAgentInstructions", _T("")));
+   
+   String downtimeTag = json_object_get_string(json, "downtimeTag", _T(""));
+   wcslcpy(m_downtimeTag, downtimeTag, MAX_DOWNTIME_TAG_LENGTH);
+
+   // Import alarm categories
+   json_t *categoriesArray = json_object_get(json, "categories");
+   if (json_is_array(categoriesArray))
+   {
+      size_t categoriesCount = json_array_size(categoriesArray);
+      for(size_t i = 0; i < categoriesCount; i++)
+      {
+         json_t *categoryId = json_array_get(categoriesArray, i);
+         if (json_is_integer(categoryId))
+         {
+            m_alarmCategoryList.add(static_cast<uint32_t>(json_integer_value(categoryId)));
+         }
+      }
+   }
+
+   // Import persistent storage actions
+   json_t *pstorageSetActionsObj = json_object_get(json, "pstorageSetActions");
+   if (json_is_object(pstorageSetActionsObj))
+   {
+      m_pstorageSetActions.addAllFromJson(pstorageSetActionsObj);
+   }
+
+   json_t *pstorageDeleteActionsArray = json_object_get(json, "pstorageDeleteActions");
+   if (json_is_array(pstorageDeleteActionsArray))
+   {
+      size_t deleteCount = json_array_size(pstorageDeleteActionsArray);
+      for(size_t i = 0; i < deleteCount; i++)
+      {
+         json_t *deleteKey = json_array_get(pstorageDeleteActionsArray, i);
+         if (json_is_string(deleteKey))
+         {
+            const char *keyStr = json_string_value(deleteKey);
+            if (keyStr != nullptr && *keyStr != 0)
+            {
+#ifdef UNICODE
+               WCHAR *key = WideStringFromUTF8String(keyStr);
+               m_pstorageDeleteActions.add(key);
+               MemFree(key);
+#else
+               m_pstorageDeleteActions.add(keyStr);
+#endif
+            }
+         }
+      }
+   }
+
+   // Import custom attribute actions
+   json_t *customAttributeSetActionsObj = json_object_get(json, "customAttributeSetActions");
+   if (json_is_object(customAttributeSetActionsObj))
+   {
+      m_customAttributeSetActions.addAllFromJson(customAttributeSetActionsObj);
+   }
+
+   json_t *customAttributeDeleteActionsArray = json_object_get(json, "customAttributeDeleteActions");
+   if (json_is_array(customAttributeDeleteActionsArray))
+   {
+      size_t deleteCount = json_array_size(customAttributeDeleteActionsArray);
+      for(size_t i = 0; i < deleteCount; i++)
+      {
+         json_t *deleteKey = json_array_get(customAttributeDeleteActionsArray, i);
+         if (json_is_string(deleteKey))
+         {
+            const char *keyStr = json_string_value(deleteKey);
+            if (keyStr != nullptr && *keyStr != 0)
+            {
+#ifdef UNICODE
+               WCHAR *key = WideStringFromUTF8String(keyStr);
+               m_customAttributeDeleteActions.add(key);
+               MemFree(key);
+#else
+               m_customAttributeDeleteActions.add(keyStr);
+#endif
+            }
+         }
+      }
+   }
+
+   // Import and compile scripts
+   String filterScriptSource = json_object_get_string(json, "filterScript", _T(""));
+   if (nxslV5)
+      m_filterScriptSource = MemCopyString(filterScriptSource);
+   else
+   {
+      StringBuffer output = NXSLConvertToV5(filterScriptSource);
+      m_filterScriptSource = MemCopyString(output);
+   }
+   if ((m_filterScriptSource != nullptr) && (*m_filterScriptSource != 0))
+   {
+      m_filterScript = CompileServerScript(m_filterScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Filter::%u"), m_id + 1);
+      if (m_filterScript == nullptr)
+      {
+         context->log(NXLOG_ERROR, _T("EPRule::EPRule()"), _T("Failed to compile evaluation script for event processing policy rule %s"), m_guid.toString().cstr());
+      }
+   }
+   else
+   {
+      m_filterScript = nullptr;
+   }
+
+   String actionScriptSource = json_object_get_string(json, "actionScript", _T(""));
+   if (nxslV5)
+      m_actionScriptSource = MemCopyString(actionScriptSource);
+   else
+   {
+      StringBuffer output = NXSLConvertToV5(actionScriptSource);
+      m_actionScriptSource = MemCopyString(output);
+   }
+   if ((m_actionScriptSource != nullptr) && (*m_actionScriptSource != 0))
+   {
+      m_actionScript = CompileServerScript(m_actionScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Action::%u"), m_id + 1);
+      if (m_actionScript == nullptr)
+      {
+         context->log(NXLOG_ERROR, _T("EPRule::EPRule()"), _T("Failed to compile action script for event processing policy rule %s"), m_guid.toString().cstr());
+      }
+   }
+   else
+   {
+      m_actionScript = nullptr;
+   }
+}
+
+/**
  * Construct event policy rule from database record
  * Assuming the following field order:
  * rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,

@@ -1099,6 +1099,213 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *contex
 }
 
 /**
+ * Import object tool from JSON
+ */
+bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context)
+{
+   String guid = json_object_get_string(config, "guid", _T(""));
+   if (guid.isEmpty())
+   {
+      context->log(NXLOG_ERROR, _T("ImportObjectTool()"), _T("Missing object tool GUID"));
+      return false;
+   }
+
+   uuid_t temp;
+   if (_uuid_parse(guid, temp) == -1)
+   {
+      context->log(NXLOG_ERROR, _T("ImportObjectTool()"), _T("Object tool GUID %s is invalid"), (const TCHAR *)guid);
+      return false;
+   }
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   // Step 1: find existing tool ID by GUID
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT tool_id FROM object_tools WHERE guid=?"));
+   if (hStmt == nullptr)
+      return ImportFailure(hdb, nullptr, context);
+
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid, DB_BIND_STATIC);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult == nullptr)
+      return ImportFailure(hdb, hStmt, context);
+
+   uint32_t toolId;
+   if (DBGetNumRows(hResult) > 0)
+   {
+      toolId = DBGetFieldULong(hResult, 0, 0);
+   }
+   else
+   {
+      toolId = 0;
+   }
+   DBFreeResult(hResult);
+   DBFreeStatement(hStmt);
+
+   if ((toolId != 0) && !overwrite)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return true;
+   }
+
+   // Step 2: create or update tool record
+	if (!DBBegin(hdb))
+      return ImportFailure(hdb, nullptr, context);
+
+   if (toolId != 0)
+   {
+      hStmt = DBPrepare(hdb, _T("UPDATE object_tools SET tool_name=?,tool_type=?,")
+                             _T("tool_data=?,description=?,flags=?,")
+                             _T("tool_filter=?,confirmation_text=?,command_name=?,")
+                             _T("command_short_name=?,icon=?,remote_port=? ")
+                             _T("WHERE tool_id=?"));
+   }
+   else
+   {
+      hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools (tool_name,tool_type,")
+                             _T("tool_data,description,flags,tool_filter,")
+                             _T("confirmation_text,command_name,command_short_name,")
+                             _T("icon,remote_port,tool_id,guid) VALUES ")
+                             _T("(?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+   }
+   if (hStmt == nullptr)
+      return ImportFailure(hdb, nullptr, context);
+
+   String name = json_object_get_string(config, "name", _T(""));
+   String data = json_object_get_string(config, "data", _T(""));
+   String description = json_object_get_string(config, "description", _T(""));
+   String filter = json_object_get_string(config, "filter", _T(""));
+   String confirmation = json_object_get_string(config, "confirmation", _T(""));
+   String commandName = json_object_get_string(config, "commandName", _T(""));
+   String commandShortName = json_object_get_string(config, "commandShortName", _T(""));
+   String image = json_object_get_string(config, "image", _T(""));
+
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, json_object_get_int32(config, "type", 0));
+   DBBind(hStmt, 3, DB_SQLTYPE_TEXT, data, DB_BIND_STATIC);
+   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, description, DB_BIND_STATIC);
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, json_object_get_uint32(config, "flags", 0));
+   DBBind(hStmt, 6, DB_SQLTYPE_TEXT, filter, DB_BIND_STATIC);
+   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, confirmation, DB_BIND_STATIC);
+   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, commandName, DB_BIND_STATIC);
+   DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, commandShortName, DB_BIND_STATIC);
+   DBBind(hStmt, 10, DB_SQLTYPE_TEXT, image, DB_BIND_STATIC);
+   DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, json_object_get_int32(config, "remotePort", 0));
+   if (toolId == 0)
+   {
+      toolId = CreateUniqueId(IDG_OBJECT_TOOL);
+      DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, toolId);
+      DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, guid, DB_BIND_STATIC);
+   }
+   else
+   {
+      DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, toolId);
+   }
+
+   if (!DBExecute(hStmt))
+      return ImportFailure(hdb, hStmt, context);
+   DBFreeStatement(hStmt);
+
+   // Update ACL
+   if (!ExecuteQueryOnObject(hdb, toolId, _T("DELETE FROM object_tools_acl WHERE tool_id=?")))
+      return ImportFailure(hdb, nullptr, context);
+
+   // Default ACL for imported tools - accessible by everyone
+   hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (?,?)"));
+   if (hStmt == nullptr)
+      return ImportFailure(hdb, nullptr, context);
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, GROUP_EVERYONE);
+   if (!DBExecute(hStmt))
+      return ImportFailure(hdb, hStmt, context);
+   DBFreeStatement(hStmt);
+
+   // Update columns configuration
+   if (!ExecuteQueryOnObject(hdb, toolId, _T("DELETE FROM object_tools_table_columns WHERE tool_id=?")))
+      return ImportFailure(hdb, nullptr, context);
+
+   int toolType = json_object_get_int32(config, "type", 0);
+   if ((toolType == TOOL_TYPE_SNMP_TABLE) || (toolType == TOOL_TYPE_AGENT_LIST))
+   {
+   	json_t *columns = json_object_get(config, "columns");
+	   if (json_is_array(columns))
+	   {
+         size_t count = json_array_size(columns);
+         if (count > 0)
+         {
+            hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_table_columns (tool_id,")
+                                   _T("col_number,col_name,col_oid,col_format,col_substr) ")
+                                   _T("VALUES (?,?,?,?,?,?)"));
+            if (hStmt == nullptr)
+               return ImportFailure(hdb, hStmt, context);
+
+            for(size_t i = 0; i < count; i++)
+            {
+               json_t *c = json_array_get(columns, i);
+               if (!json_is_object(c))
+                  continue;
+
+               String colName = json_object_get_string(c, "name", _T(""));
+               String colOid = json_object_get_string(c, "oid", _T(""));
+
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (int32_t)i);
+               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, colName, DB_BIND_STATIC);
+               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, colOid, DB_BIND_STATIC);
+               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, json_object_get_int32(c, "format", 0));
+               DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, json_object_get_int32(c, "captureGroup", 0));
+
+               if (!DBExecute(hStmt))
+                  return ImportFailure(hdb, hStmt, context);
+            }
+            DBFreeStatement(hStmt);
+         }
+      }
+   }
+
+   // Update input fields
+   if (!ExecuteQueryOnObject(hdb, toolId, _T("DELETE FROM input_fields WHERE category='T' AND owner_id=?")))
+      return ImportFailure(hdb, nullptr, context);
+
+	json_t *inputFields = json_object_get(config, "inputFields");
+   if (json_is_array(inputFields))
+   {
+      size_t count = json_array_size(inputFields);
+      if (count > 0)
+      {
+         hStmt = DBPrepare(hdb, _T("INSERT INTO input_fields (category,owner_id,name,input_type,display_name,flags,sequence_num) VALUES ('T',?,?,?,?,?,?)"));
+         if (hStmt == nullptr)
+            return ImportFailure(hdb, nullptr, context);
+
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
+         for(size_t i = 0; i < count; i++)
+         {
+            json_t *c = json_array_get(inputFields, i);
+            if (!json_is_object(c))
+               continue;
+
+            String fieldName = json_object_get_string(c, "name", _T(""));
+            String displayName = json_object_get_string(c, "displayName", _T(""));
+
+            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, fieldName, DB_BIND_STATIC);
+            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, json_object_get_int32(c, "type", 0));
+            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, displayName, DB_BIND_STATIC);
+            DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, json_object_get_int32(c, "flags", 0));
+            DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (int32_t)(i + 1));
+
+            if (!DBExecute(hStmt))
+               return ImportFailure(hdb, hStmt, context);
+         }
+         DBFreeStatement(hStmt);
+      }
+   }
+
+   DBCommit(hdb);
+	DBConnectionPoolReleaseConnection(hdb);
+   NotifyClientSessions(NX_NOTIFY_OBJTOOLS_CHANGED, toolId);
+   return true;
+}
+
+/**
  * Create export records for object tool columns
  */
 static void CreateObjectToolColumnExportRecords(DB_HANDLE hdb, TextFileWriter& xml, uint32_t id)

@@ -2787,3 +2787,100 @@ void DCItem::getScriptDependencies(StringSet *dependencies) const
       }
    }
 }
+
+/**
+ * Create DCItem from imported JSON configuration
+ */
+DCItem::DCItem(json_t *json, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5) : DCObject(json, owner, nxslV5)
+{
+   m_dataType = static_cast<BYTE>(json_object_get_int32(json, "dataType"));
+   m_transformedDataType = static_cast<BYTE>(json_object_get_int32(json, "transformedDataType", DCI_DT_NULL));
+   m_deltaCalculation = static_cast<BYTE>(json_object_get_int32(json, "delta"));
+   m_sampleCount = static_cast<BYTE>(json_object_get_int32(json, "samples"));
+   m_cacheSize = 0;
+   m_requiredCacheSize = 0;
+   m_ppValueCache = nullptr;
+   m_prevValueTimeStamp = 0;
+   m_prevDeltaValue = 0;
+   m_cacheLoaded = false;
+   m_anomalyDetected = false;
+   m_multiplier = json_object_get_int32(json, "multiplier");
+   m_snmpRawValueType = static_cast<uint16_t>(json_object_get_int32(json, "snmpRawValueType"));
+   m_allThresholdsRearmEvent = json_object_get_int32(json, "allThresholdsRearmEvent");
+   
+   String predictionEngine = json_object_get_string(json, "predictionEngine", _T(""));
+   _tcslcpy(m_predictionEngine, predictionEngine, MAX_NPE_NAME_LEN);
+   
+   m_unitName = json_object_get_string(json, "unitName", _T(""));
+
+   // for compatibility with old format
+   if (json_object_get_int32(json, "allThresholds"))
+      m_flags |= DCF_ALL_THRESHOLDS;
+   if (json_object_get_int32(json, "rawValueInOctetString"))
+      m_flags |= DCF_RAW_VALUE_OCTET_STRING;
+
+   json_t *thresholdsArray = json_object_get(json, "thresholds");
+   if (json_is_array(thresholdsArray))
+   {
+      size_t count = json_array_size(thresholdsArray);
+      m_thresholds = new ObjectArray<Threshold>(count, 8, Ownership::True);
+      for(size_t i = 0; i < count; i++)
+      {
+         json_t *thresholdJson = json_array_get(thresholdsArray, i);
+         if (json_is_object(thresholdJson))
+         {
+            m_thresholds->add(new Threshold(thresholdJson, this, nxslV5));
+         }
+      }
+   }
+   else
+   {
+      m_thresholds = nullptr;
+   }
+
+   updateCacheSizeInternal(false);
+}
+
+/**
+ * Update DCItem from imported JSON configuration
+ */
+void DCItem::updateFromImport(json_t *json, bool nxslV5)
+{
+   DCObject::updateFromImport(json, nxslV5);
+
+   lock();
+   m_dataType = static_cast<BYTE>(json_object_get_int32(json, "dataType"));
+   m_transformedDataType = static_cast<BYTE>(json_object_get_int32(json, "transformedDataType", DCI_DT_NULL));
+   m_deltaCalculation = static_cast<BYTE>(json_object_get_int32(json, "delta"));
+   m_sampleCount = static_cast<BYTE>(json_object_get_int32(json, "samples"));
+   m_snmpRawValueType = static_cast<uint16_t>(json_object_get_int32(json, "snmpRawValueType"));
+   m_unitName = json_object_get_string(json, "unitName", _T(""));
+   m_multiplier = json_object_get_int32(json, "multiplier");
+   m_allThresholdsRearmEvent = json_object_get_int32(json, "allThresholdsRearmEvent");
+
+   json_t *thresholdsArray = json_object_get(json, "thresholds");
+   if (json_is_array(thresholdsArray))
+   {
+      if (m_thresholds != nullptr)
+         m_thresholds->clear();
+      else
+         m_thresholds = new ObjectArray<Threshold>(json_array_size(thresholdsArray), 8, Ownership::True);
+         
+      size_t count = json_array_size(thresholdsArray);
+      for(size_t i = 0; i < count; i++)
+      {
+         json_t *thresholdJson = json_array_get(thresholdsArray, i);
+         if (json_is_object(thresholdJson))
+         {
+            m_thresholds->add(new Threshold(thresholdJson, this, nxslV5));
+         }
+      }
+   }
+   else
+   {
+      delete_and_null(m_thresholds);
+   }
+
+   updateCacheSizeInternal(true);
+   unlock();
+}
