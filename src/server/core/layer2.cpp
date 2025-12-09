@@ -98,7 +98,7 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, NetworkMap *fil
 /**
  * Find connection point for interface
  */
-shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type)
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type)
 {
    TCHAR macAddrText[64];
    nxlog_debug_tag(DEBUG_TAG, 6, _T("Called FindInterfaceConnectionPoint(%s)"), macAddr.toString(macAddrText));

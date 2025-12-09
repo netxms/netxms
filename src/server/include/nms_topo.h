@@ -457,7 +457,7 @@ class NetworkMapLink;
 shared_ptr<NetworkPath> NXCORE_EXPORTABLE TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest);
 const ROUTE *SelectBestRoute(const RoutingTable& routes, const InetAddress& destination);
 void BuildL2Topology(NetworkMapObjectList &topology, Node *root, NetworkMap *filterProvider, int depth, bool includeEndNodes, bool useL1Topology);
-shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type);
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type);
 
 void NXCORE_EXPORTABLE FindMacAddresses(const BYTE* macPattern, size_t macPatternSize, ObjectArray<MacAddressInfo>* out, int searchLimit);
 
