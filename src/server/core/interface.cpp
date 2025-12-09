@@ -1700,7 +1700,6 @@ json_t *Interface::toJson()
    lockProperties();
 
    json_object_set_new(root, "index", json_integer(m_index));
-   TCHAR text[64];
    json_object_set_new(root, "macAddress", m_macAddress.toJson());
    json_object_set_new(root, "ipAddressList", m_ipAddressList.toJson());
    json_object_set_new(root, "flags", json_integer(m_flags));
@@ -1735,7 +1734,8 @@ json_t *Interface::toJson()
 
    if (m_flags & IF_OSPF_INTERFACE)
    {
-      json_object_set_new(root, "ospfArea", json_string_t(IpToStr(m_ospfArea, text)));
+      char text[64];
+      json_object_set_new(root, "ospfArea", json_string(IpToStrA(m_ospfArea, text)));
       json_object_set_new(root, "ospfType", json_integer(static_cast<json_int_t>(m_ospfType)));
       json_object_set_new(root, "ospfState", json_integer(static_cast<json_int_t>(m_ospfState)));
    }
