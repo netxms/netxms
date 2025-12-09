@@ -4727,9 +4727,12 @@ public:
 class LIBNETXMS_EXPORTABLE MacAddress : public GenericId<8>
 {
 private:
-   TCHAR *toStringInternal(TCHAR *buffer, const TCHAR separator, bool bytePair = false) const;
-   TCHAR *toStringInternal3(TCHAR *buffer, const TCHAR separator) const;
-   TCHAR *toStringInternalDecimal(TCHAR *buffer, const TCHAR separator) const;
+   wchar_t *toStringInternalW(wchar_t *buffer, wchar_t separator, bool bytePair = false) const;
+   wchar_t *toStringInternal3W(wchar_t *buffer, wchar_t separator) const;
+   wchar_t *toStringInternalDecimalW(wchar_t *buffer, wchar_t separator) const;
+   char *toStringInternalA(char *buffer, char separator, bool bytePair = false) const;
+   char *toStringInternal3A(char *buffer, char separator) const;
+   char *toStringInternalDecimalA(char *buffer, char separator) const;
 
 public:
    MacAddress(size_t length = 0) : GenericId<8>(length) { }
@@ -4743,7 +4746,7 @@ public:
    }
 
    static MacAddress parse(const char *str, bool partialMac = false);
-   static MacAddress parse(const WCHAR *str, bool partialMac = false);
+   static MacAddress parse(const wchar_t *str, bool partialMac = false);
 
    bool isValid() const { return !isNull(); }
    bool isBroadcast() const;
@@ -4751,8 +4754,23 @@ public:
    bool equals(const MacAddress &a) const { return GenericId<8>::equals(a); }
    bool equals(const BYTE *value, size_t length = 6) const { return GenericId<8>::equals(value, length); }
 
-   TCHAR *toString(TCHAR *buffer, MacAddressNotation notation = MacAddressNotation::COLON_SEPARATED) const;
    String toString(MacAddressNotation notation = MacAddressNotation::COLON_SEPARATED) const;
+   char *toStringA(char *buffer, MacAddressNotation notation = MacAddressNotation::COLON_SEPARATED) const;
+   wchar_t *toStringW(wchar_t *buffer, MacAddressNotation notation = MacAddressNotation::COLON_SEPARATED) const;
+   TCHAR *toString(TCHAR *buffer, MacAddressNotation notation = MacAddressNotation::COLON_SEPARATED) const
+   {
+#ifdef UNICODE
+      return toStringW(buffer, notation);
+#else
+      return toStringA(buffer, notation);
+#endif
+   }
+
+   json_t *toJson(MacAddressNotation notation = MacAddressNotation::COLON_SEPARATED) const
+   {
+      char buffer[32];
+      return json_string(toStringA(buffer, notation));
+   }
 
    static const MacAddress NONE;
    static const MacAddress ZERO;
