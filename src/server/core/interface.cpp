@@ -1995,7 +1995,7 @@ json_t *Interface::toJson()
 
    json_object_set_new(root, "index", json_integer(m_index));
    TCHAR text[64];
-   json_object_set_new(root, "macAddress", json_string_t(m_macAddress.toString(text)));
+   json_object_set_new(root, "macAddress", m_macAddress.toJson());
    json_object_set_new(root, "ipAddressList", m_ipAddressList.toJson());
    json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "description", json_string_t(m_description));

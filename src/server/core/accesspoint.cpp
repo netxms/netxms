@@ -882,7 +882,7 @@ json_t *AccessPoint::toJson()
    json_object_set_new(root, "domainId", json_integer(m_domainId));
    json_object_set_new(root, "controllerId", json_integer(m_controllerId));
    TCHAR macAddrText[64];
-   json_object_set_new(root, "macAddress", json_string_t(m_macAddress.toString(macAddrText)));
+   json_object_set_new(root, "macAddress", m_macAddress.toJson());
    json_object_set_new(root, "vendor", json_string_t(m_vendor));
    json_object_set_new(root, "model", json_string_t(m_model));
    json_object_set_new(root, "serialNumber", json_string_t(m_serialNumber));
