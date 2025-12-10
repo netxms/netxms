@@ -113,9 +113,9 @@ void NXCORE_EXPORTABLE RegisterAIAssistantSkill(const char *name, const char *de
 }
 
 /**
- * Get list of registered AI assistant skills
+ * Get list of registered AI assistant skills as string
  */
-std::string F_GetRegisteredSkills(json_t *arguments, uint32_t userId)
+std::string GetRegisteredSkills()
 {
    json_t *output = json_array();
 
@@ -152,7 +152,7 @@ std::string Chat::loadSkill(const char *skillName)
    for(const AssistantFunction& function : skill.functions)
    {
       m_functions.emplace(function.name, make_shared<AssistantFunction>(function));
-      nxlog_debug_tag(DEBUG_TAG, 6, L"Loaded AI assistant function \"%s\" from skill \"%s\"", function.name.c_str(), skill.name.c_str());
+      nxlog_debug_tag(DEBUG_TAG, 6, L"Loaded AI assistant function \"%hs\" from skill \"%hs\"", function.name.c_str(), skill.name.c_str());
    }
    s_skillsMutex.unlock();
 

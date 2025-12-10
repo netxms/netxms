@@ -32,10 +32,10 @@ void InitAITasks();
 void AITaskSchedulerThread(ThreadPool *aiTaskThreadPool);
 
 size_t GetRegisteredSkillCount();
+std::string GetRegisteredSkills();
 
 std::string F_AITaskList(json_t *arguments, uint32_t userId);
 std::string F_DeleteAITask(json_t *arguments, uint32_t userId);
-std::string F_GetRegisteredSkills(json_t *arguments, uint32_t userId);
 
 /**
  * Loaded server config
@@ -77,8 +77,6 @@ static const char *s_systemPrompt =
          "- Provide guidance on NetXMS concepts and best practices\n\n"
          "IMPORTANT RESTRICTIONS:\n"
          "- NEVER suggest or recommend NXSL scripts unless explicitly requested by the user\n"
-         "- If you cannot perform a task with available functions, check for skills first\n"
-         "- If no suitable skill exists, clearly state your limitations\n"
          "- AVOID answering questions outside of network management and IT administration\n\n"
          "RESPONSE GUIDELINES:\n"
          "- Always use correct NetXMS terminology in responses\n"
@@ -88,20 +86,27 @@ static const char *s_systemPrompt =
          "- Use function calls to access real-time data when possible\n"
          "- Before suggesting user how to use UI, check if you can use available skills or functions to perform the task directly\n"
          "- Create background tasks for complex or time-consuming operations\n\n"
-         "SKILL MANAGEMENT:\n"
-         "- ALWAYS check available skills before stating you cannot perform a task\n"
-         "- If asked to find something and current functions yield empty result, ALWAYS check for available skills before responding\n"
-         "- If user request matches an available skill's description, automatically invoke load-skill for that skill before generating any other response.\n"
+         "SKILL MANAGEMENT AND DISCOVERY:\n"
+         "- When you lack capabilities for ANY user request, IMMEDIATELY check available skills using get-available-skills\n"
+         "- Skills are your primary method for extending capabilities - they are NOT optional extras\n"
+         "- NEVER state limitations without first checking and attempting to load relevant skills\n"
+         "- If current functions cannot fulfill a request, this is a signal to check skills, not to give up\n"
+         "- Load skills proactively based on request context, not reactively after failure\n"
+         "- When functions return empty results, check skills before concluding the task cannot be completed\n"
+         "- Skills can provide entirely new function sets - always explore them when facing limitations\n"
+         "- If a user request mentions any domain or task type, check if skills exist for that domain\n"
+         "- Pattern: Request → Check Skills → Load Relevant Skills → Attempt Task → Report Results\n"
+         "- If user request matches an available skill's description, automatically invoke load-skill for that skill before generating any other response\n"
          "- Use get-available-skills function to discover what skills are available\n"
          "- Load relevant skills using load-skill function when needed\n"
          "- Skills extend your functionality for specific domains or complex operations\n"
          "- Mentioning a skill without loading it provides no value\n"
          "- Load skills proactively when you recognize a need for specialized capabilities\n\n"
-         "WHEN YOU LACK CAPABILITIES:\n"
-         "1. First, check available skills using get-available-skills\n"
-         "2. If a relevant skill exists, load it and retry\n"
-         "3. If no skill exists, clearly explain your limitations\n"
-         "4. Suggest what type of function or skill would be needed\n\n"
+         "LIMITATION REPORTING:\n"
+         "- Only report inability to perform tasks AFTER checking and attempting relevant skills\n"
+         "- When reporting limitations, always mention which skills were checked\n"
+         "- Suggest what type of skill would be needed for unsupported requests\n"
+         "- NEVER conclude you cannot perform a task without first exploring available skills\n\n"
          "Your responses should be accurate, concise, and helpful for network administrators managing IT infrastructure through NetXMS.";
 
 /**
@@ -123,8 +128,6 @@ static const char *s_systemPromptBackground =
          "- Provide guidance on NetXMS concepts and best practices\n\n"
          "IMPORTANT RESTRICTIONS:\n"
          "- NEVER suggest or recommend NXSL scripts unless explicitly requested by the user\n"
-         "- If you cannot perform a task with available functions, check for skills first\n"
-         "- If no suitable skill exists, clearly state your limitations\n"
          "- AVOID answering questions outside of network management and IT administration\n\n"
          "RESPONSE GUIDELINES:\n"
          "- Always use correct NetXMS terminology in responses\n"
@@ -134,20 +137,26 @@ static const char *s_systemPromptBackground =
          "- Use function calls to access real-time data when possible\n"
          "- Before suggesting user how to use UI, check if you can use available skills or functions to perform the task directly\n"
          "- Create background tasks for complex or time-consuming operations\n\n"
-         "SKILL MANAGEMENT:\n"
-         "- ALWAYS check available skills before stating you cannot perform a task\n"
-         "- If asked to find something and current functions yield empty result, ALWAYS check for available skills before responding\n"
-         "- If user request matches an available skill's description, automatically invoke load-skill for that skill before generating any other response.\n"
+         "SKILL MANAGEMENT AND DISCOVERY:\n"
+         "- When you lack capabilities for ANY task, IMMEDIATELY check available skills using get-available-skills\n"
+         "- Skills are your primary method for extending capabilities - they are NOT optional extras\n"
+         "- NEVER state limitations without first checking and attempting to load relevant skills\n"
+         "- If current functions cannot fulfill a task, this is a signal to check skills, not to give up\n"
+         "- Load skills proactively based on task context, not reactively after failure\n"
+         "- When functions return empty results, check skills before concluding the task cannot be completed\n"
+         "- Skills can provide entirely new function sets - always explore them when facing limitations\n"
+         "- Pattern: Task → Check Skills → Load Relevant Skills → Attempt Task → Report Results\n"
+         "- If task matches an available skill's description, automatically invoke load-skill for that skill before generating any other response\n"
          "- Use get-available-skills function to discover what skills are available\n"
          "- Load relevant skills using load-skill function when needed\n"
          "- Skills extend your functionality for specific domains or complex operations\n"
          "- Mentioning a skill without loading it provides no value\n"
          "- Load skills proactively when you recognize a need for specialized capabilities\n\n"
-         "WHEN YOU LACK CAPABILITIES:\n"
-         "1. First, check available skills using get-available-skills\n"
-         "2. If a relevant skill exists, load it and retry\n"
-         "3. If no skill exists, clearly explain your limitations\n"
-         "4. Suggest what type of function or skill would be needed\n\n"
+         "LIMITATION REPORTING:\n"
+         "- Only report inability to perform tasks AFTER checking and attempting relevant skills\n"
+         "- When reporting limitations, always mention which skills were checked\n"
+         "- Suggest what type of skill would be needed for unsupported tasks\n"
+         "- NEVER conclude you cannot perform a task without first exploring available skills\n\n"
          "Focus on network management, monitoring, and IT administration tasks within the NetXMS framework.";
 
 static const char *s_concepts =
@@ -622,6 +631,7 @@ Chat::Chat(NetObj *context, json_t *eventData, uint32_t userId, const char *syst
    {
       addMessage("system", p.c_str());
    }
+   addMessage("system", std::string("The following skills are available to you: ").append(GetRegisteredSkills()).c_str());
    m_initialMessageCount = json_array_size(m_messages);
 
    m_userId = userId;
@@ -1016,11 +1026,6 @@ bool InitAIAssistant()
          { "task_id", "ID of the task to delete" }
       },
       F_DeleteAITask);
-   RegisterAIAssistantFunction(
-      "get-available-skills",
-      "Get list of available AI assistant skills with brief descriptions. Skills can be used to extend assistant capabilities for specific tasks.",
-      { },
-      F_GetRegisteredSkills);
 
    InitAITasks();
    s_aiTaskThreadPool = ThreadPoolCreate(_T("AI-TASKS"),
