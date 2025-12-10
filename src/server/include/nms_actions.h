@@ -66,6 +66,7 @@ void UpdateChannelNameInActions(std::pair<TCHAR*, TCHAR*> *names);
 bool CheckChannelIsUsedInAction(TCHAR *name);
 void SendActionsToClient(ClientSession *session, uint32_t requestId);
 void CreateActionExportRecord(TextFileWriter& xml, uint32_t id);
+json_t *CreateActionExportRecord(uint32_t id);
 bool ImportAction(ConfigEntry *config, bool overwrite, ImportContext *context);
 bool ImportAction(json_t *action, bool overwrite, ImportContext *context);
 bool IsValidActionId(uint32_t id);

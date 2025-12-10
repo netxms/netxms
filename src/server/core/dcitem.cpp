@@ -2824,9 +2824,10 @@ DCItem::DCItem(json_t *json, const shared_ptr<DataCollectionOwner>& owner, bool 
    {
       size_t count = json_array_size(thresholdsArray);
       m_thresholds = new ObjectArray<Threshold>(count, 8, Ownership::True);
-      for(size_t i = 0; i < count; i++)
+      size_t index;
+      json_t *thresholdJson;
+      json_array_foreach(thresholdsArray, index, thresholdJson)
       {
-         json_t *thresholdJson = json_array_get(thresholdsArray, i);
          if (json_is_object(thresholdJson))
          {
             m_thresholds->add(new Threshold(thresholdJson, this, nxslV5));
@@ -2866,10 +2867,10 @@ void DCItem::updateFromImport(json_t *json, bool nxslV5)
       else
          m_thresholds = new ObjectArray<Threshold>(json_array_size(thresholdsArray), 8, Ownership::True);
          
-      size_t count = json_array_size(thresholdsArray);
-      for(size_t i = 0; i < count; i++)
+      size_t index;
+      json_t *thresholdJson;
+      json_array_foreach(thresholdsArray, index, thresholdJson)
       {
-         json_t *thresholdJson = json_array_get(thresholdsArray, i);
          if (json_is_object(thresholdJson))
          {
             m_thresholds->add(new Threshold(thresholdJson, this, nxslV5));

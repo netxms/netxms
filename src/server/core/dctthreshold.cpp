@@ -348,9 +348,10 @@ DCTableConditionGroup::DCTableConditionGroup(json_t *json)
       size_t count = json_array_size(conditionsArray);
       m_conditions = new ObjectArray<DCTableCondition>(count, 4, Ownership::True);
       
-      for(size_t i = 0; i < count; i++)
+      size_t index;
+      json_t *conditionJson;
+      json_array_foreach(conditionsArray, index, conditionJson)
       {
-         json_t *conditionJson = json_array_get(conditionsArray, i);
          if (json_is_object(conditionJson))
          {
             String column = json_object_get_string(conditionJson, "column", _T(""));
@@ -539,10 +540,10 @@ DCTableThreshold::DCTableThreshold(json_t *json) : m_groups(0, 8, Ownership::Tru
    json_t *groupsArray = json_object_get(json, "groups");
    if (json_is_array(groupsArray))
    {
-      size_t count = json_array_size(groupsArray);
-      for (size_t i = 0; i < count; i++)
+      size_t index;
+      json_t *groupJson;
+      json_array_foreach(groupsArray, index, groupJson)
       {
-         json_t *groupJson = json_array_get(groupsArray, i);
          if (json_is_object(groupJson))
          {
             m_groups.add(new DCTableConditionGroup(groupJson));

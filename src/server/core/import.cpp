@@ -47,10 +47,10 @@ static bool IsEventExist(const TCHAR *name, json_t *root)
    json_t *events = json_object_get(root, "events");
    if (json_is_array(events))
    {
-      size_t count = json_array_size(events);
-      for (size_t i = 0; i < count; i++)
+      size_t index;
+      json_t *event;
+      json_array_foreach(events, index, event)
       {
-         json_t *event = json_array_get(events, i);
          if (json_is_object(event))
          {
             json_t *nameObj = json_object_get(event, "name");
@@ -75,10 +75,10 @@ static bool ValidateDci(json_t *root, json_t *dci, const TCHAR *templateName, Im
       return true;
 
    bool success = true;
-   int count = json_array_size(thresholds);
-   for (int i = 0; i < count; i++)
+   size_t index;
+   json_t *threshold;
+   json_array_foreach(thresholds, index, threshold)
    {
-      json_t *threshold = json_array_get(thresholds, i);
       if (!json_is_object(threshold))
          continue;
 
@@ -88,7 +88,7 @@ static bool ValidateDci(json_t *root, json_t *dci, const TCHAR *templateName, Im
       {
          context->log(NXLOG_ERROR, _T("ValidateDci()"),
             _T("Template \"%s\" DCI \"%s\" threshold %d attribute \"activationEvent\" refers to unknown event"),
-            templateName, json_object_get_string(dci, "description", _T("<unnamed>")).cstr(), (i + 1));
+            templateName, json_object_get_string(dci, "description", _T("<unnamed>")).cstr(), index + 1);
          success = false;
       }
 
@@ -98,7 +98,7 @@ static bool ValidateDci(json_t *root, json_t *dci, const TCHAR *templateName, Im
       {
          context->log(NXLOG_ERROR, _T("ValidateDci()"),
             _T("Template \"%s\" DCI \"%s\" threshold %d attribute \"deactivationEvent\" refers to unknown event"),
-            templateName, json_object_get_string(dci, "description", _T("<unnamed>")).cstr(), (i + 1));
+            templateName, json_object_get_string(dci, "description", _T("<unnamed>")).cstr(), index + 1);
          success = false;
       }
    }
@@ -123,10 +123,10 @@ static bool ValidateTemplate(json_t *root, json_t *templateObj, ImportContext *c
    json_t *dcis = json_object_get(dataCollection, "dcis");
    if (json_is_array(dcis))
    {
-      size_t count = json_array_size(dcis);
-      for (size_t i = 0; i < count; i++)
+      size_t index;
+      json_t *dci;
+      json_array_foreach(dcis, index, dci)
       {
-         json_t *dci = json_array_get(dcis, i);
          if (json_is_object(dci))
          {
             if (!ValidateDci(root, dci, templateName, context))
@@ -139,10 +139,10 @@ static bool ValidateTemplate(json_t *root, json_t *templateObj, ImportContext *c
    json_t *dcTables = json_object_get(dataCollection, "dcTables");
    if (json_is_array(dcTables))
    {
-      size_t count = json_array_size(dcTables);
-      for (size_t i = 0; i < count; i++)
+      size_t index;
+      json_t *dctable;
+      json_array_foreach(dcTables, index, dctable)
       {
-         json_t *dctable = json_array_get(dcTables, i);
          if (json_is_object(dctable))
          {
             if (!ValidateDci(root, dctable, templateName, context))
@@ -166,10 +166,10 @@ static bool ValidateConfig(json_t *root, uint32_t flags, ImportContext *context)
    json_t *events = json_object_get(root, "events");
    if (json_is_array(events))
    {
-      size_t count = json_array_size(events);
-      for (size_t i = 0; i < count; i++)
+      size_t index;
+      json_t *event;
+      json_array_foreach(events, index, event)
       {
-         json_t *event = json_array_get(events, i);
          if (!json_is_object(event))
             continue;
 
@@ -192,10 +192,10 @@ static bool ValidateConfig(json_t *root, uint32_t flags, ImportContext *context)
    json_t *traps = json_object_get(root, "traps");
    if (json_is_array(traps))
    {
-      size_t count = json_array_size(traps);
-      for (size_t i = 0; i < count; i++)
+      size_t index;
+      json_t *trap;
+      json_array_foreach(traps, index, trap)
       {
-         json_t *trap = json_array_get(traps, i);
          if (!json_is_object(trap))
             continue;
 
@@ -221,10 +221,10 @@ static bool ValidateConfig(json_t *root, uint32_t flags, ImportContext *context)
    json_t *templates = json_object_get(root, "templates");
    if (json_is_array(templates))
    {
-      size_t count = json_array_size(templates);
-      for (size_t i = 0; i < count; i++)
+      size_t index;
+      json_t *templateObj;
+      json_array_foreach(templates, index, templateObj)
       {
-         json_t *templateObj = json_array_get(templates, i);
          if (json_is_object(templateObj))
          {
             if (!ValidateTemplate(root, templateObj, context))
@@ -400,12 +400,13 @@ static uint32_t ImportEvent(json_t *event, bool overwrite, ImportContext *contex
  */
 static uint32_t ImportJsonEvents(json_t *events, uint32_t flags, ImportContext *context)
 {
-   int count = json_array_size(events);
+   size_t count = json_array_size(events);
    context->log(NXLOG_INFO, _T("ImportJsonEvents()"), _T("%d event templates to import"), count);
    
-   for (int i = 0; i < count; i++)
+   size_t index;
+   json_t *event;
+   json_array_foreach(events, index, event)
    {
-      json_t *event = json_array_get(events, i);
       if (!json_is_object(event))
          continue;
          
@@ -547,9 +548,10 @@ static uint32_t ImportJsonTemplates(json_t *templates, uint32_t flags, ImportCon
    size_t count = json_array_size(templates);
    context->log(NXLOG_INFO, _T("ImportJsonTemplates()"), _T("%d templates to import"), (int)count);
    
-   for (size_t i = 0; i < count; i++)
+   size_t index;
+   json_t *templateJson;
+   json_array_foreach(templates, index, templateJson)
    {
-      json_t *templateJson = json_array_get(templates, i);
       if (!json_is_object(templateJson))
          continue;
          
@@ -632,9 +634,10 @@ static ObjectArray<uuid> *GetRuleOrderingFromJson(json_t *root)
       if (count > 0)
       {
          ordering = new ObjectArray<uuid>(0, 16, Ownership::True);
-         for(size_t i = 0; i < count; i++)
+         size_t index;
+         json_t *guidObj;
+         json_array_foreach(ruleOrderingArray, index, guidObj)
          {
-            json_t *guidObj = json_array_get(ruleOrderingArray, i);
             if (json_is_string(guidObj))
             {
                String guidStr(json_string_value(guidObj), "utf8");
@@ -666,9 +669,10 @@ static uint32_t ImportJsonRules(json_t *rules, json_t *root, uint32_t flags, Imp
    // Get rule ordering from the root JSON object
    ObjectArray<uuid> *ruleOrdering = GetRuleOrderingFromJson(root);
    
-   for (size_t i = 0; i < count; i++)
+   size_t index;
+   json_t *rule;
+   json_array_foreach(rules, index, rule)
    {
-      json_t *rule = json_array_get(rules, i);
       if (!json_is_object(rule))
          continue;
          
@@ -705,9 +709,10 @@ static uint32_t ImportJsonScripts(json_t *scripts, uint32_t flags, ImportContext
    size_t count = json_array_size(scripts);
    context->log(NXLOG_INFO, _T("ImportJsonScripts()"), _T("%d scripts to import"), (int)count);
    
-   for (size_t i = 0; i < count; i++)
+   size_t index;
+   json_t *script;
+   json_array_foreach(scripts, index, script)
    {
-      json_t *script = json_array_get(scripts, i);
       if (!json_is_object(script))
          continue;
          
@@ -726,9 +731,10 @@ static uint32_t ImportJsonActions(json_t *actions, uint32_t flags, ImportContext
    size_t count = json_array_size(actions);
    context->log(NXLOG_INFO, _T("ImportJsonActions()"), _T("%d actions to import"), (int)count);
    
-   for (size_t i = 0; i < count; i++)
+   size_t index;
+   json_t *action;
+   json_array_foreach(actions, index, action)
    {
-      json_t *action = json_array_get(actions, i);
       if (!json_is_object(action))
          continue;
          
@@ -748,9 +754,10 @@ static uint32_t ImportJsonObjectTools(json_t *tools, uint32_t flags, ImportConte
    size_t count = json_array_size(tools);
    context->log(NXLOG_INFO, _T("ImportJsonObjectTools()"), _T("%d object tools to import"), (int)count);
    
-   for (size_t i = 0; i < count; i++)
+   size_t index;
+   json_t *tool;
+   json_array_foreach(tools, index, tool)
    {
-      json_t *tool = json_array_get(tools, i);
       if (!json_is_object(tool))
          continue;
          
@@ -770,9 +777,10 @@ static uint32_t ImportJsonTraps(json_t *traps, uint32_t flags, ImportContext *co
    size_t count = json_array_size(traps);
    context->log(NXLOG_INFO, _T("ImportJsonTraps()"), _T("%d SNMP traps to import"), (int)count);
    
-   for (size_t i = 0; i < count; i++)
+   size_t index;
+   json_t *trap;
+   json_array_foreach(traps, index, trap)
    {
-      json_t *trap = json_array_get(traps, i);
       if (!json_is_object(trap))
          continue;
          
@@ -899,9 +907,10 @@ uint32_t ImportConfigFromJson(const char* content, uint32_t flags, StringBuffer 
       size_t count = json_array_size(summaryTables);
       context->log(NXLOG_INFO, _T("ImportConfigFromJson()"), _T("%d DCI summary tables to import"), (int)count);
       
-      for (size_t i = 0; i < count; i++)
+      size_t index;
+      json_t *table;
+      json_array_foreach(summaryTables, index, table)
       {
-         json_t *table = json_array_get(summaryTables, i);
          if (json_is_object(table))
          {
             if (!ImportSummaryTable(table, (flags & CFG_IMPORT_REPLACE_SUMMARY_TABLES) != 0, context))
@@ -920,12 +929,13 @@ uint32_t ImportConfigFromJson(const char* content, uint32_t flags, StringBuffer 
       size_t count = json_array_size(webServices);
       context->log(NXLOG_INFO, _T("ImportConfigFromJson()"), _T("%d web service definitions to import"), (int)count);
       
-      for (size_t i = 0; i < count; i++)
+      size_t index;
+      json_t *webService;
+      json_array_foreach(webServices, index, webService)
       {
-         json_t *service = json_array_get(webServices, i);
-         if (json_is_object(service))
+         if (json_is_object(webService))
          {
-            if (!ImportWebServiceDefinition(service, (flags & CFG_IMPORT_REPLACE_WEB_SVCERVICE_DEFINITIONS) != 0, context))
+            if (!ImportWebServiceDefinition(webService, (flags & CFG_IMPORT_REPLACE_WEB_SVCERVICE_DEFINITIONS) != 0, context))
             {
                context->log(NXLOG_ERROR, _T("ImportConfigFromJson()"), _T("Failed to import web service definition"));
             }

@@ -908,6 +908,35 @@ void CreateEventTemplateExportRecord(TextFileWriter& str, uint32_t eventCode)
 }
 
 /**
+ * Create event template JSON export record
+ */
+void CreateEventTemplateExportRecord(json_t *array, uint32_t eventCode)
+{
+   s_eventTemplatesLock.readLock();
+
+   // Find event template
+   EventTemplate *e = s_eventTemplates.get(eventCode);
+   if (e != nullptr)
+   {
+      json_t *eventObj = json_object();
+      
+      json_object_set_new(eventObj, "id", json_integer(e->getCode()));
+      json_object_set_new(eventObj, "guid", json_string_t(e->getGuid().toString()));
+      json_object_set_new(eventObj, "name", json_string_t(e->getName()));
+      json_object_set_new(eventObj, "code", json_integer(e->getCode()));
+      json_object_set_new(eventObj, "description", json_string_t(e->getDescription()));
+      json_object_set_new(eventObj, "severity", json_integer(e->getSeverity()));
+      json_object_set_new(eventObj, "flags", json_integer(e->getFlags()));
+      json_object_set_new(eventObj, "message", json_string_t(e->getMessageTemplate()));
+      json_object_set_new(eventObj, "tags", json_string_t(e->getTags()));
+      
+      json_array_append_new(array, eventObj);
+   }
+
+   s_eventTemplatesLock.unlock();
+}
+
+/**
  * Resolve event name
  */
 bool EventNameFromCode(uint32_t eventCode, TCHAR *buffer)

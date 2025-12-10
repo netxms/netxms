@@ -1113,10 +1113,10 @@ void DataCollectionOwner::updateFromImport(json_t *data, ImportContext *context,
       json_t *dcisArray = json_object_get(dataCollectionObj, "dcis");
       if (json_is_array(dcisArray))
       {
-         size_t dcisCount = json_array_size(dcisArray);
-         for (size_t i = 0; i < dcisCount; i++)
+         size_t index;
+         json_t *dciJson;
+         json_array_foreach(dcisArray, index, dciJson)
          {
-            json_t *dciJson = json_array_get(dcisArray, i);
             if (!json_is_object(dciJson))
                continue;
                
@@ -1140,10 +1140,10 @@ void DataCollectionOwner::updateFromImport(json_t *data, ImportContext *context,
       json_t *dctablesArray = json_object_get(dataCollectionObj, "dctables");
       if (json_is_array(dctablesArray))
       {
-         size_t dctablesCount = json_array_size(dctablesArray);
-         for (size_t i = 0; i < dctablesCount; i++)
+         size_t index;
+         json_t *dctableJson;
+         json_array_foreach(dctablesArray, index, dctableJson)
          {
-            json_t *dctableJson = json_array_get(dctablesArray, i);
             if (!json_is_object(dctableJson))
                continue;
                

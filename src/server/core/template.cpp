@@ -342,6 +342,73 @@ void Template::createExportRecord(TextFileWriter& xml)
 }
 
 /**
+ * Create template JSON export record
+ */
+void Template::createConfigExportRecord(json_t *array)
+{
+   json_t *templateObj = json_object();
+   
+   json_object_set_new(templateObj, "id", json_integer(m_id));
+   json_object_set_new(templateObj, "guid", json_string_t(m_guid.toString()));
+   json_object_set_new(templateObj, "name", json_string_t(m_name));
+   json_object_set_new(templateObj, "comments", json_string_t(m_comments));
+
+   // Path in groups
+   json_t *pathArray = json_array();
+   StringList path;
+   unique_ptr<SharedObjectArray<NetObj>> list = getParents(OBJECT_TEMPLATEGROUP);
+   TemplateGroup *parent = nullptr;
+   while(list->size() > 0)
+   {
+      parent = static_cast<TemplateGroup*>(list->get(0));
+      path.add(parent->getName());
+      list = parent->getParents(OBJECT_TEMPLATEGROUP);
+   }
+
+   for(int i = path.size() - 1; i >= 0; i--)
+   {
+      json_t *elementObj = json_object();
+      json_object_set_new(elementObj, "name", json_string_t(path.get(i)));
+      json_array_append_new(pathArray, elementObj);
+   }
+   json_object_set_new(templateObj, "path", pathArray);
+
+   // Data collection objects
+   json_t *dataCollectionArray = json_array();
+   readLockDciAccess();
+   for(int i = 0; i < m_dcObjects.size(); i++)
+   {
+      json_t *dciObj = m_dcObjects.get(i)->toJson();
+      if (dciObj != nullptr)
+         json_array_append_new(dataCollectionArray, dciObj);
+   }
+   unlockDciAccess();
+   json_object_set_new(templateObj, "dataCollection", dataCollectionArray);
+
+   // Agent policies
+   json_t *agentPoliciesArray = json_array();
+   lockProperties();
+   for (int i = 0; i < m_policyList.size(); i++)
+   {
+      json_t *policyObj = m_policyList.get(i)->toJson();
+      if (policyObj != nullptr)
+      {
+         json_object_set_new(policyObj, "id", json_integer(i + 1));
+         json_array_append_new(agentPoliciesArray, policyObj);
+      }
+   }
+   unlockProperties();
+   json_object_set_new(templateObj, "agentPolicies", agentPoliciesArray);
+
+   // Auto bind configuration
+   json_t *autoBindObj = json_object();
+   AutoBindTarget::toJson(autoBindObj);
+   json_object_set_new(templateObj, "autoBind", autoBindObj);
+   
+   json_array_append_new(array, templateObj);
+}
+
+/**
  * Get list of events used by DCIs and policies
  */
 HashSet<uint32_t> *Template::getRelatedEventsList() const
@@ -505,10 +572,10 @@ void Template::updateFromImport(json_t *data, ImportContext *context, bool nxslV
    json_t *policiesArray = json_object_get(data, "agentPolicies");
    if (json_is_array(policiesArray))
    {
-      size_t policyCount = json_array_size(policiesArray);
-      for (size_t i = 0; i < policyCount; i++)
+      size_t index;
+      json_t *policyJson;
+      json_array_foreach(policiesArray, index, policyJson)
       {
-         json_t *policyJson = json_array_get(policiesArray, i);
          if (!json_is_object(policyJson))
             continue;
             

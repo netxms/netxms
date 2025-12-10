@@ -67,6 +67,7 @@ public:
          const StringList& args, const TCHAR *data, const TCHAR *contentType, bool acceptCached) const;
    void fillMessage(NXCPMessage *msg) const;
    void createExportRecord(TextFileWriter &xml) const;
+   void createConfigExportRecord(json_t *array) const;
    json_t *toJson() const;
 
    uint32_t getId() const { return m_id; }
@@ -95,6 +96,7 @@ shared_ptr<WebServiceDefinition> FindWebServiceDefinition(const TCHAR *name);
 uint32_t ModifyWebServiceDefinition(shared_ptr<WebServiceDefinition> definition);
 uint32_t DeleteWebServiceDefinition(uint32_t id);
 void CreateWebServiceDefinitionExportRecord(TextFileWriter &xml, uint32_t count, uint32_t *list);
+void CreateWebServiceDefinitionExportRecord(json_t *array, uint32_t count, uint32_t *list);
 bool ImportWebServiceDefinition(const ConfigEntry& config, bool overwrite, ImportContext *context);
 bool ImportWebServiceDefinition(json_t *config, bool overwrite, ImportContext *context);
 

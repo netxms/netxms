@@ -865,6 +865,45 @@ void CreateActionExportRecord(TextFileWriter& xml, uint32_t id)
 }
 
 /**
+ * Create export record for action as JSON object
+ */
+json_t *CreateActionExportRecord(uint32_t id)
+{
+   json_t *action = nullptr;
+   
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT guid,action_name,action_type,rcpt_addr,email_subject,action_data,channel_name FROM actions WHERE action_id=?"));
+   if (hStmt == nullptr)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return nullptr;
+   }
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         action = json_object();
+         json_object_set_new(action, "id", json_integer(id));
+         json_object_set_new(action, "guid", json_string_t(DBGetFieldGUID(hResult, 0, 0).toString()));
+         json_object_set_new(action, "name", json_string_t(DBGetField(hResult, 0, 1, nullptr, 0)));
+         json_object_set_new(action, "type", json_integer(DBGetFieldULong(hResult, 0, 2)));
+         json_object_set_new(action, "recipientAddress", json_string_t(DBGetField(hResult, 0, 3, nullptr, 0)));
+         json_object_set_new(action, "emailSubject", json_string_t(DBGetField(hResult, 0, 4, nullptr, 0)));
+         json_object_set_new(action, "data", json_string_t(DBGetField(hResult, 0, 5, nullptr, 0)));
+         json_object_set_new(action, "channelName", json_string_t(DBGetField(hResult, 0, 6, nullptr, 0)));
+      }
+      DBFreeResult(hResult);
+   }
+   DBFreeStatement(hStmt);
+   DBConnectionPoolReleaseConnection(hdb);
+   
+   return action;
+}
+
+/**
  * Check if given action ID is valid
  */
 bool IsValidActionId(uint32_t id)

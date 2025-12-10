@@ -108,8 +108,8 @@ AssetAttribute::AssetAttribute(const wchar_t *name, const ConfigEntry& entry, bo
  */
 AssetAttribute::AssetAttribute(json_t *json)
 {
-   m_name = MemCopyString(json_object_get_string(json, "name", _T("")));
-   m_displayName = MemCopyString(json_object_get_string(json, "displayName", _T("")));
+   m_name = json_object_get_string_t(json, "name", _T(""));
+   m_displayName = json_object_get_string_t(json, "displayName", _T(""));
    m_dataType = static_cast<AMDataType>(json_object_get_int32(json, "dataType", 0));
    m_isMandatory = json_object_get_boolean(json, "mandatory", false);
    m_isUnique = json_object_get_boolean(json, "unique", false);
@@ -117,8 +117,8 @@ AssetAttribute::AssetAttribute(json_t *json)
    m_autofillScriptSource = nullptr;
    m_autofillScript = nullptr;
    
-   String scriptStr = json_object_get_string(json, "script", _T(""));
-   setScript(MemCopyString(scriptStr));
+   TCHAR *script = json_object_get_string_t(json, "script", _T(""));
+   setScript(script);
    
    m_rangeMin = json_object_get_int32(json, "rangeMin", 0);
    m_rangeMax = json_object_get_int32(json, "rangeMax", 0);
@@ -127,9 +127,10 @@ AssetAttribute::AssetAttribute(json_t *json)
    json_t *enumValues = json_object_get(json, "enumValues");
    if (enumValues != nullptr && json_is_array(enumValues))
    {
-      for(size_t i = 0; i < json_array_size(enumValues); i++)
+      size_t index;
+      json_t *enumValue;
+      json_array_foreach(enumValues, index, enumValue)
       {
-         json_t *enumValue = json_array_get(enumValues, i);
          String name = json_object_get_string(enumValue, "name", _T(""));
          String value = json_object_get_string(enumValue, "value", _T(""));
          m_enumValues.set(name, value);
@@ -382,6 +383,16 @@ void AssetAttribute::createExportRecord(TextFileWriter& xml)
    }
 
    xml.append(_T("\t\t</attribute>\n"));
+}
+
+/**
+ * Create JSON export record for asset attribute
+ */
+void AssetAttribute::createConfigExportRecord(json_t *array)
+{
+   json_t *attributeObj = toJson();
+   if (attributeObj != nullptr)
+      json_array_append_new(array, attributeObj);
 }
 
 /**
@@ -1329,6 +1340,23 @@ void ExportAssetManagementSchema(TextFileWriter& xml, const StringList& attribut
 }
 
 /**
+ * Export asset management schema to JSON
+ */
+void ExportAssetManagementSchema(json_t *array, const StringList& attributeNames)
+{
+   s_schemaLock.readLock();
+   for (int i = 0; i < attributeNames.size(); i++)
+   {
+      AssetAttribute *attribute = s_schema.get(attributeNames.get(i));
+      if (attribute != nullptr)
+      {
+         attribute->createConfigExportRecord(array);
+      }
+   }
+   s_schemaLock.unlock();
+}
+
+/**
  * Import asset attributes
  */
 void ImportAssetManagementSchema(const ConfigEntry& root, bool overwrite, ImportContext *context, bool nxslV5)
@@ -1392,10 +1420,10 @@ void ImportAssetManagementSchema(json_t *root, bool overwrite, ImportContext *co
    json_t *attributes = json_object_get(root, "attributes");
    if (json_is_array(attributes))
    {
-      size_t count = json_array_size(attributes);
-      for (size_t i = 0; i < count; i++)
+      size_t index;
+      json_t *attribute;
+      json_array_foreach(attributes, index, attribute)
       {
-         json_t *attribute = json_array_get(attributes, i);
          if (!json_is_object(attribute))
             continue;
             

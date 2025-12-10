@@ -878,6 +878,7 @@ public:
    SummaryTableColumn(TCHAR *configStr);
 
    void createExportRecord(TextFileWriter& xml, uint32_t id) const;
+   json_t *toJson(uint32_t id) const;
 };
 
 #ifdef _WIN32
@@ -925,6 +926,7 @@ public:
    bool isTableDciSource() const { return is_bit_set(m_flags, SUMMARY_TABLE_TABLE_DCI_SOURCE); }
 
    void createExportRecord(TextFileWriter& xml) const;
+   void createConfigExportRecord(json_t *array) const;
 };
 
 /**
@@ -2179,6 +2181,7 @@ public:
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
    void createExportRecord(TextFileWriter& xml);
+   void createConfigExportRecord(json_t *array);
    virtual HashSet<uint32_t> *getRelatedEventsList() const override;
 
    bool hasPolicy(const uuid& guid) const;

@@ -113,10 +113,10 @@ WebServiceDefinition::WebServiceDefinition(json_t *config, uint32_t id)
    json_t *headers = json_object_get(config, "headers");
    if (json_is_array(headers))
    {
-      size_t count = json_array_size(headers);
-      for (size_t i = 0; i < count; i++)
+      size_t index;
+      json_t *header;
+      json_array_foreach(headers, index, header)
       {
-         json_t *header = json_array_get(headers, i);
          if (json_is_object(header))
          {
             String headerName = json_object_get_string(header, "name", _T(""));
@@ -352,6 +352,16 @@ void WebServiceDefinition::createExportRecord(TextFileWriter &xml) const
    xml.append(_T("</timeout>\n\t\t\t<headers>\n"));
    m_headers.forEach(CreateHeaderExportRecord, &xml);
    xml.append(_T("\t\t\t</headers>\n\t\t</webServiceDefinition>\n"));
+}
+
+/**
+ * Create JSON export record
+ */
+void WebServiceDefinition::createConfigExportRecord(json_t *array) const
+{
+   json_t *webServiceObj = toJson();
+   if (webServiceObj != nullptr)
+      json_array_append_new(array, webServiceObj);
 }
 
 /**
@@ -654,6 +664,23 @@ void CreateWebServiceDefinitionExportRecord(TextFileWriter &xml, uint32_t count,
       {
          if (list[j] == definitions->get(i)->getId())
             definitions->get(i)->createExportRecord(xml);
+      }
+   }
+   delete definitions;
+}
+
+/**
+ * Create JSON web service export records
+ */
+void CreateWebServiceDefinitionExportRecord(json_t *array, uint32_t count, uint32_t *list)
+{
+   SharedObjectArray<WebServiceDefinition> *definitions = GetWebServiceDefinitions();
+   for(uint32_t j = 0; j < count; j++)
+   {
+      for(int i = 0; i < definitions->size(); i++)
+      {
+         if (list[j] == definitions->get(i)->getId())
+            definitions->get(i)->createConfigExportRecord(array);
       }
    }
    delete definitions;

@@ -806,6 +806,8 @@ public:
    void replacePolicy(uint32_t numRules, EPRule **ruleList);
    void exportRule(TextFileWriter& xml, const uuid& guid) const;
    void exportRuleOrgering(TextFileWriter& xml) const;
+   json_t *exportRule(const uuid& guid) const;
+   json_t *exportRuleOrdering() const;
    void importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ruleOrdering);
    json_t *toJson() const;
 
@@ -826,6 +828,7 @@ uint32_t UpdateEventTemplate(const NXCPMessage& request, NXCPMessage *response, 
 uint32_t DeleteEventTemplate(uint32_t eventCode);
 void GetEventConfiguration(NXCPMessage *msg);
 void CreateEventTemplateExportRecord(TextFileWriter& str, uint32_t eventCode);
+void CreateEventTemplateExportRecord(json_t *array, uint32_t eventCode);
 
 void CorrelateEvent(Event *event);
 Event *LoadEventFromDatabase(uint64_t eventId);

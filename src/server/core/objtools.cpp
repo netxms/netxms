@@ -1229,8 +1229,7 @@ bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context)
    	json_t *columns = json_object_get(config, "columns");
 	   if (json_is_array(columns))
 	   {
-         size_t count = json_array_size(columns);
-         if (count > 0)
+         if (json_array_size(columns) > 0)
          {
             hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_table_columns (tool_id,")
                                    _T("col_number,col_name,col_oid,col_format,col_substr) ")
@@ -1238,9 +1237,10 @@ bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context)
             if (hStmt == nullptr)
                return ImportFailure(hdb, hStmt, context);
 
-            for(size_t i = 0; i < count; i++)
+            size_t index;
+            json_t *c;
+            json_array_foreach(columns, index, c)
             {
-               json_t *c = json_array_get(columns, i);
                if (!json_is_object(c))
                   continue;
 
@@ -1248,7 +1248,7 @@ bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context)
                String colOid = json_object_get_string(c, "oid", _T(""));
 
                DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (int32_t)i);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (int32_t)index);
                DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, colName, DB_BIND_STATIC);
                DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, colOid, DB_BIND_STATIC);
                DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, json_object_get_int32(c, "format", 0));
@@ -1269,17 +1269,17 @@ bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context)
 	json_t *inputFields = json_object_get(config, "inputFields");
    if (json_is_array(inputFields))
    {
-      size_t count = json_array_size(inputFields);
-      if (count > 0)
+      if (json_array_size(inputFields) > 0)
       {
          hStmt = DBPrepare(hdb, _T("INSERT INTO input_fields (category,owner_id,name,input_type,display_name,flags,sequence_num) VALUES ('T',?,?,?,?,?,?)"));
          if (hStmt == nullptr)
             return ImportFailure(hdb, nullptr, context);
 
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
-         for(size_t i = 0; i < count; i++)
+         size_t index;
+         json_t *c;
+         json_array_foreach(inputFields, index, c)
          {
-            json_t *c = json_array_get(inputFields, i);
             if (!json_is_object(c))
                continue;
 
@@ -1290,7 +1290,7 @@ bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context)
             DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, json_object_get_int32(c, "type", 0));
             DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, displayName, DB_BIND_STATIC);
             DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, json_object_get_int32(c, "flags", 0));
-            DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (int32_t)(i + 1));
+            DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (int32_t)(index + 1));
 
             if (!DBExecute(hStmt))
                return ImportFailure(hdb, hStmt, context);
@@ -1384,6 +1384,72 @@ static void CreateObjectToolInputFieldExportRecords(DB_HANDLE hdb, TextFileWrite
 }
 
 /**
+ * Create export records for object tool columns as JSON array
+ */
+static json_t *CreateObjectToolColumnExportRecords(DB_HANDLE hdb, uint32_t id)
+{
+   json_t *columns = json_array();
+   
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT col_number,col_name,col_oid,col_format,col_substr FROM object_tools_table_columns WHERE tool_id=?"));
+   if (hStmt == nullptr)
+      return columns;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         json_t *column = json_object();
+         json_object_set_new(column, "id", json_integer(DBGetFieldLong(hResult, i, 0) + 1));
+         json_object_set_new(column, "name", json_string_t(DBGetField(hResult, i, 1, nullptr, 0)));
+         json_object_set_new(column, "oid", json_string_t(DBGetField(hResult, i, 2, nullptr, 0)));
+         json_object_set_new(column, "format", json_integer(DBGetFieldLong(hResult, i, 3)));
+         json_object_set_new(column, "captureGroup", json_integer(DBGetFieldLong(hResult, i, 4)));
+         json_array_append_new(columns, column);
+      }
+      DBFreeResult(hResult);
+   }
+
+   DBFreeStatement(hStmt);
+   return columns;
+}
+
+/**
+ * Create export records for object tool input fields as JSON array
+ */
+static json_t *CreateObjectToolInputFieldExportRecords(DB_HANDLE hdb, uint32_t id)
+{
+   json_t *inputFields = json_array();
+   
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,input_type,display_name,flags FROM input_fields WHERE category='T' AND owner_id=?"));
+   if (hStmt == nullptr)
+      return inputFields;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         json_t *inputField = json_object();
+         json_object_set_new(inputField, "id", json_integer(i + 1));
+         json_object_set_new(inputField, "name", json_string_t(DBGetField(hResult, i, 0, nullptr, 0)));
+         json_object_set_new(inputField, "type", json_integer(DBGetFieldLong(hResult, i, 1)));
+         json_object_set_new(inputField, "displayName", json_string_t(DBGetField(hResult, i, 2, nullptr, 0)));
+         json_object_set_new(inputField, "flags", json_integer(DBGetFieldLong(hResult, i, 3)));
+         json_array_append_new(inputFields, inputField);
+      }
+      DBFreeResult(hResult);
+   }
+
+   DBFreeStatement(hStmt);
+   return inputFields;
+}
+
+/**
  * Create export record for given object tool
  */
 void CreateObjectToolExportRecord(TextFileWriter& xml, uint32_t id)
@@ -1439,6 +1505,55 @@ void CreateObjectToolExportRecord(TextFileWriter& xml, uint32_t id)
 
    DBFreeStatement(hStmt);
    DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Create export record for given object tool as JSON object
+ */
+json_t *CreateObjectToolExportRecord(uint32_t id)
+{
+   json_t *tool = nullptr;
+   
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT tool_name,guid,tool_type,tool_data,description,flags,tool_filter,confirmation_text,command_name,command_short_name,icon,remote_port FROM object_tools WHERE tool_id=?"));
+   if (hStmt == nullptr)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return nullptr;
+   }
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         tool = json_object();
+         json_object_set_new(tool, "id", json_integer(id));
+         json_object_set_new(tool, "name", json_string_t(DBGetField(hResult, 0, 0, nullptr, 0)));
+         json_object_set_new(tool, "guid", json_string_t(DBGetField(hResult, 0, 1, nullptr, 0)));
+         json_object_set_new(tool, "type", json_integer(DBGetFieldLong(hResult, 0, 2)));
+         json_object_set_new(tool, "data", json_string_t(DBGetField(hResult, 0, 3, nullptr, 0)));
+         json_object_set_new(tool, "description", json_string_t(DBGetField(hResult, 0, 4, nullptr, 0)));
+         json_object_set_new(tool, "flags", json_integer(DBGetFieldLong(hResult, 0, 5)));
+         json_object_set_new(tool, "filter", json_string_t(DBGetField(hResult, 0, 6, nullptr, 0)));
+         json_object_set_new(tool, "confirmation", json_string_t(DBGetField(hResult, 0, 7, nullptr, 0)));
+         json_object_set_new(tool, "commandName", json_string_t(DBGetField(hResult, 0, 8, nullptr, 0)));
+         json_object_set_new(tool, "commandShortName", json_string_t(DBGetField(hResult, 0, 9, nullptr, 0)));
+         json_object_set_new(tool, "image", json_string_t(DBGetField(hResult, 0, 10, nullptr, 0)));
+         json_object_set_new(tool, "remotePort", json_integer(DBGetFieldLong(hResult, 0, 11)));
+         
+         json_object_set_new(tool, "columns", CreateObjectToolColumnExportRecords(hdb, id));
+         json_object_set_new(tool, "inputFields", CreateObjectToolInputFieldExportRecords(hdb, id));
+      }
+      DBFreeResult(hResult);
+   }
+
+   DBFreeStatement(hStmt);
+   DBConnectionPoolReleaseConnection(hdb);
+   
+   return tool;
 }
 
 /**

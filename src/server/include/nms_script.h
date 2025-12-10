@@ -690,6 +690,7 @@ bool IsValidScriptId(uint32_t id);
 uint32_t ResolveScriptName(const TCHAR *name);
 bool GetScriptName(uint32_t scriptId, TCHAR *buffer, size_t size);
 void CreateScriptExportRecord(TextFileWriter& xml, uint32_t id);
+json_t *CreateScriptExportRecord(uint32_t id);
 void ImportScript(ConfigEntry *config, bool overwrite, ImportContext *context, bool nxslV5);
 void ImportScript(json_t *script, bool overwrite, ImportContext *context, bool nxslV5);
 ScriptVMHandle NXCORE_EXPORTABLE FindHookScript(const TCHAR *hookName, shared_ptr<NetObj> object);

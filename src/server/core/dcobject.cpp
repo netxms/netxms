@@ -353,10 +353,10 @@ DCObject::DCObject(json_t *json, const shared_ptr<DataCollectionOwner>& owner, b
    if (json_is_array(schedulesArray))
    {
       m_schedules = new StringList();
-      size_t count = json_array_size(schedulesArray);
-      for(size_t i = 0; i < count; i++)
+      size_t index;
+      json_t *scheduleJson;
+      json_array_foreach(schedulesArray, index, scheduleJson)
       {
-         json_t *scheduleJson = json_array_get(schedulesArray, i);
          if (json_is_string(scheduleJson))
          {
             m_schedules->addMBString(json_string_value(scheduleJson));
@@ -2201,10 +2201,10 @@ void DCObject::updateFromImport(json_t *json, bool nxslV5)
       else
          m_schedules = new StringList();
 
-      size_t count = json_array_size(schedulesArray);
-      for(size_t i = 0; i < count; i++)
+      size_t index;
+      json_t *scheduleItem;
+      json_array_foreach(schedulesArray, index, scheduleItem)
       {
-         json_t *scheduleItem = json_array_get(schedulesArray, i);
          if (json_is_string(scheduleItem))
          {
             m_schedules->addMBString(json_string_value(scheduleItem));

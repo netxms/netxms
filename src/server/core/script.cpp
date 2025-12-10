@@ -582,6 +582,28 @@ void CreateScriptExportRecord(TextFileWriter& xml, uint32_t id)
 }
 
 /**
+ * Create export record for library script as JSON object
+ */
+json_t *CreateScriptExportRecord(uint32_t id)
+{
+   NXSL_LibraryScript *script = LoadScriptFromDatabase(id);
+   if (script == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_BASE, 3, _T("CreateScriptExportRecord: failed to load script with ID %u from database"), id);
+      return nullptr;
+   }
+
+   json_t *scriptObj = json_object();
+   json_object_set_new(scriptObj, "id", json_integer(id));
+   json_object_set_new(scriptObj, "guid", json_string_t(script->getGuid().toString()));
+   json_object_set_new(scriptObj, "name", json_string_t(script->getName()));
+   json_object_set_new(scriptObj, "code", json_string_t(script->getSourceCode()));
+
+   delete script;
+   return scriptObj;
+}
+
+/**
  * Import script
  */
 void ImportScript(ConfigEntry *config, bool overwrite, ImportContext *context, bool nxslV5)

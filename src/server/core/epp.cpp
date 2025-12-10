@@ -267,10 +267,10 @@ EPRule::EPRule(json_t *json, ImportContext *context, bool nxslV5) : m_timeFrames
    json_t *eventsArray = json_object_get(json, "events");
    if (json_is_array(eventsArray))
    {
-      size_t eventsCount = json_array_size(eventsArray);
-      for(size_t i = 0; i < eventsCount; i++)
+      size_t index;
+      json_t *eventCode;
+      json_array_foreach(eventsArray, index, eventCode)
       {
-         json_t *eventCode = json_array_get(eventsArray, i);
          if (json_is_integer(eventCode))
          {
             m_events.add(static_cast<uint32_t>(json_integer_value(eventCode)));
@@ -282,10 +282,10 @@ EPRule::EPRule(json_t *json, ImportContext *context, bool nxslV5) : m_timeFrames
    json_t *sourcesArray = json_object_get(json, "sources");
    if (json_is_array(sourcesArray))
    {
-      size_t sourcesCount = json_array_size(sourcesArray);
-      for(size_t i = 0; i < sourcesCount; i++)
+      size_t index;
+      json_t *sourceId;
+      json_array_foreach(sourcesArray, index, sourceId)
       {
-         json_t *sourceId = json_array_get(sourcesArray, i);
          if (json_is_integer(sourceId))
          {
             m_sources.add(static_cast<uint32_t>(json_integer_value(sourceId)));
@@ -297,10 +297,10 @@ EPRule::EPRule(json_t *json, ImportContext *context, bool nxslV5) : m_timeFrames
    json_t *sourceExclusionsArray = json_object_get(json, "sourceExclusions");
    if (json_is_array(sourceExclusionsArray))
    {
-      size_t exclusionsCount = json_array_size(sourceExclusionsArray);
-      for(size_t i = 0; i < exclusionsCount; i++)
+      size_t index;
+      json_t *exclusionId;
+      json_array_foreach(sourceExclusionsArray, index, exclusionId)
       {
-         json_t *exclusionId = json_array_get(sourceExclusionsArray, i);
          if (json_is_integer(exclusionId))
          {
             m_sourceExclusions.add(static_cast<uint32_t>(json_integer_value(exclusionId)));
@@ -312,10 +312,10 @@ EPRule::EPRule(json_t *json, ImportContext *context, bool nxslV5) : m_timeFrames
    json_t *timeFramesArray = json_object_get(json, "timeFrames");
    if (json_is_array(timeFramesArray))
    {
-      size_t framesCount = json_array_size(timeFramesArray);
-      for(size_t i = 0; i < framesCount; i++)
+      size_t index;
+      json_t *timeFrame;
+      json_array_foreach(timeFramesArray, index, timeFrame)
       {
-         json_t *timeFrame = json_array_get(timeFramesArray, i);
          if (json_is_object(timeFrame))
          {
             uint32_t time = json_object_get_uint32(timeFrame, "time");
@@ -329,10 +329,10 @@ EPRule::EPRule(json_t *json, ImportContext *context, bool nxslV5) : m_timeFrames
    json_t *actionsArray = json_object_get(json, "actions");
    if (json_is_array(actionsArray))
    {
-      size_t actionsCount = json_array_size(actionsArray);
-      for(size_t i = 0; i < actionsCount; i++)
+      size_t index;
+      json_t *action;
+      json_array_foreach(actionsArray, index, action)
       {
-         json_t *action = json_array_get(actionsArray, i);
          if (json_is_object(action))
          {
             uint32_t actionId = json_object_get_uint32(action, "id");
@@ -356,10 +356,10 @@ EPRule::EPRule(json_t *json, ImportContext *context, bool nxslV5) : m_timeFrames
    json_t *timerCancellationsArray = json_object_get(json, "timerCancellations");
    if (json_is_array(timerCancellationsArray))
    {
-      size_t cancellationsCount = json_array_size(timerCancellationsArray);
-      for(size_t i = 0; i < cancellationsCount; i++)
+      size_t index;
+      json_t *timerKey;
+      json_array_foreach(timerCancellationsArray, index, timerKey)
       {
-         json_t *timerKey = json_array_get(timerCancellationsArray, i);
          if (json_is_string(timerKey))
          {
             const char *keyStr = json_string_value(timerKey);
@@ -395,10 +395,10 @@ EPRule::EPRule(json_t *json, ImportContext *context, bool nxslV5) : m_timeFrames
    json_t *categoriesArray = json_object_get(json, "categories");
    if (json_is_array(categoriesArray))
    {
-      size_t categoriesCount = json_array_size(categoriesArray);
-      for(size_t i = 0; i < categoriesCount; i++)
+      size_t index;
+      json_t *categoryId;
+      json_array_foreach(categoriesArray, index, categoryId)
       {
-         json_t *categoryId = json_array_get(categoriesArray, i);
          if (json_is_integer(categoryId))
          {
             m_alarmCategoryList.add(static_cast<uint32_t>(json_integer_value(categoryId)));
@@ -416,10 +416,10 @@ EPRule::EPRule(json_t *json, ImportContext *context, bool nxslV5) : m_timeFrames
    json_t *pstorageDeleteActionsArray = json_object_get(json, "pstorageDeleteActions");
    if (json_is_array(pstorageDeleteActionsArray))
    {
-      size_t deleteCount = json_array_size(pstorageDeleteActionsArray);
-      for(size_t i = 0; i < deleteCount; i++)
+      size_t index;
+      json_t *deleteKey;
+      json_array_foreach(pstorageDeleteActionsArray, index, deleteKey)
       {
-         json_t *deleteKey = json_array_get(pstorageDeleteActionsArray, i);
          if (json_is_string(deleteKey))
          {
             const char *keyStr = json_string_value(deleteKey);
@@ -447,10 +447,10 @@ EPRule::EPRule(json_t *json, ImportContext *context, bool nxslV5) : m_timeFrames
    json_t *customAttributeDeleteActionsArray = json_object_get(json, "customAttributeDeleteActions");
    if (json_is_array(customAttributeDeleteActionsArray))
    {
-      size_t deleteCount = json_array_size(customAttributeDeleteActionsArray);
-      for(size_t i = 0; i < deleteCount; i++)
+      size_t index;
+      json_t *deleteKey;
+      json_array_foreach(customAttributeDeleteActionsArray, index, deleteKey)
       {
-         json_t *deleteKey = json_array_get(customAttributeDeleteActionsArray, i);
          if (json_is_string(deleteKey))
          {
             const char *keyStr = json_string_value(deleteKey);
@@ -2105,6 +2105,43 @@ void EventPolicy::exportRuleOrgering(TextFileWriter& xml) const
       m_rules.get(i)->createOrderingExportRecord(xml);
    }
    unlock();
+}
+
+/**
+ * Export rule to JSON
+ */
+json_t *EventPolicy::exportRule(const uuid& guid) const
+{
+   json_t *rule = nullptr;
+   readLock();
+   for(int i = 0; i < m_rules.size(); i++)
+   {
+      if (guid.equals(m_rules.get(i)->getGuid()))
+      {
+         rule = m_rules.get(i)->toJson();
+         break;
+      }
+   }
+   unlock();
+   return rule;
+}
+
+/**
+ * Export rules ordering to JSON
+ */
+json_t *EventPolicy::exportRuleOrdering() const
+{
+   json_t *ordering = json_array();
+   readLock();
+   for(int i = 0; i < m_rules.size(); i++)
+   {
+      json_t *orderItem = json_object();
+      json_object_set_new(orderItem, "id", json_integer(i));
+      json_object_set_new(orderItem, "guid", json_string_t(m_rules.get(i)->getGuid().toString()));
+      json_array_append_new(ordering, orderItem);
+   }
+   unlock();
+   return ordering;
 }
 
 /**

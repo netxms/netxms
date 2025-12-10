@@ -154,3 +154,103 @@ void ExportLogParserRule(const NXCPMessage& request, long countFieldId, long bas
    writer->append(endTag);
    return;
 }
+
+/**
+ * Export log parser rule to JSON
+ */
+void ExportLogParserRule(const NXCPMessage& request, long countFieldId, long baseId, json_t *array, const wchar_t *logName)
+{
+   int count = request.getFieldAsUInt32(countFieldId);
+   if (count == 0)
+      return;
+   
+   char *value = ConfigReadCLOBUTF8(logName, nullptr);
+   if (value == nullptr)
+      return;
+
+   pugi::xml_document xml;
+   if (!xml.load_buffer(value, strlen(value)))
+   {
+      MemFree(value);
+      return;
+   }
+
+   pugi::xml_node node = xml.select_node("/parser/rules").node();
+   if (node != nullptr)
+   {
+      ObjectArray<char> macroList;
+      uuid_t guid;
+      json_t *rulesArray = json_array();
+      
+      for(int i = 0; i < count; i++)
+      {
+         request.getFieldAsBinary(baseId++, guid, UUID_LENGTH);
+         char guidStr[64];
+         _uuid_to_stringA(guid, guidStr);
+         pugi::xml_node ruleNode = node.find_child_by_attribute("guid", guidStr);
+         if (ruleNode != nullptr)
+         {
+            json_t *ruleObj = json_object();
+            json_object_set_new(ruleObj, "guid", json_string(guidStr));
+            
+            // Export rule attributes
+            if (auto name = ruleNode.attribute("name"))
+               json_object_set_new(ruleObj, "name", json_string(name.value()));
+            if (auto description = ruleNode.attribute("description"))
+               json_object_set_new(ruleObj, "description", json_string(description.value()));
+               
+            // Export rule content (match, event, etc.)
+            for (auto child : ruleNode.children())
+            {
+               json_object_set_new(ruleObj, child.name(), json_string(child.text().get()));
+            }
+            
+            json_array_append_new(rulesArray, ruleObj);
+
+            const char *match = ruleNode.select_node("match").node().text().get();
+            FindMacros(match, &macroList);
+         }
+      }
+      
+      json_t *parserObj = json_object();
+      json_object_set_new(parserObj, "name", json_string_t(logName));
+      json_object_set_new(parserObj, "rules", rulesArray);
+
+      // Export macros
+      pugi::xml_node macros = xml.select_node("/parser/macros").node();
+      if ((macroList.size() > 0) && (macros != nullptr))
+      {
+         json_t *macrosArray = json_array();
+         for(int i = 0; i < macroList.size(); i++)
+         {
+            char *macroName = macroList.get(i);
+            pugi::xml_node macro = macros.find_child_by_attribute("name", macroName);
+            if (macro != nullptr)
+            {
+               json_t *macroObj = json_object();
+               json_object_set_new(macroObj, "name", json_string(macroName));
+               if (auto description = macro.attribute("description"))
+                  json_object_set_new(macroObj, "description", json_string(description.value()));
+               json_object_set_new(macroObj, "value", json_string(macro.text().get()));
+               json_array_append_new(macrosArray, macroObj);
+            }
+            MemFree(macroName);
+         }
+         json_object_set_new(parserObj, "macros", macrosArray);
+      }
+
+      // Export rule order
+      json_t *orderArray = json_array();
+      for (auto child : node.children())
+      {
+         const char *guid = child.attribute("guid").as_string();
+         json_array_append_new(orderArray, json_string(guid));
+      }
+      json_object_set_new(parserObj, "order", orderArray);
+      
+      json_array_append_new(array, parserObj);
+   }
+
+   MemFree(value);
+   return;
+}
