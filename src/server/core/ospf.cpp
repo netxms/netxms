@@ -28,7 +28,7 @@
 /**
  * Convert OSPF neighbor state to text
  */
-const TCHAR *OSPFNeighborStateToText(OSPFNeighborState state)
+const TCHAR NXCORE_EXPORTABLE *OSPFNeighborStateToText(OSPFNeighborState state)
 {
    static const TCHAR *states[] = { _T("DOWN"), _T("ATTEMPT"), _T("INIT"), _T("2WAY"), _T("EXCHSTART"), _T("EXCHANGE"), _T("LOADING"), _T("FULL") };
    int index = static_cast<int>(state);
@@ -38,7 +38,7 @@ const TCHAR *OSPFNeighborStateToText(OSPFNeighborState state)
 /**
  * Convert OSPF interface state to text
  */
-const TCHAR *OSPFInterfaceStateToText(OSPFInterfaceState state)
+const TCHAR NXCORE_EXPORTABLE *OSPFInterfaceStateToText(OSPFInterfaceState state)
 {
    static const TCHAR *states[] = { _T("DOWN"), _T("LOOPBACK"), _T("WAITING"), _T("PT-TO-PT"), _T("DR"), _T("BDR"), _T("ODR") };
    int index = static_cast<int>(state);
@@ -48,7 +48,7 @@ const TCHAR *OSPFInterfaceStateToText(OSPFInterfaceState state)
 /**
  * Convert OSPF interface state to text
  */
-const TCHAR *OSPFInterfaceTypeToText(OSPFInterfaceType type)
+const TCHAR NXCORE_EXPORTABLE *OSPFInterfaceTypeToText(OSPFInterfaceType type)
 {
    static const TCHAR *types[] = { _T("BROADCAST"), _T("NBMA"), _T("PT-TO-PT"), _T("PT-TO-MP") };
    int index = static_cast<int>(type);

@@ -199,7 +199,7 @@ static ThreadPool *s_aiTaskThreadPool = nullptr;
 /**
  * Find object by its name or ID
  */
-static shared_ptr<NetObj> FindObjectByNameOrId(const char *name)
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByNameOrId(const char *name)
 {
    char *eptr;
    uint32_t id = strtoul(name, &eptr, 0);
@@ -956,6 +956,19 @@ void NXCORE_EXPORTABLE AddAIAssistantPrompt(const char *text)
 }
 
 /**
+ * Write log message
+ */
+static std::string F_WriteLogMessage(json_t *arguments, uint32_t userId)
+{
+   const char *message = json_object_get_string_utf8(arguments, "message", nullptr);
+   if ((message == nullptr) || (message[0] == 0))
+      return std::string("Log message must be provided");
+
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"AI Assistant: %hs", message);
+   return std::string("Log message written");
+}
+
+/**
  * Initialize AI assistant
  */
 bool InitAIAssistant()
@@ -1026,6 +1039,23 @@ bool InitAIAssistant()
          { "task_id", "ID of the task to delete" }
       },
       F_DeleteAITask);
+
+   RegisterAIAssistantFunction(
+      "netxms-version",
+      "Get running version of NetXMS server.",
+      {},
+      [] (json_t *arguments, uint32_t userId) -> std::string
+      {
+         return std::string("Running NetXMS server version is " NETXMS_VERSION_STRING_A);
+      });
+
+   RegisterAIAssistantFunction(
+      "write-log-message",
+      "Write message to NetXMS server log.",
+      {
+         { "message", "log message text" }
+      },
+      F_WriteLogMessage);
 
    InitAITasks();
    s_aiTaskThreadPool = ThreadPoolCreate(_T("AI-TASKS"),

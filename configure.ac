@@ -5105,6 +5105,8 @@ AC_CONFIG_FILES([
 	src/nxcproxy/Makefile
 	src/nxscript/Makefile
 	src/server/Makefile
+	src/server/aitools/Makefile
+	src/server/aitools/skills/Makefile
 	src/server/core/Makefile
 	src/server/drivers/Makefile
 	src/server/drivers/at/Makefile

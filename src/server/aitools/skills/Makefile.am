@@ -1,4 +1,4 @@
-# Copyright (C) 2004 NetXMS Team <bugs@netxms.org>
+# Copyright (C) 2020 NetXMS Team <bugs@netxms.org>
 #  
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without 
@@ -8,4 +8,8 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = @SERVER_INCLUDE@ libnxsrv core netxmsd aitools leef ntcb tools drivers hdlink pdsdrv spe wcc wlcbridge @SERVER_COMPONENTS@
+skillsdir=$(pkgdatadir)/skills
+
+skills_DATA = inventory.md maintenance.md
+
+EXTRA_DIST = $(skills_DATA)

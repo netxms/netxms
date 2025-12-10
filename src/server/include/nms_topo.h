@@ -474,14 +474,14 @@ const wchar_t NXCORE_EXPORTABLE *STPPortStateToText(SpanningTreePortState state)
 
 VrrpInfo *GetVRRPInfo(Node *node);
 
-const TCHAR *GetLinkLayerProtocolName(LinkLayerProtocol p); 
+const TCHAR NXCORE_EXPORTABLE *GetLinkLayerProtocolName(LinkLayerProtocol p);
 
 unique_ptr<NetworkMapObjectList> BuildIPTopology(const shared_ptr<Node>& root, NetworkMap *filterProvider, int radius, bool includeEndNodes);
 
 bool CollectOSPFInformation(Node *node, StructArray<OSPFArea> *areas, StructArray<OSPFInterface> *interfaces, StructArray<OSPFNeighbor> *neighbors);
-const TCHAR *OSPFNeighborStateToText(OSPFNeighborState state);
-const TCHAR *OSPFInterfaceStateToText(OSPFInterfaceState state);
-const TCHAR *OSPFInterfaceTypeToText(OSPFInterfaceType type);
+const TCHAR NXCORE_EXPORTABLE *OSPFNeighborStateToText(OSPFNeighborState state);
+const TCHAR NXCORE_EXPORTABLE *OSPFInterfaceStateToText(OSPFInterfaceState state);
+const TCHAR NXCORE_EXPORTABLE *OSPFInterfaceTypeToText(OSPFInterfaceType type);
 unique_ptr<NetworkMapObjectList> BuildOSPFTopology(const shared_ptr<Node>& root, NetworkMap *filterProvider, int radius);
 
 #endif   /* _nms_topo_h_ */

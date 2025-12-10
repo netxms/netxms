@@ -245,4 +245,9 @@ static inline std::string JsonToString(json_t *json)
    return result;
 }
 
+/**
+ * Find object by its name or ID
+ */
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByNameOrId(const char *name);
+
 #endif
