@@ -205,7 +205,7 @@ StructArray<DowntimeInfo> CalculateDowntime(uint32_t objectId, time_t periodStar
    if (object == nullptr)
       return StructArray<DowntimeInfo>();
 
-   StringBuffer query(_T("SELECT object_id, sum((CASE WHEN end_time=0 THEN ? ELSE end_time END) - (CASE WHEN start_time < ? THEN ? ELSE start_time END)) AS seconds FROM downtime_log WHERE object_id "));
+   StringBuffer query(_T("SELECT object_id, sum((CASE WHEN (end_time=0 OR end_time > ?) THEN ? ELSE end_time END) - (CASE WHEN start_time < ? THEN ? ELSE start_time END)) AS seconds FROM downtime_log WHERE object_id "));
    if (object->isEventSource())
    {
       query.append(_T("= ? "));
@@ -224,12 +224,13 @@ StructArray<DowntimeInfo> CalculateDowntime(uint32_t objectId, time_t periodStar
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(periodEnd));
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(periodStart));
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(periodEnd));
       DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(periodStart));
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, objectId);
-      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, tag, DB_BIND_STATIC);
-      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(periodEnd));
-      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(periodStart));
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(periodStart));
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, objectId);
+      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, tag, DB_BIND_STATIC);
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(periodEnd));
+      DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(periodStart));
 
       DB_RESULT hResult = DBSelectPrepared(hStmt);
       if (hResult != nullptr)
