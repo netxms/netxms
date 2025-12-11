@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
 /**
  * Helper function to read last N values of given DCI
  */
-static unique_ptr<StructArray<ScoredDciValue>> LoadDciValues(uint32_t nodeId, uint32_t dciId, DCObjectStorageClass storageClass, const std::pair<int64_t, int64_t> *timeRanges, int numTimeRanges)
+static unique_ptr<StructArray<ScoredDciValue>> LoadDciValues(uint32_t nodeId, uint32_t dciId, DCObjectStorageClass storageClass, const std::pair<Timestamp, Timestamp> *timeRanges, int numTimeRanges)
 {
    StringBuffer query(_T("SELECT idata_timestamp,idata_value"));
    if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
@@ -72,7 +72,7 @@ static unique_ptr<StructArray<ScoredDciValue>> LoadDciValues(uint32_t nodeId, ui
             for(int i = 0; i < count; i++)
             {
                ScoredDciValue *v = values->addPlaceholder();
-               v->timestamp = DBGetFieldInt64(hResult, i, 0);
+               v->timestamp = DBGetFieldTimestamp(hResult, i, 0);
                v->value = DBGetFieldDouble(hResult, i, 1);
                v->score = 0;
             }
@@ -97,7 +97,7 @@ unique_ptr<StructArray<ScoredDciValue>> DetectAnomalies(const DataCollectionTarg
       nxlog_debug_tag(DEBUG_TAG, 5, _T("DetectAnomalies: invalid DCI ID [%u] on object %s [%u]"), dciId, dcTarget.getName(), dcTarget.getId());
    }
 
-   std::pair<int64_t, int64_t> timeRange(TimeToMs(timeFrom), TimeToMs(timeTo));
+   std::pair<Timestamp, Timestamp> timeRange(Timestamp::fromTime(timeFrom), Timestamp::fromTime(timeTo));
    auto series = LoadDciValues(dcTarget.getId(), dciId, dci->getStorageClass(), &timeRange, 1);
    if (series == nullptr)
    {
@@ -149,14 +149,15 @@ bool IsAnomalousValue(const DataCollectionTarget& dcTarget, const DCObject& dci,
       depth = 90;
 
    // Construct time ranges for daily periods
-   time_t now = time(nullptr);
-   time_t t = now - width * 30;  // Half-interval in minutes to seconds
-   std::pair<int64_t, int_t> timeRanges[90]; // up to 90 days back
+   Timestamp now = Timestamp::now();
+   Timestamp t = now - width * 30000;  // Half-interval in minutes to milliseconds
+   std::pair<Timestamp, Timestamp> timeRanges[90]; // up to 90 days back
+   int64_t w = static_cast<int64_t>(width) * 60000; // width in milliseconds
    for(int i = 0; i < depth; i++)
    {
       t -= 86400 * period;
-      timeRanges[i].first = TimeToMs(t);
-      timeRanges[i].second = TimeToMs(t + width * 60);
+      timeRanges[i].first = t;
+      timeRanges[i].second = t + w;
    }
 
    auto series = LoadDciValues(dcTarget.getId(), dci.getId(), dci.getStorageClass(), timeRanges, depth);
