@@ -816,29 +816,23 @@ bool NXCORE_EXPORTABLE DeleteScheduledTaskByKey(const TCHAR *taskKey)
 /**
  * Get number of scheduled tasks with given key
  */
-int NXCORE_EXPORTABLE CountScheduledTasksByKey(const TCHAR *taskKey)
+int NXCORE_EXPORTABLE CountScheduledTasksByKey(const String& taskKey)
 {
    int count = 0;
 
    s_oneTimeScheduleLock.lock();
    for (int i = 0; i < s_oneTimeSchedules.size(); i++)
    {
-      const TCHAR *k = s_oneTimeSchedules.get(i)->getTaskKey();
-      if ((k != nullptr) && !_tcscmp(k, taskKey))
-      {
+      if (s_oneTimeSchedules.get(i)->getTaskKey().equals(taskKey))
          count++;
-      }
    }
    s_oneTimeScheduleLock.unlock();
 
    s_cronScheduleLock.lock();
    for (int i = 0; i < s_cronSchedules.size(); i++)
    {
-      const TCHAR *k = s_cronSchedules.get(i)->getTaskKey();
-      if ((k != nullptr) && !_tcscmp(k, taskKey))
-      {
+      if (s_cronSchedules.get(i)->getTaskKey().equals(taskKey))
          count++;
-      }
    }
    s_cronScheduleLock.unlock();
 
