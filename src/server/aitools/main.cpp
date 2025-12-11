@@ -55,17 +55,6 @@ static void CreateAssistantFunctionList()
       },
       F_AlarmList);
    RegisterAIAssistantFunction(
-      "create-metric",
-      "Create new data collection item (metric) for given object (node, device, server, etc.).",
-      {
-         { "object", "name or ID of an object (mandatory)" },
-         { "metric", "name of the metric to create (mandatory, meaning depends on the origin: metric name for agent, OID for SNMP, script name for script)" },
-         { "description", "optional metric description, if not provided then name will be used" },
-         { "origin", "data collection origin: agent, snmp, or script (default: agent)" },
-         { "dataType", "data type: int, unsigned-int, int64, unsigned-int64, counter32, counter64, float, string (default: string)" }
-      },
-      F_CreateMetric);
-   RegisterAIAssistantFunction(
       "find-objects",
       "Find objects by name, IP address, class, parent object, or zone. At least one search criteria should be set.",
       {
@@ -76,24 +65,6 @@ static void CreateAssistantFunctionList()
          { "zoneUIN", "optional zone UIN" }
       },
       F_FindObjects);
-   RegisterAIAssistantFunction(
-      "get-metrics",
-      "Get data collection items (metrics) and their current values for given object",
-      {
-         { "object", "name or ID of an object (node, device, server, workstation, container, etc.)" },
-         { "filter", "optional filter to select specific metrics by name (partial names allowed)" }
-      },
-      F_GetMetrics);
-   RegisterAIAssistantFunction(
-      "get-historical-data",
-      "Get historical time series data for analysis and anomaly detection. Returns data points with timestamps and values for specified time period.",
-      {
-         { "object", "name or ID of an object (mandatory)" },
-         { "metric", "name of the metric/DCI to analyze (mandatory)" },
-         { "timeFrom", "start time (ISO format or negative number of minutes, like '-60' for an our ago)" },
-         { "timeTo", "end time (optional, ISO format, defaults to now)" }
-      },
-      F_GetHistoricalData);
    RegisterAIAssistantFunction(
       "get-notification-channels",
       "Get list of configured notification channels",
@@ -131,6 +102,43 @@ static void CreateAssistantFunctionList()
  */
 static void CreateAssistantSkillList()
 {
+   RegisterAIAssistantSkill(
+      "data-collection",
+      "Provides comprehensive data collection management capabilities for NetXMS monitored infrastructure. Use this skill to create new metrics, monitor current values, analyze historical data, detect trends and anomalies, and optimize performance monitoring across your IT environment.",
+      "@data-collection.md",
+      {
+         AssistantFunction(
+            "create-metric",
+            "Create new data collection item (metric) for given object (node, device, server, etc.).",
+            {
+               { "object", "name or ID of an object (mandatory)" },
+               { "metric", "name of the metric to create (mandatory, meaning depends on the origin: metric name for agent, OID for SNMP, script name for script)" },
+               { "description", "optional metric description, if not provided then name will be used" },
+               { "origin", "data collection origin: agent, snmp, or script (default: agent)" },
+               { "dataType", "data type: int, unsigned-int, int64, unsigned-int64, counter32, counter64, float, string (default: string)" }
+            },
+            F_CreateMetric),
+         AssistantFunction(
+            "get-metrics",
+            "Get data collection items (metrics) and their current values for given object",
+            {
+               { "object", "name or ID of an object (node, device, server, workstation, container, etc.)" },
+               { "filter", "optional filter to select specific metrics by name (partial names allowed)" }
+            },
+            F_GetMetrics),
+         AssistantFunction(
+            "get-historical-data",
+            "Get historical time series data for analysis and anomaly detection. Returns data points with timestamps and values for specified time period.",
+            {
+               { "object", "name or ID of an object (mandatory)" },
+               { "metric", "name of the metric/DCI to analyze (mandatory)" },
+               { "timeFrom", "start time (ISO format or negative number of minutes, like '-60' for an our ago)" },
+               { "timeTo", "end time (optional, ISO format, defaults to now)" }
+            },
+            F_GetHistoricalData)
+      }
+   );
+
    RegisterAIAssistantSkill(
       "inventory",
       "Provides comprehensive inventory management capabilities for NetXMS monitored nodes, including hardware components, software packages, and network interfaces. Use this skill for asset discovery, compliance auditing, security assessment, change management, capacity planning, and troubleshooting system configurations.",

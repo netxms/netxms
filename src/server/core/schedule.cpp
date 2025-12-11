@@ -360,6 +360,31 @@ void ScheduledTask::fillMessage(NXCPMessage *msg, uint32_t base) const
 }
 
 /**
+ * Serialize task to JSON object
+ */
+json_t *ScheduledTask::toJson() const
+{
+   lock();
+
+   json_t *root = json_object();
+   json_object_set_new(root, "id", json_integer(m_id));
+   json_object_set_new(root, "taskHandlerId", json_string_t(m_taskHandlerId));
+   json_object_set_new(root, "schedule", json_string_t(m_schedule));
+   json_object_set_new(root, "parameters", json_string_t(m_parameters->m_persistentData));
+   json_object_set_new(root, "scheduledExecutionTime", json_integer(static_cast<int64_t>(m_scheduledExecutionTime)));
+   json_object_set_new(root, "lastExecutionTime", json_integer(static_cast<int64_t>(m_lastExecutionTime)));
+   json_object_set_new(root, "flags", json_integer(m_flags));
+   json_object_set_new(root, "recurrent", json_boolean(m_recurrent));
+   json_object_set_new(root, "userId", json_integer(m_parameters->m_userId));
+   json_object_set_new(root, "objectId", json_integer(m_parameters->m_objectId));
+   json_object_set_new(root, "comments", json_string_t(m_parameters->m_comments));
+   json_object_set_new(root, "taskKey", json_string_t(m_parameters->m_taskKey));
+
+   unlock();
+   return root;
+}
+
+/**
  * Check if user can access this scheduled task
  */
 bool ScheduledTask::canAccess(uint32_t userId, uint64_t systemAccess) const
@@ -1074,6 +1099,49 @@ void GetScheduledTasks(NXCPMessage *msg, uint32_t userId, uint64_t systemRights,
    s_recurrentTaskLock.unlock();
 
    msg->setField(VID_SCHEDULE_COUNT, taskCount);
+}
+
+/**
+ * Get scheduled tasks as JSON array
+ */
+json_t NXCORE_EXPORTABLE *GetScheduledTasks(uint32_t userId, uint64_t systemRights, bool (*filter)(const ScheduledTask *task, void *context), void *context)
+{
+   json_t *tasks = json_array();
+
+   s_oneTimeTaskLock.lock();
+   for(int i = 0; i < s_oneTimeTasks.size(); i++)
+   {
+      ScheduledTask *task = s_oneTimeTasks.get(i);
+      if (task->canAccess(userId, systemRights) && ((filter == nullptr) || filter(task, context)))
+      {
+         json_t *taskJson = task->toJson();
+         json_array_append_new(tasks, taskJson);
+      }
+   }
+   for(int i = 0; i < s_completedOneTimeTasks.size(); i++)
+   {
+      ScheduledTask *task = s_completedOneTimeTasks.get(i);
+      if (task->canAccess(userId, systemRights) && ((filter == nullptr) || filter(task, context)))
+      {
+         json_t *taskJson = task->toJson();
+         json_array_append_new(tasks, taskJson);
+      }
+   }
+   s_oneTimeTaskLock.unlock();
+
+   s_recurrentTaskLock.lock();
+   for(int i = 0; i < s_recurrentTasks.size(); i++)
+   {
+      ScheduledTask *task = s_recurrentTasks.get(i);
+      if (task->canAccess(userId, systemRights) && ((filter == nullptr) || filter(task, context)))
+      {
+         json_t *taskJson = task->toJson();
+         json_array_append_new(tasks, taskJson);
+      }
+   }
+   s_recurrentTaskLock.unlock();
+
+   return tasks;
 }
 
 /**

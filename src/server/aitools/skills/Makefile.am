@@ -10,6 +10,6 @@
 
 skillsdir=$(pkgdatadir)/skills
 
-skills_DATA = inventory.md maintenance.md
+skills_DATA = data-collection.md inventory.md maintenance.md
 
 EXTRA_DIST = $(skills_DATA)
