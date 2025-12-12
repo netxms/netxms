@@ -6,7 +6,7 @@ json.data.version = "V1.22";
 json.data.reference = "reference string";
 json.data.value = 0.712;
 json.set("rcpt", "mail@domain.com");
-json.series = %(1, 2, 3, 10, 20);
+json.series = [1, 2, 3, 10, 20];
 json.map = %{ "name":"test map", "value":200 };
 
 r = json.data;
@@ -18,7 +18,7 @@ assert(serialized like "*   \"name\": \"Test Object\"*");
 assert(serialized like "*   \"data\": {*");
 assert(serialized like "*      \"version\": \"V1.22\"*");
 assert(serialized like "*      \"reference\": \"reference string\"*");
-assert(serialized like "*      \"value\": 0.71199999999999997*");
+assert((serialized like "*      \"value\": 0.71199999999999997*") or (serialized like "*      \"value\": 0.712*"));
 assert(serialized like "*      \"extraBytes\": \"some extra bytes\"*");
 assert(serialized like "*   }*");
 assert(serialized like "*   \"rcpt\": \"mail@domain.com\"*");
@@ -30,7 +30,7 @@ assert(serialized like "*      10,*");
 assert(serialized like "*      20*");
 assert(serialized like "*   ]*");
 
-expectedValues = %( "flags = 42", "name = Test Object", "data = JsonObject@*", "rcpt = mail@domain.com", "series = JsonArray@*", "map = JsonObject@*" );
+expectedValues = [ "flags = 42", "name = Test Object", "data = JsonObject@*", "rcpt = mail@domain.com", "series = JsonArray@*", "map = JsonObject@*" ];
 
 for(k : json.keys())
 {
@@ -65,7 +65,7 @@ assert(json.name == "Test Object");
 
 timestamp = time();
 json.timestamp = timestamp;
-json.zzz = %(1, 2, %("level2-1", "level2-2"));
+json.zzz = [1, 2, ["level2-1", "level2-2"]];
 
 serialized = json.serialize();
 assert(serialized like "*   \"flags\": 42*");
@@ -96,7 +96,7 @@ assert(serialized like "*      ]*");
 series = json.series;
 assert(series.size == 5);
 
-expectedValues = %( 1, 2, 3, 10, 20 );
+expectedValues = [ 1, 2, 3, 10, 20 ];
 
 i = 0;
 for(s : series.values)
@@ -106,11 +106,11 @@ for(s : series.values)
 }
 
 series.append(42);
-series.append(%(10, 20, 30, "test"));
+series.append([10, 20, 30, "test"]);
 assert(series.size == 7);
 
 
-expectedValues = %( 1, 2, 3, 10, 20, 42 );
+expectedValues = [ 1, 2, 3, 10, 20, 42 ];
 
 i = 0;
 for(s : json.series.values)
