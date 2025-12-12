@@ -995,25 +995,25 @@ static void CheckCollectedData(bool isTable)
 {
    StartStage(isTable ? _T("Table DCI history records") : _T("DCI history records"));
 
-	time_t now = time(nullptr);
+	int64_t now = GetCurrentTimeMs();
 	IntegerArray<uint32_t> *targets = GetDataCollectionTargets();
 	SetStageWorkTotal(targets->size());
 	for(int i = 0; i < targets->size(); i++)
    {
-      UINT32 objectId = targets->get(i);
+      uint32_t objectId = targets->get(i);
       TCHAR query[1024];
-      _sntprintf(query, 1024, _T("SELECT count(*) FROM %s_%d WHERE %s_timestamp>") TIME_T_FMT,
-               isTable ? _T("tdata") : _T("idata"), objectId, isTable ? _T("tdata") : _T("idata"), TIME_T_FCAST(now));
+      _sntprintf(query, 1024, _T("SELECT count(*) FROM %s_%d WHERE %s_timestamp>") INT64_FMT,
+               isTable ? _T("tdata") : _T("idata"), objectId, isTable ? _T("tdata") : _T("idata"), now);
       DB_RESULT hResult = SQLSelect(query);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          if (DBGetFieldLong(hResult, 0, 0) > 0)
          {
             g_dbCheckErrors++;
-            if (GetYesNoEx(_T("Found collected data for node [%d] with timestamp in the future. Delete invalid records?"), objectId))
+            if (GetYesNoEx(_T("Found collected data for node [%u] with timestamp in the future. Delete invalid records?"), objectId))
             {
-               _sntprintf(query, 1024, _T("DELETE FROM %s_%d WHERE %s_timestamp>") TIME_T_FMT,
-                        isTable ? _T("tdata") : _T("idata"), objectId, isTable ? _T("tdata") : _T("idata"), TIME_T_FCAST(now));
+               _sntprintf(query, 1024, _T("DELETE FROM %s_%d WHERE %s_timestamp>") INT64_FMT,
+                        isTable ? _T("tdata") : _T("idata"), objectId, isTable ? _T("tdata") : _T("idata"), now);
                if (SQLQuery(query))
                   g_dbCheckFixes++;
             }
@@ -1064,10 +1064,10 @@ static void CheckCollectedDataSingleTable(bool isTable)
 {
    StartStage(isTable ? _T("Table DCI history records") : _T("DCI history records"), 2);
 
-   time_t now = time(nullptr);
+   int64_t now = GetCurrentTimeMs();
    TCHAR query[1024];
-   _sntprintf(query, 1024, _T("SELECT count(*) FROM %s WHERE %s_timestamp>") TIME_T_FMT,
-            isTable ? _T("tdata") : _T("idata"), isTable ? _T("tdata") : _T("idata"), TIME_T_FCAST(now));
+   _sntprintf(query, 1024, _T("SELECT count(*) FROM %s WHERE %s_timestamp>") INT64_FMT,
+            isTable ? _T("tdata") : _T("idata"), isTable ? _T("tdata") : _T("idata"), now);
    DB_RESULT hResult = SQLSelect(query);
    if (hResult != nullptr)
    {
@@ -1076,8 +1076,8 @@ static void CheckCollectedDataSingleTable(bool isTable)
          g_dbCheckErrors++;
          if (GetYesNoEx(_T("Found collected data with timestamp in the future. Delete invalid records?")))
          {
-            _sntprintf(query, 1024, _T("DELETE FROM %s WHERE %s_timestamp>") TIME_T_FMT,
-                     isTable ? _T("tdata") : _T("idata"), isTable ? _T("tdata") : _T("idata"), TIME_T_FCAST(now));
+            _sntprintf(query, 1024, _T("DELETE FROM %s WHERE %s_timestamp>") INT64_FMT,
+                     isTable ? _T("tdata") : _T("idata"), isTable ? _T("tdata") : _T("idata"), now);
             if (SQLQuery(query))
                g_dbCheckFixes++;
          }
@@ -1099,7 +1099,7 @@ static void CheckCollectedDataSingleTable(bool isTable)
          if (!IsDciExists(id, 0, isTable))
          {
             g_dbCheckErrors++;
-            if (GetYesNoEx(_T("Found collected data for non-existing DCI [%d]. Delete invalid records?"), id))
+            if (GetYesNoEx(_T("Found collected data for non-existing DCI [%u]. Delete invalid records?"), id))
             {
                _sntprintf(query, 1024, _T("DELETE FROM %s WHERE item_id=%d"), isTable ? _T("tdata") : _T("idata"), id);
                if (SQLQuery(query))
@@ -1157,7 +1157,7 @@ static void CheckRawDciValues()
 {
    StartStage(_T("Raw DCI values table"));
 
-   time_t now = time(NULL);
+   int64_t now = GetCurrentTimeMs();
 
    DB_RESULT hResult = SQLSelect(_T("SELECT item_id FROM raw_dci_values"));
    if (hResult != NULL)
@@ -1170,7 +1170,7 @@ static void CheckRawDciValues()
          if (!IsDciExists(id, 0, false))
          {
             g_dbCheckErrors++;
-            if (GetYesNoEx(_T("Found raw value record for non-existing DCI [%d]. Delete it?"), id))
+            if (GetYesNoEx(_T("Found raw value record for non-existing DCI [%u]. Delete it?"), id))
             {
                TCHAR query[256];
                _sntprintf(query, 256, _T("DELETE FROM raw_dci_values WHERE item_id=%d"), id);
@@ -1185,7 +1185,7 @@ static void CheckRawDciValues()
 
    ResetBulkYesNo();
    TCHAR query[1024];
-   _sntprintf(query, 1024, _T("SELECT count(*) FROM raw_dci_values WHERE last_poll_time>") TIME_T_FMT, TIME_T_FCAST(now));
+   _sntprintf(query, 1024, _T("SELECT count(*) FROM raw_dci_values WHERE last_poll_time>") INT64_FMT, now);
    hResult = SQLSelect(query);
    if (hResult != NULL)
    {
@@ -1194,7 +1194,7 @@ static void CheckRawDciValues()
          g_dbCheckErrors++;
          if (GetYesNoEx(_T("Found DCIs with last poll timestamp in the future. Fix it?")))
          {
-            _sntprintf(query, 1024, _T("UPDATE raw_dci_values SET last_poll_time=") TIME_T_FMT _T(" WHERE last_poll_time>") TIME_T_FMT, TIME_T_FCAST(now), TIME_T_FCAST(now));
+            _sntprintf(query, 1024, _T("UPDATE raw_dci_values SET last_poll_time=") INT64_FMT _T(" WHERE last_poll_time>") INT64_FMT, now, now);
             if (SQLQuery(query))
                g_dbCheckFixes++;
          }
