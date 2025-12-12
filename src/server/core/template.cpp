@@ -743,26 +743,23 @@ bool Template::removePolicy(const uuid& guid)
  */
 void Template::applyPolicyChanges()
 {
-   readLockChildList();
-   for(int i = 0; i < getChildList().size(); i++)
+   unique_ptr<SharedObjectArray<NetObj>> nodes = getChildren(OBJECT_NODE);
+
+   for(int i = 0; i < nodes->size(); i++)
    {
-      NetObj *object = getChildList().get(i);
-      if (object->getObjectClass() == OBJECT_NODE)
+      shared_ptr<Node> node = static_pointer_cast<Node>(nodes->getShared(i));
+      AgentPolicyInfo *ap;
+      shared_ptr<AgentConnectionEx> conn = node->getAgentConnection();
+      if (conn != nullptr)
       {
-         AgentPolicyInfo *ap;
-         shared_ptr<AgentConnectionEx> conn = static_cast<Node*>(object)->getAgentConnection();
-         if (conn != nullptr)
+         uint32_t rcc = conn->getPolicyInventory(&ap);
+         if (rcc == RCC_SUCCESS)
          {
-            UINT32 rcc = conn->getPolicyInventory(&ap);
-            if (rcc == RCC_SUCCESS)
-            {
-               checkPolicyDeployment(static_pointer_cast<Node>(getChildList().getShared(i)), ap);
-               delete ap;
-            }
+            checkPolicyDeployment(node, ap);
+            delete ap;
          }
       }
    }
-   unlockChildList();
 }
 
 /**
@@ -770,24 +767,14 @@ void Template::applyPolicyChanges()
  */
 void Template::forceApplyPolicyChanges()
 {
-   SharedObjectArray<Node> nodes(64, 64);
-   readLockChildList();
-   for(int i = 0; i < getChildList().size(); i++)
-   {
-      NetObj *object = getChildList().get(i);
-      if (object->getObjectClass() == OBJECT_NODE)
-      {
-         nodes.add(static_pointer_cast<Node>(getChildList().getShared(i)));
-      }
-   }
-   unlockChildList();
+   unique_ptr<SharedObjectArray<NetObj>> nodes = getChildren(OBJECT_NODE);
 
-   if (!nodes.isEmpty())
+   if (!nodes->isEmpty())
    {
       lockProperties();
-      for(int i = 0; i < nodes.size(); i++)
+      for(int i = 0; i < nodes->size(); i++)
       {
-         const shared_ptr<Node>& node = nodes.getShared(i);
+         const shared_ptr<Node> node = static_pointer_cast<Node>(nodes->getShared(i));
          for (int i = 0; i < m_policyList.size(); i++)
          {
             const shared_ptr<GenericAgentPolicy>& policy = m_policyList.getShared(i);
