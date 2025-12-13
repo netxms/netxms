@@ -480,20 +480,32 @@ TCHAR *SNMP_Variable::getValueAsString(TCHAR *buffer, size_t bufferSize, const c
    switch(m_type)
    {
       case ASN_INTEGER:
-         _sntprintf(buffer, bufferSize, _T("%d"), *reinterpret_cast<int32_t*>(m_value));
+         if (bufferSize >= 12)
+            IntegerToString(*reinterpret_cast<int32_t*>(m_value), buffer);
+         else
+            buffer[0] = 0;
          break;
       case ASN_COUNTER32:
       case ASN_GAUGE32:
       case ASN_TIMETICKS:
       case ASN_UINTEGER32:
-         _sntprintf(buffer, bufferSize, _T("%u"), *reinterpret_cast<uint32_t*>(m_value));
+         if (bufferSize >= 12)
+            IntegerToString(*reinterpret_cast<uint32_t*>(m_value), buffer);
+         else
+            buffer[0] = 0;
          break;
       case ASN_INTEGER64:
-         _sntprintf(buffer, bufferSize, INT64_FMT, *reinterpret_cast<int64_t*>(m_value));
+         if (bufferSize >= 22)
+            IntegerToString(*reinterpret_cast<int64_t*>(m_value), buffer);
+         else
+            buffer[0] = 0;
          break;
       case ASN_COUNTER64:
       case ASN_UINTEGER64:
-         _sntprintf(buffer, bufferSize, UINT64_FMT, *reinterpret_cast<uint64_t*>(m_value));
+         if (bufferSize >= 22)
+            IntegerToString(*reinterpret_cast<uint64_t*>(m_value), buffer);
+         else
+            buffer[0] = 0;
          break;
       case ASN_FLOAT:
          _sntprintf(buffer, bufferSize, _T("%f"), *reinterpret_cast<float*>(m_value));

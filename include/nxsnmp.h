@@ -1383,8 +1383,18 @@ public:
 uint32_t LIBNXSNMP_EXPORTABLE SnmpSaveMIBTree(const TCHAR *fileName, SNMP_MIBObject *root, uint32_t flags);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpLoadMIBTree(const TCHAR *fileName, SNMP_MIBObject **ppRoot);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpGetMIBTreeTimestamp(const TCHAR *fileName, uint32_t *timestamp);
-uint32_t LIBNXSNMP_EXPORTABLE SnmpResolveDataType(const TCHAR *type);
-TCHAR LIBNXSNMP_EXPORTABLE *SnmpDataTypeName(uint32_t type, TCHAR *buffer, size_t bufferSize);
+uint32_t LIBNXSNMP_EXPORTABLE SnmpResolveDataTypeW(const wchar_t *type);
+uint32_t LIBNXSNMP_EXPORTABLE SnmpResolveDataTypeA(const char *type);
+wchar_t LIBNXSNMP_EXPORTABLE *SnmpDataTypeNameW(uint32_t type, wchar_t *buffer, size_t bufferSize);
+char LIBNXSNMP_EXPORTABLE *SnmpDataTypeNameA(uint32_t type, char *buffer, size_t bufferSize);
+
+#ifdef UNICODE
+#define SnmpResolveDataType SnmpResolveDataTypeW
+#define SnmpDataTypeName SnmpDataTypeNameW
+#else
+#define SnmpResolveDataType SnmpResolveDataTypeA
+#define SnmpDataTypeName SnmpDataTypeNameA
+#endif
 
 const TCHAR LIBNXSNMP_EXPORTABLE *SnmpGetErrorText(uint32_t errorCode);
 const TCHAR LIBNXSNMP_EXPORTABLE *SnmpGetProtocolErrorText(SNMP_ErrorCode errorCode);

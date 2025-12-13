@@ -24,7 +24,6 @@
 #include <nxlibcurl.h>
 #include <netxms-version.h>
 #include <iris.h>
-#include <unordered_map>
 
 #define DEBUG_TAG _T("ai.assistant")
 
@@ -197,15 +196,15 @@ static std::vector<std::string> s_prompts;
 static ThreadPool *s_aiTaskThreadPool = nullptr;
 
 /**
- * Find object by its name or ID
+ * Find object by its (possibly fuzzy) name or ID
  */
-shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByNameOrId(const char *name)
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByNameOrId(const char *name, int objectClassHint)
 {
    char *eptr;
    uint32_t id = strtoul(name, &eptr, 0);
    if (*eptr == 0)
    {
-      shared_ptr<NetObj> object = FindObjectById(id);
+      shared_ptr<NetObj> object = FindObjectById(id, objectClassHint);
       if (object != nullptr)
          return object;
    }
@@ -213,7 +212,7 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByNameOrId(const char *name)
    wchar_t nameW[MAX_OBJECT_NAME];
    utf8_to_wchar(name, -1, nameW, MAX_OBJECT_NAME);
    nameW[MAX_OBJECT_NAME - 1] = 0;
-   return FindObjectByName(nameW);
+   return FindObjectByFuzzyName(nameW, objectClassHint);
 }
 
 /**

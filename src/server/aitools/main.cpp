@@ -35,6 +35,8 @@ std::string F_GetNodeSoftwarePackages(json_t *arguments, uint32_t userId);
 std::string F_GetNotificationChannels(json_t *arguments, uint32_t userId);
 std::string F_GetObject(json_t *arguments, uint32_t userId);
 std::string F_SendNotification(json_t *arguments, uint32_t userId);
+std::string F_SNMPWalk(json_t *arguments, uint32_t userId);
+std::string F_SNMPRead(json_t *arguments, uint32_t userId);
 std::string F_StartMaintenance(json_t *arguments, uint32_t userId);
 
 /**
@@ -95,6 +97,23 @@ static void CreateAssistantFunctionList()
       {
          return JsonToString(GetServerStats());
       });
+   RegisterAIAssistantFunction(
+      "snmp-read",
+      "Read SNMP variable from given node",
+      {
+         { "object", "name or ID of a node" },
+         { "oid", "SNMP OID of the variable to read" }
+      },
+      F_SNMPRead);
+   RegisterAIAssistantFunction(
+      "snmp-walk",
+      "Walk SNMP MIB from given node",
+      {
+          { "object", "name or ID of a node" },
+          { "oid", "SNMP OID to start walk from" },
+          { "limit", "maximum number of variables to return (default: 1000)" }
+      },
+      F_SNMPWalk);
 }
 
 /**

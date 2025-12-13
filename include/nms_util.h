@@ -5482,6 +5482,16 @@ struct CodeLookupElement
 };
 
 /**
+ * Code translation structure - wchar_t/char pair
+ */
+struct CodeLookupElementEx
+{
+   int32_t code;
+   const wchar_t *wtext;
+   const char *mbtext;
+};
+
+/**
  * Store for shared_ptr with synchronized access
  */
 template<typename T> class shared_ptr_store

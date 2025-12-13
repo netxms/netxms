@@ -23,6 +23,8 @@
 #ifndef _iris_h_
 #define _iris_h_
 
+#include <unordered_map>
+
 #define AI_ASSISTANT_COMPONENT   L"AI-ASSISTANT"
 
 /**
@@ -248,6 +250,6 @@ static inline std::string JsonToString(json_t *json)
 /**
  * Find object by its name or ID
  */
-shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByNameOrId(const char *name);
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByNameOrId(const char *name, int objectClassHint = -1);
 
 #endif

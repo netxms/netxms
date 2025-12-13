@@ -280,16 +280,13 @@ std::string F_GetNodeHardwareComponents(json_t *arguments, uint32_t userId)
    if ((objectName == nullptr) || (objectName[0] == 0))
       return std::string("Object name or ID must be provided");
 
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
+   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName, OBJECT_NODE);
    if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
    {
       char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known", objectName);
+      snprintf(buffer, 256, "Node with name or ID \"%s\" is not known", objectName);
       return std::string(buffer);
    }
-
-   if (object->getObjectClass() != OBJECT_NODE)
-      return std::string("Specified object is not a node");
 
    Node *node = static_cast<Node*>(object.get());
    json_t *components = node->getHardwareComponentsAsJSON();
@@ -310,16 +307,13 @@ std::string F_GetNodeInterfaces(json_t *arguments, uint32_t userId)
    if ((objectName == nullptr) || (objectName[0] == 0))
       return std::string("Object name or ID must be provided");
 
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
+   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName, OBJECT_NODE);
    if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
    {
       char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known", objectName);
+      snprintf(buffer, 256, "Node with name or ID \"%s\" is not known", objectName);
       return std::string(buffer);
    }
-
-   if (object->getObjectClass() != OBJECT_NODE)
-      return std::string("Specified object is not a node");
 
    Node *node = static_cast<Node*>(object.get());
    unique_ptr<SharedObjectArray<NetObj>> interfaces = node->getChildren(OBJECT_INTERFACE);
@@ -341,16 +335,13 @@ std::string F_GetNodeSoftwarePackages(json_t *arguments, uint32_t userId)
    if ((objectName == nullptr) || (objectName[0] == 0))
       return std::string("Object name or ID must be provided");
 
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
+   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName, OBJECT_NODE);
    if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
    {
       char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known", objectName);
+      snprintf(buffer, 256, "Node with name or ID \"%s\" is not known", objectName);
       return std::string(buffer);
    }
-
-   if (object->getObjectClass() != OBJECT_NODE)
-      return std::string("Specified object is not a node");
 
    String filter(json_object_get_string_utf8(arguments, "filter", ""), "utf-8");
 

@@ -1,7 +1,7 @@
 MODULE = aitools
 
 pkglib_LTLIBRARIES = aitools.la
-aitools_la_SOURCES = alarms.cpp datacoll.cpp main.cpp nc.cpp objects.cpp
+aitools_la_SOURCES = alarms.cpp datacoll.cpp main.cpp nc.cpp objects.cpp snmp.cpp
 aitools_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 aitools_la_LDFLAGS = -module -avoid-version
 aitools_la_LIBADD = ../../libnetxms/libnetxms.la ../libnxsrv/libnxsrv.la ../core/libnxcore.la

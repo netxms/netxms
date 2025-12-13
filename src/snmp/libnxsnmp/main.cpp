@@ -233,41 +233,52 @@ const TCHAR LIBNXSNMP_EXPORTABLE *SnmpGetProtocolErrorText(SNMP_ErrorCode errorC
 /**
  * SNMP type names
  */
-static CodeLookupElement s_typeList[] =
+static CodeLookupElementEx s_typeList[] =
 {
-   { ASN_BIT_STRING, _T("BIT STRING") },
-   { ASN_COUNTER32, _T("COUNTER32") },
-   { ASN_COUNTER64, _T("COUNTER64") },
-   { ASN_DOUBLE, _T("DOUBLE") },
-   { ASN_FLOAT, _T("FLOAT") },
-   { ASN_GAUGE32, _T("GAUGE32") },
-   { ASN_INTEGER, _T("INTEGER") },
-   { ASN_INTEGER, _T("INT") },
-   { ASN_INTEGER64, _T("INTEGER64") },
-   { ASN_IP_ADDR, _T("IP ADDRESS") },
-   { ASN_IP_ADDR, _T("IPADDR") },
-   { ASN_NSAP_ADDR, _T("NSAP ADDRESS") },
-   { ASN_NULL, _T("NULL") },
-   { ASN_OBJECT_ID, _T("OBJECT IDENTIFIER") },
-   { ASN_OBJECT_ID, _T("OID") },
-   { ASN_OCTET_STRING, _T("STRING") },
-   { ASN_OCTET_STRING, _T("OCTET STRING") },
-   { ASN_OPAQUE, _T("OPAQUE") },
-   { ASN_SEQUENCE, _T("SEQUENCE") },
-   { ASN_TIMETICKS, _T("TIMETICKS") },
-   { ASN_UINTEGER32, _T("UINTEGER32") },
-   { ASN_UINTEGER32, _T("UINT32") },
-   { ASN_UINTEGER64, _T("UINTEGER64") },
-   { 0, nullptr }
+   { ASN_BIT_STRING, L"BIT STRING", "BIT STRING" },
+   { ASN_COUNTER32, L"COUNTER32", "COUNTER32" },
+   { ASN_COUNTER64, L"COUNTER64", "COUNTER64" },
+   { ASN_DOUBLE, L"DOUBLE", "DOUBLE" },
+   { ASN_FLOAT, L"FLOAT", "FLOAT" },
+   { ASN_GAUGE32, L"GAUGE32", "GAUGE32" },
+   { ASN_INTEGER, L"INTEGER", "INTEGER" },
+   { ASN_INTEGER, L"INT", "INT" },
+   { ASN_INTEGER64, L"INTEGER64", "INTEGER64" },
+   { ASN_IP_ADDR, L"IP ADDRESS", "IP ADDRESS" },
+   { ASN_IP_ADDR, L"IPADDR", "IPADDR" },
+   { ASN_NSAP_ADDR, L"NSAP ADDRESS", "NSAP ADDRESS" },
+   { ASN_NULL, L"NULL", "NULL" },
+   { ASN_OBJECT_ID, L"OBJECT IDENTIFIER", "OBJECT IDENTIFIER" },
+   { ASN_OBJECT_ID, L"OID", "OID" },
+   { ASN_OCTET_STRING, L"STRING", "STRING" },
+   { ASN_OCTET_STRING, L"OCTET STRING", "OCTET STRING" },
+   { ASN_OPAQUE, L"OPAQUE", "OPAQUE" },
+   { ASN_SEQUENCE, L"SEQUENCE", "SEQUENCE" },
+   { ASN_TIMETICKS, L"TIMETICKS", "TIMETICKS" },
+   { ASN_UINTEGER32, L"UINTEGER32", "UINTEGER32" },
+   { ASN_UINTEGER32, L"UINT32", "UINT32" },
+   { ASN_UINTEGER64, L"UINTEGER64", "UINTEGER64" },
+   { 0, nullptr, nullptr }
 };
 
 /**
  * Resolve text representation of data type to integer value
  */
-uint32_t LIBNXSNMP_EXPORTABLE SnmpResolveDataType(const TCHAR *type)
+uint32_t LIBNXSNMP_EXPORTABLE SnmpResolveDataTypeW(const wchar_t *type)
 {
-   for(int i = 0; s_typeList[i].text != nullptr; i++)
-      if (!_tcsicmp(s_typeList[i].text, type))
+   for(int i = 0; s_typeList[i].wtext != nullptr; i++)
+      if (!wcsicmp(s_typeList[i].wtext, type))
+         return s_typeList[i].code;
+   return ASN_NULL;
+}
+
+/**
+ * Resolve text representation of data type to integer value
+ */
+uint32_t LIBNXSNMP_EXPORTABLE SnmpResolveDataTypeA(const char *type)
+{
+   for(int i = 0; s_typeList[i].mbtext != nullptr; i++)
+      if (!stricmp(s_typeList[i].mbtext, type))
          return s_typeList[i].code;
    return ASN_NULL;
 }
@@ -275,17 +286,33 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpResolveDataType(const TCHAR *type)
 /**
  * Get type name
  */
-TCHAR LIBNXSNMP_EXPORTABLE *SnmpDataTypeName(uint32_t type, TCHAR *buffer, size_t bufferSize)
+wchar_t LIBNXSNMP_EXPORTABLE *SnmpDataTypeNameW(uint32_t type, wchar_t *buffer, size_t bufferSize)
 {
-	for(int i = 0; s_typeList[i].text != nullptr; i++)
+	for(int i = 0; s_typeList[i].wtext != nullptr; i++)
 		if (static_cast<uint32_t>(s_typeList[i].code) == type)
 		{
-			_tcslcpy(buffer, s_typeList[i].text, bufferSize);
+			wcslcpy(buffer, s_typeList[i].wtext, bufferSize);
 			return buffer;
 		}
 
-	_sntprintf(buffer, bufferSize, _T("0x%02x"), type);
+	swprintf(buffer, bufferSize, L"0x%02x", type);
 	return buffer;
+}
+
+/**
+ * Get type name
+ */
+char LIBNXSNMP_EXPORTABLE *SnmpDataTypeNameA(uint32_t type, char *buffer, size_t bufferSize)
+{
+   for(int i = 0; s_typeList[i].wtext != nullptr; i++)
+      if (static_cast<uint32_t>(s_typeList[i].code) == type)
+      {
+         strlcpy(buffer, s_typeList[i].mbtext, bufferSize);
+         return buffer;
+      }
+
+   snprintf(buffer, bufferSize, "0x%02x", type);
+   return buffer;
 }
 
 /**
