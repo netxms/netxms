@@ -447,10 +447,20 @@ public:
 /**
  * OID parsing functions
  */
-TCHAR LIBNXSNMP_EXPORTABLE *SnmpConvertOIDToText(size_t length, const uint32_t *value, TCHAR *buffer, size_t bufferSize);
-size_t LIBNXSNMP_EXPORTABLE SnmpParseOID(const TCHAR *text, uint32_t *buffer, size_t bufferSize);
+wchar_t LIBNXSNMP_EXPORTABLE *SnmpConvertOIDToTextW(size_t length, const uint32_t *value, wchar_t *buffer, size_t bufferSize);
+char LIBNXSNMP_EXPORTABLE *SnmpConvertOIDToTextA(size_t length, const uint32_t *value, char *buffer, size_t bufferSize);
+size_t LIBNXSNMP_EXPORTABLE SnmpParseOIDW(const wchar_t *text, uint32_t *buffer, size_t bufferSize);
+size_t LIBNXSNMP_EXPORTABLE SnmpParseOIDA(const char *text, uint32_t *buffer, size_t bufferSize);
 bool LIBNXSNMP_EXPORTABLE SnmpIsCorrectOID(const TCHAR *oid);
 size_t LIBNXSNMP_EXPORTABLE SnmpGetOIDLength(const TCHAR *oid);
+
+#ifdef UNICODE
+#define SnmpConvertOIDToText SnmpConvertOIDToTextW
+#define SnmpParseOID SnmpParseOIDW
+#else
+#define SnmpConvertOIDToText SnmpConvertOIDToTextA
+#define SnmpParseOID SnmpParseOIDA
+#endif
 
 #define SNMP_OID_INTERNAL_BUFFER_SIZE  32
 
@@ -571,10 +581,21 @@ public:
       SnmpConvertOIDToText(m_length, m_value, buffer, MAX_OID_LEN * 5);
       return String(buffer);
    }
-   TCHAR *toString(TCHAR *buffer, size_t bufferSize) const
+   wchar_t *toStringW(wchar_t *buffer, size_t bufferSize) const
    {
-      SnmpConvertOIDToText(m_length, m_value, buffer, bufferSize);
-      return buffer;
+      return SnmpConvertOIDToTextW(m_length, m_value, buffer, bufferSize);
+   }
+   char *toStringA(char *buffer, size_t bufferSize) const
+   {
+      return SnmpConvertOIDToTextA(m_length, m_value, buffer, bufferSize);
+   }
+   TCHAR *toString(WCHAR *buffer, size_t bufferSize) const
+   {
+#ifdef UNICODE
+      return toStringW(buffer, bufferSize);
+#else
+      return toStringA(buffer, bufferSize);
+#endif
    }
    bool isValid() const { return (m_length > 0) && (m_value != nullptr); }
    bool isZeroDotZero() const { return (m_length == 2) && (m_value[0] == 0) && (m_value[1] == 0); }
@@ -678,6 +699,8 @@ public:
    }
 
    static SNMP_ObjectId parse(const TCHAR *oid);
+   static SNMP_ObjectId parseA(const char *oid);
+   static SNMP_ObjectId parseW(const wchar_t *oid);
 };
 
 /**

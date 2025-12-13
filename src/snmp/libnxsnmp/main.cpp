@@ -26,11 +26,12 @@
 /**
  * Convert OID element to string. Returns pointer to character following last digit.
  */
-static inline TCHAR *OIDElementToString(uint32_t value, TCHAR *dest)
+template <typename T>
+static inline T *OIDElementToString(uint32_t value, T *dest)
 {
-   TCHAR *p = dest;
-   TCHAR buffer[64];
-   TCHAR *t = buffer;
+   T *p = dest;
+   T buffer[64];
+   T *t = buffer;
    do
    {
       uint32_t rem = value % 10;
@@ -47,9 +48,9 @@ static inline TCHAR *OIDElementToString(uint32_t value, TCHAR *dest)
 /**
  * Convert OID to text. Returns pointer to buffer.
  */
-TCHAR LIBNXSNMP_EXPORTABLE *SnmpConvertOIDToText(size_t length, const uint32_t *value, TCHAR *buffer, size_t bufferSize)
+wchar_t LIBNXSNMP_EXPORTABLE *SnmpConvertOIDToTextW(size_t length, const uint32_t *value, wchar_t *buffer, size_t bufferSize)
 {
-   TCHAR *p = buffer;
+   wchar_t *p = buffer;
    size_t count = 0;
    for(size_t i = 0; (i < length) && (count < bufferSize); i++)
    {
@@ -62,33 +63,88 @@ TCHAR LIBNXSNMP_EXPORTABLE *SnmpConvertOIDToText(size_t length, const uint32_t *
 }
 
 /**
+ * Convert OID to text. Returns pointer to buffer.
+ */
+char LIBNXSNMP_EXPORTABLE *SnmpConvertOIDToTextA(size_t length, const uint32_t *value, char *buffer, size_t bufferSize)
+{
+   char *p = buffer;
+   size_t count = 0;
+   for(size_t i = 0; (i < length) && (count < bufferSize); i++)
+   {
+      if (i > 0)
+         *p++ = '.';
+      p = OIDElementToString(value[i], p);
+   }
+   *p = 0;
+   return buffer;
+}
+
+/**
+ * Parse number from string
+ */
+static inline uint32_t ParseNumber(const char *text)
+{
+   return strtoul(text, nullptr, 10);
+}
+
+/**
+ * Parse number from string
+ */
+static inline uint32_t ParseNumber(const wchar_t *text)
+{
+   return wcstoul(text, nullptr, 10);
+}
+
+/**
  * Parse OID in text into binary format
  * Will return 0 if OID is invalid or empty, and OID length (in UINT32s) on success
  * Buffer size should be given in number of UINT32s
  */
-size_t LIBNXSNMP_EXPORTABLE SnmpParseOID(const TCHAR *text, uint32_t *buffer, size_t bufferSize)
+template<typename T>
+static inline size_t SnmpParseOIDImpl(const T *text, uint32_t *buffer, size_t bufferSize)
 {
-   TCHAR *pCurr = (TCHAR *)text, *pEnd, szNumber[32];
-   size_t length = 0;
-   int iNumLen;
-
+   const T *pCurr = text;
    if (*pCurr == 0)
       return 0;
 
+   size_t length = 0;
+
    // Skip initial dot if present
-   if (*pCurr == _T('.'))
+   if (*pCurr == '.')
       pCurr++;
 
-   for(pEnd = pCurr; (*pEnd != 0) && (length < bufferSize); pCurr = pEnd + 1)
+   T szNumber[32];
+   int iNumLen;
+   for(const T *pEnd = pCurr; (*pEnd != 0) && (length < bufferSize); pCurr = pEnd + 1)
    {
       for(iNumLen = 0, pEnd = pCurr; (*pEnd >= _T('0')) && (*pEnd <= _T('9')); pEnd++, iNumLen++);
       if ((iNumLen > 15) || ((*pEnd != _T('.')) && (*pEnd != 0)))
          return 0;   // Number is definitely too large or not a number
-      memcpy(szNumber, pCurr, sizeof(TCHAR) * iNumLen);
+      memcpy(szNumber, pCurr, sizeof(T) * iNumLen);
       szNumber[iNumLen] = 0;
-      buffer[length++] = _tcstoul(szNumber, nullptr, 10);
+      buffer[length++] = ParseNumber(szNumber);
    }
    return length;
+}
+
+/**
+ * Parse OID in text into binary format
+ * Will return 0 if OID is invalid or empty, and OID length (in UINT32s) on success
+ * Buffer size should be given in number of UINT32s
+ */
+size_t LIBNXSNMP_EXPORTABLE SnmpParseOIDW(const wchar_t *text, uint32_t *buffer, size_t bufferSize)
+{
+   return SnmpParseOIDImpl<wchar_t>(text, buffer, bufferSize);
+}
+
+/**
+ * Parse OID in text into binary format
+ * Will return 0 if OID is invalid or empty, and OID length (in UINT32s) on success
+ * Buffer size should be given in number of UINT32s
+ */
+size_t LIBNXSNMP_EXPORTABLE SnmpParseOIDA(const char *text, uint32_t *buffer, size_t bufferSize)
+{
+   return SnmpParseOIDImpl<char>(text, buffer, bufferSize);
 }
 
 /**

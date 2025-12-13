@@ -218,3 +218,23 @@ SNMP_ObjectId SNMP_ObjectId::parse(const TCHAR *oid)
    size_t length = SnmpParseOID(oid, buffer, MAX_OID_LEN);
    return SNMP_ObjectId(buffer, length);
 }
+
+/**
+ * Parse OID
+ */
+SNMP_ObjectId SNMP_ObjectId::parseA(const char *oid)
+{
+   uint32_t buffer[MAX_OID_LEN];
+   size_t length = SnmpParseOIDA(oid, buffer, MAX_OID_LEN);
+   return SNMP_ObjectId(buffer, length);
+}
+
+/**
+ * Parse OID
+ */
+SNMP_ObjectId SNMP_ObjectId::parseW(const wchar_t *oid)
+{
+   uint32_t buffer[MAX_OID_LEN];
+   size_t length = SnmpParseOIDW(oid, buffer, MAX_OID_LEN);
+   return SNMP_ObjectId(buffer, length);
+}
