@@ -159,7 +159,6 @@ void StructuredDataExtractor::getMetricsFromJSON(StringList *params, NXCPMessage
          response->setField(fieldId++, params->get(i));
          response->setFieldFromUtf8String(fieldId++, result);
          resultCount++;
-
       }
    }
    response->setField(VID_NUM_PARAMETERS, resultCount);
@@ -175,38 +174,45 @@ uint32_t StructuredDataExtractor::getMetricFromJSON(const TCHAR *param, char *bu
    uint32_t rc = SYSINFO_RC_NO_SUCH_INSTANCE;
 
     char *program = UTF8StringFromTString(param);
-    if (jv_is_valid(m_content.jvData) && jq_compile(jqState, program))
+    if (jv_is_valid(m_content.jvData))
     {
-       jq_start(jqState, jv_copy(m_content.jvData), 0);
-       jv result = jq_next(jqState);
-       if (jv_is_valid(result))
+       if (jq_compile(jqState, program))
        {
-          if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 7)
+          jq_start(jqState, jv_copy(m_content.jvData), 0);
+          jv result = jq_next(jqState);
+          if (jv_is_valid(result))
           {
-             jv resultAsText = jv_dump_string(jv_copy(result), 0);
-             nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataExtractor::getMetricFromJSON(%s): request query: %hs"), m_source, program);
-             nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataExtractor::getMetricFromJSON(%s): result kind: %d"), m_source, jv_get_kind(result));
-             nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataExtractor::getMetricFromJSON(%s): result: %hs"), m_source, jv_string_value(resultAsText));
-             jv_free(resultAsText);
-          }
+             if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 7)
+             {
+                jv resultAsText = jv_dump_string(jv_copy(result), 0);
+                nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataExtractor::getMetricFromJSON(%s): request query: %hs"), m_source, program);
+                nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataExtractor::getMetricFromJSON(%s): result kind: %d"), m_source, jv_get_kind(result));
+                nxlog_debug_tag(DEBUG_TAG, 7, _T("StructuredDataExtractor::getMetricFromJSON(%s): result: %hs"), m_source, jv_string_value(resultAsText));
+                jv_free(resultAsText);
+             }
 
-          switch(jv_get_kind(result))
-          {
-             case JV_KIND_STRING:
-                strlcpy(buffer, jv_string_value(result), size);
-                rc = SYSINFO_RC_SUCCESS;
-                break;
-             case JV_KIND_NULL: // Valid request - nothing found
-                break;
-             default:
-                jv jvValueAsString = jv_dump_string(jv_copy(result), 0);
-                strlcpy(buffer, jv_string_value(jvValueAsString), size);
-                jv_free(jvValueAsString);
-                rc = SYSINFO_RC_SUCCESS;
-                break;
+             switch (jv_get_kind(result))
+             {
+                case JV_KIND_STRING:
+                   strlcpy(buffer, jv_string_value(result), size);
+                   rc = SYSINFO_RC_SUCCESS;
+                   break;
+                case JV_KIND_NULL: // Valid request - nothing found
+                   break;
+                default:
+                   jv jvValueAsString = jv_dump_string(jv_copy(result), 0);
+                   strlcpy(buffer, jv_string_value(jvValueAsString), size);
+                   jv_free(jvValueAsString);
+                   rc = SYSINFO_RC_SUCCESS;
+                   break;
+             }
           }
+          jv_free(result);
        }
-       jv_free(result);
+       else
+       {
+          nxlog_debug_tag(DEBUG_TAG, 5, _T("StructuredDataExtractor::getMetricFromJSON(%s): cannot compile JQ program \"%hs\""), m_source, program);
+       }
     }
     MemFree(program);
     jq_teardown(&jqState);
