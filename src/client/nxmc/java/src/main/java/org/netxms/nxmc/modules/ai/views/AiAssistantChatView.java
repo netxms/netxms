@@ -18,37 +18,47 @@
  */
 package org.netxms.nxmc.modules.ai.views;
 
+import java.util.List;
+import org.commonmark.Extension;
+import org.commonmark.ext.autolink.AutolinkExtension;
+import org.commonmark.ext.footnotes.FootnotesExtension;
+import org.commonmark.ext.gfm.strikethrough.StrikethroughExtension;
+import org.commonmark.ext.gfm.tables.TablesExtension;
+import org.commonmark.ext.image.attributes.ImageAttributesExtension;
+import org.commonmark.ext.ins.InsExtension;
+import org.commonmark.ext.task.list.items.TaskListItemsExtension;
+import org.commonmark.node.Node;
+import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.HtmlRenderer;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.ScrolledComposite;
-import org.eclipse.swt.events.ControlAdapter;
-import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.browser.Browser;
+import org.eclipse.swt.browser.ProgressEvent;
+import org.eclipse.swt.browser.ProgressListener;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
-import org.netxms.nxmc.base.widgets.MessageBubble;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.resources.ThemeEngine;
+import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -56,14 +66,19 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AiAssistantChatView extends View
 {
+   private static final Logger logger = LoggerFactory.getLogger(AiAssistantChatView.class);
+   private static final List<Extension> extensions =
+         List.of(AutolinkExtension.create(), FootnotesExtension.builder().inlineFootnotes(true).build(), ImageAttributesExtension.create(), InsExtension.create(),
+               TaskListItemsExtension.create(), StrikethroughExtension.create(), TablesExtension.create());
+
    private final I18n i18n = LocalizationHelper.getI18n(AiAssistantChatView.class);
 
    private NXCSession session;
    private long chatId;
-   private ScrolledComposite chatScrolledComposite;
-   private Composite chatContainer;
+   private Browser chatBrowser;
    private Text chatInput;
    private Action actionClearChat;
+   private StringBuilder chatContent;
 
    /**
     * Create server console view
@@ -72,6 +87,41 @@ public class AiAssistantChatView extends View
    {
       super(LocalizationHelper.getI18n(AiAssistantChatView.class).tr("AI Assistant"), ResourceManager.getImageDescriptor("icons/tool-views/ai-assistant.png"), "tools.ai-assistant", false);
       session = Registry.getSession();
+      chatContent = new StringBuilder();
+      initializeHtmlTemplate();
+   }
+
+   /**
+    * Initialize HTML template for chat display
+    */
+   private void initializeHtmlTemplate()
+   {
+      chatContent.append("<!DOCTYPE html>");
+      chatContent.append("<html><head>");
+      chatContent.append("<style>");
+      chatContent.append("body { font: 14px \"Metropolis Regular\", \"Segoe UI\", \"Liberation Sans\", Verdana, Helvetica, sans-serif; margin: 0; padding: 10px; background-color: ");
+      chatContent.append(ColorConverter.rgbToCss(ThemeEngine.getBackgroundColor("AiAssistant.ChatView").getRGB()));
+      chatContent.append("; }");
+      chatContent.append(".message { margin-bottom: 15px; display: flex; }");
+      chatContent.append(".user-message { justify-content: flex-end; }");
+      chatContent.append(".assistant-message { justify-content: flex-start; }");
+      chatContent.append(".bubble { max-width: 70%; padding: 8px 12px; border-radius: 8px; border: 1px solid; word-wrap: break-word; color: #202020; }");
+      chatContent.append(".user-bubble { background-color: ");
+      chatContent.append(ColorConverter.rgbToCss(ThemeEngine.getBackgroundColor("AiAssistant.UserMessage").getRGB()));
+      chatContent.append("; border-color: ");
+      chatContent.append(ColorConverter.rgbToCss(ThemeEngine.getForegroundColor("AiAssistant.UserMessage").getRGB()));
+      chatContent.append("; }");
+      chatContent.append(".assistant-bubble { background-color: ");
+      chatContent.append(ColorConverter.rgbToCss(ThemeEngine.getBackgroundColor("AiAssistant.AssistantMessage").getRGB()));
+      chatContent.append("; border-color: ");
+      chatContent.append(ColorConverter.rgbToCss(ThemeEngine.getForegroundColor("AiAssistant.AssistantMessage").getRGB()));
+      chatContent.append("; }");
+      chatContent.append(".sender { font-size: 12px; margin-bottom: 5px; opacity: 0.7; }");
+      chatContent.append("</style>");
+      chatContent.append("</head><body>");
+      chatContent.append("<div id='chat-container'>");
+      chatContent.append("</div>");
+      chatContent.append("</body></html>");
    }
 
    /**
@@ -113,32 +163,25 @@ public class AiAssistantChatView extends View
       layout.verticalSpacing = 0;
       parent.setLayout(layout);
 
-      // Create scrolled composite for chat messages
-      chatScrolledComposite = new ScrolledComposite(parent, SWT.V_SCROLL);
-      chatScrolledComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-      chatScrolledComposite.setExpandHorizontal(true);
-      chatScrolledComposite.setExpandVertical(true);
-
-      // Create container for chat messages
-      chatContainer = new Composite(chatScrolledComposite, SWT.NONE);
-      GridLayout chatLayout = new GridLayout();
-      chatLayout.marginWidth = 10;
-      chatLayout.marginHeight = 10;
-      chatLayout.verticalSpacing = 10;
-      chatContainer.setLayout(chatLayout);
-      chatContainer.setBackground(ThemeEngine.getBackgroundColor("AiAssistant.ChatView"));
-
-      chatScrolledComposite.setContent(chatContainer);
-      WidgetHelper.setScrollBarIncrement(chatScrolledComposite, SWT.VERTICAL, 20);
-      chatScrolledComposite.addControlListener(new ControlAdapter() {
-         public void controlResized(ControlEvent e)
+      // Create browser for chat display
+      chatBrowser = WidgetHelper.createBrowser(parent, SWT.NONE, null);
+      chatBrowser.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      chatBrowser.addProgressListener(new ProgressListener() {
+         @Override
+         public void completed(ProgressEvent event)
          {
-            updateScrolledComposite();
+            chatBrowser.execute("window.scrollTo(0, document.body.scrollHeight);");
+         }
+
+         @Override
+         public void changed(ProgressEvent event)
+         {
          }
       });
 
-      // Add welcome message
+      // Initialize with welcome message
       addAssistantMessage("Hello! I'm Iris, your AI assistant. I can help you with setting up your monitoring environment, day-to-day operations, and analyzing problems. Feel free to ask any questions!");
+      updateBrowserContent();
 
       Label separator = new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL);
       separator.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -276,7 +319,7 @@ public class AiAssistantChatView extends View
 
       addUserMessage(message);
       chatInput.setEnabled(false);
-      final MessageBubble assistantMessage = addAssistantMessage(i18n.tr("Thinking..."));
+      final String assistantMessageId = addAssistantMessage(i18n.tr("Thinking..."));
       Job job = new Job(i18n.tr("Processing AI assistant query"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -284,11 +327,11 @@ public class AiAssistantChatView extends View
             try
             {
                final String answer = session.updateAiAssistantChat(chatId, message);
-               runInUIThread(() -> updateMessage(assistantMessage, answer));
+               runInUIThread(() -> updateMessage(assistantMessageId, answer));
             }
             catch(Exception e)
             {
-               runInUIThread(() -> updateMessage(assistantMessage, "Error: " + getErrorMessage()));
+               runInUIThread(() -> updateMessage(assistantMessageId, "Error: " + getErrorMessage()));
             }
          }
 
@@ -317,17 +360,19 @@ public class AiAssistantChatView extends View
    /**
     * Add user message to the chat
     */
-   private MessageBubble addUserMessage(String message)
+   private void addUserMessage(String message)
    {
-      return addMessage(message, true);
+      addMessage(message, true, null);
    }
 
    /**
     * Add assistant message to the chat
     */
-   private MessageBubble addAssistantMessage(String message)
+   private String addAssistantMessage(String message)
    {
-      return addMessage(message, false);
+      String messageId = "msg_" + System.currentTimeMillis();
+      addMessage(message, false, messageId);
+      return messageId;
    }
 
    /**
@@ -335,91 +380,101 @@ public class AiAssistantChatView extends View
     * 
     * @param message the message text
     * @param isUser true if this is a user message, false for assistant
+    * @param messageId unique identifier for the message (null for user messages)
     */
-   private MessageBubble addMessage(String message, boolean isUser)
+   private void addMessage(String message, boolean isUser, String messageId)
    {
-      Composite messageContainer = new Composite(chatContainer, SWT.NONE);
-      GridLayout messageLayout = new GridLayout();
-      messageLayout.marginWidth = 0;
-      messageLayout.marginHeight = 0;
-      messageLayout.numColumns = 5;
-      messageLayout.makeColumnsEqualWidth = true;
-      messageContainer.setLayout(messageLayout);
-      messageContainer.setBackground(chatContainer.getBackground());
+      String escapedMessage = prepareMessageText(message);
+      String messageClass = isUser ? "user-message" : "assistant-message";
+      String bubbleClass = isUser ? "user-bubble" : "assistant-bubble";
+      String sender = isUser ? i18n.tr("User") : i18n.tr("AI Assistant");
+      String id = messageId != null ? " id='" + messageId + "'" : "";
 
-      GridData messageContainerData = new GridData(SWT.FILL, SWT.TOP, true, false);
-      messageContainer.setLayoutData(messageContainerData);
+      String messageHtml = "<div class='message " + messageClass + "'>" +
+                          "<div class='bubble " + bubbleClass + "'" + id + ">" +
+                          "<div class='sender'>" + sender + "</div>" +
+                          escapedMessage +
+                          "</div></div>";
 
-      MessageBubble messageBubble;
-      if (isUser)
-      {
-         Label spacer = new Label(messageContainer, SWT.NONE);
-         spacer.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-         spacer.setBackground(chatContainer.getBackground());
-
-         messageBubble = new MessageBubble(messageContainer, MessageBubble.Type.USER, i18n.tr("User"), message);
-      }
-      else
-      {
-         messageBubble = new MessageBubble(messageContainer, MessageBubble.Type.ASSISTANT, i18n.tr("AI Assistant"), message);
-
-         Label spacer = new Label(messageContainer, SWT.NONE);
-         spacer.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-         spacer.setBackground(chatContainer.getBackground());
-      }
-
-      GridData bubbleData = new GridData();
-      bubbleData.horizontalAlignment = isUser ? SWT.RIGHT : SWT.LEFT;
-      bubbleData.grabExcessHorizontalSpace = true;
-      bubbleData.horizontalSpan = 4;
-      messageBubble.setLayoutData(bubbleData);
-
-      chatContainer.layout(true, true);
-      updateScrolledComposite();
-      scrollToBottom();
-      return messageBubble;
+      // Insert before closing </div></body></html>
+      int insertPos = chatContent.lastIndexOf("</div></body></html>");
+      chatContent.insert(insertPos, messageHtml);
+      
+      updateBrowserContent();
    }
 
    /**
-    * Update existing message in the chat.
+    * Update existing message in the chat
     *
-    * @param messageBubble message bubble to update
-    * @param newText new text
+    * @param messageId ID of the message to update
+    * @param newText new text content
     */
-   private void updateMessage(MessageBubble messageBubble, String newText)
+   private void updateMessage(String messageId, String newText)
    {
-      messageBubble.setText(newText);
-      chatContainer.layout(true, true);
-      updateScrolledComposite();
-      scrollToBottom();
-   }
-
-   /**
-    * Update the scrolled composite size
-    */
-   private void updateScrolledComposite()
-   {
-      Rectangle r = chatScrolledComposite.getClientArea();
-      chatScrolledComposite.setMinSize(chatContainer.computeSize(r.width, SWT.DEFAULT));
-   }
-
-   /**
-    * Scroll to the bottom of the chat
-    */
-   private void scrollToBottom()
-   {
-      Display.getDefault().asyncExec(() -> {
-         if (!chatScrolledComposite.isDisposed())
+      String escapedMessage = prepareMessageText(newText);
+      String currentContent = chatContent.toString();
+      
+      // Find the message by ID and replace its content
+      String searchPattern = "id='" + messageId + "'>";
+      int startPos = currentContent.indexOf(searchPattern);
+      if (startPos != -1)
+      {
+         int contentStart = currentContent.indexOf("</div>", startPos) + 6; // After sender div
+         int contentEnd = currentContent.indexOf("</div></div>", contentStart);
+         
+         if (contentEnd != -1)
          {
-            Rectangle r = chatScrolledComposite.getClientArea();
-            Point contentSize = chatContainer.computeSize(r.width, SWT.DEFAULT);
-            Point viewportSize = chatScrolledComposite.getSize();
-            if (contentSize.y > viewportSize.y)
-            {
-               chatScrolledComposite.setOrigin(0, contentSize.y - viewportSize.y);
-            }
+            // Replace the old content
+            chatContent.replace(contentStart, contentEnd, escapedMessage);
+            updateBrowserContent();
          }
-      });
+      }
+   }
+
+   /**
+    * Update browser content with current chat HTML
+    */
+   private void updateBrowserContent()
+   {
+      chatBrowser.setText(chatContent.toString());
+   }
+
+   /**
+    * Prepare message text for HTML display
+    */
+   private String prepareMessageText(String text)
+   {
+      String html;
+      try
+      {
+         Parser parser = Parser.builder().extensions(extensions).build();
+         Node document = parser.parse(text);
+         HtmlRenderer renderer = HtmlRenderer.builder().extensions(extensions).build();
+         html = renderer.render(document);
+      }
+      catch(Exception e)
+      {
+         logger.error("Exception in Markdown renderer", e);
+         html = "<div class=\"notification notification-error\">Markdown rendering error</div><div>Original document source:</div><code>" + escapeHtml(text) +
+               "</code></div></body></html>";
+      }
+      return html;
+   }
+
+   /**
+    * Escape HTML special characters in text.
+    *
+    * @param text text to escape
+    * @return escaped text
+    */
+   private static String escapeHtml(String text)
+   {
+      return text.replace("&", "&amp;")
+                 .replace("<", "&lt;")
+                 .replace(">", "&gt;")
+                 .replace("\"", "&quot;")
+                 .replace("'", "&#x27;")
+                 .replace("\n", "<br>");
    }
 
    /**
@@ -427,14 +482,8 @@ public class AiAssistantChatView extends View
     */
    private void clearChat()
    {
-      for(Control control : chatContainer.getChildren())
-      {
-         control.dispose();
-      }
-      chatContainer.layout(true, true);
-      updateScrolledComposite();
-      
-      // Re-add welcome message
+      chatContent.setLength(0);
+      initializeHtmlTemplate();
       addAssistantMessage("Hello! I'm Iris, your AI assistant. I can help you with setting up your monitoring environment, day-to-day operations, and analyzing problems. Feel free to ask any questions!");
    }
 }

@@ -137,6 +137,7 @@ std::string F_SNMPWalk(json_t *arguments, uint32_t userId)
          json_array_append_new(output, entry);
          return SNMP_ERR_SUCCESS;
       });
+   delete transport;
 
    if (rc != SNMP_ERR_SUCCESS)
    {
