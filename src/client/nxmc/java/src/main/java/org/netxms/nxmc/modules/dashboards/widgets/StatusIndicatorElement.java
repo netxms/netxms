@@ -25,10 +25,8 @@ import java.util.regex.Pattern;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -43,12 +41,17 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.maps.configs.MapDataSource;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.StatusIndicatorConfig;
 import org.netxms.nxmc.modules.dashboards.config.StatusIndicatorConfig.StatusIndicatorElementConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
+import org.netxms.nxmc.modules.dashboards.views.DrilldownDashboardView;
+import org.netxms.nxmc.modules.networkmaps.views.AdHocPredefinedMapView;
+import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.ViewRefreshController;
@@ -117,7 +120,7 @@ public class StatusIndicatorElement extends ElementWidget
          elementWidgets[i].setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
       }
 
-      Job job = new Job(i18n.tr("Synchronize objects"), view) {
+      Job job = new Job(i18n.tr("Synchronizing objects"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -180,13 +183,7 @@ public class StatusIndicatorElement extends ElementWidget
 
 		startRefreshTimer();
 
-      addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            refreshController.dispose();
-         }
-      });
+      addDisposeListener((e) -> refreshController.dispose());
 	}
 
 	/**
@@ -234,13 +231,9 @@ public class StatusIndicatorElement extends ElementWidget
                   dciValues = null;
                }
 
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     if (!isDisposed())
-                        updateElements(scriptData, dciValues);
-                  }
+               runInUIThread(() -> {
+                  if (!isDisposed())
+                     updateElements(scriptData, dciValues);
                });
             }
 
@@ -338,12 +331,41 @@ public class StatusIndicatorElement extends ElementWidget
 	}
 
    /**
+    * Open drill-down object
+    */
+   private void openDrillDownObject(long drillDownObjectId)
+   {
+      if ((view == null) || (drillDownObjectId == 0))
+         return;
+
+      AbstractObject object = Registry.getSession().findObjectById(drillDownObjectId);
+      if (object == null)
+         return;
+
+      if (object instanceof Dashboard)
+      {
+         Dashboard dashboard = (Dashboard)object;
+         AbstractObject dashboardContext = (view instanceof AbstractDashboardView) ? ((AbstractDashboardView)view).getDashboardContext() : null;
+         long dashboardContextId = (dashboardContext != null) ? dashboardContext.getObjectId() : 0;
+         long contextObjectId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+         view.openView(new DrilldownDashboardView(dashboard, dashboardContextId, contextObjectId));
+      }
+      else if (object instanceof NetworkMap)
+      {
+         NetworkMap map = (NetworkMap)object;
+         long contextObjectId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+         view.openView(new AdHocPredefinedMapView(contextObjectId, map));
+      }
+   }
+
+   /**
     * Widget that draws single status indicator element
     */
    private class StatusIndicatorElementWidget extends Canvas
    {
       private StatusIndicatorElementConfig elementConfig;
       private ObjectStatus status;
+      private boolean mouseDown = false;
 
       /**
        * Create new status indicator element wiodget
@@ -356,13 +378,32 @@ public class StatusIndicatorElement extends ElementWidget
          super(parent, SWT.NONE);
          this.elementConfig = elementConfig;
          status = ObjectStatus.UNKNOWN;
-         addPaintListener(new PaintListener() {
+         addPaintListener((e) -> drawContent(e.gc));
+         addMouseListener(new MouseListener() {
             @Override
-            public void paintControl(PaintEvent e)
+            public void mouseDown(MouseEvent e)
             {
-               drawContent(e.gc);
+               if (e.button == 1)
+                  mouseDown = true;
+            }
+
+            @Override
+            public void mouseUp(MouseEvent e)
+            {
+               if ((e.button == 1) && mouseDown)
+               {
+                  mouseDown = false;
+                  openDrillDownObject(StatusIndicatorElementWidget.this.elementConfig.getDrillDownObjectId());
+               }
+            }
+
+            @Override
+            public void mouseDoubleClick(MouseEvent e)
+            {
+               mouseDown = false;
             }
          });
+         setCursor(getDisplay().getSystemCursor((elementConfig.getDrillDownObjectId() != 0) ? SWT.CURSOR_HAND : SWT.CURSOR_ARROW));
       }
 
       /**

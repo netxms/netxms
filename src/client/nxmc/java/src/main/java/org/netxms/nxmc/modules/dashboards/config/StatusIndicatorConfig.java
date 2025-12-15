@@ -238,6 +238,9 @@ public class StatusIndicatorConfig extends DashboardElementConfig
       @Element(required = false)
       private String tag;
 
+      @Element(required = false)
+      private long drillDownObjectId;
+
       /**
        * Default constructor
        */
@@ -250,6 +253,7 @@ public class StatusIndicatorConfig extends DashboardElementConfig
          dciName = null;
          dciDescription = null;
          tag = null;
+         drillDownObjectId = 0;
       }
 
       /**
@@ -266,6 +270,7 @@ public class StatusIndicatorConfig extends DashboardElementConfig
          dciName = src.dciName;
          dciDescription = src.dciDescription;
          tag = src.tag;
+         drillDownObjectId = src.drillDownObjectId;
       }
 
       /**
@@ -394,6 +399,22 @@ public class StatusIndicatorConfig extends DashboardElementConfig
       public void setTag(String tag)
       {
          this.tag = tag;
+      }
+
+      /**
+       * @return the drillDownObjectId
+       */
+      public long getDrillDownObjectId()
+      {
+         return drillDownObjectId;
+      }
+
+      /**
+       * @param drillDownObjectId the drillDownObjectId to set
+       */
+      public void setDrillDownObjectId(long drillDownObjectId)
+      {
+         this.drillDownObjectId = drillDownObjectId;
       }
 
       /**

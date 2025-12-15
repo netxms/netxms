@@ -36,6 +36,7 @@ import org.netxms.nxmc.modules.dashboards.config.StatusIndicatorConfig;
 import org.netxms.nxmc.modules.dashboards.config.StatusIndicatorConfig.StatusIndicatorElementConfig;
 import org.netxms.nxmc.modules.datacollection.widgets.DciSelector;
 import org.netxms.nxmc.modules.datacollection.widgets.TemplateDciSelector;
+import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -55,6 +56,7 @@ public class StatusIndicatorElementEditDialog extends Dialog
    private DciSelector dciSelector;
    private TemplateDciSelector templateDciSelector;
    private LabeledText tagEditor;
+   private ObjectSelector drillDownObjectSelector;
    private String cachedDciName;
 
    public StatusIndicatorElementEditDialog(Shell parentShell, StatusIndicatorElementConfig element)
@@ -118,6 +120,13 @@ public class StatusIndicatorElementEditDialog extends Dialog
 
       createTypeSpecificControls();
 
+      drillDownObjectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      drillDownObjectSelector.setLabel(i18n.tr("Drill-down object"));
+      drillDownObjectSelector.setObjectClass(AbstractObject.class);
+      drillDownObjectSelector.setClassFilter(ObjectSelectionDialog.createDashboardAndNetworkMapSelectionFilter());
+      drillDownObjectSelector.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+      drillDownObjectSelector.setObjectId(element.getDrillDownObjectId());
+
       return dialogArea;
    }
 
@@ -169,6 +178,7 @@ public class StatusIndicatorElementEditDialog extends Dialog
    {
       element.setLabel(label.getText().trim());
       element.setType(typeSelector.getSelectionIndex());
+      element.setDrillDownObjectId(drillDownObjectSelector.getObjectId());
       switch(element.getType())
       {
          case StatusIndicatorConfig.ELEMENT_TYPE_DCI:
