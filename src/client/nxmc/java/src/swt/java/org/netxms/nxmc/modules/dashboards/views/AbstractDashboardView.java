@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -425,5 +425,15 @@ public abstract class AbstractDashboardView extends ObjectView
       Rectangle r = scroller.getClientArea();
       Point s = dbc.computeSize(r.width, SWT.DEFAULT);
       scroller.setMinSize(s);
+   }
+
+   /**
+    * Get dashboard context.
+    *
+    * @return dashboard context
+    */
+   public AbstractObject getDashboardContext()
+   {
+      return dbc.getContext();
    }
 }
