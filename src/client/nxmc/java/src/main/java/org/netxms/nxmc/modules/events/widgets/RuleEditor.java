@@ -25,6 +25,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map.Entry;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.preference.PreferenceManager;
@@ -53,6 +54,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
@@ -64,8 +66,10 @@ import org.netxms.client.events.EventTemplate;
 import org.netxms.client.events.TimeFrame;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.propertypages.PropertyDialog;
 import org.netxms.nxmc.base.widgets.Card;
+import org.netxms.nxmc.base.widgets.MarkdownViewer;
 import org.netxms.nxmc.base.widgets.helpers.DashboardElementButton;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -114,6 +118,8 @@ public class RuleEditor extends Composite
    private Composite mainArea;
    private Card condition;
    private Card action;
+   private Card explanation;
+   private Composite explanationArea;
    private Label expandButton;
    private Label editButton;
    private boolean modified = false;
@@ -1236,6 +1242,73 @@ public class RuleEditor extends Composite
       headerLabel.setBackground(color);
       expandButton.setBackground(color);
       editButton.setBackground(color);
+   }
+
+   /**
+    * Update rule explanation area
+    */
+   public void updateExplanation()
+   {
+      if (explanation == null)
+      {
+         explanation = new Card(mainArea, i18n.tr("Explanation")) {
+            @Override
+            protected Control createClientArea(Composite parent)
+            {
+               setTitleBackground(ThemeEngine.getBackgroundColor("RuleEditor.Border.Explanation"));
+               setTitleColor(ThemeEngine.getForegroundColor("RuleEditor.Title"));
+               explanationArea = new Composite(parent, SWT.NONE);
+               explanationArea.setBackground(ThemeEngine.getBackgroundColor("RuleEditor"));
+               GridLayout layout = new GridLayout();
+               explanationArea.setLayout(layout);
+               return explanationArea;
+            }
+         };
+         GridData gd = new GridData();
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalSpan = 2;
+         gd.horizontalAlignment = SWT.FILL;
+         gd.verticalAlignment = SWT.FILL;
+         explanation.setLayoutData(gd);
+      }
+
+      for(Control c : explanationArea.getChildren())
+         c.dispose();
+
+      new Label(explanationArea, SWT.NONE).setText(i18n.tr("Generating explanation..."));
+      new ProgressBar(explanationArea, SWT.INDETERMINATE).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      setCollapsed(false, true);
+
+      Job job = new Job(i18n.tr("Explaining EPP rule"), getEditorView()) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final String explanation = session.explainEventProcessingPolicyRule(rule.getGuid());
+            runInUIThread(() -> {
+               if (RuleEditor.this.isDisposed())
+                  return;
+
+               for(Control c : explanationArea.getChildren())
+                  c.dispose();
+
+               MarkdownViewer explanationText = new MarkdownViewer(explanationArea, SWT.NONE);
+               explanationText.setBackground(ThemeEngine.getBackgroundColor("RuleEditor"));
+               explanationText.setText(explanation);
+               GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
+               gd.heightHint = 500;
+               explanationText.setLayoutData(gd);
+               explanationText.setRenderCompletionHandler(() -> editor.updateEditorAreaLayout());
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot explain EPP rule");
+         }
+      };
+      job.setUser(false);
+      job.start();
    }
 
    /**

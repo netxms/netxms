@@ -677,7 +677,7 @@ public:
    void fillMessage(NXCPMessage *msg) const;
    void createExportRecord(TextFileWriter& xml) const;
    void createOrderingExportRecord(TextFileWriter& xml) const;
-   json_t *toJson() const;
+   json_t *toJson(bool assistantMode = false) const;
 
    void validateConfig() const;
    bool isActionInUse(uint32_t actionId) const;
@@ -806,6 +806,7 @@ public:
    void exportRule(TextFileWriter& xml, const uuid& guid) const;
    void exportRuleOrgering(TextFileWriter& xml) const;
    void importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ruleOrdering);
+   json_t *getRuleDetails(const uuid& ruleId) const;
    json_t *toJson() const;
 
    void validateConfig() const;

@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -115,6 +116,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    private Action actionEnableRule;
    private Action actionDisableRule;
    private Action actionAddRule;
+   private Action actionExplain;
 
    /**
     * Create event processing policy editor view
@@ -324,6 +326,14 @@ public class EventProcessingPolicyEditor extends ConfigurationView
          public void run()
          {
             insertRule(ruleEditors.size());
+         }
+      };
+
+      actionExplain = new Action(i18n.tr("E&xplain")) {
+         @Override
+         public void run()
+         {
+            explainRule();
          }
       };
    }
@@ -812,6 +822,19 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       actionCut.setEnabled(selection.size() > 0);
       actionCopy.setEnabled(selection.size() > 0);
       actionPaste.setEnabled((selection.size() == 1) && !clipboard.isEmpty());
+      actionExplain.setEnabled(selection.size() == 1);
+   }
+
+   /**
+    * Explain selected rule
+    */
+   private void explainRule()
+   {
+      if (selection.size() != 1)
+         return;
+
+      RuleEditor editor = selection.iterator().next();
+      editor.updateExplanation();
    }
 
    /**
@@ -1018,6 +1041,8 @@ public class EventProcessingPolicyEditor extends ConfigurationView
     */
    public void fillRuleContextMenu(IMenuManager manager)
    {
+      manager.add(actionExplain);
+      manager.add(new Separator());
       manager.add(actionEnableRule);
       manager.add(actionDisableRule);
       manager.add(new Separator());

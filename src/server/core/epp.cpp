@@ -1573,13 +1573,12 @@ void EPRule::fillMessage(NXCPMessage *msg) const
 }
 
 /**
- * Serialize rule to JSON
+ * Serialize rule to JSON. If assistantMode is true, output is formed to be more usable by AI assistants.
  */
-json_t *EPRule::toJson() const
+json_t *EPRule::toJson(bool assistantMode) const
 {
    json_t *root = json_object();
    json_object_set_new(root, "guid", m_guid.toJson());
-   json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "sources", m_sources.toJson());
    json_object_set_new(root, "sourceExclusions", m_sourceExclusions.toJson());
    json_object_set_new(root, "events", m_events.toJson());
@@ -1615,12 +1614,6 @@ json_t *EPRule::toJson() const
    json_object_set_new(root, "comments", json_string_t(m_comments));
    json_object_set_new(root, "filterScript", json_string_t(m_filterScriptSource));
    json_object_set_new(root, "actionScript", json_string_t(m_actionScriptSource));
-   json_object_set_new(root, "alarmMessage", json_string_t(m_alarmMessage));
-   json_object_set_new(root, "alarmImpact", json_string_t(m_alarmImpact));
-   json_object_set_new(root, "alarmSeverity", json_integer(m_alarmSeverity));
-   json_object_set_new(root, "alarmKey", json_string_t(m_alarmKey));
-   json_object_set_new(root, "alarmTimeout", json_integer(m_alarmTimeout));
-   json_object_set_new(root, "alarmTimeoutEvent", json_integer(m_alarmTimeoutEvent));
    json_object_set_new(root, "rcaScriptName", json_string_t(m_rcaScriptName));
    json_object_set_new(root, "categories", m_alarmCategoryList.toJson());
    json_object_set_new(root, "pstorageSetActions", m_pstorageSetActions.toJson());
@@ -1628,6 +1621,49 @@ json_t *EPRule::toJson() const
    json_object_set_new(root, "customAttributeSetActions", m_customAttributeSetActions.toJson());
    json_object_set_new(root, "customAttributeDeleteActions", m_customAttributeDeleteActions.toJson());
    json_object_set_new(root, "aiAgentInstructions", json_string_t(m_aiAgentInstructions));
+
+   if (assistantMode)
+   {
+      bool generateAlarm = (m_flags & RF_GENERATE_ALARM) != 0 && m_alarmSeverity != SEVERITY_RESOLVE && m_alarmSeverity != SEVERITY_TERMINATE;
+      if (generateAlarm)
+      {
+         json_object_set_new(root, "alarmSeverity", json_string_w((m_alarmSeverity == SEVERITY_FROM_EVENT) ? L"same as event" : GetStatusAsText(m_alarmSeverity, true)));
+         json_object_set_new(root, "alarmMessage", json_string_t(m_alarmMessage));
+         json_object_set_new(root, "alarmImpact", json_string_t(m_alarmImpact));
+         json_object_set_new(root, "alarmTimeout", json_integer(m_alarmTimeout));
+         json_object_set_new(root, "alarmTimeoutEvent", json_integer(m_alarmTimeoutEvent));
+      }
+      if ((m_flags & RF_GENERATE_ALARM) != 0)
+      {
+         json_object_set_new(root, "alarmKey", json_string_t(m_alarmKey));
+      }
+
+      json_t *flags = json_object();
+      json_object_set_new(flags, "disabled", json_boolean((m_flags & RF_DISABLED) != 0));
+      json_object_set_new(flags, "generateAlarm", json_boolean(generateAlarm));
+      json_object_set_new(flags, "resolveAlarm", json_boolean((m_flags & RF_GENERATE_ALARM) != 0 && m_alarmSeverity == SEVERITY_RESOLVE));
+      json_object_set_new(flags, "terminateAlarm", json_boolean((m_flags & RF_GENERATE_ALARM) != 0 && m_alarmSeverity == SEVERITY_TERMINATE));
+      json_object_set_new(flags, "stopProcessing", json_boolean((m_flags & RF_STOP_PROCESSING) != 0));
+      json_object_set_new(flags, "createTicket", json_boolean((m_flags & RF_CREATE_TICKET) != 0));
+      json_object_set_new(flags, "terminateByRegexp", json_boolean((m_flags & RF_TERMINATE_BY_REGEXP) != 0));
+      json_object_set_new(flags, "startDowntime", json_boolean((m_flags & RF_START_DOWNTIME) != 0));
+      json_object_set_new(flags, "endDowntime", json_boolean((m_flags & RF_END_DOWNTIME) != 0));
+      json_object_set_new(flags, "requestAIComment", json_boolean((m_flags & RF_REQUEST_AI_COMMENT) != 0));
+      json_object_set_new(flags, "stopProcessing", json_boolean((m_flags & RF_STOP_PROCESSING) != 0));
+      json_object_set_new(flags, "negatedEventMatch", json_boolean((m_flags & RF_NEGATED_EVENTS) != 0));
+      json_object_set_new(flags, "negatedSourceMatch", json_boolean((m_flags & RF_NEGATED_SOURCE) != 0));
+      json_object_set_new(root, "flags", flags);
+   }
+   else
+   {
+      json_object_set_new(root, "flags", json_integer(m_flags));
+      json_object_set_new(root, "alarmSeverity", json_integer(m_alarmSeverity));
+      json_object_set_new(root, "alarmMessage", json_string_t(m_alarmMessage));
+      json_object_set_new(root, "alarmImpact", json_string_t(m_alarmImpact));
+      json_object_set_new(root, "alarmKey", json_string_t(m_alarmKey));
+      json_object_set_new(root, "alarmTimeout", json_integer(m_alarmTimeout));
+      json_object_set_new(root, "alarmTimeoutEvent", json_integer(m_alarmTimeoutEvent));
+   }
 
    return root;
 }
@@ -1815,6 +1851,25 @@ bool EventProcessingPolicy::isCategoryInUse(uint32_t categoryId) const
 
    unlock();
    return bResult;
+}
+
+/**
+ * Get rule details as JSON
+ */
+json_t *EventProcessingPolicy::getRuleDetails(const uuid& ruleId) const
+{
+   json_t *details = nullptr;
+   readLock();
+   for(int i = 0; i < m_rules.size(); i++)
+   {
+      if (ruleId.equals(m_rules.get(i)->getGuid()))
+      {
+         details = m_rules.get(i)->toJson(true);
+         break;
+      }
+   }
+   unlock();
+   return details;
 }
 
 /**

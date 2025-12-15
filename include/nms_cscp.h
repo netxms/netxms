@@ -680,6 +680,7 @@ typedef struct
 #define CMD_ADD_AI_AGENT_TASK             0x01E0
 #define CMD_CREATE_AI_ASSISTANT_CHAT      0x01E1
 #define CMD_DELETE_AI_ASSISTANT_CHAT      0x01E2
+#define CMD_EXPLAIN_EPP_RULE              0x01E3
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101

@@ -1087,7 +1087,6 @@ void ClientSession::processRequest(NXCPMessage *request)
          deleteEventTemplate(*request);
          break;
       case CMD_GENERATE_EVENT_CODE:
-
          generateEventCode(*request);
          break;
       case CMD_MODIFY_OBJECT:
@@ -2022,6 +2021,9 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_CLOSE_EPP:
          closeEventProcessingPolicy(*request);
+         break;
+      case CMD_EXPLAIN_EPP_RULE:
+         explainEventProcessingPolicyRule(*request);
          break;
       case CMD_QUERY_AI_ASSISTANT:
          queryAiAssistant(*request);
@@ -6060,13 +6062,56 @@ void ClientSession::processEventProcessingPolicyRecord(const NXCPMessage& reques
 }
 
 /**
+ * Explain event processing policy rule
+ */
+void ClientSession::explainEventProcessingPolicyRule(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   if (m_systemAccessRights & SYSTEM_ACCESS_EPP)
+   {
+      uuid ruleId = request.getFieldAsGUID(VID_RULE_ID);
+      json_t *rule = GetEventProcessingPolicy()->getRuleDetails(ruleId);
+      if (rule != nullptr)
+      {
+         char *jsonString = json_dumps(rule, JSON_INDENT(3) | JSON_PRESERVE_ORDER);
+         std::string prompt =
+                  "Provide detailed explanation of the following event processing policy rule;"
+                  "provide plain language summary first, then detailed breakdown of all components;"
+                  "rule data is in JSON format; do not include raw JSON elements into your answer, use only terms understandable by non-programmer;"
+                  "only include relevant information from the rule into your explanation;"
+                  "use additional tools and skills to extract missing information. Rule data:\n";
+         prompt.append(jsonString);
+         MemFree(jsonString);
+         json_decref(rule);
+         char *explanation = QueryAIAssistant(prompt.c_str(), nullptr);
+         response.setField(VID_RCC, RCC_SUCCESS);
+         response.setFieldFromUtf8String(VID_MESSAGE, explanation);
+         MemFree(explanation);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+      }
+   }
+   else
+   {
+      // Current user has no rights for event policy management
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on event processing policy change"));
+   }
+
+   sendMessage(response);
+}
+
+/**
  * Get compiled MIB file
  */
 void ClientSession::getMIBFile(const NXCPMessage& request)
 {
-   TCHAR mibFile[MAX_PATH];
-   _tcscpy(mibFile, g_netxmsdDataDir);
-   _tcscat(mibFile, DFILE_COMPILED_MIB);
+   wchar_t mibFile[MAX_PATH];
+   wcscpy(mibFile, g_netxmsdDataDir);
+   wcslcat(mibFile, DFILE_COMPILED_MIB, MAX_PATH);
 	sendFile(mibFile, request.getId(), 0);
 }
 
@@ -6077,9 +6122,9 @@ void ClientSession::getMIBTimestamp(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   TCHAR mibFileName[MAX_PATH];
-   _tcscpy(mibFileName, g_netxmsdDataDir);
-   _tcscat(mibFileName, DFILE_COMPILED_MIB);
+   wchar_t mibFileName[MAX_PATH];
+   wcscpy(mibFileName, g_netxmsdDataDir);
+   wcslcat(mibFileName, DFILE_COMPILED_MIB, MAX_PATH);
 
    uint32_t timestamp;
    uint32_t rc = SnmpGetMIBTreeTimestamp(mibFileName, &timestamp);

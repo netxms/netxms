@@ -78,7 +78,7 @@ EventProcessingPolicy NXCORE_EXPORTABLE *GetEventProcessingPolicy()
 /**
  * Static data
  */
-static SharedHashMap<UINT32, EventTemplate> s_eventTemplates;
+static SharedHashMap<uint32_t, EventTemplate> s_eventTemplates;
 static SharedStringObjectMap<EventTemplate> s_eventNameIndex;
 static RWLock s_eventTemplatesLock;
 

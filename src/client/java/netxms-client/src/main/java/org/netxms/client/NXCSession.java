@@ -8382,6 +8382,23 @@ public class NXCSession
    }
 
    /**
+    * Get explanation for given event processing policy rule.
+    *
+    * @param ruleId Rule ID
+    * @return Explanation text
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public String explainEventProcessingPolicyRule(UUID ruleId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_EXPLAIN_EPP_RULE);
+      msg.setField(NXCPCodes.VID_RULE_ID, ruleId);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId(), commandTimeout * 10); // Explanation may take long time
+      return response.getFieldAsString(NXCPCodes.VID_MESSAGE);
+   }
+
+   /**
     * Open data collection configuration for given node. You must call
     * DataCollectionConfiguration.close() to close data collection configuration
     * when it is no longer needed.

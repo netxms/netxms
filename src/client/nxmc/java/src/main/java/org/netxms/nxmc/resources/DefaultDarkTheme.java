@@ -89,6 +89,7 @@ public class DefaultDarkTheme extends Theme
       elements.put("RuleEditor.Title.Selected", new ThemeElement(new RGB(113, 115, 48), null));
       elements.put("RuleEditor.Border.Action", new ThemeElement(new RGB(90, 85, 97), null));
       elements.put("RuleEditor.Border.Condition", new ThemeElement(new RGB(94, 102, 82), null));
+      elements.put("RuleEditor.Border.Explanation", new ThemeElement(new RGB(35, 50, 65), null));
       elements.put("RuleEditor.Border.Rule", new ThemeElement(new RGB(56, 66, 77), null));
       elements.put("ServiceAvailability.Legend", new ThemeElement(null, new RGB(240, 240, 240)));
       elements.put("Status.Normal", new ThemeElement(new RGB(0, 137, 0), new RGB(0, 192, 0)));

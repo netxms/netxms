@@ -965,6 +965,7 @@ private:
    void closeEventProcessingPolicy(const NXCPMessage& request);
    void saveEventProcessingPolicy(const NXCPMessage& request);
    void processEventProcessingPolicyRecord(const NXCPMessage& request);
+   void explainEventProcessingPolicyRule(const NXCPMessage& request);
    void updatePeerInterface(const NXCPMessage& request);
    void clearPeerInterface(const NXCPMessage& request);
    void queryAiAssistant(const NXCPMessage& request);
