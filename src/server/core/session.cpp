@@ -2875,7 +2875,7 @@ void ClientSession::deleteAlarmCategory(const NXCPMessage& request)
    if (checkSystemAccessRights(SYSTEM_ACCESS_EPP))
    {
       uint32_t categoryId = request.getFieldAsInt32(VID_CATEGORY_ID);
-      if (!g_pEventPolicy->isCategoryInUse(categoryId))
+      if (!GetEventProcessingPolicy()->isCategoryInUse(categoryId))
       {
          msg.setField(VID_RCC, DeleteAlarmCategory(categoryId));
       }
@@ -5912,7 +5912,7 @@ void ClientSession::openEventProcessingPolicy(const NXCPMessage& request)
             InterlockedOr(&m_flags, CSF_EPP_LOCKED);
          }
          response.setField(VID_RCC, RCC_SUCCESS);
-         response.setField(VID_NUM_RULES, g_pEventPolicy->getNumRules());
+         response.setField(VID_NUM_RULES, GetEventProcessingPolicy()->getNumRules());
          success = true;
          writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Open event processing policy"));
       }
@@ -5929,7 +5929,7 @@ void ClientSession::openEventProcessingPolicy(const NXCPMessage& request)
    // Send policy to client
    if (success)
    {
-      g_pEventPolicy->sendToClient(this, request.getId());
+      GetEventProcessingPolicy()->sendToClient(this, request.getId());
    }
 }
 
@@ -5982,8 +5982,9 @@ void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
          m_dwRecordsUploaded = 0;
          if (m_dwNumRecordsToUpload == 0)
          {
-            g_pEventPolicy->replacePolicy(0, nullptr);
-            if (g_pEventPolicy->saveToDB())
+            EventProcessingPolicy *epp = GetEventProcessingPolicy();
+            epp->replacePolicy(0, nullptr);
+            if (epp->saveToDB())
             {
                writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Event processing policy cleared"));
             }
@@ -6030,11 +6031,12 @@ void ClientSession::processEventProcessingPolicyRecord(const NXCPMessage& reques
             // All records received, replace event policy...
             debugPrintf(5, _T("Replacing event processing policy with a new one at %p (%d rules)"),
                         m_ppEPPRuleList, m_dwNumRecordsToUpload);
-            json_t *oldVersion = g_pEventPolicy->toJson();
-            g_pEventPolicy->replacePolicy(m_dwNumRecordsToUpload, m_ppEPPRuleList);
-            bool success = g_pEventPolicy->saveToDB();
+            EventProcessingPolicy *epp = GetEventProcessingPolicy();
+            json_t *oldVersion = epp->toJson();
+            epp->replacePolicy(m_dwNumRecordsToUpload, m_ppEPPRuleList);
+            bool success = epp->saveToDB();
             MemFreeAndNull(m_ppEPPRuleList);
-            json_t *newVersion = g_pEventPolicy->toJson();
+            json_t *newVersion = epp->toJson();
 
             // ... and send final confirmation
             NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
@@ -7378,7 +7380,7 @@ void ClientSession::deleteAction(const NXCPMessage& request)
    {
       // Get Id of action to be deleted
       uint32_t actionId = request.getFieldAsUInt32(VID_ACTION_ID);
-      if (!g_pEventPolicy->isActionInUse(actionId))
+      if (!GetEventProcessingPolicy()->isActionInUse(actionId))
       {
          response.setField(VID_RCC, DeleteAction(actionId));
       }
@@ -10528,6 +10530,7 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
             writer.appendUtf8String("\t</traps>\n");
 
             // Write rules
+            EventProcessingPolicy *epp = GetEventProcessingPolicy();
             writer.appendUtf8String("\t<rules>\n");
             count = request.getFieldAsUInt32(VID_NUM_RULES);
             uint32_t fieldId = VID_RULE_LIST_BASE;
@@ -10535,14 +10538,14 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
             for(i = 0; i < count; i++)
             {
                request.getFieldAsBinary(fieldId++, guid, UUID_LENGTH);
-               g_pEventPolicy->exportRule(writer, guid);
+               epp->exportRule(writer, guid);
             }
             writer.appendUtf8String("\t</rules>\n");
 
             if (count > 0) //add rule order information if at least one rule is exported
             {
                writer.appendUtf8String("\t<ruleOrdering>\n");
-               g_pEventPolicy->exportRuleOrgering(writer);
+               epp->exportRuleOrgering(writer);
                writer.appendUtf8String("\t</ruleOrdering>\n");
             }
 

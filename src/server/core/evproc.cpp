@@ -314,7 +314,7 @@ static void ProcessEvent(Event *event, int processorId)
    }
 
    // Pass event through event processing policy
-   g_pEventPolicy->processEvent(event);
+   GetEventProcessingPolicy()->processEvent(event);
    nxlog_debug_tag(DEBUG_TAG, 7, _T("Event ") UINT64_FMT _T(" with code %u passed event processing policy"), event->getId(), event->getCode());
 
    // Write event to log if required, otherwise destroy it

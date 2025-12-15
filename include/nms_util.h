@@ -4716,12 +4716,25 @@ static inline const char *json_object_get_string_utf8(json_t *object, const char
 }
 
 /**
+ * Get integer value with type conversion when necessary
+ */
+static inline json_int_t json_integer_value_ex(json_t *v, json_int_t defval)
+{
+   if (json_is_integer(v))
+      return json_integer_value(v);
+   if (json_is_string(v))
+      return strtoll(json_string_value(v), nullptr, 0);
+   if (json_is_boolean(v))
+      return json_boolean_value(v) ? 1 : 0;
+   return defval;
+}
+
+/**
  * Get integer value from object
  */
 static inline int64_t json_object_get_int64(json_t *object, const char *tag, int64_t defval = 0)
 {
-   json_t *value = json_object_get(object, tag);
-   return json_is_integer(value) ? json_integer_value(value) : defval;
+   return json_integer_value_ex(json_object_get(object, tag), defval);
 }
 
 /**
@@ -4729,8 +4742,7 @@ static inline int64_t json_object_get_int64(json_t *object, const char *tag, int
  */
 static inline uint64_t json_object_get_uint64(json_t *object, const char *tag, uint64_t defval = 0)
 {
-   json_t *value = json_object_get(object, tag);
-   return json_is_integer(value) ? static_cast<uint64_t>(json_integer_value(value)) : defval;
+   return static_cast<uint64_t>(json_integer_value_ex(json_object_get(object, tag), defval));
 }
 
 /**
@@ -4738,8 +4750,7 @@ static inline uint64_t json_object_get_uint64(json_t *object, const char *tag, u
  */
 static inline int32_t json_object_get_int32(json_t *object, const char *tag, int32_t defval = 0)
 {
-   json_t *value = json_object_get(object, tag);
-   return json_is_integer(value) ? static_cast<int32_t>(json_integer_value(value)) : defval;
+   return static_cast<int32_t>(json_integer_value_ex(json_object_get(object, tag), defval));
 }
 
 /**
@@ -4747,8 +4758,7 @@ static inline int32_t json_object_get_int32(json_t *object, const char *tag, int
  */
 static inline uint32_t json_object_get_uint32(json_t *object, const char *tag, uint32_t defval = 0)
 {
-   json_t *value = json_object_get(object, tag);
-   return json_is_integer(value) ? static_cast<uint32_t>(json_integer_value(value)) : defval;
+   return static_cast<uint32_t>(json_integer_value_ex(json_object_get(object, tag), defval));
 }
 
 /**

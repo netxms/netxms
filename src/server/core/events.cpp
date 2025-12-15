@@ -38,7 +38,7 @@ ObjectQueue<Event> g_eventQueue(4096, Ownership::True);
 /**
  * Event processing policy
  */
-EventPolicy *g_pEventPolicy = nullptr;
+static EventProcessingPolicy *s_eventProcessingPolicy = nullptr;
 
 /**
  * Unique event ID
@@ -68,6 +68,11 @@ void LoadLastEventId(DB_HANDLE hdb)
          s_eventId = std::max(static_cast<int64_t>(s_eventId), DBGetFieldInt64(hResult, 0, 0));
       DBFreeResult(hResult);
    }
+}
+
+EventProcessingPolicy NXCORE_EXPORTABLE *GetEventProcessingPolicy()
+{
+   return s_eventProcessingPolicy;
 }
 
 /**
@@ -723,12 +728,12 @@ bool InitEventSubsystem()
    // Create and initialize event processing policy
    if (success)
    {
-      g_pEventPolicy = new EventPolicy;
-      if (!g_pEventPolicy->loadFromDB())
+      s_eventProcessingPolicy = new EventProcessingPolicy();
+      if (!s_eventProcessingPolicy->loadFromDB())
       {
          success = FALSE;
          nxlog_write_tag(NXLOG_ERROR, _T("event.db"), _T("Error loading event processing policy from database"));
-         delete g_pEventPolicy;
+         delete s_eventProcessingPolicy;
       }
    }
 
@@ -740,7 +745,7 @@ bool InitEventSubsystem()
  */
 void ShutdownEventSubsystem()
 {
-   delete g_pEventPolicy;
+   delete s_eventProcessingPolicy;
 }
 
 /**
@@ -910,7 +915,7 @@ void CreateEventTemplateExportRecord(TextFileWriter& str, uint32_t eventCode)
 /**
  * Resolve event name
  */
-bool EventNameFromCode(uint32_t eventCode, TCHAR *buffer)
+bool NXCORE_EXPORTABLE EventNameFromCode(uint32_t eventCode, TCHAR *buffer)
 {
    bool bRet = false;
 
@@ -934,7 +939,7 @@ bool EventNameFromCode(uint32_t eventCode, TCHAR *buffer)
 /**
  * Find event template by code - suitable for external call
  */
-shared_ptr<EventTemplate> FindEventTemplateByCode(uint32_t code)
+shared_ptr<EventTemplate> NXCORE_EXPORTABLE FindEventTemplateByCode(uint32_t code)
 {
    s_eventTemplatesLock.readLock();
    shared_ptr<EventTemplate> e = s_eventTemplates.getShared(code);
@@ -945,7 +950,7 @@ shared_ptr<EventTemplate> FindEventTemplateByCode(uint32_t code)
 /**
  * Find event template by name - suitable for external call
  */
-shared_ptr<EventTemplate> FindEventTemplateByName(const wchar_t *name)
+shared_ptr<EventTemplate> NXCORE_EXPORTABLE FindEventTemplateByName(const wchar_t *name)
 {
    s_eventTemplatesLock.readLock();
    shared_ptr<EventTemplate> e = s_eventNameIndex.getShared(name);
@@ -1156,7 +1161,7 @@ unique_ptr<ObjectArray<EventReference>> GetAllEventReferences(uint32_t eventCode
       target->getEventReferences(eventCode, eventReferences);
    }
 
-   g_pEventPolicy->getEventReferences(eventCode, eventReferences);
+   s_eventProcessingPolicy->getEventReferences(eventCode, eventReferences);
    GetSNMPTrapsEventReferences(eventCode, eventReferences);
    GetSyslogEventReferences(eventCode, eventReferences);
    GetWindowsEventLogEventReferences(eventCode, eventReferences);

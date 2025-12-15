@@ -585,10 +585,10 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
          for(int i = 0; i < rules->size(); i++)
          {
             EPRule *rule = new EPRule(*rules->get(i), context, nxslV5);
-            g_pEventPolicy->importRule(rule, (flags & CFG_IMPORT_REPLACE_EPP_RULES) != 0, ruleOrdering);
+            GetEventProcessingPolicy()->importRule(rule, (flags & CFG_IMPORT_REPLACE_EPP_RULES) != 0, ruleOrdering);
          }
          delete ruleOrdering;
-         if (!g_pEventPolicy->saveToDB())
+         if (!GetEventProcessingPolicy()->saveToDB())
          {
             context->log(NXLOG_ERROR, _T("ImportConfig()"), _T("Unable to import event processing policy rules"));
             rcc = RCC_DB_FAILURE;

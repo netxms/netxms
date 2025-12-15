@@ -1646,7 +1646,7 @@ bool EPRule::isActionInUse(UINT32 actionId) const
 /**
  * Load event processing policy from database
  */
-bool EventPolicy::loadFromDB()
+bool EventProcessingPolicy::loadFromDB()
 {
    DB_RESULT hResult;
    bool success = false;
@@ -1679,7 +1679,7 @@ bool EventPolicy::loadFromDB()
 /**
  * Save event processing policy to database
  */
-bool EventPolicy::saveToDB() const
+bool EventProcessingPolicy::saveToDB() const
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    bool success = DBBegin(hdb);
@@ -1715,7 +1715,7 @@ bool EventPolicy::saveToDB() const
 /**
  * Pass event through policy
  */
-void EventPolicy::processEvent(Event *pEvent)
+void EventProcessingPolicy::processEvent(Event *pEvent)
 {
 	nxlog_debug_tag(DEBUG_TAG, 7, L"EPP: processing event " UINT64_FMT, pEvent->getId());
    readLock();
@@ -1731,7 +1731,7 @@ void EventPolicy::processEvent(Event *pEvent)
 /**
  * Send event policy to client
  */
-void EventPolicy::sendToClient(ClientSession *session, uint32_t requestId) const
+void EventProcessingPolicy::sendToClient(ClientSession *session, uint32_t requestId) const
 {
    NXCPMessage msg(CMD_EPP_RECORD, requestId);
 
@@ -1748,7 +1748,7 @@ void EventPolicy::sendToClient(ClientSession *session, uint32_t requestId) const
 /**
  * Replace policy with new one
  */
-void EventPolicy::replacePolicy(uint32_t numRules, EPRule **ruleList)
+void EventProcessingPolicy::replacePolicy(uint32_t numRules, EPRule **ruleList)
 {
    writeLock();
    m_rules.clear();
@@ -1767,7 +1767,7 @@ void EventPolicy::replacePolicy(uint32_t numRules, EPRule **ruleList)
 /**
  * Validate event policy configuration
  */
-void EventPolicy::validateConfig() const
+void EventProcessingPolicy::validateConfig() const
 {
    readLock();
    for(int i = 0; i < m_rules.size(); i++)
@@ -1780,7 +1780,7 @@ void EventPolicy::validateConfig() const
 /**
  * Check if given action is used in policy
  */
-bool EventPolicy::isActionInUse(uint32_t actionId) const
+bool EventProcessingPolicy::isActionInUse(uint32_t actionId) const
 {
    bool bResult = false;
 
@@ -1800,7 +1800,7 @@ bool EventPolicy::isActionInUse(uint32_t actionId) const
 /**
  * Check if given category is used in policy
  */
-bool EventPolicy::isCategoryInUse(uint32_t categoryId) const
+bool EventProcessingPolicy::isCategoryInUse(uint32_t categoryId) const
 {
    bool bResult = false;
 
@@ -1820,7 +1820,7 @@ bool EventPolicy::isCategoryInUse(uint32_t categoryId) const
 /**
  * Export rule
  */
-void EventPolicy::exportRule(TextFileWriter& xml, const uuid& guid) const
+void EventProcessingPolicy::exportRule(TextFileWriter& xml, const uuid& guid) const
 {
    readLock();
    for(int i = 0; i < m_rules.size(); i++)
@@ -1837,7 +1837,7 @@ void EventPolicy::exportRule(TextFileWriter& xml, const uuid& guid) const
 /**
  * Export rules ordering
  */
-void EventPolicy::exportRuleOrgering(TextFileWriter& xml) const
+void EventProcessingPolicy::exportRuleOrgering(TextFileWriter& xml) const
 {
    readLock();
    for(int i = 0; i < m_rules.size(); i++)
@@ -1850,7 +1850,7 @@ void EventPolicy::exportRuleOrgering(TextFileWriter& xml) const
 /**
  * Finds rule index by guid and adds index shift if found
  */
-int EventPolicy::findRuleIndexByGuid(const uuid& guid, int shift) const
+int EventProcessingPolicy::findRuleIndexByGuid(const uuid& guid, int shift) const
 {
    for (int i = 0; i < m_rules.size(); i++)
    {
@@ -1865,7 +1865,7 @@ int EventPolicy::findRuleIndexByGuid(const uuid& guid, int shift) const
 /**
  * Import rule
  */
-void EventPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ruleOrdering)
+void EventProcessingPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ruleOrdering)
 {
    writeLock();
 
@@ -1939,14 +1939,16 @@ void EventPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ru
 /**
  * Create JSON representation
  */
-json_t *EventPolicy::toJson() const
+json_t *EventProcessingPolicy::toJson() const
 {
    json_t *root = json_object();
    json_t *rules = json_array();
    readLock();
    for(int i = 0; i < m_rules.size(); i++)
    {
-      json_array_append_new(rules, m_rules.get(i)->toJson());
+      json_t *r = m_rules.get(i)->toJson();
+      json_object_set_new(r, "ruleNumber", json_integer(i + 1));
+      json_array_append_new(rules, r);
    }
    unlock();
    json_object_set_new(root, "rules", rules);
@@ -1956,7 +1958,7 @@ json_t *EventPolicy::toJson() const
 /**
  * Collects information about all EPRules that are using specified event
  */
-void EventPolicy::getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const
+void EventProcessingPolicy::getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const
 {
    readLock();
    for (int i = 0; i < m_rules.size(); i++)

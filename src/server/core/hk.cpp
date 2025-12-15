@@ -596,7 +596,7 @@ static void HouseKeeper()
             return _CONTINUE;
 		   });
 
-      g_pEventPolicy->validateConfig();
+      GetEventProcessingPolicy()->validateConfig();
 
       uint32_t elapsedTime = static_cast<uint32_t>(time(nullptr) - cycleStartTime);
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Housekeeper run completed (elapsed time %u milliseconds)"), elapsedTime);

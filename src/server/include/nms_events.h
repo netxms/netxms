@@ -70,7 +70,7 @@ enum class EventOrigin
 /**
  * Event template
  */
-class EventTemplate
+class NXCORE_EXPORTABLE EventTemplate
 {
 private:
    uuid m_guid;
@@ -610,7 +610,7 @@ public:
 /**
  * Event policy rule
  */
-class EPRule
+class NXCORE_EXPORTABLE EPRule
 {
 private:
    uint32_t m_id;
@@ -781,9 +781,9 @@ public:
 };
 
 /**
- * Event policy
+ * Event procesisng policy
  */
-class EventPolicy
+class NXCORE_EXPORTABLE EventProcessingPolicy
 {
 private:
    ObjectArray<EPRule> m_rules;
@@ -795,7 +795,7 @@ private:
    int findRuleIndexByGuid(const uuid& guid, int shift = 0) const;
 
 public:
-   EventPolicy() : m_rules(128, 128, Ownership::True) { }
+   EventProcessingPolicy() : m_rules(128, 128, Ownership::True) { }
 
    uint32_t getNumRules() const { return m_rules.size(); }
    bool loadFromDB();
@@ -831,21 +831,22 @@ Event *LoadEventFromDatabase(uint64_t eventId);
 Event *FindEventInLoggerQueue(uint64_t eventId);
 StructArray<EventProcessingThreadStats> *GetEventProcessingThreadStats();
 
-bool EventNameFromCode(uint32_t eventCode, TCHAR *buffer);
+bool NXCORE_EXPORTABLE EventNameFromCode(uint32_t eventCode, TCHAR *buffer);
 uint32_t NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, uint32_t defaultValue = 0);
-shared_ptr<EventTemplate> FindEventTemplateByCode(uint32_t code);
-shared_ptr<EventTemplate> FindEventTemplateByName(const wchar_t *name);
+shared_ptr<EventTemplate> NXCORE_EXPORTABLE FindEventTemplateByCode(uint32_t code);
+shared_ptr<EventTemplate> NXCORE_EXPORTABLE FindEventTemplateByName(const wchar_t *name);
 
 void NXCORE_EXPORTABLE ResendEvents(ObjectQueue<Event> *queue);
 
 const wchar_t NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps);
 const wchar_t NXCORE_EXPORTABLE *GetAPStateAsText(AccessPointState state);
 
+EventProcessingPolicy NXCORE_EXPORTABLE *GetEventProcessingPolicy();
+
 /**
  * Global variables
  */
 extern ObjectQueue<Event> g_eventQueue;
-extern EventPolicy *g_pEventPolicy;
 extern VolatileCounter64 g_totalEventsProcessed;
 
 #endif   /* _nms_events_h_ */
