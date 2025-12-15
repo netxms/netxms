@@ -70,6 +70,7 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
    public static final int COLUMN_OBJECT = 2;
    public static final int COLUMN_METRIC = 3;
    public static final int COLUMN_LABEL = 4;
+   public static final int COLUMN_DRILLDOWN_OBJECT = 5;
 
    private final I18n i18n = LocalizationHelper.getI18n(StatusIndicatorElements.class);
 
@@ -144,8 +145,8 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
 		layout.numColumns = 2;
       dialogArea.setLayout(layout);
 
-      final String[] columnNames = { i18n.tr("Pos"), i18n.tr("Type"), i18n.tr("Object/Tag"), i18n.tr("Metric"), i18n.tr("Label") };
-      final int[] columnWidths = { 40, 90, 200, 200, 150 };
+      final String[] columnNames = { i18n.tr("Pos"), i18n.tr("Type"), i18n.tr("Object/Tag"), i18n.tr("Metric"), i18n.tr("Label"), i18n.tr("Drill-down") };
+      final int[] columnWidths = { 40, 90, 200, 200, 150, 200 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(labelProvider);
@@ -441,6 +442,10 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
          StatusIndicatorElementConfig e = (StatusIndicatorElementConfig)element;
          switch(columnIndex)
          {
+            case COLUMN_DRILLDOWN_OBJECT:
+               if (e.getDrillDownObjectId() == 0)
+                  return "";
+               return (e.getDrillDownObjectId() == AbstractObject.CONTEXT) ? i18n.tr("<context>") : session.getObjectName(e.getDrillDownObjectId());
             case COLUMN_LABEL:
                return e.getLabel();
             case COLUMN_METRIC:
