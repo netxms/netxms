@@ -376,9 +376,13 @@ public class StatusIndicatorElement extends ElementWidget
       StatusIndicatorElementWidget(Composite parent, StatusIndicatorElementConfig elementConfig)
       {
          super(parent, SWT.NONE);
+
          this.elementConfig = elementConfig;
          status = ObjectStatus.UNKNOWN;
+
+         setBackground(parent.getBackground());
          addPaintListener((e) -> drawContent(e.gc));
+
          addMouseListener(new MouseListener() {
             @Override
             public void mouseDown(MouseEvent e)
