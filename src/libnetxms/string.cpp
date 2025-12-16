@@ -351,7 +351,8 @@ bool String::fuzzyEqualsImpl(const String& s, double threshold, bool ignoreCase)
 
    size_t editDistance = CalculateLevenshteinDistance(m_buffer, m_length, s.m_buffer, s.m_length, ignoreCase);
    double similarity = 1.0 - (static_cast<double>(editDistance) / maxLen);
-   return similarity >= threshold;
+   const double epsilon = 1e-10;
+   return (similarity + epsilon) >= threshold;
 }
 
 /**
