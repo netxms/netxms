@@ -589,7 +589,7 @@ public:
    {
       return SnmpConvertOIDToTextA(m_length, m_value, buffer, bufferSize);
    }
-   TCHAR *toString(WCHAR *buffer, size_t bufferSize) const
+   TCHAR *toString(TCHAR *buffer, size_t bufferSize) const
    {
 #ifdef UNICODE
       return toStringW(buffer, bufferSize);
