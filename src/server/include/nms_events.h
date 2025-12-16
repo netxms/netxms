@@ -607,6 +607,11 @@ public:
    uint64_t getDateFilter() const { return m_dateFilter; }
 };
 
+#ifdef _WIN32
+template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<TimeFrame>;
+template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<ActionExecutionConfiguration>;
+#endif
+
 /**
  * Event policy rule
  */
@@ -779,6 +784,10 @@ public:
       msg->setField(baseId + 7, m_description);
    }
 };
+
+#ifdef _WIN32
+template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<EPRule>;
+#endif
 
 /**
  * Event procesisng policy

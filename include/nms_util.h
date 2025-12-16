@@ -498,7 +498,7 @@ static inline int64_t GetMonotonicClockTime()
 /**
  * Timestamp class - holds timestamp in milliseconds
  */
-class Timestamp
+class LIBNETXMS_EXPORTABLE Timestamp
 {
 private:
    int64_t v;

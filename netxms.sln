@@ -410,6 +410,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "clickhouse", "src\server\pd
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "planet", "src\server\drivers\planet\planet.vcxproj", "{4F2B8F51-B9B3-41AB-989E-B0AB9833B3A0}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "aitools", "src\server\aitools\aitools.vcxproj", "{B6345D17-E650-1345-B147-78D4D73313A3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -3060,6 +3062,21 @@ Global
 		{4F2B8F51-B9B3-41AB-989E-B0AB9833B3A0}.Release|Win32.ActiveCfg = Release|Win32
 		{4F2B8F51-B9B3-41AB-989E-B0AB9833B3A0}.Release|x64.ActiveCfg = Release|x64
 		{4F2B8F51-B9B3-41AB-989E-B0AB9833B3A0}.Release|x64.Build.0 = Release|x64
+		{B6345D17-E650-1345-B147-78D4D73313A3}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{B6345D17-E650-1345-B147-78D4D73313A3}.Debug|ARM64.Build.0 = Debug|ARM64
+		{B6345D17-E650-1345-B147-78D4D73313A3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B6345D17-E650-1345-B147-78D4D73313A3}.Debug|x64.ActiveCfg = Debug|x64
+		{B6345D17-E650-1345-B147-78D4D73313A3}.Debug|x64.Build.0 = Debug|x64
+		{B6345D17-E650-1345-B147-78D4D73313A3}.Release - Client Only|ARM64.ActiveCfg = Release - Client Only|ARM64
+		{B6345D17-E650-1345-B147-78D4D73313A3}.Release - Client Only|ARM64.Build.0 = Release - Client Only|ARM64
+		{B6345D17-E650-1345-B147-78D4D73313A3}.Release - Client Only|Win32.ActiveCfg = Release - Client Only|Win32
+		{B6345D17-E650-1345-B147-78D4D73313A3}.Release - Client Only|Win32.Build.0 = Release - Client Only|Win32
+		{B6345D17-E650-1345-B147-78D4D73313A3}.Release - Client Only|x64.ActiveCfg = Release - Client Only|x64
+		{B6345D17-E650-1345-B147-78D4D73313A3}.Release|ARM64.ActiveCfg = Release|ARM64
+		{B6345D17-E650-1345-B147-78D4D73313A3}.Release|ARM64.Build.0 = Release|ARM64
+		{B6345D17-E650-1345-B147-78D4D73313A3}.Release|Win32.ActiveCfg = Release|Win32
+		{B6345D17-E650-1345-B147-78D4D73313A3}.Release|x64.ActiveCfg = Release|x64
+		{B6345D17-E650-1345-B147-78D4D73313A3}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -3241,6 +3258,7 @@ Global
 		{86D0233B-300A-584C-9C54-1CA84FAEB108} = {8BC9D64D-347C-41BE-A506-D21C8FB72D56}
 		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B} = {7C6DD495-5A44-4D50-B065-A8CA120272F7}
 		{4F2B8F51-B9B3-41AB-989E-B0AB9833B3A0} = {53997B2A-D94C-428C-816D-938C297A1866}
+		{B6345D17-E650-1345-B147-78D4D73313A3} = {06312B78-7ADC-49FF-9554-0B170825CD49}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4F6B1F2-1076-4A45-8750-AF6CA13917B3}
