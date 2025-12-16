@@ -92,35 +92,39 @@ public class HbtfAclReport extends AbstractAclReport
       int columnIndex = UsersSheetCells.ACL_START_COLUMN.ordinal();
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("All Scheduled tasks");
+      cell.setCellValue("Manage All Scheduled Tasks");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("SNMP Traps");
+      cell.setCellValue("Asset Management Attributes");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Event Templates");
+      cell.setCellValue("Configure SNMP Traps");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("EPP");
+      cell.setCellValue("Configure Event Templates");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("External Integration");
+      cell.setCellValue("Edit Event Processing Policy");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Import Config");
+      cell.setCellValue("External Tool Integration Account");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Manage Actions");
+      cell.setCellValue("Import Configuration");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Manage Agent Configs");
+      cell.setCellValue("Configure Server Actions");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(columnIndex++);
+      cell.setCellValue("Manage Agent Configurations");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -128,7 +132,7 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Manage Geo Areas");
+      cell.setCellValue("Manage Geographical Areas");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -148,7 +152,7 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Manage Scripts");
+      cell.setCellValue("Manage Script Library");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -156,19 +160,19 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Manage Sessions");
+      cell.setCellValue("Manage User Sessions");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Manage Summary Tables");
+      cell.setCellValue("Manage DCI Summary Tables");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Manage Tools");
+      cell.setCellValue("Configure Object Tools");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Manage 2FA Methods");
+      cell.setCellValue("Manage two-factor authentication methods");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -176,19 +180,19 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Mobile Device Login");
+      cell.setCellValue("Login As Mobile Device");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Object Categories");
+      cell.setCellValue("Manage Object Categories");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Own Scheduled Tasks");
+      cell.setCellValue("Manage Own Scheduled Tasks");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Persistent Storage");
+      cell.setCellValue("Manage Persistent Storage");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -196,7 +200,7 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Reporting Server");
+      cell.setCellValue("Reporting Server Access");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -204,11 +208,11 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Schedule Maintenance");
+      cell.setCellValue("Schedule Object Maintenance");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Schedule Scripts");
+      cell.setCellValue("Schedule Script Execution");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -216,55 +220,63 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Server Config");
+      cell.setCellValue("Edit server configuration variables");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Server Console");
+      cell.setCellValue("Access Server Console");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Setup TCP Proxy");
+      cell.setCellValue("Initiate TCP proxy sessions");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("SSH Keys");
+      cell.setCellValue("Manage SSH Keys");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("User Agent Notifications");
+      cell.setCellValue("Manage user support application notifications");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Unlink Issues");
+      cell.setCellValue("Unlink Helpdesk Tickets");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("User Scheduled Tasks");
+      cell.setCellValue("Manage User Scheduled Tasks");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("View All Alarms");
+      cell.setCellValue("View All Alarm Categories");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Audit Log");
+      cell.setCellValue("View Asset Change Log");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("View Event Templates");
+      cell.setCellValue("View Audit Log");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Event Log");
+      cell.setCellValue("View Event Templates Configuration");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Syslog");
+      cell.setCellValue("View Event Log");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Web Service Definitions");
+      cell.setCellValue("View Syslog");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(columnIndex++);
+      cell.setCellValue("View SNMP Trap Log");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(columnIndex++);
+      cell.setCellValue("Manage Web Service Definitions");
       cell.setCellStyle(headerStyle);
 
       sheet.setColumnWidth(UsersSheetCells.ID.ordinal(), 2048);
@@ -311,6 +323,7 @@ public class HbtfAclReport extends AbstractAclReport
 
          int aclColumnIndex = UsersSheetCells.ACL_START_COLUMN.ordinal();
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_ALL_SCHEDULED_TASKS, user);
+         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_CONFIGURE_TRAPS, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_EPP, user);
@@ -349,10 +362,12 @@ public class HbtfAclReport extends AbstractAclReport
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_USER_SCHEDULED_TASKS, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_ALL_ALARMS, user);
+         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_ASSET_CHANGE_LOG, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_AUDIT_LOG, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_DB, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_LOG, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_SYSLOG, user);
+         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS, user);
       });
    }
@@ -387,7 +402,11 @@ public class HbtfAclReport extends AbstractAclReport
       int columnIndex = GroupsSheetCells.ACL_START_COLUMN.ordinal();
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("All Scheduled tasks");
+      cell.setCellValue("Manage All Scheduled Tasks");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(columnIndex++);
+      cell.setCellValue("Asset Management Attributes");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -395,27 +414,27 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Event Templates");
+      cell.setCellValue("Configure Event Templates");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("EPP");
+      cell.setCellValue("Edit Event Processing Policy");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("External Integration");
+      cell.setCellValue("External Tool Integration Account");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Import Config");
+      cell.setCellValue("Import Configuration");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Manage Actions");
+      cell.setCellValue("Configure Server Actions");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Manage Agent Configs");
+      cell.setCellValue("Manage Agent Configurations");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -423,7 +442,7 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Manage Geo Areas");
+      cell.setCellValue("Manage Geographical Areas");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -443,7 +462,7 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Manage Scripts");
+      cell.setCellValue("Manage Script Library");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -451,19 +470,19 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Manage Sessions");
+      cell.setCellValue("Manage User Sessions");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Manage Summary Tables");
+      cell.setCellValue("Manage DCI Summary Tables");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Manage Tools");
+      cell.setCellValue("Configure Object Tools");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Manage 2FA Methods");
+      cell.setCellValue("Manage two-factor authentication methods");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -471,19 +490,19 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Mobile Device Login");
+      cell.setCellValue("Login As Mobile Device");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Object Categories");
+      cell.setCellValue("Manage Object Categories");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Own Scheduled Tasks");
+      cell.setCellValue("Manage Own Scheduled Tasks");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Persistent Storage");
+      cell.setCellValue("Manage Persistent Storage");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -491,7 +510,7 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Reporting Server");
+      cell.setCellValue("Reporting Server Access");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -499,11 +518,11 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Schedule Maintenance");
+      cell.setCellValue("Schedule Object Maintenance");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Schedule Scripts");
+      cell.setCellValue("Schedule Script Execution");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -511,55 +530,63 @@ public class HbtfAclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Server Config");
+      cell.setCellValue("Edit server configuration variables");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Server Console");
+      cell.setCellValue("Access Server Console");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Setup TCP Proxy");
+      cell.setCellValue("Initiate TCP proxy sessions");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("SSH Keys");
+      cell.setCellValue("Manage SSH Keys");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("User Agent Notifications");
+      cell.setCellValue("Manage user support application notifications");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Unlink Issues");
+      cell.setCellValue("Unlink Helpdesk Tickets");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("User Scheduled Tasks");
+      cell.setCellValue("Manage User Scheduled Tasks");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("View All Alarms");
+      cell.setCellValue("View All Alarm Categories");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Audit Log");
+      cell.setCellValue("View Asset Change Log");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("View Event Templates");
+      cell.setCellValue("View Audit Log");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Event Log");
+      cell.setCellValue("View Event Templates Configuration");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Syslog");
+      cell.setCellValue("View Event Log");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Web Service Definitions");
+      cell.setCellValue("View Syslog");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(columnIndex++);
+      cell.setCellValue("View SNMP Trap Log");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(columnIndex++);
+      cell.setCellValue("Manage Web Service Definitions");
       cell.setCellStyle(headerStyle);
 
       sheet.setColumnWidth(GroupsSheetCells.ID.ordinal(), 3072);
@@ -610,6 +637,7 @@ public class HbtfAclReport extends AbstractAclReport
 
          int aclColumnIndex = GroupsSheetCells.ACL_START_COLUMN.ordinal();
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_ALL_SCHEDULED_TASKS, group);
+         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_CONFIGURE_TRAPS, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_EPP, group);
@@ -648,10 +676,12 @@ public class HbtfAclReport extends AbstractAclReport
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_USER_SCHEDULED_TASKS, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_ALL_ALARMS, group);
+         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_ASSET_CHANGE_LOG, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_AUDIT_LOG, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_DB, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_LOG, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_SYSLOG, group);
+         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS, group);
       });
    }
