@@ -63,6 +63,60 @@ The Event Processing Policy (EPP) is a comprehensive rule engine that determines
 - Multiple rules can match the same event if configured appropriately
 - Rules can be configured to stop or continue processing after a match (default is to continue processing)
 
+## Server-Side Actions
+
+NetXMS supports several types of server-side actions that can be executed when EPP rules match events:
+
+### Action Types
+
+1. **Execute command on management server**
+   - Executes provided command directly on the NetXMS server node
+   - Requires appropriate permissions for the netxmsd process user
+   - Useful for local administrative tasks and system commands
+
+2. **Execute command on remote node**
+   - Executes predefined commands on remote nodes via NetXMS agent
+   - Command must be defined in the agent's configuration file
+   - Supports parameters: `commandName param1 param2 param3...`
+   - Remote host field supports macros and multiple formats:
+     - `hostname` - Hostname or IP address (use `%a` for event source IP)
+     - `@name` - Node name (allows identification behind proxy)
+   - Requires appropriate permissions for the nxagentd process user
+
+3. **Send notification**
+   - Sends notifications via configured channels (SMS, email, Microsoft Teams, etc.)
+   - Uses notification channels configured separately
+   - Message text supports macros for dynamic content
+   - Can target multiple recipients
+   - Supports various notification drivers
+
+4. **Execute NXSL script**
+   - Executes scripts from the NetXMS script library
+   - Provides full scripting capabilities for complex logic
+   - Can access event data and system objects
+   - Allows custom automation and integration
+
+5. **Forward event**
+   - Forwards events to another NetXMS server
+   - Useful for distributed monitoring scenarios
+   - Requires proper configuration on both source and destination servers
+   - Destination server must have EnableISCListener and ReceiveForwardedEvents enabled
+
+### Action Features
+
+- **Delay and Timer Keys**: Actions can have delay times to prevent execution if problems resolve quickly
+- **Escalation**: Multiple actions with different delays for escalating notifications
+- **Macros Support**: Actions support macros for dynamic content and parameters
+- **Cancellation**: Delay timers can be canceled by other EPP rules (e.g., when problems resolve)
+
+### Common Use Cases
+
+- **Automated Response**: Execute corrective commands when issues are detected
+- **Notification Escalation**: Send alerts to different people based on problem duration
+- **Integration**: Forward events to external systems or other NetXMS servers
+- **Custom Logic**: Use NXSL scripts for complex decision-making and automation
+- **Problem Prevention**: Execute preventive actions before issues become critical
+
 ## Use Cases
 
 ### Monitoring and Alerting

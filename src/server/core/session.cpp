@@ -6080,6 +6080,8 @@ void ClientSession::explainEventProcessingPolicyRule(const NXCPMessage& request)
                   "provide plain language summary first, then detailed breakdown of all components;"
                   "rule data is in JSON format; do not include raw JSON elements into your answer, use only terms understandable by non-programmer;"
                   "only include relevant information from the rule into your explanation;"
+                  "always lookup details for objects, events, and actions referenced in the rule;"
+                  "you will need event processing skills to do that;"
                   "use additional tools and skills to extract missing information. Rule data:\n";
          prompt.append(jsonString);
          MemFree(jsonString);

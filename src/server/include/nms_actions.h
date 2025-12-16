@@ -32,13 +32,13 @@ struct Action
    uuid guid;
    ServerActionType type;
    bool isDisabled;
-   TCHAR name[MAX_OBJECT_NAME];
-   TCHAR rcptAddr[MAX_RCPT_ADDR_LEN];
-   TCHAR emailSubject[MAX_EMAIL_SUBJECT_LEN];
-   TCHAR *data;
-   TCHAR channelName[MAX_OBJECT_NAME];
+   wchar_t name[MAX_OBJECT_NAME];
+   wchar_t rcptAddr[MAX_RCPT_ADDR_LEN];
+   wchar_t emailSubject[MAX_EMAIL_SUBJECT_LEN];
+   wchar_t *data;
+   wchar_t channelName[MAX_OBJECT_NAME];
 
-   Action(const TCHAR *name);
+   Action(const wchar_t *name);
    Action(DB_RESULT hResult, int row);
    Action(const Action& src);
 
@@ -49,6 +49,7 @@ struct Action
 
    void fillMessage(NXCPMessage *msg) const;
    void saveToDatabase() const;
+   json_t *toJson() const;
 };
 
 class ImportContext;
@@ -67,8 +68,10 @@ bool CheckChannelIsUsedInAction(TCHAR *name);
 void SendActionsToClient(ClientSession *session, uint32_t requestId);
 void CreateActionExportRecord(TextFileWriter& xml, uint32_t id);
 bool ImportAction(ConfigEntry *config, bool overwrite, ImportContext *context);
-bool IsValidActionId(uint32_t id);
-uuid GetActionGUID(uint32_t id);
-uint32_t FindActionByGUID(const uuid& guid);
+json_t NXCORE_EXPORTABLE *GetActions();
+json_t NXCORE_EXPORTABLE *GetActionById(uint32_t id);
+bool NXCORE_EXPORTABLE IsValidActionId(uint32_t id);
+uuid NXCORE_EXPORTABLE GetActionGUID(uint32_t id);
+uint32_t NXCORE_EXPORTABLE FindActionByGUID(const uuid& guid);
 
 #endif   /* _nms_actions_ */

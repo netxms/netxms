@@ -75,3 +75,39 @@ std::string F_GetEventProcessingPolicy(json_t *arguments, uint32_t userId)
       return std::string("User does not have rights to manage event processing policy");
    return JsonToString(GetEventProcessingPolicy()->toJson());
 }
+
+/**
+ * Get list server side actions for event processing
+ */
+std::string F_GetEventProcessingActions(json_t *arguments, uint32_t userId)
+{
+   uint64_t systemAccess = GetEffectiveSystemRights(userId);
+   if ((systemAccess & (SYSTEM_ACCESS_MANAGE_ACTIONS | SYSTEM_ACCESS_EPP)) == 0)
+      return std::string("User does not have rights to access server actions");
+
+   return JsonToString(GetActions());
+}
+
+/**
+ * Get specific server side action for event processing
+ */
+std::string F_GetEventProcessingAction(json_t *arguments, uint32_t userId)
+{
+   uint64_t systemAccess = GetEffectiveSystemRights(userId);
+   if ((systemAccess & (SYSTEM_ACCESS_MANAGE_ACTIONS | SYSTEM_ACCESS_EPP)) == 0)
+      return std::string("User does not have rights to access server actions");
+
+   uint32_t actionId = json_object_get_uint32(arguments, "id", 0);
+   if (actionId == 0)
+      return std::string("Action ID not provided");
+
+   json_t *actionJson = GetActionById(actionId);
+   if (actionJson == nullptr)
+   {
+      char buffer[256];
+      snprintf(buffer, 256, "Action with ID %u not found", actionId);
+      return std::string(buffer);
+   }
+
+   return JsonToString(actionJson);
+}
