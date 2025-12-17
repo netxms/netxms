@@ -904,6 +904,7 @@ private:
    void updateNotificationChannel(const NXCPMessage& request);
    void removeNotificationChannel(const NXCPMessage& request);
    void renameNotificationChannel(const NXCPMessage& request);
+   void clearNotificationChannelQueue(const NXCPMessage& request);
    void getNotificationDrivers(const NXCPMessage& request);
    void startActiveDiscovery(const NXCPMessage& request);
    void getPhysicalLinks(const NXCPMessage& request);
@@ -1381,6 +1382,7 @@ void LoadNotificationChannelDrivers();
 void LoadNotificationChannels();
 void ShutdownNotificationChannels();
 void NXCORE_EXPORTABLE SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject, const TCHAR *message, uint32_t eventCode, uint64_t eventId, const uuid& ruleId);
+bool NXCORE_EXPORTABLE ClearNotificationChannelQueue(const wchar_t *name);
 void NXCORE_EXPORTABLE GetNotificationChannels(NXCPMessage *msg);
 void NXCORE_EXPORTABLE GetNotificationChannels(Table *table);
 json_t NXCORE_EXPORTABLE *GetNotificationChannels(bool basicInfoOnly);

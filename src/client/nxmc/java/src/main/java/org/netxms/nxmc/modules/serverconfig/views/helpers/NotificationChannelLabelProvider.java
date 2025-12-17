@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -77,6 +77,8 @@ public class NotificationChannelLabelProvider extends LabelProvider implements I
             return sendStatusText[((NotificationChannel)element).getSendStatus()];
          case NotificationChannels.COLUMN_NAME:
             return ((NotificationChannel)element).getName();
+         case NotificationChannels.COLUMN_QUEUE_SIZE:
+            return Integer.toString(((NotificationChannel)element).getQueueSize());
          case NotificationChannels.COLUMN_TOTAL_MESSAGES:
             return Integer.toString(((NotificationChannel)element).getMessageCount());
 		}

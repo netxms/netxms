@@ -245,6 +245,7 @@ public:
    ~NotificationChannel();
 
    void send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, uint32_t eventCode, uint64_t eventId, const uuid& ruleId);
+   void clearQueue();
 
    const wchar_t *getName() const { return m_name; }
    const wchar_t *getDescription() const { return m_description; }
@@ -471,6 +472,15 @@ void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, con
 }
 
 /**
+ * Clear notification queue
+ */
+void NotificationChannel::clearQueue()
+{
+   m_notificationQueue.clear();
+   nxlog_debug_tag(DEBUG_TAG, 4, L"Queue for notification channel \"%s\" cleared", m_name);
+}
+
+/**
  * Fill NXCPMessage with notification channel data
  */
 void NotificationChannel::fillMessage(NXCPMessage *msg, uint32_t base) const
@@ -496,6 +506,7 @@ void NotificationChannel::fillMessage(NXCPMessage *msg, uint32_t base) const
    msg->setFieldFromTime(base + 10, m_lastMessageTime);
    msg->setField(base + 11, m_messageCount);
    msg->setField(base + 12, m_failureCount);
+   msg->setField(base + 13, static_cast<uint32_t>(m_notificationQueue.size()));
 }
 
 /**
@@ -1010,6 +1021,23 @@ void NXCORE_EXPORTABLE SendNotification(const TCHAR *name, TCHAR *recipient, con
       nxlog_debug_tag(DEBUG_TAG, 1, _T("SendNotification: notification channel \"%s\" not found"), name);
    }
    s_channelListLock.unlock();
+}
+
+/**
+ * Clear notification channel queue
+ */
+bool NXCORE_EXPORTABLE ClearNotificationChannelQueue(const wchar_t *name)
+{
+   bool success = false;
+   s_channelListLock.lock();
+   NotificationChannel *nc = s_channelList.get(name);
+   if (nc != nullptr)
+   {
+      nc->clearQueue();
+      success = true;
+   }
+   s_channelListLock.unlock();
+   return success;
 }
 
 /**

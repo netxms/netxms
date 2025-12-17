@@ -13901,6 +13901,21 @@ public class NXCSession
    }
 
    /**
+    * Clear notification channel queue
+    *
+    * @param name notification channel name
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void clearNotificationChannelQueue(String name) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CLEAR_NOTIFICATION_QUEUE);
+      msg.setField(NXCPCodes.VID_NAME, name);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
     * Get list of available notification channel drivers.
     * 
     * @throws IOException if socket I/O error occurs

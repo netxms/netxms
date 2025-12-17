@@ -1833,6 +1833,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_RENAME_NOTIFICATION_CHANNEL:
          renameNotificationChannel(*request);
          break;
+      case CMD_CLEAR_NOTIFICATION_QUEUE:
+         clearNotificationChannelQueue(*request);
+         break;
       case CMD_GET_NOTIFICATION_DRIVERS:
          getNotificationDrivers(*request);
          break;
@@ -15827,6 +15830,34 @@ void ClientSession::renameNotificationChannel(const NXCPMessage& request)
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on notification channel rename"));
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Clear notification channel queue
+ */
+void ClientSession::clearNotificationChannelQueue(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      TCHAR name[MAX_OBJECT_NAME];
+      request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+      if (IsNotificationChannelExists(name))
+      {
+         response.setField(VID_RCC, ClearNotificationChannelQueue(name) ? RCC_SUCCESS : RCC_INVALID_CHANNEL_NAME);
+         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Cleared notification channel \"%s\" queue"), name);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
+      }
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on clearing notification channel queue"));
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(response);

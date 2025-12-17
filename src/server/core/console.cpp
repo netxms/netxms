@@ -464,12 +464,25 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
          ExtractWord(pArg, szBuffer);
          ClearDBWriterData(console, szBuffer);
       }
+      else if (IsCommand(_T("NCQUEUE"), szBuffer, 3))
+      {
+         ExtractWord(pArg, szBuffer);
+         if (ClearNotificationChannelQueue(szBuffer))
+         {
+            ConsoleWrite(console, _T("Notification channel queue cleared\n"));
+         }
+         else
+         {
+            ConsoleWrite(console, _T("Invalid notification channel name\n"));
+         }
+      }
       else if (szBuffer[0] == 0)
       {
          ConsoleWrite(console,
                   _T("Valid components:\n")
                   _T("   DBWriter Counters\n")
                   _T("   DBWriter DataQueue\n")
+                  _T("   NCQueue <channel-name>\n")
                   _T("\n"));
       }
       else

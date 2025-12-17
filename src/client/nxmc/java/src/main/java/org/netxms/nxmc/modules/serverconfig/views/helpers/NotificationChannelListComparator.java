@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,6 +59,9 @@ public class NotificationChannelListComparator extends ViewerComparator
             break;
          case NotificationChannels.COLUMN_NAME:
             result = nc1.getName().compareToIgnoreCase(nc2.getName());
+            break;
+         case NotificationChannels.COLUMN_QUEUE_SIZE:
+            result = Integer.compare(nc1.getQueueSize(), nc2.getQueueSize());
             break;
          case NotificationChannels.COLUMN_TOTAL_MESSAGES:
             result = Integer.compare(nc1.getMessageCount(), nc2.getMessageCount());

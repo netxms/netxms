@@ -502,6 +502,7 @@ public class NXCPCodes
    public static final int CMD_CREATE_AI_ASSISTANT_CHAT = 0x01E1;
    public static final int CMD_DELETE_AI_ASSISTANT_CHAT = 0x01E2;
    public static final int CMD_EXPLAIN_EPP_RULE = 0x01E3;
+   public static final int CMD_CLEAR_NOTIFICATION_QUEUE = 0x01E4;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

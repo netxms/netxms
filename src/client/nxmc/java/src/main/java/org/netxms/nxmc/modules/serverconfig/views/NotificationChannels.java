@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2021-2024 Raden Solutions
+ * Copyright (C) 2021-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,8 +27,6 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -72,8 +70,9 @@ public class NotificationChannels extends ConfigurationView
    public static final int COLUMN_DRIVER = 2;
    public static final int COLUMN_TOTAL_MESSAGES = 3;
    public static final int COLUMN_FAILED_MESSAGES = 4;
-   public static final int COLUMN_LAST_STATUS = 5;
-   public static final int COLUMN_ERROR_MESSAGE = 6;
+   public static final int COLUMN_QUEUE_SIZE = 5;
+   public static final int COLUMN_LAST_STATUS = 6;
+   public static final int COLUMN_ERROR_MESSAGE = 7;
 
    private NXCSession session;
    private SessionListener listener;
@@ -81,6 +80,7 @@ public class NotificationChannels extends ConfigurationView
    private Action actionNewChannel;
    private Action actionEditChannel;
    private Action actionDeleteChannel;
+   private Action actionClearQueue;
    private Action actionSendNotificationGlobal;
    private Action actionSendNotificationContext;
 
@@ -100,8 +100,8 @@ public class NotificationChannels extends ConfigurationView
    @Override
    protected void createContent(Composite parent)
    {
-      final int[] widths = { 160, 250, 100, 100, 100, 80, 400 };
-      final String[] names = { i18n.tr("Name"), i18n.tr("Description"), i18n.tr("Driver"), i18n.tr("Messages"), i18n.tr("Failures"), i18n.tr("Status"), i18n.tr("Error message") };
+      final int[] widths = { 160, 250, 100, 100, 100, 100, 80, 400 };
+      final String[] names = { i18n.tr("Name"), i18n.tr("Description"), i18n.tr("Driver"), i18n.tr("Messages"), i18n.tr("Failures"), i18n.tr("Queue"), i18n.tr("Status"), i18n.tr("Error message") };
       viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       WidgetHelper.restoreTableViewerSettings(viewer, "NotificationChannelList");
       viewer.setContentProvider(new ArrayContentProvider());
@@ -110,13 +110,7 @@ public class NotificationChannels extends ConfigurationView
       NotificationChannelFilter filter = new NotificationChannelFilter();
       viewer.addFilter(filter);
       setFilterClient(viewer, filter);
-      viewer.addDoubleClickListener(new IDoubleClickListener() {
-         @Override
-         public void doubleClick(DoubleClickEvent event)
-         {
-            editChannel();
-         }
-      });
+      viewer.addDoubleClickListener((e) -> editChannel());
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)
@@ -145,13 +139,7 @@ public class NotificationChannels extends ConfigurationView
          {
             if (n.getCode() == SessionNotification.NOTIFICATION_CHANNEL_CHANGED)
             {
-               display.asyncExec(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     refresh();
-                  }
-               });
+               display.asyncExec(() -> refresh());
             }
          }
       };
@@ -229,6 +217,14 @@ public class NotificationChannels extends ConfigurationView
          }
       };
       addKeyBinding("M1+S", actionSendNotificationContext);
+
+      actionClearQueue = new Action(i18n.tr("Clear &queue"), SharedIcons.CLEAR) {
+         @Override
+         public void run()
+         {
+            clearQueue();
+         }
+      };
    }
 
    /**
@@ -256,6 +252,8 @@ public class NotificationChannels extends ConfigurationView
       manager.add(actionNewChannel);
       manager.add(actionEditChannel);
       manager.add(actionDeleteChannel);
+      manager.add(new Separator());
+      manager.add(actionClearQueue);
       manager.add(new Separator());
       manager.add(actionSendNotificationContext);
    }
@@ -397,6 +395,39 @@ public class NotificationChannels extends ConfigurationView
       }.start();
    }
    
+   /**
+    * Clear queue of selected channels
+    */
+   private void clearQueue()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
+         return;
+
+      final List<String> channels = new ArrayList<String>(selection.size());
+      for(Object o : selection.toList())
+      {
+         if (o instanceof NotificationChannel)
+            channels.add(((NotificationChannel)o).getName());
+      }
+
+      new Job(i18n.tr("Clearing notification channel queue"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            for(String name : channels)
+               session.clearNotificationChannelQueue(name);
+            runInUIThread(() -> refresh());
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot clear notification channel queue");
+         }
+      }.start();
+   }
+
    /**
     * Send notification to channel
     * 
