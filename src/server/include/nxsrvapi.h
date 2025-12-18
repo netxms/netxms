@@ -694,8 +694,10 @@ public:
    double getCustomAttributeAsDouble(const TCHAR *key, double defaultValue) const;
    bool getCustomAttributeAsBoolean(const TCHAR *key, bool defaultValue) const;
 
-   StringMap *getCustomAttributes(bool (*filter)(const TCHAR *, const CustomAttribute *, void *) = nullptr, void *context = nullptr) const;
-   StringMap *getCustomAttributes(const TCHAR *regexp) const;
+   StringMap *getCustomAttributes(bool (*filter)(const wchar_t *, const CustomAttribute *, void *) = nullptr, void *context = nullptr) const;
+   StringMap *getCustomAttributes(const wchar_t *regexp) const;
+
+   json_t *getCustomAttributesAsJson(bool (*filter)(const wchar_t *, const CustomAttribute *, void *) = nullptr, void *context = nullptr) const;
 
    void setCustomAttribute(const TCHAR *name, SharedString value, StateChange inheritable);
    void setCustomAttribute(const TCHAR *key, int32_t value);

@@ -97,6 +97,7 @@ static inline json_t *CreateObjectSummary(const NetObj& object)
    json_object_set_new(jsonObject, "category", json_integer(object.getCategoryId()));
    json_object_set_new(jsonObject, "timestamp", json_time_string(object.getTimeStamp()));
    json_object_set_new(jsonObject, "status", json_string_t(GetStatusAsText(object.getStatus(), false)));
+   json_object_set_new(jsonObject, "customAttributes", object.getCustomAttributesAsJson());
 
    if (object.getObjectClass() == OBJECT_NODE)
    {

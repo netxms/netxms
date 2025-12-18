@@ -1011,7 +1011,7 @@ bool NObject::getCustomAttributeAsBoolean(const TCHAR *key, bool defaultValue) c
  * Get all custom attributes matching given filter. Filter can be NULL to return all attributes.
  * Filter arguments: attribute name, attribute value, context
  */
-StringMap *NObject::getCustomAttributes(bool (*filter)(const TCHAR *, const CustomAttribute *, void *), void *context) const
+StringMap *NObject::getCustomAttributes(bool (*filter)(const wchar_t *, const CustomAttribute *, void *), void *context) const
 {
    StringMap *attributes = new StringMap();
    lockCustomAttributes();
@@ -1026,24 +1026,24 @@ StringMap *NObject::getCustomAttributes(bool (*filter)(const TCHAR *, const Cust
 /**
  * Callback filter for matching attribute name by regular expression
  */
-static bool RegExpAttrFilter(const TCHAR *name, const CustomAttribute *value, PCRE *preg)
+static bool RegExpAttrFilter(const wchar_t *name, const CustomAttribute *value, PCRE *preg)
 {
    int ovector[30];
-   return _pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(name), static_cast<int>(_tcslen(name)), 0, 0, ovector, 30) >= 0;
+   return _pcre_exec_w(preg, nullptr, reinterpret_cast<const PCRE_WCHAR*>(name), static_cast<int>(wcslen(name)), 0, 0, ovector, 30) >= 0;
 }
 
 /**
  * Get all custom attributes matching given regular expression. Regular expression can be NULL to return all attributes.
  * Filter arguments: attribute name, attribute value, context
  */
-StringMap *NObject::getCustomAttributes(const TCHAR *regexp) const
+StringMap *NObject::getCustomAttributes(const wchar_t *regexp) const
 {
    if (regexp == nullptr)
       return getCustomAttributes(nullptr, nullptr);
 
    const char *eptr;
    int eoffset;
-   PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(regexp), PCRE_COMMON_FLAGS, &eptr, &eoffset, nullptr);
+   PCRE *preg = _pcre_compile_w(reinterpret_cast<const PCRE_WCHAR*>(regexp), PCRE_COMMON_FLAGS, &eptr, &eoffset, nullptr);
    if (preg == nullptr)
       return new StringMap();
 
@@ -1055,6 +1055,26 @@ StringMap *NObject::getCustomAttributes(const TCHAR *regexp) const
    delete filtered;
    unlockCustomAttributes();
    _pcre_free_t(preg);
+   return attributes;
+}
+
+/**
+ * Get all custom attributes matching given filter as JSON object. Filter can be NULL to return all attributes.
+ * Filter arguments: attribute name, attribute value, context
+ */
+json_t *NObject::getCustomAttributesAsJson(bool (*filter)(const TCHAR *, const CustomAttribute *, void *), void *context) const
+{
+   json_t *attributes = json_object();
+   lockCustomAttributes();
+   StructArray<KeyValuePair<CustomAttribute>> *filtered = m_customAttributes.toArray(filter, context);
+   for(int i = 0; i < filtered->size(); i++)
+   {
+      char keyBuffer[256];
+      wchar_to_utf8(filtered->get(i)->key, -1, keyBuffer, 256);
+      json_object_set_new(attributes, keyBuffer, json_string_w(filtered->get(i)->value->value));
+   }
+   delete filtered;
+   unlockCustomAttributes();
    return attributes;
 }
 
