@@ -63,3 +63,21 @@ std::string F_GetNotificationChannels(json_t *arguments, uint32_t userId)
    uint64_t systemAccess = GetEffectiveSystemRights(userId);
    return JsonToString(GetNotificationChannels((systemAccess & SYSTEM_ACCESS_SERVER_CONFIG) == 0));
 }
+
+/**
+ * Clear queue of notification channel
+ */
+std::string F_ClearNotificationChannelQueue(json_t *arguments, uint32_t userId)
+{
+   uint64_t systemAccess = GetEffectiveSystemRights(userId);
+   if ((systemAccess & SYSTEM_ACCESS_SERVER_CONFIG) == 0)
+      return std::string("User does not have rights to clear notification channel queues");
+
+   const char *channel = json_object_get_string_utf8(arguments, "channel", nullptr);
+   if ((channel == nullptr) || (channel[0] == 0))
+      return std::string("Channel must be provided");
+
+   return ClearNotificationChannelQueue(String(channel, "utf-8")) ?
+            std::string("Notification channel queue cleared") :
+            std::string("Invalid notification channel name");
+}

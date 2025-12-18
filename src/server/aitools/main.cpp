@@ -24,6 +24,7 @@
 #include <netxms-version.h>
 
 std::string F_AlarmList(json_t *arguments, uint32_t userId);
+std::string F_ClearNotificationChannelQueue(json_t *arguments, uint32_t userId);
 std::string F_CreateMetric(json_t *arguments, uint32_t userId);
 std::string F_EndMaintenance(json_t *arguments, uint32_t userId);
 std::string F_FindObjects(json_t *arguments, uint32_t userId);
@@ -60,6 +61,13 @@ static void CreateAssistantFunctionList()
          { "object", "optional name or ID of node, device, server, workstation, or container or group of them" }
       },
       F_AlarmList);
+   RegisterAIAssistantFunction(
+      "clear-notification-queue",
+      "Clear notification channel's queue",
+      {
+         { "channel", "notification channel name (mandatory)" }
+      },
+      F_ClearNotificationChannelQueue);
    RegisterAIAssistantFunction(
       "find-objects",
       "Find objects by name, IP address, class, parent object, or zone. At least one search criteria should be set.",

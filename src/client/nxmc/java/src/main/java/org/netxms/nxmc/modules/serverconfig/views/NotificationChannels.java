@@ -404,6 +404,9 @@ public class NotificationChannels extends ConfigurationView
       if (selection.isEmpty())
          return;
 
+      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Clear Queue"), i18n.tr("Are you sure you want to clear message queue for selected notification channels?")))
+         return;
+
       final List<String> channels = new ArrayList<String>(selection.size());
       for(Object o : selection.toList())
       {

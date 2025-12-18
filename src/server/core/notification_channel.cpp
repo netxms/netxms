@@ -536,6 +536,7 @@ json_t *NotificationChannel::toJson() const
    json_object_set_new(root, "lastMessageTime", json_time_string(m_lastMessageTime));
    json_object_set_new(root, "messageCount", json_integer(m_messageCount));
    json_object_set_new(root, "failureCount", json_integer(m_failureCount));
+   json_object_set_new(root, "queueSize", json_integer(m_notificationQueue.size()));
    return root;
 }
 
