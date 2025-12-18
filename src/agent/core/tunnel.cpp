@@ -1658,12 +1658,12 @@ Tunnel *Tunnel::createFromConfig(const ConfigEntry& ce)
 
    StringBuffer fingerprintString = ce.getSubEntryValue(_T("ServerCertificateFingerprint"), 0, nullptr);
    if (fingerprintString.isEmpty())
-      return new Tunnel(hostname, port, certificate, password);
+      return new Tunnel(hostname, port, (certificate[0] != 0) ? certificate : nullptr, password);
 
    fingerprintString.replace(_T(":"), _T(""));
    BYTE fingerprint[SHA256_DIGEST_SIZE];
    StrToBin(fingerprintString, fingerprint, SHA256_DIGEST_SIZE);
-   return new Tunnel(hostname, port, certificate, password, fingerprint);
+   return new Tunnel(hostname, port, (certificate[0] != 0) ? certificate : nullptr, password, fingerprint);
 }
 
 /**
