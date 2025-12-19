@@ -477,6 +477,7 @@ bool LIBNXDBMGR_EXPORTABLE ConvertColumnToInt64(const wchar_t *table, const wcha
          query.append(L" TYPE ");
          break;
       default:
+         query.append(L" ");
          break;
    }
    query.append(g_sqlTypes[g_dbSyntax][SQL_TYPE_INT64]);

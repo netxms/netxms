@@ -504,22 +504,104 @@ static bool Upgrade_43_9()
 
 /**
  * Delete duplicate records from data table
+/**
+ * Delete duplicate records from data table, per-database engine.
+ * Supported: PostgreSQL, MySQL (8+ and MariaDB 10.2+), MSSQL, Oracle, SQLite.
  */
 void DeleteDuplicateDataRecords(const wchar_t *tableType, uint32_t objectId)
 {
-   wchar_t query[1024];
-   nx_swprintf(query, 1024,
-      L"DELETE FROM %s_%u a "
-      L"USING ("
-      L"    SELECT item_id, %s_timestamp, MIN(ctid) as min_ctid"
-      L"    FROM %s_%u"
-      L"    GROUP BY item_id, %s_timestamp"
-      L"    HAVING COUNT(*) > 1"
-      L") b "
-      L"WHERE a.item_id = b.item_id"
-      L"  AND a.%s_timestamp = b.%s_timestamp"
-      L"  AND a.ctid > b.min_ctid", tableType, objectId, tableType, tableType, objectId, tableType, tableType, tableType);
-   SQLQuery(query);
+   wchar_t query[2048] = L"";
+   if (g_dbSyntax == DB_SYNTAX_PGSQL)
+   {
+      nx_swprintf(query, 2048,
+         L"DELETE FROM %s_%u a USING ("
+         L"    SELECT item_id, %s_timestamp, MIN(ctid) as min_ctid "
+         L"    FROM %s_%u "
+         L"    GROUP BY item_id, %s_timestamp "
+         L"    HAVING COUNT(*) > 1"
+         L") b "
+         L"WHERE a.item_id = b.item_id "
+         L"  AND a.%s_timestamp = b.%s_timestamp "
+         L"  AND a.ctid > b.min_ctid",
+         tableType, objectId,  // DELETE ... FROM %s_%u
+         tableType,            // b: SELECT ... %s_timestamp
+         tableType, objectId,  // b: FROM %s_%u
+         tableType,            // b: GROUP BY ... %s_timestamp
+         tableType, tableType, // a.%s_timestamp = b.%s_timestamp
+         tableType, tableType  // for the last AND a.ctid > b.min_ctid
+      );
+   }
+   else if (g_dbSyntax == DB_SYNTAX_MYSQL) // Assuming 8.0+ or 10.2+
+   {
+      nx_swprintf(query, 2048,
+         L"DELETE t1 FROM %s_%u t1 "
+         L"JOIN ("
+         L"    SELECT item_id, %s_timestamp, "
+         L"           ROW_NUMBER() OVER (PARTITION BY item_id, %s_timestamp ORDER BY item_id) AS rn "
+         L"    FROM %s_%u"
+         L") t2 "
+         L"ON t1.item_id = t2.item_id "
+         L"AND t1.%s_timestamp = t2.%s_timestamp "
+         L"WHERE t2.rn > 1",
+         tableType, objectId,
+         tableType,
+         tableType,
+         tableType, objectId,
+         tableType, tableType
+      );
+   }
+   else if (g_dbSyntax == DB_SYNTAX_MSSQL)
+   {
+      nx_swprintf(query, 2048,
+         L"WITH Duplicates AS ("
+         L"    SELECT *, ROW_NUMBER() OVER (PARTITION BY item_id, %s_timestamp ORDER BY item_id) AS rn "
+         L"    FROM %s_%u"
+         L") "
+         L"DELETE FROM Duplicates WHERE rn > 1",
+         tableType,
+         tableType, objectId
+      );
+   }
+   else if (g_dbSyntax == DB_SYNTAX_ORACLE)
+   {
+      nx_swprintf(query, 2048,
+         L"DELETE FROM %s_%u "
+         L"WHERE ROWID IN ("
+         L"    SELECT rid FROM ("
+         L"        SELECT ROWID AS rid, ROW_NUMBER() OVER (PARTITION BY item_id, %s_timestamp ORDER BY ROWID) AS rn "
+         L"        FROM %s_%u"
+         L"    ) WHERE rn > 1"
+         L")",
+         tableType, objectId,
+         tableType,
+         tableType, objectId
+      );
+   }
+   else if (g_dbSyntax == DB_SYNTAX_SQLITE)
+   {
+      nx_swprintf(query, 2048,
+         L"DELETE FROM %s_%u "
+         L"WHERE rowid NOT IN ("
+         L"    SELECT MIN(rowid) "
+         L"    FROM %s_%u "
+         L"    GROUP BY item_id, %s_timestamp"
+         L")",
+         tableType, objectId,
+         tableType, objectId,
+         tableType
+      );
+   }
+   else if (g_dbSyntax == DB_SYNTAX_TSDB)
+   {      
+      _tprintf(_T("Nothing to do for TSDB engine...\n"));
+   }
+   else
+   {
+      _tprintf(_T("Nothing to do for TSDB engine...\n"));
+   }
+
+   if (query[0] != 0)
+      SQLQuery(query);
 }
 
 /**
