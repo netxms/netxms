@@ -212,6 +212,7 @@ private:
    NCDriverServerStorageManager *m_storageManager;
    NCSendStatus m_sendStatus;
    bool m_healthCheckStatus;
+   bool m_queueOverflow;
    time_t m_lastMessageTime;
    uint32_t m_messageCount;
    uint32_t m_failureCount;
@@ -332,6 +333,7 @@ NotificationChannel::NotificationChannel(NCDriver *driver, NCDriverServerStorage
    wcslcpy(m_errorMessage, errorMessage, MAX_NC_ERROR_MESSAGE);
    m_sendStatus = NCSendStatus::UNKNOWN;
    m_healthCheckStatus = false;
+   m_queueOverflow = false;
    m_lastMessageTime = 0;
    m_messageCount = 0;
    m_failureCount = 0;
@@ -468,6 +470,31 @@ void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, con
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Driver for channel %s requires recipient, but message has no recipient (message dropped)"), m_name);
       return;
    }
+
+   uint32_t maxQueueSize = ConfigReadULong(_T("NotificationChannels.MaxQueueSize"), 500);
+   if ((maxQueueSize > 0) && (m_notificationQueue.size() >= maxQueueSize))
+   {
+      if (!m_queueOverflow)
+      {
+         m_queueOverflow = true;
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG,
+            _T("Notification channel \"%s\" queue size exceeds threshold (size=%u, max=%u), new messages will be dropped"),
+            m_name, static_cast<uint32_t>(m_notificationQueue.size()), maxQueueSize);
+         EventBuilder(EVENT_NC_QUEUE_OVERFLOW, g_dwMgmtNode)
+            .param(_T("channelName"), m_name)
+            .param(_T("queueSize"), static_cast<uint32_t>(m_notificationQueue.size()))
+            .param(_T("maxQueueSize"), maxQueueSize)
+            .post();
+      }
+      return;
+   }
+
+   if (m_queueOverflow)
+   {
+      m_queueOverflow = false;
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Notification channel \"%s\" queue size is below threshold"), m_name);
+   }
+
    m_notificationQueue.put(new NotificationMessage(recipient, subject, body, eventCode, eventId, ruleId));
 }
 

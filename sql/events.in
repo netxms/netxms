@@ -1844,6 +1844,17 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
 		'   5) interfaceIndex - Interface index'
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_NC_QUEUE_OVERFLOW, 'SYS_NC_QUEUE_OVERFLOW', '67b1aebf-3862-44fa-9ff8-9098c9e63a12',
+		EVENT_SEVERITY_WARNING, 1,
+		'Notification channel "%<channelName>" queue overflow (size=%<queueSize>, limit=%<maxQueueSize>)',
+		'Generated when notification channel queue size exceeds configured threshold.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) channelName - Notification channel name' CONCAT CRLF CONCAT
+		'   2) queueSize - Current queue size' CONCAT CRLF CONCAT
+		'   3) maxQueueSize - Configured maximum queue size'
+	);
 
 /*
 ** SNMP traps

@@ -25,6 +25,29 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.9 to 60.10
+ */
+static bool H_UpgradeFromV9()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_NC_QUEUE_OVERFLOW, _T("SYS_NC_QUEUE_OVERFLOW"),
+         EVENT_SEVERITY_WARNING, EF_LOG, _T("67b1aebf-3862-44fa-9ff8-9098c9e63a12"),
+         _T("Notification channel \"%<channelName>\" queue overflow (size=%<queueSize>, limit=%<maxQueueSize>)"),
+         _T("Generated when notification channel queue size exceeds configured threshold.\r\n")
+         _T("Parameters:\r\n")
+         _T("   1) channelName - Notification channel name\r\n")
+         _T("   2) queueSize - Current queue size\r\n")
+         _T("   3) maxQueueSize - Configured maximum queue size")
+         ));
+
+   CHK_EXEC(CreateConfigParam(_T("NotificationChannels.MaxQueueSize"), _T("500"),
+         _T("Maximum size of notification channel queue. When exceeded, new messages are dropped and event is generated. Set to 0 for unlimited."),
+         nullptr, 'I', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(10));
+   return true;
+}
+
+/**
  * Update log parser XML by adding GUID to each parser
  */
 static bool UpdateLogXML(const TCHAR *logName)
@@ -109,6 +132,9 @@ static bool H_UpgradeFromV8()
    return true;
 }
 
+/**
+ * Delete duplicate records from data table
+ */
 void DeleteDuplicateDataRecords(const wchar_t *tableType, uint32_t objectId);
 
 /**
@@ -489,6 +515,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 9,  60, 10, H_UpgradeFromV9  },
    { 8,  60, 9,  H_UpgradeFromV8  },
    { 7,  60, 8,  H_UpgradeFromV7  },
    { 6,  60, 7,  H_UpgradeFromV6  },
