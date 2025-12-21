@@ -2457,6 +2457,14 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    {
       value = vm->createValue(is_bit_set(node->getCapabilities(), NC_IS_CDP));
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isDecommissioned"))
+   {
+      value = vm->createValue(node->isDecommissioned());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isNativeAgent"))
+   {
+      value = vm->createValue(node->isNativeAgent());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isEtherNetIP"))
    {
       value = vm->createValue(node->isEthernetIPSupported());
