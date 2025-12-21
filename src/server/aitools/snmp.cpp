@@ -82,6 +82,7 @@ std::string F_SNMPRead(json_t *arguments, uint32_t userId)
    bool convertToHex = false;
    wchar_t value[256];
    json_object_set_new(output, "value", json_string_w(v->getValueAsPrintableString(value, 256, &convertToHex)));
+   delete response;
    return JsonToString(output);
 }
 
