@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.objects.widgets.helpers;
 import java.util.function.Consumer;
 import org.eclipse.jface.viewers.DecoratingLabelProvider;
 import org.eclipse.swt.graphics.Color;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.resources.ThemeEngine;
 
@@ -30,6 +31,7 @@ import org.netxms.nxmc.resources.ThemeEngine;
 public class DecoratingObjectLabelProvider extends DecoratingLabelProvider
 {
    private Color maintenanceColor = ThemeEngine.getForegroundColor("ObjectTree.Maintenance");
+   private Color decommissionedColor = ThemeEngine.getForegroundColor("ObjectTree.Decommissioned");
 
    /**
     * Create new decorating label provider
@@ -76,8 +78,11 @@ public class DecoratingObjectLabelProvider extends DecoratingLabelProvider
    @Override
    public Color getForeground(Object element)
    {
-      if (((AbstractObject)element).isInMaintenanceMode())
+      AbstractObject object = (AbstractObject)element;
+      if (object.isInMaintenanceMode())
          return maintenanceColor;
+      if ((object instanceof AbstractNode) && ((AbstractNode)object).isDecommissioned())
+         return decommissionedColor;
       return null;
    }
 }

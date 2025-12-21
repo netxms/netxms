@@ -80,6 +80,7 @@ public class DefaultLightTheme extends Theme
       elements.put("MibExplorer.Header", new ThemeElement(new RGB(153, 180, 209), new RGB(255, 255, 255)));
       elements.put("ObjectTab.Header", new ThemeElement(new RGB(153, 180, 209), new RGB(255, 255, 255)));
       elements.put("ObjectTree.Maintenance", new ThemeElement(null, new RGB(96, 96, 144)));
+      elements.put("ObjectTree.Decommissioned", new ThemeElement(null, new RGB(128, 128, 128)));
       elements.put("Rack", new ThemeElement(new RGB(255, 255, 255), new RGB(0, 0, 0)));
       elements.put("Rack.Border", new ThemeElement(new RGB(92, 92, 92), new RGB(92, 92, 92)));
       elements.put("Rack.EmptySpace", new ThemeElement(new RGB(224, 224, 224), null));

@@ -80,6 +80,7 @@ public class DefaultDarkTheme extends Theme
       elements.put("MibExplorer.Header", new ThemeElement(new RGB(64, 64, 64), new RGB(153, 180, 209)));
       elements.put("ObjectTab.Header", new ThemeElement(new RGB(64, 64, 64), new RGB(153, 180, 209)));
       elements.put("ObjectTree.Maintenance", new ThemeElement(null, new RGB(136, 136, 204)));
+      elements.put("ObjectTree.Decommissioned", new ThemeElement(null, new RGB(160, 160, 160)));
       elements.put("Rack", new ThemeElement(new RGB(53, 53, 53), new RGB(240, 240, 240)));
       elements.put("Rack.Border", new ThemeElement(new RGB(92, 92, 92), new RGB(92, 92, 92)));
       elements.put("Rack.EmptySpace", new ThemeElement(new RGB(64, 64, 64), null));
