@@ -39,7 +39,11 @@ std::string F_GetNodeInterfaces(json_t *arguments, uint32_t userId);
 std::string F_GetNodeSoftwarePackages(json_t *arguments, uint32_t userId);
 std::string F_GetNotificationChannels(json_t *arguments, uint32_t userId);
 std::string F_GetObject(json_t *arguments, uint32_t userId);
+std::string F_GetObjectAIData(json_t *arguments, uint32_t userId);
+std::string F_ListObjectAIDataKeys(json_t *arguments, uint32_t userId);
+std::string F_RemoveObjectAIData(json_t *arguments, uint32_t userId);
 std::string F_SendNotification(json_t *arguments, uint32_t userId);
+std::string F_SetObjectAIData(json_t *arguments, uint32_t userId);
 std::string F_SNMPWalk(json_t *arguments, uint32_t userId);
 std::string F_SNMPRead(json_t *arguments, uint32_t userId);
 std::string F_StartMaintenance(json_t *arguments, uint32_t userId);
@@ -92,6 +96,29 @@ static void CreateAssistantFunctionList()
       },
       F_GetObject);
    RegisterAIAssistantFunction(
+      "get-object-ai-data",
+      "Retrieve AI agent data stored for an object. Can get specific data by key or all data if no key specified.",
+      {
+         { "object", "mandatory name or ID of an object" },
+         { "key", "optional key to retrieve specific data (if not specified, returns all AI data)" }
+      },
+      F_GetObjectAIData);
+   RegisterAIAssistantFunction(
+      "list-object-ai-data-keys",
+      "List all AI data keys available for an object",
+      {
+         { "object", "mandatory name or ID of an object" }
+      },
+      F_ListObjectAIDataKeys);
+   RegisterAIAssistantFunction(
+      "remove-object-ai-data",
+      "Remove AI agent data for an object by key",
+      {
+         { "object", "mandatory name or ID of an object" },
+         { "key", "mandatory key of the data to remove" }
+      },
+      F_RemoveObjectAIData);
+   RegisterAIAssistantFunction(
       "send-notification",
       "Send notification to given recipient using one of configured notification channels.",
       {
@@ -101,6 +128,15 @@ static void CreateAssistantFunctionList()
          { "subject", "notification subject (optional)" }
       },
       F_SendNotification);
+   RegisterAIAssistantFunction(
+      "set-object-ai-data",
+      "Store AI agent data for an object with a specified key-value pair. Use this to remember context, analysis results, or other AI-specific information about objects.",
+      {
+         { "object", "mandatory name or ID of an object" },
+         { "key", "mandatory key for the data (e.g., 'analysis_history', 'anomaly_patterns', 'user_notes')" },
+         { "value", "mandatory value to store (can be string, number, object, or array)" }
+      },
+      F_SetObjectAIData);
    RegisterAIAssistantFunction(
       "server-stats",
       "Get stats (basic internal performance metrics like number of objects, nodes, sensors, interfaces, metrics, data collection items) of NetXMS server itself.",
@@ -135,7 +171,7 @@ static void CreateAssistantSkillList()
 {
    RegisterAIAssistantSkill(
       "data-collection",
-      "Provides comprehensive data collection management capabilities for NetXMS monitored infrastructure. Use this skill to create new metrics, monitor current values, analyze historical data, detect trends and anomalies, and optimize performance monitoring across your IT environment.",
+      "Provides comprehensive data collection management capabilities for NetXMS monitored infrastructure. Use this skill to create new metrics, monitor current values, analyze performance data, analyze historical data, detect trends and anomalies, and optimize performance monitoring across your IT environment. Essential for performance analysis, capacity planning, resource utilization monitoring, and troubleshooting performance issues.",
       "@data-collection.md",
       {
          AssistantFunction(
@@ -262,20 +298,8 @@ static void CreateAssistantSkillList()
  */
 static bool InitializeModule(Config *config)
 {
-   wchar_t path[MAX_PATH];
-   GetNetXMSDirectory(nxDirShare, path);
-   wcslcat(path, L"/aitools/prompt-overview.md", MAX_PATH);
-   char *prompt = LoadFileAsUTF8String(path);
-   if (prompt != nullptr)
-   {
-      AddAIAssistantPrompt(prompt);
-      MemFree(prompt);
-   }
-   else
-   {
-      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Cannot load AI assistant prompt file \"%s\"", path);
-   }
-
+   AddAIAssistantPromptFromFile(L"overview.md");
+   AddAIAssistantPromptFromFile(L"ai-data-storage.md");
    CreateAssistantFunctionList();
    CreateAssistantSkillList();
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"AI assistant tools module version " NETXMS_VERSION_STRING L" initialized");

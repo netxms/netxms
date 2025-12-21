@@ -242,6 +242,17 @@ CREATE TABLE object_custom_attributes
 CREATE INDEX idx_ocattr_oid ON object_custom_attributes(object_id);
 
 /*
+** Object AI data (key-value storage for AI agents)
+*/
+CREATE TABLE object_ai_data
+(
+  object_id integer not null,
+  data_key varchar(127) not null,
+  data_value SQL_TEXT null,
+  PRIMARY KEY(object_id,data_key)
+) TABLE_TYPE;
+
+/*
 ** Zone objects
 */
 CREATE TABLE zones

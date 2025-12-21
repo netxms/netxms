@@ -955,6 +955,28 @@ void NXCORE_EXPORTABLE AddAIAssistantPrompt(const char *text)
 }
 
 /**
+ * Add custom prompt from file
+ * Path is relative to NetXMS shared data prompts directory
+ */
+void NXCORE_EXPORTABLE AddAIAssistantPromptFromFile(const wchar_t *fileName)
+{
+   wchar_t path[MAX_PATH];
+   GetNetXMSDirectory(nxDirShare, path);
+   wcslcat(path, FS_PATH_SEPARATOR L"prompts" FS_PATH_SEPARATOR, MAX_PATH);
+   wcslcat(path, fileName, MAX_PATH);
+   char *prompt = LoadFileAsUTF8String(path);
+   if (prompt != nullptr)
+   {
+      AddAIAssistantPrompt(prompt);
+      MemFree(prompt);
+   }
+   else
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Cannot load AI assistant prompt file \"%s\"", path);
+   }
+}
+
+/**
  * Write log message
  */
 static std::string F_WriteLogMessage(json_t *arguments, uint32_t userId)
@@ -965,6 +987,20 @@ static std::string F_WriteLogMessage(json_t *arguments, uint32_t userId)
 
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"AI Assistant: %hs", message);
    return std::string("Log message written");
+}
+
+/**
+ * Task handler for scheduled AI agent task execution
+ */
+static void ExecuteAIAgentTask(const shared_ptr<ScheduledTaskParameters>& parameters)
+{
+   char *prompt = UTF8StringFromWideString(parameters->m_persistentData);
+   shared_ptr<NetObj> context = FindObjectById(parameters->m_objectId);
+   char *response = QueryAIAssistant(prompt, context.get());
+   nxlog_debug_tag(DEBUG_TAG, 4, L"AI assistant response for scheduled task on object [%u]: %hs",
+         parameters->m_objectId, (response != nullptr) ? response : "no response");
+   MemFree(prompt);
+   MemFree(response);
 }
 
 /**
@@ -1002,6 +1038,15 @@ bool InitAIAssistant()
    }
 
    RegisterComponent(AI_ASSISTANT_COMPONENT);
+
+   RegisterAIAssistantFunction(
+      "get-available-skills",
+      "Get list of available AI assistant skills that can be loaded to extend capabilities. Each skill provides specialized functions for specific domains like data collection, event processing, inventory management, etc.",
+      {},
+      [] (json_t *arguments, uint32_t userId) -> std::string
+      {
+         return GetRegisteredSkills();
+      });
 
    RegisterAIAssistantFunction(
       "register-ai-task",
@@ -1061,6 +1106,8 @@ bool InitAIAssistant()
          ConfigReadInt(_T("ThreadPool.AITasks.BaseSize"), 4),
          ConfigReadInt(_T("ThreadPool.AITasks.MaxSize"), 16));
    ThreadCreate(AITaskSchedulerThread, s_aiTaskThreadPool);
+
+   RegisterSchedulerTaskHandler(L"Execute.AIAgentTask", ExecuteAIAgentTask, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
 
    nxlog_debug_tag(DEBUG_TAG, 2, L"LLM service URL = \"%hs\", model = \"%hs\"", s_llmServiceURL, s_llmModel);
    nxlog_debug_tag(DEBUG_TAG, 2, L"%d global functions registered", static_cast<int>(s_globalFunctions.size()));

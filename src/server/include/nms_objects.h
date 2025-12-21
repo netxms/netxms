@@ -860,6 +860,7 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define MODIFY_OBJECT_URLS          0x04000000
 #define MODIFY_RADIO_INTERFACES     0x08000000
 #define MODIFY_AP_PROPERTIES        0x10000000
+#define MODIFY_AI_DATA              0x20000000
 #define MODIFY_ALL                  0xFFFFFFFF
 
 /**
@@ -1255,6 +1256,7 @@ enum LoadStatementIndex
    LSI_IF_VLANS,
    LSI_IF_ADDRESSES,
    LSI_ACCESS_POINT,
+   LSI_AI_DATA,
    LSI_MAX_VALUE
 };
 
@@ -1343,6 +1345,7 @@ protected:
    Mutex m_mutexResponsibleUsers;
 
    std::unordered_map<std::string, json_t*> *m_aiData;
+   mutable Mutex m_aiDataLock;
 
    Pollable* m_asPollable; // Only changed in Pollable class constructor
    DelegateObject* m_asDelegate; // Only changed in DelegateObject class constructor
@@ -1559,6 +1562,12 @@ public:
 
    unique_ptr<StructArray<ResponsibleUser>> getAllResponsibleUsers(const TCHAR *tag = nullptr) const;
    void setResponsibleUsersFromMessage(const NXCPMessage& msg, ClientSession *session);
+
+   json_t *getAllAIData() const;
+   json_t *getAIData(const char *key) const;
+   json_t *getAIDataKeys() const;
+   void setAIData(const char *key, json_t *value);
+   bool removeAIData(const char *key);
 
    virtual json_t *toJson();
 

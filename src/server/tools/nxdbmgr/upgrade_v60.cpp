@@ -25,6 +25,21 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.11 to 60.12
+ */
+static bool H_UpgradeFromV11()
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE object_ai_data (")
+      _T("   object_id integer not null,")
+      _T("   data_key varchar(127) not null,")
+      _T("   data_value $SQL:TEXT null,")
+      _T("   PRIMARY KEY(object_id,data_key))")));
+   CHK_EXEC(SetMinorSchemaVersion(12));
+   return true;
+}
+
+/**
  * Upgrade from 60.10 to 60.11
  */
 static bool H_UpgradeFromV10()
@@ -535,6 +550,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 11, 60, 12, H_UpgradeFromV11 },
    { 10, 60, 11, H_UpgradeFromV10 },
    { 9,  60, 10, H_UpgradeFromV9  },
    { 8,  60, 9,  H_UpgradeFromV8  },

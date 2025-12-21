@@ -201,6 +201,11 @@ void NXCORE_EXPORTABLE RegisterAIAssistantSkill(const char *name, const char *de
 void NXCORE_EXPORTABLE AddAIAssistantPrompt(const char *text);
 
 /**
+ * Add custom prompt from file
+ */
+void NXCORE_EXPORTABLE AddAIAssistantPromptFromFile(const wchar_t *fileName);
+
+/**
  * Create new chat
  */
 shared_ptr<Chat> NXCORE_EXPORTABLE CreateAIAssistantChat(uint32_t userId, uint32_t *rcc);

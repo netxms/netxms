@@ -6,15 +6,11 @@ aitools_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -
 aitools_la_LDFLAGS = -module -avoid-version
 aitools_la_LIBADD = ../../libnetxms/libnetxms.la ../libnxsrv/libnxsrv.la ../core/libnxcore.la
 
-aitoolsdir=$(pkgdatadir)/aitools
-
-aitools_DATA = prompt-overview.md
-
-EXTRA_DIST = $(aitools_DATA) \
+EXTRA_DIST = \
 	aitools.h \
 	aitools.vcxproj aitools.vcxproj.filters
 
-SUBDIRS = skills
+SUBDIRS = prompts skills
 
 install-exec-hook:
 	if test "x`uname -s`" = "xAIX" ; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(DESTDIR)$(pkglibdir)/$(MODULE).a $(DESTDIR)$(pkglibdir)/$(MODULE)@SHLIB_SUFFIX@ ; rm -f $(DESTDIR)$(pkglibdir)/$(MODULE).a ; fi

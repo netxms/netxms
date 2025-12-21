@@ -98,6 +98,7 @@ static inline json_t *CreateObjectSummary(const NetObj& object)
    json_object_set_new(jsonObject, "timestamp", json_time_string(object.getTimeStamp()));
    json_object_set_new(jsonObject, "status", json_string_t(GetStatusAsText(object.getStatus(), false)));
    json_object_set_new(jsonObject, "customAttributes", object.getCustomAttributesAsJson());
+   json_object_set_new(jsonObject, "comments", json_string_t(object.getComments()));
 
    if (object.getObjectClass() == OBJECT_NODE)
    {
@@ -354,4 +355,161 @@ std::string F_GetNodeSoftwarePackages(json_t *arguments, uint32_t userId)
    }
 
    return JsonToString(components);
+}
+
+/**
+ * Store AI agent data for an object
+ */
+std::string F_SetObjectAIData(json_t *arguments, uint32_t userId)
+{
+   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
+   const char *key = json_object_get_string_utf8(arguments, "key", nullptr);
+   json_t *value = json_object_get(arguments, "value");
+
+   if ((objectName == nullptr) || (objectName[0] == 0))
+      return std::string("Object name or ID must be provided");
+   
+   if ((key == nullptr) || (key[0] == 0))
+      return std::string("Key must be provided");
+   
+   if (value == nullptr)
+      return std::string("Value must be provided");
+
+   // if value is json object presented as string, parse it
+   if (json_is_string(value))
+   {
+      const char *valueStr = json_string_value(value);
+      json_error_t error;
+      json_t *parsedValue = json_loads(valueStr, 0, &error);
+      if (parsedValue != nullptr)
+      {
+         json_decref(value);
+         value = parsedValue;
+      }
+   }
+
+   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
+   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+   {
+      char buffer[256];
+      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known or not accessible", objectName);
+      return std::string(buffer);
+   }
+
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
+      return std::string("Access denied");
+
+   if (json_is_object(value))
+   {
+      object->setAIData(key, value);
+   }
+   else
+   {
+      json_t *wrappedValue = json_object();
+      json_object_set(wrappedValue, "data", value);
+      object->setAIData(key, wrappedValue);
+      json_decref(wrappedValue);
+   }
+   return std::string("AI data stored successfully");
+}
+
+/**
+ * Retrieve AI agent data for an object
+ */
+std::string F_GetObjectAIData(json_t *arguments, uint32_t userId)
+{
+   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
+   const char *key = json_object_get_string_utf8(arguments, "key", nullptr);
+
+   if ((objectName == nullptr) || (objectName[0] == 0))
+      return std::string("Object name or ID must be provided");
+
+   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
+   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+   {
+      char buffer[256];
+      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known or not accessible", objectName);
+      return std::string(buffer);
+   }
+
+   json_t *data;
+   if ((key == nullptr) || (key[0] == 0))
+   {
+      // Return all AI data if no key specified
+      data = object->getAllAIData();
+   }
+   else
+   {
+      // Return specific key
+      data = object->getAIData(key);
+   }
+
+   if (data == nullptr)
+   {
+      if ((key != nullptr) && (key[0] != 0))
+         return std::string("AI data not found for the specified key");
+      else
+         return std::string("{}"); // Empty object if no AI data exists
+   }
+
+   return JsonToString(data);
+}
+
+/**
+ * Remove AI agent data for an object
+ */
+std::string F_RemoveObjectAIData(json_t *arguments, uint32_t userId)
+{
+   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
+   const char *key = json_object_get_string_utf8(arguments, "key", nullptr);
+
+   if ((objectName == nullptr) || (objectName[0] == 0))
+      return std::string("Object name or ID must be provided");
+
+   if ((key == nullptr) || (key[0] == 0))
+      return std::string("Key must be provided");
+
+   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
+   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+   {
+      char buffer[256];
+      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known or not accessible", objectName);
+      return std::string(buffer);
+   }
+
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
+      return std::string("Access denied");
+
+   bool removed = object->removeAIData(key);
+   if (removed)
+      return std::string("AI data removed successfully");
+   else
+      return std::string("AI data not found for the specified key");
+}
+
+/**
+ * List all AI data keys for an object
+ */
+std::string F_ListObjectAIDataKeys(json_t *arguments, uint32_t userId)
+{
+   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
+
+   if ((objectName == nullptr) || (objectName[0] == 0))
+      return std::string("Object name or ID must be provided");
+
+   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
+   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+   {
+      char buffer[256];
+      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known or not accessible", objectName);
+      return std::string(buffer);
+   }
+
+   json_t *keys = object->getAIDataKeys();
+   if (keys == nullptr)
+   {
+      return std::string("[]"); // Empty array if no AI data exists
+   }
+
+   return JsonToString(keys);
 }

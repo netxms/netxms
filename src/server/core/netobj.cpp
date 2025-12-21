@@ -117,7 +117,14 @@ NetObj::~NetObj()
    delete m_trustedObjects;
    delete m_moduleData;
    delete m_responsibleUsers;
-   delete m_aiData;
+   if (m_aiData != nullptr)
+   {
+      for (auto& pair : *m_aiData)
+      {
+         json_decref(pair.second);
+      }
+      delete m_aiData;
+   }
 }
 
 /**
@@ -403,10 +410,10 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
    // Save URL associations
    if (success && (m_modified & MODIFY_OBJECT_URLS))
    {
-      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM object_urls WHERE object_id=?"));
+      success = ExecuteQueryOnObject(hdb, m_id, L"DELETE FROM object_urls WHERE object_id=?");
       if (success && !m_urls.isEmpty())
       {
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO object_urls (object_id,url_id,url,description) VALUES (?,?,?,?)"), true);
+         DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO object_urls (object_id,url_id,url,description) VALUES (?,?,?,?)", true);
          if (hStmt != nullptr)
          {
             lockProperties();
@@ -427,6 +434,35 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
             success = false;
          }
       }
+   }
+
+   // Save AI data
+   if (success && (m_modified & MODIFY_AI_DATA))
+   {
+      success = executeQueryOnObject(hdb, L"DELETE FROM object_ai_data WHERE object_id=?");
+      m_aiDataLock.lock();
+      if (success && (m_aiData != nullptr) && !m_aiData->empty())
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO object_ai_data (object_id,data_key,data_value) VALUES (?,?,?)", m_aiData->size() > 1);
+         if (hStmt != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for (const auto& pair : *m_aiData)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, pair.first.c_str(), DB_BIND_STATIC);
+               DBBind(hStmt, 3, DB_SQLTYPE_TEXT, pair.second, DB_BIND_STATIC);
+               success = DBExecute(hStmt);
+               if (!success)
+                  break;
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+      m_aiDataLock.unlock();
    }
 
    if (success)
@@ -467,7 +503,7 @@ bool NetObj::saveRuntimeData(DB_HANDLE hdb)
    bool success;
    if ((m_status != m_savedStatus) || (m_state != m_savedState))
    {
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE object_properties SET status=?,state=? WHERE object_id=?"));
+      DB_STATEMENT hStmt = DBPrepare(hdb, L"UPDATE object_properties SET status=?,state=? WHERE object_id=?");
       if (hStmt == nullptr)
          return false;
 
@@ -675,6 +711,50 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb, DB_STATEMENT *preparedStatement
 		{
 			success = false;
 		}
+   }
+
+   // Load AI data
+   if (success)
+   {
+      hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_AI_DATA, _T("SELECT data_key,data_value FROM object_ai_data WHERE object_id=?"));
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         DB_RESULT hResult = DBSelectPrepared(hStmt);
+         if (hResult != nullptr)
+         {
+            int count = DBGetNumRows(hResult);
+            if (count > 0)
+            {
+               m_aiData = new std::unordered_map<std::string, json_t*>();
+               for (int i = 0; i < count; i++)
+               {
+                  char key[128];
+                  DBGetFieldA(hResult, i, 0, key, sizeof(key));
+                  char *jsonText = DBGetFieldUTF8(hResult, i, 1, nullptr, 0);
+                  if (jsonText != nullptr)
+                  {
+                     json_error_t error;
+                     json_t *value = json_loads(jsonText, 0, &error);
+                     if (value != nullptr)
+                     {
+                        (*m_aiData)[key] = value;
+                     }
+                     MemFree(jsonText);
+                  }
+               }
+            }
+            DBFreeResult(hResult);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+      else
+      {
+         success = false;
+      }
    }
 
    // Load associated dashboards
@@ -2368,6 +2448,110 @@ void NetObj::setModuleData(const TCHAR *module, ModuleData *data)
       m_moduleData = new StringObjectMap<ModuleData>(Ownership::True);
    m_moduleData->set(module, data);
    m_moduleDataLock.unlock();
+}
+
+/**
+ * Get all AI data as JSON object
+ */
+json_t *NetObj::getAllAIData() const
+{
+   m_aiDataLock.lock();
+   if (m_aiData == nullptr || m_aiData->empty())
+   {
+      m_aiDataLock.unlock();
+      return nullptr;
+   }
+   json_t *result = json_object();
+   for (const auto& pair : *m_aiData)
+   {
+      json_object_set(result, pair.first.c_str(), pair.second);
+   }
+   m_aiDataLock.unlock();
+   return result;
+}
+
+/**
+ * Get AI data by key
+ */
+json_t *NetObj::getAIData(const char *key) const
+{
+   m_aiDataLock.lock();
+   if (m_aiData == nullptr)
+   {
+      m_aiDataLock.unlock();
+      return nullptr;
+   }
+   auto it = m_aiData->find(key);
+   if (it == m_aiData->end())
+   {
+      m_aiDataLock.unlock();
+      return nullptr;
+   }
+   json_t *result = json_incref(it->second);
+   m_aiDataLock.unlock();
+   return result;
+}
+
+/**
+ * Get list of AI data keys
+ */
+json_t *NetObj::getAIDataKeys() const
+{
+   m_aiDataLock.lock();
+   if (m_aiData == nullptr || m_aiData->empty())
+   {
+      m_aiDataLock.unlock();
+      return nullptr;
+   }
+   json_t *result = json_array();
+   for (const auto& pair : *m_aiData)
+   {
+      json_array_append_new(result, json_string(pair.first.c_str()));
+   }
+   m_aiDataLock.unlock();
+   return result;
+}
+
+/**
+ * Set AI data
+ */
+void NetObj::setAIData(const char *key, json_t *value)
+{
+   m_aiDataLock.lock();
+   if (m_aiData == nullptr)
+      m_aiData = new std::unordered_map<std::string, json_t*>();
+   auto it = m_aiData->find(key);
+   if (it != m_aiData->end())
+   {
+      json_decref(it->second);
+   }
+   (*m_aiData)[key] = json_incref(value);
+   m_aiDataLock.unlock();
+   setModified(MODIFY_AI_DATA);
+}
+
+/**
+ * Remove AI data by key
+ */
+bool NetObj::removeAIData(const char *key)
+{
+   m_aiDataLock.lock();
+   if (m_aiData == nullptr)
+   {
+      m_aiDataLock.unlock();
+      return false;
+   }
+   auto it = m_aiData->find(key);
+   if (it == m_aiData->end())
+   {
+      m_aiDataLock.unlock();
+      return false;
+   }
+   json_decref(it->second);
+   m_aiData->erase(it);
+   m_aiDataLock.unlock();
+   setModified(MODIFY_AI_DATA);
+   return true;
 }
 
 /**

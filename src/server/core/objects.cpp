@@ -1442,6 +1442,7 @@ bool LoadObjects()
       bool success =
                DBCacheTable(cachedb, mainDB, _T("object_properties"), _T("object_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("object_custom_attributes"), _T("object_id,attr_name"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("object_ai_data"), _T("object_id,data_key"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("object_urls"), _T("object_id,url_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("responsible_users"), _T("object_id,user_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("nodes"), _T("id"), _T("*")) &&
