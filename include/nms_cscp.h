@@ -682,6 +682,7 @@ typedef struct
 #define CMD_DELETE_AI_ASSISTANT_CHAT      0x01E2
 #define CMD_EXPLAIN_EPP_RULE              0x01E3
 #define CMD_CLEAR_NOTIFICATION_QUEUE      0x01E4
+#define CMD_DECOMMISSION_NODE             0x01E5
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1571,6 +1572,8 @@ typedef struct
 #define VID_CHAT_ID                 ((uint32_t)875)
 #define VID_SYSLOG_NUM_RECORDS      ((uint32_t)876)
 #define VID_WIN_LOG_NUM_RECORDS     ((uint32_t)877)
+#define VID_DECOMMISSION_TIME       ((uint32_t)878)
+#define VID_CLEAR_IP_ADDRESSES      ((uint32_t)879)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

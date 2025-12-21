@@ -503,6 +503,7 @@ public class NXCPCodes
    public static final int CMD_DELETE_AI_ASSISTANT_CHAT = 0x01E2;
    public static final int CMD_EXPLAIN_EPP_RULE = 0x01E3;
    public static final int CMD_CLEAR_NOTIFICATION_QUEUE = 0x01E4;
+   public static final int CMD_DECOMMISSION_NODE = 0x01E5;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1388,6 +1389,8 @@ public class NXCPCodes
    public static final long VID_CHAT_ID = 875;
    public static final long VID_SYSLOG_NUM_RECORDS = 876;
    public static final long VID_WIN_LOG_NUM_RECORDS = 877;
+   public static final long VID_DECOMMISSION_TIME = 878;
+   public static final long VID_CLEAR_IP_ADDRESSES = 879;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

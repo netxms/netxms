@@ -6606,6 +6606,26 @@ public class NXCSession
    }
 
    /**
+    * Decommission a node. The node will be marked for deletion and will be automatically deleted by the housekeeper
+    * after the expiration time.
+    *
+    * @param nodeId ID of the node to decommission
+    * @param expirationTime time when the node should be deleted
+    * @param clearIpAddresses if true, clear IP addresses from node and its interfaces
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error
+    */
+   public void decommissionNode(long nodeId, Date expirationTime, boolean clearIpAddresses) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_DECOMMISSION_NODE);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
+      msg.setFieldInt64(NXCPCodes.VID_DECOMMISSION_TIME, expirationTime.getTime() / 1000);
+      msg.setField(NXCPCodes.VID_CLEAR_IP_ADDRESSES, clearIpAddresses);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
     * Remove orphaned objects (with last parent left)
     *
     * @param parent

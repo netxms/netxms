@@ -484,6 +484,7 @@ CREATE TABLE nodes
   modbus_tcp_port integer not null,
   modbus_unit_id integer not null,
   last_events varchar(255) null,
+  decommission_time integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

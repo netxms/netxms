@@ -708,6 +708,7 @@ private:
    void createObject(const NXCPMessage& request);
    void changeObjectBinding(const NXCPMessage& request, bool bind);
    void deleteObject(const NXCPMessage& request);
+   void decommissionNode(const NXCPMessage& request);
    void getAlarms(const NXCPMessage& request);
    void getAlarm(const NXCPMessage& request);
    void getAlarmEvents(const NXCPMessage& request);

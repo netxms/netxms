@@ -245,6 +245,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_cipVendorCode = 0;
    m_modbusTcpPort = MODBUS_TCP_DEFAULT_PORT;
    m_modbusUnitId = 255;
+   m_decommissionTime = 0;
    m_lastConfigBackupJobStatus = DeviceBackupJobStatus::UNKNOWN;
 }
 
@@ -380,6 +381,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_modbusUnitId = newNodeData->modbusUnitId;
    m_l1TopologyUsed = false;
    m_topologyDepth = -1;
+   m_decommissionTime = 0;
    m_lastConfigBackupJobStatus = DeviceBackupJobStatus::UNKNOWN;
 }
 
@@ -446,7 +448,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
       _T("cip_status,cip_state,eip_proxy,eip_port,hardware_id,cip_vendor_code,agent_cert_mapping_method,")
       _T("agent_cert_mapping_data,snmp_engine_id,ssh_port,ssh_key_id,syslog_codepage,snmp_codepage,ospf_router_id,")
       _T("mqtt_proxy,modbus_proxy,modbus_tcp_port,modbus_unit_id,snmp_context_engine_id,vnc_password,vnc_port,")
-      _T("vnc_proxy,path_check_reason,path_check_node_id,path_check_iface_id,expected_capabilities,last_events FROM nodes WHERE id=?"));
+      _T("vnc_proxy,path_check_reason,path_check_node_id,path_check_iface_id,expected_capabilities,last_events,decommission_time FROM nodes WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -637,6 +639,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
    StringList elements = DBGetFieldAsString(hResult, 0, 90).split(L";");
    for (i = 0; i < MIN(elements.size(), MAX_LAST_EVENTS); i++)
       m_lastEvents[i] = _tcstoul(elements.get(i), nullptr, 10);
+   m_decommissionTime = static_cast<time_t>(DBGetFieldInt64(hResult, 0, 91));
 
    DBFreeResult(hResult);
 
@@ -1088,7 +1091,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          _T("agent_cert_mapping_method"), _T("agent_cert_mapping_data"), _T("snmp_engine_id"), _T("snmp_context_engine_id"),
          _T("syslog_codepage"), _T("snmp_codepage"), _T("ospf_router_id"), _T("mqtt_proxy"), _T("modbus_proxy"), _T("modbus_tcp_port"),
          _T("modbus_unit_id"), _T("vnc_password"), _T("vnc_port"), _T("vnc_proxy"), _T("path_check_reason"), _T("path_check_node_id"),
-         _T("path_check_iface_id"), L"expected_capabilities", L"last_events", nullptr
+         _T("path_check_iface_id"), L"expected_capabilities", L"last_events", L"decommission_time", nullptr
       };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"nodes", L"id", m_id, columns);
@@ -1236,7 +1239,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
             lastEvents.add(m_lastEvents[i]);
          }
          DBBind(hStmt, 91, DB_SQLTYPE_VARCHAR, lastEvents.join(L";"), DB_BIND_DYNAMIC);
-         DBBind(hStmt, 92, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 92, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_decommissionTime));
+         DBBind(hStmt, 93, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -2416,6 +2420,14 @@ void Node::deleteInterface(Interface *iface)
       }
    }
    iface->deleteObject();
+}
+
+/**
+ * Check if management status change is allowed
+ */
+bool Node::isManagementStatusChangeAllowed(bool isManaged)
+{
+   return !isManaged || !(m_state & NSF_DECOMMISSIONED);
 }
 
 /**
@@ -9377,6 +9389,7 @@ void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_PATH_CHECK_REASON, static_cast<int16_t>(m_pathCheckResult.reason));
    msg->setField(VID_PATH_CHECK_NODE_ID, m_pathCheckResult.rootCauseNodeId);
    msg->setField(VID_PATH_CHECK_INTERFACE_ID, m_pathCheckResult.rootCauseInterfaceId);
+   msg->setFieldFromTime(VID_DECOMMISSION_TIME, m_decommissionTime);
 }
 
 /**
@@ -14113,4 +14126,40 @@ ModbusTransport *Node::createModbusTransport()
 #else
    return nullptr;
 #endif
+}
+
+/**
+ * Decommission node - mark for deletion by housekeeper
+ */
+void Node::decommission(time_t expirationTime, bool clearIpAddresses)
+{
+   setMgmtStatus(false);
+
+   lockProperties();
+   m_state |= NSF_DECOMMISSIONED;
+   m_decommissionTime = expirationTime;
+   setModified(MODIFY_NODE_PROPERTIES | MODIFY_COMMON_PROPERTIES);
+
+   if (clearIpAddresses)
+   {
+      m_ipAddress = InetAddress();
+   }
+   unlockProperties();
+
+   if (clearIpAddresses)
+   {
+      readLockChildList();
+      for (int i = 0; i < getChildList().size(); i++)
+      {
+         NetObj *child = getChildList().get(i);
+         if (child->getObjectClass() == OBJECT_INTERFACE)
+         {
+            static_cast<Interface*>(child)->clearIpAddresses();
+         }
+      }
+      unlockChildList();
+   }
+
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("Node %s [%u] decommissioned, expiration time %u"),
+      m_name, m_id, static_cast<uint32_t>(expirationTime));
 }

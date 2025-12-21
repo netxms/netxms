@@ -123,6 +123,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	public static final int NSF_ICMP_UNREACHABLE         = 0x00200000;
 	public static final int NSF_SSH_UNREACHABLE          = 0x00400000;
 	public static final int NSF_MODBUS_UNREACHABLE       = 0x00800000;
+	public static final int NSF_DECOMMISSIONED           = 0x01000000;
 
 	public static final int IFXTABLE_DEFAULT = 0;
 	public static final int IFXTABLE_ENABLED = 1;
@@ -229,6 +230,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    protected RadioInterface[] radios;
    protected NetworkPathCheckResult networkPathCheckResult;
    protected DeviceBackupJobStatus lastConfigBackupJobStatus;
+   protected Date decommissionTime;
 
 	/**
 	 * Create new node object.
@@ -347,6 +349,9 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       networkPathCheckResult = new NetworkPathCheckResult(msg);
       lastConfigBackupJobStatus = DeviceBackupJobStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_LAST_BACKUP_JOB_STATUS));
 
+      long decommissionTimeSeconds = msg.getFieldAsInt64(NXCPCodes.VID_DECOMMISSION_TIME);
+      decommissionTime = (decommissionTimeSeconds > 0) ? new Date(decommissionTimeSeconds * 1000) : null;
+
       chassisPlacement = null;
       String config = msg.getFieldAsString(NXCPCodes.VID_CHASSIS_PLACEMENT_CONFIG);
       if(config != null && !config.isEmpty())
@@ -421,6 +426,26 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	{
 		return stateFlags;
 	}
+
+   /**
+    * Check if this node is decommissioned.
+    *
+    * @return true if this node is decommissioned
+    */
+   public boolean isDecommissioned()
+   {
+      return (stateFlags & NSF_DECOMMISSIONED) != 0;
+   }
+
+   /**
+    * Get decommission expiration time.
+    *
+    * @return decommission expiration time or null if node is not decommissioned
+    */
+   public Date getDecommissionTime()
+   {
+      return decommissionTime;
+   }
 
 	/**
 	 * @return the nodeType

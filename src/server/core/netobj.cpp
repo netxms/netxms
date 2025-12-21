@@ -102,6 +102,7 @@ NetObj::NetObj() : NObject(), m_mutexProperties(MutexType::FAST), m_dashboards(0
    m_creationTime = 0;
    m_categoryId = 0;
    m_assetId = 0;
+   m_aiData = nullptr;
    m_asPollable = nullptr;
    m_asDelegate = nullptr;
 }
@@ -116,6 +117,7 @@ NetObj::~NetObj()
    delete m_trustedObjects;
    delete m_moduleData;
    delete m_responsibleUsers;
+   delete m_aiData;
 }
 
 /**
@@ -1729,10 +1731,20 @@ bool NetObj::setMgmtStatus(bool isManaged)
    return true;
 }
 
-
+/**
+ * Hook called after management status change
+ */
 void NetObj::onMgmtStatusChange(bool isManaged, int oldStatus)
 {
    //Default implementation does nothing
+}
+
+/**
+ * Check if management status change is allowed
+ */
+bool NetObj::isManagementStatusChangeAllowed(bool isManaged)
+{
+   return true;
 }
 
 /**

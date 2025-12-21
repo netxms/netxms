@@ -312,6 +312,7 @@
 #define NSF_ICMP_UNREACHABLE           0x00200000
 #define NSF_SSH_UNREACHABLE            0x00400000
 #define NSF_MODBUS_UNREACHABLE         0x00800000
+#define NSF_DECOMMISSIONED             0x01000000
 
 /**
  * Sensor capabilities

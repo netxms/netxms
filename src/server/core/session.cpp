@@ -1255,6 +1255,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_DELETE_OBJECT:
          deleteObject(*request);
          break;
+      case CMD_DECOMMISSION_NODE:
+         decommissionNode(*request);
+         break;
       case CMD_POLL_OBJECT:
          forcedObjectPoll(*request);
          break;
@@ -4139,9 +4142,17 @@ void ClientSession::changeObjectMgmtStatus(const NXCPMessage& request)
 				 (object->getObjectClass() != OBJECT_TEMPLATEROOT))
 			{
 				bool managed = request.getFieldAsBoolean(VID_MGMT_STATUS);
-				object->setMgmtStatus(managed);
-				msg.setField(VID_RCC, RCC_SUCCESS);
-            writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Object %s set to %s state"), object->getName(), managed ? _T("managed") : _T("unmanaged"));
+				if (object->isManagementStatusChangeAllowed(managed))
+				{
+               object->setMgmtStatus(managed);
+               msg.setField(VID_RCC, RCC_SUCCESS);
+               writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Object %s set to %s state"), object->getName(), managed ? _T("managed") : _T("unmanaged"));
+				}
+				else
+            {
+				   debugPrintf(4, L"Attempted to change management status of object \"%s\" [%u] to %s state, but operation is not allowed", object->getName(), object->getId(), managed ? _T("managed") : _T("unmanaged"));
+               msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            }
 			}
 			else
 			{
@@ -6847,6 +6858,57 @@ void ClientSession::deleteObject(const NXCPMessage& request)
       {
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
          WriteAuditLog(AUDIT_OBJECTS, FALSE, m_userId, m_workstation, m_id, object->getId(), _T("Access denied on delete object %s"), object->getName());
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Decommission node - mark for deletion by housekeeper
+ */
+void ClientSession::decommissionNode(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
+   {
+      if (object->getId() >= 10)
+      {
+         // Use same access rights as delete
+         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_DELETE))
+         {
+            if (object->getObjectClass() == OBJECT_NODE)
+            {
+               time_t expirationTime = static_cast<time_t>(request.getFieldAsInt64(VID_DECOMMISSION_TIME));
+               bool clearIpAddresses = request.getFieldAsBoolean(VID_CLEAR_IP_ADDRESSES);
+
+               static_cast<Node*>(object.get())->decommission(expirationTime, clearIpAddresses);
+               response.setField(VID_RCC, RCC_SUCCESS);
+               WriteAuditLog(AUDIT_OBJECTS, TRUE, m_userId, m_workstation, m_id, object->getId(),
+                  _T("Node %s decommissioned, expiration time %u, clear IP addresses: %s"),
+                  object->getName(), static_cast<uint32_t>(expirationTime), clearIpAddresses ? _T("yes") : _T("no"));
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            }
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
+            WriteAuditLog(AUDIT_OBJECTS, FALSE, m_userId, m_workstation, m_id, object->getId(),
+               _T("Access denied on decommission node %s"), object->getName());
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else

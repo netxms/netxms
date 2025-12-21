@@ -494,6 +494,22 @@ static void HouseKeeper()
          nxlog_debug_tag(DEBUG_TAG, 7, _T("Empty subnet check completed"));
 		}
 
+      // Delete decommissioned nodes with passed expiration time
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Checking for expired decommissioned nodes"));
+      time_t now = time(nullptr);
+      unique_ptr<SharedObjectArray<NetObj>> decommissionedNodes = g_idxNodeById.getObjects(
+         [now] (NetObj *object) -> bool
+         {
+            Node *node = static_cast<Node*>(object);
+            return node->isDecommissioned() && (node->getDecommissionTime() <= now);
+         });
+      for(int i = 0; i < decommissionedNodes->size(); i++)
+      {
+         Node *node = static_cast<Node*>(decommissionedNodes->get(i));
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Deleting decommissioned node %s [%u]"), node->getName(), node->getId());
+         node->deleteObject();
+      }
+
 		// Remove expired DCI data
       if (!ConfigReadBoolean(_T("Housekeeper.DisableCollectedDataCleanup"), false))
       {

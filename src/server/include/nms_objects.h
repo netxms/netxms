@@ -1342,6 +1342,8 @@ protected:
    StructArray<ResponsibleUser> *m_responsibleUsers;
    Mutex m_mutexResponsibleUsers;
 
+   std::unordered_map<std::string, json_t*> *m_aiData;
+
    Pollable* m_asPollable; // Only changed in Pollable class constructor
    DelegateObject* m_asDelegate; // Only changed in DelegateObject class constructor
 
@@ -1488,6 +1490,7 @@ public:
 
    virtual bool setMgmtStatus(bool bIsManaged) final;
    virtual void onMgmtStatusChange(bool isManaged, int oldStatus);
+   virtual bool isManagementStatusChangeAllowed(bool isManaged);
    virtual void calculateCompoundStatus(bool forcedRecalc = false);
 
    uint32_t getUserRights(uint32_t userId) const;
@@ -2376,6 +2379,7 @@ public:
    void setIpAddress(const InetAddress& addr);
    void addIpAddress(const InetAddress& addr);
    void deleteIpAddress(InetAddress addr);
+   void clearIpAddresses();
    void setBridgePortNumber(uint32_t bpn)
    {
       m_bridgePortNumber = bpn;
@@ -3665,6 +3669,7 @@ protected:
    uint16_t m_cipVendorCode;
    uint16_t m_modbusTcpPort;
    uint16_t m_modbusUnitId;
+   time_t m_decommissionTime;
    DeviceBackupJobStatus m_lastConfigBackupJobStatus;
 
    virtual bool isDataCollectionDisabled() override;
@@ -3941,6 +3946,9 @@ public:
 
    bool isDown() { return is_bit_set(m_state, DCSF_UNREACHABLE); }
    time_t getDownSince() const { return m_downSince; }
+   bool isDecommissioned() const { return is_bit_set(m_state, NSF_DECOMMISSIONED); }
+   time_t getDecommissionTime() const { return m_decommissionTime; }
+   void decommission(time_t expirationTime, bool clearIpAddresses);
 
    void setNewTunnelBindFlag() { lockProperties(); m_runtimeFlags |= NDF_NEW_TUNNEL_BIND; unlockProperties(); }
    void clearNewTunnelBindFlag() { lockProperties(); m_runtimeFlags &= ~NDF_NEW_TUNNEL_BIND; unlockProperties(); }
@@ -4021,7 +4029,8 @@ public:
 
    void forceConfigurationPoll() { lockProperties(); m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL; unlockProperties(); }
 
-   void onMgmtStatusChange(bool isManaged, int oldStatus) override;
+   virtual bool isManagementStatusChangeAllowed(bool isManaged) override;
+   virtual void onMgmtStatusChange(bool isManaged, int oldStatus) override;
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
    bool checkAgentTrapId(uint64_t id);

@@ -1875,6 +1875,12 @@ static void DumpObject(ServerConsole *console, const NetObj& object)
    switch(object.getObjectClass())
    {
       case OBJECT_NODE:
+         if (static_cast<const Node&>(object).isDecommissioned())
+         {
+            ConsolePrintf(console, _T("   Decommissioned......: YES\n"));
+            ConsolePrintf(console, _T("   Decommissioned on...: %s\n"),
+                     FormatTimestamp(static_cast<const Node&>(object).getDecommissionTime(), buffer));
+         }
          ConsolePrintf(console, _T("   Primary IP..........: %s\n   Primary hostname....: %s\n   Capabilities........: ") UINT64X_FMT(_T("012")) _T(" (isSNMP=%d isAgent=%d isEIP=%d isBridge=%d isRouter=%d isMgmt=%d)\n   SNMP ObjectId.......: %s\n"),
                        static_cast<const Node&>(object).getIpAddress().toString(buffer),
                        static_cast<const Node&>(object).getPrimaryHostName().cstr(),

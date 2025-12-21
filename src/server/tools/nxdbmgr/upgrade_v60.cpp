@@ -25,6 +25,26 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.10 to 60.11
+ */
+static bool H_UpgradeFromV10()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE nodes ADD decommission_time integer\n")
+      _T("UPDATE nodes SET decommission_time=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("decommission_time")));
+
+   CHK_EXEC(CreateConfigParam(_T("Objects.Nodes.DefaultDecommissionExpirationTime"), _T("30"),
+         _T("Default expiration time in days for decommissioned nodes"),
+         _T("days"), 'I', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(11));
+   return true;
+}
+
+/**
  * Upgrade from 60.9 to 60.10
  */
 static bool H_UpgradeFromV9()
@@ -515,6 +535,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 10, 60, 11, H_UpgradeFromV10 },
    { 9,  60, 10, H_UpgradeFromV9  },
    { 8,  60, 9,  H_UpgradeFromV8  },
    { 7,  60, 8,  H_UpgradeFromV7  },

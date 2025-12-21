@@ -92,6 +92,7 @@ import org.netxms.nxmc.modules.objects.actions.EnableNetworkMapPublicAccess;
 import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
 import org.netxms.nxmc.modules.objects.actions.ObjectAction;
 import org.netxms.nxmc.modules.objects.actions.SetInterfacePeerInformation;
+import org.netxms.nxmc.modules.objects.dialogs.DecommissionNodeDialog;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog.RelationType;
@@ -121,6 +122,7 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionUnmanage;
    private Action actionRename;
    private Action actionDelete;
+   private Action actionDecommission;
    private Action actionDeployPackage;
    private Action actionProperties;
    private Action actionTakeScreenshot;
@@ -251,6 +253,14 @@ public class ObjectContextMenuManager extends MenuManager
          public void run()
          {
             deleteObject();
+         }
+      };
+
+      actionDecommission = new Action(i18n.tr("Decom&mission...")) {
+         @Override
+         public void run()
+         {
+            decommissionNode();
          }
       };
 
@@ -636,6 +646,10 @@ public class ObjectContextMenuManager extends MenuManager
       if (!containsRootObject(selection))
       {
          add(actionDelete);
+      }
+      if (singleObject && (getObjectFromSelection() instanceof Node))
+      {
+         add(actionDecommission);
       }
       if (singleObject && isChangeZoneMenuAllowed(selection))
       {
@@ -1144,6 +1158,55 @@ public class ObjectContextMenuManager extends MenuManager
          protected String getErrorMessage()
          {
             return i18n.tr("Cannot delete object");
+         }
+      }.start();
+   }
+
+   /**
+    * Decommission selected node
+    */
+   private void decommissionNode()
+   {
+      AbstractObject object = getObjectFromSelection();
+      if (!(object instanceof Node))
+         return;
+
+      final Node node = (Node)object;
+      final NXCSession session = Registry.getSession();
+
+      // Get default expiration time from server config
+      int defaultDays = 30;
+      try
+      {
+         String value = session.getPublicServerVariable("Objects.Nodes.DefaultDecommissionExpirationTime");
+         if (value != null && !value.isEmpty())
+         {
+            defaultDays = Integer.parseInt(value);
+         }
+      }
+      catch(Exception e)
+      {
+         // Use default value
+      }
+
+      DecommissionNodeDialog dlg = new DecommissionNodeDialog(getShell(), defaultDays);
+      if (dlg.open() != Window.OK)
+         return;
+
+      final java.util.Date expirationTime = dlg.getExpirationTime();
+      final boolean clearIpAddresses = dlg.isClearIpAddresses();
+
+      new Job(i18n.tr("Decommission node"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.decommissionNode(node.getObjectId(), expirationTime, clearIpAddresses);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot decommission node");
          }
       }.start();
    }

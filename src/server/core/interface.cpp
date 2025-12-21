@@ -1804,6 +1804,46 @@ void Interface::deleteIpAddress(InetAddress addr)
 }
 
 /**
+ * Clear all IP addresses from interface
+ */
+void Interface::clearIpAddresses()
+{
+   // FIXME: make copy of address list and work on it (requires changes to InetAddressList)
+   if (!isExcludedFromTopology())
+   {
+      if (IsZoningEnabled())
+      {
+         shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
+         if (zone != nullptr)
+         {
+            zone->removeFromIndex(*this);
+         }
+      }
+      else
+      {
+         const ObjectArray<InetAddress>& list = m_ipAddressList.getList();
+         for(int i = 0; i < list.size(); i++)
+         {
+            InetAddress *addr = list.get(i);
+            if (addr->isValidUnicast())
+            {
+               shared_ptr<NetObj> o = g_idxInterfaceByAddr.get(*addr);
+               if ((o != nullptr) && (o->getId() == m_id))
+               {
+                  g_idxInterfaceByAddr.remove(*addr);
+               }
+            }
+         }
+      }
+   }
+
+   lockProperties();
+   m_ipAddressList.clear();
+   setModified(MODIFY_INTERFACE_PROPERTIES);
+   unlockProperties();
+}
+
+/**
  * Change network mask for IP address
  */
 void Interface::setNetMask(const InetAddress& addr)
