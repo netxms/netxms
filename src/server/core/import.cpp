@@ -24,7 +24,7 @@
 #include "nxcore.h"
 #include <nxcore_websvc.h>
 #include <asset_management.h>
-#include <jansson.h>
+#include <jansson/jansson.h>
 #include <netxms-xml.h>
 
 #define DEBUG_TAG _T("import")
