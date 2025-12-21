@@ -3761,6 +3761,7 @@ protected:
    bool updateInterfaceConfiguration(uint32_t requestId);
    bool deleteDuplicateInterfaces(uint32_t requestId);
    void executeInterfaceUpdateHook(Interface *iface);
+   void updateInterfacesFromEntityMib(const Component *component);
    void updatePhysicalContainerBinding(uint32_t containerId);
    DuplicateCheckResult checkForDuplicates(shared_ptr<Node> *duplicate, TCHAR *reason, size_t size);
    bool isDuplicateOf(Node *node, TCHAR *reason, size_t size);

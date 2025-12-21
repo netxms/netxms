@@ -4242,7 +4242,7 @@ bool Node::updateSystemHardwareInformation(PollerInfo *poller, uint32_t requestI
             const Component *root = m_components->getRoot();
             if (root != nullptr)
             {
-               // Device could be reported as but consist from single chassis only
+               // Device could be reported as stack but consist from single chassis only
                if ((root->getClass() == COMPONENT_CLASS_STACK) && (root->getChildren().size() == 1) && (root->getChildren().get(0)->getClass() == COMPONENT_CLASS_CHASSIS))
                {
                   root = root->getChildren().get(0);
@@ -4762,6 +4762,13 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
 
    if (updateInterfaceConfiguration(rqId))
       modified |= MODIFY_NODE_PROPERTIES;
+
+   // Update interface physical port flag and location from ENTITY MIB
+   if (m_components != nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s [%u]): updating interface information from ENTITY MIB"), m_name, m_id);
+      updateInterfacesFromEntityMib(m_components->getRoot());
+   }
 
    POLL_CANCELLATION_CHECKPOINT();
 
@@ -6604,6 +6611,55 @@ void Node::executeInterfaceUpdateHook(Interface *iface)
       ReportScriptError(SCRIPT_CONTEXT_OBJECT, this, 0, vm->getErrorText(), _T("Hook::UpdateInterface"));
    }
    delete vm;
+}
+
+/**
+ * Update interface physical port flag and location from ENTITY MIB component tree
+ */
+void Node::updateInterfacesFromEntityMib(const Component *component)
+{
+   if (component == nullptr)
+      return;
+
+   if ((component->getClass() == COMPONENT_CLASS_PORT) && (component->getIfIndex() != 0))
+   {
+      shared_ptr<Interface> iface = findInterfaceByIndex(component->getIfIndex());
+      if (iface != nullptr)
+      {
+         bool updated = false;
+
+         // Mark as physical port if not already set
+         if (!iface->isPhysicalPort())
+         {
+            iface->setPhysicalPortFlag(true);
+            updated = true;
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5,
+               _T("Node::updateInterfacesFromEntityMib(%s [%u]): interface %s marked as physical port"),
+               m_name, m_id, iface->getName());
+         }
+
+         // Set physical location if not already set by driver
+         InterfacePhysicalLocation currentLoc = iface->getPhysicalLocation();
+         if (currentLoc.equals(InterfacePhysicalLocation()))
+         {
+            InterfacePhysicalLocation loc = InterfacePhysicalLocationFromEntityMib(component);
+            if (!loc.equals(InterfacePhysicalLocation()))
+            {
+               iface->setPhysicalLocation(loc);
+               updated = true;
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5,
+                  _T("Node::updateInterfacesFromEntityMib(%s [%u]): interface %s location set to %u/%u/%u/%u"),
+                  m_name, m_id, iface->getName(), loc.chassis, loc.module, loc.pic, loc.port);
+            }
+         }
+
+         if (updated)
+            executeInterfaceUpdateHook(iface.get());
+      }
+   }
+
+   for (int i = 0; i < component->getChildren().size(); i++)
+      updateInterfacesFromEntityMib(component->getChildren().get(i));
 }
 
 /**

@@ -396,6 +396,54 @@ shared_ptr<ComponentTree> LIBNXSRV_EXPORTABLE BuildComponentTree(SNMP_Transport 
 }
 
 /**
+ * Get interface physical location from ENTITY MIB component hierarchy
+ */
+InterfacePhysicalLocation LIBNXSRV_EXPORTABLE InterfacePhysicalLocationFromEntityMib(const Component *port)
+{
+   InterfacePhysicalLocation location;
+
+   if (port->getPosition() > 0)
+      location.port = port->getPosition();
+
+   const Component *parent = port->getParent();
+   bool moduleFound = false;
+
+   while (parent != nullptr)
+   {
+      int32_t pos = parent->getPosition();
+      if (pos <= 0)  // -1 means unknown per RFC 2737
+      {
+         parent = parent->getParent();
+         continue;
+      }
+
+      switch (parent->getClass())
+      {
+         case COMPONENT_CLASS_MODULE:
+            if (!moduleFound)
+            {
+               location.module = pos;
+               moduleFound = true;
+            }
+            else
+            {
+               // Second module level = pic (e.g., Juniper FPC/PIC)
+               location.pic = location.module;
+               location.module = pos;
+            }
+            break;
+         case COMPONENT_CLASS_CHASSIS:
+         case COMPONENT_CLASS_STACK:
+            location.chassis = pos;
+            break;
+      }
+      parent = parent->getParent();
+   }
+
+   return location;
+}
+
+/**
  * NXSL class ComponentClass: constructor
  */
 NXSL_ComponentClass::NXSL_ComponentClass() : NXSL_Class()

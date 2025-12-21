@@ -146,6 +146,11 @@ public:
 shared_ptr<ComponentTree> LIBNXSRV_EXPORTABLE BuildComponentTree(SNMP_Transport *snmp, const TCHAR *debugInfo);
 
 /**
+ * Get interface physical location from ENTITY MIB component hierarchy
+ */
+InterfacePhysicalLocation LIBNXSRV_EXPORTABLE InterfacePhysicalLocationFromEntityMib(const Component *port);
+
+/**
  * NXSL "Component" class
  */
 class LIBNXSRV_EXPORTABLE NXSL_ComponentClass : public NXSL_Class
