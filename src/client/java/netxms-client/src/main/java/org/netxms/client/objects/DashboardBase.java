@@ -37,7 +37,7 @@ public class DashboardBase extends GenericObject implements AutoBindObject, Poll
    public final static int SHOW_AS_OBJECT_VIEW   = 0x00010000;
    public final static int SCROLLABLE            = 0x00020000;
    public final static int SHOW_CONTEXT_SELECTOR = 0x00040000;
-   
+
    private int numColumns;
    private List<DashboardElement> elements;
    private int autoBindFlags;
