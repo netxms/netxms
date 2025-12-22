@@ -33,6 +33,9 @@ public class EventMonitorConfig extends DashboardElementConfig
    @Element(required = true)
    private long objectId = 0;
 
+   @Element(required = false)
+   private String filter = "";
+
    /**
     * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
     */
@@ -70,5 +73,21 @@ public class EventMonitorConfig extends DashboardElementConfig
    public void setObjectId(long objectId)
    {
       this.objectId = objectId;
+   }
+
+   /**
+    * @return the filter
+    */
+   public String getFilter()
+   {
+      return filter;
+   }
+
+   /**
+    * @param filter the filter to set
+    */
+   public void setFilter(String filter)
+   {
+      this.filter = filter;
    }
 }

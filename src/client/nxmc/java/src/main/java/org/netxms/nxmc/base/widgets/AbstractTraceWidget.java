@@ -304,6 +304,19 @@ public abstract class AbstractTraceWidget extends Composite
    }
 
    /**
+    * Set filter text.
+    *
+    * @param text new filter text
+    */
+   public void setFilterText(String text)
+   {
+      if (filter == null)
+         return;
+      filter.setFilterString(!text.isEmpty() ? text : null);
+      viewer.refresh();
+   }
+
+   /**
     * Set root object ID.
     *
     * @param objectId new root object ID or 0

@@ -24,6 +24,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
 import org.netxms.nxmc.modules.dashboards.config.EventMonitorConfig;
@@ -40,6 +41,7 @@ public class EventMonitor extends DashboardElementPropertyPage
 
    private EventMonitorConfig config;
    private ObjectSelector objectSelector;
+   private LabeledText filterText;
    private TitleConfigurator title;
 
    /**
@@ -107,6 +109,15 @@ public class EventMonitor extends DashboardElementPropertyPage
       gd.grabExcessHorizontalSpace = true;
       objectSelector.setLayoutData(gd);
 
+      filterText = new LabeledText(dialogArea, SWT.NONE);
+      filterText.setLabel(i18n.tr("Event filter"));
+      filterText.setText(config.getFilter());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      filterText.setLayoutData(gd);
+      filterText.setText(config.getFilter());
+
       return dialogArea;
    }
 
@@ -118,6 +129,7 @@ public class EventMonitor extends DashboardElementPropertyPage
    {
       title.updateConfiguration(config);
       config.setObjectId(objectSelector.getObjectId());
+      config.setFilter(filterText.getText().trim());
       return true;
    }
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016-2023 Raden Solutions
+ * Copyright (C) 2016-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,6 @@ package org.netxms.nxmc.modules.dashboards.widgets;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.nxmc.Registry;
@@ -89,14 +87,9 @@ public class EventMonitorElement extends ElementWidget
 
       viewer = new EventTraceWidget(getContentArea(), SWT.NONE, view);
       viewer.setRootObject(getEffectiveObjectId(config.getObjectId()));
+      viewer.setFilterText(config.getFilter());
 
-      addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            unsubscribe();
-         }
-      });
+      addDisposeListener((e) -> unsubscribe());
    }
 
    /**
