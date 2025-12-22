@@ -40,7 +40,7 @@ DataCollectionOwner::DataCollectionOwner(const TCHAR *name, const uuid& guid) : 
 {
    _tcslcpy(m_name, name, MAX_OBJECT_NAME);
    m_status = STATUS_NORMAL;
-   m_isHidden = true;
+   m_isUnpublished = true;
    m_dciListModified = false;
    m_instanceDiscoveryChanges = false;
    setCreationTime();

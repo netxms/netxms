@@ -395,7 +395,7 @@ static shared_ptr<NetObj> FindTemplateRoot(const ConfigEntry *config)
          o = make_shared<TemplateGroup>(name);
          NetObjInsert(o, true, false);
          NetObj::linkObjects(parent, o);
-         o->unhide();
+         o->publish();
          o->calculateCompoundStatus();	// Force status change to NORMAL
       }
       parent = o;
@@ -554,7 +554,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
             NetObjInsert(object, true, true);
             object->updateFromImport(tc, context, nxslV5);
             NetObj::linkObjects(parent, object);
-            object->unhide();
+            object->publish();
             context->log(NXLOG_INFO, _T("ImportConfig()"), _T("New template \"%s\" added"), object->getName());
 		   }
       }

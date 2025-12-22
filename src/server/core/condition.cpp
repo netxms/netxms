@@ -51,7 +51,7 @@ ConditionObject::ConditionObject(bool hidden) : super(), Pollable(this, Pollable
    m_sourceObject = 0;
    m_activeStatus = STATUS_MAJOR;
    m_inactiveStatus = STATUS_NORMAL;
-   m_isHidden = hidden;
+   m_isUnpublished = hidden;
    m_isActive = false;
    m_lastPoll = 0;
    m_queuedForPolling = false;

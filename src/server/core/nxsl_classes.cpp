@@ -3898,7 +3898,7 @@ static int CreateContainerImpl(NXSL_Object *object, int argc, NXSL_Value **argv,
    shared_ptr<Container> container = make_shared<Container>(argv[0]->getValueAsCString());
    NetObjInsert(container, true, false);
    NetObj::linkObjects(thisObject, container);
-   container->unhide();
+   container->publish();
 
    *result = container->createNXSLObject(vm);
    return NXSL_ERR_SUCCESS;
@@ -3916,7 +3916,7 @@ static int CreateCollectorImpl(NXSL_Object *object, int argc, NXSL_Value **argv,
    shared_ptr<Collector> collector = make_shared<Collector>(argv[0]->getValueAsCString());
    NetObjInsert(collector, true, false);
    NetObj::linkObjects(thisObject, collector);
-   collector->unhide();
+   collector->publish();
 
    *result = collector->createNXSLObject(vm);
    return NXSL_ERR_SUCCESS;
@@ -3959,7 +3959,7 @@ static int CreateNodeImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL
    {
       node->setPrimaryHostName(pname);
       NetObj::linkObjects(thisObject, node);
-      node->unhide();
+      node->publish();
       *result = node->createNXSLObject(vm);
    }
    else
@@ -3998,7 +3998,7 @@ static int CreateSensorImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NX
    shared_ptr<Sensor> sensor = make_shared<Sensor>(argv[0]->getValueAsCString(), deviceClass, gatewayId, static_cast<uint16_t>((argc > 3) ? argv[3]->getValueAsUInt32() : 255));
    NetObjInsert(sensor, true, false);
    NetObj::linkObjects(thisObject, sensor);
-   sensor->unhide();
+   sensor->publish();
    *result = sensor->createNXSLObject(vm);
    return NXSL_ERR_SUCCESS;
 }

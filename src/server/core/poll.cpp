@@ -168,7 +168,7 @@ static void CreateManagementNode(const InetAddress& addr)
 
    static_cast<Pollable&>(*node).doForcedConfigurationPoll(RegisterPoller(PollerType::CONFIGURATION, node));
 
-   node->unhide();
+   node->publish();
    g_dwMgmtNode = node->getId();   // Set local management node ID
    PostSystemEvent(EVENT_NODE_ADDED, node->getId());
 
@@ -296,7 +296,7 @@ static EnumerationCallbackResult QueueForPolling(NetObj *object, void *data)
 
    // Only objects that are not yet completed construction or being
    // prepared for deletion are hidden, so any kind of polling should not be scheduled
-   if (object->isHidden())
+   if (object->isUnpublished())
       return _CONTINUE;
 
    Pollable* pollableObject = object->getAsPollable();

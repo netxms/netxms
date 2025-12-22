@@ -3021,7 +3021,7 @@ void ClientSession::getObjects(const NXCPMessage& request)
 	unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(
 	   [baseTimeStamp, this] (NetObj *object) -> bool
 	   {
-         return !object->isHidden() && !object->isDeleted() &&
+         return !object->isUnpublished() && !object->isDeleted() &&
                 (object->getTimeStamp() >= baseTimeStamp) &&
                 object->checkAccessRights(m_userId, OBJECT_ACCESS_READ);
 	   });
@@ -3099,7 +3099,7 @@ void ClientSession::getSelectedObjects(const NXCPMessage& request)
    for(int i = 0; i < objects.size(); i++)
 	{
 		shared_ptr<NetObj> object = FindObjectById(objects.get(i));
-      if ((object != nullptr) && (object->getTimeStamp() >= timestamp) && !object->isHidden())
+      if ((object != nullptr) && (object->getTimeStamp() >= timestamp) && !object->isUnpublished())
       {
          if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
          {
@@ -6541,7 +6541,7 @@ void ClientSession::createObject(const NXCPMessage& request)
                   LinkAsset(asset.get(), object.get(), this);
                }
 
-               object->unhide();
+               object->publish();
                response.setField(VID_RCC, RCC_SUCCESS);
                response.setField(VID_OBJECT_ID, object->getId());
             }

@@ -56,7 +56,7 @@ AccessPoint::AccessPoint(const TCHAR *name, uint32_t index, const MacAddress& ma
 	m_apState = AP_UP;
    m_prevState = m_apState;
    m_gracePeriodStartTime = 0;
-	m_isHidden = true;
+	m_isUnpublished = true;
    m_peerNodeId = 0;
    m_peerInterfaceId = 0;
    m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;

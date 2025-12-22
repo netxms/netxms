@@ -962,7 +962,7 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_V
 	{
 		node->setPrimaryHostName(pname);
 		NetObj::linkObjects(parent, node);
-		node->unhide();
+		node->publish();
 		*result = node->createNXSLObject(vm);
 	}
 	else
@@ -1004,7 +1004,7 @@ static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 	shared_ptr<Container> container = make_shared<Container>(name);
 	NetObjInsert(container, true, false);
 	NetObj::linkObjects(parent, container);
-	container->unhide();
+	container->publish();
 
 	*ppResult = container->createNXSLObject(vm);
 	return 0;

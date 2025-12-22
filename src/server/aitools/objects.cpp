@@ -192,7 +192,7 @@ std::string F_FindObjects(json_t *arguments, uint32_t userId)
    unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(
       [userId, parentId, zoneUIN, name, &classFilter, ipAddressFilter] (NetObj *object) -> bool
       {
-         if (object->isHidden() || object->isDeleted() || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+         if (object->isUnpublished() || object->isDeleted() || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
             return false;
          if ((zoneUIN != 0) && (object->getZoneUIN() != zoneUIN))
             return false;

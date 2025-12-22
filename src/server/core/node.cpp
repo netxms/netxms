@@ -315,7 +315,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_icmpProxy = newNodeData->icmpProxyId;
    memset(m_lastEvents, 0, sizeof(m_lastEvents));
    m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, Ownership::True);
-   m_isHidden = true;
+   m_isUnpublished = true;
    m_failTimeAgent = TIMESTAMP_NEVER;
    m_failTimeSNMP = TIMESTAMP_NEVER;
    m_failTimeSSH = TIMESTAMP_NEVER;
@@ -2349,8 +2349,8 @@ shared_ptr<Interface> Node::createNewInterface(InterfaceInfo *info, bool manuall
 
    NetObjInsert(iface, true, false);
    linkObjects(self(), iface);
-   if (!m_isHidden)
-      iface->unhide();
+   if (!m_isUnpublished)
+      iface->publish();
 
    const InetAddress& addr = iface->getFirstIpAddress();
    EventBuilder(EVENT_INTERFACE_ADDED, m_id)

@@ -153,7 +153,7 @@ bool ContainerBase::deleteFromDatabase(DB_HANDLE hdb)
 AbstractContainer::AbstractContainer(const TCHAR *name) : super(), ContainerBase(this)
 {
    _tcslcpy(m_name, name, MAX_OBJECT_NAME);
-   m_isHidden = true;
+   m_isUnpublished = true;
    setCreationTime();
 }
 

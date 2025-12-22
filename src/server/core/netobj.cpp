@@ -71,7 +71,7 @@ NetObj::NetObj() : NObject(), m_mutexProperties(MutexType::FAST), m_dashboards(0
    m_modified = 0;
    m_isDeleted = false;
    m_isDeleteInitiated = false;
-   m_isHidden = false;
+   m_isUnpublished = false;
    m_maintenanceEventId = 0;
    m_maintenanceInitiator = 0;
    m_inheritAccessRights = true;
@@ -890,7 +890,7 @@ void NetObj::deleteObject(NetObj *initiator)
 	   return;
 	}
 	m_isDeleteInitiated = true;
-   m_isHidden = true;
+   m_isUnpublished = true;
 	unlockProperties();
 
 	// Notify modules about object deletion
@@ -993,7 +993,7 @@ void NetObj::deleteObject(NetObj *initiator)
    DeleteScheduledTasksByObjectId(m_id);
 
    lockProperties();
-   m_isHidden = false;
+   m_isUnpublished = false;
    m_isDeleted = true;
    setModified(MODIFY_ALL);
    unlockProperties();
@@ -1495,7 +1495,7 @@ void NetObj::setModified(uint32_t flags, bool notify)
    }
 
    // Send event to all connected clients
-   if (notify && !m_isHidden)
+   if (notify && !m_isUnpublished)
    {
       nxlog_debug_tag(_T("obj.notify"), 7, _T("Sending object change notification for %s [%u] (flags=0x%08X)"), m_name, m_id, flags);
       shared_ptr<NetObj> object = self();
@@ -1908,27 +1908,27 @@ void NetObj::addChildDCTargetsToList(SharedObjectArray<DataCollectionTarget> *dc
 }
 
 /**
- * Hide object and all its children
+ * Unpublish object and all its children
  */
-void NetObj::hide()
+void NetObj::unpublish()
 {
    readLockChildList();
    for(int i = 0; i < getChildList().size(); i++)
-      getChildList().get(i)->hide();
+      getChildList().get(i)->unpublish();
    unlockChildList();
 
 	lockProperties();
-   m_isHidden = true;
+   m_isUnpublished = true;
    unlockProperties();
 }
 
 /**
- * Unhide object and all its children
+ * Publish object and all its children
  */
-void NetObj::unhide()
+void NetObj::publish()
 {
    lockProperties();
-   m_isHidden = false;
+   m_isUnpublished = false;
    shared_ptr<NetObj> object = self();
    EnumerateClientSessions(
       [object] (ClientSession *session) -> void
@@ -1939,7 +1939,7 @@ void NetObj::unhide()
 
    readLockChildList();
    for(int i = 0; i < getChildList().size(); i++)
-      getChildList().get(i)->unhide();
+      getChildList().get(i)->publish();
    unlockChildList();
 
    // Trigger notifications for parent objects

@@ -538,7 +538,7 @@ static shared_ptr<NetObj> FindTemplateRootJson(json_t *templateJson)
          o = make_shared<TemplateGroup>(name);
          NetObjInsert(o, true, false);
          NetObj::linkObjects(parent, o);
-         o->unhide();
+         o->publish();
          o->calculateCompoundStatus();	// Force status change to NORMAL
       }
       parent = o;
@@ -617,7 +617,7 @@ static uint32_t ImportJsonTemplates(json_t *templates, uint32_t flags, ImportCon
          NetObjInsert(templateObj, true, true);
          templateObj->updateFromImport(templateJson, context);
          NetObj::linkObjects(parent, templateObj);
-         templateObj->unhide();
+         templateObj->publish();
          context->log(NXLOG_INFO, _T("ImportJsonTemplates()"), _T("New template \"%s\" added"), templateObj->getName());
       }
    }

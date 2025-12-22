@@ -1318,7 +1318,7 @@ protected:
    VolatileCounter m_modified;
    bool m_isDeleted;
    bool m_isDeleteInitiated;
-   bool m_isHidden;
+   bool m_isUnpublished;
    uuid m_mapImage;
    uint32_t m_drilldownObjectId;    // Object that should be opened on drill-down request
    uint32_t m_categoryId;
@@ -1454,9 +1454,9 @@ public:
 
    void updateObjectIndexes();
 
-   bool isHidden() const { return m_isHidden; }
-   void hide();
-   void unhide();
+   bool isUnpublished() const { return m_isUnpublished; }
+   void unpublish();
+   void publish();
    void markAsModified(uint32_t flags) { setModified(flags); }  // external API to mark object as modified
    void markAsSaved() { InterlockedAnd(&m_modified, 0); }
    uint32_t getModifyFlags() { return m_modified; }

@@ -258,7 +258,7 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
       static_cast<Pollable&>(*node).doForcedConfigurationPoll(RegisterPoller(PollerType::CONFIGURATION, node));
    }
 
-   node->unhide();
+   node->publish();
    EventBuilder(EVENT_NODE_ADDED, node->getId())
       .param(_T("nodeOrigin"), static_cast<int>(newNodeData->origin))
       .post();

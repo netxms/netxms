@@ -353,7 +353,7 @@ void WirelessDomain::configurationPoll(PollerInfo *poller, ClientSession *sessio
          ap->updateRadioInterfaces(info->getRadioInterfaces());
          ap->updateInfo(info->getVendor(), info->getModel(), info->getSerial());
       }
-      ap->unhide();
+      ap->publish();
       ap->updateState(info->getState());
       if (ap->getGracePeriodStartTime() != 0)
       {

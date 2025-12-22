@@ -141,7 +141,7 @@ Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyn
    m_operStatePollCount = 0;
 	m_requiredPollCount = 0;	// Use system default
 	m_zoneUIN = zoneUIN;
-   m_isHidden = true;
+   m_isUnpublished = true;
    m_ifTableSuffixLen = 0;
    m_ifTableSuffix = nullptr;
    m_vlans = nullptr;
@@ -192,7 +192,7 @@ Interface::Interface(const TCHAR *objectName, const TCHAR *ifName, const TCHAR *
    m_operStatePollCount = 0;
 	m_requiredPollCount = 0;	// Use system default
 	m_zoneUIN = zoneUIN;
-   m_isHidden = true;
+   m_isUnpublished = true;
    m_ifTableSuffixLen = 0;
    m_ifTableSuffix = nullptr;
    m_vlans = nullptr;

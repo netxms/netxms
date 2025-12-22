@@ -866,7 +866,7 @@ void DashboardTemplate::autobindPoll(PollerInfo *poller, ClientSession *session,
                parents->add(g_dashboardRoot);
             }
             NetObj::linkObjects(parents->getShared(0), dashboard);
-            dashboard->unhide();
+            dashboard->publish();
             dashboard->calculateCompoundStatus();
             m_instanceDashboards[object->getId()] = dashboard->getId();
             modified = true;

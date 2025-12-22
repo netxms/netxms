@@ -106,7 +106,7 @@ NetworkMap::NetworkMap(const NetworkMap &src) : super(), AutoBindTarget(this), P
    m_linkStylingScript = nullptr;
    m_linkStylingScriptSource = nullptr;
    setLinkStylingScript(src.m_linkStylingScriptSource);
-   m_isHidden = true;
+   m_isUnpublished = true;
    m_updateFailed = false;
    m_displayPriority = src.m_displayPriority;
    setCreationTime();
@@ -145,7 +145,7 @@ NetworkMap::NetworkMap(int type, const IntegerArray<uint32_t>& seeds) : super(),
    m_linkStylingScriptSource = nullptr;
    m_linkStylingScript = nullptr;
    m_updateFailed = false;
-   m_isHidden = true;
+   m_isUnpublished = true;
    m_displayPriority = 0;
    setCreationTime();
 }
@@ -1976,7 +1976,7 @@ void NetworkMap::clone(const TCHAR *name, const TCHAR *alias)
    auto parentList = getParentList();
    linkObjects(parentList.getShared(0), clonedMap);
    parentList.get(0)->calculateCompoundStatus();
-   clonedMap->unhide();
+   clonedMap->publish();
 }
 
 /**
