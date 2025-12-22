@@ -25,6 +25,22 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.12 to 60.13
+ */
+static bool H_UpgradeFromV12()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE object_properties ADD is_hidden integer\n")
+      _T("UPDATE object_properties SET is_hidden=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("object_properties"), _T("is_hidden")));
+
+   CHK_EXEC(SetMinorSchemaVersion(13));
+   return true;
+}
+
+/**
  * Upgrade from 60.11 to 60.12
  */
 static bool H_UpgradeFromV11()
@@ -550,6 +566,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 12, 60, 13, H_UpgradeFromV12 },
    { 11, 60, 12, H_UpgradeFromV11 },
    { 10, 60, 11, H_UpgradeFromV10 },
    { 9,  60, 10, H_UpgradeFromV9  },

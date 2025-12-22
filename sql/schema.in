@@ -200,6 +200,7 @@ CREATE TABLE object_properties
   creation_time integer not null,
   category integer not null,
   asset_id integer not null,
+  is_hidden integer not null,
   PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 

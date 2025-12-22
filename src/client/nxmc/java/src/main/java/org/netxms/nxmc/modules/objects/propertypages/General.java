@@ -22,6 +22,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
@@ -45,9 +46,11 @@ public class General extends ObjectPropertyPage
    private Text name;
    private Text alias;
    private ObjectCategorySelector categorySelector;
+   private Button checkHidden;
 	private String initialName;
    private String initialAlias;
    private int initialCategory;
+   private boolean initialHidden;
 
    /**
     * Create new page.
@@ -116,6 +119,12 @@ public class General extends ObjectPropertyPage
       categorySelector.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       categorySelector.setCategoryId(initialCategory);
 
+      // Hidden checkbox
+      initialHidden = object.isHidden();
+      checkHidden = new Button(dialogArea, SWT.CHECK);
+      checkHidden.setText(i18n.tr("Hidden"));
+      checkHidden.setSelection(initialHidden);
+
 		return dialogArea;
 	}
 
@@ -138,7 +147,8 @@ public class General extends ObjectPropertyPage
       final String newName = name.getText();
       final String newAlias = alias.getText();
       final int newCategory = categorySelector.getCategoryId();
-      if (newName.equals(initialName) && newAlias.equals(initialAlias) && (newCategory == initialCategory))
+      final boolean newHidden = checkHidden.getSelection();
+      if (newName.equals(initialName) && newAlias.equals(initialAlias) && (newCategory == initialCategory) && (newHidden == initialHidden))
          return true; // nothing to change
 
 		if (isApply)
@@ -149,6 +159,7 @@ public class General extends ObjectPropertyPage
 		data.setName(newName);
       data.setAlias(newAlias);
       data.setCategoryId(newCategory);
+      data.setHidden(newHidden);
       new Job(i18n.tr("Updating object properties"), null, messageArea) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -174,6 +185,7 @@ public class General extends ObjectPropertyPage
 							initialName = newName;
                      initialAlias = newAlias;
                      initialCategory = newCategory;
+                     initialHidden = newHidden;
 							General.this.setValid(true);
 						}
 					});

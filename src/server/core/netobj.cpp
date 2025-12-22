@@ -72,6 +72,7 @@ NetObj::NetObj() : NObject(), m_mutexProperties(MutexType::FAST), m_dashboards(0
    m_isDeleted = false;
    m_isDeleteInitiated = false;
    m_isUnpublished = false;
+   m_isHidden = false;
    m_maintenanceEventId = 0;
    m_maintenanceInitiator = 0;
    m_inheritAccessRights = true;
@@ -309,7 +310,7 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
          _T("location_accuracy"), _T("location_timestamp"), _T("guid"), _T("map_image"), _T("drilldown_object_id"), _T("country"),
          _T("region"), _T("city"), _T("district"), _T("street_address"), _T("postcode"), _T("maint_event_id"),
          _T("state_before_maint"), _T("state"), _T("flags"), _T("creation_time"), _T("maint_initiator"), _T("alias"),
-         _T("name_on_map"), _T("category"), _T("comments_source"), _T("asset_id"), nullptr
+         _T("name_on_map"), _T("category"), _T("comments_source"), _T("asset_id"), _T("is_hidden"), nullptr
       };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_properties"), _T("object_id"), m_id, columns);
@@ -364,7 +365,8 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 36, DB_SQLTYPE_INTEGER, m_categoryId);
          DBBind(hStmt, 37, DB_SQLTYPE_TEXT, m_commentsSource, DB_BIND_STATIC);
          DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, m_assetId);
-         DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, (LONG)(m_isHidden ? 1 : 0));
+         DBBind(hStmt, 40, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -617,7 +619,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb, DB_STATEMENT *preparedStatement
                                   _T("status_thresholds,comments,location_type,latitude,longitude,location_accuracy,")
                                   _T("location_timestamp,guid,map_image,drilldown_object_id,country,region,city,district,street_address,")
                                   _T("postcode,maint_event_id,state_before_maint,maint_initiator,state,flags,creation_time,alias,")
-                                  _T("name_on_map,category,comments_source,asset_id FROM object_properties WHERE object_id=?"));
+                                  _T("name_on_map,category,comments_source,asset_id,is_hidden FROM object_properties WHERE object_id=?"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -679,6 +681,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb, DB_STATEMENT *preparedStatement
             m_categoryId = DBGetFieldULong(hResult, 0, 35);
             m_commentsSource = DBGetFieldAsSharedString(hResult, 0, 36);
             m_assetId = DBGetFieldULong(hResult, 0, 37);
+            m_isHidden = DBGetFieldLong(hResult, 0, 38) ? true : false;
             success = true;
          }
 			else if (ignoreEmptyResults)
@@ -1301,6 +1304,7 @@ void NetObj::fillMessageLockedEssential(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_NAME_ON_MAP, m_nameOnMap);
    msg->setField(VID_OBJECT_STATUS, static_cast<uint16_t>(m_status));
    msg->setField(VID_IS_DELETED, m_isDeleted);
+   msg->setField(VID_IS_HIDDEN, m_isHidden);
    msg->setField(VID_MAINTENANCE_MODE, m_maintenanceEventId != 0);
    msg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
    msg->setField(VID_IMAGE, m_mapImage);
@@ -1556,6 +1560,10 @@ uint32_t NetObj::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession
    {
       updateFlags(msg.getFieldAsUInt32(VID_FLAGS), msg.isFieldExist(VID_FLAGS_MASK) ? msg.getFieldAsUInt32(VID_FLAGS_MASK) : UINT_MAX);
    }
+
+   // Change hidden state
+   if (msg.isFieldExist(VID_IS_HIDDEN))
+      m_isHidden = msg.getFieldAsBoolean(VID_IS_HIDDEN);
 
    if (msg.isFieldExist(VID_NAME_ON_MAP))
       m_nameOnMap = msg.getFieldAsSharedString(VID_NAME_ON_MAP);
@@ -1947,6 +1955,17 @@ void NetObj::publish()
    for(int i = 0; i < getParentList().size(); i++)
       getParentList().get(i)->markAsModified(0);
    unlockParentList();
+}
+
+/**
+ * Set hidden state
+ */
+void NetObj::setHidden(bool hidden)
+{
+   lockProperties();
+   m_isHidden = hidden;
+   setModified(MODIFY_COMMON_PROPERTIES);
+   unlockProperties();
 }
 
 /**

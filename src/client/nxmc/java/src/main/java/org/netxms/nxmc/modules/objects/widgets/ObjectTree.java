@@ -587,6 +587,25 @@ public class ObjectTree extends Composite
    }
 
    /**
+    * @return true if hidden objects are shown
+    */
+   public boolean isShowHiddenObjects()
+   {
+      return filter.isShowHiddenObjects();
+   }
+
+   /**
+    * Show/hide hidden objects
+    * 
+    * @param show true to show hidden objects
+    */
+   public void setShowHiddenObjects(boolean show)
+   {
+      filter.setShowHiddenObjects(show);
+      onFilterModify();
+   }
+
+   /**
     * Set action to be executed when user press "Close" button in object filter. Default implementation will hide filter area
     * without notifying parent.
     * 

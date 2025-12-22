@@ -139,6 +139,7 @@ public abstract class AbstractObject
    protected int flags;
 	protected ObjectStatus status = ObjectStatus.UNKNOWN;
 	protected boolean isDeleted = false;
+	protected boolean isHidden = false;
 	protected boolean inMaintenanceMode = false;
    protected int maintenanceInitiatorId = 0;
 	protected long primaryZoneProxyId = 0;
@@ -231,6 +232,7 @@ public abstract class AbstractObject
       categoryId = msg.getFieldAsInt32(NXCPCodes.VID_CATEGORY_ID);
       flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 		isDeleted = msg.getFieldAsBoolean(NXCPCodes.VID_IS_DELETED);
+		isHidden = msg.getFieldAsBoolean(NXCPCodes.VID_IS_HIDDEN);
 		status = ObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_STATUS));
 		inMaintenanceMode = msg.getFieldAsBoolean(NXCPCodes.VID_MAINTENANCE_MODE);
       maintenanceInitiatorId = msg.getFieldAsInt32(NXCPCodes.VID_MAINTENANCE_INITIATOR);
@@ -549,6 +551,16 @@ public abstract class AbstractObject
 	public boolean isDeleted()
 	{
 		return isDeleted;
+	}
+
+	/**
+	 * Check if object is hidden
+	 *
+	 * @return true if object is hidden
+	 */
+	public boolean isHidden()
+	{
+		return isHidden;
 	}
 
 	/**

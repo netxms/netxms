@@ -65,6 +65,7 @@ public class NXCObjectModificationData
    private String nameOnMap;
    private Collection<AccessListElement> acl;
    private Boolean inheritAccessRights;
+   private Boolean isHidden;
    private Map<String, CustomAttribute> customAttributes;
    private String autoBindFilter;
    private Integer version;
@@ -308,6 +309,22 @@ public class NXCObjectModificationData
    public void setInheritAccessRights(boolean inheritAccessRights)
    {
       this.inheritAccessRights = inheritAccessRights;
+   }
+
+   /**
+    * @return the isHidden
+    */
+   public Boolean isHidden()
+   {
+      return isHidden;
+   }
+
+   /**
+    * @param isHidden the isHidden to set
+    */
+   public void setHidden(boolean isHidden)
+   {
+      this.isHidden = isHidden;
    }
 
    /**

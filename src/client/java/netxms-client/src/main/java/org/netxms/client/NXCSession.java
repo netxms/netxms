@@ -6691,6 +6691,12 @@ public class NXCSession
          msg.setField(NXCPCodes.VID_NAME_ON_MAP, data.getNameOnMap());
       }
 
+      // Hidden state
+      if (data.isHidden() != null)
+      {
+         msg.setField(NXCPCodes.VID_IS_HIDDEN, data.isHidden());
+      }
+
       // Primary IP
       if (data.getPrimaryIpAddress() != null)
       {

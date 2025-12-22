@@ -56,6 +56,7 @@ public class ObjectViewerFilter extends ViewerFilter
 	private boolean hideUnmanaged = false;
 	private boolean hideTemplateChecks = false;
 	private boolean hideSubInterfaces = false;
+   private boolean showHiddenObjects = false;
 	private Map<Long, AbstractObject> objectList = null;
 	private AbstractObject lastMatch = null;
 	private List<AbstractObject> sourceObjects = null;
@@ -204,7 +205,10 @@ public class ObjectViewerFilter extends ViewerFilter
 
       if (hideSubInterfaces && (element instanceof Interface) && (((Interface)element).getParentInterfaceId() != 0))
          return false;
-	   
+
+      if (!showHiddenObjects && ((AbstractObject)element).isHidden())
+         return false;
+
 	   return true;
 	}
 
@@ -366,5 +370,21 @@ public class ObjectViewerFilter extends ViewerFilter
    public void setHideSubInterfaces(boolean hideSubInterfaces)
    {
       this.hideSubInterfaces = hideSubInterfaces;
+   }
+
+   /**
+    * @return the showHiddenObjects
+    */
+   public boolean isShowHiddenObjects()
+   {
+      return showHiddenObjects;
+   }
+
+   /**
+    * @param showHiddenObjects the showHiddenObjects to set
+    */
+   public void setShowHiddenObjects(boolean showHiddenObjects)
+   {
+      this.showHiddenObjects = showHiddenObjects;
    }
 }

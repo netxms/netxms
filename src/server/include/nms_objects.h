@@ -1319,6 +1319,7 @@ protected:
    bool m_isDeleted;
    bool m_isDeleteInitiated;
    bool m_isUnpublished;
+   bool m_isHidden;
    uuid m_mapImage;
    uint32_t m_drilldownObjectId;    // Object that should be opened on drill-down request
    uint32_t m_categoryId;
@@ -1457,6 +1458,10 @@ public:
    bool isUnpublished() const { return m_isUnpublished; }
    void unpublish();
    void publish();
+
+   bool isHidden() const { return m_isHidden; }
+   void setHidden(bool hidden);
+
    void markAsModified(uint32_t flags) { setModified(flags); }  // external API to mark object as modified
    void markAsSaved() { InterlockedAnd(&m_modified, 0); }
    uint32_t getModifyFlags() { return m_modified; }
