@@ -375,6 +375,17 @@ std::string F_SetObjectAIData(json_t *arguments, uint32_t userId)
    if (value == nullptr)
       return std::string("Value must be provided");
 
+   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
+   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+   {
+      char buffer[256];
+      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known or not accessible", objectName);
+      return std::string(buffer);
+   }
+
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
+      return std::string("Access denied");
+
    // if value is json object presented as string, parse it
    if (json_is_string(value))
    {
@@ -386,18 +397,11 @@ std::string F_SetObjectAIData(json_t *arguments, uint32_t userId)
          json_decref(value);
          value = parsedValue;
       }
+      else
+      {
+         json_incref(value);
+      }
    }
-
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known or not accessible", objectName);
-      return std::string(buffer);
-   }
-
-   if (!object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
-      return std::string("Access denied");
 
    if (json_is_object(value))
    {
@@ -410,6 +414,8 @@ std::string F_SetObjectAIData(json_t *arguments, uint32_t userId)
       object->setAIData(key, wrappedValue);
       json_decref(wrappedValue);
    }
+   json_decref(value);
+
    return std::string("AI data stored successfully");
 }
 
