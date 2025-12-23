@@ -996,7 +996,8 @@ static void ExecuteAIAgentTask(const shared_ptr<ScheduledTaskParameters>& parame
 {
    char *prompt = UTF8StringFromWideString(parameters->m_persistentData);
    shared_ptr<NetObj> context = FindObjectById(parameters->m_objectId);
-   char *response = QueryAIAssistant(prompt, context.get());
+   Chat chat(context.get(), nullptr, parameters->m_userId, s_systemPromptBackground);
+   char *response = chat.sendRequest(prompt, 10);
    nxlog_debug_tag(DEBUG_TAG, 4, L"AI assistant response for scheduled task on object [%u]: %hs",
          parameters->m_objectId, (response != nullptr) ? response : "no response");
    MemFree(prompt);
