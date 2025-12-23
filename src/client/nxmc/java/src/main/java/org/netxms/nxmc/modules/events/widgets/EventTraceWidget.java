@@ -48,9 +48,24 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
    private I18n i18n;
 
 	private NXCSession session;
-	private Action actionShowColor; 
+	private Action actionShowColor;
 	private Action actionShowIcons;
 	private EventLabelProvider labelProvider;
+   private EventInterceptor eventInterceptor;
+
+   /**
+    * Interface for intercepting real-time events during initial loading.
+    */
+   public interface EventInterceptor
+   {
+      /**
+       * Called when a real-time event is received.
+       *
+       * @param event the event object
+       * @return true if the event was intercepted and should not be added to widget
+       */
+      boolean interceptEvent(Object event);
+   }
 
 	/**
 	 * @param parent
@@ -163,8 +178,33 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
    {
       if (n.getCode() == SessionNotification.NEW_EVENTLOG_RECORD)
       {
-         runInUIThread(() -> addElement(n.getObject()));
+         runInUIThread(() -> {
+            if ((eventInterceptor == null) || !eventInterceptor.interceptEvent(n.getObject()))
+            {
+               addElement(n.getObject());
+            }
+         });
       }
+   }
+
+   /**
+    * Set event interceptor for handling real-time events during initial loading.
+    *
+    * @param interceptor the interceptor to set, or null to disable interception
+    */
+   public void setEventInterceptor(EventInterceptor interceptor)
+   {
+      this.eventInterceptor = interceptor;
+   }
+
+   /**
+    * Add event element to the trace widget.
+    *
+    * @param event event to add
+    */
+   public void addEvent(Object event)
+   {
+      addElement(event);
    }
 
 	/**

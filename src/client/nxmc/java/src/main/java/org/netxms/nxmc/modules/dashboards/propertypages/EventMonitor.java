@@ -24,6 +24,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
@@ -42,6 +43,8 @@ public class EventMonitor extends DashboardElementPropertyPage
    private EventMonitorConfig config;
    private ObjectSelector objectSelector;
    private LabeledText filterText;
+   private LabeledSpinner maxEvents;
+   private LabeledSpinner timeRangeMinutes;
    private TitleConfigurator title;
 
    /**
@@ -92,12 +95,15 @@ public class EventMonitor extends DashboardElementPropertyPage
       Composite dialogArea = new Composite(parent, SWT.NONE);
 
       GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      layout.makeColumnsEqualWidth = true;
       dialogArea.setLayout(layout);
 
       title = new TitleConfigurator(dialogArea, config);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
       title.setLayoutData(gd);
 
       objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true, true);
@@ -107,6 +113,7 @@ public class EventMonitor extends DashboardElementPropertyPage
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
       objectSelector.setLayoutData(gd);
 
       filterText = new LabeledText(dialogArea, SWT.NONE);
@@ -115,8 +122,27 @@ public class EventMonitor extends DashboardElementPropertyPage
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
       filterText.setLayoutData(gd);
       filterText.setText(config.getFilter());
+
+      maxEvents = new LabeledSpinner(dialogArea, SWT.NONE);
+      maxEvents.setLabel(i18n.tr("Maximum events to load (0 to disable)"));
+      maxEvents.setRange(0, 1000);
+      maxEvents.setSelection(config.getMaxEvents());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      maxEvents.setLayoutData(gd);
+
+      timeRangeMinutes = new LabeledSpinner(dialogArea, SWT.NONE);
+      timeRangeMinutes.setLabel(i18n.tr("Time range (minutes, 0 for no limit)"));
+      timeRangeMinutes.setRange(0, 10080);
+      timeRangeMinutes.setSelection(config.getTimeRangeMinutes());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      timeRangeMinutes.setLayoutData(gd);
 
       return dialogArea;
    }
@@ -130,6 +156,8 @@ public class EventMonitor extends DashboardElementPropertyPage
       title.updateConfiguration(config);
       config.setObjectId(objectSelector.getObjectId());
       config.setFilter(filterText.getText().trim());
+      config.setMaxEvents(maxEvents.getSelection());
+      config.setTimeRangeMinutes(timeRangeMinutes.getSelection());
       return true;
    }
 }

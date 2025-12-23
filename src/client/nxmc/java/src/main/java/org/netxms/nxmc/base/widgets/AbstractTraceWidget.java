@@ -241,6 +241,26 @@ public abstract class AbstractTraceWidget extends Composite
       viewer.refresh();
 	}
 
+   /**
+    * Add multiple elements at once (for historical data loading).
+    * Elements are added in order, with first element ending up at the top.
+    *
+    * @param elements elements to add
+    */
+   public void addElements(java.util.List<?> elements)
+   {
+      if (isDisposed() || elements.isEmpty())
+         return;
+
+      for(int i = elements.size() - 1; i >= 0; i--)
+      {
+         if (data.size() == MAX_ELEMENTS)
+            data.removeLast();
+         data.addFirst(elements.get(i));
+      }
+      viewer.refresh();
+   }
+
 	/**
     * Refresh viewer
     */

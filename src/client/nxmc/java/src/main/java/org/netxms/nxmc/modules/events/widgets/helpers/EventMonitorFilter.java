@@ -38,11 +38,32 @@ public class EventMonitorFilter extends AbstractTraceViewFilter
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
-      Event event = (Event)element;
+      long sourceId;
+      String message;
+      int code;
 
-      if ((rootObjectId != 0) && (rootObjectId != event.getSourceId()))
+      if (element instanceof Event)
       {
-         AbstractObject object = session.findObjectById(event.getSourceId());
+         Event event = (Event)element;
+         sourceId = event.getSourceId();
+         message = event.getMessage();
+         code = event.getCode();
+      }
+      else if (element instanceof HistoricalEvent)
+      {
+         HistoricalEvent event = (HistoricalEvent)element;
+         sourceId = event.getSourceId();
+         message = event.getMessage();
+         code = event.getCode();
+      }
+      else
+      {
+         return false;
+      }
+
+      if ((rootObjectId != 0) && (rootObjectId != sourceId))
+      {
+         AbstractObject object = session.findObjectById(sourceId);
          if ((object == null) || !object.isChildOf(rootObjectId))
             return false;
       }
@@ -50,9 +71,9 @@ public class EventMonitorFilter extends AbstractTraceViewFilter
       if ((filterString == null) || (filterString.isEmpty()))
          return true;
 
-      return 
-         event.getMessage().toLowerCase().contains(filterString) ||
-         session.getEventName(event.getCode()).toLowerCase().contains(filterString) || 
-         session.getObjectName(event.getSourceId()).toLowerCase().contains(filterString); 
+      return
+         message.toLowerCase().contains(filterString) ||
+         session.getEventName(code).toLowerCase().contains(filterString) ||
+         session.getObjectName(sourceId).toLowerCase().contains(filterString);
 	}
 }

@@ -36,6 +36,12 @@ public class EventMonitorConfig extends DashboardElementConfig
    @Element(required = false)
    private String filter = "";
 
+   @Element(required = false)
+   private int maxEvents = 100;
+
+   @Element(required = false)
+   private int timeRangeMinutes = 60;
+
    /**
     * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
     */
@@ -89,5 +95,37 @@ public class EventMonitorConfig extends DashboardElementConfig
    public void setFilter(String filter)
    {
       this.filter = filter;
+   }
+
+   /**
+    * @return the maxEvents
+    */
+   public int getMaxEvents()
+   {
+      return maxEvents;
+   }
+
+   /**
+    * @param maxEvents the maxEvents to set
+    */
+   public void setMaxEvents(int maxEvents)
+   {
+      this.maxEvents = maxEvents;
+   }
+
+   /**
+    * @return the timeRangeMinutes
+    */
+   public int getTimeRangeMinutes()
+   {
+      return timeRangeMinutes;
+   }
+
+   /**
+    * @param timeRangeMinutes the timeRangeMinutes to set
+    */
+   public void setTimeRangeMinutes(int timeRangeMinutes)
+   {
+      this.timeRangeMinutes = timeRangeMinutes;
    }
 }

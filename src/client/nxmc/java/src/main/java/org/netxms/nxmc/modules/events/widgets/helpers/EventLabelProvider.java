@@ -24,6 +24,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.Severity;
 import org.netxms.client.events.Event;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
@@ -59,7 +60,18 @@ public class EventLabelProvider extends LabelProvider implements ITableLabelProv
 	@Override
 	public Color getBackground(Object element)
 	{
-      return showColor ? StatusDisplayInfo.getStatusBackgroundColor(((Event)element).getSeverity()) : null;
+      if (!showColor)
+         return null;
+
+      Severity severity;
+      if (element instanceof Event)
+         severity = ((Event)element).getSeverity();
+      else if (element instanceof HistoricalEvent)
+         severity = ((HistoricalEvent)element).getSeverity();
+      else
+         return null;
+
+      return StatusDisplayInfo.getStatusBackgroundColor(severity);
 	}
 
    /**
@@ -70,7 +82,14 @@ public class EventLabelProvider extends LabelProvider implements ITableLabelProv
 	{
 		if (showIcons && (columnIndex == 0))
 		{
-			return StatusDisplayInfo.getStatusImage(((Event)element).getSeverity());
+         Severity severity;
+         if (element instanceof Event)
+            severity = ((Event)element).getSeverity();
+         else if (element instanceof HistoricalEvent)
+            severity = ((HistoricalEvent)element).getSeverity();
+         else
+            return null;
+			return StatusDisplayInfo.getStatusImage(severity);
 		}
 		return null;
 	}
@@ -81,20 +100,48 @@ public class EventLabelProvider extends LabelProvider implements ITableLabelProv
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-		final Event event = (Event)element;
+      long sourceId;
+      java.util.Date timeStamp;
+      Severity severity;
+      int code;
+      String message;
+
+      if (element instanceof Event)
+      {
+         Event event = (Event)element;
+         sourceId = event.getSourceId();
+         timeStamp = event.getTimeStamp();
+         severity = event.getSeverity();
+         code = event.getCode();
+         message = event.getMessage();
+      }
+      else if (element instanceof HistoricalEvent)
+      {
+         HistoricalEvent event = (HistoricalEvent)element;
+         sourceId = event.getSourceId();
+         timeStamp = event.getTimeStamp();
+         severity = event.getSeverity();
+         code = event.getCode();
+         message = event.getMessage();
+      }
+      else
+      {
+         return null;
+      }
+
 		switch(columnIndex)
 		{
 			case EventTraceWidget.COLUMN_TIMESTAMP:
-            return DateFormatFactory.getDateTimeFormat().format(event.getTimeStamp());
+            return DateFormatFactory.getDateTimeFormat().format(timeStamp);
 			case EventTraceWidget.COLUMN_SOURCE:
-				final AbstractObject object = session.findObjectById(event.getSourceId());
+				final AbstractObject object = session.findObjectById(sourceId);
             return (object != null) ? object.getObjectName() : i18n.tr("Unknown");
 			case EventTraceWidget.COLUMN_SEVERITY:
-				return StatusDisplayInfo.getStatusText(event.getSeverity());
+				return StatusDisplayInfo.getStatusText(severity);
 			case EventTraceWidget.COLUMN_EVENT:
-			   return session.getEventName(event.getCode());
+			   return session.getEventName(code);
 			case EventTraceWidget.COLUMN_MESSAGE:
-				return event.getMessage();
+				return message;
 		}
 		return null;
 	}
