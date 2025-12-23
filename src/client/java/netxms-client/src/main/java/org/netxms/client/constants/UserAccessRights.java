@@ -100,5 +100,6 @@ public final class UserAccessRights
    public static final int OBJECT_ACCESS_CONFIGURE_AGENT  = 0x00100000; 
    public static final int OBJECT_ACCESS_EDIT_COMMENTS    = 0x00200000; 
    public static final int OBJECT_ACCESS_EDIT_RESP_USERS  = 0x00400000; 
-   public static final int OBJECT_ACCESS_DELEGATED_READ   = 0x00800000; 
+   public static final int OBJECT_ACCESS_DELEGATED_READ   = 0x00800000;
+   public static final int OBJECT_ACCESS_MANAGE_POLICIES  = 0x01000000;
 }

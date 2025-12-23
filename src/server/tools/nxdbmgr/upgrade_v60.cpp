@@ -25,6 +25,24 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.14 to 60.15
+ */
+static bool H_UpgradeFromV14()
+{
+   // Add OBJECT_ACCESS_MANAGE_POLICIES (0x01000000) to all ACL entries with MODIFY access set for Admins group
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE acl SET access_rights=access_rights+16777216 WHERE user_id=1073741825 AND (BITAND(access_rights, 16777216)=0) AND (BITAND(access_rights, 2)<>0)")));
+   }
+   else
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE acl SET access_rights=access_rights+16777216 WHERE user_id=1073741825 AND ((access_rights & 16777216)=0) AND ((access_rights & 2)<>0)")));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(15));
+   return true;
+}
+
+/**
  * Upgrade from 60.13 to 60.14 (Oracle varchar to varchar2(N char) conversion)
  */
 static bool H_UpgradeFromV13()
@@ -1122,6 +1140,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 14, 60, 15, H_UpgradeFromV14 },
    { 13, 60, 14, H_UpgradeFromV13 },
    { 12, 60, 13, H_UpgradeFromV12 },
    { 11, 60, 12, H_UpgradeFromV11 },

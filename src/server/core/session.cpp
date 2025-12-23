@@ -15402,7 +15402,7 @@ void ClientSession::updatePolicy(const NXCPMessage& request)
    shared_ptr<NetObj> templateObject = FindObjectById(request.getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
    if (templateObject != nullptr)
    {
-      if (templateObject->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
+      if (templateObject->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_POLICIES))
       {
          uuid guid = static_cast<Template&>(*templateObject).updatePolicyFromMessage(request);
          if(!guid.isNull())
@@ -15438,7 +15438,7 @@ void ClientSession::deletePolicy(const NXCPMessage& request)
    shared_ptr<NetObj> templateObject = FindObjectById(request.getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
    if(templateObject != nullptr)
    {
-      if (templateObject->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
+      if (templateObject->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_POLICIES))
       {
          if (static_cast<Template&>(*templateObject).removePolicy(request.getFieldAsGUID(VID_GUID)))
             response.setField(VID_RCC, RCC_SUCCESS);
@@ -15468,7 +15468,7 @@ void ClientSession::getPolicyList(const NXCPMessage& request)
    shared_ptr<NetObj> templateObject = FindObjectById(request.getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
    if (templateObject != nullptr)
    {
-      if (templateObject->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
+      if (templateObject->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_POLICIES))
       {
          static_cast<Template&>(*templateObject).fillPolicyListMessage(&msg);
          msg.setField(VID_RCC, RCC_SUCCESS);
@@ -15496,7 +15496,7 @@ void ClientSession::getPolicy(const NXCPMessage& request)
    shared_ptr<NetObj> templateObject = FindObjectById(request.getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
    if (templateObject != nullptr)
    {
-      if (templateObject->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
+      if (templateObject->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_POLICIES))
       {
          uuid guid = request.getFieldAsGUID(VID_GUID);
          if (static_cast<Template&>(*templateObject).fillPolicyDetailsMessage(&msg, guid))
