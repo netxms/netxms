@@ -25,7 +25,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.AbstractSelector;
 import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.events.dialogs.EventSelectionDialog;
+import org.netxms.nxmc.modules.events.dialogs.MultiEventSelectionDialog;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -68,8 +68,7 @@ public class MultiEventSelector extends AbstractSelector
    @Override
    protected void selectionButtonHandler()
    {
-      EventSelectionDialog dlg = new EventSelectionDialog(getShell());
-      dlg.enableMultiSelection(true);
+      MultiEventSelectionDialog dlg = new MultiEventSelectionDialog(getShell(), eventCodes);
       if (dlg.open() == Window.OK)
       {
          EventTemplate[] events = dlg.getSelectedEvents();
