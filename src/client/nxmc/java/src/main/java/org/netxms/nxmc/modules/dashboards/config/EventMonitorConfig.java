@@ -42,6 +42,9 @@ public class EventMonitorConfig extends DashboardElementConfig
    @Element(required = false)
    private int timeRangeMinutes = 60;
 
+   @Element(required = false)
+   private String eventCodes = "";
+
    /**
     * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
     */
@@ -127,5 +130,61 @@ public class EventMonitorConfig extends DashboardElementConfig
    public void setTimeRangeMinutes(int timeRangeMinutes)
    {
       this.timeRangeMinutes = timeRangeMinutes;
+   }
+
+   /**
+    * Get event codes filter as array.
+    *
+    * @return array of event codes (empty array if no filter)
+    */
+   public int[] getEventCodes()
+   {
+      if (eventCodes == null || eventCodes.isEmpty())
+         return new int[0];
+
+      String[] parts = eventCodes.split(",");
+      int[] codes = new int[parts.length];
+      int count = 0;
+      for(String part : parts)
+      {
+         try
+         {
+            codes[count++] = Integer.parseInt(part.trim());
+         }
+         catch(NumberFormatException e)
+         {
+            // Ignore invalid entries
+         }
+      }
+      if (count < codes.length)
+      {
+         int[] result = new int[count];
+         System.arraycopy(codes, 0, result, 0, count);
+         return result;
+      }
+      return codes;
+   }
+
+   /**
+    * Set event codes filter from array.
+    *
+    * @param codes array of event codes (null or empty for no filter)
+    */
+   public void setEventCodes(int[] codes)
+   {
+      if (codes == null || codes.length == 0)
+      {
+         eventCodes = "";
+         return;
+      }
+
+      StringBuilder sb = new StringBuilder();
+      for(int i = 0; i < codes.length; i++)
+      {
+         if (i > 0)
+            sb.append(",");
+         sb.append(codes[i]);
+      }
+      eventCodes = sb.toString();
    }
 }

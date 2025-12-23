@@ -31,6 +31,17 @@ import org.netxms.nxmc.base.widgets.helpers.AbstractTraceViewFilter;
 public class EventMonitorFilter extends AbstractTraceViewFilter
 {
    private NXCSession session = Registry.getSession();
+   private int[] eventCodes = null;
+
+   /**
+    * Set event codes filter.
+    *
+    * @param codes array of allowed event codes (null or empty for no filter)
+    */
+   public void setEventCodes(int[] codes)
+   {
+      this.eventCodes = (codes != null && codes.length > 0) ? codes : null;
+   }
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -59,6 +70,22 @@ public class EventMonitorFilter extends AbstractTraceViewFilter
       else
       {
          return false;
+      }
+
+      // Check event code filter
+      if (eventCodes != null)
+      {
+         boolean found = false;
+         for(int allowedCode : eventCodes)
+         {
+            if (code == allowedCode)
+            {
+               found = true;
+               break;
+            }
+         }
+         if (!found)
+            return false;
       }
 
       if ((rootObjectId != 0) && (rootObjectId != sourceId))

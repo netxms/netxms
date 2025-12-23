@@ -25,6 +25,7 @@ import org.eclipse.swt.SWT;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.TableRow;
+import org.netxms.client.constants.ColumnFilterSetOperation;
 import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.events.Event;
@@ -89,6 +90,7 @@ public class EventMonitorElement extends ElementWidget
       viewer = new EventTraceWidget(getContentArea(), SWT.NONE, view);
       viewer.setRootObject(getEffectiveObjectId(config.getObjectId()));
       viewer.setFilterText(config.getFilter());
+      viewer.setEventCodeFilter(config.getEventCodes());
 
       // Set up event interceptor to buffer events during historical load
       if (config.getMaxEvents() > 0)
@@ -192,6 +194,26 @@ public class EventMonitorElement extends ElementWidget
             if (object != null)
             {
                filter.setColumnFilter("event_source", new ColumnFilter(isEventSource(object) ? ColumnFilterType.EQUALS : ColumnFilterType.CHILDOF, effectiveObjectId));
+            }
+         }
+
+         // Add event code filter if configured
+         int[] eventCodes = config.getEventCodes();
+         if (eventCodes.length > 0)
+         {
+            if (eventCodes.length == 1)
+            {
+               filter.setColumnFilter("event_code", new ColumnFilter(ColumnFilterType.EQUALS, eventCodes[0]));
+            }
+            else
+            {
+               ColumnFilter setFilter = new ColumnFilter();
+               setFilter.setOperation(ColumnFilterSetOperation.OR);
+               for(int code : eventCodes)
+               {
+                  setFilter.addSubFilter(new ColumnFilter(ColumnFilterType.EQUALS, code));
+               }
+               filter.setColumnFilter("event_code", setFilter);
             }
          }
 

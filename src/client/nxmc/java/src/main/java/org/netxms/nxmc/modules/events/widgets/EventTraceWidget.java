@@ -207,6 +207,17 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
       addElement(event);
    }
 
+   /**
+    * Set event code filter for client-side filtering.
+    *
+    * @param codes array of allowed event codes (null or empty for no filter)
+    */
+   public void setEventCodeFilter(int[] codes)
+   {
+      ((EventMonitorFilter)filter).setEventCodes(codes);
+      refresh();
+   }
+
 	/**
 	 * @return the actionShowColor
 	 */

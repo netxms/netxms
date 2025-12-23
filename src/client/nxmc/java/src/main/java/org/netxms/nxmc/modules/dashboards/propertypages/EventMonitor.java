@@ -26,10 +26,12 @@ import org.eclipse.swt.widgets.Control;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
 import org.netxms.nxmc.modules.dashboards.config.EventMonitorConfig;
 import org.netxms.nxmc.modules.dashboards.widgets.TitleConfigurator;
+import org.netxms.nxmc.modules.events.widgets.MultiEventSelector;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.xnap.commons.i18n.I18n;
 
@@ -42,6 +44,7 @@ public class EventMonitor extends DashboardElementPropertyPage
 
    private EventMonitorConfig config;
    private ObjectSelector objectSelector;
+   private MultiEventSelector eventSelector;
    private LabeledText filterText;
    private LabeledSpinner maxEvents;
    private LabeledSpinner timeRangeMinutes;
@@ -116,15 +119,23 @@ public class EventMonitor extends DashboardElementPropertyPage
       gd.horizontalSpan = 2;
       objectSelector.setLayoutData(gd);
 
+      eventSelector = new MultiEventSelector(dialogArea, SWT.NONE, new SelectorConfigurator().setShowClearButton(true));
+      eventSelector.setLabel(i18n.tr("Events"));
+      eventSelector.setEventCodes(config.getEventCodes());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      eventSelector.setLayoutData(gd);
+
       filterText = new LabeledText(dialogArea, SWT.NONE);
-      filterText.setLabel(i18n.tr("Event filter"));
+      filterText.setLabel(i18n.tr("Text filter"));
       filterText.setText(config.getFilter());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       filterText.setLayoutData(gd);
-      filterText.setText(config.getFilter());
 
       maxEvents = new LabeledSpinner(dialogArea, SWT.NONE);
       maxEvents.setLabel(i18n.tr("Maximum events to load (0 to disable)"));
@@ -155,6 +166,7 @@ public class EventMonitor extends DashboardElementPropertyPage
    {
       title.updateConfiguration(config);
       config.setObjectId(objectSelector.getObjectId());
+      config.setEventCodes(eventSelector.getEventCodes());
       config.setFilter(filterText.getText().trim());
       config.setMaxEvents(maxEvents.getSelection());
       config.setTimeRangeMinutes(timeRangeMinutes.getSelection());

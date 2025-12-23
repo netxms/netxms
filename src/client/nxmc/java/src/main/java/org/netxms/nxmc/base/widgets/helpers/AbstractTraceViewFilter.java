@@ -43,7 +43,7 @@ public abstract class AbstractTraceViewFilter extends ViewerFilter implements Ab
    @Override
 	public void setFilterString(String filterString)
 	{
-		this.filterString = filterString.toLowerCase();
+      this.filterString = (filterString != null) ? filterString.toLowerCase() : null;
 	}
 
    /**
