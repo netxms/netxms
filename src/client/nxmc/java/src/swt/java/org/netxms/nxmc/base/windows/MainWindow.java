@@ -22,6 +22,7 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.preference.PreferenceDialog;
@@ -63,6 +64,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
@@ -561,6 +563,29 @@ public class MainWindow extends Window implements MessageAreaHolder
                processKeyDownEvent(e.stateMask, e.keyCode);
          }
       });
+
+      // Handle macOS Preferences menu item (Cmd+,)
+      if (SystemUtils.IS_OS_MAC_OSX)
+      {
+         Menu systemMenu = display.getSystemMenu();
+         if (systemMenu != null)
+         {
+            for(MenuItem item : systemMenu.getItems())
+            {
+               if (item.getID() == SWT.ID_PREFERENCES)
+               {
+                  item.addSelectionListener(new SelectionAdapter() {
+                     @Override
+                     public void widgetSelected(SelectionEvent e)
+                     {
+                        switchToPerspective("configuration");
+                     }
+                  });
+                  break;
+               }
+            }
+         }
+      }
 
       switchToPerspective("pinboard");
       PreferenceStore ps = PreferenceStore.getInstance();

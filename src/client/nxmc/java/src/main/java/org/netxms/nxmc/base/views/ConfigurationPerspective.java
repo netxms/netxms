@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ServiceLoader;
+import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -34,6 +35,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.nxmc.Memento;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.services.ConfigurationPerspectiveElement;
@@ -89,6 +92,8 @@ public class ConfigurationPerspective extends Perspective
       configuration.multiViewMainArea = false;
       configuration.hasSupplementalArea = false;
       configuration.priority = 250;
+      if (SystemUtils.IS_OS_MAC_OSX && !Registry.IS_WEB_CLIENT)
+         configuration.keyboardShortcut = new KeyStroke(SWT.COMMAND, ',');
    }
 
    /**
