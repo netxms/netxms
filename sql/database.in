@@ -44,6 +44,7 @@
 #define TABLE_TYPE
 #define CRLF            chr(13)||chr(10)
 #define CONCAT          ||
+#define varchar(n)      varchar2(n char)
 
 #elif defined(DB_SQLITE)
 
