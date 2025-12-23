@@ -99,7 +99,7 @@ public class AiAssistantChatView extends View
       chatContent.append("<!DOCTYPE html>");
       chatContent.append("<html><head>");
       chatContent.append("<style>");
-      chatContent.append("body { font: 14px \"Metropolis Regular\", \"Segoe UI\", \"Liberation Sans\", Verdana, Helvetica, sans-serif; margin: 0; padding: 10px; background-color: ");
+      chatContent.append("body { font: 14px \"Metropolis Regular\", \"Segoe UI\", \"Liberation Sans\", \".AppleSystemUIFont\", Verdana, Helvetica, sans-serif; margin: 0; padding: 10px; background-color: ");
       chatContent.append(ColorConverter.rgbToCss(ThemeEngine.getBackgroundColor("AiAssistant.ChatView").getRGB()));
       chatContent.append("; }");
       chatContent.append(".message { margin-bottom: 15px; display: flex; }");

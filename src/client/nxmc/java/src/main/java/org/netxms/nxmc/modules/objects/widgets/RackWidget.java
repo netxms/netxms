@@ -73,7 +73,7 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
    private static final int MAX_BORDER_WIDTH = 30;
    private static final int MIN_BORDER_WIDTH = 15;
    private static final int MIN_WIDTH = MIN_UNIT_WIDTH + MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH + MIN_BORDER_WIDTH * 2 + MIN_BORDER_WIDTH / 2;
-   private static final String[] FONT_NAMES = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" };
+   private static final String[] FONT_NAMES = { "Segoe UI", "Liberation Sans", "DejaVu Sans", ".AppleSystemUIFont", "Verdana", "Arial" };
    private static final String[] SIDE_LABELS = { "Front", "Back" };
 
    private static Image imageDefaultTop = null;

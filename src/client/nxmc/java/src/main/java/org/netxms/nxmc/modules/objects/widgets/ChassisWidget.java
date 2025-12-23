@@ -67,7 +67,7 @@ public class ChassisWidget extends Canvas implements PaintListener, DisposeListe
    private static final int STATUS_INDECATOR_WIDTH = 8;
    private static final int STATUS_INDECATOR_SHIFT = 2;
    private static final int STATUS_INDECATOR_BORDER = 1;
-   private static final String[] FONT_NAMES = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" };
+   private static final String[] FONT_NAMES = { "Segoe UI", "Liberation Sans", "DejaVu Sans", ".AppleSystemUIFont", "Verdana", "Arial" };
    private static final String[] VIEW_LABELS = { "Front", "Back" };
    
    private Chassis chassis;
