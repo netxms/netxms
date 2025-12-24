@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -146,6 +146,7 @@ public class AlarmList extends CompositeWithMessageArea
    private Action actionCreateIssue;
    private Action actionShowIssue;
    private Action actionUnlinkIssue;
+   private Action actionCreateIncident;
    private Action actionExportToCsv;
    private Action actionShowAlarmDetails;
    private Action actionQueryAssistant;
@@ -545,7 +546,15 @@ public class AlarmList extends CompositeWithMessageArea
             unlinkIssue();
          }
       };
-      
+
+      actionCreateIncident = new Action(i18n.tr("Create &incident"), ResourceManager.getImageDescriptor("icons/incident.png")) {
+         @Override
+         public void run()
+         {
+            createIncident();
+         }
+      };
+
       actionGoToObject = new Action(i18n.tr("&Go to object")) {
 			@Override
 			public void run()
@@ -801,6 +810,8 @@ public class AlarmList extends CompositeWithMessageArea
                   manager.add(actionUnlinkIssue);
             }
          }
+         manager.add(new Separator());
+         manager.add(actionCreateIncident);
          if (aiAssistantAvailable)
          {
             manager.add(actionQueryAssistant);
@@ -1295,6 +1306,41 @@ public class AlarmList extends CompositeWithMessageArea
          protected String getErrorMessage()
          {
             return i18n.tr("Cannot unlink alarm from helpdesk ticket");
+         }
+      }.start();
+   }
+
+   /**
+    * Create incident from selected alarm
+    */
+   private void createIncident()
+   {
+      IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      final Alarm alarm = (Alarm)selection.getFirstElement();
+      new Job(i18n.tr("Create incident"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final long incidentId = session.createIncident(alarm.getSourceObjectId(), alarm.getMessage(), null, alarm.getId());
+            runInUIThread(() -> {
+               if (isDisposed())
+                  return;
+
+               String message = String.format(i18n.tr("Incident #%d created successfully"), incidentId);
+               if (view != null)
+                  view.addMessage(MessageArea.SUCCESS, message);
+               else
+                  MessageDialogHelper.openInformation(getShell(), i18n.tr("Create Incident"), message);
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot create incident from alarm");
          }
       }.start();
    }

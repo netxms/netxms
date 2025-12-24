@@ -1856,6 +1856,71 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   3) maxQueueSize - Configured maximum queue size'
 	);
 
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_INCIDENT_OPENED, 'SYS_INCIDENT_OPENED', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Incident #%<incidentId> opened (%<title>)',
+		'Generated when a new incident is created.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) incidentId - Incident ID' CONCAT CRLF CONCAT
+		'   2) title - Incident title' CONCAT CRLF CONCAT
+		'   3) sourceAlarmId - Source alarm ID (0 if manual)' CONCAT CRLF CONCAT
+		'   4) userId - User ID who created (0 if auto)'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_INCIDENT_STATE_CHANGED, 'SYS_INCIDENT_STATE_CHANGED', 'b2c3d4e5-f6a7-8901-bcde-f12345678901',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Incident #%<incidentId> state changed from %<oldStateName> to %<newStateName>',
+		'Generated when incident state changes.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) incidentId - Incident ID' CONCAT CRLF CONCAT
+		'   2) title - Incident title' CONCAT CRLF CONCAT
+		'   3) oldState - Previous state code' CONCAT CRLF CONCAT
+		'   4) oldStateName - Previous state name' CONCAT CRLF CONCAT
+		'   5) newState - New state code' CONCAT CRLF CONCAT
+		'   6) newStateName - New state name' CONCAT CRLF CONCAT
+		'   7) userId - User ID who changed state'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_INCIDENT_ASSIGNED, 'SYS_INCIDENT_ASSIGNED', 'e5f6a7b8-c9d0-1234-efab-345678901234',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Incident #%<incidentId> assigned to user %<assignedUserName>',
+		'Generated when an incident is assigned to a user.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) incidentId - Incident ID' CONCAT CRLF CONCAT
+		'   2) title - Incident title' CONCAT CRLF CONCAT
+		'   3) assignedUserId - Assigned user ID' CONCAT CRLF CONCAT
+		'   4) assignedUserName - Assigned user name' CONCAT CRLF CONCAT
+		'   5) assignedByUser - User ID who assigned'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_INCIDENT_ALARM_LINKED, 'SYS_INCIDENT_ALARM_LINKED', 'ee499067-16c1-493d-8d1b-eefe02a4efb0',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Alarm #%<alarmId> linked to incident #%<incidentId>',
+		'Generated when an alarm is linked to an incident.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) incidentId - Incident ID' CONCAT CRLF CONCAT
+		'   2) title - Incident title' CONCAT CRLF CONCAT
+		'   3) alarmId - Alarm ID' CONCAT CRLF CONCAT
+		'   4) userId - User ID who liked'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_INCIDENT_ALARM_UNLINKED, 'SYS_INCIDENT_ALARM_UNLINKED', '7b5b0dff-0498-4342-a2ca-033a6f30d0a0',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Alarm #%<alarmId> unlinked from incident #%<incidentId>',
+		'Generated when an alarm is unlinked from an incident.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) incidentId - Incident ID' CONCAT CRLF CONCAT
+		'   2) title - Incident title' CONCAT CRLF CONCAT
+		'   3) alarmId - Alarm ID' CONCAT CRLF CONCAT
+		'   4) userId - User ID who unliked'
+	);
+
 /*
 ** SNMP traps
 */

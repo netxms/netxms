@@ -36,6 +36,7 @@
 #include <netxms_maps.h>
 #include <asset_management.h>
 #include <nms_users.h>
+#include <nms_incident.h>
 #include <netxms-version.h>
 #include <iris.h>
 
@@ -1239,6 +1240,36 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_UNLINK_HELPDESK_ISSUE:
          unlinkHelpdeskIssue(*request);
+         break;
+      case CMD_GET_INCIDENTS:
+         getIncidents(*request);
+         break;
+      case CMD_GET_INCIDENT_DETAILS:
+         getIncidentDetails(*request);
+         break;
+      case CMD_CREATE_INCIDENT:
+         createIncident(*request);
+         break;
+      case CMD_UPDATE_INCIDENT:
+         updateIncident(*request);
+         break;
+      case CMD_CHANGE_INCIDENT_STATE:
+         changeIncidentState(*request);
+         break;
+      case CMD_ASSIGN_INCIDENT:
+         assignIncident(*request);
+         break;
+      case CMD_LINK_ALARM_TO_INCIDENT:
+         linkAlarmToIncident(*request);
+         break;
+      case CMD_UNLINK_ALARM_FROM_INCIDENT:
+         unlinkAlarmFromIncident(*request);
+         break;
+      case CMD_ADD_INCIDENT_COMMENT:
+         addIncidentComment(*request);
+         break;
+      case CMD_GET_INCIDENT_ACTIVITY:
+         getIncidentActivity(*request);
          break;
       case CMD_CREATE_ACTION:
          createAction(*request);
@@ -7306,6 +7337,301 @@ void ClientSession::unlinkHelpdeskIssue(const NXCPMessage& request)
       // Normally, for existing alarms object will not be nullptr,
       // so we assume that alarm id is invalid
       response.setField(VID_RCC, RCC_INVALID_ALARM_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Get list of incidents
+ */
+void ClientSession::getIncidents(const NXCPMessage& request)
+{
+   uint32_t objectId = request.getFieldAsUInt32(VID_OBJECT_ID);
+   SendIncidentsToClient(objectId, request.getId(), this);
+}
+
+/**
+ * Get incident details
+ */
+void ClientSession::getIncidentDetails(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   if (incident != nullptr)
+   {
+      shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
+      if ((object != nullptr) && object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      {
+         incident->fillMessage(&response);
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      // Try to get from database (closed incident)
+      response.setField(VID_RCC, GetIncident(incidentId, &response));
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Create new incident
+ */
+void ClientSession::createIncident(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t objectId = request.getFieldAsUInt32(VID_OBJECT_ID);
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+
+   if (object == nullptr)
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+   else if (!object->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   else
+   {
+      TCHAR title[256];
+      request.getFieldAsString(VID_INCIDENT_TITLE, title, 256);
+      TCHAR *initialComment = request.getFieldAsString(VID_COMMENTS);
+      uint32_t alarmId = request.getFieldAsUInt32(VID_SOURCE_ALARM_ID);
+
+      uint32_t incidentId;
+      uint32_t rcc = CreateIncident(objectId, title, initialComment, alarmId, m_userId, &incidentId);
+      MemFree(initialComment);
+      response.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+         response.setField(VID_INCIDENT_ID, incidentId);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Update incident title
+ */
+void ClientSession::updateIncident(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   if (incident != nullptr)
+   {
+      shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
+      if ((object != nullptr) && object->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
+      {
+         TCHAR title[256];
+         request.getFieldAsString(VID_INCIDENT_TITLE, title, 256);
+         response.setField(VID_RCC, UpdateIncident(incidentId, title, m_userId));
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INCIDENT_NOT_FOUND);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Change incident state
+ */
+void ClientSession::changeIncidentState(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
+   int newState = request.getFieldAsInt16(VID_INCIDENT_STATE);
+   wchar_t *comment = request.getFieldAsString(VID_COMMENTS);
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+
+   if (incident != nullptr)
+   {
+      shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
+      if ((object != nullptr) && object->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
+      {
+         response.setField(VID_RCC, incident->changeState(newState, m_userId, comment));
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INCIDENT_NOT_FOUND);
+   }
+
+   MemFree(comment);
+   sendMessage(response);
+}
+
+/**
+ * Assign incident to user
+ */
+void ClientSession::assignIncident(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
+   uint32_t userId = request.getFieldAsUInt32(VID_USER_ID);
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   if (incident != nullptr)
+   {
+      shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
+      if ((object != nullptr) && object->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
+      {
+         response.setField(VID_RCC, AssignIncident(incidentId, userId, m_userId));
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INCIDENT_NOT_FOUND);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Link alarm to incident
+ */
+void ClientSession::linkAlarmToIncident(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
+   uint32_t alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   if (incident != nullptr)
+   {
+      shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
+      if ((object != nullptr) && object->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
+      {
+         response.setField(VID_RCC, LinkAlarmToIncident(incidentId, alarmId, m_userId));
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INCIDENT_NOT_FOUND);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Unlink alarm from incident
+ */
+void ClientSession::unlinkAlarmFromIncident(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
+   uint32_t alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   if (incident != nullptr)
+   {
+      shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
+      if ((object != nullptr) && object->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
+      {
+         response.setField(VID_RCC, UnlinkAlarmFromIncident(incidentId, alarmId, m_userId));
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INCIDENT_NOT_FOUND);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Add comment to incident
+ */
+void ClientSession::addIncidentComment(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   if (incident != nullptr)
+   {
+      shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
+      if ((object != nullptr) && object->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
+      {
+         TCHAR *text = request.getFieldAsString(VID_COMMENTS);
+         uint32_t commentId;
+         uint32_t rcc = AddIncidentComment(incidentId, text, m_userId, &commentId);
+         response.setField(VID_RCC, rcc);
+         if (rcc == RCC_SUCCESS)
+            response.setField(VID_COMMENT_ID, commentId);
+         MemFree(text);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INCIDENT_NOT_FOUND);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Get incident activity log
+ */
+void ClientSession::getIncidentActivity(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   if (incident != nullptr)
+   {
+      shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
+      if ((object != nullptr) && object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      {
+         response.setField(VID_RCC, GetIncidentActivity(incidentId, &response));
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      // Try to get from database (closed incident)
+      response.setField(VID_RCC, GetIncidentActivity(incidentId, &response));
    }
 
    sendMessage(response);

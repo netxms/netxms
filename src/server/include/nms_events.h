@@ -642,6 +642,11 @@ private:
 	IntegerArray<uint32_t> m_alarmCategoryList;
 	wchar_t *m_rcaScriptName;    // Name of library script used for root cause analysis
 
+   // Incident creation settings (used when RF_CREATE_INCIDENT flag is set)
+   uint32_t m_incidentDelay;        // Delay in seconds (0 = immediate)
+   wchar_t *m_incidentTitle;        // Title template (nullptr = use alarm message)
+   wchar_t *m_incidentDescription;  // Description template
+
 	wchar_t m_downtimeTag[MAX_DOWNTIME_TAG_LENGTH];
 
 	StringMap m_pstorageSetActions;
@@ -658,6 +663,7 @@ private:
    bool matchTime(struct tm *localTime) const;
 
    uint32_t generateAlarm(Event *event) const;
+   void createIncidentFromAlarm(Event *event, uint32_t alarmId) const;
    void executeActionScript(Event *event) const;
 
    bool isFilterEmpty() const

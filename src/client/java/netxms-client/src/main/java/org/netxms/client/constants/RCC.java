@@ -212,6 +212,11 @@ public final class RCC
    public static final int TCP_PROXY_DISABLED = 177;
    public static final int INVALID_TASK_ID = 178;
    public static final int INVALID_CHAT_ID = 179;
+   public static final int INCIDENT_NOT_FOUND = 180;
+   public static final int INCIDENT_CLOSED = 181;
+   public static final int ALARM_ALREADY_IN_INCIDENT = 182;
+   public static final int INVALID_INCIDENT_STATE = 183;
+   public static final int COMMENT_REQUIRED = 184;
 
    // Client-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

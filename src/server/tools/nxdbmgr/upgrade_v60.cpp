@@ -25,6 +25,137 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.15 to 60.16 (Incident management)
+ */
+static bool H_UpgradeFromV15()
+{
+   // Create incidents table
+   CHK_EXEC(SQLQuery(
+      _T("CREATE TABLE incidents (")
+      _T("id integer not null,")
+      _T("creation_time integer not null,")
+      _T("last_change_time integer not null,")
+      _T("state integer not null,")
+      _T("assigned_user_id integer,")
+      _T("title varchar(255) not null,")
+      _T("source_alarm_id integer,")
+      _T("source_object_id integer not null,")
+      _T("created_by_user integer not null,")
+      _T("resolved_by_user integer,")
+      _T("closed_by_user integer,")
+      _T("resolve_time integer,")
+      _T("close_time integer,")
+      _T("PRIMARY KEY(id))")));
+
+   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_incidents_state ON incidents(state)")));
+   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_incidents_source_object ON incidents(source_object_id)")));
+   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_incidents_assigned_user ON incidents(assigned_user_id)")));
+
+   // Create incident_alarms table
+   CHK_EXEC(SQLQuery(
+      _T("CREATE TABLE incident_alarms (")
+      _T("incident_id integer not null,")
+      _T("alarm_id integer not null,")
+      _T("linked_time integer not null,")
+      _T("linked_by_user integer not null,")
+      _T("PRIMARY KEY(incident_id, alarm_id))")));
+
+   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_incident_alarms_alarm ON incident_alarms(alarm_id)")));
+
+   // Create incident_comments table
+   CHK_EXEC(SQLQuery(
+      _T("CREATE TABLE incident_comments (")
+      _T("id integer not null,")
+      _T("incident_id integer not null,")
+      _T("creation_time integer not null,")
+      _T("user_id integer not null,")
+      _T("comment_text $SQL:TEXT not null,")
+      _T("PRIMARY KEY(id))")));
+
+   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_incident_comments_incident ON incident_comments(incident_id)")));
+
+   // Create incident_activity_log table
+   CHK_EXEC(SQLQuery(
+      _T("CREATE TABLE incident_activity_log (")
+      _T("id integer not null,")
+      _T("incident_id integer not null,")
+      _T("timestamp integer not null,")
+      _T("user_id integer not null,")
+      _T("activity_type integer not null,")
+      _T("old_value varchar(255),")
+      _T("new_value varchar(255),")
+      _T("details varchar(1000),")
+      _T("PRIMARY KEY(id))")));
+
+   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_incident_activity_incident ON incident_activity_log(incident_id)")));
+
+   // Add incident columns to event_policy table
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE event_policy ADD incident_delay integer")));
+   CHK_EXEC(SQLQuery(_T("UPDATE event_policy SET incident_delay=0")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("event_policy"), _T("incident_delay")));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE event_policy ADD incident_title varchar(255)")));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE event_policy ADD incident_description varchar(2000)")));
+
+   // Create incident events
+   CHK_EXEC(CreateEventTemplate(EVENT_INCIDENT_OPENED, _T("SYS_INCIDENT_OPENED"),
+      EVENT_SEVERITY_NORMAL, EF_LOG, _T("a1b2c3d4-e5f6-7890-abcd-ef1234567890"),
+      _T("Incident #%<incidentId> opened (%<title>)"),
+      _T("Generated when a new incident is created.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) incidentId - Incident ID\r\n")
+      _T("   2) title - Incident title\r\n")
+      _T("   3) sourceAlarmId - Source alarm ID (0 if manual)\r\n")
+      _T("   4) createdByUser - User ID who created (0 if auto)")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_INCIDENT_STATE_CHANGED, _T("SYS_INCIDENT_STATE_CHANGED"),
+      EVENT_SEVERITY_NORMAL, EF_LOG, _T("b2c3d4e5-f6a7-8901-bcde-f12345678901"),
+      _T("Incident #%<incidentId> state changed from %<oldStateName> to %<newStateName>"),
+      _T("Generated when incident state changes.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) incidentId - Incident ID\r\n")
+      _T("   2) title - Incident title\r\n")
+      _T("   3) oldState - Previous state code\r\n")
+      _T("   4) oldStateName - Previous state name\r\n")
+      _T("   5) newState - New state code\r\n")
+      _T("   6) newStateName - New state name\r\n")
+      _T("   7) userId - User ID who changed state")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_INCIDENT_ASSIGNED, _T("SYS_INCIDENT_ASSIGNED"),
+      EVENT_SEVERITY_NORMAL, EF_LOG, _T("e5f6a7b8-c9d0-1234-efab-345678901234"),
+      _T("Incident #%<incidentId> assigned to user %<assignedUserName>"),
+      _T("Generated when an incident is assigned to a user.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) incidentId - Incident ID\r\n")
+      _T("   2) title - Incident title\r\n")
+      _T("   3) assignedUserId - Assigned user ID\r\n")
+      _T("   4) assignedUserName - Assigned user name\r\n")
+      _T("   5) assignedByUser - User ID who assigned")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_INCIDENT_ALARM_LINKED, _T("SYS_INCIDENT_ALARM_LINKED"),
+      EVENT_SEVERITY_NORMAL, EF_LOG, _T("ee499067-16c1-493d-8d1b-eefe02a4efb0"),
+      _T("Alarm #%<alarmId> linked to incident #%<incidentId>"),
+      _T("Generated when an alarm is linked to an incident.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) incidentId - Incident ID\r\n")
+      _T("   2) title - Incident title\r\n")
+      _T("   3) alarmId - Alarm ID\r\n")
+      _T("   4) userId - User ID who linked")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_INCIDENT_ALARM_UNLINKED, _T("SYS_INCIDENT_ALARM_UNLINKED"),
+      EVENT_SEVERITY_NORMAL, EF_LOG, _T("7b5b0dff-0498-4342-a2ca-033a6f30d0a0"),
+      _T("Alarm #%<alarmId> unlinked from incident #%<incidentId>"),
+      _T("Generated when an alarm is unlinked from an incident.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) incidentId - Incident ID\r\n")
+      _T("   2) title - Incident title\r\n")
+      _T("   3) alarmId - Alarm ID\r\n")
+      _T("   4) userId - User ID who unlinked")));
+
+   CHK_EXEC(SetMinorSchemaVersion(16));
+   return true;
+}
+
+/**
  * Upgrade from 60.14 to 60.15
  */
 static bool H_UpgradeFromV14()
@@ -1140,6 +1271,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 15, 60, 16, H_UpgradeFromV15 },
    { 14, 60, 15, H_UpgradeFromV14 },
    { 13, 60, 14, H_UpgradeFromV13 },
    { 12, 60, 13, H_UpgradeFromV12 },

@@ -85,6 +85,7 @@ import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
+import org.netxms.client.constants.IncidentState;
 import org.netxms.client.constants.ObjectPollType;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.RCC;
@@ -127,6 +128,9 @@ import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventReference;
 import org.netxms.client.events.EventTemplate;
+import org.netxms.client.events.Incident;
+import org.netxms.client.events.IncidentActivity;
+import org.netxms.client.events.IncidentSummary;
 import org.netxms.client.events.SyslogRecord;
 import org.netxms.client.log.Log;
 import org.netxms.client.maps.MapDCIInstance;
@@ -4924,6 +4928,256 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_ALARM_STATUS_FLOW_STATE, state);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Get list of incidents for an object. To get all incidents, use objectId = 0.
+    *
+    * @param objectId Object ID to filter by, or 0 for all incidents
+    * @return List of incidents
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<IncidentSummary> getIncidents(long objectId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_INCIDENTS);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, objectId);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<IncidentSummary> list = new ArrayList<>(count);
+      long fieldId = NXCPCodes.VID_INCIDENT_LIST_BASE;
+      for (int i = 0; i < count; i++)
+      {
+         list.add(new IncidentSummary(response, fieldId));
+         fieldId += 10;
+      }
+      return list;
+   }
+
+   /**
+    * Get incident details by ID.
+    *
+    * @param incidentId Incident ID
+    * @return Incident object with full details
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public Incident getIncident(long incidentId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_INCIDENT_DETAILS);
+      msg.setFieldUInt32(NXCPCodes.VID_INCIDENT_ID, incidentId);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      return new Incident(response);
+   }
+
+   /**
+    * Create a new incident.
+    *
+    * @param objectId       Source object ID
+    * @param title          Incident title
+    * @param initialComment Initial comment to add (can be null)
+    * @param sourceAlarmId  Source alarm ID (0 if not created from alarm)
+    * @return ID of the created incident
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public long createIncident(long objectId, String title, String initialComment, long sourceAlarmId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_INCIDENT);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, objectId);
+      msg.setField(NXCPCodes.VID_INCIDENT_TITLE, title);
+      if (initialComment != null && !initialComment.isEmpty())
+         msg.setField(NXCPCodes.VID_COMMENTS, initialComment);
+      msg.setFieldUInt32(NXCPCodes.VID_SOURCE_ALARM_ID, sourceAlarmId);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getFieldAsInt64(NXCPCodes.VID_INCIDENT_ID);
+   }
+
+   /**
+    * Create a new incident from an alarm.
+    *
+    * @param alarmId Source alarm ID
+    * @param title   Incident title
+    * @return ID of the created incident
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public long createIncidentFromAlarm(long alarmId, String title) throws IOException, NXCException
+   {
+      Alarm alarm = getAlarm(alarmId);
+      return createIncident(alarm.getSourceObjectId(), title, null, alarmId);
+   }
+
+   /**
+    * Update incident title.
+    *
+    * @param incidentId Incident ID
+    * @param title      New title (required)
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void updateIncident(long incidentId, String title) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_INCIDENT);
+      msg.setFieldUInt32(NXCPCodes.VID_INCIDENT_ID, incidentId);
+      msg.setField(NXCPCodes.VID_INCIDENT_TITLE, title);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Change incident state.
+    *
+    * @param incidentId Incident ID
+    * @param newState   New state (use Incident.STATE_* constants)
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void changeIncidentState(long incidentId, IncidentState newState) throws IOException, NXCException
+   {
+      changeIncidentState(incidentId, newState, null);
+   }
+
+   /**
+    * Change state of an incident with optional comment.
+    *
+    * @param incidentId Incident ID
+    * @param newState   New state (use Incident.STATE_* constants)
+    * @param comment    Optional comment (required for BLOCKED state)
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void changeIncidentState(long incidentId, IncidentState newState, String comment) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_CHANGE_INCIDENT_STATE);
+      msg.setFieldUInt32(NXCPCodes.VID_INCIDENT_ID, incidentId);
+      msg.setFieldInt16(NXCPCodes.VID_INCIDENT_STATE, newState.getValue());
+      if (comment != null && !comment.isEmpty())
+         msg.setField(NXCPCodes.VID_COMMENTS, comment);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Resolve an incident. This also resolves all linked alarms.
+    *
+    * @param incidentId Incident ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void resolveIncident(long incidentId) throws IOException, NXCException
+   {
+      changeIncidentState(incidentId, IncidentState.RESOLVED);
+   }
+
+   /**
+    * Close an incident.
+    *
+    * @param incidentId Incident ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void closeIncident(long incidentId) throws IOException, NXCException
+   {
+      changeIncidentState(incidentId, IncidentState.CLOSED);
+   }
+
+   /**
+    * Assign an incident to a user.
+    *
+    * @param incidentId Incident ID
+    * @param userId User ID to assign to, or 0 to unassign
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void assignIncident(long incidentId, int userId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_ASSIGN_INCIDENT);
+      msg.setFieldUInt32(NXCPCodes.VID_INCIDENT_ID, incidentId);
+      msg.setFieldInt32(NXCPCodes.VID_USER_ID, userId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Link an alarm to an incident.
+    *
+    * @param incidentId Incident ID
+    * @param alarmId    Alarm ID to link
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void linkAlarmToIncident(long incidentId, long alarmId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_LINK_ALARM_TO_INCIDENT);
+      msg.setFieldUInt32(NXCPCodes.VID_INCIDENT_ID, incidentId);
+      msg.setFieldUInt32(NXCPCodes.VID_ALARM_ID, alarmId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Unlink an alarm from an incident.
+    *
+    * @param incidentId Incident ID
+    * @param alarmId    Alarm ID to unlink
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void unlinkAlarmFromIncident(long incidentId, long alarmId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_UNLINK_ALARM_FROM_INCIDENT);
+      msg.setFieldUInt32(NXCPCodes.VID_INCIDENT_ID, incidentId);
+      msg.setFieldUInt32(NXCPCodes.VID_ALARM_ID, alarmId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Add a comment to an incident.
+    *
+    * @param incidentId Incident ID
+    * @param text       Comment text
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void addIncidentComment(long incidentId, String text) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_INCIDENT_COMMENT);
+      msg.setFieldUInt32(NXCPCodes.VID_INCIDENT_ID, incidentId);
+      msg.setField(NXCPCodes.VID_COMMENTS, text);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Get activity log for an incident.
+    *
+    * @param incidentId Incident ID
+    * @return List of incident activity entries
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<IncidentActivity> getIncidentActivity(long incidentId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_INCIDENT_ACTIVITY);
+      msg.setFieldUInt32(NXCPCodes.VID_INCIDENT_ID, incidentId);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<IncidentActivity> list = new ArrayList<IncidentActivity>(count);
+      long varId = NXCPCodes.VID_ACTIVITY_LIST_BASE;
+      for (int i = 0; i < count; i++)
+      {
+         list.add(new IncidentActivity(response, varId));
+         varId += 10;
+      }
+      return list;
    }
 
    /**

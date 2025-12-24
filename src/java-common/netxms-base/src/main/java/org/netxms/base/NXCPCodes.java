@@ -504,6 +504,17 @@ public class NXCPCodes
    public static final int CMD_EXPLAIN_EPP_RULE = 0x01E3;
    public static final int CMD_CLEAR_NOTIFICATION_QUEUE = 0x01E4;
    public static final int CMD_DECOMMISSION_NODE = 0x01E5;
+   public static final int CMD_GET_INCIDENTS = 0x01E6;
+   public static final int CMD_GET_INCIDENT_DETAILS = 0x01E7;
+   public static final int CMD_CREATE_INCIDENT = 0x01E8;
+   public static final int CMD_UPDATE_INCIDENT = 0x01E9;
+   public static final int CMD_CHANGE_INCIDENT_STATE = 0x01EA;
+   public static final int CMD_ASSIGN_INCIDENT = 0x01EB;
+   public static final int CMD_LINK_ALARM_TO_INCIDENT = 0x01EC;
+   public static final int CMD_UNLINK_ALARM_FROM_INCIDENT = 0x01ED;
+   public static final int CMD_ADD_INCIDENT_COMMENT = 0x01EE;
+   public static final int CMD_GET_INCIDENT_ACTIVITY = 0x01EF;
+   public static final int CMD_INCIDENT_UPDATE = 0x01F0;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1391,6 +1402,16 @@ public class NXCPCodes
    public static final long VID_WIN_LOG_NUM_RECORDS = 877;
    public static final long VID_DECOMMISSION_TIME = 878;
    public static final long VID_CLEAR_IP_ADDRESSES = 879;
+   public static final long VID_INCIDENT_ID = 880;
+   public static final long VID_INCIDENT_STATE = 881;
+   public static final long VID_INCIDENT_TITLE = 882;
+   public static final long VID_INCIDENT_DESCRIPTION = 883;
+   public static final long VID_INCIDENT_ASSIGNED_USER = 884;
+   public static final long VID_SOURCE_ALARM_ID = 885;
+   public static final long VID_CLOSED_BY_USER = 886;
+   public static final long VID_CLOSE_TIME = 887;
+   public static final long VID_RESOLVE_TIME = 888;
+   public static final long VID_INCIDENT_DELAY = 889;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1519,4 +1540,7 @@ public class NXCPCodes
    public static final long VID_PARTIAL_OBJECT_INFO_BASE = 0x10000000L;
    public static final long VID_UNIT_NAMES_BASE = 0x10000000L;
    public static final long VID_METADATA_BASE = 0x1F000000L;
+   public static final long VID_INCIDENT_LIST_BASE = 0x60000000L;
+   public static final long VID_ACTIVITY_LIST_BASE = 0x61000000L;
+   public static final long VID_COMMENT_LIST_BASE = 0x62000000L;
 }

@@ -100,6 +100,9 @@
 #define IDG_BUSINESS_SERVICE_RECORD 29
 #define IDG_MAINTENANCE_JOURNAL     30
 #define IDG_PACKAGE_DEPLOYMENT_JOB  31
+#define IDG_INCIDENT                32
+#define IDG_INCIDENT_COMMENT        33
+#define IDG_INCIDENT_ACTIVITY       34
 
 /**** ID functions *****/
 bool InitIdTable();
@@ -723,6 +726,16 @@ private:
 	void updateAlarmComment(const NXCPMessage& request);
 	void deleteAlarmComment(const NXCPMessage& request);
 	void updateAlarmStatusFlow(const NXCPMessage& request);
+   void getIncidents(const NXCPMessage& request);
+   void getIncidentDetails(const NXCPMessage& request);
+   void createIncident(const NXCPMessage& request);
+   void updateIncident(const NXCPMessage& request);
+   void changeIncidentState(const NXCPMessage& request);
+   void assignIncident(const NXCPMessage& request);
+   void linkAlarmToIncident(const NXCPMessage& request);
+   void unlinkAlarmFromIncident(const NXCPMessage& request);
+   void addIncidentComment(const NXCPMessage& request);
+   void getIncidentActivity(const NXCPMessage& request);
    void createAction(const NXCPMessage& request);
    void updateAction(const NXCPMessage& request);
    void deleteAction(const NXCPMessage& request);

@@ -683,6 +683,17 @@ typedef struct
 #define CMD_EXPLAIN_EPP_RULE              0x01E3
 #define CMD_CLEAR_NOTIFICATION_QUEUE      0x01E4
 #define CMD_DECOMMISSION_NODE             0x01E5
+#define CMD_GET_INCIDENTS                 0x01E6
+#define CMD_GET_INCIDENT_DETAILS          0x01E7
+#define CMD_CREATE_INCIDENT               0x01E8
+#define CMD_UPDATE_INCIDENT               0x01E9
+#define CMD_CHANGE_INCIDENT_STATE         0x01EA
+#define CMD_ASSIGN_INCIDENT               0x01EB
+#define CMD_LINK_ALARM_TO_INCIDENT        0x01EC
+#define CMD_UNLINK_ALARM_FROM_INCIDENT    0x01ED
+#define CMD_ADD_INCIDENT_COMMENT          0x01EE
+#define CMD_GET_INCIDENT_ACTIVITY         0x01EF
+#define CMD_INCIDENT_UPDATE               0x01F0
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1574,6 +1585,16 @@ typedef struct
 #define VID_WIN_LOG_NUM_RECORDS     ((uint32_t)877)
 #define VID_DECOMMISSION_TIME       ((uint32_t)878)
 #define VID_CLEAR_IP_ADDRESSES      ((uint32_t)879)
+#define VID_INCIDENT_ID             ((uint32_t)880)
+#define VID_INCIDENT_STATE          ((uint32_t)881)
+#define VID_INCIDENT_TITLE          ((uint32_t)882)
+#define VID_INCIDENT_DESCRIPTION    ((uint32_t)883)
+#define VID_INCIDENT_ASSIGNED_USER  ((uint32_t)884)
+#define VID_SOURCE_ALARM_ID         ((uint32_t)885)
+#define VID_CLOSED_BY_USER          ((uint32_t)886)
+#define VID_CLOSE_TIME              ((uint32_t)887)
+#define VID_RESOLVE_TIME            ((uint32_t)888)
+#define VID_INCIDENT_DELAY          ((uint32_t)889)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)
@@ -1846,5 +1867,9 @@ typedef struct
 #define VID_UNIT_NAMES_BASE         ((uint32_t)0x10000000)
 
 #define VID_METADATA_BASE           ((uint32_t)0x1F000000)
+
+#define VID_INCIDENT_LIST_BASE      ((uint32_t)0x60000000)
+#define VID_COMMENT_LIST_BASE       ((uint32_t)0x62000000)
+#define VID_ACTIVITY_LIST_BASE      ((uint32_t)0x61000000)
 
 #endif   /* _nms_cscp_h_ */

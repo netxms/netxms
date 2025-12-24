@@ -1450,6 +1450,9 @@ CREATE TABLE event_policy
   rca_script_name varchar(255) null,
   action_script SQL_TEXT null,
   ai_instructions SQL_TEXT null,
+  incident_delay integer not null,  // Delay in seconds for incident creation (0 = immediate)
+  incident_title varchar(255) null,  // Incident title template (null = use alarm message)
+  incident_description varchar(2000) null,  // Incident description template
   PRIMARY KEY(rule_id)
 ) TABLE_TYPE;
 
@@ -1658,6 +1661,78 @@ CREATE TABLE alarm_state_changes
 ) TABLE_TYPE;
 
 CREATE INDEX idx_alarm_state_changes_by_id ON alarm_state_changes(alarm_id);
+
+/*
+** Incidents
+*/
+CREATE TABLE incidents
+(
+   id integer not null,
+   creation_time integer not null,
+   last_change_time integer not null,
+   state integer not null,
+   assigned_user_id integer null,
+   title varchar(255) not null,
+   source_alarm_id integer null,
+   source_object_id integer not null,
+   created_by_user integer not null,
+   resolved_by_user integer null,
+   closed_by_user integer null,
+   resolve_time integer null,
+   close_time integer null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_incidents_state ON incidents(state);
+CREATE INDEX idx_incidents_source_object ON incidents(source_object_id);
+CREATE INDEX idx_incidents_assigned_user ON incidents(assigned_user_id);
+
+/*
+** Incident to alarm mapping
+*/
+CREATE TABLE incident_alarms
+(
+   incident_id integer not null,
+   alarm_id integer not null,
+   linked_time integer not null,
+   linked_by_user integer not null,
+   PRIMARY KEY(incident_id, alarm_id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_incident_alarms_alarm ON incident_alarms(alarm_id);
+
+/*
+** Incident comments
+*/
+CREATE TABLE incident_comments
+(
+   id integer not null,
+   incident_id integer not null,
+   creation_time integer not null,
+   user_id integer not null,
+   comment_text SQL_TEXT not null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_incident_comments_incident ON incident_comments(incident_id);
+
+/*
+** Incident activity log
+*/
+CREATE TABLE incident_activity_log
+(
+   id integer not null,
+   incident_id integer not null,
+   timestamp integer not null,
+   user_id integer not null,
+   activity_type integer not null,
+   old_value varchar(255) null,
+   new_value varchar(255) null,
+   details varchar(1000) null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_incident_activity_incident ON incident_activity_log(incident_id);
 
 /**
  * SNMP trap configuration

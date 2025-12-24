@@ -191,6 +191,26 @@
 #define ALARM_HELPDESK_CLOSED    2
 
 /**
+ * Incident states
+ */
+#define INCIDENT_STATE_OPEN          0
+#define INCIDENT_STATE_IN_PROGRESS   1
+#define INCIDENT_STATE_BLOCKED       2
+#define INCIDENT_STATE_RESOLVED      3
+#define INCIDENT_STATE_CLOSED        4
+
+/**
+ * Incident activity types (for activity log)
+ */
+#define INCIDENT_ACTIVITY_CREATED       0
+#define INCIDENT_ACTIVITY_STATE_CHANGE  1
+#define INCIDENT_ACTIVITY_ASSIGNED      2
+#define INCIDENT_ACTIVITY_ALARM_LINKED  3
+#define INCIDENT_ACTIVITY_ALARM_UNLINKED 4
+#define INCIDENT_ACTIVITY_COMMENT_ADDED 5
+#define INCIDENT_ACTIVITY_UPDATED       6
+
+/**
  * Node capabilities
  */
 #define NC_IS_SNMP                _ULL(0x0000000001)
@@ -763,6 +783,11 @@ enum SessionState
 #define RCC_TCP_PROXY_DISABLED            ((uint32_t)177)
 #define RCC_INVALID_TASK_ID               ((uint32_t)178)
 #define RCC_INVALID_CHAT_ID               ((uint32_t)179)
+#define RCC_INCIDENT_NOT_FOUND            ((uint32_t)180)
+#define RCC_INCIDENT_CLOSED               ((uint32_t)181)
+#define RCC_ALARM_ALREADY_IN_INCIDENT     ((uint32_t)182)
+#define RCC_INVALID_INCIDENT_STATE        ((uint32_t)183)
+#define RCC_COMMENT_REQUIRED              ((uint32_t)184)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
@@ -905,6 +930,7 @@ enum SessionState
 #define OBJECT_ACCESS_EDIT_RESP_USERS  0x00400000
 #define OBJECT_ACCESS_DELEGATED_READ   0x00800000
 #define OBJECT_ACCESS_MANAGE_POLICIES  0x01000000
+#define OBJECT_ACCESS_MANAGE_INCIDENTS 0x02000000
 
 /**
  * Object sync flags
@@ -1191,6 +1217,7 @@ enum AggregationFunction
 #define RF_START_DOWNTIME        0x010000
 #define RF_END_DOWNTIME          0x020000
 #define RF_REQUEST_AI_COMMENT    0x040000
+#define RF_CREATE_INCIDENT       0x080000
 
 /**
  * Network map types

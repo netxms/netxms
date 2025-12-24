@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nms_incident.h>
 #include <nxcore_ps.h>
 
 #define DEBUG_TAG _T("event.policy")
@@ -52,6 +53,9 @@ EPRule::EPRule(uint32_t id) : m_timeFrames(0, 16, Ownership::True), m_actions(0,
 	m_alarmTimeoutEvent = EVENT_ALARM_TIMEOUT;
 	m_downtimeTag[0] = 0;
 	m_aiAgentInstructions = nullptr;
+   m_incidentDelay = 0;
+   m_incidentTitle = nullptr;
+   m_incidentDescription = nullptr;
 }
 
 /**
@@ -250,6 +254,11 @@ EPRule::EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5) :
          }
       }
    }
+
+   // Incident creation settings
+   m_incidentDelay = config.getSubEntryValueAsUInt(_T("incidentDelay"));
+   m_incidentTitle = MemCopyString(config.getSubEntryValue(_T("incidentTitle")));
+   m_incidentDescription = MemCopyString(config.getSubEntryValue(_T("incidentDescription")));
 }
 
 /**
@@ -500,6 +509,13 @@ EPRule::EPRule(json_t *json, ImportContext *context) : m_timeFrames(0, 16, Owner
    {
       m_actionScript = nullptr;
    }
+
+   // Incident creation settings
+   m_incidentDelay = json_object_get_uint32(json, "incidentDelay");
+   String incidentTitle = json_object_get_string(json, "incidentTitle", nullptr);
+   m_incidentTitle = incidentTitle.isEmpty() ? nullptr : MemCopyString(incidentTitle);
+   String incidentDescription = json_object_get_string(json, "incidentDescription", nullptr);
+   m_incidentDescription = incidentDescription.isEmpty() ? nullptr : MemCopyString(incidentDescription);
 }
 
 /**
@@ -507,7 +523,7 @@ EPRule::EPRule(json_t *json, ImportContext *context) : m_timeFrames(0, 16, Owner
  * Assuming the following field order:
  * rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,
  * alarm_timeout,alarm_timeout_event,rca_script_name,alarm_impact,action_script,
- * downtime_tag,ai_instructions
+ * downtime_tag,ai_instructions,incident_delay,incident_title,incident_description
  */
 EPRule::EPRule(DB_RESULT hResult, int row) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
 {
@@ -550,6 +566,9 @@ EPRule::EPRule(DB_RESULT hResult, int row) : m_timeFrames(0, 16, Ownership::True
    }
    DBGetField(hResult, row, 13, m_downtimeTag, MAX_DOWNTIME_TAG_LENGTH);
    m_aiAgentInstructions = DBGetField(hResult, row, 14, nullptr, 0);
+   m_incidentDelay = DBGetFieldULong(hResult, row, 15);
+   m_incidentTitle = DBGetField(hResult, row, 16, nullptr, 0);
+   m_incidentDescription = DBGetField(hResult, row, 17, nullptr, 0);
 }
 
 /**
@@ -652,6 +671,10 @@ EPRule::EPRule(const NXCPMessage& msg) : m_timeFrames(0, 16, Ownership::True), m
    }
 
    m_aiAgentInstructions = msg.getFieldAsString(VID_AI_AGENT_INSTRUCTIONS);
+
+   m_incidentDelay = msg.getFieldAsUInt32(VID_INCIDENT_DELAY);
+   m_incidentTitle = msg.getFieldAsString(VID_INCIDENT_TITLE);
+   m_incidentDescription = msg.getFieldAsString(VID_INCIDENT_DESCRIPTION);
 }
 
 /**
@@ -669,6 +692,8 @@ EPRule::~EPRule()
    MemFree(m_actionScriptSource);
    delete m_actionScript;
    MemFree(m_aiAgentInstructions);
+   MemFree(m_incidentTitle);
+   MemFree(m_incidentDescription);
 }
 
 
@@ -1111,6 +1136,60 @@ bool EPRule::processEvent(Event *event) const
 }
 
 /**
+ * Create incident from alarm (immediate or delayed)
+ */
+void EPRule::createIncidentFromAlarm(Event *event, uint32_t alarmId) const
+{
+   if (m_incidentDelay == 0)
+   {
+      // Immediate incident creation
+      String title = (m_incidentTitle != nullptr && m_incidentTitle[0] != 0)
+         ? event->expandText(m_incidentTitle)
+         : String(event->getLastAlarmMessage());
+
+      String description = (m_incidentDescription != nullptr)
+         ? event->expandText(m_incidentDescription)
+         : String();
+
+      CreateIncident(event->getSourceId(), title.cstr(),
+         description.isEmpty() ? nullptr : description.cstr(), alarmId, 0, nullptr);
+   }
+   else
+   {
+      // Schedule delayed incident creation using scheduler
+      StringBuffer persistentData;
+      persistentData.appendFormattedString(_T("alarm=%u;object=%u"), alarmId, event->getSourceId());
+
+      if (m_incidentTitle != nullptr && m_incidentTitle[0] != 0)
+      {
+         String title = event->expandText(m_incidentTitle);
+         persistentData.append(_T(";title="));
+         persistentData.append(title);
+      }
+      if (m_incidentDescription != nullptr)
+      {
+         String desc = event->expandText(m_incidentDescription);
+         persistentData.append(_T(";description="));
+         persistentData.append(desc);
+      }
+
+      TCHAR comments[256];
+      _sntprintf(comments, 256, _T("Delayed incident creation for alarm %u"), alarmId);
+
+      AddOneTimeScheduledTask(INCIDENT_CREATE_TASK_ID,
+         time(nullptr) + m_incidentDelay,
+         persistentData.cstr(),
+         nullptr,  // No transient data needed
+         0,        // userId
+         event->getSourceId(),
+         SYSTEM_ACCESS_FULL,
+         comments,
+         nullptr,  // No key needed
+         true);    // System task
+   }
+}
+
+/**
  * Generate alarm from event
  */
 uint32_t EPRule::generateAlarm(Event *event) const
@@ -1160,6 +1239,12 @@ uint32_t EPRule::generateAlarm(Event *event) const
                      m_alarmTimeout, m_alarmTimeoutEvent, parentAlarmId, m_rcaScriptName, event, 0, m_alarmCategoryList,
                      (m_flags & RF_CREATE_TICKET) != 0, (m_flags & RF_REQUEST_AI_COMMENT) != 0);
 	   event->setLastAlarmMessage(message);
+
+      // Create incident if RF_CREATE_INCIDENT flag is set and alarm was created
+      if ((m_flags & RF_CREATE_INCIDENT) && (alarmId != 0))
+      {
+         createIncidentFromAlarm(event, alarmId);
+      }
 	}
 
    event->setLastAlarmKey(key);
@@ -1370,7 +1455,8 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
    // General attributes
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_impact,")
                                   _T("alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,rca_script_name,")
-                                  _T("action_script,downtime_tag,ai_instructions) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+                                  _T("action_script,downtime_tag,ai_instructions,incident_delay,incident_title,incident_description) ")
+                                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -1388,6 +1474,9 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
       DBBind(hStmt, 13, DB_SQLTYPE_TEXT, m_actionScriptSource, DB_BIND_STATIC);
       DBBind(hStmt, 14, DB_SQLTYPE_VARCHAR, m_downtimeTag, DB_BIND_STATIC);
       DBBind(hStmt, 15, DB_SQLTYPE_TEXT, m_aiAgentInstructions, DB_BIND_STATIC);
+      DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_incidentDelay);
+      DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_incidentTitle, DB_BIND_STATIC, 255);
+      DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_incidentDescription, DB_BIND_STATIC, 2000);
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -1620,6 +1709,9 @@ void EPRule::fillMessage(NXCPMessage *msg) const
    m_pstorageDeleteActions.fillMessage(msg, VID_PSTORAGE_DELETE_LIST_BASE, VID_NUM_DELETE_PSTORAGE);
    m_customAttributeSetActions.fillMessage(msg, VID_CUSTOM_ATTR_SET_LIST_BASE, VID_CUSTOM_ATTR_SET_COUNT);
    m_customAttributeDeleteActions.fillMessage(msg, VID_CUSTOM_ATTR_DEL_LIST_BASE, VID_CUSTOM_ATTR_DEL_COUNT);
+   msg->setField(VID_INCIDENT_DELAY, m_incidentDelay);
+   msg->setField(VID_INCIDENT_TITLE, CHECK_NULL_EX(m_incidentTitle));
+   msg->setField(VID_INCIDENT_DESCRIPTION, CHECK_NULL_EX(m_incidentDescription));
 }
 
 /**
@@ -1747,6 +1839,9 @@ json_t *EPRule::createExportRecord() const
    json_object_set_new(root, "customAttributeSetActions", m_customAttributeSetActions.toJson());
    json_object_set_new(root, "customAttributeDeleteActions", m_customAttributeDeleteActions.toJson());
    json_object_set_new(root, "aiAgentInstructions", json_string_t(m_aiAgentInstructions));
+   json_object_set_new(root, "incidentDelay", json_integer(m_incidentDelay));
+   json_object_set_new(root, "incidentTitle", json_string_t(m_incidentTitle));
+   json_object_set_new(root, "incidentDescription", json_string_t(m_incidentDescription));
 
    return root;
 }
@@ -1871,7 +1966,8 @@ bool EventProcessingPolicy::loadFromDB()
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    hResult = DBSelect(hdb, L"SELECT rule_id,rule_guid,flags,comments,alarm_message,"
                            L"alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,"
-                           L"rca_script_name,alarm_impact,action_script,downtime_tag,ai_instructions "
+                           L"rca_script_name,alarm_impact,action_script,downtime_tag,ai_instructions,"
+                           L"incident_delay,incident_title,incident_description "
                            L"FROM event_policy ORDER BY rule_id");
    if (hResult != nullptr)
    {
