@@ -202,6 +202,11 @@
 #define EVENT_IF_SPEED_BELOW_MAXIMUM                148
 #define EVENT_INTERFACE_UNMANAGED                   149
 #define EVENT_NC_QUEUE_OVERFLOW                     150
+#define EVENT_INCIDENT_OPENED                       151
+#define EVENT_INCIDENT_STATE_CHANGED                152
+#define EVENT_INCIDENT_ASSIGNED                     153
+#define EVENT_INCIDENT_ALARM_LINKED                 154
+#define EVENT_INCIDENT_ALARM_UNLINKED               155
 
 #define EVENT_SNMP_UNMATCHED_TRAP                   500
 #define EVENT_SNMP_COLD_START                       501

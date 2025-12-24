@@ -78,6 +78,7 @@ import org.netxms.nxmc.modules.events.propertypages.RuleActionScript;
 import org.netxms.nxmc.modules.events.propertypages.RuleAiAgentInstructions;
 import org.netxms.nxmc.modules.events.propertypages.RuleAlarm;
 import org.netxms.nxmc.modules.events.propertypages.RuleComments;
+import org.netxms.nxmc.modules.events.propertypages.RuleIncident;
 import org.netxms.nxmc.modules.events.propertypages.RuleCondition;
 import org.netxms.nxmc.modules.events.propertypages.RuleCustomAttribute;
 import org.netxms.nxmc.modules.events.propertypages.RuleDowntimeControl;
@@ -805,6 +806,15 @@ public class RuleEditor extends Composite
          {
             createLabel(clientArea, 1, false, i18n.tr("and add AI assistant's comment"), listener);
          }
+
+         if ((rule.getFlags() & EventProcessingPolicyRule.CREATE_INCIDENT) != 0)
+         {
+            final MouseListener incidentListener = createMouseListener("Incident");
+            if (rule.getIncidentDelay() > 0)
+               createLabel(clientArea, 1, false, String.format(i18n.tr("and create incident after %d seconds delay"), rule.getIncidentDelay()), incidentListener);
+            else
+               createLabel(clientArea, 1, false, i18n.tr("and create incident immediately"), incidentListener);
+         }
       }
 
       /* downtime */
@@ -1070,6 +1080,7 @@ public class RuleEditor extends Composite
       pm.addTo("Condition", new PreferenceNode("FilteringScript", new RuleFilteringScript(this)));
       pm.addToRoot(new PreferenceNode("Action", new RuleAction(this)));
       pm.addTo("Action", new PreferenceNode("Alarm", new RuleAlarm(this)));
+      pm.addTo("Action", new PreferenceNode("Incident", new RuleIncident(this)));
       pm.addTo("Action", new PreferenceNode("Downtime", new RuleDowntimeControl(this)));
       pm.addTo("Action", new PreferenceNode("PersistentStorage", new RulePersistentStorage(this)));
       pm.addTo("Action", new PreferenceNode("CustomAttributes", new RuleCustomAttribute(this)));
