@@ -833,6 +833,10 @@ public class AclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
       cell.setCellValue("Manage Policies");
 
+      cell = headerRow.createCell(PermissionsSheetCells.MANAGE_INCIDENTS.ordinal());
+      cell.setCellStyle(headerStyle);
+      cell.setCellValue("Manage Incidents");
+
       sheet.setColumnWidth(PermissionsSheetCells.OBJECT_NAME.ordinal(), 20480);
       sheet.setColumnWidth(PermissionsSheetCells.USER_OR_GROUP_NAME.ordinal(), 4096);
 
@@ -869,6 +873,7 @@ public class AclReport extends AbstractAclReport
          createPermissionCell(row, PermissionsSheetCells.SEND_EVENTS, UserAccessRights.OBJECT_ACCESS_SEND_EVENTS, element);
          createPermissionCell(row, PermissionsSheetCells.PUSH_DATA, UserAccessRights.OBJECT_ACCESS_PUSH_DATA, element);
          createPermissionCell(row, PermissionsSheetCells.MANAGE_POLICIES, UserAccessRights.OBJECT_ACCESS_MANAGE_POLICIES, element);
+         createPermissionCell(row, PermissionsSheetCells.MANAGE_INCIDENTS, UserAccessRights.OBJECT_ACCESS_MANAGE_INCIDENTS, element);
       }
    }
 }

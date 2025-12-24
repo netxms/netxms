@@ -102,4 +102,5 @@ public final class UserAccessRights
    public static final int OBJECT_ACCESS_EDIT_RESP_USERS  = 0x00400000; 
    public static final int OBJECT_ACCESS_DELEGATED_READ   = 0x00800000;
    public static final int OBJECT_ACCESS_MANAGE_POLICIES  = 0x01000000;
+   public static final int OBJECT_ACCESS_MANAGE_INCIDENTS = 0x02000000;
 }

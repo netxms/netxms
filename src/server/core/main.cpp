@@ -35,6 +35,7 @@
 #include <nxnet.h>
 #include <nxstat.h>
 #include <netxms-editline.h>
+#include <nms_incident.h>
 
 #ifdef _WIN32
 #include <errno.h>
@@ -1265,6 +1266,10 @@ retry_db_lock:
    if (!InitAlarmManager())
       return false;
 
+   // Initialize incidents
+   if (!InitIncidentManager())
+      return false;
+
    // Initialize objects infrastructure and load objects from database
    LoadGeoAreas();
    LoadNetworkDeviceDrivers();
@@ -1391,6 +1396,7 @@ retry_db_lock:
    RegisterSchedulerTaskHandler(RELOAD_CRLS_TASK_ID, ReloadCRLs, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(RENEW_AGENT_CERTIFICATES_TASK_ID, RenewAgentCertificates, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, ProcessUnboundTunnels, 0); //No access right because it will be used only by server
+   RegisterSchedulerTaskHandler(INCIDENT_CREATE_TASK_ID, CreateIncidentFromAlarmTask, 0); //No access right because it will be used only by server
    InitializeTaskScheduler();
 
    // Schedule unbound agent tunnel processing and automatic agent certificate renewal
@@ -1534,6 +1540,7 @@ void NXCORE_EXPORTABLE Shutdown()
    CleanupActions();
    ShutdownEventSubsystem();
    ShutdownAlarmManager();
+   ShutdownIncidentManager();
    ShutdownNotificationChannels();
    nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 1, _T("Event processing stopped"));
 

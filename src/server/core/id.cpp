@@ -38,7 +38,7 @@ void LoadLastEventId(DB_HANDLE hdb);
 /**
  * Constants
  */
-#define NUMBER_OF_GROUPS   32
+#define NUMBER_OF_GROUPS   35
 
 /**
  * Static data
@@ -53,7 +53,8 @@ static uint32_t s_freeIdTable[NUMBER_OF_GROUPS] =
       1, 1, 1, 1,
       1, 1, 1, 1,
       1, 1, 1, 1,
-      1, 1, 1, 1
+      1, 1, 1, 1,
+      1, 1, 1
    };
 static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
    {
@@ -64,42 +65,46 @@ static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
       0x7FFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
+      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
+      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
    };
-static const TCHAR *s_groupNames[NUMBER_OF_GROUPS] =
+static const wchar_t *s_groupNames[NUMBER_OF_GROUPS] =
 {
-   _T("Network Objects"),
-   _T("Events"),
-   _T("Data Collection Items"),
-   _T("SNMP Trap"),
-   _T("Actions"),
-   _T("Data Collection Thresholds"),
-   _T("Users"),
-   _T("User Groups"),
-   _T("Alarms"),
-   _T("Alarm Notes"),
-   _T("Packages"),
-   _T("Business Service Tickets"),
-   _T("Object Tools"),
-   _T("Scripts"),
-   _T("Agent Configurations"),
-   _T("Graphs"),
-   _T("Authentication Tokens"),
-   _T("Mapping Tables"),
-   _T("DCI Summary Tables"),
-   _T("Alarm Categories"),
-   _T("User Agent Messages"),
-   _T("Passive Rack Elements"),
-   _T("Physical Links"),
-   _T("Web Service Definitions"),
-   _T("Object Categories"),
-   _T("Geographical Areas"),
-   _T("SSH Keys"),
-   _T("Object Queries"),
-   _T("Business Service Checks"),
-   _T("Business Service Downtime Records"),
-   _T("Maintenance journal"),
-   _T("Package Deployment Jobs")
+   L"Network Objects",
+   L"Events",
+   L"Data Collection Items",
+   L"SNMP Trap",
+   L"Actions",
+   L"Data Collection Thresholds",
+   L"Users",
+   L"User Groups",
+   L"Alarms",
+   L"Alarm Notes",
+   L"Packages",
+   L"Business Service Tickets",
+   L"Object Tools",
+   L"Scripts",
+   L"Agent Configurations",
+   L"Graphs",
+   L"Authentication Tokens",
+   L"Mapping Tables",
+   L"DCI Summary Tables",
+   L"Alarm Categories",
+   L"User Agent Messages",
+   L"Passive Rack Elements",
+   L"Physical Links",
+   L"Web Service Definitions",
+   L"Object Categories",
+   L"Geographical Areas",
+   L"SSH Keys",
+   L"Object Queries",
+   L"Business Service Checks",
+   L"Business Service Downtime Records",
+   L"Maintenance journal",
+   L"Package Deployment Jobs",
+   L"Incidents",
+   L"Incident Comments",
+   L"Incident Activity Records"
 };
 
 /**
@@ -432,6 +437,33 @@ bool InitIdTable()
       DBFreeResult(hResult);
    }
 
+   // Get first available incident id
+   hResult = DBSelect(hdb, _T("SELECT max(id) FROM incidents"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_freeIdTable[IDG_INCIDENT] = std::max(s_freeIdTable[IDG_INCIDENT], DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available incident comment id
+   hResult = DBSelect(hdb, _T("SELECT max(id) FROM incident_comments"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_freeIdTable[IDG_INCIDENT_COMMENT] = std::max(s_freeIdTable[IDG_INCIDENT_COMMENT], DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available incident activity record id
+   hResult = DBSelect(hdb, _T("SELECT max(id) FROM incident_activity_log"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_freeIdTable[IDG_INCIDENT_ACTIVITY] = std::max(s_freeIdTable[IDG_INCIDENT_ACTIVITY], DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
    LoadLastEventId(hdb);
 
    DBConnectionPoolReleaseConnection(hdb);
@@ -448,7 +480,7 @@ uint32_t NXCORE_EXPORTABLE CreateUniqueId(int group)
    if (s_freeIdTable[group] == s_idLimits[group])
    {
       id = 0;   // ID zero means _T("no unique ID available")
-      nxlog_write(NXLOG_ERROR, _T("Unable to assign unique ID to object in group \"%s\". You should perform database optimization to fix that."), s_groupNames[group]);
+      nxlog_write(NXLOG_ERROR, L"Unable to assign unique ID to object in group \"%s\". You should perform database optimization to fix that.", s_groupNames[group]);
    }
    else
    {

@@ -51,6 +51,7 @@ public class EventProcessingPolicyRule
    public static final int START_DOWNTIME      = 0x010000;
    public static final int END_DOWNTIME        = 0x020000;
    public static final int REQUEST_AI_COMMENT  = 0x040000;
+   public static final int CREATE_INCIDENT     = 0x080000;
 
    public static final int SEVERITY_ANY = SEVERITY_NORMAL | SEVERITY_WARNING | SEVERITY_MINOR | SEVERITY_MAJOR | SEVERITY_CRITICAL;
 
@@ -69,6 +70,9 @@ public class EventProcessingPolicyRule
    private List<Long> alarmCategoryIds;
    private String rcaScriptName;
    private String downtimeTag;
+   private int incidentDelay;
+   private String incidentTitle;
+   private String incidentDescription;
    private String actionScript;
    private List<ActionExecutionConfiguration> actions;
    private List<String> timerCancellations;
@@ -100,6 +104,9 @@ public class EventProcessingPolicyRule
       alarmCategoryIds = new ArrayList<Long>(0);
       rcaScriptName = null;
       downtimeTag = "";
+      incidentDelay = 0;
+      incidentTitle = "";
+      incidentDescription = "";
       actionScript = null;
       actions = new ArrayList<ActionExecutionConfiguration>(0);
       timerCancellations = new ArrayList<String>(0);
@@ -136,6 +143,9 @@ public class EventProcessingPolicyRule
       alarmCategoryIds = src.alarmCategoryIds;
       rcaScriptName = src.rcaScriptName;
       downtimeTag = src.downtimeTag;
+      incidentDelay = src.incidentDelay;
+      incidentTitle = src.incidentTitle;
+      incidentDescription = src.incidentDescription;
       actionScript = src.actionScript;
       actions = new ArrayList<ActionExecutionConfiguration>(src.actions.size());
       for(ActionExecutionConfiguration d : src.actions)
@@ -179,6 +189,9 @@ public class EventProcessingPolicyRule
       alarmCategoryIds = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ALARM_CATEGORY_ID));
       rcaScriptName = msg.getFieldAsString(NXCPCodes.VID_RCA_SCRIPT_NAME);
       downtimeTag = msg.getFieldAsString(NXCPCodes.VID_DOWNTIME_TAG);
+      incidentDelay = msg.getFieldAsInt32(NXCPCodes.VID_INCIDENT_DELAY);
+      incidentTitle = msg.getFieldAsString(NXCPCodes.VID_INCIDENT_TITLE);
+      incidentDescription = msg.getFieldAsString(NXCPCodes.VID_INCIDENT_DESCRIPTION);
       actionScript = msg.getFieldAsString(NXCPCodes.VID_ACTION_SCRIPT);
       aiAgentInstructions = msg.getFieldAsString(NXCPCodes.VID_AI_AGENT_INSTRUCTIONS);
       comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
@@ -242,6 +255,9 @@ public class EventProcessingPolicyRule
       msg.setField(NXCPCodes.VID_ALARM_CATEGORY_ID, alarmCategoryIds);
       msg.setField(NXCPCodes.VID_RCA_SCRIPT_NAME, rcaScriptName);
       msg.setField(NXCPCodes.VID_DOWNTIME_TAG, downtimeTag);
+      msg.setFieldInt32(NXCPCodes.VID_INCIDENT_DELAY, incidentDelay);
+      msg.setField(NXCPCodes.VID_INCIDENT_TITLE, incidentTitle);
+      msg.setField(NXCPCodes.VID_INCIDENT_DESCRIPTION, incidentDescription);
       msg.setField(NXCPCodes.VID_ACTION_SCRIPT, actionScript);
       msg.setField(NXCPCodes.VID_AI_AGENT_INSTRUCTIONS, aiAgentInstructions);
 
@@ -717,6 +733,66 @@ public class EventProcessingPolicyRule
    public void setDowntimeTag(String downtimeTag)
    {
       this.downtimeTag = downtimeTag;
+   }
+
+   /**
+    * Get incident creation delay (in seconds).
+    *
+    * @return incident creation delay in seconds (0 = immediate)
+    */
+   public int getIncidentDelay()
+   {
+      return incidentDelay;
+   }
+
+   /**
+    * Set incident creation delay.
+    *
+    * @param incidentDelay incident creation delay in seconds (0 = immediate)
+    */
+   public void setIncidentDelay(int incidentDelay)
+   {
+      this.incidentDelay = incidentDelay;
+   }
+
+   /**
+    * Get incident title template.
+    *
+    * @return incident title template (empty string means use alarm message)
+    */
+   public String getIncidentTitle()
+   {
+      return incidentTitle;
+   }
+
+   /**
+    * Set incident title template.
+    *
+    * @param incidentTitle incident title template (null or empty string means use alarm message)
+    */
+   public void setIncidentTitle(String incidentTitle)
+   {
+      this.incidentTitle = (incidentTitle != null) ? incidentTitle : "";
+   }
+
+   /**
+    * Get incident description template.
+    *
+    * @return incident description template
+    */
+   public String getIncidentDescription()
+   {
+      return incidentDescription;
+   }
+
+   /**
+    * Set incident description template.
+    *
+    * @param incidentDescription incident description template
+    */
+   public void setIncidentDescription(String incidentDescription)
+   {
+      this.incidentDescription = (incidentDescription != null) ? incidentDescription : "";
    }
 
    /**

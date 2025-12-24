@@ -233,6 +233,7 @@ public class AccessControl extends ObjectPropertyPage
       createAccessCheck(rights, i18n.tr("Control maintenance mode"), UserAccessRights.OBJECT_ACCESS_MAINTENANCE);
       createAccessCheck(rights, i18n.tr("Edit maintenance journal"), UserAccessRights.OBJECT_ACCESS_EDIT_MNT_JOURNAL);
       createAccessCheck(rights, i18n.tr("Manage policies"), UserAccessRights.OBJECT_ACCESS_MANAGE_POLICIES);
+      createAccessCheck(rights, i18n.tr("Manage incidents"), UserAccessRights.OBJECT_ACCESS_MANAGE_INCIDENTS);
 
       userList.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
