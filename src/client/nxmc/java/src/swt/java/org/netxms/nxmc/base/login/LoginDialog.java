@@ -109,6 +109,9 @@ public class LoginDialog extends Dialog
    {
       PreferenceStore settings = PreferenceStore.getInstance();
 
+      // Migrate global settings to per-server storage if needed
+      migrateGlobalSettings();
+
       Composite dialogArea = new Composite(parent, SWT.NONE);
       dialogArea.setLayoutData(new GridData(GridData.FILL_BOTH));
       applyDialogFont(dialogArea);
@@ -193,20 +196,34 @@ public class LoginDialog extends Dialog
 			   selectCertificate();
 			}
 		});
-      
-      // Read field data
+
+      // Read server history and set last used server
       comboServer.setItems(settings.getAsStringArray("Connect.ServerHistory"));
-      String text = settings.getAsString("Connect.Server");
-      if (text != null)
-         comboServer.setText(text);
+      String lastServer = settings.getAsString("Connect.Server");
+      if (lastServer != null)
+         comboServer.setText(lastServer);
 
-      text = settings.getAsString("Connect.Login");
-      if (text != null)
-         textLogin.setText(text);
+      // Add listener to load credentials when server selection changes
+      comboServer.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            loadServerCredentials(comboServer.getText());
+         }
+      });
 
-      authMethod = AuthenticationType.getByValue(settings.getAsInteger("Connect.AuthMethod", AuthenticationType.PASSWORD.getValue()));
-      comboAuth.select(authMethod.getValue());
-      selectAuthenticationField(false);
+      // Load credentials for the current server
+      if (lastServer != null && !lastServer.isEmpty())
+      {
+         loadServerCredentials(lastServer);
+      }
+      else
+      {
+         // No server selected, use defaults
+         authMethod = AuthenticationType.PASSWORD;
+         comboAuth.select(authMethodIndex(authMethod));
+         selectAuthenticationField(false);
+      }
 
       // Set initial focus
       if (comboServer.getText().isEmpty())
@@ -269,17 +286,18 @@ public class LoginDialog extends Dialog
    	}
 
       PreferenceStore settings = PreferenceStore.getInstance();
+      String currentServer = comboServer.getText();
 
+      // Update server history
       HashSet<String> items = new HashSet<String>();
       items.addAll(Arrays.asList(comboServer.getItems()));
-      items.add(comboServer.getText());
+      items.add(currentServer);
 
-      settings.set("Connect.Server", comboServer.getText());
+      settings.set("Connect.Server", currentServer);
       settings.set("Connect.ServerHistory", items);
-      settings.set("Connect.Login", textLogin.getText());
-      settings.set("Connect.AuthMethod", authMethod.getValue());
-      if (certificate != null)
-         settings.set("Connect.Certificate", ((X509Certificate)certificate).getSubjectX500Principal().toString());
+
+      // Save credentials for this specific server
+      saveServerCredentials(currentServer);
 
       password = textPassword.getText();
       super.okPressed();
@@ -424,5 +442,109 @@ public class LoginDialog extends Dialog
          default:
             return AuthenticationType.PASSWORD;
       }
+   }
+
+   /**
+    * Normalize server name to create a valid preference key.
+    * Converts to lowercase and replaces special characters with underscores.
+    *
+    * @param server server name or address
+    * @return normalized key suitable for use in preference storage
+    */
+   private static String normalizeServerKey(String server)
+   {
+      if (server == null || server.isEmpty())
+         return "";
+      return server.toLowerCase().replace(':', '_').replace('.', '_').replace(' ', '_');
+   }
+
+   /**
+    * Get preference key for server-specific setting.
+    *
+    * @param server server name
+    * @param property property name
+    * @return full preference key
+    */
+   private static String getServerPreferenceKey(String server, String property)
+   {
+      return "Connect.Servers." + normalizeServerKey(server) + "." + property;
+   }
+
+   /**
+    * Load credentials for the specified server and populate form fields.
+    *
+    * @param server server name to load credentials for
+    */
+   private void loadServerCredentials(String server)
+   {
+      if (server == null || server.isEmpty())
+         return;
+
+      PreferenceStore settings = PreferenceStore.getInstance();
+
+      String login = settings.getAsString(getServerPreferenceKey(server, "Login"));
+      if (login != null)
+         textLogin.setText(login);
+      else
+         textLogin.setText("");
+
+      int authMethodValue = settings.getAsInteger(getServerPreferenceKey(server, "AuthMethod"), AuthenticationType.PASSWORD.getValue());
+      authMethod = AuthenticationType.getByValue(authMethodValue);
+      comboAuth.select(authMethodIndex(authMethod));
+      selectAuthenticationField(true);
+   }
+
+   /**
+    * Save current credentials for the specified server.
+    *
+    * @param server server name to save credentials for
+    */
+   private void saveServerCredentials(String server)
+   {
+      if (server == null || server.isEmpty())
+         return;
+
+      PreferenceStore settings = PreferenceStore.getInstance();
+
+      settings.set(getServerPreferenceKey(server, "Login"), textLogin.getText());
+      settings.set(getServerPreferenceKey(server, "AuthMethod"), authMethod.getValue());
+      if (certificate != null)
+         settings.set(getServerPreferenceKey(server, "Certificate"), ((X509Certificate)certificate).getSubjectX500Principal().toString());
+   }
+
+   /**
+    * Migrate global login settings to per-server storage.
+    * Called once when upgrading from older version that stored credentials globally.
+    */
+   private void migrateGlobalSettings()
+   {
+      PreferenceStore settings = PreferenceStore.getInstance();
+
+      // Check if migration already done
+      if (settings.getAsBoolean("Connect.PerServerCredentialsMigrated", false))
+         return;
+
+      // Get the last used server
+      String lastServer = settings.getAsString("Connect.Server");
+      if (lastServer == null || lastServer.isEmpty())
+      {
+         settings.set("Connect.PerServerCredentialsMigrated", true);
+         return;
+      }
+
+      // Migrate global settings to the last used server
+      String globalLogin = settings.getAsString("Connect.Login");
+      if (globalLogin != null && !globalLogin.isEmpty())
+         settings.set(getServerPreferenceKey(lastServer, "Login"), globalLogin);
+
+      int globalAuthMethod = settings.getAsInteger("Connect.AuthMethod", AuthenticationType.PASSWORD.getValue());
+      settings.set(getServerPreferenceKey(lastServer, "AuthMethod"), globalAuthMethod);
+
+      String globalCert = settings.getAsString("Connect.Certificate");
+      if (globalCert != null && !globalCert.isEmpty())
+         settings.set(getServerPreferenceKey(lastServer, "Certificate"), globalCert);
+
+      // Mark migration as complete
+      settings.set("Connect.PerServerCredentialsMigrated", true);
    }
 }
