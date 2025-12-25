@@ -22,8 +22,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.netxms.client.NXCSession;
-import org.netxms.client.events.Incident;
-import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.events.IncidentSummary;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
@@ -50,8 +49,8 @@ public class IncidentComparator extends ViewerComparator
    @Override
    public int compare(Viewer viewer, Object e1, Object e2)
    {
-      Incident i1 = (Incident)e1;
-      Incident i2 = (Incident)e2;
+      IncidentSummary i1 = (IncidentSummary)e1;
+      IncidentSummary i2 = (IncidentSummary)e2;
 
       int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID");
       int result;
@@ -62,13 +61,13 @@ public class IncidentComparator extends ViewerComparator
             result = Long.compare(i1.getId(), i2.getId());
             break;
          case IncidentList.COLUMN_STATE:
-            result = Integer.compare(i1.getState(), i2.getState());
+            result = Integer.compare(i1.getState().getValue(), i2.getState().getValue());
             break;
          case IncidentList.COLUMN_TITLE:
             result = i1.getTitle().compareToIgnoreCase(i2.getTitle());
             break;
          case IncidentList.COLUMN_SOURCE_OBJECT:
-            result = getObjectName(i1.getSourceObjectId()).compareToIgnoreCase(getObjectName(i2.getSourceObjectId()));
+            result = session.getObjectName(i1.getSourceObjectId()).compareToIgnoreCase(session.getObjectName(i2.getSourceObjectId()));
             break;
          case IncidentList.COLUMN_ASSIGNED_USER:
             result = getUserName(i1.getAssignedUserId()).compareToIgnoreCase(getUserName(i2.getAssignedUserId()));
@@ -80,12 +79,7 @@ public class IncidentComparator extends ViewerComparator
             result = i1.getLastChangeTime().compareTo(i2.getLastChangeTime());
             break;
          case IncidentList.COLUMN_ALARMS:
-            int c1 = (i1.getLinkedAlarmIds() != null) ? i1.getLinkedAlarmIds().length : 0;
-            int c2 = (i2.getLinkedAlarmIds() != null) ? i2.getLinkedAlarmIds().length : 0;
-            result = Integer.compare(c1, c2);
-            break;
-         case IncidentList.COLUMN_COMMENTS:
-            result = Integer.compare(i1.getCommentsCount(), i2.getCommentsCount());
+            result = Integer.compare(i1.getAlarmCount(), i2.getAlarmCount());
             break;
          default:
             result = 0;
@@ -93,17 +87,6 @@ public class IncidentComparator extends ViewerComparator
       }
 
       return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
-   }
-
-   /**
-    * Get object name by ID
-    */
-   private String getObjectName(long objectId)
-   {
-      if (objectId == 0)
-         return "";
-      AbstractObject object = session.findObjectById(objectId);
-      return (object != null) ? object.getObjectName() : "";
    }
 
    /**

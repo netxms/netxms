@@ -20,37 +20,42 @@ package org.netxms.nxmc.modules.incidents.widgets.helpers;
 
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
-import org.netxms.client.events.Incident;
-import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.constants.IncidentState;
+import org.netxms.client.events.IncidentSummary;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.modules.incidents.widgets.IncidentList;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.tools.ViewerElementUpdater;
 
 /**
  * Label provider for incident list
  */
 public class IncidentListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
+   private TableViewer viewer;
    private NXCSession session;
    private Image[] stateImages;
 
    /**
     * Create label provider
     */
-   public IncidentListLabelProvider()
+   public IncidentListLabelProvider(TableViewer viewer)
    {
+      this.viewer = viewer;
+
       session = Registry.getSession();
 
       stateImages = new Image[5];
-      stateImages[Incident.STATE_OPEN] = ResourceManager.getImage("icons/incident-open.png");
-      stateImages[Incident.STATE_IN_PROGRESS] = ResourceManager.getImage("icons/incident-in-progress.png");
-      stateImages[Incident.STATE_PENDING] = ResourceManager.getImage("icons/incident-pending.png");
-      stateImages[Incident.STATE_RESOLVED] = ResourceManager.getImage("icons/incident-resolved.png");
-      stateImages[Incident.STATE_CLOSED] = ResourceManager.getImage("icons/incident-closed.png");
+      stateImages[IncidentState.OPEN.getValue()] = ResourceManager.getImage("icons/incident-open.png");
+      stateImages[IncidentState.IN_PROGRESS.getValue()] = ResourceManager.getImage("icons/incident-in-progress.png");
+      stateImages[IncidentState.PENDING.getValue()] = ResourceManager.getImage("icons/incident-pending.png");
+      stateImages[IncidentState.RESOLVED.getValue()] = ResourceManager.getImage("icons/incident-resolved.png");
+      stateImages[IncidentState.CLOSED.getValue()] = ResourceManager.getImage("icons/incident-closed.png");
    }
 
    /**
@@ -59,11 +64,10 @@ public class IncidentListLabelProvider extends LabelProvider implements ITableLa
    @Override
    public Image getColumnImage(Object element, int columnIndex)
    {
-      if (columnIndex == IncidentList.COLUMN_STATE)
+      if (columnIndex == 0)
       {
-         int state = ((Incident)element).getState();
-         if (state >= 0 && state < stateImages.length)
-            return stateImages[state];
+         IncidentState state = ((IncidentSummary)element).getState();
+         return stateImages[state.getValue()];
       }
       return null;
    }
@@ -74,49 +78,27 @@ public class IncidentListLabelProvider extends LabelProvider implements ITableLa
    @Override
    public String getColumnText(Object element, int columnIndex)
    {
-      Incident incident = (Incident)element;
+      IncidentSummary incident = (IncidentSummary)element;
       switch(columnIndex)
       {
          case IncidentList.COLUMN_ID:
             return Long.toString(incident.getId());
          case IncidentList.COLUMN_STATE:
-            return incident.getStateName();
+            return incident.getState().name(); // FIXME: localization
          case IncidentList.COLUMN_TITLE:
             return incident.getTitle();
          case IncidentList.COLUMN_SOURCE_OBJECT:
-            return getObjectName(incident.getSourceObjectId());
+            return session.getObjectName(incident.getSourceObjectId());
          case IncidentList.COLUMN_ASSIGNED_USER:
-            return getUserName(incident.getAssignedUserId());
+            AbstractUserObject user = session.findUserDBObjectById(incident.getAssignedUserId(), new ViewerElementUpdater(viewer, element));
+            return (user != null) ? user.getName() : "[" + Integer.toString(incident.getAssignedUserId()) + "]";
          case IncidentList.COLUMN_CREATED_TIME:
             return DateFormatFactory.getDateTimeFormat().format(incident.getCreationTime());
          case IncidentList.COLUMN_LAST_CHANGE_TIME:
             return DateFormatFactory.getDateTimeFormat().format(incident.getLastChangeTime());
          case IncidentList.COLUMN_ALARMS:
-            long[] alarmIds = incident.getLinkedAlarmIds();
-            return (alarmIds != null) ? Integer.toString(alarmIds.length) : "0";
-         case IncidentList.COLUMN_COMMENTS:
-            return Integer.toString(incident.getCommentsCount());
+            return Integer.toString(incident.getAlarmCount());
       }
       return "";
-   }
-
-   /**
-    * Get object name by ID
-    */
-   private String getObjectName(long objectId)
-   {
-      if (objectId == 0)
-         return "";
-      AbstractObject object = session.findObjectById(objectId);
-      return (object != null) ? object.getObjectName() : "[" + Long.toString(objectId) + "]";
-   }
-
-   /**
-    * Get user name by ID
-    */
-   private String getUserName(int userId)
-   {
-      AbstractUserObject user = session.findUserDBObjectById(userId, null);
-      return (user != null) ? user.getName() : "[" + Long.toString(userId) + "]";
    }
 }

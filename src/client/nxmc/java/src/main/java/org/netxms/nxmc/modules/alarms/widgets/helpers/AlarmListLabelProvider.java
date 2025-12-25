@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -130,12 +130,10 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
          case AlarmList.COLUMN_STATE:
             int time = alarm.getAckTime();
             String timeString = time > 0
-                  ? " (" + DateFormatFactory.getDateTimeFormat().format(System.currentTimeMillis() + time * 1000) + ")" //$NON-NLS-1$ //$NON-NLS-2$
-                  : ""; //$NON-NLS-1$
+                  ? " (" + DateFormatFactory.getDateTimeFormat().format(System.currentTimeMillis() + time * 1000) + ")" : "";
             return stateText[alarm.getState()] + timeString;
          case AlarmList.COLUMN_SOURCE:
-            AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
-            return (object != null) ? object.getObjectName() : ("[" + Long.toString(alarm.getSourceObjectId()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+            return session.getObjectName(alarm.getSourceObjectId());
          case AlarmList.COLUMN_ZONE:
             if (session.isZoningEnabled())
             {
@@ -152,8 +150,7 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
          case AlarmList.COLUMN_ACK_BY:
             if (alarm.getState() == Alarm.STATE_OUTSTANDING)
                return null;
-            int userId = (alarm.getState() == Alarm.STATE_ACKNOWLEDGED) ? alarm.getAcknowledgedByUser()
-                  : alarm.getResolvedByUser();
+            int userId = (alarm.getState() == Alarm.STATE_ACKNOWLEDGED) ? alarm.getAcknowledgedByUser() : alarm.getResolvedByUser();
             AbstractUserObject user = session.findUserDBObjectById(userId, new ViewerElementUpdater(viewer, element));
             return (user != null) ? user.getName() : ("[" + Long.toString(userId) + "]");
          case AlarmList.COLUMN_CREATED:

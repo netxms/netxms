@@ -43,6 +43,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.events.Incident;
+import org.netxms.client.events.IncidentSummary;
 import org.netxms.client.users.User;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -74,7 +75,6 @@ public class IncidentList extends Composite
    public static final int COLUMN_CREATED_TIME = 5;
    public static final int COLUMN_LAST_CHANGE_TIME = 6;
    public static final int COLUMN_ALARMS = 7;
-   public static final int COLUMN_COMMENTS = 8;
 
    private final I18n i18n = LocalizationHelper.getI18n(IncidentList.class);
 
@@ -83,7 +83,7 @@ public class IncidentList extends Composite
    private SessionListener sessionListener;
    private SortableTableViewer viewer;
    private IncidentListFilter filter;
-   private Map<Long, Incident> incidents = new HashMap<>();
+   private Map<Long, IncidentSummary> incidents = new HashMap<>();
 
    private Action actionCreate;
    private Action actionResolve;
@@ -116,14 +116,13 @@ public class IncidentList extends Composite
          i18n.tr("Assigned To"),
          i18n.tr("Created"),
          i18n.tr("Last Change"),
-         i18n.tr("Alarms"),
-         i18n.tr("Comments")
+         i18n.tr("Alarms")
       };
-      final int[] columnWidths = { 80, 100, 300, 150, 120, 150, 150, 70, 70 };
+      final int[] columnWidths = { 80, 100, 300, 150, 120, 150, 150, 70 };
 
       viewer = new SortableTableViewer(this, columnNames, columnWidths, COLUMN_ID, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new IncidentListLabelProvider());
+      viewer.setLabelProvider(new IncidentListLabelProvider(viewer));
       viewer.setComparator(new IncidentComparator());
 
       filter = new IncidentListFilter();
@@ -284,10 +283,10 @@ public class IncidentList extends Composite
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final List<Incident> incidentList = session.getIncidents(0);
+            final List<IncidentSummary> incidentList = session.getIncidents(0);
             runInUIThread(() -> {
                incidents.clear();
-               for(Incident i : incidentList)
+               for(IncidentSummary i : incidentList)
                   incidents.put(i.getId(), i);
                viewer.setInput(incidents.values().toArray());
             });
@@ -412,7 +411,7 @@ public class IncidentList extends Composite
       if (dialog.open() != Window.OK)
          return;
 
-      final long userId = dialog.getSelection()[0].getId();
+      final int userId = dialog.getSelection()[0].getId();
       new Job(i18n.tr("Assigning incident"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception

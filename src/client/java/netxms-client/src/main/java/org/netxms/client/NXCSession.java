@@ -85,6 +85,7 @@ import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
+import org.netxms.client.constants.IncidentState;
 import org.netxms.client.constants.ObjectPollType;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.RCC;
@@ -130,6 +131,7 @@ import org.netxms.client.events.EventTemplate;
 import org.netxms.client.events.Incident;
 import org.netxms.client.events.IncidentActivity;
 import org.netxms.client.events.IncidentComment;
+import org.netxms.client.events.IncidentSummary;
 import org.netxms.client.events.SyslogRecord;
 import org.netxms.client.log.Log;
 import org.netxms.client.maps.MapDCIInstance;
@@ -4937,7 +4939,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<Incident> getIncidents(long objectId) throws IOException, NXCException
+   public List<IncidentSummary> getIncidents(long objectId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_INCIDENTS);
       msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, objectId);
@@ -4945,12 +4947,12 @@ public class NXCSession
       final NXCPMessage response = waitForRCC(msg.getMessageId());
 
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
-      List<Incident> list = new ArrayList<Incident>(count);
-      long varId = NXCPCodes.VID_INCIDENT_LIST_BASE;
+      List<IncidentSummary> list = new ArrayList<>(count);
+      long fieldId = NXCPCodes.VID_INCIDENT_LIST_BASE;
       for (int i = 0; i < count; i++)
       {
-         list.add(new Incident(response, varId));
-         varId += 100;  // Each incident uses 100 variable IDs
+         list.add(new IncidentSummary(response, fieldId));
+         fieldId += 10;
       }
       return list;
    }
@@ -5019,11 +5021,11 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void changeIncidentState(long incidentId, int newState) throws IOException, NXCException
+   public void changeIncidentState(long incidentId, IncidentState newState) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_CHANGE_INCIDENT_STATE);
       msg.setFieldUInt32(NXCPCodes.VID_INCIDENT_ID, incidentId);
-      msg.setFieldInt32(NXCPCodes.VID_INCIDENT_STATE, newState);
+      msg.setFieldInt16(NXCPCodes.VID_INCIDENT_STATE, newState.getValue());
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -5037,7 +5039,7 @@ public class NXCSession
     */
    public void resolveIncident(long incidentId) throws IOException, NXCException
    {
-      changeIncidentState(incidentId, Incident.STATE_RESOLVED);
+      changeIncidentState(incidentId, IncidentState.RESOLVED);
    }
 
    /**
@@ -5049,7 +5051,7 @@ public class NXCSession
     */
    public void closeIncident(long incidentId) throws IOException, NXCException
    {
-      changeIncidentState(incidentId, Incident.STATE_CLOSED);
+      changeIncidentState(incidentId, IncidentState.CLOSED);
    }
 
    /**
@@ -5060,11 +5062,11 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void assignIncident(long incidentId, long userId) throws IOException, NXCException
+   public void assignIncident(long incidentId, int userId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_ASSIGN_INCIDENT);
       msg.setFieldUInt32(NXCPCodes.VID_INCIDENT_ID, incidentId);
-      msg.setFieldUInt32(NXCPCodes.VID_USER_ID, userId);
+      msg.setFieldInt32(NXCPCodes.VID_USER_ID, userId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }

@@ -43,7 +43,7 @@ public class IncidentsView extends View
    public IncidentsView()
    {
       super(LocalizationHelper.getI18n(IncidentsView.class).tr("Incidents"),
-            ResourceManager.getImageDescriptor("icons/perspective-incidents.png"), "incidents.main", false);
+            ResourceManager.getImageDescriptor("icons/perspective-incidents.png"), "incidents.main", true);
    }
 
    /**

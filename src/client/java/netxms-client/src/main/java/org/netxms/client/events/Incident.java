@@ -22,24 +22,17 @@ import java.util.Arrays;
 import java.util.Date;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.IncidentState;
 
 /**
  * Incident - operational record for tracking and managing multiple alarms
  */
 public class Incident
 {
-   // Incident states
-   public static final int STATE_OPEN = 0;
-   public static final int STATE_IN_PROGRESS = 1;
-   public static final int STATE_PENDING = 2;
-   public static final int STATE_RESOLVED = 3;
-   public static final int STATE_CLOSED = 4;
-
-   // Incident attributes
    private long id;
    private Date creationTime;
    private Date lastChangeTime;
-   private int state;
+   private IncidentState state;
    private int assignedUserId;
    private String title;
    private String description;
@@ -54,48 +47,6 @@ public class Incident
    private int commentsCount;
 
    /**
-    * Create incident object from NXCP message
-    *
-    * @param msg Source NXCP message
-    * @param baseId Base variable ID for list parsing
-    */
-   public Incident(NXCPMessage msg, long baseId)
-   {
-      id = msg.getFieldAsInt64(baseId);
-      creationTime = new Date(msg.getFieldAsInt64(baseId + 1) * 1000);
-      lastChangeTime = new Date(msg.getFieldAsInt64(baseId + 2) * 1000);
-      state = msg.getFieldAsInt32(baseId + 3);
-      assignedUserId = msg.getFieldAsInt32(baseId + 4);
-      title = msg.getFieldAsString(baseId + 5);
-      description = msg.getFieldAsString(baseId + 6);
-      sourceAlarmId = msg.getFieldAsInt64(baseId + 7);
-      sourceObjectId = msg.getFieldAsInt64(baseId + 8);
-      createdByUser = msg.getFieldAsInt64(baseId + 9);
-      resolvedByUser = msg.getFieldAsInt64(baseId + 10);
-      closedByUser = msg.getFieldAsInt64(baseId + 11);
-      long rt = msg.getFieldAsInt64(baseId + 12);
-      resolveTime = (rt > 0) ? new Date(rt * 1000) : null;
-      long ct = msg.getFieldAsInt64(baseId + 13);
-      closeTime = (ct > 0) ? new Date(ct * 1000) : null;
-      commentsCount = msg.getFieldAsInt32(baseId + 14);
-
-      // Linked alarm IDs are in a separate list
-      int alarmCount = msg.getFieldAsInt32(baseId + 15);
-      if (alarmCount > 0)
-      {
-         linkedAlarmIds = new long[alarmCount];
-         for (int i = 0; i < alarmCount; i++)
-         {
-            linkedAlarmIds[i] = msg.getFieldAsInt64(baseId + 16 + i);
-         }
-      }
-      else
-      {
-         linkedAlarmIds = new long[0];
-      }
-   }
-
-   /**
     * Create incident object from NXCP message (details response)
     *
     * @param msg Source NXCP message
@@ -103,9 +54,9 @@ public class Incident
    public Incident(NXCPMessage msg)
    {
       id = msg.getFieldAsInt64(NXCPCodes.VID_INCIDENT_ID);
-      creationTime = new Date(msg.getFieldAsInt64(NXCPCodes.VID_CREATION_TIME) * 1000);
-      lastChangeTime = new Date(msg.getFieldAsInt64(NXCPCodes.VID_LAST_CHANGE_TIME) * 1000);
-      state = msg.getFieldAsInt32(NXCPCodes.VID_INCIDENT_STATE);
+      creationTime = msg.getFieldAsDate(NXCPCodes.VID_CREATION_TIME);
+      lastChangeTime = msg.getFieldAsDate(NXCPCodes.VID_LAST_CHANGE_TIME);
+      state = IncidentState.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_INCIDENT_STATE));
       assignedUserId = msg.getFieldAsInt32(NXCPCodes.VID_INCIDENT_ASSIGNED_USER);
       title = msg.getFieldAsString(NXCPCodes.VID_INCIDENT_TITLE);
       description = msg.getFieldAsString(NXCPCodes.VID_INCIDENT_DESCRIPTION);
@@ -124,31 +75,6 @@ public class Incident
       linkedAlarmIds = msg.getFieldAsUInt32Array(NXCPCodes.VID_INCIDENT_ALARM_LIST_BASE);
       if (linkedAlarmIds == null)
          linkedAlarmIds = new long[0];
-   }
-
-   /**
-    * Get state name for the given state value
-    *
-    * @param state State value
-    * @return State name
-    */
-   public static String getStateName(int state)
-   {
-      switch(state)
-      {
-         case STATE_OPEN:
-            return "Open";
-         case STATE_IN_PROGRESS:
-            return "In Progress";
-         case STATE_PENDING:
-            return "Pending";
-         case STATE_RESOLVED:
-            return "Resolved";
-         case STATE_CLOSED:
-            return "Closed";
-         default:
-            return "Unknown";
-      }
    }
 
    /**
@@ -186,19 +112,9 @@ public class Incident
     *
     * @return incident state
     */
-   public int getState()
+   public IncidentState getState()
    {
       return state;
-   }
-
-   /**
-    * Get state name for this incident
-    *
-    * @return state name
-    */
-   public String getStateName()
-   {
-      return getStateName(state);
    }
 
    /**
@@ -338,7 +254,7 @@ public class Incident
     */
    public boolean isClosed()
    {
-      return state == STATE_CLOSED;
+      return state == IncidentState.CLOSED;
    }
 
    /**
@@ -348,7 +264,7 @@ public class Incident
     */
    public boolean isResolved()
    {
-      return state == STATE_RESOLVED || state == STATE_CLOSED;
+      return state == IncidentState.RESOLVED || state == IncidentState.CLOSED;
    }
 
    /**
@@ -357,11 +273,8 @@ public class Incident
    @Override
    public String toString()
    {
-      return "Incident [id=" + id + ", creationTime=" + creationTime + ", lastChangeTime=" + lastChangeTime
-            + ", state=" + getStateName() + ", assignedUserId=" + assignedUserId + ", title=" + title
-            + ", sourceAlarmId=" + sourceAlarmId + ", sourceObjectId=" + sourceObjectId
-            + ", createdByUser=" + createdByUser + ", resolvedByUser=" + resolvedByUser
-            + ", closedByUser=" + closedByUser + ", resolveTime=" + resolveTime + ", closeTime=" + closeTime
-            + ", linkedAlarmIds=" + Arrays.toString(linkedAlarmIds) + ", commentsCount=" + commentsCount + "]";
+      return "Incident [id=" + id + ", creationTime=" + creationTime + ", lastChangeTime=" + lastChangeTime + ", state=" + state.name() + ", assignedUserId=" + assignedUserId + ", title=" + title +
+            ", sourceAlarmId=" + sourceAlarmId + ", sourceObjectId=" + sourceObjectId + ", createdByUser=" + createdByUser + ", resolvedByUser=" + resolvedByUser + ", closedByUser=" + closedByUser +
+            ", resolveTime=" + resolveTime + ", closeTime=" + closeTime + ", linkedAlarmIds=" + Arrays.toString(linkedAlarmIds) + ", commentsCount=" + commentsCount + "]";
    }
 }

@@ -21,7 +21,7 @@ package org.netxms.nxmc.modules.incidents.widgets.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.NXCSession;
-import org.netxms.client.events.Incident;
+import org.netxms.client.events.IncidentSummary;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.nxmc.Registry;
@@ -50,10 +50,10 @@ public class IncidentListFilter extends ViewerFilter implements AbstractViewerFi
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      Incident incident = (Incident)element;
+      IncidentSummary incident = (IncidentSummary)element;
 
       // Check state filter
-      if ((stateFilter & (1 << incident.getState())) == 0)
+      if ((stateFilter & (1 << incident.getState().getValue())) == 0)
          return false;
 
       // Check text filter
@@ -62,10 +62,6 @@ public class IncidentListFilter extends ViewerFilter implements AbstractViewerFi
 
       // Match against title
       if (incident.getTitle().toLowerCase().contains(filterString))
-         return true;
-
-      // Match against description
-      if (incident.getDescription() != null && incident.getDescription().toLowerCase().contains(filterString))
          return true;
 
       // Match against object name
