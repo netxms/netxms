@@ -538,6 +538,41 @@ uint32_t Incident::close(uint32_t userId)
 }
 
 /**
+ * Update incident title and description
+ */
+uint32_t Incident::update(const TCHAR *title, const TCHAR *description, uint32_t userId)
+{
+   lock();
+
+   if (m_state == INCIDENT_STATE_CLOSED)
+   {
+      unlock();
+      return RCC_INCIDENT_CLOSED;
+   }
+
+   // Update title if provided
+   if ((title != nullptr) && (*title != 0))
+   {
+      MemFree(m_title);
+      m_title = MemCopyString(title);
+   }
+
+   // Update description
+   MemFree(m_description);
+   m_description = (description != nullptr) ? MemCopyString(description) : nullptr;
+
+   m_lastChangeTime = time(nullptr);
+
+   updateInDatabase();
+   logActivity(INCIDENT_ACTIVITY_UPDATED, userId, nullptr, nullptr, nullptr);
+
+   unlock();
+
+   NotifyClientsOnIncidentUpdate(CMD_INCIDENT_UPDATE, this);
+   return RCC_SUCCESS;
+}
+
+/**
  * Link alarm to incident
  */
 uint32_t Incident::linkAlarm(uint32_t alarmId, uint32_t userId)
@@ -946,6 +981,21 @@ uint32_t NXCORE_EXPORTABLE CloseIncident(uint32_t incidentId, uint32_t userId)
       return RCC_INCIDENT_NOT_FOUND;
 
    return incident->close(userId);
+}
+
+/**
+ * Update incident title and description
+ */
+uint32_t NXCORE_EXPORTABLE UpdateIncident(uint32_t incidentId, const TCHAR *title, const TCHAR *description, uint32_t userId)
+{
+   s_incidents.lock();
+   shared_ptr<Incident> incident = s_incidents.get(incidentId);
+   s_incidents.unlock();
+
+   if (incident == nullptr)
+      return RCC_INCIDENT_NOT_FOUND;
+
+   return incident->update(title, description, userId);
 }
 
 /**

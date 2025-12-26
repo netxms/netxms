@@ -121,6 +121,7 @@ public:
    uint32_t assign(uint32_t userId, uint32_t assignedBy);
    uint32_t resolve(uint32_t userId);
    uint32_t close(uint32_t userId);
+   uint32_t update(const TCHAR *title, const TCHAR *description, uint32_t userId);
 
    uint32_t linkAlarm(uint32_t alarmId, uint32_t userId);
    uint32_t unlinkAlarm(uint32_t alarmId, uint32_t userId);
@@ -153,6 +154,7 @@ uint32_t NXCORE_EXPORTABLE ChangeIncidentState(uint32_t incidentId, int newState
 uint32_t NXCORE_EXPORTABLE AssignIncident(uint32_t incidentId, uint32_t userId, uint32_t assignedBy);
 uint32_t NXCORE_EXPORTABLE ResolveIncident(uint32_t incidentId, uint32_t userId);
 uint32_t NXCORE_EXPORTABLE CloseIncident(uint32_t incidentId, uint32_t userId);
+uint32_t NXCORE_EXPORTABLE UpdateIncident(uint32_t incidentId, const TCHAR *title, const TCHAR *description, uint32_t userId);
 
 uint32_t NXCORE_EXPORTABLE LinkAlarmToIncident(uint32_t incidentId, uint32_t alarmId, uint32_t userId);
 uint32_t NXCORE_EXPORTABLE UnlinkAlarmFromIncident(uint32_t incidentId, uint32_t alarmId, uint32_t userId);

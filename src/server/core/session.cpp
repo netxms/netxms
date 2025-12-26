@@ -1250,6 +1250,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_CREATE_INCIDENT:
          createIncident(*request);
          break;
+      case CMD_UPDATE_INCIDENT:
+         updateIncident(*request);
+         break;
       case CMD_CHANGE_INCIDENT_STATE:
          changeIncidentState(*request);
          break;
@@ -7412,6 +7415,39 @@ void ClientSession::createIncident(const NXCPMessage& request)
       response.setField(VID_RCC, rcc);
       if (rcc == RCC_SUCCESS)
          response.setField(VID_INCIDENT_ID, incidentId);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Update incident title and description
+ */
+void ClientSession::updateIncident(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
+   Incident *incident = FindIncidentById(incidentId);
+
+   if (incident != nullptr)
+   {
+      shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
+      if ((object != nullptr) && object->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
+      {
+         TCHAR title[256], description[2001];
+         request.getFieldAsString(VID_INCIDENT_TITLE, title, 256);
+         request.getFieldAsString(VID_INCIDENT_DESCRIPTION, description, 2001);
+         response.setField(VID_RCC, UpdateIncident(incidentId, title, description[0] != 0 ? description : nullptr, m_userId));
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INCIDENT_NOT_FOUND);
    }
 
    sendMessage(response);

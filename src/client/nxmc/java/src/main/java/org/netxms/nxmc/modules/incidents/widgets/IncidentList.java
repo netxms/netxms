@@ -42,7 +42,6 @@ import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
-import org.netxms.client.events.Incident;
 import org.netxms.client.events.IncidentSummary;
 import org.netxms.client.users.User;
 import org.netxms.nxmc.Registry;
@@ -52,6 +51,7 @@ import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.incidents.dialogs.CreateIncidentDialog;
 import org.netxms.nxmc.modules.incidents.dialogs.EditIncidentCommentDialog;
+import org.netxms.nxmc.modules.incidents.views.IncidentDetails;
 import org.netxms.nxmc.modules.incidents.widgets.helpers.IncidentComparator;
 import org.netxms.nxmc.modules.incidents.widgets.helpers.IncidentListFilter;
 import org.netxms.nxmc.modules.incidents.widgets.helpers.IncidentListLabelProvider;
@@ -152,7 +152,12 @@ public class IncidentList extends Composite
          @Override
          public void doubleClick(DoubleClickEvent event)
          {
-            // Open incident details (could be implemented later)
+            IStructuredSelection selection = viewer.getStructuredSelection();
+            if (selection.size() == 1)
+            {
+               IncidentSummary incident = (IncidentSummary)selection.getFirstElement();
+               view.openView(new IncidentDetails(incident.getId(), incident.getSourceObjectId()));
+            }
          }
       });
 
@@ -349,7 +354,7 @@ public class IncidentList extends Composite
          {
             for (Object o : selectedIncidents)
             {
-               session.resolveIncident(((Incident)o).getId());
+               session.resolveIncident(((IncidentSummary)o).getId());
             }
             runInUIThread(() -> refresh());
          }
@@ -382,7 +387,7 @@ public class IncidentList extends Composite
          {
             for (Object o : selectedIncidents)
             {
-               session.closeIncident(((Incident)o).getId());
+               session.closeIncident(((IncidentSummary)o).getId());
             }
             runInUIThread(() -> refresh());
          }
@@ -404,7 +409,7 @@ public class IncidentList extends Composite
       if (selection.size() != 1)
          return;
 
-      final Incident incident = (Incident)selection.getFirstElement();
+      final IncidentSummary incident = (IncidentSummary)selection.getFirstElement();
 
       UserSelectionDialog dialog = new UserSelectionDialog(getShell(), User.class);
       dialog.enableMultiSelection(false);
@@ -437,7 +442,7 @@ public class IncidentList extends Composite
       if (selection.size() != 1)
          return;
 
-      final Incident incident = (Incident)selection.getFirstElement();
+      final IncidentSummary incident = (IncidentSummary)selection.getFirstElement();
 
       EditIncidentCommentDialog dialog = new EditIncidentCommentDialog(getShell(), null);
       if (dialog.open() == Window.OK)

@@ -5014,6 +5014,26 @@ public class NXCSession
    }
 
    /**
+    * Update incident title and description.
+    *
+    * @param incidentId  Incident ID
+    * @param title       New title (required)
+    * @param description New description (can be null)
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void updateIncident(long incidentId, String title, String description) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_INCIDENT);
+      msg.setFieldUInt32(NXCPCodes.VID_INCIDENT_ID, incidentId);
+      msg.setField(NXCPCodes.VID_INCIDENT_TITLE, title);
+      if (description != null)
+         msg.setField(NXCPCodes.VID_INCIDENT_DESCRIPTION, description);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
     * Change incident state.
     *
     * @param incidentId Incident ID

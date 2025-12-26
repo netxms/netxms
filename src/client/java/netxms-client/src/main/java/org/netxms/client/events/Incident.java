@@ -38,9 +38,9 @@ public class Incident
    private String description;
    private long sourceAlarmId;
    private long sourceObjectId;
-   private long createdByUser;
-   private long resolvedByUser;
-   private long closedByUser;
+   private int createdByUser;
+   private int resolvedByUser;
+   private int closedByUser;
    private Date resolveTime;
    private Date closeTime;
    private long[] linkedAlarmIds;
@@ -62,9 +62,9 @@ public class Incident
       description = msg.getFieldAsString(NXCPCodes.VID_INCIDENT_DESCRIPTION);
       sourceAlarmId = msg.getFieldAsInt64(NXCPCodes.VID_SOURCE_ALARM_ID);
       sourceObjectId = msg.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID);
-      createdByUser = msg.getFieldAsInt64(NXCPCodes.VID_USER_ID);
-      resolvedByUser = msg.getFieldAsInt64(NXCPCodes.VID_RESOLVED_BY_USER);
-      closedByUser = msg.getFieldAsInt64(NXCPCodes.VID_CLOSED_BY_USER);
+      createdByUser = msg.getFieldAsInt32(NXCPCodes.VID_USER_ID);
+      resolvedByUser = msg.getFieldAsInt32(NXCPCodes.VID_RESOLVED_BY_USER);
+      closedByUser = msg.getFieldAsInt32(NXCPCodes.VID_CLOSED_BY_USER);
       long rt = msg.getFieldAsInt64(NXCPCodes.VID_RESOLVE_TIME);
       resolveTime = (rt > 0) ? new Date(rt * 1000) : null;
       long ct = msg.getFieldAsInt64(NXCPCodes.VID_CLOSE_TIME);
@@ -172,7 +172,7 @@ public class Incident
     *
     * @return creator user ID or 0 if auto-created
     */
-   public long getCreatedByUser()
+   public int getCreatedByUser()
    {
       return createdByUser;
    }
@@ -182,7 +182,7 @@ public class Incident
     *
     * @return user ID or 0 if not resolved
     */
-   public long getResolvedByUser()
+   public int getResolvedByUser()
    {
       return resolvedByUser;
    }
@@ -192,7 +192,7 @@ public class Incident
     *
     * @return user ID or 0 if not closed
     */
-   public long getClosedByUser()
+   public int getClosedByUser()
    {
       return closedByUser;
    }

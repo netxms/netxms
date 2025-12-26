@@ -507,13 +507,14 @@ public class NXCPCodes
    public static final int CMD_GET_INCIDENTS = 0x01E6;
    public static final int CMD_GET_INCIDENT_DETAILS = 0x01E7;
    public static final int CMD_CREATE_INCIDENT = 0x01E8;
-   public static final int CMD_CHANGE_INCIDENT_STATE = 0x01E9;
-   public static final int CMD_ASSIGN_INCIDENT = 0x01EA;
-   public static final int CMD_LINK_ALARM_TO_INCIDENT = 0x01EB;
-   public static final int CMD_UNLINK_ALARM_FROM_INCIDENT = 0x01EC;
-   public static final int CMD_ADD_INCIDENT_COMMENT = 0x01ED;
-   public static final int CMD_GET_INCIDENT_COMMENTS = 0x01EE;
-   public static final int CMD_GET_INCIDENT_ACTIVITY = 0x01EF;
+   public static final int CMD_UPDATE_INCIDENT = 0x01E9;
+   public static final int CMD_CHANGE_INCIDENT_STATE = 0x01EA;
+   public static final int CMD_ASSIGN_INCIDENT = 0x01EB;
+   public static final int CMD_LINK_ALARM_TO_INCIDENT = 0x01EC;
+   public static final int CMD_UNLINK_ALARM_FROM_INCIDENT = 0x01ED;
+   public static final int CMD_ADD_INCIDENT_COMMENT = 0x01EE;
+   public static final int CMD_GET_INCIDENT_COMMENTS = 0x01EF;
+   public static final int CMD_GET_INCIDENT_ACTIVITY = 0x01F0;
    public static final int CMD_INCIDENT_UPDATE = 0x01F1;
 
 	// CMD_RS_ - Reporting Server related codes

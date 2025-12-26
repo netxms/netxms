@@ -729,6 +729,7 @@ private:
    void getIncidents(const NXCPMessage& request);
    void getIncidentDetails(const NXCPMessage& request);
    void createIncident(const NXCPMessage& request);
+   void updateIncident(const NXCPMessage& request);
    void changeIncidentState(const NXCPMessage& request);
    void assignIncident(const NXCPMessage& request);
    void linkAlarmToIncident(const NXCPMessage& request);

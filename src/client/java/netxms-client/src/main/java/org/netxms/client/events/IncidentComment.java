@@ -29,7 +29,7 @@ public class IncidentComment
    private long id;
    private long incidentId;
    private Date creationTime;
-   private long userId;
+   private int userId;
    private String text;
 
    /**
@@ -43,7 +43,7 @@ public class IncidentComment
       id = msg.getFieldAsInt64(baseId);
       incidentId = msg.getFieldAsInt64(baseId + 1);
       creationTime = new Date(msg.getFieldAsInt64(baseId + 2) * 1000);
-      userId = msg.getFieldAsInt64(baseId + 3);
+      userId = msg.getFieldAsInt32(baseId + 3);
       text = msg.getFieldAsString(baseId + 4);
    }
 
@@ -82,7 +82,7 @@ public class IncidentComment
     *
     * @return user ID
     */
-   public long getUserId()
+   public int getUserId()
    {
       return userId;
    }
