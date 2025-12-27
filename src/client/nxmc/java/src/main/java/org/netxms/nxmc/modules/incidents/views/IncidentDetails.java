@@ -59,8 +59,6 @@ import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.CopyTableRowsAction;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.layout.DashboardLayout;
-import org.netxms.nxmc.base.layout.DashboardLayoutData;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.base.widgets.ImageHyperlink;
@@ -107,7 +105,19 @@ public class IncidentDetails extends AdHocObjectView
 
    private Composite content;
 
-   // Overview section
+   // Layout components
+   private ScrolledComposite leftScroller;
+   private Composite leftColumn;
+   private Composite rightColumn;
+
+   // Header section (title + save)
+   private Text textTitle;
+   private Button buttonSave;
+
+   // Description section
+   private Text textDescription;
+
+   // Overview section (right sidebar)
    private CLabel labelId;
    private CLabel labelState;
    private CLabel labelSource;
@@ -117,19 +127,19 @@ public class IncidentDetails extends AdHocObjectView
    private CLabel labelResolved;
    private CLabel labelClosed;
 
-   // Details section
-   private Text textTitle;
-   private Text textDescription;
-   private Button buttonSave;
-
-   // Comments section
-   private ScrolledComposite commentsScroller;
+   // Comments section (left column)
    private Composite commentsArea;
    private ImageHyperlink linkAddComment;
    private Map<Long, IncidentCommentsEditor> commentEditors = new HashMap<>();
 
-   // Alarms section
+   // Alarms section (left column)
    private SortableTableViewer alarmViewer;
+
+   // Action buttons (right sidebar)
+   private Button buttonBlock;
+   private Button buttonResolve;
+   private Button buttonClose;
+   private Button buttonAssign;
 
    // Actions
    private Action actionAssign;
@@ -199,18 +209,120 @@ public class IncidentDetails extends AdHocObjectView
       stateImages[IncidentState.RESOLVED.getValue()] = imageCache.create(ResourceManager.getImageDescriptor("icons/incidents/incident-resolved.png"));
       stateImages[IncidentState.CLOSED.getValue()] = imageCache.create(ResourceManager.getImageDescriptor("icons/incidents/incident-closed.png"));
 
-      DashboardLayout layout = new DashboardLayout();
+      // Main layout: vertical stack (header, description, content area)
+      GridLayout layout = new GridLayout();
       layout.marginWidth = WidgetHelper.OUTER_SPACING;
       layout.marginHeight = WidgetHelper.OUTER_SPACING;
+      layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
       parent.setLayout(layout);
 
-      createOverviewSection(parent);
-      createDetailsSection(parent);
-      createCommentsSection(parent);
-      createAlarmsSection(parent);
+      createHeaderSection(parent);
+      createDescriptionSection(parent);
+      createContentArea(parent);
 
       createActions();
       createContextMenu();
+   }
+
+   /**
+    * Create header section with title and save button
+    */
+   private void createHeaderSection(Composite parent)
+   {
+      Composite header = new Composite(parent, SWT.NONE);
+      GridLayout layout = new GridLayout(2, false);
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      header.setLayout(layout);
+      header.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+      textTitle = new Text(header, SWT.BORDER | SWT.SINGLE);
+      textTitle.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      textTitle.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            setDetailsModified(true);
+         }
+      });
+
+      buttonSave = new Button(header, SWT.PUSH);
+      buttonSave.setText(i18n.tr("Save"));
+      buttonSave.setEnabled(false);
+      buttonSave.addListener(SWT.Selection, (e) -> saveDetails());
+   }
+
+   /**
+    * Create description section
+    */
+   private void createDescriptionSection(Composite parent)
+   {
+      textDescription = new Text(parent, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.WRAP);
+      GridData gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+      gd.heightHint = 80;
+      textDescription.setLayoutData(gd);
+      textDescription.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            setDetailsModified(true);
+         }
+      });
+   }
+
+   /**
+    * Create two-column content area
+    */
+   private void createContentArea(Composite parent)
+   {
+      Composite contentArea = new Composite(parent, SWT.NONE);
+      GridLayout layout = new GridLayout(2, false);
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
+      contentArea.setLayout(layout);
+      contentArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+      // Left column with ScrolledComposite (scrollable)
+      leftScroller = new ScrolledComposite(contentArea, SWT.V_SCROLL);
+      leftScroller.setExpandHorizontal(true);
+      leftScroller.setExpandVertical(true);
+      GridData leftGd = new GridData(SWT.FILL, SWT.FILL, true, true);
+      leftGd.widthHint = 500;
+      leftScroller.setLayoutData(leftGd);
+      WidgetHelper.setScrollBarIncrement(leftScroller, SWT.VERTICAL, 20);
+      leftScroller.addControlListener(new ControlAdapter() {
+         public void controlResized(ControlEvent e)
+         {
+            leftColumn.layout(true, true);
+            leftScroller.setMinSize(leftColumn.computeSize(leftScroller.getClientArea().width, SWT.DEFAULT));
+         }
+      });
+
+      leftColumn = new Composite(leftScroller, SWT.NONE);
+      GridLayout leftLayout = new GridLayout();
+      leftLayout.marginWidth = 0;
+      leftLayout.marginHeight = 0;
+      leftLayout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+      leftColumn.setLayout(leftLayout);
+      leftScroller.setContent(leftColumn);
+
+      // Right column (fixed sidebar, no scroll)
+      rightColumn = new Composite(contentArea, SWT.NONE);
+      GridLayout rightLayout = new GridLayout();
+      rightLayout.marginWidth = 0;
+      rightLayout.marginHeight = 0;
+      rightLayout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+      rightColumn.setLayout(rightLayout);
+      GridData rightGd = new GridData(SWT.FILL, SWT.TOP, false, false);
+      rightGd.widthHint = 280;
+      rightColumn.setLayoutData(rightGd);
+
+      // Create sections in the appropriate columns
+      createCommentsSection(leftColumn);
+      createAlarmsSection(leftColumn);
+      createOverviewSection(rightColumn);
+      createActionsSection(rightColumn);
    }
 
    /**
@@ -288,159 +400,113 @@ public class IncidentDetails extends AdHocObjectView
    }
 
    /**
-    * Create overview section
+    * Create overview section (right sidebar)
     */
    private void createOverviewSection(Composite parent)
    {
-      final Section section = new Section(parent, i18n.tr("Overview"), true);
-      DashboardLayoutData dd = new DashboardLayoutData();
-      dd.fill = false;
-      section.setLayoutData(dd);
+      final Section section = new Section(parent, i18n.tr("Overview"), false);
+      section.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 
       final Composite clientArea = section.getClient();
-      GridLayout layout = new GridLayout();
-      layout.numColumns = 4;
+      GridLayout layout = new GridLayout(2, false);
       clientArea.setLayout(layout);
 
-      // Row 1: ID and State
+      // ID
       Label label = new Label(clientArea, SWT.NONE);
       label.setText(i18n.tr("ID:"));
-
       labelId = new CLabel(clientArea, SWT.NONE);
       labelId.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
+      // State
       label = new Label(clientArea, SWT.NONE);
       label.setText(i18n.tr("State:"));
-
       labelState = new CLabel(clientArea, SWT.NONE);
       labelState.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-      // Row 2: Source and Assigned
+      // Source
       label = new Label(clientArea, SWT.NONE);
       label.setText(i18n.tr("Source:"));
-
       labelSource = new CLabel(clientArea, SWT.NONE);
       labelSource.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
+      // Assigned
       label = new Label(clientArea, SWT.NONE);
       label.setText(i18n.tr("Assigned:"));
-
       labelAssigned = new CLabel(clientArea, SWT.NONE);
       labelAssigned.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-      // Row 3: Created and Last Change
+      // Created
       label = new Label(clientArea, SWT.NONE);
       label.setText(i18n.tr("Created:"));
-
       labelCreated = new CLabel(clientArea, SWT.NONE);
       labelCreated.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
+      // Last Change
       label = new Label(clientArea, SWT.NONE);
       label.setText(i18n.tr("Last change:"));
-
       labelLastChange = new CLabel(clientArea, SWT.NONE);
       labelLastChange.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-      // Row 4: Resolved and Closed
+      // Resolved
       label = new Label(clientArea, SWT.NONE);
       label.setText(i18n.tr("Resolved:"));
-
       labelResolved = new CLabel(clientArea, SWT.NONE);
       labelResolved.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
+      // Closed
       label = new Label(clientArea, SWT.NONE);
       label.setText(i18n.tr("Closed:"));
-
       labelClosed = new CLabel(clientArea, SWT.NONE);
       labelClosed.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
    }
 
    /**
-    * Create details section (editable title and description)
+    * Create actions section with buttons (right sidebar)
     */
-   private void createDetailsSection(Composite parent)
+   private void createActionsSection(Composite parent)
    {
-      final Section section = new Section(parent, i18n.tr("Details"), true);
-      DashboardLayoutData dd = new DashboardLayoutData();
-      dd.fill = false;
-      section.setLayoutData(dd);
+      final Section section = new Section(parent, i18n.tr("Actions"), false);
+      section.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 
       final Composite clientArea = section.getClient();
-      GridLayout layout = new GridLayout();
-      layout.numColumns = 3;
+      GridLayout layout = new GridLayout(2, true);
       clientArea.setLayout(layout);
 
-      // Title row
-      Label label = new Label(clientArea, SWT.NONE);
-      label.setText(i18n.tr("Title:"));
+      buttonBlock = new Button(clientArea, SWT.PUSH);
+      buttonBlock.setText(i18n.tr("Block..."));
+      buttonBlock.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      buttonBlock.addListener(SWT.Selection, (e) -> blockIncident());
 
-      textTitle = new Text(clientArea, SWT.BORDER);
-      textTitle.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      textTitle.addModifyListener(new ModifyListener() {
-         @Override
-         public void modifyText(ModifyEvent e)
-         {
-            setDetailsModified(true);
-         }
-      });
+      buttonResolve = new Button(clientArea, SWT.PUSH);
+      buttonResolve.setText(i18n.tr("Resolve"));
+      buttonResolve.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      buttonResolve.addListener(SWT.Selection, (e) -> resolveIncident());
 
-      buttonSave = new Button(clientArea, SWT.PUSH);
-      buttonSave.setText(i18n.tr("Save"));
-      buttonSave.setEnabled(false);
-      GridData gd = new GridData();
-      gd.verticalSpan = 2;
-      gd.verticalAlignment = SWT.TOP;
-      buttonSave.setLayoutData(gd);
-      buttonSave.addListener(SWT.Selection, (e) -> saveDetails());
+      buttonClose = new Button(clientArea, SWT.PUSH);
+      buttonClose.setText(i18n.tr("Close"));
+      buttonClose.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      buttonClose.addListener(SWT.Selection, (e) -> closeIncident());
 
-      // Description row
-      label = new Label(clientArea, SWT.NONE);
-      label.setText(i18n.tr("Description:"));
-      label.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
-
-      textDescription = new Text(clientArea, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.WRAP);
-      gd = new GridData(SWT.FILL, SWT.FILL, true, false);
-      gd.heightHint = 80;
-      textDescription.setLayoutData(gd);
-      textDescription.addModifyListener(new ModifyListener() {
-         @Override
-         public void modifyText(ModifyEvent e)
-         {
-            setDetailsModified(true);
-         }
-      });
+      buttonAssign = new Button(clientArea, SWT.PUSH);
+      buttonAssign.setText(i18n.tr("Assign..."));
+      buttonAssign.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      buttonAssign.addListener(SWT.Selection, (e) -> assignIncident());
    }
 
    /**
-    * Create comments section
+    * Create comments section (left column)
     */
    private void createCommentsSection(Composite parent)
    {
-      final Section section = new Section(parent, i18n.tr("Comments"), true);
-      final DashboardLayoutData dd = new DashboardLayoutData();
-      dd.fill = true;
-      section.setLayoutData(dd);
-      section.addExpansionListener((e) -> dd.fill = e.getState());
+      final Section section = new Section(parent, i18n.tr("Comments"), false);
+      section.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 
-      commentsScroller = new ScrolledComposite(section.getClient(), SWT.V_SCROLL);
-      commentsScroller.setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
-      commentsScroller.setExpandHorizontal(true);
-      commentsScroller.setExpandVertical(true);
-      WidgetHelper.setScrollBarIncrement(commentsScroller, SWT.VERTICAL, 20);
-      commentsScroller.addControlListener(new ControlAdapter() {
-         public void controlResized(ControlEvent e)
-         {
-            commentsArea.layout(true, true);
-            commentsScroller.setMinSize(commentsArea.computeSize(commentsScroller.getClientArea().width, SWT.DEFAULT));
-         }
-      });
-
-      commentsArea = new Composite(commentsScroller, SWT.NONE);
-      commentsArea.setBackground(commentsScroller.getBackground());
+      commentsArea = section.getClient();
+      commentsArea.setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
       GridLayout layout = new GridLayout();
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
       commentsArea.setLayout(layout);
-
-      commentsScroller.setContent(commentsArea);
 
       linkAddComment = new ImageHyperlink(commentsArea, SWT.NONE);
       linkAddComment.setImage(imageCache.create(ResourceManager.getImageDescriptor("icons/new_comment.png")));
@@ -456,15 +522,14 @@ public class IncidentDetails extends AdHocObjectView
    }
 
    /**
-    * Create alarms section
+    * Create alarms section (left column)
     */
    private void createAlarmsSection(Composite parent)
    {
-      final Section section = new Section(parent, i18n.tr("Related Alarms"), true);
-      final DashboardLayoutData dd = new DashboardLayoutData();
-      dd.fill = true;
-      section.setLayoutData(dd);
-      section.addExpansionListener((e) -> dd.fill = e.getState());
+      final Section section = new Section(parent, i18n.tr("Related Alarms"), false);
+      GridData sectionGd = new GridData(SWT.FILL, SWT.TOP, true, false);
+      sectionGd.heightHint = 200;
+      section.setLayoutData(sectionGd);
 
       final String[] names = { i18n.tr("Severity"), i18n.tr("State"), i18n.tr("Source"), i18n.tr("Message"), i18n.tr("Created") };
       final int[] widths = { 90, 90, 150, 300, 150 };
@@ -629,6 +694,7 @@ public class IncidentDetails extends AdHocObjectView
       boolean editable = !incident.isClosed();
       textTitle.setEditable(editable);
       textDescription.setEditable(editable);
+      buttonSave.setEnabled(false);
       buttonSave.setVisible(editable);
    }
 
@@ -676,10 +742,21 @@ public class IncidentDetails extends AdHocObjectView
    private void updateActionStates()
    {
       boolean canModify = incident != null && !incident.isClosed();
+      boolean canBlock = canModify && incident.getState() != IncidentState.BLOCKED;
+      boolean canResolve = canModify && !incident.isResolved();
+      boolean canClose = incident != null && !incident.isClosed();
+
+      // Update toolbar actions
       actionAssign.setEnabled(canModify);
-      actionBlock.setEnabled(canModify && incident.getState() != IncidentState.BLOCKED);
-      actionResolve.setEnabled(canModify && !incident.isResolved());
-      actionClose.setEnabled(incident != null && !incident.isClosed());
+      actionBlock.setEnabled(canBlock);
+      actionResolve.setEnabled(canResolve);
+      actionClose.setEnabled(canClose);
+
+      // Update sidebar buttons
+      buttonAssign.setEnabled(canModify);
+      buttonBlock.setEnabled(canBlock);
+      buttonResolve.setEnabled(canResolve);
+      buttonClose.setEnabled(canClose);
    }
 
    /**
@@ -688,8 +765,8 @@ public class IncidentDetails extends AdHocObjectView
    private void updateLayout()
    {
       content.layout(true, true);
-      commentsArea.layout(true, true);
-      commentsScroller.setMinSize(commentsArea.computeSize(commentsScroller.getClientArea().width, SWT.DEFAULT));
+      leftColumn.layout(true, true);
+      leftScroller.setMinSize(leftColumn.computeSize(leftScroller.getClientArea().width, SWT.DEFAULT));
    }
 
    /**
