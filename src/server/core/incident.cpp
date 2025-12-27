@@ -70,7 +70,7 @@ static IncidentList s_incidents;
 /**
  * State name table
  */
-static const wchar_t *s_stateNames[] = { L"Open", L"In Progress", L"Pending", L"Resolved", L"Closed" };
+static const wchar_t *s_stateNames[] = { L"Open", L"In Progress", L"Blocked", L"Resolved", L"Closed" };
 
 /**
  * Get incident state name
@@ -379,7 +379,7 @@ void Incident::postStateChangeEvent(int oldState, int newState, uint32_t userId)
 /**
  * Change incident state
  */
-uint32_t Incident::changeState(int newState, uint32_t userId)
+uint32_t Incident::changeState(int newState, uint32_t userId, const TCHAR *comment)
 {
    lock();
 
@@ -393,6 +393,13 @@ uint32_t Incident::changeState(int newState, uint32_t userId)
    {
       unlock();
       return RCC_INVALID_INCIDENT_STATE;
+   }
+
+   // Require comment for BLOCKED state
+   if ((newState == INCIDENT_STATE_BLOCKED) && ((comment == nullptr) || (*comment == 0)))
+   {
+      unlock();
+      return RCC_COMMENT_REQUIRED;
    }
 
    int oldState = m_state;
@@ -413,6 +420,14 @@ uint32_t Incident::changeState(int newState, uint32_t userId)
    updateInDatabase();
    logActivity(INCIDENT_ACTIVITY_STATE_CHANGE, userId, GetIncidentStateName(oldState), GetIncidentStateName(newState), nullptr);
    postStateChangeEvent(oldState, newState, userId);
+
+   // Add comment if provided
+   if ((comment != nullptr) && (*comment != 0))
+   {
+      IncidentComment incidentComment(CreateUniqueId(IDG_INCIDENT_COMMENT), m_id, time(nullptr), userId, comment);
+      incidentComment.saveToDatabase();
+      logAddCommentActivity(userId);
+   }
 
    unlock();
 
@@ -691,6 +706,41 @@ uint32_t Incident::unlinkAlarm(uint32_t alarmId, uint32_t userId)
 }
 
 /**
+ * Fill message with incident comments
+ */
+static void IncidentCommentsToMessage(uint32_t incidentId, NXCPMessage *msg)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   wchar_t query[256];
+   nx_swprintf(query, 256,
+      L"SELECT id,incident_id,creation_time,user_id,comment_text FROM incident_comments WHERE incident_id=%u ORDER BY creation_time",
+      incidentId);
+
+   DB_RESULT hResult = DBSelect(hdb, query);
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      msg->setField(VID_NUM_COMMENTS, static_cast<uint32_t>(count));
+
+      uint32_t baseId = VID_COMMENT_LIST_BASE;
+      for (int i = 0; i < count; i++)
+      {
+         IncidentComment comment(hResult, i);
+         comment.fillMessage(msg, baseId);
+         baseId += 10;
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      msg->setField(VID_NUM_COMMENTS, static_cast<uint32_t>(0));
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
  * Fill NXCP message with full incident data
  */
 void Incident::fillMessage(NXCPMessage *msg) const
@@ -711,7 +761,9 @@ void Incident::fillMessage(NXCPMessage *msg) const
    msg->setFieldFromTime(VID_CLOSE_TIME, m_closeTime);
 
    msg->setField(VID_NUM_ALARMS, static_cast<uint32_t>(m_linkedAlarms.size()));
-   msg->setFieldFromInt32Array(VID_INCIDENT_ALARM_LIST_BASE, &m_linkedAlarms);
+   msg->setFieldFromInt32Array(VID_ALARM_ID_LIST, &m_linkedAlarms);
+
+   IncidentCommentsToMessage(m_id, msg);
 }
 
 /**
@@ -869,47 +921,48 @@ uint32_t NXCORE_EXPORTABLE GetIncident(uint32_t incidentId, NXCPMessage *msg)
    shared_ptr<Incident> incident = s_incidents.get(incidentId);
    s_incidents.unlock();
 
-   if (incident == nullptr)
+   if (incident != nullptr)
    {
-      // Check in database for closed incidents
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      TCHAR query[256];
-      _sntprintf(query, 256,
-         _T("SELECT id,creation_time,last_change_time,state,assigned_user_id,title,description,")
-         _T("source_alarm_id,source_object_id,created_by_user,resolved_by_user,closed_by_user,")
-         _T("resolve_time,close_time FROM incidents WHERE id=%u"), incidentId);
-
-      DB_RESULT hResult = DBSelect(hdb, query);
-      if (hResult != nullptr)
-      {
-         if (DBGetNumRows(hResult) > 0)
-         {
-            Incident dbIncident(hResult, 0);
-            dbIncident.loadLinkedAlarms(hdb);
-            dbIncident.fillMessage(msg);
-            DBFreeResult(hResult);
-            DBConnectionPoolReleaseConnection(hdb);
-            return RCC_SUCCESS;
-         }
-         DBFreeResult(hResult);
-      }
-      DBConnectionPoolReleaseConnection(hdb);
-      return RCC_INCIDENT_NOT_FOUND;
+      incident->fillMessage(msg);
+      return RCC_SUCCESS;
    }
 
-   incident->fillMessage(msg);
-   return RCC_SUCCESS;
+   // Check in database for closed incidents
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   TCHAR query[256];
+   _sntprintf(query, 256,
+      _T("SELECT id,creation_time,last_change_time,state,assigned_user_id,title,description,")
+      _T("source_alarm_id,source_object_id,created_by_user,resolved_by_user,closed_by_user,")
+      _T("resolve_time,close_time FROM incidents WHERE id=%u"), incidentId);
+
+   DB_RESULT hResult = DBSelect(hdb, query);
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         Incident dbIncident(hResult, 0);
+         dbIncident.loadLinkedAlarms(hdb);
+         dbIncident.fillMessage(msg);
+         DBFreeResult(hResult);
+         DBConnectionPoolReleaseConnection(hdb);
+         return RCC_SUCCESS;
+      }
+      DBFreeResult(hResult);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return RCC_INCIDENT_NOT_FOUND;
 }
 
 /**
  * Find incident by ID (in-memory only, returns nullptr for closed incidents)
  */
-Incident NXCORE_EXPORTABLE *FindIncidentById(uint32_t incidentId)
+shared_ptr<Incident> NXCORE_EXPORTABLE FindIncidentById(uint32_t incidentId)
 {
    s_incidents.lock();
    shared_ptr<Incident> incident = s_incidents.get(incidentId);
    s_incidents.unlock();
-   return incident.get();
+   return incident;
 }
 
 /**
@@ -926,7 +979,7 @@ shared_ptr<Incident> NXCORE_EXPORTABLE FindIncidentByAlarmId(uint32_t alarmId)
 /**
  * Change incident state
  */
-uint32_t NXCORE_EXPORTABLE ChangeIncidentState(uint32_t incidentId, int newState, uint32_t userId)
+uint32_t NXCORE_EXPORTABLE ChangeIncidentState(uint32_t incidentId, int newState, uint32_t userId, const TCHAR *comment)
 {
    s_incidents.lock();
    shared_ptr<Incident> incident = s_incidents.get(incidentId);
@@ -935,7 +988,7 @@ uint32_t NXCORE_EXPORTABLE ChangeIncidentState(uint32_t incidentId, int newState
    if (incident == nullptr)
       return RCC_INCIDENT_NOT_FOUND;
 
-   return incident->changeState(newState, userId);
+   return incident->changeState(newState, userId, comment);
 }
 
 /**
@@ -1058,40 +1111,6 @@ uint32_t NXCORE_EXPORTABLE AddIncidentComment(uint32_t incidentId, const TCHAR *
    return RCC_SUCCESS;
 }
 
-/**
- * Get incident comments
- */
-uint32_t NXCORE_EXPORTABLE GetIncidentComments(uint32_t incidentId, NXCPMessage *msg)
-{
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-   wchar_t query[256];
-   nx_swprintf(query, 256,
-      L"SELECT id,incident_id,creation_time,user_id,comment_text FROM incident_comments WHERE incident_id=%u ORDER BY creation_time",
-      incidentId);
-
-   DB_RESULT hResult = DBSelect(hdb, query);
-   if (hResult == nullptr)
-   {
-      DBConnectionPoolReleaseConnection(hdb);
-      return RCC_DB_FAILURE;
-   }
-
-   int count = DBGetNumRows(hResult);
-   msg->setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(count));
-
-   uint32_t baseId = VID_INCIDENT_COMMENT_LIST_BASE;
-   for (int i = 0; i < count; i++)
-   {
-      IncidentComment comment(hResult, i);
-      comment.fillMessage(msg, baseId);
-      baseId += 10;
-   }
-
-   DBFreeResult(hResult);
-   DBConnectionPoolReleaseConnection(hdb);
-   return RCC_SUCCESS;
-}
 
 /**
  * Get incident activity log
@@ -1117,7 +1136,7 @@ uint32_t NXCORE_EXPORTABLE GetIncidentActivity(uint32_t incidentId, NXCPMessage 
    msg->setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(count));
 
    wchar_t buffer[256];
-   uint32_t fieldId = VID_INCIDENT_ACTIVITY_LIST_BASE;
+   uint32_t fieldId = VID_ACTIVITY_LIST_BASE;
    for (int i = 0; i < count; i++)
    {
       msg->setField(fieldId++, DBGetFieldUInt32(hResult, i, 0));  // id

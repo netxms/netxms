@@ -42,6 +42,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.constants.IncidentState;
 import org.netxms.client.events.IncidentSummary;
 import org.netxms.client.users.User;
 import org.netxms.nxmc.Registry;
@@ -86,11 +87,11 @@ public class IncidentList extends Composite
    private Map<Long, IncidentSummary> incidents = new HashMap<>();
 
    private Action actionCreate;
+   private Action actionBlock;
    private Action actionResolve;
    private Action actionClose;
    private Action actionAssign;
    private Action actionAddComment;
-   private Action actionRefresh;
 
    /**
     * Create incident list widget
@@ -186,11 +187,19 @@ public class IncidentList extends Composite
     */
    private void createActions()
    {
-      actionCreate = new Action(i18n.tr("&Create Incident..."), SharedIcons.ADD_OBJECT) {
+      actionCreate = new Action(i18n.tr("&Create incident..."), SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
          {
             createIncident();
+         }
+      };
+
+      actionBlock = new Action(i18n.tr("&Block...")) {
+         @Override
+         public void run()
+         {
+            blockIncident();
          }
       };
 
@@ -218,19 +227,11 @@ public class IncidentList extends Composite
          }
       };
 
-      actionAddComment = new Action(i18n.tr("Add Co&mment...")) {
+      actionAddComment = new Action(i18n.tr("Add co&mment...")) {
          @Override
          public void run()
          {
             addComment();
-         }
-      };
-
-      actionRefresh = new Action(i18n.tr("Re&fresh"), SharedIcons.REFRESH) {
-         @Override
-         public void run()
-         {
-            refresh();
          }
       };
    }
@@ -255,13 +256,12 @@ public class IncidentList extends Composite
    {
       manager.add(actionCreate);
       manager.add(new Separator());
+      manager.add(actionBlock);
       manager.add(actionResolve);
       manager.add(actionClose);
       manager.add(new Separator());
       manager.add(actionAssign);
       manager.add(actionAddComment);
-      manager.add(new Separator());
-      manager.add(actionRefresh);
    }
 
    /**
@@ -273,6 +273,7 @@ public class IncidentList extends Composite
       boolean hasSelection = !selection.isEmpty();
       boolean singleSelection = selection.size() == 1;
 
+      actionBlock.setEnabled(singleSelection);
       actionResolve.setEnabled(hasSelection);
       actionClose.setEnabled(hasSelection);
       actionAssign.setEnabled(singleSelection);
@@ -332,6 +333,46 @@ public class IncidentList extends Composite
             }
          }.start();
       }
+   }
+
+   /**
+    * Block selected incident
+    */
+   private void blockIncident()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      final IncidentSummary incident = (IncidentSummary)selection.getFirstElement();
+
+      EditIncidentCommentDialog dialog = new EditIncidentCommentDialog(getShell(), null,
+            i18n.tr("Block Incident"), i18n.tr("Reason for blocking"));
+      if (dialog.open() != Window.OK)
+         return;
+
+      final String comment = dialog.getText();
+      if (comment.trim().isEmpty())
+      {
+         MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"),
+               i18n.tr("Comment is required when blocking an incident"));
+         return;
+      }
+
+      new Job(i18n.tr("Blocking incident"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.changeIncidentState(incident.getId(), IncidentState.BLOCKED, comment);
+            runInUIThread(() -> refresh());
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot block incident");
+         }
+      }.start();
    }
 
    /**
@@ -493,15 +534,5 @@ public class IncidentList extends Composite
    public Action getActionCreate()
    {
       return actionCreate;
-   }
-
-   /**
-    * Get refresh action
-    *
-    * @return refresh action
-    */
-   public Action getActionRefresh()
-   {
-      return actionRefresh;
    }
 }

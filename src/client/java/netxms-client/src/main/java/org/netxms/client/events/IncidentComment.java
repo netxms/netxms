@@ -42,7 +42,7 @@ public class IncidentComment
    {
       id = msg.getFieldAsInt64(baseId);
       incidentId = msg.getFieldAsInt64(baseId + 1);
-      creationTime = new Date(msg.getFieldAsInt64(baseId + 2) * 1000);
+      creationTime = msg.getFieldAsDate(baseId + 2);
       userId = msg.getFieldAsInt32(baseId + 3);
       text = msg.getFieldAsString(baseId + 4);
    }

@@ -117,7 +117,7 @@ public:
    void logCreationActivity(uint32_t userId) { logActivity(INCIDENT_ACTIVITY_CREATED, userId, nullptr, nullptr, nullptr); }
    void logAddCommentActivity(uint32_t userId) { logActivity(INCIDENT_ACTIVITY_COMMENT_ADDED, userId, nullptr, nullptr, nullptr); }
 
-   uint32_t changeState(int newState, uint32_t userId);
+   uint32_t changeState(int newState, uint32_t userId, const TCHAR *comment = nullptr);
    uint32_t assign(uint32_t userId, uint32_t assignedBy);
    uint32_t resolve(uint32_t userId);
    uint32_t close(uint32_t userId);
@@ -147,10 +147,10 @@ void ShutdownIncidentManager();
 uint32_t NXCORE_EXPORTABLE CreateIncident(uint32_t sourceObjectId, const TCHAR *title,
    const TCHAR *description, uint32_t sourceAlarmId, uint32_t userId, uint32_t *incidentId);
 uint32_t NXCORE_EXPORTABLE GetIncident(uint32_t incidentId, NXCPMessage *msg);
-Incident NXCORE_EXPORTABLE *FindIncidentById(uint32_t incidentId);
+shared_ptr<Incident> NXCORE_EXPORTABLE FindIncidentById(uint32_t incidentId);
 shared_ptr<Incident> NXCORE_EXPORTABLE FindIncidentByAlarmId(uint32_t alarmId);
 
-uint32_t NXCORE_EXPORTABLE ChangeIncidentState(uint32_t incidentId, int newState, uint32_t userId);
+uint32_t NXCORE_EXPORTABLE ChangeIncidentState(uint32_t incidentId, int newState, uint32_t userId, const TCHAR *comment = nullptr);
 uint32_t NXCORE_EXPORTABLE AssignIncident(uint32_t incidentId, uint32_t userId, uint32_t assignedBy);
 uint32_t NXCORE_EXPORTABLE ResolveIncident(uint32_t incidentId, uint32_t userId);
 uint32_t NXCORE_EXPORTABLE CloseIncident(uint32_t incidentId, uint32_t userId);
@@ -160,7 +160,6 @@ uint32_t NXCORE_EXPORTABLE LinkAlarmToIncident(uint32_t incidentId, uint32_t ala
 uint32_t NXCORE_EXPORTABLE UnlinkAlarmFromIncident(uint32_t incidentId, uint32_t alarmId, uint32_t userId);
 
 uint32_t NXCORE_EXPORTABLE AddIncidentComment(uint32_t incidentId, const TCHAR *text, uint32_t userId, uint32_t *commentId);
-uint32_t NXCORE_EXPORTABLE GetIncidentComments(uint32_t incidentId, NXCPMessage *msg);
 uint32_t NXCORE_EXPORTABLE GetIncidentActivity(uint32_t incidentId, NXCPMessage *msg);
 
 void SendIncidentsToClient(uint32_t objectId, uint32_t requestId, ClientSession *session);

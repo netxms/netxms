@@ -43,6 +43,8 @@ public class EditIncidentCommentDialog extends Dialog
    private LabeledText textControl;
    private String text;
    private String initialText;
+   private String customTitle;
+   private String customLabel;
 
    /**
     * Create dialog
@@ -52,8 +54,23 @@ public class EditIncidentCommentDialog extends Dialog
     */
    public EditIncidentCommentDialog(Shell parentShell, String initialText)
    {
+      this(parentShell, initialText, null, null);
+   }
+
+   /**
+    * Create dialog with custom title and label
+    *
+    * @param parentShell parent shell
+    * @param initialText initial text (null for new comment)
+    * @param customTitle custom dialog title (null to use default)
+    * @param customLabel custom text field label (null to use default)
+    */
+   public EditIncidentCommentDialog(Shell parentShell, String initialText, String customTitle, String customLabel)
+   {
       super(parentShell);
       this.initialText = initialText;
+      this.customTitle = customTitle;
+      this.customLabel = customLabel;
    }
 
    /**
@@ -72,7 +89,10 @@ public class EditIncidentCommentDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText((initialText != null) ? i18n.tr("Edit Comment") : i18n.tr("Add Comment"));
+      if (customTitle != null)
+         newShell.setText(customTitle);
+      else
+         newShell.setText((initialText != null) ? i18n.tr("Edit Comment") : i18n.tr("Add Comment"));
 
       PreferenceStore settings = PreferenceStore.getInstance();
       newShell.setSize(settings.getAsInteger(CONFIG_PREFIX + ".cx", 400), settings.getAsInteger(CONFIG_PREFIX + ".cy", 350));
@@ -92,7 +112,7 @@ public class EditIncidentCommentDialog extends Dialog
       dialogArea.setLayout(layout);
 
       textControl = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
-      textControl.setLabel(i18n.tr("Comment"));
+      textControl.setLabel((customLabel != null) ? customLabel : i18n.tr("Comment"));
       if (initialText != null)
          textControl.setText(initialText);
       GridData gd = new GridData();

@@ -195,7 +195,7 @@
  */
 #define INCIDENT_STATE_OPEN          0
 #define INCIDENT_STATE_IN_PROGRESS   1
-#define INCIDENT_STATE_PENDING       2
+#define INCIDENT_STATE_BLOCKED       2
 #define INCIDENT_STATE_RESOLVED      3
 #define INCIDENT_STATE_CLOSED        4
 
@@ -787,6 +787,7 @@ enum SessionState
 #define RCC_INCIDENT_CLOSED               ((uint32_t)181)
 #define RCC_ALARM_ALREADY_IN_INCIDENT     ((uint32_t)182)
 #define RCC_INVALID_INCIDENT_STATE        ((uint32_t)183)
+#define RCC_COMMENT_REQUIRED              ((uint32_t)184)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

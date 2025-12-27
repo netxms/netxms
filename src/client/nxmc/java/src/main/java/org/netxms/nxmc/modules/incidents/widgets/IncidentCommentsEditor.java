@@ -54,7 +54,7 @@ public class IncidentCommentsEditor extends Composite
     */
    public IncidentCommentsEditor(Composite parent, ImageCache imageCache, IncidentComment comment)
    {
-      super(parent, SWT.BORDER);
+      super(parent, SWT.NONE);
 
       setBackground(parent.getBackground());
 
@@ -85,6 +85,7 @@ public class IncidentCommentsEditor extends Composite
       user.setImage(imageCache.create(ResourceManager.getImageDescriptor("icons/user.png")));
       user.setText((userObject != null) ? userObject.getName() : i18n.tr("<unknown>"));
       user.setBackground(parent.getBackground());
+      user.setForeground(getDisplay().getSystemColor(SWT.COLOR_LINK_FOREGROUND));
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = false;
@@ -93,6 +94,7 @@ public class IncidentCommentsEditor extends Composite
       final Label time = new Label(this, SWT.NONE);
       time.setText(DateFormatFactory.getDateTimeFormat().format(comment.getCreationTime()));
       time.setBackground(parent.getBackground());
+      time.setForeground(getDisplay().getSystemColor(SWT.COLOR_WIDGET_DISABLED_FOREGROUND));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;

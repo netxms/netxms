@@ -18,8 +18,11 @@
  */
 package org.netxms.client.events;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.IncidentState;
@@ -45,6 +48,7 @@ public class Incident
    private Date closeTime;
    private long[] linkedAlarmIds;
    private int commentsCount;
+   private List<IncidentComment> comments;
 
    /**
     * Create incident object from NXCP message (details response)
@@ -72,9 +76,18 @@ public class Incident
       commentsCount = msg.getFieldAsInt32(NXCPCodes.VID_NUM_COMMENTS);
 
       // Linked alarm IDs
-      linkedAlarmIds = msg.getFieldAsUInt32Array(NXCPCodes.VID_INCIDENT_ALARM_LIST_BASE);
+      linkedAlarmIds = msg.getFieldAsUInt32Array(NXCPCodes.VID_ALARM_ID_LIST);
       if (linkedAlarmIds == null)
          linkedAlarmIds = new long[0];
+
+      // Parse comments
+      comments = new ArrayList<>(commentsCount);
+      long fieldId = NXCPCodes.VID_COMMENT_LIST_BASE;
+      for (int i = 0; i < commentsCount; i++)
+      {
+         comments.add(new IncidentComment(msg, fieldId));
+         fieldId += 10;
+      }
    }
 
    /**
@@ -245,6 +258,16 @@ public class Incident
    public int getCommentsCount()
    {
       return commentsCount;
+   }
+
+   /**
+    * Get comments
+    *
+    * @return list of comments
+    */
+   public List<IncidentComment> getComments()
+   {
+      return Collections.unmodifiableList(comments);
    }
 
    /**

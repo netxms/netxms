@@ -67,8 +67,6 @@ public class IncidentsView extends View
       manager.add(incidentList.getActionCreate());
       manager.add(new Separator());
       manager.add(actionExportToCsv);
-      manager.add(new Separator());
-      manager.add(incidentList.getActionRefresh());
       super.fillLocalMenu(manager);
    }
 
@@ -79,8 +77,6 @@ public class IncidentsView extends View
    protected void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(incidentList.getActionCreate());
-      manager.add(new Separator());
-      manager.add(incidentList.getActionRefresh());
       super.fillLocalToolBar(manager);
    }
 

@@ -692,9 +692,8 @@ typedef struct
 #define CMD_LINK_ALARM_TO_INCIDENT        0x01EC
 #define CMD_UNLINK_ALARM_FROM_INCIDENT    0x01ED
 #define CMD_ADD_INCIDENT_COMMENT          0x01EE
-#define CMD_GET_INCIDENT_COMMENTS         0x01EF
-#define CMD_GET_INCIDENT_ACTIVITY         0x01F0
-#define CMD_INCIDENT_UPDATE               0x01F1
+#define CMD_GET_INCIDENT_ACTIVITY         0x01EF
+#define CMD_INCIDENT_UPDATE               0x01F0
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1871,8 +1870,7 @@ typedef struct
 #define VID_METADATA_BASE           ((uint32_t)0x1F000000)
 
 #define VID_INCIDENT_LIST_BASE      ((uint32_t)0x60000000)
-#define VID_INCIDENT_ALARM_LIST_BASE ((uint32_t)0x70000000)
-#define VID_INCIDENT_COMMENT_LIST_BASE ((uint32_t)0x10000000)
-#define VID_INCIDENT_ACTIVITY_LIST_BASE ((uint32_t)0x20000000)
+#define VID_COMMENT_LIST_BASE       ((uint32_t)0x62000000)
+#define VID_ACTIVITY_LIST_BASE      ((uint32_t)0x61000000)
 
 #endif   /* _nms_cscp_h_ */

@@ -53,7 +53,7 @@ public class IncidentListLabelProvider extends LabelProvider implements ITableLa
       stateImages = new Image[5];
       stateImages[IncidentState.OPEN.getValue()] = ResourceManager.getImage("icons/incident-open.png");
       stateImages[IncidentState.IN_PROGRESS.getValue()] = ResourceManager.getImage("icons/incident-in-progress.png");
-      stateImages[IncidentState.PENDING.getValue()] = ResourceManager.getImage("icons/incident-pending.png");
+      stateImages[IncidentState.BLOCKED.getValue()] = ResourceManager.getImage("icons/incident-blocked.png");
       stateImages[IncidentState.RESOLVED.getValue()] = ResourceManager.getImage("icons/incident-resolved.png");
       stateImages[IncidentState.CLOSED.getValue()] = ResourceManager.getImage("icons/incident-closed.png");
    }

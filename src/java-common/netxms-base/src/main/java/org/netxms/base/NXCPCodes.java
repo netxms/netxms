@@ -513,9 +513,8 @@ public class NXCPCodes
    public static final int CMD_LINK_ALARM_TO_INCIDENT = 0x01EC;
    public static final int CMD_UNLINK_ALARM_FROM_INCIDENT = 0x01ED;
    public static final int CMD_ADD_INCIDENT_COMMENT = 0x01EE;
-   public static final int CMD_GET_INCIDENT_COMMENTS = 0x01EF;
-   public static final int CMD_GET_INCIDENT_ACTIVITY = 0x01F0;
-   public static final int CMD_INCIDENT_UPDATE = 0x01F1;
+   public static final int CMD_GET_INCIDENT_ACTIVITY = 0x01EF;
+   public static final int CMD_INCIDENT_UPDATE = 0x01F0;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1542,7 +1541,6 @@ public class NXCPCodes
    public static final long VID_UNIT_NAMES_BASE = 0x10000000L;
    public static final long VID_METADATA_BASE = 0x1F000000L;
    public static final long VID_INCIDENT_LIST_BASE = 0x60000000L;
-   public static final long VID_INCIDENT_ACTIVITY_LIST_BASE = 0x61000000L;
-   public static final long VID_INCIDENT_COMMENT_LIST_BASE = 0x62000000L;
-   public static final long VID_INCIDENT_ALARM_LIST_BASE = 0x63000000L;
+   public static final long VID_ACTIVITY_LIST_BASE = 0x61000000L;
+   public static final long VID_COMMENT_LIST_BASE = 0x62000000L;
 }

@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
@@ -134,9 +133,9 @@ public class IncidentDetails extends AdHocObjectView
 
    // Actions
    private Action actionAssign;
+   private Action actionBlock;
    private Action actionResolve;
    private Action actionClose;
-   private Action actionRefresh;
    private CopyTableRowsAction copyAlarmAction;
 
    /**
@@ -157,7 +156,7 @@ public class IncidentDetails extends AdHocObjectView
       stateImages = new Image[5];
       stateImages[IncidentState.OPEN.getValue()] = ResourceManager.getImage("icons/incident-open.png");
       stateImages[IncidentState.IN_PROGRESS.getValue()] = ResourceManager.getImage("icons/incident-in-progress.png");
-      stateImages[IncidentState.PENDING.getValue()] = ResourceManager.getImage("icons/incident-pending.png");
+      stateImages[IncidentState.BLOCKED.getValue()] = ResourceManager.getImage("icons/incident-blocked.png");
       stateImages[IncidentState.RESOLVED.getValue()] = ResourceManager.getImage("icons/incident-resolved.png");
       stateImages[IncidentState.CLOSED.getValue()] = ResourceManager.getImage("icons/incident-closed.png");
    }
@@ -176,7 +175,7 @@ public class IncidentDetails extends AdHocObjectView
       stateImages = new Image[5];
       stateImages[IncidentState.OPEN.getValue()] = ResourceManager.getImage("icons/incident-open.png");
       stateImages[IncidentState.IN_PROGRESS.getValue()] = ResourceManager.getImage("icons/incident-in-progress.png");
-      stateImages[IncidentState.PENDING.getValue()] = ResourceManager.getImage("icons/incident-pending.png");
+      stateImages[IncidentState.BLOCKED.getValue()] = ResourceManager.getImage("icons/incident-blocked.png");
       stateImages[IncidentState.RESOLVED.getValue()] = ResourceManager.getImage("icons/incident-resolved.png");
       stateImages[IncidentState.CLOSED.getValue()] = ResourceManager.getImage("icons/incident-closed.png");
    }
@@ -238,6 +237,14 @@ public class IncidentDetails extends AdHocObjectView
          }
       };
 
+      actionBlock = new Action(i18n.tr("&Block...")) {
+         @Override
+         public void run()
+         {
+            blockIncident();
+         }
+      };
+
       actionResolve = new Action(i18n.tr("&Resolve")) {
          @Override
          public void run()
@@ -254,14 +261,6 @@ public class IncidentDetails extends AdHocObjectView
          }
       };
 
-      actionRefresh = new Action(i18n.tr("Re&fresh"), SharedIcons.REFRESH) {
-         @Override
-         public void run()
-         {
-            refresh();
-         }
-      };
-
       copyAlarmAction = new CopyTableRowsAction(alarmViewer, true);
    }
 
@@ -273,10 +272,9 @@ public class IncidentDetails extends AdHocObjectView
    {
       manager.add(actionAssign);
       manager.add(new Separator());
+      manager.add(actionBlock);
       manager.add(actionResolve);
       manager.add(actionClose);
-      manager.add(new Separator());
-      manager.add(actionRefresh);
    }
 
    /**
@@ -286,12 +284,7 @@ public class IncidentDetails extends AdHocObjectView
    {
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
-         {
-            fillAlarmContextMenu(mgr);
-         }
-      });
+      menuMgr.addMenuListener((m) -> fillAlarmContextMenu(m));
 
       Menu menu = menuMgr.createContextMenu(alarmViewer.getControl());
       alarmViewer.getControl().setMenu(menu);
@@ -441,7 +434,7 @@ public class IncidentDetails extends AdHocObjectView
       section.addExpansionListener((e) -> dd.fill = e.getState());
 
       commentsScroller = new ScrolledComposite(section.getClient(), SWT.V_SCROLL);
-      commentsScroller.setBackground(section.getClient().getBackground());
+      commentsScroller.setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
       commentsScroller.setExpandHorizontal(true);
       commentsScroller.setExpandVertical(true);
       WidgetHelper.setScrollBarIncrement(commentsScroller, SWT.VERTICAL, 20);
@@ -454,7 +447,7 @@ public class IncidentDetails extends AdHocObjectView
       });
 
       commentsArea = new Composite(commentsScroller, SWT.NONE);
-      commentsArea.setBackground(section.getClient().getBackground());
+      commentsArea.setBackground(commentsScroller.getBackground());
       GridLayout layout = new GridLayout();
       commentsArea.setLayout(layout);
 
@@ -525,7 +518,6 @@ public class IncidentDetails extends AdHocObjectView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final Incident incidentData = session.getIncident(incidentId);
-            final List<IncidentComment> comments = session.getIncidentComments(incidentId);
 
             // Fetch linked alarm details
             long[] linkedAlarmIds = incidentData.getLinkedAlarmIds();
@@ -546,7 +538,7 @@ public class IncidentDetails extends AdHocObjectView
                incident = incidentData;
                updateOverview();
                updateDetails();
-               updateComments(comments);
+               updateComments(incidentData.getComments());
                updateAlarms(linkedAlarms);
                updateActionStates();
                updateLayout();
@@ -696,6 +688,7 @@ public class IncidentDetails extends AdHocObjectView
    {
       boolean canModify = incident != null && !incident.isClosed();
       actionAssign.setEnabled(canModify);
+      actionBlock.setEnabled(canModify && incident.getState() != IncidentState.BLOCKED);
       actionResolve.setEnabled(canModify && !incident.isResolved());
       actionClose.setEnabled(incident != null && !incident.isClosed());
    }
@@ -774,6 +767,40 @@ public class IncidentDetails extends AdHocObjectView
          protected String getErrorMessage()
          {
             return i18n.tr("Cannot assign incident");
+         }
+      }.start();
+   }
+
+   /**
+    * Block incident
+    */
+   private void blockIncident()
+   {
+      EditIncidentCommentDialog dialog = new EditIncidentCommentDialog(getWindow().getShell(), null,
+            i18n.tr("Block Incident"), i18n.tr("Reason for blocking"));
+      if (dialog.open() != Window.OK)
+         return;
+
+      final String comment = dialog.getText();
+      if (comment.trim().isEmpty())
+      {
+         MessageDialogHelper.openWarning(getWindow().getShell(), i18n.tr("Warning"),
+               i18n.tr("Comment is required when blocking an incident"));
+         return;
+      }
+
+      new Job(i18n.tr("Blocking incident"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.changeIncidentState(incidentId, IncidentState.BLOCKED, comment);
+            runInUIThread(() -> refresh());
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot block incident");
          }
       }.start();
    }

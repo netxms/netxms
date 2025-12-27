@@ -30,7 +30,7 @@ public enum IncidentState
 {
    OPEN(0),
    IN_PROGRESS(1),
-   PENDING(2),
+   BLOCKED(2),
    RESOLVED(3),
    CLOSED(4);
 

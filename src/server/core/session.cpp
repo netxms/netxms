@@ -1268,9 +1268,6 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_ADD_INCIDENT_COMMENT:
          addIncidentComment(*request);
          break;
-      case CMD_GET_INCIDENT_COMMENTS:
-         getIncidentComments(*request);
-         break;
       case CMD_GET_INCIDENT_ACTIVITY:
          getIncidentActivity(*request);
          break;
@@ -7362,14 +7359,14 @@ void ClientSession::getIncidentDetails(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
-   Incident *incident = FindIncidentById(incidentId);
-
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
    if (incident != nullptr)
    {
       shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
       if ((object != nullptr) && object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
       {
-         response.setField(VID_RCC, GetIncident(incidentId, &response));
+         incident->fillMessage(&response);
+         response.setField(VID_RCC, RCC_SUCCESS);
       }
       else
       {
@@ -7428,8 +7425,7 @@ void ClientSession::updateIncident(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
-   Incident *incident = FindIncidentById(incidentId);
-
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
    if (incident != nullptr)
    {
       shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
@@ -7462,14 +7458,15 @@ void ClientSession::changeIncidentState(const NXCPMessage& request)
 
    uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
    int newState = request.getFieldAsInt16(VID_INCIDENT_STATE);
-   Incident *incident = FindIncidentById(incidentId);
+   wchar_t *comment = request.getFieldAsString(VID_COMMENTS);
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
 
    if (incident != nullptr)
    {
       shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
       if ((object != nullptr) && object->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
       {
-         response.setField(VID_RCC, ChangeIncidentState(incidentId, newState, m_userId));
+         response.setField(VID_RCC, incident->changeState(newState, m_userId, comment));
       }
       else
       {
@@ -7481,6 +7478,7 @@ void ClientSession::changeIncidentState(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_INCIDENT_NOT_FOUND);
    }
 
+   MemFree(comment);
    sendMessage(response);
 }
 
@@ -7493,8 +7491,7 @@ void ClientSession::assignIncident(const NXCPMessage& request)
 
    uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
    uint32_t userId = request.getFieldAsUInt32(VID_USER_ID);
-   Incident *incident = FindIncidentById(incidentId);
-
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
    if (incident != nullptr)
    {
       shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
@@ -7524,8 +7521,7 @@ void ClientSession::linkAlarmToIncident(const NXCPMessage& request)
 
    uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
    uint32_t alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
-   Incident *incident = FindIncidentById(incidentId);
-
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
    if (incident != nullptr)
    {
       shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
@@ -7555,8 +7551,7 @@ void ClientSession::unlinkAlarmFromIncident(const NXCPMessage& request)
 
    uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
    uint32_t alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
-   Incident *incident = FindIncidentById(incidentId);
-
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
    if (incident != nullptr)
    {
       shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
@@ -7585,8 +7580,7 @@ void ClientSession::addIncidentComment(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
-   Incident *incident = FindIncidentById(incidentId);
-
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
    if (incident != nullptr)
    {
       shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
@@ -7614,37 +7608,6 @@ void ClientSession::addIncidentComment(const NXCPMessage& request)
 }
 
 /**
- * Get incident comments
- */
-void ClientSession::getIncidentComments(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-
-   uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
-   Incident *incident = FindIncidentById(incidentId);
-
-   if (incident != nullptr)
-   {
-      shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
-      if ((object != nullptr) && object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
-      {
-         response.setField(VID_RCC, GetIncidentComments(incidentId, &response));
-      }
-      else
-      {
-         response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      }
-   }
-   else
-   {
-      // Try to get from database (closed incident)
-      response.setField(VID_RCC, GetIncidentComments(incidentId, &response));
-   }
-
-   sendMessage(response);
-}
-
-/**
  * Get incident activity log
  */
 void ClientSession::getIncidentActivity(const NXCPMessage& request)
@@ -7652,8 +7615,7 @@ void ClientSession::getIncidentActivity(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
-   Incident *incident = FindIncidentById(incidentId);
-
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
    if (incident != nullptr)
    {
       shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());

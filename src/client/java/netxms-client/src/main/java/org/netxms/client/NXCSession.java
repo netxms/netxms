@@ -130,7 +130,6 @@ import org.netxms.client.events.EventReference;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.events.Incident;
 import org.netxms.client.events.IncidentActivity;
-import org.netxms.client.events.IncidentComment;
 import org.netxms.client.events.IncidentSummary;
 import org.netxms.client.events.SyslogRecord;
 import org.netxms.client.log.Log;
@@ -5043,9 +5042,25 @@ public class NXCSession
     */
    public void changeIncidentState(long incidentId, IncidentState newState) throws IOException, NXCException
    {
+      changeIncidentState(incidentId, newState, null);
+   }
+
+   /**
+    * Change state of an incident with optional comment.
+    *
+    * @param incidentId Incident ID
+    * @param newState   New state (use Incident.STATE_* constants)
+    * @param comment    Optional comment (required for BLOCKED state)
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void changeIncidentState(long incidentId, IncidentState newState, String comment) throws IOException, NXCException
+   {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_CHANGE_INCIDENT_STATE);
       msg.setFieldUInt32(NXCPCodes.VID_INCIDENT_ID, incidentId);
       msg.setFieldInt16(NXCPCodes.VID_INCIDENT_STATE, newState.getValue());
+      if (comment != null && !comment.isEmpty())
+         msg.setField(NXCPCodes.VID_COMMENTS, comment);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -5143,32 +5158,6 @@ public class NXCSession
    }
 
    /**
-    * Get comments for an incident.
-    *
-    * @param incidentId Incident ID
-    * @return List of incident comments
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public List<IncidentComment> getIncidentComments(long incidentId) throws IOException, NXCException
-   {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_INCIDENT_COMMENTS);
-      msg.setFieldUInt32(NXCPCodes.VID_INCIDENT_ID, incidentId);
-      sendMessage(msg);
-      final NXCPMessage response = waitForRCC(msg.getMessageId());
-
-      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
-      List<IncidentComment> list = new ArrayList<IncidentComment>(count);
-      long varId = NXCPCodes.VID_INCIDENT_COMMENT_LIST_BASE;
-      for (int i = 0; i < count; i++)
-      {
-         list.add(new IncidentComment(response, varId));
-         varId += 10;
-      }
-      return list;
-   }
-
-   /**
     * Get activity log for an incident.
     *
     * @param incidentId Incident ID
@@ -5185,7 +5174,7 @@ public class NXCSession
 
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
       List<IncidentActivity> list = new ArrayList<IncidentActivity>(count);
-      long varId = NXCPCodes.VID_INCIDENT_ACTIVITY_LIST_BASE;
+      long varId = NXCPCodes.VID_ACTIVITY_LIST_BASE;
       for (int i = 0; i < count; i++)
       {
          list.add(new IncidentActivity(response, varId));
