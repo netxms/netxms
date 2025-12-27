@@ -51,11 +51,25 @@ public class IncidentListLabelProvider extends LabelProvider implements ITableLa
       session = Registry.getSession();
 
       stateImages = new Image[5];
-      stateImages[IncidentState.OPEN.getValue()] = ResourceManager.getImage("icons/incident-open.png");
-      stateImages[IncidentState.IN_PROGRESS.getValue()] = ResourceManager.getImage("icons/incident-in-progress.png");
-      stateImages[IncidentState.BLOCKED.getValue()] = ResourceManager.getImage("icons/incident-blocked.png");
-      stateImages[IncidentState.RESOLVED.getValue()] = ResourceManager.getImage("icons/incident-resolved.png");
-      stateImages[IncidentState.CLOSED.getValue()] = ResourceManager.getImage("icons/incident-closed.png");
+      stateImages[IncidentState.OPEN.getValue()] = ResourceManager.getImage("icons/incidents/incident-open.png");
+      stateImages[IncidentState.IN_PROGRESS.getValue()] = ResourceManager.getImage("icons/incidents/incident-in-progress.png");
+      stateImages[IncidentState.BLOCKED.getValue()] = ResourceManager.getImage("icons/incidents/incident-blocked.png");
+      stateImages[IncidentState.RESOLVED.getValue()] = ResourceManager.getImage("icons/incidents/incident-resolved.png");
+      stateImages[IncidentState.CLOSED.getValue()] = ResourceManager.getImage("icons/incidents/incident-closed.png");
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      for(int i = 0; i < stateImages.length; i++)
+      {
+         if (stateImages[i] != null)
+            stateImages[i].dispose();
+      }
+      super.dispose();
    }
 
    /**

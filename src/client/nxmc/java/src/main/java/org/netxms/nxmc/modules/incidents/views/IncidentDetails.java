@@ -100,9 +100,9 @@ public class IncidentDetails extends AdHocObjectView
 
    private long incidentId;
    private Incident incident;
-   private NXCSession session;
+   private NXCSession session = Registry.getSession();
    private ImageCache imageCache;
-   private BaseObjectLabelProvider objectLabelProvider;
+   private BaseObjectLabelProvider objectLabelProvider = new BaseObjectLabelProvider();
    private Image[] stateImages;
 
    private Composite content;
@@ -150,15 +150,6 @@ public class IncidentDetails extends AdHocObjectView
             ResourceManager.getImageDescriptor("icons/object-views/incidents.png"),
             "objects.incident-details", contextObject, contextObject, false);
       this.incidentId = incidentId;
-      this.session = Registry.getSession();
-      this.objectLabelProvider = new BaseObjectLabelProvider();
-
-      stateImages = new Image[5];
-      stateImages[IncidentState.OPEN.getValue()] = ResourceManager.getImage("icons/incident-open.png");
-      stateImages[IncidentState.IN_PROGRESS.getValue()] = ResourceManager.getImage("icons/incident-in-progress.png");
-      stateImages[IncidentState.BLOCKED.getValue()] = ResourceManager.getImage("icons/incident-blocked.png");
-      stateImages[IncidentState.RESOLVED.getValue()] = ResourceManager.getImage("icons/incident-resolved.png");
-      stateImages[IncidentState.CLOSED.getValue()] = ResourceManager.getImage("icons/incident-closed.png");
    }
 
    /**
@@ -169,15 +160,6 @@ public class IncidentDetails extends AdHocObjectView
       super(LocalizationHelper.getI18n(IncidentDetails.class).tr("Incident Details"),
             ResourceManager.getImageDescriptor("icons/object-views/incidents.png"),
             "objects.incident-details", 0, 0, false);
-      this.session = Registry.getSession();
-      this.objectLabelProvider = new BaseObjectLabelProvider();
-
-      stateImages = new Image[5];
-      stateImages[IncidentState.OPEN.getValue()] = ResourceManager.getImage("icons/incident-open.png");
-      stateImages[IncidentState.IN_PROGRESS.getValue()] = ResourceManager.getImage("icons/incident-in-progress.png");
-      stateImages[IncidentState.BLOCKED.getValue()] = ResourceManager.getImage("icons/incident-blocked.png");
-      stateImages[IncidentState.RESOLVED.getValue()] = ResourceManager.getImage("icons/incident-resolved.png");
-      stateImages[IncidentState.CLOSED.getValue()] = ResourceManager.getImage("icons/incident-closed.png");
    }
 
    /**
@@ -207,8 +189,15 @@ public class IncidentDetails extends AdHocObjectView
    @Override
    protected void createContent(Composite parent)
    {
-      imageCache = new ImageCache();
+      imageCache = new ImageCache(parent);
       content = parent;
+
+      stateImages = new Image[5];
+      stateImages[IncidentState.OPEN.getValue()] = imageCache.create(ResourceManager.getImageDescriptor("icons/incidents/incident-open.png"));
+      stateImages[IncidentState.IN_PROGRESS.getValue()] = imageCache.create(ResourceManager.getImageDescriptor("icons/incidents/incident-in-progress.png"));
+      stateImages[IncidentState.BLOCKED.getValue()] = imageCache.create(ResourceManager.getImageDescriptor("icons/incidents/incident-blocked.png"));
+      stateImages[IncidentState.RESOLVED.getValue()] = imageCache.create(ResourceManager.getImageDescriptor("icons/incidents/incident-resolved.png"));
+      stateImages[IncidentState.CLOSED.getValue()] = imageCache.create(ResourceManager.getImageDescriptor("icons/incidents/incident-closed.png"));
 
       DashboardLayout layout = new DashboardLayout();
       layout.marginWidth = WidgetHelper.OUTER_SPACING;
@@ -237,7 +226,7 @@ public class IncidentDetails extends AdHocObjectView
          }
       };
 
-      actionBlock = new Action(i18n.tr("&Block...")) {
+      actionBlock = new Action(i18n.tr("&Block..."), ResourceManager.getImageDescriptor("icons/incidents/incident-blocked.png")) {
          @Override
          public void run()
          {
@@ -245,7 +234,7 @@ public class IncidentDetails extends AdHocObjectView
          }
       };
 
-      actionResolve = new Action(i18n.tr("&Resolve")) {
+      actionResolve = new Action(i18n.tr("&Resolve"), ResourceManager.getImageDescriptor("icons/incidents/incident-resolved.png")) {
          @Override
          public void run()
          {
@@ -253,7 +242,7 @@ public class IncidentDetails extends AdHocObjectView
          }
       };
 
-      actionClose = new Action(i18n.tr("C&lose")) {
+      actionClose = new Action(i18n.tr("C&lose"), ResourceManager.getImageDescriptor("icons/incidents/incident-closed.png")) {
          @Override
          public void run()
          {

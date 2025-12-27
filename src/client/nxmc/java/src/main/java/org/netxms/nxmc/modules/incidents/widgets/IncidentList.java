@@ -57,6 +57,7 @@ import org.netxms.nxmc.modules.incidents.widgets.helpers.IncidentComparator;
 import org.netxms.nxmc.modules.incidents.widgets.helpers.IncidentListFilter;
 import org.netxms.nxmc.modules.incidents.widgets.helpers.IncidentListLabelProvider;
 import org.netxms.nxmc.modules.users.dialogs.UserSelectionDialog;
+import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -195,7 +196,7 @@ public class IncidentList extends Composite
          }
       };
 
-      actionBlock = new Action(i18n.tr("&Block...")) {
+      actionBlock = new Action(i18n.tr("&Block..."), ResourceManager.getImageDescriptor("icons/incidents/incident-blocked.png")) {
          @Override
          public void run()
          {
@@ -203,7 +204,7 @@ public class IncidentList extends Composite
          }
       };
 
-      actionResolve = new Action(i18n.tr("&Resolve")) {
+      actionResolve = new Action(i18n.tr("&Resolve"), ResourceManager.getImageDescriptor("icons/incidents/incident-resolved.png")) {
          @Override
          public void run()
          {
@@ -211,7 +212,7 @@ public class IncidentList extends Composite
          }
       };
 
-      actionClose = new Action(i18n.tr("C&lose")) {
+      actionClose = new Action(i18n.tr("C&lose"), ResourceManager.getImageDescriptor("icons/incidents/incident-closed.png")) {
          @Override
          public void run()
          {
@@ -227,7 +228,7 @@ public class IncidentList extends Composite
          }
       };
 
-      actionAddComment = new Action(i18n.tr("Add co&mment...")) {
+      actionAddComment = new Action(i18n.tr("Add co&mment..."), ResourceManager.getImageDescriptor("icons/new_comment.png")) {
          @Override
          public void run()
          {
