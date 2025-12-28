@@ -1151,23 +1151,23 @@ public class NXCPMessage
    }
 
    /**
-    * Get string list from field
+    * Get field as list of strings
     * 
     * @param fieldId field ID
     * @return list of strings
     */
-   public List<String> getStringListFromField(long fieldId)
+   public List<String> getFieldAsStringList(long fieldId)
    {
       final NXCPMessageField var = findField(fieldId);
       String[] array = (var != null) ? var.getAsStringArrayEx() : null;
-      return Arrays.asList(array);      
+      return (array != null) ? Arrays.asList(array) : null;
    }
    
    /**
-    * Get field as array of 32 bit integers
+    * Get field as array of strings
     * 
     * @param fieldId field ID
-    * @return field value as array of Long objects
+    * @return field value as array of String objects
     */
    public String[] getFieldAsStringArrayEx(final long fieldId)
    {

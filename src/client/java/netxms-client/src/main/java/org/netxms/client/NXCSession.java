@@ -789,6 +789,10 @@ public class NXCSession
                      sendNotification(new SessionNotification(SessionNotification.PACKAGE_DEPLOYMENT_JOB_CHANGED, msg.getFieldAsInt64(NXCPCodes.VID_ELEMENT_LIST_BASE),
                            new PackageDeploymentJob(msg, NXCPCodes.VID_ELEMENT_LIST_BASE)));
                      break;
+                  case NXCPCodes.CMD_AI_AGENT_QUESTION:
+                     sendNotification(new SessionNotification(SessionNotification.AI_QUESTION,
+                           msg.getFieldAsInt64(NXCPCodes.VID_CHAT_ID), new org.netxms.client.ai.AiQuestion(msg)));
+                     break;
                   default:
                      // Check subscriptions
                      synchronized(messageSubscriptions)
@@ -9988,7 +9992,7 @@ public class NXCSession
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       List<String> list;
       if (response.isFieldPresent(NXCPCodes.VID_PROPERTIES))
-         list = response.getStringListFromField(NXCPCodes.VID_PROPERTIES);
+         list = response.getFieldAsStringList(NXCPCodes.VID_PROPERTIES);
       else
          list = new ArrayList<String>();
       return list;
@@ -15565,6 +15569,27 @@ public class NXCSession
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.getFieldAsInt64(NXCPCodes.VID_TASK_ID);
+   }
+
+   /**
+    * Answer AI agent question.
+    *
+    * @param chatId chat ID the question belongs to
+    * @param questionId question ID
+    * @param positive true for positive response (approve/yes/confirm), false for negative
+    * @param selectedOption selected option index for multiple choice questions (-1 if not applicable)
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void answerAiQuestion(long chatId, long questionId, boolean positive, int selectedOption) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_AI_AGENT_RESPONSE);
+      msg.setFieldUInt32(NXCPCodes.VID_CHAT_ID, chatId);
+      msg.setFieldInt64(NXCPCodes.VID_AI_QUESTION_ID, questionId);
+      msg.setField(NXCPCodes.VID_AI_RESPONSE_POSITIVE, positive);
+      msg.setFieldInt32(NXCPCodes.VID_AI_RESPONSE_OPTION, selectedOption);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
    }
 
    /**

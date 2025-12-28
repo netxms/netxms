@@ -2095,6 +2095,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_ADD_AI_AGENT_TASK:
          addAiAgentTask(*request);
          break;
+      case CMD_AI_AGENT_RESPONSE:
+         handleAiQuestionResponse(*request);
+         break;
       default:
          if ((code >> 8) == 0x11)
          {
@@ -18746,6 +18749,44 @@ void ClientSession::addAiAgentTask(const NXCPMessage& request)
    }
    MemFree(description);
    MemFree(prompt);
+   sendMessage(response);
+}
+
+/**
+ * Handle AI agent question response from client
+ *
+ * Called by:
+ * CMD_AI_AGENT_RESPONSE
+ *
+ * Expected input parameters:
+ * VID_CHAT_ID              Chat ID
+ * VID_AI_QUESTION_ID       Question ID
+ * VID_AI_RESPONSE_POSITIVE Response for binary questions (true/false)
+ * VID_AI_RESPONSE_OPTION   Selected option index for multiple choice (-1 if not applicable)
+ *
+ * Return values:
+ * VID_RCC                  Request completion code
+ */
+void ClientSession::handleAiQuestionResponse(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t chatId = request.getFieldAsUInt32(VID_CHAT_ID);
+   uint32_t rcc;
+   shared_ptr<Chat> chat = GetAIAssistantChat(chatId, m_userId, &rcc);
+   if (chat != nullptr)
+   {
+      uint64_t questionId = request.getFieldAsUInt64(VID_AI_QUESTION_ID);
+      bool positive = request.getFieldAsBoolean(VID_AI_RESPONSE_POSITIVE);
+      int32_t selectedOption = request.getFieldAsInt32(VID_AI_RESPONSE_OPTION);
+      chat->handleQuestionResponse(questionId, positive, selectedOption);
+      response.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      response.setField(VID_RCC, rcc);
+   }
+
    sendMessage(response);
 }
 

@@ -694,6 +694,8 @@ typedef struct
 #define CMD_ADD_INCIDENT_COMMENT          0x01EE
 #define CMD_GET_INCIDENT_ACTIVITY         0x01EF
 #define CMD_INCIDENT_UPDATE               0x01F0
+#define CMD_AI_AGENT_QUESTION             0x01F1
+#define CMD_AI_AGENT_RESPONSE             0x01F2
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1595,6 +1597,15 @@ typedef struct
 #define VID_CLOSE_TIME              ((uint32_t)887)
 #define VID_RESOLVE_TIME            ((uint32_t)888)
 #define VID_INCIDENT_DELAY          ((uint32_t)889)
+#define VID_AI_QUESTION_ID          ((uint32_t)890)
+#define VID_AI_QUESTION_TYPE        ((uint32_t)891)
+#define VID_AI_CONFIRMATION_TYPE    ((uint32_t)892)
+#define VID_AI_QUESTION_TEXT        ((uint32_t)893)
+#define VID_AI_QUESTION_CONTEXT     ((uint32_t)894)
+#define VID_AI_QUESTION_TIMEOUT     ((uint32_t)895)
+#define VID_AI_RESPONSE_POSITIVE    ((uint32_t)896)
+#define VID_AI_RESPONSE_OPTION      ((uint32_t)897)
+#define VID_AI_QUESTION_OPTIONS     ((uint32_t)898)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

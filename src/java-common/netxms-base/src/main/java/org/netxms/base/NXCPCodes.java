@@ -515,6 +515,8 @@ public class NXCPCodes
    public static final int CMD_ADD_INCIDENT_COMMENT = 0x01EE;
    public static final int CMD_GET_INCIDENT_ACTIVITY = 0x01EF;
    public static final int CMD_INCIDENT_UPDATE = 0x01F0;
+   public static final int CMD_AI_AGENT_QUESTION = 0x01F1;
+   public static final int CMD_AI_AGENT_RESPONSE = 0x01F2;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1412,6 +1414,15 @@ public class NXCPCodes
    public static final long VID_CLOSE_TIME = 887;
    public static final long VID_RESOLVE_TIME = 888;
    public static final long VID_INCIDENT_DELAY = 889;
+   public static final long VID_AI_QUESTION_ID = 890;
+   public static final long VID_AI_QUESTION_TYPE = 891;
+   public static final long VID_AI_CONFIRMATION_TYPE = 892;
+   public static final long VID_AI_QUESTION_TEXT = 893;
+   public static final long VID_AI_QUESTION_CONTEXT = 894;
+   public static final long VID_AI_QUESTION_TIMEOUT = 895;
+   public static final long VID_AI_RESPONSE_POSITIVE = 896;
+   public static final long VID_AI_RESPONSE_OPTION = 897;
+   public static final long VID_AI_QUESTION_OPTIONS = 898;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

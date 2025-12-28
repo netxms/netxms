@@ -66,6 +66,45 @@ enum class AITaskState
 };
 
 /**
+ * Confirmation type for binary questions
+ */
+enum class ConfirmationType
+{
+   APPROVE_REJECT = 0,
+   YES_NO = 1,
+   CONFIRM_CANCEL = 2
+};
+
+/**
+ * Pending question for user interaction
+ */
+struct PendingQuestion
+{
+   uint64_t id;
+   bool isMultipleChoice;
+   ConfirmationType confirmationType;
+   MutableString text;
+   MutableString context;
+   StringList options;
+   time_t expiresAt;
+   Condition responseReceived;
+   bool responded;
+   bool positiveResponse;
+   int selectedOption;
+
+   PendingQuestion() : responseReceived(false)
+   {
+      id = 0;
+      isMultipleChoice = false;
+      confirmationType = ConfirmationType::APPROVE_REJECT;
+      expiresAt = 0;
+      responded = false;
+      positiveResponse = false;
+      selectedOption = -1;
+   }
+};
+
+/**
  * AI task
  */
 class AITask
@@ -123,6 +162,8 @@ private:
    json_t *m_functionDeclarations;
    time_t m_creationTime;
    time_t m_lastUpdateTime;
+   PendingQuestion *m_pendingQuestion;
+   Mutex m_questionMutex;
 
    void addMessage(const char *role, const char *content)
    {
@@ -147,6 +188,11 @@ public:
    char *sendRequest(const char *prompt, int maxIterations);
 
    void clear();
+
+   bool askConfirmation(const TCHAR *text, const TCHAR *context, ConfirmationType type, uint32_t timeout = 300);
+   int askMultipleChoice(const TCHAR *text, const TCHAR *context, const StringList &options, uint32_t timeout = 300);
+   void handleQuestionResponse(uint64_t questionId, bool positive, int selectedOption);
+   bool hasPendingQuestion() const { return m_pendingQuestion != nullptr; }
 };
 
 /**

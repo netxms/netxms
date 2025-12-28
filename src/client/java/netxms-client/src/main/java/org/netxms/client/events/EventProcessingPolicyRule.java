@@ -204,7 +204,7 @@ public class EventProcessingPolicyRule
          actions.add(new ActionExecutionConfiguration(msg, fieldId));
          fieldId += 10;
       }
-      timerCancellations = msg.getStringListFromField(NXCPCodes.VID_TIMER_LIST);
+      timerCancellations = msg.getFieldAsStringList(NXCPCodes.VID_TIMER_LIST);
 
       persistentStorageSet = msg.getStringMapFromFields(NXCPCodes.VID_PSTORAGE_SET_LIST_BASE, NXCPCodes.VID_NUM_SET_PSTORAGE);
       persistentStorageDelete = msg.getStringListFromFields(NXCPCodes.VID_PSTORAGE_DELETE_LIST_BASE, NXCPCodes.VID_NUM_DELETE_PSTORAGE);

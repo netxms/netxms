@@ -36,6 +36,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
+import org.eclipse.swt.browser.BrowserFunction;
 import org.eclipse.swt.browser.ProgressEvent;
 import org.eclipse.swt.browser.ProgressListener;
 import org.eclipse.swt.events.KeyEvent;
@@ -48,6 +49,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
+import org.netxms.client.ai.AiQuestion;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
@@ -64,7 +68,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * AI assistant chat view
  */
-public class AiAssistantChatView extends View
+public class AiAssistantChatView extends View implements SessionListener
 {
    private static final Logger logger = LoggerFactory.getLogger(AiAssistantChatView.class);
    private static final List<Extension> extensions =
@@ -79,6 +83,8 @@ public class AiAssistantChatView extends View
    private Text chatInput;
    private Action actionClearChat;
    private StringBuilder chatContent;
+   private AiQuestion pendingQuestion;
+   private String currentMessageId;
 
    /**
     * Create server console view
@@ -117,7 +123,61 @@ public class AiAssistantChatView extends View
       chatContent.append(ColorConverter.rgbToCss(ThemeEngine.getForegroundColor("AiAssistant.AssistantMessage").getRGB()));
       chatContent.append("; }");
       chatContent.append(".sender { font-size: 12px; margin-bottom: 5px; opacity: 0.7; }");
+      // Question card styles
+      chatContent.append(".question-card { background-color: #f8f9fa; border: 2px solid #0d6efd; border-radius: 12px; padding: 16px; margin: 15px 0; max-width: 80%; }");
+      chatContent.append(".question-header { font-weight: bold; color: #0d6efd; margin-bottom: 10px; font-size: 13px; }");
+      chatContent.append(".question-text { margin-bottom: 12px; }");
+      chatContent.append(".question-context { background-color: #e9ecef; padding: 8px 12px; border-radius: 4px; font-family: monospace; margin-bottom: 12px; white-space: pre-wrap; }");
+      chatContent.append(".question-buttons { display: flex; gap: 10px; margin-bottom: 8px; }");
+      chatContent.append(".question-btn { padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px; }");
+      chatContent.append(".question-btn-positive { background-color: #198754; color: white; }");
+      chatContent.append(".question-btn-positive:hover { background-color: #157347; }");
+      chatContent.append(".question-btn-negative { background-color: #dc3545; color: white; }");
+      chatContent.append(".question-btn-negative:hover { background-color: #bb2d3b; }");
+      chatContent.append(".question-btn-option { background-color: #0d6efd; color: white; display: block; width: 100%; text-align: left; margin-bottom: 5px; }");
+      chatContent.append(".question-btn-option:hover { background-color: #0b5ed7; }");
+      chatContent.append(".question-timer { font-size: 12px; color: #6c757d; }");
+      chatContent.append(".question-answered { opacity: 0.6; }");
+      chatContent.append(".question-answered .question-buttons { display: none; }");
+      chatContent.append(".question-btn:disabled { opacity: 0.5; cursor: not-allowed; }");
       chatContent.append("</style>");
+      chatContent.append("<script>");
+      chatContent.append("var questionTimers = {};");
+      chatContent.append("var answeredQuestions = {};");
+      chatContent.append("function answerQuestion(questionId, positive, selectedOption) {");
+      chatContent.append("  if (answeredQuestions[questionId]) return;");  // Prevent double-click
+      chatContent.append("  answeredQuestions[questionId] = true;");
+      chatContent.append("  if (questionTimers[questionId]) { clearInterval(questionTimers[questionId]); delete questionTimers[questionId]; }");
+      chatContent.append("  var card = document.getElementById('question_' + questionId);");
+      chatContent.append("  if (card) {");
+      chatContent.append("    card.classList.add('question-answered');");
+      chatContent.append("    var buttons = card.querySelectorAll('button');");
+      chatContent.append("    buttons.forEach(function(btn) { btn.disabled = true; });");
+      chatContent.append("    var timer = card.querySelector('.question-timer');");
+      chatContent.append("    if (timer) { timer.textContent = 'Answered'; }");
+      chatContent.append("  }");
+      chatContent.append("  window.javaCallback(questionId, positive, selectedOption);");
+      chatContent.append("}");
+      chatContent.append("function startQuestionTimer(questionId, seconds) {");
+      chatContent.append("  if (questionTimers[questionId]) return;");  // Prevent duplicate timers
+      chatContent.append("  var timerEl = document.getElementById('timer_' + questionId);");
+      chatContent.append("  if (!timerEl) return;");
+      chatContent.append("  var remaining = seconds;");
+      chatContent.append("  function updateTimer() {");
+      chatContent.append("    var mins = Math.floor(remaining / 60);");
+      chatContent.append("    var secs = remaining % 60;");
+      chatContent.append("    timerEl.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;");
+      chatContent.append("    if (remaining <= 0) {");
+      chatContent.append("      clearInterval(questionTimers[questionId]);");
+      chatContent.append("      delete questionTimers[questionId];");
+      chatContent.append("      answerQuestion(questionId, false, -1);");
+      chatContent.append("    }");
+      chatContent.append("    remaining--;");
+      chatContent.append("  }");
+      chatContent.append("  updateTimer();");
+      chatContent.append("  questionTimers[questionId] = setInterval(updateTimer, 1000);");
+      chatContent.append("}");
+      chatContent.append("</script>");
       chatContent.append("</head><body>");
       chatContent.append("<div id='chat-container'>");
       chatContent.append("</div>");
@@ -179,6 +239,22 @@ public class AiAssistantChatView extends View
          }
       });
 
+      // Create BrowserFunction for JS-to-Java callback
+      new BrowserFunction(chatBrowser, "javaCallback") {
+         @Override
+         public Object function(Object[] arguments)
+         {
+            if (arguments.length >= 3)
+            {
+               long questionId = ((Number)arguments[0]).longValue();
+               boolean positive = (Boolean)arguments[1];
+               int selectedOption = ((Number)arguments[2]).intValue();
+               handleQuestionResponse(questionId, positive, selectedOption);
+            }
+            return null;
+         }
+      };
+
       // Initialize with welcome message
       addAssistantMessage("Hello! I'm Iris, your AI assistant. I can help you with setting up your monitoring environment, day-to-day operations, and analyzing problems. Feel free to ask any questions!");
       updateBrowserContent();
@@ -234,6 +310,8 @@ public class AiAssistantChatView extends View
    @Override
    protected void postContentCreate()
    {
+      session.addListener(this);
+
       Job job = new Job(i18n.tr("Creating AI assistant chat"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -250,6 +328,28 @@ public class AiAssistantChatView extends View
       };
       job.setUser(false);
       job.start();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      session.removeListener(this);
+      super.dispose();
+   }
+
+   /**
+    * @see org.netxms.client.SessionListener#notificationHandler(org.netxms.client.SessionNotification)
+    */
+   @Override
+   public void notificationHandler(SessionNotification n)
+   {
+      if ((n.getCode() == SessionNotification.AI_QUESTION) && (n.getSubCode() == chatId))
+      {
+         getDisplay().asyncExec(() -> displayQuestion((AiQuestion)n.getObject()));
+      }
    }
 
    /**
@@ -319,7 +419,7 @@ public class AiAssistantChatView extends View
 
       addUserMessage(message);
       chatInput.setEnabled(false);
-      final String assistantMessageId = addAssistantMessage(i18n.tr("Thinking..."));
+      currentMessageId = addAssistantMessage(i18n.tr("Thinking..."));
       Job job = new Job(i18n.tr("Processing AI assistant query"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -327,11 +427,17 @@ public class AiAssistantChatView extends View
             try
             {
                final String answer = session.updateAiAssistantChat(chatId, message);
-               runInUIThread(() -> updateMessage(assistantMessageId, answer));
+               runInUIThread(() -> {
+                  updateMessage(currentMessageId, answer);
+                  currentMessageId = null;
+               });
             }
             catch(Exception e)
             {
-               runInUIThread(() -> updateMessage(assistantMessageId, "Error: " + getErrorMessage()));
+               runInUIThread(() -> {
+                  updateMessage(currentMessageId, "Error: " + getErrorMessage());
+                  currentMessageId = null;
+               });
             }
          }
 
@@ -413,20 +519,57 @@ public class AiAssistantChatView extends View
    {
       String escapedMessage = prepareMessageText(newText);
       String currentContent = chatContent.toString();
-      
+
       // Find the message by ID and replace its content
       String searchPattern = "id='" + messageId + "'>";
       int startPos = currentContent.indexOf(searchPattern);
+
+      // If original message was removed (due to question interruption), try current thinking message
+      if (startPos == -1 && currentMessageId != null && !currentMessageId.equals(messageId))
+      {
+         searchPattern = "id='" + currentMessageId + "'>";
+         startPos = currentContent.indexOf(searchPattern);
+      }
+
       if (startPos != -1)
       {
          int contentStart = currentContent.indexOf("</div>", startPos) + 6; // After sender div
          int contentEnd = currentContent.indexOf("</div></div>", contentStart);
-         
+
          if (contentEnd != -1)
          {
             // Replace the old content
             chatContent.replace(contentStart, contentEnd, escapedMessage);
             updateBrowserContent();
+         }
+      }
+   }
+
+   /**
+    * Remove a message from the chat
+    *
+    * @param messageId ID of the message to remove
+    */
+   private void removeMessage(String messageId)
+   {
+      String currentContent = chatContent.toString();
+
+      // Find the outer message div containing the bubble with given ID
+      String searchPattern = "id='" + messageId + "'>";
+      int bubbleStart = currentContent.indexOf(searchPattern);
+      if (bubbleStart != -1)
+      {
+         // Find the start of outer message div (search backwards for "<div class='message")
+         int messageStart = currentContent.lastIndexOf("<div class='message", bubbleStart);
+         if (messageStart != -1)
+         {
+            // Find the end of the outer message div (two closing </div>s after bubble)
+            int messageEnd = currentContent.indexOf("</div></div>", bubbleStart);
+            if (messageEnd != -1)
+            {
+               messageEnd += 12; // Include "</div></div>"
+               chatContent.delete(messageStart, messageEnd);
+            }
          }
       }
    }
@@ -485,5 +628,164 @@ public class AiAssistantChatView extends View
       chatContent.setLength(0);
       initializeHtmlTemplate();
       addAssistantMessage("Hello! I'm Iris, your AI assistant. I can help you with setting up your monitoring environment, day-to-day operations, and analyzing problems. Feel free to ask any questions!");
+   }
+
+   /**
+    * Display a question from the AI agent
+    *
+    * @param question the question to display
+    */
+   private void displayQuestion(AiQuestion question)
+   {
+      pendingQuestion = question;
+      chatInput.setEnabled(false);
+
+      // Remove "Thinking..." message if present
+      if (currentMessageId != null)
+      {
+         removeMessage(currentMessageId);
+      }
+
+      StringBuilder html = new StringBuilder();
+      html.append("<div class='question-card' id='question_").append(question.getId()).append("'>");
+      html.append("<div class='question-header'>Iris is asking:</div>");
+      html.append("<div class='question-text'>").append(escapeHtml(question.getText())).append("</div>");
+
+      String context = question.getContext();
+      if (context != null && !context.isEmpty())
+      {
+         html.append("<div class='question-context'>").append(escapeHtml(context)).append("</div>");
+      }
+
+      html.append("<div class='question-buttons'>");
+      if (question.isMultipleChoice())
+      {
+         List<String> options = question.getOptions();
+         for (int i = 0; i < options.size(); i++)
+         {
+            html.append("<button class='question-btn question-btn-option' onclick='answerQuestion(")
+                .append(question.getId()).append(", true, ").append(i).append(")'>")
+                .append(escapeHtml(options.get(i))).append("</button>");
+         }
+      }
+      else
+      {
+         html.append("<button class='question-btn question-btn-positive' onclick='answerQuestion(")
+             .append(question.getId()).append(", true, -1)'>")
+             .append(question.getPositiveLabel()).append("</button>");
+         html.append("<button class='question-btn question-btn-negative' onclick='answerQuestion(")
+             .append(question.getId()).append(", false, -1)'>")
+             .append(question.getNegativeLabel()).append("</button>");
+      }
+      html.append("</div>");
+
+      html.append("<div class='question-timer'>Expires in <span id='timer_")
+          .append(question.getId()).append("'>").append(question.getTimeoutSeconds() / 60)
+          .append(":").append(String.format("%02d", question.getTimeoutSeconds() % 60)).append("</span></div>");
+      html.append("</div>");
+
+      // Add inline script to start timer when page loads
+      html.append("<script>startQuestionTimer(").append(question.getId()).append(", ")
+          .append(question.getTimeoutSeconds()).append(");</script>");
+
+      // Insert before closing </div></body></html>
+      int insertPos = chatContent.lastIndexOf("</div></body></html>");
+      chatContent.insert(insertPos, html.toString());
+
+      updateBrowserContent();
+   }
+
+   /**
+    * Handle user response to a question
+    *
+    * @param questionId question ID
+    * @param positive true for positive response
+    * @param selectedOption selected option for multiple choice (-1 for binary)
+    */
+   private void handleQuestionResponse(long questionId, boolean positive, int selectedOption)
+   {
+      if (pendingQuestion == null || pendingQuestion.getId() != questionId)
+      {
+         logger.warn("Received response for unknown question: " + questionId);
+         return;
+      }
+
+      final AiQuestion question = pendingQuestion;
+      pendingQuestion = null;
+
+      // Mark question as answered in the HTML content
+      markQuestionAnswered(questionId);
+
+      // Add "Thinking..." message back while waiting for model's final response
+      if (currentMessageId != null)
+      {
+         currentMessageId = addAssistantMessage(i18n.tr("Thinking..."));
+      }
+
+      Job job = new Job(i18n.tr("Sending response to AI assistant"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.answerAiQuestion(chatId, question.getId(), positive, selectedOption);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot send response to AI assistant");
+         }
+      };
+      job.setUser(false);
+      job.start();
+   }
+
+   /**
+    * Mark a question as answered in the HTML content
+    *
+    * @param questionId the question ID to mark as answered
+    */
+   private void markQuestionAnswered(long questionId)
+   {
+      String currentContent = chatContent.toString();
+
+      // Find the question card and add the answered class
+      String searchPattern = "id='question_" + questionId + "'";
+      int cardStart = currentContent.indexOf(searchPattern);
+      if (cardStart == -1)
+         return;
+
+      // Find the class attribute of the question-card div
+      int divStart = currentContent.lastIndexOf("<div class='question-card'", cardStart);
+      if (divStart == -1)
+         return;
+
+      // Replace the class to include question-answered
+      String oldClass = "<div class='question-card'";
+      String newClass = "<div class='question-card question-answered'";
+      int classPos = currentContent.indexOf(oldClass, divStart);
+      if (classPos != -1 && classPos < cardStart + 50)
+      {
+         chatContent.replace(classPos, classPos + oldClass.length(), newClass);
+      }
+
+      // Update timer text to "Answered"
+      currentContent = chatContent.toString();
+      String timerSearch = "id='timer_" + questionId + "'>";
+      int timerStart = currentContent.indexOf(timerSearch);
+      if (timerStart != -1)
+      {
+         int timerTextStart = timerStart + timerSearch.length();
+         int timerTextEnd = currentContent.indexOf("</span>", timerTextStart);
+         if (timerTextEnd != -1)
+         {
+            // Find the parent div with class question-timer and replace entire content
+            int timerDivStart = currentContent.lastIndexOf("<div class='question-timer'>", timerStart);
+            int timerDivEnd = currentContent.indexOf("</div>", timerStart);
+            if (timerDivStart != -1 && timerDivEnd != -1)
+            {
+               chatContent.replace(timerDivStart, timerDivEnd + 6, "<div class='question-timer'>Answered</div>");
+            }
+         }
+      }
    }
 }

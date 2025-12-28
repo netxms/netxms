@@ -597,6 +597,7 @@ static json_t *DoApiRequest(json_t *requestData)
 static std::unordered_map<uint32_t, shared_ptr<Chat>> s_chats;
 static Mutex s_chatsLock;
 static VolatileCounter s_nextChatId = 0;
+static VolatileCounter64 s_nextQuestionId = 0;
 
 /**
  * Chat constructor
@@ -604,6 +605,7 @@ static VolatileCounter s_nextChatId = 0;
 Chat::Chat(NetObj *context, json_t *eventData, uint32_t userId, const char *systemPrompt)
 {
    m_id = InterlockedIncrement(&s_nextChatId);
+   m_pendingQuestion = nullptr;
 
    initializeFunctions();
 
@@ -644,6 +646,7 @@ Chat::~Chat()
 {
    json_decref(m_messages);
    json_decref(m_functionDeclarations);
+   delete m_pendingQuestion;
 }
 
 /**
@@ -665,6 +668,99 @@ void Chat::initializeFunctions()
       [this] (json_t *arguments, uint32_t userId) -> std::string
       {
          return this->loadSkill(json_object_get_string_utf8(arguments, "name", ""));
+      }
+   ));
+
+   m_functions.emplace("ask_user_confirmation", make_shared<AssistantFunction>(
+      "ask_user_confirmation",
+      "Ask user a yes/no confirmation question. Blocks until user responds or timeout (5 minutes). Use for approval workflows or binary decisions.",
+      std::vector<std::pair<std::string, std::string>>{
+         {"text", "The question text to display to the user"},
+         {"context", "Optional additional context (e.g., command to be approved)"},
+         {"confirmation_type", "Type of confirmation: 'approve_reject', 'yes_no', or 'confirm_cancel'. Defaults to 'approve_reject'"}
+      },
+      [this] (json_t *arguments, uint32_t userId) -> std::string
+      {
+         const char *text = json_object_get_string_utf8(arguments, "text", "");
+         if (*text == 0)
+            return R"({"error": "Question text is required"})";
+
+         const char *context = json_object_get_string_utf8(arguments, "context", "");
+         const char *typeStr = json_object_get_string_utf8(arguments, "confirmation_type", "approve_reject");
+
+         ConfirmationType type = ConfirmationType::APPROVE_REJECT;
+         if (!stricmp(typeStr, "yes_no"))
+            type = ConfirmationType::YES_NO;
+         else if (!stricmp(typeStr, "confirm_cancel"))
+            type = ConfirmationType::CONFIRM_CANCEL;
+
+#ifdef UNICODE
+         WCHAR *wtext = WideStringFromUTF8String(text);
+         WCHAR *wcontext = WideStringFromUTF8String(context);
+         bool result = this->askConfirmation(wtext, wcontext, type);
+         MemFree(wtext);
+         MemFree(wcontext);
+#else
+         bool result = this->askConfirmation(text, context, type);
+#endif
+
+         return result ? R"({"approved": true})" : R"({"approved": false})";
+      }
+   ));
+
+   m_functions.emplace("ask_user_choice", make_shared<AssistantFunction>(
+      "ask_user_choice",
+      "Ask user to choose from multiple options. Blocks until user responds or timeout (5 minutes). Use when user needs to select from a list of choices.",
+      std::vector<std::pair<std::string, std::string>>{
+         {"text", "The question text to display to the user"},
+         {"context", "Optional additional context for the question"},
+         {"options", "Array of option strings for the user to choose from"}
+      },
+      [this] (json_t *arguments, uint32_t userId) -> std::string
+      {
+         const char *text = json_object_get_string_utf8(arguments, "text", "");
+         if (*text == 0)
+            return R"({"error": "Question text is required"})";
+
+         json_t *optionsArray = json_object_get(arguments, "options");
+         if (!json_is_array(optionsArray) || json_array_size(optionsArray) == 0)
+            return R"({"error": "Options array is required and must not be empty"})";
+
+         StringList options;
+         size_t i;
+         json_t *value;
+         json_array_foreach(optionsArray, i, value)
+         {
+            if (json_is_string(value))
+            {
+#ifdef UNICODE
+               WCHAR *woption = WideStringFromUTF8String(json_string_value(value));
+               options.add(woption);
+               MemFree(woption);
+#else
+               options.add(json_string_value(value));
+#endif
+            }
+         }
+
+         if (options.isEmpty())
+            return R"({"error": "Options array must contain at least one string"})";
+
+         const char *context = json_object_get_string_utf8(arguments, "context", "");
+
+#ifdef UNICODE
+         WCHAR *wtext = WideStringFromUTF8String(text);
+         WCHAR *wcontext = WideStringFromUTF8String(context);
+         int result = this->askMultipleChoice(wtext, wcontext, options);
+         MemFree(wtext);
+         MemFree(wcontext);
+#else
+         int result = this->askMultipleChoice(text, context, options);
+#endif
+
+         char buffer[64];
+         snprintf(buffer, sizeof(buffer), R"({"selected": %d})", result);
+         return std::string(buffer);
       }
    ));
 
@@ -808,6 +904,173 @@ std::string Chat::callFunction(const char *name, json_t *arguments)
 }
 
 /**
+ * Send question to user
+ */
+static void SendQuestionToUser(uint32_t userId, uint32_t chatId, const PendingQuestion *question)
+{
+   NXCPMessage msg(CMD_AI_AGENT_QUESTION, 0);
+   msg.setField(VID_CHAT_ID, chatId);
+   msg.setField(VID_AI_QUESTION_ID, question->id);
+   msg.setField(VID_AI_QUESTION_TYPE, question->isMultipleChoice ? static_cast<uint16_t>(1) : static_cast<uint16_t>(0));
+   msg.setField(VID_AI_CONFIRMATION_TYPE, static_cast<uint16_t>(question->confirmationType));
+   msg.setField(VID_AI_QUESTION_TEXT, question->text);
+   msg.setField(VID_AI_QUESTION_CONTEXT, question->context);
+   msg.setField(VID_AI_QUESTION_TIMEOUT, static_cast<uint32_t>(question->expiresAt - time(nullptr)));
+   if (question->isMultipleChoice)
+   {
+      msg.setField(VID_AI_QUESTION_OPTIONS, question->options);
+   }
+
+   EnumerateClientSessions(
+      [userId, &msg] (ClientSession *session) -> void
+      {
+         if (session->isAuthenticated() && (session->getUserId() == userId))
+            session->postMessage(msg);
+      });
+}
+
+/**
+ * Ask confirmation question and wait for response
+ */
+bool Chat::askConfirmation(const TCHAR *text, const TCHAR *context, ConfirmationType type, uint32_t timeout)
+{
+   m_questionMutex.lock();
+
+   // Only one question at a time per chat
+   if (m_pendingQuestion != nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Chat [%u]: cannot ask confirmation, another question is pending"), m_id);
+      m_questionMutex.unlock();
+      return false;
+   }
+
+   m_pendingQuestion = new PendingQuestion();
+   m_pendingQuestion->id = InterlockedIncrement64(&s_nextQuestionId);
+   m_pendingQuestion->isMultipleChoice = false;
+   m_pendingQuestion->confirmationType = type;
+   m_pendingQuestion->text = text;
+   m_pendingQuestion->context = (context != nullptr) ? context : _T("");
+   m_pendingQuestion->expiresAt = time(nullptr) + timeout;
+   m_pendingQuestion->responded = false;
+   m_pendingQuestion->positiveResponse = false;
+   m_pendingQuestion->selectedOption = -1;
+
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Chat [%u]: asking confirmation question [") UINT64_FMT _T("] to user [%u]: %s"),
+      m_id, m_pendingQuestion->id, m_userId, text);
+
+   SendQuestionToUser(m_userId, m_id, m_pendingQuestion);
+
+   // Wait for response with timeout
+   m_questionMutex.unlock();
+   bool gotResponse = m_pendingQuestion->responseReceived.wait(timeout * 1000);
+   m_questionMutex.lock();
+
+   bool result = false;
+   if (gotResponse && m_pendingQuestion->responded)
+   {
+      result = m_pendingQuestion->positiveResponse;
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Chat [%u]: confirmation question [") UINT64_FMT _T("] answered: %s"),
+         m_id, m_pendingQuestion->id, result ? _T("positive") : _T("negative"));
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Chat [%u]: confirmation question [") UINT64_FMT _T("] timed out"),
+         m_id, m_pendingQuestion->id);
+      result = false;  // Timeout = negative response
+   }
+
+   delete_and_null(m_pendingQuestion);
+   m_questionMutex.unlock();
+   return result;
+}
+
+/**
+ * Ask multiple choice question and wait for response
+ */
+int Chat::askMultipleChoice(const TCHAR *text, const TCHAR *context, const StringList &options, uint32_t timeout)
+{
+   m_questionMutex.lock();
+
+   // Only one question at a time per chat
+   if (m_pendingQuestion != nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Chat [%u]: cannot ask multiple choice, another question is pending"), m_id);
+      m_questionMutex.unlock();
+      return -1;
+   }
+
+   m_pendingQuestion = new PendingQuestion();
+   m_pendingQuestion->id = InterlockedIncrement64(&s_nextQuestionId);
+   m_pendingQuestion->isMultipleChoice = true;
+   m_pendingQuestion->confirmationType = ConfirmationType::YES_NO;  // Not used for multiple choice
+   m_pendingQuestion->text = text;
+   m_pendingQuestion->context = (context != nullptr) ? context : _T("");
+   m_pendingQuestion->options.addAll(options);
+   m_pendingQuestion->expiresAt = time(nullptr) + timeout;
+   m_pendingQuestion->responded = false;
+   m_pendingQuestion->positiveResponse = false;
+   m_pendingQuestion->selectedOption = -1;
+
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Chat [%u]: asking multiple choice question [") UINT64_FMT _T("] to user [%u]: %s"),
+      m_id, m_pendingQuestion->id, m_userId, text);
+
+   SendQuestionToUser(m_userId, m_id, m_pendingQuestion);
+
+   // Wait for response with timeout
+   m_questionMutex.unlock();
+   bool gotResponse = m_pendingQuestion->responseReceived.wait(timeout * 1000);
+   m_questionMutex.lock();
+
+   int result = -1;
+   if (gotResponse && m_pendingQuestion->responded)
+   {
+      result = m_pendingQuestion->selectedOption;
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Chat [%u]: multiple choice question [") UINT64_FMT _T("] answered: option %d"),
+         m_id, m_pendingQuestion->id, result);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Chat [%u]: multiple choice question [") UINT64_FMT _T("] timed out"),
+         m_id, m_pendingQuestion->id);
+      result = -1;  // Timeout = no selection
+   }
+
+   delete_and_null(m_pendingQuestion);
+   m_questionMutex.unlock();
+   return result;
+}
+
+/**
+ * Handle response to pending question
+ */
+void Chat::handleQuestionResponse(uint64_t questionId, bool positive, int selectedOption)
+{
+   LockGuard lockGuard(m_questionMutex);
+
+   if (m_pendingQuestion == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Chat [%u]: received response for question [") UINT64_FMT _T("] but no question is pending"),
+         m_id, questionId);
+      return;
+   }
+
+   if (m_pendingQuestion->id != questionId)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Chat [%u]: received response for question [") UINT64_FMT _T("] but pending question is [%") PRIu64 _T("]"),
+         m_id, questionId, m_pendingQuestion->id);
+      return;
+   }
+
+   m_pendingQuestion->responded = true;
+   m_pendingQuestion->positiveResponse = positive;
+   m_pendingQuestion->selectedOption = selectedOption;
+   m_pendingQuestion->responseReceived.set();
+
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("Chat [%u]: question [") UINT64_FMT _T("] response received: positive=%s, option=%d"),
+      m_id, questionId, BooleanToString(positive), selectedOption);
+}
+
+/**
  * Send single independent request to AI assistant
  */
 char NXCORE_EXPORTABLE *QueryAIAssistant(const char *prompt, NetObj *context, int maxIterations)
@@ -892,6 +1155,7 @@ shared_ptr<Chat> NXCORE_EXPORTABLE GetAIAssistantChat(uint32_t chatId, uint32_t 
  */
 uint32_t NXCORE_EXPORTABLE ClearAIAssistantChat(uint32_t chatId, uint32_t userId)
 {
+   shared_ptr<Chat> chat;
    uint32_t rcc;
    s_chatsLock.lock();
    auto it = s_chats.find(chatId);
@@ -899,8 +1163,7 @@ uint32_t NXCORE_EXPORTABLE ClearAIAssistantChat(uint32_t chatId, uint32_t userId
    {
       if ((userId == 0) || (it->second->getUserId() == userId))
       {
-         it->second->clear();
-         nxlog_debug_tag(DEBUG_TAG, 5, L"History for chat [%u] cleared", chatId);
+         chat = it->second;
          rcc = RCC_SUCCESS;
       }
       else
@@ -913,6 +1176,13 @@ uint32_t NXCORE_EXPORTABLE ClearAIAssistantChat(uint32_t chatId, uint32_t userId
       rcc = RCC_INVALID_CHAT_ID;
    }
    s_chatsLock.unlock();
+
+   // Clear chat history outside of lock to avoid long blocking of other operations
+   if (chat != nullptr)
+   {
+      chat->clear();
+      nxlog_debug_tag(DEBUG_TAG, 5, L"Chat [%u] history cleared", chatId);
+   }
    return rcc;
 }
 
