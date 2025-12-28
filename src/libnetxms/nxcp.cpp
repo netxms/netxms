@@ -539,7 +539,9 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_UNLINK_ALARM_FROM_INCIDENT"),
       _T("CMD_ADD_INCIDENT_COMMENT"),
       _T("CMD_GET_INCIDENT_ACTIVITY"),
-      _T("CMD_INCIDENT_UPDATE")
+      _T("CMD_INCIDENT_UPDATE"),
+      _T("CMD_AI_AGENT_QUESTION"),
+      _T("CMD_AI_AGENT_RESPONSE")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -552,7 +554,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_INCIDENT_UPDATE))
+   if ((code >= CMD_LOGIN) && (code <= CMD_AI_AGENT_RESPONSE))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }
