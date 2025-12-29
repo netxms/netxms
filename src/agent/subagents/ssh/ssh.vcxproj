@@ -383,6 +383,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="channel_proxy.cpp" />
     <ClCompile Include="handlers.cpp" />
     <ClCompile Include="keys.cpp" />
     <ClCompile Include="main.cpp" />

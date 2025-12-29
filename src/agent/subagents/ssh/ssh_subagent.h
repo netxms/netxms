@@ -81,7 +81,60 @@ public:
 
    StringList *execute(const TCHAR *command);
    bool execute(const TCHAR *command, const shared_ptr<ActionExecutionContext>& context);
+
+   /**
+    * Open interactive channel with PTY and shell for network device CLI access
+    * @return SSH channel handle on success, nullptr on failure
+    */
+   ssh_channel openInteractiveChannel();
+
+   /**
+    * Test if command execution channel is available
+    * @return true if command execution works, false otherwise
+    */
+   bool testCommandChannel(const char *command = nullptr);
+
+   /**
+    * Test if session can open new channels (lightweight connectivity test)
+    * @return true if session is usable, false otherwise
+    */
+   bool testSession();
 };
+
+/**
+ * SSH channel proxy - forwards raw data between server and SSH PTY channel
+ */
+class SSHChannelProxy
+{
+private:
+   uint32_t m_channelId;
+   ssh_channel m_sshChannel;
+   AbstractCommSession *m_commSession;
+   THREAD m_readerThread;
+   bool m_running;
+
+   void readerThreadInternal();
+   static void readerThreadStarter(SSHChannelProxy *proxy);
+
+public:
+   SSHChannelProxy(uint32_t channelId, ssh_channel channel, AbstractCommSession *session);
+   ~SSHChannelProxy();
+
+   void start();
+   void stop();
+
+   uint32_t getChannelId() const { return m_channelId; }
+
+   void writeToChannel(const BYTE *data, size_t size);
+};
+
+/* Channel proxy management */
+void InitializeSSHChannelProxyManager();
+void ShutdownSSHChannelProxyManager();
+SSHChannelProxy *CreateSSHChannelProxy(uint32_t channelId, ssh_channel channel, AbstractCommSession *session);
+SSHChannelProxy *FindSSHChannelProxy(uint32_t channelId);
+void DeleteSSHChannelProxy(uint32_t channelId);
+bool HandleSSHChannelCommand(uint32_t command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session);
 
 /* Key functions */
 shared_ptr<KeyPair> GetSshKey(AbstractCommSession *session, uint32_t id);

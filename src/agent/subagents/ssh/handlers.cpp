@@ -25,6 +25,11 @@
 
 /**
  * SSH connectivity check handler
+ * Returns: 0 = SSH not available or bit mask:
+ *    1 = SSH connection available
+ *    2 = command execution channel available
+ *    4 = interactive channel available
+ * channel availability is tested only if 5th argument is set to true
  */
 LONG H_SSHConnection(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session)
 {
@@ -48,32 +53,70 @@ LONG H_SSHConnection(const TCHAR* param, const TCHAR* arg, TCHAR* value, Abstrac
    InetAddress addr = InetAddress::resolveHostName(hostName);
    if (!addr.isValidUnicast())
    {
-      ret_boolean(value, false);
+      ret_int(value, 0);
       return SYSINFO_RC_SUCCESS;
    }
 
+   uint32_t keyId;
+   AgentGetMetricArgAsUInt32(param, 4, &keyId);
    shared_ptr<KeyPair> keys;
-   TCHAR keyId[16] = _T("");
-   AgentGetParameterArg(param, 4, keyId, 16);
-   if (keyId[0] != 0)
-   {
-      TCHAR* end;
-      uint32_t id = _tcstoul(keyId, &end, 0);
-      keys = GetSshKey(session, id);
-   }
+   if (keyId != 0)
+      keys = GetSshKey(session, keyId);
 
-   SSHSession* ssh = AcquireSession(addr, port, login, password, keys);
-   if (ssh != nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 8, _T("SSH connection to %s:%u created successfully"), hostName, port);
-      ret_boolean(value, true);
-      ReleaseSession(ssh);
-   }
-   else
+   SSHSession *ssh = AcquireSession(addr, port, login, password, keys);
+   if (ssh == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 6, _T("Failed to create SSH connection to %s:%u"), hostName, port);
-      ret_boolean(value, false);
+      ret_int(value, 0);
+      return SYSINFO_RC_SUCCESS;
    }
+   ReleaseSession(ssh);
+
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("SSH connection to %s:%u created successfully"), hostName, port);
+
+   bool checkCapabilities = false;
+   AgentGetMetricArgAsBoolean(param, 5, &checkCapabilities);
+   if (!checkCapabilities)
+   {
+      ret_int(value, 1);
+      return SYSINFO_RC_SUCCESS;
+   }
+
+   int capabilities = 1;
+
+   // Reacquire session for each capability test - this will ensure that session is valid
+   ssh = AcquireSession(addr, port, login, password, keys);
+   if (ssh == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Failed to reacquire SSH connection to %s:%u for capability test"), hostName, port);
+      ret_int(value, capabilities);
+      return SYSINFO_RC_SUCCESS;
+   }
+
+   ssh_channel interactiveChannel = ssh->openInteractiveChannel();
+   if (interactiveChannel != nullptr)
+   {
+      capabilities |= 4;
+      ssh_channel_close(interactiveChannel);
+      ssh_channel_free(interactiveChannel);
+   }
+   ReleaseSession(ssh);
+
+   ssh = AcquireSession(addr, port, login, password, keys);
+   if (ssh == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Failed to reacquire SSH connection to %s:%u for capability test"), hostName, port);
+      ret_int(value, capabilities);
+      return SYSINFO_RC_SUCCESS;
+   }
+
+   char command[128] = "";
+   AgentGetMetricArgA(param, 6, command, 128);
+   if (ssh->testCommandChannel((command[0] != 0) ? command : nullptr))
+      capabilities |= 2;
+
+   ReleaseSession(ssh);
+   ret_int(value, capabilities);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -225,7 +268,7 @@ LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, A
 
    shared_ptr<KeyPair> key;
    TCHAR keyId[16] = _T("");
-   AgentGetParameterArg(param, 6, keyId, 16);
+   AgentGetParameterArg(param, 5, keyId, 16);
    if (keyId[0] != 0)
    {
       TCHAR *end;

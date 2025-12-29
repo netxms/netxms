@@ -41,9 +41,18 @@ SSHSession *AcquireSession(const InetAddress& addr, uint16_t port, const TCHAR *
       SSHSession *s = s_sessions.get(i);
       if (s->match(addr, port, user) && s->acquire())
       {
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("AcquireSession: acquired existing session %s"), s->getName());
-         s_lock.unlock();
-         return s;
+         // Test if cached session can still open channels (some devices like Cisco
+         // don't support session reuse after channel close)
+         if (s->testSession())
+         {
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("AcquireSession: acquired existing session %s"), s->getName());
+            s_lock.unlock();
+            return s;
+         }
+         // Session is stale, remove it from pool
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("AcquireSession: cached session %s failed connectivity test, removing"), s->getName());
+         s_sessions.remove(s);
+         i--;
       }
    }
    s_lock.unlock();

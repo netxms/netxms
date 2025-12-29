@@ -301,6 +301,11 @@ void CommSession::readThread()
                }
                m_tcpProxyLock.unlock();
             }
+            else
+            {
+               // Attempt to process unknown binary message by subagents
+               ProcessBinaryMessageBySubAgent(msg, this);
+            }
             delete msg;
          }
          else if (msg->isControl())

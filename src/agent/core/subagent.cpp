@@ -336,6 +336,27 @@ bool ProcessCommandBySubAgent(uint32_t command, NXCPMessage *request, NXCPMessag
 }
 
 /**
+ * Process binary message by subagents
+ * Uses the same commandHandler but with response=nullptr to indicate binary message
+ */
+bool ProcessBinaryMessageBySubAgent(NXCPMessage *msg, AbstractCommSession *session)
+{
+   bool processed = false;
+   uint32_t command = msg->getCode();
+   for(int i = 0; (i < s_subAgents.size()) && !processed; i++)
+   {
+      NETXMS_SUBAGENT_INFO *s = s_subAgents.get(i)->info;
+      if (s->commandHandler != nullptr)
+      {
+         processed = s->commandHandler(command, msg, nullptr, session);
+         session->debugPrintf(7, _T("Binary message %sprocessed by sub-agent %s"),
+            processed ? _T("") : _T("not "), s->name);
+      }
+   }
+   return processed;
+}
+
+/**
  * Notify all sub-agents
  */
 void NotifySubAgents(uint32_t code, void *data)

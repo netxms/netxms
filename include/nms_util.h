@@ -1422,8 +1422,9 @@ public:
 
    String();
    String(const TCHAR *init);
-   String(const TCHAR *init, ssize_t len, Ownership takeOwnership = Ownership::False);
+   String(const TCHAR *init, ssize_t length, Ownership takeOwnership = Ownership::False);
    String(const char *init, const char *codepage);
+   String(const char *init, ssize_t length, const char *codepage);
    String(const String& src);
    String(String&& src);
    virtual ~String();
@@ -1513,8 +1514,9 @@ class LIBNETXMS_EXPORTABLE MutableString : public String
 public:
    MutableString() : String() { }
    MutableString(const TCHAR *init) : String(init) { }
-   MutableString(const TCHAR *init, size_t len) : String(init, len) { }
+   MutableString(const TCHAR *init, size_t length) : String(init, length) { }
    MutableString(const char *init, const char *codepage) : String(init, codepage) { }
+   MutableString(const char *init, ssize_t length, const char *codepage) : String(init, length, codepage) { }
    MutableString(const String& src) : String(src) { }
    MutableString(const MutableString& src) : String(src) { }
    MutableString(MutableString&& src) : String(src) { }
@@ -1543,6 +1545,7 @@ public:
    SharedString(const TCHAR *str) { if (str != nullptr) m_string = make_shared<String>(str); }
    SharedString(TCHAR *str, Ownership takeOwnership) { if (str != nullptr) m_string = make_shared<String>(str, -1, takeOwnership); }
    SharedString(const char *str, const char *codepage) { if (str != nullptr) m_string = make_shared<String>(str, codepage); }
+   SharedString(const char *str, ssize_t length, const char *codepage) { if (str != nullptr) m_string = make_shared<String>(str, length, codepage); }
 
    SharedString& operator=(const SharedString &str)
    {
@@ -1610,6 +1613,7 @@ public:
    StringBuffer(const TCHAR *init);
    StringBuffer(const TCHAR *init, size_t length);
    StringBuffer(const char *init, const char *codepage);
+   StringBuffer(const char *init, ssize_t length, const char *codepage);
    StringBuffer(const StringBuffer& src);
    StringBuffer(StringBuffer&& src);
    StringBuffer(const String& src);

@@ -696,6 +696,9 @@ typedef struct
 #define CMD_INCIDENT_UPDATE               0x01F0
 #define CMD_AI_AGENT_QUESTION             0x01F1
 #define CMD_AI_AGENT_RESPONSE             0x01F2
+#define CMD_SETUP_SSH_CHANNEL             0x01F3
+#define CMD_SSH_CHANNEL_DATA              0x01F4
+#define CMD_CLOSE_SSH_CHANNEL             0x01F5
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101

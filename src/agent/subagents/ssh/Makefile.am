@@ -1,7 +1,7 @@
 SUBAGENT = ssh
 
 pkglib_LTLIBRARIES = ssh.la
-ssh_la_SOURCES = handlers.cpp keys.cpp main.cpp session.cpp sp.cpp
+ssh_la_SOURCES = channel_proxy.cpp handlers.cpp keys.cpp main.cpp session.cpp sp.cpp
 ssh_la_CPPFLAGS = @LIBSSH_CPPFLAGS@ -I@top_srcdir@/include -I@top_srcdir@/build
 ssh_la_LDFLAGS = @LIBSSH_LDFLAGS@ -module -avoid-version -export-symbols ../subagent.sym
 ssh_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la -lssh

@@ -95,9 +95,9 @@ String::String(const TCHAR *init)
 /**
  * Create string with given initial content
  */
-String::String(const TCHAR *init, ssize_t len, Ownership takeOwnership)
+String::String(const TCHAR *init, ssize_t length, Ownership takeOwnership)
 {
-   m_length = (init == nullptr) ? 0 : ((len >= 0) ? len : _tcslen(init));
+   m_length = (init == nullptr) ? 0 : ((length >= 0) ? length : _tcslen(init));
    if (m_length < STRING_INTERNAL_BUFFER_SIZE)
    {
       m_buffer = m_internalBuffer;
@@ -143,6 +143,39 @@ String::String(const char *init, const char *codepage)
    {
       memcpy(m_buffer, init, len + 1);
       m_length = len;
+   }
+#endif
+   m_buffer[m_length] = 0;
+}
+
+/**
+ * Create string with given initial content
+ */
+String::String(const char *init, ssize_t length, const char *codepage)
+{
+   if (length < 0)
+      length = (init != nullptr) ? strlen(init) : 0;
+
+   if ((init == nullptr) || (length == 0) || (init[0] == 0))
+   {
+      m_internalBuffer[0] = 0;
+      m_buffer = m_internalBuffer;
+      m_length = 0;
+      return;
+   }
+
+   m_buffer = (length < STRING_INTERNAL_BUFFER_SIZE) ? m_internalBuffer : MemAllocString(length + 1);
+#ifdef UNICODE
+   m_length = mbcp_to_wchar(init, length, m_buffer, length + 1, codepage);
+#else
+   if ((codepage != nullptr) && (!stricmp(codepage, "UTF8") || !stricmp(codepage, "UTF-8")))
+   {
+      m_length = utf8_to_mb(init, length, m_buffer, length + 1);
+   }
+   else
+   {
+      memcpy(m_buffer, init, length);
+      m_length = length;
    }
 #endif
    m_buffer[m_length] = 0;
@@ -654,6 +687,15 @@ StringBuffer::StringBuffer(const TCHAR *init, size_t length) : String(init, leng
  * Create string buffer with given initial content
  */
 StringBuffer::StringBuffer(const char *init, const char *codepage) : String(init, codepage)
+{
+   m_allocated = isInternalBuffer() ? 0 : m_length + 1;
+   m_allocationStep = 256;
+}
+
+/**
+ * Create string buffer with given initial content
+ */
+StringBuffer::StringBuffer(const char *init, ssize_t length, const char *codepage) : String(init, length, codepage)
 {
    m_allocated = isInternalBuffer() ? 0 : m_length + 1;
    m_allocationStep = 256;
