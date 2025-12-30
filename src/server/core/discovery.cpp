@@ -279,7 +279,7 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
    // *** SSH ***
    if (!(g_flags & AF_DISABLE_SSH_PROBE))
    {
-      if (SSHCheckCommSettings((zoneProxy != 0) ? zoneProxy : g_dwMgmtNode, ipAddr, zoneUIN, sshCredentials, sshPort))
+      if (SSHCheckCommSettings((zoneProxy != 0) ? zoneProxy : g_dwMgmtNode, ipAddr, zoneUIN, sshCredentials, sshPort, nullptr))
       {
          reachable = true;
       }

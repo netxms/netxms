@@ -136,6 +136,8 @@ npe.tsre	Time series regression engine
 ntcb		NTCB module
 ntcb.session	NTCB module sessions
 
+nxsl.ssh	NXSL SSH session operations
+
 nxcp.streamcomp	NXCP stream compression
 
 obj.*		Object related

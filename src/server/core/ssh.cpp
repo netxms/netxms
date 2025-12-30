@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2022-2024 Raden Solutions
+** Copyright (C) 2022-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,40 +25,47 @@
 /**
  * Check SSH connection using given communication settings
  */
-bool SSHCheckConnection(const shared_ptr<Node>& proxyNode, const InetAddress& addr, uint16_t port, const TCHAR *login, const TCHAR *password, uint32_t keyId)
+bool SSHCheckConnection(const shared_ptr<Node>& proxyNode, const InetAddress& addr, uint16_t port, const wchar_t *login, const wchar_t *password, uint32_t keyId, uint32_t *sshCapabilities)
 {
    StringBuffer request(_T("SSH.CheckConnection("));
-   TCHAR ipAddr[64];
+   wchar_t ipAddr[64];
    request
       .append(addr.toString(ipAddr))
-      .append(_T(':'))
+      .append(L':')
       .append(port)
-      .append(_T(",\""))
+      .append(L",\"")
       .append(EscapeStringForAgent(login).cstr())
-      .append(_T("\",\""))
+      .append(L"\",\"")
       .append(EscapeStringForAgent(password).cstr())
-      .append(_T("\","))
-      .append(keyId)
-      .append(_T(')'));
+      .append(L"\",")
+      .append(keyId);
+   if (sshCapabilities != nullptr)
+      request.append(L",true");
+   request.append(L')');
 
-   TCHAR response[2];
-   return proxyNode->getMetricFromAgent(request, response, 2) == DCE_SUCCESS && response[0] == _T('1');
+   wchar_t response[64];
+   if (proxyNode->getMetricFromAgent(request, response, 64) != DCE_SUCCESS)
+      return false;
+
+   if (sshCapabilities != nullptr)
+      *sshCapabilities = static_cast<uint32_t>(wcstol(response, nullptr, 10));
+   return true;
 }
 
 /**
  * Check SSH connection using given communication settings
  */
-bool SSHCheckConnection(uint32_t proxyNodeId, const InetAddress& addr, uint16_t port, const TCHAR *login, const TCHAR *password, uint32_t keyId)
+bool SSHCheckConnection(uint32_t proxyNodeId, const InetAddress& addr, uint16_t port, const wchar_t *login, const wchar_t *password, uint32_t keyId, uint32_t *sshCapabilities)
 {
    shared_ptr<Node> proxyNode = static_pointer_cast<Node>(FindObjectById(proxyNodeId, OBJECT_NODE));
-   return (proxyNode != nullptr) ? SSHCheckConnection(proxyNode, addr, port, login, password, keyId) : false;
+   return (proxyNode != nullptr) ? SSHCheckConnection(proxyNode, addr, port, login, password, keyId, sshCapabilities) : false;
 }
 
 /**
  * Determine SSH communication settings for node
- * On success, returns true and fills selectedCredentials and selectedPort
+ * On success, returns true and fills selectedCredentials, selectedPort, and sshCapabilities (if not null)
  */
-bool SSHCheckCommSettings(uint32_t proxyNodeId, const InetAddress& addr, int32_t zoneUIN, SSHCredentials *selectedCredentials, uint16_t *selectedPort)
+bool SSHCheckCommSettings(uint32_t proxyNodeId, const InetAddress& addr, int32_t zoneUIN, SSHCredentials *selectedCredentials, uint16_t *selectedPort, uint32_t *sshCapabilities)
 {
    TCHAR ipAddrText[64];
    addr.toString(ipAddrText);
@@ -81,7 +88,7 @@ bool SSHCheckCommSettings(uint32_t proxyNodeId, const InetAddress& addr, int32_t
       {
          SSHCredentials *c = credentials.get(j);
          nxlog_debug_tag(DEBUG_TAG_SSH, 5, _T("SSHCheckCommSettings(%s): trying port %d login name %s"), ipAddrText, port, c->login);
-         success = SSHCheckConnection(proxyNode, addr, port, c->login, c->password, c->keyId);
+         success = SSHCheckConnection(proxyNode, addr, port, c->login, c->password, c->keyId, sshCapabilities);
          if (success)
          {
             if (selectedPort != nullptr)

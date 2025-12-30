@@ -576,6 +576,7 @@ public:
    virtual ObjectArray<AgentParameterDefinition> *getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual shared_ptr<ArpCache> getArpCache(SNMP_Transport *snmp, DriverData *driverData);
    virtual ObjectArray<LinkLayerNeighborInfo> *getLinkLayerNeighbors(SNMP_Transport *snmp, DriverData *driverData, bool *ignoreStandardMibs);
+   virtual void getSSHDriverHints(SSHDriverHints *hints) const;
 };
 
 /**

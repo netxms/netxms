@@ -283,6 +283,10 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
       {
          connection->processTcpProxyData(msg->getId(), msg->getBinaryData(), msg->getBinaryDataSize(), false);
       }
+      else if (msg->getCode() == CMD_SSH_CHANNEL_DATA)
+      {
+         connection->processSSHChannelData(msg->getId(), msg->getBinaryData(), msg->getBinaryDataSize(), false);
+      }
       delete msg;
    }
    else if (msg->isControl())
@@ -407,6 +411,10 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
             break;
          case CMD_CLOSE_TCP_PROXY:
             connection->processTcpProxyData(msg->getFieldAsUInt32(VID_CHANNEL_ID), nullptr, 0, msg->getFieldAsBoolean(VID_ERROR_INDICATOR));
+            delete msg;
+            break;
+         case CMD_CLOSE_SSH_CHANNEL:
+            connection->processSSHChannelData(msg->getFieldAsUInt32(VID_CHANNEL_ID), nullptr, 0, msg->getFieldAsBoolean(VID_ERROR_INDICATOR));
             delete msg;
             break;
          case CMD_NOTIFY:
@@ -3144,6 +3152,143 @@ uint32_t AgentConnection::closeTcpProxy(uint32_t channelId)
  */
 void AgentConnection::processTcpProxyData(uint32_t channelId, const void *data, size_t size, bool errorIndicator)
 {
+}
+
+/**
+ * Open SSH channel
+ */
+uint32_t AgentConnection::openSSHChannel(const InetAddress& target, uint16_t port, const TCHAR *user, const TCHAR *password, uint32_t keyId, uint32_t *channelId)
+{
+   uint32_t requestId = generateRequestId();
+   *channelId = requestId;
+
+   NXCPMessage msg(CMD_SETUP_SSH_CHANNEL, requestId, m_nProtocolVersion);
+   msg.setField(VID_IP_ADDRESS, target);
+   msg.setField(VID_PORT, port);
+   msg.setField(VID_USER_NAME, user);
+   msg.setField(VID_PASSWORD, password);
+   msg.setField(VID_SSH_KEY_ID, keyId);
+   msg.setField(VID_CHANNEL_ID, requestId);
+
+   uint32_t rcc;
+   if (sendMessage(&msg))
+   {
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+      if (response != nullptr)
+      {
+         rcc = response->getFieldAsUInt32(VID_RCC);
+         if (rcc == ERR_SUCCESS)
+         {
+            *channelId = response->getFieldAsUInt32(VID_CHANNEL_ID);
+         }
+         delete response;
+      }
+      else
+      {
+         rcc = ERR_REQUEST_TIMEOUT;
+      }
+   }
+   else
+   {
+      rcc = ERR_CONNECTION_BROKEN;
+   }
+   return rcc;
+}
+
+/**
+ * Send data to SSH channel
+ */
+uint32_t AgentConnection::sendSSHChannelData(uint32_t channelId, const BYTE *data, size_t size)
+{
+   // Build raw NXCP message with binary payload
+   size_t msgSize = NXCP_HEADER_SIZE + size;
+   if ((msgSize % 8) != 0)
+      msgSize += 8 - msgSize % 8;
+
+   NXCP_MESSAGE *msg = static_cast<NXCP_MESSAGE*>(MemAlloc(msgSize));
+   msg->code = htons(CMD_SSH_CHANNEL_DATA);
+   msg->id = htonl(channelId);
+   msg->flags = htons(MF_BINARY);
+   msg->numFields = htonl(static_cast<uint32_t>(size));
+   msg->size = htonl(static_cast<uint32_t>(msgSize));
+   memcpy(reinterpret_cast<BYTE*>(msg) + NXCP_HEADER_SIZE, data, size);
+
+   bool success = sendRawMessage(msg);
+   MemFree(msg);
+
+   return success ? ERR_SUCCESS : ERR_CONNECTION_BROKEN;
+}
+
+/**
+ * Close SSH channel
+ */
+uint32_t AgentConnection::closeSSHChannel(uint32_t channelId)
+{
+   uint32_t requestId = generateRequestId();
+   NXCPMessage msg(CMD_CLOSE_SSH_CHANNEL, requestId, m_nProtocolVersion);
+   msg.setField(VID_CHANNEL_ID, channelId);
+   uint32_t rcc;
+   if (sendMessage(&msg))
+   {
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+      if (response != nullptr)
+      {
+         rcc = response->getFieldAsUInt32(VID_RCC);
+         delete response;
+      }
+      else
+      {
+         rcc = ERR_REQUEST_TIMEOUT;
+      }
+   }
+   else
+   {
+      rcc = ERR_CONNECTION_BROKEN;
+   }
+
+   // Remove handler regardless of result
+   removeSSHChannelDataHandler(channelId);
+
+   return rcc;
+}
+
+/**
+ * Set SSH channel data handler
+ */
+void AgentConnection::setSSHChannelDataHandler(uint32_t channelId, SSHChannelDataCallback handler)
+{
+   m_sshChannelLock.lock();
+   m_sshChannelHandlers.add(channelId, handler);
+   m_sshChannelLock.unlock();
+}
+
+/**
+ * Remove SSH channel data handler
+ */
+void AgentConnection::removeSSHChannelDataHandler(uint32_t channelId)
+{
+   m_sshChannelLock.lock();
+   m_sshChannelHandlers.remove(channelId);
+   m_sshChannelLock.unlock();
+}
+
+/**
+ * Process data received from SSH channel
+ */
+void AgentConnection::processSSHChannelData(uint32_t channelId, const void *data, size_t size, bool errorIndicator)
+{
+   m_sshChannelLock.lock();
+   SSHChannelDataCallback handler = m_sshChannelHandlers.get(channelId);
+   if (handler != nullptr)
+   {
+      m_sshChannelLock.unlock();
+      handler(static_cast<const BYTE*>(data), size, errorIndicator);
+   }
+   else
+   {
+      m_sshChannelLock.unlock();
+      debugPrintf(6, L"SSH channel data received for unknown channel %u", channelId);
+   }
 }
 
 /**

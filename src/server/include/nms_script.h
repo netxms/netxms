@@ -638,6 +638,18 @@ public:
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
+/**
+ * NXSL "SSHSession" class
+ */
+class NXSL_SSHSessionClass : public NXSL_Class
+{
+public:
+   NXSL_SSHSessionClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
 class ScheduleParameters;
 
 /**
@@ -735,6 +747,7 @@ extern NXSL_ServiceRootClass g_nxslServiceRootClass;
 extern NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 extern NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
 extern NXSL_SoftwarePackage g_nxslSoftwarePackage;
+extern NXSL_SSHSessionClass g_nxslSSHSessionClass;
 extern NXSL_SubnetClass g_nxslSubnetClass;
 extern NXSL_TemplateClass g_nxslTemplateClass;
 extern NXSL_TunnelClass g_nxslTunnelClass;

@@ -1061,6 +1061,33 @@ template class LIBNXSRV_TEMPLATE_EXPORTABLE std::function<void(size_t)>;
 #endif
 
 /**
+ * SSH channel data callback type
+ */
+typedef std::function<void(const BYTE*, size_t, bool)> SSHChannelDataCallback;
+
+struct SSHChannelCallbackIndexEntry;
+
+/**
+ * SSH channel callback index
+ */
+class LIBNXSRV_EXPORTABLE SSHChannelCallbackIndex
+{
+private:
+   SSHChannelCallbackIndexEntry *m_data;
+
+public:
+   SSHChannelCallbackIndex()
+   {
+      m_data = nullptr;
+   }
+   ~SSHChannelCallbackIndex();
+
+   void add(uint32_t id, SSHChannelDataCallback handler);
+   void remove(uint32_t id);
+   SSHChannelDataCallback get(uint32_t id);
+};
+
+/**
  * Agent connection
  */
 class LIBNXSRV_EXPORTABLE AgentConnection : public enable_shared_from_this<AgentConnection>
@@ -1104,6 +1131,8 @@ private:
 	bool m_fileUpdateConnection;
 	bool m_allowCompression;
 	VolatileCounter m_bulkDataProcessing;
+	SSHChannelCallbackIndex m_sshChannelHandlers;
+   Mutex m_sshChannelLock;
 
    uint32_t setupEncryption(RSA_KEY serverKey);
    uint32_t authenticate(BOOL bProxyData);
@@ -1142,6 +1171,7 @@ protected:
    virtual uint32_t processBulkCollectedData(NXCPMessage *request, NXCPMessage *response);
    virtual bool processCustomMessage(NXCPMessage *pMsg);
    virtual void processTcpProxyData(uint32_t channelId, const void *data, size_t size, bool errorIndicator);
+   virtual void processSSHChannelData(uint32_t channelId, const void *data, size_t size, bool errorIndicator);
    virtual void getSshKeys(NXCPMessage *msg, NXCPMessage *response);
 
    const InetAddress& getIpAddr() const { return m_addr; }
@@ -1227,6 +1257,12 @@ public:
    TCHAR *getHostByAddr(const InetAddress& ipAddr, TCHAR *buffer, size_t bufLen);
    uint32_t setupTcpProxy(const InetAddress& ipAddr, uint16_t port, uint32_t *channelId);
    uint32_t closeTcpProxy(uint32_t channelId);
+
+   uint32_t openSSHChannel(const InetAddress& target, uint16_t port, const TCHAR *user, const TCHAR *password, uint32_t keyId, uint32_t *channelId);
+   uint32_t sendSSHChannelData(uint32_t channelId, const BYTE *data, size_t size);
+   uint32_t closeSSHChannel(uint32_t channelId);
+   void setSSHChannelDataHandler(uint32_t channelId, SSHChannelDataCallback handler);
+   void removeSSHChannelDataHandler(uint32_t channelId);
 
    uint32_t generateRequestId() { return (uint32_t)InterlockedIncrement(&m_requestId); }
 	NXCPMessage *customRequest(NXCPMessage *request, const TCHAR *recvFile = nullptr, bool append = false,
@@ -1374,6 +1410,135 @@ public:
 };
 
 #endif   /* WITH_MODBUS */
+
+/**
+ * SSH driver hints for interactive CLI sessions
+ */
+struct SSHDriverHints
+{
+   const char *promptPattern;           // Regex for command prompt
+   const char *enabledPromptPattern;    // Regex for privileged prompt
+   const char *enableCommand;           // "enable" or equivalent
+   const char *enablePromptPattern;     // "Password:" pattern
+   const char *paginationDisableCmd;    // "terminal length 0"
+   const char *paginationPrompt;        // "--More--" pattern
+   const char *paginationContinue;      // " " (space)
+   const char *exitCommand;             // "exit"
+   uint32_t commandTimeout;             // Default timeout (ms)
+   uint32_t connectTimeout;             // Connection timeout (ms)
+
+   SSHDriverHints()
+   {
+      promptPattern = "[>$]\\s*$";
+      enabledPromptPattern = "#\\s*$";
+      enableCommand = nullptr;
+      enablePromptPattern = nullptr;
+      paginationDisableCmd = nullptr;
+      paginationPrompt = "-+[Mm][Oo][Rr][Ee]-+";
+      paginationContinue = " ";
+      exitCommand = "exit";
+      commandTimeout = 30000;
+      connectTimeout = 10000;
+   }
+};
+
+class SSHInteractiveChannel;
+
+#ifdef _WIN32
+template class LIBNXSRV_TEMPLATE_EXPORTABLE shared_ptr<SSHInteractiveChannel>;
+#endif
+
+/**
+ * Interactive SSH channel with server-side parsing
+ */
+class LIBNXSRV_EXPORTABLE SSHInteractiveChannel : public enable_shared_from_this<SSHInteractiveChannel>
+{
+private:
+   shared_ptr<AgentConnection> m_agentConn;
+   uint32_t m_channelId;
+   SSHDriverHints m_hints;
+
+   // Prompt detection
+   void *m_promptRegex;
+   void *m_promptRegexW;
+   void *m_enabledPromptRegex;
+   void *m_paginationRegex;
+
+   // State
+   bool m_connected;
+   bool m_privileged;
+   uint32_t m_lastError;
+   MutableString m_lastErrorMessage;
+
+   // Data buffer (receives async data from agent)
+   ByteStream m_buffer;
+   Mutex m_bufferLock;
+   Condition m_dataReceived;
+
+   // Internal methods
+   bool waitForPrompt(uint32_t timeout);
+   bool checkPromptMatch();
+   void processIncomingData();
+   void stripAnsiCodes();
+   bool handlePagination();
+   StringList *parseOutput(const char *sentCommand);
+   bool isCommandEcho(const wchar_t *line, const char *command);
+
+public:
+   SSHInteractiveChannel(const shared_ptr<AgentConnection>& conn, uint32_t channelId, const SSHDriverHints& hints);
+   ~SSHInteractiveChannel();
+
+   /**
+    * Callback for incoming data from agent
+    */
+   void onDataReceived(const BYTE *data, size_t size, bool errorIndicator);
+
+   /**
+    * Wait for initial prompt after connection
+    */
+   bool waitForInitialPrompt();
+
+   /**
+    * Disable pagination (best effort)
+    */
+   void disablePagination();
+
+   /**
+    * Execute command and return output
+    */
+   StringList *execute(const char *command, uint32_t timeout = 0);
+
+   /**
+    * Escalate to privileged mode
+    */
+   bool escalatePrivilege(const TCHAR *enablePassword);
+
+   /**
+    * Check if in privileged mode
+    */
+   bool isPrivileged() const { return m_privileged; }
+
+   /**
+    * Check if connected
+    */
+   bool isConnected() const { return m_connected; }
+
+   /**
+    * Get channel ID
+    */
+   uint32_t getChannelId() const { return m_channelId; }
+
+   /**
+    * Close channel
+    */
+   void close();
+
+   /**
+    * Error information
+    */
+   uint32_t getLastError() const { return m_lastError; }
+   const wchar_t *getLastErrorMessage() const { return m_lastErrorMessage.cstr(); }
+};
 
 /**
  * ISC flags

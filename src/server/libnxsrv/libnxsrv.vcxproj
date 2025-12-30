@@ -408,6 +408,7 @@
     <ClCompile Include="nobject.cpp" />
     <ClCompile Include="nxtool.cpp" />
     <ClCompile Include="snmpproxy.cpp" />
+    <ClCompile Include="ssh_channel.cpp" />
     <ClCompile Include="vlan.cpp" />
     <ClCompile Include="windll.cpp" />
     <ClCompile Include="xml_to_json.cpp" />

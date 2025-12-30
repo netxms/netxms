@@ -39,6 +39,9 @@
     <ClCompile Include="snmpproxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ssh_channel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="vlan.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

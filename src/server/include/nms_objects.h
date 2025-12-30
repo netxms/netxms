@@ -4104,6 +4104,8 @@ public:
    SNMP_Transport *createSnmpTransport(uint16_t port = 0, SNMP_Version version = SNMP_VERSION_DEFAULT, const char *context = nullptr, const char *community = nullptr);
    SNMP_SecurityContext *getSnmpSecurityContext() const;
 
+   shared_ptr<SSHInteractiveChannel> openInteractiveSSHChannel(const wchar_t *login, const wchar_t *password, uint32_t keyId);
+
    ModbusTransport *createModbusTransport();
 
    uint32_t getEffectiveSnmpProxy(ProxySelection proxySelection = ProxySelection::AVAILABLE);

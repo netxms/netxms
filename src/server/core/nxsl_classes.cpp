@@ -36,6 +36,28 @@ bool AddMaintenanceJournalRecord(uint32_t objectId, uint32_t userId, const TCHAR
 NXSL_Value *ReadMaintenanceJournal(const shared_ptr<NetObj>& object, NXSL_VM *vm, time_t startTime, time_t endTime);
 
 /**
+ * SSH session handle for NXSL
+ */
+struct SSHSessionData
+{
+   shared_ptr<SSHInteractiveChannel> channel;
+   uint32_t nodeId;
+
+   SSHSessionData(const shared_ptr<SSHInteractiveChannel>& ch, uint32_t node) : channel(ch)
+   {
+      nodeId = node;
+   }
+
+   ~SSHSessionData()
+   {
+      if (channel != nullptr && channel->isConnected())
+      {
+         channel->close();
+      }
+   }
+};
+
+/**
  * Safely get pointer from object data
  */
 template<typename T> static T *SharedObjectFromData(NXSL_Object *nxslObject)
@@ -1868,6 +1890,67 @@ NXSL_METHOD_DEFINITION(Node, executeSSHCommand)
 }
 
 /**
+ * Node::openSSHSession([user], [password], [keyId]) method
+ */
+NXSL_METHOD_DEFINITION(Node, openSSHSession)
+{
+   if (argc > 3)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+
+   const wchar_t *login = nullptr, *password = nullptr;
+   uint32_t keyId = 0;
+   if (argc >= 1)
+   {
+      if (!argv[0]->isString())
+         return NXSL_ERR_NOT_STRING;
+      login = argv[0]->getValueAsCString();
+
+      if (argc >= 2)
+      {
+         if (!argv[1]->isString())
+            return NXSL_ERR_NOT_STRING;
+         password = argv[1]->getValueAsCString();
+
+         if (argc >= 3)
+         {
+            if (!argv[2]->isInteger())
+               return NXSL_ERR_NOT_INTEGER;
+            keyId = argv[2]->getValueAsUInt32();
+         }
+      }
+   }
+
+   shared_ptr<SSHInteractiveChannel> channel = node->openInteractiveSSHChannel(login, password, keyId);
+   if (channel == nullptr)
+   {
+      nxlog_debug_tag(L"nxsl.ssh", 5, L"openSSHSession: cannot open SSH channel to %s [%u]", node->getName(), node->getId());
+      *result = vm->createValue();
+      return 0;
+   }
+
+   // Wait for initial prompt
+   if (!channel->waitForInitialPrompt())
+   {
+      nxlog_debug_tag(L"nxsl.ssh", 5, L"openSSHSession: timeout waiting for initial prompt from %s [%u]", node->getName(), node->getId());
+      channel->close();
+      *result = vm->createValue();
+      return 0;
+   }
+
+   // Disable pagination
+   channel->disablePagination();
+
+   nxlog_debug_tag(L"nxsl.ssh", 5, L"SSH session opened to %s [%u], channel %u", node->getName(), node->getId(), channel->getChannelId());
+
+   // Create NXSL object
+   SSHSessionData *sessionData = new SSHSessionData(channel, node->getId());
+   *result = vm->createValue(vm->createObject(&g_nxslSSHSessionClass, sessionData));
+   return 0;
+}
+
+/**
  * Node::getInterface(interfaceId) method
  * Interface ID could be ifIndex, name, or MAC address
  */
@@ -2155,6 +2238,7 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, executeAgentCommand, -1);
    NXSL_REGISTER_METHOD(Node, executeAgentCommandWithOutput, -1);
    NXSL_REGISTER_METHOD(Node, executeSSHCommand, 1);
+   NXSL_REGISTER_METHOD(Node, openSSHSession, -1);
    NXSL_REGISTER_METHOD(Node, getInterface, 1);
    NXSL_REGISTER_METHOD(Node, getInterfaceByIndex, 1);
    NXSL_REGISTER_METHOD(Node, getInterfaceByMACAddress, 1);
@@ -7559,6 +7643,142 @@ void NXSL_NetworkPathCheckResultClass::onObjectDelete(NXSL_Object *object)
 }
 
 /**
+ * SSHSession::execute(command, [timeout]) method
+ */
+NXSL_METHOD_DEFINITION(SSHSession, execute)
+{
+   if (argc < 1 || argc > 2)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   if (argc > 1 && !argv[1]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   SSHSessionData *session = static_cast<SSHSessionData*>(object->getData());
+   if (session->channel == nullptr || !session->channel->isConnected())
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
+   uint32_t timeout = (argc > 1) ? argv[1]->getValueAsUInt32() : 0;
+
+   char command[4096];
+#ifdef UNICODE
+   wchar_to_utf8(argv[0]->getValueAsCString(), -1, command, sizeof(command));
+#else
+   strlcpy(command, argv[0]->getValueAsCString(), sizeof(command));
+#endif
+
+   StringList *output = session->channel->execute(command, timeout);
+   if (output != nullptr)
+   {
+      *result = vm->createValue(new NXSL_Array(vm, *output));
+      delete output;
+   }
+   else
+   {
+      *result = vm->createValue();
+   }
+   return 0;
+}
+
+/**
+ * SSHSession::escalatePrivilege(password) method
+ */
+NXSL_METHOD_DEFINITION(SSHSession, escalatePrivilege)
+{
+   if (argc != 1)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   SSHSessionData *session = static_cast<SSHSessionData*>(object->getData());
+   if (session->channel == nullptr || !session->channel->isConnected())
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
+   bool success = session->channel->escalatePrivilege(argv[0]->getValueAsCString());
+   *result = vm->createValue(success);
+   return 0;
+}
+
+/**
+ * SSHSession::close() method
+ */
+NXSL_METHOD_DEFINITION(SSHSession, close)
+{
+   SSHSessionData *session = static_cast<SSHSessionData*>(object->getData());
+   if (session->channel != nullptr && session->channel->isConnected())
+   {
+      session->channel->close();
+   }
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * NXSL class SSHSession: constructor
+ */
+NXSL_SSHSessionClass::NXSL_SSHSessionClass() : NXSL_Class()
+{
+   setName(_T("SSHSession"));
+   NXSL_REGISTER_METHOD(SSHSession, execute, -1);
+   NXSL_REGISTER_METHOD(SSHSession, escalatePrivilege, 1);
+   NXSL_REGISTER_METHOD(SSHSession, close, 0);
+}
+
+/**
+ * NXSL class SSHSession: get attribute
+ */
+NXSL_Value *NXSL_SSHSessionClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   SSHSessionData *session = static_cast<SSHSessionData*>(object->getData());
+
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("connected"))
+   {
+      value = vm->createValue(session->channel != nullptr && session->channel->isConnected());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("privileged"))
+   {
+      value = vm->createValue(session->channel != nullptr && session->channel->isPrivileged());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastError"))
+   {
+      value = vm->createValue(session->channel != nullptr ?
+         static_cast<int32_t>(session->channel->getLastError()) : 0);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastErrorMessage"))
+   {
+      value = vm->createValue(session->channel != nullptr ?
+         session->channel->getLastErrorMessage() : _T(""));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("nodeId"))
+   {
+      value = vm->createValue(session->nodeId);
+   }
+   return value;
+}
+
+/**
+ * SSHSession object destruction handler
+ */
+void NXSL_SSHSessionClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<SSHSessionData*>(object->getData());
+}
+
+/**
  * Class objects
  */
 NXSL_AccessPointClass g_nxslAccessPointClass;
@@ -7599,6 +7819,7 @@ NXSL_ServiceRootClass g_nxslServiceRootClass;
 NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
 NXSL_SoftwarePackage g_nxslSoftwarePackage;
+NXSL_SSHSessionClass g_nxslSSHSessionClass;
 NXSL_SubnetClass g_nxslSubnetClass;
 NXSL_TemplateClass g_nxslTemplateClass;
 NXSL_TunnelClass g_nxslTunnelClass;

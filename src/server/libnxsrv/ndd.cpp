@@ -1568,3 +1568,14 @@ ObjectArray<LinkLayerNeighborInfo> *NetworkDeviceDriver::getLinkLayerNeighbors(S
 {
    return nullptr;
 }
+
+/**
+ * Get SSH driver hints for interactive CLI sessions.
+ * Derived drivers can override this to provide device-specific hints.
+ * Default implementation relies on default values provided in SSHDriverHints constructor.
+ *
+ * @param hints pointer to SSHDriverHints structure to be filled
+ */
+void NetworkDeviceDriver::getSSHDriverHints(SSHDriverHints *hints) const
+{
+}

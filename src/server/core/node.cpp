@@ -6300,7 +6300,7 @@ bool Node::checkSshConnection()
    SharedString sshLogin = getSshLogin(); // Use getter instead of direct access because we need proper lock
    if (sshLogin.isNull() || sshLogin.isEmpty())
       return false;
-   return SSHCheckConnection(getEffectiveSshProxy(), m_ipAddress, m_sshPort, sshLogin, getSshPassword(), m_sshKeyId);
+   return SSHCheckConnection(getEffectiveSshProxy(), m_ipAddress, m_sshPort, sshLogin, getSshPassword(), m_sshKeyId, nullptr);
 }
 
 /**
@@ -6314,12 +6314,20 @@ bool Node::confPollSsh()
    sendPollerMsg(_T("   Checking SSH connectivity...\r\n"));
 
    bool modified = false;
-   bool success = checkSshConnection();
+   bool success = false;
+
+   uint32_t sshCapabilities;
+   SharedString sshLogin = getSshLogin(); // Use getter instead of direct access because we need proper lock
+   if (!sshLogin.isNull() && !sshLogin.isEmpty())
+   {
+      success = SSHCheckConnection(getEffectiveSshProxy(), m_ipAddress, m_sshPort, sshLogin, getSshPassword(), m_sshKeyId, &sshCapabilities);
+   }
+
    if (!success)
    {
       SSHCredentials credentials;
       uint16_t port;
-      if (SSHCheckCommSettings(getEffectiveSshProxy(), m_ipAddress, m_zoneUIN, &credentials, &port))
+      if (SSHCheckCommSettings(getEffectiveSshProxy(), m_ipAddress, m_zoneUIN, &credentials, &port, &sshCapabilities))
       {
          lockProperties();
          m_sshPort = port;
@@ -6336,12 +6344,54 @@ bool Node::confPollSsh()
    {
       sendPollerMsg(POLLER_INFO _T("   SSH connection is available\r\n"));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("ConfPoll(%s): SSH connected"), m_name);
+
+      // Agents before 6.0 will only return 1 without actual capability check
+      // Assume that command channel is available in this case
+      if (sshCapabilities == 1)
+         sshCapabilities = 3;
+
       lockProperties();
+
       if (!(m_capabilities & NC_IS_SSH))
       {
          m_capabilities |= NC_IS_SSH;
          modified = true;
       }
+
+      if (sshCapabilities & 4)
+      {
+         if (!(m_capabilities & NC_SSH_SHELL_CHANNEL))
+         {
+            m_capabilities |= NC_SSH_SHELL_CHANNEL;
+            modified = true;
+         }
+      }
+      else
+      {
+         if (m_capabilities & NC_SSH_SHELL_CHANNEL)
+         {
+            m_capabilities &= ~NC_SSH_SHELL_CHANNEL;
+            modified = true;
+         }
+      }
+
+      if (sshCapabilities & 2)
+      {
+         if (!(m_capabilities & NC_SSH_COMMAND_CHANNEL))
+         {
+            m_capabilities |= NC_SSH_COMMAND_CHANNEL;
+            modified = true;
+         }
+      }
+      else
+      {
+         if (m_capabilities & NC_SSH_COMMAND_CHANNEL)
+         {
+            m_capabilities &= ~NC_SSH_COMMAND_CHANNEL;
+            modified = true;
+         }
+      }
+
       unlockProperties();
 
       ExitFromUnreachableState();
@@ -11218,6 +11268,60 @@ SNMP_SecurityContext *Node::getSnmpSecurityContext() const
    SNMP_SecurityContext *ctx = new SNMP_SecurityContext(m_snmpSecurity);
    unlockProperties();
    return ctx;
+}
+
+/**
+ * Open interactive SSH channel to the node via SSH proxy
+ */
+shared_ptr<SSHInteractiveChannel> Node::openInteractiveSSHChannel(const wchar_t *login, const wchar_t *password, uint32_t keyId)
+{
+   // Check SSH capability
+   if (!(m_capabilities & NC_IS_SSH))
+   {
+      nxlog_debug_tag(L"ssh", 5, L"Node::openSSHInteractiveChannel(%s [%u]): node does not support SSH", m_name, m_id);
+      return shared_ptr<SSHInteractiveChannel>();
+   }
+
+   uint32_t proxyId = getEffectiveSshProxy();
+   shared_ptr<Node> proxyNode = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
+   if (proxyNode == nullptr)
+   {
+      nxlog_debug_tag(L"ssh", 5, L"Node::openSSHInteractiveChannel(%s [%u]): SSH proxy node [%u] not found", m_name, m_id, proxyId);
+      return shared_ptr<SSHInteractiveChannel>();
+   }
+
+   shared_ptr<AgentConnectionEx> agentConn = proxyNode->createAgentConnection();
+   if (agentConn == nullptr)
+   {
+      nxlog_debug_tag(L"ssh", 5, L"Node::openSSHInteractiveChannel(%s [%u]): cannot connect to SSH proxy node %s [%u]",
+               m_name, m_id, proxyNode->getName(), proxyId);
+      return shared_ptr<SSHInteractiveChannel>();
+   }
+
+   // Open SSH channel through agent
+   uint32_t channelId;
+   uint32_t rcc = agentConn->openSSHChannel(m_ipAddress, m_sshPort, (login != nullptr) ? login : m_sshLogin.cstr(),
+            (password != nullptr) ? password : m_sshPassword.cstr(), (keyId != 0) ? keyId : m_sshKeyId, &channelId);
+   if (rcc != ERR_SUCCESS)
+   {
+      nxlog_debug_tag(L"ssh", 5, L"Node::openSSHInteractiveChannel(%s [%u]): cannot open interactive SSH channel via proxy node %s [%u] (%u: %s)",
+               m_name, m_id, proxyNode->getName(), proxyId, rcc, AgentErrorCodeToText(rcc));
+               return shared_ptr<SSHInteractiveChannel>();
+   }
+
+   SSHDriverHints hints;
+   if (m_driver != nullptr)
+   {
+      m_driver->getSSHDriverHints(&hints);
+   }
+   shared_ptr<SSHInteractiveChannel> channel = make_shared<SSHInteractiveChannel>(agentConn, channelId, hints);
+
+   agentConn->setSSHChannelDataHandler(channelId,
+      [channel] (const BYTE *data, size_t size, bool errorIndicator)
+      {
+         channel->onDataReceived(data, size, errorIndicator);
+      });
+   return channel;
 }
 
 /**
