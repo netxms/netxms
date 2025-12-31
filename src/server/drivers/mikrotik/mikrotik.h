@@ -50,6 +50,7 @@ public:
    virtual bool hasMetrics() override;
    virtual DataCollectionError getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size) override;
    virtual ObjectArray<AgentParameterDefinition>* getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
 };
 
 /**

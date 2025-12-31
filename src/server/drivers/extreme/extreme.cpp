@@ -162,6 +162,36 @@ void ExtremeDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverD
 }
 
 /**
+ * Get SSH driver hints for Extreme EXOS devices
+ */
+void ExtremeDriver::getSSHDriverHints(SSHDriverHints *hints) const
+{
+   // EXOS prompt patterns:
+   // - Normal: hostname.slot #
+   // - Unsaved config: * hostname.slot #
+   // - May have slot number or not: hostname #
+   // The asterisk (*) indicates unsaved configuration changes
+   hints->promptPattern = "^\\*?\\s*[\\w.-]+(\\.[0-9]+)?\\s*[#>]\\s*$";
+   hints->enabledPromptPattern = nullptr;  // EXOS doesn't have enable mode
+
+   // EXOS uses role-based access, no enable/privilege escalation
+   hints->enableCommand = nullptr;
+   hints->enablePromptPattern = nullptr;
+
+   // Pagination control
+   hints->paginationDisableCmd = "disable clipaging";
+   hints->paginationPrompt = "Press <SPACE> to continue or <Q> to quit:|press <SPACE> to continue";
+   hints->paginationContinue = " ";
+
+   // Exit command
+   hints->exitCommand = "exit";
+
+   // Timeouts
+   hints->commandTimeout = 30000;
+   hints->connectTimeout = 15000;
+}
+
+/**
  * Driver entry point
  */
 DECLARE_NDD_ENTRY_POINT(ExtremeDriver);

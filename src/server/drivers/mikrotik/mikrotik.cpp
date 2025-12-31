@@ -406,6 +406,38 @@ bool MikrotikDriver::hasMetrics()
 }
 
 /**
+ * Get SSH driver hints for MikroTik RouterOS devices
+ */
+void MikrotikDriver::getSSHDriverHints(SSHDriverHints *hints) const
+{
+   // RouterOS prompt patterns:
+   // - Root menu: [admin@MikroTik] >
+   // - Submenu: [admin@MikroTik] /ip address>
+   // - With safe mode: [admin@MikroTik] <SAFE>>
+   // Username and hostname can contain letters, numbers, dashes, underscores
+   hints->promptPattern = "^\\[[\\w.-]+@[\\w.-]+\\]\\s*(<SAFE>)?\\s*(/[\\w/ -]*)?[>]\\s*$";
+   hints->enabledPromptPattern = nullptr;  // RouterOS doesn't have enable mode
+
+   // No enable/privilege escalation in RouterOS
+   // Permissions are based on user group membership
+   hints->enableCommand = nullptr;
+   hints->enablePromptPattern = nullptr;
+
+   // RouterOS doesn't paginate SSH output by default
+   // But if configured, it may show: -- [Q quit|D dump|down]
+   hints->paginationDisableCmd = nullptr;  // Not needed for SSH
+   hints->paginationPrompt = "-- \\[Q quit";
+   hints->paginationContinue = " ";
+
+   // Exit command
+   hints->exitCommand = "/quit";
+
+   // Timeouts (RouterOS is generally responsive)
+   hints->commandTimeout = 30000;
+   hints->connectTimeout = 10000;
+}
+
+/**
  * Driver entry point
  */
 DECLARE_NDD_ENTRY_POINT(MikrotikDriver);

@@ -147,3 +147,32 @@ InterfaceList *HirschmannClassicDriver::getInterfaces(SNMP_Transport *snmp, NObj
 
 	return ifList;
 }
+
+/**
+ * Get SSH driver hints for Hirschmann Classic OS devices
+ */
+void HirschmannClassicDriver::getSSHDriverHints(SSHDriverHints *hints) const
+{
+   // Classic OS prompt patterns (Cisco IOS-like):
+   // - User EXEC mode: hostname>
+   // - Privileged EXEC mode: hostname#
+   // - Configuration mode: hostname(config)#
+   hints->promptPattern = "^[\\w.-]+(\\([\\w/-]+\\))?[>#]\\s*$";
+   hints->enabledPromptPattern = "^[\\w.-]+(\\([\\w/-]+\\))?#\\s*$";
+
+   // Enable command for privilege escalation
+   hints->enableCommand = "enable";
+   hints->enablePromptPattern = "[Pp]assword:\\s*$";
+
+   // Pagination control
+   hints->paginationDisableCmd = "terminal datadump";
+   hints->paginationPrompt = "--More--|Press any key";
+   hints->paginationContinue = " ";
+
+   // Exit command
+   hints->exitCommand = "exit";
+
+   // Timeouts
+   hints->commandTimeout = 30000;
+   hints->connectTimeout = 15000;
+}

@@ -81,6 +81,7 @@ cd src/client/nxmc/java && mvn eclipse:eclipse -Pdesktop && cd -
 ### Network Device Support
 
 - 35+ specialized device drivers in `src/server/drivers/`
+- See [Network Device Drivers](#network-device-drivers) section below for implementation details
 
 ### Notification Channels
 
@@ -166,3 +167,125 @@ cd src/client/nxmc/java && mvn eclipse:eclipse -Pdesktop && cd -
 - Issue-first approach: create GitHub issue before coding
 - All changes require discussion and approval before implementation
 - Pull requests must reference related issues
+
+## Network Device Drivers
+
+Network device drivers provide vendor-specific support for switches, routers, and other network equipment. They are loaded as shared libraries by the server.
+
+### Driver Location
+
+- All drivers are in `src/server/drivers/<vendor>/`
+- Each driver has: `<vendor>.h`, `<vendor>.cpp`, and optionally separate files for device variants
+- Driver interface defined in `src/server/include/nddrv.h`
+- Base class implementation in `src/server/libnxsrv/ndd.cpp`
+
+### Driver Structure
+
+```cpp
+// In <vendor>.h
+class MyVendorDriver : public NetworkDeviceDriver
+{
+public:
+   virtual const TCHAR *getName() override;
+   virtual const TCHAR *getVersion() override;
+   virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
+   // ... other overrides
+};
+
+// In <vendor>.cpp - Single driver
+DECLARE_NDD_ENTRY_POINT(MyVendorDriver);
+
+// Or for multiple drivers in one module
+NDD_BEGIN_DRIVER_LIST
+NDD_DRIVER(MyVendorDriver1)
+NDD_DRIVER(MyVendorDriver2)
+NDD_END_DRIVER_LIST
+DECLARE_NDD_MODULE_ENTRY_POINT
+```
+
+### Key Virtual Methods
+
+| Method | Purpose |
+|--------|---------|
+| `getName()` | Return driver name (e.g., "CISCO-NEXUS") |
+| `getVersion()` | Return driver version (use `NETXMS_VERSION_STRING`) |
+| `isPotentialDevice(oid)` | Return priority (0-255) based on sysObjectID match |
+| `isDeviceSupported(snmp, oid)` | Confirm device support via SNMP queries |
+| `getHardwareInformation(...)` | Fill vendor, model, serial number |
+| `getInterfaces(...)` | Get interface list with physical port locations |
+| `getVlans(...)` | Get VLAN configuration |
+| `getSSHDriverHints(hints)` | Provide SSH CLI interaction parameters |
+
+### SSH Driver Hints
+
+For devices supporting interactive SSH sessions, implement `getSSHDriverHints()`:
+
+```cpp
+void MyVendorDriver::getSSHDriverHints(SSHDriverHints *hints) const
+{
+   // Prompt detection regex patterns
+   hints->promptPattern = "^[\\w.-]+[>#]\\s*$";        // User/exec mode
+   hints->enabledPromptPattern = "^[\\w.-]+#\\s*$";   // Privileged mode
+
+   // Privilege escalation (set to nullptr if not applicable)
+   hints->enableCommand = "enable";
+   hints->enablePromptPattern = "[Pp]assword:\\s*$";
+
+   // Pagination control
+   hints->paginationDisableCmd = "terminal length 0";
+   hints->paginationPrompt = "--More--|Press any key";
+   hints->paginationContinue = " ";
+
+   // Session management
+   hints->exitCommand = "exit";
+   hints->commandTimeout = 30000;   // milliseconds
+   hints->connectTimeout = 15000;   // milliseconds
+}
+```
+
+### Implemented SSH Hints
+
+| Vendor | Driver Class | Key Differences |
+|--------|--------------|-----------------|
+| Cisco IOS/IOS-XE | `CiscoDeviceDriver` | `enable`, `terminal length 0` |
+| Cisco NX-OS | `CiscoNexusDriver` | Similar to IOS |
+| Juniper JunOS | `JuniperDriver` | `user@host>`, no enable, `set cli screen-length 0` |
+| MikroTik RouterOS | `MikrotikDriver` | `[user@host] >`, no enable, no pagination |
+| Huawei VRP | `HuaweiSWDriver` | `<host>`/`[host]`, `super`, `screen-length 0 temporary` |
+| Hirschmann HiOS | `HirschmannHiOSDriver` | IOS-like, `terminal datadump` |
+| Extreme EXOS | `ExtremeDriver` | `host.slot #`, no enable, `disable clipaging` |
+
+### Device Detection Priority
+
+`isPotentialDevice()` returns a priority value (0-255):
+- **0** - Device not supported
+- **1-99** - Low confidence (generic fallback)
+- **100-199** - Medium confidence
+- **200-255** - High confidence (specific device match)
+
+Higher priority drivers are selected when multiple drivers match.
+
+### Interface Physical Location
+
+Set `InterfaceInfo` fields for physical port mapping:
+
+```cpp
+iface->isPhysicalPort = true;
+iface->location.chassis = 1;    // For stacked/chassis devices
+iface->location.module = slot;  // Slot/module number
+iface->location.port = port;    // Port number within module
+```
+
+### Debug Logging
+
+Use a driver-specific debug tag:
+
+```cpp
+#define DEBUG_TAG _T("ndd.myvendor")
+nxlog_debug_tag(DEBUG_TAG, 5, _T("MyVendorDriver: processing %s"), nodeName);
+```
+
+### Design Documentation
+
+- SSH Interactive Sessions: `doc/SSH_Interactive_Sessions_Design.md`

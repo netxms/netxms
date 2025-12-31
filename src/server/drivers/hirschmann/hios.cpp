@@ -148,3 +148,32 @@ InterfaceList *HirschmannHiOSDriver::getInterfaces(SNMP_Transport *snmp, NObject
 
 	return ifList;
 }
+
+/**
+ * Get SSH driver hints for Hirschmann HiOS devices
+ */
+void HirschmannHiOSDriver::getSSHDriverHints(SSHDriverHints *hints) const
+{
+   // HiOS prompt patterns (Cisco IOS-like):
+   // - User EXEC mode: hostname>
+   // - Privileged EXEC mode: hostname#
+   // - Configuration mode: hostname(config)#, hostname(config-if-1/1)#
+   hints->promptPattern = "^[\\w.-]+(\\([\\w/-]+\\))?[>#]\\s*$";
+   hints->enabledPromptPattern = "^[\\w.-]+(\\([\\w/-]+\\))?#\\s*$";
+
+   // Enable command for privilege escalation
+   hints->enableCommand = "enable";
+   hints->enablePromptPattern = "[Pp]assword:\\s*$";
+
+   // Pagination control - HiOS uses "terminal datadump" to disable paging
+   hints->paginationDisableCmd = "terminal datadump";
+   hints->paginationPrompt = "--More--|Press any key";
+   hints->paginationContinue = " ";
+
+   // Exit command
+   hints->exitCommand = "exit";
+
+   // Timeouts
+   hints->commandTimeout = 30000;
+   hints->connectTimeout = 15000;
+}
