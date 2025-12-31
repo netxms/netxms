@@ -327,6 +327,8 @@ struct SSHDriverHints
    const char *paginationPrompt;        // "--More--" pattern
    const char *paginationContinue;      // " " (space)
    const char *exitCommand;             // "exit"
+   const char *testCommand;             // Command for testing command/exec mode
+   const char *testCommandPattern;      // Expected pattern in test command output
    uint32_t commandTimeout;             // Default timeout (ms)
    uint32_t connectTimeout;             // Connection timeout (ms)
 
@@ -340,6 +342,8 @@ struct SSHDriverHints
       paginationPrompt = "-+[Mm][Oo][Rr][Ee]-+";
       paginationContinue = " ";
       exitCommand = "exit";
+      testCommand = "echo netxms_test_12345";
+      testCommandPattern = "netxms_test_12345";
       commandTimeout = 30000;
       connectTimeout = 10000;
    }
@@ -814,6 +818,8 @@ void CiscoDeviceDriver::getSSHDriverHints(SSHDriverHints *hints) const
    hints->paginationPrompt = " --[Mm]ore-- |<--- More --->|--More--";
    hints->paginationContinue = " ";
    hints->exitCommand = "exit";
+   hints->testCommand = "show version | include Cisco";
+   hints->testCommandPattern = "Cisco";
    hints->commandTimeout = 30000;
    hints->connectTimeout = 15000;
 }
@@ -835,6 +841,8 @@ void CiscoNexusDriver::getSSHDriverHints(SSHDriverHints *hints) const
    hints->paginationPrompt = " --[Mm]ore-- ";
    hints->paginationContinue = " ";
    hints->exitCommand = "exit";
+   hints->testCommand = "show version | include Cisco";
+   hints->testCommandPattern = "Cisco";
    hints->commandTimeout = 30000;
    hints->connectTimeout = 15000;
 }
@@ -864,6 +872,8 @@ void JuniperDriver::getSSHDriverHints(SSHDriverHints *hints) const
    hints->paginationContinue = " ";
 
    hints->exitCommand = "exit";
+   hints->testCommand = "show version | match JUNOS";
+   hints->testCommandPattern = "JUNOS";
    hints->commandTimeout = 60000;   // JunOS may be slower
    hints->connectTimeout = 20000;
 }
@@ -893,6 +903,8 @@ void MikrotikDriver::getSSHDriverHints(SSHDriverHints *hints) const
    hints->paginationContinue = " ";
 
    hints->exitCommand = "/quit";
+   hints->testCommand = ":put netxms_test";
+   hints->testCommandPattern = "netxms_test";
    hints->commandTimeout = 30000;
    hints->connectTimeout = 10000;
 }
@@ -922,6 +934,8 @@ void HuaweiSWDriver::getSSHDriverHints(SSHDriverHints *hints) const
    hints->paginationContinue = " ";
 
    hints->exitCommand = "quit";
+   hints->testCommand = "display version | include VRP";
+   hints->testCommandPattern = "VRP";
    hints->commandTimeout = 30000;
    hints->connectTimeout = 15000;
 }
@@ -950,6 +964,8 @@ void HirschmannHiOSDriver::getSSHDriverHints(SSHDriverHints *hints) const
    hints->paginationContinue = " ";
 
    hints->exitCommand = "exit";
+   hints->testCommand = "show system";
+   hints->testCommandPattern = "System";
    hints->commandTimeout = 30000;
    hints->connectTimeout = 15000;
 }
@@ -979,6 +995,8 @@ void ExtremeDriver::getSSHDriverHints(SSHDriverHints *hints) const
    hints->paginationContinue = " ";
 
    hints->exitCommand = "exit";
+   hints->testCommand = "show version | include ExtremeXOS";
+   hints->testCommandPattern = "ExtremeXOS";
    hints->commandTimeout = 30000;
    hints->connectTimeout = 15000;
 }
@@ -997,6 +1015,8 @@ void NetworkDeviceDriver::getSSHDriverHints(SSHDriverHints *hints) const
    hints->paginationPrompt = nullptr;
    hints->paginationContinue = " ";
    hints->exitCommand = "exit";
+   hints->testCommand = "echo netxms_test_12345";
+   hints->testCommandPattern = "netxms_test_12345";
    hints->commandTimeout = 30000;
    hints->connectTimeout = 10000;
 }

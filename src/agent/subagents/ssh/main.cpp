@@ -163,6 +163,7 @@ static bool SubagentCommandHandler(uint32_t command, NXCPMessage *request, NXCPM
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
+   { _T("SSH.CheckCommandMode(*)"), H_SSHCheckCommandMode, nullptr, DCI_DT_INT, _T("Check SSH command/exec mode with output pattern matching") },
    { _T("SSH.CheckConnection(*)"), H_SSHConnection, nullptr, DCI_DT_INT, _T("Result of SSH connection check") },
 	{ _T("SSH.Command(*)"), H_SSHCommand, nullptr, DCI_DT_STRING, _T("Result of command execution") },
 };

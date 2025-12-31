@@ -172,6 +172,10 @@ void HirschmannClassicDriver::getSSHDriverHints(SSHDriverHints *hints) const
    // Exit command
    hints->exitCommand = "exit";
 
+   // Test command for verifying command mode support
+   hints->testCommand = "show system";
+   hints->testCommandPattern = "System";
+
    // Timeouts
    hints->commandTimeout = 30000;
    hints->connectTimeout = 15000;

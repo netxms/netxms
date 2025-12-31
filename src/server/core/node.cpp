@@ -6300,7 +6300,7 @@ bool Node::checkSshConnection()
    SharedString sshLogin = getSshLogin(); // Use getter instead of direct access because we need proper lock
    if (sshLogin.isNull() || sshLogin.isEmpty())
       return false;
-   return SSHCheckConnection(getEffectiveSshProxy(), m_ipAddress, m_sshPort, sshLogin, getSshPassword(), m_sshKeyId, nullptr);
+   return SSHCheckConnection(getEffectiveSshProxy(), m_ipAddress, m_sshPort, sshLogin, getSshPassword(), m_sshKeyId);
 }
 
 /**
@@ -6316,18 +6316,17 @@ bool Node::confPollSsh()
    bool modified = false;
    bool success = false;
 
-   uint32_t sshCapabilities;
    SharedString sshLogin = getSshLogin(); // Use getter instead of direct access because we need proper lock
    if (!sshLogin.isNull() && !sshLogin.isEmpty())
    {
-      success = SSHCheckConnection(getEffectiveSshProxy(), m_ipAddress, m_sshPort, sshLogin, getSshPassword(), m_sshKeyId, &sshCapabilities);
+      success = SSHCheckConnection(getEffectiveSshProxy(), m_ipAddress, m_sshPort, sshLogin, getSshPassword(), m_sshKeyId);
    }
 
    if (!success)
    {
       SSHCredentials credentials;
       uint16_t port;
-      if (SSHCheckCommSettings(getEffectiveSshProxy(), m_ipAddress, m_zoneUIN, &credentials, &port, &sshCapabilities))
+      if (SSHCheckCommSettings(getEffectiveSshProxy(), m_ipAddress, m_zoneUIN, &credentials, &port))
       {
          lockProperties();
          m_sshPort = port;
@@ -6345,10 +6344,7 @@ bool Node::confPollSsh()
       sendPollerMsg(POLLER_INFO _T("   SSH connection is available\r\n"));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("ConfPoll(%s): SSH connected"), m_name);
 
-      // Agents before 6.0 will only return 1 without actual capability check
-      // Assume that command channel is available in this case
-      if (sshCapabilities == 1)
-         sshCapabilities = 3;
+      // TODO: check for command channel and interactive shell support
 
       lockProperties();
 
@@ -6356,40 +6352,6 @@ bool Node::confPollSsh()
       {
          m_capabilities |= NC_IS_SSH;
          modified = true;
-      }
-
-      if (sshCapabilities & 4)
-      {
-         if (!(m_capabilities & NC_SSH_SHELL_CHANNEL))
-         {
-            m_capabilities |= NC_SSH_SHELL_CHANNEL;
-            modified = true;
-         }
-      }
-      else
-      {
-         if (m_capabilities & NC_SSH_SHELL_CHANNEL)
-         {
-            m_capabilities &= ~NC_SSH_SHELL_CHANNEL;
-            modified = true;
-         }
-      }
-
-      if (sshCapabilities & 2)
-      {
-         if (!(m_capabilities & NC_SSH_COMMAND_CHANNEL))
-         {
-            m_capabilities |= NC_SSH_COMMAND_CHANNEL;
-            modified = true;
-         }
-      }
-      else
-      {
-         if (m_capabilities & NC_SSH_COMMAND_CHANNEL)
-         {
-            m_capabilities &= ~NC_SSH_COMMAND_CHANNEL;
-            modified = true;
-         }
       }
 
       unlockProperties();

@@ -1424,6 +1424,8 @@ struct SSHDriverHints
    const char *paginationPrompt;        // "--More--" pattern
    const char *paginationContinue;      // " " (space)
    const char *exitCommand;             // "exit"
+   const char *testCommand;             // Command for testing command/exec mode
+   const char *testCommandPattern;      // Expected pattern in test command output
    uint32_t commandTimeout;             // Default timeout (ms)
    uint32_t connectTimeout;             // Connection timeout (ms)
 
@@ -1437,6 +1439,8 @@ struct SSHDriverHints
       paginationPrompt = "-+[Mm][Oo][Rr][Ee]-+";
       paginationContinue = " ";
       exitCommand = "exit";
+      testCommand = "echo netxms_test_12345";
+      testCommandPattern = "netxms_test_12345";
       commandTimeout = 30000;
       connectTimeout = 10000;
    }

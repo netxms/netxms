@@ -1380,11 +1380,11 @@ SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipA
 unique_ptr<StringList> SnmpGetKnownCommunities(int32_t zoneUIN);
 
 bool SSHCheckConnection(const shared_ptr<Node>& proxyNode, const InetAddress& addr, uint16_t port,
-   const TCHAR *login, const TCHAR *password, uint32_t keyId, uint32_t *sshCapabilities);
+   const TCHAR *login, const TCHAR *password, uint32_t keyId);
 bool SSHCheckConnection(uint32_t proxyNodeId, const InetAddress& addr, uint16_t port, const TCHAR *login,
-   const TCHAR *password, uint32_t keyId, uint32_t *sshCapabilities);
+   const TCHAR *password, uint32_t keyId);
 bool SSHCheckCommSettings(uint32_t proxyNodeId, const InetAddress& addr, int32_t zoneUIN,
-   SSHCredentials *selectedCredentials, uint16_t *selectedPort, uint32_t *sshCapabilities);
+   SSHCredentials *selectedCredentials, uint16_t *selectedPort);
 
 bool VNCCheckConnection(Node *proxyNode, const InetAddress& addr, uint16_t port);
 bool VNCCheckConnection(uint32_t proxyNodeId, const InetAddress& addr, uint16_t port);

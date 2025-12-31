@@ -150,6 +150,7 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
 LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 uint32_t H_SSHCommandAction(const shared_ptr<ActionExecutionContext>& context);
 LONG H_SSHConnection(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_SSHCheckCommandMode(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 
 /* globals */
 extern uint32_t g_sshConnectTimeout;

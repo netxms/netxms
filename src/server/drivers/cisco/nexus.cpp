@@ -348,6 +348,10 @@ void CiscoNexusDriver::getSSHDriverHints(SSHDriverHints *hints) const
    // Exit command
    hints->exitCommand = "exit";
 
+   // Test command for verifying command mode support
+   hints->testCommand = "show version | include Cisco";
+   hints->testCommandPattern = "Cisco";
+
    // Timeouts
    hints->commandTimeout = 30000;
    hints->connectTimeout = 15000;

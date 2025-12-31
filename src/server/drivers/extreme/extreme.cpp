@@ -186,6 +186,10 @@ void ExtremeDriver::getSSHDriverHints(SSHDriverHints *hints) const
    // Exit command
    hints->exitCommand = "exit";
 
+   // Test command for verifying command mode support
+   hints->testCommand = "show version | include ExtremeXOS";
+   hints->testCommandPattern = "ExtremeXOS";
+
    // Timeouts
    hints->commandTimeout = 30000;
    hints->connectTimeout = 15000;

@@ -432,6 +432,10 @@ void MikrotikDriver::getSSHDriverHints(SSHDriverHints *hints) const
    // Exit command
    hints->exitCommand = "/quit";
 
+   // Test command for verifying command mode support
+   hints->testCommand = ":put netxms_test";
+   hints->testCommandPattern = "netxms_test";
+
    // Timeouts (RouterOS is generally responsive)
    hints->commandTimeout = 30000;
    hints->connectTimeout = 10000;

@@ -25,11 +25,7 @@
 
 /**
  * SSH connectivity check handler
- * Returns: 0 = SSH not available or bit mask:
- *    1 = SSH connection available
- *    2 = command execution channel available
- *    4 = interactive channel available
- * channel availability is tested only if 5th argument is set to true
+ * Returns: 0 = if SSH not available or 1 if SSH connection available
  */
 LONG H_SSHConnection(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session)
 {
@@ -73,50 +69,119 @@ LONG H_SSHConnection(const TCHAR* param, const TCHAR* arg, TCHAR* value, Abstrac
    ReleaseSession(ssh);
 
    nxlog_debug_tag(DEBUG_TAG, 8, _T("SSH connection to %s:%u created successfully"), hostName, port);
+   ret_int(value, 1);
+   return SYSINFO_RC_SUCCESS;
+}
 
-   bool checkCapabilities = false;
-   AgentGetMetricArgAsBoolean(param, 5, &checkCapabilities);
-   if (!checkCapabilities)
+/**
+ * SSH command mode check handler
+ * Parameters: host[:port], login, password, command, pattern, keyId
+ * Executes command via exec channel and matches output against regex pattern
+ * Returns: 1 (success - pattern matched) or 0 (failure)
+ */
+LONG H_SSHCheckCommandMode(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR hostName[256], login[64], password[64];
+   if (!AgentGetParameterArg(param, 1, hostName, 256) ||
+       !AgentGetParameterArg(param, 2, login, 64) ||
+       !AgentGetParameterArg(param, 3, password, 64))
    {
-      ret_int(value, 1);
+      return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   uint16_t port = 22;
+   TCHAR *p = _tcschr(hostName, _T(':'));
+   if (p != nullptr)
+   {
+      *p = 0;
+      p++;
+      port = static_cast<uint16_t>(_tcstoul(p, nullptr, 10));
+   }
+
+   InetAddress addr = InetAddress::resolveHostName(hostName);
+   if (!addr.isValidUnicast())
+   {
+      ret_int(value, 0);
       return SYSINFO_RC_SUCCESS;
    }
 
-   int capabilities = 1;
-
-   // Reacquire session for each capability test - this will ensure that session is valid
-   ssh = AcquireSession(addr, port, login, password, keys);
-   if (ssh == nullptr)
+   // Get optional command (4th argument)
+   size_t commandBufferLen = _tcslen(param);
+   TCHAR *command = MemAllocString(commandBufferLen);
+   if (!AgentGetParameterArg(param, 4, command, commandBufferLen) || command[0] == 0)
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("Failed to reacquire SSH connection to %s:%u for capability test"), hostName, port);
-      ret_int(value, capabilities);
-      return SYSINFO_RC_SUCCESS;
+      _tcscpy(command, _T("echo netxms_test_12345"));
    }
 
-   ssh_channel interactiveChannel = ssh->openInteractiveChannel();
-   if (interactiveChannel != nullptr)
+   // Get optional pattern (5th argument)
+   TCHAR pattern[256];
+   if (!AgentGetParameterArg(param, 5, pattern, 256) || pattern[0] == 0)
    {
-      capabilities |= 4;
-      ssh_channel_close(interactiveChannel);
-      ssh_channel_free(interactiveChannel);
-   }
-   ReleaseSession(ssh);
-
-   ssh = AcquireSession(addr, port, login, password, keys);
-   if (ssh == nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("Failed to reacquire SSH connection to %s:%u for capability test"), hostName, port);
-      ret_int(value, capabilities);
-      return SYSINFO_RC_SUCCESS;
+      _tcscpy(pattern, _T("netxms_test_12345"));
    }
 
-   char command[128] = "";
-   AgentGetMetricArgA(param, 6, command, 128);
-   if (ssh->testCommandChannel((command[0] != 0) ? command : nullptr))
-      capabilities |= 2;
+   // Get optional key ID (6th argument)
+   uint32_t keyId = 0;
+   AgentGetMetricArgAsUInt32(param, 6, &keyId);
+   shared_ptr<KeyPair> keys;
+   if (keyId != 0)
+      keys = GetSshKey(session, keyId);
 
-   ReleaseSession(ssh);
-   ret_int(value, capabilities);
+   int result = 0;
+
+   SSHSession *ssh = AcquireSession(addr, port, login, password, keys);
+   if (ssh != nullptr)
+   {
+      StringList *output = ssh->execute(command);
+      if (output != nullptr)
+      {
+         const char *errptr;
+         int erroffset;
+         PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pattern), PCRE_COMMON_FLAGS, &errptr, &erroffset, nullptr);
+         if (preg != nullptr)
+         {
+            int ovector[30];
+            for (int i = 0; i < output->size(); i++)
+            {
+               const TCHAR *line = output->get(i);
+               int rc = _pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(line),
+                                     static_cast<int>(_tcslen(line)), 0, 0, ovector, 30);
+               if (rc >= 0)
+               {
+                  result = 1;
+                  nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH.CheckCommandMode: pattern matched on %s:%u"), hostName, port);
+                  break;
+               }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 8, _T("SSH.CheckCommandMode: pattern did not match line \"%s\" on %s:%u"), line, hostName, port);
+               }
+            }
+            _pcre_free_t(preg);
+            if (result == 0)
+            {
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("SSH.CheckCommandMode: pattern \"%s\" did not match any output line"), pattern);
+            }
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("SSH.CheckCommandMode: failed to compile pattern \"%s\""), pattern);
+         }
+         delete output;
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH.CheckCommandMode: command execution failed on %s:%u (exec channel may not be supported)"), hostName, port);
+      }
+      ReleaseSession(ssh);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH.CheckCommandMode: failed to create SSH connection to %s:%u"), hostName, port);
+   }
+
+   MemFree(command);
+   ret_int(value, result);
    return SYSINFO_RC_SUCCESS;
 }
 

@@ -133,6 +133,10 @@ void HuaweiSWDriver::getSSHDriverHints(SSHDriverHints *hints) const
    // Exit command
    hints->exitCommand = "quit";
 
+   // Test command for verifying command mode support
+   hints->testCommand = "display version | include VRP";
+   hints->testCommandPattern = "VRP";
+
    // Timeouts
    hints->commandTimeout = 30000;
    hints->connectTimeout = 15000;

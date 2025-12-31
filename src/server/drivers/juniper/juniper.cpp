@@ -423,6 +423,10 @@ void JuniperDriver::getSSHDriverHints(SSHDriverHints *hints) const
    // Exit command
    hints->exitCommand = "exit";
 
+   // Test command for verifying command mode support
+   hints->testCommand = "show version | match JUNOS";
+   hints->testCommandPattern = "JUNOS";
+
    // Timeouts (JunOS devices may be slower due to XML parsing)
    hints->commandTimeout = 60000;
    hints->connectTimeout = 20000;
