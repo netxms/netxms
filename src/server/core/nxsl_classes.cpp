@@ -701,7 +701,7 @@ NXSL_METHOD_DEFINITION(NetObj, unbindFrom)
       return NXSL_ERR_BAD_CLASS;
 
    NetObj *parent = static_cast<shared_ptr<NetObj>*>(nxslParent->getData())->get();
-   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_COLLECTOR) &&
+   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_COLLECTOR) &&
             (parent->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
