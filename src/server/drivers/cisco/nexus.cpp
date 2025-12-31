@@ -322,3 +322,33 @@ failure:
    delete list;
    return nullptr;
 }
+
+/**
+ * Get SSH driver hints for Cisco NX-OS devices
+ */
+void CiscoNexusDriver::getSSHDriverHints(SSHDriverHints *hints) const
+{
+   // NX-OS prompt patterns (similar to IOS but may include VDC context):
+   // - User mode: switch>
+   // - Privileged mode: switch#
+   // - Config mode: switch(config)#, switch(config-if)#, etc.
+   // - VDC context: switch-vdc#
+   hints->promptPattern = "^[\\w.-]+(\\([\\w-]+\\))?[>#]\\s*$";
+   hints->enabledPromptPattern = "^[\\w.-]+(\\([\\w-]+\\))?#\\s*$";
+
+   // Enable command (NX-OS typically doesn't require enable for admin users)
+   hints->enableCommand = "enable";
+   hints->enablePromptPattern = "[Pp]assword:\\s*$";
+
+   // Pagination control
+   hints->paginationDisableCmd = "terminal length 0";
+   hints->paginationPrompt = " --[Mm]ore-- ";
+   hints->paginationContinue = " ";
+
+   // Exit command
+   hints->exitCommand = "exit";
+
+   // Timeouts
+   hints->commandTimeout = 30000;
+   hints->connectTimeout = 15000;
+}

@@ -38,6 +38,7 @@ public:
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
 	virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual StructArray<ForwardingDatabaseEntry> *getForwardingDatabase(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
 };
 
 /**
@@ -144,6 +145,7 @@ public:
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
    virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
 };
 
 /**

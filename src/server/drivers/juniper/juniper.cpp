@@ -399,6 +399,36 @@ bool JuniperDriver::isLldpRemTableUsingIfIndex(const NObject *node, DriverData *
 }
 
 /**
+ * Get SSH driver hints for Juniper JunOS devices
+ */
+void JuniperDriver::getSSHDriverHints(SSHDriverHints *hints) const
+{
+   // JunOS prompt patterns:
+   // - Operational mode: user@hostname>
+   // - Configuration mode: user@hostname#
+   // - May include routing instance: user@hostname:instance>
+   hints->promptPattern = "^[\\w.-]+@[\\w.-]+(:[\\w.-]+)?[>%#]\\s*$";
+   hints->enabledPromptPattern = "^[\\w.-]+@[\\w.-]+(:[\\w.-]+)?#\\s*$";
+
+   // JunOS uses class-based authorization, not enable/disable model
+   // Some systems may still have "enable" equivalent via "start shell"
+   hints->enableCommand = nullptr;
+   hints->enablePromptPattern = nullptr;
+
+   // Pagination control - use "set cli screen-length 0" in operational mode
+   hints->paginationDisableCmd = "set cli screen-length 0";
+   hints->paginationPrompt = "---\\([Mm]ore\\s*\\d*%?\\)---|---\\(more\\)---";
+   hints->paginationContinue = " ";
+
+   // Exit command
+   hints->exitCommand = "exit";
+
+   // Timeouts (JunOS devices may be slower due to XML parsing)
+   hints->commandTimeout = 60000;
+   hints->connectTimeout = 20000;
+}
+
+/**
  * Driver module entry point
  */
 NDD_BEGIN_DRIVER_LIST

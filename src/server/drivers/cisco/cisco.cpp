@@ -374,6 +374,36 @@ StructArray<ForwardingDatabaseEntry> *CiscoDeviceDriver::getForwardingDatabase(S
 }
 
 /**
+ * Get SSH driver hints for Cisco IOS/IOS-XE devices
+ */
+void CiscoDeviceDriver::getSSHDriverHints(SSHDriverHints *hints) const
+{
+   // Cisco IOS prompt patterns:
+   // - User mode: hostname>
+   // - Privileged mode: hostname#
+   // - Config mode: hostname(config)#, hostname(config-if)#, etc.
+   // Prompt may include domain name: hostname.domain.com>
+   hints->promptPattern = "^[\\w.-]+(\\([\\w-]+\\))?[>#]\\s*$";
+   hints->enabledPromptPattern = "^[\\w.-]+(\\([\\w-]+\\))?#\\s*$";
+
+   // Enable command and password prompt
+   hints->enableCommand = "enable";
+   hints->enablePromptPattern = "[Pp]assword:\\s*$";
+
+   // Pagination control
+   hints->paginationDisableCmd = "terminal length 0";
+   hints->paginationPrompt = " --[Mm]ore-- |<--- More --->|--More--";
+   hints->paginationContinue = " ";
+
+   // Exit command
+   hints->exitCommand = "exit";
+
+   // Timeouts (Cisco devices are generally responsive)
+   hints->commandTimeout = 30000;
+   hints->connectTimeout = 15000;
+}
+
+/**
  * Driver module entry point
  */
 NDD_BEGIN_DRIVER_LIST
