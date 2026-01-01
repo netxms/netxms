@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2025 Reden Solutions
+** Copyright (C) 2003-2026 Reden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -1258,7 +1258,7 @@ public:
    uint32_t setupTcpProxy(const InetAddress& ipAddr, uint16_t port, uint32_t *channelId);
    uint32_t closeTcpProxy(uint32_t channelId);
 
-   uint32_t openSSHChannel(const InetAddress& target, uint16_t port, const TCHAR *user, const TCHAR *password, uint32_t keyId, uint32_t *channelId);
+   uint32_t openSSHChannel(const InetAddress& target, uint16_t port, const TCHAR *user, const TCHAR *password, uint32_t keyId, const char *terminalType, uint32_t *channelId);
    uint32_t sendSSHChannelData(uint32_t channelId, const BYTE *data, size_t size);
    uint32_t closeSSHChannel(uint32_t channelId);
    void setSSHChannelDataHandler(uint32_t channelId, SSHChannelDataCallback handler);
@@ -1426,6 +1426,7 @@ struct SSHDriverHints
    const char *exitCommand;             // "exit"
    const char *testCommand;             // Command for testing command/exec mode
    const char *testCommandPattern;      // Expected pattern in test command output
+   const char *terminalType;            // Terminal type for PTY (e.g., "xterm", "vt100", "dumb")
    uint32_t commandTimeout;             // Default timeout (ms)
    uint32_t connectTimeout;             // Connection timeout (ms)
 
@@ -1441,6 +1442,7 @@ struct SSHDriverHints
       exitCommand = "exit";
       testCommand = "echo netxms_test_12345";
       testCommandPattern = "netxms_test_12345";
+      terminalType = "vt100";
       commandTimeout = 30000;
       connectTimeout = 10000;
    }
@@ -1483,7 +1485,9 @@ private:
    bool waitForPrompt(uint32_t timeout);
    bool checkPromptMatch();
    void processIncomingData();
-   void stripAnsiCodes();
+   void respondToTerminalQueries(const BYTE *data, size_t size);
+   void removeControlCharacters();
+   void collapseCharacterByCharacterOutput();
    bool handlePagination();
    StringList *parseOutput(const char *sentCommand);
    bool isCommandEcho(const wchar_t *line, const char *command);

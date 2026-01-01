@@ -4128,6 +4128,7 @@ public:
    BYTE *takeBuffer();
 
    void clear() { m_size = 0; m_pos = 0; }
+   void truncate(size_t newSize) { if (newSize < m_size) { m_size = newSize; if (m_pos > m_size) m_pos = m_size; } }
 
    void write(const void *data, size_t size);
    void write(char c) { write(&c, 1); }

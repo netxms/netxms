@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -3157,7 +3157,7 @@ void AgentConnection::processTcpProxyData(uint32_t channelId, const void *data, 
 /**
  * Open SSH channel
  */
-uint32_t AgentConnection::openSSHChannel(const InetAddress& target, uint16_t port, const TCHAR *user, const TCHAR *password, uint32_t keyId, uint32_t *channelId)
+uint32_t AgentConnection::openSSHChannel(const InetAddress& target, uint16_t port, const TCHAR *user, const TCHAR *password, uint32_t keyId, const char *terminalType, uint32_t *channelId)
 {
    uint32_t requestId = generateRequestId();
    *channelId = requestId;
@@ -3169,6 +3169,8 @@ uint32_t AgentConnection::openSSHChannel(const InetAddress& target, uint16_t por
    msg.setField(VID_PASSWORD, password);
    msg.setField(VID_SSH_KEY_ID, keyId);
    msg.setField(VID_CHANNEL_ID, requestId);
+   if (terminalType != nullptr && terminalType[0] != '\0')
+      msg.setFieldFromUtf8String(VID_TERMINAL_TYPE, terminalType);
 
    uint32_t rcc;
    if (sendMessage(&msg))

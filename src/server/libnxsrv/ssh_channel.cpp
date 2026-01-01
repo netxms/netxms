@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -84,11 +84,6 @@ SSHChannelDataCallback SSHChannelCallbackIndex::get(uint32_t id)
    HASH_FIND_INT(m_data, &id, entry);
    return (entry != nullptr) ? entry->handler : nullptr;
 }
-
-/**
- * ANSI escape sequence pattern
- */
-static const char *s_ansiPattern = "\x1b\\[[0-9;]*[A-Za-z]|\x1b\\][^\x07]*\x07|\x1b[()][AB012]|\x1b[=>]";
 
 /**
  * SSHInteractiveChannel constructor
@@ -190,6 +185,10 @@ void SSHInteractiveChannel::onDataReceived(const BYTE *data, size_t size, bool e
          buffer[size] = 0;
          nxlog_debug_tag(DEBUG_TAG, 7, L"SSHInteractiveChannel::onDataReceived: received %u bytes: %hs", static_cast<uint32_t>(size), buffer.buffer());
       }
+
+      // Respond to terminal queries before buffering
+      respondToTerminalQueries(data, size);
+
       m_bufferLock.lock();
       m_buffer.write(data, size);
       m_bufferLock.unlock();
@@ -277,7 +276,17 @@ bool SSHInteractiveChannel::checkPromptMatch()
       return false;
    }
 
-   // Find last line
+   // Skip trailing whitespace and newlines (some devices add newlines after prompt)
+   while (len > 0 && (data[len - 1] == '\n' || data[len - 1] == '\r' || data[len - 1] == ' ' || data[len - 1] == '\t'))
+      len--;
+
+   if (len == 0)
+   {
+      m_bufferLock.unlock();
+      return false;
+   }
+
+   // Find last line (after trimming)
    const char *lastLine = data;
    for (size_t i = len; i > 0; i--)
    {
@@ -306,12 +315,13 @@ bool SSHInteractiveChannel::checkPromptMatch()
 }
 
 /**
- * Process incoming data - strip ANSI codes and handle pagination
+ * Process incoming data - strip control characters, collapse char-by-char output, handle pagination
  */
 void SSHInteractiveChannel::processIncomingData()
 {
    m_bufferLock.lock();
-   stripAnsiCodes();
+   removeControlCharacters();
+   collapseCharacterByCharacterOutput();
    m_bufferLock.unlock();
 
    // Check for pagination prompt and handle it
@@ -320,65 +330,240 @@ void SSHInteractiveChannel::processIncomingData()
       // Wait a bit for more data after sending pagination continue
       m_dataReceived.wait(200);
       m_bufferLock.lock();
-      stripAnsiCodes();
+      removeControlCharacters();
+      collapseCharacterByCharacterOutput();
       m_bufferLock.unlock();
    }
 }
 
+
 /**
- * Strip ANSI escape codes from buffer
+ * Respond to terminal queries in the data
+ * Detects ESC[6n (cursor position), ESC Z (identify), ESC[c (device attributes) and sends appropriate responses
  */
-void SSHInteractiveChannel::stripAnsiCodes()
+void SSHInteractiveChannel::respondToTerminalQueries(const BYTE *data, size_t len)
+{
+   for (size_t i = 0; i + 1 < len; i++)
+   {
+      if (data[i] == 0x1B)  // ESC
+      {
+         // Check for ESC[6n (Device Status Report - cursor position query)
+         if (i + 3 < len && data[i + 1] == '[' && data[i + 2] == '6' && data[i + 3] == 'n')
+         {
+            // Respond with cursor at row 1, column 1
+            const char *response = "\x1B[1;1R";
+            m_agentConn->sendSSHChannelData(m_channelId, reinterpret_cast<const BYTE*>(response), strlen(response));
+            nxlog_debug_tag(DEBUG_TAG, 7, L"SSHInteractiveChannel %u: responded to cursor position query (ESC[6n)", m_channelId);
+         }
+         // Check for ESC Z (Identify Terminal)
+         else if (data[i + 1] == 'Z')
+         {
+            // Respond as VT100: ESC[?1;0c (VT100 with no options)
+            const char *response = "\x1B[?1;0c";
+            m_agentConn->sendSSHChannelData(m_channelId, reinterpret_cast<const BYTE*>(response), strlen(response));
+            nxlog_debug_tag(DEBUG_TAG, 7, L"SSHInteractiveChannel %u: responded to terminal identify query (ESC Z)", m_channelId);
+         }
+         // Check for ESC[c or ESC[0c (Device Attributes query)
+         else if (i + 2 < len && data[i + 1] == '[' && (data[i + 2] == 'c' || (data[i + 2] == '0' && i + 3 < len && data[i + 3] == 'c')))
+         {
+            // Respond as VT100
+            const char *response = "\x1B[?1;0c";
+            m_agentConn->sendSSHChannelData(m_channelId, reinterpret_cast<const BYTE*>(response), strlen(response));
+            nxlog_debug_tag(DEBUG_TAG, 7, L"SSHInteractiveChannel %u: responded to device attributes query (ESC[c)", m_channelId);
+         }
+      }
+   }
+}
+
+/**
+ * Check if character is ASCII printable (0x20-0x7E)
+ */
+static inline bool IsAsciiPrintable(unsigned char c)
+{
+   return c >= 0x20 && c <= 0x7E;
+}
+
+/**
+ * Skip CSI sequence parameters and final byte
+ * src should point to first byte after CSI introducer (ESC[ or 0x9B)
+ * Returns pointer to byte after the sequence
+ */
+static char *SkipCSISequence(char *src)
+{
+   // Skip parameter bytes (0x30-0x3F) and intermediate bytes (0x20-0x2F)
+   while (*src != 0 && (unsigned char)*src >= 0x20 && (unsigned char)*src < 0x40)
+      src++;
+   // Skip final byte (0x40-0x7E)
+   if (*src != 0 && (unsigned char)*src >= 0x40 && (unsigned char)*src <= 0x7E)
+      src++;
+   return src;
+}
+
+/**
+ * Skip OSC sequence content and terminator
+ * src should point to first byte after OSC introducer (ESC] or 0x9D)
+ * Returns pointer to byte after the sequence
+ */
+static char *SkipOSCSequence(char *src)
+{
+   while (*src != 0)
+   {
+      if (*src == 0x07)  // BEL terminates OSC
+      {
+         src++;
+         break;
+      }
+      if (*src == 0x1B && *(src + 1) == '\\')  // ESC \ (ST) terminates OSC
+      {
+         src += 2;
+         break;
+      }
+      if ((unsigned char)*src == 0x9C)  // 8-bit ST terminates OSC
+      {
+         src++;
+         break;
+      }
+      src++;
+   }
+   return src;
+}
+
+/**
+ * Remove control characters from buffer, including ANSI escape sequences
+ * Replaces the old stripAnsiCodes() with more comprehensive handling
+ */
+void SSHInteractiveChannel::removeControlCharacters()
 {
    if (m_buffer.size() == 0)
       return;
 
-   const char *errptr;
-   int erroffset;
-   pcre *ansiRegex = pcre_compile(s_ansiPattern, PCRE_COMMON_FLAGS_A, &errptr, &erroffset, nullptr);
-   if (ansiRegex == nullptr)
+   char *data = reinterpret_cast<char*>(const_cast<BYTE*>(m_buffer.buffer()));
+   size_t len = m_buffer.size();
+
+   // Work in-place (always writing to positions <= reading position)
+   char *src = data;
+   char *dst = data;
+   char *end = data + len;
+
+   while (src < end)
+   {
+      unsigned char c = (unsigned char)*src;
+
+      if (c == 0x1B)  // ESC - start of 7-bit escape sequence
+      {
+         src++;
+         if (src >= end)
+            break;
+
+         if (*src == '[')  // CSI sequence: ESC [
+         {
+            src = SkipCSISequence(src + 1);
+         }
+         else if (*src == ']')  // OSC sequence: ESC ]
+         {
+            src = SkipOSCSequence(src + 1);
+         }
+         else if (*src == '(' || *src == ')' || *src == '*' || *src == '+')  // Character set designation
+         {
+            src++;
+            if (src < end)
+               src++;
+         }
+         else if (*src == '#')  // DEC line attributes: ESC # <digit>
+         {
+            src++;
+            if (src < end)
+               src++;
+         }
+         else if (*src >= 0x40 && *src <= 0x5F)  // Two-byte Fe sequences (ESC + 0x40-0x5F)
+         {
+            src++;
+         }
+         else if (*src >= 0x20 && *src <= 0x2F)  // nF escape sequences
+         {
+            // Skip intermediate bytes
+            while (src < end && (unsigned char)*src >= 0x20 && (unsigned char)*src <= 0x2F)
+               src++;
+            // Skip final byte
+            if (src < end && (unsigned char)*src >= 0x30 && (unsigned char)*src <= 0x7E)
+               src++;
+         }
+         else  // Unknown escape, skip the character after ESC
+         {
+            src++;
+         }
+      }
+      else if (c == 0x9B)  // 8-bit CSI
+      {
+         src = SkipCSISequence(src + 1);
+      }
+      else if (c == 0x9D)  // 8-bit OSC
+      {
+         src = SkipOSCSequence(src + 1);
+      }
+      else if (c >= 0x80 && c <= 0x9F)  // Other C1 control codes - skip
+      {
+         src++;
+      }
+      else if (c >= 32 || c == '\n' || c == '\t')
+      {
+         // Printable characters and common whitespace (skip CR)
+         *dst++ = *src++;
+      }
+      else
+      {
+         // Skip other control characters (C0: 0x00-0x1F except handled above)
+         src++;
+      }
+   }
+
+   m_buffer.truncate(dst - data);
+}
+
+/**
+ * Collapse character-by-character output with CR/LF between each character
+ * This handles devices like MikroTik that echo each character on a new line
+ */
+void SSHInteractiveChannel::collapseCharacterByCharacterOutput()
+{
+   if (m_buffer.size() == 0)
       return;
 
-   ByteStream cleanBuffer(m_buffer.size());
-   const char *data = reinterpret_cast<const char*>(m_buffer.buffer());
+   char *data = reinterpret_cast<char*>(const_cast<BYTE*>(m_buffer.buffer()));
    size_t len = m_buffer.size();
-   size_t pos = 0;
 
-   int ovector[30];
-   while(pos < len)
+   // Work in-place (always writing to positions <= reading position)
+   char *src = data;
+   char *dst = data;
+   char *end = data + len;
+
+   while (src < end)
    {
-      int rc = pcre_exec(ansiRegex, nullptr, data + pos, static_cast<int>(len - pos), 0, 0, ovector, 30);
-      if (rc < 0)
+      // Check if this looks like char-by-char output: single ASCII printable char followed by newline
+      if (IsAsciiPrintable((unsigned char)*src) && (src + 1 < end && *(src + 1) == '\n'))
       {
-         // No more matches, copy rest of data
-         cleanBuffer.write(data + pos, len - pos);
-         break;
+         // Check if next non-newline char is also a single char followed by newline
+         // This indicates char-by-char mode
+         char *next = src + 1;
+         while (next < end && *next == '\n')
+            next++;
+
+         if (next < end && IsAsciiPrintable((unsigned char)*next) && (next + 1 < end && *(next + 1) == '\n'))
+         {
+            // Looks like char-by-char mode - copy char without trailing newline
+            *dst++ = *src++;
+            // Skip the newlines between chars
+            while (src < end && *src == '\n')
+               src++;
+            continue;
+         }
       }
 
-      // Copy data before match
-      if (ovector[0] > 0)
-         cleanBuffer.write(data + pos, ovector[0]);
-
-      // Skip the ANSI sequence
-      pos += ovector[1];
+      // Normal character (including newlines) - preserve as-is
+      *dst++ = *src++;
    }
 
-   // Also strip carriage returns (but keep newlines)
-   ByteStream finalBuffer(cleanBuffer.size());
-   const char *cleanData = reinterpret_cast<const char*>(cleanBuffer.buffer());
-   size_t cleanLen = cleanBuffer.size();
-
-   for(size_t i = 0; i < cleanLen; i++)
-   {
-      if (cleanData[i] != '\r')
-         finalBuffer.write(static_cast<BYTE>(cleanData[i]));
-   }
-
-   // Replace buffer with cleaned data
-   m_buffer.clear();
-   m_buffer.write(finalBuffer.buffer(), finalBuffer.size());
-
-   pcre_free(ansiRegex);
+   m_buffer.truncate(dst - data);
 }
 
 /**
@@ -496,6 +681,10 @@ StringList *SSHInteractiveChannel::execute(const char *command, uint32_t timeout
 StringList *SSHInteractiveChannel::parseOutput(const char *sentCommand)
 {
    m_bufferLock.lock();
+
+   // Process any remaining control characters (data may have arrived after last processIncomingData call)
+   removeControlCharacters();
+   collapseCharacterByCharacterOutput();
 
    // Convert buffer to string
    String output(reinterpret_cast<const char*>(m_buffer.buffer()), m_buffer.size(), "UTF-8");

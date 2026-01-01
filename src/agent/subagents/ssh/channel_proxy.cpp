@@ -260,6 +260,11 @@ bool HandleSSHChannelCommand(uint32_t command, NXCPMessage *request, NXCPMessage
                keys = GetSshKey(session, keyId);
             }
 
+            char terminalType[32] = "";
+            request->getFieldAsUtf8String(VID_TERMINAL_TYPE, terminalType, 32);
+            if (terminalType[0] == 0)
+               strcpy(terminalType, "vt100");
+
             // Get or create SSH session
             SSHSession *sshSession = AcquireSession(addr, port, user, password, keys);
             if (sshSession == nullptr)
@@ -272,7 +277,7 @@ bool HandleSSHChannelCommand(uint32_t command, NXCPMessage *request, NXCPMessage
             }
 
             // Open interactive channel
-            ssh_channel channel = sshSession->openInteractiveChannel();
+            ssh_channel channel = sshSession->openInteractiveChannel(terminalType);
             if (channel == nullptr)
             {
                TCHAR ipAddrText[64];

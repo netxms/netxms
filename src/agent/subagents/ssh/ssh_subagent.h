@@ -1,6 +1,6 @@
 /*
 ** NetXMS SSH subagent
-** Copyright (C) 2004-2025 Raden Solutions
+** Copyright (C) 2004-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -84,9 +84,10 @@ public:
 
    /**
     * Open interactive channel with PTY and shell for network device CLI access
+    * @param terminalType Terminal type for PTY (e.g., "xterm", "vt100", "dumb"), defaults to "xterm"
     * @return SSH channel handle on success, nullptr on failure
     */
-   ssh_channel openInteractiveChannel();
+   ssh_channel openInteractiveChannel(const char *terminalType = "xterm");
 
    /**
     * Test if command execution channel is available
@@ -151,6 +152,7 @@ LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, A
 uint32_t H_SSHCommandAction(const shared_ptr<ActionExecutionContext>& context);
 LONG H_SSHConnection(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SSHCheckCommandMode(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_SSHCheckShellChannel(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 
 /* globals */
 extern uint32_t g_sshConnectTimeout;

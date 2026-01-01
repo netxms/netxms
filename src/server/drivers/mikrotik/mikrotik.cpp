@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Mikrotik routers
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -415,7 +415,7 @@ void MikrotikDriver::getSSHDriverHints(SSHDriverHints *hints) const
    // - Submenu: [admin@MikroTik] /ip address>
    // - With safe mode: [admin@MikroTik] <SAFE>>
    // Username and hostname can contain letters, numbers, dashes, underscores
-   hints->promptPattern = "^\\[[\\w.-]+@[\\w.-]+\\]\\s*(<SAFE>)?\\s*(/[\\w/ -]*)?[>]\\s*$";
+   hints->promptPattern = "\\[[\\w.-]+@[\\w.-]+\\]\\s*(<SAFE>)?\\s*(/[\\w/ -]*)?[>]\\s*$";
    hints->enabledPromptPattern = nullptr;  // RouterOS doesn't have enable mode
 
    // No enable/privilege escalation in RouterOS

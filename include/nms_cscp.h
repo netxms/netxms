@@ -1609,6 +1609,7 @@ typedef struct
 #define VID_AI_RESPONSE_POSITIVE    ((uint32_t)896)
 #define VID_AI_RESPONSE_OPTION      ((uint32_t)897)
 #define VID_AI_QUESTION_OPTIONS     ((uint32_t)898)
+#define VID_TERMINAL_TYPE           ((uint32_t)899)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

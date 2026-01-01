@@ -1,6 +1,6 @@
 /*
 ** NetXMS SSH subagent
-** Copyright (C) 2004-2025 Raden Solutions
+** Copyright (C) 2004-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -381,8 +381,10 @@ bool SSHSession::execute(const TCHAR *command, StringList *output, ActionExecuti
 /**
  * Open interactive channel with PTY and shell for network device CLI access
  * The caller is responsible for closing the channel when done
+ *
+ * @param terminalType Terminal type for PTY (e.g., "xterm", "vt100", "dumb")
  */
-ssh_channel SSHSession::openInteractiveChannel()
+ssh_channel SSHSession::openInteractiveChannel(const char *terminalType)
 {
    if (!isConnected())
    {
@@ -405,20 +407,16 @@ ssh_channel SSHSession::openInteractiveChannel()
       return nullptr;
    }
 
-   // Request PTY (pseudo-terminal)
-   if (ssh_channel_request_pty(channel) != SSH_OK)
+   // Request PTY (pseudo-terminal) with terminal type and size
+   // 200 columns for long output lines, 24 rows
+   const char *term = (terminalType != nullptr && terminalType[0] != '\0') ? terminalType : "vt100";
+   if (ssh_channel_request_pty_size(channel, term, 200, 24) != SSH_OK)
    {
       nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::openInteractiveChannel: PTY request failed on %s:%d (%hs)"),
                       m_addr.toString().cstr(), m_port, ssh_get_error(m_session));
       ssh_channel_close(channel);
       ssh_channel_free(channel);
       return nullptr;
-   }
-
-   // Set terminal size (200 columns for long output lines, 24 rows)
-   if (ssh_channel_change_pty_size(channel, 200, 24) != SSH_OK)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("SSHSession::openInteractiveChannel: failed to set PTY size (non-fatal)"));
    }
 
    // Start shell
@@ -431,8 +429,8 @@ ssh_channel SSHSession::openInteractiveChannel()
       return nullptr;
    }
 
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("SSHSession::openInteractiveChannel: interactive channel opened on %s:%d"),
-                   m_addr.toString().cstr(), m_port);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("SSHSession::openInteractiveChannel: interactive channel opened on %s:%d (term=%hs)"),
+                   m_addr.toString().cstr(), m_port, term);
    m_lastAccess = time(nullptr);
    return channel;
 }

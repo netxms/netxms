@@ -1,6 +1,6 @@
 /*
 ** NetXMS SSH subagent
-** Copyright (C) 2004-2025 Victor Kirhenshtein
+** Copyright (C) 2004-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -165,6 +165,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { _T("SSH.CheckCommandMode(*)"), H_SSHCheckCommandMode, nullptr, DCI_DT_INT, _T("Check SSH command/exec mode with output pattern matching") },
    { _T("SSH.CheckConnection(*)"), H_SSHConnection, nullptr, DCI_DT_INT, _T("Result of SSH connection check") },
+   { _T("SSH.CheckShellChannel(*)"), H_SSHCheckShellChannel, nullptr, DCI_DT_INT, _T("Check SSH interactive shell channel with prompt pattern matching") },
 	{ _T("SSH.Command(*)"), H_SSHCommand, nullptr, DCI_DT_STRING, _T("Result of command execution") },
 };
 

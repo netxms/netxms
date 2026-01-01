@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Common defines for client library and server
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by

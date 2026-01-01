@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -6344,7 +6344,22 @@ bool Node::confPollSsh()
       sendPollerMsg(POLLER_INFO _T("   SSH connection is available\r\n"));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("ConfPoll(%s): SSH connected"), m_name);
 
-      // TODO: check for command channel and interactive shell support
+      // Check for command channel and interactive shell support
+      SSHDriverHints hints;
+      if (m_driver != nullptr)
+      {
+         m_driver->getSSHDriverHints(&hints);
+      }
+
+      // Check command channel using driver hints or defaults
+      sendPollerMsg(_T("   Checking SSH command channel...\r\n"));
+      bool commandChannelAvailable = SSHCheckCommandChannel(getEffectiveSshProxy(), m_ipAddress, m_sshPort,
+            sshLogin, getSshPassword(), m_sshKeyId, hints.testCommand, hints.testCommandPattern);
+
+      // Check interactive shell channel using driver hints or defaults
+      sendPollerMsg(_T("   Checking SSH interactive shell channel...\r\n"));
+      bool shellChannelAvailable = SSHCheckShellChannel(getEffectiveSshProxy(), m_ipAddress, m_sshPort,
+            sshLogin, getSshPassword(), m_sshKeyId, hints.promptPattern, hints.terminalType);
 
       lockProperties();
 
@@ -6352,6 +6367,53 @@ bool Node::confPollSsh()
       {
          m_capabilities |= NC_IS_SSH;
          modified = true;
+      }
+
+      // Update command channel capability
+      if (commandChannelAvailable)
+      {
+         if (!(m_capabilities & NC_SSH_COMMAND_CHANNEL))
+         {
+            m_capabilities |= NC_SSH_COMMAND_CHANNEL;
+            modified = true;
+         }
+         sendPollerMsg(POLLER_INFO _T("   SSH command channel is available\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("ConfPoll(%s): SSH command channel available"), m_name);
+      }
+      else
+      {
+         if (m_capabilities & NC_SSH_COMMAND_CHANNEL)
+         {
+            m_capabilities &= ~NC_SSH_COMMAND_CHANNEL;
+            modified = true;
+         }
+         sendPollerMsg(_T("   SSH command channel is not available\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): SSH command channel not available"), m_name);
+      }
+
+      // Update shell channel capability
+      if (shellChannelAvailable)
+      {
+         if (!(m_capabilities & NC_SSH_SHELL_CHANNEL))
+         {
+            m_capabilities |= NC_SSH_SHELL_CHANNEL;
+            modified = true;
+         }
+         sendPollerMsg(POLLER_INFO _T("   SSH interactive shell channel is available\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("ConfPoll(%s): SSH shell channel available"), m_name);
+      }
+      else
+      {
+         if (m_capabilities & NC_SSH_SHELL_CHANNEL)
+         {
+            m_capabilities &= ~NC_SSH_SHELL_CHANNEL;
+            modified = true;
+         }
+         if (m_driver != nullptr)
+         {
+            sendPollerMsg(_T("   SSH interactive shell channel is not available\r\n"));
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): SSH shell channel not available"), m_name);
+         }
       }
 
       unlockProperties();
@@ -11260,10 +11322,17 @@ shared_ptr<SSHInteractiveChannel> Node::openInteractiveSSHChannel(const wchar_t 
       return shared_ptr<SSHInteractiveChannel>();
    }
 
+   // Get driver hints before opening channel (needed for terminal type)
+   SSHDriverHints hints;
+   if (m_driver != nullptr)
+   {
+      m_driver->getSSHDriverHints(&hints);
+   }
+
    // Open SSH channel through agent
    uint32_t channelId;
    uint32_t rcc = agentConn->openSSHChannel(m_ipAddress, m_sshPort, (login != nullptr) ? login : m_sshLogin.cstr(),
-            (password != nullptr) ? password : m_sshPassword.cstr(), (keyId != 0) ? keyId : m_sshKeyId, &channelId);
+            (password != nullptr) ? password : m_sshPassword.cstr(), (keyId != 0) ? keyId : m_sshKeyId, hints.terminalType, &channelId);
    if (rcc != ERR_SUCCESS)
    {
       nxlog_debug_tag(L"ssh", 5, L"Node::openSSHInteractiveChannel(%s [%u]): cannot open interactive SSH channel via proxy node %s [%u] (%u: %s)",
@@ -11271,11 +11340,6 @@ shared_ptr<SSHInteractiveChannel> Node::openInteractiveSSHChannel(const wchar_t 
                return shared_ptr<SSHInteractiveChannel>();
    }
 
-   SSHDriverHints hints;
-   if (m_driver != nullptr)
-   {
-      m_driver->getSSHDriverHints(&hints);
-   }
    shared_ptr<SSHInteractiveChannel> channel = make_shared<SSHInteractiveChannel>(agentConn, channelId, hints);
 
    agentConn->setSSHChannelDataHandler(channelId,

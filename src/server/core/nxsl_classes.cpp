@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -2604,6 +2604,14 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSSH"))
    {
       value = vm->createValue(node->isSSHSupported());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSSHCommandChannelAvailable"))
+   {
+      value = vm->createValue(is_bit_set(node->getCapabilities(), NC_SSH_COMMAND_CHANNEL));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSSHInteractiveChannelAvailable"))
+   {
+      value = vm->createValue(is_bit_set(node->getCapabilities(), NC_SSH_SHELL_CHANNEL));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSONMP") || NXSL_COMPARE_ATTRIBUTE_NAME("isNDP"))
    {

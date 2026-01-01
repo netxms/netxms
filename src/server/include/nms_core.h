@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1385,6 +1385,18 @@ bool SSHCheckConnection(uint32_t proxyNodeId, const InetAddress& addr, uint16_t 
    const TCHAR *password, uint32_t keyId);
 bool SSHCheckCommSettings(uint32_t proxyNodeId, const InetAddress& addr, int32_t zoneUIN,
    SSHCredentials *selectedCredentials, uint16_t *selectedPort);
+bool SSHCheckCommandChannel(const shared_ptr<Node>& proxyNode, const InetAddress& addr, uint16_t port,
+   const TCHAR *login, const TCHAR *password, uint32_t keyId,
+   const char *testCommand, const char *testPattern);
+bool SSHCheckCommandChannel(uint32_t proxyNodeId, const InetAddress& addr, uint16_t port,
+   const TCHAR *login, const TCHAR *password, uint32_t keyId,
+   const char *testCommand, const char *testPattern);
+bool SSHCheckShellChannel(const shared_ptr<Node>& proxyNode, const InetAddress& addr, uint16_t port,
+   const TCHAR *login, const TCHAR *password, uint32_t keyId,
+   const char *promptPattern, const char *terminalType);
+bool SSHCheckShellChannel(uint32_t proxyNodeId, const InetAddress& addr, uint16_t port,
+   const TCHAR *login, const TCHAR *password, uint32_t keyId,
+   const char *promptPattern, const char *terminalType);
 
 bool VNCCheckConnection(Node *proxyNode, const InetAddress& addr, uint16_t port);
 bool VNCCheckConnection(uint32_t proxyNodeId, const InetAddress& addr, uint16_t port);
