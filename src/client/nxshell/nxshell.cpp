@@ -188,7 +188,7 @@ static void ShowUsage(bool showVersion)
    {
       _tprintf(
          _T("NetXMS Interactive Shell  Version ") NETXMS_VERSION_STRING _T("\n")
-         _T("Copyright (c) 2006-2025 Raden Solutions\n\n"));
+         _T("Copyright (c) 2006-2026 Raden Solutions\n\n"));
    }
 
    _tprintf(
@@ -297,7 +297,7 @@ int main(int argc, char *argv[])
 		   case 'v': // version
             _tprintf(
                _T("NetXMS Interactive Shell  Version ") NETXMS_VERSION_STRING _T("\n")
-               _T("Copyright (c) 2006-2025 Raden Solutions\n\n"));
+               _T("Copyright (c) 2006-2026 Raden Solutions\n\n"));
 			   exit(0);
 			   break;
 		   case '?':

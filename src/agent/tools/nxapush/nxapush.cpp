@@ -210,7 +210,7 @@ static void usage(char *argv0)
 {
 	_tprintf(
 _T("NetXMS Agent PUSH  Version ") NETXMS_VERSION_STRING _T("\n")
-_T("Copyright (c) 2006-2025 Raden Solutions\n\n")
+_T("Copyright (c) 2006-2026 Raden Solutions\n\n")
 _T("Usage: %hs [OPTIONS] [@batch_file] [values]\n")
 _T("       %hs [OPTIONS] -\n")
 _T("  \n")

@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
    InitNetXMSProcess(true);
 
    WriteToTerminal(_T("NetXMS Scripting Host  Version \x1b[1m") NETXMS_VERSION_STRING _T("\x1b[0m\n")
-                   _T("Copyright (c) 2005-2025 Victor Kirhenshtein\n\n"));
+                   _T("Copyright (c) 2005-2026 Victor Kirhenshtein\n\n"));
 
    // Parse command line
    opterr = 1;

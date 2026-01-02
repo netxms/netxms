@@ -35,7 +35,7 @@ NETXMS_EXECUTABLE_HEADER(nxadm)
 static void Help()
 {
    printf("NetXMS Server Administration Tool  Version " NETXMS_VERSION_STRING_A "\n"
-          "Copyright (c) 2004-2025 Raden Solutions\n\n"
+          "Copyright (c) 2004-2026 Raden Solutions\n\n"
           "Usage: nxadm [-u <login>] [-P|-p <password>] -c <command>\n"
           "       nxadm [-u <login>] [-P|-p <password>] -i\n"
           "       nxadm [-u <login>] [-P|-p <password>] [-r] -s <script>\n"

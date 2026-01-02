@@ -278,7 +278,7 @@ static void ShowUsage()
    _tprintf(
 #endif
       _T("NetXMS Management Console  Version ") NETXMS_VERSION_STRING _T("\n")
-      _T("Copyright (c) 2006-2025 Raden Solutions\n\n")
+      _T("Copyright (c) 2006-2026 Raden Solutions\n\n")
       _T("Usage: nxmc [LAUNCHER-OPTIONS] [-- APP-OPTIONS]\n")
       _T("\n")
       _T("Launcher options:\n")
@@ -416,11 +416,11 @@ int main(int argc, char *argv[])
 #ifdef _WIN32
             MessageBox(nullptr,
                _T("NetXMS Management Console  Version ") NETXMS_VERSION_STRING _T("\n")
-               _T("Copyright (c) 2006-2025 Raden Solutions\n\n"), _T("NetXMS Management Console"), MB_OK | MB_ICONINFORMATION);
+               _T("Copyright (c) 2006-2026 Raden Solutions\n\n"), _T("NetXMS Management Console"), MB_OK | MB_ICONINFORMATION);
 #else
             _tprintf(
                _T("NetXMS Management Console  Version ") NETXMS_VERSION_STRING _T("\n")
-               _T("Copyright (c) 2006-2025 Raden Solutions\n\n"));
+               _T("Copyright (c) 2006-2026 Raden Solutions\n\n"));
 #endif
 			   exit(0);
 			   break;
