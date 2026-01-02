@@ -6355,11 +6355,37 @@ bool Node::confPollSsh()
       sendPollerMsg(_T("   Checking SSH command channel...\r\n"));
       bool commandChannelAvailable = SSHCheckCommandChannel(getEffectiveSshProxy(), m_ipAddress, m_sshPort,
             sshLogin, getSshPassword(), m_sshKeyId, hints.testCommand, hints.testCommandPattern);
+      if (commandChannelAvailable)
+      {
+         sendPollerMsg(POLLER_INFO _T("   SSH command channel is available\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("ConfPoll(%s): SSH command channel available"), m_name);
+      }
+      else
+      {
+         sendPollerMsg(_T("   SSH command channel is not available\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): SSH command channel not available"), m_name);
+      }
 
       // Check interactive shell channel using driver hints or defaults
-      sendPollerMsg(_T("   Checking SSH interactive shell channel...\r\n"));
-      bool shellChannelAvailable = SSHCheckShellChannel(getEffectiveSshProxy(), m_ipAddress, m_sshPort,
+      sendPollerMsg(_T("   Checking SSH interactive channel...\r\n"));
+      bool shellChannelAvailable = SSHCheckInteractiveChannel(getEffectiveSshProxy(), m_ipAddress, m_sshPort,
             sshLogin, getSshPassword(), m_sshKeyId, hints.promptPattern, hints.terminalType);
+      if (!shellChannelAvailable && (hints.enabledPromptPattern != nullptr))
+      {
+         // Retry with enabled prompt pattern
+         shellChannelAvailable = SSHCheckInteractiveChannel(getEffectiveSshProxy(), m_ipAddress, m_sshPort,
+               sshLogin, getSshPassword(), m_sshKeyId, hints.enabledPromptPattern, hints.terminalType);
+      }
+      if (shellChannelAvailable)
+      {
+         sendPollerMsg(POLLER_INFO _T("   SSH interactive channel is available\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("ConfPoll(%s): SSH interactive channel available"), m_name);
+      }
+      else
+      {
+         sendPollerMsg(_T("   SSH interactive channel is not available\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): SSH interactive channel not available"), m_name);
+      }
 
       lockProperties();
 
@@ -6377,8 +6403,6 @@ bool Node::confPollSsh()
             m_capabilities |= NC_SSH_COMMAND_CHANNEL;
             modified = true;
          }
-         sendPollerMsg(POLLER_INFO _T("   SSH command channel is available\r\n"));
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("ConfPoll(%s): SSH command channel available"), m_name);
       }
       else
       {
@@ -6387,32 +6411,23 @@ bool Node::confPollSsh()
             m_capabilities &= ~NC_SSH_COMMAND_CHANNEL;
             modified = true;
          }
-         sendPollerMsg(_T("   SSH command channel is not available\r\n"));
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): SSH command channel not available"), m_name);
       }
 
       // Update shell channel capability
       if (shellChannelAvailable)
       {
-         if (!(m_capabilities & NC_SSH_SHELL_CHANNEL))
+         if (!(m_capabilities & NC_SSH_INTERACTIVE_CHANNEL))
          {
-            m_capabilities |= NC_SSH_SHELL_CHANNEL;
+            m_capabilities |= NC_SSH_INTERACTIVE_CHANNEL;
             modified = true;
          }
-         sendPollerMsg(POLLER_INFO _T("   SSH interactive shell channel is available\r\n"));
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("ConfPoll(%s): SSH shell channel available"), m_name);
       }
       else
       {
-         if (m_capabilities & NC_SSH_SHELL_CHANNEL)
+         if (m_capabilities & NC_SSH_INTERACTIVE_CHANNEL)
          {
-            m_capabilities &= ~NC_SSH_SHELL_CHANNEL;
+            m_capabilities &= ~NC_SSH_INTERACTIVE_CHANNEL;
             modified = true;
-         }
-         if (m_driver != nullptr)
-         {
-            sendPollerMsg(_T("   SSH interactive shell channel is not available\r\n"));
-            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): SSH shell channel not available"), m_name);
          }
       }
 

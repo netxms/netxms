@@ -2613,7 +2613,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSSHInteractiveChannelAvailable"))
    {
-      value = vm->createValue(is_bit_set(node->getCapabilities(), NC_SSH_SHELL_CHANNEL));
+      value = vm->createValue(is_bit_set(node->getCapabilities(), NC_SSH_INTERACTIVE_CHANNEL));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSONMP") || NXSL_COMPARE_ATTRIBUTE_NAME("isNDP"))
    {

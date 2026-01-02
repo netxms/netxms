@@ -103,7 +103,7 @@ void InitAITasks()
       s_systemPrompt.append(CURRENT_MODULE.pfGetAIAgentInstructions());
    }
 
-   nxlog_debug_tag(DEBUG_TAG, 2, L"Last AI task ID=%u, last AI task log record ID=" INT64_FMT, s_taskId, s_logRecordId);
+   nxlog_debug_tag(DEBUG_TAG, 2, L"Last AI task ID=%u,last AI task log record ID=" INT64_FMT, s_taskId, s_logRecordId);
 }
 
 /**

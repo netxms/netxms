@@ -2586,7 +2586,7 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
       NXSL_ENV_CONSTANT("NodeCapability::SNMP", NC_IS_SNMP);
       NXSL_ENV_CONSTANT("NodeCapability::SSH", NC_IS_SSH);
       NXSL_ENV_CONSTANT("NodeCapability::SSHCommandChannel", NC_SSH_COMMAND_CHANNEL);
-      NXSL_ENV_CONSTANT("NodeCapability::SSHInteractiveChannel", NC_SSH_SHELL_CHANNEL);
+      NXSL_ENV_CONSTANT("NodeCapability::SSHInteractiveChannel", NC_SSH_INTERACTIVE_CHANNEL);
       NXSL_ENV_CONSTANT("NodeCapability::STP", NC_IS_STP);
       NXSL_ENV_CONSTANT("NodeCapability::UserAgent", NC_HAS_USER_AGENT);
       NXSL_ENV_CONSTANT("NodeCapability::VLAN", NC_HAS_VLANS);

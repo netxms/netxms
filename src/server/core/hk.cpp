@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -75,27 +75,27 @@ bool ThrottleHousekeeper()
  */
 static void ExecuteHousekeeperScripts()
 {
-   TCHAR path[MAX_PATH];
+   wchar_t path[MAX_PATH];
    GetNetXMSDirectory(nxDirData, path);
-   _tcscat(path, DDIR_HOUSEKEEPER);
+   wcscat(path, DDIR_HOUSEKEEPER);
 
    int count = 0;
    nxlog_debug_tag(DEBUG_TAG,  1, _T("Running housekeeper scripts from %s"), path);
-   _TDIR *dir = _topendir(path);
+   DIRW *dir = wopendir(path);
    if (dir != nullptr)
    {
-      _tcscat(path, FS_PATH_SEPARATOR);
-      int insPos = (int)_tcslen(path);
+      wcscat(path, FS_PATH_SEPARATOR);
+      size_t insPos = wcslen(path);
 
       struct _tdirent *f;
-      while((f = _treaddir(dir)) != nullptr)
+      while((f = wreaddir(dir)) != nullptr)
       {
-         if (MatchString(_T("*.nxsl"), f->d_name, false))
+         if (MatchStringW(L"*.nxsl", f->d_name, false))
          {
             count++;
-            _tcscpy(&path[insPos], f->d_name);
+            wcscpy(&path[insPos], f->d_name);
 
-            TCHAR *source = NXSLLoadFile(path);
+            wchar_t *source = NXSLLoadFile(path);
             if (source != nullptr)
             {
                NXSL_CompilationDiagnostic diag;
@@ -123,18 +123,18 @@ static void ExecuteHousekeeperScripts()
                nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot load housekeeper NXSL script %s"), f->d_name);
             }
          }
-         else if (MatchString(_T("*.sql"), f->d_name, false))
+         else if (MatchStringW(L"*.sql", f->d_name, false))
          {
             count++;
-            _tcscpy(&path[insPos], f->d_name);
+            wcscpy(&path[insPos], f->d_name);
             DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
             if (ExecuteSQLCommandFile(path, hdb))
             {
-               nxlog_debug_tag(DEBUG_TAG,  3, _T("Housekeeper SQL script %s completed"), f->d_name);
+               nxlog_debug_tag(DEBUG_TAG,  3, L"Housekeeper SQL script %s completed", f->d_name);
             }
             else
             {
-               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot load housekeeper SQL script %s"), f->d_name);
+               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Cannot load housekeeper SQL script %s", f->d_name);
             }
             DBConnectionPoolReleaseConnection(hdb);
          }
@@ -142,9 +142,9 @@ static void ExecuteHousekeeperScripts()
          if (!ThrottleHousekeeper())
             break;
       }
-      _tclosedir(dir);
+      wclosedir(dir);
    }
-   nxlog_debug_tag(DEBUG_TAG,  3, _T("%d housekeeper scripts processed"), count);
+   nxlog_debug_tag(DEBUG_TAG,  3, L"%d housekeeper scripts processed", count);
 }
 
 /**
@@ -299,7 +299,7 @@ static void CleanTimescaleData(DB_HANDLE hdb)
    g_idxSensorById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
 
    // Always run on default storage class
-   time_t defaultCutoffTime = time(NULL) - DCObject::m_defaultRetentionTime * 86400;
+   time_t defaultCutoffTime = time(nullptr) - DCObject::m_defaultRetentionTime * 86400;
    DropChunksForStorageClass(hdb, defaultCutoffTime, 'i', DCObjectStorageClass::DEFAULT);
    DropChunksForStorageClass(hdb, defaultCutoffTime, 't', DCObjectStorageClass::DEFAULT);
 
@@ -355,8 +355,8 @@ static void HouseKeeper()
    int hour;
    int minute;
 
-   TCHAR buffer[64];
-   ConfigReadStr(_T("Housekeeper.StartTime"), buffer, 64, _T("02:00"));
+   wchar_t buffer[64];
+   ConfigReadStr(L"Housekeeper.StartTime", buffer, 64, L"02:00");
    TCHAR *p = _tcschr(buffer, _T(':'));
    if (p != nullptr)
    {
@@ -365,7 +365,7 @@ static void HouseKeeper()
       minute = _tcstol(p, nullptr, 10);
       if ((minute < 0) || (minute > 59))
       {
-         nxlog_debug_tag(DEBUG_TAG, 2, _T("Invalid minute value %s"), p);
+         nxlog_debug_tag(DEBUG_TAG, 2, L"Invalid minute value %s", p);
          minute = 0;
       }
    }
@@ -376,10 +376,10 @@ static void HouseKeeper()
    hour = _tcstol(buffer, nullptr, 10);
    if ((hour < 0) || (hour > 23))
    {
-      nxlog_debug_tag(DEBUG_TAG, 2, _T("Invalid hour value %s"), buffer);
+      nxlog_debug_tag(DEBUG_TAG, 2, L"Invalid hour value %s", buffer);
       hour = 0;
    }
-   nxlog_debug_tag(DEBUG_TAG, 2, _T("Wakeup time is %02d:%02d"), hour, minute);
+   nxlog_debug_tag(DEBUG_TAG, 2, L"Wakeup time is %02d:%02d", hour, minute);
 
    // Call policy validation for templates
    g_idxObjectById.forEach(
@@ -393,12 +393,12 @@ static void HouseKeeper()
    int sleepTime = GetSleepTime(hour, minute, 0);
    while(!s_shutdown)
    {
-      nxlog_debug_tag(DEBUG_TAG, 2, _T("Sleeping for %d seconds"), sleepTime);
+      nxlog_debug_tag(DEBUG_TAG, 2, L"Sleeping for %d seconds", sleepTime);
       s_wakeupCondition.wait(sleepTime * 1000);
       if (s_shutdown)
          break;
 
-      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Housekeeper run started"));
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Housekeeper run started");
       s_running = true;
       time_t cycleStartTime = time(nullptr);
       PostSystemEvent(EVENT_HOUSEKEEPER_STARTED, g_dwMgmtNode);

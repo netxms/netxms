@@ -175,10 +175,10 @@ bool SSHCheckCommandChannel(uint32_t proxyNodeId, const InetAddress& addr, uint1
 }
 
 /**
- * Check SSH interactive shell channel support
+ * Check SSH interactive channel support
  * Opens PTY+shell and matches initial output against promptPattern
  */
-bool SSHCheckShellChannel(const shared_ptr<Node>& proxyNode, const InetAddress& addr, uint16_t port,
+bool SSHCheckInteractiveChannel(const shared_ptr<Node>& proxyNode, const InetAddress& addr, uint16_t port,
    const wchar_t *login, const wchar_t *password, uint32_t keyId,
    const char *promptPattern, const char *terminalType)
 {
@@ -227,7 +227,7 @@ bool SSHCheckShellChannel(const shared_ptr<Node>& proxyNode, const InetAddress& 
    }
    else
    {
-      request.append(_T("xterm"));
+      request.append(L"vt100");
    }
    request.append(L"\")");
 
@@ -238,12 +238,12 @@ bool SSHCheckShellChannel(const shared_ptr<Node>& proxyNode, const InetAddress& 
 }
 
 /**
- * Check SSH interactive shell channel support (by proxy node ID)
+ * Check SSH interactive channel support (by proxy node ID)
  */
-bool SSHCheckShellChannel(uint32_t proxyNodeId, const InetAddress& addr, uint16_t port,
+bool SSHCheckInteractiveChannel(uint32_t proxyNodeId, const InetAddress& addr, uint16_t port,
    const wchar_t *login, const wchar_t *password, uint32_t keyId,
    const char *promptPattern, const char *terminalType)
 {
    shared_ptr<Node> proxyNode = static_pointer_cast<Node>(FindObjectById(proxyNodeId, OBJECT_NODE));
-   return (proxyNode != nullptr) ? SSHCheckShellChannel(proxyNode, addr, port, login, password, keyId, promptPattern, terminalType) : false;
+   return (proxyNode != nullptr) ? SSHCheckInteractiveChannel(proxyNode, addr, port, login, password, keyId, promptPattern, terminalType) : false;
 }

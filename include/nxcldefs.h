@@ -202,54 +202,54 @@
 /**
  * Incident activity types (for activity log)
  */
-#define INCIDENT_ACTIVITY_CREATED       0
-#define INCIDENT_ACTIVITY_STATE_CHANGE  1
-#define INCIDENT_ACTIVITY_ASSIGNED      2
-#define INCIDENT_ACTIVITY_ALARM_LINKED  3
+#define INCIDENT_ACTIVITY_CREATED        0
+#define INCIDENT_ACTIVITY_STATE_CHANGE   1
+#define INCIDENT_ACTIVITY_ASSIGNED       2
+#define INCIDENT_ACTIVITY_ALARM_LINKED   3
 #define INCIDENT_ACTIVITY_ALARM_UNLINKED 4
-#define INCIDENT_ACTIVITY_COMMENT_ADDED 5
-#define INCIDENT_ACTIVITY_UPDATED       6
+#define INCIDENT_ACTIVITY_COMMENT_ADDED  5
+#define INCIDENT_ACTIVITY_UPDATED        6
 
 /**
  * Node capabilities
  */
-#define NC_IS_SNMP                _ULL(0x0000000001)
-#define NC_IS_NATIVE_AGENT        _ULL(0x0000000002)
-#define NC_IS_BRIDGE              _ULL(0x0000000004)
-#define NC_IS_ROUTER              _ULL(0x0000000008)
-#define NC_IS_LOCAL_MGMT          _ULL(0x0000000010)
-#define NC_IS_PRINTER             _ULL(0x0000000020)
-#define NC_IS_OSPF                _ULL(0x0000000040)
-#define NC_IS_SSH                 _ULL(0x0000000080)
-#define NC_IS_CDP                 _ULL(0x0000000100)
-#define NC_IS_NDP                 _ULL(0x0000000200)  /* Supports Nortel (Synoptics/Bay Networks) topology discovery */ /* SONMP is an old name for NDP */
-#define NC_IS_LLDP                _ULL(0x0000000400)  /* Supports Link Layer Discovery Protocol */
-#define NC_IS_VRRP                _ULL(0x0000000800)  /* VRRP support */
-#define NC_HAS_VLANS              _ULL(0x0000001000)  /* VLAN information available */
-#define NC_IS_8021X               _ULL(0x0000002000)  /* 802.1x support enabled on node */
-#define NC_IS_STP                 _ULL(0x0000004000)  /* Spanning Tree (IEEE 802.1d) enabled on node */
-#define NC_HAS_ENTITY_MIB         _ULL(0x0000008000)  /* Supports ENTITY-MIB */
-#define NC_HAS_IFXTABLE           _ULL(0x0000010000)  /* Supports ifXTable */
-#define NC_HAS_AGENT_IFXCOUNTERS  _ULL(0x0000020000)  /* Agent supports 64-bit interface counters */
-#define NC_HAS_WINPDH             _ULL(0x0000040000)  /* Node supports Windows PDH parameters */
-#define NC_IS_WIFI_CONTROLLER     _ULL(0x0000080000)  /* Node is wireless network controller */
-#define NC_IS_SMCLP               _ULL(0x0000100000)  /* Node supports SMCLP protocol */
-#define NC_IS_NEW_POLICY_TYPES    _ULL(0x0000200000)  /* Defines if agent is already upgraded to new policy type */
-#define NC_HAS_USER_AGENT         _ULL(0x0000400000)  /* User agent (desktop support app) is installed */
-#define NC_IS_ETHERNET_IP         _ULL(0x0000800000)
-#define NC_IS_MODBUS_TCP          _ULL(0x0001000000)
-#define NC_IS_PROFINET            _ULL(0x0002000000)
-#define NC_HAS_FILE_MANAGER       _ULL(0x0004000000)
-#define NC_LLDP_V2_MIB            _ULL(0x0008000000)
-#define NC_EMULATED_ENTITY_MIB    _ULL(0x0010000000)  /* ENTITY MIB support emulated by driver */
-#define NC_DEVICE_VIEW            _ULL(0x0020000000)  /* Device view is supported */
-#define NC_IS_WIFI_AP             _ULL(0x0040000000)  /* Node is wireless access point */
-#define NC_IS_VNC                 _ULL(0x0080000000)  /* Node supports VNC connection from server or zone proxy */
-#define NC_IS_LOCAL_VNC           _ULL(0x0100000000)  /* Node supports VNC connection via local agent */
-#define NC_REGISTERED_FOR_BACKUP  _ULL(0x0200000000)  /* Node is registered for device configuration backup */
-#define NC_HAS_SERVICE_MANAGER    _ULL(0x0400000000)  /* Node has service manager accessible via NetXMS agent */
-#define NC_SSH_SHELL_CHANNEL      _ULL(0x0800000000)  /* Set if interactive (shell) SSH channel can be established */
-#define NC_SSH_COMMAND_CHANNEL    _ULL(0x1000000000)  /* Set if SSH command channel can be established */
+#define NC_IS_SNMP                 _ULL(0x0000000001)
+#define NC_IS_NATIVE_AGENT         _ULL(0x0000000002)
+#define NC_IS_BRIDGE               _ULL(0x0000000004)
+#define NC_IS_ROUTER               _ULL(0x0000000008)
+#define NC_IS_LOCAL_MGMT           _ULL(0x0000000010)
+#define NC_IS_PRINTER              _ULL(0x0000000020)
+#define NC_IS_OSPF                 _ULL(0x0000000040)
+#define NC_IS_SSH                  _ULL(0x0000000080)
+#define NC_IS_CDP                  _ULL(0x0000000100)
+#define NC_IS_NDP                  _ULL(0x0000000200)  /* Supports Nortel (Synoptics/Bay Networks) topology discovery */ /* SONMP is an old name for NDP */
+#define NC_IS_LLDP                 _ULL(0x0000000400)  /* Supports Link Layer Discovery Protocol */
+#define NC_IS_VRRP                 _ULL(0x0000000800)  /* VRRP support */
+#define NC_HAS_VLANS               _ULL(0x0000001000)  /* VLAN information available */
+#define NC_IS_8021X                _ULL(0x0000002000)  /* 802.1x support enabled on node */
+#define NC_IS_STP                  _ULL(0x0000004000)  /* Spanning Tree (IEEE 802.1d) enabled on node */
+#define NC_HAS_ENTITY_MIB          _ULL(0x0000008000)  /* Supports ENTITY-MIB */
+#define NC_HAS_IFXTABLE            _ULL(0x0000010000)  /* Supports ifXTable */
+#define NC_HAS_AGENT_IFXCOUNTERS   _ULL(0x0000020000)  /* Agent supports 64-bit interface counters */
+#define NC_HAS_WINPDH              _ULL(0x0000040000)  /* Node supports Windows PDH parameters */
+#define NC_IS_WIFI_CONTROLLER      _ULL(0x0000080000)  /* Node is wireless network controller */
+#define NC_IS_SMCLP                _ULL(0x0000100000)  /* Node supports SMCLP protocol */
+#define NC_IS_NEW_POLICY_TYPES     _ULL(0x0000200000)  /* Defines if agent is already upgraded to new policy type */
+#define NC_HAS_USER_AGENT          _ULL(0x0000400000)  /* User agent (desktop support app) is installed */
+#define NC_IS_ETHERNET_IP          _ULL(0x0000800000)
+#define NC_IS_MODBUS_TCP           _ULL(0x0001000000)
+#define NC_IS_PROFINET             _ULL(0x0002000000)
+#define NC_HAS_FILE_MANAGER        _ULL(0x0004000000)
+#define NC_LLDP_V2_MIB             _ULL(0x0008000000)
+#define NC_EMULATED_ENTITY_MIB     _ULL(0x0010000000)  /* ENTITY MIB support emulated by driver */
+#define NC_DEVICE_VIEW             _ULL(0x0020000000)  /* Device view is supported */
+#define NC_IS_WIFI_AP              _ULL(0x0040000000)  /* Node is wireless access point */
+#define NC_IS_VNC                  _ULL(0x0080000000)  /* Node supports VNC connection from server or zone proxy */
+#define NC_IS_LOCAL_VNC            _ULL(0x0100000000)  /* Node supports VNC connection via local agent */
+#define NC_REGISTERED_FOR_BACKUP   _ULL(0x0200000000)  /* Node is registered for device configuration backup */
+#define NC_HAS_SERVICE_MANAGER     _ULL(0x0400000000)  /* Node has service manager accessible via NetXMS agent */
+#define NC_SSH_INTERACTIVE_CHANNEL _ULL(0x0800000000)  /* Set if interactive (shell) SSH channel can be established */
+#define NC_SSH_COMMAND_CHANNEL     _ULL(0x1000000000)  /* Set if SSH command channel can be established */
 
 /**
  * Node flags

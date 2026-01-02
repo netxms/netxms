@@ -1469,6 +1469,7 @@ private:
    void *m_promptRegex;
    void *m_promptRegexW;
    void *m_enabledPromptRegex;
+   void *m_enabledPromptRegexW;
    void *m_paginationRegex;
 
    // State

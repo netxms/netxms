@@ -95,6 +95,7 @@ SSHInteractiveChannel::SSHInteractiveChannel(const shared_ptr<AgentConnection>& 
    m_promptRegex = nullptr;
    m_promptRegexW = nullptr;
    m_enabledPromptRegex = nullptr;
+   m_enabledPromptRegexW = nullptr;
    m_paginationRegex = nullptr;
    m_connected = true;
    m_privileged = false;
@@ -130,6 +131,14 @@ SSHInteractiveChannel::SSHInteractiveChannel(const shared_ptr<AgentConnection>& 
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("SSHInteractiveChannel: failed to compile enabled prompt pattern: %hs"), errptr);
       }
+
+      wchar_t wEnabledPromptPattern[256];
+      utf8_to_wchar(hints.enabledPromptPattern, -1, wEnabledPromptPattern, 256);
+      m_enabledPromptRegexW = _pcre_compile_w(reinterpret_cast<const PCRE_WCHAR*>(wEnabledPromptPattern), PCRE_COMMON_FLAGS_W, &errptr, &erroffset, nullptr);
+      if (m_enabledPromptRegexW == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("SSHInteractiveChannel: failed to compile enabled prompt pattern (wide): %hs"), errptr);
+      }
    }
 
    // Compile pagination regex
@@ -158,6 +167,8 @@ SSHInteractiveChannel::~SSHInteractiveChannel()
       _pcre_free_w(static_cast<PCREW*>(m_promptRegexW));
    if (m_enabledPromptRegex != nullptr)
       pcre_free(static_cast<pcre*>(m_enabledPromptRegex));
+   if (m_enabledPromptRegexW != nullptr)
+      _pcre_free_w(static_cast<PCREW*>(m_enabledPromptRegexW));
    if (m_paginationRegex != nullptr)
       pcre_free(static_cast<pcre*>(m_paginationRegex));
 }
@@ -299,10 +310,26 @@ bool SSHInteractiveChannel::checkPromptMatch()
 
    size_t lastLineLen = len - (lastLine - data);
 
-   // Check against prompt pattern
-   int rc = pcre_exec(static_cast<pcre*>(m_promptRegex), nullptr, lastLine, static_cast<int>(lastLineLen), 0, 0, nullptr, 0);
+   int rc = -1;
 
-   // Also check enabled prompt pattern if in privileged mode check
+   // If already privileged, check enabled prompt first
+   if (m_privileged && m_enabledPromptRegex != nullptr)
+   {
+      rc = pcre_exec(static_cast<pcre*>(m_enabledPromptRegex), nullptr, lastLine, static_cast<int>(lastLineLen), 0, 0, nullptr, 0);
+      if (rc >= 0)
+      {
+         m_bufferLock.unlock();
+         return true;
+      }
+   }
+
+   // Check normal prompt pattern
+   if (m_promptRegex != nullptr)
+   {
+      rc = pcre_exec(static_cast<pcre*>(m_promptRegex), nullptr, lastLine, static_cast<int>(lastLineLen), 0, 0, nullptr, 0);
+   }
+
+   // If normal prompt didn't match, try enabled prompt (handles initial privileged connection)
    if (rc < 0 && m_enabledPromptRegex != nullptr)
    {
       rc = pcre_exec(static_cast<pcre*>(m_enabledPromptRegex), nullptr, lastLine, static_cast<int>(lastLineLen), 0, 0, nullptr, 0);
@@ -563,13 +590,26 @@ StringList *SSHInteractiveChannel::parseOutput(const char *sentCommand)
    }
 
    // Strip prompt (last line)
-   if (lines.size() > 0 && m_promptRegexW != nullptr)
+   if (lines.size() > 0)
    {
       const wchar_t *lastLine = lines.get(lines.size() - 1);
-      if (_pcre_exec_w(static_cast<PCREW*>(m_promptRegexW), nullptr, reinterpret_cast<const PCRE_WCHAR*>(lastLine), static_cast<int>(wcslen(lastLine)), 0, 0, nullptr, 0) >= 0)
+      int lastLineLen = static_cast<int>(wcslen(lastLine));
+      bool promptMatched = false;
+
+      // If privileged, check enabled prompt first
+      if (m_privileged && m_enabledPromptRegexW != nullptr)
       {
-         lines.remove(lines.size() - 1);
+         promptMatched = _pcre_exec_w(static_cast<PCREW*>(m_enabledPromptRegexW), nullptr, reinterpret_cast<const PCRE_WCHAR*>(lastLine), lastLineLen, 0, 0, nullptr, 0) >= 0;
       }
+
+      // Check normal prompt if not matched
+      if (!promptMatched && m_promptRegexW != nullptr)
+      {
+         promptMatched = _pcre_exec_w(static_cast<PCREW*>(m_promptRegexW), nullptr, reinterpret_cast<const PCRE_WCHAR*>(lastLine), lastLineLen, 0, 0, nullptr, 0) >= 0;
+      }
+
+      if (promptMatched)
+         lines.remove(lines.size() - 1);
    }
 
    // Remove trailing empty lines

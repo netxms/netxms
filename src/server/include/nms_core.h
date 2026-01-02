@@ -1386,16 +1386,16 @@ bool SSHCheckConnection(uint32_t proxyNodeId, const InetAddress& addr, uint16_t 
 bool SSHCheckCommSettings(uint32_t proxyNodeId, const InetAddress& addr, int32_t zoneUIN,
    SSHCredentials *selectedCredentials, uint16_t *selectedPort);
 bool SSHCheckCommandChannel(const shared_ptr<Node>& proxyNode, const InetAddress& addr, uint16_t port,
-   const TCHAR *login, const TCHAR *password, uint32_t keyId,
+   const wchar_t *login, const wchar_t *password, uint32_t keyId,
    const char *testCommand, const char *testPattern);
 bool SSHCheckCommandChannel(uint32_t proxyNodeId, const InetAddress& addr, uint16_t port,
-   const TCHAR *login, const TCHAR *password, uint32_t keyId,
+   const wchar_t *login, const wchar_t *password, uint32_t keyId,
    const char *testCommand, const char *testPattern);
-bool SSHCheckShellChannel(const shared_ptr<Node>& proxyNode, const InetAddress& addr, uint16_t port,
-   const TCHAR *login, const TCHAR *password, uint32_t keyId,
+bool SSHCheckInteractiveChannel(const shared_ptr<Node>& proxyNode, const InetAddress& addr, uint16_t port,
+   const wchar_t *login, const wchar_t *password, uint32_t keyId,
    const char *promptPattern, const char *terminalType);
-bool SSHCheckShellChannel(uint32_t proxyNodeId, const InetAddress& addr, uint16_t port,
-   const TCHAR *login, const TCHAR *password, uint32_t keyId,
+bool SSHCheckInteractiveChannel(uint32_t proxyNodeId, const InetAddress& addr, uint16_t port,
+   const wchar_t *login, const wchar_t *password, uint32_t keyId,
    const char *promptPattern, const char *terminalType);
 
 bool VNCCheckConnection(Node *proxyNode, const InetAddress& addr, uint16_t port);

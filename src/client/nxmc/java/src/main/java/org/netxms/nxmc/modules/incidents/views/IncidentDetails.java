@@ -1079,7 +1079,7 @@ public class IncidentDetails extends AdHocObjectView
    private void closeIncident()
    {
       if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Close Incident"),
-            i18n.tr("Are you sure you want to close this incident?")))
+            i18n.tr("Are you sure you want to close this incident? All linked alarms will be terminated.")))
          return;
 
       changeIncidentState(IncidentState.CLOSED);

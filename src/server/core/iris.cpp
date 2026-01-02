@@ -118,8 +118,7 @@ static const char *s_systemPrompt =
  * System prompt for background requests
  */
 static const char *s_systemPromptBackground =
-         "You are Iris, a NetXMS AI assistant with deep knowledge of network management and monitoring. "
-         "You have knowledge about NetXMS and its components, including network management, monitoring, and administration tasks. "
+         "You are an AI agent integrated with NetXMS, a network management system. "
          "You are operating autonomously without user interaction. "
          "AUTONOMOUS OPERATION:\n"
          "- Make decisions without user input or confirmation\n"
@@ -726,8 +725,8 @@ void Chat::initializeFunctions()
       }
    ));
 
-   m_functions.emplace("ask_user_confirmation", make_shared<AssistantFunction>(
-      "ask_user_confirmation",
+   m_functions.emplace("ask-user-confirmation", make_shared<AssistantFunction>(
+      "ask-user-confirmation",
       "Ask user a yes/no confirmation question. Blocks until user responds or timeout (5 minutes). Use for approval workflows or binary decisions.",
       std::vector<std::pair<std::string, std::string>>{
          {"text", "The question text to display to the user"},
@@ -763,8 +762,8 @@ void Chat::initializeFunctions()
       }
    ));
 
-   m_functions.emplace("ask_user_choice", make_shared<AssistantFunction>(
-      "ask_user_choice",
+   m_functions.emplace("ask-user-choice", make_shared<AssistantFunction>(
+      "ask-user-choice",
       "Ask user to choose from multiple options. Blocks until user responds or timeout (5 minutes). Use when user needs to select from a list of choices.",
       std::vector<std::pair<std::string, std::string>>{
          {"text", "The question text to display to the user"},
@@ -1322,7 +1321,7 @@ static void ExecuteAIAgentTask(const shared_ptr<ScheduledTaskParameters>& parame
    char *prompt = UTF8StringFromWideString(parameters->m_persistentData);
    shared_ptr<NetObj> context = FindObjectById(parameters->m_objectId);
    Chat chat(context.get(), nullptr, parameters->m_userId, s_systemPromptBackground);
-   char *response = chat.sendRequest(prompt, 10);
+   char *response = chat.sendRequest(prompt, 64);
    nxlog_debug_tag(DEBUG_TAG, 4, L"AI assistant response for scheduled task on object [%u]: %hs",
          parameters->m_objectId, (response != nullptr) ? response : "no response");
    MemFree(prompt);
