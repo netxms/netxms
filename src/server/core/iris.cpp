@@ -729,17 +729,17 @@ void Chat::initializeFunctions()
       "ask-user-confirmation",
       "Ask user a yes/no confirmation question. Blocks until user responds or timeout (5 minutes). Use for approval workflows or binary decisions.",
       std::vector<std::pair<std::string, std::string>>{
-         {"text", "The question text to display to the user"},
-         {"context", "Optional additional context (e.g., command to be approved)"},
+         {"intent", "Explanation of why this action is needed and what it accomplishes. Do not put actual command or action here, use 'action' parameter for that."},
+         {"action", "Optional: The specific action to be approved (command, script code, configuration change, etc.). Do not add any additional text, just the action itself."},
          {"confirmation_type", "Type of confirmation: 'approve_reject', 'yes_no', or 'confirm_cancel'. Defaults to 'approve_reject'"}
       },
       [this] (json_t *arguments, uint32_t userId) -> std::string
       {
-         const char *text = json_object_get_string_utf8(arguments, "text", "");
+         const char *text = json_object_get_string_utf8(arguments, "intent", "");
          if (*text == 0)
-            return R"({"error": "Question text is required"})";
+            return R"({"error": "Intent is required"})";
 
-         const char *context = json_object_get_string_utf8(arguments, "context", "");
+         const char *context = json_object_get_string_utf8(arguments, "action", "");
          const char *typeStr = json_object_get_string_utf8(arguments, "confirmation_type", "approve_reject");
 
          ConfirmationType type = ConfirmationType::APPROVE_REJECT;
@@ -766,15 +766,15 @@ void Chat::initializeFunctions()
       "ask-user-choice",
       "Ask user to choose from multiple options. Blocks until user responds or timeout (5 minutes). Use when user needs to select from a list of choices.",
       std::vector<std::pair<std::string, std::string>>{
-         {"text", "The question text to display to the user"},
+         {"question", "The question to display to the user"},
          {"context", "Optional additional context for the question"},
          {"options", "Array of option strings for the user to choose from"}
       },
       [this] (json_t *arguments, uint32_t userId) -> std::string
       {
-         const char *text = json_object_get_string_utf8(arguments, "text", "");
+         const char *text = json_object_get_string_utf8(arguments, "question", "");
          if (*text == 0)
-            return R"({"error": "Question text is required"})";
+            return R"({"error": "Question is required"})";
 
          json_t *optionsArray = json_object_get(arguments, "options");
          if (!json_is_array(optionsArray) || json_array_size(optionsArray) == 0)
