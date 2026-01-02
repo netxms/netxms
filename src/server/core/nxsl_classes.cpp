@@ -1828,10 +1828,12 @@ NXSL_METHOD_DEFINITION(Node, executeAgentCommandWithOutput)
       for(int i = 1; (i < argc) && (i < 128); i++)
          list.add(argv[i]->getValueAsCString());
       StringBuffer output;
-      uint32_t rcc = conn->executeCommand(argv[0]->getValueAsCString(), list, true, [](ActionCallbackEvent event, const TCHAR *text, void *context) {
-         if (event == ACE_DATA)
-            static_cast<StringBuffer*>(context)->append(text);
-      }, &output);
+      uint32_t rcc = conn->executeCommand(argv[0]->getValueAsCString(), list, true,
+         [] (ActionCallbackEvent event, const void *text, void *context) -> void
+         {
+            if (event == ACE_DATA)
+               static_cast<StringBuffer*>(context)->append(static_cast<const wchar_t*>(text));
+         }, &output);
       *result = (rcc == ERR_SUCCESS) ? vm->createValue(output) : vm->createValue();
       nxlog_debug_tag(_T("nxsl.agent"), 5, _T("NXSL: Node::executeAgentCommandWithOutput: command \"%s\" on node %s [%u]: RCC=%u"), argv[0]->getValueAsCString(), node->getName(), node->getId(), rcc);
    }

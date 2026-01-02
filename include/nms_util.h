@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -4129,6 +4129,8 @@ public:
 
    void clear() { m_size = 0; m_pos = 0; }
    void truncate(size_t newSize) { if (newSize < m_size) { m_size = newSize; if (m_pos > m_size) m_pos = m_size; } }
+
+   void removeTerminalControlCharacters();
 
    void write(const void *data, size_t size);
    void write(char c) { write(&c, 1); }

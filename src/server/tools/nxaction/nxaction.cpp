@@ -1,7 +1,7 @@
 /* 
 ** nxaction - command line tool used to execute preconfigured actions 
 **            on NetXMS agent
-** Copyright (C) 2004-2023 Raden Solutions
+** Copyright (C) 2004-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ static bool s_showOutput = false;
 /**
  * Output callback
  */
-static void OutputCallback(ActionCallbackEvent e, const TCHAR *data, void *arg)
+static void OutputCallback(ActionCallbackEvent e, const void *data, void *arg)
 {
    if (e == ACE_DATA)
       _tprintf(_T("%s"), data);

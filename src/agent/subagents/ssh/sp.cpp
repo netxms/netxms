@@ -32,30 +32,36 @@ static THREAD s_housekeeperThread = INVALID_THREAD_HANDLE;
 
 /**
  * Acquire SSH session
+ * @param nonReusable If true, create a session that won't be added to the pool and will be
+ *                    deleted on release. Use this for interactive channels on devices like
+ *                    Cisco that don't support multiple channels per session.
  */
-SSHSession *AcquireSession(const InetAddress& addr, uint16_t port, const TCHAR *user, const TCHAR *password, const shared_ptr<KeyPair>& keys)
+SSHSession *AcquireSession(const InetAddress& addr, uint16_t port, const TCHAR *user, const TCHAR *password, const shared_ptr<KeyPair>& keys, bool nonReusable)
 {
-   s_lock.lock();
-   for(int i = 0; i < s_sessions.size(); i++)
+   if (!nonReusable)
    {
-      SSHSession *s = s_sessions.get(i);
-      if (s->match(addr, port, user) && s->acquire())
+      s_lock.lock();
+      for(int i = 0; i < s_sessions.size(); i++)
       {
-         // Test if cached session can still open channels (some devices like Cisco
-         // don't support session reuse after channel close)
-         if (s->testSession())
+         SSHSession *s = s_sessions.get(i);
+         if (s->match(addr, port, user) && s->acquire())
          {
-            nxlog_debug_tag(DEBUG_TAG, 7, _T("AcquireSession: acquired existing session %s"), s->getName());
-            s_lock.unlock();
-            return s;
+            // Test if cached session can still open channels (some devices like Cisco
+            // don't support session reuse after channel close)
+            if (s->testSession())
+            {
+               nxlog_debug_tag(DEBUG_TAG, 7, _T("AcquireSession: acquired existing session %s"), s->getName());
+               s_lock.unlock();
+               return s;
+            }
+            // Session is stale, remove it from pool
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("AcquireSession: cached session %s failed connectivity test, removing"), s->getName());
+            s_sessions.remove(s);
+            i--;
          }
-         // Session is stale, remove it from pool
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("AcquireSession: cached session %s failed connectivity test, removing"), s->getName());
-         s_sessions.remove(s);
-         i--;
       }
+      s_lock.unlock();
    }
-   s_lock.unlock();
 
    // No matching sessions, create new one
    SSHSession *session = new SSHSession(addr, port, InterlockedIncrement(&s_sessionId));
@@ -67,9 +73,16 @@ SSHSession *AcquireSession(const InetAddress& addr, uint16_t port, const TCHAR *
    nxlog_debug_tag(DEBUG_TAG, 7, _T("AcquireSession: created new session %s"), session->getName());
 
    session->acquire();
-   s_lock.lock();
-   s_sessions.add(session);
-   s_lock.unlock();
+   if (nonReusable)
+   {
+      session->setNonReusable();
+   }
+   else
+   {
+      s_lock.lock();
+      s_sessions.add(session);
+      s_lock.unlock();
+   }
    return session;
 }
 
@@ -78,6 +91,13 @@ SSHSession *AcquireSession(const InetAddress& addr, uint16_t port, const TCHAR *
  */
 void ReleaseSession(SSHSession *session)
 {
+   if (session->isNonReusable())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("ReleaseSession: deleting non-reusable session %s"), session->getName());
+      delete session;
+      return;
+   }
+
    s_lock.lock();
    session->release();
    if (!session->isConnected())

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -9300,7 +9300,7 @@ public:
 /**
  * Action execution callback
  */
-static void ActionExecuteCallback(ActionCallbackEvent e, const TCHAR *text, void *arg)
+static void ActionExecuteCallback(ActionCallbackEvent e, const void *text, void *arg)
 {
    ActionExecutionData *data = static_cast<ActionExecutionData*>(arg);
    switch(e)
@@ -9317,7 +9317,7 @@ static void ActionExecuteCallback(ActionCallbackEvent e, const TCHAR *text, void
       case ACE_DATA:
          data->m_msg.deleteAllFields();
          data->m_msg.setCode(CMD_COMMAND_OUTPUT);
-         data->m_msg.setField(VID_MESSAGE, text);
+         data->m_msg.setFieldFromUtf8String(VID_MESSAGE, static_cast<const char*>(text));
          break;
    }
    data->m_session->sendMessage(data->m_msg);
@@ -9384,7 +9384,7 @@ void ClientSession::executeAction(const NXCPMessage& request)
                if (withOutput)
                {
                   ActionExecutionData data(this, request.getId());
-                  rcc = pConn->executeCommand(action, list, true, ActionExecuteCallback, &data);
+                  rcc = pConn->executeCommand(action, list, true, ActionExecuteCallback, &data, true);
                }
                else
                {
@@ -17557,25 +17557,25 @@ void ClientSession::executeSshCommand(const NXCPMessage& request)
             shared_ptr<AgentConnectionEx> conn = proxy->createAgentConnection();
             if (conn != nullptr)
             {
-               StringList list;
-               TCHAR ipAddr[64];
-               list.add(node->getIpAddress().toString(ipAddr));
-               list.add(node->getSshPort());
-               list.add(node->getSshLogin());
-               list.add(node->getSshPassword());
-               list.add(command);
-               list.add(node->getSshKeyId());
+               StringList args;
+               wchar_t ipAddr[64];
+               args.add(node->getIpAddress().toString(ipAddr));
+               args.add(node->getSshPort());
+               args.add(node->getSshLogin());
+               args.add(node->getSshPassword());
+               args.add(command);
+               args.add(node->getSshKeyId());
 
                uint32_t rcc;
                bool withOutput = request.getFieldAsBoolean(VID_RECEIVE_OUTPUT);
                if (withOutput)
                {
                   ActionExecutionData data(this, request.getId());
-                  rcc = conn->executeCommand(_T("SSH.Command"), list, true, ActionExecuteCallback, &data);
+                  rcc = conn->executeCommand(_T("SSH.Command"), args, true, ActionExecuteCallback, &data, true);
                }
                else
                {
-                  rcc = conn->executeCommand(_T("SSH.Command"), list);
+                  rcc = conn->executeCommand(_T("SSH.Command"), args);
                }
                debugPrintf(4, _T("executeSshCommand: rcc=%d"), rcc);
 

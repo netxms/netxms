@@ -32,6 +32,7 @@ SSHSession::SSHSession(const InetAddress& addr, uint16_t port, int32_t id)
    m_session = nullptr;
    m_lastAccess = 0;
    m_busy = false;
+   m_nonReusable = false;
    m_name.append(_T("nobody@"));
    m_name.append(m_addr.toString());
    m_name.append(_T(':'));
@@ -243,30 +244,9 @@ static inline bool CheckForChannelReadBug(ssh_session session)
 }
 
 /**
- * Execute command and capture output
- */
-StringList* SSHSession::execute(const TCHAR *command)
-{
-   auto output = new StringList();
-   if (!execute(command, output, nullptr))
-   {
-      delete_and_null(output);
-   }
-   return output;
-}
-
-/**
- * Execute command and feed output to provided action context
- */
-bool SSHSession::execute(const TCHAR *command, const shared_ptr<ActionExecutionContext>& context)
-{
-   return execute(command, nullptr, context.get());
-}
-
-/**
  * Execute command process output as requested
  */
-bool SSHSession::execute(const TCHAR *command, StringList *output, ActionExecutionContext *context)
+bool SSHSession::execute(const char *command, StringList *output, ActionExecutionContext *context, ByteStream *rawOutput)
 {
    if ((m_session == nullptr) || !ssh_is_connected(m_session))
    {
@@ -284,12 +264,7 @@ bool SSHSession::execute(const TCHAR *command, StringList *output, ActionExecuti
    bool result = false;
    if (ssh_channel_open_session(channel) == SSH_OK)
    {
-#ifdef UNICODE
-      char *mbcmd = UTF8StringFromWideString(command);
-      if (ssh_channel_request_exec(channel, mbcmd) == SSH_OK)
-#else
       if (ssh_channel_request_exec(channel, command) == SSH_OK)
-#endif
       {
          if (context != nullptr)
             context->markAsCompleted(ERR_SUCCESS);
@@ -304,6 +279,10 @@ bool SSHSession::execute(const TCHAR *command, StringList *output, ActionExecuti
             if (context != nullptr)
             {
                context->sendOutputUtf8(buffer);
+            }
+            else if (rawOutput != nullptr)
+            {
+               rawOutput->write(buffer, nbytes);
             }
             else
             {
@@ -365,9 +344,6 @@ bool SSHSession::execute(const TCHAR *command, StringList *output, ActionExecuti
          nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::execute: command \"%s\" execution on %s:%d failed"), command, m_addr.toString().cstr(), m_port);
       }
       ssh_channel_close(channel);
-#ifdef UNICODE
-      MemFree(mbcmd);
-#endif
    }
    else
    {

@@ -1232,8 +1232,8 @@ public:
    uint32_t nop();
    uint32_t getRemoteSystemTime(int64_t *remoteTime, int32_t *offset = nullptr, uint32_t *roundtripTime = nullptr, bool *allowSync = nullptr);
    uint32_t synchronizeTime();
-   uint32_t executeCommand(const TCHAR *command, const StringList &args, bool withOutput = false,
-         void (*outputCallback)(ActionCallbackEvent, const TCHAR*, void*) = nullptr, void *cbData = nullptr);
+   uint32_t executeCommand(const wchar_t *command, const StringList &args, bool withOutput = false,
+         void (*outputCallback)(ActionCallbackEvent, const void*, void*) = nullptr, void *context = nullptr, bool utf8Output = false);
    uint32_t changeFileOwner(const TCHAR *file, bool allowPathExpansion, const TCHAR *newOwner, const TCHAR *newGroup);
    uint32_t changeFilePermissions(const TCHAR *file, bool allowPathExpansion, uint32_t permissions, const TCHAR *newOwner, const TCHAR *newGroup);
    uint32_t getFileSetInfo(const StringList &fileSet, bool allowPathExpansion, ObjectArray<RemoteFileInfo> **info);
@@ -1263,6 +1263,7 @@ public:
    uint32_t closeSSHChannel(uint32_t channelId);
    void setSSHChannelDataHandler(uint32_t channelId, SSHChannelDataCallback handler);
    void removeSSHChannelDataHandler(uint32_t channelId);
+   uint32_t executeSSHCommand(const InetAddress& addr, uint16_t port, const TCHAR *login, const TCHAR *password, uint32_t keyId, const char *command, ByteStream *output);
 
    uint32_t generateRequestId() { return (uint32_t)InterlockedIncrement(&m_requestId); }
 	NXCPMessage *customRequest(NXCPMessage *request, const TCHAR *recvFile = nullptr, bool append = false,
@@ -1486,7 +1487,7 @@ private:
    bool checkPromptMatch();
    void processIncomingData();
    void respondToTerminalQueries(const BYTE *data, size_t size);
-   void removeControlCharacters();
+   void removeControlCharacters() { m_buffer.removeTerminalControlCharacters(); }
    void collapseCharacterByCharacterOutput();
    bool handlePagination();
    StringList *parseOutput(const char *sentCommand);

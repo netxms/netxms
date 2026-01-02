@@ -8003,11 +8003,11 @@ bool Node::getDataFromSmclp(const wchar_t *command, StringBuffer *output)
          arguments.add(m_sshKeyId);
          unlockProperties();
 
-         rcc = conn->executeCommand(_T("SSH.Command"), arguments, true,
-            [] (ActionCallbackEvent event, const TCHAR *text, void *context) -> void
+         rcc = conn->executeCommand(L"SSH.Command", arguments, true,
+            [] (ActionCallbackEvent event, const void *text, void *context) -> void
             {
                if (event == ACE_DATA)
-                  static_cast<StringBuffer*>(context)->append(text);
+                  static_cast<StringBuffer*>(context)->append(static_cast<const wchar_t*>(text));
             }, output);
       }
    }

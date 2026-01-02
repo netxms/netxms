@@ -155,6 +155,11 @@ static void SubagentShutdown()
  */
 static bool SubagentCommandHandler(uint32_t command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
 {
+   if (command == CMD_SSH_COMMAND)
+   {
+      ExecuteSSHCommand(*request, response, session);
+      return true;
+   }
    return HandleSSHChannelCommand(command, request, response, session);
 }
 

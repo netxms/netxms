@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** NetXMS Foundation Library
- ** Copyright (C) 2003-2025 Raden Solutions
+ ** Copyright (C) 2003-2026 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -795,4 +795,139 @@ size_t ByteStream::curlWriteFunction(char *ptr, size_t size, size_t nmemb, ByteS
    size_t bytes = size * nmemb;
    data->write(ptr, bytes);
    return bytes;
+}
+
+/**
+ * Skip CSI sequence parameters and final byte
+ * src should point to first byte after CSI introducer (ESC[ or 0x9B)
+ * Returns pointer to byte after the sequence
+ */
+static char *SkipCSISequence(char *src)
+{
+   // Skip parameter bytes (0x30-0x3F) and intermediate bytes (0x20-0x2F)
+   while (*src != 0 && (unsigned char)*src >= 0x20 && (unsigned char)*src < 0x40)
+      src++;
+   // Skip final byte (0x40-0x7E)
+   if (*src != 0 && (unsigned char)*src >= 0x40 && (unsigned char)*src <= 0x7E)
+      src++;
+   return src;
+}
+
+/**
+ * Skip OSC sequence content and terminator
+ * src should point to first byte after OSC introducer (ESC] or 0x9D)
+ * Returns pointer to byte after the sequence
+ */
+static char *SkipOSCSequence(char *src)
+{
+   while (*src != 0)
+   {
+      if (*src == 0x07)  // BEL terminates OSC
+      {
+         src++;
+         break;
+      }
+      if (*src == 0x1B && *(src + 1) == '\\')  // ESC \ (ST) terminates OSC
+      {
+         src += 2;
+         break;
+      }
+      if ((unsigned char)*src == 0x9C)  // 8-bit ST terminates OSC
+      {
+         src++;
+         break;
+      }
+      src++;
+   }
+   return src;
+}
+
+/**
+ * Remove terminal control characters from buffer, including ANSI escape sequences
+ */
+void ByteStream::removeTerminalControlCharacters()
+{
+   if (m_size == 0)
+      return;
+
+   char *data = reinterpret_cast<char*>(m_data);
+
+   // Work in-place (always writing to positions <= reading position)
+   char *src = data;
+   char *dst = data;
+   char *end = data + m_size;
+
+   while (src < end)
+   {
+      unsigned char c = (unsigned char)*src;
+
+      if (c == 0x1B)  // ESC - start of 7-bit escape sequence
+      {
+         src++;
+         if (src >= end)
+            break;
+
+         if (*src == '[')  // CSI sequence: ESC [
+         {
+            src = SkipCSISequence(src + 1);
+         }
+         else if (*src == ']')  // OSC sequence: ESC ]
+         {
+            src = SkipOSCSequence(src + 1);
+         }
+         else if (*src == '(' || *src == ')' || *src == '*' || *src == '+')  // Character set designation
+         {
+            src++;
+            if (src < end)
+               src++;
+         }
+         else if (*src == '#')  // DEC line attributes: ESC # <digit>
+         {
+            src++;
+            if (src < end)
+               src++;
+         }
+         else if (*src >= 0x40 && *src <= 0x5F)  // Two-byte Fe sequences (ESC + 0x40-0x5F)
+         {
+            src++;
+         }
+         else if (*src >= 0x20 && *src <= 0x2F)  // nF escape sequences
+         {
+            // Skip intermediate bytes
+            while (src < end && (unsigned char)*src >= 0x20 && (unsigned char)*src <= 0x2F)
+               src++;
+            // Skip final byte
+            if (src < end && (unsigned char)*src >= 0x30 && (unsigned char)*src <= 0x7E)
+               src++;
+         }
+         else  // Unknown escape, skip the character after ESC
+         {
+            src++;
+         }
+      }
+      else if (c == 0x9B)  // 8-bit CSI
+      {
+         src = SkipCSISequence(src + 1);
+      }
+      else if (c == 0x9D)  // 8-bit OSC
+      {
+         src = SkipOSCSequence(src + 1);
+      }
+      else if (c >= 0x80 && c <= 0x9F)  // Other C1 control codes - skip
+      {
+         src++;
+      }
+      else if (c >= 32 || c == '\n' || c == '\t')
+      {
+         // Printable characters and common whitespace (skip CR)
+         *dst++ = *src++;
+      }
+      else
+      {
+         // Skip other control characters (C0: 0x00-0x1F except handled above)
+         src++;
+      }
+   }
+
+   truncate(dst - data);
 }

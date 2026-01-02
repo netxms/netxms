@@ -59,8 +59,9 @@ private:
    ssh_session m_session;
    time_t m_lastAccess;
    bool m_busy;
+   bool m_nonReusable;
 
-   bool execute(const TCHAR *command, StringList* output, ActionExecutionContext* context);
+   bool execute(const char *command, StringList *output, ActionExecutionContext *context, ByteStream *rawOutput);
 
 public:
    SSHSession(const InetAddress& addr, uint16_t port, int32_t id = 0);
@@ -73,14 +74,66 @@ public:
    const TCHAR *getName() const { return m_name.cstr(); }
    time_t getLastAccessTime() const { return m_lastAccess; }
    bool isBusy() const { return m_busy; }
+   bool isNonReusable() const { return m_nonReusable; }
+   void setNonReusable() { m_nonReusable = true; }
 
    bool match(const InetAddress& addr, uint16_t port, const TCHAR *login) const;
 
    bool acquire();
    void release();
 
-   StringList *execute(const TCHAR *command);
-   bool execute(const TCHAR *command, const shared_ptr<ActionExecutionContext>& context);
+   /**
+    * Execute command and capture output
+    */
+   StringList *execute(const char *command)
+   {
+      auto output = new StringList();
+      if (!execute(command, output, nullptr, nullptr))
+      {
+         delete_and_null(output);
+      }
+      return output;
+   }
+
+   /**
+    * Execute command and feed output to provided action context
+    */
+   bool execute(const char *command, const shared_ptr<ActionExecutionContext>& context)
+   {
+      return execute(command, nullptr, context.get(), nullptr);
+   }
+
+   /**
+    * Execute command and write raw output to provided byte stream
+    */
+   bool execute(const char *command, ByteStream *rawOutput)
+   {
+      return execute(command, nullptr, nullptr, rawOutput);
+   }
+
+#ifdef UNICODE
+   /**
+    * Execute command and capture output
+    */
+   StringList *execute(const wchar_t *command)
+   {
+      char *utf8Command = UTF8StringFromWideString(command);
+      StringList *output = execute(utf8Command);
+      MemFree(utf8Command);
+      return output;
+   }
+
+   /**
+    * Execute command and feed output to provided action context
+    */
+   bool execute(const wchar_t *command, const shared_ptr<ActionExecutionContext>& context)
+   {
+      char *utf8Command = UTF8StringFromWideString(command);
+      bool result = execute(utf8Command, context);
+      MemFree(utf8Command);
+      return result;
+   }
+#endif
 
    /**
     * Open interactive channel with PTY and shell for network device CLI access
@@ -143,7 +196,7 @@ shared_ptr<KeyPair> GetSshKey(AbstractCommSession *session, uint32_t id);
 /* Session pool */
 void InitializeSessionPool();
 void ShutdownSessionPool();
-SSHSession *AcquireSession(const InetAddress& addr, uint16_t port, const TCHAR *user, const TCHAR *password, const shared_ptr<KeyPair>& keys);
+SSHSession *AcquireSession(const InetAddress& addr, uint16_t port, const TCHAR *user, const TCHAR *password, const shared_ptr<KeyPair>& keys, bool nonReusable = false);
 void ReleaseSession(SSHSession *session);
 
 /* handlers */
@@ -153,6 +206,9 @@ uint32_t H_SSHCommandAction(const shared_ptr<ActionExecutionContext>& context);
 LONG H_SSHConnection(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SSHCheckCommandMode(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SSHCheckShellChannel(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+
+/* message processing */
+void ExecuteSSHCommand(const NXCPMessage& request, NXCPMessage *response, AbstractCommSession *session);
 
 /* globals */
 extern uint32_t g_sshConnectTimeout;

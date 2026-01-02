@@ -462,7 +462,9 @@ LONG H_SSHCheckShellChannel(const TCHAR *param, const TCHAR *arg, TCHAR *value, 
 
    int result = 0;
 
-   SSHSession *ssh = AcquireSession(addr, port, login, password, keys);
+   // Always create new session for interactive channel test because some devices
+   // (like Cisco) don't support multiple channels per session
+   SSHSession *ssh = AcquireSession(addr, port, login, password, keys, true);
    if (ssh != nullptr)
    {
       ssh_channel channel = ssh->openInteractiveChannel(terminalType);
@@ -604,10 +606,10 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
    size_t commandBufferLen = _tcslen(param);
    TCHAR *command = MemAllocString(commandBufferLen);
    TCHAR hostName[256], login[64], password[64];
-   if (!AgentGetParameterArg(param, 1, hostName, 256) ||
-       !AgentGetParameterArg(param, 2, login, 64) ||
-       !AgentGetParameterArg(param, 3, password, 64) ||
-       !AgentGetParameterArg(param, 4, command, commandBufferLen))
+   if (!AgentGetMetricArg(param, 1, hostName, 256) ||
+       !AgentGetMetricArg(param, 2, login, 64) ||
+       !AgentGetMetricArg(param, 3, password, 64) ||
+       !AgentGetMetricArg(param, 4, command, commandBufferLen))
    {
       MemFree(command);
       return SYSINFO_RC_UNSUPPORTED;
@@ -630,13 +632,10 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
    }
 
    shared_ptr<KeyPair> keys;
-   TCHAR keyId[16] = _T("");
-   AgentGetParameterArg(param, 6, keyId, 16);
-   if (keyId[0] != 0)
+   uint32_t keyId = AgentGetMetricArgAsUInt32(param, 6, 0);
+   if (keyId != 0)
    {
-      TCHAR *end;
-      uint32_t id = _tcstoul(keyId, &end, 0);
-      keys = GetSshKey(session, id);
+      keys = GetSshKey(session, keyId);
    }
 
    LONG rc = SYSINFO_RC_ERROR;
@@ -770,7 +769,7 @@ LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, A
 }
 
 /**
- * Generic handler to execute command on host by ssh
+ * Generic handler to execute command on host by SSH
  */
 uint32_t H_SSHCommandAction(const shared_ptr<ActionExecutionContext>& context)
 {
@@ -805,4 +804,57 @@ uint32_t H_SSHCommandAction(const shared_ptr<ActionExecutionContext>& context)
       nxlog_debug_tag(DEBUG_TAG, 6, _T("Failed to create SSH connection to %s:%u"), context->getArg(0), port);
    }
    return rc;
+}
+
+/**
+ * Execute SSH command
+ */
+void ExecuteSSHCommand(const NXCPMessage& request, NXCPMessage *response, AbstractCommSession *session)
+{
+   InetAddress addr = request.getFieldAsInetAddress(VID_IP_ADDRESS);
+   uint16_t port = request.getFieldAsUInt16(VID_PORT);
+   if (port == 0)
+      port = SSH_PORT;
+
+   TCHAR user[256], password[256];
+   request.getFieldAsString(VID_USER_NAME, user, 256);
+   request.getFieldAsString(VID_PASSWORD, password, 256);
+
+   uint32_t keyId = request.getFieldAsUInt32(VID_SSH_KEY_ID);
+   shared_ptr<KeyPair> keys;
+   if (keyId != 0)
+   {
+      keys = GetSshKey(session, keyId);
+   }
+
+   char command[4096];
+   request.getFieldAsUtf8String(VID_COMMAND, command, 4096);
+
+   TCHAR ipAddrText[64];
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteSSHCommand: executing \"%hs\" on %s:%u"), command, addr.toString(ipAddrText), port);
+
+   // Get or create SSH session
+   SSHSession *sshSession = AcquireSession(addr, port, user, password, keys);
+   if (sshSession == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteSSHCommand: cannot create SSH session to %s:%u"), addr.toString(ipAddrText), port);
+      response->setField(VID_RCC, ERR_REMOTE_CONNECT_FAILED);
+      return;
+   }
+
+   // Execute command
+   ByteStream output;
+   bool success = sshSession->execute(command, &output);
+   ReleaseSession(sshSession);
+
+   if (!success)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteSSHCommand: command execution failed on %s:%u"), addr.toString(ipAddrText), port);
+      response->setField(VID_RCC, ERR_EXEC_FAILED);
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteSSHCommand: command executed successfully on %s:%u, %d bytes of output"),
+      addr.toString(ipAddrText), port, static_cast<int>(output.size()));
+   response->setField(VID_RCC, ERR_SUCCESS);
+   response->setField(VID_OUTPUT, output.buffer(), output.size());
 }

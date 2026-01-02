@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1642,10 +1642,12 @@ static int F_AgentExecuteCommandWithOutput(int argc, NXSL_Value **argv, NXSL_Val
       for(int i = 2; (i < argc) && (i < 128); i++)
          list.add(argv[i]->getValueAsCString());
       StringBuffer output;
-      uint32_t rcc = conn->executeCommand(argv[1]->getValueAsCString(), list, true, [](ActionCallbackEvent event, const TCHAR *text, void *context) {
-         if (event == ACE_DATA)
-            static_cast<StringBuffer*>(context)->append(text);
-      }, &output);
+      uint32_t rcc = conn->executeCommand(argv[1]->getValueAsCString(), list, true,
+         [] (ActionCallbackEvent event, const void *text, void *context) -> void
+         {
+            if (event == ACE_DATA)
+               static_cast<StringBuffer*>(context)->append(static_cast<const wchar_t*>(text));
+         }, &output);
       *result = (rcc == ERR_SUCCESS) ? vm->createValue(output) : vm->createValue();
       nxlog_debug_tag(_T("nxsl.agent"), 5, _T("F_AgentExecuteCommandWithOutput: command \"%s\" on node %s [%u]: RCC=%u"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
    }

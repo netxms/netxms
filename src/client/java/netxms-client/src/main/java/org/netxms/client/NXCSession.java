@@ -75,6 +75,7 @@ import org.netxms.client.agent.config.AgentConfiguration;
 import org.netxms.client.agent.config.AgentConfigurationHandle;
 import org.netxms.client.ai.AiAgentTask;
 import org.netxms.client.ai.AiAssistantFunction;
+import org.netxms.client.ai.AiQuestion;
 import org.netxms.client.asset.AssetAttribute;
 import org.netxms.client.businessservices.BusinessServiceCheck;
 import org.netxms.client.businessservices.BusinessServiceTicket;
@@ -791,7 +792,7 @@ public class NXCSession
                      break;
                   case NXCPCodes.CMD_AI_AGENT_QUESTION:
                      sendNotification(new SessionNotification(SessionNotification.AI_QUESTION,
-                           msg.getFieldAsInt64(NXCPCodes.VID_CHAT_ID), new org.netxms.client.ai.AiQuestion(msg)));
+                           msg.getFieldAsInt64(NXCPCodes.VID_CHAT_ID), new AiQuestion(msg)));
                      break;
                   default:
                      // Check subscriptions

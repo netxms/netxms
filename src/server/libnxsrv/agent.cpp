@@ -1800,8 +1800,8 @@ uint32_t AgentConnection::synchronizeTime()
 /**
  * Execute command on agent
  */
-uint32_t AgentConnection::executeCommand(const TCHAR *command, const StringList &args,
-      bool withOutput, void (*outputCallback)(ActionCallbackEvent, const TCHAR*, void*), void *cbData)
+uint32_t AgentConnection::executeCommand(const wchar_t *command, const StringList &args,
+      bool withOutput, void (*outputCallback)(ActionCallbackEvent, const void*, void*), void *context, bool utf8Output)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
@@ -1811,51 +1811,45 @@ uint32_t AgentConnection::executeCommand(const TCHAR *command, const StringList 
    request.setField(VID_RECEIVE_OUTPUT, withOutput);
    args.fillMessage(&request, VID_ACTION_ARG_BASE, VID_NUM_ARGS);
 
-   if (sendMessage(&request))
+   if (!sendMessage(&request))
+      return ERR_CONNECTION_BROKEN;
+
+   uint32_t rcc = waitForRCC(request.getId(), m_commandTimeout);
+   if (!withOutput || (rcc != ERR_SUCCESS))
+      return rcc;
+
+   outputCallback(ACE_CONNECTED, nullptr, context);    // Indicate successful start
+   bool eos = false;
+   while(!eos)
    {
-      if (withOutput)
+      NXCPMessage *response = waitForMessage(CMD_COMMAND_OUTPUT, request.getId(), m_commandTimeout * 10);
+      if (response != nullptr)
       {
-         uint32_t rcc = waitForRCC(request.getId(), m_commandTimeout);
-         if (rcc == ERR_SUCCESS)
+         eos = response->isEndOfSequence();
+         if (response->isFieldExist(VID_MESSAGE))
          {
-            outputCallback(ACE_CONNECTED, nullptr, cbData);    // Indicate successful start
-            bool eos = false;
-            while(!eos)
+            if (utf8Output)
             {
-               NXCPMessage *response = waitForMessage(CMD_COMMAND_OUTPUT, request.getId(), m_commandTimeout * 10);
-               if (response != nullptr)
-               {
-                  eos = response->isEndOfSequence();
-                  if (response->isFieldExist(VID_MESSAGE))
-                  {
-                     TCHAR line[4096];
-                     response->getFieldAsString(VID_MESSAGE, line, 4096);
-                     outputCallback(ACE_DATA, line, cbData);
-                  }
-                  delete response;
-               }
-               else
-               {
-                  return ERR_REQUEST_TIMEOUT;
-               }
+               char data[4096];
+               response->getFieldAsUtf8String(VID_MESSAGE, data, 4096);
+               outputCallback(ACE_DATA, data, context);
             }
-            outputCallback(ACE_DISCONNECTED, nullptr, cbData);
-            return ERR_SUCCESS;
+            else
+            {
+               wchar_t data[4096];
+               response->getFieldAsString(VID_MESSAGE, data, 4096);
+               outputCallback(ACE_DATA, data, context);
+            }
          }
-         else
-         {
-            return rcc;
-         }
+         delete response;
       }
       else
       {
-         return waitForRCC(request.getId(), m_commandTimeout);
+         return ERR_REQUEST_TIMEOUT;
       }
    }
-   else
-   {
-      return ERR_CONNECTION_BROKEN;
-   }
+   outputCallback(ACE_DISCONNECTED, nullptr, context);
+   return ERR_SUCCESS;
 }
 
 /**
@@ -3291,6 +3285,76 @@ void AgentConnection::processSSHChannelData(uint32_t channelId, const void *data
       m_sshChannelLock.unlock();
       debugPrintf(6, L"SSH channel data received for unknown channel %u", channelId);
    }
+}
+
+/**
+ * Execute SSH command via agent's SSH subagent
+ *
+ * @param addr Target IP address
+ * @param port Target SSH port
+ * @param login SSH login
+ * @param password SSH password
+ * @param keyId SSH key ID (0 for password authentication)
+ * @param command Command to execute (UTF-8)
+ * @param output Output data stream
+ * @return agent error code
+ */
+uint32_t AgentConnection::executeSSHCommand(const InetAddress& addr, uint16_t port, const TCHAR *login, const TCHAR *password, uint32_t keyId, const char *command, ByteStream *output)
+{
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
+
+   uint32_t requestId = generateRequestId();
+   NXCPMessage msg(CMD_SSH_COMMAND, requestId, m_nProtocolVersion);
+   msg.setField(VID_IP_ADDRESS, addr);
+   msg.setField(VID_PORT, port);
+   msg.setField(VID_USER_NAME, login);
+   msg.setField(VID_PASSWORD, password);
+   msg.setField(VID_SSH_KEY_ID, keyId);
+   msg.setFieldFromUtf8String(VID_COMMAND, command);
+
+   if (!sendMessage(&msg))
+      return ERR_CONNECTION_BROKEN;
+
+   NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+   if (response == nullptr)
+   {
+      debugPrintf(5, _T("executeSSHCommand: request timeout"));
+      return ERR_REQUEST_TIMEOUT;
+   }
+
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
+   if (rcc == ERR_SUCCESS)
+   {
+      size_t size;
+      const BYTE *bytes = response->getBinaryFieldPtr(VID_OUTPUT, &size);
+      output->write(bytes, size);
+   }
+   else if (rcc == ERR_UNKNOWN_COMMAND)
+   {
+      // Try fallback to action
+      StringList args;
+      wchar_t ipAddr[64];
+      args.add(addr.toString(ipAddr));
+      args.add(port);
+      args.add(login);
+      args.add(password);
+      args.addUTF8String(command);
+      args.add(keyId);
+
+      rcc = executeCommand(L"SSH.Command", args, true,
+         [] (ActionCallbackEvent e, const void *data, void *context) -> void
+         {
+            auto output = static_cast<ByteStream*>(context);
+            output->write(data, strlen(static_cast<const char*>(data)));
+         }, output, true);
+   }
+   else
+   {
+      debugPrintf(5, _T("executeSSHCommand: agent returned error %u (%s)"), rcc, AgentErrorCodeToText(rcc));
+   }
+   delete response;
+   return rcc;
 }
 
 /**

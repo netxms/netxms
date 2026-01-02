@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -1610,6 +1610,7 @@ typedef struct
 #define VID_AI_RESPONSE_OPTION      ((uint32_t)897)
 #define VID_AI_QUESTION_OPTIONS     ((uint32_t)898)
 #define VID_TERMINAL_TYPE           ((uint32_t)899)
+#define VID_OUTPUT                  ((uint32_t)900)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

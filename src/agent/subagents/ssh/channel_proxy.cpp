@@ -265,8 +265,9 @@ bool HandleSSHChannelCommand(uint32_t command, NXCPMessage *request, NXCPMessage
             if (terminalType[0] == 0)
                strcpy(terminalType, "vt100");
 
-            // Get or create SSH session
-            SSHSession *sshSession = AcquireSession(addr, port, user, password, keys);
+            // Get or create SSH session - always create new session for interactive channels
+            // because some devices (like Cisco) don't support multiple channels per session
+            SSHSession *sshSession = AcquireSession(addr, port, user, password, keys, true);
             if (sshSession == nullptr)
             {
                TCHAR ipAddrText[64];

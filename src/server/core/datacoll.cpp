@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -115,8 +115,8 @@ static void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, TCHAR
                shared_ptr<Node> proxy = static_pointer_cast<Node>(FindObjectById(static_cast<Node*>(dcTarget)->getEffectiveSshProxy(), OBJECT_NODE));
                if (proxy != nullptr)
                {
-                  TCHAR name[MAX_PARAM_NAME], ipAddr[64];
-                  _sntprintf(name, MAX_PARAM_NAME, _T("SSH.Command(%s:%u,\"%s\",\"%s\",\"%s\",\"\",%d)"),
+                  wchar_t name[MAX_PARAM_NAME], ipAddr[64];
+                  nx_swprintf(name, MAX_PARAM_NAME, _T("SSH.Command(%s:%u,\"%s\",\"%s\",\"%s\",\"\",%d)"),
                              static_cast<Node*>(dcTarget)->getIpAddress().toString(ipAddr),
                              static_cast<uint32_t>(static_cast<Node*>(dcTarget)->getSshPort()),
                              EscapeStringForAgent(static_cast<Node*>(dcTarget)->getSshLogin()).cstr(),
