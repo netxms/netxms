@@ -147,12 +147,6 @@ public:
     * @return true if command execution works, false otherwise
     */
    bool testCommandChannel(const char *command = nullptr);
-
-   /**
-    * Test if session can open new channels (lightweight connectivity test)
-    * @return true if session is usable, false otherwise
-    */
-   bool testSession();
 };
 
 /**
@@ -195,7 +189,7 @@ shared_ptr<KeyPair> GetSshKey(AbstractCommSession *session, uint32_t id);
 void InitializeSessionPool();
 void ShutdownSessionPool();
 SSHSession *AcquireSession(const InetAddress& addr, uint16_t port, const TCHAR *user, const TCHAR *password, const shared_ptr<KeyPair>& keys, bool nonReusable = false);
-void ReleaseSession(SSHSession *session);
+void ReleaseSession(SSHSession *session, bool invalidate = false);
 
 /* handlers */
 LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);

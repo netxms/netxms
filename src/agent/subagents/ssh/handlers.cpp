@@ -129,9 +129,15 @@ LONG H_SSHCheckCommandMode(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
 
    int result = 0;
 
-   SSHSession *ssh = AcquireSession(addr, port, login, password, keys);
-   if (ssh != nullptr)
+   for (int attempt = 0; attempt < 2; attempt++)
    {
+      SSHSession *ssh = AcquireSession(addr, port, login, password, keys);
+      if (ssh == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH.CheckCommandMode: failed to create SSH connection to %s:%u"), hostName, port);
+         break;
+      }
+
       StringList *output = ssh->execute(command);
       if (output != nullptr)
       {
@@ -168,16 +174,14 @@ LONG H_SSHCheckCommandMode(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
             nxlog_debug_tag(DEBUG_TAG, 4, _T("SSH.CheckCommandMode: failed to compile pattern \"%s\""), pattern);
          }
          delete output;
+         ReleaseSession(ssh);
+         break;
       }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH.CheckCommandMode: command execution failed on %s:%u (exec channel may not be supported)"), hostName, port);
-      }
-      ReleaseSession(ssh);
-   }
-   else
-   {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH.CheckCommandMode: failed to create SSH connection to %s:%u"), hostName, port);
+
+      // Execute failed - invalidate session and retry once
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH.CheckCommandMode: command execution failed on %s:%u%s"),
+                      hostName, port, (attempt == 0) ? _T(", retrying with new session") : _T(" (exec channel may not be supported)"));
+      ReleaseSession(ssh, true);
    }
 
    MemFree(command);
@@ -639,9 +643,15 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
    }
 
    LONG rc = SYSINFO_RC_ERROR;
-   SSHSession *ssh = AcquireSession(addr, port, login, password, keys);
-   if (ssh != nullptr)
+   for (int attempt = 0; attempt < 2; attempt++)
    {
+      SSHSession *ssh = AcquireSession(addr, port, login, password, keys);
+      if (ssh == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("Failed to create SSH connection to %s:%u"), hostName, port);
+         break;
+      }
+
       StringList *output = ssh->execute(command);
       if (output != nullptr)
       {
@@ -693,16 +703,14 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
             nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH output is empty"));
          }
          delete output;
+         ReleaseSession(ssh);
+         break;
       }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH command execution on %s failed"), hostName);
-      }
-      ReleaseSession(ssh);
-   }
-   else
-   {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("Failed to create SSH connection to %s:%u"), hostName, port);
+
+      // Execute failed - invalidate session and retry once
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH command execution on %s failed%s"), hostName,
+                      (attempt == 0) ? _T(", retrying with new session") : _T(""));
+      ReleaseSession(ssh, true);
    }
    MemFree(command);
    return rc;
@@ -752,17 +760,24 @@ LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, A
    }
 
    LONG rc = SYSINFO_RC_ERROR;
-   SSHSession *ssh = AcquireSession(addr, port, login, password, key);
-   if (ssh != nullptr)
+   for (int attempt = 0; attempt < 2; attempt++)
    {
+      SSHSession *ssh = AcquireSession(addr, port, login, password, key);
+      if (ssh == nullptr)
+         break;
+
       StringList *output = ssh->execute(command);
       if (output != nullptr)
       {
          value->addAll(output);
          rc = SYSINFO_RC_SUCCESS;
          delete output;
+         ReleaseSession(ssh);
+         break;
       }
-      ReleaseSession(ssh);
+
+      // Execute failed - invalidate session and retry once
+      ReleaseSession(ssh, true);
    }
    MemFree(command);
    return rc;
@@ -773,7 +788,7 @@ LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, A
  */
 uint32_t H_SSHCommandAction(const shared_ptr<ActionExecutionContext>& context)
 {
-	if (context->getArgCount() < 6)
+   if (context->getArgCount() < 6)
       return ERR_MALFORMED_COMMAND;
 
    InetAddress addr = InetAddress::resolveHostName(context->getArg(0));
@@ -783,25 +798,30 @@ uint32_t H_SSHCommandAction(const shared_ptr<ActionExecutionContext>& context)
    uint16_t port = (uint16_t)_tcstoul(context->getArg(1), nullptr, 10);
    uint32_t id = _tcstoul(context->getArg(5), nullptr, 10);
    shared_ptr<KeyPair> key = GetSshKey(context->getSession().get(), id);
+
    uint32_t rc = ERR_EXEC_FAILED;
-   SSHSession *ssh = AcquireSession(addr, port, context->getArg(2), context->getArg(3), key);
-   if (ssh != nullptr)
+   for (int attempt = 0; attempt < 2; attempt++)
    {
+      SSHSession *ssh = AcquireSession(addr, port, context->getArg(2), context->getArg(3), key);
+      if (ssh == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("Failed to create SSH connection to %s:%u"), context->getArg(0), port);
+         break;
+      }
+
       if (ssh->execute(context->getArg(4), context))
       {
          rc = ERR_SUCCESS;
          nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH command execution on %s successful"), context->getArg(0));
+         context->sendEndOfOutputMarker();
+         ReleaseSession(ssh);
+         break;
       }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH command execution on %s failed"), context->getArg(0));
-      }
-      context->sendEndOfOutputMarker();
-      ReleaseSession(ssh);
-   }
-   else
-   {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("Failed to create SSH connection to %s:%u"), context->getArg(0), port);
+
+      // Execute failed - invalidate session and retry once
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH command execution on %s failed%s"), context->getArg(0),
+                      (attempt == 0) ? _T(", retrying with new session") : _T(""));
+      ReleaseSession(ssh, true);
    }
    return rc;
 }
@@ -833,28 +853,32 @@ void ExecuteSSHCommand(const NXCPMessage& request, NXCPMessage *response, Abstra
    TCHAR ipAddrText[64];
    nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteSSHCommand: executing \"%hs\" on %s:%u"), command, addr.toString(ipAddrText), port);
 
-   // Get or create SSH session
-   SSHSession *sshSession = AcquireSession(addr, port, user, password, keys);
-   if (sshSession == nullptr)
+   for (int attempt = 0; attempt < 2; attempt++)
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteSSHCommand: cannot create SSH session to %s:%u"), addr.toString(ipAddrText), port);
-      response->setField(VID_RCC, ERR_REMOTE_CONNECT_FAILED);
-      return;
+      SSHSession *sshSession = AcquireSession(addr, port, user, password, keys);
+      if (sshSession == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteSSHCommand: cannot create SSH session to %s:%u"), addr.toString(ipAddrText), port);
+         response->setField(VID_RCC, ERR_REMOTE_CONNECT_FAILED);
+         return;
+      }
+
+      ByteStream output;
+      if (sshSession->execute(command, &output))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteSSHCommand: command executed successfully on %s:%u, %d bytes of output"),
+            addr.toString(ipAddrText), port, static_cast<int>(output.size()));
+         response->setField(VID_RCC, ERR_SUCCESS);
+         response->setField(VID_OUTPUT, output.buffer(), output.size());
+         ReleaseSession(sshSession);
+         return;
+      }
+
+      // Execute failed - invalidate session and retry once
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteSSHCommand: command execution failed on %s:%u%s"),
+                      addr.toString(ipAddrText), port, (attempt == 0) ? _T(", retrying with new session") : _T(""));
+      ReleaseSession(sshSession, true);
    }
 
-   // Execute command
-   ByteStream output;
-   bool success = sshSession->execute(command, &output);
-   ReleaseSession(sshSession);
-
-   if (!success)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteSSHCommand: command execution failed on %s:%u"), addr.toString(ipAddrText), port);
-      response->setField(VID_RCC, ERR_EXEC_FAILED);
-   }
-
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteSSHCommand: command executed successfully on %s:%u, %d bytes of output"),
-      addr.toString(ipAddrText), port, static_cast<int>(output.size()));
-   response->setField(VID_RCC, ERR_SUCCESS);
-   response->setField(VID_OUTPUT, output.buffer(), output.size());
+   response->setField(VID_RCC, ERR_EXEC_FAILED);
 }

@@ -46,18 +46,9 @@ SSHSession *AcquireSession(const InetAddress& addr, uint16_t port, const TCHAR *
          SSHSession *s = s_sessions.get(i);
          if (s->match(addr, port, user) && s->acquire())
          {
-            // Test if cached session can still open channels (some devices like Cisco
-            // don't support session reuse after channel close)
-            if (s->testSession())
-            {
-               nxlog_debug_tag(DEBUG_TAG, 7, _T("AcquireSession: acquired existing session %s"), s->getName());
-               s_lock.unlock();
-               return s;
-            }
-            // Session is stale, remove it from pool
-            nxlog_debug_tag(DEBUG_TAG, 7, _T("AcquireSession: cached session %s failed connectivity test, removing"), s->getName());
-            s_sessions.remove(s);
-            i--;
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("AcquireSession: acquired existing session %s"), s->getName());
+            s_lock.unlock();
+            return s;
          }
       }
       s_lock.unlock();
@@ -88,8 +79,10 @@ SSHSession *AcquireSession(const InetAddress& addr, uint16_t port, const TCHAR *
 
 /**
  * Release SSH session
+ * @param invalidate If true, remove session from pool regardless of connection state.
+ *                   Use this when an operation failed due to session issues (e.g. channel open failed).
  */
-void ReleaseSession(SSHSession *session)
+void ReleaseSession(SSHSession *session, bool invalidate)
 {
    if (session->isNonReusable())
    {
@@ -100,9 +93,10 @@ void ReleaseSession(SSHSession *session)
 
    s_lock.lock();
    session->release();
-   if (!session->isConnected())
+   if (invalidate || !session->isConnected())
    {
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("ReleaseSession: disconnected session %s removed"), session->getName());
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("ReleaseSession: session %s removed (%s)"),
+                      session->getName(), invalidate ? _T("invalidated") : _T("disconnected"));
       s_sessions.remove(session);
    }
    s_lock.unlock();

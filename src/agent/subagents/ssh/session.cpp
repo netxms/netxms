@@ -58,27 +58,6 @@ bool SSHSession::match(const InetAddress& addr, uint16_t port, const TCHAR *logi
 }
 
 /**
- * Test if session can open new channels (lightweight connectivity test)
- * Some devices (like Cisco) close the session after first channel use
- */
-bool SSHSession::testSession()
-{
-   if (!isConnected())
-      return false;
-
-   ssh_channel channel = ssh_channel_new(m_session);
-   if (channel == nullptr)
-      return false;
-
-   bool success = (ssh_channel_open_session(channel) == SSH_OK);
-   if (success)
-      ssh_channel_close(channel);
-   ssh_channel_free(channel);
-
-   return success;
-}
-
-/**
  * Acquire session
  */
 bool SSHSession::acquire()
