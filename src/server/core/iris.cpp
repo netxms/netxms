@@ -74,6 +74,13 @@ static const char *s_systemPrompt =
          "- Load skills to extend your capabilities for specialized tasks\n"
          "- Create background tasks for complex or time-consuming operations\n"
          "- Provide guidance on NetXMS concepts and best practices\n\n"
+         "BACKGROUND WORK OPTIONS:\n"
+         "Choose the right approach based on user intent:\n"
+         "- AI Task (register-ai-task): For autonomous multi-step work that needs state preservation between iterations. "
+         "Use when user wants you to 'work through', 'investigate over time', 'take multiple passes', or process large volumes autonomously. "
+         "AI tasks can signal completion and preserve context via memento.\n"
+         "- Scheduled Task: For time-based recurring operations (daily checks, weekly reports). Use when user specifies a schedule like 'every day', 'weekly', 'at 9am'.\n"
+         "- Foreground (current chat): For immediate analysis the user wants to see and interact with now.\n\n"
          "IMPORTANT RESTRICTIONS:\n"
          "- NEVER suggest or recommend NXSL scripts unless explicitly requested by the user\n"
          "- AVOID answering questions outside of network management and IT administration\n\n"
@@ -1375,7 +1382,13 @@ bool InitAIAssistant()
 
    RegisterAIAssistantFunction(
       "register-ai-task",
-      "Register new AI task for background execution. Use this function to create long running tasks that may require multiple executions to complete.",
+      "Register new AI task for autonomous background execution. "
+      "Use AI tasks when: "
+      "(1) work should continue without user interaction, "
+      "(2) task needs multiple iterations to complete (e.g., processing many items, investigation requiring multiple passes), "
+      "(3) task needs to preserve state/context between iterations, "
+      "(4) user indicates 'take your time', 'work through this', 'multiple passes', or 'let me know when done'. "
+      "Do NOT use AI tasks for time-based recurring operations (daily, weekly) - use scheduled tasks for those instead.",
       {
           { "description", "Task description" },
           { "prompt", "Initial prompt for the task" },
