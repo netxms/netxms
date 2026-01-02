@@ -303,4 +303,10 @@ static inline std::string JsonToString(json_t *json)
  */
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByNameOrId(const char *name, int objectClassHint = -1);
 
+/**
+ * Parse timestamp from string. Supports absolute timestamps in ISO 8601 format or as UNIX timestamp,
+ * as well as relative timestamps in format [+|-]<number>[s|m|h|d]
+ */
+time_t NXCORE_EXPORTABLE ParseTimestamp(const char *ts);
+
 #endif

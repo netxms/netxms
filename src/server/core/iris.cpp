@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -85,6 +85,12 @@ static const char *s_systemPrompt =
          "- Use function calls to access real-time data when possible\n"
          "- Before suggesting user how to use UI, check if you can use available skills or functions to perform the task directly\n"
          "- Create background tasks for complex or time-consuming operations\n\n"
+         "TIMESTAMP FORMATS:\n"
+         "All functions accepting timestamp arguments support the following formats:\n"
+         "- Relative: [+|-]<number>[s|m|h|d] where s=seconds, m=minutes, h=hours, d=days (no suffix defaults to minutes)\n"
+         "  Examples: -30m (30 minutes ago), +2h (2 hours in future), -1d (1 day ago), -30 (30 minutes ago)\n"
+         "- UNIX timestamp: numeric value representing seconds since epoch (e.g., 1704067200)\n"
+         "- ISO 8601: YYYY-MM-DDTHH:MM:SSZ in UTC (e.g., 2024-01-01T12:00:00Z)\n\n"
          "SKILL MANAGEMENT AND DISCOVERY:\n"
          "- When you lack capabilities for ANY user request, IMMEDIATELY check available skills using get-available-skills\n"
          "- Skills are your primary method for extending capabilities - they are NOT optional extras\n"
@@ -136,6 +142,12 @@ static const char *s_systemPromptBackground =
          "- Use function calls to access real-time data when possible\n"
          "- Before suggesting user how to use UI, check if you can use available skills or functions to perform the task directly\n"
          "- Create background tasks for complex or time-consuming operations\n\n"
+         "TIMESTAMP FORMATS:\n"
+         "All functions accepting timestamp arguments support the following formats:\n"
+         "- Relative: [+|-]<number>[s|m|h|d] where s=seconds, m=minutes, h=hours, d=days (no suffix defaults to minutes)\n"
+         "  Examples: -30m (30 minutes ago), +2h (2 hours in future), -1d (1 day ago), -30 (30 minutes ago)\n"
+         "- UNIX timestamp: numeric value representing seconds since epoch (e.g., 1704067200)\n"
+         "- ISO 8601: YYYY-MM-DDTHH:MM:SSZ in UTC (e.g., 2024-01-01T12:00:00Z)\n\n"
          "SKILL MANAGEMENT AND DISCOVERY:\n"
          "- When you lack capabilities for ANY task, IMMEDIATELY check available skills using get-available-skills\n"
          "- Skills are your primary method for extending capabilities - they are NOT optional extras\n"
@@ -213,6 +225,49 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByNameOrId(const char *name, int 
    utf8_to_wchar(name, -1, nameW, MAX_OBJECT_NAME);
    nameW[MAX_OBJECT_NAME - 1] = 0;
    return FindObjectByFuzzyName(nameW, objectClassHint);
+}
+
+/**
+ * Parse timestamp from string. Supports absolute timestamps in ISO 8601 format or as UNIX timestamp,
+ * as well as relative timestamps in format [+|-]<number>[s|m|h|d]
+ */
+time_t NXCORE_EXPORTABLE ParseTimestamp(const char *ts)
+{
+   char *eptr;
+   if ((ts[0] == '-') || (ts[0] == '+'))
+   {
+      // Offset from now
+      int64_t offset = strtoll(&ts[1], &eptr, 10);
+      if (*eptr != 0)
+      {
+         // check for suffix
+         if (stricmp(eptr, "m") == 0)
+            offset *= 60;
+         else if (stricmp(eptr, "h") == 0)
+            offset *= 3600;
+         else if (stricmp(eptr, "d") == 0)
+            offset *= 86400;
+         else if (stricmp(eptr, "s") != 0)
+            return 0;  // invalid format
+      }
+      else
+      {
+         // no suffix, assume minutes
+         offset *= 60;
+      }
+      time_t now = time(nullptr);
+      return (ts[0] == '+') ? now + static_cast<time_t>(offset) : now - static_cast<time_t>(offset);
+   }
+
+   int64_t n = strtoll(ts, &eptr, 10);
+   if (*eptr == 0)
+      return static_cast<time_t>(n);   // Assume UNIX timestamp
+
+   struct tm t;
+   if (strptime(ts, "%Y-%m-%dT%H:%M:%SZ", &t) == nullptr)
+      return 0;
+
+   return timegm(&t);
 }
 
 /**
