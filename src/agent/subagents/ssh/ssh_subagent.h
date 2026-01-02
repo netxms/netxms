@@ -163,6 +163,7 @@ class SSHChannelProxy
 private:
    uint32_t m_channelId;
    ssh_channel m_sshChannel;
+   SSHSession *m_sshSession;
    AbstractCommSession *m_commSession;
    THREAD m_readerThread;
    bool m_running;
@@ -171,7 +172,7 @@ private:
    static void readerThreadStarter(SSHChannelProxy *proxy);
 
 public:
-   SSHChannelProxy(uint32_t channelId, ssh_channel channel, AbstractCommSession *session);
+   SSHChannelProxy(uint32_t channelId, ssh_channel channel, SSHSession *sshSession, AbstractCommSession *session);
    ~SSHChannelProxy();
 
    void start();
@@ -185,9 +186,6 @@ public:
 /* Channel proxy management */
 void InitializeSSHChannelProxyManager();
 void ShutdownSSHChannelProxyManager();
-SSHChannelProxy *CreateSSHChannelProxy(uint32_t channelId, ssh_channel channel, AbstractCommSession *session);
-SSHChannelProxy *FindSSHChannelProxy(uint32_t channelId);
-void DeleteSSHChannelProxy(uint32_t channelId);
 bool HandleSSHChannelCommand(uint32_t command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session);
 
 /* Key functions */

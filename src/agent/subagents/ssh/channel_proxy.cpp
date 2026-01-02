@@ -1,6 +1,6 @@
 /*
 ** NetXMS SSH subagent
-** Copyright (C) 2004-2025 Raden Solutions
+** Copyright (C) 2004-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -54,21 +54,20 @@ void ShutdownSSHChannelProxyManager()
 /**
  * Create new SSH channel proxy
  */
-SSHChannelProxy *CreateSSHChannelProxy(uint32_t channelId, ssh_channel channel, AbstractCommSession *session)
+static void CreateSSHChannelProxy(uint32_t channelId, ssh_channel channel, SSHSession *sshSession, AbstractCommSession *session)
 {
-   SSHChannelProxy *proxy = new SSHChannelProxy(channelId, channel, session);
+   SSHChannelProxy *proxy = new SSHChannelProxy(channelId, channel, sshSession, session);
    s_channelProxyLock.lock();
    s_channelProxies.add(proxy);
    s_channelProxyLock.unlock();
    proxy->start();
    nxlog_debug_tag(DEBUG_TAG, 5, _T("SSH channel proxy %u created"), channelId);
-   return proxy;
 }
 
 /**
  * Find SSH channel proxy by ID
  */
-SSHChannelProxy *FindSSHChannelProxy(uint32_t channelId)
+static SSHChannelProxy *FindSSHChannelProxy(uint32_t channelId)
 {
    SSHChannelProxy *proxy = nullptr;
    s_channelProxyLock.lock();
@@ -87,7 +86,7 @@ SSHChannelProxy *FindSSHChannelProxy(uint32_t channelId)
 /**
  * Delete SSH channel proxy
  */
-void DeleteSSHChannelProxy(uint32_t channelId)
+static void DeleteSSHChannelProxy(uint32_t channelId)
 {
    s_channelProxyLock.lock();
    for(int i = 0; i < s_channelProxies.size(); i++)
@@ -106,10 +105,11 @@ void DeleteSSHChannelProxy(uint32_t channelId)
 /**
  * SSHChannelProxy constructor
  */
-SSHChannelProxy::SSHChannelProxy(uint32_t channelId, ssh_channel channel, AbstractCommSession *session)
+SSHChannelProxy::SSHChannelProxy(uint32_t channelId, ssh_channel channel, SSHSession *sshSession, AbstractCommSession *session)
 {
    m_channelId = channelId;
    m_sshChannel = channel;
+   m_sshSession = sshSession;
    m_commSession = session;
    m_readerThread = INVALID_THREAD_HANDLE;
    m_running = false;
@@ -126,6 +126,7 @@ SSHChannelProxy::~SSHChannelProxy()
       ssh_channel_close(m_sshChannel);
       ssh_channel_free(m_sshChannel);
    }
+   ReleaseSession(m_sshSession);
 }
 
 /**
@@ -289,23 +290,13 @@ bool HandleSSHChannelCommand(uint32_t command, NXCPMessage *request, NXCPMessage
                return true;
             }
 
-            // Create proxy
-            SSHChannelProxy *proxy = CreateSSHChannelProxy(channelId, channel, session);
-            if (proxy == nullptr)
-            {
-               ssh_channel_close(channel);
-               ssh_channel_free(channel);
-               ReleaseSession(sshSession);
-               response->setField(VID_RCC, ERR_INTERNAL_ERROR);
-               return true;
-            }
+            CreateSSHChannelProxy(channelId, channel, sshSession, session);
+            response->setField(VID_RCC, ERR_SUCCESS);
+            response->setField(VID_CHANNEL_ID, channelId);
 
             TCHAR ipAddrText[64];
             nxlog_debug_tag(DEBUG_TAG, 5, _T("CMD_SETUP_SSH_CHANNEL: channel %u opened to %s:%u"),
                             channelId, addr.toString(ipAddrText), port);
-
-            response->setField(VID_RCC, ERR_SUCCESS);
-            response->setField(VID_CHANNEL_ID, channelId);
 
             // Note: We don't release the SSH session - it stays acquired while the channel is open
             // The session will be released when the channel is closed
