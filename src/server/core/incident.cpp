@@ -23,6 +23,7 @@
 #include "nxcore.h"
 #include <nms_incident.h>
 #include <nms_users.h>
+#include <iris.h>
 
 #define DEBUG_TAG L"incident"
 
@@ -1144,7 +1145,7 @@ void SendIncidentsToClient(uint32_t objectId, uint32_t requestId, ClientSession 
 
 /**
  * Scheduled task handler for delayed incident creation from alarm
- * Persistent data format: "alarm=<id>;object=<id>;title=<text>;comment=<text>"
+ * Persistent data format: "alarm=<id>;object=<id>;title=<text>;comment=<text>[;ai_analyze=1;ai_depth=<n>;ai_assign=<0|1>;ai_prompt=<text>]"
  */
 void CreateIncidentFromAlarmTask(const shared_ptr<ScheduledTaskParameters>& parameters)
 {
@@ -1162,6 +1163,12 @@ void CreateIncidentFromAlarmTask(const shared_ptr<ScheduledTaskParameters>& para
    wchar_t title[256] = L"";
    wchar_t initialComment[2001] = L"";
 
+   // AI analysis parameters
+   bool aiAnalyze = false;
+   int aiDepth = 0;
+   bool aiAutoAssign = false;
+   wchar_t aiPrompt[2001] = L"";
+
    // Parse persistent data
    StringList parts(data, L";");
    for (int i = 0; i < parts.size(); i++)
@@ -1175,6 +1182,14 @@ void CreateIncidentFromAlarmTask(const shared_ptr<ScheduledTaskParameters>& para
          wcslcpy(title, part + 6, 256);
       else if (wcsncmp(part, L"comment=", 8) == 0)
          wcslcpy(initialComment, part + 8, 2001);
+      else if (wcsncmp(part, L"ai_analyze=", 11) == 0)
+         aiAnalyze = (wcstoul(part + 11, nullptr, 10) != 0);
+      else if (wcsncmp(part, L"ai_depth=", 9) == 0)
+         aiDepth = static_cast<int>(wcstol(part + 9, nullptr, 10));
+      else if (wcsncmp(part, L"ai_assign=", 10) == 0)
+         aiAutoAssign = (wcstoul(part + 10, nullptr, 10) != 0);
+      else if (wcsncmp(part, L"ai_prompt=", 10) == 0)
+         wcslcpy(aiPrompt, part + 10, 2001);
    }
 
    if (alarmId == 0)
@@ -1215,6 +1230,12 @@ void CreateIncidentFromAlarmTask(const shared_ptr<ScheduledTaskParameters>& para
    if (rcc == RCC_SUCCESS)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("CreateIncidentFromAlarmTask: created incident [%u] from alarm [%u]"), incidentId, alarmId);
+
+      // Trigger AI analysis if enabled
+      if (aiAnalyze)
+      {
+         SpawnIncidentAIAnalysis(incidentId, aiDepth, aiAutoAssign, (aiPrompt[0] != 0) ? aiPrompt : nullptr);
+      }
    }
    else
    {

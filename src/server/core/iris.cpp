@@ -24,6 +24,7 @@
 #include <nxlibcurl.h>
 #include <netxms-version.h>
 #include <iris.h>
+#include <nms_incident.h>
 
 #define DEBUG_TAG _T("ai.assistant")
 
@@ -1333,6 +1334,175 @@ static void ExecuteAIAgentTask(const shared_ptr<ScheduledTaskParameters>& parame
          parameters->m_objectId, (response != nullptr) ? response : "no response");
    MemFree(prompt);
    MemFree(response);
+}
+
+/**
+ * Build incident analysis prompt based on depth level
+ */
+static std::string BuildIncidentAnalysisPrompt(uint32_t incidentId, int depth, const TCHAR *customPrompt)
+{
+   StringBuffer prompt;
+   prompt.append(_T("Analyze incident #"));
+   prompt.append(incidentId);
+   prompt.append(_T(" using the available incident analysis functions.\n\n"));
+
+   switch(depth)
+   {
+      case 0:  // Quick analysis
+         prompt.append(_T("ANALYSIS DEPTH: Quick\n"));
+         prompt.append(_T("Perform a brief analysis:\n"));
+         prompt.append(_T("1. Get incident details using get-incident-details\n"));
+         prompt.append(_T("2. Identify the primary issue from linked alarms\n"));
+         prompt.append(_T("3. Suggest immediate actions if any\n"));
+         break;
+      case 1:  // Standard analysis
+         prompt.append(_T("ANALYSIS DEPTH: Standard\n"));
+         prompt.append(_T("Perform a comprehensive analysis:\n"));
+         prompt.append(_T("1. Get incident details using get-incident-details\n"));
+         prompt.append(_T("2. Get related events using get-incident-related-events\n"));
+         prompt.append(_T("3. Check for similar historical incidents using get-incident-history\n"));
+         prompt.append(_T("4. Analyze patterns and correlations\n"));
+         prompt.append(_T("5. Suggest remediation steps\n"));
+         break;
+      case 2:  // Thorough analysis
+      default:
+         prompt.append(_T("ANALYSIS DEPTH: Thorough\n"));
+         prompt.append(_T("Perform an in-depth analysis:\n"));
+         prompt.append(_T("1. Get incident details using get-incident-details\n"));
+         prompt.append(_T("2. Get related events using get-incident-related-events with extended time window\n"));
+         prompt.append(_T("3. Analyze topology context using get-incident-topology-context\n"));
+         prompt.append(_T("4. Review historical incidents using get-incident-history\n"));
+         prompt.append(_T("5. Look for related alarms that should be linked\n"));
+         prompt.append(_T("6. Perform root cause analysis\n"));
+         prompt.append(_T("7. Provide detailed remediation recommendations\n"));
+         break;
+   }
+
+   if ((customPrompt != nullptr) && (*customPrompt != 0))
+   {
+      prompt.append(_T("\n\nADDITIONAL INSTRUCTIONS:\n"));
+      prompt.append(customPrompt);
+   }
+
+   prompt.append(_T("\n\nOUTPUT REQUIREMENTS:\n"));
+   prompt.append(_T("- Provide your analysis as a structured report\n"));
+   prompt.append(_T("- Include a summary section at the beginning\n"));
+   prompt.append(_T("- List any correlated alarms that should be linked\n"));
+   prompt.append(_T("- Suggest an assignee if appropriate using suggest-incident-assignee\n"));
+   prompt.append(_T("- The analysis will be posted as an incident comment\n"));
+
+   return prompt.getUTF8String();
+}
+
+/**
+ * Background task for incident AI analysis
+ */
+static void IncidentAIAnalysisTask(uint32_t incidentId, int depth, bool autoAssign, String customPrompt)
+{
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Starting AI analysis for incident [%u], depth=%d, autoAssign=%s"),
+      incidentId, depth, BooleanToString(autoAssign));
+
+   // Get incident to verify it exists and get source object
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   if (incident == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("AI analysis cancelled: incident [%u] not found"), incidentId);
+      return;
+   }
+
+   // Get source object for context
+   shared_ptr<NetObj> sourceObject = FindObjectById(incident->getSourceObjectId());
+
+   // Build the analysis prompt
+   std::string prompt = BuildIncidentAnalysisPrompt(incidentId, depth, customPrompt.cstr());
+
+   // Create chat and execute analysis
+   Chat chat(sourceObject.get(), nullptr, 0, s_systemPromptBackground);
+   char *response = chat.sendRequest(prompt.c_str(), 32);
+
+   if (response != nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("AI analysis completed for incident [%u], response length=%d"),
+         incidentId, static_cast<int>(strlen(response)));
+
+      // Post analysis as incident comment
+      TCHAR *commentText = WideStringFromUTF8String(response);
+
+      // Prepend AI analysis header
+      StringBuffer comment;
+      comment.append(_T("[AI Analysis Report]\n\n"));
+      comment.append(commentText);
+      MemFree(commentText);
+
+      uint32_t rcc = AddIncidentComment(incidentId, comment.cstr(), 0, nullptr);
+      if (rcc != RCC_SUCCESS)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to add AI analysis comment to incident [%u], rcc=%u"),
+            incidentId, rcc);
+      }
+
+      // Auto-assign if enabled
+      if (autoAssign)
+      {
+         // Query AI for assignee suggestion
+         json_t *args = json_object();
+         json_object_set_new(args, "incident_id", json_integer(incidentId));
+         std::string suggestion = CallGlobalAIAssistantFunction("suggest-incident-assignee", args, 0);
+         json_decref(args);
+
+         // Parse the suggestion response
+         json_error_t error;
+         json_t *suggestionJson = json_loads(suggestion.c_str(), 0, &error);
+         if (suggestionJson != nullptr)
+         {
+            uint32_t suggestedUserId = json_object_get_uint32(suggestionJson, "user_id", 0);
+            if (suggestedUserId != 0)
+            {
+               rcc = AssignIncident(incidentId, suggestedUserId, 0);
+               if (rcc == RCC_SUCCESS)
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 4, _T("AI auto-assigned incident [%u] to user [%u]"),
+                     incidentId, suggestedUserId);
+               }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to auto-assign incident [%u] to user [%u], rcc=%u"),
+                     incidentId, suggestedUserId, rcc);
+               }
+            }
+            json_decref(suggestionJson);
+         }
+      }
+
+      MemFree(response);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("AI analysis for incident [%u] did not produce a response"), incidentId);
+   }
+}
+
+/**
+ * Spawn background AI analysis for an incident
+ */
+void NXCORE_EXPORTABLE SpawnIncidentAIAnalysis(uint32_t incidentId, int depth, bool autoAssign, const TCHAR *customPrompt)
+{
+   if (s_aiTaskThreadPool == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot spawn incident AI analysis: AI task thread pool not initialized"));
+      return;
+   }
+
+   // Capture custom prompt as String for the lambda
+   String prompt = (customPrompt != nullptr) ? customPrompt : _T("");
+
+   ThreadPoolExecute(s_aiTaskThreadPool,
+      [incidentId, depth, autoAssign, prompt] () -> void
+      {
+         IncidentAIAnalysisTask(incidentId, depth, autoAssign, prompt);
+      });
+
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Spawned AI analysis task for incident [%u]"), incidentId);
 }
 
 /**

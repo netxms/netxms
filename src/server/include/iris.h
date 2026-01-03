@@ -309,4 +309,13 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByNameOrId(const char *name, int 
  */
 time_t NXCORE_EXPORTABLE ParseTimestamp(const char *ts);
 
+/**
+ * Spawn background AI analysis for an incident
+ * @param incidentId ID of the incident to analyze
+ * @param depth Analysis depth: 0=quick, 1=standard, 2=thorough
+ * @param autoAssign If true, automatically assign incident based on AI suggestion
+ * @param customPrompt Optional custom instructions for analysis (can be nullptr)
+ */
+void NXCORE_EXPORTABLE SpawnIncidentAIAnalysis(uint32_t incidentId, int depth, bool autoAssign, const TCHAR *customPrompt);
+
 #endif

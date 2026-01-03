@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,7 +23,9 @@
 #include "aitools.h"
 #include <netxms-version.h>
 
+std::string F_AddIncidentComment(json_t *arguments, uint32_t userId);
 std::string F_AlarmList(json_t *arguments, uint32_t userId);
+std::string F_AssignIncident(json_t *arguments, uint32_t userId);
 std::string F_ClearNotificationChannelQueue(json_t *arguments, uint32_t userId);
 std::string F_CreateMetric(json_t *arguments, uint32_t userId);
 std::string F_EndMaintenance(json_t *arguments, uint32_t userId);
@@ -33,6 +35,13 @@ std::string F_GetEventProcessingActions(json_t *arguments, uint32_t userId);
 std::string F_GetEventProcessingPolicy(json_t *arguments, uint32_t userId);
 std::string F_GetEventTemplate(json_t *arguments, uint32_t userId);
 std::string F_GetHistoricalData(json_t *arguments, uint32_t userId);
+std::string F_GetIncidentDetails(json_t *arguments, uint32_t userId);
+std::string F_GetIncidentHistory(json_t *arguments, uint32_t userId);
+std::string F_GetIncidentRelatedEvents(json_t *arguments, uint32_t userId);
+std::string F_GetIncidentTopologyContext(json_t *arguments, uint32_t userId);
+std::string F_GetOpenIncidents(json_t *arguments, uint32_t userId);
+std::string F_LinkAlarmToIncident(json_t *arguments, uint32_t userId);
+std::string F_LinkAlarmsToIncident(json_t *arguments, uint32_t userId);
 std::string F_GetMetrics(json_t *arguments, uint32_t userId);
 std::string F_GetNodeHardwareComponents(json_t *arguments, uint32_t userId);
 std::string F_GetNodeInterfaces(json_t *arguments, uint32_t userId);
@@ -47,6 +56,7 @@ std::string F_SetObjectAIData(json_t *arguments, uint32_t userId);
 std::string F_SNMPWalk(json_t *arguments, uint32_t userId);
 std::string F_SNMPRead(json_t *arguments, uint32_t userId);
 std::string F_StartMaintenance(json_t *arguments, uint32_t userId);
+std::string F_SuggestIncidentAssignee(json_t *arguments, uint32_t userId);
 
 /**
  * Module metadata
@@ -289,6 +299,91 @@ static void CreateAssistantSkillList()
                { "object", "name or ID of an object (mandatory)" }
             },
             F_EndMaintenance)
+      }
+   );
+
+   RegisterAIAssistantSkill(
+      "incident-analysis",
+      "Provides comprehensive incident management and analysis capabilities for NetXMS. Use this skill to investigate incidents, analyze root causes, correlate related alarms, review historical incidents, assess topology impact, and manage incident lifecycle including comments and assignments.",
+      "@incident-analysis.md",
+      {
+         AssistantFunction(
+            "get-incident-details",
+            "Get full details of an incident including linked alarms, source object, comments, and state information.",
+            {
+               { "incident_id", "ID of the incident (mandatory)" }
+            },
+            F_GetIncidentDetails),
+         AssistantFunction(
+            "get-incident-related-events",
+            "Get events related to an incident within a time window around its creation for correlation analysis.",
+            {
+               { "incident_id", "ID of the incident (mandatory)" },
+               { "time_window", "Time window in seconds before and after incident creation (default: 3600)" }
+            },
+            F_GetIncidentRelatedEvents),
+         AssistantFunction(
+            "get-incident-history",
+            "Get historical incidents for a specific object to identify recurring issues and patterns.",
+            {
+               { "object", "Name or ID of the object to get incident history for (mandatory)" },
+               { "max_count", "Maximum number of historical incidents to return (default: 20)" }
+            },
+            F_GetIncidentHistory),
+         AssistantFunction(
+            "get-incident-topology-context",
+            "Get topology context for an incident including upstream and downstream objects with their current status.",
+            {
+               { "incident_id", "ID of the incident (mandatory)" }
+            },
+            F_GetIncidentTopologyContext),
+         AssistantFunction(
+            "add-incident-comment",
+            "Add a comment to an incident for documenting analysis findings, updates, or notes.",
+            {
+               { "incident_id", "ID of the incident (mandatory)" },
+               { "text", "Comment text to add (mandatory)" }
+            },
+            F_AddIncidentComment),
+         AssistantFunction(
+            "link-alarm-to-incident",
+            "Link a single alarm to an incident. Alarms can only be linked to one incident at a time.",
+            {
+               { "incident_id", "ID of the incident (mandatory)" },
+               { "alarm_id", "ID of the alarm to link (mandatory)" }
+            },
+            F_LinkAlarmToIncident),
+         AssistantFunction(
+            "link-alarms-to-incident",
+            "Link multiple alarms to an incident in a single operation.",
+            {
+               { "incident_id", "ID of the incident (mandatory)" },
+               { "alarm_ids", "JSON array of alarm IDs to link (mandatory)" }
+            },
+            F_LinkAlarmsToIncident),
+         AssistantFunction(
+            "assign-incident",
+            "Assign an incident to a specific user by user ID or username.",
+            {
+               { "incident_id", "ID of the incident (mandatory)" },
+               { "user_id", "ID of the user to assign to (provide either user_id or user_name)" },
+               { "user_name", "Username to assign to (provide either user_id or user_name)" }
+            },
+            F_AssignIncident),
+         AssistantFunction(
+            "suggest-incident-assignee",
+            "Get AI suggestion for incident assignment based on responsible users configured on the source object.",
+            {
+               { "incident_id", "ID of the incident (mandatory)" }
+            },
+            F_SuggestIncidentAssignee),
+         AssistantFunction(
+            "get-open-incidents",
+            "Get all open (not closed) incidents for a specific object. Returns incidents in states: Open, In Progress, Blocked, or Resolved.",
+            {
+               { "object", "Name or ID of the object to get open incidents for (mandatory)" }
+            },
+            F_GetOpenIncidents)
       }
    );
 }

@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2022-2025 Raden Solutions
+** Copyright (C) 2022-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,25 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 #include <netxms-xml.h>
+
+/**
+ * Upgrade from 60.16 to 60.17
+ */
+static bool H_UpgradeFromV16()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE event_policy ADD incident_ai_depth integer\n")
+      _T("ALTER TABLE event_policy ADD incident_ai_auto_assign char(1)\n")
+      _T("ALTER TABLE event_policy ADD incident_ai_prompt varchar(2000)\n")
+      _T("UPDATE event_policy SET incident_ai_depth=0,incident_ai_auto_assign='0'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("event_policy"), _T("incident_ai_depth")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("event_policy"), _T("incident_ai_auto_assign")));
+
+   CHK_EXEC(SetMinorSchemaVersion(17));
+   return true;
+}
 
 /**
  * Upgrade from 60.15 to 60.16 (Incident management)
@@ -1271,6 +1290,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 16, 60, 17, H_UpgradeFromV16 },
    { 15, 60, 16, H_UpgradeFromV15 },
    { 14, 60, 15, H_UpgradeFromV14 },
    { 13, 60, 14, H_UpgradeFromV13 },

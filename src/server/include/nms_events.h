@@ -647,6 +647,11 @@ private:
    wchar_t *m_incidentTitle;        // Title template (nullptr = use alarm message)
    wchar_t *m_incidentDescription;  // Description template
 
+   // AI incident analysis settings (used when RF_AI_ANALYZE_INCIDENT flag is set)
+   int m_incidentAIAnalysisDepth;   // 0=quick, 1=standard, 2=thorough
+   bool m_incidentAIAutoAssign;     // Auto-assign based on AI suggestion
+   wchar_t *m_incidentAIPrompt;     // Custom AI analysis instructions (optional)
+
 	wchar_t m_downtimeTag[MAX_DOWNTIME_TAG_LENGTH];
 
 	StringMap m_pstorageSetActions;
@@ -697,6 +702,11 @@ public:
 
    bool isUsingEvent(uint32_t eventCode) const { return m_events.contains(eventCode); }
    const wchar_t *getComments() const { return m_comments; }
+
+   // AI incident analysis accessors
+   int getIncidentAIAnalysisDepth() const { return m_incidentAIAnalysisDepth; }
+   bool getIncidentAIAutoAssign() const { return m_incidentAIAutoAssign; }
+   const wchar_t *getIncidentAIPrompt() const { return m_incidentAIPrompt; }
 };
 
 /**

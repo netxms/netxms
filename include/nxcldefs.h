@@ -1220,6 +1220,7 @@ enum AggregationFunction
 #define RF_END_DOWNTIME          0x020000
 #define RF_REQUEST_AI_COMMENT    0x040000
 #define RF_CREATE_INCIDENT       0x080000
+#define RF_AI_ANALYZE_INCIDENT   0x100000
 
 /**
  * Network map types

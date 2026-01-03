@@ -1611,6 +1611,9 @@ typedef struct
 #define VID_AI_QUESTION_OPTIONS     ((uint32_t)898)
 #define VID_TERMINAL_TYPE           ((uint32_t)899)
 #define VID_OUTPUT                  ((uint32_t)900)
+#define VID_INCIDENT_AI_DEPTH       ((uint32_t)901)
+#define VID_INCIDENT_AI_AUTO_ASSIGN ((uint32_t)902)
+#define VID_INCIDENT_AI_PROMPT      ((uint32_t)903)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

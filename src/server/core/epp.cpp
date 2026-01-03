@@ -23,6 +23,7 @@
 #include "nxcore.h"
 #include <nms_incident.h>
 #include <nxcore_ps.h>
+#include <iris.h>
 
 #define DEBUG_TAG _T("event.policy")
 
@@ -56,6 +57,9 @@ EPRule::EPRule(uint32_t id) : m_timeFrames(0, 16, Ownership::True), m_actions(0,
    m_incidentDelay = 0;
    m_incidentTitle = nullptr;
    m_incidentDescription = nullptr;
+   m_incidentAIAnalysisDepth = 0;
+   m_incidentAIAutoAssign = false;
+   m_incidentAIPrompt = nullptr;
 }
 
 /**
@@ -259,6 +263,11 @@ EPRule::EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5) :
    m_incidentDelay = config.getSubEntryValueAsUInt(_T("incidentDelay"));
    m_incidentTitle = MemCopyString(config.getSubEntryValue(_T("incidentTitle")));
    m_incidentDescription = MemCopyString(config.getSubEntryValue(_T("incidentDescription")));
+
+   // AI incident analysis settings
+   m_incidentAIAnalysisDepth = config.getSubEntryValueAsInt(_T("incidentAIAnalysisDepth"));
+   m_incidentAIAutoAssign = config.getSubEntryValueAsBoolean(_T("incidentAIAutoAssign"), false);
+   m_incidentAIPrompt = MemCopyString(config.getSubEntryValue(_T("incidentAIPrompt")));
 }
 
 /**
@@ -516,6 +525,12 @@ EPRule::EPRule(json_t *json, ImportContext *context) : m_timeFrames(0, 16, Owner
    m_incidentTitle = incidentTitle.isEmpty() ? nullptr : MemCopyString(incidentTitle);
    String incidentDescription = json_object_get_string(json, "incidentDescription", nullptr);
    m_incidentDescription = incidentDescription.isEmpty() ? nullptr : MemCopyString(incidentDescription);
+
+   // AI incident analysis settings
+   m_incidentAIAnalysisDepth = json_object_get_int32(json, "incidentAIAnalysisDepth", 0);
+   m_incidentAIAutoAssign = json_object_get_boolean(json, "incidentAIAutoAssign", false);
+   String incidentAIPrompt = json_object_get_string(json, "incidentAIPrompt", nullptr);
+   m_incidentAIPrompt = incidentAIPrompt.isEmpty() ? nullptr : MemCopyString(incidentAIPrompt);
 }
 
 /**
@@ -523,7 +538,8 @@ EPRule::EPRule(json_t *json, ImportContext *context) : m_timeFrames(0, 16, Owner
  * Assuming the following field order:
  * rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,
  * alarm_timeout,alarm_timeout_event,rca_script_name,alarm_impact,action_script,
- * downtime_tag,ai_instructions,incident_delay,incident_title,incident_description
+ * downtime_tag,ai_instructions,incident_delay,incident_title,incident_description,
+ * incident_ai_depth,incident_ai_auto_assign,incident_ai_prompt
  */
 EPRule::EPRule(DB_RESULT hResult, int row) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
 {
@@ -569,6 +585,9 @@ EPRule::EPRule(DB_RESULT hResult, int row) : m_timeFrames(0, 16, Ownership::True
    m_incidentDelay = DBGetFieldULong(hResult, row, 15);
    m_incidentTitle = DBGetField(hResult, row, 16, nullptr, 0);
    m_incidentDescription = DBGetField(hResult, row, 17, nullptr, 0);
+   m_incidentAIAnalysisDepth = DBGetFieldLong(hResult, row, 18);
+   m_incidentAIAutoAssign = DBGetFieldLong(hResult, row, 19) != 0;
+   m_incidentAIPrompt = DBGetField(hResult, row, 20, nullptr, 0);
 }
 
 /**
@@ -675,6 +694,10 @@ EPRule::EPRule(const NXCPMessage& msg) : m_timeFrames(0, 16, Ownership::True), m
    m_incidentDelay = msg.getFieldAsUInt32(VID_INCIDENT_DELAY);
    m_incidentTitle = msg.getFieldAsString(VID_INCIDENT_TITLE);
    m_incidentDescription = msg.getFieldAsString(VID_INCIDENT_DESCRIPTION);
+
+   m_incidentAIAnalysisDepth = msg.getFieldAsInt32(VID_INCIDENT_AI_DEPTH);
+   m_incidentAIAutoAssign = msg.getFieldAsBoolean(VID_INCIDENT_AI_AUTO_ASSIGN);
+   m_incidentAIPrompt = msg.getFieldAsString(VID_INCIDENT_AI_PROMPT);
 }
 
 /**
@@ -694,6 +717,7 @@ EPRule::~EPRule()
    MemFree(m_aiAgentInstructions);
    MemFree(m_incidentTitle);
    MemFree(m_incidentDescription);
+   MemFree(m_incidentAIPrompt);
 }
 
 
@@ -1151,8 +1175,15 @@ void EPRule::createIncidentFromAlarm(Event *event, uint32_t alarmId) const
          ? event->expandText(m_incidentDescription)
          : String();
 
-      CreateIncident(event->getSourceId(), title.cstr(),
-         description.isEmpty() ? nullptr : description.cstr(), alarmId, 0, nullptr);
+      uint32_t incidentId = 0;
+      uint32_t rcc = CreateIncident(event->getSourceId(), title.cstr(),
+         description.isEmpty() ? nullptr : description.cstr(), alarmId, 0, &incidentId);
+
+      // Trigger AI analysis if enabled and incident was created successfully
+      if ((rcc == RCC_SUCCESS) && (incidentId != 0) && (m_flags & RF_AI_ANALYZE_INCIDENT))
+      {
+         SpawnIncidentAIAnalysis(incidentId, m_incidentAIAnalysisDepth, m_incidentAIAutoAssign, m_incidentAIPrompt);
+      }
    }
    else
    {
@@ -1171,6 +1202,18 @@ void EPRule::createIncidentFromAlarm(Event *event, uint32_t alarmId) const
          String desc = event->expandText(m_incidentDescription);
          persistentData.append(_T(";description="));
          persistentData.append(desc);
+      }
+
+      // Add AI analysis parameters if enabled
+      if (m_flags & RF_AI_ANALYZE_INCIDENT)
+      {
+         persistentData.appendFormattedString(_T(";ai_analyze=1;ai_depth=%d;ai_assign=%d"),
+            m_incidentAIAnalysisDepth, m_incidentAIAutoAssign ? 1 : 0);
+         if (m_incidentAIPrompt != nullptr && m_incidentAIPrompt[0] != 0)
+         {
+            persistentData.append(_T(";ai_prompt="));
+            persistentData.append(m_incidentAIPrompt);
+         }
       }
 
       TCHAR comments[256];
@@ -1455,8 +1498,9 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
    // General attributes
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_impact,")
                                   _T("alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,rca_script_name,")
-                                  _T("action_script,downtime_tag,ai_instructions,incident_delay,incident_title,incident_description) ")
-                                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+                                  _T("action_script,downtime_tag,ai_instructions,incident_delay,incident_title,incident_description,")
+                                  _T("incident_ai_depth,incident_ai_auto_assign,incident_ai_prompt) ")
+                                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -1477,6 +1521,9 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
       DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_incidentDelay);
       DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_incidentTitle, DB_BIND_STATIC, 255);
       DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_incidentDescription, DB_BIND_STATIC, 2000);
+      DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_incidentAIAnalysisDepth);
+      DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_incidentAIAutoAssign ? 1 : 0);
+      DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_incidentAIPrompt, DB_BIND_STATIC, 2000);
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -1712,6 +1759,9 @@ void EPRule::fillMessage(NXCPMessage *msg) const
    msg->setField(VID_INCIDENT_DELAY, m_incidentDelay);
    msg->setField(VID_INCIDENT_TITLE, CHECK_NULL_EX(m_incidentTitle));
    msg->setField(VID_INCIDENT_DESCRIPTION, CHECK_NULL_EX(m_incidentDescription));
+   msg->setField(VID_INCIDENT_AI_DEPTH, static_cast<int32_t>(m_incidentAIAnalysisDepth));
+   msg->setField(VID_INCIDENT_AI_AUTO_ASSIGN, m_incidentAIAutoAssign);
+   msg->setField(VID_INCIDENT_AI_PROMPT, CHECK_NULL_EX(m_incidentAIPrompt));
 }
 
 /**
@@ -1842,6 +1892,9 @@ json_t *EPRule::createExportRecord() const
    json_object_set_new(root, "incidentDelay", json_integer(m_incidentDelay));
    json_object_set_new(root, "incidentTitle", json_string_t(m_incidentTitle));
    json_object_set_new(root, "incidentDescription", json_string_t(m_incidentDescription));
+   json_object_set_new(root, "incidentAIAnalysisDepth", json_integer(m_incidentAIAnalysisDepth));
+   json_object_set_new(root, "incidentAIAutoAssign", json_boolean(m_incidentAIAutoAssign));
+   json_object_set_new(root, "incidentAIPrompt", json_string_t(m_incidentAIPrompt));
 
    return root;
 }
@@ -1925,6 +1978,8 @@ json_t *EPRule::toJson(bool assistantMode) const
       json_object_set_new(flags, "startDowntime", json_boolean((m_flags & RF_START_DOWNTIME) != 0));
       json_object_set_new(flags, "endDowntime", json_boolean((m_flags & RF_END_DOWNTIME) != 0));
       json_object_set_new(flags, "requestAIComment", json_boolean((m_flags & RF_REQUEST_AI_COMMENT) != 0));
+      json_object_set_new(flags, "createIncident", json_boolean((m_flags & RF_CREATE_INCIDENT) != 0));
+      json_object_set_new(flags, "aiAnalyzeIncident", json_boolean((m_flags & RF_AI_ANALYZE_INCIDENT) != 0));
       json_object_set_new(flags, "stopProcessing", json_boolean((m_flags & RF_STOP_PROCESSING) != 0));
       json_object_set_new(flags, "negatedEventMatch", json_boolean((m_flags & RF_NEGATED_EVENTS) != 0));
       json_object_set_new(flags, "negatedSourceMatch", json_boolean((m_flags & RF_NEGATED_SOURCE) != 0));
@@ -1967,7 +2022,8 @@ bool EventProcessingPolicy::loadFromDB()
    hResult = DBSelect(hdb, L"SELECT rule_id,rule_guid,flags,comments,alarm_message,"
                            L"alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,"
                            L"rca_script_name,alarm_impact,action_script,downtime_tag,ai_instructions,"
-                           L"incident_delay,incident_title,incident_description "
+                           L"incident_delay,incident_title,incident_description,"
+                           L"incident_ai_depth,incident_ai_auto_assign,incident_ai_prompt "
                            L"FROM event_policy ORDER BY rule_id");
    if (hResult != nullptr)
    {
