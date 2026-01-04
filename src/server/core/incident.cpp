@@ -101,13 +101,14 @@ static void NotifyClientsOnIncidentUpdate(uint32_t code, const Incident *inciden
 /**
  * Constructor from data
  */
-IncidentComment::IncidentComment(uint32_t id, uint32_t incidentId, time_t creationTime, uint32_t userId, const TCHAR *text)
+IncidentComment::IncidentComment(uint32_t id, uint32_t incidentId, time_t creationTime, uint32_t userId, const TCHAR *text, bool aiGenerated)
 {
    m_id = id;
    m_incidentId = incidentId;
    m_creationTime = creationTime;
    m_userId = userId;
    m_text = MemCopyString(text);
+   m_aiGenerated = aiGenerated;
 }
 
 /**
@@ -115,11 +116,12 @@ IncidentComment::IncidentComment(uint32_t id, uint32_t incidentId, time_t creati
  */
 IncidentComment::IncidentComment(DB_RESULT hResult, int row)
 {
-   m_id = DBGetFieldULong(hResult, row, 0);
-   m_incidentId = DBGetFieldULong(hResult, row, 1);
-   m_creationTime = static_cast<time_t>(DBGetFieldInt64(hResult, row, 2));
-   m_userId = DBGetFieldULong(hResult, row, 3);
+   m_id = DBGetFieldUInt32(hResult, row, 0);
+   m_incidentId = DBGetFieldUInt32(hResult, row, 1);
+   m_creationTime = DBGetFieldTime(hResult, row, 2);
+   m_userId = DBGetFieldUInt32(hResult, row, 3);
    m_text = DBGetField(hResult, row, 4, nullptr, 0);
+   m_aiGenerated = DBGetFieldInt32(hResult, row, 5) != 0;
 }
 
 /**
@@ -140,6 +142,7 @@ void IncidentComment::fillMessage(NXCPMessage *msg, uint32_t baseId) const
    msg->setFieldFromTime(baseId + 2, m_creationTime);
    msg->setField(baseId + 3, m_userId);
    msg->setField(baseId + 4, m_text);
+   msg->setField(baseId + 5, m_aiGenerated);
 }
 
 /**
@@ -149,7 +152,7 @@ bool IncidentComment::saveToDatabase() const
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   static const wchar_t *columns[] = { L"incident_id", L"creation_time", L"user_id", L"comment_text", nullptr };
+   static const wchar_t *columns[] = { L"incident_id", L"creation_time", L"user_id", L"comment_text", L"ai_generated", nullptr };
    DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"incident_comments", L"id", m_id, columns);
    if (hStmt == nullptr)
    {
@@ -161,7 +164,8 @@ bool IncidentComment::saveToDatabase() const
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_creationTime));
    DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_userId);
    DBBind(hStmt, 4, DB_SQLTYPE_TEXT, m_text, DB_BIND_STATIC);
-   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_aiGenerated ? L"1" : L"0", DB_BIND_STATIC);
+   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBExecute(hStmt);
    DBFreeStatement(hStmt);
@@ -631,7 +635,7 @@ static void IncidentCommentsToMessage(uint32_t incidentId, NXCPMessage *msg)
 
    wchar_t query[256];
    nx_swprintf(query, 256,
-      L"SELECT id,incident_id,creation_time,user_id,comment_text FROM incident_comments WHERE incident_id=%u ORDER BY creation_time",
+      L"SELECT id,incident_id,creation_time,user_id,comment_text,ai_generated FROM incident_comments WHERE incident_id=%u ORDER BY creation_time",
       incidentId);
 
    DB_RESULT hResult = DBSelect(hdb, query);
@@ -874,7 +878,7 @@ uint32_t NXCORE_EXPORTABLE GetIncident(uint32_t incidentId, NXCPMessage *msg)
    }
 
    DBConnectionPoolReleaseConnection(hdb);
-   return RCC_INCIDENT_NOT_FOUND;
+   return RCC_INVALID_INCIDENT_ID;
 }
 
 /**
@@ -909,7 +913,7 @@ uint32_t NXCORE_EXPORTABLE ChangeIncidentState(uint32_t incidentId, int newState
    s_incidents.unlock();
 
    if (incident == nullptr)
-      return RCC_INCIDENT_NOT_FOUND;
+      return RCC_INVALID_INCIDENT_ID;
 
    return incident->changeState(newState, userId, comment);
 }
@@ -924,7 +928,7 @@ uint32_t NXCORE_EXPORTABLE AssignIncident(uint32_t incidentId, uint32_t userId, 
    s_incidents.unlock();
 
    if (incident == nullptr)
-      return RCC_INCIDENT_NOT_FOUND;
+      return RCC_INVALID_INCIDENT_ID;
 
    return incident->assign(userId, assignedBy);
 }
@@ -939,7 +943,7 @@ uint32_t NXCORE_EXPORTABLE ResolveIncident(uint32_t incidentId, uint32_t userId)
    s_incidents.unlock();
 
    if (incident == nullptr)
-      return RCC_INCIDENT_NOT_FOUND;
+      return RCC_INVALID_INCIDENT_ID;
 
    return incident->changeState(INCIDENT_STATE_RESOLVED, userId);
 }
@@ -954,7 +958,7 @@ uint32_t NXCORE_EXPORTABLE CloseIncident(uint32_t incidentId, uint32_t userId)
    s_incidents.unlock();
 
    if (incident == nullptr)
-      return RCC_INCIDENT_NOT_FOUND;
+      return RCC_INVALID_INCIDENT_ID;
 
    return incident->changeState(INCIDENT_STATE_CLOSED, userId);
 }
@@ -969,7 +973,7 @@ uint32_t NXCORE_EXPORTABLE UpdateIncident(uint32_t incidentId, const TCHAR *titl
    s_incidents.unlock();
 
    if (incident == nullptr)
-      return RCC_INCIDENT_NOT_FOUND;
+      return RCC_INVALID_INCIDENT_ID;
 
    return incident->update(title, userId);
 }
@@ -984,7 +988,7 @@ uint32_t NXCORE_EXPORTABLE LinkAlarmToIncident(uint32_t incidentId, uint32_t ala
    s_incidents.unlock();
 
    if (incident == nullptr)
-      return RCC_INCIDENT_NOT_FOUND;
+      return RCC_INVALID_INCIDENT_ID;
 
    return incident->linkAlarm(alarmId, userId);
 }
@@ -999,7 +1003,7 @@ uint32_t NXCORE_EXPORTABLE UnlinkAlarmFromIncident(uint32_t incidentId, uint32_t
    s_incidents.unlock();
 
    if (incident == nullptr)
-      return RCC_INCIDENT_NOT_FOUND;
+      return RCC_INVALID_INCIDENT_ID;
 
    return incident->unlinkAlarm(alarmId, userId);
 }
@@ -1007,20 +1011,20 @@ uint32_t NXCORE_EXPORTABLE UnlinkAlarmFromIncident(uint32_t incidentId, uint32_t
 /**
  * Add comment to incident
  */
-uint32_t NXCORE_EXPORTABLE AddIncidentComment(uint32_t incidentId, const TCHAR *text, uint32_t userId, uint32_t *commentId)
+uint32_t NXCORE_EXPORTABLE AddIncidentComment(uint32_t incidentId, const TCHAR *text, uint32_t userId, uint32_t *commentId, bool aiGenerated)
 {
    s_incidents.lock();
    shared_ptr<Incident> incident = s_incidents.get(incidentId);
    s_incidents.unlock();
 
    if (incident == nullptr)
-      return RCC_INCIDENT_NOT_FOUND;
+      return RCC_INVALID_INCIDENT_ID;
 
    if (incident->getState() == INCIDENT_STATE_CLOSED)
       return RCC_INCIDENT_CLOSED;
 
    uint32_t id = CreateUniqueId(IDG_INCIDENT_COMMENT);
-   IncidentComment comment(id, incidentId, time(nullptr), userId, text);
+   IncidentComment comment(id, incidentId, time(nullptr), userId, text, aiGenerated);
 
    if (!comment.saveToDatabase())
       return RCC_DB_FAILURE;

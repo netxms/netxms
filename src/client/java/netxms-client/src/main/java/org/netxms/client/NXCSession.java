@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15393,6 +15393,23 @@ public class NXCSession
    }
 
    /**
+    * Create new AI assistant chat linked to specific incident.
+    *
+    * @param incidentId incident ID or 0 for no link
+    * @return chat ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public long createAiAssistantChat(long incidentId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_AI_ASSISTANT_CHAT);
+      msg.setFieldUInt32(NXCPCodes.VID_INCIDENT_ID, incidentId);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getFieldAsInt64(NXCPCodes.VID_CHAT_ID);
+   }
+
+   /**
     * Create new AI assistant chat.
     *
     * @return chat ID
@@ -15401,10 +15418,7 @@ public class NXCSession
     */
    public long createAiAssistantChat() throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_AI_ASSISTANT_CHAT);
-      sendMessage(msg);
-      NXCPMessage response = waitForRCC(msg.getMessageId());
-      return response.getFieldAsInt64(NXCPCodes.VID_CHAT_ID);
+      return createAiAssistantChat(0);
    }
 
    /**

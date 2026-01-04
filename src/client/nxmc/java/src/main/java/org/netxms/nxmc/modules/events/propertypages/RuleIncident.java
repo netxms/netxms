@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,10 +27,11 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.events.EventProcessingPolicyRule;
+import org.netxms.nxmc.base.widgets.LabeledCombo;
+import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.widgets.RuleEditor;
-import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -42,10 +43,15 @@ public class RuleIncident extends RuleBasePropertyPage
    private final I18n i18n = LocalizationHelper.getI18n(RuleIncident.class);
 
    private Button checkCreateIncident;
+   private Button checkAIAnalysis;
    private Composite incidentOptionsGroup;
-   private LabeledText incidentDelay;
+   private LabeledSpinner incidentDelay;
    private LabeledText incidentTitle;
    private LabeledText incidentDescription;
+   private Composite incidentAIAnalysisGroup;
+   private LabeledCombo incidentAIAnalysysDepth;
+   private Button incidentAIAutoAssign;
+   private LabeledText insidentAIPrompt;
 
    /**
     * Create property page.
@@ -76,8 +82,23 @@ public class RuleIncident extends RuleBasePropertyPage
          public void widgetSelected(SelectionEvent e)
          {
             boolean enabled = checkCreateIncident.getSelection();
+            checkAIAnalysis.setEnabled(enabled);
             incidentOptionsGroup.setVisible(enabled);
             ((GridData)incidentOptionsGroup.getLayoutData()).exclude = !enabled;
+            dialogArea.layout(true, true);
+         }
+      });
+
+      checkAIAnalysis = new Button(dialogArea, SWT.CHECK);
+      checkAIAnalysis.setText(i18n.tr("Perform AI-based incident analysis"));
+      checkAIAnalysis.setSelection((rule.getFlags() & EventProcessingPolicyRule.AI_ANALYZE_INCIDENT) != 0);
+      checkAIAnalysis.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            boolean enabled = checkAIAnalysis.getSelection() && checkCreateIncident.getSelection();
+            incidentAIAnalysisGroup.setVisible(enabled);
+            ((GridData)incidentAIAnalysisGroup.getLayoutData()).exclude = !enabled;
             dialogArea.layout(true, true);
          }
       });
@@ -96,13 +117,10 @@ public class RuleIncident extends RuleBasePropertyPage
       layout.marginWidth = 0;
       incidentOptionsGroup.setLayout(layout);
 
-      incidentDelay = new LabeledText(incidentOptionsGroup, SWT.NONE);
+      incidentDelay = new LabeledSpinner(incidentOptionsGroup, SWT.NONE);
       incidentDelay.setLabel(i18n.tr("Creation delay (seconds, 0 for immediate)"));
-      incidentDelay.getTextControl().setTextLimit(5);
-      incidentDelay.setText(Integer.toString(rule.getIncidentDelay()));
-      gd = new GridData();
-      gd.widthHint = 100;
-      incidentDelay.setLayoutData(gd);
+      incidentDelay.setRange(0, 99999);
+      incidentDelay.setSelection(rule.getIncidentDelay());
 
       incidentTitle = new LabeledText(incidentOptionsGroup, SWT.NONE);
       incidentTitle.setLabel(i18n.tr("Title (leave empty to use alarm message)"));
@@ -121,6 +139,41 @@ public class RuleIncident extends RuleBasePropertyPage
       gd.heightHint = 100;
       incidentDescription.setLayoutData(gd);
 
+      incidentAIAnalysisGroup = new Composite(dialogArea, SWT.NONE);
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.TOP;
+      gd.exclude = (rule.getFlags() & EventProcessingPolicyRule.CREATE_INCIDENT) == 0;
+      incidentAIAnalysisGroup.setLayoutData(gd);
+      incidentAIAnalysisGroup.setVisible(
+            (rule.getFlags() & (EventProcessingPolicyRule.CREATE_INCIDENT | EventProcessingPolicyRule.AI_ANALYZE_INCIDENT)) == (EventProcessingPolicyRule.CREATE_INCIDENT | EventProcessingPolicyRule.AI_ANALYZE_INCIDENT));
+      layout = new GridLayout();
+      layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      incidentAIAnalysisGroup.setLayout(layout);
+
+      incidentAIAnalysysDepth = new LabeledCombo(incidentAIAnalysisGroup, SWT.NONE);
+      incidentAIAnalysysDepth.setLabel(i18n.tr("AI Analysis Depth"));
+      incidentAIAnalysysDepth.add(i18n.tr("Quick"));
+      incidentAIAnalysysDepth.add(i18n.tr("Standard"));
+      incidentAIAnalysysDepth.add(i18n.tr("Deep"));
+      incidentAIAnalysysDepth.select(rule.getIncidentAIAnalysisDepth());
+      
+      incidentAIAutoAssign = new Button(incidentAIAnalysisGroup, SWT.CHECK);
+      incidentAIAutoAssign.setText(i18n.tr("Automatically assign incident to suggested owner"));
+      incidentAIAutoAssign.setSelection((rule.getFlags() & EventProcessingPolicyRule.AI_AUTO_ASSIGN) != 0);
+
+      insidentAIPrompt = new LabeledText(incidentAIAnalysisGroup, SWT.NONE, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL);
+      insidentAIPrompt.setLabel(i18n.tr("AI Prompt for Analysis (optional)"));
+      insidentAIPrompt.setText(rule.getIncidentAIPrompt());
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.heightHint = 100;
+      insidentAIPrompt.setLayoutData(gd);
+
       return dialogArea;
    }
 
@@ -132,26 +185,23 @@ public class RuleIncident extends RuleBasePropertyPage
    {
       if (checkCreateIncident.getSelection())
       {
-         try
-         {
-            int delay = Integer.parseInt(incidentDelay.getText().trim());
-            if (delay < 0)
-            {
-               MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"),
-                  i18n.tr("Please enter valid delay value (must be 0 or positive integer)"));
-               return false;
-            }
-            rule.setIncidentDelay(delay);
-         }
-         catch(NumberFormatException e)
-         {
-            MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"),
-               i18n.tr("Please enter valid delay value (must be 0 or positive integer)"));
-            return false;
-         }
+         rule.setIncidentDelay(incidentDelay.getSelection());
          rule.setIncidentTitle(incidentTitle.getText().trim());
          rule.setIncidentDescription(incidentDescription.getText());
          rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.CREATE_INCIDENT);
+         if (checkAIAnalysis.getSelection())
+         {
+            rule.setIncidentAIAnalysisDepth(incidentAIAnalysysDepth.getSelectionIndex());
+            rule.setIncidentAIPrompt(insidentAIPrompt.getText());
+            if (incidentAIAutoAssign.getSelection())
+               rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.AI_ANALYZE_INCIDENT | EventProcessingPolicyRule.AI_AUTO_ASSIGN);
+            else
+               rule.setFlags((rule.getFlags() & ~EventProcessingPolicyRule.AI_AUTO_ASSIGN) | EventProcessingPolicyRule.AI_ANALYZE_INCIDENT);
+         }
+         else
+         {
+            rule.setFlags(rule.getFlags() & ~(EventProcessingPolicyRule.AI_ANALYZE_INCIDENT | EventProcessingPolicyRule.AI_AUTO_ASSIGN));
+         }
       }
       else
       {

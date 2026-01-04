@@ -667,6 +667,7 @@ static VolatileCounter64 s_nextQuestionId = 0;
 Chat::Chat(NetObj *context, json_t *eventData, uint32_t userId, const char *systemPrompt)
 {
    m_id = InterlockedIncrement(&s_nextChatId);
+   m_boundIncidentId = 0;
    m_pendingQuestion = nullptr;
 
    initializeFunctions();
@@ -709,6 +710,63 @@ Chat::~Chat()
    json_decref(m_messages);
    json_decref(m_functionDeclarations);
    delete m_pendingQuestion;
+}
+
+/**
+ * Bind chat to an incident
+ */
+void Chat::bindToIncident(uint32_t incidentId)
+{
+   LockGuard lockGuard(m_mutex);
+
+   if (m_boundIncidentId != 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Chat [%u] already bound to incident [%u]"), m_id, m_boundIncidentId);
+      return;
+   }
+
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   if (incident == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Chat [%u]: cannot bind to incident [%u] - incident not found"), m_id, incidentId);
+      return;
+   }
+
+   m_boundIncidentId = incidentId;
+
+   // Add incident context as system message
+   addMessage("system", "This chat session is bound to an incident for discussion and analysis. Here is the incident context:");
+   json_t *json = incident->toJson();
+   char *jsonText = json_dumps(json, 0);
+   json_decref(json);
+   addMessage("system", jsonText);
+   MemFree(jsonText);
+
+   // Add source object context if available
+   shared_ptr<NetObj> sourceObject = FindObjectById(incident->getSourceObjectId());
+   if (sourceObject != nullptr)
+   {
+      addMessage("system", "The incident source object context:");
+      json_t *objJson = sourceObject->toJson();
+      char *objJsonText = json_dumps(objJson, 0);
+      json_decref(objJson);
+      addMessage("system", objJsonText);
+      MemFree(objJsonText);
+   }
+
+   // Add incident-specific guidance
+   char guidance[512];
+   snprintf(guidance, sizeof(guidance),
+      "You are discussing incident #%u. Help the user understand the incident, analyze linked alarms, "
+      "suggest remediation steps, and answer questions about the incident context. "
+      "You can use incident-related functions to get more details or take actions on this incident.",
+      incidentId);
+   addMessage("system", guidance);
+
+   // Auto-load incident-analysis skill
+   loadSkill("incident-analysis");
+
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Chat [%u] bound to incident [%u]"), m_id, incidentId);
 }
 
 /**
@@ -1171,15 +1229,33 @@ void ProcessEventWithAIAssistant(Event *event, const shared_ptr<NetObj>& object,
 /**
  * Create new chat
  */
-shared_ptr<Chat> NXCORE_EXPORTABLE CreateAIAssistantChat(uint32_t userId, uint32_t *rcc)
+shared_ptr<Chat> NXCORE_EXPORTABLE CreateAIAssistantChat(uint32_t userId, uint32_t incidentId, uint32_t *rcc)
 {
+   // Validate incident if specified
+   if (incidentId != 0)
+   {
+      shared_ptr<Incident> incident = FindIncidentById(incidentId);
+      if (incident == nullptr)
+      {
+         *rcc = RCC_INVALID_INCIDENT_ID;
+         return nullptr;
+      }
+   }
+
    shared_ptr<Chat> chat = make_shared<Chat>(nullptr, nullptr, userId, nullptr);
+
+   // Bind to incident if specified
+   if (incidentId != 0)
+   {
+      chat->bindToIncident(incidentId);
+   }
 
    s_chatsLock.lock();
    s_chats.emplace(chat->getId(), chat);
    s_chatsLock.unlock();
 
-   nxlog_debug_tag(DEBUG_TAG, 5, L"New chat [%u] created for user [%u]", chat->getId(), userId);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("New chat [%u] created for user [%u], bound to incident [%u]"),
+      chat->getId(), userId, incidentId);
    *rcc = RCC_SUCCESS;
    return chat;
 }
@@ -1434,7 +1510,7 @@ static void IncidentAIAnalysisTask(uint32_t incidentId, int depth, bool autoAssi
       comment.append(commentText);
       MemFree(commentText);
 
-      uint32_t rcc = AddIncidentComment(incidentId, comment.cstr(), 0, nullptr);
+      uint32_t rcc = AddIncidentComment(incidentId, comment.cstr(), 0, nullptr, true);
       if (rcc != RCC_SUCCESS)
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to add AI analysis comment to incident [%u], rcc=%u"),

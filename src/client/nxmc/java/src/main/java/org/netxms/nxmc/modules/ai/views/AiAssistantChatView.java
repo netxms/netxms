@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2025 Raden Solutions
+ * Copyright (C) 2025-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,7 +56,6 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorConverter;
@@ -85,15 +84,32 @@ public class AiAssistantChatView extends View implements SessionListener
    private StringBuilder chatContent;
    private AiQuestion pendingQuestion;
    private String currentMessageId;
+   private long boundIncidentId;
 
    /**
-    * Create server console view
+    * Create AI assistant chat view
     */
    public AiAssistantChatView()
    {
-      super(LocalizationHelper.getI18n(AiAssistantChatView.class).tr("AI Assistant"), ResourceManager.getImageDescriptor("icons/tool-views/ai-assistant.png"), "tools.ai-assistant", false);
+      super(LocalizationHelper.getI18n(AiAssistantChatView.class).tr("AI Assistant"), SharedIcons.AI_ASSISTANT, "tools.ai-assistant", false);
       session = Registry.getSession();
       chatContent = new StringBuilder();
+      boundIncidentId = 0;
+      initializeHtmlTemplate();
+   }
+
+   /**
+    * Create AI assistant chat view bound to an incident
+    *
+    * @param incidentId the incident ID to bind the chat to
+    */
+   public AiAssistantChatView(long incidentId)
+   {
+      super(LocalizationHelper.getI18n(AiAssistantChatView.class).tr("AI Assistant - Incident #{0}", incidentId),
+            SharedIcons.AI_ASSISTANT, "tools.ai-assistant." + incidentId, false);
+      session = Registry.getSession();
+      chatContent = new StringBuilder();
+      boundIncidentId = incidentId;
       initializeHtmlTemplate();
    }
 
@@ -197,7 +213,7 @@ public class AiAssistantChatView extends View implements SessionListener
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            chatId = session.createAiAssistantChat();
+            chatId = session.createAiAssistantChat(boundIncidentId);
             runInUIThread(() -> chatInput.setEnabled(true));
          }
 
@@ -316,7 +332,7 @@ public class AiAssistantChatView extends View implements SessionListener
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            chatId = session.createAiAssistantChat();
+            chatId = session.createAiAssistantChat(boundIncidentId);
             runInUIThread(() -> chatInput.setEnabled(true));
          }
 

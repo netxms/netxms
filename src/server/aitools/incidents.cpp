@@ -505,7 +505,7 @@ std::string F_AddIncidentComment(json_t *arguments, uint32_t userId)
       return std::string("Access denied or source object not found");
 
    uint32_t commentId = 0;
-   uint32_t rcc = AddIncidentComment(incidentId, String(text, "utf-8"), userId, &commentId);
+   uint32_t rcc = AddIncidentComment(incidentId, String(text, "utf-8"), userId, &commentId, true);
    if (rcc != RCC_SUCCESS)
    {
       char buffer[128];
@@ -722,4 +722,147 @@ std::string F_GetOpenIncidents(json_t *arguments, uint32_t userId)
       return std::string("Object not found or access denied");
 
    return QueryObjectIncidents(object, true, 0);
+}
+
+/**
+ * Create a new incident
+ */
+std::string F_CreateIncident(json_t *arguments, uint32_t userId)
+{
+   const char *title = json_object_get_string_utf8(arguments, "title", nullptr);
+   if ((title == nullptr) || (title[0] == 0))
+      return std::string("Incident title must be provided");
+
+   const char *objectName = json_object_get_string_utf8(arguments, "source_object", nullptr);
+   if ((objectName == nullptr) || (objectName[0] == 0))
+      return std::string("Source object name or ID must be provided");
+
+   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
+   if (object == nullptr)
+      return std::string("Source object not found");
+
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
+      return std::string("Access denied - insufficient permissions to manage incidents on this object");
+
+   const char *initialComment = json_object_get_string_utf8(arguments, "initial_comment", nullptr);
+   uint32_t sourceAlarmId = json_object_get_uint32(arguments, "source_alarm_id", 0);
+
+   // Convert strings to TCHAR
+   String titleStr(title, "utf-8");
+   String commentStr = (initialComment != nullptr) ? String(initialComment, "utf-8") : String();
+
+   uint32_t incidentId = 0;
+   uint32_t rcc = CreateIncident(object->getId(), titleStr.cstr(),
+      commentStr.isEmpty() ? nullptr : commentStr.cstr(), sourceAlarmId, userId, &incidentId);
+
+   if (rcc != RCC_SUCCESS)
+   {
+      char buffer[128];
+      if (rcc == RCC_ALARM_ALREADY_IN_INCIDENT)
+         snprintf(buffer, 128, "Failed to create incident: alarm is already linked to another incident");
+      else
+         snprintf(buffer, 128, "Failed to create incident: error code %u", rcc);
+      return std::string(buffer);
+   }
+
+   json_t *result = json_object();
+   json_object_set_new(result, "success", json_true());
+   json_object_set_new(result, "incidentId", json_integer(incidentId));
+   json_object_set_new(result, "sourceObjectId", json_integer(object->getId()));
+   json_object_set_new(result, "sourceObjectName", json_string_t(object->getName()));
+   return JsonToString(result);
+}
+
+/**
+ * Create an incident from multiple alarms
+ */
+std::string F_CreateIncidentFromAlarms(json_t *arguments, uint32_t userId)
+{
+   const char *title = json_object_get_string_utf8(arguments, "title", nullptr);
+   if ((title == nullptr) || (title[0] == 0))
+      return std::string("Incident title must be provided");
+
+   json_t *alarmIds = json_object_get(arguments, "alarm_ids");
+   if ((alarmIds == nullptr) || !json_is_array(alarmIds) || (json_array_size(alarmIds) == 0))
+      return std::string("Alarm IDs array must be provided and non-empty");
+
+   // Get first alarm to determine source object
+   uint32_t firstAlarmId = static_cast<uint32_t>(json_integer_value(json_array_get(alarmIds, 0)));
+   if (firstAlarmId == 0)
+      return std::string("Invalid first alarm ID");
+
+   Alarm *firstAlarm = FindAlarmById(firstAlarmId);
+   if (firstAlarm == nullptr)
+      return std::string("First alarm not found");
+
+   uint32_t sourceObjectId = firstAlarm->getSourceObject();
+   delete firstAlarm;
+
+   shared_ptr<NetObj> sourceObject = FindObjectById(sourceObjectId);
+   if (sourceObject == nullptr)
+      return std::string("Source object for first alarm not found");
+
+   if (!sourceObject->checkAccessRights(userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
+      return std::string("Access denied - insufficient permissions to manage incidents on source object");
+
+   const char *initialComment = json_object_get_string_utf8(arguments, "initial_comment", nullptr);
+
+   // Convert strings to TCHAR
+   String titleStr(title, "utf-8");
+   String commentStr = (initialComment != nullptr) ? String(initialComment, "utf-8") : String();
+
+   // Create incident with first alarm
+   uint32_t incidentId = 0;
+   uint32_t rcc = CreateIncident(sourceObjectId, titleStr.cstr(),
+      commentStr.isEmpty() ? nullptr : commentStr.cstr(), firstAlarmId, userId, &incidentId);
+
+   if (rcc != RCC_SUCCESS)
+   {
+      char buffer[128];
+      if (rcc == RCC_ALARM_ALREADY_IN_INCIDENT)
+         snprintf(buffer, 128, "Failed to create incident: first alarm is already linked to another incident");
+      else
+         snprintf(buffer, 128, "Failed to create incident: error code %u", rcc);
+      return std::string(buffer);
+   }
+
+   // Link remaining alarms
+   int linkedCount = 1;  // First alarm already linked
+   json_t *failures = json_array();
+
+   for (size_t i = 1; i < json_array_size(alarmIds); i++)
+   {
+      uint32_t alarmId = static_cast<uint32_t>(json_integer_value(json_array_get(alarmIds, i)));
+      if (alarmId == 0)
+         continue;
+
+      rcc = LinkAlarmToIncident(incidentId, alarmId, userId);
+      if (rcc == RCC_SUCCESS)
+      {
+         linkedCount++;
+      }
+      else
+      {
+         json_t *failure = json_object();
+         json_object_set_new(failure, "alarmId", json_integer(alarmId));
+         json_object_set_new(failure, "errorCode", json_integer(rcc));
+         if (rcc == RCC_ALARM_ALREADY_IN_INCIDENT)
+            json_object_set_new(failure, "reason", json_string("Alarm already in another incident"));
+         else
+            json_object_set_new(failure, "reason", json_string("Failed to link"));
+         json_array_append_new(failures, failure);
+      }
+   }
+
+   json_t *result = json_object();
+   json_object_set_new(result, "success", json_true());
+   json_object_set_new(result, "incidentId", json_integer(incidentId));
+   json_object_set_new(result, "sourceObjectId", json_integer(sourceObjectId));
+   json_object_set_new(result, "sourceObjectName", json_string_t(sourceObject->getName()));
+   json_object_set_new(result, "linkedAlarmCount", json_integer(linkedCount));
+   if (json_array_size(failures) > 0)
+      json_object_set_new(result, "linkFailures", failures);
+   else
+      json_decref(failures);
+   return JsonToString(result);
 }

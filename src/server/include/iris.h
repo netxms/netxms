@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -155,6 +155,7 @@ class Chat
 private:
    uint32_t m_id;
    uint32_t m_userId;
+   uint32_t m_boundIncidentId;  // ID of bound incident (0 if not bound)
    Mutex m_mutex;
    json_t *m_messages;
    size_t m_initialMessageCount;
@@ -184,6 +185,9 @@ public:
 
    uint32_t getId() const { return m_id; }
    uint32_t getUserId() const { return m_userId; }
+   uint32_t getBoundIncidentId() const { return m_boundIncidentId; }
+
+   void bindToIncident(uint32_t incidentId);
 
    char *sendRequest(const char *prompt, int maxIterations);
 
@@ -253,8 +257,11 @@ void NXCORE_EXPORTABLE AddAIAssistantPromptFromFile(const wchar_t *fileName);
 
 /**
  * Create new chat
+ * @param userId ID of the user creating the chat
+ * @param incidentId ID of incident to bind to (0 for no binding)
+ * @param rcc Pointer to store result code
  */
-shared_ptr<Chat> NXCORE_EXPORTABLE CreateAIAssistantChat(uint32_t userId, uint32_t *rcc);
+shared_ptr<Chat> NXCORE_EXPORTABLE CreateAIAssistantChat(uint32_t userId, uint32_t incidentId, uint32_t *rcc);
 
 /**
  * Get chat with given ID

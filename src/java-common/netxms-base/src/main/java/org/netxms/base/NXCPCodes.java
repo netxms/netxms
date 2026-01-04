@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1423,6 +1423,10 @@ public class NXCPCodes
    public static final long VID_AI_RESPONSE_POSITIVE = 896;
    public static final long VID_AI_RESPONSE_OPTION = 897;
    public static final long VID_AI_QUESTION_OPTIONS = 898;
+   public static final long VID_TERMINAL_TYPE = 899;
+   public static final long VID_OUTPUT = 900;
+   public static final long VID_INCIDENT_AI_DEPTH = 901;
+   public static final long VID_INCIDENT_AI_PROMPT = 902;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

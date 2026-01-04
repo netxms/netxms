@@ -27,6 +27,8 @@ std::string F_AddIncidentComment(json_t *arguments, uint32_t userId);
 std::string F_AlarmList(json_t *arguments, uint32_t userId);
 std::string F_AssignIncident(json_t *arguments, uint32_t userId);
 std::string F_ClearNotificationChannelQueue(json_t *arguments, uint32_t userId);
+std::string F_CreateIncident(json_t *arguments, uint32_t userId);
+std::string F_CreateIncidentFromAlarms(json_t *arguments, uint32_t userId);
 std::string F_CreateMetric(json_t *arguments, uint32_t userId);
 std::string F_EndMaintenance(json_t *arguments, uint32_t userId);
 std::string F_FindObjects(json_t *arguments, uint32_t userId);
@@ -383,7 +385,26 @@ static void CreateAssistantSkillList()
             {
                { "object", "Name or ID of the object to get open incidents for (mandatory)" }
             },
-            F_GetOpenIncidents)
+            F_GetOpenIncidents),
+         AssistantFunction(
+            "create-incident",
+            "Create a new incident for tracking an issue. Use when detecting patterns, anomalies, or issues that warrant unified tracking.",
+            {
+               { "title", "Incident title (mandatory)" },
+               { "source_object", "Name or ID of the source object (mandatory)" },
+               { "initial_comment", "Initial comment describing the issue (optional)" },
+               { "source_alarm_id", "ID of an alarm to link (optional)" }
+            },
+            F_CreateIncident),
+         AssistantFunction(
+            "create-incident-from-alarms",
+            "Create an incident linking multiple related alarms. Use when multiple alarms stem from a common root cause.",
+            {
+               { "title", "Incident title (mandatory)" },
+               { "alarm_ids", "JSON array of alarm IDs to link (mandatory)" },
+               { "initial_comment", "Initial comment describing the correlation (optional)" }
+            },
+            F_CreateIncidentFromAlarms)
       }
    );
 }

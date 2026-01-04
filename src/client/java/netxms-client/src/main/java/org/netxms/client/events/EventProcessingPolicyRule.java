@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,6 +52,8 @@ public class EventProcessingPolicyRule
    public static final int END_DOWNTIME        = 0x020000;
    public static final int REQUEST_AI_COMMENT  = 0x040000;
    public static final int CREATE_INCIDENT     = 0x080000;
+   public static final int AI_ANALYZE_INCIDENT = 0x100000;
+   public static final int AI_AUTO_ASSIGN      = 0x200000;
 
    public static final int SEVERITY_ANY = SEVERITY_NORMAL | SEVERITY_WARNING | SEVERITY_MINOR | SEVERITY_MAJOR | SEVERITY_CRITICAL;
 
@@ -73,6 +75,8 @@ public class EventProcessingPolicyRule
    private int incidentDelay;
    private String incidentTitle;
    private String incidentDescription;
+   private int incidentAIAnalysisDepth;
+   private String incidentAIPrompt;
    private String actionScript;
    private List<ActionExecutionConfiguration> actions;
    private List<String> timerCancellations;
@@ -107,6 +111,8 @@ public class EventProcessingPolicyRule
       incidentDelay = 0;
       incidentTitle = "";
       incidentDescription = "";
+      incidentAIAnalysisDepth = 0;
+      incidentAIPrompt = null;
       actionScript = null;
       actions = new ArrayList<ActionExecutionConfiguration>(0);
       timerCancellations = new ArrayList<String>(0);
@@ -146,6 +152,8 @@ public class EventProcessingPolicyRule
       incidentDelay = src.incidentDelay;
       incidentTitle = src.incidentTitle;
       incidentDescription = src.incidentDescription;
+      incidentAIAnalysisDepth = src.incidentAIAnalysisDepth;
+      incidentAIPrompt = src.incidentAIPrompt;
       actionScript = src.actionScript;
       actions = new ArrayList<ActionExecutionConfiguration>(src.actions.size());
       for(ActionExecutionConfiguration d : src.actions)
@@ -192,6 +200,8 @@ public class EventProcessingPolicyRule
       incidentDelay = msg.getFieldAsInt32(NXCPCodes.VID_INCIDENT_DELAY);
       incidentTitle = msg.getFieldAsString(NXCPCodes.VID_INCIDENT_TITLE);
       incidentDescription = msg.getFieldAsString(NXCPCodes.VID_INCIDENT_DESCRIPTION);
+      incidentAIAnalysisDepth = msg.getFieldAsInt32(NXCPCodes.VID_INCIDENT_AI_DEPTH);
+      incidentAIPrompt = msg.getFieldAsString(NXCPCodes.VID_INCIDENT_AI_PROMPT);
       actionScript = msg.getFieldAsString(NXCPCodes.VID_ACTION_SCRIPT);
       aiAgentInstructions = msg.getFieldAsString(NXCPCodes.VID_AI_AGENT_INSTRUCTIONS);
       comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
@@ -258,6 +268,8 @@ public class EventProcessingPolicyRule
       msg.setFieldInt32(NXCPCodes.VID_INCIDENT_DELAY, incidentDelay);
       msg.setField(NXCPCodes.VID_INCIDENT_TITLE, incidentTitle);
       msg.setField(NXCPCodes.VID_INCIDENT_DESCRIPTION, incidentDescription);
+      msg.setFieldInt32(NXCPCodes.VID_INCIDENT_AI_DEPTH, incidentAIAnalysisDepth);
+      msg.setField(NXCPCodes.VID_INCIDENT_AI_PROMPT, incidentAIPrompt);
       msg.setField(NXCPCodes.VID_ACTION_SCRIPT, actionScript);
       msg.setField(NXCPCodes.VID_AI_AGENT_INSTRUCTIONS, aiAgentInstructions);
 
@@ -793,6 +805,38 @@ public class EventProcessingPolicyRule
    public void setIncidentDescription(String incidentDescription)
    {
       this.incidentDescription = (incidentDescription != null) ? incidentDescription : "";
+   }
+
+   /**
+    * @return the incidentAIAnalysisDepth
+    */
+   public int getIncidentAIAnalysisDepth()
+   {
+      return incidentAIAnalysisDepth;
+   }
+
+   /**
+    * @param incidentAIAnalysisDepth the incidentAIAnalysisDepth to set
+    */
+   public void setIncidentAIAnalysisDepth(int incidentAIAnalysisDepth)
+   {
+      this.incidentAIAnalysisDepth = incidentAIAnalysisDepth;
+   }
+
+   /**
+    * @return the incidentAIPrompt
+    */
+   public String getIncidentAIPrompt()
+   {
+      return (incidentAIPrompt != null) ? incidentAIPrompt : "";
+   }
+
+   /**
+    * @param incidentAIPrompt the incidentAIPrompt to set
+    */
+   public void setIncidentAIPrompt(String incidentAIPrompt)
+   {
+      this.incidentAIPrompt = incidentAIPrompt;
    }
 
    /**

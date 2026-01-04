@@ -39,9 +39,10 @@ private:
    time_t m_creationTime;
    uint32_t m_userId;
    TCHAR *m_text;
+   bool m_aiGenerated;
 
 public:
-   IncidentComment(uint32_t id, uint32_t incidentId, time_t creationTime, uint32_t userId, const TCHAR *text);
+   IncidentComment(uint32_t id, uint32_t incidentId, time_t creationTime, uint32_t userId, const TCHAR *text, bool aiGenerated = false);
    IncidentComment(DB_RESULT hResult, int row);
    ~IncidentComment();
 
@@ -154,7 +155,7 @@ uint32_t NXCORE_EXPORTABLE UpdateIncident(uint32_t incidentId, const TCHAR *titl
 uint32_t NXCORE_EXPORTABLE LinkAlarmToIncident(uint32_t incidentId, uint32_t alarmId, uint32_t userId);
 uint32_t NXCORE_EXPORTABLE UnlinkAlarmFromIncident(uint32_t incidentId, uint32_t alarmId, uint32_t userId);
 
-uint32_t NXCORE_EXPORTABLE AddIncidentComment(uint32_t incidentId, const TCHAR *text, uint32_t userId, uint32_t *commentId);
+uint32_t NXCORE_EXPORTABLE AddIncidentComment(uint32_t incidentId, const TCHAR *text, uint32_t userId, uint32_t *commentId, bool aiGenerated = false);
 uint32_t NXCORE_EXPORTABLE GetIncidentActivity(uint32_t incidentId, NXCPMessage *msg);
 
 void SendIncidentsToClient(uint32_t objectId, uint32_t requestId, ClientSession *session);

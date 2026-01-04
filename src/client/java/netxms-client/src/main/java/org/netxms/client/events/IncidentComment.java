@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ public class IncidentComment
    private Date creationTime;
    private int userId;
    private String text;
+   private boolean aiGenerated;
 
    /**
     * Create incident comment from NXCP message
@@ -45,6 +46,7 @@ public class IncidentComment
       creationTime = msg.getFieldAsDate(baseId + 2);
       userId = msg.getFieldAsInt32(baseId + 3);
       text = msg.getFieldAsString(baseId + 4);
+      aiGenerated = msg.getFieldAsBoolean(baseId + 5);
    }
 
    /**
@@ -98,12 +100,19 @@ public class IncidentComment
    }
 
    /**
+    * @return the aiGenerated
+    */
+   public boolean isAiGenerated()
+   {
+      return aiGenerated;
+   }
+
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
    public String toString()
    {
-      return "IncidentComment [id=" + id + ", incidentId=" + incidentId + ", creationTime=" + creationTime
-            + ", userId=" + userId + ", text=" + text + "]";
+      return "IncidentComment [id=" + id + ", incidentId=" + incidentId + ", creationTime=" + creationTime + ", userId=" + userId + ", text=" + text + ", aiGenerated=" + aiGenerated + "]";
    }
 }

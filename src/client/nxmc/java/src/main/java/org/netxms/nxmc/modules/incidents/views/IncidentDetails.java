@@ -68,6 +68,7 @@ import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.ai.views.AiAssistantChatView;
 import org.netxms.nxmc.modules.alarms.views.AlarmDetails;
 import org.netxms.nxmc.modules.incidents.dialogs.EditIncidentCommentDialog;
 import org.netxms.nxmc.modules.incidents.widgets.IncidentCommentsEditor;
@@ -147,6 +148,7 @@ public class IncidentDetails extends AdHocObjectView
    private Button buttonAssign;
 
    // Actions
+   private Action actionAskAi;
    private Action actionAssign;
    private Action actionBlock;
    private Action actionInProgress;
@@ -373,6 +375,14 @@ public class IncidentDetails extends AdHocObjectView
     */
    private void createActions()
    {
+      actionAskAi = new Action(i18n.tr("Discuss with AI"), SharedIcons.AI_ASSISTANT) {
+         @Override
+         public void run()
+         {
+            openView(new AiAssistantChatView(incidentId));
+         }
+      };
+
       actionAssign = new Action(i18n.tr("&Assign..."), SharedIcons.USER) {
          @Override
          public void run()
@@ -430,6 +440,8 @@ public class IncidentDetails extends AdHocObjectView
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
    {
+      manager.add(actionAskAi);
+      manager.add(new Separator());
       manager.add(actionAssign);
       manager.add(new Separator());
       manager.add(actionInProgress);
@@ -437,6 +449,25 @@ public class IncidentDetails extends AdHocObjectView
       manager.add(actionResolve);
       manager.add(actionReopen);
       manager.add(actionClose);
+      super.fillLocalToolBar(manager);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      manager.add(actionAskAi);
+      manager.add(new Separator());
+      manager.add(actionAssign);
+      manager.add(new Separator());
+      manager.add(actionInProgress);
+      manager.add(actionBlock);
+      manager.add(actionResolve);
+      manager.add(actionReopen);
+      manager.add(actionClose);
+      super.fillLocalMenu(manager);
    }
 
    /**
@@ -493,13 +524,20 @@ public class IncidentDetails extends AdHocObjectView
       labelAssigned = new CLabel(clientArea, SWT.NONE);
       labelAssigned.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       labelAssigned.setBackground(clientArea.getBackground());
+      labelAssigned.setForeground(getDisplay().getSystemColor(SWT.COLOR_LINK_FOREGROUND));
+
+      buttonAssign = new Button(clientArea, SWT.PUSH);
+      buttonAssign.setText(i18n.tr("Assign..."));
+      buttonAssign.setImage(SharedIcons.IMG_USER);
+      buttonAssign.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      buttonAssign.addListener(SWT.Selection, (e) -> assignIncident());
 
       // Created
       new Label(clientArea, SWT.NONE); // spacer
       label = new Label(clientArea, SWT.NONE);
       label.setText(i18n.tr("Created"));
       label.setFont(boldFont);
-      labelCreated = new CLabel(clientArea, SWT.NONE);
+      labelCreated = new CLabel(clientArea, SWT.MULTI);
       labelCreated.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       labelCreated.setBackground(clientArea.getBackground());
 
@@ -550,16 +588,10 @@ public class IncidentDetails extends AdHocObjectView
       clientArea.setLayout(layout);
 
       buttonInProgress = new Button(clientArea, SWT.PUSH);
-      buttonInProgress.setText(i18n.tr("In progress"));
+      buttonInProgress.setText(i18n.tr("Start"));
       buttonInProgress.setImage(stateImages[IncidentState.IN_PROGRESS.getValue()]);
       buttonInProgress.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       buttonInProgress.addListener(SWT.Selection, (e) -> changeIncidentState(IncidentState.IN_PROGRESS));
-
-      buttonBlock = new Button(clientArea, SWT.PUSH);
-      buttonBlock.setText(i18n.tr("Block..."));
-      buttonBlock.setImage(stateImages[IncidentState.BLOCKED.getValue()]);
-      buttonBlock.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      buttonBlock.addListener(SWT.Selection, (e) -> blockIncident());
 
       buttonResolve = new Button(clientArea, SWT.PUSH);
       buttonResolve.setText(i18n.tr("Resolve"));
@@ -579,11 +611,11 @@ public class IncidentDetails extends AdHocObjectView
       buttonClose.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       buttonClose.addListener(SWT.Selection, (e) -> closeIncident());
 
-      buttonAssign = new Button(clientArea, SWT.PUSH);
-      buttonAssign.setText(i18n.tr("Assign..."));
-      buttonAssign.setImage(SharedIcons.IMG_USER);
-      buttonAssign.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      buttonAssign.addListener(SWT.Selection, (e) -> assignIncident());
+      buttonBlock = new Button(clientArea, SWT.PUSH);
+      buttonBlock.setText(i18n.tr("Mark as blocked..."));
+      buttonBlock.setImage(stateImages[IncidentState.BLOCKED.getValue()]);
+      buttonBlock.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+      buttonBlock.addListener(SWT.Selection, (e) -> blockIncident());
    }
 
    /**
@@ -759,34 +791,35 @@ public class IncidentDetails extends AdHocObjectView
    {
       if (userId == 0)
       {
-         label.setText(timestamp != null ? DateFormatFactory.getDateTimeFormat().format(timestamp) : "-");
+         label.setText(timestamp != null ? DateFormatFactory.getDateTimeFormat().format(timestamp) : i18n.tr("(unassigned)"));
+         label.setImage(SharedIcons.IMG_DISABLE);
          return;
       }
 
-      AbstractUserObject user = session.findUserDBObjectById(userId, new Runnable() {
-         @Override
-         public void run()
-         {
-            label.getDisplay().asyncExec(new Runnable() {
-               @Override
-               public void run()
+      AbstractUserObject user = session.findUserDBObjectById(userId, () -> {
+         label.getDisplay().asyncExec(new Runnable() {
+            @Override
+            public void run()
+            {
+               if (!label.isDisposed())
                {
-                  if (!label.isDisposed())
-                  {
-                     AbstractUserObject user = session.findUserDBObjectById(userId, null);
-                     String text = (user != null) ? user.getName() : "[" + userId + "]";
-                     if (timestamp != null)
-                        text = DateFormatFactory.getDateTimeFormat().format(timestamp) + " by " + text;
-                     label.setText(text);
-                  }
+                  AbstractUserObject user = session.findUserDBObjectById(userId, null);
+                  String text = (user != null) ? user.getName() : "[" + userId + "]";
+                  if (timestamp != null)
+                     text = DateFormatFactory.getDateTimeFormat().format(timestamp) + "\nby " + text;
+                  else
+                     label.setImage(SharedIcons.IMG_USER);
+                  label.setText(text);
                }
-            });
-         }
+            }
+         });
       });
 
       String text = (user != null) ? user.getName() : "[" + userId + "]";
       if (timestamp != null)
-         text = DateFormatFactory.getDateTimeFormat().format(timestamp) + " by " + text;
+         text = DateFormatFactory.getDateTimeFormat().format(timestamp) + "\nby " + text;
+      else
+         label.setImage(SharedIcons.IMG_USER);
       label.setText(text);
    }
 
@@ -820,7 +853,7 @@ public class IncidentDetails extends AdHocObjectView
 
       for(IncidentComment comment : comments)
       {
-         IncidentCommentsEditor editor = new IncidentCommentsEditor(commentsArea, imageCache, comment);
+         IncidentCommentsEditor editor = new IncidentCommentsEditor(commentsArea, comment);
          GridData gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;

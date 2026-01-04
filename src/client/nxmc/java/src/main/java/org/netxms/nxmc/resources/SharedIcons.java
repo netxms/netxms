@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ import org.eclipse.swt.graphics.Image;
 public class SharedIcons
 {
    public static ImageDescriptor ADD_OBJECT;
+   public static ImageDescriptor AI_ASSISTANT;
 	public static ImageDescriptor ALARM;
    public static ImageDescriptor BROWSER;
    public static ImageDescriptor CALENDAR;
@@ -93,7 +94,8 @@ public class SharedIcons
 	public static ImageDescriptor ZOOM_OUT;
 
 	public static Image IMG_ADD_OBJECT;
-	public static Image IMG_ALARM;
+   public static Image IMG_AI_ASSISTANT;
+   public static Image IMG_ALARM;
    public static Image IMG_BROWSER;
    public static Image IMG_CALENDAR;
 	public static Image IMG_CHECKBOX_OFF;
@@ -164,6 +166,7 @@ public class SharedIcons
 	public static void init()
 	{
       ADD_OBJECT = ResourceManager.getImageDescriptor("icons/add_obj.png");
+      AI_ASSISTANT = ResourceManager.getImageDescriptor("icons/ai-assistant.png");
       ALARM = ResourceManager.getImageDescriptor("icons/alarm.png");
       BROWSER = ResourceManager.getImageDescriptor("icons/browser.png");
       CALENDAR = ResourceManager.getImageDescriptor("icons/calendar.png");
@@ -230,7 +233,8 @@ public class SharedIcons
       ZOOM_OUT = ResourceManager.getImageDescriptor("icons/zoom-out.png");
 
 		IMG_ADD_OBJECT = ADD_OBJECT.createImage();
-		IMG_ALARM = ALARM.createImage();
+      IMG_AI_ASSISTANT = AI_ASSISTANT.createImage();
+      IMG_ALARM = ALARM.createImage();
       IMG_BROWSER = BROWSER.createImage();
       IMG_CALENDAR = CALENDAR.createImage();
 		IMG_CHECKBOX_OFF = CHECKBOX_OFF.createImage();

@@ -7446,7 +7446,7 @@ void ClientSession::updateIncident(const NXCPMessage& request)
    }
    else
    {
-      response.setField(VID_RCC, RCC_INCIDENT_NOT_FOUND);
+      response.setField(VID_RCC, RCC_INVALID_INCIDENT_ID);
    }
 
    sendMessage(response);
@@ -7478,7 +7478,7 @@ void ClientSession::changeIncidentState(const NXCPMessage& request)
    }
    else
    {
-      response.setField(VID_RCC, RCC_INCIDENT_NOT_FOUND);
+      response.setField(VID_RCC, RCC_INVALID_INCIDENT_ID);
    }
 
    MemFree(comment);
@@ -7509,7 +7509,7 @@ void ClientSession::assignIncident(const NXCPMessage& request)
    }
    else
    {
-      response.setField(VID_RCC, RCC_INCIDENT_NOT_FOUND);
+      response.setField(VID_RCC, RCC_INVALID_INCIDENT_ID);
    }
 
    sendMessage(response);
@@ -7539,7 +7539,7 @@ void ClientSession::linkAlarmToIncident(const NXCPMessage& request)
    }
    else
    {
-      response.setField(VID_RCC, RCC_INCIDENT_NOT_FOUND);
+      response.setField(VID_RCC, RCC_INVALID_INCIDENT_ID);
    }
 
    sendMessage(response);
@@ -7569,7 +7569,7 @@ void ClientSession::unlinkAlarmFromIncident(const NXCPMessage& request)
    }
    else
    {
-      response.setField(VID_RCC, RCC_INCIDENT_NOT_FOUND);
+      response.setField(VID_RCC, RCC_INVALID_INCIDENT_ID);
    }
 
    sendMessage(response);
@@ -7604,7 +7604,7 @@ void ClientSession::addIncidentComment(const NXCPMessage& request)
    }
    else
    {
-      response.setField(VID_RCC, RCC_INCIDENT_NOT_FOUND);
+      response.setField(VID_RCC, RCC_INVALID_INCIDENT_ID);
    }
 
    sendMessage(response);
@@ -18540,20 +18540,58 @@ void ClientSession::queryAiAssistant(const NXCPMessage& request)
  * Called by:
  * CMD_CREATE_AI_ASSISTANT_CHAT
  *
+ * Expected input parameters:
+ * VID_INCIDENT_ID  (optional) Incident ID to bind chat to
+ *
  * Return values:
  * VID_RCC                          Request completion code
  * VID_CHAT_ID                      Created chat ID
+ * VID_INCIDENT_ID                  Bound incident ID (if specified)
  */
 void ClientSession::createAiAssistantChat(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   uint32_t rcc;
-   shared_ptr<Chat> chat = CreateAIAssistantChat(m_userId, &rcc);
+   // Get optional incident ID
+   uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
+
+   uint32_t rcc = RCC_SUCCESS;
+   shared_ptr<Chat> chat = nullptr;
+
+   // If incident specified, verify access rights
+   if (incidentId != 0)
+   {
+      shared_ptr<Incident> incident = FindIncidentById(incidentId);
+      if (incident != nullptr)
+      {
+         shared_ptr<NetObj> sourceObject = FindObjectById(incident->getSourceObjectId());
+         if ((sourceObject == nullptr) || !sourceObject->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+         {
+            rcc = RCC_ACCESS_DENIED;
+         }
+         else
+         {
+            chat = CreateAIAssistantChat(m_userId, incidentId, &rcc);
+         }
+      }
+      else
+      {
+         rcc = RCC_INVALID_INCIDENT_ID;
+      }
+   }
+   else
+   {
+      chat = CreateAIAssistantChat(m_userId, 0, &rcc);
+   }
+
    if (chat != nullptr)
    {
       response.setField(VID_RCC, RCC_SUCCESS);
       response.setField(VID_CHAT_ID, chat->getId());
+      if (incidentId != 0)
+      {
+         response.setField(VID_INCIDENT_ID, incidentId);
+      }
    }
    else
    {

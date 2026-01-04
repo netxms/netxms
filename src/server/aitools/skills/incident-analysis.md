@@ -28,6 +28,10 @@ This skill provides comprehensive incident management and analysis capabilities 
 - `get-incident-topology-context`: Get network topology context including L2 neighbors, subnets, routes, and interface peers
 - `get-open-incidents`: Get all open (not closed) incidents for a specific object
 
+### Incident Creation
+- `create-incident`: Create a new incident for tracking an issue
+- `create-incident-from-alarms`: Create an incident linking multiple related alarms in one operation
+
 ### Incident Modification
 - `add-incident-comment`: Add analysis notes, findings, or updates to incidents
 - `link-alarm-to-incident`: Link a single alarm to an incident
@@ -62,3 +66,15 @@ This skill provides comprehensive incident management and analysis capabilities 
 - Alarms can only be linked to one incident at a time
 - Assignment suggestions are based on responsible users configured on objects
 - Historical incident queries return incidents regardless of their current state
+
+## Incident Creation Guidelines
+
+Create incidents when:
+- Multiple alarms stem from a single root cause and need unified tracking
+- Proactive analysis reveals issues before alarms trigger
+- Anomaly detection identifies patterns requiring investigation
+
+Do NOT create incidents when:
+- A single alarm adequately represents the issue
+- Finding is informational only (use comments on existing incidents instead)
+- An existing incident already covers the situation (link alarms to it instead)

@@ -1453,6 +1453,8 @@ CREATE TABLE event_policy
   incident_delay integer not null,  // Delay in seconds for incident creation (0 = immediate)
   incident_title varchar(255) null,  // Incident title template (null = use alarm message)
   incident_description varchar(2000) null,  // Incident description template
+  incident_ai_depth integer not null,
+  incident_ai_prompt varchar(2000) null,
   PRIMARY KEY(rule_id)
 ) TABLE_TYPE;
 
@@ -1710,6 +1712,7 @@ CREATE TABLE incident_comments
    incident_id integer not null,
    creation_time integer not null,
    user_id integer not null,
+   ai_generated char(1) not null,
    comment_text SQL_TEXT not null,
    PRIMARY KEY(id)
 ) TABLE_TYPE;

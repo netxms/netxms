@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -814,6 +814,26 @@ public class RuleEditor extends Composite
                createLabel(clientArea, 1, false, String.format(i18n.tr("and create incident after %d seconds delay"), rule.getIncidentDelay()), incidentListener);
             else
                createLabel(clientArea, 1, false, i18n.tr("and create incident immediately"), incidentListener);
+            if ((rule.getFlags() & EventProcessingPolicyRule.AI_ANALYZE_INCIDENT) != 0)
+            {
+               createLabel(clientArea, 2, false,
+                     ((rule.getFlags() & EventProcessingPolicyRule.AI_AUTO_ASSIGN) != 0) ? i18n.tr("with AI assistant analysis and automatic assignment") : i18n.tr("with AI assistant analysis"),
+                     incidentListener);
+               String instructions = rule.getIncidentAIPrompt();
+               if ((instructions != null) && !instructions.isEmpty())
+               {
+                  createLabel(clientArea, 2, false, i18n.tr("using the following AI assistant instructions:"), incidentListener);
+                  Text aiInstructions = new Text(clientArea, SWT.MULTI | SWT.WRAP);
+                  GridData gd = new GridData();
+                  gd.horizontalIndent = INDENT * 3;
+                  gd.horizontalAlignment = SWT.FILL;
+                  gd.grabExcessHorizontalSpace = true;
+                  aiInstructions.setLayoutData(gd);
+                  aiInstructions.setText(instructions);
+                  aiInstructions.setEditable(false);
+                  aiInstructions.addMouseListener(incidentListener);
+               }
+            }
          }
       }
 
@@ -961,10 +981,11 @@ public class RuleEditor extends Composite
          }
       }
 
+      /* AI agent instructions */
       if (!rule.getAiAgentInstructions().isBlank())
       {
          final MouseListener listener = createMouseListener("AIAgentInstructions");
-         addActionGroupLabel(clientArea, i18n.tr("Instruct AI agent:"), editor.getImageExecute(), listener);
+         addActionGroupLabel(clientArea, i18n.tr("Instruct AI agent:"), SharedIcons.IMG_AI_ASSISTANT, listener);
 
          Text aiInstructions = new Text(clientArea, SWT.MULTI | SWT.WRAP);
          GridData gd = new GridData();

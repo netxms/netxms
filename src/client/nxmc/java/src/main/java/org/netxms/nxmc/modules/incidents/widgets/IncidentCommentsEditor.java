@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,8 +31,7 @@ import org.netxms.client.users.AbstractUserObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.resources.ResourceManager;
-import org.netxms.nxmc.tools.ImageCache;
+import org.netxms.nxmc.resources.SharedIcons;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -52,7 +51,7 @@ public class IncidentCommentsEditor extends Composite
     * @param imageCache image cache for icons
     * @param comment the comment to display
     */
-   public IncidentCommentsEditor(Composite parent, ImageCache imageCache, IncidentComment comment)
+   public IncidentCommentsEditor(Composite parent, IncidentComment comment)
    {
       super(parent, SWT.NONE);
 
@@ -64,26 +63,21 @@ public class IncidentCommentsEditor extends Composite
       setLayout(layout);
 
       final CLabel user = new CLabel(this, SWT.NONE);
-      final AbstractUserObject userObject = session.findUserDBObjectById(comment.getUserId(), new Runnable() {
-         @Override
-         public void run()
-         {
-            parent.getDisplay().asyncExec(new Runnable() {
-               @Override
-               public void run()
+      final AbstractUserObject userObject = session.findUserDBObjectById(comment.getUserId(), () -> {
+         parent.getDisplay().asyncExec(() -> {
+            if (!user.isDisposed())
+            {
+               final AbstractUserObject u = session.findUserDBObjectById(comment.getUserId(), null);
+               if (u != null)
                {
-                  if (!user.isDisposed())
-                  {
-                     final AbstractUserObject userObject = session.findUserDBObjectById(comment.getUserId(), null);
-                     user.setText((userObject != null) ? userObject.getName() : i18n.tr("<unknown>"));
-                     user.getParent().layout(true, true);
-                  }
+                  user.setText(u.getName());
+                  user.getParent().layout(true, true);
                }
-            });
-         }
+            }
+         });
       });
 
-      user.setImage(imageCache.create(ResourceManager.getImageDescriptor("icons/user.png")));
+      user.setImage(SharedIcons.IMG_USER);
       user.setText((userObject != null) ? userObject.getName() : i18n.tr("<unknown>"));
       user.setBackground(parent.getBackground());
       user.setForeground(getDisplay().getSystemColor(SWT.COLOR_LINK_FOREGROUND));

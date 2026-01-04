@@ -785,7 +785,7 @@ enum SessionState
 #define RCC_TCP_PROXY_DISABLED            ((uint32_t)177)
 #define RCC_INVALID_TASK_ID               ((uint32_t)178)
 #define RCC_INVALID_CHAT_ID               ((uint32_t)179)
-#define RCC_INCIDENT_NOT_FOUND            ((uint32_t)180)
+#define RCC_INVALID_INCIDENT_ID           ((uint32_t)180)
 #define RCC_INCIDENT_CLOSED               ((uint32_t)181)
 #define RCC_ALARM_ALREADY_IN_INCIDENT     ((uint32_t)182)
 #define RCC_INVALID_INCIDENT_STATE        ((uint32_t)183)
@@ -1221,6 +1221,7 @@ enum AggregationFunction
 #define RF_REQUEST_AI_COMMENT    0x040000
 #define RF_CREATE_INCIDENT       0x080000
 #define RF_AI_ANALYZE_INCIDENT   0x100000
+#define RF_AI_AUTO_ASSIGN        0x200000
 
 /**
  * Network map types
