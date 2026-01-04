@@ -333,3 +333,4 @@ cmake-build-debug/
 # Other
 .aider*
 .netxmsd_history
+.serena/
