@@ -72,6 +72,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.Severity;
+import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.BrandingManager;
 import org.netxms.nxmc.Memento;
@@ -307,38 +308,115 @@ public class MainWindow extends Window implements MessageAreaHolder
       if (!BrandingManager.isWelcomePageEnabled())
          return;
 
-      PreferenceStore ps = PreferenceStore.getInstance();
-      if (ps.getAsBoolean("WelcomePage.Disabled", !session.getClientConfigurationHintAsBoolean("EnableWelcomePage", true)))
+      // Check master switch (server config)
+      if (!session.getClientConfigurationHintAsBoolean("EnableWelcomePage", true))
          return;
 
-      String serverVersion = session.getServerVersion();
-      int dotCount = 0;
-      for(int i = 0; i < serverVersion.length(); i++)
+      // Check user permission (opt-in: must have right to see welcome page)
+      if ((session.getUserSystemRights() & UserAccessRights.SYSTEM_ACCESS_VIEW_WELCOME_PAGE) == 0)
+         return;
+
+      PreferenceStore ps = PreferenceStore.getInstance();
+
+      // Migration: convert old single-version key to new multi-version format
+      String oldVersion = ps.getAsString("WelcomePage.LastDisplayedVersion");
+      if ((oldVersion != null) && !oldVersion.isEmpty())
       {
-         char ch = serverVersion.charAt(i);
+         String existingSeen = ps.getAsString("WelcomePage.SeenVersions", "");
+         ps.set("WelcomePage.SeenVersions", addVersion(existingSeen, oldVersion));
+         ps.set("WelcomePage.LastDisplayedVersion", "");
+      }
+
+      String serverVersion = extractMajorMinorPatch(session.getServerVersion());
+
+      // Check local storage
+      String localSeen = ps.getAsString("WelcomePage.SeenVersions", "");
+      if (containsVersion(localSeen, serverVersion))
+         return;
+
+      // Check server-side storage
+      String serverSeen = "";
+      try
+      {
+         serverSeen = session.getAttributeForCurrentUser(".WelcomePage.SeenVersions");
+      }
+      catch(Exception e)
+      {
+         logger.debug("Failed to get welcome page seen versions from server", e);
+      }
+      if (containsVersion(serverSeen, serverVersion))
+      {
+         // Update local storage to match server (optimization for future checks)
+         ps.set("WelcomePage.SeenVersions", addVersion(localSeen, serverVersion));
+         return;
+      }
+
+      WelcomePage welcomePage = new WelcomePage(mainArea, SWT.NONE, serverVersion);
+      welcomePage.setSize(mainArea.getSize());
+      welcomePage.moveAbove(null);
+   }
+
+   /**
+    * Extract major.minor.patch version from full version string.
+    *
+    * @param version full version string
+    * @return major.minor.patch version
+    */
+   private static String extractMajorMinorPatch(String version)
+   {
+      int dotCount = 0;
+      for(int i = 0; i < version.length(); i++)
+      {
+         char ch = version.charAt(i);
          if (ch == '-')
          {
-            serverVersion = serverVersion.substring(0, i);
-            break;
+            return version.substring(0, i);
          }
          if (ch == '.')
          {
             dotCount++;
             if (dotCount == 3)
             {
-               serverVersion = serverVersion.substring(0, i);
-               break;
+               return version.substring(0, i);
             }
          }
       }
+      return version;
+   }
 
-      String v = ps.getAsString("WelcomePage.LastDisplayedVersion");
-      if (serverVersion.equals(v))
-         return;
+   /**
+    * Check if comma-separated list contains given version.
+    *
+    * @param list comma-separated list of versions
+    * @param version version to check
+    * @return true if list contains version
+    */
+   private static boolean containsVersion(String list, String version)
+   {
+      if ((list == null) || list.isEmpty())
+         return false;
+      for(String v : list.split(","))
+      {
+         if (v.trim().equals(version))
+            return true;
+      }
+      return false;
+   }
 
-      WelcomePage welcomePage = new WelcomePage(mainArea, SWT.NONE, serverVersion);
-      welcomePage.setSize(mainArea.getSize());
-      welcomePage.moveAbove(null);
+   /**
+    * Add version to comma-separated list if not already present.
+    *
+    * @param list comma-separated list of versions
+    * @param version version to add
+    * @return updated list
+    */
+   private static String addVersion(String list, String version)
+   {
+      if ((list == null) || list.isEmpty())
+         return version;
+      if (containsVersion(list, version))
+         return list;
+      return list + "," + version;
    }
 
    /**

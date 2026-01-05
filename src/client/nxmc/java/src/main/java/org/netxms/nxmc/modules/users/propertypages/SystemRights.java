@@ -124,6 +124,7 @@ public class SystemRights extends PropertyPage
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_LOG, i18n.tr("View event log")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_SYSLOG, i18n.tr("View syslog")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, i18n.tr("View SNMP trap log")));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_WELCOME_PAGE, i18n.tr("View welcome page")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS, i18n.tr("Manage web service definitions")));
 
       Composite dialogArea = new Composite(parent, SWT.BORDER);

@@ -75,6 +75,7 @@ public final class UserAccessRights
    public static final long SYSTEM_ACCESS_MANAGE_2FA_METHODS      = 0x01000000000000L;
    public static final long SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE     = 0x02000000000000L;
    public static final long SYSTEM_ACCESS_VIEW_ASSET_CHANGE_LOG   = 0x04000000000000L;
+   public static final long SYSTEM_ACCESS_VIEW_WELCOME_PAGE       = 0x08000000000000L;
 
 	// Object access rights
 	public static final int OBJECT_ACCESS_READ             = 0x00000001;

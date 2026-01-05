@@ -35,7 +35,9 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.netxms.client.NXCSession;
 import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -117,7 +119,7 @@ public class WelcomePage extends Composite
          public void widgetSelected(SelectionEvent e)
          {
             WelcomePage.this.dispose();
-            PreferenceStore.getInstance().set("WelcomePage.LastDisplayedVersion", serverVersion);
+            markVersionAsSeen(serverVersion);
          }
       });
 
@@ -136,7 +138,7 @@ public class WelcomePage extends Composite
                if (event.location.equals("app:close"))
                {
                   WelcomePage.this.dispose();
-                  PreferenceStore.getInstance().set("WelcomePage.LastDisplayedVersion", serverVersion);
+                  markVersionAsSeen(serverVersion);
                }
             }
          });
@@ -188,5 +190,73 @@ public class WelcomePage extends Composite
          }
       }
       return result.toString();
+   }
+
+   /**
+    * Mark version as seen in both local and server-side storage.
+    *
+    * @param serverVersion server version to mark as seen
+    */
+   private static void markVersionAsSeen(final String serverVersion)
+   {
+      PreferenceStore ps = PreferenceStore.getInstance();
+
+      // Update local storage
+      String localSeen = ps.getAsString("WelcomePage.SeenVersions", "");
+      ps.set("WelcomePage.SeenVersions", addVersion(localSeen, serverVersion));
+
+      // Update server-side storage (async, best effort)
+      Job job = new Job("Saving welcome page state", null) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            NXCSession session = Registry.getSession();
+            String serverSeen = session.getAttributeForCurrentUser(".WelcomePage.SeenVersions");
+            session.setAttributeForCurrentUser(".WelcomePage.SeenVersions", addVersion(serverSeen, serverVersion));
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return null; // Silent failure
+         }
+      };
+      job.setUser(false);
+      job.start();
+   }
+
+   /**
+    * Check if comma-separated list contains given version.
+    *
+    * @param list comma-separated list of versions
+    * @param version version to check
+    * @return true if list contains version
+    */
+   private static boolean containsVersion(String list, String version)
+   {
+      if ((list == null) || list.isEmpty())
+         return false;
+      for(String v : list.split(","))
+      {
+         if (v.trim().equals(version))
+            return true;
+      }
+      return false;
+   }
+
+   /**
+    * Add version to comma-separated list if not already present.
+    *
+    * @param list comma-separated list of versions
+    * @param version version to add
+    * @return updated list
+    */
+   private static String addVersion(String list, String version)
+   {
+      if ((list == null) || list.isEmpty())
+         return version;
+      if (containsVersion(list, version))
+         return list;
+      return list + "," + version;
    }
 }

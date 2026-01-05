@@ -39,7 +39,6 @@ public class AppearancePage extends PropertyPage
 
    private Button checkVerticalLayout;
    private Button checkShowServerClock;
-   private Button checkShowWelcomePage;
    private Button checkShowTrayIcon;
 
    public AppearancePage()
@@ -70,10 +69,6 @@ public class AppearancePage extends PropertyPage
       checkShowServerClock.setText(i18n.tr("Show server &clock"));
       checkShowServerClock.setSelection(settings.getAsBoolean("Appearance.ShowServerClock", false));
 
-      checkShowWelcomePage = new Button(dialogArea, SWT.CHECK);
-      checkShowWelcomePage.setText(i18n.tr("Show post-upgrade &welcome page on startup"));
-      checkShowWelcomePage.setSelection(!settings.getAsBoolean("WelcomePage.Disabled", !Registry.getSession().getClientConfigurationHintAsBoolean("EnableWelcomePage", true)));
-
       if (!Registry.IS_WEB_CLIENT)
       {
          checkShowTrayIcon = new Button(dialogArea, SWT.CHECK);
@@ -93,7 +88,6 @@ public class AppearancePage extends PropertyPage
       PreferenceStore settings = PreferenceStore.getInstance();
       settings.set("Appearance.VerticalLayout", checkVerticalLayout.getSelection());
       settings.set("Appearance.ShowServerClock", checkShowServerClock.getSelection());
-      settings.set("WelcomePage.Disabled", !checkShowWelcomePage.getSelection());
       if (!Registry.IS_WEB_CLIENT)
       {
          settings.set("Appearance.ShowTrayIcon", checkShowTrayIcon.getSelection());

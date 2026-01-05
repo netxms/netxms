@@ -25,6 +25,25 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.19 to 60.20
+ */
+static bool H_UpgradeFromV19()
+{
+   // Add SYSTEM_ACCESS_VIEW_WELCOME_PAGE (bit 51 = 0x8000000000000 = 2251799813685248) to Admins group
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE user_groups SET system_access=system_access+2251799813685248 WHERE id=1073741825 AND BITAND(system_access, 2251799813685248)=0")));
+   }
+   else
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE user_groups SET system_access=system_access+2251799813685248 WHERE id=1073741825 AND (system_access & 2251799813685248)=0")));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(20));
+   return true;
+}
+
+/**
  * Upgrade from 60.18 to 60.19
  */
 static bool H_UpgradeFromV18()
@@ -1317,6 +1336,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 19, 60, 20, H_UpgradeFromV19 },
    { 18, 60, 19, H_UpgradeFromV18 },
    { 17, 60, 18, H_UpgradeFromV17 },
    { 16, 60, 17, H_UpgradeFromV16 },
