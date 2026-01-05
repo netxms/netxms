@@ -486,6 +486,7 @@
     <ClCompile Include="epp.cpp" />
     <ClCompile Include="events.cpp" />
     <ClCompile Include="evproc.cpp" />
+    <ClCompile Include="export.cpp" />
     <ClCompile Include="fdb.cpp" />
     <ClCompile Include="filemonitoring.cpp" />
     <ClCompile Include="ft.cpp" />
@@ -499,7 +500,9 @@
     <ClCompile Include="icmpstat.cpp" />
     <ClCompile Include="id.cpp" />
     <ClCompile Include="import.cpp" />
+    <ClCompile Include="import_legacy.cpp" />
     <ClCompile Include="inaddr_index.cpp" />
+    <ClCompile Include="incident.cpp" />
     <ClCompile Include="index.cpp" />
     <ClCompile Include="interface.cpp" />
     <ClCompile Include="iris.cpp" />

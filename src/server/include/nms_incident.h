@@ -59,7 +59,7 @@ public:
 /**
  * Incident class
  */
-class NXCORE_EXPORTABLE Incident : public enable_shared_from_this<Incident>
+class NXCORE_EXPORTABLE Incident
 {
 private:
    uint32_t m_id;

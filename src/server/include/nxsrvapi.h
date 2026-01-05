@@ -1415,7 +1415,7 @@ public:
 /**
  * SSH driver hints for interactive CLI sessions
  */
-struct SSHDriverHints
+struct LIBNXSRV_EXPORTABLE SSHDriverHints
 {
    const char *promptPattern;           // Regex for command prompt
    const char *enabledPromptPattern;    // Regex for privileged prompt
@@ -1458,7 +1458,7 @@ template class LIBNXSRV_TEMPLATE_EXPORTABLE shared_ptr<SSHInteractiveChannel>;
 /**
  * Interactive SSH channel with server-side parsing
  */
-class LIBNXSRV_EXPORTABLE SSHInteractiveChannel : public enable_shared_from_this<SSHInteractiveChannel>
+class LIBNXSRV_EXPORTABLE SSHInteractiveChannel
 {
 private:
    shared_ptr<AgentConnection> m_agentConn;

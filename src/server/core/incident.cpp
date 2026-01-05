@@ -60,7 +60,7 @@ public:
       m_incidents.forEach(callback);
    }
 
-   int size() const { return m_incidents.size(); }
+   size_t size() const { return m_incidents.size(); }
 };
 
 /**

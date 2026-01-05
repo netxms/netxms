@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -235,8 +235,8 @@ bool VaultClient::authenticateWithAppRole(const char *roleId, const char *secret
 
    char response[8192];
    bool apiSuccess = apiCall("POST", "/v1/auth/approle/login", payload, response, sizeof(response));
-   free(payload);
-   
+   MemFree(payload);
+
    if (!apiSuccess)
    {
       return false;
@@ -301,8 +301,8 @@ bool VaultClient::authenticateWithUserPass(const char *username, const char *pas
 
    char response[8192];
    bool apiSuccess = apiCall("POST", path, payload, response, sizeof(response));
-   free(payload);
-   
+   MemFree(payload);
+
    if (!apiSuccess)
    {
       return false;
@@ -375,7 +375,7 @@ bool VaultClient::readSecret(const char *path, const char *field, char *buffer, 
    if (strstr(path, "/data/") == nullptr && strncmp(path, "data/", 5) != 0)
    {
       // Assume KV v2 and insert /data/ after the mount point
-      char *pathCopy = strdup(path);
+      char *pathCopy = MemCopyStringA(path);
       char *firstSlash = strchr(pathCopy, '/');
       if (firstSlash != nullptr)
       {
@@ -386,7 +386,7 @@ bool VaultClient::readSecret(const char *path, const char *field, char *buffer, 
       {
          snprintf(apiPath, sizeof(apiPath), "/v1/%s", path);
       }
-      free(pathCopy);
+      MemFree(pathCopy);
    }
    else
    {
@@ -484,7 +484,7 @@ bool VaultClient::writeSecret(const char *path, const char *field, const char *v
    if (strstr(path, "/data/") == nullptr && strncmp(path, "data/", 5) != 0)
    {
       // Assume KV v2 and insert /data/ after the mount point
-      char *pathCopy = strdup(path);
+      char *pathCopy = MemCopyStringA(path);
       char *firstSlash = strchr(pathCopy, '/');
       if (firstSlash != nullptr)
       {
@@ -495,7 +495,7 @@ bool VaultClient::writeSecret(const char *path, const char *field, const char *v
       {
          snprintf(apiPath, sizeof(apiPath), "/v1/%s", path);
       }
-      free(pathCopy);
+      MemFree(pathCopy);
    }
    else
    {
@@ -504,7 +504,7 @@ bool VaultClient::writeSecret(const char *path, const char *field, const char *v
 
    char response[8192];
    bool success = apiCall("POST", apiPath, payload, response, sizeof(response));
-   free(payload);
+   MemFree(payload);
    
    if (success)
    {

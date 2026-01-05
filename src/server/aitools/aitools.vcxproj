@@ -328,6 +328,7 @@
     <ClCompile Include="alarms.cpp" />
     <ClCompile Include="datacoll.cpp" />
     <ClCompile Include="evproc.cpp" />
+    <ClCompile Include="incidents.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="nc.cpp" />
     <ClCompile Include="objects.cpp" />
