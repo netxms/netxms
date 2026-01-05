@@ -29,7 +29,7 @@
 #include <math.h>
 #include <gauge_helpers.h>
 #include "auth-token.h"
-#include <map>
+#include <unordered_map>
 
 /**
  * Forward declarations of classes
@@ -5258,7 +5258,7 @@ private:
 #pragma warning( push )
 #pragma warning( disable: 4251 )
 #endif
-   std::map<uint32_t, uint32_t> m_instanceDashboards;
+   std::unordered_map<uint32_t, uint32_t> m_instanceDashboards;
 #ifdef _WIN32
 #pragma warning( pop )
 #endif
