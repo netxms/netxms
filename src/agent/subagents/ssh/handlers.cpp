@@ -636,8 +636,8 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
    }
 
    shared_ptr<KeyPair> keys;
-   uint32_t keyId = AgentGetMetricArgAsUInt32(param, 6, 0);
-   if (keyId != 0)
+   uint32_t keyId;
+   if (AgentGetMetricArgAsUInt32(param, 6, &keyId))
    {
       keys = GetSshKey(session, keyId);
    }
