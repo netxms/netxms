@@ -1441,6 +1441,7 @@ public:
    String operator +(const TCHAR *right) const;
 
 	char *getUTF8String() const;
+	std::string getUTF8StdString() const;
 
 	size_t length() const { return m_length; }
 	bool isEmpty() const { return m_length == 0; }

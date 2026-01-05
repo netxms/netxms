@@ -67,6 +67,7 @@ public class DataCollectionItem extends DataCollectionObject
    private DataType transformedDataType;
 	private int deltaCalculation;
 	private int sampleCount;
+	private int sampleSaveInterval;
 	private int multiplier;
 	private String unitName;
 	private int snmpRawValueType;
@@ -88,6 +89,7 @@ public class DataCollectionItem extends DataCollectionObject
       transformedDataType = DataType.getByValue(msg.getFieldAsInt16(NXCPCodes.VID_TRANSFORMED_DATA_TYPE));
 		deltaCalculation = msg.getFieldAsInt32(NXCPCodes.VID_DCI_DELTA_CALCULATION);
 		sampleCount = msg.getFieldAsInt32(NXCPCodes.VID_SAMPLE_COUNT);
+		sampleSaveInterval = msg.getFieldAsInt32(NXCPCodes.VID_SAMPLE_SAVE_INTERVAL);
 		multiplier = msg.getFieldAsInt32(NXCPCodes.VID_MULTIPLIER);
 		unitName = msg.getFieldAsString(NXCPCodes.VID_UNITS_NAME);
 		snmpRawValueType = msg.getFieldAsInt32(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE);
@@ -117,6 +119,7 @@ public class DataCollectionItem extends DataCollectionObject
       transformedDataType = DataType.NULL;
 		deltaCalculation = DELTA_NONE;
 		sampleCount = 0;
+		sampleSaveInterval = 1;
 		multiplier = 0;
 		unitName = null;
 		snmpRawValueType = SNMP_RAWTYPE_NONE;
@@ -168,6 +171,7 @@ public class DataCollectionItem extends DataCollectionObject
       transformedDataType = src.transformedDataType;
       deltaCalculation = src.deltaCalculation;
       sampleCount = src.sampleCount;
+      sampleSaveInterval = src.sampleSaveInterval;
       multiplier = src.multiplier;
       unitName = src.unitName;
       snmpRawValueType = src.snmpRawValueType;
@@ -190,6 +194,7 @@ public class DataCollectionItem extends DataCollectionObject
       msg.setFieldInt16(NXCPCodes.VID_TRANSFORMED_DATA_TYPE, transformedDataType.getValue());
 		msg.setFieldInt16(NXCPCodes.VID_DCI_DELTA_CALCULATION, deltaCalculation);
 		msg.setFieldInt16(NXCPCodes.VID_SAMPLE_COUNT, sampleCount);
+		msg.setFieldInt32(NXCPCodes.VID_SAMPLE_SAVE_INTERVAL, sampleSaveInterval);
 		msg.setFieldInt16(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE, snmpRawValueType);
       msg.setFieldInt32(NXCPCodes.VID_DEACTIVATION_EVENT, allThresholdsRearmEvent);
 		msg.setField(NXCPCodes.VID_NPE_NAME, predictionEngine);
@@ -530,5 +535,25 @@ public class DataCollectionItem extends DataCollectionObject
          flags |= DCF_STORE_CHANGES_ONLY;
       else
          flags &= ~DCF_STORE_CHANGES_ONLY;
+   }
+
+   /**
+    * Get sample save interval (save every N-th sample).
+    *
+    * @return sample save interval (1 = save all samples)
+    */
+   public int getSampleSaveInterval()
+   {
+      return sampleSaveInterval;
+   }
+
+   /**
+    * Set sample save interval (save every N-th sample).
+    *
+    * @param sampleSaveInterval sample save interval (1 = save all samples)
+    */
+   public void setSampleSaveInterval(int sampleSaveInterval)
+   {
+      this.sampleSaveInterval = sampleSaveInterval;
    }
 }

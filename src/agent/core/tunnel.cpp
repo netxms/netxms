@@ -825,9 +825,7 @@ static bool VerifyServerCertificate(X509 *cert)
             if (!dp.isEmpty())
             {
                nxlog_debug_tag(DEBUG_TAG, 4, _T("VerifyServerCertificate: certificate CRL DP: %s"), dp.cstr());
-               char *url = dp.getUTF8String();
-               AddRemoteCRL(url, true);
-               MemFree(url);
+               AddRemoteCRL(dp.getUTF8StdString().c_str(), true);
             }
 
             X509 *issuer = sk_X509_value(chain, 1);

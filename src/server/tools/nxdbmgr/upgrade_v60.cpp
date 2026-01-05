@@ -25,6 +25,19 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.18 to 60.19
+ */
+static bool H_UpgradeFromV18()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE items ADD sample_save_interval integer")));
+   CHK_EXEC(SQLQuery(_T("UPDATE items SET sample_save_interval=1")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("items"), _T("sample_save_interval")));
+
+   CHK_EXEC(SetMinorSchemaVersion(19));
+   return true;
+}
+
+/**
  * Upgrade from 60.17 to 60.18
  */
 static bool H_UpgradeFromV17()
@@ -1304,6 +1317,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 18, 60, 19, H_UpgradeFromV18 },
    { 17, 60, 18, H_UpgradeFromV17 },
    { 16, 60, 17, H_UpgradeFromV16 },
    { 15, 60, 16, H_UpgradeFromV15 },

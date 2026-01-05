@@ -527,6 +527,8 @@ protected:
 	uint16_t m_snmpRawValueType;		// Actual SNMP raw value type for input transformation
 	TCHAR m_predictionEngine[MAX_NPE_NAME_LEN];
    uint32_t m_allThresholdsRearmEvent; // Event to be generated when all thresholds are rearmed
+   int32_t m_sampleSaveInterval;       // Save every N-th sample (1 = save all)
+   int32_t m_sampleSaveCounter;        // Runtime counter for nth sample logic (not persisted)
 
    bool transform(ItemValue &value, time_t nElapsedTime);
    void checkThresholds(ItemValue &value, const shared_ptr<DCObject>& originalDci);
@@ -590,6 +592,7 @@ public:
 	bool hasActiveThreshold() const;
    int getThresholdSeverity() const;
 	int getSampleCount() const { return m_sampleCount; }
+	int32_t getSampleSaveInterval() const { return m_sampleSaveInterval; }
 	const TCHAR *getPredictionEngine() const { return m_predictionEngine; }
 	int getMultiplier() const { return m_multiplier; }
 	int getUseMultiplier() const { return (m_flags & DCF_MULTIPLIERS_MASK) >> 16; }

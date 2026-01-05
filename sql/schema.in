@@ -921,6 +921,7 @@ CREATE TABLE items
   instd_data varchar(1023) null,
   instd_filter SQL_TEXT null,
   samples integer not null,
+  sample_save_interval integer not null,
   npe_name varchar(15) null,
   comments SQL_TEXT null,
   instance_retention_time integer not null,

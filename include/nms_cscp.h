@@ -1613,6 +1613,7 @@ typedef struct
 #define VID_OUTPUT                  ((uint32_t)900)
 #define VID_INCIDENT_AI_DEPTH       ((uint32_t)901)
 #define VID_INCIDENT_AI_PROMPT      ((uint32_t)902)
+#define VID_SAMPLE_SAVE_INTERVAL    ((uint32_t)903)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

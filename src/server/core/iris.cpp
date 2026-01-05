@@ -1467,7 +1467,7 @@ static std::string BuildIncidentAnalysisPrompt(uint32_t incidentId, int depth, c
    prompt.append(_T("- Suggest an assignee if appropriate using suggest-incident-assignee\n"));
    prompt.append(_T("- The analysis will be posted as an incident comment\n"));
 
-   return prompt.getUTF8String();
+   return prompt.getUTF8StdString();
 }
 
 /**

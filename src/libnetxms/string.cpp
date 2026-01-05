@@ -325,6 +325,27 @@ char *String::getUTF8String() const
 }
 
 /**
+ * Get content as std::string in UTF-8 encoding
+ */
+std::string String::getUTF8StdString() const
+{
+   if (m_length == 0)
+      return std::string();
+
+#ifdef UNICODE
+   size_t l = wchar_utf8len(m_buffer, m_length);
+   Buffer<char, 1024> buffer(l + 1);
+   wchar_to_utf8(m_buffer, m_length + 1, buffer, l + 1);
+   return std::string(buffer);
+#else
+   char *utf8 = UTF8StringFromMBString(m_buffer);
+   std::string result(utf8);
+   MemFree(utf8);
+   return result;
+#endif
+}
+
+/**
  * Check that two strings are equal
  */
 bool String::equals(const String& s) const

@@ -870,12 +870,10 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
          X509_REQ *certRequest = d2i_X509_REQ(nullptr, &certRequestData, (long)certRequestLen);
          if (certRequest != nullptr)
          {
-            char *ou = m_bindGuid.toString().getUTF8String();
-            char *cn = m_guid.toString().getUTF8String();
+            std::string ou = m_bindGuid.toString().getUTF8StdString();
+            std::string cn = m_guid.toString().getUTF8StdString();
             int32_t days = ConfigReadInt(_T("AgentTunnels.Certificates.ValidityPeriod"), 90);
-            X509 *cert = IssueCertificate(certRequest, ou, cn, days);
-            MemFree(ou);
-            MemFree(cn);
+            X509 *cert = IssueCertificate(certRequest, ou.c_str(), cn.c_str(), days);
             if (cert != nullptr)
             {
                LogCertificateAction(ISSUE_CERTIFICATE, m_bindUserId, m_nodeId, m_bindGuid, CERT_TYPE_AGENT, cert);
@@ -1550,9 +1548,7 @@ retry:
       if (!dp.isEmpty())
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): certificate CRL DP: %s"), request->addr.toString().cstr(), dp.cstr());
-         char *url = dp.getUTF8String();
-         AddRemoteCRL(url, true);
-         MemFree(url);
+         AddRemoteCRL(dp.getUTF8StdString().c_str(), true);
       }
 
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L) && !defined(LIBRESSL_VERSION_NUMBER)

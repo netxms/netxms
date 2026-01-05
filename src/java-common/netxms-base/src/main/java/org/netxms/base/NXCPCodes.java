@@ -1427,6 +1427,7 @@ public class NXCPCodes
    public static final long VID_OUTPUT = 900;
    public static final long VID_INCIDENT_AI_DEPTH = 901;
    public static final long VID_INCIDENT_AI_PROMPT = 902;
+   public static final long VID_SAMPLE_SAVE_INTERVAL = 903;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

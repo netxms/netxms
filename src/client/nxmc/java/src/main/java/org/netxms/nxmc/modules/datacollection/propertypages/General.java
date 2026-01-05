@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataOrigin;
@@ -124,6 +125,7 @@ public class General extends AbstractDCIPropertyPage
 	private Text pollingInterval;
 	private Text retentionTime;
 	private Button checkSaveOnlyChangedValues;
+	private Spinner sampleSaveInterval;
 
    /**
     * Create page.
@@ -435,12 +437,35 @@ public class General extends AbstractDCIPropertyPage
       {
          DataCollectionItem dci = (DataCollectionItem)dco;
 
+         Composite sampleSaveComposite = new Composite(groupRetention, SWT.NONE);
+         layout = new GridLayout();
+         layout.marginHeight = 0;
+         layout.marginWidth = WidgetHelper.OUTER_SPACING;
+         layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
+         layout.numColumns = 3;
+         sampleSaveComposite.setLayout(layout);
+
+         Label sampleSaveLabel = new Label(sampleSaveComposite, SWT.NONE);
+         sampleSaveLabel.setText("Save every");
+
+         sampleSaveInterval = new Spinner(sampleSaveComposite, SWT.BORDER);
+         sampleSaveInterval.setMinimum(1);
+         sampleSaveInterval.setMaximum(10000);
+         sampleSaveInterval.setSelection(dci.getSampleSaveInterval());
+
+         Label sampleSaveLabel2 = new Label(sampleSaveComposite, SWT.NONE);
+         sampleSaveLabel2.setText("sample");
+
+         gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+         gd.horizontalSpan = 2;
+         gd.verticalIndent = SUB_ELEMENT_INDENT;
+         sampleSaveComposite.setLayoutData(gd);
+
          checkSaveOnlyChangedValues = new Button(groupRetention, SWT.CHECK);
          checkSaveOnlyChangedValues.setText("Save only &changed values");
          checkSaveOnlyChangedValues.setSelection(dci.isStoreChangesOnly());
          gd = new GridData();
          gd.horizontalSpan = 2;
-         gd.verticalIndent = SUB_ELEMENT_INDENT;
          checkSaveOnlyChangedValues.setLayoutData(gd);
       }
 
@@ -499,6 +524,7 @@ public class General extends AbstractDCIPropertyPage
          dci.setUnitName(dataUnit.getText());      
          dci.setMultiplierSelection(useMultipliers.getSelectionIndex());
          dci.setStoreChangesOnly(checkSaveOnlyChangedValues.getSelection());
+         dci.setSampleSaveInterval(sampleSaveInterval.getSelection());
       }
 
 		editor.modify();
