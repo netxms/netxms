@@ -175,7 +175,7 @@ Configure NetXMS to be built in `/opt/netxms` with desired options:
 
    ```bash
    mkdir /opt/netxms
-   cd ./tools
+   cd ./build
    ./updatetag.pl #run once after clone to generate version.h
    cd ..
    ./reconf #run once after clone 
