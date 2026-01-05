@@ -1176,7 +1176,7 @@ void Chat::handleQuestionResponse(uint64_t questionId, bool positive, int select
 
    if (m_pendingQuestion->id != questionId)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Chat [%u]: received response for question [") UINT64_FMT _T("] but pending question is [%") PRIu64 _T("]"),
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Chat [%u]: received response for question [") UINT64_FMT _T("] but pending question is [") UINT64_FMT _T("]"),
          m_id, questionId, m_pendingQuestion->id);
       return;
    }

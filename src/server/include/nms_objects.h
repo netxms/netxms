@@ -2112,7 +2112,7 @@ class NXCORE_EXPORTABLE FileDeliveryPolicy : public GenericAgentPolicy
 protected:
    virtual void importAdditionalData(const ConfigEntry *config, ImportContext *context) override;
    virtual void importAdditionalData(json_t *data, ImportContext *context) override;
-   virtual void exportAdditionalData(json_t *root) const;
+   virtual void exportAdditionalData(json_t *root) const override;
 
 public:
    FileDeliveryPolicy(const uuid& guid, uint32_t ownerId) : GenericAgentPolicy(guid, _T("FileDelivery"), ownerId) { }
