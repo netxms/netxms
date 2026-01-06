@@ -70,6 +70,7 @@ import org.netxms.nxmc.modules.objects.propertypages.NetworkServicePolling;
 import org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage;
 import org.netxms.nxmc.modules.objects.propertypages.PhysicalContainerPlacement;
 import org.netxms.nxmc.modules.objects.propertypages.Polling;
+import org.netxms.nxmc.modules.objects.propertypages.PortStopList;
 import org.netxms.nxmc.modules.objects.propertypages.RackPassiveElements;
 import org.netxms.nxmc.modules.objects.propertypages.RackProperties;
 import org.netxms.nxmc.modules.objects.propertypages.ResponsibleUsers;
@@ -138,6 +139,7 @@ public class ObjectPropertiesManager
       pageClasses.add(NetworkServicePolling.class);
       pageClasses.add(PhysicalContainerPlacement.class);
       pageClasses.add(Polling.class);
+      pageClasses.add(PortStopList.class);
       pageClasses.add(RackPassiveElements.class);
       pageClasses.add(RackProperties.class);
       pageClasses.add(ResponsibleUsers.class);

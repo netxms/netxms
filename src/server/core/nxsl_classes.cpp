@@ -2215,6 +2215,73 @@ NXSL_METHOD_DEFINITION(Node, setPollCountForStatusChange)
 }
 
 /**
+ * Node::isPortBlocked(port, protocol) method
+ */
+NXSL_METHOD_DEFINITION(Node, isPortBlocked)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+   if (!argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   int port = argv[0]->getValueAsInt32();
+   if ((port < 1) || (port > 65535))
+   {
+      *result = vm->createValue(false);
+      return NXSL_ERR_SUCCESS;
+   }
+
+   const TCHAR *protocol = argv[1]->getValueAsCString();
+   bool tcp;
+   if (!_tcsicmp(protocol, _T("tcp")))
+      tcp = true;
+   else if (!_tcsicmp(protocol, _T("udp")))
+      tcp = false;
+   else
+   {
+      *result = vm->createValue(false);
+      return NXSL_ERR_SUCCESS;
+   }
+
+   Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   *result = vm->createValue(IsPortBlocked(node->getId(), static_cast<uint16_t>(port), tcp));
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * Node::getBlockedPorts(protocol) method
+ */
+NXSL_METHOD_DEFINITION(Node, getBlockedPorts)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   const TCHAR *protocol = argv[0]->getValueAsCString();
+   bool tcp;
+   if (!_tcsicmp(protocol, _T("tcp")))
+      tcp = true;
+   else if (!_tcsicmp(protocol, _T("udp")))
+      tcp = false;
+   else
+   {
+      *result = vm->createValue(new NXSL_Array(vm));
+      return NXSL_ERR_SUCCESS;
+   }
+
+   Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   IntegerArray<uint16_t> tcpPorts, udpPorts;
+   GetEffectivePortStopList(node->getId(), &tcpPorts, &udpPorts);
+
+   NXSL_Array *array = new NXSL_Array(vm);
+   IntegerArray<uint16_t> *ports = tcp ? &tcpPorts : &udpPorts;
+   for(int i = 0; i < ports->size(); i++)
+      array->append(vm->createValue(ports->get(i)));
+
+   *result = vm->createValue(array);
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
  * NXSL class Node: constructor
  */
 NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
@@ -2246,7 +2313,9 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, getInterfaceByMACAddress, 1);
    NXSL_REGISTER_METHOD(Node, getInterfaceByName, 1);
    NXSL_REGISTER_METHOD(Node, getInterfaceName, 1);
+   NXSL_REGISTER_METHOD(Node, getBlockedPorts, 1);
    NXSL_REGISTER_METHOD(Node, getWebService, 1);
+   NXSL_REGISTER_METHOD(Node, isPortBlocked, 2);
    NXSL_REGISTER_METHOD(Node, readAgentList, 1);
    NXSL_REGISTER_METHOD(Node, readAgentParameter, 1);
    NXSL_REGISTER_METHOD(Node, readAgentTable, 1);

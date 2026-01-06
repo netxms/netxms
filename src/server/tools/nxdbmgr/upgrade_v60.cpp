@@ -25,6 +25,25 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.21 to 60.22
+ */
+static bool H_UpgradeFromV21()
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE port_stop_list (")
+      _T("   object_id integer not null,")
+      _T("   id integer not null,")
+      _T("   port integer not null,")
+      _T("   protocol char(1) not null,")
+      _T("   PRIMARY KEY(object_id,id))")));
+
+   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_psl_object ON port_stop_list(object_id)")));
+
+   CHK_EXEC(SetMinorSchemaVersion(22));
+   return true;
+}
+
+/**
  * Upgrade from 60.20 to 60.21
  */
 static bool H_UpgradeFromV20()
@@ -1373,6 +1392,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 21, 60, 22, H_UpgradeFromV21 },
    { 20, 60, 21, H_UpgradeFromV20 },
    { 19, 60, 20, H_UpgradeFromV19 },
    { 18, 60, 19, H_UpgradeFromV18 },

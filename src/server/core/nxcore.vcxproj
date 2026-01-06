@@ -553,6 +553,7 @@
     <ClCompile Include="physical_link.cpp" />
     <ClCompile Include="poll.cpp" />
     <ClCompile Include="pollable.cpp" />
+    <ClCompile Include="port_stop_list.cpp" />
     <ClCompile Include="ps.cpp" />
     <ClCompile Include="rack.cpp" />
     <ClCompile Include="radius.cpp" />

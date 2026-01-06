@@ -113,6 +113,7 @@ void StopSnmpTrapReceiver();
 void CheckNodeCountRestrictions();
 void InitializeDeviceBackupInterface();
 void LoadWellKnownPortList();
+void LoadPortStopList();
 bool InitAIAssistant();
 void ShutdownAIMessageManager();
 
@@ -1224,6 +1225,7 @@ retry_db_lock:
    InitCurrencyList();
    LoadOUIDatabase();
    LoadWellKnownPortList();
+   LoadPortStopList();
 
    // Load and compile scripts
    LoadScripts();

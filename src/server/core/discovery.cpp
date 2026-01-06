@@ -1338,6 +1338,16 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
                   IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), proxy->getName(), proxy->getId(), BooleanToString(snmpScanEnabled),
                   BooleanToString(tcpScanEnabled), blockSize, interBlockDelay);
             IntegerArray<uint16_t> ports = GetWellKnownPorts(_T("snmp"), 0);
+
+            // Filter blocked UDP ports
+            IntegerArray<uint16_t> blockedUdpPorts;
+            GetEffectivePortStopListForZone(range.getZoneUIN(), nullptr, &blockedUdpPorts);
+            for (int i = ports.size() - 1; i >= 0; i--)
+            {
+               if (blockedUdpPorts.contains(ports.get(i)))
+                  ports.remove(i);
+            }
+
             unique_ptr<StringList> communities = SnmpGetKnownCommunities(0);
             for(int i = 0; (i < ports.size()) && !IsShutdownInProgress(); i++)
             {
@@ -1358,9 +1368,19 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
                   IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), proxy->getName(), proxy->getId());
             IntegerArray<uint16_t> ports = GetWellKnownPorts(_T("agent"), 0);
             ports.addAll(GetWellKnownPorts(_T("ssh"), 0));
+            ports.add(ETHERNET_IP_DEFAULT_PORT);
+
+            // Filter blocked TCP ports
+            IntegerArray<uint16_t> blockedTcpPorts;
+            GetEffectivePortStopListForZone(range.getZoneUIN(), &blockedTcpPorts, nullptr);
+            for (int i = ports.size() - 1; i >= 0; i--)
+            {
+               if (blockedTcpPorts.contains(ports.get(i)))
+                  ports.remove(i);
+            }
+
             for(int i = 0; (i < ports.size()) && !IsShutdownInProgress(); i++)
                ScanAddressRangeTCPProxy(conn.get(), from, blockEndAddr, ports.get(i), callback, range.getZoneUIN(), proxy.get(), console);
-            ScanAddressRangeTCPProxy(conn.get(), from, blockEndAddr, ETHERNET_IP_DEFAULT_PORT, callback, range.getZoneUIN(), proxy.get(), console);
          }
 
          from += blockSize;
@@ -1386,6 +1406,16 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
          {
             ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Starting SNMP check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(blockEndAddr, ipAddr2));
             IntegerArray<uint16_t> ports = GetWellKnownPorts(_T("snmp"), 0);
+
+            // Filter blocked UDP ports
+            IntegerArray<uint16_t> blockedUdpPorts;
+            GetEffectivePortStopListForZone(range.getZoneUIN(), nullptr, &blockedUdpPorts);
+            for (int i = ports.size() - 1; i >= 0; i--)
+            {
+               if (blockedUdpPorts.contains(ports.get(i)))
+                  ports.remove(i);
+            }
+
             unique_ptr<StringList> communities = SnmpGetKnownCommunities(0);
             for(int i = 0; (i < ports.size()) && !IsShutdownInProgress(); i++)
             {
@@ -1406,9 +1436,19 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
             ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Starting TCP check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(blockEndAddr, ipAddr2));
             IntegerArray<uint16_t> ports = GetWellKnownPorts(_T("agent"), 0);
             ports.addAll(GetWellKnownPorts(_T("ssh"), 0));
+            ports.add(ETHERNET_IP_DEFAULT_PORT);
+
+            // Filter blocked TCP ports
+            IntegerArray<uint16_t> blockedTcpPorts;
+            GetEffectivePortStopListForZone(range.getZoneUIN(), &blockedTcpPorts, nullptr);
+            for (int i = ports.size() - 1; i >= 0; i--)
+            {
+               if (blockedTcpPorts.contains(ports.get(i)))
+                  ports.remove(i);
+            }
+
             for(int i = 0; (i < ports.size()) && !IsShutdownInProgress(); i++)
                ScanAddressRangeTCP(from, blockEndAddr, ports.get(i), callback, console, nullptr);
-            ScanAddressRangeTCP(from, blockEndAddr, ETHERNET_IP_DEFAULT_PORT, callback, console, nullptr);
          }
 
          from += blockSize;

@@ -2145,6 +2145,20 @@ CREATE TABLE well_known_ports
 ) TABLE_TYPE;
 
 /*
+** Port stop list - ports that should never be accessed by server
+*/
+CREATE TABLE port_stop_list
+(
+   object_id integer not null,
+   id integer not null,
+   port integer not null,
+   protocol char(1) not null,
+   PRIMARY KEY(object_id,id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_psl_object ON port_stop_list(object_id);
+
+/*
 ** Network maps
 */
 CREATE TABLE network_maps

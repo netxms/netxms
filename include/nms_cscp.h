@@ -703,6 +703,8 @@ typedef struct
 #define CMD_AI_MESSAGE_UPDATE             0x01F7
 #define CMD_SET_AI_MESSAGE_STATUS         0x01F8
 #define CMD_DELETE_AI_MESSAGE             0x01F9
+#define CMD_GET_PORT_STOP_LIST            0x01FA
+#define CMD_UPDATE_PORT_STOP_LIST         0x01FB
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1627,6 +1629,7 @@ typedef struct
 #define VID_AI_MESSAGE_SPAWN_DATA   ((uint32_t)910)
 #define VID_AI_MESSAGE_RELATED_OBJ  ((uint32_t)911)
 #define VID_AI_MESSAGE_SOURCE_TASK  ((uint32_t)912)
+#define VID_PORT_STOP_COUNT         ((uint32_t)913)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)
@@ -1695,6 +1698,9 @@ typedef struct
 
 // Base value for ICMP target list
 #define VID_ICMP_TARGET_LIST_BASE   ((uint32_t)0x75000000)
+
+// Base value for port stop list
+#define VID_PORT_STOP_LIST_BASE     ((uint32_t)0x77000000)
 
 // Base value for asset properties
 #define VID_ASSET_PROPERTIES_BASE   ((uint32_t)0x76000000)

@@ -14543,6 +14543,62 @@ public class NXCSession
    }
 
    /**
+    * Get port stop list for given object.
+    *
+    * @param objectId object ID (can be Zone, Container, Subnet, or Node)
+    * @return list of port stop entries
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<PortStopEntry> getPortStopList(long objectId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PORT_STOP_LIST);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+
+      int count = response.getFieldAsInt32(NXCPCodes.VID_PORT_STOP_COUNT);
+      List<PortStopEntry> entries = new ArrayList<PortStopEntry>(count);
+      long fieldId = NXCPCodes.VID_PORT_STOP_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         entries.add(new PortStopEntry(response, fieldId));
+         fieldId += 10;
+      }
+      return entries;
+   }
+
+   /**
+    * Update port stop list for given object.
+    *
+    * @param objectId object ID (can be Zone, Container, Subnet, or Node)
+    * @param entries new port stop list (null to delete existing list)
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void updatePortStopList(long objectId, List<PortStopEntry> entries) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_PORT_STOP_LIST);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      if (entries != null)
+      {
+         long fieldId = NXCPCodes.VID_PORT_STOP_LIST_BASE;
+         for(PortStopEntry entry : entries)
+         {
+            entry.fillMessage(msg, fieldId);
+            fieldId += 10;
+         }
+         msg.setFieldInt32(NXCPCodes.VID_PORT_STOP_COUNT, entries.size());
+      }
+      else
+      {
+         msg.setFieldInt32(NXCPCodes.VID_PORT_STOP_COUNT, 0);
+      }
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
     * Get configured geographical areas
     *
     * @return list of configured geographical areas

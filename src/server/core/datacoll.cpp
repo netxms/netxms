@@ -112,17 +112,24 @@ static void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, TCHAR
          case DS_SSH:
             if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
-               shared_ptr<Node> proxy = static_pointer_cast<Node>(FindObjectById(static_cast<Node*>(dcTarget)->getEffectiveSshProxy(), OBJECT_NODE));
+               Node *node = static_cast<Node*>(dcTarget);
+               if (IsPortBlocked(node->getId(), node->getSshPort(), true))
+               {
+                  nxlog_debug_tag(DEBUG_TAG_DC_SSH, 5, _T("DataCollector(%s [%u]): SSH port %u blocked by port stop list"), node->getName(), node->getId(), node->getSshPort());
+                  *error = DCE_COMM_ERROR;
+                  break;
+               }
+               shared_ptr<Node> proxy = static_pointer_cast<Node>(FindObjectById(node->getEffectiveSshProxy(), OBJECT_NODE));
                if (proxy != nullptr)
                {
                   wchar_t name[MAX_PARAM_NAME], ipAddr[64];
                   nx_swprintf(name, MAX_PARAM_NAME, _T("SSH.Command(%s:%u,\"%s\",\"%s\",\"%s\",\"\",%d)"),
-                             static_cast<Node*>(dcTarget)->getIpAddress().toString(ipAddr),
-                             static_cast<uint32_t>(static_cast<Node*>(dcTarget)->getSshPort()),
-                             EscapeStringForAgent(static_cast<Node*>(dcTarget)->getSshLogin()).cstr(),
-                             EscapeStringForAgent(static_cast<Node*>(dcTarget)->getSshPassword()).cstr(),
+                             node->getIpAddress().toString(ipAddr),
+                             static_cast<uint32_t>(node->getSshPort()),
+                             EscapeStringForAgent(node->getSshLogin()).cstr(),
+                             EscapeStringForAgent(node->getSshPassword()).cstr(),
                              EscapeStringForAgent(dci.getName()).cstr(),
-                             static_cast<Node*>(dcTarget)->getSshKeyId());
+                             node->getSshKeyId());
                   *error = proxy->getMetricFromAgent(name, buffer, MAX_RESULT_LENGTH);
                }
                else
