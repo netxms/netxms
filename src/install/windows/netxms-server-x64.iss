@@ -487,7 +487,7 @@ Filename: "icacls.exe"; Parameters: """{app}\var"" /grant:r *S-1-5-19:(OI)(CI)F"
 Filename: "icacls.exe"; Parameters: """{app}\var"" /grant:r *S-1-5-32-544:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
 Filename: "{app}\bin\nxmibc.exe"; Parameters: "-z -d ""{app}\share\mibs"" -d ""{app}\var\mibs"" -o ""{app}\var\netxms.cmib"""; WorkingDir: "{app}\bin"; StatusMsg: "Compiling MIB files..."; Flags: runhidden; Components: server
 ; Setup agent service
-Filename: "{app}\bin\nxagentd.exe"; Parameters: "-Z ""{app}\etc\nxagentd.conf"" 127.0.0.1,::1 ""{app}\log\nxagentd.log"" ""{app}\var"" ""{app}\etc\nxagentd.conf.d"" portcheck.nsm ssh.nsm winperf.nsm wmi.nsm"; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent configuration file..."; Components: server
+Filename: "{app}\bin\nxagentd.exe"; Parameters: "-Z ""{app}\etc\nxagentd.conf"" 127.0.0.1,::1 ""{app}\log\nxagentd.log"" ""{app}\var"" ""{app}\etc\nxagentd.conf.d"" netsvc ssh winperf wmi"; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent configuration file..."; Components: server
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-c ""{app}\etc\nxagentd.conf"" -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing agent service..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; StatusMsg: "Starting agent service..."; Flags: runhidden; Components: server
 ; Setup server core service
