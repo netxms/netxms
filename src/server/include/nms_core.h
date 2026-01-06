@@ -996,6 +996,9 @@ private:
    void deleteAiAgentTask(const NXCPMessage& request);
    void addAiAgentTask(const NXCPMessage& request);
    void handleAiQuestionResponse(const NXCPMessage& request);
+   void getAIMessages(const NXCPMessage& request);
+   void setAIMessageStatus(const NXCPMessage& request);
+   void deleteAIMessage(const NXCPMessage& request);
    void getSmclpProperties(const NXCPMessage& request);
    void getInterfaceTrafficDcis(const NXCPMessage& request);
    void autoConnectNetworkMapNodes(const NXCPMessage& request);

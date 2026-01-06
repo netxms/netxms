@@ -517,6 +517,10 @@ public class NXCPCodes
    public static final int CMD_INCIDENT_UPDATE = 0x01F0;
    public static final int CMD_AI_AGENT_QUESTION = 0x01F1;
    public static final int CMD_AI_AGENT_RESPONSE = 0x01F2;
+   public static final int CMD_GET_AI_MESSAGES = 0x01F6;
+   public static final int CMD_AI_MESSAGE_UPDATE = 0x01F7;
+   public static final int CMD_SET_AI_MESSAGE_STATUS = 0x01F8;
+   public static final int CMD_DELETE_AI_MESSAGE = 0x01F9;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1428,6 +1432,15 @@ public class NXCPCodes
    public static final long VID_INCIDENT_AI_DEPTH = 901;
    public static final long VID_INCIDENT_AI_PROMPT = 902;
    public static final long VID_SAMPLE_SAVE_INTERVAL = 903;
+   public static final long VID_AI_MESSAGE_ID = 904;
+   public static final long VID_AI_MESSAGE_TYPE = 905;
+   public static final long VID_AI_MESSAGE_TITLE = 906;
+   public static final long VID_AI_MESSAGE_TEXT = 907;
+   public static final long VID_AI_MESSAGE_STATUS = 908;
+   public static final long VID_AI_MESSAGE_EXPIRATION = 909;
+   public static final long VID_AI_MESSAGE_SPAWN_DATA = 910;
+   public static final long VID_AI_MESSAGE_RELATED_OBJ = 911;
+   public static final long VID_AI_MESSAGE_SOURCE_TASK = 912;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

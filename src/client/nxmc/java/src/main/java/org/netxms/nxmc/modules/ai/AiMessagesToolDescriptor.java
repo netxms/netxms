@@ -19,44 +19,53 @@
 package org.netxms.nxmc.modules.ai;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.netxms.nxmc.base.views.ConfigurationView;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.ai.views.AiTaskManager;
+import org.netxms.nxmc.modules.ai.views.AiMessagesView;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.netxms.nxmc.services.ConfigurationPerspectiveElement;
+import org.netxms.nxmc.services.ToolDescriptor;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Configuration perspective element for AI tasks
+ * Tools perspective element for AI messages view
  */
-public class AiTasksConfigurationElement implements ConfigurationPerspectiveElement
+public class AiMessagesToolDescriptor implements ToolDescriptor
 {
-   private final I18n i18n = LocalizationHelper.getI18n(AiTasksConfigurationElement.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AiMessagesToolDescriptor.class);
 
    /**
-    * @see org.netxms.nxmc.services.ConfigurationPerspectiveElement#getName()
+    * @see org.netxms.nxmc.services.ToolDescriptor#getName()
     */
    @Override
    public String getName()
    {
-      return i18n.tr("AI Tasks");
+      return i18n.tr("AI messages");
    }
 
    /**
-    * @see org.netxms.nxmc.services.ConfigurationPerspectiveElement#getImage()
+    * @see org.netxms.nxmc.services.ToolDescriptor#getImage()
     */
    @Override
    public ImageDescriptor getImage()
    {
-      return ResourceManager.getImageDescriptor("icons/config-views/ai-tasks.png");
+      return ResourceManager.getImageDescriptor("icons/tool-views/ai-messages.png");
    }
 
    /**
-    * @see org.netxms.nxmc.services.ConfigurationPerspectiveElement#createView()
+    * @see org.netxms.nxmc.services.ToolDescriptor#createView()
     */
    @Override
-   public ConfigurationView createView()
+   public View createView()
    {
-      return new AiTaskManager();
+      return new AiMessagesView();
+   }
+
+   /**
+    * @see org.netxms.nxmc.services.ToolDescriptor#getRequiredComponentId()
+    */
+   @Override
+   public String getRequiredComponentId()
+   {
+      return "AI-ASSISTANT";
    }
 }

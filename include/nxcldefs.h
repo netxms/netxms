@@ -790,6 +790,7 @@ enum SessionState
 #define RCC_ALARM_ALREADY_IN_INCIDENT     ((uint32_t)182)
 #define RCC_INVALID_INCIDENT_STATE        ((uint32_t)183)
 #define RCC_COMMENT_REQUIRED              ((uint32_t)184)
+#define RCC_INVALID_MESSAGE_ID            ((uint32_t)185)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -217,6 +217,7 @@ public final class RCC
    public static final int ALARM_ALREADY_IN_INCIDENT = 182;
    public static final int INVALID_INCIDENT_STATE = 183;
    public static final int COMMENT_REQUIRED = 184;
+   public static final int INVALID_MESSAGE_ID = 185;
 
    // Client-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

@@ -1,4 +1,5 @@
 org.netxms.nxmc.modules.ai.AiAssistantChatDescriptor
+org.netxms.nxmc.modules.ai.AiMessagesToolDescriptor
 org.netxms.nxmc.modules.snmp.MibExplorerToolDescriptor
 org.netxms.nxmc.modules.tools.FindByIpAddressDescriptor
 org.netxms.nxmc.modules.tools.FindByMacAddressDescriptor

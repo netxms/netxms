@@ -25,6 +25,43 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.20 to 60.21
+ */
+static bool H_UpgradeFromV20()
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE ai_messages (")
+      _T("   id integer not null,")
+      _T("   message_guid varchar(36) not null,")
+      _T("   message_type integer not null,")
+      _T("   creation_time integer not null,")
+      _T("   expiration_time integer not null,")
+      _T("   source_task_id integer null,")
+      _T("   source_task_type varchar(63) null,")
+      _T("   related_object_id integer null,")
+      _T("   title varchar(255) not null,")
+      _T("   message_text $SQL:TEXT not null,")
+      _T("   spawn_task_data $SQL:TEXT null,")
+      _T("   status integer not null default 0,")
+      _T("   PRIMARY KEY(id))")));
+
+   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_ai_messages_expiration ON ai_messages(expiration_time)")));
+
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE ai_message_recipients (")
+      _T("   message_id integer not null,")
+      _T("   user_id integer not null,")
+      _T("   is_initiator char(1) not null default '0',")
+      _T("   read_time integer null,")
+      _T("   PRIMARY KEY(message_id, user_id))")));
+
+   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_ai_msg_recipients_user ON ai_message_recipients(user_id)")));
+
+   CHK_EXEC(SetMinorSchemaVersion(21));
+   return true;
+}
+
+/**
  * Upgrade from 60.19 to 60.20
  */
 static bool H_UpgradeFromV19()
@@ -1336,6 +1373,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 20, 60, 21, H_UpgradeFromV20 },
    { 19, 60, 20, H_UpgradeFromV19 },
    { 18, 60, 19, H_UpgradeFromV18 },
    { 17, 60, 18, H_UpgradeFromV17 },

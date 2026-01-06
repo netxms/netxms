@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2025 Raden Solutions
+ * Copyright (C) 2025-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.ai.views.AiAssistantChatView;
-import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.services.ToolDescriptor;
 import org.xnap.commons.i18n.I18n;
 
@@ -48,7 +48,7 @@ public class AiAssistantChatDescriptor implements ToolDescriptor
    @Override
    public ImageDescriptor getImage()
    {
-      return ResourceManager.getImageDescriptor("icons/tool-views/ai-assistant.png");
+      return SharedIcons.AI_ASSISTANT;
    }
 
    /**

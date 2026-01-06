@@ -544,7 +544,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_AI_AGENT_RESPONSE"),
       _T("CMD_SETUP_SSH_CHANNEL"),
       _T("CMD_SSH_CHANNEL_DATA"),
-      _T("CMD_CLOSE_SSH_CHANNEL")
+      _T("CMD_CLOSE_SSH_CHANNEL"),
+      _T("CMD_GET_AI_MESSAGES"),
+      _T("CMD_AI_MESSAGE_UPDATE"),
+      _T("CMD_SET_AI_MESSAGE_STATUS"),
+      _T("CMD_DELETE_AI_MESSAGE")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -557,7 +561,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_CLOSE_SSH_CHANNEL))
+   if ((code >= CMD_LOGIN) && (code <= CMD_DELETE_AI_MESSAGE))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

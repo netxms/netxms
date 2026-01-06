@@ -29,6 +29,7 @@ public class SharedIcons
    public static ImageDescriptor ADD_OBJECT;
    public static ImageDescriptor AI_ASSISTANT;
 	public static ImageDescriptor ALARM;
+   public static ImageDescriptor APPROVE;
    public static ImageDescriptor BROWSER;
    public static ImageDescriptor CALENDAR;
 	public static ImageDescriptor CHECKBOX_OFF;
@@ -72,6 +73,7 @@ public class SharedIcons
    public static ImageDescriptor PREVIEW;
    public static ImageDescriptor PROPERTIES;
 	public static ImageDescriptor REFRESH;
+   public static ImageDescriptor REJECT;
    public static ImageDescriptor RENAME;
 	public static ImageDescriptor RESTART;
 	public static ImageDescriptor SAVE;
@@ -96,6 +98,7 @@ public class SharedIcons
 	public static Image IMG_ADD_OBJECT;
    public static Image IMG_AI_ASSISTANT;
    public static Image IMG_ALARM;
+   public static Image IMG_APPROVE;
    public static Image IMG_BROWSER;
    public static Image IMG_CALENDAR;
 	public static Image IMG_CHECKBOX_OFF;
@@ -139,6 +142,7 @@ public class SharedIcons
    public static Image IMG_PREVIEW;
    public static Image IMG_PROPERTIES;
 	public static Image IMG_REFRESH;
+   public static Image IMG_REJECT;
    public static Image IMG_RENAME;
 	public static Image IMG_RESTART;
 	public static Image IMG_SAVE;
@@ -168,6 +172,7 @@ public class SharedIcons
       ADD_OBJECT = ResourceManager.getImageDescriptor("icons/add_obj.png");
       AI_ASSISTANT = ResourceManager.getImageDescriptor("icons/ai-assistant.png");
       ALARM = ResourceManager.getImageDescriptor("icons/alarm.png");
+      APPROVE = ResourceManager.getImageDescriptor("icons/approve.png");
       BROWSER = ResourceManager.getImageDescriptor("icons/browser.png");
       CALENDAR = ResourceManager.getImageDescriptor("icons/calendar.png");
       CHECKBOX_OFF = ResourceManager.getImageDescriptor("icons/checkbox_off.png");
@@ -211,6 +216,7 @@ public class SharedIcons
       PREVIEW = ResourceManager.getImageDescriptor("icons/preview.png");
       PROPERTIES = ResourceManager.getImageDescriptor("icons/properties.png");
       REFRESH = ResourceManager.getImageDescriptor("icons/refresh.png");
+      REJECT = ResourceManager.getImageDescriptor("icons/reject.png");
       RENAME = ResourceManager.getImageDescriptor("icons/rename.png");
       RESTART = ResourceManager.getImageDescriptor("icons/restart.gif");
       SAVE = ResourceManager.getImageDescriptor("icons/save.png");
@@ -235,6 +241,7 @@ public class SharedIcons
 		IMG_ADD_OBJECT = ADD_OBJECT.createImage();
       IMG_AI_ASSISTANT = AI_ASSISTANT.createImage();
       IMG_ALARM = ALARM.createImage();
+      IMG_APPROVE = APPROVE.createImage();
       IMG_BROWSER = BROWSER.createImage();
       IMG_CALENDAR = CALENDAR.createImage();
 		IMG_CHECKBOX_OFF = CHECKBOX_OFF.createImage();
@@ -278,6 +285,7 @@ public class SharedIcons
       IMG_PREVIEW = PREVIEW.createImage();
       IMG_PROPERTIES = PROPERTIES.createImage();
 		IMG_REFRESH = REFRESH.createImage();
+      IMG_REJECT = REJECT.createImage();
       IMG_RENAME = RENAME.createImage();
 		IMG_RESTART = RESTART.createImage();
 		IMG_SAVE = SAVE.createImage();

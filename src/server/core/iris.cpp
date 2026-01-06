@@ -25,6 +25,7 @@
 #include <netxms-version.h>
 #include <iris.h>
 #include <nms_incident.h>
+#include <ai_messages.h>
 
 #define DEBUG_TAG _T("ai.assistant")
 
@@ -1685,7 +1686,34 @@ bool InitAIAssistant()
       },
       F_WriteLogMessage);
 
+   RegisterAIAssistantFunction(
+      "create-ai-message",
+      "Create an informational message or alert for the user to review later. "
+      "Use this when you want to communicate findings, reports, or analysis results "
+      "to the user without blocking the current task execution.",
+      {
+         { "title", "Short title for the message (max 255 chars)" },
+         { "text", "Full message content" },
+         { "type", "Message type: 'informational' or 'alert'" },
+         { "relatedObjectId", "Optional: ID of related NetXMS object" },
+         { "expirationMinutes", "Optional: minutes until message expires (default 7 days)" }
+      }, F_CreateAIMessage);
+
+   RegisterAIAssistantFunction(
+      "create-approval-request",
+      "Create an approval request that, when approved by the user, spawns a new AI task. "
+      "Use this when you identify an action that requires user authorization before execution, "
+      "such as service restarts, configuration changes, or potentially disruptive operations.",
+      {
+         { "title", "Short title describing what needs approval (max 255 chars)" },
+         { "text", "Full description of what will happen on approval" },
+         { "taskPrompt", "The prompt for the AI task to execute when approved" },
+         { "relatedObjectId", "Optional: ID of related NetXMS object" },
+         { "expirationMinutes", "Optional: minutes until request expires (default 24 hours)" }
+      }, F_CreateApprovalRequest);
+
    InitAITasks();
+   InitializeAIMessageManager();
    s_aiTaskThreadPool = ThreadPoolCreate(_T("AI-TASKS"),
          ConfigReadInt(_T("ThreadPool.AITasks.BaseSize"), 4),
          ConfigReadInt(_T("ThreadPool.AITasks.MaxSize"), 16));

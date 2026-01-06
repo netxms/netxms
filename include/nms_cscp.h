@@ -699,6 +699,10 @@ typedef struct
 #define CMD_SETUP_SSH_CHANNEL             0x01F3
 #define CMD_SSH_CHANNEL_DATA              0x01F4
 #define CMD_CLOSE_SSH_CHANNEL             0x01F5
+#define CMD_GET_AI_MESSAGES               0x01F6
+#define CMD_AI_MESSAGE_UPDATE             0x01F7
+#define CMD_SET_AI_MESSAGE_STATUS         0x01F8
+#define CMD_DELETE_AI_MESSAGE             0x01F9
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1614,6 +1618,15 @@ typedef struct
 #define VID_INCIDENT_AI_DEPTH       ((uint32_t)901)
 #define VID_INCIDENT_AI_PROMPT      ((uint32_t)902)
 #define VID_SAMPLE_SAVE_INTERVAL    ((uint32_t)903)
+#define VID_AI_MESSAGE_ID           ((uint32_t)904)
+#define VID_AI_MESSAGE_TYPE         ((uint32_t)905)
+#define VID_AI_MESSAGE_TITLE        ((uint32_t)906)
+#define VID_AI_MESSAGE_TEXT         ((uint32_t)907)
+#define VID_AI_MESSAGE_STATUS       ((uint32_t)908)
+#define VID_AI_MESSAGE_EXPIRATION   ((uint32_t)909)
+#define VID_AI_MESSAGE_SPAWN_DATA   ((uint32_t)910)
+#define VID_AI_MESSAGE_RELATED_OBJ  ((uint32_t)911)
+#define VID_AI_MESSAGE_SOURCE_TASK  ((uint32_t)912)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

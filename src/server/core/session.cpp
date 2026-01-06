@@ -39,6 +39,7 @@
 #include <nms_incident.h>
 #include <netxms-version.h>
 #include <iris.h>
+#include <ai_messages.h>
 
 #ifdef _WIN32
 #include <psapi.h>
@@ -2097,6 +2098,15 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_AI_AGENT_RESPONSE:
          handleAiQuestionResponse(*request);
+         break;
+      case CMD_GET_AI_MESSAGES:
+         getAIMessages(*request);
+         break;
+      case CMD_SET_AI_MESSAGE_STATUS:
+         setAIMessageStatus(*request);
+         break;
+      case CMD_DELETE_AI_MESSAGE:
+         deleteAIMessage(*request);
          break;
       default:
          if ((code >> 8) == 0x11)
@@ -18825,6 +18835,87 @@ void ClientSession::handleAiQuestionResponse(const NXCPMessage& request)
       response.setField(VID_RCC, rcc);
    }
 
+   sendMessage(response);
+}
+
+/**
+ * Get AI messages for current user
+ *
+ * Called by:
+ * CMD_GET_AI_MESSAGES
+ */
+void ClientSession::getAIMessages(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   unique_ptr<SharedObjectArray<AIMessage>> messages = GetAIMessagesForUser(m_userId);
+   response.setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(messages->size()));
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   for (int i = 0; i < messages->size(); i++)
+   {
+      messages->get(i)->fillMessage(&response, fieldId, m_userId);
+      fieldId += 20;
+   }
+   response.setField(VID_RCC, RCC_SUCCESS);
+
+   sendMessage(response);
+}
+
+/**
+ * Set AI message status (read, approve, reject)
+ *
+ * Called by:
+ * CMD_SET_AI_MESSAGE_STATUS
+ *
+ * Expected input parameters:
+ * VID_AI_MESSAGE_ID    Message ID
+ * VID_AI_MESSAGE_STATUS New status (1=read, 2=approved, 3=rejected)
+ */
+void ClientSession::setAIMessageStatus(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t messageId = request.getFieldAsUInt32(VID_AI_MESSAGE_ID);
+   AIMessageStatus newStatus = AIMessageStatusFromInt(request.getFieldAsInt32(VID_AI_MESSAGE_STATUS));
+
+   uint32_t rcc;
+   switch (newStatus)
+   {
+      case AI_MSG_STATUS_READ:
+         rcc = MarkAIMessageAsRead(messageId, m_userId);
+         break;
+      case AI_MSG_STATUS_APPROVED:
+         rcc = ApproveAIMessage(messageId, m_userId);
+         break;
+      case AI_MSG_STATUS_REJECTED:
+         rcc = RejectAIMessage(messageId, m_userId);
+         break;
+      default:
+         rcc = RCC_INVALID_ARGUMENT;
+         break;
+   }
+
+   response.setField(VID_RCC, rcc);
+   sendMessage(response);
+}
+
+/**
+ * Delete AI message
+ *
+ * Called by:
+ * CMD_DELETE_AI_MESSAGE
+ *
+ * Expected input parameters:
+ * VID_AI_MESSAGE_ID    Message ID
+ */
+void ClientSession::deleteAIMessage(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t messageId = request.getFieldAsUInt32(VID_AI_MESSAGE_ID);
+   uint32_t rcc = DeleteAIMessage(messageId, m_userId);
+
+   response.setField(VID_RCC, rcc);
    sendMessage(response);
 }
 

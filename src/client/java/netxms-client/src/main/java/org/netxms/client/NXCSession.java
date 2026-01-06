@@ -75,11 +75,13 @@ import org.netxms.client.agent.config.AgentConfiguration;
 import org.netxms.client.agent.config.AgentConfigurationHandle;
 import org.netxms.client.ai.AiAgentTask;
 import org.netxms.client.ai.AiAssistantFunction;
+import org.netxms.client.ai.AiMessage;
 import org.netxms.client.ai.AiQuestion;
 import org.netxms.client.asset.AssetAttribute;
 import org.netxms.client.businessservices.BusinessServiceCheck;
 import org.netxms.client.businessservices.BusinessServiceTicket;
 import org.netxms.client.constants.AggregationFunction;
+import org.netxms.client.constants.AiMessageStatus;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.BackgroundTaskState;
 import org.netxms.client.constants.DataCollectionObjectStatus;
@@ -793,6 +795,11 @@ public class NXCSession
                   case NXCPCodes.CMD_AI_AGENT_QUESTION:
                      sendNotification(new SessionNotification(SessionNotification.AI_QUESTION,
                            msg.getFieldAsInt64(NXCPCodes.VID_CHAT_ID), new AiQuestion(msg)));
+                     break;
+                  case NXCPCodes.CMD_AI_MESSAGE_UPDATE:
+                     sendNotification(new SessionNotification(SessionNotification.AI_MESSAGE_CHANGED,
+                           msg.getFieldAsInt64(NXCPCodes.VID_AI_MESSAGE_ID),
+                           new AiMessage(msg, NXCPCodes.VID_ELEMENT_LIST_BASE)));
                      break;
                   default:
                      // Check subscriptions
@@ -15603,6 +15610,99 @@ public class NXCSession
       msg.setFieldInt64(NXCPCodes.VID_AI_QUESTION_ID, questionId);
       msg.setField(NXCPCodes.VID_AI_RESPONSE_POSITIVE, positive);
       msg.setFieldInt32(NXCPCodes.VID_AI_RESPONSE_OPTION, selectedOption);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Get AI messages for the current user.
+    *
+    * @return list of AI messages
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error
+    */
+   public List<AiMessage> getAiMessages() throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AI_MESSAGES);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<AiMessage> list = new ArrayList<AiMessage>(count);
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         list.add(new AiMessage(response, fieldId));
+         fieldId += 20;
+      }
+      return list;
+   }
+
+   /**
+    * Set AI message status (mark as read, approve, or reject).
+    *
+    * @param messageId message ID
+    * @param status new status
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error
+    */
+   public void setAiMessageStatus(long messageId, AiMessageStatus status) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_AI_MESSAGE_STATUS);
+      msg.setFieldUInt32(NXCPCodes.VID_AI_MESSAGE_ID, messageId);
+      msg.setFieldInt16(NXCPCodes.VID_AI_MESSAGE_STATUS, status.getValue());
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Mark AI message as read.
+    *
+    * @param messageId message ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error
+    */
+   public void markAiMessageAsRead(long messageId) throws IOException, NXCException
+   {
+      setAiMessageStatus(messageId, AiMessageStatus.READ);
+   }
+
+   /**
+    * Approve AI message (for approval requests).
+    * This will spawn a new AI task with the stored prompt.
+    *
+    * @param messageId message ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error
+    */
+   public void approveAiMessage(long messageId) throws IOException, NXCException
+   {
+      setAiMessageStatus(messageId, AiMessageStatus.APPROVED);
+   }
+
+   /**
+    * Reject AI message (for approval requests).
+    *
+    * @param messageId message ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error
+    */
+   public void rejectAiMessage(long messageId) throws IOException, NXCException
+   {
+      setAiMessageStatus(messageId, AiMessageStatus.REJECTED);
+   }
+
+   /**
+    * Delete AI message.
+    *
+    * @param messageId message ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error
+    */
+   public void deleteAiMessage(long messageId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_AI_MESSAGE);
+      msg.setFieldUInt32(NXCPCodes.VID_AI_MESSAGE_ID, messageId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }

@@ -3021,3 +3021,47 @@ CREATE INDEX idx_ai_task_exec_log_asset_id ON ai_task_execution_log(task_id);
 #ifdef DB_TSDB
 SELECT create_hypertable('ai_task_execution_log', 'execution_timestamp', chunk_time_interval => interval '86400 seconds');
 #endif
+
+/**
+ * AI agent messages
+ */
+CREATE TABLE ai_messages
+(
+   id integer not null,
+   message_guid varchar(36) not null,
+   message_type integer not null,
+   creation_time integer not null,
+   expiration_time integer not null,
+   source_task_id integer null,
+   source_task_type varchar(63) null,
+   related_object_id integer null,
+   title varchar(255) not null,
+   message_text SQL_TEXT not null,
+   spawn_task_data SQL_TEXT null,
+#ifdef DB_ORACLE
+   status integer default 0 not null,
+#else
+   status integer not null default 0,
+#endif
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_ai_messages_expiration ON ai_messages(expiration_time);
+
+/**
+ * AI message recipients
+ */
+CREATE TABLE ai_message_recipients
+(
+   message_id integer not null,
+   user_id integer not null,
+#ifdef DB_ORACLE
+   is_initiator char(1) default '0' not null,
+#else
+   is_initiator char(1) not null default '0',
+#endif
+   read_time integer null,
+   PRIMARY KEY(message_id, user_id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_ai_msg_recipients_user ON ai_message_recipients(user_id);

@@ -114,6 +114,7 @@ void CheckNodeCountRestrictions();
 void InitializeDeviceBackupInterface();
 void LoadWellKnownPortList();
 bool InitAIAssistant();
+void ShutdownAIMessageManager();
 
 void CheckUserAuthenticationTokens(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameters);
@@ -1476,6 +1477,7 @@ void NXCORE_EXPORTABLE Shutdown()
          g_moduleList.get(i)->pfShutdown();
    }
 
+   ShutdownAIMessageManager();
    ShutdownWebAPI();
 
    ThreadJoin(s_statCollectorThread);

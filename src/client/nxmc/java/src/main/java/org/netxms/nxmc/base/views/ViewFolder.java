@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -520,6 +520,7 @@ public class ViewFolder extends ViewContainer
       if (currentView != null)
       {
          // Dispose current view with same ID and replace with provided one
+         logger.debug("Disposing existing view with ID " + viewId + " to replace with new instance");
          boolean originalDisposeWhenEmpty = disposeWhenEmpty;
          disposeWhenEmpty = false;
          currentView.dispose();
