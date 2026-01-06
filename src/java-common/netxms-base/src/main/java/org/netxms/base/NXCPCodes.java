@@ -1444,6 +1444,7 @@ public class NXCPCodes
    public static final long VID_AI_MESSAGE_RELATED_OBJ = 911;
    public static final long VID_AI_MESSAGE_SOURCE_TASK = 912;
    public static final long VID_PORT_STOP_COUNT = 913;
+   public static final long VID_SNMP_CONTEXT = 914;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

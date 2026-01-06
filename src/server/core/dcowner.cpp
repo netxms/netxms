@@ -287,7 +287,7 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedS
         L"instd_filter,samples,sample_save_interval,comments,guid,npe_name,instance_retention_time,"
         L"grace_period_start,related_object,polling_schedule_type,retention_type,"
         L"polling_interval_src,retention_time_src,snmp_version,state_flags,all_rearmed_event,"
-        L"transformed_datatype,user_tag,thresholds_disable_end_time "
+        L"transformed_datatype,user_tag,thresholds_disable_end_time,snmp_context "
         L"FROM items WHERE node_id=?");
 	if (hStmt != nullptr)
 	{
@@ -309,7 +309,7 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedS
         L"transformation_script,comments,guid,instd_method,instd_data,"
         L"instd_filter,instance,instance_retention_time,grace_period_start,"
         L"related_object,polling_schedule_type,retention_type,polling_interval_src,"
-        L"retention_time_src,snmp_version,state_flags,user_tag,thresholds_disable_end_time "
+        L"retention_time_src,snmp_version,state_flags,user_tag,thresholds_disable_end_time,snmp_context "
         L"FROM dc_tables WHERE node_id=?");
 	if (hStmt != nullptr)
 	{

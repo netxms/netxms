@@ -61,7 +61,7 @@ DCTable::DCTable(uint32_t id, const TCHAR *name, int source, BYTE scheduleType, 
  *    transformation_script,comments,guid,instd_method,instd_data,
  *    instd_filter,instance,instance_retention_time,grace_period_start,
  *    related_object,polling_schedule_type,retention_type,polling_interval_src,
- *    retention_time_src,snmp_version,state_flags,user_tag,thresholds_disable_end_time
+ *    retention_time_src,snmp_version,state_flags,user_tag,thresholds_disable_end_time,snmp_context
  */
 DCTable::DCTable(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
@@ -98,6 +98,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hRes
    m_stateFlags = DBGetFieldUInt32(hResult, row, 30);
    m_userTag = DBGetFieldAsSharedString(hResult, row, 31);
    m_thresholdDisableEndTime = DBGetFieldTime(hResult, row, 32);
+   m_snmpContext = DBGetFieldAsSharedString(hResult, row, 33);
 
    int effectivePollingInterval = getEffectivePollingInterval();
    m_startTime = (useStartupDelay && (effectivePollingInterval >= 10)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
@@ -572,7 +573,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
       L"instd_method", L"instd_data", L"instd_filter", L"instance", L"instance_retention_time",
       L"grace_period_start", L"related_object", L"polling_interval_src", L"retention_time_src",
       L"polling_schedule_type", L"retention_type", L"snmp_version", L"state_flags", L"user_tag",
-      L"thresholds_disable_end_time", nullptr
+      L"thresholds_disable_end_time", L"snmp_context", nullptr
    };
 
 	DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"dc_tables", L"item_id", m_id, columns);
@@ -619,7 +620,8 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_stateFlags);
    DBBind(hStmt, 32, DB_SQLTYPE_VARCHAR, m_userTag, DB_BIND_STATIC, MAX_DCI_TAG_LENGTH - 1);
    DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_thresholdDisableEndTime));
-   DBBind(hStmt, 34, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, m_snmpContext, DB_BIND_STATIC);
+   DBBind(hStmt, 35, DB_SQLTYPE_INTEGER, m_id);
 
 	bool result = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -1179,6 +1181,7 @@ json_t *DCTable::createExportRecord() const
    json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "snmpPort", json_integer(m_snmpPort));
    json_object_set_new(root, "snmpVersion", json_integer(static_cast<int32_t>(m_snmpVersion)));
+   json_object_set_new(root, "snmpContext", json_string_t(m_snmpContext));
    json_object_set_new(root, "instanceDiscoveryMethod", json_integer(m_instanceDiscoveryMethod));
    json_object_set_new(root, "instance", json_string_t(m_instanceName));
    json_object_set_new(root, "instanceRetentionTime", json_integer(m_instanceRetentionTime));

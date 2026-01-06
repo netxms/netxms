@@ -7301,10 +7301,10 @@ StringMap *Node::getInstanceList(DCObject *dco)
          node->getStringMapFromScript(dco->getInstanceDiscoveryData(), &instanceMap, this);
          break;
       case IDM_SNMP_WALK_VALUES:
-         node->getListFromSNMP(dco->getSnmpPort(), dco->getSnmpVersion(), dco->getInstanceDiscoveryData(), &instances);
+         node->getListFromSNMP(dco->getSnmpPort(), dco->getSnmpVersion(), dco->getInstanceDiscoveryData(), &instances, dco->getSnmpContext());
          break;
       case IDM_SNMP_WALK_OIDS:
-         node->getOIDSuffixListFromSNMP(dco->getSnmpPort(), dco->getSnmpVersion(), dco->getInstanceDiscoveryData(), &instanceMap);
+         node->getOIDSuffixListFromSNMP(dco->getSnmpPort(), dco->getSnmpVersion(), dco->getInstanceDiscoveryData(), &instanceMap, dco->getSnmpContext());
          break;
       case IDM_WEB_SERVICE:
          node->getListFromWebService(dco->getInstanceDiscoveryData(), &instances);
@@ -7449,7 +7449,7 @@ bool Node::connectToAgent(uint32_t *error, uint32_t *socketError, bool *newConne
 /**
  * Convert SNMP error code to DC collection error code
  */
-inline DataCollectionError DCErrorFromSNMPError(UINT32 snmpError)
+static inline DataCollectionError DCErrorFromSNMPError(UINT32 snmpError)
 {
    switch(snmpError)
    {
@@ -7467,9 +7467,22 @@ inline DataCollectionError DCErrorFromSNMPError(UINT32 snmpError)
 }
 
 /**
+ * Convert context string to UTF-8
+ */
+static inline char *ContextToUtf8(const wchar_t *context, char *buffer, size_t size)
+{
+   if ((context != nullptr) && (*context != 0))
+   {
+      wchar_to_utf8(context, -1, buffer, size);
+      return buffer;
+   }
+   return nullptr;
+}
+
+/**
  * Get DCI value via SNMP. Buffer size should be at least 64 characters.
  */
-DataCollectionError Node::getMetricFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *name, TCHAR *buffer, size_t size, int interpretRawValue)
+DataCollectionError Node::getMetricFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *name, TCHAR *buffer, size_t size, int interpretRawValue, const TCHAR *context)
 {
    if ((((m_state & NSF_SNMP_UNREACHABLE) || !(m_capabilities & NC_IS_SNMP)) && (port == 0)) ||
        (m_state & DCSF_UNREACHABLE) ||
@@ -7487,7 +7500,8 @@ DataCollectionError Node::getMetricFromSNMP(uint16_t port, SNMP_Version version,
    }
 
    uint32_t snmpResult;
-   SNMP_Transport *snmp = createSnmpTransport(port, version);
+   char contextUtf8[256];
+   SNMP_Transport *snmp = createSnmpTransport(port, version, ContextToUtf8(context, contextUtf8, sizeof(contextUtf8)));
    if (snmp != nullptr)
    {
       if (interpretRawValue == SNMP_RAWTYPE_NONE)
@@ -7630,9 +7644,10 @@ static uint32_t ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowO
 /**
  * Get table from SNMP
  */
-DataCollectionError Node::getTableFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, shared_ptr<Table> *table)
+DataCollectionError Node::getTableFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, shared_ptr<Table> *table, const TCHAR *context)
 {
-   SNMP_Transport *snmp = createSnmpTransport(port, version);
+   char contextUtf8[256];
+   SNMP_Transport *snmp = createSnmpTransport(port, version, ContextToUtf8(context, contextUtf8, sizeof(contextUtf8)));
    if (snmp == nullptr)
       return DCE_COMM_ERROR;
 
@@ -7682,10 +7697,11 @@ static uint32_t SNMPGetListCallback(SNMP_Variable *varbind, SNMP_Transport *snmp
 /**
  * Get list of values from SNMP
  */
-DataCollectionError Node::getListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringList **list)
+DataCollectionError Node::getListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringList **list, const TCHAR *context)
 {
    *list = nullptr;
-   SNMP_Transport *snmp = createSnmpTransport(port, version);
+   char contextUtf8[256];
+   SNMP_Transport *snmp = createSnmpTransport(port, version, ContextToUtf8(context, contextUtf8, sizeof(contextUtf8)));
    if (snmp == nullptr)
       return DCE_COMM_ERROR;
 
@@ -7703,10 +7719,11 @@ DataCollectionError Node::getListFromSNMP(uint16_t port, SNMP_Version version, c
 /**
  * Get list of OID suffixes from SNMP
  */
-DataCollectionError Node::getOIDSuffixListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringMap **values)
+DataCollectionError Node::getOIDSuffixListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringMap **values, const TCHAR *context)
 {
    *values = nullptr;
-   SNMP_Transport *snmp = createSnmpTransport(port, version);
+   char contextUtf8[256];
+   SNMP_Transport *snmp = createSnmpTransport(port, version, ContextToUtf8(context, contextUtf8, sizeof(contextUtf8)));
    if (snmp == nullptr)
       return DCE_COMM_ERROR;
 

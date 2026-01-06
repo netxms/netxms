@@ -96,6 +96,7 @@ public abstract class DataCollectionObject
 	protected String perfTabSettings;
 	protected int snmpPort;
    protected SnmpVersion snmpVersion;
+   protected String snmpContext;
 	protected ArrayList<String> schedules;
 	protected Object userData;
    protected String comments;
@@ -141,6 +142,7 @@ public abstract class DataCollectionObject
       snmpVersion = msg.isFieldPresent(NXCPCodes.VID_SNMP_VERSION)
             ? SnmpVersion.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_SNMP_VERSION))
             : SnmpVersion.DEFAULT;
+      snmpContext = msg.getFieldAsString(NXCPCodes.VID_SNMP_CONTEXT);
 		comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
 		instanceRetentionTime = msg.getFieldAsInt32(NXCPCodes.VID_INSTANCE_RETENTION);
 		
@@ -196,6 +198,7 @@ public abstract class DataCollectionObject
       userTag = "";
 		snmpPort = 0;
       snmpVersion = SnmpVersion.DEFAULT;
+      snmpContext = "";
 		schedules = new ArrayList<String>(0);
 		comments = "";
       instanceName = "";
@@ -264,6 +267,7 @@ public abstract class DataCollectionObject
 	   perfTabSettings = src.perfTabSettings;
 	   snmpPort = src.snmpPort;
       snmpVersion = src.snmpVersion;
+      snmpContext = src.snmpContext;
 	   schedules = new ArrayList<String>(src.schedules);
 	   userData = src.userData;
 	   comments = src.comments;
@@ -303,6 +307,7 @@ public abstract class DataCollectionObject
 			msg.setField(NXCPCodes.VID_PERFTAB_SETTINGS, perfTabSettings);
 		msg.setFieldInt16(NXCPCodes.VID_SNMP_PORT, snmpPort);
       msg.setFieldInt16(NXCPCodes.VID_SNMP_VERSION, snmpVersion.getValue());
+      msg.setField(NXCPCodes.VID_SNMP_CONTEXT, snmpContext);
 		msg.setField(NXCPCodes.VID_COMMENTS, comments);
 		msg.setFieldInt32(NXCPCodes.VID_INSTANCE_RETENTION, instanceRetentionTime);
 
@@ -692,6 +697,26 @@ public abstract class DataCollectionObject
    public void setSnmpVersion(SnmpVersion snmpVersion)
    {
       this.snmpVersion = snmpVersion;
+   }
+
+   /**
+    * Get custom SNMP context for this DCI.
+    *
+    * @return custom SNMP context or empty string for node default
+    */
+   public String getSnmpContext()
+   {
+      return snmpContext;
+   }
+
+   /**
+    * Set custom SNMP context for this DCI.
+    *
+    * @param snmpContext custom SNMP context or empty string for node default
+    */
+   public void setSnmpContext(String snmpContext)
+   {
+      this.snmpContext = snmpContext;
    }
 
    /**

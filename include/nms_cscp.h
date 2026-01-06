@@ -1630,6 +1630,7 @@ typedef struct
 #define VID_AI_MESSAGE_RELATED_OBJ  ((uint32_t)911)
 #define VID_AI_MESSAGE_SOURCE_TASK  ((uint32_t)912)
 #define VID_PORT_STOP_COUNT         ((uint32_t)913)
+#define VID_SNMP_CONTEXT            ((uint32_t)914)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

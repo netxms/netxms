@@ -25,6 +25,17 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.22 to 60.23
+ */
+static bool H_UpgradeFromV22()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE items ADD snmp_context varchar(255)")));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE dc_tables ADD snmp_context varchar(255)")));
+   CHK_EXEC(SetMinorSchemaVersion(23));
+   return true;
+}
+
+/**
  * Upgrade from 60.21 to 60.22
  */
 static bool H_UpgradeFromV21()
@@ -1392,6 +1403,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 22, 60, 23, H_UpgradeFromV22 },
    { 21, 60, 22, H_UpgradeFromV21 },
    { 20, 60, 21, H_UpgradeFromV20 },
    { 19, 60, 20, H_UpgradeFromV19 },

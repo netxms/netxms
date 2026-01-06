@@ -82,7 +82,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy, bool copyThresholds) : DCObje
  *    instd_method,instd_data,instd_filter,samples,sample_save_interval,comments,guid,npe_name,
  *    instance_retention_time,grace_period_start,related_object,polling_schedule_type,
  *    retention_type,polling_interval_src,retention_time_src,snmp_version,state_flags,
- *    all_rearmed_event,transformed_datatype,user_tag,thresholds_disable_end_time
+ *    all_rearmed_event,transformed_datatype,user_tag,thresholds_disable_end_time,snmp_context
  */
 DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
@@ -138,6 +138,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
    m_transformedDataType = (BYTE)DBGetFieldLong(hResult, row, 40);
    m_userTag = DBGetFieldAsSharedString(hResult, row, 41);
    m_thresholdDisableEndTime = DBGetFieldTime(hResult, row, 42);
+   m_snmpContext = DBGetFieldAsSharedString(hResult, row, 43);
 
    int effectivePollingInterval = getEffectivePollingInterval();
    m_startTime = (useStartupDelay && (effectivePollingInterval >= 10)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
@@ -375,7 +376,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
       L"instd_filter", L"samples", L"sample_save_interval", L"comments", L"guid", L"npe_name", L"instance_retention_time",
       L"grace_period_start", L"related_object", L"polling_interval_src", L"retention_time_src",
       L"polling_schedule_type", L"retention_type", L"snmp_version", L"state_flags", L"all_rearmed_event",
-      L"transformed_datatype", L"user_tag", L"thresholds_disable_end_time", nullptr
+      L"transformed_datatype", L"user_tag", L"thresholds_disable_end_time", L"snmp_context", nullptr
    };
 
 	DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"items", L"item_id", m_id, columns);
@@ -432,7 +433,8 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 41, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_transformedDataType));
    DBBind(hStmt, 42, DB_SQLTYPE_VARCHAR, m_userTag, DB_BIND_STATIC, MAX_DCI_TAG_LENGTH - 1);
    DBBind(hStmt, 43, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_thresholdDisableEndTime));
-   DBBind(hStmt, 44, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 44, DB_SQLTYPE_VARCHAR, m_snmpContext, DB_BIND_STATIC);
+   DBBind(hStmt, 45, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -2442,6 +2444,7 @@ json_t *DCItem::createExportRecord() const
    json_object_set_new(root, "snmpRawValueType", json_integer(m_snmpRawValueType));
    json_object_set_new(root, "snmpPort", json_integer(m_snmpPort));
    json_object_set_new(root, "snmpVersion", json_integer(static_cast<int32_t>(m_snmpVersion)));
+   json_object_set_new(root, "snmpContext", json_string_t(m_snmpContext));
    json_object_set_new(root, "instanceDiscoveryMethod", json_integer(m_instanceDiscoveryMethod));
    json_object_set_new(root, "instanceRetentionTime", json_integer(m_instanceRetentionTime));
    json_object_set_new(root, "comments", json_string_t(m_comments));

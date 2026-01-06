@@ -897,6 +897,7 @@ CREATE TABLE items
   source integer not null,  // 0 for internal or 1 for native agent or 2 for SNMP
   snmp_port integer not null,
   snmp_version integer not null,
+  snmp_context varchar(255),
   datatype integer not null,
   transformed_datatype integer not null,
   polling_schedule_type char(1) not null,
@@ -982,6 +983,7 @@ CREATE TABLE dc_tables
   source integer not null,  // 0 for internal or 1 for native agent or 2 for SNMP
   snmp_port integer not null,
   snmp_version integer not null,
+  snmp_context varchar(255),
   polling_schedule_type char(1) not null,
   polling_interval integer not null,
   polling_interval_src varchar(255) null,
