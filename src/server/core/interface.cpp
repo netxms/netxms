@@ -1619,7 +1619,7 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
             .param(_T("remoteIfId"), iface->getId())
             .param(_T("remoteIfIndex"), iface->getIfIndex())
             .param(_T("remoteIfName"), iface->getName())
-            .param(_T("remoteIfIP"), iface->getIpAddressList()->getFirstUnicastAddress())
+            .param(_T("remoteIfIP"), iface->getFirstUnicastAddress())
             .param(_T("remoteIfMAC"), iface->getMacAddress())
             .param(_T("protocol"), protocol)
             .post();
@@ -1741,6 +1741,109 @@ InetAddress Interface::getFirstIpAddress() const
    InetAddress a = t.isValid() ? t : m_ipAddressList.get(0);
    unlockProperties();
    return a;
+}
+
+/**
+ * Get first unicast IP address (thread-safe)
+ */
+InetAddress Interface::getFirstUnicastAddress() const
+{
+   lockProperties();
+   InetAddress result = m_ipAddressList.getFirstUnicastAddress();
+   unlockProperties();
+   return result;
+}
+
+/**
+ * Get first unicast IPv4 address (thread-safe)
+ */
+InetAddress Interface::getFirstUnicastAddressV4() const
+{
+   lockProperties();
+   InetAddress result = m_ipAddressList.getFirstUnicastAddressV4();
+   unlockProperties();
+   return result;
+}
+
+/**
+ * Check if interface has given IP address (thread-safe)
+ */
+bool Interface::hasIpAddress(const InetAddress& addr) const
+{
+   lockProperties();
+   bool result = m_ipAddressList.hasAddress(addr);
+   unlockProperties();
+   return result;
+}
+
+/**
+ * Check if interface has an address in given subnet (thread-safe)
+ */
+bool Interface::hasAddressInSubnet(const InetAddress& subnet) const
+{
+   lockProperties();
+   bool result = false;
+   for(int i = 0; i < m_ipAddressList.size(); i++)
+   {
+      if (subnet.contains(m_ipAddressList.get(i)))
+      {
+         result = true;
+         break;
+      }
+   }
+   unlockProperties();
+   return result;
+}
+
+/**
+ * Check if interface has an address in same subnet as given address (thread-safe)
+ */
+bool Interface::hasAddressInSameSubnet(const InetAddress& addr) const
+{
+   lockProperties();
+   bool result = false;
+   for(int i = 0; i < m_ipAddressList.size(); i++)
+   {
+      if (m_ipAddressList.get(i).sameSubnet(addr))
+      {
+         result = true;
+         break;
+      }
+   }
+   unlockProperties();
+   return result;
+}
+
+/**
+ * Find address on the same subnet as given address (thread-safe)
+ */
+InetAddress Interface::findSameSubnetAddress(const InetAddress& addr) const
+{
+   lockProperties();
+   InetAddress result = m_ipAddressList.findSameSubnetAddress(addr);
+   unlockProperties();
+   return result;
+}
+
+/**
+ * Get IP address list as string (thread-safe)
+ */
+String Interface::getIpAddressListAsString() const
+{
+   lockProperties();
+   String result = m_ipAddressList.toString();
+   unlockProperties();
+   return result;
+}
+
+/**
+ * Copy IP addresses to provided list (thread-safe)
+ */
+void Interface::copyIpAddressesTo(InetAddressList *dest) const
+{
+   lockProperties();
+   dest->add(m_ipAddressList);
+   unlockProperties();
 }
 
 /**

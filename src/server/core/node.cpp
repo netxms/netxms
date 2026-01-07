@@ -1997,7 +1997,7 @@ shared_ptr<Interface> Node::findInterfaceByIP(const InetAddress& addr) const
    {
       NetObj *curr = getChildList().get(i);
       if ((curr->getObjectClass() == OBJECT_INTERFACE) &&
-          static_cast<Interface*>(curr)->getIpAddressList()->hasAddress(addr))
+          static_cast<Interface*>(curr)->hasIpAddress(addr))
       {
          iface = static_pointer_cast<Interface>(getChildList().getShared(i));
          break;
@@ -2018,20 +2018,13 @@ shared_ptr<Interface> Node::findInterfaceBySubnet(const InetAddress& subnet) con
    for(int i = 0; i < getChildList().size(); i++)
    {
       NetObj *curr = getChildList().get(i);
-      if (curr->getObjectClass() != OBJECT_INTERFACE)
-         continue;
-
-      const InetAddressList *addrList = static_cast<Interface*>(curr)->getIpAddressList();
-      for(int j = 0; j < addrList->size(); j++)
+      if ((curr->getObjectClass() == OBJECT_INTERFACE) &&
+          static_cast<Interface*>(curr)->hasAddressInSubnet(subnet))
       {
-         if (subnet.contains(addrList->get(j)))
-         {
-            iface = static_pointer_cast<Interface>(getChildList().getShared(i));
-            goto stop_search;
-         }
+         iface = static_pointer_cast<Interface>(getChildList().getShared(i));
+         break;
       }
    }
-stop_search:
    unlockChildList();
    return iface;
 }
@@ -2047,20 +2040,13 @@ shared_ptr<Interface> Node::findInterfaceInSameSubnet(const InetAddress& addr) c
    for(int i = 0; i < getChildList().size(); i++)
    {
       NetObj *curr = getChildList().get(i);
-      if (curr->getObjectClass() != OBJECT_INTERFACE)
-         continue;
-
-      const InetAddressList *addrList = static_cast<Interface*>(curr)->getIpAddressList();
-      for(int j = 0; j < addrList->size(); j++)
+      if ((curr->getObjectClass() == OBJECT_INTERFACE) &&
+          static_cast<Interface*>(curr)->hasAddressInSameSubnet(addr))
       {
-         if (addrList->get(j).sameSubnet(addr))
-         {
-            iface = static_pointer_cast<Interface>(getChildList().getShared(i));
-            goto stop_search;
-         }
+         iface = static_pointer_cast<Interface>(getChildList().getShared(i));
+         break;
       }
    }
-stop_search:
    unlockChildList();
    return iface;
 }
@@ -2121,7 +2107,7 @@ bool Node::isMyIP(const InetAddress& addr) const
    {
       NetObj *curr = getChildList().get(i);
       if ((curr->getObjectClass() == OBJECT_INTERFACE) &&
-          static_cast<Interface*>(curr)->getIpAddressList()->hasAddress(addr))
+          static_cast<Interface*>(curr)->hasIpAddress(addr))
       {
          unlockChildList();
          return true;
@@ -2385,18 +2371,19 @@ void Node::deleteInterface(Interface *iface)
    // Check if we should unlink node from interface's subnet
    if (!iface->isExcludedFromTopology())
    {
-      const ObjectArray<InetAddress>& list = iface->getIpAddressList()->getList();
-      for(int i = 0; i < list.size(); i++)
+      InetAddressList addrListCopy;
+      iface->copyIpAddressesTo(&addrListCopy);
+      for(int i = 0; i < addrListCopy.size(); i++)
       {
          bool doUnlink = true;
-         const InetAddress *addr = list.get(i);
+         InetAddress addr = addrListCopy.get(i);
 
          readLockChildList();
          for(int j = 0; j < getChildList().size(); j++)
          {
             NetObj *curr = getChildList().get(j);
             if ((curr->getObjectClass() == OBJECT_INTERFACE) && (curr != iface) &&
-                static_cast<Interface*>(curr)->getIpAddressList()->findSameSubnetAddress(*addr).isValid())
+                static_cast<Interface*>(curr)->findSameSubnetAddress(addr).isValid())
             {
                doUnlink = false;
                break;
@@ -2407,7 +2394,7 @@ void Node::deleteInterface(Interface *iface)
          if (doUnlink)
          {
             // Last interface in subnet, should unlink node
-            shared_ptr<Subnet> subnet = FindSubnetByIP(m_zoneUIN, addr->getSubnetAddress());
+            shared_ptr<Subnet> subnet = FindSubnetByIP(m_zoneUIN, addr.getSubnetAddress());
             if (subnet != nullptr)
             {
                unlinkObjects(subnet.get(), this);
@@ -6857,7 +6844,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                .param(_T("interfaceIpAddress"), addr)
                .param(_T("interfaceMask"), addr.getMaskBits())
                .post();
-               
+
             deleteInterface(iface);
          }
          hasChanges = true;
@@ -6969,10 +6956,11 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                   }
 
                   // Check for deleted IPs and changed masks
-                  const InetAddressList *ifList = pInterface->getIpAddressList();
-                  for(int n = 0; n < ifList->size(); n++)
+                  InetAddressList ifListCopy;
+                  pInterface->copyIpAddressesTo(&ifListCopy);
+                  for(int n = 0; n < ifListCopy.size(); n++)
                   {
-                     const InetAddress& ifAddr = ifList->get(n);
+                     InetAddress ifAddr = ifListCopy.get(n);
                      InetAddress addr = ifInfo->ipAddrList.findAddress(ifAddr);
                      if (addr.isValid())
                      {
@@ -7026,7 +7014,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                   for(int m = 0; m < ifInfo->ipAddrList.size(); m++)
                   {
                      InetAddress addr = ifInfo->ipAddrList.get(m);
-                     if (!ifList->hasAddress(addr))
+                     if (!ifListCopy.hasAddress(addr))
                      {
                         if (addr.getMaskBits() == 0)
                         {
@@ -7128,7 +7116,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
          {
             auto iface = deleteList.get(j);
             sendPollerMsg(POLLER_WARNING _T("   Interface \"%s\" no longer exists\r\n"), iface->getName());
-            const InetAddress& addr = iface->getIpAddressList()->getFirstUnicastAddress();
+            InetAddress addr = iface->getFirstUnicastAddress();
             EventBuilder(EVENT_INTERFACE_DELETED, m_id)
                .param(_T("interfaceIndex"), iface->getIfIndex())
                .param(_T("interfaceName"), iface->getName())
@@ -7158,7 +7146,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
          if (iface->isFake())
          {
             // Check if primary IP is different from interface's IP
-            if (!iface->getIpAddressList()->hasAddress(m_ipAddress))
+            if (!iface->hasIpAddress(m_ipAddress))
             {
                deleteInterface(iface);
                if (m_ipAddress.isValidUnicast())
@@ -8427,7 +8415,7 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, shared_ptr<Table> 
          table->set(6, iface->getSpeed());
          table->set(7, iface->getMTU());
          table->set(8, iface->getMacAddress().toString(buffer));
-         table->set(9, iface->getIpAddressList()->toString());
+         table->set(9, iface->getIpAddressListAsString());
          table->set(10, iface->getAdminState());
          table->set(11, iface->getOperState());
          if (iface->getInboundUtilization() >= 0)
@@ -9628,7 +9616,7 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *
          {
             NetObj *curr = getChildList().get(i);
             if ((curr->getObjectClass() == OBJECT_INTERFACE) &&
-                static_cast<Interface*>(curr)->getIpAddressList()->hasAddress(ipAddr))
+                static_cast<Interface*>(curr)->hasIpAddress(ipAddr))
                break;
          }
          unlockChildList();
@@ -9675,7 +9663,7 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *
             {
                NetObj *curr = getChildList().get(i);
                if ((curr->getObjectClass() == OBJECT_INTERFACE) &&
-                   static_cast<Interface*>(curr)->getIpAddressList()->hasAddress(ipAddr))
+                   static_cast<Interface*>(curr)->hasIpAddress(ipAddr))
                   break;
             }
             unlockChildList();
@@ -9969,7 +9957,7 @@ uint32_t Node::wakeUp()
       NetObj *object = getChildList().get(i);
       if ((object->getObjectClass() == OBJECT_INTERFACE) &&
           (object->getStatus() != STATUS_UNMANAGED) &&
-          static_cast<Interface*>(object)->getIpAddressList()->getFirstUnicastAddressV4().isValid())
+          static_cast<Interface*>(object)->getFirstUnicastAddressV4().isValid())
       {
          rcc = static_cast<Interface*>(object)->wakeUp();
          if (rcc == RCC_SUCCESS)
@@ -9985,7 +9973,7 @@ uint32_t Node::wakeUp()
          NetObj *object = getChildList().get(i);
          if ((object->getObjectClass() == OBJECT_INTERFACE) &&
              (object->getStatus() == STATUS_UNMANAGED) &&
-             static_cast<Interface*>(object)->getIpAddressList()->getFirstUnicastAddressV4().isValid())
+             static_cast<Interface*>(object)->getFirstUnicastAddressV4().isValid())
          {
             rcc = static_cast<Interface*>(object)->wakeUp();
             if (rcc == RCC_SUCCESS)
@@ -10806,7 +10794,7 @@ bool Node::getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr
          shared_ptr<Interface> iface = findInterfaceByIndex(route->ifIndex);
          if (iface != nullptr)
          {
-            *srcAddr = iface->getIpAddressList()->getFirstUnicastAddressV4();
+            *srcAddr = iface->getFirstUnicastAddressV4();
          }
          else
          {
@@ -10851,7 +10839,7 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
          }
       }
       else if ((object->getObjectClass() == OBJECT_INTERFACE) &&
-               static_cast<Interface*>(object)->getIpAddressList()->findSameSubnetAddress(destAddr).isValid())
+               static_cast<Interface*>(object)->findSameSubnetAddress(destAddr).isValid())
       {
          *nextHop = destAddr;
          *route = InetAddress::INVALID;
@@ -10882,7 +10870,7 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
       {
          shared_ptr<Interface> iface = findInterfaceByIndex(bestRoute->ifIndex);
          if (bestRoute->nextHop.isAnyLocal() && (iface != nullptr) &&
-             (iface->getIpAddressList()->getFirstUnicastAddressV4().getHostBits() == 0))
+             (iface->getFirstUnicastAddressV4().getHostBits() == 0))
          {
             // On Linux XEN VMs can be pointed by individual host routes to virtual interfaces
             // where each vif has netmask 255.255.255.255 and next hop in routing table set to 0.0.0.0
@@ -11431,10 +11419,11 @@ bool Node::resolveName(bool useOnlyDNS, const TCHAR* *const facility)
          NetObj *curr = getChildList().get(i);
          if ((curr->getObjectClass() == OBJECT_INTERFACE) && !static_cast<Interface*>(curr)->isLoopback())
          {
-            const InetAddressList *list = static_cast<Interface*>(curr)->getIpAddressList();
-            for(int n = 0; n < list->size(); n++)
+            InetAddressList addrListCopy;
+            static_cast<Interface*>(curr)->copyIpAddressesTo(&addrListCopy);
+            for(int n = 0; n < addrListCopy.size(); n++)
             {
-               const InetAddress& a = list->get(i);
+               InetAddress a = addrListCopy.get(n);
                if (a.isValidUnicast() && (a.getHostByAddr(name, MAX_OBJECT_NAME) != nullptr))
                {
                   _tcslcpy(m_name, name, MAX_OBJECT_NAME);
@@ -11896,8 +11885,8 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
                if ((node != nullptr) && (!ws->ipAddr.isValid()))
                {
                   shared_ptr<Interface> iface = node->findInterfaceByMAC(MacAddress(ws->macAddr, MAC_ADDR_LENGTH));
-                  if ((iface != nullptr) && iface->getIpAddressList()->getFirstUnicastAddressV4().isValid())
-                     ws->ipAddr = iface->getIpAddressList()->getFirstUnicastAddressV4();
+                  if ((iface != nullptr) && iface->getFirstUnicastAddressV4().isValid())
+                     ws->ipAddr = iface->getFirstUnicastAddressV4();
                   else
                      ws->ipAddr = node->getIpAddress();
                }
@@ -12320,14 +12309,7 @@ void Node::checkSubnetBinding()
       if (iface->isExcludedFromTopology())
          continue;
 
-      for(int m = 0; m < iface->getIpAddressList()->size(); m++)
-      {
-         const InetAddress& a = iface->getIpAddressList()->get(m);
-         if (a.isValidUnicast())
-         {
-            addrList.add(a);
-         }
-      }
+      iface->copyIpAddressesTo(&addrList);
    }
    unlockChildList();
 

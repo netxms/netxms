@@ -2333,6 +2333,14 @@ public:
 
    const InetAddressList *getIpAddressList() const { return &m_ipAddressList; }
    InetAddress getFirstIpAddress() const;
+   InetAddress getFirstUnicastAddress() const;
+   InetAddress getFirstUnicastAddressV4() const;
+   bool hasIpAddress(const InetAddress& addr) const;
+   bool hasAddressInSubnet(const InetAddress& subnet) const;
+   bool hasAddressInSameSubnet(const InetAddress& addr) const;
+   InetAddress findSameSubnetAddress(const InetAddress& addr) const;
+   String getIpAddressListAsString() const;
+   void copyIpAddressesTo(InetAddressList *dest) const;
    uint32_t getIfIndex() const { return m_index; }
    uint32_t getIfType() const { return m_type; }
    uint32_t getMTU() const { return m_mtu; }
