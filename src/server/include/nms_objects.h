@@ -861,6 +861,7 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define MODIFY_RADIO_INTERFACES     0x08000000
 #define MODIFY_AP_PROPERTIES        0x10000000
 #define MODIFY_AI_DATA              0x20000000
+#define MODIFY_PORT_STOP_LIST       0x40000000
 #define MODIFY_ALL                  0xFFFFFFFF
 
 /**
@@ -1226,6 +1227,15 @@ struct ResponsibleUser
    TCHAR tag[MAX_RESPONSIBLE_USER_TAG_LEN];
 };
 
+/**
+ * Port stop list entry
+ */
+struct PortStopEntry
+{
+   uint16_t port;
+   char protocol;   // 'T' = TCP, 'U' = UDP, 'B' = Both
+};
+
 class ObjectIndex;
 
 /**
@@ -1257,6 +1267,7 @@ enum LoadStatementIndex
    LSI_IF_ADDRESSES,
    LSI_ACCESS_POINT,
    LSI_AI_DATA,
+   LSI_PORT_STOP_LIST,
    LSI_MAX_VALUE
 };
 
@@ -1348,6 +1359,9 @@ protected:
    std::unordered_map<std::string, json_t*> *m_aiData;
    mutable Mutex m_aiDataLock;
 
+   StructArray<PortStopEntry> *m_portStopList;
+   mutable Mutex m_mutexPortStopList;
+
    Pollable* m_asPollable; // Only changed in Pollable class constructor
    DelegateObject* m_asDelegate; // Only changed in DelegateObject class constructor
 
@@ -1358,12 +1372,15 @@ protected:
    void unlockProperties() const { m_mutexProperties.unlock(); }
    void lockResponsibleUsersList() const { m_mutexResponsibleUsers.lock(); }
    void unlockResponsibleUsersList() const { m_mutexResponsibleUsers.unlock(); }
+   void lockPortStopList() const { m_mutexPortStopList.lock(); }
+   void unlockPortStopList() const { m_mutexPortStopList.unlock(); }
 
    void setModified(uint32_t flags, bool notify = true);                  // Used to mark object as modified
 
    bool loadACLFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatements);
    bool loadCommonProperties(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, bool ignoreEmptyResults = false);
    bool loadTrustedObjects(DB_HANDLE hdb);
+   bool loadPortStopListFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatements);
    bool executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query)
    {
       return ExecuteQueryOnObject(hdb, m_id, query);
@@ -1387,6 +1404,7 @@ protected:
    virtual void updateFlags(uint32_t flags, uint32_t mask);
 
    void setResponsibleUsers(StructArray<ResponsibleUser> *responsibleUsers, ClientSession *session);
+   void setPortStopListFromMessage(const NXCPMessage& msg);
 
    bool isGeoLocationHistoryTableExists(DB_HANDLE hdb) const;
    bool createGeoLocationHistoryTable(DB_HANDLE hdb);
@@ -1567,6 +1585,10 @@ public:
 
    unique_ptr<StructArray<ResponsibleUser>> getAllResponsibleUsers(const TCHAR *tag = nullptr) const;
    void setResponsibleUsersFromMessage(const NXCPMessage& msg, ClientSession *session);
+
+   bool hasOwnPortStopList() const;
+   void getEffectivePortStopList(IntegerArray<uint16_t> *tcpPorts, IntegerArray<uint16_t> *udpPorts) const;
+   bool isPortBlocked(uint16_t port, bool tcp) const;
 
    json_t *getAllAIData() const;
    json_t *getAIData(const char *key) const;

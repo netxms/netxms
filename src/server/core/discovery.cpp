@@ -1341,7 +1341,9 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
 
             // Filter blocked UDP ports
             IntegerArray<uint16_t> blockedUdpPorts;
-            GetEffectivePortStopListForZone(range.getZoneUIN(), nullptr, &blockedUdpPorts);
+            shared_ptr<Zone> stopListZone = FindZoneByUIN(range.getZoneUIN());
+            if (stopListZone != nullptr)
+               stopListZone->getEffectivePortStopList(nullptr, &blockedUdpPorts);
             for (int i = ports.size() - 1; i >= 0; i--)
             {
                if (blockedUdpPorts.contains(ports.get(i)))
@@ -1371,12 +1373,16 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
             ports.add(ETHERNET_IP_DEFAULT_PORT);
 
             // Filter blocked TCP ports
-            IntegerArray<uint16_t> blockedTcpPorts;
-            GetEffectivePortStopListForZone(range.getZoneUIN(), &blockedTcpPorts, nullptr);
-            for (int i = ports.size() - 1; i >= 0; i--)
+            shared_ptr<Zone> zone = FindZoneByUIN(range.getZoneUIN());
+            if (zone != nullptr)
             {
-               if (blockedTcpPorts.contains(ports.get(i)))
-                  ports.remove(i);
+               IntegerArray<uint16_t> blockedTcpPorts;
+               zone->getEffectivePortStopList(&blockedTcpPorts, nullptr);
+               for (int i = ports.size() - 1; i >= 0; i--)
+               {
+                  if (blockedTcpPorts.contains(ports.get(i)))
+                     ports.remove(i);
+               }
             }
 
             for(int i = 0; (i < ports.size()) && !IsShutdownInProgress(); i++)
@@ -1389,9 +1395,9 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
    }
    else
    {
-      TCHAR ipAddr1[MAX_IP_ADDR_TEXT_LEN], ipAddr2[MAX_IP_ADDR_TEXT_LEN], rangeText[128];
-      _sntprintf(rangeText, 128, _T("%s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
-      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s (snmp=%s tcp=%s bs=%u delay=%u)"),
+      wchar_t ipAddr1[MAX_IP_ADDR_TEXT_LEN], ipAddr2[MAX_IP_ADDR_TEXT_LEN], rangeText[128];
+      nx_swprintf(rangeText, 128, L"%s - %s", IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
+      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, L"Starting active discovery check on range %s (snmp=%s tcp=%s bs=%u delay=%u)",
             rangeText, BooleanToString(snmpScanEnabled), BooleanToString(tcpScanEnabled), blockSize, interBlockDelay);
       while((from <= to) && !IsShutdownInProgress())
       {
@@ -1409,7 +1415,9 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
 
             // Filter blocked UDP ports
             IntegerArray<uint16_t> blockedUdpPorts;
-            GetEffectivePortStopListForZone(range.getZoneUIN(), nullptr, &blockedUdpPorts);
+            shared_ptr<Zone> stopListZone = FindZoneByUIN(range.getZoneUIN());
+            if (stopListZone != nullptr)
+               stopListZone->getEffectivePortStopList(nullptr, &blockedUdpPorts);
             for (int i = ports.size() - 1; i >= 0; i--)
             {
                if (blockedUdpPorts.contains(ports.get(i)))
@@ -1438,13 +1446,20 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
             ports.addAll(GetWellKnownPorts(_T("ssh"), 0));
             ports.add(ETHERNET_IP_DEFAULT_PORT);
 
-            // Filter blocked TCP ports
-            IntegerArray<uint16_t> blockedTcpPorts;
-            GetEffectivePortStopListForZone(range.getZoneUIN(), &blockedTcpPorts, nullptr);
-            for (int i = ports.size() - 1; i >= 0; i--)
+            // Filter blocked TCP ports using default zone settings
+            if (IsZoningEnabled())
             {
-               if (blockedTcpPorts.contains(ports.get(i)))
-                  ports.remove(i);
+               shared_ptr<Zone> zone = FindZoneByUIN(0); // Default zone
+               if (zone != nullptr)
+               {
+                  IntegerArray<uint16_t> blockedTcpPorts;
+                  zone->getEffectivePortStopList(&blockedTcpPorts, nullptr);
+                  for (int i = ports.size() - 1; i >= 0; i--)
+                  {
+                     if (blockedTcpPorts.contains(ports.get(i)))
+                        ports.remove(i);
+                  }
+               }
             }
 
             for(int i = 0; (i < ports.size()) && !IsShutdownInProgress(); i++)

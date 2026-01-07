@@ -37,7 +37,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -45,6 +44,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
+import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.PortStopEntry;
 import org.netxms.client.objects.AbstractObject;
@@ -175,8 +175,9 @@ public class PortStopList extends ObjectPropertyPage
       });
 
       Composite buttons = new Composite(dialogArea, SWT.NONE);
-      FillLayout buttonsLayout = new FillLayout(SWT.VERTICAL);
-      buttonsLayout.spacing = WidgetHelper.INNER_SPACING;
+      GridLayout buttonsLayout = new GridLayout();
+      buttonsLayout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+      buttonsLayout.marginHeight = 0;
       buttons.setLayout(buttonsLayout);
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
@@ -191,6 +192,9 @@ public class PortStopList extends ObjectPropertyPage
             addEntry();
          }
       });
+      gd = new GridData();
+      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
+      addButton.setLayoutData(gd);
 
       editButton = new Button(buttons, SWT.PUSH);
       editButton.setText(i18n.tr("&Edit..."));
@@ -202,6 +206,9 @@ public class PortStopList extends ObjectPropertyPage
             editEntry();
          }
       });
+      gd = new GridData();
+      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
+      editButton.setLayoutData(gd);
 
       deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText(i18n.tr("&Delete"));
@@ -213,27 +220,13 @@ public class PortStopList extends ObjectPropertyPage
             deleteEntries();
          }
       });
+      gd = new GridData();
+      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
+      deleteButton.setLayoutData(gd);
 
-      // Load data from server
-      final NXCSession session = Registry.getSession();
-      new Job(i18n.tr("Loading port stop list"), null, messageArea) {
-         @Override
-         protected void run(IProgressMonitor monitor) throws Exception
-         {
-            final List<PortStopEntry> serverEntries = session.getPortStopList(object.getObjectId());
-            runInUIThread(() -> {
-               entries.clear();
-               entries.addAll(serverEntries);
-               viewer.setInput(entries.toArray());
-            });
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return i18n.tr("Cannot load port stop list");
-         }
-      }.start();
+      entries.clear();
+      entries.addAll(object.getPortStopList());
+      viewer.setInput(entries.toArray());
 
       return dialogArea;
    }
@@ -296,13 +289,14 @@ public class PortStopList extends ObjectPropertyPage
       if (isApply)
          setValid(false);
 
-      final List<PortStopEntry> entriesToSave = new ArrayList<>(entries);
+      NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
+      md.setPortStopList(entries);
       final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Updating port stop list"), null, messageArea) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.updatePortStopList(object.getObjectId(), entriesToSave);
+            session.modifyObject(md);
          }
 
          @Override

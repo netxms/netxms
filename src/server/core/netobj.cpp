@@ -62,7 +62,7 @@ static const char *s_classNameA[]=
 /**
  * Default constructor
  */
-NetObj::NetObj() : NObject(), m_mutexProperties(MutexType::FAST), m_dashboards(0, 8), m_urls(0, 8, Ownership::True), m_moduleDataLock(MutexType::FAST), m_mutexResponsibleUsers(MutexType::FAST)
+NetObj::NetObj() : NObject(), m_mutexProperties(MutexType::FAST), m_dashboards(0, 8), m_urls(0, 8, Ownership::True), m_moduleDataLock(MutexType::FAST), m_mutexResponsibleUsers(MutexType::FAST), m_mutexPortStopList(MutexType::FAST)
 {
    m_status = STATUS_UNKNOWN;
    m_savedStatus = STATUS_UNKNOWN;
@@ -100,6 +100,7 @@ NetObj::NetObj() : NObject(), m_mutexProperties(MutexType::FAST), m_dashboards(0
    m_runtimeFlags = 0;
    m_flags = 0;
    m_responsibleUsers = nullptr;
+   m_portStopList = nullptr;
    m_creationTime = 0;
    m_categoryId = 0;
    m_assetId = 0;
@@ -118,6 +119,7 @@ NetObj::~NetObj()
    delete m_trustedObjects;
    delete m_moduleData;
    delete m_responsibleUsers;
+   delete m_portStopList;
    if (m_aiData != nullptr)
    {
       for (auto& pair : *m_aiData)
@@ -299,6 +301,38 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
          }
       }
       unlockResponsibleUsersList();
+   }
+
+   // Save port stop list
+   if (success && (m_modified & MODIFY_PORT_STOP_LIST))
+   {
+      success = executeQueryOnObject(hdb, _T("DELETE FROM port_stop_list WHERE object_id=?"));
+      lockPortStopList();
+      if (success && (m_portStopList != nullptr))
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO port_stop_list (object_id,id,port,protocol) VALUES (?,?,?,?)"), m_portStopList->size() > 1);
+         if (hStmt != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for (int i = 0; (i < m_portStopList->size()) && success; i++)
+            {
+               PortStopEntry *e = m_portStopList->get(i);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, i);
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, e->port);
+               char protocol[2];
+               protocol[0] = e->protocol;
+               protocol[1] = 0;
+               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, protocol, DB_BIND_STATIC);
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+      unlockPortStopList();
    }
 
    if (success && (m_modified & MODIFY_COMMON_PROPERTIES))
@@ -846,6 +880,9 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb, DB_STATEMENT *preparedStatement
 	   }
 	}
 
+   if (success)
+      success = loadPortStopListFromDB(hdb, preparedStatements);
+
 	if (!success)
 		nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_OBJECT_INIT, _T("NetObj::loadCommonProperties() failed for %s object %s [%u]"), getObjectClassName(), m_name, m_id);
 
@@ -1262,6 +1299,39 @@ bool NetObj::loadACLFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatements)
 }
 
 /**
+ * Load port stop list from database
+ */
+bool NetObj::loadPortStopListFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatements)
+{
+   DB_STATEMENT hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_PORT_STOP_LIST,
+      _T("SELECT port,protocol FROM port_stop_list WHERE object_id=? ORDER BY id"));
+   if (hStmt == nullptr)
+      return false;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult == nullptr)
+      return false;
+
+   int count = DBGetNumRows(hResult);
+   if (count > 0)
+   {
+      m_portStopList = new StructArray<PortStopEntry>(count);
+      for (int i = 0; i < count; i++)
+      {
+         PortStopEntry *e = m_portStopList->addPlaceholder();
+         e->port = static_cast<uint16_t>(DBGetFieldULong(hResult, i, 0));
+         TCHAR protocol[2];
+         DBGetField(hResult, i, 1, protocol, 2);
+         e->protocol = static_cast<char>(protocol[0]);
+      }
+   }
+   DBFreeResult(hResult);
+
+   return true;
+}
+
+/**
  * Handler for ACL elements enumeration
  */
 static void EnumerationHandler(uint32_t userId, uint32_t accessRights, std::pair<uint32_t, DB_HANDLE> *context)
@@ -1479,6 +1549,25 @@ void NetObj::fillMessage(NXCPMessage *msg, uint32_t userId, bool full)
       msg->setField(VID_RESPONSIBLE_USERS_COUNT, static_cast<uint32_t>(0));
    }
    unlockResponsibleUsersList();
+
+   lockPortStopList();
+   if (m_portStopList != nullptr)
+   {
+      msg->setField(VID_PORT_STOP_COUNT, m_portStopList->size());
+      uint32_t fieldId = VID_PORT_STOP_LIST_BASE;
+      for (int i = 0; i < m_portStopList->size(); i++)
+      {
+         PortStopEntry *e = m_portStopList->get(i);
+         msg->setField(fieldId++, e->port);
+         msg->setField(fieldId++, static_cast<int16_t>(e->protocol));
+         fieldId += 8;
+      }
+   }
+   else
+   {
+      msg->setField(VID_PORT_STOP_COUNT, static_cast<uint32_t>(0));
+   }
+   unlockPortStopList();
 
    if (isPollable())
       getAsPollable()->pollStateToMessage(msg);
@@ -1702,6 +1791,9 @@ uint32_t NetObj::modifyFromMessageInternalStage2(const NXCPMessage& msg, ClientS
 
    if (msg.isFieldExist(VID_RESPONSIBLE_USERS_COUNT))
       setResponsibleUsersFromMessage(msg, session);
+
+   if (msg.isFieldExist(VID_PORT_STOP_COUNT))
+      setPortStopListFromMessage(msg);
 
    // Change object's ACL
    if (msg.isFieldExist(VID_ACL_SIZE))
@@ -3690,6 +3782,139 @@ void NetObj::setResponsibleUsersFromMessage(const NXCPMessage& msg, ClientSessio
    }
 
    setResponsibleUsers(responsibleUsers, session);
+}
+
+/**
+ * Set port stop list from NXCP message
+ */
+void NetObj::setPortStopListFromMessage(const NXCPMessage& msg)
+{
+   int count = msg.getFieldAsInt32(VID_PORT_STOP_COUNT);
+
+   // Empty list equals null list
+   StructArray<PortStopEntry> *newList = nullptr;
+   if (count > 0)
+   {
+      newList = new StructArray<PortStopEntry>(count);
+      uint32_t fieldId = VID_PORT_STOP_LIST_BASE;
+      for (int i = 0; i < count; i++)
+      {
+         PortStopEntry *e = newList->addPlaceholder();
+         e->port = static_cast<uint16_t>(msg.getFieldAsUInt32(fieldId++));
+         e->protocol = static_cast<char>(msg.getFieldAsInt16(fieldId++));
+         fieldId += 8;
+      }
+   }
+
+   lockPortStopList();
+   delete m_portStopList;
+   m_portStopList = newList;
+   unlockPortStopList();
+
+   markAsModified(MODIFY_PORT_STOP_LIST);
+}
+
+/**
+ * Check if object has its own port stop list configured
+ */
+bool NetObj::hasOwnPortStopList() const
+{
+   lockPortStopList();
+   bool hasOwn = (m_portStopList != nullptr);
+   unlockPortStopList();
+   return hasOwn;
+}
+
+/**
+ * Get effective port stop list with inheritance
+ * If object has its own list, use it. Otherwise, merge from all parents up to Zone.
+ */
+void NetObj::getEffectivePortStopList(IntegerArray<uint16_t> *tcpPorts, IntegerArray<uint16_t> *udpPorts) const
+{
+   // If this object has its own list, use it exclusively (stops inheritance)
+   lockPortStopList();
+   if (m_portStopList != nullptr)
+   {
+      for (int i = 0; i < m_portStopList->size(); i++)
+      {
+         PortStopEntry *e = m_portStopList->get(i);
+         if ((e->protocol == 'T' || e->protocol == 'B') && (tcpPorts != nullptr))
+            tcpPorts->add(e->port);
+         if ((e->protocol == 'U' || e->protocol == 'B') && (udpPorts != nullptr))
+            udpPorts->add(e->port);
+      }
+      unlockPortStopList();
+      return;
+   }
+   unlockPortStopList();
+
+   // Collect from parents
+   HashSet<uint32_t> visited;
+   visited.put(m_id);
+
+   unique_ptr<SharedObjectArray<NetObj>> parents = getParents();
+   for (int i = 0; i < parents->size(); i++)
+   {
+      NetObj *parent = parents->get(i);
+      int objClass = parent->getObjectClass();
+      if ((objClass != OBJECT_CONTAINER) && (objClass != OBJECT_COLLECTOR) &&
+          (objClass != OBJECT_CLUSTER) && (objClass != OBJECT_SUBNET))
+         continue;
+      if (visited.contains(parent->getId()))
+         continue;
+      visited.put(parent->getId());
+
+      // Get ports from this parent (only if it has its own list)
+      parent->lockPortStopList();
+      if (parent->m_portStopList != nullptr)
+      {
+         for (int j = 0; j < parent->m_portStopList->size(); j++)
+         {
+            PortStopEntry *e = parent->m_portStopList->get(j);
+            if ((e->protocol == 'T' || e->protocol == 'B') && (tcpPorts != nullptr))
+               tcpPorts->add(e->port);
+            if ((e->protocol == 'U' || e->protocol == 'B') && (udpPorts != nullptr))
+               udpPorts->add(e->port);
+         }
+      }
+      parent->unlockPortStopList();
+   }
+
+   // Add zone-level list
+   int32_t zoneUIN = getZoneUIN();
+   if (zoneUIN != 0)
+   {
+      shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
+      if ((zone != nullptr) && !visited.contains(zone->getId()))
+      {
+         zone->lockPortStopList();
+         if (zone->m_portStopList != nullptr)
+         {
+            for (int i = 0; i < zone->m_portStopList->size(); i++)
+            {
+               PortStopEntry *e = zone->m_portStopList->get(i);
+               if ((e->protocol == 'T' || e->protocol == 'B') && (tcpPorts != nullptr))
+                  tcpPorts->add(e->port);
+               if ((e->protocol == 'U' || e->protocol == 'B') && (udpPorts != nullptr))
+                  udpPorts->add(e->port);
+            }
+         }
+         zone->unlockPortStopList();
+      }
+   }
+}
+
+/**
+ * Check if specific port is blocked for this object (with inheritance)
+ */
+bool NetObj::isPortBlocked(uint16_t port, bool tcp) const
+{
+   IntegerArray<uint16_t> ports;
+   if (tcp)
+      getEffectivePortStopList(&ports, nullptr);
+   else
+      getEffectivePortStopList(nullptr, &ports);
+   return ports.contains(port);
 }
 
 /**

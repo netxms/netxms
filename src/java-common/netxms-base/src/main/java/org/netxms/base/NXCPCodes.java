@@ -521,8 +521,6 @@ public class NXCPCodes
    public static final int CMD_AI_MESSAGE_UPDATE = 0x01F7;
    public static final int CMD_SET_AI_MESSAGE_STATUS = 0x01F8;
    public static final int CMD_DELETE_AI_MESSAGE = 0x01F9;
-   public static final int CMD_GET_PORT_STOP_LIST = 0x01FA;
-   public static final int CMD_UPDATE_PORT_STOP_LIST = 0x01FB;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

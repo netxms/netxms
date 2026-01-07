@@ -465,9 +465,6 @@
     <ClCompile Include="network_cred.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="port_stop_list.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="download_task.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

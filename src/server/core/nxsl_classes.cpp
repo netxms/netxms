@@ -2244,7 +2244,7 @@ NXSL_METHOD_DEFINITION(Node, isPortBlocked)
    }
 
    Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
-   *result = vm->createValue(IsPortBlocked(node->getId(), static_cast<uint16_t>(port), tcp));
+   *result = vm->createValue(node->isPortBlocked(static_cast<uint16_t>(port), tcp));
    return NXSL_ERR_SUCCESS;
 }
 
@@ -2270,7 +2270,7 @@ NXSL_METHOD_DEFINITION(Node, getBlockedPorts)
 
    Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
    IntegerArray<uint16_t> tcpPorts, udpPorts;
-   GetEffectivePortStopList(node->getId(), &tcpPorts, &udpPorts);
+   node->getEffectivePortStopList(&tcpPorts, &udpPorts);
 
    NXSL_Array *array = new NXSL_Array(vm);
    IntegerArray<uint16_t> *ports = tcp ? &tcpPorts : &udpPorts;

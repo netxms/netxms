@@ -5646,9 +5646,16 @@ bool Node::confPollEthernetIP()
       return false;
    }
 
+   if (isPortBlocked(m_eipPort, true))
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 5, _T("Node::confPollEthernetIP(%s [%u]): port %u blocked by port stop list"), m_name, m_id, m_eipPort);
+      sendPollerMsg(L"   EtherNet/IP polling skipped because port %u is blocked by port stop list\r\n", m_eipPort);
+      return false;
+   }
+
    bool hasChanges = false;
 
-   sendPollerMsg(_T("   Checking EtherNet/IP...\r\n"));
+   sendPollerMsg(L"   Checking EtherNet/IP...\r\n");
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking EtherNet/IP"), m_name);
 
    CIP_Identity *identity = nullptr;
@@ -8346,7 +8353,7 @@ DataCollectionError Node::getMetricFromEtherNetIP(const TCHAR *metric, TCHAR *bu
    if (!(m_capabilities & NC_IS_ETHERNET_IP))
       return DCE_NOT_SUPPORTED;
 
-   if (IsPortBlocked(m_id, m_eipPort, true))
+   if (isPortBlocked(m_eipPort, true))
    {
       nxlog_debug_tag(DEBUG_TAG_DC_EIP, 5, _T("Node::getMetricFromEtherNetIP(%s [%u]): port %u blocked by port stop list"), m_name, m_id, m_eipPort);
       return DCE_COMM_ERROR;
@@ -10408,7 +10415,7 @@ shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
 
    // Check port stop list for agent port (only applies to direct connections, not tunnels)
    shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(m_id);
-   if ((tunnel == nullptr) && IsPortBlocked(m_id, m_agentPort, true))
+   if ((tunnel == nullptr) && isPortBlocked(m_agentPort, true))
    {
       nxlog_debug_tag(DEBUG_TAG_AGENT, 5, _T("Node::createAgentConnection(%s [%u]): port %u blocked by port stop list"), m_name, m_id, m_agentPort);
       return shared_ptr<AgentConnectionEx>();
@@ -11261,7 +11268,7 @@ SNMP_Transport *Node::createSnmpTransport(uint16_t port, SNMP_Version version, c
       return nullptr;
 
    uint16_t effectivePort = (port != 0) ? port : m_snmpPort;
-   if (IsPortBlocked(m_id, effectivePort, false))
+   if (isPortBlocked(effectivePort, false))
    {
       nxlog_debug_tag(L"snmp", 5, L"Node::createSnmpTransport(%s [%u]): port %u blocked by port stop list", m_name, m_id, effectivePort);
       return nullptr;
@@ -14341,7 +14348,7 @@ void Node::updateClusterMembership()
 ModbusTransport *Node::createModbusTransport()
 {
 #if WITH_MODBUS
-   if (IsPortBlocked(m_id, m_modbusTcpPort, true))
+   if (isPortBlocked(m_modbusTcpPort, true))
    {
       nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 5, _T("Node::createModbusTransport(%s [%u]): port %u blocked by port stop list"), m_name, m_id, m_modbusTcpPort);
       return nullptr;

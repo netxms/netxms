@@ -942,8 +942,6 @@ private:
    void updateUsmCredentials(const NXCPMessage& request);
    void updateSshCredentials(const NXCPMessage& request);
    void updateWellKnownPortList(const NXCPMessage& request);
-   void getPortStopList(const NXCPMessage& request);
-   void updatePortStopList(const NXCPMessage& request);
    void findProxyForNode(const NXCPMessage& request);
    void getSshKeys(const NXCPMessage& request);
    void deleteSshKey(const NXCPMessage& request);
@@ -1536,14 +1534,6 @@ void FullWellKnownPortListToMessage(const TCHAR *tag, uint32_t userId, NXCPMessa
 void ZoneWellKnownPortListToMessage(const TCHAR *tag, int32_t zoneUIN, NXCPMessage *msg);
 uint32_t UpdateWellKnownPortList(const NXCPMessage& request, const TCHAR *tag, int32_t zoneUIN);
 IntegerArray<uint16_t> GetWellKnownPorts(const TCHAR *tag, int32_t zoneUIN);
-
-void LoadPortStopList();
-bool IsPortBlocked(uint32_t objectId, uint16_t port, bool tcp);
-void GetEffectivePortStopList(uint32_t objectId, IntegerArray<uint16_t> *tcpPorts, IntegerArray<uint16_t> *udpPorts);
-void GetEffectivePortStopListForZone(int32_t zoneUIN, IntegerArray<uint16_t> *tcpPorts, IntegerArray<uint16_t> *udpPorts);
-void PortStopListToMessage(uint32_t objectId, NXCPMessage *msg);
-uint32_t UpdatePortStopList(const NXCPMessage& request, uint32_t objectId);
-void DeletePortStopList(uint32_t objectId);
 
 void ReinitializeSyslogParser();
 void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value);

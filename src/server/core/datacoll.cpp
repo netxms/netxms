@@ -113,7 +113,7 @@ static void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, TCHAR
             if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
                Node *node = static_cast<Node*>(dcTarget);
-               if (IsPortBlocked(node->getId(), node->getSshPort(), true))
+               if (node->isPortBlocked(node->getSshPort(), true))
                {
                   nxlog_debug_tag(DEBUG_TAG_DC_SSH, 5, _T("DataCollector(%s [%u]): SSH port %u blocked by port stop list"), node->getName(), node->getId(), node->getSshPort());
                   *error = DCE_COMM_ERROR;

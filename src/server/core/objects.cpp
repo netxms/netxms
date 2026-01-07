@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1444,6 +1444,7 @@ bool LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("object_custom_attributes"), _T("object_id,attr_name"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("object_ai_data"), _T("object_id,data_key"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("object_urls"), _T("object_id,url_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("port_stop_list"), _T("object_id,id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("responsible_users"), _T("object_id,user_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("nodes"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("zones"), _T("id"), _T("*")) &&

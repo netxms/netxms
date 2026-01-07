@@ -45,6 +45,7 @@ import org.netxms.client.PollState;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.services.ServiceManager;
+import org.netxms.client.PortStopEntry;
 import org.netxms.client.users.ResponsibleUser;
 
 /**
@@ -168,6 +169,7 @@ public abstract class AbstractObject
 	protected final Map<String, CustomAttribute> customAttributes = new HashMap<String, CustomAttribute>(0);
 	protected final List<ObjectUrl> urls = new ArrayList<ObjectUrl>(0);
    protected final List<ResponsibleUser> responsibleUsers = new ArrayList<ResponsibleUser>(0);
+   protected final List<PortStopEntry> portStopList = new ArrayList<PortStopEntry>(0);
 	protected Map<String, Object> moduleData = null;
    protected PollState[] pollStates = null;
    protected boolean partialObject;
@@ -336,6 +338,12 @@ public abstract class AbstractObject
       id = NXCPCodes.VID_RESPONSIBLE_USERS_BASE;
       for(i = 0; i < count; i++, id += 10)
          responsibleUsers.add(new ResponsibleUser(msg, id));
+
+      // Port stop list
+      count = msg.getFieldAsInt32(NXCPCodes.VID_PORT_STOP_COUNT);
+      id = NXCPCodes.VID_PORT_STOP_LIST_BASE;
+      for(i = 0; i < count; i++, id += 10)
+         portStopList.add(new PortStopEntry(msg, id));
 
       // Poll states
       count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_POLL_STATES);
@@ -1377,12 +1385,22 @@ public abstract class AbstractObject
    
    /**
     * Get direct responsible users
-    * 
+    *
     * @return responsible users list
     */
    public List<ResponsibleUser> getResponsibleUsers()
    {
       return responsibleUsers;
+   }
+
+   /**
+    * Get port stop list for this object (own list, not inherited).
+    *
+    * @return port stop list
+    */
+   public List<PortStopEntry> getPortStopList()
+   {
+      return portStopList;
    }
 
    /**

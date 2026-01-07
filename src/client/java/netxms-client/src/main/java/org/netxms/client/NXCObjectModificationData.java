@@ -172,6 +172,7 @@ public class NXCObjectModificationData
    private Long sensorProxy;
    private List<PassiveRackElement> passiveElements;
    private List<ResponsibleUser> responsibleUsers;
+   private List<PortStopEntry> portStopList;
    private IcmpStatCollectionMode icmpStatCollectionMode;
    private List<InetAddress> icmpTargets;
    private String chassisPlacement;
@@ -2028,6 +2029,26 @@ public class NXCObjectModificationData
    public void setResponsibleUsers(List<ResponsibleUser> responsibleUsers)
    {
       this.responsibleUsers = responsibleUsers;
+   }
+
+   /**
+    * Get port stop list.
+    *
+    * @return port stop list or null if not set
+    */
+   public List<PortStopEntry> getPortStopList()
+   {
+      return portStopList;
+   }
+
+   /**
+    * Set port stop list. Use null to indicate no modification, empty list to clear.
+    *
+    * @param portStopList port stop list to set
+    */
+   public void setPortStopList(List<PortStopEntry> portStopList)
+   {
+      this.portStopList = portStopList;
    }
 
    /**

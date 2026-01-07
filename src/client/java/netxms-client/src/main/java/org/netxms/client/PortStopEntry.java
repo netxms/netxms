@@ -50,11 +50,10 @@ public class PortStopEntry
     * @param msg NXCP message
     * @param baseId base variable ID
     */
-   protected PortStopEntry(NXCPMessage msg, long baseId)
+   public PortStopEntry(NXCPMessage msg, long baseId)
    {
       port = msg.getFieldAsInt32(baseId);
-      String protocolStr = msg.getFieldAsString(baseId + 1);
-      protocol = (protocolStr != null && !protocolStr.isEmpty()) ? protocolStr.charAt(0) : PROTOCOL_BOTH;
+      protocol = (char)msg.getFieldAsInt16(baseId + 1);
    }
 
    /**
@@ -66,7 +65,7 @@ public class PortStopEntry
    public void fillMessage(NXCPMessage msg, long baseId)
    {
       msg.setFieldInt32(baseId, port);
-      msg.setField(baseId + 1, String.valueOf(protocol));
+      msg.setFieldInt16(baseId + 1, protocol);
    }
 
    /**
@@ -149,12 +148,18 @@ public class PortStopEntry
       }
    }
 
+   /**
+    * @see java.lang.Object#toString()
+    */
    @Override
    public String toString()
    {
       return "PortStopEntry [port=" + port + ", protocol=" + getProtocolString() + "]";
    }
 
+   /**
+    * @see java.lang.Object#hashCode()
+    */
    @Override
    public int hashCode()
    {
@@ -165,6 +170,9 @@ public class PortStopEntry
       return result;
    }
 
+   /**
+    * @see java.lang.Object#equals(java.lang.Object)
+    */
    @Override
    public boolean equals(Object obj)
    {

@@ -1555,12 +1555,6 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_UPDATE_SSH_CREDENTIALS:
          updateSshCredentials(*request);
          break;
-      case CMD_GET_PORT_STOP_LIST:
-         getPortStopList(*request);
-         break;
-      case CMD_UPDATE_PORT_STOP_LIST:
-         updatePortStopList(*request);
-         break;
       case CMD_GET_PERSISTENT_STORAGE:
          getPersistantStorage(*request);
          break;
@@ -16999,65 +16993,6 @@ void ClientSession::updateWellKnownPortList(const NXCPMessage& request)
 
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    response.setField(VID_RCC, rcc);
-   sendMessage(response);
-}
-
-/**
- * Get port stop list for object
- */
-void ClientSession::getPortStopList(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   uint32_t objectId = request.getFieldAsUInt32(VID_OBJECT_ID);
-
-   shared_ptr<NetObj> object = FindObjectById(objectId);
-   if (object != nullptr)
-   {
-      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
-      {
-         PortStopListToMessage(objectId, &response);
-         response.setField(VID_RCC, RCC_SUCCESS);
-      }
-      else
-      {
-         response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      }
-   }
-   else
-   {
-      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-   }
-   sendMessage(response);
-}
-
-/**
- * Update port stop list for object
- */
-void ClientSession::updatePortStopList(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   uint32_t objectId = request.getFieldAsUInt32(VID_OBJECT_ID);
-
-   shared_ptr<NetObj> object = FindObjectById(objectId);
-   if (object != nullptr)
-   {
-      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
-      {
-         uint32_t rcc = UpdatePortStopList(request, objectId);
-         response.setField(VID_RCC, rcc);
-         if (rcc == RCC_SUCCESS)
-            writeAuditLog(AUDIT_SYSCFG, true, objectId, _T("Updated port stop list for object %s [%u]"), object->getName(), objectId);
-      }
-      else
-      {
-         writeAuditLog(AUDIT_SYSCFG, false, objectId, _T("Access denied on updating port stop list for object %s [%u]"), object->getName(), objectId);
-         response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      }
-   }
-   else
-   {
-      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-   }
    sendMessage(response);
 }
 

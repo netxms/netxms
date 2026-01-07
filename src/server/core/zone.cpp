@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 
 #include "nxcore.h"
 
-#define DEBUG_TAG_ZONE_PROXY  _T("zone.proxy")
+#define DEBUG_TAG_ZONE_PROXY  L"zone.proxy"
 
 /**
  * Dump index to console
@@ -36,7 +36,7 @@ Zone::Zone() : super(), Pollable(this, Pollable::STATUS)
 {
    m_id = 0;
    m_uin = 0;
-   _tcscpy(m_name, _T("Default"));
+   wcscpy(m_name, L"Default");
    GenerateRandomBytes(m_proxyAuthKey, ZONE_PROXY_KEY_LENGTH);
 	m_idxNodeByAddr = new InetAddressIndex;
 	m_idxInterfaceByAddr = new InetAddressIndex;
