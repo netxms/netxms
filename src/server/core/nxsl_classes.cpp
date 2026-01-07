@@ -3267,11 +3267,11 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("ipAddressList"))
    {
-      const InetAddressList *addrList = iface->getIpAddressList();
+      InetAddressList addrList = iface->getIpAddressList();
       NXSL_Array *a = new NXSL_Array(vm);
-      for(int i = 0; i < addrList->size(); i++)
+      for(int i = 0; i < addrList.size(); i++)
       {
-         a->append(NXSL_InetAddressClass::createObject(vm, addrList->get(i)));
+         a->append(NXSL_InetAddressClass::createObject(vm, addrList.get(i)));
       }
       value = vm->createValue(a);
    }

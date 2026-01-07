@@ -397,7 +397,7 @@ TCHAR *InetAddress::getHostByAddr(TCHAR *buffer, size_t buflen) const
    }
 
    char hostBuffer[NI_MAXHOST];
-   if (getnameinfo(reinterpret_cast<struct sockaddr*>(&sa), saLen, 
+   if (getnameinfo(reinterpret_cast<struct sockaddr*>(&sa), saLen,
                    hostBuffer, sizeof(hostBuffer), nullptr, 0, NI_NAMEREQD) != 0)
       return nullptr;
 
@@ -422,7 +422,7 @@ TCHAR *InetAddress::getHostByAddr(TCHAR *buffer, size_t buflen) const
    {
       uint32_t addr = htonl(m_addr.v4);
 #if HAVE_GETHOSTBYADDR_R
-      if (gethostbyaddr_r(reinterpret_cast<const char*>(&addr), 4, AF_INET, 
+      if (gethostbyaddr_r(reinterpret_cast<const char*>(&addr), 4, AF_INET,
                          &hostbuf, tempBuffer, sizeof(tempBuffer), &hs, &h_errnop) != 0)
          hs = nullptr;
 #else
@@ -432,7 +432,7 @@ TCHAR *InetAddress::getHostByAddr(TCHAR *buffer, size_t buflen) const
    else if (m_family == AF_INET6)
    {
 #if HAVE_GETHOSTBYADDR_R
-      if (gethostbyaddr_r(reinterpret_cast<const char*>(m_addr.v6), 16, AF_INET6, 
+      if (gethostbyaddr_r(reinterpret_cast<const char*>(m_addr.v6), 16, AF_INET6,
                          &hostbuf, tempBuffer, sizeof(tempBuffer), &hs, &h_errnop) != 0)
          hs = nullptr;
 #else
@@ -649,6 +649,15 @@ InetAddress InetAddress::createFromSockaddr(const struct sockaddr *s)
       return InetAddress(reinterpret_cast<const struct sockaddr_in6*>(s)->sin6_addr.s6_addr);
 #endif
    return InetAddress();
+}
+
+/**
+ * Copy constructor
+ */
+InetAddressList::InetAddressList(const InetAddressList& src) : m_list(0, 8, Ownership::True)
+{
+   for(int i = 0; i < src.m_list.size(); i++)
+      m_list.add(new InetAddress(*src.m_list.get(i)));
 }
 
 /**

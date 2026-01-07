@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2024 Victor Kirhenshtein
 **
@@ -383,7 +383,7 @@ void MacAddressInfo::fillMessage(NXCPMessage* msg, uint32_t base) const
          Interface *iface = static_cast<Interface*>(m_owner.get());
          msg->setField(base + 5, iface->getParentNodeId());
          msg->setField(base + 6, iface->getId());
-         msg->setField(base + 7, iface->getIpAddressList()->getFirstUnicastAddress());
+         msg->setField(base + 7, iface->getFirstUnicastAddress());
       }
       else if (m_owner->getObjectClass() == OBJECT_ACCESSPOINT)
       {
@@ -466,7 +466,7 @@ void MacAddressInfo::fillJson(json_t *json, uint32_t userId, bool includeObject,
          Interface *iface = static_cast<Interface*>(m_owner.get());
          json_object_set_new(json, "localNodeId", json_integer(iface->getParentNodeId()));
          json_object_set_new(json, "localInterfaceId", json_integer(iface->getId()));
-         json_object_set_new(json, "localIpAddress", iface->getIpAddressList()->getFirstUnicastAddress().toJson());
+         json_object_set_new(json, "localIpAddress", iface->getFirstUnicastAddress().toJson());
          if (includeObject && iface->checkAccessRights(userId, OBJECT_ACCESS_READ))
             json_object_set_new(json, "localInterface", createObjectSummary(*iface));
          shared_ptr<NetObj> node = FindObjectById(iface->getParentNodeId());

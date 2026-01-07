@@ -122,7 +122,7 @@ bool Zone::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
          hResult = DBSelectPrepared(hStmt);
          if (hResult != nullptr)
-         { 
+         {
             int count = DBGetNumRows(hResult);
             for(int i = 0; i < count; i++)
             {
@@ -354,16 +354,16 @@ bool Zone::showThresholdSummary() const
  */
 void Zone::removeFromIndex(const Interface& iface)
 {
-   const ObjectArray<InetAddress>& list = iface.getIpAddressList()->getList();
-   for(int i = 0; i < list.size(); i++)
+   InetAddressList addrList = iface.getIpAddressList();
+   for(int i = 0; i < addrList.size(); i++)
    {
-      InetAddress *addr = list.get(i);
-      if (addr->isValidUnicast())
+      InetAddress addr = addrList.get(i);
+      if (addr.isValidUnicast())
       {
-	      shared_ptr<NetObj> o = m_idxInterfaceByAddr->get(*addr);
+	      shared_ptr<NetObj> o = m_idxInterfaceByAddr->get(addr);
 	      if ((o != nullptr) && (o->getId() == iface.getId()))
 	      {
-		      m_idxInterfaceByAddr->remove(*addr);
+		      m_idxInterfaceByAddr->remove(addr);
 	      }
       }
    }

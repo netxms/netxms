@@ -604,16 +604,16 @@ void NetObjDeleteFromIndexes(const NetObj& object)
 			}
 			else
 			{
-            const ObjectArray<InetAddress>& list = static_cast<const Interface&>(object).getIpAddressList()->getList();
-            for(int i = 0; i < list.size(); i++)
+            InetAddressList addrList = static_cast<const Interface&>(object).getIpAddressList();
+            for(int i = 0; i < addrList.size(); i++)
             {
-               InetAddress *addr = list.get(i);
-               if (addr->isValidUnicast())
+               InetAddress addr = addrList.get(i);
+               if (addr.isValidUnicast())
                {
-				      shared_ptr<NetObj> o = g_idxInterfaceByAddr.get(*addr);
+				      shared_ptr<NetObj> o = g_idxInterfaceByAddr.get(addr);
 				      if ((o != nullptr) && (o->getId() == object.getId()))
 				      {
-					      g_idxInterfaceByAddr.remove(*addr);
+					      g_idxInterfaceByAddr.remove(addr);
 				      }
                }
             }
@@ -1343,7 +1343,7 @@ uint32_t FindLocalMgmtNode()
 
 /**
  * Template function for loading objects from database
- * 
+ *
  * @param className    object class name
  * @param hdb          database handle
  * @param query        sets table and WHERE condition, if needed
@@ -1936,10 +1936,12 @@ static void DumpObject(ServerConsole *console, const NetObj& object)
          ConsolePrintf(console, _T("   IP address..........: %s\n"), static_cast<const AccessPoint&>(object).getIpAddress().toString(buffer));
          break;
       case OBJECT_INTERFACE:
+      {
          ConsolePrintf(console, _T("   MAC address.........: %s\n"), static_cast<const Interface&>(object).getMacAddress().toString(buffer));
-         for(int n = 0; n < static_cast<const Interface&>(object).getIpAddressList()->size(); n++)
+         InetAddressList addrList = static_cast<const Interface&>(object).getIpAddressList();
+         for(int n = 0; n < addrList.size(); n++)
          {
-            const InetAddress& a = static_cast<const Interface&>(object).getIpAddressList()->get(n);
+            InetAddress a = addrList.get(n);
             ConsolePrintf(console, _T("   IP address..........: %s/%d\n"), a.toString(buffer), a.getMaskBits());
          }
          ConsolePrintf(console, _T("   Interface index.....: %u\n"), static_cast<const Interface&>(object).getIfIndex());
@@ -1951,6 +1953,7 @@ static void DumpObject(ServerConsole *console, const NetObj& object)
          }
          PrintInterfaceIcmpStatistic(console, static_cast<const Interface&>(object));
          break;
+      }
       case OBJECT_TEMPLATE:
          ConsolePrintf(console, _T("   Version.............: %d\n"), static_cast<const Template&>(object).getVersion());
          break;

@@ -424,7 +424,7 @@ static bool AcceptNewNodeStage1(DiscoveredAddress *address)
                   ipAddrText, address->macAddr.toString(macAddrText), oldNode->getIpAddress().toString(oldIpAddrText), oldNode->getName());
 
             // we should change node's primary IP only if old IP for this MAC was also node's primary IP
-            if (iface->getIpAddressList()->hasAddress(oldNode->getIpAddress()))
+            if (iface->hasIpAddress(oldNode->getIpAddress()))
             {
                // Try to re-read interface list using old IP address and check if node has botl old and new IPs
                bool bothAddressesFound = false;
@@ -1017,9 +1017,9 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, uint32_t i
    {
       // Check if given IP address is not configured on source interface itself
       // Some Juniper devices can report addresses from internal interfaces in ARP cache
-      if (!iface->getIpAddressList()->hasAddress(ipAddr))
+      if (!iface->hasIpAddress(ipAddr))
       {
-         const InetAddress& interfaceAddress = iface->getIpAddressList()->findSameSubnetAddress(ipAddr);
+         InetAddress interfaceAddress = iface->findSameSubnetAddress(ipAddr);
          if (interfaceAddress.isValidUnicast())
          {
             nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Interface found: %s [%u] addr=%s/%d ifIndex=%u"),
@@ -1062,7 +1062,7 @@ static void CheckHostRoute(Node *node, const ROUTE *route)
    TCHAR buffer[MAX_IP_ADDR_TEXT_LEN];
    nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking host route %s at %d"), route->destination.toString(buffer), route->ifIndex);
    shared_ptr<Interface> iface = node->findInterfaceByIndex(route->ifIndex);
-   if ((iface != nullptr) && iface->getIpAddressList()->findSameSubnetAddress(route->destination).isValidUnicast())
+   if ((iface != nullptr) && iface->findSameSubnetAddress(route->destination).isValidUnicast())
    {
       CheckPotentialNode(node, route->destination, route->ifIndex, MacAddress::NONE, DA_SRC_ROUTING_TABLE, node->getId());
    }

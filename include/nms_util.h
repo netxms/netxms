@@ -1079,7 +1079,7 @@ public:
     * Create new memory pool
     */
    MemoryPool(size_t regionSize = 8192);
-   
+
    /**
     * Forbid copy construction
     */
@@ -2051,10 +2051,10 @@ public:
 
    ConstIterator& operator=(const ConstIterator& other)
    {
-      m_worker->decRefCount(); 
+      m_worker->decRefCount();
       m_worker = other.m_worker;
       m_worker->incRefCount();
-      return *this; 
+      return *this;
    }
 
    bool operator==(const ConstIterator& other) { return m_worker->equals(other.m_worker); }
@@ -2065,7 +2065,7 @@ public:
       return *this;
    }
    ConstIterator operator++(int) // Postfix increment operator.
-   {  
+   {
       ConstIterator temp = *this;
       m_worker->next();
       return temp;
@@ -3474,7 +3474,7 @@ protected:
 
 public:
    HashMapIterator(HashMapBase *hashMap = nullptr);
-   HashMapIterator(const HashMapIterator& other);  
+   HashMapIterator(const HashMapIterator& other);
 
    virtual bool hasNext() override;
    virtual void *next() override;
@@ -4602,7 +4602,7 @@ static inline json_t *json_string_w(const WCHAR *s)
  * Create JSON string with base64-encoded content
  */
 static inline json_t *json_base64_string(const void *data, size_t len)
-{  
+{
    char *out;
    base64_encode_alloc(reinterpret_cast<const char*>(data), len, &out);
    json_t *js = json_string(out);
@@ -5214,7 +5214,7 @@ private:
 
 public:
    InetAddressList() : m_list(0, 8, Ownership::True) { }
-   InetAddressList(const InetAddressList& src) = delete;
+   InetAddressList(const InetAddressList& src);
 
    void add(const InetAddress& addr);
    void add(const InetAddressList& addrList);

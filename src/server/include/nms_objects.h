@@ -585,8 +585,10 @@ public:
 
    bool put(const InetAddress& addr, const shared_ptr<NetObj>& object);
    bool put(const InetAddressList *addrList, const shared_ptr<NetObj>& object);
+   bool put(const InetAddressList& addrList, const shared_ptr<NetObj>& object) { return put(&addrList, object); }
    void remove(const InetAddress& addr);
    void remove(const InetAddressList *addrList);
+   void remove(const InetAddressList& addrList) { remove(&addrList); }
    shared_ptr<NetObj> get(const InetAddress& addr) const;
    shared_ptr<NetObj> find(bool (*comparator)(NetObj *, void *), void *context) const;
 
@@ -2353,8 +2355,15 @@ public:
    void saveStateBeforeMaintenance(uint32_t nodeId);
    void generateEventsAfterMaintenace(uint32_t parentId);
 
-   const InetAddressList *getIpAddressList() const { return &m_ipAddressList; }
+   InetAddressList getIpAddressList() const { return GetAttributeWithLock(m_ipAddressList, m_mutexProperties); }
    InetAddress getFirstIpAddress() const;
+   InetAddress getFirstUnicastAddress() const;
+   InetAddress getFirstUnicastAddressV4() const;
+   bool hasIpAddress(const InetAddress& addr) const;
+   bool hasAddressInSubnet(const InetAddress& subnet) const;
+   bool hasAddressInSameSubnet(const InetAddress& addr) const;
+   InetAddress findSameSubnetAddress(const InetAddress& addr) const;
+   String getIpAddressListAsString() const;
    uint32_t getIfIndex() const { return m_index; }
    uint32_t getIfType() const { return m_type; }
    uint32_t getMTU() const { return m_mtu; }
@@ -2542,6 +2551,46 @@ public:
 
    void statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Event> *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, uint32_t nodeIcmpProxy);
 };
+
+inline InetAddress Interface::getFirstUnicastAddress() const
+{
+   lockProperties();
+   InetAddress result = m_ipAddressList.getFirstUnicastAddress();
+   unlockProperties();
+   return result;
+}
+
+inline InetAddress Interface::getFirstUnicastAddressV4() const
+{
+   lockProperties();
+   InetAddress result = m_ipAddressList.getFirstUnicastAddressV4();
+   unlockProperties();
+   return result;
+}
+
+inline bool Interface::hasIpAddress(const InetAddress& addr) const
+{
+   lockProperties();
+   bool result = m_ipAddressList.hasAddress(addr);
+   unlockProperties();
+   return result;
+}
+
+inline InetAddress Interface::findSameSubnetAddress(const InetAddress& addr) const
+{
+   lockProperties();
+   InetAddress result = m_ipAddressList.findSameSubnetAddress(addr);
+   unlockProperties();
+   return result;
+}
+
+inline String Interface::getIpAddressListAsString() const
+{
+   lockProperties();
+   String result = m_ipAddressList.toString();
+   unlockProperties();
+   return result;
+}
 
 #ifdef _WIN32
 template class NXCORE_TEMPLATE_EXPORTABLE weak_ptr<Node>;

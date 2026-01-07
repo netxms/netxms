@@ -1619,7 +1619,7 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
             .param(_T("remoteIfId"), iface->getId())
             .param(_T("remoteIfIndex"), iface->getIfIndex())
             .param(_T("remoteIfName"), iface->getName())
-            .param(_T("remoteIfIP"), iface->getIpAddressList()->getFirstUnicastAddress())
+            .param(_T("remoteIfIP"), iface->getFirstUnicastAddress())
             .param(_T("remoteIfMAC"), iface->getMacAddress())
             .param(_T("protocol"), protocol)
             .post();
@@ -1741,6 +1741,44 @@ InetAddress Interface::getFirstIpAddress() const
    InetAddress a = t.isValid() ? t : m_ipAddressList.get(0);
    unlockProperties();
    return a;
+}
+
+/**
+ * Check if interface has an address in given subnet (thread-safe)
+ */
+bool Interface::hasAddressInSubnet(const InetAddress& subnet) const
+{
+   lockProperties();
+   bool result = false;
+   for(int i = 0; i < m_ipAddressList.size(); i++)
+   {
+      if (subnet.contains(m_ipAddressList.get(i)))
+      {
+         result = true;
+         break;
+      }
+   }
+   unlockProperties();
+   return result;
+}
+
+/**
+ * Check if interface has an address in same subnet as given address (thread-safe)
+ */
+bool Interface::hasAddressInSameSubnet(const InetAddress& addr) const
+{
+   lockProperties();
+   bool result = false;
+   for(int i = 0; i < m_ipAddressList.size(); i++)
+   {
+      if (m_ipAddressList.get(i).sameSubnet(addr))
+      {
+         result = true;
+         break;
+      }
+   }
+   unlockProperties();
+   return result;
 }
 
 /**
