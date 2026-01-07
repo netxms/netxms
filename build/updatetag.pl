@@ -28,11 +28,6 @@ my $version_release = "0";
 my $is_core_module = 0;
 
 my $dirname = dirname(__FILE__);
-my $h_file = "$dirname/$h_file";
-my $iss_file = "$dirname/$iss_file";
-my $property_file = "$dirname/$property_file";
-my $rc_file = "$dirname/$rc_file";
-
 if (-e "$dirname/../include/netxms-version.h")
 {
 	$is_core_module = 1;
