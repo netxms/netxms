@@ -28,21 +28,10 @@ my $version_release = "0";
 my $is_core_module = 0;
 
 my $dirname = dirname(__FILE__);
-
-# Only prepend dirname for default filenames (not absolute paths)
-sub make_path {
-   my ($file, $dirname) = @_;
-   # Check if it's already an absolute path (Unix or Windows style)
-   if ($file =~ /^[\/\\]/ || $file =~ /^[A-Za-z]:/) {
-      return $file;
-   }
-   return "$dirname/$file";
-}
-
-$h_file = make_path($h_file, $dirname);
-$iss_file = make_path($iss_file, $dirname);
-$property_file = make_path($property_file, $dirname);
-$rc_file = make_path($rc_file, $dirname);
+my $h_file = "$dirname/$h_file";
+my $iss_file = "$dirname/$iss_file";
+my $property_file = "$dirname/$property_file";
+my $rc_file = "$dirname/$rc_file";
 
 if (-e "$dirname/../include/netxms-version.h")
 {
