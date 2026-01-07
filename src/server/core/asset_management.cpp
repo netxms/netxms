@@ -531,9 +531,24 @@ void AssetManagementSchemaToMessage(NXCPMessage *msg)
 }
 
 /**
+ * Get asset management schema as JSON (for AI assistant)
+ */
+json_t NXCORE_EXPORTABLE *GetAssetManagementSchemaAsJson()
+{
+   json_t *attributes = json_array();
+   s_schemaLock.readLock();
+   for (KeyValuePair<AssetAttribute> *a : s_schema)
+   {
+      json_array_append_new(attributes, a->value->toJson());
+   }
+   s_schemaLock.unlock();
+   return attributes;
+}
+
+/**
  * Create asset management attribute
  */
-uint32_t CreateAssetAttribute(const NXCPMessage& msg, const ClientSession& session)
+uint32_t NXCORE_EXPORTABLE CreateAssetAttribute(const NXCPMessage& msg, const ClientSession& session)
 {
    uint32_t result;
    s_schemaLock.writeLock();
@@ -580,7 +595,7 @@ uint32_t CreateAssetAttribute(const NXCPMessage& msg, const ClientSession& sessi
 /**
  * Update asset management attribute
  */
-uint32_t UpdateAssetAttribute(const NXCPMessage& msg, const ClientSession& session)
+uint32_t NXCORE_EXPORTABLE UpdateAssetAttribute(const NXCPMessage& msg, const ClientSession& session)
 {
    uint32_t result;
    s_schemaLock.writeLock();
@@ -613,7 +628,7 @@ uint32_t UpdateAssetAttribute(const NXCPMessage& msg, const ClientSession& sessi
 /**
  * Delete asset attribute
  */
-uint32_t DeleteAssetAttribute(const NXCPMessage &msg, const ClientSession &session)
+uint32_t NXCORE_EXPORTABLE DeleteAssetAttribute(const NXCPMessage &msg, const ClientSession &session)
 {
    uint32_t result;
    s_schemaLock.writeLock();
@@ -682,7 +697,7 @@ bool isValidDate(uint32_t formatedDate)
 /**
  * Validate value for asset property
  */
-std::pair<uint32_t, String> ValidateAssetPropertyValue(const TCHAR *name, const TCHAR *value)
+std::pair<uint32_t, String> NXCORE_EXPORTABLE ValidateAssetPropertyValue(const TCHAR *name, const TCHAR *value)
 {
    s_schemaLock.readLock();
    AssetAttribute *assetAttribute = s_schema.get(name);
@@ -860,7 +875,7 @@ std::pair<uint32_t, String> ValidateAssetPropertyValue(const TCHAR *name, const 
 /**
  * Get display name of given asset attribute
  */
-String GetAssetAttributeDisplayName(const TCHAR *name)
+String NXCORE_EXPORTABLE GetAssetAttributeDisplayName(const TCHAR *name)
 {
    s_schemaLock.readLock();
    AssetAttribute *attribute = s_schema.get(name);
@@ -872,7 +887,7 @@ String GetAssetAttributeDisplayName(const TCHAR *name)
 /**
  * Check if given asset property is mandatory
  */
-bool IsMandatoryAssetProperty(const TCHAR *name)
+bool NXCORE_EXPORTABLE IsMandatoryAssetProperty(const TCHAR *name)
 {
    s_schemaLock.readLock();
    AssetAttribute *attr = s_schema.get(name);
@@ -884,7 +899,7 @@ bool IsMandatoryAssetProperty(const TCHAR *name)
 /**
  * Check if given asset property is boolean
  */
-bool IsBooleanAssetProperty(const TCHAR *name)
+bool NXCORE_EXPORTABLE IsBooleanAssetProperty(const TCHAR *name)
 {
    s_schemaLock.readLock();
    AssetAttribute *attr = s_schema.get(name);
@@ -896,7 +911,7 @@ bool IsBooleanAssetProperty(const TCHAR *name)
 /**
  * Check if given asset property name is valid
  */
-bool IsValidAssetPropertyName(const TCHAR *name)
+bool NXCORE_EXPORTABLE IsValidAssetPropertyName(const TCHAR *name)
 {
    s_schemaLock.readLock();
    bool valid = s_schema.contains(name);
@@ -907,7 +922,7 @@ bool IsValidAssetPropertyName(const TCHAR *name)
 /**
  * Get all asset attribute names
  */
-unique_ptr<StringSet> GetAssetAttributeNames(bool mandatoryOnly)
+unique_ptr<StringSet> NXCORE_EXPORTABLE GetAssetAttributeNames(bool mandatoryOnly)
 {
    unique_ptr<StringSet> names = make_unique<StringSet>();
    s_schemaLock.readLock();
@@ -1075,7 +1090,7 @@ std::pair<uint32_t, String> UpdateAssetIdentification(Asset *asset, NetObj *obje
 /**
  * Link asset to object
  */
-void LinkAsset(Asset *asset, NetObj *object, ClientSession *session)
+void NXCORE_EXPORTABLE LinkAsset(Asset *asset, NetObj *object, ClientSession *session)
 {
    if (asset->getLinkedObjectId() == object->getId())
       return;
@@ -1107,7 +1122,7 @@ void LinkAsset(Asset *asset, NetObj *object, ClientSession *session)
 /**
  * Unlink asset from object it is currently linked to
  */
-void UnlinkAsset(Asset *asset, ClientSession *session)
+void NXCORE_EXPORTABLE UnlinkAsset(Asset *asset, ClientSession *session)
 {
    if (asset->getLinkedObjectId() == 0)
       return;
