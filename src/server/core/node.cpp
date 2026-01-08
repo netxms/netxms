@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <agent_tunnel.h>
+#include <netxms-regex.h>
 #include <entity_mib.h>
 #include <ethernet_ip.h>
 #include <netxms_maps.h>
@@ -12757,6 +12758,83 @@ NXSL_Value* Node::getSoftwarePackagesForNXSL(NXSL_VM* vm)
       }
    }
    unlockProperties();
+   return vm->createValue(a);
+}
+
+/**
+ * Get list of installed packages for NXSL script with optional filtering
+ */
+NXSL_Value* Node::getInstalledPackagesForNXSL(NXSL_VM* vm, const wchar_t *filter, bool useRegex)
+{
+   if ((filter == nullptr) || (filter[0] == 0))
+      return getSoftwarePackagesForNXSL(vm);
+
+   NXSL_Array *a = new NXSL_Array(vm);
+
+   PCRE *compiledRegex = nullptr;
+   if (useRegex && (filter != nullptr) && (filter[0] != 0))
+   {
+      const char *eptr;
+      int eoffset;
+      compiledRegex = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(filter), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+      if (compiledRegex == nullptr)
+      {
+         nxlog_debug_tag(L"nxsl.packages", 6, L"Node::getInstalledPackagesForNXSL: invalid regular expression \"%s\"", filter);
+         return vm->createValue(a);  // Return empty array on invalid regex
+      }
+   }
+
+   bool useGlob = !useRegex && ((filter != nullptr) && ((wcschr(filter, L'*') != nullptr) || (wcschr(filter, L'?') != nullptr)));
+
+   lockProperties();
+   if (m_softwarePackages != nullptr)
+   {
+      for (int i = 0; i < m_softwarePackages->size(); i++)
+      {
+         SoftwarePackage *pkg = m_softwarePackages->get(i);
+         bool match = true;
+
+         if ((filter != nullptr) && (filter[0] != 0))
+         {
+            if (compiledRegex != nullptr)
+            {
+               int pmatch[30];
+               int rc = _pcre_exec_t(compiledRegex, nullptr, reinterpret_cast<const PCRE_TCHAR*>(pkg->getName()), static_cast<int>(wcslen(pkg->getName())), 0, 0, pmatch, 30);
+               match = (rc >= 0);
+
+               if (!match && (pkg->getDescription() != nullptr))
+               {
+                  rc = _pcre_exec_t(compiledRegex, nullptr,
+                     reinterpret_cast<const PCRE_TCHAR*>(pkg->getDescription()),
+                     static_cast<int>(_tcslen(pkg->getDescription())), 0, 0, pmatch, 30);
+                  match = (rc >= 0);
+               }
+            }
+            else if (useGlob)
+            {
+               match = MatchStringW(filter, pkg->getName(), false);
+               if (!match && (pkg->getDescription() != nullptr))
+                  match = MatchStringW(filter, pkg->getDescription(), false);
+            }
+            else
+            {
+               match = (wcsistr(pkg->getName(), filter) != nullptr);
+               if (!match && (pkg->getDescription() != nullptr))
+                  match = (wcsistr(pkg->getDescription(), filter) != nullptr);
+            }
+         }
+
+         if (match)
+         {
+            a->append(vm->createValue(vm->createObject(&g_nxslSoftwarePackage, new SoftwarePackage(*pkg))));
+         }
+      }
+   }
+   unlockProperties();
+
+   if (compiledRegex != nullptr)
+      _pcre_free_t(compiledRegex);
+
    return vm->createValue(a);
 }
 

@@ -1892,63 +1892,33 @@ NXSL_METHOD_DEFINITION(Node, executeSSHCommand)
 }
 
 /**
- * Node::openSSHSession([user], [password], [keyId]) method
+ * Node::getInstalledPackages(filter, useRegex) method
  */
-NXSL_METHOD_DEFINITION(Node, openSSHSession)
+NXSL_METHOD_DEFINITION(Node, getInstalledPackages)
 {
-   if (argc > 3)
+   if (argc > 2)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   const wchar_t *filter = nullptr;
+   bool useRegex = false;
 
-   const wchar_t *login = nullptr, *password = nullptr;
-   uint32_t keyId = 0;
    if (argc >= 1)
    {
-      if (!argv[0]->isString())
-         return NXSL_ERR_NOT_STRING;
-      login = argv[0]->getValueAsCString();
-
-      if (argc >= 2)
+      if (!argv[0]->isNull())
       {
-         if (!argv[1]->isString())
+         if (!argv[0]->isString())
             return NXSL_ERR_NOT_STRING;
-         password = argv[1]->getValueAsCString();
-
-         if (argc >= 3)
-         {
-            if (!argv[2]->isInteger())
-               return NXSL_ERR_NOT_INTEGER;
-            keyId = argv[2]->getValueAsUInt32();
-         }
+         filter = argv[0]->getValueAsCString();
       }
    }
 
-   shared_ptr<SSHInteractiveChannel> channel = node->openInteractiveSSHChannel(login, password, keyId);
-   if (channel == nullptr)
+   if (argc >= 2)
    {
-      nxlog_debug_tag(L"nxsl.ssh", 5, L"openSSHSession: cannot open SSH channel to %s [%u]", node->getName(), node->getId());
-      *result = vm->createValue();
-      return 0;
+      useRegex = argv[1]->isTrue();
    }
 
-   // Wait for initial prompt
-   if (!channel->waitForInitialPrompt())
-   {
-      nxlog_debug_tag(L"nxsl.ssh", 5, L"openSSHSession: timeout waiting for initial prompt from %s [%u]", node->getName(), node->getId());
-      channel->close();
-      *result = vm->createValue();
-      return 0;
-   }
-
-   // Disable pagination
-   channel->disablePagination();
-
-   nxlog_debug_tag(L"nxsl.ssh", 5, L"SSH session opened to %s [%u], channel %u", node->getName(), node->getId(), channel->getChannelId());
-
-   // Create NXSL object
-   SSHSessionData *sessionData = new SSHSessionData(channel, node->getId());
-   *result = vm->createValue(vm->createObject(&g_nxslSSHSessionClass, sessionData));
+   auto node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   *result = node->getInstalledPackagesForNXSL(vm, filter, useRegex);
    return 0;
 }
 
@@ -2050,6 +2020,67 @@ NXSL_METHOD_DEFINITION(Node, getWebService)
    {
       *result = vm->createValue(vm->createObject(&g_nxslWebServiceClass, new WebServiceHandle(d, *node)));
    }
+   return 0;
+}
+
+/**
+ * Node::openSSHSession([user], [password], [keyId]) method
+ */
+NXSL_METHOD_DEFINITION(Node, openSSHSession)
+{
+   if (argc > 3)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+
+   const wchar_t *login = nullptr, *password = nullptr;
+   uint32_t keyId = 0;
+   if (argc >= 1)
+   {
+      if (!argv[0]->isString())
+         return NXSL_ERR_NOT_STRING;
+      login = argv[0]->getValueAsCString();
+
+      if (argc >= 2)
+      {
+         if (!argv[1]->isString())
+            return NXSL_ERR_NOT_STRING;
+         password = argv[1]->getValueAsCString();
+
+         if (argc >= 3)
+         {
+            if (!argv[2]->isInteger())
+               return NXSL_ERR_NOT_INTEGER;
+            keyId = argv[2]->getValueAsUInt32();
+         }
+      }
+   }
+
+   shared_ptr<SSHInteractiveChannel> channel = node->openInteractiveSSHChannel(login, password, keyId);
+   if (channel == nullptr)
+   {
+      nxlog_debug_tag(L"nxsl.ssh", 5, L"openSSHSession: cannot open SSH channel to %s [%u]", node->getName(), node->getId());
+      *result = vm->createValue();
+      return 0;
+   }
+
+   // Wait for initial prompt
+   if (!channel->waitForInitialPrompt())
+   {
+      nxlog_debug_tag(L"nxsl.ssh", 5, L"openSSHSession: timeout waiting for initial prompt from %s [%u]", node->getName(), node->getId());
+      channel->close();
+      *result = vm->createValue();
+      return 0;
+   }
+
+   // Disable pagination
+   channel->disablePagination();
+
+   nxlog_debug_tag(L"nxsl.ssh", 5, L"SSH session opened to %s [%u], channel %u", node->getName(), node->getId(), channel->getChannelId());
+
+   // Create NXSL object
+   SSHSessionData *sessionData = new SSHSessionData(channel, node->getId());
+   *result = vm->createValue(vm->createObject(&g_nxslSSHSessionClass, sessionData));
    return 0;
 }
 
@@ -2314,6 +2345,7 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, getInterfaceByName, 1);
    NXSL_REGISTER_METHOD(Node, getInterfaceName, 1);
    NXSL_REGISTER_METHOD(Node, getBlockedPorts, 1);
+   NXSL_REGISTER_METHOD(Node, getInstalledPackages, -1);
    NXSL_REGISTER_METHOD(Node, getWebService, 1);
    NXSL_REGISTER_METHOD(Node, isPortBlocked, 2);
    NXSL_REGISTER_METHOD(Node, readAgentList, 1);

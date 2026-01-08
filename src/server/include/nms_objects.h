@@ -4106,6 +4106,7 @@ public:
    NXSL_Value *getInterfacesForNXSL(NXSL_VM *vm);
    NXSL_Value *getHardwareComponentsForNXSL(NXSL_VM* vm);
    NXSL_Value* getSoftwarePackagesForNXSL(NXSL_VM* vm);
+   NXSL_Value* getInstalledPackagesForNXSL(NXSL_VM* vm, const wchar_t *filter = nullptr, bool useRegex = false);
    NXSL_Value *getOSPFAreasForNXSL(NXSL_VM *vm);
    NXSL_Value *getOSPFNeighborsForNXSL(NXSL_VM *vm);
 
