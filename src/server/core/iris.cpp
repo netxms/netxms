@@ -267,7 +267,7 @@ time_t NXCORE_EXPORTABLE ParseTimestamp(const char *ts)
       return (ts[0] == '+') ? now + static_cast<time_t>(offset) : now - static_cast<time_t>(offset);
    }
 
-   if (!stricmp(eptr, "now"))
+   if (!stricmp(ts, "now"))
       return time(nullptr);
 
    int64_t n = strtoll(ts, &eptr, 10);
