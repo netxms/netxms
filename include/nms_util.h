@@ -3139,6 +3139,7 @@ protected:
    void _put(const void *key);
    void _remove(const void *key);
    bool _contains(const void *key) const;
+   uint32_t _count(const void *key) const;
 
 public:
    virtual ~HashSetBase();
@@ -3148,7 +3149,9 @@ public:
 
    void clear();
 
-   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const void *, void *), void *context) const;
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const void*, void*), void *context) const;
+   EnumerationCallbackResult forEach(std::function<EnumerationCallbackResult(const void*, void*)> cb, void *context) const;
+   EnumerationCallbackResult forEach(std::function<EnumerationCallbackResult(const void*, uint32_t)> cb) const;
 };
 
 /**
@@ -3196,6 +3199,11 @@ public:
       return HashSetBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const void*, void*)>(cb), context);
    }
 
+   EnumerationCallbackResult forEach(std::function<EnumerationCallbackResult(const K*)> cb) const
+   {
+      return HashSetBase::forEach([cb] (const void *k, uint32_t c) { return cb(*static_cast<const K*>(k), c); });
+   }
+
    Iterator<const K> begin()
    {
       return Iterator<const K>(new HashSetIterator(this));
@@ -3224,7 +3232,7 @@ template class LIBNETXMS_TEMPLATE_EXPORTABLE HashSet<uint64_t>;
 #endif
 
 /**
- * Hash set template
+ * Counting hash set - allows multiple addition of same key and counts number of additions / removals
  */
 template<class K> class CountingHashSet : public HashSetBase
 {
@@ -3249,10 +3257,16 @@ public:
    void remove(const K& key) { _remove(&key); }
    void removeAll(std::vector<K> keys) { for (K& key : keys) _remove(&key); }
    bool contains(const K& key) const { return _contains(&key); }
+   uint32_t count(const K& key) const { return _count(&key); }
 
    EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K *, void *), void *context) const
    {
       return HashSetBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const void *, void *)>(cb), context);
+   }
+
+   EnumerationCallbackResult forEach(std::function<EnumerationCallbackResult(const K&, uint32_t)> cb) const
+   {
+      return HashSetBase::forEach([cb] (const void *k, uint32_t c) { return cb(*static_cast<const K*>(k), c); });
    }
 
    Iterator<const K> begin()
@@ -3371,6 +3385,14 @@ public:
    {
       m_mutex.lock();
       auto result = m_set.forEach(cb, context);
+      m_mutex.unlock();
+      return result;
+   }
+
+   EnumerationCallbackResult forEach(std::function<EnumerationCallbackResult(const K&, uint32_t)> cb) const
+   {
+      m_mutex.lock();
+      auto result = m_set.forEach(cb);
       m_mutex.unlock();
       return result;
    }

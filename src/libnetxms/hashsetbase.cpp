@@ -161,6 +161,19 @@ bool HashSetBase::_contains(const void *key) const
 }
 
 /**
+ * Get count of given entry
+ */
+uint32_t HashSetBase::_count(const void *key) const
+{
+   if (key == nullptr)
+      return 0;
+
+   HashSetEntry *entry;
+   HASH_FIND(hh, m_data, key, m_keylen, entry);
+   return (entry != nullptr) ? entry->count : 0;
+}
+
+/**
  * Put element
  */
 void HashSetBase::_put(const void *key)
@@ -213,6 +226,44 @@ EnumerationCallbackResult HashSetBase::forEach(EnumerationCallbackResult (*cb)(c
    HASH_ITER(hh, m_data, entry, tmp)
    {
       if (cb(GET_KEY(this, entry), userData) == _STOP)
+      {
+         result = _STOP;
+         break;
+      }
+   }
+   return result;
+}
+
+/**
+ * Enumerate entries
+ * Returns true if whole map was enumerated and false if enumeration was aborted by callback.
+ */
+EnumerationCallbackResult HashSetBase::forEach(std::function<EnumerationCallbackResult(const void*, void*)> cb, void *context) const
+{
+   EnumerationCallbackResult result = _CONTINUE;
+   HashSetEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      if (cb(GET_KEY(this, entry), context) == _STOP)
+      {
+         result = _STOP;
+         break;
+      }
+   }
+   return result;
+}
+
+/**
+ * Enumerate entries
+ * Returns true if whole map was enumerated and false if enumeration was aborted by callback.
+ */
+EnumerationCallbackResult HashSetBase::forEach(std::function<EnumerationCallbackResult(const void*, uint32_t)> cb) const
+{
+   EnumerationCallbackResult result = _CONTINUE;
+   HashSetEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      if (cb(GET_KEY(this, entry), entry->count) == _STOP)
       {
          result = _STOP;
          break;

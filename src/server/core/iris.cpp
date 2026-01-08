@@ -237,7 +237,7 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByNameOrId(const char *name, int 
 
 /**
  * Parse timestamp from string. Supports absolute timestamps in ISO 8601 format or as UNIX timestamp,
- * as well as relative timestamps in format [+|-]<number>[s|m|h|d]
+ * as well as relative timestamps in format [+|-]<number>[s|m|h|d] or word "now".
  */
 time_t NXCORE_EXPORTABLE ParseTimestamp(const char *ts)
 {
@@ -266,6 +266,9 @@ time_t NXCORE_EXPORTABLE ParseTimestamp(const char *ts)
       time_t now = time(nullptr);
       return (ts[0] == '+') ? now + static_cast<time_t>(offset) : now - static_cast<time_t>(offset);
    }
+
+   if (!stricmp(eptr, "now"))
+      return time(nullptr);
 
    int64_t n = strtoll(ts, &eptr, 10);
    if (*eptr == 0)
