@@ -157,7 +157,7 @@ CREATE TABLE userdb_custom_attributes
 ) TABLE_TYPE;
 
 /**
- * Common object properties 
+ * Common object properties
  */
 CREATE TABLE object_properties
 (
@@ -379,7 +379,7 @@ CREATE TABLE physical_links
   right_object_id integer not null,
   right_patch_pannel_id integer not null,
   right_port_number integer not null,
-  right_front char(1) not null,  
+  right_front char(1) not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -916,7 +916,7 @@ CREATE TABLE items
   resource_id integer not null,   // associated cluster resource ID
   proxy_node integer not null,    // ID of proxy node (for SNMP and agent items)
   multiplier integer not null, // kilo, mega, milli, etc.
-  units_name varchar(63) null, // units name 
+  units_name varchar(63) null, // units name
   perftab_settings SQL_TEXT null,     // Settings for displaying graph on performance tab
   instd_method integer not null,
   instd_data varchar(1023) null,
@@ -1499,13 +1499,13 @@ CREATE TABLE policy_time_frame_list
  */
 CREATE TABLE policy_action_list
 (
-  record_id integer not null, 
+  record_id integer not null,
   rule_id integer not null,
   action_id integer not null,
   timer_delay varchar(127) null,
   timer_key varchar(127) null,
   blocking_timer_key varchar(127) null,
-  snooze_time varchar(127) null, 
+  snooze_time varchar(127) null,
   active char(1) not null,
   PRIMARY KEY(record_id,rule_id)
 ) TABLE_TYPE;
@@ -2137,7 +2137,7 @@ CREATE TABLE usm_credentials
 /*
 ** Well-known TCP or UDP ports
 */
-CREATE TABLE well_known_ports 
+CREATE TABLE well_known_ports
 (
    tag varchar(15) not null,
    zone integer not null,
@@ -2238,7 +2238,7 @@ CREATE TABLE network_map_seed_nodes
 /**
  * Object location for deleted nodes
  */
-CREATE TABLE network_map_deleted_nodes 
+CREATE TABLE network_map_deleted_nodes
 (
   map_id integer not null,
   object_id integer not null,
@@ -2352,7 +2352,7 @@ CREATE TABLE business_service_prototypes
 CREATE TABLE business_service_checks
 (
   id integer not null,
-  service_id integer not null,  
+  service_id integer not null,
   prototype_service_id integer not null,
   prototype_check_id integer not null,
   type integer not null, // 2 - threshold, 1 - script, 0 - object
@@ -2602,7 +2602,7 @@ CREATE TABLE responsible_users
 /**
  * Auto bind information for objects
  */
-CREATE TABLE auto_bind_target 
+CREATE TABLE auto_bind_target
 (
    object_id integer not null,
    bind_filter_1 SQL_TEXT null,
@@ -2614,7 +2614,7 @@ CREATE TABLE auto_bind_target
 /**
  * Versionning table for objects
  */
-CREATE TABLE versionable_object 
+CREATE TABLE versionable_object
 (
    object_id integer not null,
    version integer not null,
@@ -2624,8 +2624,8 @@ CREATE TABLE versionable_object
 /**
  * User agent messages
  */
-CREATE TABLE user_agent_notifications 
-( 
+CREATE TABLE user_agent_notifications
+(
    id integer not null,
    message varchar(1023) null,
    objects varchar(1023) not null,
@@ -2719,7 +2719,7 @@ CREATE TABLE websvc_headers
 /**
  * Shared secrets default and for zones
  */
-CREATE TABLE shared_secrets 
+CREATE TABLE shared_secrets
 (
    id integer not null,
    secret varchar(88) null,
@@ -2730,7 +2730,7 @@ CREATE TABLE shared_secrets
 /**
  * List of deleted DCIs to clear data on housekeeper
  */
-CREATE TABLE dci_delete_list 
+CREATE TABLE dci_delete_list
 (
    node_id integer not null,
    dci_id integer not null,
@@ -2787,7 +2787,7 @@ CREATE TABLE geo_areas
 /**
  * Data collection target information about object
  */
-CREATE TABLE dc_targets 
+CREATE TABLE dc_targets
 (
    id integer not null,
    geolocation_ctrl_mode integer not null,
@@ -2810,7 +2810,7 @@ CREATE TABLE pollable_objects
 /**
  * SSH keys
  */
-CREATE TABLE ssh_keys 
+CREATE TABLE ssh_keys
 (
    id integer not null,
    name varchar(255) not null,
@@ -3054,11 +3054,7 @@ CREATE TABLE ai_messages
    title varchar(255) not null,
    message_text SQL_TEXT not null,
    spawn_task_data SQL_TEXT null,
-#ifdef DB_ORACLE
-   status integer default 0 not null,
-#else
-   status integer not null default 0,
-#endif
+   status integer not null,
    PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -3071,11 +3067,7 @@ CREATE TABLE ai_message_recipients
 (
    message_id integer not null,
    user_id integer not null,
-#ifdef DB_ORACLE
-   is_initiator char(1) default '0' not null,
-#else
-   is_initiator char(1) not null default '0',
-#endif
+   is_initiator char(1) not null,
    read_time integer null,
    PRIMARY KEY(message_id, user_id)
 ) TABLE_TYPE;

@@ -72,7 +72,7 @@ static bool H_UpgradeFromV20()
       _T("   title varchar(255) not null,")
       _T("   message_text $SQL:TEXT not null,")
       _T("   spawn_task_data $SQL:TEXT null,")
-      _T("   status integer not null default 0,")
+      _T("   status integer not null,")
       _T("   PRIMARY KEY(id))")));
 
    CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_ai_messages_expiration ON ai_messages(expiration_time)")));
@@ -81,7 +81,7 @@ static bool H_UpgradeFromV20()
       _T("CREATE TABLE ai_message_recipients (")
       _T("   message_id integer not null,")
       _T("   user_id integer not null,")
-      _T("   is_initiator char(1) not null default '0',")
+      _T("   is_initiator char(1) not null,")
       _T("   read_time integer null,")
       _T("   PRIMARY KEY(message_id, user_id))")));
 
