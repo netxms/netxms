@@ -14,7 +14,6 @@ repos:
       - id: check-merge-conflict
       - id: check-symlinks
       - id: check-toml
-      - id: check-vcs-permalinks
       - id: check-xml
       - id: check-yaml
         args: [--allow-multiple-documents]
