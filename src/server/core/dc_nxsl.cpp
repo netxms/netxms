@@ -490,8 +490,8 @@ static int GetDCIValuesImpl(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 		if (hStmt != nullptr)
 		{
 			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, argv[1]->getValueAsUInt32());
-			DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, argv[2]->getValueAsInt32());
-			DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (argc > 3) ? argv[3]->getValueAsInt32() : static_cast<int32_t>(time(nullptr)));
+			DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, argv[2]->getValueAsInt64() * 1000L);
+			DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (argc > 3) ? argv[3]->getValueAsInt64() * 1000L : static_cast<int64_t>(time(nullptr)) * 1000L);
 			DB_RESULT hResult = DBSelectPrepared(hStmt);
 			if (hResult != nullptr)
 			{
