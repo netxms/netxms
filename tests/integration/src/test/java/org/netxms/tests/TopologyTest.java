@@ -40,7 +40,7 @@ import org.netxms.utilities.TestHelper;
  * Tests for network topology functions
  */
 public class TopologyTest extends AbstractSessionTest
-{   
+{
    public static AbstractObject findSubnet(NXCSession session) throws IOException, NXCException, InterruptedException
    {
       Node node = TestHelper.findManagementServer(session);
@@ -48,7 +48,7 @@ public class TopologyTest extends AbstractSessionTest
       session.syncObjects();
       for(AbstractObject parent : node.getParentsAsArray())
       {
-         if (parent instanceof Subnet) 
+         if (parent instanceof Subnet)
          {
             return parent;
          }
@@ -63,18 +63,18 @@ public class TopologyTest extends AbstractSessionTest
 
       AbstractNode node = (AbstractNode)TestHelper.getTopologyNode(session);
       assertNotNull(node);
-      System.out.println("parent " + TopologyTest.findSubnet(session));
+      System.out.println("parent " + TopologyTest.findSubnet(session).getObjectId());
       long[] map = session.getSubnetAddressMap(TopologyTest.findSubnet(session).getObjectId());
       for(int i = 0; i < map.length; i++)
          System.out.println(i + ": " + map[i]);
-      
+
       session.disconnect();
    }
-   
+
    @Test
    public void testLinkLayerTopology() throws Exception
    {
-      final NXCSession session = connectAndLogin();     
+      final NXCSession session = connectAndLogin();
       Node node = TestHelper.getTopologyNode(session);
       assertNotNull(node);
 
@@ -83,7 +83,7 @@ public class TopologyTest extends AbstractSessionTest
          System.out.println(e.toString());
       for(NetworkMapLink l : page.getLinks())
          System.out.println(l.toString());
-      
+
       session.disconnect();
    }
 
@@ -97,10 +97,10 @@ public class TopologyTest extends AbstractSessionTest
       List<Route> rt = session.getRoutingTable(node.getObjectId());
       for(Route r : rt)
          System.out.println(r.toString());
-      
+
       session.disconnect();
    }
-     
+
    @Test
    public void testSwitchForwardingTable() throws Exception
    {
@@ -111,7 +111,7 @@ public class TopologyTest extends AbstractSessionTest
       List<FdbEntry> fdb = session.getSwitchForwardingDatabase(node.getObjectId());
       for(FdbEntry e : fdb)
          System.out.println(e.toString());
-      
+
       session.disconnect();
    }
 }
