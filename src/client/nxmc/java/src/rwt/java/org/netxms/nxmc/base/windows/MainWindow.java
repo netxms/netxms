@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.window.Window;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
@@ -92,12 +93,14 @@ import org.netxms.nxmc.base.widgets.Spacer;
 import org.netxms.nxmc.base.widgets.WelcomePage;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.ai.widgets.AiAssistantChatWidget;
 import org.netxms.nxmc.modules.alarms.preferencepages.AlarmPreferences;
 import org.netxms.nxmc.modules.alarms.preferencepages.AlarmSounds;
 import org.netxms.nxmc.modules.networkmaps.preferencepage.GeneralMapPreferences;
 import org.netxms.nxmc.modules.objects.ObjectsPerspective;
 import org.netxms.nxmc.modules.objects.preferencepages.ObjectsPreferences;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorConverter;
@@ -131,6 +134,7 @@ public class MainWindow extends Window implements MessageAreaHolder
    private ViewFolder rightPinArea;
    private ViewFolder bottomPinArea;
    private boolean verticalLayout;
+   private AiAssistantChatWidget aiChatWidget;
    private boolean showServerClock;
    private Composite serverClockArea;
    private ServerClock serverClock;
@@ -400,6 +404,8 @@ public class MainWindow extends Window implements MessageAreaHolder
    {
       NXCSession session = Registry.getSession();
 
+      boolean withAiAssistant = session.isServerComponentRegistered("AI-ASSISTANT");
+
       Font perspectiveSwitcherFont = ThemeEngine.getFont("Window.PerspectiveSwitcher");
 
       windowContent = new Composite(parent, SWT.NONE);
@@ -424,7 +430,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       layout.marginWidth = 5;
       layout.marginHeight = 5;
       layout.horizontalSpacing = 5;
-      layout.numColumns = 15;
+      layout.numColumns = withAiAssistant ? 17 : 15;
       headerArea.setLayout(layout);
 
       Label appLogo = new Label(headerArea, SWT.CENTER);
@@ -473,6 +479,12 @@ public class MainWindow extends Window implements MessageAreaHolder
       }
 
       new Spacer(headerArea, 32);
+
+      if (withAiAssistant)
+      {
+         new HeaderButton(headerArea, "icons/main-window/ai.png", i18n.tr("AI assistant chat"), () -> showAiAssistantChat());
+         new Spacer(headerArea, 32);
+      }
 
       userMenuButton = new HeaderButton(headerArea, "icons/main-window/user.png", i18n.tr("User properties"), new Runnable() {
          @Override
@@ -865,6 +877,85 @@ public class MainWindow extends Window implements MessageAreaHolder
       }
       pinArea.addView(view, true, true);
       return pinArea;
+   }
+
+   /**
+    * Show AI assistant chat control
+    */
+   private void showAiAssistantChat()
+   {
+      if (aiChatWidget != null)
+      {
+         aiChatWidget.setFocus();
+         return;
+      }
+
+      int[] weights = horizontalSplitArea.getWeights();
+
+      final Composite chatArea = new Composite(horizontalSplitArea, SWT.BORDER);
+      GridLayout layout = new GridLayout();
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      layout.verticalSpacing = 0;
+      layout.numColumns = 2;
+      chatArea.setLayout(layout);
+
+      CLabel label = new CLabel(chatArea, SWT.NONE);
+      label.setImage(SharedIcons.IMG_AI_ASSISTANT);
+      label.setText(i18n.tr("AI Assistant Chat"));
+
+      ToolBar toolbar = new ToolBar(chatArea, SWT.FLAT | SWT.RIGHT);
+      toolbar.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false));
+
+      Label separator = new Label(chatArea, SWT.SEPARATOR | SWT.HORIZONTAL);
+      separator.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+
+      ToolItem clearItem = new ToolItem(toolbar, SWT.PUSH);
+      clearItem.setImage(SharedIcons.IMG_CLEAR_LOG);
+      clearItem.setToolTipText(i18n.tr("Clear chat history"));
+      clearItem.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            aiChatWidget.clearChatSession();
+         }
+      });
+
+      ToolItem closeItem = new ToolItem(toolbar, SWT.PUSH);
+      closeItem.setImage(SharedIcons.IMG_CLOSE);
+      closeItem.setToolTipText(i18n.tr("Close"));
+      closeItem.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            aiChatWidget.dispose();
+            aiChatWidget = null;
+            chatArea.dispose();
+            horizontalSplitArea.layout(true, true);
+         }
+      });
+
+      aiChatWidget = new AiAssistantChatWidget(chatArea, SWT.NONE, null, 0, true);
+      aiChatWidget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
+      aiChatWidget.createChatSession(true);
+
+      weights = Arrays.copyOf(weights, weights.length + 1);
+      int total = 0;
+      for(int w : weights)
+         total += w;
+      weights[weights.length - 1] = 3 * total / 7; // 30% of new full weight
+      horizontalSplitArea.setWeights(weights);
+   }
+
+   /**
+    * Set AI assistant context
+    * 
+    * @param context context object
+    */
+   public void setAiAssistantContext(Object context)
+   {
+      if (aiChatWidget != null)
+         aiChatWidget.setContext(context);
    }
 
    /**

@@ -15444,15 +15444,17 @@ public class NXCSession
     *
     * @param chatId chat ID
     * @param message new user message
+    * @param context additional context information
     * @return assistant response
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public String updateAiAssistantChat(long chatId, String message) throws IOException, NXCException
+   public String updateAiAssistantChat(long chatId, String message, String context) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_AI_ASSISTANT);
       msg.setFieldUInt32(NXCPCodes.VID_CHAT_ID, chatId);
       msg.setField(NXCPCodes.VID_MESSAGE, message);
+      msg.setField(NXCPCodes.VID_AI_QUESTION_CONTEXT, context);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId(), commandTimeout * 10);   // LLM response can take significant amount of time
       return response.getFieldAsString(NXCPCodes.VID_MESSAGE);

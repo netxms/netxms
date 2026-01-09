@@ -18523,7 +18523,8 @@ void ClientSession::queryAiAssistant(const NXCPMessage& request)
    shared_ptr<Chat> chat = GetAIAssistantChat(chatId, m_userId, &rcc);
    if (chat != nullptr)
    {
-      char *answer = chat->sendRequest(userMessage, 16);
+      char *context = request.getFieldAsUtf8String(VID_AI_QUESTION_CONTEXT);
+      char *answer = chat->sendRequest(userMessage, 16, context);
       if (answer != nullptr)
       {
          response.setField(VID_RCC, RCC_SUCCESS);
@@ -18534,6 +18535,7 @@ void ClientSession::queryAiAssistant(const NXCPMessage& request)
       {
          response.setField(VID_RCC, RCC_SYSTEM_FAILURE);
       }
+      MemFree(context);
    }
    else
    {

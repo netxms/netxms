@@ -189,7 +189,7 @@ public:
 
    void bindToIncident(uint32_t incidentId);
 
-   char *sendRequest(const char *prompt, int maxIterations);
+   char *sendRequest(const char *prompt, int maxIterations, const char *context = nullptr);
 
    void clear();
 

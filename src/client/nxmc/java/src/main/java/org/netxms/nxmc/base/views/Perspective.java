@@ -157,6 +157,7 @@ public abstract class Perspective
          mainFolder.setContext(context);
       else if (mainArea != null)
          mainArea.setContext(context);
+      Registry.getMainWindow().setAiAssistantContext(context);
    }
 
    /**

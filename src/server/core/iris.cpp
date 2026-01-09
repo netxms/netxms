@@ -915,10 +915,16 @@ void Chat::clear()
 /**
  * Send request to assistant
  */
-char *Chat::sendRequest(const char *prompt, int maxIterations)
+char *Chat::sendRequest(const char *prompt, int maxIterations, const char *context)
 {
    LockGuard lockGuard(m_mutex);
 
+   if (context != nullptr && context[0] != 0)
+   {
+      std::string contextPrompt = "Additional context for this and following requests: ";
+      contextPrompt.append(context);
+      addMessage("user", contextPrompt.c_str());
+   }
    addMessage("user", prompt);
 
    int iterations = maxIterations;
