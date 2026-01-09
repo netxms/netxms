@@ -494,13 +494,13 @@ INSERT INTO user_groups (id,name,system_access,ui_access_rules,flags,description
 
 INSERT INTO user_group_members (group_id,user_id) VALUES (1073741825,1);
 
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (1,1073741825,2097151);
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (2,1073741825,2097151);
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (3,1073741825,2097151);
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (5,1073741825,2097151);
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (6,1073741825,2097151);
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (7,1073741825,2097151);
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (9,1073741825,2097151);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (1,1073741825,67108863);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (2,1073741825,67108863);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (3,1073741825,67108863);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (5,1073741825,67108863);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (6,1073741825,67108863);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (7,1073741825,67108863);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (9,1073741825,67108863);
 
 /*
 ** Default community string
@@ -510,7 +510,7 @@ INSERT INTO snmp_communities (id,community,zone) VALUES(1,'public',-1);
 /*
 **Notification channels
 */
-INSERT INTO notification_channels (name,driver_name,description,configuration) VALUES 
+INSERT INTO notification_channels (name,driver_name,description,configuration) VALUES
    (
       'SMTP-Text','SMTP','Default SMTP text channel',
       '#Server=localhost' CONCAT CRLF CONCAT
@@ -523,7 +523,7 @@ INSERT INTO notification_channels (name,driver_name,description,configuration) V
       '#FromName=NetXMS Server' CONCAT CRLF CONCAT
       '#IsHTML=no' CONCAT CRLF
    );
-INSERT INTO notification_channels (name,driver_name,description,configuration) VALUES 
+INSERT INTO notification_channels (name,driver_name,description,configuration) VALUES
    (
       'SMTP-HTML','SMTP','Default SMTP HTML channel',
       '#Server=localhost' CONCAT CRLF CONCAT
@@ -536,4 +536,3 @@ INSERT INTO notification_channels (name,driver_name,description,configuration) V
       '#FromName=NetXMS Server' CONCAT CRLF CONCAT
       '#IsHTML=yes' CONCAT CRLF
    );
-
