@@ -527,8 +527,7 @@ void DeleteDuplicateDataRecords(const wchar_t *tableType, uint32_t objectId)
          tableType,            // b: SELECT ... %s_timestamp
          tableType, objectId,  // b: FROM %s_%u
          tableType,            // b: GROUP BY ... %s_timestamp
-         tableType, tableType, // a.%s_timestamp = b.%s_timestamp
-         tableType, tableType  // for the last AND a.ctid > b.min_ctid
+         tableType, tableType // a.%s_timestamp = b.%s_timestamp
       );
    }
    else if (g_dbSyntax == DB_SYNTAX_MYSQL) // Assuming 8.0+ or 10.2+
@@ -590,14 +589,6 @@ void DeleteDuplicateDataRecords(const wchar_t *tableType, uint32_t objectId)
          tableType, objectId,
          tableType
       );
-   }
-   else if (g_dbSyntax == DB_SYNTAX_TSDB)
-   {      
-      _tprintf(_T("Nothing to do for TSDB engine...\n"));
-   }
-   else
-   {
-      _tprintf(_T("Nothing to do for TSDB engine...\n"));
    }
 
    if (query[0] != 0)

@@ -3150,7 +3150,7 @@ public:
    void clear();
 
    EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const void*, void*), void *context) const;
-   EnumerationCallbackResult forEach(std::function<EnumerationCallbackResult(const void*, void*)> cb, void *context) const;
+   EnumerationCallbackResult forEach(std::function<EnumerationCallbackResult(const void*)> cb) const;
    EnumerationCallbackResult forEach(std::function<EnumerationCallbackResult(const void*, uint32_t)> cb) const;
 };
 

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -219,13 +219,13 @@ void HashSetBase::_remove(const void *key)
  * Enumerate entries
  * Returns true if whole map was enumerated and false if enumeration was aborted by callback.
  */
-EnumerationCallbackResult HashSetBase::forEach(EnumerationCallbackResult (*cb)(const void *, void *), void *userData) const
+EnumerationCallbackResult HashSetBase::forEach(EnumerationCallbackResult (*cb)(const void *, void *), void *context) const
 {
    EnumerationCallbackResult result = _CONTINUE;
    HashSetEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      if (cb(GET_KEY(this, entry), userData) == _STOP)
+      if (cb(GET_KEY(this, entry), context) == _STOP)
       {
          result = _STOP;
          break;
@@ -238,13 +238,13 @@ EnumerationCallbackResult HashSetBase::forEach(EnumerationCallbackResult (*cb)(c
  * Enumerate entries
  * Returns true if whole map was enumerated and false if enumeration was aborted by callback.
  */
-EnumerationCallbackResult HashSetBase::forEach(std::function<EnumerationCallbackResult(const void*, void*)> cb, void *context) const
+EnumerationCallbackResult HashSetBase::forEach(std::function<EnumerationCallbackResult(const void*)> cb) const
 {
    EnumerationCallbackResult result = _CONTINUE;
    HashSetEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      if (cb(GET_KEY(this, entry), context) == _STOP)
+      if (cb(GET_KEY(this, entry)) == _STOP)
       {
          result = _STOP;
          break;

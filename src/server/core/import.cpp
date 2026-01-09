@@ -354,7 +354,8 @@ static uint32_t ImportEvent(json_t *event, bool overwrite, ImportContext *contex
                     (const TCHAR *)DBPrepareString(hdb, name), severity, flags,
                     (const TCHAR *)DBPrepareString(hdb, msg),
                     (const TCHAR *)DBPrepareString(hdb, descr),
-                    (const TCHAR *)DBPrepareString(hdb, tags));
+                    (const TCHAR *)DBPrepareString(hdb, tags),
+                    code);
       }
       else
       {

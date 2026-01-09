@@ -587,8 +587,6 @@ public:
    bool put(const InetAddressList *addrList, const shared_ptr<NetObj>& object);
    bool put(const InetAddressList& addrList, const shared_ptr<NetObj>& object) { return put(&addrList, object); }
    void remove(const InetAddress& addr);
-   void remove(const InetAddressList *addrList);
-   void remove(const InetAddressList& addrList) { remove(&addrList); }
    shared_ptr<NetObj> get(const InetAddress& addr) const;
    shared_ptr<NetObj> find(bool (*comparator)(NetObj *, void *), void *context) const;
 
