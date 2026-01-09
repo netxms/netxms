@@ -6658,7 +6658,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                .param(_T("interfaceIpAddress"), addr)
                .param(_T("interfaceMask"), addr.getMaskBits())
                .post();
-               
+
             deleteInterface(iface);
          }
          hasChanges = true;
@@ -11149,7 +11149,7 @@ bool Node::resolveName(bool useOnlyDNS, const TCHAR* *const facility)
             const InetAddressList *list = static_cast<Interface*>(curr)->getIpAddressList();
             for(int n = 0; n < list->size(); n++)
             {
-               const InetAddress& a = list->get(i);
+               const InetAddress& a = list->get(n);
                if (a.isValidUnicast() && (a.getHostByAddr(name, MAX_OBJECT_NAME) != nullptr))
                {
                   _tcslcpy(m_name, name, MAX_OBJECT_NAME);
