@@ -12351,7 +12351,15 @@ void Node::checkSubnetBinding()
       if (iface->isExcludedFromTopology())
          continue;
 
-      addrList.add(iface->getIpAddressList());
+      InetAddressList ifaceAddrList = iface->getIpAddressList();
+      for(int m = 0; m < ifaceAddrList.size(); m++)
+      {
+         InetAddress a = ifaceAddrList.get(m);
+         if (a.isValidUnicast())
+         {
+            addrList.add(a);
+         }
+      }
    }
    unlockChildList();
 
