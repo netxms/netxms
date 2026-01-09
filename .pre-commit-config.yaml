@@ -1,0 +1,26 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-ast
+        exclude: src/client/nxshell/samples/
+      - id: check-builtin-literals
+        exclude: src/client/nxshell/samples/
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-illegal-windows-names
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-toml
+      - id: check-vcs-permalinks
+      - id: check-xml
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: destroyed-symlinks
+      - id: detect-private-key
+        exclude: src/server/core/sshkeys.cpp
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace
