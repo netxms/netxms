@@ -3199,9 +3199,9 @@ public:
       return HashSetBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const void*, void*)>(cb), context);
    }
 
-   EnumerationCallbackResult forEach(std::function<EnumerationCallbackResult(const K*)> cb) const
+   EnumerationCallbackResult forEach(std::function<EnumerationCallbackResult(const K&)> cb) const
    {
-      return HashSetBase::forEach([cb] (const void *k, uint32_t c) { return cb(*static_cast<const K*>(k), c); });
+      return HashSetBase::forEach([cb] (const void *k) { return cb(*static_cast<const K*>(k)); });
    }
 
    Iterator<const K> begin()
