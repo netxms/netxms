@@ -150,7 +150,7 @@ public:
 /**
  * Chat with AI assistant
  */
-class Chat
+class NXCORE_EXPORTABLE Chat
 {
 private:
    uint32_t m_id;
@@ -197,6 +197,7 @@ public:
    int askMultipleChoice(const TCHAR *text, const TCHAR *context, const StringList &options, uint32_t timeout = 300);
    void handleQuestionResponse(uint64_t questionId, bool positive, int selectedOption);
    bool hasPendingQuestion() const { return m_pendingQuestion != nullptr; }
+   json_t *getPendingQuestion();
 };
 
 /**

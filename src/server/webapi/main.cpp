@@ -31,6 +31,12 @@ DEFINE_MODULE_METADATA("WEBAPI", "Raden Solutions", NETXMS_VERSION_STRING_A, NET
 /**
  * Handlers
  */
+int H_AiChatAnswerQuestion(Context *context);
+int H_AiChatClear(Context *context);
+int H_AiChatCreate(Context *context);
+int H_AiChatDelete(Context *context);
+int H_AiChatSendMessage(Context *context);
+int H_AiCharPollQuestion(Context *context);
 int H_AlarmAcknowledge(Context *context);
 int H_AlarmDetails(Context *context);
 int H_AlarmResolve(Context *context);
@@ -70,6 +76,24 @@ int H_TakeScreenshot(Context *context);
  */
 static bool InitModule(Config *config)
 {
+   RouteBuilder("v1/ai/chat")
+      .POST(H_AiChatCreate)
+      .build();
+   RouteBuilder("v1/ai/chat/:chat-id/message")
+      .POST(H_AiChatSendMessage)
+      .build();
+   RouteBuilder("v1/ai/chat/:chat-id/question")
+      .GET(H_AiCharPollQuestion)
+      .build();
+   RouteBuilder("v1/ai/chat/:chat-id/answer")
+      .POST(H_AiChatAnswerQuestion)
+      .build();
+   RouteBuilder("v1/ai/chat/:chat-id/clear")
+      .POST(H_AiChatClear)
+      .build();
+   RouteBuilder("v1/ai/chat/:chat-id")
+      .DELETE(H_AiChatDelete)
+      .build();
    RouteBuilder("v1/alarms")
       .GET(H_Alarms)
       .build();
@@ -169,7 +193,6 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/status")
       .GET(H_Status)
       .build();
-
    return true;
 }
 

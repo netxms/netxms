@@ -1201,6 +1201,34 @@ void Chat::handleQuestionResponse(uint64_t questionId, bool positive, int select
 }
 
 /**
+ * Get pending question as JSON object (for WebAPI polling)
+ */
+json_t *Chat::getPendingQuestion()
+{
+   LockGuard lockGuard(m_questionMutex);
+   if (m_pendingQuestion == nullptr)
+      return nullptr;
+
+   json_t *question = json_object();
+   json_object_set_new(question, "id", json_integer(m_pendingQuestion->id));
+   json_object_set_new(question, "type", json_string(m_pendingQuestion->isMultipleChoice ? "multipleChoice" : "confirmation"));
+   json_object_set_new(question, "confirmationType", json_integer(static_cast<int>(m_pendingQuestion->confirmationType)));
+   json_object_set_new(question, "text", json_string_t(m_pendingQuestion->text.cstr()));
+   json_object_set_new(question, "context", json_string_t(m_pendingQuestion->context.cstr()));
+   json_object_set_new(question, "expiresAt", json_integer(m_pendingQuestion->expiresAt));
+
+   if (m_pendingQuestion->isMultipleChoice)
+   {
+      json_t *options = json_array();
+      for (int i = 0; i < m_pendingQuestion->options.size(); i++)
+         json_array_append_new(options, json_string_t(m_pendingQuestion->options.get(i)));
+      json_object_set_new(question, "options", options);
+   }
+
+   return question;
+}
+
+/**
  * Send single independent request to AI assistant
  */
 char NXCORE_EXPORTABLE *QueryAIAssistant(const char *prompt, NetObj *context, int maxIterations)
