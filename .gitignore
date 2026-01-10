@@ -334,3 +334,8 @@ cmake-build-debug/
 .aider*
 .netxmsd_history
 .serena/
+
+# Python
+__pycache__/
+*.egg-info/
+venv/
