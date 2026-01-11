@@ -1,6 +1,6 @@
 /* 
 ** nxsnmpwalk - command line tool used to retrieve parameters from SNMP agent
-** Copyright (C) 2004-2023 Victor Kirhenshtein
+** Copyright (C) 2004-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,6 +30,15 @@
 NETXMS_EXECUTABLE_HEADER(nxsnmpwalk)
 
 /**
+ * Compiled MIB file name
+ */
+#ifdef _WIN32
+#define COMPILED_MIB_FILE    _T("\\netxms.cmib")
+#else
+#define COMPILED_MIB_FILE    _T("/netxms.cmib")
+#endif
+
+/**
  * Static data
  */
 static char m_community[256] = "public";
@@ -43,13 +52,94 @@ static uint16_t m_port = 161;
 static SNMP_Version m_snmpVersion = SNMP_VERSION_2C;
 static uint32_t m_timeout = 3000;
 static const char *s_codepage = nullptr;
+static bool s_rawOutput = false;           // -R flag: disable display hints
+static bool s_noMib = false;               // -M flag: skip MIB loading
+static bool s_numericOids = false;         // -n flag: numeric OIDs only
+static TCHAR s_mibPath[MAX_PATH] = _T(""); // -m flag: custom MIB path
+static SNMP_MIBObject *s_mibRoot = nullptr;
+
+/**
+ * Load MIB tree
+ */
+static bool LoadMIBTree()
+{
+   if (s_noMib)
+      return true;
+
+   TCHAR mibPath[MAX_PATH];
+   if (s_mibPath[0] != 0)
+   {
+      _tcslcpy(mibPath, s_mibPath, MAX_PATH);
+   }
+   else
+   {
+      TCHAR dataDir[MAX_PATH];
+      GetNetXMSDirectory(nxDirData, dataDir);
+      _tcslcpy(mibPath, dataDir, MAX_PATH);
+      _tcslcat(mibPath, COMPILED_MIB_FILE, MAX_PATH);
+   }
+
+   uint32_t rc = SnmpLoadMIBTree(mibPath, &s_mibRoot);
+   if (rc != SNMP_ERR_SUCCESS)
+   {
+      _tprintf(_T("Warning: Unable to load MIB tree from %s (%s)\n"), mibPath, SnmpGetErrorText(rc));
+      return false;
+   }
+   return true;
+}
+
+/**
+ * Format OID name (numeric or symbolic)
+ */
+static void FormatOIDName(const SNMP_ObjectId& oid, TCHAR *buffer, size_t bufferSize)
+{
+   if (s_numericOids || s_mibRoot == nullptr)
+   {
+      oid.toString(buffer, bufferSize);
+      return;
+   }
+
+   SNMP_MIBObject *mibObj = SnmpFindMIBObjectByOID(s_mibRoot, oid);
+   if (mibObj != nullptr && mibObj->getName() != nullptr)
+   {
+      // Calculate matched OID length by walking up from mibObj
+      size_t matchLen = 0;
+      for (SNMP_MIBObject *p = mibObj; p->getParent() != nullptr; p = p->getParent())
+         matchLen++;
+
+      if (matchLen < oid.length())
+      {
+         // Format as name.suffix (e.g., "ifPhysAddress.1")
+         TCHAR suffix[256] = _T("");
+         for (size_t i = matchLen; i < oid.length(); i++)
+         {
+            TCHAR part[32];
+            _sntprintf(part, 32, _T(".%u"), oid.value()[i]);
+            _tcslcat(suffix, part, 256);
+         }
+         _sntprintf(buffer, bufferSize, _T("%s%s"), mibObj->getName(), suffix);
+      }
+      else
+      {
+         _tcslcpy(buffer, mibObj->getName(), bufferSize);
+      }
+   }
+   else
+   {
+      oid.toString(buffer, bufferSize);
+   }
+}
 
 /**
  * Walk callback
  */
 static uint32_t WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, void *context)
 {
-   TCHAR buffer[1024], typeName[256];
+   TCHAR buffer[1024], typeName[256], oidName[512];
+
+   // Format OID name (numeric or symbolic)
+   FormatOIDName(var->getName(), oidName, 512);
+
    if (var->getType() == ASN_OPAQUE)
    {
       SNMP_Variable *subvar = var->decodeOpaque();
@@ -57,21 +147,38 @@ static uint32_t WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, void
       {
          bool convert = true;
          subvar->getValueAsPrintableString(buffer, 1024, &convert, s_codepage);
-         _tprintf(_T("%s [OPAQUE]: [%s]: %s\n"), (const TCHAR *)var->getName().toString(),
+         _tprintf(_T("%s [OPAQUE]: [%s]: %s\n"), oidName,
                convert ? _T("Hex-STRING") : SnmpDataTypeName(subvar->getType(), typeName, 256), buffer);
          delete subvar;
       }
       else
       {
-         _tprintf(_T("%s [OPAQUE]:\n"), var->getName().toString().cstr());
+         _tprintf(_T("%s [OPAQUE]:\n"), oidName);
       }
    }
    else
    {
-      bool convert = true;
-      var->getValueAsPrintableString(buffer, 1024, &convert, s_codepage);
-      _tprintf(_T("%s [%s]: %s\n"), var->getName().toString().cstr(),
-            convert ? _T("Hex-STRING") : SnmpDataTypeName(var->getType(), typeName, 256), buffer);
+      // Try to apply display hint if available
+      bool usedHint = false;
+      if (!s_rawOutput && s_mibRoot != nullptr)
+      {
+         SNMP_MIBObject *mibObj = SnmpFindMIBObjectByOID(s_mibRoot, var->getName());
+         if (mibObj != nullptr && mibObj->getDisplayHint() != nullptr)
+         {
+            var->getValueWithDisplayHint(mibObj->getDisplayHint(), buffer, 1024);
+            const TCHAR *tc = mibObj->getTextualConvention();
+            _tprintf(_T("%s [%s]: %s\n"), oidName, ((tc != nullptr) && (tc[0] != 0)) ? tc : SnmpDataTypeName(var->getType(), typeName, 256), buffer);
+            usedHint = true;
+         }
+      }
+
+      if (!usedHint)
+      {
+         bool convert = true;
+         var->getValueAsPrintableString(buffer, 1024, &convert, s_codepage);
+         _tprintf(_T("%s [%s]: %s\n"), oidName,
+               convert ? _T("Hex-STRING") : SnmpDataTypeName(var->getType(), typeName, 256), buffer);
+      }
    }
    return SNMP_ERR_SUCCESS;
 }
@@ -133,7 +240,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "a:A:c:C:e:E:hn:p:u:v:w:")) != -1)
+	while((ch = getopt(argc, argv, "a:A:c:C:e:E:hm:Mn:Np:Ru:v:w:")) != -1)
    {
       switch(ch)
       {
@@ -144,11 +251,15 @@ int main(int argc, char *argv[])
                      _T("   -A <passwd>   : User's authentication password for SNMP v3 USM\n")
                      _T("   -c <string>   : Community string. Default is \"public\"\n")
                      _T("   -C <codepage> : Codepage for remote system\n")
-						   _T("   -e <method>   : Encryption method for SNMP v3 USM. Valid methods are DES and AES\n")
+                     _T("   -e <method>   : Encryption method for SNMP v3 USM. Valid methods are DES and AES\n")
                      _T("   -E <passwd>   : User's encryption password for SNMP v3 USM\n")
                      _T("   -h            : Display help and exit\n")
-						   _T("   -n <name>     : SNMP v3 context name\n")
+                     _T("   -m <path>     : Path to compiled MIB file\n")
+                     _T("   -M            : Do not load MIB tree\n")
+                     _T("   -n <name>     : SNMP v3 context name\n")
+                     _T("   -N            : Show numeric OIDs only\n")
                      _T("   -p <port>     : Agent's port number. Default is 161\n")
+                     _T("   -R            : Raw output (disable display hint formatting)\n")
                      _T("   -u <user>     : User name for SNMP v3 USM\n")
                      _T("   -v <version>  : SNMP version to use (valid values is 1, 2c, and 3)\n")
                      _T("   -w <seconds>  : Request timeout (default is 3 seconds)\n")
@@ -247,8 +358,24 @@ int main(int argc, char *argv[])
 					bStart = FALSE;
 				}
             break;
+         case 'm':   // MIB file path
+#ifdef UNICODE
+            MultiByteToWideCharSysLocale(optarg, s_mibPath, MAX_PATH);
+#else
+            strlcpy(s_mibPath, optarg, MAX_PATH);
+#endif
+            break;
+         case 'M':   // No MIB
+            s_noMib = true;
+            break;
          case 'n':   // context name
             strlcpy(m_contextName, optarg, 256);
+            break;
+         case 'N':   // Numeric OIDs
+            s_numericOids = true;
+            break;
+         case 'R':   // Raw output
+            s_rawOutput = true;
             break;
          case 'p':   // Port number
             value = strtoul(optarg, &eptr, 0);
@@ -309,17 +436,19 @@ int main(int argc, char *argv[])
       }
       else
       {
+         LoadMIBTree();
 #ifdef UNICODE
-			WCHAR *host = WideStringFromMBStringSysLocale(argv[optind]);
-			WCHAR *rootOid = WideStringFromMBStringSysLocale(argv[optind + 1]);
+         WCHAR *host = WideStringFromMBStringSysLocale(argv[optind]);
+         WCHAR *rootOid = WideStringFromMBStringSysLocale(argv[optind + 1]);
          iExit = DoWalk(host, rootOid);
-			MemFree(host);
-			MemFree(rootOid);
+         MemFree(host);
+         MemFree(rootOid);
 #else
          iExit = DoWalk(argv[optind], argv[optind + 1]);
 #endif
       }
    }
 
+   delete s_mibRoot;
    return iExit;
 }

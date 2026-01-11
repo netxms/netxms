@@ -400,8 +400,9 @@ private:
    uint32_t m_dwOID;
    TCHAR *m_pszName;
    TCHAR *m_pszDescription;
-	TCHAR *m_pszTextualConvention;
-	TCHAR *m_index;
+   TCHAR *m_pszTextualConvention;
+   TCHAR *m_displayHint;
+   TCHAR *m_index;
    int m_iType;
    int m_iStatus;
    int m_iAccess;
@@ -411,14 +412,15 @@ private:
 public:
    SNMP_MIBObject();
    SNMP_MIBObject(uint32_t oid, const TCHAR *name);
-   SNMP_MIBObject(uint32_t oid, const TCHAR *name, int type,
-                  int status, int access, const TCHAR *description,
-						const TCHAR *textualConvention, const TCHAR *index);
+   SNMP_MIBObject(uint32_t oid, const TCHAR *name, int type, int status, int access,
+                  const TCHAR *description, const TCHAR *textualConvention,
+                  const TCHAR *displayHint, const TCHAR *index);
    ~SNMP_MIBObject();
 
    void setParent(SNMP_MIBObject *pObject) { m_pParent = pObject; }
    void addChild(SNMP_MIBObject *pObject);
-   void setInfo(int type, int status, int access, const TCHAR *description, const TCHAR *textualConvention, const TCHAR *index);
+   void setInfo(int type, int status, int access, const TCHAR *description,
+                const TCHAR *textualConvention, const TCHAR *displayHint, const TCHAR *index);
    void setName(const TCHAR *name) { MemFree(m_pszName); m_pszName = MemCopyString(name); }
 
    SNMP_MIBObject *getParent() { return m_pParent; }
@@ -430,6 +432,8 @@ public:
    uint32_t getObjectId() const { return m_dwOID; }
    const TCHAR *getName() const { return m_pszName; }
    const TCHAR *getDescription() const { return m_pszDescription; }
+   const TCHAR *getTextualConvention() const { return m_pszTextualConvention; }
+   const TCHAR *getDisplayHint() const { return m_displayHint; }
    const TCHAR *getIndex() const { return m_index; }
    int getType() const { return m_iType; }
    int getStatus() const { return m_iStatus; }
@@ -777,6 +781,7 @@ public:
    double getValueAsDouble() const;
    TCHAR *getValueAsString(TCHAR *buffer, size_t bufferSize, const char *codepage = nullptr) const;
    TCHAR *getValueAsPrintableString(TCHAR *buffer, size_t bufferSize, bool *convertToHex, const char *codepage = nullptr) const;
+   TCHAR *getValueWithDisplayHint(const TCHAR *hint, TCHAR *buffer, size_t bufferSize) const;
    SNMP_ObjectId getValueAsObjectId() const;
    MacAddress getValueAsMACAddr() const;
    TCHAR *getValueAsIPAddr(TCHAR *buffer) const;
@@ -1383,6 +1388,7 @@ public:
 uint32_t LIBNXSNMP_EXPORTABLE SnmpSaveMIBTree(const TCHAR *fileName, SNMP_MIBObject *root, uint32_t flags);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpLoadMIBTree(const TCHAR *fileName, SNMP_MIBObject **ppRoot);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpGetMIBTreeTimestamp(const TCHAR *fileName, uint32_t *timestamp);
+SNMP_MIBObject LIBNXSNMP_EXPORTABLE *SnmpFindMIBObjectByOID(SNMP_MIBObject *root, const SNMP_ObjectId& oid);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpResolveDataTypeW(const wchar_t *type);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpResolveDataTypeA(const char *type);
 wchar_t LIBNXSNMP_EXPORTABLE *SnmpDataTypeNameW(uint32_t type, wchar_t *buffer, size_t bufferSize);

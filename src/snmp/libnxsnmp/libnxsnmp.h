@@ -77,7 +77,7 @@ struct SNMP_MIB_HEADER
  * MIB file header constants
  */
 #define MIB_FILE_MAGIC     "NXMIB "
-#define MIB_FILE_VERSION   3
+#define MIB_FILE_VERSION   4
 
 /**
  * Tags for compiled MIB file
@@ -93,6 +93,7 @@ struct SNMP_MIB_HEADER
 #define MIB_TAG_UINT32_OID         0x09
 #define MIB_TAG_TEXTUAL_CONVENTION 0x0A
 #define MIB_TAG_INDEX              0x0B
+#define MIB_TAG_DISPLAY_HINT       0x0C
 
 #define MIB_END_OF_TAG             0x80
 

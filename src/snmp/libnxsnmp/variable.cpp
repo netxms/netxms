@@ -662,6 +662,148 @@ TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize
 }
 
 /**
+ * Get value formatted according to display hint
+ * Falls back to getValueAsPrintableString() if hint is null/empty or parsing fails
+ */
+TCHAR *SNMP_Variable::getValueWithDisplayHint(const TCHAR *hint, TCHAR *buffer, size_t bufferSize) const
+{
+   // Validate inputs
+   if ((buffer == nullptr) || (bufferSize == 0))
+      return nullptr;
+
+   // Fall back if no hint or not an octet string
+   if ((hint == nullptr) || (*hint == 0) || (m_type != ASN_OCTET_STRING))
+   {
+      bool convertToHex = true;
+      return getValueAsPrintableString(buffer, bufferSize, &convertToHex);
+   }
+
+   // Parse and apply display hint
+   // RFC 2579 display-hint format: 1*octet-format
+   // Each octet-format: [*]repeat-count format-char [separator]
+   // For simple hints like "1x:", the pattern repeats for all bytes
+   StringBuffer result;
+   size_t valuePos = 0;
+   const TCHAR *hintPos = hint;
+   TCHAR lastSeparator = 0;  // Track separator for repeating pattern
+   bool firstElement = true;
+
+   while (valuePos < m_valueLength)
+   {
+      // If we've exhausted the hint but still have bytes, restart from beginning
+      // This handles simple repeating patterns like "1x:" for MAC addresses
+      if (*hintPos == 0)
+      {
+         // If the hint had a separator at the end, it means repeat the pattern
+         if (lastSeparator != 0)
+         {
+            hintPos = hint;  // Restart hint from beginning
+         }
+         else
+         {
+            // No separator at end means remaining bytes should be formatted in hex
+            break;
+         }
+      }
+
+      // Check for variable repeat indicator
+      bool variableRepeat = false;
+      if (*hintPos == _T('*'))
+      {
+         variableRepeat = true;
+         hintPos++;
+      }
+
+      // Parse repeat count (number of octets to format)
+      int repeatCount = 0;
+      while (_istdigit(*hintPos))
+      {
+         repeatCount = repeatCount * 10 + (*hintPos - _T('0'));
+         hintPos++;
+      }
+
+      if (repeatCount == 0)
+         repeatCount = 1;
+
+      // If variable repeat, get count from next octet in value
+      if (variableRepeat && valuePos < m_valueLength)
+      {
+         repeatCount = m_value[valuePos++];
+      }
+
+      // Parse format character
+      TCHAR formatChar = *hintPos++;
+      if (formatChar == 0)
+         break;
+
+      // Parse optional separator
+      TCHAR separator = 0;
+      if (*hintPos != 0 && !_istdigit(*hintPos) && *hintPos != _T('*'))
+      {
+         separator = *hintPos++;
+      }
+      lastSeparator = separator;  // Remember for pattern repetition
+
+      // Format the octets according to repeat count
+      for (int i = 0; i < repeatCount && valuePos < m_valueLength; i++)
+      {
+         // Add separator between items (not before first one in entire output)
+         if (!firstElement && separator != 0)
+            result.append(separator);
+         firstElement = false;
+
+         switch (formatChar)
+         {
+            case _T('x'):  // Hexadecimal (lowercase)
+               {
+                  TCHAR hex[3];
+                  hex[0] = bin2hex(m_value[valuePos] >> 4);
+                  hex[1] = bin2hex(m_value[valuePos] & 0x0F);
+                  hex[2] = 0;
+                  result.append(hex);
+                  valuePos++;
+               }
+               break;
+
+            case _T('d'):  // Decimal (unsigned)
+               {
+                  TCHAR decimal[8];
+                  _sntprintf(decimal, 8, _T("%u"), static_cast<unsigned int>(m_value[valuePos++]));
+                  result.append(decimal);
+               }
+               break;
+
+            case _T('o'):  // Octal
+               {
+                  TCHAR octal[8];
+                  _sntprintf(octal, 8, _T("%o"), static_cast<unsigned int>(m_value[valuePos++]));
+                  result.append(octal);
+               }
+               break;
+
+            case _T('a'):  // ASCII character
+            case _T('t'):  // UTF-8 (treat as ASCII for single bytes)
+               if (m_value[valuePos] >= 0x20 && m_value[valuePos] < 0x7F)
+                  result.append(static_cast<TCHAR>(m_value[valuePos]));
+               else
+                  result.append(_T('.'));  // Non-printable placeholder
+               valuePos++;
+               break;
+
+            default:
+               // Unknown format character, skip byte
+               valuePos++;
+               break;
+         }
+      }
+   }
+
+   // Copy result to buffer
+   _tcslcpy(buffer, result.cstr(), bufferSize);
+   return buffer;
+}
+
+/**
  * Get value as object id. Returned object must be destroyed by caller
  */
 SNMP_ObjectId SNMP_Variable::getValueAsObjectId() const

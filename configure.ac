@@ -5176,6 +5176,7 @@ AC_CONFIG_FILES([
 	src/snmp/Makefile
 	src/snmp/libnxsnmp/Makefile
 	src/snmp/nxmibc/Makefile
+	src/snmp/nxmibdump/Makefile
 	src/snmp/nxsnmpget/Makefile
 	src/snmp/nxsnmpset/Makefile
 	src/snmp/nxsnmpwalk/Makefile

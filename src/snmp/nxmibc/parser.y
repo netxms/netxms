@@ -732,8 +732,10 @@ TypeOrValueAssignment:
       $$->iSyntax = $3->nSyntax;
       $$->pszDataType = $3->pszStr;
       $$->pszDescription = $3->pszDescription;
+      $$->displayHint = $3->displayHint;
       $3->pszStr = nullptr;
       $3->pszDescription = nullptr;
+      $3->displayHint = nullptr;
       delete_and_null($3);
    }
 }
@@ -1308,7 +1310,15 @@ SnmpReferenceStatement:
 SnmpDisplayHintStatement:
     DISPLAY_HINT_SYM CharString
 {
-   MemFreeAndNull($2);
+   if (s_currentSyntaxObject != nullptr)
+   {
+      MemFree(s_currentSyntaxObject->displayHint);
+   }
+   else
+   {
+      s_currentSyntaxObject = new MP_SYNTAX();
+   }
+   s_currentSyntaxObject->displayHint = $2;
 }
 ;
 

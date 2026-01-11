@@ -8,5 +8,5 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = libnxsnmp nxmibc nxsnmpget nxsnmpset nxsnmpwalk
+SUBDIRS = libnxsnmp nxmibc nxmibdump nxsnmpget nxsnmpset nxsnmpwalk
 
