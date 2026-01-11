@@ -169,6 +169,12 @@ LONG H_NetInterfaceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 				case IF_INFO_OUT_ERRORS:
 					ret_uint(value, s_ifaceData[i].oerrors);
 					break;
+				case IF_INFO_IN_DROPS:
+					ret_uint(value, s_ifaceData[i].if_iqdrops);
+					break;
+				case IF_INFO_OUT_DROPS:
+					ret_uint(value, s_ifaceData[i].xmitdrops);
+					break;
 				default:
 					nRet = SYSINFO_RC_UNSUPPORTED;
 					break;

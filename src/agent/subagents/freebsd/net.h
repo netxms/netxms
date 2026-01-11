@@ -40,7 +40,11 @@ enum InterfaceMetrict
    IF_INFO_PACKETS_IN_64,
    IF_INFO_PACKETS_OUT,
    IF_INFO_PACKETS_OUT_64,
-   IF_INFO_SPEED
+   IF_INFO_SPEED,
+   IF_INFO_IN_DROPS,
+   IF_INFO_IN_DROPS_64,
+   IF_INFO_OUT_DROPS,
+   IF_INFO_OUT_DROPS_64
 };
 
 LONG H_NetIpForwarding(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);

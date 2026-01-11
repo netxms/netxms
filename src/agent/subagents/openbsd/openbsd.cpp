@@ -72,6 +72,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("Net.Interface.PacketsIn64(*)"), H_NetIfInfoFromIOCTL, (const TCHAR *)IF_INFO_PACKETS_IN, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_PACKETSIN },
 	{ _T("Net.Interface.PacketsOut(*)"), H_NetIfInfoFromIOCTL, (const TCHAR *)IF_INFO_PACKETS_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSOUT },
 	{ _T("Net.Interface.PacketsOut64(*)"), H_NetIfInfoFromIOCTL, (const TCHAR *)IF_INFO_PACKETS_OUT_64, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_PACKETSOUT },
+	{ _T("Net.Interface.InDrops(*)"), H_NetIfInfoFromIOCTL, (const TCHAR *)IF_INFO_IN_DROPS, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_INDROPS },
+	{ _T("Net.Interface.InDrops64(*)"), H_NetIfInfoFromIOCTL, (const TCHAR *)IF_INFO_IN_DROPS_64, DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_INDROPS },
 	{ _T("Net.Interface.Speed(*)"), H_NetIfInfoFromIOCTL, (const TCHAR *)IF_INFO_SPEED, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_SPEED },
 #else
 	{ _T("Net.Interface.BytesIn(*)"), H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_BYTES_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESIN },
@@ -80,6 +82,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("Net.Interface.OutErrors(*)"), H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_OUT_ERRORS, DCI_DT_UINT, DCIDESC_NET_INTERFACE_OUTERRORS },
 	{ _T("Net.Interface.PacketsIn(*)"), H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_PACKETS_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSIN },
 	{ _T("Net.Interface.PacketsOut(*)"), H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_PACKETS_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSOUT },
+	{ _T("Net.Interface.InDrops(*)"), H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_IN_DROPS, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_INDROPS },
 #endif
 
 	{ _T("Net.IP.Forwarding"), H_NetIpForwarding, (const TCHAR *)4, DCI_DT_INT, DCIDESC_NET_IP_FORWARDING },

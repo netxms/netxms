@@ -111,6 +111,10 @@ enum class ProcessInfoAgregationMethod
 #define NETINFO_IF_BYTES_OUT_64      13
 #define NETINFO_IF_PACKETS_IN_64     14
 #define NETINFO_IF_PACKETS_OUT_64    15
+#define NETINFO_IF_IN_DROPS          16
+#define NETINFO_IF_OUT_DROPS         17
+#define NETINFO_IF_IN_DROPS_64       18
+#define NETINFO_IF_OUT_DROPS_64      19
 
 /**
  * Request types for H_MemoryInfo

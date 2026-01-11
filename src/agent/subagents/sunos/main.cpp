@@ -261,6 +261,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Net.Interface.Link(*)"), H_NetInterfaceLink, nullptr, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
    { _T("Net.Interface.OperStatus(*)"), H_NetInterfaceLink, nullptr, DCI_DT_INT, DCIDESC_NET_INTERFACE_OPERSTATUS },
    { _T("Net.Interface.OutErrors(*)"), H_NetInterfaceStats, (const TCHAR*)"oerrors", DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_OUTERRORS },
+   { _T("Net.Interface.InDrops(*)"), H_NetInterfaceStats, (const TCHAR*)"norcvbuf", DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_INDROPS },
+   { _T("Net.Interface.OutDrops(*)"), H_NetInterfaceStats, (const TCHAR*)"noxmtbuf", DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_OUTDROPS },
    { _T("Net.Interface.PacketsIn(*)"), H_NetInterfaceStats, (const TCHAR*)"ipackets", DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSIN },
    { _T("Net.Interface.PacketsIn64(*)"), H_NetInterfaceStats, (const TCHAR*)"ipackets64", DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_PACKETSIN },
    { _T("Net.Interface.PacketsOut(*)"), H_NetInterfaceStats, (const TCHAR*)"opackets", DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSOUT },

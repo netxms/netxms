@@ -635,6 +635,18 @@ LONG H_NetIfInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
       case IF_INFO_PACKETS_OUT_64:
          ret_uint64(value, ifData.ifmd_data.ifi_opackets);
          break;
+      case IF_INFO_IN_DROPS:
+         ret_uint(value, static_cast<uint32_t>(ifData.ifmd_data.ifi_iqdrops));
+         break;
+      case IF_INFO_IN_DROPS_64:
+         ret_uint64(value, ifData.ifmd_data.ifi_iqdrops);
+         break;
+      case IF_INFO_OUT_DROPS:
+         ret_uint(value, static_cast<uint32_t>(ifData.ifmd_data.ifi_oqdrops));
+         break;
+      case IF_INFO_OUT_DROPS_64:
+         ret_uint64(value, ifData.ifmd_data.ifi_oqdrops);
+         break;
       default:
          return SYSINFO_RC_UNSUPPORTED;
    }
@@ -818,6 +830,18 @@ LONG H_NetIfInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
 				case IF_INFO_PACKETS_OUT_64:
 					ret_uint64(value, ReadKernelCounter64(ifnet.if_counters[IFCOUNTER_OPACKETS]));
 					break;
+				case IF_INFO_IN_DROPS:
+					ret_uint(value, (UINT32)(ReadKernelCounter64(ifnet.if_counters[IFCOUNTER_IQDROPS]) & _ULL(0xFFFFFFFF)));
+					break;
+				case IF_INFO_IN_DROPS_64:
+					ret_uint64(value, ReadKernelCounter64(ifnet.if_counters[IFCOUNTER_IQDROPS]));
+					break;
+				case IF_INFO_OUT_DROPS:
+					ret_uint(value, (UINT32)(ReadKernelCounter64(ifnet.if_counters[IFCOUNTER_OQDROPS]) & _ULL(0xFFFFFFFF)));
+					break;
+				case IF_INFO_OUT_DROPS_64:
+					ret_uint64(value, ReadKernelCounter64(ifnet.if_counters[IFCOUNTER_OQDROPS]));
+					break;
 				default:
 					rc = SYSINFO_RC_UNSUPPORTED;
 					break;
@@ -842,6 +866,14 @@ LONG H_NetIfInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
 					break;
 				case IF_INFO_PACKETS_OUT:
 					ret_uint(value, ifnet.if_opackets);
+					break;
+				case IF_INFO_IN_DROPS:
+					ret_uint(value, ifnet.if_iqdrops);
+					break;
+				case IF_INFO_OUT_DROPS:
+				case IF_INFO_IN_DROPS_64:
+				case IF_INFO_OUT_DROPS_64:
+					rc = SYSINFO_RC_UNSUPPORTED;  // Not available in older FreeBSD
 					break;
 				default:
 					rc = SYSINFO_RC_UNSUPPORTED;

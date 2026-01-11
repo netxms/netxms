@@ -635,6 +635,12 @@ LONG H_NetIfInfoFromIOCTL(const TCHAR *param, const TCHAR *arg, TCHAR *value, Ab
 			case IF_INFO_SPEED:
 				ret_uint64(value, ifdata.ifi_baudrate);
 				break;
+			case IF_INFO_IN_DROPS:
+				ret_uint(value, (UINT32)ifdata.ifi_iqdrops);
+				break;
+			case IF_INFO_IN_DROPS_64:
+				ret_uint64(value, ifdata.ifi_iqdrops);
+				break;
 			default:
 				ret = SYSINFO_RC_UNSUPPORTED;
 				break;
@@ -715,6 +721,9 @@ LONG H_NetIfInfoFromKVM(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *value, 
 					break;
 				case IF_INFO_PACKETS_OUT:
 					ret_uint(value, ifnet.if_opackets);
+					break;
+				case IF_INFO_IN_DROPS:
+					ret_uint(value, ifnet.if_iqdrops);
 					break;
 				default:
 					nRet = SYSINFO_RC_UNSUPPORTED;

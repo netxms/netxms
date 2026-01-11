@@ -225,6 +225,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Net.Interface.Link(*)"), H_NetIfInfoFromIOCTL, (TCHAR *)IF_INFO_OPER_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_LINK },
    { _T("Net.Interface.MaxSpeed(*)"), H_NetIfInfoSpeed, _T("M"), DCI_DT_UINT64, DCIDESC_NET_INTERFACE_MAXSPEED },
    { _T("Net.Interface.OutErrors(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_ERRORS_OUT, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_OUTERRORS },
+   { _T("Net.Interface.InDrops(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_DROPS_IN, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_INDROPS },
+   { _T("Net.Interface.OutDrops(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_DROPS_OUT, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_OUTDROPS },
    { _T("Net.Interface.PacketsIn(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_PACKETS_IN, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSIN },
    { _T("Net.Interface.PacketsOut(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_PACKETS_OUT, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSOUT },
    { _T("Net.Interface.Speed(*)"), H_NetIfInfoSpeed, _T("S"), DCI_DT_UINT64, DCIDESC_NET_INTERFACE_SPEED },
@@ -238,6 +240,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Net.Interface.OutErrors64(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_ERRORS_OUT_64, DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_OUTERRORS },
    { _T("Net.Interface.PacketsIn64(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_PACKETS_IN_64, DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_PACKETSIN },
    { _T("Net.Interface.PacketsOut64(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_PACKETS_OUT_64, DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_PACKETSOUT },
+   { _T("Net.Interface.InDrops64(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_DROPS_IN_64, DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_INDROPS },
+   { _T("Net.Interface.OutDrops64(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_DROPS_OUT_64, DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_OUTDROPS },
 #endif
 
    { _T("Process.Count(*)"), H_ProcessCount, _T("S"), DCI_DT_INT, DCIDESC_PROCESS_COUNT },

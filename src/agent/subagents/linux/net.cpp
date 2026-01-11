@@ -1202,6 +1202,18 @@ LONG H_NetIfInfoFromProc(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
             case IF_INFO_ERRORS_OUT_64:
                nRet = ValueFromLine64(ptr, 10, value);
                break;
+            case IF_INFO_DROPS_IN:
+               nRet = ValueFromLine(ptr, 3, value);
+               break;
+            case IF_INFO_DROPS_IN_64:
+               nRet = ValueFromLine64(ptr, 3, value);
+               break;
+            case IF_INFO_DROPS_OUT:
+               nRet = ValueFromLine(ptr, 11, value);
+               break;
+            case IF_INFO_DROPS_OUT_64:
+               nRet = ValueFromLine64(ptr, 11, value);
+               break;
             default:
                nRet = SYSINFO_RC_UNSUPPORTED;
                break;

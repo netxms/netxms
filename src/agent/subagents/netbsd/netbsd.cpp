@@ -88,6 +88,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_UINT64,		DCIDESC_NET_INTERFACE_PACKETSIN },
 	{ "Net.Interface.PacketsOut(*)",  H_NetIfInfoFromKVM, (char *)IF_INFO_PACKETS_OUT,
 		DCI_DT_UINT64,		DCIDESC_NET_INTERFACE_PACKETSOUT },
+	{ "Net.Interface.InDrops(*)",     H_NetIfInfoFromKVM, (char *)IF_INFO_IN_DROPS,
+		DCI_DT_COUNTER32,	DCIDESC_NET_INTERFACE_INDROPS },
 
 	{ "Process.Count(*)",             H_ProcessCount,    "P",			DCI_DT_UINT,	DCIDESC_PROCESS_COUNT },
 	{ "Process.CountEx(*)",           H_ProcessCount,    "E",			DCI_DT_UINT,	DCIDESC_PROCESS_COUNTEX },
