@@ -131,14 +131,12 @@ public abstract class AbstractTraceWidget extends Composite
 	 */
 	private void createPopupMenu()
 	{
-		// Create menu manager
-		MenuManager menuMgr = new MenuManager();
-		menuMgr.setRemoveAllWhenShown(true);
+      MenuManager menuMgr = new MenuManager();
+      menuMgr.setRemoveAllWhenShown(true);
       menuMgr.addMenuListener((m) -> fillContextMenu(m));
 
-		// Create menu
-		Menu menu = menuMgr.createContextMenu(viewer.getControl());
-		viewer.getControl().setMenu(menu);
+      Menu menu = menuMgr.createContextMenu(viewer.getControl());
+      viewer.getControl().setMenu(menu);
 	}
 
 	/**
@@ -148,7 +146,7 @@ public abstract class AbstractTraceWidget extends Composite
 	 */
 	protected void fillContextMenu(final IMenuManager manager)
 	{
-		manager.add(actionCopy);
+      manager.add(actionCopy);
 		manager.add(new Separator());
 	}
 

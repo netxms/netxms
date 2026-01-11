@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,14 +20,11 @@ package org.netxms.nxmc.base.views;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
-import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -83,7 +80,6 @@ public abstract class AbstractTraceView extends View
       setFilterClient(traceWidget.getViewer(), traceWidget.getFilter());
 
 		createActions();
-		createContextMenu();
 	}
 
 	/**
@@ -179,36 +175,6 @@ public abstract class AbstractTraceView extends View
       manager.add(traceWidget.getActionCopy());
    }
 
-   /**
-    * Create pop-up menu for user list
-    */
-   private void createContextMenu()
-   {
-      // Create menu manager
-      MenuManager menuMgr = new MenuManager();
-      menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
-         {
-            fillContextMenu(mgr);
-         }
-      });
-
-      // Create menu
-      Menu menu = menuMgr.createContextMenu(traceWidget.getViewer().getControl());
-      traceWidget.getViewer().getControl().setMenu(menu);
-   }
-
-   /**
-    * Fill context menu
-    * 
-    * @param mgr Menu manager
-    */
-   protected void fillContextMenu(final IMenuManager manager)
-   {   
-      manager.add(traceWidget.getActionCopy());
-   }
-   
    /**
     * @see org.netxms.nxmc.base.views.View#setFocus()
     */

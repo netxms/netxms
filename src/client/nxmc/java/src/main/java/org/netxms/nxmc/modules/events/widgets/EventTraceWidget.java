@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,11 +19,16 @@
 package org.netxms.nxmc.modules.events.widgets;
 
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.events.Event;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.View;
@@ -32,6 +37,8 @@ import org.netxms.nxmc.base.widgets.helpers.AbstractTraceViewFilter;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.widgets.helpers.EventLabelProvider;
 import org.netxms.nxmc.modules.events.widgets.helpers.EventMonitorFilter;
+import org.netxms.nxmc.modules.events.widgets.helpers.HistoricalEvent;
+import org.netxms.nxmc.modules.logviewer.views.AdHocEventLogView;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -75,6 +82,7 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
    public EventTraceWidget(Composite parent, int style, View view)
 	{
       super(parent, style, view);
+      System.out.println("Creating EventTraceWidget");
 
       session = Registry.getSession();
 		session.addListener(this);
@@ -169,6 +177,91 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 		};
 		actionShowIcons.setChecked(labelProvider.isShowIcons());
 	}
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.AbstractTraceWidget#fillContextMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillContextMenu(IMenuManager manager)
+   {
+      super.fillContextMenu(manager);
+
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() == 1)
+      {
+         Object element = selection.getFirstElement();
+         if ((element instanceof Event) || (element instanceof HistoricalEvent))
+         {
+            manager.add(new Separator());
+            MenuManager openEventLogMenu = new MenuManager(i18n.tr("Open event log"));
+            addOpenEventLogActions(openEventLogMenu, element);
+            manager.add(openEventLogMenu);
+         }
+      }
+   }
+
+   /**
+    * Add "Open Event Log" submenu actions.
+    *
+    * @param manager menu manager
+    * @param event selected event (Event or HistoricalEvent)
+    */
+   private void addOpenEventLogActions(IMenuManager manager, Object event)
+   {
+      final long sourceId;
+      final int code;
+
+      if (event instanceof Event)
+      {
+         sourceId = ((Event)event).getSourceId();
+         code = ((Event)event).getCode();
+      }
+      else
+      {
+         sourceId = ((HistoricalEvent)event).getSourceId();
+         code = ((HistoricalEvent)event).getCode();
+      }
+
+      String sourceName = session.getObjectName(sourceId);
+      String eventName = session.getEventName(code);
+
+      manager.add(new Action(i18n.tr("Filter by source ({0})", sourceName)) {
+         @Override
+         public void run()
+         {
+            openEventLogFiltered(sourceId, null, sourceName);
+         }
+      });
+
+      manager.add(new Action(i18n.tr("Filter by event type ({0})", eventName)) {
+         @Override
+         public void run()
+         {
+            openEventLogFiltered(null, code, eventName);
+         }
+      });
+
+      manager.add(new Action(i18n.tr("Filter by source and event type")) {
+         @Override
+         public void run()
+         {
+            openEventLogFiltered(sourceId, code, sourceName + " / " + eventName);
+         }
+      });
+   }
+
+   /**
+    * Open Event Log view with specified filter.
+    *
+    * @param sourceId source object ID (null for no filter)
+    * @param eventCode event code (null for no filter)
+    * @param titleSuffix suffix for view title
+    */
+   private void openEventLogFiltered(Long sourceId, Integer eventCode, String titleSuffix)
+   {
+      AdHocEventLogView logView = new AdHocEventLogView(sourceId, eventCode, titleSuffix);
+      view.openView(logView);
+   }
 
    /**
     * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
