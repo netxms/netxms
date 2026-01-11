@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,8 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ViewerRow;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
@@ -95,9 +96,13 @@ public abstract class BaseTableValueViewer extends Composite
       configId = buildConfigId(configSubId);
       session = Registry.getSession();
 
-      setLayout(new FillLayout());
+      GridLayout layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      setLayout(layout);
 
       viewer = new SortableTableViewer(this, SWT.FULL_SELECTION | SWT.MULTI);
+      viewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       viewer.setContentProvider(new TableContentProvider());
       labelProvider = new TableLabelProvider();
       viewer.setLabelProvider(labelProvider);
@@ -303,11 +308,26 @@ public abstract class BaseTableValueViewer extends Composite
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final Table table = readData();
+            final String noDataMessage = getNoDataMessage();
             if (table == null)
             {
-               // Ignore this read
                runInUIThread(() -> {
-                  updateViewer(null);
+                  if (viewer.getControl().isDisposed())
+                     return;
+
+                  if (noDataMessage != null)
+                  {
+                     showOverlayMessage(noDataMessage);
+                  }
+                  else
+                  {
+                     hideOverlayMessage();
+                     updateViewer(null);
+                  }
+                  if (postRefreshHook != null)
+                  {
+                     postRefreshHook.run();
+                  }
                });
                return;
             }
@@ -316,13 +336,7 @@ public abstract class BaseTableValueViewer extends Composite
                if (viewer.getControl().isDisposed())
                   return;
 
-               if (errorLabel != null)
-               {
-                  errorLabel.dispose();
-                  errorLabel = null;
-                  viewer.getControl().setVisible(true);
-                  viewer.getControl().getParent().layout(true, true);
-               }
+               hideOverlayMessage();
                updateViewer(table);
                if (postRefreshHook != null)
                {
@@ -345,25 +359,75 @@ public abstract class BaseTableValueViewer extends Composite
    {
       return filter;
    }
-   
+
+   /**
+    * Show overlay message (hides the table viewer)
+    *
+    * @param message message to display
+    */
+   protected void showOverlayMessage(String message)
+   {
+      if (isDisposed())
+         return;
+
+      if (errorLabel == null)
+      {
+         viewer.getControl().setVisible(false);
+         ((GridData)viewer.getControl().getLayoutData()).exclude = true;
+         errorLabel = new CLabel(this, SWT.CENTER);
+         errorLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
+      }
+      errorLabel.setText(message);
+      layout(true, true);
+   }
+
+   /**
+    * Hide overlay message (shows the table viewer)
+    */
+   protected void hideOverlayMessage()
+   {
+      if (isDisposed())
+         return;
+
+      if (errorLabel != null)
+      {
+         errorLabel.dispose();
+         errorLabel = null;
+         ((GridData)viewer.getControl().getLayoutData()).exclude = false;
+         viewer.getControl().setVisible(true);
+         layout(true, true);
+      }
+   }
+
    /**
     * Read data to display
-    * 
+    *
     * @return table data
     * @throws Exception on error
     */
    protected abstract Table readData() throws Exception;
-   
+
+   /**
+    * Get message to display when no data is available. Subclasses can override this
+    * to provide context-specific messages (e.g., "DCI is disabled").
+    *
+    * @return message to display or null to show empty table
+    */
+   protected String getNoDataMessage()
+   {
+      return null;
+   }
+
    /**
     * Get name of read job
-    * 
+    *
     * @return name of read job
     */
    protected abstract String getReadJobName();
-   
+
    /**
     * Get error message for read job
-    * 
+    *
     * @return error message for read job
     */
    protected abstract String getReadJobErrorMessage();

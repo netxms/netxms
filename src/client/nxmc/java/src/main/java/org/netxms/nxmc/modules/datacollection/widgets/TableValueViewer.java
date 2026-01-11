@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,10 @@ import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.Table;
 import org.netxms.client.TableColumnDefinition;
+import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.datacollection.ChartDciConfig;
+import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.charts.api.ChartType;
@@ -49,6 +52,7 @@ public class TableValueViewer extends BaseTableValueViewer
    private long objectId = 0;
    private long dciId = 0;
    private String objectName = null;
+   private String statusMessage = null;
    private Action actionShowHistory;
    private Action actionShowLineChart;
    private Action actionShowBarChart;
@@ -284,9 +288,67 @@ public class TableValueViewer extends BaseTableValueViewer
    @Override
    protected Table readData() throws Exception
    {
+      statusMessage = null;
       if (objectId == 0)
          return null;
-      return session.getTableLastValues(objectId, dciId);
+
+      Table table = session.getTableLastValues(objectId, dciId);
+
+      // If table is empty (no rows), check DCI status to provide meaningful feedback
+      if ((table == null) || (table.getRowCount() == 0))
+      {
+         DciValue dciInfo = getDciInfo();
+         if (dciInfo != null)
+         {
+            if (dciInfo.getStatus() == DataCollectionObjectStatus.DISABLED)
+            {
+               statusMessage = i18n.tr("Data collection is disabled");
+               return null;
+            }
+            else if (dciInfo.getStatus() == DataCollectionObjectStatus.UNSUPPORTED)
+            {
+               statusMessage = i18n.tr("Metric is not supported");
+               return null;
+            }
+            else if (dciInfo.getErrorCount() > 0)
+            {
+               statusMessage = String.format(i18n.tr("Data collection error (%d consecutive failures)"), dciInfo.getErrorCount());
+               return null;
+            }
+            else if (dciInfo.isNoValueObject())
+            {
+               statusMessage = i18n.tr("No data collected yet");
+               return null;
+            }
+         }
+      }
+
+      return table;
+   }
+
+   /**
+    * Get DCI info for this table DCI
+    *
+    * @return DCI value info or null if not found
+    */
+   private DciValue getDciInfo() throws Exception
+   {
+      DciValue[] dciList = session.getLastValues(objectId);
+      for(DciValue dci : dciList)
+      {
+         if ((dci.getId() == dciId) && (dci.getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE))
+            return dci;
+      }
+      return null;
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.datacollection.widgets.BaseTableValueViewer#getNoDataMessage()
+    */
+   @Override
+   protected String getNoDataMessage()
+   {
+      return statusMessage;
    }
 
    /**
