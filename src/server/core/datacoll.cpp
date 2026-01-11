@@ -24,6 +24,8 @@
 #include <nxcore_websvc.h>
 #include <gauge_helpers.h>
 
+void ScheduleThresholdRepeatEventsOnStartup();
+
 /**
  * Interval between DCI polling
  */
@@ -33,6 +35,11 @@
  * Thread pool for data collectors
  */
 ThreadPool *g_dataCollectorThreadPool = nullptr;
+
+/**
+ * Thread pool for threshold repeat events
+ */
+ThreadPool *g_thresholdRepeatPool = nullptr;
 
 /**
  * DCI cache loader queue
@@ -484,13 +491,17 @@ static THREAD s_cacheLoaderThread = INVALID_THREAD_HANDLE;
  */
 void InitDataCollector()
 {
-   g_dataCollectorThreadPool = ThreadPoolCreate(_T("DATACOLL"),
-            ConfigReadInt(_T("ThreadPool.DataCollector.BaseSize"), 10),
-            ConfigReadInt(_T("ThreadPool.DataCollector.MaxSize"), 250),
+   g_dataCollectorThreadPool = ThreadPoolCreate(L"DATACOLL",
+            ConfigReadInt(L"ThreadPool.DataCollector.BaseSize", 10),
+            ConfigReadInt(L"ThreadPool.DataCollector.MaxSize", 250),
             256 * 1024);
+
+   g_thresholdRepeatPool = ThreadPoolCreate(L"THREVT", 2, 4);
 
    s_itemPollerThread = ThreadCreateEx(ItemPoller);
    s_cacheLoaderThread = ThreadCreateEx(CacheLoader);
+
+   ScheduleThresholdRepeatEventsOnStartup();
 }
 
 /**
@@ -501,6 +512,7 @@ void StopDataCollection()
    ThreadJoin(s_itemPollerThread);
    ThreadJoin(s_cacheLoaderThread);
    ThreadPoolDestroy(g_dataCollectorThreadPool);
+   ThreadPoolDestroy(g_thresholdRepeatPool);
 }
 
 /**

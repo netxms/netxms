@@ -168,6 +168,7 @@ private:
 	int m_repeatInterval;		// -1 = default, 0 = off, >0 = seconds between repeats
 	time_t m_lastEventTimestamp;
 	wchar_t *m_lastEventMessage;
+   uint64_t m_activationSequence;  // Incremented on each activation, used for repeat event scheduling
 
    const ItemValue& value() const { return m_value; }
    void calculateAverage(ItemValue *result, const ItemValue &lastValue, ItemValue **ppPrevValues);
@@ -208,6 +209,8 @@ public:
 	void markLastEvent(int severity, const wchar_t *message);
    void saveStateBeforeMaintenance() { m_wasReachedBeforeMaint = m_isReached; }
    void setLastCheckedValue(const ItemValue &value) { m_lastCheckValue = value; }
+   uint64_t getActivationSequence() const { return m_activationSequence; }
+   void incrementActivationSequence() { m_activationSequence++; }
 
    bool saveToDB(DB_HANDLE hdb, uint32_t index);
    ThresholdCheckResult check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue, ItemValue &tvalue, shared_ptr<NetObj> target, DCItem *dci);
@@ -635,7 +638,10 @@ public:
    virtual json_t *createExportRecord() const override;
 
 	int getThresholdCount() const { return (m_thresholds != nullptr) ? m_thresholds->size() : 0; }
+   Threshold *getThreshold(int index) const { return (m_thresholds != nullptr && index >= 0 && index < m_thresholds->size()) ? m_thresholds->get(index) : nullptr; }
    uint32_t getAllThresholdRearmEvent() const { return m_allThresholdsRearmEvent; }
+   uint32_t postThresholdRepeatEvent(uint32_t thresholdId, uint64_t activationSequence);
+   uint32_t scheduleThresholdRepeatEvents();
 
 	void setUnitName(const SharedString &unitName) { SetAttributeWithLock(m_unitName, unitName, m_mutex); }
 	void setAllThresholdsFlag(BOOL bFlag) { if (bFlag) m_flags |= DCF_ALL_THRESHOLDS; else m_flags &= ~DCF_ALL_THRESHOLDS; }

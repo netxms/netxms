@@ -48,6 +48,7 @@ Threshold::Threshold(DCItem *relatedItem)
 	m_lastEventTimestamp = 0;
 	m_lastEventMessage = nullptr;
 	m_numMatches = 0;
+   m_activationSequence = 0;
 }
 
 /**
@@ -76,6 +77,7 @@ Threshold::Threshold()
 	m_lastEventTimestamp = 0;
    m_lastEventMessage = nullptr;
 	m_numMatches = 0;
+   m_activationSequence = 0;
 }
 
 /**
@@ -105,6 +107,7 @@ Threshold::Threshold(const Threshold& src, bool shadowCopy) : m_value(src.m_valu
 	m_lastEventTimestamp = shadowCopy ? src.m_lastEventTimestamp : 0;
    m_lastEventMessage = nullptr;
 	m_numMatches = shadowCopy ? src.m_numMatches : 0;
+   m_activationSequence = shadowCopy ? src.m_activationSequence : 0;
 }
 
 /**
@@ -148,6 +151,7 @@ Threshold::Threshold(DB_RESULT hResult, int row, DCItem *relatedItem) : m_value(
 
 	if ((m_function == F_LAST) && (m_sampleCount < 1))
 		m_sampleCount = 1;
+   m_activationSequence = 0;
 }
 
 /**
@@ -187,6 +191,7 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem, bool nxslV5)
 	m_lastEventTimestamp = 0;
 	m_lastEventMessage = nullptr;
 	m_numMatches = 0;
+   m_activationSequence = 0;
 }
 
 /**
@@ -234,6 +239,7 @@ Threshold::Threshold(json_t *json, DCItem *parentItem)
    m_lastEventTimestamp = 0;
    m_lastEventMessage = nullptr;
    m_numMatches = 0;
+   m_activationSequence = 0;
 }
 
 /**

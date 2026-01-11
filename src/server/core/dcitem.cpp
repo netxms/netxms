@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,111 @@
 
 #include "nxcore.h"
 #include <npe.h>
+
+/**
+ * Thread pool for threshold repeat events
+ */
+extern ThreadPool *g_thresholdRepeatPool;
+
+/**
+ * Context for threshold repeat callback
+ */
+struct ThresholdRepeatContext
+{
+   uint32_t targetId;
+   uint32_t dciId;
+   uint32_t thresholdId;
+   uint64_t activationSequence;
+};
+
+/**
+ * Callback for processing threshold repeat events
+ */
+static void ProcessThresholdRepeatEvent(ThresholdRepeatContext *ctx)
+{
+   nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 7, _T("Processing repeat for target=%u dci=%u threshold=%u seq=") UINT64_FMT,
+      ctx->targetId, ctx->dciId, ctx->thresholdId, ctx->activationSequence);
+
+   shared_ptr<NetObj> target = FindObjectById(ctx->targetId);
+   if (target == nullptr || !target->isDataCollectionTarget())
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 7, _T("Target %u not found or not a data collection target"), ctx->targetId);
+      delete ctx;
+      return;
+   }
+
+   shared_ptr<DCObject> dco = static_cast<DataCollectionTarget&>(*target).getDCObjectById(ctx->dciId, 0, true);
+   if (dco == nullptr || dco->getType() != DCO_TYPE_ITEM)
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 7, _T("DCI %u not found on target %u"), ctx->dciId, ctx->targetId);
+      delete ctx;
+      return;
+   }
+
+   uint32_t repeatInterval = static_cast<DCItem&>(*dco).postThresholdRepeatEvent(ctx->thresholdId, ctx->activationSequence);
+   if (repeatInterval > 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 6, _T("Posted repeat for target=%u dci=%u threshold=%u, next in %us"),
+         ctx->targetId, ctx->dciId, ctx->thresholdId, repeatInterval);
+      ThreadPoolScheduleRelative(g_thresholdRepeatPool, repeatInterval * 1000, ProcessThresholdRepeatEvent, ctx);  // Reuse context
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 7, L"Not rescheduling repeat for target=%u dci=%u threshold=%u",
+         ctx->targetId, ctx->dciId, ctx->thresholdId);
+      delete ctx;
+   }
+}
+
+/**
+ * Schedule threshold repeat event
+ */
+static void ScheduleThresholdRepeatEvent(uint32_t targetId, uint32_t dciId, uint32_t thresholdId, uint64_t activationSequence, uint32_t delay)
+{
+   auto ctx = new ThresholdRepeatContext{targetId, dciId, thresholdId, activationSequence};
+
+   nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 6, _T("Scheduling repeat for target=%u dci=%u threshold=%u seq=") UINT64_FMT _T(" in %us"),
+      targetId, dciId, thresholdId, activationSequence, delay);
+
+   ThreadPoolScheduleRelative(g_thresholdRepeatPool, delay * 1000, ProcessThresholdRepeatEvent, ctx);
+}
+
+/**
+ * Callback for scheduling threshold repeat on startup
+ */
+static EnumerationCallbackResult ScheduleThresholdRepeatEvents(NetObj *object, void *data)
+{
+   if (!object->isDataCollectionTarget())
+      return _CONTINUE;
+
+   DataCollectionTarget *target = static_cast<DataCollectionTarget*>(object);
+   unique_ptr<SharedObjectArray<DCObject>> dcObjects = target->getAllDCObjects();
+
+   uint32_t scheduledCount = 0;
+   for (int i = 0; i < dcObjects->size(); i++)
+   {
+      DCObject *dco = dcObjects->get(i);
+      if (dco->getType() == DCO_TYPE_ITEM)
+         scheduledCount += static_cast<DCItem*>(dco)->scheduleThresholdRepeatEvents();
+   }
+
+   if (scheduledCount > 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 5, _T("Scheduled %u threshold repeat events for %s [%u]"),
+         scheduledCount, object->getName(), object->getId());
+   }
+   return _CONTINUE;
+}
+
+/**
+ * Schedule threshold repeat events for all active thresholds (called on server startup)
+ */
+void ScheduleThresholdRepeatEventsOnStartup()
+{
+   nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 4, _T("Scanning for active thresholds with repeat interval"));
+   g_idxObjectById.forEach(ScheduleThresholdRepeatEvents, nullptr);
+   nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 4, _T("Active threshold scan completed"));
+}
 
 /**
  * Create DCItem from another DCItem
@@ -537,6 +642,15 @@ void DCItem::checkThresholds(ItemValue &value, const shared_ptr<DCObject>& origi
                   .param(_T("instanceName"), m_instanceName)
                   .param(_T("thresholdId"), thresholdId)
                   .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
+
+               // Schedule repeat event if interval is configured
+               time_t repeatInterval = (t->getRepeatInterval() == -1) ?
+                  g_thresholdRepeatInterval : static_cast<time_t>(t->getRepeatInterval());
+               if (repeatInterval > 0)
+               {
+                  t->incrementActivationSequence();
+                  ScheduleThresholdRepeatEvent(m_ownerId, m_id, thresholdId, t->getActivationSequence(), repeatInterval);
+               }
             }
             if (!(m_flags & DCF_ALL_THRESHOLDS))
                i = m_thresholds->size();  // Stop processing
@@ -573,38 +687,35 @@ void DCItem::checkThresholds(ItemValue &value, const shared_ptr<DCObject>& origi
             thresholdDeactivated = true;
             break;
          case ThresholdCheckResult::ALREADY_ACTIVE:
+            // Handle resendActivationEvent (DCF_ALL_THRESHOLDS mode - re-send event when another threshold deactivates)
+            if (resendActivationEvent)
             {
-   				// Check if we need to re-sent threshold violation event
-	            time_t now = time(nullptr);
-	            time_t repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : static_cast<time_t>(t->getRepeatInterval());
-				   if (resendActivationEvent || ((repeatInterval != 0) && (t->getLastEventTimestamp() + repeatInterval <= now)))
-				   {
-	               shared_ptr<DCObject> sharedThis((originalDci != nullptr) ? originalDci : shared_from_this());
-		            EventBuilder(t->getEventCode(), m_ownerId)
-		               .dci(m_id)
-		               .param(_T("dciName"), m_name)
-		               .param(_T("dciDescription"), m_description)
-		               .param(_T("thresholdValue"), thresholdValue.getString())
-		               .param(_T("currentValue"), checkValue.getString())
-		               .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
-		               .param(_T("instance"), m_instanceName)
-		               .param(_T("isRepeatedEvent"), _T("1"))
-		               .param(_T("dciValue"), value.getString())
-		               .param(_T("operation"), t->getOperation())
-		               .param(_T("function"), t->getFunction())
-		               .param(_T("pollCount"), t->getSampleCount())
-		               .param(_T("thresholdDefinition"), t->getTextualDefinition())
-	                  .param(_T("instanceValue"), m_instanceDiscoveryData)
-	                  .param(_T("instanceName"), m_instanceName)
-	                  .param(_T("thresholdId"), thresholdId)
-		               .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
-				   }
+               shared_ptr<DCObject> sharedThis((originalDci != nullptr) ? originalDci : shared_from_this());
+               EventBuilder(t->getEventCode(), m_ownerId)
+                  .dci(m_id)
+                  .param(_T("dciName"), m_name)
+                  .param(_T("dciDescription"), m_description)
+                  .param(_T("thresholdValue"), thresholdValue.getString())
+                  .param(_T("currentValue"), checkValue.getString())
+                  .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+                  .param(_T("instance"), m_instanceName)
+                  .param(_T("isRepeatedEvent"), _T("1"))
+                  .param(_T("dciValue"), value.getString())
+                  .param(_T("operation"), t->getOperation())
+                  .param(_T("function"), t->getFunction())
+                  .param(_T("pollCount"), t->getSampleCount())
+                  .param(_T("thresholdDefinition"), t->getTextualDefinition())
+                  .param(_T("instanceValue"), m_instanceDiscoveryData)
+                  .param(_T("instanceName"), m_instanceName)
+                  .param(_T("thresholdId"), thresholdId)
+                  .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
             }
-				if (!(m_flags & DCF_ALL_THRESHOLDS))
-				{
-					i = m_thresholds->size();  // Threshold condition still true, stop processing
-				}
-				resendActivationEvent = false;
+            // Note: Repeat events are now handled by dedicated timer, not tied to polling
+            if (!(m_flags & DCF_ALL_THRESHOLDS))
+            {
+               i = m_thresholds->size();  // Threshold condition still true, stop processing
+            }
+            resendActivationEvent = false;
             hasActiveThresholds = true;
             break;
          default:
@@ -1046,6 +1157,15 @@ void DCItem::processNewError(bool noInstance, Timestamp timestamp)
                   .param(_T("instanceValue"), m_instanceDiscoveryData)
                   .param(_T("instanceName"), m_instanceName)
                   .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
+
+               // Schedule repeat event if interval is configured
+               time_t repeatInterval = (t->getRepeatInterval() == -1) ?
+                  g_thresholdRepeatInterval : static_cast<time_t>(t->getRepeatInterval());
+               if (repeatInterval > 0)
+               {
+                  t->incrementActivationSequence();
+                  ScheduleThresholdRepeatEvent(m_ownerId, m_id, thresholdId, t->getActivationSequence(), repeatInterval);
+               }
             }
             if (!(m_flags & DCF_ALL_THRESHOLDS))
             {
@@ -1078,35 +1198,11 @@ void DCItem::processNewError(bool noInstance, Timestamp timestamp)
             thresholdDeactivated = true;
             break;
          case ThresholdCheckResult::ALREADY_ACTIVE:
+            // Note: Repeat events are now handled by dedicated timer, not tied to polling
+            if (!(m_flags & DCF_ALL_THRESHOLDS))
             {
-   				// Check if we need to re-sent threshold violation event
-               time_t repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : static_cast<time_t>(t->getRepeatInterval());
-				   if ((repeatInterval != 0) && (t->getLastEventTimestamp() + repeatInterval < timestamp.asTime()))
-				   {
-	               shared_ptr<DCObject> sharedThis(shared_from_this());
-		            EventBuilder(t->getEventCode(), m_ownerId)
-		               .dci(m_id)
-		               .param(_T("dciName"), m_name)
-		               .param(_T("dciDescription"), m_description)
-		               .param(_T("thresholdValue"), _T(""))
-		               .param(_T("currentValue"), _T(""))
-		               .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
-		               .param(_T("instance"), m_instanceName)
-		               .param(_T("isRepeatedEvent"), _T("1"))
-		               .param(_T("dciValue"), _T(""))
-		               .param(_T("operation"), t->getOperation())
-		               .param(_T("function"), t->getFunction())
-		               .param(_T("pollCount"), t->getSampleCount())
-		               .param(_T("thresholdDefinition"), t->getTextualDefinition())
-	                  .param(_T("instanceValue"), m_instanceDiscoveryData)
-	                  .param(_T("instanceName"), m_instanceName)
-		               .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
-				   }
+               i = m_thresholds->size();  // Threshold condition still true, stop processing
             }
-				if (!(m_flags & DCF_ALL_THRESHOLDS))
-				{
-					i = m_thresholds->size();  // Threshold condition still true, stop processing
-				}
             hasActiveThresholds = true;
             break;
          default:
@@ -2871,4 +2967,104 @@ void DCItem::getScriptDependencies(StringSet *dependencies) const
          m_thresholds->get(i)->getScriptDependencies(dependencies);
       }
    }
+}
+
+/**
+ * Post threshold repeat event. Called from threshold repeat callback.
+ * Returns repeat interval if should reschedule, 0 otherwise.
+ */
+uint32_t DCItem::postThresholdRepeatEvent(uint32_t thresholdId, uint64_t activationSequence)
+{
+   lock();
+
+   Threshold *t = getThresholdById(thresholdId);
+   if (t == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 7, _T("Threshold %u not found on DCI %u"), thresholdId, m_id);
+      unlock();
+      return 0;
+   }
+
+   if (!t->isReached() || t->getActivationSequence() != activationSequence)
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 7, _T("Threshold %u on DCI %u: state changed (reached=%s, seq=") UINT64_FMT _T(" vs ") UINT64_FMT _T(")"),
+         thresholdId, m_id,
+         t->isReached() ? _T("yes") : _T("no"),
+         t->getActivationSequence(), activationSequence);
+      unlock();
+      return 0;
+   }
+
+   uint32_t repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : t->getRepeatInterval();
+   if (repeatInterval == 0)
+   {
+      unlock();
+      return 0;
+   }
+
+   // Gather values for event
+   const wchar_t *dciValue = (m_cacheSize > 0) ? m_ppValueCache[0]->getString() : L"";
+   String currentValue = t->getLastCheckValue().getString();
+   String thresholdValue = t->getStringValue();
+
+   shared_ptr<DCObject> sharedThis = shared_from_this();
+
+   EventBuilder(t->getEventCode(), m_ownerId)
+      .dci(m_id)
+      .param(_T("dciName"), m_name)
+      .param(_T("dciDescription"), m_description)
+      .param(_T("thresholdValue"), thresholdValue)
+      .param(_T("currentValue"), currentValue)
+      .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+      .param(_T("instance"), m_instanceName)
+      .param(_T("isRepeatedEvent"), _T("1"))
+      .param(_T("dciValue"), dciValue)
+      .param(_T("operation"), t->getOperation())
+      .param(_T("function"), t->getFunction())
+      .param(_T("pollCount"), t->getSampleCount())
+      .param(_T("thresholdDefinition"), t->getTextualDefinition())
+      .param(_T("instanceValue"), m_instanceDiscoveryData)
+      .param(_T("instanceName"), m_instanceName)
+      .param(_T("thresholdId"), thresholdId)
+      .post(
+         [sharedThis, thresholdId] (Event *e) -> void
+         {
+            static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage());
+         });
+
+   unlock();
+   return repeatInterval;
+}
+
+/**
+ * Schedule repeat events for all reached thresholds
+ */
+uint32_t DCItem::scheduleThresholdRepeatEvents()
+{
+   LockGuard lockGuard(m_mutex);
+   if (m_thresholds == nullptr)
+      return 0;
+
+   uint32_t scheduledCount = 0;
+   time_t now = time(nullptr);
+   for (int j = 0; j < m_thresholds->size(); j++)
+   {
+      Threshold *t = m_thresholds->get(j);
+      if (!t->isReached())
+         continue;
+
+      uint32_t repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : t->getRepeatInterval();
+      if (repeatInterval <= 0)
+         continue;
+
+      // Calculate delay based on time since last event
+      time_t elapsed = now - t->getLastEventTimestamp();
+      uint32_t delay = (elapsed >= repeatInterval) ? 1 : static_cast<uint32_t>(repeatInterval - elapsed);
+
+      t->incrementActivationSequence();
+      ScheduleThresholdRepeatEvent(m_ownerId, m_id, t->getId(), t->getActivationSequence(), delay);
+      scheduledCount++;
+   }
+
+   return scheduledCount;
 }
