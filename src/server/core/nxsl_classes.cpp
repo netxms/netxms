@@ -5127,9 +5127,17 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
    {
       value = vm->createValue(event->getId());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastAlarmId"))
+   {
+      value = vm->createValue(event->getLastAlarmId());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastAlarmKey"))
    {
       value = vm->createValue(event->getLastAlarmKey());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastAlarmMessage"))
+   {
+      value = vm->createValue(event->getLastAlarmMessage());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("message"))
    {

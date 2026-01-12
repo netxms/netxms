@@ -155,6 +155,7 @@ private:
 	StringList m_parameterNames;
 	MutableString m_lastAlarmKey;
 	MutableString m_lastAlarmMessage;
+	uint32_t m_lastAlarmId;
 	int64_t m_queueTime;
 	EventQueueBinding *m_queueBinding;
 	std::function<void (Event*)> m_callback;
@@ -181,15 +182,17 @@ public:
    void getTagsAsList(StringBuffer *sb) const;
    time_t getTimestamp() const { return m_timestamp; }
    time_t getOriginTimestamp() const { return m_originTimestamp; }
-   const TCHAR *getLastAlarmKey() const { return m_lastAlarmKey.cstr(); }
-   const TCHAR *getLastAlarmMessage() const { return m_lastAlarmMessage.cstr(); }
+   const wchar_t *getLastAlarmKey() const { return m_lastAlarmKey.cstr(); }
+   const wchar_t *getLastAlarmMessage() const { return m_lastAlarmMessage.cstr(); }
+   uint32_t getLastAlarmId() const { return m_lastAlarmId; }
    const StringList *getParameterList() const { return &m_parameters; }
    const StringList *getParameterNames() const { return &m_parameterNames; }
 
    void setLogWriteFlag(bool flag) { if (flag) m_flags |= EF_LOG; else m_flags &= ~EF_LOG; }
    void setSeverity(int severity) { m_severity = severity; }
-   void setLastAlarmKey(const TCHAR *key) { m_lastAlarmKey = key; }
-   void setLastAlarmMessage(const TCHAR *message) { m_lastAlarmMessage = message; }
+   void setLastAlarmKey(const wchar_t *key) { m_lastAlarmKey = key; }
+   void setLastAlarmMessage(const wchar_t *message) { m_lastAlarmMessage = message; }
+   void setLastAlarmId(uint32_t id) { m_lastAlarmId = id; }
 
    int64_t getQueueTime() const { return m_queueTime; }
    void setQueueTime(int64_t t) { m_queueTime = t; }

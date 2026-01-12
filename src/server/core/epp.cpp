@@ -1273,6 +1273,7 @@ uint32_t EPRule::generateAlarm(Event *event) const
                      m_alarmTimeout, m_alarmTimeoutEvent, parentAlarmId, m_rcaScriptName, event, 0, m_alarmCategoryList,
                      (m_flags & RF_CREATE_TICKET) != 0, (m_flags & RF_REQUEST_AI_COMMENT) != 0);
 	   event->setLastAlarmMessage(message);
+	   event->setLastAlarmId(alarmId);
 
       // Create incident if RF_CREATE_INCIDENT flag is set and alarm was created
       if ((m_flags & RF_CREATE_INCIDENT) && (alarmId != 0))
