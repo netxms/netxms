@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS subagent for Darwin
 ** Copyright (C) 2012 Alex Kirhenshtein
 **
@@ -360,8 +360,6 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, A
 		{
 			if (pName != pNext->ifa_name)
 			{
-				IFLIST *pTmp;
-
 				nIfCount++;
 				auto tmp = MemReallocArrayNoFree(pList, nIfCount);
 				if (tmp == NULL)
@@ -395,7 +393,7 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, A
 					pList[nIfCount-1].addr = pTmp;
 					pList[nIfCount-1].addr[pList[nIfCount-1].addrCount-1].ip =
 						((struct sockaddr_in *)(pNext->ifa_addr))->sin_addr;
-					pList[nIfCount-1].addr[pList[nIfCount-1].addrCount-1].mask = 
+					pList[nIfCount-1].addr[pList[nIfCount-1].addrCount-1].mask =
 						BitsInMask(htonl(((struct sockaddr_in *)
 										(pNext->ifa_netmask))->sin_addr.s_addr));
 				}
