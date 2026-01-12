@@ -462,7 +462,7 @@ void DatabaseInstance::checkMySQLVersion()
       {
          m_usePerformanceSchema = false;
       }
-      MemFree(hResult);
+      DBFreeResult(hResult);
    }
    else
    {
@@ -545,6 +545,75 @@ reconnect:
 }
 
 /**
+ * Read statement counts from performance schema events_statements_summary table
+ * Returns a StringMap with Com_% style keys, or nullptr on failure
+ */
+static StringMap *ReadStatementCounts(DB_HANDLE hdb)
+{
+   static const struct
+   {
+      const TCHAR *eventName;
+      const TCHAR *comName;
+   } statementMapping[] =
+   {
+      { _T("statement/sql/select"), _T("Com_select") },
+      { _T("statement/sql/insert"), _T("Com_insert") },
+      { _T("statement/sql/update"), _T("Com_update") },
+      { _T("statement/sql/delete"), _T("Com_delete") },
+      { _T("statement/sql/update_multi"), _T("Com_update_multi") },
+      { _T("statement/sql/delete_multi"), _T("Com_delete_multi") },
+      { nullptr, nullptr }
+   };
+
+   DB_RESULT hResult = DBSelect(hdb,
+      _T("SELECT EVENT_NAME, COUNT_STAR FROM performance_schema.events_statements_summary_global_by_event_name ")
+      _T("WHERE EVENT_NAME LIKE 'statement/sql/%'"));
+
+   if (hResult == nullptr)
+      return nullptr;
+
+   StringMap *data = new StringMap();
+   int count = DBGetNumRows(hResult);
+   for (int i = 0; i < count; i++)
+   {
+      TCHAR eventName[256];
+      DBGetField(hResult, i, 0, eventName, 256);
+
+      // Map event name to Com_% style name
+      for (int j = 0; statementMapping[j].eventName != nullptr; j++)
+      {
+         if (_tcscmp(eventName, statementMapping[j].eventName) == 0)
+         {
+            data->setPreallocated(_tcsdup(statementMapping[j].comName), DBGetField(hResult, i, 1, nullptr, 0));
+            break;
+         }
+      }
+   }
+   DBFreeResult(hResult);
+
+   return data;
+}
+
+/**
+ * Read COM_% status variables using SHOW GLOBAL STATUS (fallback method)
+ */
+static StringMap *ReadComStatusViaShow(DB_HANDLE hdb)
+{
+   DB_RESULT hResult = DBSelect(hdb, _T("SHOW GLOBAL STATUS LIKE 'Com_%'"));
+   if (hResult == nullptr)
+      return nullptr;
+
+   StringMap *data = new StringMap();
+   int count = DBGetNumRows(hResult);
+   for (int i = 0; i < count; i++)
+   {
+      data->setPreallocated(DBGetField(hResult, i, 0, nullptr, 0), DBGetField(hResult, i, 1, nullptr, 0));
+   }
+   DBFreeResult(hResult);
+   return data;
+}
+
+/**
  * Read global stats table into memory
  */
 static StringMap *ReadGlobalStatsTable(DB_HANDLE hdb, const TCHAR *table)
@@ -577,6 +646,30 @@ bool DatabaseInstance::poll()
       nxlog_debug_tag(DEBUG_TAG, 7, _T("MYSQL: using performance schema for %s database during polling"), m_info.id);
       globalStatus = ReadGlobalStatsTable(m_session, _T("performance_schema.global_status"));
       globalVariables = ReadGlobalStatsTable(m_session, _T("performance_schema.global_variables"));
+
+      // Get statement counts from events_statements_summary (COM_% variables are not in performance_schema.global_status)
+      StringMap *statementCounts = ReadStatementCounts(m_session);
+      if (statementCounts == nullptr || statementCounts->size() == 0)
+      {
+         delete statementCounts;
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("MYSQL: events_statements_summary not available for %s, falling back to SHOW STATUS"), m_info.id);
+         statementCounts = ReadComStatusViaShow(m_session);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("MYSQL: using events_statements_summary for statement counts for %s"), m_info.id);
+      }
+
+      // Merge statement counts into globalStatus
+      if (statementCounts != nullptr && globalStatus != nullptr)
+      {
+         globalStatus->addAll(statementCounts);
+         delete statementCounts;
+      }
+      else
+      {
+         delete statementCounts;
+      }
    }
    else
    {
@@ -585,7 +678,7 @@ bool DatabaseInstance::poll()
       globalVariables = ReadGlobalStatsTable(m_session, _T("information_schema.global_variables"));
    }
 
-   if ((globalStatus == NULL) || (globalVariables == NULL))
+   if ((globalStatus == nullptr) || (globalVariables == nullptr))
    {
       delete globalStatus;
       delete globalVariables;
