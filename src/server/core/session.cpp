@@ -313,7 +313,7 @@ bool ClientSession::start()
 /**
  * Check if file transfer is stalled and should be cancelled
  */
-EnumerationCallbackResult ClientSession::checkFileTransfer(const uint32_t &key, ServerDownloadFileInfo *fileTransfer, 
+EnumerationCallbackResult ClientSession::checkFileTransfer(const uint32_t &key, ServerDownloadFileInfo *fileTransfer,
       std::pair<ClientSession*, IntegerArray<uint32_t>*> *context)
 {
    if (time(nullptr) - fileTransfer->getLastUpdateTime() > 60)
@@ -4935,7 +4935,7 @@ void ClientSession::forceDCIPoll(const NXCPMessage& request)
 				{
 				   if (dci->hasAccess(m_userId))
 				   {
-                  dci->requestForcePoll(this);
+                  dci->requestForcePoll(m_id);
                   response.setField(VID_RCC, RCC_SUCCESS);
                   debugPrintf(4, _T("ForceDCIPoll: DCI %d at node %d"), dciId, object->getId());
                   writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Forced DCI poll initiated for DCI \"%s\" [%u]"), dci->getDescription().cstr(), dci->getId());
@@ -10944,16 +10944,16 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
          if (out != nullptr)
          {
             json_t *root = json_object();
-            
+
             // Set format version to 6 (JSON format)
             json_object_set_new(root, "formatVersion", json_integer(6));
             json_object_set_new(root, "nxslVersionV5", json_boolean(true));
-            
+
             // Server information
             json_t *server = json_object();
             json_object_set_new(server, "version", json_string(NETXMS_VERSION_STRING_A));
             json_object_set_new(server, "buildTag", json_string(NETXMS_BUILD_TAG_A));
-            
+
             wchar_t osVersion[256];
             GetOSVersionString(osVersion, 256);
 #ifdef UNICODE
@@ -10962,12 +10962,12 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
             json_object_set_new(server, "operatingSystem", json_string(osVersion));
 #endif
             json_object_set_new(root, "server", server);
-            
+
             // Description
             wchar_t *description = request.getFieldAsString(VID_DESCRIPTION);
             json_object_set_new(root, "description", description ? json_string_t(description) : json_string(""));
             MemFree(description);
-            
+
             // Export events
             json_t *events = json_array();
             uint32_t count = request.getFieldAsUInt32(VID_NUM_EVENTS);
@@ -10979,7 +10979,7 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
             }
             MemFree(idList);
             json_object_set_new(root, "events", events);
-            
+
             // Export templates
             json_t *templates = json_array();
             for(int i = 0; i < templateList.size(); i++)
@@ -10991,7 +10991,7 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
                }
             }
             json_object_set_new(root, "templates", templates);
-            
+
             // Export traps
             json_t *traps = json_array();
             count = request.getFieldAsUInt32(VID_NUM_TRAPS);
@@ -11007,8 +11007,8 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
             }
             MemFree(idList);
             json_object_set_new(root, "traps", traps);
-            
-            // Export rules using request UUIDs  
+
+            // Export rules using request UUIDs
             json_t *rules = json_array();
             EventProcessingPolicy *epp = GetEventProcessingPolicy();
             count = request.getFieldAsUInt32(VID_NUM_RULES);
@@ -11019,7 +11019,7 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
                {
                   uuid_t guid;
                   request.getFieldAsBinary(fieldId++, guid, UUID_LENGTH);
-                  
+
                   // Use new JSON export method
                   json_t *ruleObj = epp->exportRule(uuid(guid));
                   if (ruleObj != nullptr)
@@ -11029,7 +11029,7 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
                }
             }
             json_object_set_new(root, "rules", rules);
-            
+
             // Export rule ordering only if there are rules to export
             if (json_array_size(rules) > 0)
             {
@@ -11043,7 +11043,7 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
                   json_object_set_new(root, "ruleOrdering", json_array());
                }
             }
-            
+
             // Export scripts
             json_t *scripts = json_array();
             count = request.getFieldAsUInt32(VID_NUM_SCRIPTS);
@@ -11059,7 +11059,7 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
             }
             MemFree(idList);
             json_object_set_new(root, "scripts", scripts);
-            
+
             // Export object tools
             json_t *objectTools = json_array();
             count = request.getFieldAsUInt32(VID_NUM_TOOLS);
@@ -11075,7 +11075,7 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
             }
             MemFree(idList);
             json_object_set_new(root, "objectTools", objectTools);
-            
+
             // Export DCI summary tables
             json_t *dciSummaryTables = json_array();
             count = request.getFieldAsUInt32(VID_NUM_SUMMARY_TABLES);
@@ -11087,7 +11087,7 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
             }
             MemFree(idList);
             json_object_set_new(root, "dciSummaryTables", dciSummaryTables);
-            
+
             // Export actions
             json_t *actions = json_array();
             count = request.getFieldAsUInt32(VID_NUM_ACTIONS);
@@ -11103,7 +11103,7 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
             }
             MemFree(idList);
             json_object_set_new(root, "actions", actions);
-            
+
             // Export web service definitions
             json_t *webServiceDefinitions = json_array();
             count = request.getFieldAsUInt32(VID_WEB_SERVICE_DEF_COUNT);
@@ -11112,18 +11112,18 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
             CreateWebServiceDefinitionExportRecord(webServiceDefinitions, count, idList);
             MemFree(idList);
             json_object_set_new(root, "webServiceDefinitions", webServiceDefinitions);
-            
+
             // Export asset management schema
             json_t *assetManagementSchema = json_array();
             StringList assetAttributeNames(request, VID_ASSET_ATTRIBUTE_NAMES);
             ExportAssetManagementSchema(assetManagementSchema, assetAttributeNames);
             json_object_set_new(root, "assetManagementSchema", assetManagementSchema);
-            
+
             // Export log parser rules - separate sections like XML
             json_t *syslog = json_object();
             ExportSyslogParserRulesJSON(request, VID_SYSLOG_NUM_RECORDS, VID_SYSLOG_RULES_LIST_BASE, syslog);
             json_object_set_new(root, "syslog", syslog);
-            
+
             json_t *winlog = json_object();
             ExportWinlogParserRulesJSON(request, VID_WIN_LOG_NUM_RECORDS, VID_WIN_EVENT_RULES_LIST_BASE, winlog);
             json_object_set_new(root, "winlog", winlog);
@@ -11178,9 +11178,9 @@ void ClientSession::importConfiguration(const NXCPMessage& request)
       if (content != nullptr)
       {
          uint32_t flags = request.getFieldAsUInt32(VID_FLAGS);
-         
+
          finalizeConfigurationImport(content, flags, &response);
-         
+
          MemFree(content);
       }
       else
@@ -11225,15 +11225,15 @@ void ClientSession::importConfigurationFromFile(const NXCPMessage& request)
                fseek(file, 0, SEEK_END);
                long size = ftell(file);
                fseek(file, 0, SEEK_SET);
-               
+
                char *content = (char*)malloc(size + 1);
                if (content != nullptr)
                {
                   size_t bytesRead = fread(content, 1, size, file);
                   content[bytesRead] = 0;
-                  
+
                   finalizeConfigurationImport(content, uploadData, &response2);
-                  
+
                   MemFree(content);
                }
                else
@@ -11283,7 +11283,7 @@ void ClientSession::finalizeConfigurationImport(const char* content, uint32_t fl
       // Use ImportConfigFromContent which auto-detects format (JSON vs XML)
       StringBuffer *log;
       uint32_t result = ImportConfigFromContent(content, flags, &log);
-      
+
       if (result == RCC_SUCCESS)
          response->setField(VID_EXECUTION_RESULT, log->cstr());
       else
