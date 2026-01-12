@@ -397,8 +397,7 @@ static void AddSNMPResult(Table *table, int column, SNMP_Variable *pVar, LONG nF
          }
          default:
          {
-				bool convert = true;
-            pVar->getValueAsPrintableString(buffer, 4096, &convert);
+            FormatSNMPValue(pVar, buffer, 4096);
             break;
          }
       }

@@ -7500,7 +7500,24 @@ DataCollectionError Node::getMetricFromSNMP(uint16_t port, SNMP_Version version,
    {
       if (interpretRawValue == SNMP_RAWTYPE_NONE)
       {
-         snmpResult = SnmpGetEx(snmp, name, nullptr, 0, buffer, size * sizeof(TCHAR), SG_PSTRING_RESULT, nullptr);
+         SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+         request.bindVariable(new SNMP_Variable(name));
+
+         SNMP_PDU *response;
+         snmpResult = snmp->doRequest(&request, &response);
+         if (snmpResult == SNMP_ERR_SUCCESS)
+         {
+            if ((response->getNumVariables() > 0) && (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
+            {
+               SNMP_Variable *varbind = response->getVariable(0);
+               FormatSNMPValue(varbind, buffer, size);
+            }
+            else
+            {
+               snmpResult = SNMP_ERR_NO_OBJECT;
+            }
+            delete response;
+         }
       }
       else
       {

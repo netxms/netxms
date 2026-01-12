@@ -115,12 +115,11 @@ static void GenerateTrapEvent(SnmpTrap *trap, const shared_ptr<Node>& node, cons
          SNMP_Variable *varbind = pdu->getVariable(index);
          if (varbind != nullptr)
          {
-            bool convertToHex = true;
             TCHAR name[64], buffer[3072];
             _sntprintf(name, 64, _T("%d"), pm->getPosition());
             event.param(name,
                ((g_flags & AF_ALLOW_TRAP_VARBIND_CONVERSION) && !(pm->getFlags() & TRAP_VARBIND_FORCE_TEXT)) ?
-                  varbind->getValueAsPrintableString(buffer, 3072, &convertToHex) :
+                  FormatSNMPValue(varbind, buffer, 3072) :
                   varbind->getValueAsString(buffer, 3072));
          }
       }
@@ -134,11 +133,10 @@ static void GenerateTrapEvent(SnmpTrap *trap, const shared_ptr<Node>& node, cons
             int result = varbind->getName().compare(*(pm->getOid()));
             if ((result == OID_EQUAL) || (result == OID_LONGER))
             {
-               bool convertToHex = true;
                TCHAR buffer[3072];
                event.param(varbind->getName().toString(),
                   ((g_flags & AF_ALLOW_TRAP_VARBIND_CONVERSION) && !(pm->getFlags() & TRAP_VARBIND_FORCE_TEXT)) ?
-                     varbind->getValueAsPrintableString(buffer, 3072, &convertToHex) :
+                     FormatSNMPValue(varbind, buffer, 3072) :
                      varbind->getValueAsString(buffer, 3072));
                break;
             }
@@ -191,9 +189,8 @@ void SnmpTrap::buildVarbindList()
 
       v->getName().toString(oidText, 1024);
 
-      bool convertToHex = true;
       if (g_flags & AF_ALLOW_TRAP_VARBIND_CONVERSION)
-         v->getValueAsPrintableString(data, 4096, &convertToHex);
+         FormatSNMPValue(v, data, 4096);
       else
          v->getValueAsString(data, 4096);
 

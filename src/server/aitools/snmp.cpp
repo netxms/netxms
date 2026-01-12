@@ -79,9 +79,8 @@ std::string F_SNMPRead(json_t *arguments, uint32_t userId)
    char buffer[256];
    json_object_set_new(output, "oid", json_string(oid.toStringA(buffer, 256)));
    json_object_set_new(output, "type", json_string(SnmpDataTypeNameA(v->getType(), buffer, 256)));
-   bool convertToHex = false;
    wchar_t value[256];
-   json_object_set_new(output, "value", json_string_w(v->getValueAsPrintableString(value, 256, &convertToHex)));
+   json_object_set_new(output, "value", json_string_w(FormatSNMPValue(v, value, 256)));
    delete response;
    return JsonToString(output);
 }
@@ -132,9 +131,8 @@ std::string F_SNMPWalk(json_t *arguments, uint32_t userId)
          SNMP_ObjectId oid = v->getName();
          json_object_set_new(entry, "oid", json_string(oid.toStringA(buffer, 256)));
          json_object_set_new(entry, "type", json_string(SnmpDataTypeNameA(v->getType(), buffer, 256)));
-         bool convertToHex = false;
          wchar_t value[256];
-         json_object_set_new(entry, "value", json_string_w(v->getValueAsPrintableString(value, 256, &convertToHex)));
+         json_object_set_new(entry, "value", json_string_w(FormatSNMPValue(v, value, 256)));
          json_array_append_new(output, entry);
          return SNMP_ERR_SUCCESS;
       });

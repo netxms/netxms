@@ -172,7 +172,7 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport, const TCHAR 
                }
                else if (flags & SG_STRING_RESULT)
                {
-                  pVar->getValueAsString((TCHAR *)value, bufferSize / sizeof(TCHAR), codepage);
+                  pVar->getValueAsString(static_cast<TCHAR*>(value), bufferSize / sizeof(TCHAR), codepage);
                }
                else if (flags & SG_PSTRING_RESULT)
                {

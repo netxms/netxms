@@ -6339,8 +6339,7 @@ NXSL_Value *NXSL_SNMPVarBindClass::getAttr(NXSL_Object *object, const NXSL_Ident
 	else if (NXSL_COMPARE_ATTRIBUTE_NAME("printableValue"))
 	{
    	TCHAR strValue[1024];
-		bool convToHex = true;
-		t->getValueAsPrintableString(strValue, 1024, &convToHex);
+		FormatSNMPValue(t, strValue, 1024);
 		value = vm->createValue(strValue);
 	}
 	else if (NXSL_COMPARE_ATTRIBUTE_NAME("valueAsIp"))
