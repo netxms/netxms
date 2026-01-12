@@ -95,7 +95,7 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
 	m_snmpVersion = SNMP_VERSION_DEFAULT;
    m_lastScriptErrorReport = 0;
    m_doForcePoll = false;
-   m_pollingSession = nullptr;
+   m_pollingSessionId = -1;
    m_instanceDiscoveryMethod = IDM_NONE;
    m_instanceRetentionTime = -1;
    m_instanceGracePeriodStart = 0;
@@ -140,7 +140,7 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
 	m_snmpPort = src->m_snmpPort;
    m_snmpVersion = src->m_snmpVersion;
 	m_doForcePoll = false;
-	m_pollingSession = nullptr;
+	m_pollingSessionId = -1;
    m_lastScriptErrorReport = 0;
    m_schedules = (src->m_schedules != nullptr) ? new StringList(src->m_schedules) : nullptr;
    m_instanceDiscoveryMethod = src->m_instanceDiscoveryMethod;
@@ -184,7 +184,7 @@ DCObject::DCObject(uint32_t id, const TCHAR *name, int source, BYTE scheduleType
    m_snmpVersion = SNMP_VERSION_DEFAULT;
    m_lastScriptErrorReport = 0;
    m_doForcePoll = false;
-   m_pollingSession = nullptr;
+   m_pollingSessionId = -1;
    m_instanceDiscoveryMethod = IDM_NONE;
    m_instanceRetentionTime = -1;
    m_instanceGracePeriodStart = 0;
@@ -251,7 +251,7 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_lastScriptErrorReport = 0;
    m_comments = config->getSubEntryValue(_T("comments"));
    m_doForcePoll = false;
-   m_pollingSession = nullptr;
+   m_pollingSessionId = -1;
    if (nxslV5)
    {
       setTransformationScript(config->getSubEntryValue(_T("transformation")));
@@ -685,11 +685,7 @@ bool DCObject::isReadyForPolling(time_t currTime)
       {
          // DCI cannot be force polled at the moment, clear force poll request
          nxlog_debug_tag(DEBUG_TAG_DC_SCHEDULER, 6, _T("Forced poll of DC object %s [%u] on node %s [%u] cancelled"), m_name.cstr(), m_id, getOwnerName(), m_ownerId);
-         if (m_pollingSession != nullptr)
-         {
-            m_pollingSession->decRefCount();
-            m_pollingSession = nullptr;
-         }
+         m_pollingSessionId = -1;
          m_doForcePoll = false;
          unlock();
          return false;
@@ -1064,7 +1060,7 @@ void DCObject::updateFromTemplate(DCObject *src)
 
    // DCObject::updateFromTemplate can be called in two different scenarios:
    // 1. When template DCI was changed and we have to update DCI on data collection target;
-   // 2. When instance discovery DCI was changed and we have to update DCIs on same node created 
+   // 2. When instance discovery DCI was changed and we have to update DCIs on same node created
    //    from that instance discovery DCI.
    // In second case, instance discovery method should not be changed, and instance data should be updated instead.
    // Owner object being the same as template object is an indicator that this DCI was created by instance discovery.
@@ -1287,27 +1283,23 @@ NXSL_Value *DCObject::createNXSLObject(NXSL_VM *vm) const
 /**
  * Process force poll request
  */
-ClientSession *DCObject::processForcePoll()
+session_id_t DCObject::processForcePoll()
 {
    lock();
-   ClientSession *session = m_pollingSession;
-   m_pollingSession = nullptr;
+   session_id_t sessionId = m_pollingSessionId;
+   m_pollingSessionId = -1;
    m_doForcePoll = false;
    unlock();
-   return session;
+   return sessionId;
 }
 
 /**
  * Request force poll
  */
-void DCObject::requestForcePoll(ClientSession *session)
+void DCObject::requestForcePoll(session_id_t sessionId)
 {
    lock();
-   if (m_pollingSession != nullptr)
-      m_pollingSession->decRefCount();
-   m_pollingSession = session;
-   if (m_pollingSession != nullptr)
-      m_pollingSession->incRefCount();
+   m_pollingSessionId = sessionId;
    m_doForcePoll = true;
    unlock();
 }

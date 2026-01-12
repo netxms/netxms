@@ -305,7 +305,7 @@ bool ClientSession::start()
 /**
  * Check if file transfer is stalled and should be cancelled
  */
-EnumerationCallbackResult ClientSession::checkFileTransfer(const uint32_t &key, ServerDownloadFileInfo *fileTransfer, 
+EnumerationCallbackResult ClientSession::checkFileTransfer(const uint32_t &key, ServerDownloadFileInfo *fileTransfer,
       std::pair<ClientSession*, IntegerArray<uint32_t>*> *context)
 {
    if (time(nullptr) - fileTransfer->getLastUpdateTime() > 60)
@@ -4797,7 +4797,7 @@ void ClientSession::forceDCIPoll(const NXCPMessage& request)
 				{
 				   if (dci->hasAccess(m_userId))
 				   {
-                  dci->requestForcePoll(this);
+                  dci->requestForcePoll(m_id);
                   response.setField(VID_RCC, RCC_SUCCESS);
                   debugPrintf(4, _T("ForceDCIPoll: DCI %d at node %d"), dciId, object->getId());
                   writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Forced DCI poll initiated for DCI \"%s\" [%u]"), dci->getDescription().cstr(), dci->getId());

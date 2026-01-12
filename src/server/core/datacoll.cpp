@@ -368,11 +368,10 @@ void DataCollector(const shared_ptr<DCObject>& dcObject)
          // Send session notification when force poll is performed
          if (dcObject->isForcePollRequested())
          {
-            ClientSession *session = dcObject->processForcePoll();
-            if (session != nullptr)
+            session_id_t sessionId = dcObject->processForcePoll();
+            if (sessionId != -1)
             {
-               session->notify(NX_NOTIFY_FORCE_DCI_POLL, dcObject->getOwnerId());
-               session->decRefCount();
+               NotifyClientSession(sessionId, NX_NOTIFY_FORCE_DCI_POLL, dcObject->getOwnerId());
             }
          }
       }

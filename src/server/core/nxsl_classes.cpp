@@ -5280,7 +5280,7 @@ NXSL_METHOD_DEFINITION(DCI, forcePoll)
       shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget*>(dcTarget.get())->getDCObjectById(dci->getId(), 0, true);
       if (dcObject != nullptr)
       {
-         dcObject->requestForcePoll(nullptr);
+         dcObject->requestForcePoll(-1);
       }
    }
    *result = vm->createValue();

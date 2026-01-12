@@ -321,7 +321,7 @@ protected:
    time_t m_lastScriptErrorReport;
    SharedString m_comments;
 	bool m_doForcePoll;                    // Force poll indicator
-	ClientSession *m_pollingSession;       // Force poll requestor session
+	session_id_t m_pollingSessionId;       // Force poll requestor session ID
    uint16_t m_instanceDiscoveryMethod;
    SharedString m_instanceDiscoveryData;  // Instance discovery data (instance value for discovered DCIs and method specific data for prototype)
    SharedString m_instanceFilterSource;
@@ -455,8 +455,8 @@ public:
 
    NXSL_Value *createNXSLObject(NXSL_VM *vm) const;
 
-   ClientSession *processForcePoll();
-   void requestForcePoll(ClientSession *session);
+   session_id_t processForcePoll();
+   void requestForcePoll(session_id_t sessionId);
    bool isForcePollRequested() { return m_doForcePoll; }
 	bool prepareForDeletion();
 
