@@ -535,7 +535,7 @@ protected:
    int32_t m_sampleSaveInterval;       // Save every N-th sample (1 = save all)
    int32_t m_sampleSaveCounter;        // Runtime counter for nth sample logic (not persisted)
 
-   bool transform(ItemValue &value, time_t nElapsedTime);
+   bool transform(ItemValue &value, int64_t elapsedTime);
    void checkThresholds(ItemValue &value, const shared_ptr<DCObject>& originalDci);
    void updateCacheSizeInternal(bool allowLoad);
    void clearCache();

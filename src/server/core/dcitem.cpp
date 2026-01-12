@@ -1333,7 +1333,7 @@ static inline void ConvertValue(ItemValue& value, int destinationDataType, int s
 /**
  * Transform received value. Assuming that DCI object is locked.
  */
-bool DCItem::transform(ItemValue &value, time_t elapsedTime)
+bool DCItem::transform(ItemValue &value, int64_t elapsedTime)
 {
    if ((m_transformationScript == nullptr) && !m_transformationScriptSource.isNull() && !IsBlankString(m_transformationScriptSource))
       return false;  // Transformation script present but cannot be compiled
@@ -1423,6 +1423,7 @@ bool DCItem::transform(ItemValue &value, time_t elapsedTime)
          elapsedTime /= 60;  // Convert to minutes
          /* no break */
       case DCM_AVERAGE_PER_SECOND:
+         elapsedTime /= 1000;  // Convert to seconds
          // Check elapsed time to prevent divide-by-zero exception
          if (elapsedTime == 0)
             elapsedTime++;
