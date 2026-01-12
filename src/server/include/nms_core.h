@@ -1424,6 +1424,7 @@ void LoadNotificationChannelDrivers();
 void LoadNotificationChannels();
 void ShutdownNotificationChannels();
 void NXCORE_EXPORTABLE SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject, const TCHAR *message, uint32_t eventCode, uint64_t eventId, const uuid& ruleId);
+void NXCORE_EXPORTABLE SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject, const TCHAR *message, const Event *event, const shared_ptr<NetObj>& sourceObject, const uuid& ruleId);
 bool NXCORE_EXPORTABLE ClearNotificationChannelQueue(const wchar_t *name);
 void NXCORE_EXPORTABLE GetNotificationChannels(NXCPMessage *msg);
 void NXCORE_EXPORTABLE GetNotificationChannels(Table *table);

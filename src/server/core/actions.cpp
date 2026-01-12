@@ -633,7 +633,9 @@ void ExecuteAction(uint32_t actionId, const Event& event, const Alarm *alarm, co
                nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending notification using channel %s: \"%s\""), action->channelName, context->data.cstr());
             else
                nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending notification using channel %s to %s: \"%s\""), action->channelName, context->recipient.cstr(), context->data.cstr());
-            SendNotification(action->channelName, context->recipient.getBuffer(), context->subject, context->data, event.getCode(), event.getId(), ruleId);
+            // Pass event and source object for NXSL notification channels
+            shared_ptr<NetObj> sourceObject = FindObjectById(event.getSourceId());
+            SendNotification(action->channelName, context->recipient.getBuffer(), context->subject, context->data, &event, sourceObject, ruleId);
          }
          else
          {
@@ -905,7 +907,7 @@ json_t NXCORE_EXPORTABLE *GetActions()
 json_t *CreateActionExportRecord(uint32_t id)
 {
    json_t *action = nullptr;
-   
+
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT guid,action_name,action_type,rcpt_addr,email_subject,action_data,channel_name FROM actions WHERE action_id=?"));
    if (hStmt == nullptr)
@@ -927,15 +929,15 @@ json_t *CreateActionExportRecord(uint32_t id)
          json_object_set_new(action, "name", json_string_t(DBGetField(hResult, 0, 1, buffer, 256)));
          json_object_set_new(action, "type", json_integer(DBGetFieldULong(hResult, 0, 2)));
          json_object_set_new(action, "recipientAddress", json_string_t(DBGetField(hResult, 0, 3, buffer, 256)));
-         json_object_set_new(action, "emailSubject", json_string_t(DBGetField(hResult, 0, 4, buffer, 256)));         
-         json_object_set_new(action, "data", json_string_t(DBGetField(hResult, 0, 5, buffer, 256)));         
+         json_object_set_new(action, "emailSubject", json_string_t(DBGetField(hResult, 0, 4, buffer, 256)));
+         json_object_set_new(action, "data", json_string_t(DBGetField(hResult, 0, 5, buffer, 256)));
          json_object_set_new(action, "channelName", json_string_t(DBGetField(hResult, 0, 6, buffer, 256)));
       }
       DBFreeResult(hResult);
    }
    DBFreeStatement(hStmt);
    DBConnectionPoolReleaseConnection(hdb);
-   
+
    return action;
 }
 
@@ -1098,18 +1100,18 @@ bool ImportAction(json_t *action, bool overwrite, ImportContext *context)
 
    // Set action properties from JSON
    actionObj->type = static_cast<ServerActionType>(json_object_get_int32(action, "type", static_cast<int32_t>(ServerActionType::LOCAL_COMMAND)));
-   
+
    String emailSubject = json_object_get_string(action, "emailSubject", _T(""));
-   _tcslcpy(actionObj->emailSubject, emailSubject, MAX_EMAIL_SUBJECT_LEN);      
+   _tcslcpy(actionObj->emailSubject, emailSubject, MAX_EMAIL_SUBJECT_LEN);
    String rcptAddr = json_object_get_string(action, "recipientAddress", _T(""));
-   _tcslcpy(actionObj->rcptAddr, rcptAddr, MAX_RCPT_ADDR_LEN);      
+   _tcslcpy(actionObj->rcptAddr, rcptAddr, MAX_RCPT_ADDR_LEN);
    String channelName = json_object_get_string(action, "channelName", _T(""));
-   _tcslcpy(actionObj->channelName, channelName, MAX_OBJECT_NAME);      
+   _tcslcpy(actionObj->channelName, channelName, MAX_OBJECT_NAME);
    String data = json_object_get_string(action, "data", _T(""));
    if (actionObj->data != nullptr)
       MemFree(actionObj->data);
    actionObj->data = MemCopyString(data.isEmpty() ? nullptr : data.cstr());
-      
+
    actionObj->saveToDatabase();
    EnumerateClientSessions(SendActionDBUpdate, actionObj.get());
    s_actions.set(actionObj->id, actionObj);
