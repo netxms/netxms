@@ -1228,6 +1228,9 @@ retry_db_lock:
    // Load and compile scripts
    LoadScripts();
 
+   // Load MIB tree for SNMP display hint support
+   LoadMIBTree();
+
    // Initialize persistent storage
    PersistentStorageInit();
 

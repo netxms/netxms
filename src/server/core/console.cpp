@@ -894,6 +894,20 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
          ConsolePrintf(console, _T("Variable name missing\n"));
       }
    }
+   else if (IsCommand(_T("RELOAD"), szBuffer, 3))
+   {
+      pArg = ExtractWord(pArg, szBuffer);
+      if (IsCommand(_T("MIB"), szBuffer, 3))
+      {
+         ConsolePrintf(console, _T("Reloading MIB tree...\n"));
+         ReloadMIBTree();
+         ConsolePrintf(console, _T("MIB tree reloaded\n"));
+      }
+      else
+      {
+         ConsolePrintf(console, _T("Usage: RELOAD MIB\n"));
+      }
+   }
    else if (IsCommand(_T("SHOW"), szBuffer, 2))
    {
       // Get argument
@@ -1918,6 +1932,7 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
             _T("   ping <address>                    - Send ICMP echo request to given IP address\n")
             _T("   poll <type> <node>                - Initiate node poll\n")
             _T("   raise <exception>                 - Raise exception\n")
+            _T("   reload mib                        - Reload MIB tree from compiled file\n")
             _T("   scan <range start> <range end> [proxy <id>|zone <uin>] [discovery] \n")
             _T("                                     - Manual active discovery scan for given range. Without 'discovery' parameter prints results only\n")
             _T("   set <variable> <value>            - Set value of server configuration variable\n")

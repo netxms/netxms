@@ -24,11 +24,18 @@
 
 #define DEBUG_TAG_SNMP_DISCOVERY _T("snmp.discovery")
 #define DEBUG_TAG_SNMP_ROUTES    _T("snmp.routes")
+#define DEBUG_TAG_SNMP_MIB       _T("snmp.mib")
 
 /**
  * MIB compilation mutex
  */
 Mutex m_mibCompilationMutex;
+
+/**
+ * Global MIB tree and synchronization
+ */
+static SNMP_MIBObject *s_mibRoot = nullptr;
+static RWLock s_mibTreeLock;
 
 /**
  * Extract IPv4 address encoded as OID elements at given offset
@@ -606,8 +613,9 @@ void MibCompilerExecutor::endOfOutput()
    msg.setField(VID_RCC, RCC_SUCCESS);
    m_session->sendMessage(msg);
 
+   ReloadMIBTree();
    NotifyClientSessions(NX_NOTIFY_MIB_UPDATED, 0);
-   nxlog_debug_tag(_T("snmp.mib"), 6, _T("CompileMibFiles: MIB compiler execution completed"));
+   nxlog_debug_tag(DEBUG_TAG_SNMP_MIB, 6, _T("CompileMibFiles: MIB compiler execution completed"));
 }
 
 /**
@@ -645,4 +653,73 @@ uint32_t CompileMibFiles(ClientSession *session, uint32_t requestId)
    }
 
    return RCC_SUCCESS;
+}
+
+/**
+ * Load MIB tree from compiled file
+ */
+bool LoadMIBTree()
+{
+   TCHAR mibPath[MAX_PATH];
+   _tcscpy(mibPath, g_netxmsdDataDir);
+   _tcscat(mibPath, DFILE_COMPILED_MIB);
+
+   SNMP_MIBObject *newRoot = nullptr;
+   uint32_t rc = SnmpLoadMIBTree(mibPath, &newRoot);
+
+   if (rc == SNMP_ERR_SUCCESS)
+   {
+      s_mibTreeLock.writeLock();
+      SNMP_MIBObject *oldRoot = s_mibRoot;
+      s_mibRoot = newRoot;
+      s_mibTreeLock.unlock();
+
+      delete oldRoot;
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_SNMP_MIB, _T("MIB tree loaded from %s"), mibPath);
+      return true;
+   }
+   else if (rc == SNMP_ERR_FILE_IO)
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_SNMP_MIB, _T("MIB file %s not found - display hints will not be available"), mibPath);
+      return true;  // Not fatal
+   }
+   else
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_SNMP_MIB, _T("Failed to load MIB tree from %s: %s"), mibPath, SnmpGetErrorText(rc));
+      return false;
+   }
+}
+
+/**
+ * Reload MIB tree
+ */
+void ReloadMIBTree()
+{
+   nxlog_debug_tag(DEBUG_TAG_SNMP_MIB, 2, _T("Reloading MIB tree"));
+   LoadMIBTree();
+}
+
+/**
+ * Format SNMP value with display hint if available
+ */
+wchar_t *FormatSNMPValue(const SNMP_Variable *var, wchar_t *buffer, size_t bufferSize)
+{
+   if ((var == nullptr) || (buffer == nullptr) || (bufferSize == 0))
+      return nullptr;
+
+   s_mibTreeLock.readLock();
+   if (s_mibRoot != nullptr)
+   {
+      SNMP_MIBObject *mibObj = SnmpFindMIBObjectByOID(s_mibRoot, var->getName());
+      if ((mibObj != nullptr) && (mibObj->getDisplayHint() != nullptr))
+      {
+         var->getValueWithDisplayHint(mibObj->getDisplayHint(), buffer, bufferSize);
+         s_mibTreeLock.unlock();
+         return buffer;
+      }
+   }
+   s_mibTreeLock.unlock();
+
+   bool convertToHex = true;
+   return var->getValueAsPrintableString(buffer, bufferSize, &convertToHex);
 }

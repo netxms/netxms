@@ -1383,6 +1383,10 @@ SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipA
          int32_t zoneUIN, bool initialDiscovery);
 unique_ptr<StringList> SnmpGetKnownCommunities(int32_t zoneUIN);
 
+bool LoadMIBTree();
+void ReloadMIBTree();
+wchar_t *FormatSNMPValue(const SNMP_Variable *var, wchar_t *buffer, size_t bufferSize);
+
 bool SSHCheckConnection(const shared_ptr<Node>& proxyNode, const InetAddress& addr, uint16_t port,
    const TCHAR *login, const TCHAR *password, uint32_t keyId);
 bool SSHCheckConnection(uint32_t proxyNodeId, const InetAddress& addr, uint16_t port, const TCHAR *login,
