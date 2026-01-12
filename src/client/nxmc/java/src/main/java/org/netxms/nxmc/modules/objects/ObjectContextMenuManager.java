@@ -93,6 +93,7 @@ import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
 import org.netxms.nxmc.modules.objects.actions.ObjectAction;
 import org.netxms.nxmc.modules.objects.actions.SetInterfacePeerInformation;
 import org.netxms.nxmc.modules.objects.dialogs.DecommissionNodeDialog;
+import org.netxms.nxmc.modules.objects.dialogs.EffectiveRightsDialog;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog.RelationType;
@@ -125,6 +126,7 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionDecommission;
    private Action actionDeployPackage;
    private Action actionProperties;
+   private Action actionShowEffectiveRights;
    private Action actionTakeScreenshot;
    private Action actionOpenRemoteControlView;
    private Action actionEditAgentConfig;
@@ -269,6 +271,14 @@ public class ObjectContextMenuManager extends MenuManager
          public void run()
          {
             ObjectPropertiesManager.openObjectPropertiesDialog(getObjectFromSelection(), getShell(), view);
+         }
+      };
+
+      actionShowEffectiveRights = new Action(i18n.tr("Show effective rights...")) {
+         @Override
+         public void run()
+         {
+            showEffectiveRights();
          }
       };
 
@@ -848,6 +858,7 @@ public class ObjectContextMenuManager extends MenuManager
       if (singleObject)
       {
          add(new Separator());
+         add(actionShowEffectiveRights);
          add(actionProperties);
       }
    }
@@ -1160,6 +1171,18 @@ public class ObjectContextMenuManager extends MenuManager
             return i18n.tr("Cannot delete object");
          }
       }.start();
+   }
+
+   /**
+    * Show effective rights dialog
+    */
+   private void showEffectiveRights()
+   {
+      AbstractObject object = getObjectFromSelection();
+      if (object == null)
+         return;
+
+      new EffectiveRightsDialog(getShell(), object).open();
    }
 
    /**

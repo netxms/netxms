@@ -42,8 +42,8 @@ public class NotificationChannelLabelProvider extends LabelProvider implements I
     */
    public NotificationChannelLabelProvider()
    {
-      imageInactive = ResourceManager.getImageDescriptor("icons/inactive.gif").createImage();
-      imageActive = ResourceManager.getImageDescriptor("icons/active.gif").createImage();
+      imageInactive = ResourceManager.getImageDescriptor("icons/inactive.png").createImage();
+      imageActive = ResourceManager.getImageDescriptor("icons/active.png").createImage();
    }
 
    /**

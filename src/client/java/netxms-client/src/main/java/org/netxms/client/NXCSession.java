@@ -7877,8 +7877,24 @@ public class NXCSession
     */
    public int getEffectiveRights(final long objectId) throws IOException, NXCException
    {
+      return getEffectiveRights(objectId, userId);
+   }
+
+   /**
+    * Get effective rights of specified user to given object. Requires OBJECT_ACCESS_ACL permission on the object if querying for a
+    * different user.
+    *
+    * @param objectId The object ID
+    * @param userId The user ID to query rights for
+    * @return The effective rights
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public int getEffectiveRights(final long objectId, final int userId) throws IOException, NXCException
+   {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_EFFECTIVE_RIGHTS);
       msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, objectId);
+      msg.setFieldInt32(NXCPCodes.VID_USER_ID, userId);
       sendMessage(msg);
       return waitForRCC(msg.getMessageId()).getFieldAsInt32(NXCPCodes.VID_EFFECTIVE_RIGHTS);
    }

@@ -14543,12 +14543,27 @@ void ClientSession::getEffectiveRights(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   // Get node id and check object class and access rights
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
-      response.setField(VID_EFFECTIVE_RIGHTS, object->getUserRights(m_userId));
-		response.setField(VID_RCC, RCC_SUCCESS);
+      uint32_t targetUserId = request.getFieldAsUInt32(VID_USER_ID);
+
+      // If user specified is same as current, return current user's rights
+      if (targetUserId == m_userId)
+      {
+         response.setField(VID_EFFECTIVE_RIGHTS, object->getUserRights(m_userId));
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      // Require OBJECT_ACCESS_ACL to query other users' rights
+      else if (object->checkAccessRights(m_userId, OBJECT_ACCESS_ACL))
+      {
+         response.setField(VID_EFFECTIVE_RIGHTS, object->getUserRights(targetUserId));
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
    }
    else  // No object with given ID
    {

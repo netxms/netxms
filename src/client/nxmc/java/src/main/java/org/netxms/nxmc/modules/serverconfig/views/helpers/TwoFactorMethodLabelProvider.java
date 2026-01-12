@@ -35,8 +35,8 @@ public class TwoFactorMethodLabelProvider extends LabelProvider implements ITabl
    
    public TwoFactorMethodLabelProvider()
    {
-      imageInactive = ResourceManager.getImage("icons/inactive.gif");
-      imageActive = ResourceManager.getImage("icons/active.gif");
+      imageInactive = ResourceManager.getImage("icons/inactive.png");
+      imageActive = ResourceManager.getImage("icons/active.png");
    }
 
    /**
