@@ -27,18 +27,18 @@ public class NetworkMapScript extends AbstractSessionTest
    public void testNetworkMapStylingScript() throws Exception
    {
       NXCSession session = connectAndLogin();
-      
-      //Delete old map 
+
+      //Delete old map
       AbstractObject oldMap = session.findObjectByName(TEST_MAP_NAME);
       if (oldMap != null)
          session.deleteObject(oldMap.getObjectId());
-      
+
       AbstractObject managementNode = TestHelper.findManagementServer(session);
-      assertNotNull(managementNode);       
+      assertNotNull(managementNode);
       TestHelper.findOrCreateDCI(session, managementNode, TEST_DCI_DESCRIPTION);
-      
+
       TestHelper.checkNodeCreatedOrCreate(session, TEST_NODE);
-      AbstractObject secondObject = session.findObjectByName(TEST_NODE);      
+      AbstractObject secondObject = session.findObjectByName(TEST_NODE);
       TestHelper.findOrCreateDCI(session, secondObject, TEST_DCI_DESCRIPTION);
 
       AbstractObject netMap = session.findObjectByName(TEST_MAP_NAME);
@@ -46,7 +46,7 @@ public class NetworkMapScript extends AbstractSessionTest
       {
          session.deleteObject(netMap.getObjectId());
       }
-      
+
       NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_NETWORKMAP, TEST_MAP_NAME, GenericObject.NETWORKMAPROOT);
       cd.setMapType(MapType.CUSTOM);
       NetworkMapPage map = ((NetworkMap)session.createObjectSync(cd)).createMapPage();
@@ -56,7 +56,7 @@ public class NetworkMapScript extends AbstractSessionTest
       long elementId2 = map.createElementId();
       map.addElement(new NetworkMapObject(elementId2, managementNode.getObjectId()));
       map.addLink(new NetworkMapLink(map.createLinkId(), 0, elementId1, elementId2));
-      
+
       final NXCObjectModificationData md = new NXCObjectModificationData(map.getMapObjectId());
       md.setMapContent(map.getElements(), map.getLinks());
       String script = IOUtils.toString(this.getClass().getResourceAsStream("/networkMapStylingScript.nxsl"), "UTF-8");
@@ -65,9 +65,9 @@ public class NetworkMapScript extends AbstractSessionTest
 
       session.pollObject(map.getMapObjectId(), ObjectPollType.MAP_UPDATE, null);
       Thread.sleep(3000);
-      
+
       netMap = session.findObjectById(map.getMapObjectId());
-      
-      assertEquals(netMap.getCustomAttribute("NetworkMapScript").getValue(), "1");
+
+      assertEquals("1", netMap.getCustomAttribute("NetworkMapScript").getValue());
    }
 }

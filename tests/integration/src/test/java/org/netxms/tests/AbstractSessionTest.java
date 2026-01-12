@@ -19,8 +19,12 @@
 package org.netxms.tests;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProtocolVersion;
+import org.netxms.client.constants.DataOrigin;
+import org.netxms.client.objects.Node;
+import org.netxms.utilities.TestHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,11 +37,16 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractSessionTest
 {
    private static final Logger logger = LoggerFactory.getLogger(AbstractSessionTest.class);
+   private static final String METRIC_NAME = "Server.DB.Queries.Failed";
 
    private NXCSession session = null;
+   private long managementServerId = 0;
+   private long initialFailedQueries = -1;
 
    protected NXCSession connect() throws Exception
    {
+      if (session != null)
+         session.disconnect();
       session = new NXCSession(TestConstants.SERVER_ADDRESS, TestConstants.SERVER_PORT_CLIENT, true);
       session.setRecvBufferSize(65536, 33554432);
       session.connect(new int[] { ProtocolVersion.INDEX_FULL });
@@ -55,9 +64,74 @@ public abstract class AbstractSessionTest
       return s;
    }
 
+   /**
+    * Get the failed query count by querying internal metric directly
+    */
+   private long getFailedQueryCount() throws Exception
+   {
+      if (managementServerId == 0)
+         return -1;
+
+      String value = session.queryMetric(managementServerId, DataOrigin.INTERNAL, METRIC_NAME);
+      return Long.parseLong(value);
+   }
+
+   @BeforeEach
+   public void setupSqlErrorCheck()
+   {
+      initialFailedQueries = -1;
+      try
+      {
+         session = connectAndLogin();
+
+         Node managementServer = TestHelper.findManagementServer(session);
+         if (managementServer != null)
+         {
+            managementServerId = managementServer.getObjectId();
+            initialFailedQueries = getFailedQueryCount();
+            System.out.println("SQL error check: initial failed queries = " + initialFailedQueries);
+         }
+         else
+         {
+            logger.warn("Management server not found - SQL error check disabled for this test");
+         }
+      }
+      catch(Exception e)
+      {
+         logger.warn("Could not setup SQL error check", e);
+      }
+   }
+
    @AfterEach
    public void cleanup()
    {
+      // SQL error check
+      if (session != null)
+      {
+         try
+         {
+            if (initialFailedQueries >= 0 && managementServerId != 0)
+            {
+               long currentFailedQueries = getFailedQueryCount();
+               System.out.println("SQL error check: final failed queries = " + currentFailedQueries);
+               if (currentFailedQueries > initialFailedQueries)
+               {
+                  long errorCount = currentFailedQueries - initialFailedQueries;
+                  throw new AssertionError("SQL errors detected during test: " + errorCount +
+                     " failed queries (was " + initialFailedQueries + ", now " + currentFailedQueries + ")");
+               }
+            }
+         }
+         catch(AssertionError e)
+         {
+            throw e;  // Re-throw assertion errors
+         }
+         catch(Exception e)
+         {
+            logger.warn("Could not complete SQL error check", e);
+         }
+      }
+
       if (session != null)
       {
          try
