@@ -59,6 +59,7 @@ int H_AiChatCreate(Context *context)
 
 /**
  * Handler for POST /v1/ai/chat/:chat-id/message - send message to AI
+ * Returns 202 Accepted and processes asynchronously. Use GET /status to poll for result.
  */
 int H_AiChatSendMessage(Context *context)
 {
@@ -101,25 +102,80 @@ int H_AiChatSendMessage(Context *context)
    json_t *contextObj = json_object_get(request, "context");
    char *contextStr = (contextObj != nullptr) ? json_dumps(contextObj, 0) : nullptr;
 
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("H_SendMessage: sending message to chat %u"), chatId);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("H_SendMessage: starting async message processing for chat %u"), chatId);
 
-   char *answer = chat->sendRequest(message, 10, contextStr);
+   // Start async processing
+   if (!chat->startAsyncRequest(message, 10, contextStr))
+   {
+      MemFree(contextStr);
+      context->setErrorResponse("Request already in progress");
+      return 409;  // Conflict
+   }
    MemFree(contextStr);
 
+   // Return 202 Accepted - client should poll /status for result
    json_t *response = json_object();
-   if (answer != nullptr)
+   json_object_set_new(response, "status", json_string("processing"));
+   context->setResponseData(response);
+   json_decref(response);
+   return 202;
+}
+
+/**
+ * Handler for GET /v1/ai/chat/:chat-id/status - get processing status
+ * Returns current status, pending question (if any), and response (if complete)
+ */
+int H_AiChatGetStatus(Context *context)
+{
+   uint32_t chatId = context->getPlaceholderValueAsUInt32(_T("chat-id"));
+   if (chatId == 0)
    {
-      json_object_set_new(response, "response", json_string(answer));
-      MemFree(answer);
-   }
-   else
-   {
-      json_object_set_new(response, "response", json_null());
+      context->setErrorResponse("Invalid chat ID");
+      return 400;
    }
 
-   // Include pending question if any
-   json_t *question = chat->getPendingQuestion();
-   json_object_set_new(response, "pendingQuestion", question != nullptr ? question : json_null());
+   uint32_t rcc;
+   shared_ptr<Chat> chat = GetAIAssistantChat(chatId, context->getUserId(), &rcc);
+   if (chat == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("H_GetStatus: chat %u not found or access denied (rcc=%u)"), chatId, rcc);
+      if (rcc == RCC_ACCESS_DENIED)
+      {
+         context->setErrorResponse("Access denied");
+         return 403;
+      }
+      context->setErrorResponse("Chat not found");
+      return 404;
+   }
+
+   json_t *response = json_object();
+
+   AsyncRequestState state = chat->getAsyncState();
+   switch(state)
+   {
+      case AsyncRequestState::PROCESSING:
+         json_object_set_new(response, "status", json_string("processing"));
+         // Include pending question if any (allows client to see and answer questions while processing)
+         {
+            json_t *question = chat->getPendingQuestion();
+            json_object_set_new(response, "pendingQuestion", question != nullptr ? question : json_null());
+         }
+         break;
+
+      case AsyncRequestState::COMPLETED:
+         {
+            json_object_set_new(response, "status", json_string("completed"));
+            char *result = chat->takeAsyncResult();
+            json_object_set_new(response, "response", result != nullptr ? json_string(result) : json_null());
+            MemFree(result);
+         }
+         break;
+
+      case AsyncRequestState::IDLE:
+      default:
+         json_object_set_new(response, "status", json_string("idle"));
+         break;
+   }
 
    context->setResponseData(response);
    json_decref(response);

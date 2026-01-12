@@ -673,6 +673,8 @@ Chat::Chat(NetObj *context, json_t *eventData, uint32_t userId, const char *syst
    m_id = InterlockedIncrement(&s_nextChatId);
    m_boundIncidentId = 0;
    m_pendingQuestion = nullptr;
+   m_asyncState = AsyncRequestState::IDLE;
+   m_asyncResult = nullptr;
 
    initializeFunctions();
 
@@ -714,6 +716,7 @@ Chat::~Chat()
    json_decref(m_messages);
    json_decref(m_functionDeclarations);
    delete m_pendingQuestion;
+   MemFree(m_asyncResult);
 }
 
 /**
@@ -882,9 +885,23 @@ void Chat::initializeFunctions()
          int result = this->askMultipleChoice(text, context, options);
 #endif
 
-         char buffer[64];
-         snprintf(buffer, sizeof(buffer), R"({"selected": %d})", result);
-         return std::string(buffer);
+         if (result >= 0 && result < options.size())
+         {
+            // Include both 1-based index and selected text for clarity
+            const wchar_t *selectedText = options.get(result);
+            json_t *response = json_object();
+            json_object_set_new(response, "selected", json_integer(result + 1));
+            json_object_set_new(response, "selectedOption", json_string_w(selectedText));
+            return JsonToString(response);
+         }
+         else
+         {
+            json_t *response = json_object();
+            json_object_set_new(response, "selected", json_integer(-1));
+            json_object_set_new(response, "selectedOption", json_null());
+            json_object_set_new(response, "error", json_string("No selection made or timeout"));
+            return JsonToString(response);
+         }
       }
    ));
 
@@ -1017,6 +1034,67 @@ char *Chat::sendRequest(const char *prompt, int maxIterations, const char *conte
    }
    nxlog_debug_tag(DEBUG_TAG, 5, L"Final LLM response %s", (answer != nullptr) ? L"received" : L"not received");
    return answer;
+}
+
+/**
+ * Start async request processing (for WebAPI)
+ * Returns false if a request is already in progress
+ */
+bool Chat::startAsyncRequest(const char *prompt, int maxIterations, const char *context)
+{
+   m_asyncMutex.lock();
+   if (m_asyncState == AsyncRequestState::PROCESSING)
+   {
+      m_asyncMutex.unlock();
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Chat [%u]: cannot start async request, another request is already processing"), m_id);
+      return false;
+   }
+
+   m_asyncState = AsyncRequestState::PROCESSING;
+   MemFreeAndNull(m_asyncResult);
+   m_asyncMutex.unlock();
+
+   // Copy parameters for background thread
+   char *promptCopy = MemCopyStringA(prompt);
+   char *contextCopy = (context != nullptr) ? MemCopyStringA(context) : nullptr;
+   uint32_t rcc;
+   shared_ptr<Chat> self = GetAIAssistantChat(m_id, m_userId, &rcc);
+
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Chat [%u]: starting async request processing"), m_id);
+
+   ThreadPoolExecute(s_aiTaskThreadPool,
+      [self, promptCopy, maxIterations, contextCopy]() -> void
+      {
+         char *result = self->sendRequest(promptCopy, maxIterations, contextCopy);
+
+         self->m_asyncMutex.lock();
+         self->m_asyncResult = result;
+         self->m_asyncState = AsyncRequestState::COMPLETED;
+         self->m_asyncMutex.unlock();
+
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Chat [%u]: async request processing completed"), self->m_id);
+
+         MemFree(promptCopy);
+         MemFree(contextCopy);
+      });
+
+   return true;
+}
+
+/**
+ * Take async result (transfers ownership to caller, resets state to IDLE)
+ * Returns nullptr if no result is available yet
+ */
+char *Chat::takeAsyncResult()
+{
+   LockGuard lockGuard(m_asyncMutex);
+   if (m_asyncState != AsyncRequestState::COMPLETED)
+      return nullptr;
+
+   char *result = m_asyncResult;
+   m_asyncResult = nullptr;
+   m_asyncState = AsyncRequestState::IDLE;
+   return result;
 }
 
 /**
@@ -1190,6 +1268,9 @@ void Chat::handleQuestionResponse(uint64_t questionId, bool positive, int select
          m_id, questionId, m_pendingQuestion->id);
       return;
    }
+
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Chat [%u]: setting response for question [") UINT64_FMT _T("]: positive=%s, selectedOption=%d"),
+      m_id, questionId, BooleanToString(positive), selectedOption);
 
    m_pendingQuestion->responded = true;
    m_pendingQuestion->positiveResponse = positive;

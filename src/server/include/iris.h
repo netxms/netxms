@@ -148,6 +148,16 @@ public:
 };
 
 /**
+ * Async request state for WebAPI
+ */
+enum class AsyncRequestState
+{
+   IDLE = 0,
+   PROCESSING = 1,
+   COMPLETED = 2
+};
+
+/**
  * Chat with AI assistant
  */
 class NXCORE_EXPORTABLE Chat
@@ -165,6 +175,9 @@ private:
    time_t m_lastUpdateTime;
    PendingQuestion *m_pendingQuestion;
    Mutex m_questionMutex;
+   AsyncRequestState m_asyncState;
+   char *m_asyncResult;
+   Mutex m_asyncMutex;
 
    void addMessage(const char *role, const char *content)
    {
@@ -190,6 +203,10 @@ public:
    void bindToIncident(uint32_t incidentId);
 
    char *sendRequest(const char *prompt, int maxIterations, const char *context = nullptr);
+
+   bool startAsyncRequest(const char *prompt, int maxIterations, const char *context = nullptr);
+   AsyncRequestState getAsyncState() const { return m_asyncState; }
+   char *takeAsyncResult();
 
    void clear();
 

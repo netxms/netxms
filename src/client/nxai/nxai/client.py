@@ -190,6 +190,8 @@ class NetXMSClient:
         """
         Send a message to the AI assistant.
 
+        Server processes asynchronously. This method polls for result.
+
         Args:
             chat_id: Chat session ID
             message: Message text
@@ -209,21 +211,85 @@ class NetXMSClient:
             f"/v1/ai/chat/{chat_id}/message",
             json=payload,
             headers=self._headers(),
-            timeout=self.MESSAGE_TIMEOUT,
+            timeout=self.DEFAULT_TIMEOUT,
+        )
+
+        if response.status_code == 202:
+            # Async processing started - poll for result
+            return self._poll_for_result(chat_id)
+        elif response.is_success:
+            # Backward compatibility: server returned sync response
+            data = response.json()
+            pending_question = None
+            if data.get("pendingQuestion"):
+                pending_question = Question.from_dict(data["pendingQuestion"])
+            return ChatResponse(
+                response=data.get("response"),
+                pending_question=pending_question,
+            )
+        else:
+            self._handle_error(response)
+            return ChatResponse(response=None, pending_question=None)  # unreachable
+
+    def get_status(self, chat_id: int) -> dict[str, Any]:
+        """
+        Get processing status for a chat.
+
+        Args:
+            chat_id: Chat session ID
+
+        Returns:
+            Status dict with 'status', optional 'response', and optional 'pendingQuestion'
+        """
+        response = self.client.get(
+            f"/v1/ai/chat/{chat_id}/status",
+            headers=self._headers(),
         )
 
         if not response.is_success:
             self._handle_error(response)
 
-        data = response.json()
-        pending_question = None
-        if data.get("pendingQuestion"):
-            pending_question = Question.from_dict(data["pendingQuestion"])
+        return response.json()
 
-        return ChatResponse(
-            response=data.get("response"),
-            pending_question=pending_question,
-        )
+    def _poll_for_result(self, chat_id: int) -> ChatResponse:
+        """
+        Poll until processing completes or a question appears.
+
+        Args:
+            chat_id: Chat session ID
+
+        Returns:
+            ChatResponse with result or pending question
+        """
+        import time
+
+        poll_interval = 0.5  # seconds
+        max_polls = int(self.MESSAGE_TIMEOUT / poll_interval)
+
+        for _ in range(max_polls):
+            status = self.get_status(chat_id)
+
+            if status["status"] == "completed":
+                return ChatResponse(
+                    response=status.get("response"),
+                    pending_question=None,
+                )
+            elif status["status"] == "processing":
+                # Check for pending question
+                question_data = status.get("pendingQuestion")
+                if question_data:
+                    return ChatResponse(
+                        response=None,
+                        pending_question=Question.from_dict(question_data),
+                    )
+                time.sleep(poll_interval)
+            elif status["status"] == "idle":
+                # No processing in progress - shouldn't happen after send_message
+                raise NetXMSError("Unexpected idle status after sending message")
+            else:
+                raise NetXMSError(f"Unexpected status: {status['status']}")
+
+        raise NetXMSError("Timeout waiting for AI response")
 
     def poll_question(self, chat_id: int) -> Question | None:
         """

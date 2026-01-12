@@ -35,6 +35,7 @@ int H_AiChatAnswerQuestion(Context *context);
 int H_AiChatClear(Context *context);
 int H_AiChatCreate(Context *context);
 int H_AiChatDelete(Context *context);
+int H_AiChatGetStatus(Context *context);
 int H_AiChatSendMessage(Context *context);
 int H_AiCharPollQuestion(Context *context);
 int H_AlarmAcknowledge(Context *context);
@@ -84,6 +85,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/ai/chat/:chat-id/question")
       .GET(H_AiCharPollQuestion)
+      .build();
+   RouteBuilder("v1/ai/chat/:chat-id/status")
+      .GET(H_AiChatGetStatus)
       .build();
    RouteBuilder("v1/ai/chat/:chat-id/answer")
       .POST(H_AiChatAnswerQuestion)

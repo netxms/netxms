@@ -183,18 +183,21 @@ class ChatSession:
             # Keep tracking it but don't resend
             context_sent = self.context is not None
 
-            # Render response
-            if response.response:
-                self.renderer.render_response(response.response)
-
-            # Handle pending question if any
-            if response.pending_question:
+            # Handle pending questions in a loop (there may be multiple)
+            while response.pending_question:
                 handle_question(
                     self.client,
                     self.chat_id,
                     response.pending_question,
                     self.renderer,
                 )
+                # After answering, poll for continuation
+                with self.renderer.show_spinner("Thinking..."):
+                    response = self.client._poll_for_result(self.chat_id)
+
+            # Render final response
+            if response.response:
+                self.renderer.render_response(response.response)
 
         except KeyboardInterrupt:
             self.renderer.print()
