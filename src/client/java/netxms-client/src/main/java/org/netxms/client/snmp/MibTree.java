@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,13 +36,13 @@ import com.jcraft.jzlib.InflaterInputStream;
 public class MibTree
 {
 	private static final byte[] MIB_FILE_MAGIC_NUMBER = { 0x4E, 0x58, 0x4D, 0x49, 0x42, 0x20 };
-		
+
 	// MIB file flags
 	protected static final int SMT_COMPRESS_DATA     = 0x0001;
 	protected static final int SMT_SKIP_DESCRIPTIONS = 0x0002;
-	
+
 	private MibObject root;
-	
+
 	/**
 	 * Create empty MIB tree
 	 */
@@ -50,7 +50,7 @@ public class MibTree
 	{
 		root = new MibObject();
 	}
-	
+
 	/**
 	 * Create MIB tree from compiled MIB file.
 	 * 
@@ -61,7 +61,7 @@ public class MibTree
 	public MibTree(File file) throws IOException, NXCException
 	{
 		NXCPDataInputStream in = new NXCPDataInputStream(new BufferedInputStream(new FileInputStream(file)));
-		
+
 		try
 		{
 			// Read header
@@ -72,7 +72,7 @@ public class MibTree
 			int headerSize = in.readUnsignedByte();
 			in.skipBytes(1);	// Skip version field
 			int flags = in.readUnsignedShort();
-			
+
 			if ((flags & SMT_COMPRESS_DATA) != 0)
 			{
 				in.close();
@@ -95,7 +95,7 @@ public class MibTree
 			{
 				in.skipBytes(headerSize - 10);
 			}
-			
+
 			int tag = in.readUnsignedByte();
 			if (tag == MibObject.MIB_TAG_OBJECT)
 			{
@@ -122,7 +122,7 @@ public class MibTree
 	{
 		return root;
 	}
-	
+
 	/**
 	 * Find matching object in tree. If exactMatch set to true, method will search for object with
 	 * ID equal to given. If exactMatch set to false, and object with given id cannot be found, closest upper level

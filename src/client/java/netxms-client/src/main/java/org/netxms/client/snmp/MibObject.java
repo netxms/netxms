@@ -91,12 +91,14 @@ public class MibObject
 	protected static final int MIB_TAG_DWORD_OID          = 0x09;
 	protected static final int MIB_TAG_TEXTUAL_CONVENTION = 0x0A;
    protected static final int MIB_TAG_INDEX              = 0x0B;
+   protected static final int MIB_TAG_DISPLAY_HINT       = 0x0C;
 	protected static final int MIB_END_OF_TAG             = 0x80;
 
 	private long id;
 	private String name;
 	private String description;
 	private String textualConvention;
+   private String displayHint;
    private String index;
 	private int type;
 	private int status;
@@ -179,6 +181,9 @@ public class MibObject
 	         	MibObject object = new MibObject(in, this);
 	         	childObjects.put(object.getId(), object);
 	         	break;
+            case MIB_TAG_DISPLAY_HINT:
+               displayHint = readStringFromStream(in);
+               break;
 	         default:
 	         	throw new NXCException(RCC.BAD_MIB_FILE_DATA);
 			}
@@ -368,4 +373,12 @@ public class MibObject
 	{
 		return (textualConvention != null) ? textualConvention : "";
 	}
+
+   /**
+    * @return the displayHint
+    */
+   public String getDisplayHint()
+   {
+      return (displayHint != null) ? displayHint : "";
+   }
 }
