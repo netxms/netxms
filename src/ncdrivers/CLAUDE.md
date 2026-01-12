@@ -272,6 +272,35 @@ int DummyDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR 
 }
 ```
 
+## Built-in NXSL Driver
+
+The NXSL notification channel driver is built into the server core (not a loadable module) to provide access to the server scripting environment.
+
+### Configuration
+- Configuration is raw NXSL script text (not XML)
+- Script has access to `NXSL_ServerEnv` with all server functions
+
+### Script Variables
+| Variable | Availability |
+|----------|--------------|
+| `$RECIPIENT` | Always |
+| `$SUBJECT` | Always |
+| `$MESSAGE` | Always |
+| `$event` | When triggered from EPP action |
+| `$object` / `$node` | When triggered from EPP with source object |
+
+### Return Values
+| Return | Result |
+|--------|--------|
+| `null` (no return) | Success |
+| `true` | Success |
+| `false` | Failure |
+| integer > 0 | Retry in N seconds |
+
+### NXSL Value Checking
+- `NXSL_Value::isFalse()` returns `true` for both `false` AND `null`
+- To distinguish explicit `false` from no return, check `isNull()` first
+
 ## Related Components
 
 - [Server](../server/CLAUDE.md) - Server loads and uses notification drivers
