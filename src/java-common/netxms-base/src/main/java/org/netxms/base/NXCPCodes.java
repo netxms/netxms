@@ -521,6 +521,7 @@ public class NXCPCodes
    public static final int CMD_AI_MESSAGE_UPDATE = 0x01F7;
    public static final int CMD_SET_AI_MESSAGE_STATUS = 0x01F8;
    public static final int CMD_DELETE_AI_MESSAGE = 0x01F9;
+   public static final int CMD_GET_LOG_QUERY_SQL = 0x01FA;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1443,6 +1444,7 @@ public class NXCPCodes
    public static final long VID_AI_MESSAGE_SOURCE_TASK = 912;
    public static final long VID_PORT_STOP_COUNT = 913;
    public static final long VID_SNMP_CONTEXT = 914;
+   public static final long VID_QUERY_SQL = 915;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -206,6 +206,7 @@ public:
    void release() { m_mutex.unlock(); }
 
    bool query(LogFilter *filter, int64_t *rowCount, uint32_t userId);
+   StringBuffer buildQuerySql(LogFilter *filter, int64_t maxRecordId, uint32_t userId);
    Table *getData(int64_t startRow, int64_t numRows, bool refresh, uint32_t userId);
    void getRecordDetails(int64_t recordId, NXCPMessage *msg);
    void getColumnInfo(NXCPMessage *msg);

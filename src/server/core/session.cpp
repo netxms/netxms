@@ -1615,6 +1615,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_LOG_RECORD_DETAILS:
          getServerLogRecordDetails(*request);
          break;
+      case CMD_GET_LOG_QUERY_SQL:
+         getServerLogQuerySql(*request);
+         break;
       case CMD_FIND_NODE_CONNECTION:
          findNodeConnection(*request);
          break;
@@ -12729,6 +12732,31 @@ void ClientSession::getServerLogRecordDetails(const NXCPMessage& request)
    if (log != nullptr)
    {
       log->getRecordDetails(request.getFieldAsInt64(VID_RECORD_ID), &response);
+      log->release();
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_LOG_HANDLE);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Get SQL query for server log
+ */
+void ClientSession::getServerLogQuerySql(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   int32_t handle = request.getFieldAsInt32(VID_LOG_HANDLE);
+   shared_ptr<LogHandle> log = AcquireLogHandleObject(this, handle);
+   if (log != nullptr)
+   {
+      LogFilter filter(request, log.get());
+      StringBuffer sql = log->buildQuerySql(&filter, -1, 0);
+      response.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_QUERY_SQL, sql);
       log->release();
    }
    else

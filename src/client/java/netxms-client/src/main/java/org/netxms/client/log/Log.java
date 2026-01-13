@@ -264,6 +264,24 @@ public class Log
    }
 
    /**
+    * Get SQL query that would be executed for given filter. Returned query does not include access control constraints.
+    *
+    * @param filter log filter
+    * @return SQL query string
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public String getQuerySql(LogFilter filter) throws IOException, NXCException
+   {
+      NXCPMessage msg = session.newMessage(NXCPCodes.CMD_GET_LOG_QUERY_SQL);
+      msg.setFieldInt32(NXCPCodes.VID_LOG_HANDLE, handle);
+      filter.fillMessage(msg);
+      session.sendMessage(msg);
+      NXCPMessage response = session.waitForRCC(msg.getMessageId());
+      return response.getFieldAsString(NXCPCodes.VID_QUERY_SQL);
+   }
+
+   /**
     * Close log
     *
     * @throws IOException if socket I/O error occurs

@@ -834,6 +834,7 @@ private:
 	void queryServerLog(const NXCPMessage& request);
 	void getServerLogQueryData(const NXCPMessage& request);
    void getServerLogRecordDetails(const NXCPMessage& request);
+   void getServerLogQuerySql(const NXCPMessage& request);
 	void sendDCIThresholds(const NXCPMessage& request);
 	void addClusterNode(const NXCPMessage& request);
    void addWirelessDomainController(const NXCPMessage& request);
