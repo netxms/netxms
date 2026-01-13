@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <agent_tunnel.h>
+#include <nxcore_websvc.h>
 
 /**
  * Externals
@@ -621,15 +622,9 @@ uint32_t AgentConnectionEx::uninstallPolicy(uuid guid, const TCHAR *type, bool n
 /**
  * Make web service custom request
  */
-WebServiceCallResult *AgentConnectionEx::webServiceCustomRequest(HttpRequestMethod requestMethod, const TCHAR *url, uint32_t requestTimeout, const TCHAR *login, const TCHAR *password,
+WebServiceCallResult AgentConnectionEx::webServiceCustomRequest(HttpRequestMethod requestMethod, const TCHAR *url, uint32_t requestTimeout, const TCHAR *login, const TCHAR *password,
          const WebServiceAuthType authType, const StringMap& headers, bool verifyCert, bool verifyHost, bool followLocation, uint32_t cacheRetentionTime, const TCHAR *data)
 {
-   // Cache only requests using cacheable methods per 4.2.1 of RFC 7231.
-   // Of those, netxms knows only GET.
-   if (cacheRetentionTime > 0) {
-      assert(requestMethod == HttpRequestMethod::_GET);
-   }
-   WebServiceCallResult *result = new WebServiceCallResult();
    NXCPMessage msg(getProtocolVersion());
    uint32_t requestId = generateRequestId();
    msg.setCode(CMD_WEB_SERVICE_CUSTOM_REQUEST);
@@ -649,6 +644,7 @@ WebServiceCallResult *AgentConnectionEx::webServiceCustomRequest(HttpRequestMeth
    msg.setField(VID_REQUEST_DATA, data);
 
    uint32_t rcc;
+   WebServiceCallResult result;
    if (sendMessage(&msg))
    {
       NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, getCommandTimeout());
@@ -657,25 +653,28 @@ WebServiceCallResult *AgentConnectionEx::webServiceCustomRequest(HttpRequestMeth
          rcc = response->getFieldAsUInt32(VID_RCC);
          if (rcc == ERR_SUCCESS)
          {
-            result->httpResponseCode = response->getFieldAsUInt32(VID_WEBSVC_RESPONSE_CODE);
-            result->document = response->getFieldAsString(VID_WEBSVC_RESPONSE);
-            result->success = true;
+            result.httpResponseCode = response->getFieldAsUInt32(VID_WEBSVC_RESPONSE_CODE);
+            result.document = response->getFieldAsString(VID_WEBSVC_RESPONSE);
+            response->getFieldAsString(VID_WEBSVC_ERROR_TEXT, result.errorMessage, WEBSVC_ERROR_TEXT_MAX_SIZE);
+            result.success = true;
          }
-         response->getFieldAsString(VID_WEBSVC_ERROR_TEXT, result->errorMessage, WEBSVC_ERROR_TEXT_MAX_SIZE);
          delete response;
       }
       else
       {
          rcc = ERR_REQUEST_TIMEOUT;
-         _tcslcpy(result->errorMessage, _T("Agent request timeout"), WEBSVC_ERROR_TEXT_MAX_SIZE);
       }
    }
    else
    {
       rcc = ERR_CONNECTION_BROKEN;
-      _tcslcpy(result->errorMessage, _T("Agent connection broken"), WEBSVC_ERROR_TEXT_MAX_SIZE);
    }
-   result->agentErrorCode = rcc;
+
+   result.agentErrorCode = rcc;
+   if (rcc != ERR_SUCCESS)
+   {
+      wcslcpy(result.errorMessage, AgentErrorCodeToText(rcc), WEBSVC_ERROR_TEXT_MAX_SIZE);
+   }
    return result;
 }
 

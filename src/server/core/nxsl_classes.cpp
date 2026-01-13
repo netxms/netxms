@@ -1529,6 +1529,10 @@ static int BaseWebServiceRequestWithData(WebServiceHandle *websvc, int argc, NXS
    {
       data = MemCopyString(argv[0]->getValueAsCString());
    }
+   else if (argv[0]->isNull())
+   {
+      data = MemCopyStringW(websvc->first->getRequestData());
+   }
    else
    {
       return NXSL_ERR_NOT_STRING;
@@ -1574,8 +1578,8 @@ static int BaseWebServiceRequestWithData(WebServiceHandle *websvc, int argc, NXS
    {
       acceptCached = false;
    }
-   WebServiceCallResult *response = websvc->first->makeCustomRequest(websvc->second, requestMethod, parameters, data, contentType, acceptCached);
-   *result = vm->createValue(vm->createObject(&g_nxslWebServiceResponseClass, response));
+   WebServiceCallResult response = websvc->first->makeCustomRequest(websvc->second, requestMethod, parameters, data, contentType, acceptCached);
+   *result = vm->createValue(vm->createObject(&g_nxslWebServiceResponseClass, new WebServiceCallResult(std::move(response))));
    MemFree(data);
 
    return 0;
@@ -1606,10 +1610,40 @@ static int BaseWebServiceRequestWithoutData(WebServiceHandle *websvc, int argc, 
       acceptCached = false;
    }
 
-   WebServiceCallResult *response = websvc->first->makeCustomRequest(websvc->second, requestMethod, parameters, nullptr, nullptr, acceptCached);
-   *result = vm->createValue(vm->createObject(&g_nxslWebServiceResponseClass, response));
+   WebServiceCallResult response = websvc->first->makeCustomRequest(websvc->second, requestMethod, parameters, nullptr, nullptr, acceptCached);
+   *result = vm->createValue(vm->createObject(&g_nxslWebServiceResponseClass, new WebServiceCallResult(std::move(response))));
 
    return 0;
+}
+
+static inline bool HttpRequestMethodFromString(const wchar_t *s, HttpRequestMethod *value)
+{
+   if (!_tcsicmp(s, _T("GET")))
+   {
+      *value = HttpRequestMethod::_GET;
+      return true;
+   }
+   else if (!_tcsicmp(s, _T("POST")))
+   {
+      *value = HttpRequestMethod::_POST;
+      return true;
+   }
+   else if (!_tcsicmp(s, _T("PUT")))
+   {
+      *value = HttpRequestMethod::_PUT;
+      return true;
+   }
+   else if (!_tcsicmp(s, _T("DELETE")))
+   {
+      *value = HttpRequestMethod::_DELETE;
+      return true;
+   }
+   else if (!_tcsicmp(s, _T("PATCH")))
+   {
+      *value = HttpRequestMethod::_PATCH;
+      return true;
+   }
+   return false;
 }
 
 /**
@@ -1617,13 +1651,13 @@ static int BaseWebServiceRequestWithoutData(WebServiceHandle *websvc, int argc, 
  */
 NXSL_METHOD_DEFINITION(Node, callWebService)
 {
-   if (argc < 2)
+   if (argc < 1)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   if ((argc > 0) && !argv[0]->isString())
+   if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   if ((argc > 1) && !argv[1]->isString())
+   if ((argc > 1) && !argv[1]->isString() && !argv[1]->isNull())
       return NXSL_ERR_NOT_STRING;
 
    shared_ptr<WebServiceDefinition> d = FindWebServiceDefinition(argv[0]->getValueAsCString());
@@ -1632,38 +1666,31 @@ NXSL_METHOD_DEFINITION(Node, callWebService)
    if (d == nullptr)
    {
       WebServiceCallResult *webSwcResult = new WebServiceCallResult();
-      _tcsncpy(webSwcResult->errorMessage, _T("Web service definition not found"), WEBSVC_ERROR_TEXT_MAX_SIZE);
+      wcslcpy(webSwcResult->errorMessage, L"Web service definition not found", WEBSVC_ERROR_TEXT_MAX_SIZE);
       *result = vm->createValue(vm->createObject(&g_nxslWebServiceResponseClass, webSwcResult));
       return 0;
    }
 
    WebServiceHandle websvc = WebServiceHandle(d, *node);
-   const TCHAR *requestMethod = argv[1]->getValueAsCString();
-   if (!_tcsicmp(_T("GET"), requestMethod))
+   HttpRequestMethod method = d->getHttpRequestMethod();
+   int argOffset = 1;
+   if (argc > 1)
    {
-      return BaseWebServiceRequestWithoutData(&websvc, argc - 2, argv  + 2, result, vm, HttpRequestMethod::_GET);
-   }
-   else if (!_tcsicmp(_T("DELETE"), requestMethod))
-   {
-      return BaseWebServiceRequestWithoutData(&websvc, argc - 2, argv  + 2, result, vm, HttpRequestMethod::_DELETE);
-   }
-   else if (!_tcsicmp(_T("POST"), requestMethod))
-   {
-      return BaseWebServiceRequestWithData(&websvc, argc - 2, argv  + 2, result, vm, HttpRequestMethod::_POST);
-   }
-   else if (!_tcsicmp(_T("PUT"), requestMethod))
-   {
-      return BaseWebServiceRequestWithData(&websvc, argc - 2, argv  + 2, result, vm, HttpRequestMethod::_PUT);
-   }
-   else if (!_tcsicmp(_T("PATCH"), requestMethod))
-   {
-      return BaseWebServiceRequestWithData(&websvc, argc - 2, argv  + 2, result, vm, HttpRequestMethod::_PATCH);
+      if (argv[1]->isString() && !HttpRequestMethodFromString(argv[1]->getValueAsCString(), &method))
+      {
+         WebServiceCallResult *webSwcResult = new WebServiceCallResult();
+         wcslcpy(webSwcResult->errorMessage, L"Invalid web service request method", WEBSVC_ERROR_TEXT_MAX_SIZE);
+         *result = vm->createValue(vm->createObject(&g_nxslWebServiceResponseClass, webSwcResult));
+         return 0;
+      }
+      argOffset = 2;
    }
 
-   WebServiceCallResult *webSwcResult = new WebServiceCallResult();
-   _tcslcpy(webSwcResult->errorMessage, _T("Invalid web service request method"), WEBSVC_ERROR_TEXT_MAX_SIZE);
-   *result = vm->createValue(vm->createObject(&g_nxslWebServiceResponseClass, webSwcResult));
-   return 0;
+   if (method == HttpRequestMethod::_GET || method == HttpRequestMethod::_DELETE)
+   {
+      return BaseWebServiceRequestWithoutData(&websvc, argc - argOffset, &argv[argOffset], result, vm, method);
+   }
+   return BaseWebServiceRequestWithData(&websvc, argc - argOffset, &argv[argOffset], result, vm, method);
 }
 
 /**
@@ -7022,6 +7049,10 @@ NXSL_Value *NXSL_WebServiceResponseClass::getAttr(NXSL_Object *object, const NXS
    {
       value = vm->createValue(result->agentErrorCode);
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("body"))
+   {
+      value = vm->createValue(result->document);
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("document"))
    {
       value = vm->createValue(result->document);
@@ -7031,6 +7062,10 @@ NXSL_Value *NXSL_WebServiceResponseClass::getAttr(NXSL_Object *object, const NXS
       value = vm->createValue(result->errorMessage);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("httpResponseCode"))
+   {
+      value = vm->createValue(result->httpResponseCode);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("statusCode"))
    {
       value = vm->createValue(result->httpResponseCode);
    }

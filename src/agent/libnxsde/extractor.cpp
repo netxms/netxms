@@ -627,3 +627,36 @@ uint32_t StructuredDataExtractor::updateContent(const char *text, size_t size, b
    }
    return rcc;
 }
+
+/**
+ * Update cached content after error (for example, HTTP 400). Resets document type to NONE but stores raw response data.
+ */
+void StructuredDataExtractor::updateContentOnError(const char *text, size_t size, const TCHAR *id)
+{
+   deleteContent();
+
+   // Check for UTF-8 BOM
+   if (size >= 3 && (static_cast<unsigned char>(text[0]) == 0xEF) && (static_cast<unsigned char>(text[1]) == 0xBB) && (static_cast<unsigned char>(text[2]) == 0xBF))
+   {
+      text += 3;
+      size -= 3;
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("StructuredDataExtractor::updateContentOnError(%s, %s): skipped BOM sequence"), m_source, id);
+   }
+   m_responseData = MemCopyBlock(text, size + 1); // +1 for null terminator
+   m_lastRequestTime = time(nullptr);
+
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("StructuredDataExtractor::updateContentOnError(%s, %s): response length=%u"), m_source, id, static_cast<unsigned int>(size));
+   if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 8)
+   {
+#ifdef UNICODE
+      WCHAR *responseText = WideStringFromUTF8String(text);
+#else
+      char *responseText = MBStringFromUTF8String(text);
+#endif
+      for(TCHAR *s = responseText; *s != 0; s++)
+         if (*s < ' ')
+            *s = ' ';
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("StructuredDataExtractor::updateContentOnError(%s, %s): response data: %s"), m_source, id, responseText);
+      MemFree(responseText);
+   }
+}

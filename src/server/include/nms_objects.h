@@ -117,28 +117,6 @@ template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<GeoLocation>;
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<AgentTunnel>;
 #endif
 
-
-/**
- * Error message max field lenght
- */
-#define WEBSVC_ERROR_TEXT_MAX_SIZE 256
-
-/**
- * Web service custom request result data
- */
-struct WebServiceCallResult
-{
-   bool success;
-   uint32_t agentErrorCode;
-   uint32_t httpResponseCode;
-   wchar_t errorMessage[WEBSVC_ERROR_TEXT_MAX_SIZE];
-   wchar_t *document;
-
-public:
-   WebServiceCallResult();
-   ~WebServiceCallResult();
-};
-
 /**
  * Geo area
  */
@@ -163,6 +141,79 @@ public:
    const wchar_t *getName() const { return m_name; }
    const wchar_t *getComments() const { return m_comments; }
    StringBuffer getBorderAsString() const;
+};
+
+/**
+ * Web service call rrror message max field lenght
+ */
+#define WEBSVC_ERROR_TEXT_MAX_SIZE 256
+
+/**
+ * Web service custom request result data
+ */
+struct WebServiceCallResult
+{
+   bool success;
+   uint32_t agentErrorCode;
+   uint32_t httpResponseCode;
+   wchar_t errorMessage[WEBSVC_ERROR_TEXT_MAX_SIZE];
+   wchar_t *document;
+
+   WebServiceCallResult()
+   {
+      success = false;
+      agentErrorCode = ERR_SUCCESS;
+      httpResponseCode = 0;
+      errorMessage[0] = 0;
+      document = nullptr;
+   }
+
+   WebServiceCallResult(const WebServiceCallResult& src)
+   {
+      success = src.success;
+      agentErrorCode = src.agentErrorCode;
+      httpResponseCode = src.httpResponseCode;
+      memcpy(errorMessage, src.errorMessage, sizeof(errorMessage));
+      document = MemCopyStringW(src.document);
+   }
+
+   WebServiceCallResult(WebServiceCallResult&& src)
+   {
+      success = src.success;
+      agentErrorCode = src.agentErrorCode;
+      httpResponseCode = src.httpResponseCode;
+      memcpy(errorMessage, src.errorMessage, sizeof(errorMessage));
+      document = src.document;
+      src.document = nullptr;
+   }
+
+   ~WebServiceCallResult()
+   {
+      MemFree(document);
+   }
+
+   WebServiceCallResult& operator=(const WebServiceCallResult& src)
+   {
+      success = src.success;
+      agentErrorCode = src.agentErrorCode;
+      httpResponseCode = src.httpResponseCode;
+      memcpy(errorMessage, src.errorMessage, sizeof(errorMessage));
+      MemFree(document);
+      document = MemCopyStringW(src.document);
+      return *this;
+   }
+
+   WebServiceCallResult& operator=(WebServiceCallResult&& src)
+   {
+      success = src.success;
+      agentErrorCode = src.agentErrorCode;
+      httpResponseCode = src.httpResponseCode;
+      memcpy(errorMessage, src.errorMessage, sizeof(errorMessage));
+      MemFree(document);
+      document = src.document;
+      src.document = nullptr;
+      return *this;
+   }
 };
 
 /**
@@ -203,7 +254,7 @@ public:
    uint32_t deployPolicy(NXCPMessage *msg);
    uint32_t uninstallPolicy(uuid guid, const TCHAR *type, bool newTypeFormatSupported);
 
-   WebServiceCallResult *webServiceCustomRequest(HttpRequestMethod requestMEthod, const TCHAR *url, uint32_t requestTimeout, const TCHAR *login, const TCHAR *password,
+   WebServiceCallResult webServiceCustomRequest(HttpRequestMethod requestMethod, const TCHAR *url, uint32_t requestTimeout, const TCHAR *login, const TCHAR *password,
          const WebServiceAuthType authType, const StringMap& headers, bool verifyCert, bool verifyHost, bool followLocation, uint32_t cacheRetentionTime, const TCHAR *data);
 
    void setTunnel(const shared_ptr<AgentTunnel>& tunnel) { m_tunnel = tunnel; }

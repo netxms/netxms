@@ -63,7 +63,7 @@ public:
 
    uint32_t query(DataCollectionTarget *object, WebServiceRequestType requestType, const TCHAR *path,
             const StringList& args, AgentConnection *conn, void *result) const;
-   WebServiceCallResult *makeCustomRequest(shared_ptr<Node> node, const HttpRequestMethod requestMethod,
+   WebServiceCallResult makeCustomRequest(shared_ptr<Node> node, const HttpRequestMethod requestMethod,
          const StringList& args, const TCHAR *data, const TCHAR *contentType, bool acceptCached) const;
    void fillMessage(NXCPMessage *msg) const;
    void createExportRecord(json_t *array) const;

@@ -260,15 +260,15 @@ uint32_t WebServiceDefinition::query(DataCollectionTarget *object, WebServiceReq
 /**
  * Make custom web service request using this definition. Returns agent WebServiceCallResult object.
  */
-WebServiceCallResult *WebServiceDefinition::makeCustomRequest(shared_ptr<Node> node, const HttpRequestMethod requestType,
+WebServiceCallResult WebServiceDefinition::makeCustomRequest(shared_ptr<Node> node, const HttpRequestMethod requestType,
       const StringList& args, const TCHAR *data, const TCHAR *contentType, bool acceptCached) const
 {
    shared_ptr<AgentConnectionEx> conn = node->getAgentConnection();
    if (conn == nullptr)
    {
-      WebServiceCallResult *result = new WebServiceCallResult();
-      result->success = false;
-      _tcsncpy(result->errorMessage, _T("No connection with agent"), WEBSVC_ERROR_TEXT_MAX_SIZE);
+      WebServiceCallResult result;
+      result.agentErrorCode = ERR_CONNECTION_BROKEN;
+      wcslcpy(result.errorMessage, L"No connection with agent", WEBSVC_ERROR_TEXT_MAX_SIZE);
       return result;
    }
    StringBuffer url = node->expandText(m_url, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, &args);
@@ -304,21 +304,6 @@ void WebServiceDefinition::fillMessage(NXCPMessage *msg) const
    m_headers.fillMessage(msg, VID_HEADERS_BASE, VID_NUM_HEADERS);
    msg->setField(VID_FLAGS, m_flags);
 }
-
-/**
- * Create export record for single header
- */
-static EnumerationCallbackResult CreateHeaderExportRecord(const TCHAR *key, const TCHAR *value, TextFileWriter *xml)
-{
-   xml->appendUtf8String("\t\t\t\t<header>\n\t\t\t\t\t<name>");
-   xml->append(EscapeStringForXML2(key));
-   xml->appendUtf8String("</name>\n\t\t\t\t\t<value>");
-   xml->append(EscapeStringForXML2(value));
-   xml->appendUtf8String("</value>\n\t\t\t\t</header>\n");
-   return _CONTINUE;
-}
-
-
 
 /**
  * Create JSON export record
@@ -759,24 +744,4 @@ bool ImportWebServiceDefinition(json_t *config, bool overwrite, ImportContext *c
    }
 
    return success;
-}
-
-/**
- * Web service custom request result constructor
- */
-WebServiceCallResult::WebServiceCallResult()
-{
-   success = false;
-   agentErrorCode = ERR_SUCCESS;
-   httpResponseCode = 0;
-   errorMessage[0] = 0;
-   document = nullptr;
-}
-
-/**
- * Web service custom request result destructor
- */
-WebServiceCallResult::~WebServiceCallResult()
-{
-   MemFree(document);
 }

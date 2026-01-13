@@ -112,6 +112,7 @@ public:
    const char *getResponseData() const { return m_responseData; }
    bool isDataExpired(uint32_t retentionTime) { return (time(nullptr) - m_lastRequestTime) >= retentionTime; }
    uint32_t updateContent(const char *text, size_t size, bool forcePlainTextParser, const TCHAR *id);
+   void updateContentOnError(const char *text, size_t size, const TCHAR *id);
 };
 
 #endif
