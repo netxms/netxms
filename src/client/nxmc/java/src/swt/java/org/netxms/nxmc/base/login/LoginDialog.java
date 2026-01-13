@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Radern Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.base.login;
 
+import java.security.Signature;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
@@ -69,7 +70,8 @@ public class LoginDialog extends Dialog
    private String password;
    private Certificate certificate;
    private final CertificateManager certMgr;
-   private AuthenticationType authMethod = AuthenticationType.PASSWORD; 
+   private AuthenticationType authMethod = AuthenticationType.PASSWORD;
+   private LoginCredentials credentials; 
 
    /**
     * @param parentShell
@@ -300,6 +302,33 @@ public class LoginDialog extends Dialog
       saveServerCredentials(currentServer);
 
       password = textPassword.getText();
+
+      // Create credentials object while widgets are still available
+      switch(authMethod)
+      {
+         case CERTIFICATE:
+            Signature signature = null;
+            if (certificate != null)
+            {
+               try
+               {
+                  signature = certMgr.extractSignature(certificate);
+               }
+               catch(Exception e)
+               {
+                  // Signature extraction failed, will be handled during login
+               }
+            }
+            credentials = new LoginCredentials(currentServer, textLogin.getText(), certificate, signature);
+            break;
+         case TOKEN:
+            credentials = LoginCredentials.forToken(currentServer, textLogin.getText());
+            break;
+         default:
+            credentials = new LoginCredentials(currentServer, textLogin.getText(), password);
+            break;
+      }
+
       super.okPressed();
    }
 
@@ -546,5 +575,15 @@ public class LoginDialog extends Dialog
 
       // Mark migration as complete
       settings.set("Connect.PerServerCredentialsMigrated", true);
+   }
+
+   /**
+    * Get login credentials from dialog. Must be called after dialog is closed with OK.
+    *
+    * @return login credentials
+    */
+   public LoginCredentials getCredentials()
+   {
+      return credentials;
    }
 }

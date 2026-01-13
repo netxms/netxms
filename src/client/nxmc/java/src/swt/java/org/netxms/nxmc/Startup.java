@@ -21,8 +21,6 @@ package org.netxms.nxmc;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.security.Signature;
-import java.security.cert.Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -61,6 +59,7 @@ import org.netxms.nxmc.base.dialogs.PasswordExpiredDialog;
 import org.netxms.nxmc.base.dialogs.PasswordRequestDialog;
 import org.netxms.nxmc.base.dialogs.ReconnectDialog;
 import org.netxms.nxmc.base.dialogs.SecurityWarningDialog;
+import org.netxms.nxmc.base.login.LoginCredentials;
 import org.netxms.nxmc.base.login.LoginDialog;
 import org.netxms.nxmc.base.login.LoginJob;
 import org.netxms.nxmc.base.views.NonRestorableView;
@@ -417,10 +416,15 @@ public class Startup
       I18n i18n = LocalizationHelper.getI18n(Startup.class);
       PreferenceStore settings = PreferenceStore.getInstance();
       boolean success = false;
-      boolean autoConnect = false;
       boolean enableCompression = true;
       boolean ignoreProtocolVersion = false;
-      String password = "";
+
+      // Local variables to hold parsed credentials (not in PreferenceStore)
+      String server = null;
+      String loginName = null;
+      String password = null;
+      String token = null;
+      boolean autoConnect = false;
 
       CertificateManager certMgr = CertificateManagerProvider.provideCertificateManager();
       certMgr.setKeyStoreRequestListener(new KeyStoreRequestListener() {
@@ -454,47 +458,35 @@ public class Startup
          }
       });
 
-      // Update settings from JVM properties
-      updateSettingsFromProperty(settings, "netxms.server", "Connect.Server");
-      updateSettingsFromProperty(settings, "netxms.login", "Connect.Login");
-      String v = System.getProperty("netxms.password");
+      // Parse JVM properties
+      server = System.getProperty("netxms.server");
+      loginName = System.getProperty("netxms.login");
+      password = System.getProperty("netxms.password");
+      token = System.getProperty("netxms.token");
+      String v = System.getProperty("netxms.autologin");
       if (v != null)
-      {
-         password = v;
-         settings.set("Connect.AuthMethod", AuthenticationType.PASSWORD.getValue());
-      }
-      v = System.getProperty("netxms.token");
-      if (v != null)
-      {
-         settings.set("Connect.Login", v);
-         settings.set("Connect.AuthMethod", AuthenticationType.TOKEN.getValue());
-      }
-      v = System.getProperty("netxms.autologin");
-      if (v != null)
-      {
          autoConnect = Boolean.parseBoolean(v);
-      }
 
-      // Parse command line arguments relevant for login
+      // Parse command line arguments (override JVM properties)
       for(String s : args)
       {
          if (s.startsWith("-server="))
          {
-            settings.set("Connect.Server", s.substring(8));
+            server = s.substring(8);
          }
          else if (s.startsWith("-login="))
          {
-            settings.set("Connect.Login", s.substring(7));
+            loginName = s.substring(7);
          }
          else if (s.startsWith("-password="))
          {
             password = s.substring(10);
-            settings.set("Connect.AuthMethod", AuthenticationType.PASSWORD.getValue());
+            token = null; // password overrides token
          }
          else if (s.startsWith("-token="))
          {
-            settings.set("Connect.Login", s.substring(7));
-            settings.set("Connect.AuthMethod", AuthenticationType.TOKEN.getValue());
+            token = s.substring(7);
+            password = null; // token overrides password
          }
          else if (s.equals("-auto"))
          {
@@ -512,40 +504,33 @@ public class Startup
 
       boolean encrypt = true;
       LoginDialog loginDialog = new LoginDialog(null, certMgr);
+      LoginCredentials credentials = null;
 
       while(!success)
       {
-         if (!autoConnect)
+         if (autoConnect)
+         {
+            if (server == null)
+               server = "127.0.0.1";
+
+            // Build credentials directly from parsed args
+            if (token != null)
+               credentials = LoginCredentials.forToken(server, token);
+            else
+               credentials = new LoginCredentials(server, loginName, password);
+            autoConnect = false; // only auto-connect once
+         }
+         else
          {
             if (loginDialog.open() != Window.OK)
             {
                logger.info("Login cancelled by user - exiting");
                return false;
             }
-            password = loginDialog.getPassword();
-         }
-         else
-         {
-            autoConnect = false; // only do auto connect first time
+            credentials = loginDialog.getCredentials();
          }
 
-         LoginJob job = new LoginJob(display, ignoreProtocolVersion, enableCompression);
-
-         AuthenticationType authMethod = AuthenticationType.getByValue(settings.getAsInteger("Connect.AuthMethod", AuthenticationType.PASSWORD.getValue()));
-         switch(authMethod)
-         {
-            case CERTIFICATE:
-               job.setCertificate(loginDialog.getCertificate(), getSignature(certMgr, loginDialog.getCertificate()));
-               break;
-            case PASSWORD:
-               job.setPassword(password);
-               break;
-            case TOKEN:
-               job.setAuthByToken();
-               break;
-            default:
-               break;
-         }
+         LoginJob job = new LoginJob(display, credentials, ignoreProtocolVersion, enableCompression);
 
          ProgressMonitorDialog monitorDialog = new ProgressMonitorDialog(null) {
             @Override
@@ -567,15 +552,20 @@ public class Startup
                         || (((NXCException)e.getCause()).getErrorCode() == RCC.NO_CIPHERS))
                   && encrypt)
             {
-               boolean alwaysAllow = settings.getAsBoolean("Connect.AllowUnencrypted." + settings.getAsString("Connect.Server"), false);
-               int action = getAction(settings, alwaysAllow);
+               boolean alwaysAllow = settings.getAsBoolean("Connect.AllowUnencrypted." + credentials.getServer(), false);
+               int action = getAction(credentials.getServer(), alwaysAllow);
                if (action != SecurityWarningDialog.NO)
                {
                   autoConnect = true;
                   encrypt = false;
+                  // Re-use current credentials for retry
+                  server = credentials.getServer();
+                  loginName = credentials.getLoginName();
+                  password = credentials.getPassword();
+                  token = (credentials.getAuthMethod() == AuthenticationType.TOKEN) ? credentials.getLoginName() : null;
                   if (action == SecurityWarningDialog.ALWAYS)
                   {
-                     settings.set("Connect.AllowUnencrypted." + settings.getAsString("Connect.Server"), true);
+                     settings.set("Connect.AllowUnencrypted." + credentials.getServer(), true);
                   }
                }
             }
@@ -602,61 +592,27 @@ public class Startup
       final NXCSession session = Registry.getSession();
       if ((session.getAuthenticationMethod() == AuthenticationType.PASSWORD) && session.isPasswordExpired())
       {
-         requestPasswordChange(loginDialog.getPassword(), session);
+         requestPasswordChange(credentials.getPassword(), session);
       }
 
       return true;
    }
 
    /**
-    * Update settings from JVM property
+    * Get user action on encryption failure.
     *
-    * @param settings settings
-    * @param pname property name
-    * @param key configuration key name
+    * @param server server address
+    * @param alwaysAllow true if user previously allowed unencrypted connections to this server
+    * @return user action (SecurityWarningDialog.YES, NO, or ALWAYS)
     */
-   private static void updateSettingsFromProperty(PreferenceStore settings, String pname, String key)
-   {
-      String v = System.getProperty(pname);
-      if (v != null)
-         settings.putValue(key, v);
-   }
-
-   /**
-    * @param certMgr
-    * @param cert
-    * @return
-    */
-   private static Signature getSignature(CertificateManager certMgr, Certificate cert)
-   {
-      Signature sign;
-
-      try
-      {
-         sign = certMgr.extractSignature(cert);
-      }
-      catch(Exception e)
-      {
-         logger.error("Exception in getSignature", e);
-         return null;
-      }
-
-      return sign;
-   }
-
-   /**
-    * @param settings
-    * @param alwaysAllow
-    * @return
-    */
-   private static int getAction(PreferenceStore settings, boolean alwaysAllow)
+   private static int getAction(String server, boolean alwaysAllow)
    {
       I18n i18n = LocalizationHelper.getI18n(Startup.class);
       if (alwaysAllow)
          return SecurityWarningDialog.YES;
 
       return SecurityWarningDialog.showSecurityWarning(null,
-            String.format(i18n.tr("NetXMS server %s does not support encryption. Do you want to connect anyway?"), settings.getAsString("Connect.Server")), //$NON-NLS-1$
+            String.format(i18n.tr("NetXMS server %s does not support encryption. Do you want to connect anyway?"), server),
             i18n.tr("NetXMS server you are connecting to does not support encryption. If you countinue, information containing your credentials will be sent in clear text and could easily be read by a third party.\n\nFor assistance, contact your network administrator or the owner of the NetXMS server.\n\n"));
    }
 

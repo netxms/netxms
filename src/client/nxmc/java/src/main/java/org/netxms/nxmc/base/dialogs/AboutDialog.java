@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -119,7 +119,7 @@ public class AboutDialog extends Dialog
       StringBuilder sb = new StringBuilder();
       sb.append("NetXMS Management Client Version ");
       sb.append(VersionInfo.version());
-      sb.append("\nCopyright \u00a9 2003-2025 Raden Solutions");
+      sb.append("\nCopyright \u00a9 2003-2026 Raden Solutions");
       versionText.setText(sb.toString());
 
       Text detailsText = new Text(textArea, SWT.MULTI | SWT.READ_ONLY);
