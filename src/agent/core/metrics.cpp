@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1485,10 +1485,12 @@ void GetParameterList(NXCPMessage *msg)
    count = static_cast<uint32_t>(s_lists.size());
    for(i = 0, fieldId = VID_ENUM_LIST_BASE; i < s_lists.size(); i++)
    {
-      msg->setField(fieldId++, s_lists.get(i)->name);
+      NETXMS_SUBAGENT_LIST *l = s_lists.get(i);
+      msg->setField(fieldId++, l->name);
+      msg->setField(fieldId++, l->description);
    }
    ListListsFromExtProviders(msg, &fieldId, &count);
-	ListListsFromExtSubagents(msg, &fieldId, &count);
+   ListListsFromExtSubagents(msg, &fieldId, &count);
    msg->setField(VID_NUM_ENUMS, count);
 
 	// Tables
@@ -1533,10 +1535,12 @@ void GetEnumList(NXCPMessage *msg)
    uint32_t fieldId = VID_ENUM_LIST_BASE;
    for(int i = 0; i < s_lists.size(); i++)
    {
-      msg->setField(fieldId++, s_lists.get(i)->name);
+      NETXMS_SUBAGENT_LIST *l = s_lists.get(i);
+      msg->setField(fieldId++, l->name);
+      msg->setField(fieldId++, l->description);
    }
 
    uint32_t count = static_cast<uint32_t>(s_lists.size());
-	ListListsFromExtSubagents(msg, &fieldId, &count);
+   ListListsFromExtSubagents(msg, &fieldId, &count);
    msg->setField(VID_NUM_ENUMS, count);
 }

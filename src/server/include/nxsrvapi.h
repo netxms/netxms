@@ -909,6 +909,27 @@ public:
 };
 
 /**
+ * Agent list definition
+ */
+class LIBNXSRV_EXPORTABLE AgentListDefinition
+{
+private:
+   TCHAR *m_name;
+   TCHAR *m_description;
+
+public:
+   AgentListDefinition(const NXCPMessage *msg, uint32_t baseId);
+   AgentListDefinition(const AgentListDefinition *src);
+   AgentListDefinition(const TCHAR *name, const TCHAR *description);
+   ~AgentListDefinition();
+
+   uint32_t fillMessage(NXCPMessage *msg, uint32_t baseId) const;
+
+   const TCHAR *getName() const { return m_name; }
+   const TCHAR *getDescription() const { return m_description; }
+};
+
+/**
  * Remote file information
  */
 class LIBNXSRV_EXPORTABLE RemoteFileInfo
@@ -1248,6 +1269,7 @@ public:
    uint32_t checkNetworkService(uint32_t *status, const InetAddress& addr, int serviceType, uint16_t port = 0, uint16_t proto = 0,
          const TCHAR *serviceRequest = nullptr, const TCHAR *serviceResponse = nullptr, uint32_t *responseTime = nullptr);
    uint32_t getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentTableDefinition> **tableList);
+   uint32_t getSupportedLists(ObjectArray<AgentListDefinition> **listList);
    uint32_t readConfigFile(TCHAR **content, size_t *size);
    uint32_t writeConfigFile(const TCHAR *content);
    uint32_t getPolicyInventory(AgentPolicyInfo **info);

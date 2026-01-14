@@ -2352,6 +2352,54 @@ uint32_t AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefin
 }
 
 /**
+ * Get list of supported lists from agent
+ */
+uint32_t AgentConnection::getSupportedLists(ObjectArray<AgentListDefinition> **listList)
+{
+   *listList = nullptr;
+
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
+
+   uint32_t requestId = generateRequestId();
+   NXCPMessage msg(CMD_GET_ENUM_LIST, requestId, m_nProtocolVersion);
+
+   uint32_t rcc;
+   if (sendMessage(&msg))
+   {
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+      if (response != nullptr)
+      {
+         rcc = response->getFieldAsUInt32(VID_RCC);
+         debugPrintf(6, _T("AgentConnection::getSupportedLists(): RCC=%d"), rcc);
+         if (rcc == ERR_SUCCESS)
+         {
+            uint32_t count = response->getFieldAsUInt32(VID_NUM_ENUMS);
+            ObjectArray<AgentListDefinition> *llist = new ObjectArray<AgentListDefinition>(count, 16, Ownership::True);
+            for(uint32_t i = 0, id = VID_ENUM_LIST_BASE; i < count; i++)
+            {
+               llist->add(new AgentListDefinition(response, id));
+               id += 2;
+            }
+            *listList = llist;
+            debugPrintf(6, _T("AgentConnection::getSupportedLists(): %d lists received from agent"), count);
+         }
+         delete response;
+      }
+      else
+      {
+         rcc = ERR_REQUEST_TIMEOUT;
+      }
+   }
+   else
+   {
+      rcc = ERR_CONNECTION_BROKEN;
+   }
+
+   return rcc;
+}
+
+/**
  * Setup encryption
  */
 uint32_t AgentConnection::setupEncryption(RSA_KEY serverKey)
@@ -3686,6 +3734,57 @@ uint32_t AgentTableDefinition::fillMessage(NXCPMessage *msg, uint32_t baseId) co
 
    msg->setField(baseId, fieldId - baseId);
    return fieldId - baseId;
+}
+
+/**
+ * Create new agent list definition from NXCP message
+ */
+AgentListDefinition::AgentListDefinition(const NXCPMessage *msg, uint32_t baseId)
+{
+   m_name = msg->getFieldAsString(baseId);
+   m_description = msg->getFieldAsString(baseId + 1);
+   if ((m_description == nullptr) || (*m_description == 0))
+   {
+      MemFree(m_description);
+      m_description = MemCopyString(m_name);
+   }
+}
+
+/**
+ * Create new agent list definition from another definition object
+ */
+AgentListDefinition::AgentListDefinition(const AgentListDefinition *src)
+{
+   m_name = MemCopyString(src->m_name);
+   m_description = MemCopyString(src->m_description);
+}
+
+/**
+ * Create new agent list definition from scratch
+ */
+AgentListDefinition::AgentListDefinition(const TCHAR *name, const TCHAR *description)
+{
+   m_name = MemCopyString(name);
+   m_description = ((description != nullptr) && (*description != 0)) ? MemCopyString(description) : MemCopyString(name);
+}
+
+/**
+ * Destructor for agent list definition
+ */
+AgentListDefinition::~AgentListDefinition()
+{
+   MemFree(m_name);
+   MemFree(m_description);
+}
+
+/**
+ * Fill NXCP message
+ */
+uint32_t AgentListDefinition::fillMessage(NXCPMessage *msg, uint32_t baseId) const
+{
+   msg->setField(baseId, m_name);
+   msg->setField(baseId + 1, m_description);
+   return 2;
 }
 
 /**

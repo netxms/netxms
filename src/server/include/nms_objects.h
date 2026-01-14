@@ -2881,8 +2881,9 @@ public:
    virtual uint16_t getModbusTcpPort() const { return 0; }
    virtual uint16_t getModbusUnitId() const { return 0; }
 
-   virtual uint32_t getMetricForClient(int origin, uint32_t userId, const TCHAR *name, TCHAR *buffer, size_t size);
-   virtual uint32_t getTableForClient(int origin, uint32_t userId, const TCHAR *name, shared_ptr<Table> *table);
+   virtual uint32_t getMetricForClient(int origin, uint32_t userId, const wchar_t *name, wchar_t *buffer, size_t size);
+   virtual uint32_t getListForClient(int origin, uint32_t userId, const wchar_t *name, StringList **list);
+   virtual uint32_t getTableForClient(int origin, uint32_t userId, const wchar_t *name, shared_ptr<Table> *table);
 
    DataCollectionError getMetricFromScript(const TCHAR *param, TCHAR *buffer, size_t bufSize, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo);
    DataCollectionError getTableFromScript(const TCHAR *param, shared_ptr<Table> *table, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo);
@@ -3713,6 +3714,7 @@ protected:
    DriverData *m_driverData;
    ObjectArray<AgentParameterDefinition> *m_agentParameters; // List of metrics supported by agent
    ObjectArray<AgentTableDefinition> *m_agentTables; // List of supported tables
+   ObjectArray<AgentListDefinition> *m_agentLists; // List of supported lists
    ObjectArray<AgentParameterDefinition> *m_driverParameters; // List of metrics supported by driver
    StringList *m_smclpMetrics;  // List of metrics supported by SM-CLP
    time_t m_failTimeAgent;
@@ -4174,8 +4176,9 @@ public:
    bool checkWindowsEventId(uint64_t id);
    bool checkAgentPushRequestId(uint64_t id);
 
-   virtual uint32_t getMetricForClient(int origin, uint32_t userId, const TCHAR *name, TCHAR *buffer, size_t size) override;
-   virtual uint32_t getTableForClient(int origin, uint32_t userId, const TCHAR *name, shared_ptr<Table> *table) override;
+   virtual uint32_t getMetricForClient(int origin, uint32_t userId, const wchar_t *name, wchar_t *buffer, size_t size) override;
+   virtual uint32_t getListForClient(int origin, uint32_t userId, const wchar_t *name, StringList **list) override;
+   virtual uint32_t getTableForClient(int origin, uint32_t userId, const wchar_t *name, shared_ptr<Table> *table) override;
 
    virtual DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size) override;
    virtual DataCollectionError getInternalTable(const TCHAR *name, shared_ptr<Table> *result) override;
@@ -4217,6 +4220,9 @@ public:
    ObjectArray<AgentTableDefinition> *openTableList();
    void closeTableList() { unlockProperties(); }
 
+   ObjectArray<AgentListDefinition> *openListList();
+   void closeListList() { unlockProperties(); }
+
    void getSmclpMetrics(StringSet *metrics) const;
 
    shared_ptr<AgentConnectionEx> createAgentConnection(bool sendServerId = false);
@@ -4240,6 +4246,7 @@ public:
    uint32_t getEffectiveTcpProxy();
 
    void writeParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags);
+   void writeListListToMessage(NXCPMessage *msg);
    void writeWinPerfObjectsToMessage(NXCPMessage *msg);
    void writePackageListToMessage(NXCPMessage *msg);
    void writeWsListToMessage(NXCPMessage *msg, uint32_t apId = 0);

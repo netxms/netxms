@@ -175,6 +175,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_lldpLocalPortInfo = nullptr;
    m_agentParameters = nullptr;
    m_agentTables = nullptr;
+   m_agentLists = nullptr;
    m_driverParameters = nullptr;
    m_smclpMetrics = nullptr;
    m_pollerNode = 0;
@@ -305,6 +306,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_lldpLocalPortInfo = nullptr;
    m_agentParameters = nullptr;
    m_agentTables = nullptr;
+   m_agentLists = nullptr;
    m_driverParameters = nullptr;
    m_smclpMetrics = nullptr;
    m_pollerNode = 0;
@@ -395,6 +397,7 @@ Node::~Node()
    delete[] m_proxyConnections;
    delete m_agentParameters;
    delete m_agentTables;
+   delete m_agentLists;
    delete m_driverParameters;
    delete m_smclpMetrics;
    MemFree(m_sysDescription);
@@ -5488,6 +5491,22 @@ bool Node::confPollAgent()
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): AgentConnection::getSupportedParameters() failed: rcc=%u"), m_name, rcc);
       }
 
+      // Get supported lists
+      ObjectArray<AgentListDefinition> *llist;
+      rcc = pAgentConn->getSupportedLists(&llist);
+      if (rcc == ERR_SUCCESS)
+      {
+         lockProperties();
+         delete m_agentLists;
+         m_agentLists = llist;
+         unlockProperties();
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): %d supported lists received from agent"), m_name, llist->size());
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): AgentConnection::getSupportedLists() failed: rcc=%u"), m_name, rcc);
+      }
+
       // Check for service manager support
       StringList *services;
       rcc = pAgentConn->getList(L"System.Services", &services);
@@ -9354,7 +9373,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
 /**
  * Get metric value for client
  */
-uint32_t Node::getMetricForClient(int origin, uint32_t userId, const TCHAR *name, TCHAR *buffer, size_t size)
+uint32_t Node::getMetricForClient(int origin, uint32_t userId, const wchar_t *name, wchar_t *buffer, size_t size)
 {
    DataCollectionError rc = DCE_ACCESS_DENIED;
    switch(origin)
@@ -9382,9 +9401,27 @@ uint32_t Node::getMetricForClient(int origin, uint32_t userId, const TCHAR *name
 }
 
 /**
+ * Get list for client
+ */
+uint32_t Node::getListForClient(int origin, uint32_t userId, const wchar_t *name, StringList **list)
+{
+   DataCollectionError rc = DCE_ACCESS_DENIED;
+   switch(origin)
+   {
+      case DS_NATIVE_AGENT:
+         if (checkAccessRights(userId, OBJECT_ACCESS_READ_AGENT))
+            rc = getListFromAgent(name, list);
+         break;
+      default:
+         return super::getListForClient(origin, userId, name, list);
+   }
+   return RCCFromDCIError(rc);
+}
+
+/**
  * Get table for client
  */
-uint32_t Node::getTableForClient(int origin, uint32_t userId, const TCHAR *name, shared_ptr<Table> *table)
+uint32_t Node::getTableForClient(int origin, uint32_t userId, const wchar_t *name, shared_ptr<Table> *table)
 {
    DataCollectionError rc = DCE_ACCESS_DENIED;
    switch(origin)
@@ -10154,6 +10191,33 @@ void Node::writeParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags)
 }
 
 /**
+ * Put list of supported lists into NXCP message
+ */
+void Node::writeListListToMessage(NXCPMessage *msg)
+{
+   lockProperties();
+
+   if (m_agentLists != nullptr)
+   {
+      msg->setField(VID_NUM_ENUMS, static_cast<uint32_t>(m_agentLists->size()));
+
+      uint32_t fieldId = VID_ENUM_LIST_BASE;
+      for(int i = 0; i < m_agentLists->size(); i++)
+      {
+         fieldId += m_agentLists->get(i)->fillMessage(msg, fieldId);
+      }
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT, 6, _T("Node[%s]::writeListListToMessage(): sending %d lists"), m_name, m_agentLists->size());
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT, 6, _T("Node[%s]::writeListListToMessage(): list is missing"), m_name);
+      msg->setField(VID_NUM_ENUMS, static_cast<uint32_t>(0));
+   }
+
+   unlockProperties();
+}
+
+/**
  * Put list of supported Windows performance counters into NXCP message
  */
 void Node::writeWinPerfObjectsToMessage(NXCPMessage *msg)
@@ -10221,6 +10285,15 @@ ObjectArray<AgentTableDefinition> *Node::openTableList()
 {
    lockProperties();
    return m_agentTables;
+}
+
+/**
+ * Open list of supported lists for reading
+ */
+ObjectArray<AgentListDefinition> *Node::openListList()
+{
+   lockProperties();
+   return m_agentLists;
 }
 
 /**

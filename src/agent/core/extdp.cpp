@@ -587,7 +587,9 @@ void StructuredMetricProvider::listLists(NXCPMessage *msg, uint32_t *baseId, uin
    m_lists->forEach(
       [msg, baseId, count](const TCHAR *key, void *value)
       {
+         StructuredExtractorParameterDefinition *def = static_cast<StructuredExtractorParameterDefinition*>(value);
          msg->setField((*baseId)++, key);
+         msg->setField((*baseId)++, def->description);
          (*count)++;
          return _CONTINUE;
 
@@ -595,6 +597,7 @@ void StructuredMetricProvider::listLists(NXCPMessage *msg, uint32_t *baseId, uin
    unlock();
 
    msg->setField((*baseId)++, m_genericParamName);
+   msg->setField((*baseId)++, _T(""));  // Generic parameter has no description
    (*count)++;
 }
 

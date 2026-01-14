@@ -1109,7 +1109,7 @@ void DataCollectionTarget::updateDataCollectionTimeIntervals()
 /**
  * Get metric value for client
  */
-uint32_t DataCollectionTarget::getMetricForClient(int origin, uint32_t userId, const TCHAR *name, TCHAR *buffer, size_t size)
+uint32_t DataCollectionTarget::getMetricForClient(int origin, uint32_t userId, const wchar_t *name, wchar_t *buffer, size_t size)
 {
    DataCollectionError rc = DCE_ACCESS_DENIED;
    switch(origin)
@@ -1122,6 +1122,28 @@ uint32_t DataCollectionTarget::getMetricForClient(int origin, uint32_t userId, c
          if (checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
             rc = getMetricFromScript(name, buffer, size, this, shared_ptr<DCObjectInfo>());
          break;
+      case DS_WEB_SERVICE:
+         if (checkAccessRights(userId, OBJECT_ACCESS_READ))
+            rc = getMetricFromWebService(name, buffer, size);
+         break;
+      default:
+         return RCC_INCOMPATIBLE_OPERATION;
+   }
+   return RCCFromDCIError(rc);
+}
+
+/**
+ * Get list for client
+ */
+uint32_t DataCollectionTarget::getListForClient(int origin, uint32_t userId, const wchar_t *name, StringList **list)
+{
+   DataCollectionError rc = DCE_ACCESS_DENIED;
+   switch(origin)
+   {
+      case DS_WEB_SERVICE:
+         if (checkAccessRights(userId, OBJECT_ACCESS_READ))
+            rc = getListFromWebService(name, list);
+         break;
       default:
          return RCC_INCOMPATIBLE_OPERATION;
    }
@@ -1131,7 +1153,7 @@ uint32_t DataCollectionTarget::getMetricForClient(int origin, uint32_t userId, c
 /**
  * Get table for client
  */
-uint32_t DataCollectionTarget::getTableForClient(int origin, uint32_t userId, const TCHAR *name, shared_ptr<Table> *table)
+uint32_t DataCollectionTarget::getTableForClient(int origin, uint32_t userId, const wchar_t *name, shared_ptr<Table> *table)
 {
    DataCollectionError rc = DCE_ACCESS_DENIED;
    switch(origin)

@@ -745,6 +745,7 @@ private:
    void onTrap(const NXCPMessage& request);
    void onWakeUpNode(const NXCPMessage& request);
    void queryMetric(const NXCPMessage& request);
+   void queryList(const NXCPMessage& request);
    void queryTable(const NXCPMessage& request);
    void editTrap(const NXCPMessage& request, int operation);
    void lockTrapCfg(const NXCPMessage& request, bool lock);
@@ -758,6 +759,7 @@ private:
    void getPackageDeploymentJobs(const NXCPMessage& request);
    void cancelPackageDeploymentJob(const NXCPMessage& request);
    void getParametersList(const NXCPMessage& request);
+   void getListsList(const NXCPMessage& request);
    void getUserVariable(const NXCPMessage& request);
    void setUserVariable(const NXCPMessage& request);
    void copyUserVariable(const NXCPMessage& request);

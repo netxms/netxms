@@ -704,6 +704,8 @@ typedef struct
 #define CMD_SET_AI_MESSAGE_STATUS         0x01F8
 #define CMD_DELETE_AI_MESSAGE             0x01F9
 #define CMD_GET_LOG_QUERY_SQL             0x01FA
+#define CMD_GET_LIST_LIST                 0x01FB
+#define CMD_QUERY_LIST                    0x01FC
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101

@@ -6620,6 +6620,28 @@ public class NXCSession
    }
 
    /**
+    * Query list (enumeration) from agent running on given node. This call will cause server to make an actual call to the agent and
+    * return current values for the given list. Result is not cached.
+    *
+    * @param nodeId Node ID
+    * @param origin parameter's origin (NetXMS agent, SNMP, etc.)
+    * @param name list name
+    * @return list of values returned by agent
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<String> queryList(long nodeId, DataOrigin origin, String name) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_LIST);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
+      msg.setFieldInt16(NXCPCodes.VID_DCI_SOURCE_TYPE, origin.getValue());
+      msg.setField(NXCPCodes.VID_NAME, name);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getStringListFromFields(NXCPCodes.VID_STRING_LIST_BASE, NXCPCodes.VID_NUM_STRINGS);
+   }
+
+   /**
     * Query table immediately. This call will cause server to do actual call to managed node and will return current value for given
     * table. Result is not cached.
     *
@@ -10072,6 +10094,32 @@ public class NXCSession
       {
          list.add(new AgentTable(response, baseId));
          baseId += response.getFieldAsInt64(baseId);
+      }
+      return list;
+   }
+
+   /**
+    * Get list of lists (enumerations) supported by agent running on given node.
+    *
+    * @param nodeId Node ID
+    * @return List of lists supported by agent
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<AgentList> getSupportedLists(long nodeId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_LIST_LIST);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ENUMS);
+      List<AgentList> list = new ArrayList<AgentList>(count);
+      long baseId = NXCPCodes.VID_ENUM_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         list.add(new AgentList(response, baseId));
+         baseId += 2;
       }
       return list;
    }

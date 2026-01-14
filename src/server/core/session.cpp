@@ -1317,6 +1317,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_QUERY_PARAMETER:
          queryMetric(*request);
          break;
+      case CMD_QUERY_LIST:
+         queryList(*request);
+         break;
       case CMD_QUERY_TABLE:
          queryTable(*request);
          break;
@@ -1343,6 +1346,9 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_GET_PARAMETER_LIST:
          getParametersList(*request);
+         break;
+      case CMD_GET_LIST_LIST:
+         getListsList(*request);
          break;
       case CMD_GET_DATA_COLLECTION_SUMMARY:
          getDataCollectionSummary(*request);
@@ -8182,6 +8188,41 @@ void ClientSession::queryMetric(const NXCPMessage& request)
 }
 
 /**
+ * Query specific list from data collection target
+ */
+void ClientSession::queryList(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   // Find node object
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
+   {
+      if (object->isDataCollectionTarget())
+      {
+         TCHAR name[MAX_PARAM_NAME];
+         request.getFieldAsString(VID_NAME, name, MAX_PARAM_NAME);
+         StringList *value = nullptr;
+         uint32_t rcc = static_cast<DataCollectionTarget&>(*object).getListForClient(request.getFieldAsUInt16(VID_DCI_SOURCE_TYPE), m_userId, name, &value);
+         response.setField(VID_RCC, rcc);
+         if (rcc == RCC_SUCCESS)
+            value->fillMessage(&response, VID_STRING_LIST_BASE, VID_STRING_COUNT);
+         delete value;
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
  * Query specific table from node
  */
 void ClientSession::queryTable(const NXCPMessage& request)
@@ -8705,6 +8746,35 @@ void ClientSession::getParametersList(const NXCPMessage& request)
                if (controller != nullptr)
                   static_cast<Node&>(*controller).writeParamListToMessage(&response, origin, request.getFieldAsUInt16(VID_FLAGS));
             }
+            break;
+         default:
+            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            break;
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Get list of supported lists for given node
+ */
+void ClientSession::getListsList(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
+   {
+      switch(object->getObjectClass())
+      {
+         case OBJECT_NODE:
+            response.setField(VID_RCC, RCC_SUCCESS);
+            static_cast<Node&>(*object).writeListListToMessage(&response);
             break;
          default:
             response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);

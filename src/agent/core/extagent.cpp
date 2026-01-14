@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -279,6 +279,7 @@ NETXMS_SUBAGENT_LIST *ExternalSubagent::getSupportedLists(UINT32 *count)
 				for(UINT32 i = 0; i < *count; i++)
 				{
 					response->getFieldAsString(varId++, result[i].name, MAX_PARAM_NAME);
+					response->getFieldAsString(varId++, result[i].description, MAX_DB_STRING);
 				}
 			}
 			delete response;
@@ -414,6 +415,7 @@ void ExternalSubagent::listLists(NXCPMessage *msg, UINT32 *baseId, UINT32 *count
 		for(UINT32 i = 0; i < paramCount; i++)
 		{
 			msg->setField(id++, list[i].name);
+			msg->setField(id++, list[i].description);
 		}
 		*baseId = id;
 		*count += paramCount;
