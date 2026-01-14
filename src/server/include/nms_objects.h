@@ -4684,6 +4684,7 @@ protected:
    time_t m_lastHealthCheck;
    bool m_lockedForHealthCheck;
 
+   virtual void fillMessageLockedEssential(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageUnlocked(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;

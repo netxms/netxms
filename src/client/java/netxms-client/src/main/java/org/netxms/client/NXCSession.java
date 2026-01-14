@@ -557,6 +557,8 @@ public class NXCSession
                            synchronized(objectList)
                            {
                               partialObjectList.put(object.getObjectId(), object);
+                              if (object instanceof Zone)
+                                 zoneList.put(((Zone)object).getUIN(), (Zone)object);
                            }
                         }
                         else

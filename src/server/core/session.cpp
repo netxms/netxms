@@ -3070,7 +3070,7 @@ void ClientSession::getObjects(const NXCPMessage& request)
 	   {
          return !object->isUnpublished() && !object->isDeleted() &&
                 (object->getTimeStamp() >= baseTimeStamp) &&
-                object->checkAccessRights(m_userId, OBJECT_ACCESS_READ);
+                (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ) || (object->getObjectClass() == OBJECT_ZONE));
 	   });
 	for(int i = 0; i < objects->size(); i++)
 	{
@@ -3081,7 +3081,7 @@ void ClientSession::getObjects(const NXCPMessage& request)
          continue;
 	   }
 
-      object->fillMessage(&response, m_userId);
+      object->fillMessage(&response, m_userId, (object->getObjectClass() != OBJECT_ZONE) || object->checkAccessRights(m_userId, OBJECT_ACCESS_READ));
       if ((object->getObjectClass() == OBJECT_NODE) && !object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
       {
          // mask passwords
@@ -3702,7 +3702,9 @@ void ClientSession::sendObjectUpdates()
       shared_ptr<NetObj> object = FindObjectById(idList[i]);
       if ((object != nullptr) && !object->isDeleted())
       {
-         object->fillMessage(&response, m_userId);
+         // Zone objects might be scheduled for update without read access - in that case send essential info only
+         // Other objects will be queued only if read access is granted
+         object->fillMessage(&response, m_userId, (object->getObjectClass() != OBJECT_ZONE) || object->checkAccessRights(m_userId, OBJECT_ACCESS_READ));
          if ((object->getObjectClass() == OBJECT_NODE) && !object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
          {
             // mask passwords
@@ -3777,7 +3779,7 @@ void ClientSession::sendObjectUpdates()
 void ClientSession::onObjectChange(const shared_ptr<NetObj>& object)
 {
    if (((m_flags & (CSF_AUTHENTICATED | CSF_OBJECT_SYNC_FINISHED | CSF_TERMINATED | CSF_TERMINATE_REQUESTED)) == (CSF_AUTHENTICATED | CSF_OBJECT_SYNC_FINISHED)) &&
-       isSubscribedTo(NXC_CHANNEL_OBJECTS) && (object->isDeleted() || object->checkAccessRights(m_userId, OBJECT_ACCESS_READ)))
+       isSubscribedTo(NXC_CHANNEL_OBJECTS) && (object->isDeleted() || object->checkAccessRights(m_userId, OBJECT_ACCESS_READ) || (object->getObjectClass() == OBJECT_ZONE)))
    {
       m_pendingObjectNotificationsLock.lock();
       m_pendingObjectNotifications.put(object->getId());

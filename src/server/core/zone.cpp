@@ -248,6 +248,15 @@ void Zone::onObjectDelete(const NetObj& object)
 }
 
 /**
+ * Create NXCP message with object's essential data (for partial sync)
+ */
+void Zone::fillMessageLockedEssential(NXCPMessage *msg, uint32_t userId)
+{
+   super::fillMessageLockedEssential(msg, userId);
+   msg->setField(VID_ZONE_UIN, m_uin);
+}
+
+/**
  * Create NXCP message with object's data
  */
 void Zone::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
