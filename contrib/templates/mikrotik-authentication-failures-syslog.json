@@ -245,15 +245,15 @@
     "rules": [
       {
         "guid": "41d0ea34-1c9d-4d14-951a-a11c1f4df0af",
-        "content": "<rule guid=\"41d0ea34-1c9d-4d14-951a-a11c1f4df0af\" name=\"\"><match repeatInterval=\"0\" reset=\"false\">system,error,critical login failure for user (.*) from .* via (.*)</match><event>SYSLOG_MKT_LOGIN_FAILURE</event><facility>1</facility><tag>system</tag><agentAction action=\"\"/></rule>"
+        "content": "<rule guid=\"41d0ea34-1c9d-4d14-951a-a11c1f4df0af\" name=\"MikroTik login failure\"><match repeatInterval=\"0\" reset=\"false\">system,error,critical login failure for user (.*) from .* via (.*)</match><event>SYSLOG_MKT_LOGIN_FAILURE</event><facility>1</facility><tag>system</tag><agentAction action=\"\"/></rule>"
       },
       {
         "guid": "df3abea5-f39e-4cd8-acc0-9d8749921798",
-        "content": "<rule guid=\"df3abea5-f39e-4cd8-acc0-9d8749921798\" name=\"\"><match repeatInterval=\"0\" reset=\"false\"> (.*),error : user (.*) authentication failed</match><event>SYSLOG_MKT_AUTH_FAILURE</event><facility>1</facility><agentAction action=\"\"/></rule>"
+        "content": "<rule guid=\"df3abea5-f39e-4cd8-acc0-9d8749921798\" name=\"MikroTik user authentication failure\"><match repeatInterval=\"0\" reset=\"false\"> (.*),error : user (.*) authentication failed</match><event>SYSLOG_MKT_AUTH_FAILURE</event><facility>1</facility><agentAction action=\"\"/></rule>"
       },
       {
         "guid": "3b35c657-bdd8-42fe-ba54-e94ad4de89a7",
-        "content": "<rule guid=\"3b35c657-bdd8-42fe-ba54-e94ad4de89a7\" name=\"\"><match repeatInterval=\"0\" reset=\"false\">route,(.*),info Discarding packet: (.*) authentication failed</match><event>SYSLOG_MKT_ROUTING_AUTH_FAILED</event><facility>1</facility><tag>route</tag><agentAction action=\"\"/></rule>"
+        "content": "<rule guid=\"3b35c657-bdd8-42fe-ba54-e94ad4de89a7\" name=\"MikroTik routing protocol authentication failure\"><match repeatInterval=\"0\" reset=\"false\">route,(.*),info Discarding packet: (.*) authentication failed</match><event>SYSLOG_MKT_ROUTING_AUTH_FAILED</event><facility>1</facility><tag>route</tag><agentAction action=\"\"/></rule>"
       }
     ],
     "order": [
