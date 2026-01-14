@@ -1,9 +1,9 @@
 # Copyright (C) 2004, 2005 NetXMS Team <bugs@netxms.org>
-#  
+#
 # This file is free software; as a special exception the author gives
-# unlimited permission to copy and/or distribute it, with or without 
+# unlimited permission to copy and/or distribute it, with or without
 # modifications, as long as this notice is preserved.
-# 
+#
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -27,6 +27,7 @@ templates_DATA = \
 	lenovo_xcc.xml \
 	linux.xml \
 	lsi_megaraid.xml \
+	mikrotik-authentication-failures-syslog.json \
 	netgear_nas.xml \
 	netxms_agent.xml \
 	netxms_file_handle_usage.xml \

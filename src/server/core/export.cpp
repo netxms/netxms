@@ -65,19 +65,19 @@ void FindMacros(const char *regexp, ObjectArray<char> *macroList)
 static void ExportLogParserRulesJSON(const NXCPMessage& request, long countFieldId, long baseId, json_t *object, const WCHAR *configKey)
 {
    int count = request.getFieldAsUInt32(countFieldId);
-   
+
    if (count == 0)
    {
-      // Create empty rules and order objects/arrays
-      json_object_set_new(object, "rules", json_object());
+      // Create empty rules and order arrays
+      json_object_set_new(object, "rules", json_array());
       json_object_set_new(object, "order", json_array());
       return;
    }
-   
+
    char *value = ConfigReadCLOBUTF8(configKey, nullptr);
    if (value == nullptr)
    {
-      json_object_set_new(object, "rules", json_object());
+      json_object_set_new(object, "rules", json_array());
       json_object_set_new(object, "order", json_array());
       return;
    }
@@ -85,7 +85,7 @@ static void ExportLogParserRulesJSON(const NXCPMessage& request, long countField
    pugi::xml_document xml;
    if (!xml.load_buffer(value, strlen(value)))
    {
-      json_object_set_new(object, "rules", json_object());
+      json_object_set_new(object, "rules", json_array());
       json_object_set_new(object, "order", json_array());
       MemFree(value);
       return;
@@ -96,8 +96,8 @@ static void ExportLogParserRulesJSON(const NXCPMessage& request, long countField
    {
       ObjectArray<char> macroList;
       uuid_t guid;
-      json_t *rulesObject = json_object();
-      
+      json_t *rulesArray = json_array();
+
       for(int i = 0; i < count; i++)
       {
          request.getFieldAsBinary(baseId++, guid, UUID_LENGTH);
@@ -106,19 +106,22 @@ static void ExportLogParserRulesJSON(const NXCPMessage& request, long countField
          pugi::xml_node ruleNode = node.find_child_by_attribute("guid", guidStr);
          if (ruleNode != nullptr)
          {
-            // Export rule as XML string to maintain exact structure
+            // Export rule as object with guid and content properties
             xml_string_writer ruleWriter;
             ruleNode.print(ruleWriter, "", pugi::format_default | pugi::format_raw, pugi::encoding_utf8, 0);
             char *xmlUtf8 = UTF8StringFromWideString(ruleWriter.result.cstr());
-            json_object_set_new(rulesObject, guidStr, json_string(xmlUtf8));
+            json_t *ruleObj = json_object();
+            json_object_set_new(ruleObj, "guid", json_string(guidStr));
+            json_object_set_new(ruleObj, "content", json_string(xmlUtf8));
+            json_array_append_new(rulesArray, ruleObj);
             MemFree(xmlUtf8);
 
             const char *match = ruleNode.select_node("match").node().text().get();
             FindMacros(match, &macroList);
          }
       }
-      
-      json_object_set_new(object, "rules", rulesObject);
+
+      json_object_set_new(object, "rules", rulesArray);
 
       // Export macros as name-value object
       pugi::xml_node macros = xml.select_node("/parser/macros").node();
