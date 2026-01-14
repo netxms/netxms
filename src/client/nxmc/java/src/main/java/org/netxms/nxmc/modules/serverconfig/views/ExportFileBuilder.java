@@ -85,6 +85,7 @@ import org.netxms.nxmc.modules.events.dialogs.RuleSelectionDialog;
 import org.netxms.nxmc.modules.events.widgets.helpers.BaseEventTemplateLabelProvider;
 import org.netxms.nxmc.modules.logwatch.dialogs.SelectLogParserRuleDlg;
 import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParser;
+import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParserEvent;
 import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParserRule;
 import org.netxms.nxmc.modules.nxsl.dialogs.SelectScriptDialog;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
@@ -164,7 +165,7 @@ public class ExportFileBuilder extends ConfigurationView
     */
    @Override
    public void createContent(Composite parent)
-	{		
+	{
       ScrolledComposite scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
       scroller.setExpandHorizontal(true);
       scroller.setExpandVertical(true);
@@ -186,7 +187,7 @@ public class ExportFileBuilder extends ConfigurationView
 
       scroller.setContent(content);
 
-		createDescriptionSection();		
+		createDescriptionSection();
 		createTemplatesSection();
 		createEventSection();
 		createTrapSection();
@@ -292,7 +293,7 @@ public class ExportFileBuilder extends ConfigurationView
 				addTemplates();
 			}
 		});
-		
+
       final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
 		linkRemove.setText(i18n.tr("Remove"));
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
@@ -368,7 +369,7 @@ public class ExportFileBuilder extends ConfigurationView
 				addEvents();
 			}
 		});
-		
+
       final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
 		linkRemove.setText(i18n.tr("Remove"));
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
@@ -405,7 +406,7 @@ public class ExportFileBuilder extends ConfigurationView
       layout.horizontalSpacing = 0;
 		clientArea.setLayout(layout);
       clientArea.setBackground(content.getBackground());
-		
+
       trapViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -470,7 +471,7 @@ public class ExportFileBuilder extends ConfigurationView
 				}
 			}
 		});
-		
+
       final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
 		linkRemove.setText(i18n.tr("Remove"));
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
@@ -507,7 +508,7 @@ public class ExportFileBuilder extends ConfigurationView
       layout.horizontalSpacing = 0;
 		clientArea.setLayout(layout);
       clientArea.setBackground(content.getBackground());
-		
+
       ruleViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI);
 		ruleViewer.getTable().setLinesVisible(true);
 		ruleViewer.getTable().setHeaderVisible(true);
@@ -615,7 +616,7 @@ public class ExportFileBuilder extends ConfigurationView
       layout.horizontalSpacing = 0;
       clientArea.setLayout(layout);
       clientArea.setBackground(content.getBackground());
-      
+
       scriptViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -654,7 +655,7 @@ public class ExportFileBuilder extends ConfigurationView
             addScripts();
          }
       });
-      
+
       final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
       linkRemove.setText(i18n.tr("Remove"));
       linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
@@ -691,7 +692,7 @@ public class ExportFileBuilder extends ConfigurationView
       layout.horizontalSpacing = 0;
       clientArea.setLayout(layout);
       clientArea.setBackground(content.getBackground());
-      
+
       toolsViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -730,7 +731,7 @@ public class ExportFileBuilder extends ConfigurationView
             addObjectTools();
          }
       });
-      
+
       final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
       linkRemove.setText(i18n.tr("Remove"));
       linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
@@ -767,7 +768,7 @@ public class ExportFileBuilder extends ConfigurationView
       layout.horizontalSpacing = 0;
       clientArea.setLayout(layout);
       clientArea.setBackground(content.getBackground());
-      
+
       summaryTableViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -806,7 +807,7 @@ public class ExportFileBuilder extends ConfigurationView
             addSummaryTables();
          }
       });
-      
+
       final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
       linkRemove.setText(i18n.tr("Remove"));
       linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
@@ -822,7 +823,7 @@ public class ExportFileBuilder extends ConfigurationView
          }
       });
    }
-   
+
    /**
     * Create "Actions" section
     */
@@ -843,7 +844,7 @@ public class ExportFileBuilder extends ConfigurationView
       layout.horizontalSpacing = 0;
       clientArea.setLayout(layout);
       clientArea.setBackground(content.getBackground());
-      
+
       actionViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -882,7 +883,7 @@ public class ExportFileBuilder extends ConfigurationView
             addActions();
          }
       });
-      
+
       final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
       linkRemove.setText(i18n.tr("Remove"));
       linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
@@ -898,7 +899,7 @@ public class ExportFileBuilder extends ConfigurationView
          }
       });
    }
-   
+
    /**
     * Create "Web Service Definitions" section
     */
@@ -919,7 +920,7 @@ public class ExportFileBuilder extends ConfigurationView
       layout.horizontalSpacing = 0;
       clientArea.setLayout(layout);
       clientArea.setBackground(content.getBackground());
-      
+
       webServiceViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -970,7 +971,7 @@ public class ExportFileBuilder extends ConfigurationView
             addWebServiceDefinitions();
          }
       });
-      
+
       final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
       linkRemove.setText(i18n.tr("Remove"));
       linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
@@ -990,7 +991,7 @@ public class ExportFileBuilder extends ConfigurationView
          }
       });
    }
-   
+
    /**
     * Create "Asset Attributes" section
     */
@@ -1069,7 +1070,7 @@ public class ExportFileBuilder extends ConfigurationView
          }
       });
    }
-   
+
    /**
     * Create syslog selection section
     */
@@ -1081,13 +1082,13 @@ public class ExportFileBuilder extends ConfigurationView
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.FILL;
       section.setLayoutData(gd);
-      
+
       Composite clientArea = section.getClient();
       GridLayout layout = new GridLayout();
       layout.numColumns = 2;
       clientArea.setLayout(layout);
       clientArea.setBackground(content.getBackground());
-      
+
       syslogLogParserViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -1101,7 +1102,7 @@ public class ExportFileBuilder extends ConfigurationView
       syslogLogParserViewer.setLabelProvider(new LabelProvider() {
          @Override
          public String getText(Object element)
-         {         
+         {
             return ((LogParserRule)element).getEffectiveDisplayName();
          }
       });
@@ -1136,11 +1137,11 @@ public class ExportFileBuilder extends ConfigurationView
                         String content = session.getServerConfigClob("SyslogParser");
                         syslogLogParserCache = LogParser.createFromXml(content);
                      }
-                     catch(NXCException e) 
+                     catch(NXCException e)
                      {
                         syslogLogParserCache = new LogParser();
                      }
-                     
+
                      runInUIThread(() -> addSyslogRules());
                   }
 
@@ -1177,7 +1178,7 @@ public class ExportFileBuilder extends ConfigurationView
          }
       });
    }
-   
+
    /**
     * Create Windows Event Log selection section
     */
@@ -1244,11 +1245,11 @@ public class ExportFileBuilder extends ConfigurationView
                         String content = session.getServerConfigClob("WindowsEventParser");
                         windowsLogParserCache = LogParser.createFromXml(content);
                      }
-                     catch(NXCException e) 
+                     catch(NXCException e)
                      {
                         windowsLogParserCache = new LogParser();
                      }
-                     
+
                      runInUIThread(() -> addWindowsLogRules());
                   }
 
@@ -1290,14 +1291,14 @@ public class ExportFileBuilder extends ConfigurationView
 	 * Create actions
 	 */
 	private void createActions()
-	{      
+	{
       actionExport = new Action(i18n.tr("&Export..."), SharedIcons.EXPORT) {
 			@Override
 			public void run()
 			{
 				save();
 			}
-		};		
+		};
       addKeyBinding("M1+E", actionExport);
       actionExport.setEnabled(false);
 
@@ -1333,7 +1334,7 @@ public class ExportFileBuilder extends ConfigurationView
 
 	/**
 	 * Do export operation and call completion handler when done
-	 * 
+	 *
 	 * @param completionHandler
 	 */
 	private void doExport(final ExportCompletionHandler completionHandler)
@@ -1342,57 +1343,57 @@ public class ExportFileBuilder extends ConfigurationView
       int i = 0;
       for(EventTemplate t : events.values())
          eventList[i++] = t.getCode();
-      
+
       final long[] templateList = new long[templates.size()];
       i = 0;
       for(Template t : templates.values())
          templateList[i++] = t.getObjectId();
-      
+
       final long[] trapList = new long[traps.size()];
       i = 0;
       for(SnmpTrap t : traps.values())
          trapList[i++] = t.getId();
-      
+
       final UUID[] ruleList = new UUID[rules.size()];
       i = 0;
       for(EventProcessingPolicyRule r : rules.values())
          ruleList[i++] = r.getGuid();
-      
+
       final long[] scriptList = new long[scripts.size()];
       i = 0;
       for(Script s : scripts.values())
          scriptList[i++] = s.getId();
-      
+
       final long[] toolList = new long[tools.size()];
       i = 0;
       for(ObjectTool t : tools.values())
          toolList[i++] = t.getId();
-      
+
       final long[] summaryTableList = new long[summaryTables.size()];
       i = 0;
       for(DciSummaryTableDescriptor t : summaryTables.values())
          summaryTableList[i++] = t.getId();
-      
+
       final long[] actionList = new long[actions.size()];
       i = 0;
       for(ServerAction a : actions.values())
          actionList[i++] = a.getId();
-      
+
       final long[] webServiceList = new long[webServices.size()];
       i = 0;
       for(WebServiceDefinition a : webServices.values())
          webServiceList[i++] = a.getId();
-      
+
       final String[] assetAttributesList = new String[assetAttributes.size()];
       i = 0;
       for(AssetAttribute a : assetAttributes.values())
          assetAttributesList[i++] = a.getName();
-      
+
       final UUID[] syslogList = new UUID[syslogLogParsers.size()];
       i = 0;
       for(LogParserRule r : syslogLogParsers.values())
          syslogList[i++] = r.getGuid();
-      
+
       final UUID[] windowsEventList = new UUID[windowsLogParsers.size()];
       i = 0;
       for(LogParserRule r : windowsLogParsers.values())
@@ -1466,7 +1467,7 @@ public class ExportFileBuilder extends ConfigurationView
 
 	/**
 	 * Remove objects from list
-	 * 
+	 *
 	 * @param viewer
 	 * @param objects
 	 */
@@ -1496,20 +1497,20 @@ public class ExportFileBuilder extends ConfigurationView
 			{
             events.put(t.getCode(), t);
             Matcher m = SCRIPT_PATTERN.matcher(t.getMessage());
-            while (m.find()) 
+            while (m.find())
             {
                allMatches.add(m.group(1));
             }
 			}
-			addReferencedScripts(allMatches);			
+			addReferencedScripts(allMatches);
 			eventViewer.setInput(events.values().toArray());
 			setModified();
 		}
 	}
-	
+
 	/**
 	 * Add referenced scripts
-	 * 
+	 *
 	 * @param scriptNames list of script names
 	 */
 	void addReferencedScripts(Collection<String> scriptNames)
@@ -1539,13 +1540,13 @@ public class ExportFileBuilder extends ConfigurationView
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
             return i18n.tr("Cannot get script list from server");
          }
-      }.start();	   
+      }.start();
 	}
 
 	/**
@@ -1594,15 +1595,15 @@ public class ExportFileBuilder extends ConfigurationView
 								eventCodes.add(c);
 						}
 
-						for(Script s : session.getDataCollectionScripts(id)) 
+						for(Script s : session.getDataCollectionScripts(id))
 						   scriptList.put(s.getId(), s);
 						for (AgentPolicy entry : session.getAgentPolicyList(id).values())
 						{
-						   if (entry.getPolicyType().equals(AgentPolicy.AGENT_CONFIG) && 
+						   if (entry.getPolicyType().equals(AgentPolicy.AGENT_CONFIG) &&
 						         (entry.getFlags() & AgentPolicy.EXPAND_MACRO) != 0)
 						   {
 	                     Matcher m = SCRIPT_PATTERN.matcher(entry.getContent());
-	                     while (m.find()) 
+	                     while (m.find())
 	                     {
 	                        allMatches.add(m.group(1));
 	                     }
@@ -1612,9 +1613,9 @@ public class ExportFileBuilder extends ConfigurationView
                runInUIThread(() -> {
                   for(EventTemplate e : session.findMultipleEventTemplates(eventCodes))
                   {
-                     events.put(e.getCode(), e); 
+                     events.put(e.getCode(), e);
                      Matcher m = SCRIPT_PATTERN.matcher(e.getMessage());
-                     while (m.find()) 
+                     while (m.find())
                      {
                         allMatches.add(m.group(1));
                      }
@@ -1626,7 +1627,7 @@ public class ExportFileBuilder extends ConfigurationView
                   scriptViewer.setInput(scripts.values().toArray());
 					});
 				}
-				
+
 				@Override
 				protected String getErrorMessage()
 				{
@@ -1660,9 +1661,9 @@ public class ExportFileBuilder extends ConfigurationView
 	         Set<String> allMatches = new HashSet<>();
             for(EventTemplate t : session.findMultipleEventTemplates(eventCodes))
 				{
-				   events.put(t.getCode(), t);  
+				   events.put(t.getCode(), t);
                Matcher m = SCRIPT_PATTERN.matcher(t.getMessage());
-               while (m.find()) 
+               while (m.find())
                {
                   allMatches.add(m.group(1));
                }
@@ -1696,31 +1697,31 @@ public class ExportFileBuilder extends ConfigurationView
 				}
             for(ActionExecutionConfiguration ac : r.getActions())
                actionCodes.add(ac.getActionId());
-            
+
             Matcher m = SCRIPT_PATTERN.matcher(r.getAlarmKey());
-            while (m.find()) 
+            while (m.find())
             {
                allMatches.add(m.group(1));
             }
             m = SCRIPT_PATTERN.matcher(r.getAlarmMessage());
-            while (m.find()) 
+            while (m.find())
             {
                allMatches.add(m.group(1));
             }
             m = SCRIPT_PATTERN.matcher(r.getDowntimeTag());
-            while (m.find()) 
+            while (m.find())
             {
                allMatches.add(m.group(1));
             }
             for (Entry<String, String> entry : r.getPStorageSet().entrySet())
             {
                m = SCRIPT_PATTERN.matcher(entry.getKey());
-               while (m.find()) 
+               while (m.find())
                {
                   allMatches.add(m.group(1));
                }
                m = SCRIPT_PATTERN.matcher(entry.getValue());
-               while (m.find()) 
+               while (m.find())
                {
                   allMatches.add(m.group(1));
                }
@@ -1728,7 +1729,7 @@ public class ExportFileBuilder extends ConfigurationView
             for (String entry : r.getPStorageDelete())
             {
                m = SCRIPT_PATTERN.matcher(entry);
-               while (m.find()) 
+               while (m.find())
                {
                   allMatches.add(m.group(1));
                }
@@ -1736,12 +1737,12 @@ public class ExportFileBuilder extends ConfigurationView
             for (Entry<String, String> entry : r.getCustomAttributeStorageSet().entrySet())
             {
                m = SCRIPT_PATTERN.matcher(entry.getKey());
-               while (m.find()) 
+               while (m.find())
                {
                   allMatches.add(m.group(1));
                }
                m = SCRIPT_PATTERN.matcher(entry.getValue());
-               while (m.find()) 
+               while (m.find())
                {
                   allMatches.add(m.group(1));
                }
@@ -1749,7 +1750,7 @@ public class ExportFileBuilder extends ConfigurationView
             for (String entry : r.getCustomAttributeStorageDelete())
             {
                m = SCRIPT_PATTERN.matcher(entry);
-               while (m.find()) 
+               while (m.find())
                {
                   allMatches.add(m.group(1));
                }
@@ -1757,12 +1758,12 @@ public class ExportFileBuilder extends ConfigurationView
             for (ActionExecutionConfiguration entry : r.getActions())
             {
                m = SCRIPT_PATTERN.matcher(entry.getTimerKey());
-               while (m.find()) 
+               while (m.find())
                {
                   allMatches.add(m.group(1));
                }
                m = SCRIPT_PATTERN.matcher(entry.getBlockingTimerKey());
-               while (m.find()) 
+               while (m.find())
                {
                   allMatches.add(m.group(1));
                }
@@ -1770,7 +1771,7 @@ public class ExportFileBuilder extends ConfigurationView
             for (String entry : r.getTimerCancellations())
             {
                m = SCRIPT_PATTERN.matcher(entry);
-               while (m.find()) 
+               while (m.find())
                {
                   allMatches.add(m.group(1));
                }
@@ -1778,18 +1779,18 @@ public class ExportFileBuilder extends ConfigurationView
 			}
 			ruleViewer.setInput(rules.values().toArray());
 			setModified();
-			
+
          if (!eventCodes.isEmpty())
 			{
             for(EventTemplate t : session.findMultipleEventTemplates(eventCodes))
             {
                events.put(t.getCode(), t);
                Matcher m = SCRIPT_PATTERN.matcher(t.getMessage());
-               while (m.find()) 
+               while (m.find())
                {
                   allMatches.add(m.group(1));
                }
-            } 
+            }
 				eventViewer.setInput(events.values().toArray());
          }
          if (!actionCodes.isEmpty())
@@ -1802,20 +1803,20 @@ public class ExportFileBuilder extends ConfigurationView
                   {
                      actions.put(actionId, action);
                      Matcher m = SCRIPT_PATTERN.matcher(action.getEmailSubject());
-                     while (m.find()) 
+                     while (m.find())
                      {
                         allMatches.add(m.group(1));
-                     }    
+                     }
                      m = SCRIPT_PATTERN.matcher(action.getData());
-                     while (m.find()) 
+                     while (m.find())
                      {
                         allMatches.add(m.group(1));
-                     }  
+                     }
                      m = SCRIPT_PATTERN.matcher(action.getRecipientAddress());
-                     while (m.find()) 
+                     while (m.find())
                      {
                         allMatches.add(m.group(1));
-                     }  
+                     }
                      break;
                   }
                }
@@ -1841,7 +1842,7 @@ public class ExportFileBuilder extends ConfigurationView
          setModified();
       }
    }
-   
+
    /**
     * Add oject tools to list
     */
@@ -1856,7 +1857,7 @@ public class ExportFileBuilder extends ConfigurationView
          setModified();
       }
    }
-   
+
    /**
     * Add oject tools to list
     */
@@ -1871,7 +1872,7 @@ public class ExportFileBuilder extends ConfigurationView
          setModified();
       }
    }
-   
+
    /**
     * Add actions to list
     */
@@ -1885,20 +1886,20 @@ public class ExportFileBuilder extends ConfigurationView
          {
             actions.put(a.getId(), a);
             Matcher m = SCRIPT_PATTERN.matcher(a.getEmailSubject());
-            while (m.find()) 
+            while (m.find())
             {
                allMatches.add(m.group(1));
-            }    
+            }
             m = SCRIPT_PATTERN.matcher(a.getData());
-            while (m.find()) 
+            while (m.find())
             {
                allMatches.add(m.group(1));
-            }  
+            }
             m = SCRIPT_PATTERN.matcher(a.getRecipientAddress());
-            while (m.find()) 
+            while (m.find())
             {
                allMatches.add(m.group(1));
-            }         
+            }
          }
          addReferencedScripts(allMatches);
          actionViewer.setInput(actions.values().toArray());
@@ -1920,7 +1921,7 @@ public class ExportFileBuilder extends ConfigurationView
          setModified();
       }
    }
-   
+
    /**
     * Add asset attributes to list
     */
@@ -1935,7 +1936,69 @@ public class ExportFileBuilder extends ConfigurationView
          setModified();
       }
    }
-   
+
+   /**
+    * Add events referenced by log parser rules to the export list.
+    *
+    * @param rules collection of log parser rules
+    */
+   private void addLogParserRuleEvents(Collection<LogParserRule> rules)
+   {
+      final Set<Integer> eventCodes = new HashSet<>();
+      final Set<String> eventNames = new HashSet<>();
+      for(LogParserRule rule : rules)
+      {
+         LogParserEvent event = rule.getEvent();
+         if (event != null)
+         {
+            String eventValue = event.getEvent();
+            if (eventValue != null && !eventValue.isEmpty() && !eventValue.equals("0"))
+            {
+               try
+               {
+                  int code = Integer.parseInt(eventValue);
+                  if (code >= 100000)
+                     eventCodes.add(code);
+               }
+               catch(NumberFormatException e)
+               {
+                  // It's an event name, not a code
+                  eventNames.add(eventValue);
+               }
+            }
+         }
+      }
+
+      if (!eventCodes.isEmpty() || !eventNames.isEmpty())
+      {
+         Set<String> allMatches = new HashSet<>();
+         for(EventTemplate t : session.findMultipleEventTemplates(eventCodes))
+         {
+            events.put(t.getCode(), t);
+            Matcher m = SCRIPT_PATTERN.matcher(t.getMessage());
+            while (m.find())
+            {
+               allMatches.add(m.group(1));
+            }
+         }
+         for(String eventName : eventNames)
+         {
+            EventTemplate t = session.findEventTemplateByName(eventName);
+            if (t != null)
+            {
+               events.put(t.getCode(), t);
+               Matcher m = SCRIPT_PATTERN.matcher(t.getMessage());
+               while (m.find())
+               {
+                  allMatches.add(m.group(1));
+               }
+            }
+         }
+         addReferencedScripts(allMatches);
+         eventViewer.setInput(events.values().toArray());
+      }
+   }
+
    /**
     * Add syslog parser to list
     */
@@ -1944,13 +2007,14 @@ public class ExportFileBuilder extends ConfigurationView
       SelectLogParserRuleDlg dlg = new SelectLogParserRuleDlg(getWindow().getShell(), syslogLogParserCache, "SyslogParser");
       if (dlg.open() == Window.OK)
       {
-         for(LogParserRule service : dlg.getSelectedRules())
-            syslogLogParsers.put(service.getGuid(), service);
+         for(LogParserRule rule : dlg.getSelectedRules())
+            syslogLogParsers.put(rule.getGuid(), rule);
          syslogLogParserViewer.setInput(syslogLogParsers.values().toArray());
          setModified();
+         addLogParserRuleEvents(dlg.getSelectedRules());
       }
    }
-   
+
    /**
     * Add windows log parser to list
     */
@@ -1959,10 +2023,11 @@ public class ExportFileBuilder extends ConfigurationView
       SelectLogParserRuleDlg dlg = new SelectLogParserRuleDlg(getWindow().getShell(), windowsLogParserCache, "WindowsEventParser");
       if (dlg.open() == Window.OK)
       {
-         for(LogParserRule service : dlg.getSelectedRules())
-            windowsLogParsers.put(service.getGuid(), service);
+         for(LogParserRule rule : dlg.getSelectedRules())
+            windowsLogParsers.put(rule.getGuid(), rule);
          windowsLogParserViewer.setInput(windowsLogParsers.values().toArray());
          setModified();
+         addLogParserRuleEvents(dlg.getSelectedRules());
       }
    }
 
@@ -2010,7 +2075,7 @@ public class ExportFileBuilder extends ConfigurationView
    {
       /**
        * Called when export is complete
-       * 
+       *
        * @param json resulting JSON document
        */
       public void exportCompleted(final File json);
