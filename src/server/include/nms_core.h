@@ -1386,7 +1386,7 @@ unique_ptr<StringList> SnmpGetKnownCommunities(int32_t zoneUIN);
 
 bool LoadMIBTree();
 void ReloadMIBTree();
-wchar_t *FormatSNMPValue(const SNMP_Variable *var, wchar_t *buffer, size_t bufferSize);
+wchar_t NXCORE_EXPORTABLE *FormatSNMPValue(const SNMP_Variable *var, wchar_t *buffer, size_t bufferSize);
 
 bool SSHCheckConnection(const shared_ptr<Node>& proxyNode, const InetAddress& addr, uint16_t port,
    const TCHAR *login, const TCHAR *password, uint32_t keyId);

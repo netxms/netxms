@@ -702,7 +702,7 @@ void ReloadMIBTree()
 /**
  * Format SNMP value with display hint if available
  */
-wchar_t *FormatSNMPValue(const SNMP_Variable *var, wchar_t *buffer, size_t bufferSize)
+wchar_t NXCORE_EXPORTABLE *FormatSNMPValue(const SNMP_Variable *var, wchar_t *buffer, size_t bufferSize)
 {
    if ((var == nullptr) || (buffer == nullptr) || (bufferSize == 0))
       return nullptr;
