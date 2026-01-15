@@ -130,7 +130,8 @@ public class ExtendedGraphViewer extends GraphViewer
    private Point rightClickLocation = null;
    private boolean backgroundDragActive = false;
    private boolean backgroundDragged = false;
-   private org.eclipse.draw2d.geometry.Point backgroundDragLast = null;
+   private Point backgroundDragStart = null; // in absolute screen coordinates
+   private org.eclipse.draw2d.geometry.Point backgroundDragStartViewLocation = null;
 
 	/**
 	 * @param composite
@@ -196,13 +197,14 @@ public class ExtendedGraphViewer extends GraphViewer
             if (!backgroundDragActive)
                return;
 
-            int dx = backgroundDragLast.x - me.x; // movement in figure coordinates
-            int dy = backgroundDragLast.y - me.y;
-            if ((dx == 0) && (dy == 0))
+            Point currentLocation = graph.getDisplay().getCursorLocation();
+            int dx = backgroundDragStart.x - currentLocation.x; // delta in screen coordinates
+            int dy = backgroundDragStart.y - currentLocation.y;
+            if ((dx == 0) && (dy == 0) && !backgroundDragged)
                return;
 
             backgroundDragged = true;
-            org.eclipse.draw2d.geometry.Point newViewLocation = graph.getViewport().getViewLocation().getCopy().translate(new org.eclipse.draw2d.geometry.Point(dx, dy));
+            org.eclipse.draw2d.geometry.Point newViewLocation = backgroundDragStartViewLocation.getCopy().translate(dx, dy);
             if (newViewLocation.x < 0)
                newViewLocation.x = 0;
             if (newViewLocation.y < 0)
@@ -217,7 +219,6 @@ public class ExtendedGraphViewer extends GraphViewer
                newViewLocation.y = scaledSize.height - viewportArea.height;
 
             graph.getViewport().setViewLocation(newViewLocation);
-            backgroundDragLast.setLocation(me.x, me.y);
          }
       });
       backgroundLayer.addMouseListener(new MouseListener() {
@@ -232,7 +233,8 @@ public class ExtendedGraphViewer extends GraphViewer
                setSelection(null);
             }
             backgroundDragActive = false;
-            backgroundDragLast = null;
+            backgroundDragStart = null;
+            backgroundDragStartViewLocation = null;
             graph.setCursor(null);
          }
 
@@ -244,7 +246,8 @@ public class ExtendedGraphViewer extends GraphViewer
 
             backgroundDragActive = true;
             backgroundDragged = false;
-            backgroundDragLast = new org.eclipse.draw2d.geometry.Point(me.x, me.y);
+            backgroundDragStart = graph.getDisplay().getCursorLocation();
+            backgroundDragStartViewLocation = graph.getViewport().getViewLocation().getCopy();
             graph.setCursor(graph.getDisplay().getSystemCursor(SWT.CURSOR_SIZEALL));
          }
 
