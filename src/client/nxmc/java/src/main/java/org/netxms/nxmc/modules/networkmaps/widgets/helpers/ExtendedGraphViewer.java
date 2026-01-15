@@ -129,6 +129,7 @@ public class ExtendedGraphViewer extends GraphViewer
    private volatile int blockRefresh;
    private Point rightClickLocation = null;
    private boolean backgroundDragActive = false;
+   private boolean backgroundDragged = false;
    private org.eclipse.draw2d.geometry.Point backgroundDragLast = null;
 
 	/**
@@ -200,6 +201,7 @@ public class ExtendedGraphViewer extends GraphViewer
             if ((dx == 0) && (dy == 0))
                return;
 
+            backgroundDragged = true;
             org.eclipse.draw2d.geometry.Point newViewLocation = graph.getViewport().getViewLocation().getCopy().translate(new org.eclipse.draw2d.geometry.Point(dx, dy));
             if (newViewLocation.x < 0)
                newViewLocation.x = 0;
@@ -225,6 +227,10 @@ public class ExtendedGraphViewer extends GraphViewer
             if (me.button != 1)
                return;
 
+            if (!backgroundDragged)
+            {
+               setSelection(null);
+            }
             backgroundDragActive = false;
             backgroundDragLast = null;
             graph.setCursor(null);
@@ -237,6 +243,7 @@ public class ExtendedGraphViewer extends GraphViewer
                return;
 
             backgroundDragActive = true;
+            backgroundDragged = false;
             backgroundDragLast = new org.eclipse.draw2d.geometry.Point(me.x, me.y);
             graph.setCursor(graph.getDisplay().getSystemCursor(SWT.CURSOR_SIZEALL));
          }
