@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1621,5 +1621,19 @@ public class WidgetHelper
          logger.error("Cannot create browser widget", t);
          return null;
       }
+   }
+
+   public static final int COLOR_WIDGET_DISABLED_FOREGROUND = SWT.COLOR_WIDGET_DISABLED_FOREGROUND;
+   public static final int COLOR_LINK_FOREGROUND = SWT.COLOR_LINK_FOREGROUND;
+
+   /**
+    * Get system color by ID - helper method for RAP compatibility.
+    *
+    * @param id
+    * @return
+    */
+   public static Color getSystemColor(int id)
+   {
+      return Display.getCurrent().getSystemColor(id);
    }
 }

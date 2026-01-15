@@ -32,6 +32,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -80,7 +81,7 @@ public class IncidentCommentsEditor extends Composite
       user.setImage(SharedIcons.IMG_USER);
       user.setText((userObject != null) ? userObject.getName() : i18n.tr("<unknown>"));
       user.setBackground(parent.getBackground());
-      user.setForeground(getDisplay().getSystemColor(SWT.COLOR_LINK_FOREGROUND));
+      user.setForeground(WidgetHelper.getSystemColor(WidgetHelper.COLOR_LINK_FOREGROUND));
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = false;
@@ -89,7 +90,7 @@ public class IncidentCommentsEditor extends Composite
       final Label time = new Label(this, SWT.NONE);
       time.setText(DateFormatFactory.getDateTimeFormat().format(comment.getCreationTime()));
       time.setBackground(parent.getBackground());
-      time.setForeground(getDisplay().getSystemColor(SWT.COLOR_WIDGET_DISABLED_FOREGROUND));
+      time.setForeground(WidgetHelper.getSystemColor(WidgetHelper.COLOR_WIDGET_DISABLED_FOREGROUND));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;

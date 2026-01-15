@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020 Raden Solutions
+ * Copyright (C) 2020-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
  * Label provider for bulk DCI update dialog
@@ -66,7 +67,7 @@ public class BulkUpdateLabelProvider extends LabelProvider implements ITableLabe
          return null;
       BulkDciUpdateElementUI el = (BulkDciUpdateElementUI)element;
       if (!el.isModified())
-         return null; // FIXME: Display.getCurrent().getSystemColor(SWT.COLOR_WIDGET_DISABLED_FOREGROUND);
+         return WidgetHelper.getSystemColor(WidgetHelper.COLOR_WIDGET_DISABLED_FOREGROUND);
       return null;
    }
 

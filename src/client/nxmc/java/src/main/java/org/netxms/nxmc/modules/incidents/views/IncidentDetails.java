@@ -264,7 +264,7 @@ public class IncidentDetails extends AdHocObjectView
       label.setFont(titleFont);
       label.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
       label.setBackground(parent.getBackground());
-      label.setForeground(getDisplay().getSystemColor(SWT.COLOR_WIDGET_DISABLED_FOREGROUND));
+      label.setForeground(WidgetHelper.getSystemColor(WidgetHelper.COLOR_WIDGET_DISABLED_FOREGROUND));
 
       textTitle = new Text(header, SWT.SINGLE | SWT.READ_ONLY);
       textTitle.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -524,7 +524,7 @@ public class IncidentDetails extends AdHocObjectView
       labelAssigned = new CLabel(clientArea, SWT.NONE);
       labelAssigned.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       labelAssigned.setBackground(clientArea.getBackground());
-      labelAssigned.setForeground(getDisplay().getSystemColor(SWT.COLOR_LINK_FOREGROUND));
+      labelAssigned.setForeground(WidgetHelper.getSystemColor(WidgetHelper.COLOR_LINK_FOREGROUND));
 
       buttonAssign = new Button(clientArea, SWT.PUSH);
       buttonAssign.setText(i18n.tr("Assign..."));

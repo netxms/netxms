@@ -281,7 +281,7 @@ public class EffectiveRightsDialog extends Dialog
          RightDefinition rd = (RightDefinition)item.getData();
          boolean granted = (currentEffectiveRights & rd.mask) != 0;
          item.setImage(0, granted ? checkImage : uncheckImage);
-         item.setForeground(1, granted ? null : rightsTable.getDisplay().getSystemColor(SWT.COLOR_WIDGET_DISABLED_FOREGROUND));
+         item.setForeground(1, granted ? null : WidgetHelper.getSystemColor(WidgetHelper.COLOR_WIDGET_DISABLED_FOREGROUND));
       }
    }
 }

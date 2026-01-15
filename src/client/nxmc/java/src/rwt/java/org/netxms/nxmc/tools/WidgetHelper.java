@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,6 +44,10 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.internal.theme.CssColor;
+import org.eclipse.rap.rwt.internal.theme.CssValue;
+import org.eclipse.rap.rwt.internal.theme.SimpleSelector;
+import org.eclipse.rap.rwt.internal.theme.ThemeUtil;
 import org.eclipse.rap.rwt.scripting.ClientListener;
 import org.eclipse.rap.rwt.widgets.WidgetUtil;
 import org.eclipse.swt.SWT;
@@ -1689,5 +1693,31 @@ public class WidgetHelper
          logger.error("Cannot create browser widget", t);
          return null;
       }
+   }
+
+   public static final int COLOR_LINK_FOREGROUND = 36;
+   public static final int COLOR_WIDGET_DISABLED_FOREGROUND = 39;
+
+   /**
+    * Get system color by ID - helper method for RAP compatibility.
+    *
+    * @param id
+    * @return
+    */
+   public static Color getSystemColor(int id)
+   {
+      CssValue value = null;
+      switch(id)
+      {
+         case COLOR_WIDGET_DISABLED_FOREGROUND:
+            value = ThemeUtil.getCssValue("*", "color", new SimpleSelector(":disabled"));
+            break;
+         case COLOR_LINK_FOREGROUND:
+            value = ThemeUtil.getCssValue("Link-Hyperlink", "color", SimpleSelector.DEFAULT);
+            break;         
+         default:
+            return Display.getCurrent().getSystemColor(id);
+      }
+      return (value != null) ? CssColor.createColor((CssColor)value) : null;
    }
 }
