@@ -5,7 +5,8 @@ radius_DATA = radius.dict
 
 lib_LTLIBRARIES = libnxcore.la
 libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.cpp ad.cpp addrlist.cpp \
-			admin.cpp agent.cpp agent_policy.cpp ai_messages.cpp aitask.cpp alarm.cpp alarm_category.cpp asset.cpp \
+			admin.cpp agent.cpp agent_policy.cpp ai_core.cpp ai_messages.cpp ai_tasks.cpp \
+			alarm.cpp alarm_category.cpp asset.cpp \
 			asset_management.cpp audit.cpp authtokens.cpp beacon.cpp bizservice.cpp \
 			bizsvcbase.cpp bizsvccheck.cpp bizsvcproto.cpp cas_validator.cpp \
 			ccy.cpp cdp.cpp cert.cpp chassis.cpp circuit.cpp client.cpp cluster.cpp collector.cpp \
@@ -18,7 +19,7 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			evproc.cpp export.cpp fdb.cpp filemonitoring.cpp ft.cpp geo_areas.cpp graph.cpp \
 			hash_index.cpp hdlink.cpp hk.cpp hwcomponent.cpp icmpscan.cpp \
 			icmpstat.cpp id.cpp import.cpp import_legacy.cpp incident.cpp inaddr_index.cpp index.cpp interface.cpp \
-			iris.cpp isc.cpp layer2.cpp ldap.cpp lln.cpp \
+			isc.cpp layer2.cpp ldap.cpp lln.cpp \
 			lldp.cpp locks.cpp logfilter.cpp loghandle.cpp logs.cpp macdb.cpp main.cpp \
 			maint.cpp market.cpp mdconn.cpp mdsession.cpp mj.cpp mobile.cpp \
 			modules.cpp mt.cpp ndd.cpp ndp.cpp netinfo.cpp netmap.cpp netmap_content.cpp \

@@ -21,7 +21,7 @@
 **/
 
 #include "nxcore.h"
-#include <iris.h>
+#include <nxai.h>
 #include <ai_messages.h>
 
 #define DEBUG_TAG L"ai.messages"

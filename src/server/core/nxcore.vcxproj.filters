@@ -39,6 +39,15 @@
     <ClCompile Include="agent_policy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ai_core.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ai_messages.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ai_tasks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="alarm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -199,9 +208,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="interface.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="iris.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="isc.cpp">
@@ -528,9 +534,6 @@
     <ClCompile Include="devbackup.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="aitask.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="webapi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -553,9 +556,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="export.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ai_messages.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

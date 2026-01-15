@@ -21,7 +21,7 @@
 **/
 
 #include "nxcore.h"
-#include <iris.h>
+#include <nxai.h>
 #include <nms_users.h>
 
 #define DEBUG_TAG L"ai.tasks"

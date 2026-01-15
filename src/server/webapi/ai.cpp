@@ -21,7 +21,7 @@
 **/
 
 #include "webapi.h"
-#include <iris.h>
+#include <nxai.h>
 
 #define DEBUG_TAG  _T("webapi.ai")
 

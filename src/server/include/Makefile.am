@@ -16,7 +16,6 @@ serverinclude_HEADERS = \
 	device-backup.h \
 	entity_mib.h \
 	hdlink.h \
-	iris.h \
 	local_admin.h \
 	nddrv.h \
 	netxms-editline.h \
@@ -34,6 +33,7 @@ serverinclude_HEADERS = \
 	nms_topo.h \
 	nms_users.h \
 	npe.h \
+	nxai.h \
 	nxcore_2fa.h \
 	nxcore_discovery.h \
 	nxcore_logs.h \

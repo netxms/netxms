@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 #include "nxcore.h"
 #include <nms_incident.h>
 #include <nms_users.h>
-#include <iris.h>
+#include <nxai.h>
 
 #define DEBUG_TAG L"incident"
 

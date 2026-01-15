@@ -23,7 +23,7 @@
 #include "nxcore.h"
 #include <nms_incident.h>
 #include <nxcore_ps.h>
-#include <iris.h>
+#include <nxai.h>
 
 #define DEBUG_TAG _T("event.policy")
 

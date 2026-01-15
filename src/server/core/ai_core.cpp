@@ -16,14 +16,14 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: iris.cpp
+** File: ai_core.cpp
 **
 **/
 
 #include "nxcore.h"
 #include <nxlibcurl.h>
 #include <netxms-version.h>
-#include <iris.h>
+#include <nxai.h>
 #include <nms_incident.h>
 #include <ai_messages.h>
 

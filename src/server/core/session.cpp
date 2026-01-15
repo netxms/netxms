@@ -38,7 +38,7 @@
 #include <nms_users.h>
 #include <nms_incident.h>
 #include <netxms-version.h>
-#include <iris.h>
+#include <nxai.h>
 #include <ai_messages.h>
 
 #ifdef _WIN32

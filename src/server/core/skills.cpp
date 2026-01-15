@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 **/
 
 #include "nxcore.h"
-#include <iris.h>
+#include <nxai.h>
 #include <unordered_map>
 
 #define DEBUG_TAG _T("ai.skills")
