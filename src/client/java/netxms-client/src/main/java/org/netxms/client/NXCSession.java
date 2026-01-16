@@ -6638,7 +6638,7 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_NAME, name);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      return response.getStringListFromFields(NXCPCodes.VID_STRING_LIST_BASE, NXCPCodes.VID_NUM_STRINGS);
+      return response.getStringListFromFields(NXCPCodes.VID_STRING_LIST_BASE, NXCPCodes.VID_STRING_COUNT);
    }
 
    /**

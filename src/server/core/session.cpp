@@ -8194,13 +8194,12 @@ void ClientSession::queryList(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   // Find node object
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->isDataCollectionTarget())
       {
-         TCHAR name[MAX_PARAM_NAME];
+         wchar_t name[MAX_PARAM_NAME];
          request.getFieldAsString(VID_NAME, name, MAX_PARAM_NAME);
          StringList *value = nullptr;
          uint32_t rcc = static_cast<DataCollectionTarget&>(*object).getListForClient(request.getFieldAsUInt16(VID_DCI_SOURCE_TYPE), m_userId, name, &value);

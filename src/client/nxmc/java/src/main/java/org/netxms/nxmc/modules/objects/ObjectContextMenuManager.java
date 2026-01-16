@@ -102,6 +102,7 @@ import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.objects.views.RemoteControlView;
 import org.netxms.nxmc.modules.objects.views.RouteView;
 import org.netxms.nxmc.modules.objects.views.ScreenshotView;
+import org.netxms.nxmc.modules.agentmanagement.views.AgentExplorer;
 import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -131,7 +132,8 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionOpenRemoteControlView;
    private Action actionEditAgentConfig;
    private Action actionExecuteScript;
-   private Action actionOpenMibExprorer;   
+   private Action actionOpenMibExprorer;
+   private Action actionOpenAgentExplorer;
    private Action actionBind;
    private Action actionUnbind;
    private Action actionBindTo;
@@ -319,6 +321,14 @@ public class ObjectContextMenuManager extends MenuManager
          public void run()
          {
             openMibExplorer();
+         }
+      };
+
+      actionOpenAgentExplorer = new Action(i18n.tr("A&gent Explorer"), ResourceManager.getImageDescriptor("icons/object-views/agent-explorer.png")) {
+         @Override
+         public void run()
+         {
+            openAgentExplorer();
          }
       };
 
@@ -735,6 +745,10 @@ public class ObjectContextMenuManager extends MenuManager
             if (((Node)object).hasSnmpAgent())
             {
                add(actionOpenMibExprorer);
+            }
+            if (((Node)object).hasAgent())
+            {
+               add(actionOpenAgentExplorer);
             }
             if (((Node)object).getPrimaryIP().isValidUnicastAddress() || ((Node)object).isManagementServer())
             {
@@ -1291,6 +1305,16 @@ public class ObjectContextMenuManager extends MenuManager
       AbstractObject object = getObjectFromSelection();
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
       view.openView(new MibExplorer(object.getObjectId(), contextId, false));
+   }
+
+   /**
+    * Open Agent explorer
+    */
+   private void openAgentExplorer()
+   {
+      AbstractObject object = getObjectFromSelection();
+      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+      view.openView(new AgentExplorer(object.getObjectId(), contextId, false));
    }
 
    /**
