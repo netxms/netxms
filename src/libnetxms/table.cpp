@@ -401,7 +401,7 @@ json_t *Table::toGrafanaJson() const
 #endif
          if (tableColumn->getDataType() != DCI_DT_STRING)
          {
-            String formattedValue = FormatDCIValue(tableColumn->getUnitName(), m_data.get(i)->getValue(j));
+            String formattedValue = FormatDCIValue(tableColumn->getUnitName(), m_data.get(i)->getValue(j), tableColumn->getUseMultiplier());
             json_object_set_new(row, name, json_string_t(formattedValue));
          }
          else

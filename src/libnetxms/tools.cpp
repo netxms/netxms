@@ -4131,7 +4131,7 @@ bool LIBNETXMS_EXPORTABLE ReadPassword(const TCHAR *prompt, TCHAR *buffer, size_
 
    /* Turn echoing off and fail if we can’t. */
 #ifdef WIN32
-   HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE); 
+   HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
    DWORD mode;
    GetConsoleMode(hStdin, &mode);
 
@@ -4535,7 +4535,7 @@ bool LIBNETXMS_EXPORTABLE MoveFileOrDirectory(const TCHAR *oldName, const TCHAR 
          {
             if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
                continue;
-            
+
             TCHAR nextNewName[MAX_PATH];
             _tcscpy(nextNewName, newName);
             _tcscat(nextNewName, FS_PATH_SEPARATOR);
@@ -5239,7 +5239,7 @@ String LIBNETXMS_EXPORTABLE FormatNumber(double n, bool useBinaryMultipliers, in
 /**
  * List of units that should be exempt from multiplication
  */
-static const TCHAR *s_unitsWithoutMultipliers[] = { _T("%"), _T("°C"), _T("°F"), _T("dbm") };
+static const TCHAR *s_unitsWithoutMultipliers[] = { _T("%"), _T("°C"), _T("°F"), _T("dBm"), _T("rpm") };
 
 /**
  * Format DCI value based on Unit and value.
@@ -5303,6 +5303,40 @@ String LIBNETXMS_EXPORTABLE FormatDCIValue(const TCHAR *unitName, const TCHAR *v
    }
 
    return result;
+}
+
+/**
+ * Format DCI value for display with control over multiplier usage
+ * @param unitName unit name (can be nullptr)
+ * @param value raw value string
+ * @param useMultiplier 0=default (apply multipliers), 1=always apply, 2=never apply (return raw value with unit)
+ */
+String LIBNETXMS_EXPORTABLE FormatDCIValue(const TCHAR *unitName, const TCHAR *value, int useMultiplier)
+{
+   if (value == nullptr || *value == 0)
+      return String();
+
+   // When multipliers explicitly disabled (useMultiplier == 2), return raw value with unit
+   if (useMultiplier == 2)
+   {
+      StringBuffer result;
+      result.append(value);
+      if (unitName != nullptr && *unitName != 0)
+      {
+         StringBuffer units = unitName;
+         units.replace(_T(" (IEC)"), _T(""));
+         units.replace(_T(" (Metric)"), _T(""));
+         if (!units.isEmpty())
+         {
+            result.append(_T(" "));
+            result.append(units);
+         }
+      }
+      return result;
+   }
+
+   // For default (0) and yes (1), delegate to existing function
+   return FormatDCIValue(unitName, value);
 }
 
 /**
