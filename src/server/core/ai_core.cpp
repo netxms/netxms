@@ -668,13 +668,14 @@ static VolatileCounter64 s_nextQuestionId = 0;
 /**
  * Chat constructor
  */
-Chat::Chat(NetObj *context, json_t *eventData, uint32_t userId, const char *systemPrompt)
+Chat::Chat(NetObj *context, json_t *eventData, uint32_t userId, const char *systemPrompt, bool isInteractive)
 {
    m_id = InterlockedIncrement(&s_nextChatId);
    m_boundIncidentId = 0;
    m_pendingQuestion = nullptr;
    m_asyncState = AsyncRequestState::IDLE;
    m_asyncResult = nullptr;
+   m_isInteractive = isInteractive;
 
    initializeFunctions();
 
@@ -795,6 +796,21 @@ void Chat::initializeFunctions()
       [this] (json_t *arguments, uint32_t userId) -> std::string
       {
          return this->loadSkill(json_object_get_string_utf8(arguments, "name", ""));
+      }
+   ));
+
+   m_functions.emplace("get-session-info", make_shared<AssistantFunction>(
+      "get-session-info",
+      "Get information about the current session type. Returns whether this is an interactive session (user chat) or background session (autonomous task). "
+      "Use this to determine the appropriate approval workflow: interactive sessions should use ask-user-confirmation, "
+      "background sessions should use create-approval-request.",
+      std::vector<std::pair<std::string, std::string>>{},
+      [this] (json_t *arguments, uint32_t userId) -> std::string
+      {
+         json_t *result = json_object();
+         json_object_set_new(result, "session_type", json_string(m_isInteractive ? "interactive" : "background"));
+         json_object_set_new(result, "user_interaction_available", json_boolean(m_isInteractive));
+         return JsonToString(result);
       }
    ));
 
@@ -1329,7 +1345,7 @@ void ProcessEventWithAIAssistant(Event *event, const shared_ptr<NetObj>& object,
    ThreadPoolExecute(s_aiTaskThreadPool,
       [prompt, object, eventData, eventId] () -> void
       {
-         Chat chat(object.get(), eventData, 0, s_systemPromptBackground);
+         Chat chat(object.get(), eventData, 0, s_systemPromptBackground, false);
          char *response = chat.sendRequest(prompt, 10);
          if (response != nullptr)
          {
@@ -1523,7 +1539,7 @@ static void ExecuteAIAgentTask(const shared_ptr<ScheduledTaskParameters>& parame
 {
    char *prompt = UTF8StringFromWideString(parameters->m_persistentData);
    shared_ptr<NetObj> context = FindObjectById(parameters->m_objectId);
-   Chat chat(context.get(), nullptr, parameters->m_userId, s_systemPromptBackground);
+   Chat chat(context.get(), nullptr, parameters->m_userId, s_systemPromptBackground, false);
    char *response = chat.sendRequest(prompt, 64);
    nxlog_debug_tag(DEBUG_TAG, 4, L"AI assistant response for scheduled task on object [%u]: %hs",
          parameters->m_objectId, (response != nullptr) ? response : "no response");
@@ -1612,7 +1628,7 @@ static void IncidentAIAnalysisTask(uint32_t incidentId, int depth, bool autoAssi
    std::string prompt = BuildIncidentAnalysisPrompt(incidentId, depth, customPrompt.cstr());
 
    // Create chat and execute analysis
-   Chat chat(sourceObject.get(), nullptr, 0, s_systemPromptBackground);
+   Chat chat(sourceObject.get(), nullptr, 0, s_systemPromptBackground, false);
    char *response = chat.sendRequest(prompt.c_str(), 32);
 
    if (response != nullptr)

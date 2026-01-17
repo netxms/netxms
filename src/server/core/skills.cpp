@@ -161,3 +161,4 @@ std::string Chat::loadSkill(const char *skillName)
 
    return skill.prompt;
 }
+

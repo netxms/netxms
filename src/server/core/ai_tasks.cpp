@@ -347,7 +347,7 @@ void AITask::execute()
       prompt.append("</memento>\n");
    }
 
-   Chat chat(nullptr, nullptr, m_userId, s_systemPrompt.c_str());
+   Chat chat(nullptr, nullptr, m_userId, s_systemPrompt.c_str(), false);
    char *response = chat.sendRequest(prompt.c_str(), 64);
    if (response != nullptr)
    {

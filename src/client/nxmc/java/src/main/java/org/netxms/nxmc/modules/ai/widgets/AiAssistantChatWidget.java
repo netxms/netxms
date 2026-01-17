@@ -589,6 +589,7 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
       chatContent.setLength(0);
       initializeHtmlTemplate();
       addAssistantMessage("Hello! I'm Iris, your AI assistant. I can help you with setting up your monitoring environment, day-to-day operations, and analyzing problems. Feel free to ask any questions!");
+      contextChanged = true; // Force context resend on next query
    }
 
    /**

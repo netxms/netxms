@@ -178,6 +178,7 @@ private:
    AsyncRequestState m_asyncState;
    char *m_asyncResult;
    Mutex m_asyncMutex;
+   bool m_isInteractive;
 
    void addMessage(const char *role, const char *content)
    {
@@ -193,12 +194,13 @@ private:
    std::string loadSkill(const char *skillName);
 
 public:
-   Chat(NetObj *context = nullptr, json_t *eventData = nullptr, uint32_t userId = 0, const char *systemPrompt = nullptr);
+   Chat(NetObj *context = nullptr, json_t *eventData = nullptr, uint32_t userId = 0, const char *systemPrompt = nullptr, bool isInteractive = true);
    ~Chat();
 
    uint32_t getId() const { return m_id; }
    uint32_t getUserId() const { return m_userId; }
    uint32_t getBoundIncidentId() const { return m_boundIncidentId; }
+   bool isInteractive() const { return m_isInteractive; }
 
    void bindToIncident(uint32_t incidentId);
 
