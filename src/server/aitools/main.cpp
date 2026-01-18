@@ -59,6 +59,9 @@ std::string F_SNMPWalk(json_t *arguments, uint32_t userId);
 std::string F_SNMPRead(json_t *arguments, uint32_t userId);
 std::string F_StartMaintenance(json_t *arguments, uint32_t userId);
 std::string F_SuggestIncidentAssignee(json_t *arguments, uint32_t userId);
+std::string F_ListLogs(json_t *arguments, uint32_t userId);
+std::string F_GetLogSchema(json_t *arguments, uint32_t userId);
+std::string F_SearchLog(json_t *arguments, uint32_t userId);
 std::string F_SearchSyslog(json_t *arguments, uint32_t userId);
 std::string F_SearchWindowsEvents(json_t *arguments, uint32_t userId);
 std::string F_SearchSnmpTraps(json_t *arguments, uint32_t userId);
@@ -417,9 +420,34 @@ static void CreateAssistantSkillList()
 
    RegisterAIAssistantSkill(
       "log-analysis",
-      "Provides comprehensive log analysis capabilities for NetXMS. Use this skill to search and analyze syslog messages, Windows events, SNMP traps, and system events. Essential for troubleshooting, root cause analysis, security investigation, compliance auditing, and detecting patterns or anomalies in log data across monitored infrastructure.",
+      "Provides comprehensive log analysis capabilities for NetXMS. Use this skill to search and analyze syslog messages, Windows events, SNMP traps, system events, and custom log tables from server modules. Essential for troubleshooting, root cause analysis, security investigation, compliance auditing, and detecting patterns or anomalies in log data across monitored infrastructure.",
       "@log-analysis.md",
       {
+         AssistantFunction(
+            "list-logs",
+            "List all available logs that the user has permission to access. Use this to discover available log sources including custom logs from server modules.",
+            {},
+            F_ListLogs),
+         AssistantFunction(
+            "get-log-schema",
+            "Get detailed schema information for a specific log including column names, types, and descriptions.",
+            {
+               { "log_name", "name of the log to get schema for (required)" }
+            },
+            F_GetLogSchema),
+         AssistantFunction(
+            "search-log",
+            "Search any log table with flexible filtering. Works with built-in logs and custom module logs.",
+            {
+               { "log_name", "name of the log to search (required)" },
+               { "object", "optional object name or ID to filter by source" },
+               { "time_from", "start time (ISO format or relative like '-60m', default: -60m)" },
+               { "time_to", "end time (ISO format, default: now)" },
+               { "text_pattern", "case-insensitive text search pattern across text columns" },
+               { "filters", "optional JSON object with column-specific filters" },
+               { "limit", "max results (default: 100, max: 1000)" }
+            },
+            F_SearchLog),
          AssistantFunction(
             "search-syslog",
             "Search syslog messages with flexible filtering by time, source, severity, facility, and text content.",

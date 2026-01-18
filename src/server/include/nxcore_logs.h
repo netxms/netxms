@@ -23,6 +23,8 @@
 #ifndef _nxcore_logs_h_
 #define _nxcore_logs_h_
 
+#include <functional>
+
 #define MAX_COLUMN_NAME_LEN    64
 
 /**
@@ -94,6 +96,7 @@ struct NXCORE_LOG
 	const wchar_t *idColumn;
 	const wchar_t *relatedObjectIdColumn;
 	uint64_t requiredAccess;
+	const char *aiDescription;    // AI context description (UTF-8)
 	LOG_COLUMN columns[32];
 };
 
@@ -218,5 +221,7 @@ int32_t OpenLog(const wchar_t *name, ClientSession *session, uint32_t *rcc);
 uint32_t CloseLog(ClientSession *session, int32_t logHandle);
 void CloseAllLogsForSession(session_id_t sessionId);
 shared_ptr<LogHandle> AcquireLogHandleObject(ClientSession *session, int32_t logHandle);
+const NXCORE_LOG NXCORE_EXPORTABLE *FindLogDefinition(const wchar_t *name);
+void NXCORE_EXPORTABLE EnumerateLogDefinitions(std::function<void(const NXCORE_LOG*)> callback);
 
 #endif

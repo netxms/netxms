@@ -28,6 +28,7 @@
 #include <nms_core.h>
 #include <nxmodule.h>
 #include <nxai.h>
+#include <nxcore_logs.h>
 
 #define DEBUG_TAG _T("ai.tools")
 

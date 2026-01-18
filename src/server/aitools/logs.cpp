@@ -346,6 +346,487 @@ static void AddObjectAccessConstraint(StringBuffer& query, uint32_t userId, cons
 }
 
 /**
+ * Get column type name as string
+ */
+static const char *GetColumnTypeName(int type)
+{
+   switch(type)
+   {
+      case LC_TEXT:             return "text";
+      case LC_SEVERITY:         return "severity";
+      case LC_OBJECT_ID:        return "object_id";
+      case LC_USER_ID:          return "user_id";
+      case LC_EVENT_CODE:       return "event_code";
+      case LC_TIMESTAMP:        return "timestamp";
+      case LC_INTEGER:          return "integer";
+      case LC_ALARM_STATE:      return "alarm_state";
+      case LC_ALARM_HD_STATE:   return "alarm_hd_state";
+      case LC_ZONE_UIN:         return "zone_uin";
+      case LC_EVENT_ORIGIN:     return "event_origin";
+      case LC_TEXT_DETAILS:     return "text_details";
+      case LC_JSON_DETAILS:     return "json_details";
+      case LC_COMPLETION_STATUS: return "completion_status";
+      case LC_ACTION_CODE:      return "action_code";
+      case LC_ATM_TXN_CODE:     return "atm_txn_code";
+      case LC_ASSET_OPERATION:  return "asset_operation";
+      case LC_DEPLOYMENT_STATUS: return "deployment_status";
+      case LC_AI_TASK_STATUS:   return "ai_task_status";
+      default:                  return "unknown";
+   }
+}
+
+/**
+ * List available logs
+ */
+std::string F_ListLogs(json_t *arguments, uint32_t userId)
+{
+   uint64_t systemRights = GetEffectiveSystemRights(userId);
+
+   json_t *output = json_object();
+   json_t *logs = json_array();
+
+   EnumerateLogDefinitions(
+      [&logs, systemRights] (const NXCORE_LOG *log) -> void
+      {
+         // Check if user has access to this log
+         if ((log->requiredAccess != 0) && ((systemRights & log->requiredAccess) == 0))
+            return;
+
+         json_t *logInfo = json_object();
+
+         // Convert wide string to UTF-8
+         char nameUtf8[256];
+         wchar_to_utf8(log->name, -1, nameUtf8, 256);
+         json_object_set_new(logInfo, "name", json_string(nameUtf8));
+
+         if (log->aiDescription != nullptr)
+            json_object_set_new(logInfo, "description", json_string(log->aiDescription));
+
+         // Include related object column if present
+         if (log->relatedObjectIdColumn != nullptr)
+         {
+            char colUtf8[128];
+            wchar_to_utf8(log->relatedObjectIdColumn, -1, colUtf8, 128);
+            json_object_set_new(logInfo, "objectColumn", json_string(colUtf8));
+         }
+
+         json_array_append_new(logs, logInfo);
+      });
+
+   json_object_set_new(output, "logs", logs);
+   json_object_set_new(output, "count", json_integer(json_array_size(logs)));
+
+   return JsonToString(output);
+}
+
+/**
+ * Get log schema
+ */
+std::string F_GetLogSchema(json_t *arguments, uint32_t userId)
+{
+   const char *logName = json_object_get_string_utf8(arguments, "log_name", nullptr);
+   if ((logName == nullptr) || (logName[0] == 0))
+      return std::string("log_name parameter is required");
+
+   // Convert to wide string
+   wchar_t logNameW[256];
+   utf8_to_wchar(logName, -1, logNameW, 256);
+
+   const NXCORE_LOG *log = FindLogDefinition(logNameW);
+   if (log == nullptr)
+   {
+      char buffer[512];
+      snprintf(buffer, 512, "Log \"%s\" not found", logName);
+      return std::string(buffer);
+   }
+
+   // Check access
+   uint64_t systemRights = GetEffectiveSystemRights(userId);
+   if ((log->requiredAccess != 0) && ((systemRights & log->requiredAccess) == 0))
+      return std::string("User does not have permission to access this log");
+
+   json_t *output = json_object();
+
+   char nameUtf8[256];
+   wchar_to_utf8(log->name, -1, nameUtf8, 256);
+   json_object_set_new(output, "name", json_string(nameUtf8));
+
+   char tableUtf8[256];
+   wchar_to_utf8(log->table, -1, tableUtf8, 256);
+   json_object_set_new(output, "table", json_string(tableUtf8));
+
+   if (log->aiDescription != nullptr)
+      json_object_set_new(output, "description", json_string(log->aiDescription));
+
+   if (log->relatedObjectIdColumn != nullptr)
+   {
+      char colUtf8[128];
+      wchar_to_utf8(log->relatedObjectIdColumn, -1, colUtf8, 128);
+      json_object_set_new(output, "objectColumn", json_string(colUtf8));
+   }
+
+   // Build columns array
+   json_t *columns = json_array();
+   for (int i = 0; log->columns[i].name != nullptr; i++)
+   {
+      const LOG_COLUMN *col = &log->columns[i];
+
+      json_t *colInfo = json_object();
+
+      char colNameUtf8[128];
+      wchar_to_utf8(col->name, -1, colNameUtf8, 128);
+      json_object_set_new(colInfo, "name", json_string(colNameUtf8));
+
+      if (col->description != nullptr)
+      {
+         char descUtf8[256];
+         wchar_to_utf8(col->description, -1, descUtf8, 256);
+         json_object_set_new(colInfo, "description", json_string(descUtf8));
+      }
+
+      json_object_set_new(colInfo, "type", json_string(GetColumnTypeName(col->type)));
+
+      // Add flags info
+      if (col->flags & LCF_RECORD_ID)
+         json_object_set_new(colInfo, "isRecordId", json_boolean(true));
+      if (col->flags & LCF_TSDB_TIMESTAMPTZ)
+         json_object_set_new(colInfo, "isPrimaryTimestamp", json_boolean(true));
+
+      json_array_append_new(columns, colInfo);
+   }
+
+   json_object_set_new(output, "columns", columns);
+
+   return JsonToString(output);
+}
+
+/**
+ * Unified log search function
+ */
+std::string F_SearchLog(json_t *arguments, uint32_t userId)
+{
+   const char *logName = json_object_get_string_utf8(arguments, "log_name", nullptr);
+   if ((logName == nullptr) || (logName[0] == 0))
+      return std::string("log_name parameter is required");
+
+   // Convert to wide string
+   wchar_t logNameW[256];
+   utf8_to_wchar(logName, -1, logNameW, 256);
+
+   const NXCORE_LOG *log = FindLogDefinition(logNameW);
+   if (log == nullptr)
+   {
+      char buffer[512];
+      snprintf(buffer, 512, "Log \"%s\" not found", logName);
+      return std::string(buffer);
+   }
+
+   // Check access
+   uint64_t systemRights = GetEffectiveSystemRights(userId);
+   if ((log->requiredAccess != 0) && ((systemRights & log->requiredAccess) == 0))
+      return std::string("User does not have permission to access this log");
+
+   // Parse common parameters
+   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
+   const char *timeFromStr = json_object_get_string_utf8(arguments, "time_from", "-60m");
+   const char *timeToStr = json_object_get_string_utf8(arguments, "time_to", nullptr);
+   const char *textPattern = json_object_get_string_utf8(arguments, "text_pattern", nullptr);
+   int32_t limit = json_object_get_int32(arguments, "limit", 100);
+   if (limit > 1000)
+      limit = 1000;
+
+   // Parse time range
+   time_t timeFrom = ParseTimestamp(timeFromStr);
+   time_t timeTo = (timeToStr != nullptr) ? ParseTimestamp(timeToStr) : time(nullptr);
+
+   // Find timestamp column
+   const TCHAR *timestampColumn = nullptr;
+   for (int i = 0; log->columns[i].name != nullptr; i++)
+   {
+      if ((log->columns[i].type == LC_TIMESTAMP) &&
+          (log->columns[i].flags & LCF_TSDB_TIMESTAMPTZ))
+      {
+         timestampColumn = log->columns[i].name;
+         break;
+      }
+   }
+   if (timestampColumn == nullptr)
+   {
+      // Fallback: use first timestamp column
+      for (int i = 0; log->columns[i].name != nullptr; i++)
+      {
+         if (log->columns[i].type == LC_TIMESTAMP)
+         {
+            timestampColumn = log->columns[i].name;
+            break;
+         }
+      }
+   }
+   if (timestampColumn == nullptr)
+      return std::string("Log does not have a timestamp column");
+
+   // Find text columns
+   ObjectArray<const TCHAR> textColumns(8, 8, Ownership::False);
+   for (int i = 0; log->columns[i].name != nullptr; i++)
+   {
+      if ((log->columns[i].type == LC_TEXT) || (log->columns[i].type == LC_TEXT_DETAILS))
+         textColumns.add(log->columns[i].name);
+   }
+
+   // Resolve object if specified
+   uint32_t objectId = 0;
+   if ((objectName != nullptr) && (objectName[0] != 0) && (log->relatedObjectIdColumn != nullptr))
+   {
+      shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
+      if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      {
+         char buffer[256];
+         snprintf(buffer, 256, "Object with name or ID \"%s\" is not known or not accessible", objectName);
+         return std::string(buffer);
+      }
+      objectId = object->getId();
+   }
+
+   // Build query
+   bool useTsdbTimestamp = (g_dbSyntax == DB_SYNTAX_TSDB);
+   StringBuffer query;
+
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_MSSQL:
+         query.appendFormattedString(_T("SELECT TOP %d "), limit);
+         break;
+      default:
+         query.append(_T("SELECT "));
+         break;
+   }
+
+   // Build column list
+   bool firstCol = true;
+   for (int i = 0; log->columns[i].name != nullptr; i++)
+   {
+      if (!firstCol)
+         query.append(_T(","));
+      firstCol = false;
+
+      const LOG_COLUMN *col = &log->columns[i];
+      if ((col->type == LC_TIMESTAMP) && useTsdbTimestamp && (col->flags & LCF_TSDB_TIMESTAMPTZ))
+      {
+         query.appendFormattedString(_T("date_part('epoch',%s)::int AS %s"),
+                                      col->name, col->name);
+      }
+      else
+      {
+         query.append(col->name);
+      }
+   }
+
+   query.appendFormattedString(_T(" FROM %s WHERE "), log->table);
+
+   // Time filter
+   if (useTsdbTimestamp)
+      query.appendFormattedString(_T("%s BETWEEN to_timestamp(%u) AND to_timestamp(%u)"),
+                                   timestampColumn, static_cast<uint32_t>(timeFrom), static_cast<uint32_t>(timeTo));
+   else
+      query.appendFormattedString(_T("%s BETWEEN %u AND %u"),
+                                   timestampColumn, static_cast<uint32_t>(timeFrom), static_cast<uint32_t>(timeTo));
+
+   // Object filter
+   if ((objectId != 0) && (log->relatedObjectIdColumn != nullptr))
+      query.appendFormattedString(_T(" AND %s=%u"), log->relatedObjectIdColumn, objectId);
+   else if (log->relatedObjectIdColumn != nullptr)
+      AddObjectAccessConstraint(query, userId, log->relatedObjectIdColumn);
+
+   // Text pattern filter
+   if ((textPattern != nullptr) && (textPattern[0] != 0) && (textColumns.size() > 0))
+   {
+      String escapedPattern = EscapeSQLLikePattern(String(textPattern, "utf-8"));
+      query.append(_T(" AND ("));
+      for (int i = 0; i < textColumns.size(); i++)
+      {
+         if (i > 0)
+            query.append(_T(" OR "));
+         query.appendFormattedString(_T("LOWER(%s) LIKE LOWER('%%"), textColumns.get(i));
+         query.append(escapedPattern);
+         query.append(_T("%%')"));
+      }
+      query.append(_T(")"));
+   }
+
+   // Apply additional filters from JSON
+   json_t *filters = json_object_get(arguments, "filters");
+   if (json_is_object(filters))
+   {
+      const char *key;
+      json_t *value;
+      json_object_foreach(filters, key, value)
+      {
+         // Find matching column
+         wchar_t keyW[128];
+         utf8_to_wchar(key, -1, keyW, 128);
+
+         for (int i = 0; log->columns[i].name != nullptr; i++)
+         {
+            if (!wcsicmp(log->columns[i].name, keyW))
+            {
+               if (json_is_integer(value))
+               {
+                  query.appendFormattedString(_T(" AND %s=%lld"), log->columns[i].name, (long long)json_integer_value(value));
+               }
+               else if (json_is_string(value))
+               {
+                  String strVal(json_string_value(value), "utf-8");
+                  query.appendFormattedString(_T(" AND %s='"), log->columns[i].name);
+                  query.append(strVal);
+                  query.append(_T("'"));
+               }
+               else if (json_is_array(value))
+               {
+                  // IN clause
+                  query.appendFormattedString(_T(" AND %s IN ("), log->columns[i].name);
+                  size_t idx;
+                  json_t *elem;
+                  bool first = true;
+                  json_array_foreach(value, idx, elem)
+                  {
+                     if (!first)
+                        query.append(_T(","));
+                     first = false;
+                     if (json_is_integer(elem))
+                        query.appendFormattedString(_T("%lld"), (long long)json_integer_value(elem));
+                     else if (json_is_string(elem))
+                     {
+                        query.append(_T("'"));
+                        query.append(String(json_string_value(elem), "utf-8"));
+                        query.append(_T("'"));
+                     }
+                  }
+                  query.append(_T(")"));
+               }
+               break;
+            }
+         }
+      }
+   }
+
+   // Order by timestamp descending
+   query.appendFormattedString(_T(" ORDER BY %s DESC"), timestampColumn);
+
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_MYSQL:
+      case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_SQLITE:
+      case DB_SYNTAX_TSDB:
+         query.appendFormattedString(_T(" LIMIT %d"), limit);
+         break;
+      case DB_SYNTAX_DB2:
+         query.appendFormattedString(_T(" FETCH FIRST %d ROWS ONLY"), limit);
+         break;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("F_SearchLog: executing query: %s"), query.cstr());
+
+   // Execute query
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, query);
+
+   json_t *output = json_object();
+   json_t *records = json_array();
+
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      json_object_set_new(output, "count", json_integer(count));
+
+      for (int row = 0; row < count; row++)
+      {
+         json_t *record = json_object();
+         int colIndex = 0;
+
+         for (int i = 0; log->columns[i].name != nullptr; i++)
+         {
+            const LOG_COLUMN *col = &log->columns[i];
+
+            char colNameUtf8[128];
+            wchar_to_utf8(col->name, -1, colNameUtf8, 128);
+
+            switch(col->type)
+            {
+               case LC_INTEGER:
+               case LC_SEVERITY:
+               case LC_ALARM_STATE:
+               case LC_ALARM_HD_STATE:
+               case LC_ZONE_UIN:
+               case LC_EVENT_ORIGIN:
+               case LC_COMPLETION_STATUS:
+               case LC_ACTION_CODE:
+               case LC_ATM_TXN_CODE:
+               case LC_ASSET_OPERATION:
+               case LC_DEPLOYMENT_STATUS:
+               case LC_AI_TASK_STATUS:
+                  json_object_set_new(record, colNameUtf8, json_integer(DBGetFieldInt64(hResult, row, colIndex)));
+                  break;
+
+               case LC_TIMESTAMP:
+                  json_object_set_new(record, colNameUtf8, json_integer(DBGetFieldULong(hResult, row, colIndex)));
+                  break;
+
+               case LC_OBJECT_ID:
+               case LC_USER_ID:
+               case LC_EVENT_CODE:
+                  {
+                     uint32_t id = DBGetFieldULong(hResult, row, colIndex);
+                     json_object_set_new(record, colNameUtf8, json_integer(id));
+
+                     // Add name resolution for object IDs
+                     if (col->type == LC_OBJECT_ID)
+                     {
+                        String objName = GetObjectNameById(id);
+                        if (!objName.isEmpty())
+                        {
+                           char nameKey[140];
+                           snprintf(nameKey, sizeof(nameKey), "%s_name", colNameUtf8);
+                           json_object_set_new(record, nameKey, json_string_t(objName));
+                        }
+                     }
+                  }
+                  break;
+
+               case LC_TEXT:
+               case LC_TEXT_DETAILS:
+               case LC_JSON_DETAILS:
+               default:
+                  {
+                     TCHAR *text = DBGetField(hResult, row, colIndex, nullptr, 0);
+                     if (text != nullptr)
+                     {
+                        json_object_set_new(record, colNameUtf8, json_string_t(text));
+                        MemFree(text);
+                     }
+                  }
+                  break;
+            }
+
+            colIndex++;
+         }
+
+         json_array_append_new(records, record);
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      json_object_set_new(output, "count", json_integer(0));
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+
+   json_object_set_new(output, "records", records);
+   return JsonToString(output);
+}
+
+/**
  * Search syslog messages
  */
 std::string F_SearchSyslog(json_t *arguments, uint32_t userId)
