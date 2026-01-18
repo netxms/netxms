@@ -28,6 +28,7 @@
 #include <netxms_maps.h>
 #include <asset_management.h>
 #include <nms_users.h>
+#include <nms_pkg.h>
 
 /**
  * Maintenance journal access
@@ -6876,6 +6877,69 @@ void NXSL_SoftwarePackage::onObjectDelete(NXSL_Object* object)
 }
 
 /**
+ * NXSL class DeploymentPackage: constructor
+ */
+NXSL_DeploymentPackageClass::NXSL_DeploymentPackageClass()
+{
+   setName(_T("DeploymentPackage"));
+}
+
+/**
+ * NXSL class DeploymentPackage: get attribute
+ */
+NXSL_Value* NXSL_DeploymentPackageClass::getAttr(NXSL_Object* object, const NXSL_Identifier& attr)
+{
+   NXSL_Value* value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM* vm = object->vm();
+
+   auto package = static_cast<PackageDetails*>(object->getData());
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("command"))
+   {
+      value = vm->createValue(package->command);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("description"))
+   {
+      value = vm->createValue(package->description);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("fileName"))
+   {
+      value = vm->createValue(package->packageFile);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("id"))
+   {
+      value = vm->createValue(package->id);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("name"))
+   {
+      value = vm->createValue(package->name);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("platform"))
+   {
+      value = vm->createValue(package->platform);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("type"))
+   {
+      value = vm->createValue(package->type);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("version"))
+   {
+      value = vm->createValue(package->version);
+   }
+   return value;
+}
+
+/**
+ * NXSL class DeploymentPackage: object destructor
+ */
+void NXSL_DeploymentPackageClass::onObjectDelete(NXSL_Object* object)
+{
+   delete static_cast<PackageDetails*>(object->getData());
+}
+
+/**
  * NXSL "VLAN" class
  */
 NXSL_VlanClass::NXSL_VlanClass()
@@ -7950,6 +8014,7 @@ NXSL_ContainerClass g_nxslContainerClass;
 NXSL_DataPointClass g_nxslDataPointClass;
 NXSL_DciClass g_nxslDciClass;
 NXSL_DCTargetClass g_nxslDCTargetClass;
+NXSL_DeploymentPackageClass g_nxslDeploymentPackageClass;
 NXSL_DowntimeInfoClass g_nxslDowntimeInfoClass;
 NXSL_EventClass g_nxslEventClass;
 NXSL_HardwareComponent g_nxslHardwareComponent;

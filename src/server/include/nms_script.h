@@ -555,6 +555,18 @@ public:
 };
 
 /**
+ * Deployment package information for NXSL
+ */
+class NXSL_DeploymentPackageClass : public NXSL_Class
+{
+public:
+   NXSL_DeploymentPackageClass();
+
+   virtual NXSL_Value* getAttr(NXSL_Object* object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object* object) override;
+};
+
+/**
  * Maintenance journal record
  */
 class NXSL_MaintenanceJournalRecordClass : public NXSL_Class
@@ -725,6 +737,7 @@ extern NXSL_CollectorClass g_nxslCollectorClass;
 extern NXSL_ContainerClass g_nxslContainerClass;
 extern NXSL_DataPointClass g_nxslDataPointClass;
 extern NXSL_DciClass g_nxslDciClass;
+extern NXSL_DeploymentPackageClass g_nxslDeploymentPackageClass;
 extern NXSL_DowntimeInfoClass g_nxslDowntimeInfoClass;
 extern NXSL_EventClass g_nxslEventClass;
 extern NXSL_HardwareComponent g_nxslHardwareComponent;

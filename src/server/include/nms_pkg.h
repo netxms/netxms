@@ -148,5 +148,6 @@ bool IsDuplicatePackageFileName(const wchar_t *fileName);
 bool IsValidPackageId(uint32_t packageId);
 uint32_t GetPackageDetails(uint32_t packageId, PackageDetails *details);
 uint32_t UninstallPackage(uint32_t packageId);
+ObjectArray<PackageDetails> *GetAllPackages(const TCHAR *platformFilter = nullptr, const TCHAR *typeFilter = nullptr);
 
 #endif   /* _nms_pkg_h_ */

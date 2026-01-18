@@ -24,6 +24,7 @@
 #include <nxcore_ps.h>
 #include <netxms_maps.h>
 #include <nxai.h>
+#include <nms_pkg.h>
 
 /**
  * Externals
@@ -612,6 +613,64 @@ static int F_GetNodeInterfaces(int argc, NXSL_Value **argv, NXSL_Value **result,
    Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
 	*result = node->getInterfacesForNXSL(vm);
 	return 0;
+}
+
+/**
+ * Get list of packages available for deployment
+ * Syntax:
+ *    GetAvailablePackages()              - all packages
+ *    GetAvailablePackages(platform)      - filter by platform
+ *    GetAvailablePackages(platform, type) - filter by platform and type
+ * Returns: Array of DeploymentPackage objects
+ */
+static int F_GetAvailablePackages(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (argc > 2)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   const TCHAR *platformFilter = nullptr;
+   const TCHAR *typeFilter = nullptr;
+
+   if (argc >= 1)
+   {
+      if (!argv[0]->isNull())
+      {
+         if (!argv[0]->isString())
+            return NXSL_ERR_NOT_STRING;
+         platformFilter = argv[0]->getValueAsCString();
+      }
+   }
+
+   if (argc >= 2)
+   {
+      if (!argv[1]->isNull())
+      {
+         if (!argv[1]->isString())
+            return NXSL_ERR_NOT_STRING;
+         typeFilter = argv[1]->getValueAsCString();
+      }
+   }
+
+   ObjectArray<PackageDetails> *packages = GetAllPackages(platformFilter, typeFilter);
+   NXSL_Array *a = new NXSL_Array(vm);
+   for (int i = 0; i < packages->size(); i++)
+   {
+      PackageDetails *p = packages->get(i);
+      PackageDetails *copy = new PackageDetails();
+      copy->id = p->id;
+      _tcslcpy(copy->type, p->type, 16);
+      _tcslcpy(copy->name, p->name, MAX_OBJECT_NAME);
+      _tcslcpy(copy->version, p->version, 32);
+      _tcslcpy(copy->platform, p->platform, MAX_PLATFORM_NAME_LEN);
+      copy->packageFile = p->packageFile;
+      copy->command = p->command;
+      copy->description = p->description;
+      a->append(vm->createValue(vm->createObject(&g_nxslDeploymentPackageClass, copy)));
+   }
+   delete packages;
+
+   *result = vm->createValue(a);
+   return 0;
 }
 
 /**
@@ -2304,6 +2363,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { "FindObjectByGUID", F_FindObjectByGUID, -1 },
    { "FindVendorByMACAddress", F_FindVendorByMACAddress, 1 },
    { "GetAllNodes", F_GetAllNodes, -1 },
+   { "GetAvailablePackages", F_GetAvailablePackages, -1 },
    { "GetConfigurationVariable", F_GetConfigurationVariable, -1 },
    { "GetCustomAttribute", F_GetCustomAttribute, 2, true },
    { "GetEventParameter", F_GetEventParameter, 2, true },
