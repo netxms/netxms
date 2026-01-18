@@ -320,7 +320,7 @@ bool SSHSession::execute(const char *command, StringList *output, ActionExecutio
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::execute: command \"%s\" execution on %s:%d failed"), command, m_addr.toString().cstr(), m_port);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::execute: command \"%hs\" execution on %s:%d failed: %hs"), command, m_addr.toString().cstr(), m_port, ssh_get_error(m_session));
       }
       ssh_channel_close(channel);
    }

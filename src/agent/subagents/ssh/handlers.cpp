@@ -141,6 +141,8 @@ LONG H_SSHCheckCommandMode(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
       StringList *output = ssh->execute(command);
       if (output != nullptr)
       {
+         nxlog_debug_tag(DEBUG_TAG, 8, _T("SSH.CheckCommandMode: command executed on %s:%u, %d output lines, checking pattern \"%s\""), hostName, port, output->size(), pattern);
+
          const char *errptr;
          int erroffset;
          PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pattern), PCRE_COMMON_FLAGS, &errptr, &erroffset, nullptr);
@@ -180,7 +182,7 @@ LONG H_SSHCheckCommandMode(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
 
       // Execute failed - invalidate session and retry once
       nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH.CheckCommandMode: command execution failed on %s:%u%s"),
-                      hostName, port, (attempt == 0) ? _T(", retrying with new session") : _T(" (exec channel may not be supported)"));
+                      hostName, port, (attempt == 0) ? _T(", retrying with new session") : _T(" (command channel may not be supported)"));
       ReleaseSession(ssh, true);
    }
 
