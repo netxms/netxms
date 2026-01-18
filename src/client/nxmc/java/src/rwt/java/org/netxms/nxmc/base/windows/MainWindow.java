@@ -93,6 +93,7 @@ import org.netxms.nxmc.base.widgets.Spacer;
 import org.netxms.nxmc.base.widgets.WelcomePage;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.ai.actions.ExportConversationAction;
 import org.netxms.nxmc.modules.ai.widgets.AiAssistantChatWidget;
 import org.netxms.nxmc.modules.alarms.preferencepages.AlarmPreferences;
 import org.netxms.nxmc.modules.alarms.preferencepages.AlarmSounds;
@@ -909,6 +910,17 @@ public class MainWindow extends Window implements MessageAreaHolder
 
       Label separator = new Label(chatArea, SWT.SEPARATOR | SWT.HORIZONTAL);
       separator.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+
+      ToolItem exportItem = new ToolItem(toolbar, SWT.PUSH);
+      exportItem.setImage(SharedIcons.IMG_EXPORT);
+      exportItem.setToolTipText(i18n.tr("Export chat history"));
+      exportItem.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            new ExportConversationAction(null, aiChatWidget).run();
+         }
+      });
 
       ToolItem clearItem = new ToolItem(toolbar, SWT.PUSH);
       clearItem.setImage(SharedIcons.IMG_CLEAR_LOG);

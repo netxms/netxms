@@ -18,6 +18,9 @@
  */
 package org.netxms.nxmc.modules.ai.widgets;
 
+import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import org.commonmark.Extension;
 import org.commonmark.ext.autolink.AutolinkExtension;
@@ -55,6 +58,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -93,6 +97,24 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
    private String currentMessageId;
    private Image imageUnknownContext;
    private BaseObjectLabelProvider objectLabelProvider;
+   private List<ChatMessage> messages;
+
+   /**
+    * Represents a single chat message for export purposes.
+    */
+   private static class ChatMessage
+   {
+      final boolean isUser;
+      final String content;
+      final long timestamp;
+
+      ChatMessage(boolean isUser, String content)
+      {
+         this.isUser = isUser;
+         this.content = content;
+         this.timestamp = System.currentTimeMillis();
+      }
+   }
 
    /**
     * Create AI assistant chat widget
@@ -110,6 +132,7 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
       this.withContext = withContext;
       this.session = Registry.getSession();
       this.chatContent = new StringBuilder();
+      this.messages = new ArrayList<>();
 
       imageUnknownContext = ResourceManager.getImage("icons/ai/unknown-context.png");
       objectLabelProvider = new BaseObjectLabelProvider();
@@ -451,6 +474,9 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
     */
    private void addMessage(String message, boolean isUser, String messageId)
    {
+      // Track message for export
+      messages.add(new ChatMessage(isUser, message));
+
       String escapedMessage = prepareMessageText(message);
       String messageClass = isUser ? "user-message" : "assistant-message";
       String bubbleClass = isUser ? "user-bubble" : "assistant-bubble";
@@ -478,6 +504,16 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
     */
    private void updateMessage(String messageId, String newText)
    {
+      // Update the last assistant message in the list (replaces "Thinking..." placeholder)
+      if (!messages.isEmpty())
+      {
+         ChatMessage lastMessage = messages.get(messages.size() - 1);
+         if (!lastMessage.isUser)
+         {
+            messages.set(messages.size() - 1, new ChatMessage(false, newText));
+         }
+      }
+
       String escapedMessage = prepareMessageText(newText);
       String currentContent = chatContent.toString();
 
@@ -587,6 +623,7 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
    public void clearChat()
    {
       chatContent.setLength(0);
+      messages.clear();
       initializeHtmlTemplate();
       addAssistantMessage("Hello! I'm Iris, your AI assistant. I can help you with setting up your monitoring environment, day-to-day operations, and analyzing problems. Feel free to ask any questions!");
       contextChanged = true; // Force context resend on next query
@@ -799,6 +836,41 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
    public boolean setFocus()
    {
       return chatInput.setFocus();
+   }
+
+   /**
+    * Check if the chat has any messages to export (excluding the welcome message).
+    *
+    * @return true if there are messages to export
+    */
+   public boolean hasMessagesToExport()
+   {
+      return messages.size() > 1; // More than just the welcome message
+   }
+
+   /**
+    * Export the conversation as Markdown.
+    *
+    * @return the conversation formatted as Markdown
+    */
+   public String exportAsMarkdown()
+   {
+      DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM);
+      StringBuilder md = new StringBuilder();
+      md.append("# AI Assistant Conversation\n");
+      md.append("Exported: ").append(dateFormat.format(new Date())).append("\n\n");
+      md.append("---\n\n");
+
+      DateFormat df = DateFormatFactory.getDateTimeFormat();
+      for (ChatMessage msg : messages)
+      {
+         String sender = msg.isUser ? "User" : "AI Assistant";
+         md.append("**").append(sender).append(" at ").append(df.format(new Date(msg.timestamp))).append("**\n\n");
+         md.append(msg.content).append("\n\n");
+         md.append("---\n\n");
+      }
+
+      return md.toString();
    }
 
    /**

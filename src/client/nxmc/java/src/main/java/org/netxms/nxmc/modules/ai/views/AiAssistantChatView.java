@@ -26,6 +26,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.ai.actions.ExportConversationAction;
 import org.netxms.nxmc.modules.ai.widgets.AiAssistantChatWidget;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.xnap.commons.i18n.I18n;
@@ -40,6 +41,7 @@ public class AiAssistantChatView extends View
    private long boundIncidentId;
    private AiAssistantChatWidget chatWidget;
    private Action actionClearChat;
+   private Action actionExportConversation;
 
    /**
     * Create AI assistant chat view
@@ -105,6 +107,9 @@ public class AiAssistantChatView extends View
          }
       };
       addKeyBinding("M1+L", actionClearChat);
+
+      actionExportConversation = new ExportConversationAction(this, chatWidget);
+      addKeyBinding("M1+M2+E", actionExportConversation);
    }
 
    /**
@@ -113,6 +118,7 @@ public class AiAssistantChatView extends View
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
    {
+      manager.add(actionExportConversation);
       manager.add(actionClearChat);
    }
 
@@ -122,6 +128,7 @@ public class AiAssistantChatView extends View
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      manager.add(actionExportConversation);
       manager.add(actionClearChat);
    }
 
