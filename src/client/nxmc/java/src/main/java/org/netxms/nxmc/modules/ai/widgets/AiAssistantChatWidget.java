@@ -53,6 +53,7 @@ import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.ai.AiFunctionCall;
 import org.netxms.client.ai.AiQuestion;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
@@ -162,7 +163,7 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
       chatContent.append(".message { margin-bottom: 15px; display: flex; }");
       chatContent.append(".user-message { justify-content: flex-end; }");
       chatContent.append(".assistant-message { justify-content: flex-start; }");
-      chatContent.append(".bubble { max-width: 70%; padding: 8px 12px; border-radius: 8px; border: 1px solid; word-wrap: break-word; color: #202020; }");
+      chatContent.append(".bubble { max-width: 90%; padding: 8px 12px; border-radius: 8px; border: 1px solid; word-wrap: break-word; color: #202020; }");
       chatContent.append(".user-bubble { background-color: ");
       chatContent.append(ColorConverter.rgbToCss(ThemeEngine.getBackgroundColor("AiAssistant.UserMessage").getRGB()));
       chatContent.append("; border-color: ");
@@ -191,6 +192,10 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
       chatContent.append(".question-answered { opacity: 0.6; }");
       chatContent.append(".question-answered .question-buttons { display: none; }");
       chatContent.append(".question-btn:disabled { opacity: 0.5; cursor: not-allowed; }");
+      // Function call status styles
+      chatContent.append(".function-status { display: flex; align-items: center; gap: 8px; color: #555; }");
+      chatContent.append(".function-spinner { width: 16px; height: 16px; animation: spin 1s linear infinite; }");
+      chatContent.append("@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }");
       chatContent.append("</style>");
       chatContent.append("<script>");
       chatContent.append("var questionTimers = {};");
@@ -383,9 +388,52 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
    @Override
    public void notificationHandler(SessionNotification n)
    {
-      if ((n.getCode() == SessionNotification.AI_QUESTION) && (n.getSubCode() == chatId))
+      if (n.getSubCode() != chatId)
+         return;
+
+      if (n.getCode() == SessionNotification.AI_QUESTION)
       {
          getDisplay().asyncExec(() -> displayQuestion((AiQuestion)n.getObject()));
+      }
+      else if (n.getCode() == SessionNotification.AI_FUNCTION_CALL)
+      {
+         getDisplay().asyncExec(() -> updateFunctionStatus((AiFunctionCall)n.getObject()));
+      }
+   }
+
+   /**
+    * Update the "Thinking..." message to show current function being executed with a spinner icon
+    *
+    * @param functionCall function call information
+    */
+   private void updateFunctionStatus(AiFunctionCall functionCall)
+   {
+      if (currentMessageId == null)
+         return;
+
+      // Build HTML with spinner SVG and function name
+      String spinnerSvg = "<svg class='function-spinner' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'>" +
+                          "<circle cx='12' cy='12' r='10' stroke-opacity='0.25'/>" +
+                          "<path d='M12 2a10 10 0 0 1 10 10' stroke-linecap='round'/>" +
+                          "</svg>";
+      String statusHtml = "<div class='function-status'>" + spinnerSvg +
+                          "<span>" + escapeHtml(functionCall.getDisplayName()) + "...</span></div>";
+
+      // Update directly in HTML content (bypass markdown processing for status messages)
+      String currentContent = chatContent.toString();
+      String searchPattern = "id='" + currentMessageId + "'>";
+      int startPos = currentContent.indexOf(searchPattern);
+
+      if (startPos != -1)
+      {
+         int contentStart = currentContent.indexOf("</div>", startPos) + 6; // After sender div
+         int contentEnd = currentContent.indexOf("</div></div>", contentStart);
+
+         if (contentEnd != -1)
+         {
+            chatContent.replace(contentStart, contentEnd, statusHtml);
+            updateBrowserContent();
+         }
       }
    }
 
@@ -401,7 +449,7 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
 
       addUserMessage(message);
       chatInput.setEnabled(false);
-      currentMessageId = addAssistantMessage(i18n.tr("Thinking..."));
+      currentMessageId = addThinkingMessage();
       final String contextString = buildContextString();
       contextChanged = false;
       Job job = new Job(i18n.tr("Processing AI assistant query"), view) {
@@ -462,6 +510,40 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
    {
       String messageId = "msg_" + System.currentTimeMillis();
       addMessage(message, false, messageId);
+      return messageId;
+   }
+
+   /**
+    * Add "Thinking..." message with spinner animation
+    *
+    * @return message ID for later updates
+    */
+   private String addThinkingMessage()
+   {
+      String messageId = "msg_" + System.currentTimeMillis();
+
+      // Build HTML with spinner SVG
+      String spinnerSvg = "<svg class='function-spinner' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'>" +
+                          "<circle cx='12' cy='12' r='10' stroke-opacity='0.25'/>" +
+                          "<path d='M12 2a10 10 0 0 1 10 10' stroke-linecap='round'/>" +
+                          "</svg>";
+      String thinkingHtml = "<div class='function-status'>" + spinnerSvg +
+                            "<span>" + i18n.tr("Thinking...") + "</span></div>";
+
+      // Track message for export
+      messages.add(new ChatMessage(false, i18n.tr("Thinking...")));
+
+      String messageHtml = "<div class='message assistant-message'>" +
+                           "<div class='bubble assistant-bubble' id='" + messageId + "'>" +
+                           "<div class='sender'>" + i18n.tr("AI Assistant") + "</div>" +
+                           thinkingHtml +
+                           "</div></div>";
+
+      // Insert before closing </div></body></html>
+      int insertPos = chatContent.lastIndexOf("</div></body></html>");
+      chatContent.insert(insertPos, messageHtml);
+
+      updateBrowserContent();
       return messageId;
    }
 
@@ -739,7 +821,7 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
       // Add "Thinking..." message back while waiting for model's final response
       if (currentMessageId != null)
       {
-         currentMessageId = addAssistantMessage(i18n.tr("Thinking..."));
+         currentMessageId = addThinkingMessage();
       }
 
       Job job = new Job(i18n.tr("Sending response to AI assistant"), view) {

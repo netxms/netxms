@@ -137,7 +137,7 @@ public abstract class Perspective
     *
     * @return
     */
-   protected Object getContext()
+   public Object getContext()
    {
       if (mainFolder != null)
          return mainFolder.getContext();
@@ -173,7 +173,7 @@ public abstract class Perspective
          mainFolder.updateContext(context);
       else if (mainArea != null)
          mainArea.updateContext(context);
-   }   
+   }
 
    /**
     * Save perspective state

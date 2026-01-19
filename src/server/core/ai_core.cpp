@@ -946,6 +946,23 @@ void Chat::clear()
 }
 
 /**
+ * Send function call notification to user
+ */
+static void SendFunctionCallNotification(uint32_t userId, uint32_t chatId, const char *functionName)
+{
+   NXCPMessage msg(CMD_AI_FUNCTION_CALL, 0);
+   msg.setField(VID_CHAT_ID, chatId);
+   msg.setFieldFromUtf8String(VID_AI_FUNCTION_NAME, functionName);
+
+   EnumerateClientSessions(
+      [userId, &msg](ClientSession *session) -> void
+      {
+         if (session->isAuthenticated() && (session->getUserId() == userId))
+            session->postMessage(msg);
+      });
+}
+
+/**
  * Send request to assistant
  */
 char *Chat::sendRequest(const char *prompt, int maxIterations, const char *context)
@@ -1007,6 +1024,10 @@ char *Chat::sendRequest(const char *prompt, int maxIterations, const char *conte
                   json_t *toolCallId = json_object_get(tool, "id");
                   const char *name = json_object_get_string_utf8(function, "name", "");
                   nxlog_debug_tag(DEBUG_TAG, 5, L"LLM function call requested: %hs", name);
+                  if (m_isInteractive)
+                  {
+                     SendFunctionCallNotification(m_userId, m_id, name);
+                  }
                   std::string functionResult = callFunction(name, json_object_get(function, "arguments"));
                   if (!functionResult.empty())
                   {

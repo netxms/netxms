@@ -18835,7 +18835,7 @@ void ClientSession::callAiAssistantFunction(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    char functionName[128];
-   request.getFieldAsUtf8String(VID_NAME, functionName, 128);
+   request.getFieldAsUtf8String(VID_AI_FUNCTION_NAME, functionName, 128);
 
    char *args = request.getFieldAsUtf8String(VID_ARGUMENTS);
    if (args != nullptr)

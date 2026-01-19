@@ -75,6 +75,7 @@ import org.netxms.client.agent.config.AgentConfiguration;
 import org.netxms.client.agent.config.AgentConfigurationHandle;
 import org.netxms.client.ai.AiAgentTask;
 import org.netxms.client.ai.AiAssistantFunction;
+import org.netxms.client.ai.AiFunctionCall;
 import org.netxms.client.ai.AiMessage;
 import org.netxms.client.ai.AiQuestion;
 import org.netxms.client.asset.AssetAttribute;
@@ -802,6 +803,10 @@ public class NXCSession
                      sendNotification(new SessionNotification(SessionNotification.AI_MESSAGE_CHANGED,
                            msg.getFieldAsInt64(NXCPCodes.VID_AI_MESSAGE_ID),
                            new AiMessage(msg, NXCPCodes.VID_ELEMENT_LIST_BASE)));
+                     break;
+                  case NXCPCodes.CMD_AI_FUNCTION_CALL:
+                     sendNotification(new SessionNotification(SessionNotification.AI_FUNCTION_CALL,
+                           msg.getFieldAsInt64(NXCPCodes.VID_CHAT_ID), new AiFunctionCall(msg)));
                      break;
                   default:
                      // Check subscriptions
@@ -15608,7 +15613,7 @@ public class NXCSession
    public String callAiAssistantFunction(String name, String arguments) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_CALL_AI_ASSISTANT_FUNCTION);
-      msg.setField(NXCPCodes.VID_NAME, name);
+      msg.setField(NXCPCodes.VID_AI_FUNCTION_NAME, name);
       msg.setField(NXCPCodes.VID_ARGUMENTS, arguments);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());

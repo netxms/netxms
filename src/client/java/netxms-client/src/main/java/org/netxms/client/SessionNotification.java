@@ -37,6 +37,7 @@ public class SessionNotification
    public static final int SYSTEM_ACCESS_CHANGED = 13;
    public static final int AI_QUESTION = 14;
    public static final int AI_MESSAGE_CHANGED = 15;
+   public static final int AI_FUNCTION_CALL = 16;
    public static final int OBJECT_DELETED = 99;
 
 	public static final int NOTIFY_BASE = 1000;	// Base value for notifications used as subcode for NXC_EVENT_NOTIFICATION in C library

@@ -524,6 +524,7 @@ public class NXCPCodes
    public static final int CMD_GET_LOG_QUERY_SQL = 0x01FA;
    public static final int CMD_GET_LIST_LIST = 0x01FB;
    public static final int CMD_QUERY_LIST = 0x01FC;
+   public static final int CMD_AI_FUNCTION_CALL = 0x01FD;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1447,6 +1448,7 @@ public class NXCPCodes
    public static final long VID_PORT_STOP_COUNT = 913;
    public static final long VID_SNMP_CONTEXT = 914;
    public static final long VID_QUERY_SQL = 915;
+   public static final long VID_AI_FUNCTION_NAME = 916;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

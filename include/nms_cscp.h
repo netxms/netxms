@@ -706,6 +706,7 @@ typedef struct
 #define CMD_GET_LOG_QUERY_SQL             0x01FA
 #define CMD_GET_LIST_LIST                 0x01FB
 #define CMD_QUERY_LIST                    0x01FC
+#define CMD_AI_FUNCTION_CALL              0x01FD
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1633,6 +1634,7 @@ typedef struct
 #define VID_PORT_STOP_COUNT         ((uint32_t)913)
 #define VID_SNMP_CONTEXT            ((uint32_t)914)
 #define VID_QUERY_SQL               ((uint32_t)915)
+#define VID_AI_FUNCTION_NAME        ((uint32_t)916)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)
