@@ -69,6 +69,11 @@ static char s_llmTemperatureStr[32] = "";
 static char s_llmTopPStr[32] = "";
 
 /**
+ * Context window size (num_ctx for Ollama)
+ */
+static int s_llmContextSize = 32768;
+
+/**
  * Functions
  */
 static AssistantFunctionSet s_globalFunctions;
@@ -1044,6 +1049,12 @@ char *Chat::sendRequest(const char *prompt, int maxIterations, const char *conte
          json_object_set_new(request, "temperature", json_real(strtod(s_llmTemperatureStr, nullptr)));
       if (s_llmTopPStr[0] != 0)
          json_object_set_new(request, "top_p", json_real(strtod(s_llmTopPStr, nullptr)));
+      if (s_llmContextSize > 0)
+      {
+         json_t *options = json_object();
+         json_object_set_new(options, "num_ctx", json_integer(s_llmContextSize));
+         json_object_set_new(request, "options", options);
+      }
       json_object_set(request, "tools", m_functionDeclarations);
       json_object_set(request, "messages", m_messages);
 
@@ -1804,6 +1815,7 @@ bool InitAIAssistant()
 {
    NX_CFG_TEMPLATE configTemplate[] =
    {
+      { _T("ContextSize"), CT_LONG, 0, 0, 0, 0, &s_llmContextSize },
       { _T("Model"), CT_MB_STRING, 0, 0, sizeof(s_llmModel), 0, s_llmModel },
       { _T("Temperature"), CT_MB_STRING, 0, 0, sizeof(s_llmTemperatureStr), 0, s_llmTemperatureStr },
       { _T("Token"), CT_MB_STRING, 0, 0, sizeof(s_llmAuthToken), 0, s_llmAuthToken },
@@ -1938,7 +1950,8 @@ bool InitAIAssistant()
 
    RegisterSchedulerTaskHandler(L"Execute.AIAgentTask", ExecuteAIAgentTask, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
 
-   nxlog_debug_tag(DEBUG_TAG, 2, L"LLM service URL = \"%hs\", model = \"%hs\", temperature = %hs, top_p = %hs", s_llmServiceURL, s_llmModel,
+   nxlog_debug_tag(DEBUG_TAG, 2, L"LLM service URL = \"%hs\", model = \"%hs\", context_size = %d, temperature = %hs, top_p = %hs",
+      s_llmServiceURL, s_llmModel, s_llmContextSize,
       (s_llmTemperatureStr[0] != 0) ? s_llmTemperatureStr : "default", (s_llmTopPStr[0] != 0) ? s_llmTopPStr : "default");
    nxlog_debug_tag(DEBUG_TAG, 2, L"%d global functions registered", static_cast<int>(s_globalFunctions.size()));
    nxlog_debug_tag(DEBUG_TAG, 2, L"%d skills registered", static_cast<int>(GetRegisteredSkillCount()));
