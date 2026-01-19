@@ -292,6 +292,52 @@ time_t NXCORE_EXPORTABLE ParseTimestamp(const char *ts)
 }
 
 /**
+ * Strip thinking tags from LLM response.
+ * Removes content between <think> and </think> tags (case-insensitive).
+ * Handles multiple thinking blocks and trims leading whitespace after removal.
+ */
+static char *StripThinkingTags(const char *input)
+{
+   if (input == nullptr)
+      return nullptr;
+
+   size_t inputLen = strlen(input);
+   char *result = MemAllocStringA(inputLen + 1);
+   char *dst = result;
+   const char *src = input;
+
+   while (*src != 0)
+   {
+      // Check for <think> tag (case-insensitive)
+      if (strnicmp(src, "<think>", 7) == 0)
+      {
+         // Find closing </think> tag
+         const char *end = strcasestr(src, "</think>");
+         if (end != nullptr)
+         {
+            src = end + 8;  // Skip past </think>
+            continue;
+         }
+      }
+      *dst++ = *src++;
+   }
+   *dst = 0;
+
+   // Trim leading whitespace
+   char *trimmed = result;
+   while (*trimmed == ' ' || *trimmed == '\n' || *trimmed == '\r' || *trimmed == '\t')
+      trimmed++;
+
+   // If we trimmed from the start, move content
+   if (trimmed != result)
+   {
+      memmove(result, trimmed, strlen(trimmed) + 1);
+   }
+
+   return result;
+}
+
+/**
  * Rebuild function declarations JSON object. Functions mutex must be locked before calling this function.
  */
 json_t *RebuildFunctionDeclarations(const std::unordered_map<std::string, shared_ptr<AssistantFunction>>& functions)
@@ -1066,7 +1112,7 @@ char *Chat::sendRequest(const char *prompt, int maxIterations, const char *conte
             json_t *content = json_object_get(message, "content");
             if (json_is_string(content))
             {
-               answer = MemCopyStringA(json_string_value(content));
+               answer = StripThinkingTags(json_string_value(content));
                iterations = 0;
             }
             else

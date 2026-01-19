@@ -59,6 +59,7 @@ make -j$(nproc)
 | `core/poll.cpp` | Polling infrastructure |
 | `core/events.cpp` | Event processing |
 | `core/alarm.cpp` | Alarm management |
+| `core/ai_core.cpp` | AI/LLM integration core |
 
 ## Network Device Drivers
 
@@ -188,6 +189,12 @@ When modifying the database schema:
 1. Write upgrade procedures in `tools/nxdbmgr/`
 2. Update schema in `sql/` folder (root)
 3. See [Data Dictionary](https://www.netxms.org/documentation/datadictionary-latest/)
+
+## AI Integration
+
+The AI subsystem (`core/ai_core.cpp`) handles LLM communication for the AI assistant feature.
+
+- Some LLM models (e.g., QwQ) output internal reasoning in `<think>...</think>` tags - these are filtered by `StripThinkingTags()` before presenting to users
 
 ## Debugging
 
