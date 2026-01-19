@@ -43,8 +43,8 @@ Name: "{app}\logs"; Flags: uninsalwaysuninstall
 
 [InstallDelete]
 Type: files; Name: "{app}\jetty-base\webapps\ROOT\nxmc-*.jar"
-Type: files; Name: "{app}\jetty-base\lib\logging\logback-classic-1.3.5.jar"
-Type: files; Name: "{app}\jetty-base\lib\logging\logback-core-1.3.5.jar"
+Type: files; Name: "{app}\jetty-base\lib\logging\logback-classic-1.5.21.jar"
+Type: files; Name: "{app}\jetty-base\lib\logging\logback-core-1.5.21.jar"
 Type: filesandordirs; Name: "{app}\jetty-home\lib\*"
 Type: filesandordirs; Name: "{app}\jetty-home\modules\*"
 
