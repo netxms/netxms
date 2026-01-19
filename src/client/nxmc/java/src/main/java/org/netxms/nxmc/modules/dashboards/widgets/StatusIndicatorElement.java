@@ -144,6 +144,7 @@ public class StatusIndicatorElement extends ElementWidget
             }
 
             // Resolve DCI names
+            boolean dciTemplatesFound = false;
             DciValue[] nodeDciList = null;
             for(int i = 0; i < elementWidgets.length; i++)
             {
@@ -165,10 +166,23 @@ public class StatusIndicatorElement extends ElementWidget
                      {
                         e.setObjectId(contextObject.getObjectId());
                         e.setDciId(dciInfo.getId());
+                        dciTemplatesFound = true;
                         break;
                      }
                   }
                }
+            }
+
+            if (dciTemplatesFound)
+            {
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     if (!isDisposed())
+                        refreshData();
+                  }
+               });
             }
          }
 
