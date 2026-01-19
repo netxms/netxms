@@ -59,6 +59,16 @@ static char s_llmModel[64] = "llama3.2";
 static char s_llmAuthToken[256] = "";
 
 /**
+ * Temperature (string, empty = not set)
+ */
+static char s_llmTemperatureStr[32] = "";
+
+/**
+ * Top P (string, empty = not set)
+ */
+static char s_llmTopPStr[32] = "";
+
+/**
  * Functions
  */
 static AssistantFunctionSet s_globalFunctions;
@@ -984,6 +994,10 @@ char *Chat::sendRequest(const char *prompt, int maxIterations, const char *conte
       json_t *request = json_object();
       json_object_set_new(request, "model", json_string(s_llmModel));
       json_object_set_new(request, "stream", json_boolean(false));
+      if (s_llmTemperatureStr[0] != 0)
+         json_object_set_new(request, "temperature", json_real(strtod(s_llmTemperatureStr, nullptr)));
+      if (s_llmTopPStr[0] != 0)
+         json_object_set_new(request, "top_p", json_real(strtod(s_llmTopPStr, nullptr)));
       json_object_set(request, "tools", m_functionDeclarations);
       json_object_set(request, "messages", m_messages);
 
@@ -1745,7 +1759,9 @@ bool InitAIAssistant()
    NX_CFG_TEMPLATE configTemplate[] =
    {
       { _T("Model"), CT_MB_STRING, 0, 0, sizeof(s_llmModel), 0, s_llmModel },
+      { _T("Temperature"), CT_MB_STRING, 0, 0, sizeof(s_llmTemperatureStr), 0, s_llmTemperatureStr },
       { _T("Token"), CT_MB_STRING, 0, 0, sizeof(s_llmAuthToken), 0, s_llmAuthToken },
+      { _T("TopP"), CT_MB_STRING, 0, 0, sizeof(s_llmTopPStr), 0, s_llmTopPStr },
       { _T("URL"), CT_MB_STRING, 0, 0, sizeof(s_llmServiceURL), 0, s_llmServiceURL },
       { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
    };
@@ -1876,7 +1892,8 @@ bool InitAIAssistant()
 
    RegisterSchedulerTaskHandler(L"Execute.AIAgentTask", ExecuteAIAgentTask, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
 
-   nxlog_debug_tag(DEBUG_TAG, 2, L"LLM service URL = \"%hs\", model = \"%hs\"", s_llmServiceURL, s_llmModel);
+   nxlog_debug_tag(DEBUG_TAG, 2, L"LLM service URL = \"%hs\", model = \"%hs\", temperature = %hs, top_p = %hs", s_llmServiceURL, s_llmModel,
+      (s_llmTemperatureStr[0] != 0) ? s_llmTemperatureStr : "default", (s_llmTopPStr[0] != 0) ? s_llmTopPStr : "default");
    nxlog_debug_tag(DEBUG_TAG, 2, L"%d global functions registered", static_cast<int>(s_globalFunctions.size()));
    nxlog_debug_tag(DEBUG_TAG, 2, L"%d skills registered", static_cast<int>(GetRegisteredSkillCount()));
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("AI assistant initialized"));
