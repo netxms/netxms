@@ -80,6 +80,12 @@ static AssistantFunctionSet s_globalFunctions;
 static Mutex s_globalFunctionsMutex(MutexType::FAST);
 
 /**
+ * Thread-local storage for current chat context.
+ * Set by Chat::sendRequest() for the duration of request processing.
+ */
+static thread_local Chat* s_currentChat = nullptr;
+
+/**
  * System prompt
  */
 static const char *s_systemPrompt =
@@ -898,16 +904,7 @@ void Chat::initializeFunctions()
          else if (!stricmp(typeStr, "confirm_cancel"))
             type = ConfirmationType::CONFIRM_CANCEL;
 
-#ifdef UNICODE
-         WCHAR *wtext = WideStringFromUTF8String(text);
-         WCHAR *wcontext = WideStringFromUTF8String(context);
-         bool result = this->askConfirmation(wtext, wcontext, type);
-         MemFree(wtext);
-         MemFree(wcontext);
-#else
          bool result = this->askConfirmation(text, context, type);
-#endif
-
          return result ? R"({"approved": true})" : R"({"approved": false})";
       }
    ));
@@ -951,17 +948,7 @@ void Chat::initializeFunctions()
             return R"({"error": "Options array must contain at least one string"})";
 
          const char *context = json_object_get_string_utf8(arguments, "context", "");
-
-#ifdef UNICODE
-         WCHAR *wtext = WideStringFromUTF8String(text);
-         WCHAR *wcontext = WideStringFromUTF8String(context);
-         int result = this->askMultipleChoice(wtext, wcontext, options);
-         MemFree(wtext);
-         MemFree(wcontext);
-#else
          int result = this->askMultipleChoice(text, context, options);
-#endif
-
          if (result >= 0 && result < options.size())
          {
             // Include both 1-based index and selected text for clarity
@@ -1029,6 +1016,8 @@ static void SendFunctionCallNotification(uint32_t userId, uint32_t chatId, const
 char *Chat::sendRequest(const char *prompt, int maxIterations, const char *context)
 {
    LockGuard lockGuard(m_mutex);
+
+   s_currentChat = this;
 
    if (context != nullptr && context[0] != 0)
    {
@@ -1141,6 +1130,8 @@ char *Chat::sendRequest(const char *prompt, int maxIterations, const char *conte
       json_decref(response);
    }
    nxlog_debug_tag(DEBUG_TAG, 5, L"Final LLM response %s", (answer != nullptr) ? L"received" : L"not received");
+
+   s_currentChat = nullptr;
    return answer;
 }
 
@@ -1229,8 +1220,8 @@ static void SendQuestionToUser(uint32_t userId, uint32_t chatId, const PendingQu
    msg.setField(VID_AI_QUESTION_ID, question->id);
    msg.setField(VID_AI_QUESTION_TYPE, question->isMultipleChoice ? static_cast<uint16_t>(1) : static_cast<uint16_t>(0));
    msg.setField(VID_AI_CONFIRMATION_TYPE, static_cast<uint16_t>(question->confirmationType));
-   msg.setField(VID_AI_QUESTION_TEXT, question->text);
-   msg.setField(VID_AI_QUESTION_CONTEXT, question->context);
+   msg.setFieldFromUtf8String(VID_AI_QUESTION_TEXT, question->text.c_str());
+   msg.setFieldFromUtf8String(VID_AI_QUESTION_CONTEXT, question->context.c_str());
    msg.setField(VID_AI_QUESTION_TIMEOUT, static_cast<uint32_t>(question->expiresAt - time(nullptr)));
    if (question->isMultipleChoice)
    {
@@ -1248,7 +1239,7 @@ static void SendQuestionToUser(uint32_t userId, uint32_t chatId, const PendingQu
 /**
  * Ask confirmation question and wait for response
  */
-bool Chat::askConfirmation(const TCHAR *text, const TCHAR *context, ConfirmationType type, uint32_t timeout)
+bool Chat::askConfirmation(const char *text, const char *context, ConfirmationType type, uint32_t timeout)
 {
    m_questionMutex.lock();
 
@@ -1265,13 +1256,13 @@ bool Chat::askConfirmation(const TCHAR *text, const TCHAR *context, Confirmation
    m_pendingQuestion->isMultipleChoice = false;
    m_pendingQuestion->confirmationType = type;
    m_pendingQuestion->text = text;
-   m_pendingQuestion->context = (context != nullptr) ? context : _T("");
+   m_pendingQuestion->context = (context != nullptr) ? context : "";
    m_pendingQuestion->expiresAt = time(nullptr) + timeout;
    m_pendingQuestion->responded = false;
    m_pendingQuestion->positiveResponse = false;
    m_pendingQuestion->selectedOption = -1;
 
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("Chat [%u]: asking confirmation question [") UINT64_FMT _T("] to user [%u]: %s"),
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Chat [%u]: asking confirmation question [") UINT64_FMT _T("] to user [%u]: %hs"),
       m_id, m_pendingQuestion->id, m_userId, text);
 
    SendQuestionToUser(m_userId, m_id, m_pendingQuestion);
@@ -1303,7 +1294,7 @@ bool Chat::askConfirmation(const TCHAR *text, const TCHAR *context, Confirmation
 /**
  * Ask multiple choice question and wait for response
  */
-int Chat::askMultipleChoice(const TCHAR *text, const TCHAR *context, const StringList &options, uint32_t timeout)
+int Chat::askMultipleChoice(const char *text, const char *context, const StringList &options, uint32_t timeout)
 {
    m_questionMutex.lock();
 
@@ -1320,14 +1311,14 @@ int Chat::askMultipleChoice(const TCHAR *text, const TCHAR *context, const Strin
    m_pendingQuestion->isMultipleChoice = true;
    m_pendingQuestion->confirmationType = ConfirmationType::YES_NO;  // Not used for multiple choice
    m_pendingQuestion->text = text;
-   m_pendingQuestion->context = (context != nullptr) ? context : _T("");
+   m_pendingQuestion->context = (context != nullptr) ? context : "";
    m_pendingQuestion->options.addAll(options);
    m_pendingQuestion->expiresAt = time(nullptr) + timeout;
    m_pendingQuestion->responded = false;
    m_pendingQuestion->positiveResponse = false;
    m_pendingQuestion->selectedOption = -1;
 
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("Chat [%u]: asking multiple choice question [") UINT64_FMT _T("] to user [%u]: %s"),
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Chat [%u]: asking multiple choice question [") UINT64_FMT _T("] to user [%u]: %hs"),
       m_id, m_pendingQuestion->id, m_userId, text);
 
    SendQuestionToUser(m_userId, m_id, m_pendingQuestion);
@@ -1402,8 +1393,8 @@ json_t *Chat::getPendingQuestion()
    json_object_set_new(question, "id", json_integer(m_pendingQuestion->id));
    json_object_set_new(question, "type", json_string(m_pendingQuestion->isMultipleChoice ? "multipleChoice" : "confirmation"));
    json_object_set_new(question, "confirmationType", json_integer(static_cast<int>(m_pendingQuestion->confirmationType)));
-   json_object_set_new(question, "text", json_string_t(m_pendingQuestion->text.cstr()));
-   json_object_set_new(question, "context", json_string_t(m_pendingQuestion->context.cstr()));
+   json_object_set_new(question, "text", json_string(m_pendingQuestion->text.c_str()));
+   json_object_set_new(question, "context", json_string(m_pendingQuestion->context.c_str()));
    json_object_set_new(question, "expiresAt", json_integer(m_pendingQuestion->expiresAt));
 
    if (m_pendingQuestion->isMultipleChoice)
@@ -1451,6 +1442,15 @@ void ProcessEventWithAIAssistant(Event *event, const shared_ptr<NetObj>& object,
          MemFree(prompt);
          json_decref(eventData);
       });
+}
+
+/**
+ * Get current chat context (thread-local).
+ * Returns the Chat object that is currently processing a request on this thread, or nullptr if none.
+ */
+Chat NXCORE_EXPORTABLE *GetCurrentAIChat()
+{
+   return s_currentChat;
 }
 
 /**

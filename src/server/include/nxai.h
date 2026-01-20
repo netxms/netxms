@@ -83,8 +83,8 @@ struct PendingQuestion
    uint64_t id;
    bool isMultipleChoice;
    ConfirmationType confirmationType;
-   MutableString text;
-   MutableString context;
+   std::string text;
+   std::string context;
    StringList options;
    time_t expiresAt;
    Condition responseReceived;
@@ -212,8 +212,8 @@ public:
 
    void clear();
 
-   bool askConfirmation(const TCHAR *text, const TCHAR *context, ConfirmationType type, uint32_t timeout = 300);
-   int askMultipleChoice(const TCHAR *text, const TCHAR *context, const StringList &options, uint32_t timeout = 300);
+   bool askConfirmation(const char *text, const char *context, ConfirmationType type, uint32_t timeout = 300);
+   int askMultipleChoice(const char *text, const char *context, const StringList &options, uint32_t timeout = 300);
    void handleQuestionResponse(uint64_t questionId, bool positive, int selectedOption);
    bool hasPendingQuestion() const { return m_pendingQuestion != nullptr; }
    json_t *getPendingQuestion();
@@ -274,6 +274,13 @@ void NXCORE_EXPORTABLE AddAIAssistantPrompt(const char *text);
  * Add custom prompt from file
  */
 void NXCORE_EXPORTABLE AddAIAssistantPromptFromFile(const wchar_t *fileName);
+
+/**
+ * Get current chat context (thread-local).
+ * Returns the Chat object that is currently processing a request on this thread, or nullptr if none.
+ * This allows AI function handlers to access the Chat for user interaction (e.g., askConfirmation).
+ */
+Chat NXCORE_EXPORTABLE *GetCurrentAIChat();
 
 /**
  * Create new chat
