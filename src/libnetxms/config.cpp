@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** NetXMS Foundation Library
- ** Copyright (C) 2003-2025 Raden Solutions
+ ** Copyright (C) 2003-2026 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -950,6 +950,18 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                   break;   // this parameter was already initialized, and override from config is forbidden
                }
                *((uint64_t *)cfgTemplate[i].buffer) = ParseSize(value, 1000);
+               break;
+            case CT_DOUBLE:
+               if ((cfgTemplate[i].overrideIndicator != nullptr) &&
+                   (*((double*)cfgTemplate[i].overrideIndicator) != NXCONFIG_UNINITIALIZED_VALUE))
+               {
+                  break;   // this parameter was already initialized, and override from config is forbidden
+               }
+               *((double*)cfgTemplate[i].buffer) = _tcstod(value, &eptr);
+               if (*eptr != 0)
+               {
+                  error(_T("Invalid floating point number '%s' in configuration file %s at line %d\n"), value, entry->getFile(), entry->getLine());
+               }
                break;
             case CT_IGNORE:
                break;
