@@ -1031,6 +1031,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          fd.left = new FormAttachment(0, 0);
          fd.top = new FormAttachment(0, 0);
          fd.right = new FormAttachment(100, 0);
+         fd.bottom = new FormAttachment(100, 0);
          mainContent.setLayoutData(fd);
 
          mainContent.getParent().layout();
