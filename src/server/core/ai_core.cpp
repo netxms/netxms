@@ -59,14 +59,14 @@ static char s_llmModel[64] = "llama3.2";
 static char s_llmAuthToken[256] = "";
 
 /**
- * Temperature (string, empty = not set)
+ * Temperature (-1 = not set)
  */
-static char s_llmTemperatureStr[32] = "";
+static double s_llmTemperature = -1.0;
 
 /**
- * Top P (string, empty = not set)
+ * Top P (-1 = not set)
  */
-static char s_llmTopPStr[32] = "";
+static double s_llmTopP = -1.0;
 
 /**
  * Context window size (num_ctx for Ollama)
@@ -1045,10 +1045,10 @@ char *Chat::sendRequest(const char *prompt, int maxIterations, const char *conte
       json_t *request = json_object();
       json_object_set_new(request, "model", json_string(s_llmModel));
       json_object_set_new(request, "stream", json_boolean(false));
-      if (s_llmTemperatureStr[0] != 0)
-         json_object_set_new(request, "temperature", json_real(strtod(s_llmTemperatureStr, nullptr)));
-      if (s_llmTopPStr[0] != 0)
-         json_object_set_new(request, "top_p", json_real(strtod(s_llmTopPStr, nullptr)));
+      if (s_llmTemperature >= 0)
+         json_object_set_new(request, "temperature", json_real(s_llmTemperature));
+      if (s_llmTopP >= 0)
+         json_object_set_new(request, "top_p", json_real((s_llmTopP > 1) ? 1.0 : s_llmTopP));
       if (s_llmContextSize > 0)
       {
          json_t *options = json_object();
@@ -1817,9 +1817,9 @@ bool InitAIAssistant()
    {
       { _T("ContextSize"), CT_LONG, 0, 0, 0, 0, &s_llmContextSize },
       { _T("Model"), CT_MB_STRING, 0, 0, sizeof(s_llmModel), 0, s_llmModel },
-      { _T("Temperature"), CT_MB_STRING, 0, 0, sizeof(s_llmTemperatureStr), 0, s_llmTemperatureStr },
+      { _T("Temperature"), CT_DOUBLE, 0, 0, 0, 0, &s_llmTemperature },
       { _T("Token"), CT_MB_STRING, 0, 0, sizeof(s_llmAuthToken), 0, s_llmAuthToken },
-      { _T("TopP"), CT_MB_STRING, 0, 0, sizeof(s_llmTopPStr), 0, s_llmTopPStr },
+      { _T("TopP"), CT_DOUBLE, 0, 0, 0, 0, &s_llmTopP },
       { _T("URL"), CT_MB_STRING, 0, 0, sizeof(s_llmServiceURL), 0, s_llmServiceURL },
       { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
    };
@@ -1950,9 +1950,18 @@ bool InitAIAssistant()
 
    RegisterSchedulerTaskHandler(L"Execute.AIAgentTask", ExecuteAIAgentTask, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
 
-   nxlog_debug_tag(DEBUG_TAG, 2, L"LLM service URL = \"%hs\", model = \"%hs\", context_size = %d, temperature = %hs, top_p = %hs",
-      s_llmServiceURL, s_llmModel, s_llmContextSize,
-      (s_llmTemperatureStr[0] != 0) ? s_llmTemperatureStr : "default", (s_llmTopPStr[0] != 0) ? s_llmTopPStr : "default");
+   if ((s_llmTemperature >= 0) && (s_llmTopP >= 0))
+      nxlog_debug_tag(DEBUG_TAG, 2, L"LLM service URL = \"%hs\", model = \"%hs\", context_size = %d, temperature = %g, top_p = %g",
+         s_llmServiceURL, s_llmModel, s_llmContextSize, s_llmTemperature, s_llmTopP);
+   else if (s_llmTemperature >= 0)
+      nxlog_debug_tag(DEBUG_TAG, 2, L"LLM service URL = \"%hs\", model = \"%hs\", context_size = %d, temperature = %g, top_p = default",
+         s_llmServiceURL, s_llmModel, s_llmContextSize, s_llmTemperature);
+   else if (s_llmTopP >= 0)
+      nxlog_debug_tag(DEBUG_TAG, 2, L"LLM service URL = \"%hs\", model = \"%hs\", context_size = %d, temperature = default, top_p = %g",
+         s_llmServiceURL, s_llmModel, s_llmContextSize, s_llmTopP);
+   else
+      nxlog_debug_tag(DEBUG_TAG, 2, L"LLM service URL = \"%hs\", model = \"%hs\", context_size = %d, temperature = default, top_p = default",
+         s_llmServiceURL, s_llmModel, s_llmContextSize);
    nxlog_debug_tag(DEBUG_TAG, 2, L"%d global functions registered", static_cast<int>(s_globalFunctions.size()));
    nxlog_debug_tag(DEBUG_TAG, 2, L"%d skills registered", static_cast<int>(GetRegisteredSkillCount()));
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("AI assistant initialized"));
