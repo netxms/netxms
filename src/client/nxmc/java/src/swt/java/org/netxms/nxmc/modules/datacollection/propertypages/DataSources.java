@@ -94,7 +94,7 @@ public class DataSources extends PreferencePage
    public DataSources(GraphDefinition settings, boolean saveToDatabase)
    {
       super("Data Source");
-      config = settings;     
+      config = settings;
       this.saveToDatabase = saveToDatabase;
    }
 
@@ -235,7 +235,7 @@ public class DataSources extends PreferencePage
 				addItem();
 			}
       });
-		
+
       editButton = new Button(rightButtons, SWT.PUSH);
       editButton.setText(i18n.tr("&Edit..."));
       rd = new RowData();
@@ -255,7 +255,7 @@ public class DataSources extends PreferencePage
 			}
       });
       editButton.setEnabled(false);
-		
+
       deleteButton = new Button(rightButtons, SWT.PUSH);
       deleteButton.setText(i18n.tr("Delete"));
       rd = new RowData();
@@ -308,7 +308,7 @@ public class DataSources extends PreferencePage
 		ChartDciConfig dci = (ChartDciConfig)item.getData();
 		if (dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR))
 			return;
-		
+
 		int width = viewer.getTable().getColumn(COLUMN_COLOR).getWidth();
 		Color color = ColorConverter.colorFromInt(dci.getColorAsInt(), colorCache);
 		event.gc.setForeground(colorCache.create(0, 0, 0));
@@ -331,17 +331,17 @@ public class DataSources extends PreferencePage
 			for(DciValue item : selection)
 			{
    			ChartDciConfig dci = new ChartDciConfig(item);
-   			
+
    			labelProvider.addCacheEntry(dci.nodeId, dci.dciId, dci.name);
    			select.add(dci);
-   			dciList.add(dci);           
+   			dciList.add(dci);
 			}
-			
+
          viewer.setInput(dciList.toArray());
          viewer.setSelection(new StructuredSelection(select));
 		}
 	}
-	
+
 	/**
 	 * Edit selected item
 	 */
@@ -352,13 +352,13 @@ public class DataSources extends PreferencePage
 		if (dci == null)
 			return;
 
-		DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, false, graphIsTemplate);
+		DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, graphIsTemplate);
 		if (dlg.open() == Window.OK)
 		{
 			viewer.update(dci, null);
 		}
 	}
-	
+
 	/**
 	 * Delete selected item(s)
 	 */
@@ -371,7 +371,7 @@ public class DataSources extends PreferencePage
 	}
 
 	/**
-	 * Move selected item up 
+	 * Move selected item up
 	 */
 	private void moveUp()
 	{
@@ -388,7 +388,7 @@ public class DataSources extends PreferencePage
 			}
 		}
 	}
-	
+
 	/**
 	 * Move selected item down
 	 */
@@ -410,7 +410,7 @@ public class DataSources extends PreferencePage
 
 	/**
 	 * Apply changes
-	 * 
+	 *
 	 * @param isApply true if update operation caused by "Apply" button
 	 */
 	protected void applyChanges(final boolean isApply)
@@ -419,7 +419,7 @@ public class DataSources extends PreferencePage
       {
          return;
       }
-	   
+
 		config.setDciList(dciList.toArray(new ChartDciConfig[dciList.size()]));
 		if (saveToDatabase && isApply)
 		{
@@ -431,7 +431,7 @@ public class DataSources extends PreferencePage
 				{
                session.saveGraph((GraphDefinition)config, false);
 				}
-	
+
 				@Override
 				protected void jobFinalize()
 				{
@@ -443,7 +443,7 @@ public class DataSources extends PreferencePage
 						}
 					});
 				}
-	
+
 				@Override
 				protected String getErrorMessage()
 				{

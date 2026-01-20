@@ -35,7 +35,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.StatusIndicatorConfig;
 import org.netxms.nxmc.modules.dashboards.config.StatusIndicatorConfig.StatusIndicatorElementConfig;
 import org.netxms.nxmc.modules.datacollection.widgets.DciSelector;
-import org.netxms.nxmc.modules.datacollection.widgets.TemplateDciSelector;
+import org.netxms.nxmc.modules.datacollection.widgets.DciTemplateSelectionWidget;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -54,7 +54,7 @@ public class StatusIndicatorElementEditDialog extends Dialog
    private Composite typeSpecificControl;
    private ObjectSelector objectSelector;
    private DciSelector dciSelector;
-   private TemplateDciSelector templateDciSelector;
+   private DciTemplateSelectionWidget templateDciWidget;
    private LabeledText tagEditor;
    private ObjectSelector drillDownObjectSelector;
    private String cachedDciName;
@@ -146,9 +146,8 @@ public class StatusIndicatorElementEditDialog extends Dialog
             dciSelector.setDciId(element.getObjectId(), element.getDciId());
             break;
          case StatusIndicatorConfig.ELEMENT_TYPE_DCI_TEMPLATE:
-            templateDciSelector = new TemplateDciSelector(typeSpecificControl, SWT.NONE);
-            templateDciSelector.setLabel(i18n.tr("DCI name"));
-            templateDciSelector.setText(element.getDciName());
+            templateDciWidget = new DciTemplateSelectionWidget(typeSpecificControl, SWT.NONE);
+            templateDciWidget.setConfig(element.getTemplateConfig());
             break;
          case StatusIndicatorConfig.ELEMENT_TYPE_OBJECT:
             objectSelector = new ObjectSelector(typeSpecificControl, SWT.NONE, false);
@@ -187,7 +186,7 @@ public class StatusIndicatorElementEditDialog extends Dialog
             cachedDciName = dciSelector.getDciName();
             break;
          case StatusIndicatorConfig.ELEMENT_TYPE_DCI_TEMPLATE:
-            element.setDciName(templateDciSelector.getText());
+            element.applyTemplateConfig(templateDciWidget.getConfig());
             break;
          case StatusIndicatorConfig.ELEMENT_TYPE_OBJECT:
             element.setObjectId(objectSelector.getObjectId());
