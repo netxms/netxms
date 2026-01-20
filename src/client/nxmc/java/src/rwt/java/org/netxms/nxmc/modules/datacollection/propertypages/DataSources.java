@@ -131,11 +131,12 @@ public class DataSources extends PreferencePage
 		});
 		*/
 
+      viewer.setInput(dciList.toArray());
       labelProvider.resolveDciNames(dciList, new Runnable() {
          @Override
          public void run()
          {
-            viewer.setInput(dciList.toArray());
+            viewer.refresh();
          }
       });
 
@@ -308,7 +309,7 @@ public class DataSources extends PreferencePage
 			{
    			ChartDciConfig dci = new ChartDciConfig(item);
 
-   			labelProvider.addCacheEntry(dci.nodeId, dci.dciId, dci.name);
+   			labelProvider.addCacheEntry(dci.nodeId, dci.dciId, dci.dciDescription);
    			select.add(dci);
    			dciList.add(dci);
 			}

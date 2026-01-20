@@ -46,7 +46,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	private NXCSession session;
 	private Map<Long, DciInfo> dciNameCache = new HashMap<Long, DciInfo>();
 	private List<ChartDciConfig> elementList;
-	
+
 	/**
 	 * The constructor
 	 */
@@ -55,7 +55,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 		this.elementList = elementList;
       session = Registry.getSession();
 	}
-	
+
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
@@ -80,7 +80,9 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 				AbstractObject object = session.findObjectById(dci.nodeId);
 				return (object != null) ? object.getObjectName() : ("[" + Long.toString(dci.nodeId) + "]");
 			case DataSources.COLUMN_METRIC:
-				String name = dciNameCache.get(dci.dciId).displayName;
+				String name = null;
+				if (dciNameCache.containsKey(dci.dciId))
+               name = dciNameCache.get(dci.dciId).displayName;
             return (name != null) ? name : i18n.tr("<unresolved>");
 			case DataSources.COLUMN_LABEL:
 				return dci.name;
@@ -89,10 +91,10 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Resolve DCI names for given collection of condition DCIs and add to cache
-	 * 
+	 *
 	 * @param dciList
 	 */
    public void resolveDciNames(final Collection<ChartDciConfig> dciList, final Runnable completionHandler)
@@ -102,7 +104,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
          protected void run(IProgressMonitor monitor) throws Exception
 			{
 				final Map<Long, DciInfo> names = session.dciIdsToNames(dciList);
-				
+
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -123,7 +125,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 
 	/**
 	 * Add single cache entry
-	 * 
+	 *
 	 * @param nodeId
 	 * @param dciId
 	 * @param name
