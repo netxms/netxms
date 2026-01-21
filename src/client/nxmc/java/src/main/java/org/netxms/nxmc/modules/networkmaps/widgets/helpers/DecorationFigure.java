@@ -111,7 +111,7 @@ public class DecorationFigure extends DecorationLayerAbstractFigure
 		add(handle);
 		Dimension size = getSize();
 		handle.setSize(8, 8);
-		
+
 		switch(pos)
 		{
 			case TOP_LEFT:

@@ -146,11 +146,12 @@ public class ExtendedGraphViewer extends GraphViewer
       this.moveCallback = moveCallback;
 
       eventDispatcher = new ExtendedSWTEventDispatcher();
-      graph.getLightweightSystem().setEventDispatcher(eventDispatcher);
+      graph.setCursor(graph.getDisplay().getSystemCursor(SWT.CURSOR_ARROW));
 
 		colors = new ColorCache(graph);
 
 		final ScalableFigure rootLayer = graph.getRootLayer();
+      rootLayer.setCursor(graph.getDisplay().getSystemCursor(SWT.CURSOR_ARROW));
 
       iconBack = ResourceManager.getImage("icons/netmap/back.png");
 
@@ -270,7 +271,7 @@ public class ExtendedGraphViewer extends GraphViewer
                dragStarted = false;
                objectDragLastPosition = null;
                unblockRefresh();
-               graph.setCursor(null);
+               graph.setCursor(graph.getDisplay().getSystemCursor(SWT.CURSOR_ARROW));
                return;
             }
 
@@ -281,7 +282,7 @@ public class ExtendedGraphViewer extends GraphViewer
             backgroundDragActive = false;
             backgroundDragStart = null;
             backgroundDragStartViewLocation = null;
-            graph.setCursor(null);
+            graph.setCursor(graph.getDisplay().getSystemCursor(SWT.CURSOR_ARROW));
          }
 
          @Override

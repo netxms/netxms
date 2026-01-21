@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -261,7 +261,7 @@ public class BendpointEditor
 			addMouseListener(this);
 			setCursor(Display.getCurrent().getSystemCursor(SWT.CURSOR_CROSS));
 		}
-		
+
 		/**
 		 * Stop dragging
 		 */
@@ -274,9 +274,9 @@ public class BendpointEditor
 			saveBendPoints();
 		}
 
-		/* (non-Javadoc)
-		 * @see org.eclipse.draw2d.MouseListener#mousePressed(org.eclipse.draw2d.MouseEvent)
-		 */
+      /**
+       * @see org.eclipse.draw2d.MouseListener#mousePressed(org.eclipse.draw2d.MouseEvent)
+       */
 		@Override
 		public void mousePressed(MouseEvent me)
 		{

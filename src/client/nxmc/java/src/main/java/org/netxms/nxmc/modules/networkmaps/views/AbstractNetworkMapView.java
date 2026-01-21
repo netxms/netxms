@@ -308,6 +308,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       fd.right = new FormAttachment(100, 0);
       fd.bottom = new FormAttachment(100, 0);
       mainContent.setLayoutData(fd);
+      mainContent.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_NO));
 
       viewer = new ExtendedGraphViewer(mainContent, SWT.NONE, this, new FigureChangeCallback() {
          @Override

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,8 +37,6 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -112,15 +110,11 @@ public class NetworkMapWidget extends Composite
 		viewer.setContentProvider(new MapContentProvider(viewer, labelProvider));
 		viewer.setLabelProvider(labelProvider);
 
-		addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-				if (defaultLinkColor != null)
-					defaultLinkColor.dispose();
-		      if (sessionListener != null)
-		         session.removeListener(sessionListener);
-			}
+      addDisposeListener((e) -> {
+         if (defaultLinkColor != null)
+            defaultLinkColor.dispose();
+         if (sessionListener != null)
+            session.removeListener(sessionListener);
 		});
 
       sessionListener = new SessionListener() {
