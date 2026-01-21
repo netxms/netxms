@@ -853,6 +853,16 @@ SharedString NXCPMessage::getFieldAsSharedString(uint32_t fieldId, size_t maxSiz
 
 /**
  * Get string field
+ */
+String NXCPMessage::getFieldAsString(uint32_t fieldId, size_t maxSize) const
+{
+   Buffer<TCHAR, 1024> buffer(maxSize);
+   getFieldAsString(fieldId, buffer, maxSize);
+   return String(buffer);
+}
+
+/**
+ * Get string field
  * If buffer is NULL, memory block of required size will be allocated
  * for result; if buffer is not NULL, entire result or part of it will
  * be placed to buffer and pointer to buffer will be returned.

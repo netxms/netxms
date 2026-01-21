@@ -1538,9 +1538,11 @@ void GetEnumList(NXCPMessage *msg)
       NETXMS_SUBAGENT_LIST *l = s_lists.get(i);
       msg->setField(fieldId++, l->name);
       msg->setField(fieldId++, l->description);
+      fieldId += 8;
    }
 
    uint32_t count = static_cast<uint32_t>(s_lists.size());
    ListListsFromExtSubagents(msg, &fieldId, &count);
    msg->setField(VID_NUM_ENUMS, count);
+   msg->setField(VID_TABLE_EXTENDED_FORMAT, true);
 }

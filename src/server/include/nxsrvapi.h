@@ -914,19 +914,23 @@ public:
 class LIBNXSRV_EXPORTABLE AgentListDefinition
 {
 private:
-   TCHAR *m_name;
-   TCHAR *m_description;
+   String m_name;
+   String m_description;
 
 public:
-   AgentListDefinition(const NXCPMessage *msg, uint32_t baseId);
-   AgentListDefinition(const AgentListDefinition *src);
-   AgentListDefinition(const TCHAR *name, const TCHAR *description);
-   ~AgentListDefinition();
+   AgentListDefinition(const NXCPMessage& msg, uint32_t baseId) :
+      m_name(msg.getFieldAsString(baseId, MAX_PARAM_NAME)), m_description(msg.getFieldAsString(baseId, 512)) {}
+   AgentListDefinition(const AgentListDefinition& src) : m_name(src.m_name), m_description(src.m_description) {}
+   AgentListDefinition(const wchar_t *name, const wchar_t *description) : m_name(name), m_description(description) {}
 
-   uint32_t fillMessage(NXCPMessage *msg, uint32_t baseId) const;
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const
+   {
+      msg->setField(baseId, m_name);
+      msg->setField(baseId + 1, m_description);
+   }
 
-   const TCHAR *getName() const { return m_name; }
-   const TCHAR *getDescription() const { return m_description; }
+   const wchar_t *getName() const { return m_name.cstr(); }
+   const wchar_t *getDescription() const { return m_description.cstr(); }
 };
 
 /**

@@ -406,16 +406,17 @@ void ExternalSubagent::listParameters(StringList *list)
  */
 void ExternalSubagent::listLists(NXCPMessage *msg, UINT32 *baseId, UINT32 *count)
 {
-	UINT32 paramCount = 0;
+	uint32_t paramCount = 0;
 	NETXMS_SUBAGENT_LIST *list = getSupportedLists(&paramCount);
 	if (list != nullptr)
 	{
-		UINT32 id = *baseId;
+	   uint32_t id = *baseId;
 
-		for(UINT32 i = 0; i < paramCount; i++)
+		for(uint32_t i = 0; i < paramCount; i++)
 		{
 			msg->setField(id++, list[i].name);
 			msg->setField(id++, list[i].description);
+			id += 8;
 		}
 		*baseId = id;
 		*count += paramCount;

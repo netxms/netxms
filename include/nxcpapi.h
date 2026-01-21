@@ -167,6 +167,7 @@ public:
 	char *getFieldAsMBString(uint32_t fieldId, char *buffer = nullptr, size_t bufferSize = 0) const;
 	char *getFieldAsUtf8String(uint32_t fieldId, char *buffer = nullptr, size_t bufferSize = 0) const;
    SharedString getFieldAsSharedString(uint32_t fieldId, size_t maxSize = 0) const;
+   String getFieldAsString(uint32_t fieldId, size_t maxSize) const;
    size_t getFieldAsBinary(uint32_t fieldId, BYTE *buffer, size_t bufferSize) const;
    InetAddress getFieldAsInetAddress(uint32_t fieldId) const;
    MacAddress getFieldAsMacAddress(uint32_t fieldId) const;

@@ -10204,7 +10204,8 @@ void Node::writeListListToMessage(NXCPMessage *msg)
       uint32_t fieldId = VID_ENUM_LIST_BASE;
       for(int i = 0; i < m_agentLists->size(); i++)
       {
-         fieldId += m_agentLists->get(i)->fillMessage(msg, fieldId);
+         m_agentLists->get(i)->fillMessage(msg, fieldId);
+         fieldId += 10;
       }
       nxlog_debug_tag(DEBUG_TAG_DC_AGENT, 6, _T("Node[%s]::writeListListToMessage(): sending %d lists"), m_name, m_agentLists->size());
    }

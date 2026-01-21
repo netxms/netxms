@@ -37,7 +37,6 @@ import org.netxms.nxmc.modules.agentmanagement.views.AgentExplorer;
 import org.netxms.nxmc.modules.agentmanagement.views.helpers.AgentDataTreeNode;
 import org.netxms.nxmc.modules.agentmanagement.views.helpers.AgentDataTreeNode.NodeType;
 import org.netxms.nxmc.modules.datacollection.widgets.BaseTableValueViewer;
-import org.netxms.nxmc.modules.datacollection.widgets.TableValueViewer;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 

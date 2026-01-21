@@ -10124,7 +10124,7 @@ public class NXCSession
       for(int i = 0; i < count; i++)
       {
          list.add(new AgentList(response, baseId));
-         baseId += 2;
+         baseId += 10;
       }
       return list;
    }
