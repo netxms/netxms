@@ -132,6 +132,7 @@ public class ExtendedGraphViewer extends GraphViewer
    private boolean backgroundDragged = false;
    private Point backgroundDragStart = null; // in absolute screen coordinates
    private org.eclipse.draw2d.geometry.Point backgroundDragStartViewLocation = null;
+   private org.eclipse.draw2d.geometry.Point objectDragLastPosition = null;
 
 	/**
 	 * @param composite
@@ -194,6 +195,27 @@ public class ExtendedGraphViewer extends GraphViewer
          @Override
          public void mouseDragged(MouseEvent me)
          {
+            // If object drag is in progress, continue moving the selected objects
+            if (dragStarted && objectDragLastPosition != null)
+            {
+               int dx = me.x - objectDragLastPosition.x;
+               int dy = me.y - objectDragLastPosition.y;
+               if ((dx != 0) || (dy != 0))
+               {
+                  for(Object o : graph.getSelection())
+                  {
+                     if (o instanceof CGraphNode)
+                     {
+                        CGraphNode n = (CGraphNode)o;
+                        org.eclipse.draw2d.geometry.Point p = n.getLocation();
+                        n.setLocation(p.x + dx, p.y + dy);
+                     }
+                  }
+                  objectDragLastPosition.setLocation(me.x, me.y);
+               }
+               return;
+            }
+
             if (!backgroundDragActive)
                return;
 
@@ -228,6 +250,30 @@ public class ExtendedGraphViewer extends GraphViewer
             if (me.button != 1)
                return;
 
+            // If object drag was in progress, finish it and call move callback
+            if (dragStarted && moveCallback != null)
+            {
+               if (getLayoutAlgorithm() instanceof ManualLayout)
+               {
+                  for(Object object : graph.getSelection())
+                  {
+                     if (object instanceof CGraphNode)
+                     {
+                        IFigure figure = ((CGraphNode)object).getFigure();
+                        if (figure instanceof ObjectFigure)
+                        {
+                           moveCallback.onMove(((ObjectFigure)figure).getMapElement());
+                        }
+                     }
+                  }
+               }
+               dragStarted = false;
+               objectDragLastPosition = null;
+               unblockRefresh();
+               graph.setCursor(null);
+               return;
+            }
+
             if (!backgroundDragged)
             {
                setSelection(null);
@@ -242,6 +288,10 @@ public class ExtendedGraphViewer extends GraphViewer
          public void mousePressed(MouseEvent me)
          {
             if (me.button != 1)
+               return;
+
+            // Don't start background drag if object drag is in progress
+            if (dragStarted)
                return;
 
             backgroundDragActive = true;
@@ -359,6 +409,7 @@ public class ExtendedGraphViewer extends GraphViewer
                   if (!(getLayoutAlgorithm() instanceof ManualLayout))
                   {
                      dragStarted = false;
+                     objectDragLastPosition = null;
                      unblockRefresh();
                      return;
                   }
@@ -380,6 +431,7 @@ public class ExtendedGraphViewer extends GraphViewer
                   unblockRefresh();
                }
                dragStarted = false;
+               objectDragLastPosition = null;
             }
 
             @Override
@@ -417,8 +469,19 @@ public class ExtendedGraphViewer extends GraphViewer
             @Override
             public void mouseDragged(MouseEvent me)
             {
+               // Don't start object drag if background drag is active
+               if (backgroundDragActive)
+                  return;
+
                if (!dragStarted)
+               {
                   blockRefresh();
+                  objectDragLastPosition = new org.eclipse.draw2d.geometry.Point(me.x, me.y);
+               }
+               else if (objectDragLastPosition != null)
+               {
+                  objectDragLastPosition.setLocation(me.x, me.y);
+               }
                dragStarted = true;
             }
          };
