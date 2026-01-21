@@ -167,7 +167,7 @@ Only after issue approval:
 2. **Install dependencies (Ubuntu/Debian)**:
    ```bash
    sudo apt-get update
-   sudo apt-get install build-essential g++ automake git gitk libtool flex bison libssl-dev libjansson-dev autoconf valgrind gdb libcurl4-openssl-dev postgresql-client maven mariadb-client libpcre3-dev mosquitto-dev libmariadb-dev libpq-dev default-jdk libasan8
+   sudo apt-get install build-essential g++ automake git gitk libtool flex bison libssl-dev libjansson-dev autoconf valgrind gdb libcurl4-openssl-dev postgresql-client maven mariadb-client libpcre3-dev mosquitto-dev libmariadb-dev libpq-dev default-jdk libasan8 libexpat1-dev libmicrohttpd-dev
    ```
 
 3. **Configure and build**:
