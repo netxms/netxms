@@ -354,7 +354,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
 
    int itemCount = 0;
    int tableCount = 0;
-   time_t now = time(nullptr);
+   int64_t now = GetCurrentTimeMs();
 
    readLockDciAccess();
 
@@ -443,7 +443,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
                if (itemCount > 0)
                   queryItems.append(_T(" OR "));
                queryItems.append(_T("(idata_timestamp<"));
-               queryItems.append(static_cast<int64_t>(now - retentionTime * 86400));
+               queryItems.append(now - retentionTime * _LL(86400000));
                queryItems.append(_T(" AND item_id IN ("));
                queryItems.append(*idList);
                queryItems.append(_T("))"));
@@ -457,7 +457,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
                if (tableCount > 0)
                   queryTables.append(_T(" OR "));
                queryTables.append(_T("(tdata_timestamp<"));
-               queryTables.append(static_cast<int64_t>(now - retentionTime * 86400));
+               queryTables.append(now - retentionTime * _LL(86400000));
                queryTables.append(_T(" AND item_id IN ("));
                queryTables.append(*idList);
                queryTables.append(_T("))"));
@@ -480,7 +480,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
                queryItems.append(_T("(item_id="));
                queryItems.append(o->getId());
                queryItems.append(_T(" AND idata_timestamp<"));
-               queryItems.append(static_cast<int64_t>(now - o->getEffectiveRetentionTime() * 86400));
+               queryItems.append(now - o->getEffectiveRetentionTime() * _LL(86400000));
                queryItems.append(_T(')'));
                itemCount++;
             }
@@ -491,7 +491,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
                queryTables.append(_T("(item_id="));
                queryTables.append(o->getId());
                queryTables.append(_T(" AND tdata_timestamp<"));
-               queryTables.append(static_cast<int64_t>(now - o->getEffectiveRetentionTime() * 86400));
+               queryTables.append(now - o->getEffectiveRetentionTime() * _LL(86400000));
                queryTables.append(_T(')'));
                tableCount++;
             }
@@ -503,14 +503,14 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
    if (sameRetentionTimeItems && (retentionTimeItems != -1))
    {
       queryItems.append(_T("idata_timestamp<"));
-      queryItems.append(static_cast<int64_t>(now - retentionTimeItems * 86400));
+      queryItems.append(now - retentionTimeItems * _LL(86400000));
       itemCount++;   // Indicate that query should be run
    }
 
    if (sameRetentionTimeTables && (retentionTimeTables != -1))
    {
       queryTables.append(_T("tdata_timestamp<"));
-      queryTables.append(static_cast<int64_t>(now - retentionTimeTables * 86400));
+      queryTables.append(now - retentionTimeTables * _LL(86400000));
       tableCount++;   // Indicate that query should be run
    }
 
@@ -540,7 +540,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
    if (itemCount > 0)
    {
       LockIDataWrites();
-      nxlog_debug_tag(_T("housekeeper"), 6, _T("DataCollectionTarget::cleanDCIData(%s [%d]): running query \"%s\""), m_name, m_id, queryItems.cstr());
+      nxlog_debug_tag(_T("housekeeper"), 6, _T("DataCollectionTarget::cleanDCIData(%s [%u]): running query \"%s\""), m_name, m_id, queryItems.cstr());
       DBQuery(hdb, queryItems);
       UnlockIDataWrites();
       if (!ThrottleHousekeeper())
@@ -549,7 +549,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
 
    if (tableCount > 0)
    {
-      nxlog_debug_tag(_T("housekeeper"), 6, _T("DataCollectionTarget::cleanDCIData(%s [%d]): running query \"%s\""), m_name, m_id, queryTables.cstr());
+      nxlog_debug_tag(_T("housekeeper"), 6, _T("DataCollectionTarget::cleanDCIData(%s [%u]): running query \"%s\""), m_name, m_id, queryTables.cstr());
       DBQuery(hdb, queryTables);
    }
 }
