@@ -345,10 +345,13 @@ public class StatusIndicatorElement extends ElementWidget
                   {
                      w.setStatus(ObjectStatus.UNKNOWN);
                   }
+                  w.setVisible(true);
+                  ((GridData)w.getLayoutData()).exclude = false;
                }
                else
                {
-                  w.setStatus(ObjectStatus.UNKNOWN);
+                  w.setVisible(false);
+                  ((GridData)w.getLayoutData()).exclude = true;
                }
                break;
             case StatusIndicatorConfig.ELEMENT_TYPE_DCI:
@@ -374,6 +377,7 @@ public class StatusIndicatorElement extends ElementWidget
                break;
          }
       }
+      getContentArea().layout(true, true);
    }
 
 	/**
