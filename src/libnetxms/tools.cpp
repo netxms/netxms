@@ -2611,7 +2611,7 @@ bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, in
 
    for(curr = pszPattern; bRun; curr = ptr + 1)
    {
-      for(ptr = curr; (*ptr != 0) && (*ptr != '-') && (*ptr != ','); ptr++);
+      for(ptr = curr; (*ptr != 0) && (*ptr != '-') && (*ptr != ',') && (*ptr != _T('L')) && (*ptr != _T('#')); ptr++);
       switch(*ptr)
       {
          case '-':
@@ -2630,6 +2630,32 @@ bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, in
                return true;
             ptr++;
             if (*ptr != ',')
+               bRun = false;
+            break;
+         case '#':  // Nth occurrence of day of week in a month (like 5#3 - third Friday)
+            if (bRange || (localTime == nullptr))
+               return false;  // Range with # is not supported; n#m form supported only for day of week
+            *ptr = 0;
+            nCurr = _tcstol(curr, nullptr, 10);
+            if (nValue == nCurr)
+            {
+               ptr++;
+               int occurrence = _tcstol(ptr, &ptr, 10);
+               if ((occurrence >= 1) && (occurrence <= 5))
+               {
+                  int currentOccurrence = (localTime->tm_mday - 1) / 7 + 1;
+                  if (currentOccurrence == occurrence)
+                     return true;
+               }
+            }
+            else
+            {
+               // Skip past the occurrence number
+               ptr++;
+               while ((*ptr >= _T('0')) && (*ptr <= _T('9')))
+                  ptr++;
+            }
+            if (*ptr != _T(','))
                bRun = false;
             break;
          case 0:
