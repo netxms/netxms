@@ -202,35 +202,35 @@ Threshold::Threshold(json_t *json, DCItem *parentItem)
    createId();
    m_itemId = parentItem->getId();
    m_targetId = parentItem->getOwnerId();
-   
+
    String activationEvent = json_object_get_string(json, "activationEvent", _T("SYS_THRESHOLD_REACHED"));
    m_eventCode = EventCodeFromName(activationEvent, EVENT_THRESHOLD_REACHED);
-   
+
    String deactivationEvent = json_object_get_string(json, "deactivationEvent", _T("SYS_THRESHOLD_REARMED"));
    m_rearmEventCode = EventCodeFromName(deactivationEvent, EVENT_THRESHOLD_REARMED);
-   
+
    m_function = static_cast<BYTE>(json_object_get_int32(json, "function", F_LAST));
    m_operation = static_cast<BYTE>(json_object_get_int32(json, "condition", OP_EQ));
    m_dataType = parentItem->getTransformedDataType();
-   
+
    String value = json_object_get_string(json, "value", _T(""));
    m_value.set(value, true);
    m_expandValue = (NumChars(m_value, '%') > 0);
-   
+
    // Handle both sampleCount and param1 for compatibility
    json_t *sampleCountObj = json_object_get(json, "sampleCount");
    if (sampleCountObj != nullptr)
       m_sampleCount = json_integer_value(sampleCountObj);
    else
       m_sampleCount = json_object_get_int32(json, "param1", 1);
-   
+
    m_scriptSource = nullptr;
    m_script = nullptr;
    m_lastScriptErrorReport = 0;
-   
+
    String script = json_object_get_string(json, "script", _T(""));
    setScript(MemCopyString(script));
-   
+
    m_isReached = false;
    m_wasReachedBeforeMaint = false;
    m_disabled = false;
@@ -1036,7 +1036,7 @@ json_t *Threshold::createExportRecord() const
    json_object_set_new(root, "function", json_integer(m_function));
    json_object_set_new(root, "condition", json_integer(m_operation));
    json_object_set_new(root, "value", json_string_t(m_value));
-   
+
    // Convert event codes to event names
    TCHAR activationEventName[MAX_EVENT_NAME];
    if (EventNameFromCode(m_eventCode, activationEventName))
@@ -1047,7 +1047,7 @@ json_t *Threshold::createExportRecord() const
    {
       json_object_set_new(root, "activationEvent", json_string("UNKNOWN_EVENT"));
    }
-   
+
    TCHAR deactivationEventName[MAX_EVENT_NAME];
    if (EventNameFromCode(m_rearmEventCode, deactivationEventName))
    {
@@ -1057,11 +1057,11 @@ json_t *Threshold::createExportRecord() const
    {
       json_object_set_new(root, "deactivationEvent", json_string("UNKNOWN_EVENT"));
    }
-   
+
    json_object_set_new(root, "sampleCount", json_integer(m_sampleCount));
    json_object_set_new(root, "repeatInterval", json_integer(m_repeatInterval));
    json_object_set_new(root, "script", json_string_t(CHECK_NULL_EX(m_scriptSource)));
-   
+
    return root;
 }
 
@@ -1149,6 +1149,7 @@ void Threshold::reconcile(const Threshold& src)
    m_currentSeverity = src.m_currentSeverity;
    m_lastScriptErrorReport = src.m_lastScriptErrorReport;
    m_lastCheckValue = src.m_lastCheckValue;
+   m_activationSequence = src.m_activationSequence;
 }
 
 /**
