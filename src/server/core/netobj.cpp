@@ -3119,7 +3119,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
             {
                if (event->getDciId() != 0)
                {
-                  dciId = alarm->getDciId();
+                  dciId = event->getDciId();
                   object = FindObjectById(event->getSourceId());
                }
             }
