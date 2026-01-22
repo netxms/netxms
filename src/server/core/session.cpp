@@ -12934,6 +12934,15 @@ void ClientSession::findNodeConnection(const NXCPMessage& request)
  */
 void ClientSession::findMacAddress(const NXCPMessage& request)
 {
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   if (!checkSystemAccessRights(SYSTEM_ACCESS_SEARCH_NETWORK))
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      sendMessage(response);
+      return;
+   }
+
    BYTE macPattern[MAC_ADDR_LENGTH];
    size_t macPatternSize = request.getFieldAsBinary(VID_MAC_ADDR, macPattern, MAC_ADDR_LENGTH);
    int searchLimit = request.getFieldAsInt32(VID_MAX_RECORDS);
@@ -12941,7 +12950,6 @@ void ClientSession::findMacAddress(const NXCPMessage& request)
    ObjectArray<MacAddressInfo> icpl(0, 16, Ownership::True);
    FindMacAddresses(macPattern, macPatternSize, &icpl, searchLimit);
 
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    response.setField(VID_RCC, RCC_SUCCESS);
 
    if (icpl.isEmpty())
@@ -12950,10 +12958,19 @@ void ClientSession::findMacAddress(const NXCPMessage& request)
    }
    else
    {
-      response.setField(VID_NUM_ELEMENTS, icpl.size());
+      int count = 0;
       uint32_t base = VID_ELEMENT_LIST_BASE;
-      for (int i = 0; i < icpl.size(); i++, base += 10)
-         icpl.get(i)->fillMessage(&response, base);
+      for (int i = 0; i < icpl.size(); i++)
+      {
+         MacAddressInfo *info = icpl.get(i);
+         shared_ptr<NetObj> owner = info->getOwner();
+         if ((owner != nullptr) && !owner->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+            continue;
+         info->fillMessage(&response, base);
+         base += 10;
+         count++;
+      }
+      response.setField(VID_NUM_ELEMENTS, count);
    }
 
    sendMessage(response);
@@ -12964,8 +12981,16 @@ void ClientSession::findMacAddress(const NXCPMessage& request)
  */
 void ClientSession::findIpAddress(const NXCPMessage& request)
 {
-   TCHAR ipAddrText[64];
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   if (!checkSystemAccessRights(SYSTEM_ACCESS_SEARCH_NETWORK))
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      sendMessage(response);
+      return;
+   }
+
+   TCHAR ipAddrText[64];
 	response.setField(VID_RCC, RCC_SUCCESS);
 
 	MacAddress macAddr;
@@ -13068,6 +13093,14 @@ void ClientSession::findIpAddress(const NXCPMessage& request)
 void ClientSession::findHostname(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   if (!checkSystemAccessRights(SYSTEM_ACCESS_SEARCH_NETWORK))
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      sendMessage(response);
+      return;
+   }
+
    response.setField(VID_RCC, RCC_SUCCESS);
 
    int32_t zoneUIN = request.getFieldAsUInt32(VID_ZONE_UIN);
@@ -13076,13 +13109,17 @@ void ClientSession::findHostname(const NXCPMessage& request)
 
    unique_ptr<SharedObjectArray<NetObj>> nodes = FindNodesByHostname(zoneUIN, hostname);
 
-   response.setField(VID_NUM_ELEMENTS, nodes->size());
-
+   int count = 0;
    uint32_t fieldId = VID_ELEMENT_LIST_BASE;
    for(int i = 0; i < nodes->size(); i++)
    {
-      response.setField(fieldId++, nodes->get(i)->getId());
+      NetObj *node = nodes->get(i);
+      if (!node->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+         continue;
+      response.setField(fieldId++, node->getId());
+      count++;
    }
+   response.setField(VID_NUM_ELEMENTS, count);
 
    sendMessage(response);
 }

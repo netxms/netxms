@@ -288,7 +288,8 @@ public:
       if (m_requestData.size() > 0)
       {
          m_requestData.write('\0');
-         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Web API request data: %hs"), m_requestData.buffer());
+         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Web API request data received (%u bytes)"),
+            static_cast<uint32_t>(m_requestData.size() - 1));
       }
    }
 

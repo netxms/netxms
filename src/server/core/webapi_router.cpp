@@ -43,6 +43,22 @@ struct Route
 static Route *s_root = nullptr;
 
 /**
+ * Mask authentication token for logging (shows first 4 and last 4 characters)
+ */
+static void MaskToken(const char *token, char *masked, size_t size)
+{
+   size_t len = strlen(token);
+   if (len <= 8)
+   {
+      strlcpy(masked, "********", size);
+   }
+   else
+   {
+      snprintf(masked, size, "%.4s****%.4s", token, token + len - 4);
+   }
+}
+
+/**
  * Add route
  */
 void RouteBuilder::build()
@@ -237,14 +253,18 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
       token = UserAuthenticationToken::parseA(encodedToken);
       if (token.isNull())
       {
-         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Authentication token \"%hs\" provided in request has invalid format", encodedToken);
+         char masked[32];
+         MaskToken(encodedToken, masked, sizeof(masked));
+         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Authentication token \"%hs\" provided in request has invalid format", masked);
          *responseCode = 401;  // Unauthorized
          return nullptr;
       }
 
       if (!ValidateAuthenticationToken(token, &userId, nullptr, AUTH_TOKEN_VALIDITY_TIME))
       {
-         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Authentication token \"%hs\" provided in request is invalid or expired", encodedToken);
+         char masked[32];
+         MaskToken(encodedToken, masked, sizeof(masked));
+         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Authentication token \"%hs\" provided in request is invalid or expired", masked);
          *responseCode = 401;  // Unauthorized
          return nullptr;
       }
@@ -252,7 +272,9 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
       uint32_t rcc;
       if (!ValidateUserId(userId, loginName, &systemAccessRights, &rcc))
       {
-         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Authentication token \"%hs\" provided in request is valid but associated login is not (RCC=%u)", encodedToken);
+         char masked[32];
+         MaskToken(encodedToken, masked, sizeof(masked));
+         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Authentication token \"%hs\" provided in request is valid but associated login is not (RCC=%u)", masked, rcc);
          *responseCode = 403;  // Forbidden
          return nullptr;
       }

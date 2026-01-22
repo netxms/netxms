@@ -28,6 +28,12 @@
  */
 int H_FindMacAddress(Context *context)
 {
+   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_SEARCH_NETWORK))
+   {
+      context->setErrorResponse("Access denied");
+      return 403;
+   }
+
    json_t *output = json_array();
 
    const char *macAddress = context->getQueryParameter("macAddress");
@@ -38,11 +44,18 @@ int H_FindMacAddress(Context *context)
    ObjectArray<MacAddressInfo> icpl(0, 16, Ownership::True);
    FindMacAddresses(mac.value(), mac.length(), &icpl, searchLimit);
 
-   for(int i = 0; i < icpl.size() && i < searchLimit; i++)
+   int count = 0;
+   for(int i = 0; i < icpl.size() && count < searchLimit; i++)
    {
+      MacAddressInfo *info = icpl.get(i);
+      shared_ptr<NetObj> owner = info->getOwner();
+      if ((owner != nullptr) && !owner->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+         continue;
+
       json_t *json = json_object();
-      icpl.get(i)->fillJson(json, context->getUserId(), includeObject, CreateObjectSummary);
+      info->fillJson(json, context->getUserId(), includeObject, CreateObjectSummary);
       json_array_append_new(output, json);
+      count++;
    }
 
    context->setResponseData(output);

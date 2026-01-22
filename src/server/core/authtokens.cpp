@@ -180,7 +180,7 @@ void NXCORE_EXPORTABLE RevokeAuthenticationToken(const UserAuthenticationToken& 
    if (descriptor != nullptr)
    {
       s_tokens.remove(hash);
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token \"%s\" was revoked"), token.toString().cstr());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token \"%s\" was revoked"), token.toMaskedString().cstr());
       if (descriptor->persistent)
          DeleteAuthenticationTokenFromDB(descriptor->tokenId);
    }
@@ -219,14 +219,14 @@ bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken
    shared_ptr<AuthenticationTokenDescriptor> descriptor = s_tokens.getShared(hash);
    if (descriptor == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token \"%s\" does not exist"), token.toString().cstr());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token \"%s\" does not exist"), token.toMaskedString().cstr());
       return false;
    }
    time_t now = time(nullptr);
    if (descriptor->expirationTime <= now)
    {
       s_tokens.remove(hash);
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token [%u] \"%s\" has expired"), descriptor->tokenId, token.toString().cstr());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token [%u] \"%s\" has expired"), descriptor->tokenId, token.toMaskedString().cstr());
       if (descriptor->persistent)
          DeleteAuthenticationTokenFromDB(descriptor->tokenId);
       return false;
@@ -252,7 +252,7 @@ void CheckUserAuthenticationTokens(const shared_ptr<ScheduledTaskParameters>& pa
       {
          if (descriptor->expirationTime <= time(nullptr))
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token \"%s\" has expired"), descriptor->token.toString().cstr());
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token \"%s\" has expired"), descriptor->token.toMaskedString().cstr());
             expiredTokens.add(descriptor);
          }
          return _CONTINUE;

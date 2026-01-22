@@ -77,6 +77,16 @@ public:
       return String(toString(buffer));
    }
 
+   String toMaskedString() const
+   {
+      String full = toString();
+      if (full.length() <= 8)
+         return String(_T("********"));
+      TCHAR buffer[64];
+      _sntprintf(buffer, 64, _T("%.4s****%.4s"), full.cstr(), full.cstr() + full.length() - 4);
+      return String(buffer);
+   }
+
    static UserAuthenticationToken parseW(const wchar_t *s);
    static UserAuthenticationToken parseA(const char *s);
    static UserAuthenticationToken parse(const wchar_t *s)

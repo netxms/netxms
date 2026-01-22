@@ -45,6 +45,24 @@ static const char *s_stateNames[] =
 };
 
 /**
+ * Get severity name with bounds checking
+ */
+static inline const char* GetSeverityName(int severity)
+{
+   static const int MAX_SEVERITY = sizeof(s_severityNames) / sizeof(s_severityNames[0]);
+   return (severity >= 0 && severity < MAX_SEVERITY) ? s_severityNames[severity] : "Unknown";
+}
+
+/**
+ * Get state name with bounds checking
+ */
+static inline const char* GetStateName(int state)
+{
+   static const int MAX_STATE = sizeof(s_stateNames) / sizeof(s_stateNames[0]);
+   return (state >= 0 && state < MAX_STATE) ? s_stateNames[state] : "Unknown";
+}
+
+/**
  * Format object name for Grafana
  */
 static inline String FormatObjectNameForGrafana(const NetObj *object)
@@ -99,8 +117,8 @@ int H_GrafanaGetAlarms(Context *context)
       {
          json_t *json = json_object();
          json_object_set_new(json, "Id", json_integer(alarm->getAlarmId()));
-         json_object_set_new(json, "Severity", json_string(s_severityNames[alarm->getCurrentSeverity()]));
-         json_object_set_new(json, "State", json_string(s_stateNames[alarm->getState() & ALARM_STATE_MASK]));
+         json_object_set_new(json, "Severity", json_string(GetSeverityName(alarm->getCurrentSeverity())));
+         json_object_set_new(json, "State", json_string(GetStateName(alarm->getState() & ALARM_STATE_MASK)));
          json_object_set_new(json, "Source", json_string_t(FormatObjectNameForGrafana(object.get())));
          json_object_set_new(json, "Message", json_string_t(alarm->getMessage()));
          json_object_set_new(json, "Count", json_integer(alarm->getRepeatCount()));
@@ -112,7 +130,7 @@ int H_GrafanaGetAlarms(Context *context)
          }
          else
          {
-            uint32_t userId;
+            uint32_t userId = 0;
             switch (alarm->getState() & ALARM_STATE_MASK)
             {
                case ALARM_STATE_ACKNOWLEDGED:
@@ -123,6 +141,8 @@ int H_GrafanaGetAlarms(Context *context)
                   break;
                case ALARM_STATE_TERMINATED:
                   userId = alarm->getTermByUser();
+                  break;
+               default:
                   break;
             }
             TCHAR buffer[MAX_USER_NAME];
