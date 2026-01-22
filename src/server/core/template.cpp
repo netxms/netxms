@@ -72,6 +72,7 @@ static GenericAgentPolicy *CreatePolicy(const TCHAR *name, const TCHAR *type, UI
  */
 Template::Template() : super(), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND), VersionableObject(this)
 {
+   m_removeDCIOnDelete = true;
 }
 
 /**
@@ -79,6 +80,7 @@ Template::Template() : super(), AutoBindTarget(this), Pollable(this, Pollable::A
  */
 Template::Template(const TCHAR *name, const uuid& guid) : super(name, guid), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND), VersionableObject(this)
 {
+   m_removeDCIOnDelete = true;
 }
 
 /**
@@ -602,7 +604,7 @@ void Template::prepareForDeletion()
    {
       NetObj *object = getChildList().get(i);
       if (object->isDataCollectionTarget())
-         queueRemoveFromTarget(object->getId(), true);
+         queueRemoveFromTarget(object->getId(), m_removeDCIOnDelete);
       if (object->getObjectClass() == OBJECT_NODE)
       {
          removeAllPolicies(static_cast<Node*>(object));

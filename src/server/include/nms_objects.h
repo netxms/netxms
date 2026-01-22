@@ -2230,6 +2230,7 @@ private:
 protected:
    SharedObjectArray<GenericAgentPolicy> m_policyList;
    SharedObjectArray<GenericAgentPolicy> m_deletedPolicyList;
+   bool m_removeDCIOnDelete;
 
    virtual void prepareForDeletion() override;
    virtual void onDataCollectionChange() override;
@@ -2281,6 +2282,7 @@ public:
    void checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyInfo *ap);
    void initiatePolicyValidation();
    void removeAllPolicies(Node *node);
+   void setRemoveDCIOnDelete(bool removeDCI) { m_removeDCIOnDelete = removeDCI; }
 };
 
 /**

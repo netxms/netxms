@@ -98,6 +98,7 @@ import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog.RelationType;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedTemplateObjectSelectionDialog;
+import org.netxms.nxmc.modules.objects.dialogs.TemplateDeleteDialog;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.objects.views.RemoteControlView;
 import org.netxms.nxmc.modules.objects.views.RouteView;
@@ -1163,12 +1164,37 @@ public class ObjectContextMenuManager extends MenuManager
     */
    private void deleteObject()
    {
-      final Object[] objects = ((IStructuredSelection)selectionProvider.getSelection()).toArray();  
-      String question = (objects.length == 1) ?
-         String.format(i18n.tr("Are you sure you want to delete \"%s\"?"), ((AbstractObject)objects[0]).getObjectName()) :
-         String.format(i18n.tr("Are you sure you want to delete %d objects?"), objects.length);
-      if (!MessageDialogHelper.openConfirm(view.getWindow().getShell(), i18n.tr("Confirm Delete"), question))
-         return;
+      final Object[] objects = ((IStructuredSelection)selectionProvider.getSelection()).toArray();
+
+      // Check if deleting templates
+      boolean hasTemplates = false;
+      for(Object obj : objects)
+      {
+         if (obj instanceof Template)
+         {
+            hasTemplates = true;
+            break;
+         }
+      }
+
+      final boolean removeDci;
+      if (hasTemplates)
+      {
+         String templateName = (objects.length == 1) ? ((AbstractObject)objects[0]).getObjectName() : i18n.tr("multiple templates");
+         TemplateDeleteDialog dlg = new TemplateDeleteDialog(view.getWindow().getShell(), templateName);
+         if (dlg.open() != Window.OK)
+            return;
+         removeDci = dlg.isRemoveDci();
+      }
+      else
+      {
+         String question = (objects.length == 1) ?
+            String.format(i18n.tr("Are you sure you want to delete \"%s\"?"), ((AbstractObject)objects[0]).getObjectName()) :
+            String.format(i18n.tr("Are you sure you want to delete %d objects?"), objects.length);
+         if (!MessageDialogHelper.openConfirm(view.getWindow().getShell(), i18n.tr("Confirm Delete"), question))
+            return;
+         removeDci = true;
+      }
 
       final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Delete objects"), view) {
@@ -1176,7 +1202,13 @@ public class ObjectContextMenuManager extends MenuManager
          protected void run(IProgressMonitor monitor) throws Exception
          {
             for(int i = 0; i < objects.length; i++)
-               session.deleteObject(((AbstractObject)objects[i]).getObjectId());
+            {
+               AbstractObject obj = (AbstractObject)objects[i];
+               if (obj instanceof Template)
+                  session.deleteObject(obj.getObjectId(), removeDci);
+               else
+                  session.deleteObject(obj.getObjectId());
+            }
          }
 
          @Override

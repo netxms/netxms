@@ -6878,8 +6878,23 @@ public class NXCSession
     */
    public void deleteObject(final long objectId) throws IOException, NXCException
    {
+      deleteObject(objectId, true);
+   }
+
+   /**
+    * Delete object with option to control DCI removal for templates. When deleting a template object, this method allows
+    * specifying whether DCIs created from the template on target objects should be removed or detached (kept as standalone).
+    *
+    * @param objectId ID of an object which should be deleted
+    * @param removeDci if true, DCIs will be removed from target objects; if false, DCIs will be detached (only applies to templates)
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteObject(final long objectId, final boolean removeDci) throws IOException, NXCException
+   {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_OBJECT);
       msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, objectId);
+      msg.setField(NXCPCodes.VID_REMOVE_DCI, removeDci);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
 

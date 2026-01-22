@@ -6898,6 +6898,12 @@ void ClientSession::deleteObject(const NXCPMessage& request)
 				}
 				else
 				{
+               // For templates, set the DCI removal option before deletion
+               if (object->getObjectClass() == OBJECT_TEMPLATE)
+               {
+                  bool removeDCI = request.isFieldExist(VID_REMOVE_DCI) ? request.getFieldAsBoolean(VID_REMOVE_DCI) : true;
+                  static_cast<Template&>(*object).setRemoveDCIOnDelete(removeDCI);
+               }
                ThreadPoolExecute(g_clientThreadPool, DeleteObjectWorker, object);
                response.setField(VID_RCC, RCC_SUCCESS);
                WriteAuditLog(AUDIT_OBJECTS, TRUE, m_userId, m_workstation, m_id, object->getId(), _T("Object %s deleted"), object->getName());
