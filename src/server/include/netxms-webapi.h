@@ -36,7 +36,8 @@
 
 #define DEBUG_TAG_WEBAPI  _T("webapi")
 
-#define AUTH_TOKEN_VALIDITY_TIME 86400
+#define AUTH_TOKEN_VALIDITY_TIME    86400
+#define MAX_WEBAPI_REQUEST_SIZE     (10 * 1024 * 1024)  // 10 MB limit
 
 /* do undefs for Method enum values in case any of them defined in system headers */
 #undef DELETE
@@ -278,9 +279,20 @@ public:
       return m_responseData.size();
    }
 
-   void onUploadData(const char *data, size_t size)
+   InetAddress getClientAddress() const
    {
+      return GetClientAddress(m_connection);
+   }
+
+   bool onUploadData(const char *data, size_t size)
+   {
+      if (m_requestData.size() + size > MAX_WEBAPI_REQUEST_SIZE)
+      {
+         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 4, _T("Request body exceeds maximum size limit (%u bytes)"), MAX_WEBAPI_REQUEST_SIZE);
+         return false;
+      }
       m_requestData.write(data, size);
+      return true;
    }
 
    void onUploadComplete()

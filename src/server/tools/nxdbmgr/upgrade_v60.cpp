@@ -25,6 +25,25 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.23 to 60.24
+ */
+static bool H_UpgradeFromV23()
+{
+   // Add SYSTEM_ACCESS_SEARCH_NETWORK (bit 52 = 0x10000000000000 = 4503599627370496) to Admins group
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE user_groups SET system_access=system_access+4503599627370496 WHERE id=1073741825 AND BITAND(system_access, 4503599627370496)=0")));
+   }
+   else
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE user_groups SET system_access=system_access+4503599627370496 WHERE id=1073741825 AND (system_access & 4503599627370496)=0")));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(24));
+   return true;
+}
+
+/**
  * Upgrade from 60.22 to 60.23
  */
 static bool H_UpgradeFromV22()
@@ -1403,6 +1422,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 23, 60, 24, H_UpgradeFromV23 },
    { 22, 60, 23, H_UpgradeFromV22 },
    { 21, 60, 22, H_UpgradeFromV21 },
    { 20, 60, 21, H_UpgradeFromV20 },

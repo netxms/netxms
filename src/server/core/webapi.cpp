@@ -104,7 +104,10 @@ static MHD_Result ConnectionHandler(void *serverContext, MHD_Connection *connect
    nxlog_debug_tag(DEBUG_TAG_WEBAPI, 7, _T("Request data size: %d"), static_cast<int>(*uploadDataSize));
    if (*uploadDataSize != 0)
    {
-      context->onUploadData(uploadData, *uploadDataSize);
+      if (!context->onUploadData(uploadData, *uploadDataSize))
+      {
+         return SendResponse(connection, 413);  // Payload Too Large
+      }
       *uploadDataSize = 0;
       return MHD_YES;
    }

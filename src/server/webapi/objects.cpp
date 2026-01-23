@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2023-2025 Raden Solutions
+** Copyright (C) 2023-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -364,13 +364,16 @@ int H_ObjectExecuteAgentCommand(Context *context)
 {
    uint32_t objectId = context->getPlaceholderValueAsUInt32(_T("object-id"));
    if (objectId == 0)
+   {
+      context->setErrorResponse("Invalid object ID");
       return 400;
+   }
 
-   shared_ptr<NetObj> object = FindObjectById(objectId);
-   if (object == nullptr)
+   shared_ptr<NetObj> node = FindObjectById(objectId, OBJECT_NODE);
+   if (node == nullptr)
       return 404;
 
-   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_CONTROL))
+   if (!node->checkAccessRights(context->getUserId(), OBJECT_ACCESS_CONTROL))
       return 403;
 
    json_t *request = context->getRequestDocument();
@@ -390,7 +393,7 @@ int H_ObjectExecuteAgentCommand(Context *context)
 
    uint32_t alarmId = json_object_get_uint32(request, "alarmId", 0);
    Alarm *alarm = (alarmId != 0) ? FindAlarmById(alarmId) : 0;
-   if ((alarm != nullptr) && (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ_ALARMS) || !alarm->checkCategoryAccess(context->getUserId(), context->getSystemAccessRights())))
+   if ((alarm != nullptr) && (!node->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ_ALARMS) || !alarm->checkCategoryAccess(context->getUserId(), context->getSystemAccessRights())))
    {
       nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_ObjectExecuteAgentCommand: alarm ID is provided but user has no access to that alarm"));
       context->setErrorResponse("Alarm ID is provided but user has no access to that alarm");
@@ -398,7 +401,7 @@ int H_ObjectExecuteAgentCommand(Context *context)
       return 403;
    }
 
-   shared_ptr<AgentConnectionEx> pConn = static_cast<Node&>(*object).createAgentConnection();
+   shared_ptr<AgentConnectionEx> pConn = static_cast<Node&>(*node).createAgentConnection();
    if (pConn == nullptr)
    {
       context->setErrorResponse("Cannot connect to agent");
@@ -408,7 +411,7 @@ int H_ObjectExecuteAgentCommand(Context *context)
 
    StringMap inputFields(json_object_get(request, "inputFields"));
 
-   StringList args = SplitCommandLine(object->expandText(commandLine, alarm, nullptr, shared_ptr<DCObjectInfo>(), context->getLoginName(), nullptr, nullptr, &inputFields, nullptr));
+   StringList args = SplitCommandLine(node->expandText(commandLine, alarm, nullptr, shared_ptr<DCObjectInfo>(), context->getLoginName(), nullptr, nullptr, &inputFields, nullptr));
    wchar_t actionName[MAX_PARAM_NAME];
    wcslcpy(actionName, args.get(0), MAX_PARAM_NAME);
    args.remove(0);
