@@ -36,7 +36,7 @@
 
 #define DEBUG_TAG_WEBAPI  _T("webapi")
 
-#define AUTH_TOKEN_VALIDITY_TIME    86400
+#define AUTH_TOKEN_VALIDITY_TIME    14400  // 4 hours
 #define MAX_WEBAPI_REQUEST_SIZE     (10 * 1024 * 1024)  // 10 MB limit
 
 /* do undefs for Method enum values in case any of them defined in system headers */

@@ -54,6 +54,13 @@ static inline MHD_Result SendResponse(MHD_Connection *connection, int responseCo
 {
    nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Response code %d to web API call"), responseCode);
    MHD_Response *response = MHD_create_response_from_buffer(size, data, MHD_RESPMEM_PERSISTENT);
+
+   // Add security headers
+   MHD_add_response_header(response, "X-Content-Type-Options", "nosniff");
+   MHD_add_response_header(response, "X-Frame-Options", "DENY");
+   MHD_add_response_header(response, "Cache-Control", "no-store");
+   MHD_add_response_header(response, "Content-Type", "application/json; charset=utf-8");
+
    if (headers != nullptr)
    {
       headers->forEach(

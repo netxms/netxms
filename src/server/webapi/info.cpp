@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2023-2025 Raden Solutions
+** Copyright (C) 2023-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,8 +30,6 @@ int H_Root(Context *context)
 {
    json_t *response = json_object();
    json_object_set_new(response, "description", json_string("NetXMS web service API"));
-   json_object_set_new(response, "version", json_string(NETXMS_VERSION_STRING_A));
-   json_object_set_new(response, "build", json_string(NETXMS_BUILD_TAG_A));
    json_object_set_new(response, "apiVersion", json_integer(1));
    context->setResponseData(response);
    json_decref(response);
