@@ -1130,6 +1130,10 @@ public class EventProcessingPolicyEditor extends ConfigurationView
             return true;
       }
 
+      // Check rule GUID
+      if (rule.getGuid().toString().toLowerCase().contains(filterText))
+         return true;
+
       return false;
    }
 
