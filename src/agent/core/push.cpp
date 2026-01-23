@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
@@ -24,6 +24,8 @@
 
 #define DEBUG_TAG _T("dc.push")
 
+void QueueNotificationMessage(NXCPMessage *msg);
+
 /**
  * Request ID
  */
@@ -35,37 +37,28 @@ static VolatileCounter s_requestIdLow = 0;
  */
 bool PushData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, Timestamp timestamp)
 {
-	bool success = false;
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("PushData: \"%s\" = \"%s\""), parameter, value);
 
-	nxlog_debug_tag(DEBUG_TAG, 6, _T("PushData: \"%s\" = \"%s\""), parameter, value);
-
-	NXCPMessage msg(CMD_PUSH_DCI_DATA, 0, 4); // Use version 4 to avoid compatibility issues
-	msg.setField(VID_NAME, parameter);
-	msg.setField(VID_VALUE, value);
-   msg.setField(VID_OBJECT_ID, objectId);
-   msg.setField(VID_TIMESTAMP_MS, timestamp);
-   msg.setFieldFromTime(VID_TIMESTAMP, timestamp.asTime());   // for compatibility with older servers
-   msg.setField(VID_REQUEST_ID, s_requestIdHigh | static_cast<uint64_t>(InterlockedIncrement(&s_requestIdLow)));
+   NXCPMessage *msg = new NXCPMessage(CMD_PUSH_DCI_DATA, 0, 4); // Use version 4 to avoid compatibility issues
+   msg->setField(VID_NAME, parameter);
+   msg->setField(VID_VALUE, value);
+   msg->setField(VID_OBJECT_ID, objectId);
+   msg->setField(VID_TIMESTAMP_MS, timestamp);
+   msg->setFieldFromTime(VID_TIMESTAMP, timestamp.asTime());   // for compatibility with older servers
+   msg->setField(VID_REQUEST_ID, s_requestIdHigh | static_cast<uint64_t>(InterlockedIncrement(&s_requestIdLow)));
 
    if (g_dwFlags & AF_SUBAGENT_LOADER)
    {
-      success = SendMessageToMasterAgent(&msg);
+      bool success = SendMessageToMasterAgent(msg);
+      delete msg;
+      return success;
    }
    else
    {
-      g_sessionLock.lock();
-      for(int i = 0; i < g_sessions.size(); i++)
-      {
-         CommSession *session = g_sessions.get(i);
-         if (session->canAcceptTraps())
-         {
-            session->sendMessage(&msg);
-            success = true;
-         }
-      }
-      g_sessionLock.unlock();
+      // Queue through notification processor - it handles caching and sync
+      QueueNotificationMessage(msg);  // Takes ownership of msg
+      return true;
    }
-	return success;
 }
 
 /**
