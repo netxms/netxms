@@ -9667,9 +9667,10 @@ void ClientSession::execTableTool(const NXCPMessage& request)
          {
             if (object->getObjectClass() == OBJECT_NODE)
             {
-               response.setField(VID_RCC,
-                               ExecuteTableTool(dwToolId, static_pointer_cast<Node>(object),
-                                                request.getId(), this));
+               uint32_t rcc = ExecuteTableTool(dwToolId, static_pointer_cast<Node>(object), request.getId(), this);
+               if (rcc == RCC_SUCCESS)
+                  writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Executed table tool [%u] on node %s"), dwToolId, object->getName());
+               response.setField(VID_RCC, rcc);
             }
             else
             {
@@ -9683,6 +9684,7 @@ void ClientSession::execTableTool(const NXCPMessage& request)
       }
       else
       {
+         writeAuditLog(AUDIT_OBJECTS, false, request.getFieldAsUInt32(VID_OBJECT_ID), _T("Access denied on executing table tool [%u]"), dwToolId);
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
