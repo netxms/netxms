@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,6 +76,7 @@ public final class UserAccessRights
    public static final long SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE     = 0x02000000000000L;
    public static final long SYSTEM_ACCESS_VIEW_ASSET_CHANGE_LOG   = 0x04000000000000L;
    public static final long SYSTEM_ACCESS_VIEW_WELCOME_PAGE       = 0x08000000000000L;
+   public static final long SYSTEM_ACCESS_SEARCH_NETWORK          = 0x10000000000000L;
 
 	// Object access rights
 	public static final int OBJECT_ACCESS_READ             = 0x00000001;

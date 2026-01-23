@@ -228,6 +228,10 @@ public class AclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
+      cell.setCellValue("Search Network");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(columnIndex++);
       cell.setCellValue("Send Notifications");
       cell.setCellStyle(headerStyle);
 
@@ -365,6 +369,7 @@ public class AclReport extends AbstractAclReport
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_MAINTENANCE, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_SCRIPT, user);
+         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SEARCH_NETWORK, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SEND_NOTIFICATION, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SERVER_CONFIG, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SERVER_CONSOLE, user);
@@ -547,6 +552,10 @@ public class AclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
+      cell.setCellValue("Search Network");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(columnIndex++);
       cell.setCellValue("Send Notifications");
       cell.setCellStyle(headerStyle);
 
@@ -690,6 +699,7 @@ public class AclReport extends AbstractAclReport
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_MAINTENANCE, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_SCRIPT, group);
+         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SEARCH_NETWORK, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SEND_NOTIFICATION, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SERVER_CONFIG, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SERVER_CONSOLE, group);

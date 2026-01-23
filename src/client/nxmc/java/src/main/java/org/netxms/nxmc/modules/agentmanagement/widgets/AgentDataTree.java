@@ -35,7 +35,6 @@ import org.eclipse.swt.widgets.Tree;
 import org.netxms.client.AgentList;
 import org.netxms.client.AgentParameter;
 import org.netxms.client.AgentTable;
-import org.netxms.nxmc.modules.agentmanagement.views.AgentExplorer;
 import org.netxms.nxmc.modules.agentmanagement.views.helpers.AgentDataTreeNode;
 import org.netxms.nxmc.resources.ResourceManager;
 
@@ -45,7 +44,6 @@ import org.netxms.nxmc.resources.ResourceManager;
 public class AgentDataTree extends Composite
 {
    private TreeViewer treeViewer;
-   private AgentExplorer view;
    private AgentDataTreeNode[] rootNodes;
 
    /**
@@ -55,10 +53,9 @@ public class AgentDataTree extends Composite
     * @param style SWT style
     * @param view parent view
     */
-   public AgentDataTree(Composite parent, int style, AgentExplorer view)
+   public AgentDataTree(Composite parent, int style)
    {
       super(parent, style);
-      this.view = view;
 
       setLayout(new FillLayout());
 

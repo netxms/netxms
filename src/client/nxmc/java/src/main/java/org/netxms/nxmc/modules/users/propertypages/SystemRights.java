@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -109,6 +109,7 @@ public class SystemRights extends PropertyPage
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD, i18n.tr("Schedule file upload"))); 
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SCHEDULE_MAINTENANCE, i18n.tr("Schedule object maintenance")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SCHEDULE_SCRIPT, i18n.tr("Schedule script execution")));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SEARCH_NETWORK, i18n.tr("Search network")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SEND_NOTIFICATION, i18n.tr("Send notifications")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SERVER_CONFIG, i18n.tr("Edit server configuration variables")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SERVER_CONSOLE, i18n.tr("Access server console")));

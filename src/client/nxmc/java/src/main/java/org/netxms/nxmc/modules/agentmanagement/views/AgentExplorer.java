@@ -144,7 +144,7 @@ public class AgentExplorer extends AdHocObjectView
       gd.verticalIndent = toolView ? 3 : 0;
       splitter.setLayoutData(gd);
 
-      agentDataTree = new AgentDataTree(splitter, SWT.BORDER, this);
+      agentDataTree = new AgentDataTree(splitter, SWT.BORDER);
       agentDataTree.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)
