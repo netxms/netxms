@@ -12958,19 +12958,13 @@ void ClientSession::findMacAddress(const NXCPMessage& request)
    }
    else
    {
-      int count = 0;
+      response.setField(VID_NUM_ELEMENTS, icpl.size());
       uint32_t base = VID_ELEMENT_LIST_BASE;
       for (int i = 0; i < icpl.size(); i++)
       {
-         MacAddressInfo *info = icpl.get(i);
-         shared_ptr<NetObj> owner = info->getOwner();
-         if ((owner != nullptr) && !owner->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
-            continue;
-         info->fillMessage(&response, base);
+         icpl.get(i)->fillMessage(&response, base);
          base += 10;
-         count++;
       }
-      response.setField(VID_NUM_ELEMENTS, count);
    }
 
    sendMessage(response);
@@ -13093,13 +13087,6 @@ void ClientSession::findIpAddress(const NXCPMessage& request)
 void ClientSession::findHostname(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-
-   if (!checkSystemAccessRights(SYSTEM_ACCESS_SEARCH_NETWORK))
-   {
-      response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      sendMessage(response);
-      return;
-   }
 
    response.setField(VID_RCC, RCC_SUCCESS);
 
