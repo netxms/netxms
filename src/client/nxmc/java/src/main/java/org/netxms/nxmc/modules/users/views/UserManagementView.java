@@ -64,6 +64,7 @@ import org.netxms.nxmc.modules.users.propertypages.General;
 import org.netxms.nxmc.modules.users.propertypages.GroupMembership;
 import org.netxms.nxmc.modules.users.propertypages.Members;
 import org.netxms.nxmc.modules.users.propertypages.SystemRights;
+import org.netxms.nxmc.modules.users.propertypages.TokenManagement;
 import org.netxms.nxmc.modules.users.propertypages.UIAccessRules;
 import org.netxms.nxmc.modules.users.views.helpers.DecoratingUserLabelProvider;
 import org.netxms.nxmc.modules.users.views.helpers.UserComparator;
@@ -262,6 +263,7 @@ public class UserManagementView extends ConfigurationView
             {
                pm.addToRoot(new PreferenceNode("authentication", new Authentication((User)userObject, UserManagementView.this)));
                pm.addToRoot(new PreferenceNode("group-membership", new GroupMembership((User)userObject, UserManagementView.this)));
+               pm.addToRoot(new PreferenceNode("token-management", new TokenManagement((User)userObject, UserManagementView.this)));
             }
             else if (userObject instanceof UserGroup)
             {
