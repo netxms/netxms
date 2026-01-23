@@ -2270,6 +2270,7 @@ CREATE TABLE dashboards
   id integer not null,
   num_columns integer not null,
   display_priority integer not null,
+  forced_context_object_id integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
