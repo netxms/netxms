@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -566,10 +566,11 @@ unique_ptr<ObjectArray<UserDatabaseObject>> NXCORE_EXPORTABLE FindUserDBObjects(
 NXSL_Value *GetUserDBObjectForNXSL(uint32_t id, NXSL_VM *vm);
 
 shared_ptr<AuthenticationTokenDescriptor> NXCORE_EXPORTABLE IssueAuthenticationToken(uint32_t userId, uint32_t validFor,
-   AuthenticationTokenType type = AuthenticationTokenType::EPHEMERAL, const wchar_t *description = nullptr);
+   AuthenticationTokenType type = AuthenticationTokenType::EPHEMERAL, const wchar_t *description = nullptr, uint32_t maxLifetime = 0);
 void NXCORE_EXPORTABLE RevokeAuthenticationToken(const UserAuthenticationToken& token);
 uint32_t NXCORE_EXPORTABLE RevokeAuthenticationToken(uint32_t tokenId, uint32_t userId = 0);
-bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId, bool *serviceToken = nullptr, uint32_t validFor = 0);
+bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId, bool *serviceToken = nullptr,
+   uint32_t validFor = 0, time_t *expiresAt = nullptr, time_t *maxExpiresAt = nullptr);
 void AuthenticationTokensToMessage(uint32_t userId, NXCPMessage *msg);
 
 unique_ptr<StringList> NXCORE_EXPORTABLE GetUserConfigured2FAMethods(uint32_t userId);

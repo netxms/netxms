@@ -106,6 +106,8 @@ CREATE TABLE auth_tokens
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
+CREATE INDEX idx_auth_tokens_user_id ON auth_tokens(user_id);
+
 /**
  * User groups
  */

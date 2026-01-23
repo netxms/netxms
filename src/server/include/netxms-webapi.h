@@ -36,8 +36,28 @@
 
 #define DEBUG_TAG_WEBAPI  _T("webapi")
 
-#define AUTH_TOKEN_VALIDITY_TIME    14400  // 4 hours
-#define MAX_WEBAPI_REQUEST_SIZE     (10 * 1024 * 1024)  // 10 MB limit
+#define AUTH_TOKEN_VALIDITY_TIME              14400   // 4 hours - token refresh interval
+#define DEFAULT_AUTH_TOKEN_MAX_LIFETIME       86400   // 24 hours - maximum absolute token lifetime (configurable via WebAPI.AuthTokenMaxLifetime)
+#define DEFAULT_AUTH_TOKEN_WARNING_THRESHOLD  3600    // 1 hour - time before max expiration to send warning headers (configurable via WebAPI.AuthTokenWarningThreshold)
+#define MAX_WEBAPI_REQUEST_SIZE               (10 * 1024 * 1024)  // 10 MB limit
+
+/**
+ * Get configured maximum token lifetime for ephemeral tokens
+ * Returns 0 if no limit is configured
+ */
+static inline uint32_t GetAuthTokenMaxLifetime()
+{
+   return ConfigReadULong(_T("WebAPI.AuthTokenMaxLifetime"), DEFAULT_AUTH_TOKEN_MAX_LIFETIME);
+}
+
+/**
+ * Get configured warning threshold for token expiration
+ * Returns 0 if warnings are disabled
+ */
+static inline uint32_t GetAuthTokenWarningThreshold()
+{
+   return ConfigReadULong(_T("WebAPI.AuthTokenWarningThreshold"), DEFAULT_AUTH_TOKEN_WARNING_THRESHOLD);
+}
 
 /* do undefs for Method enum values in case any of them defined in system headers */
 #undef DELETE

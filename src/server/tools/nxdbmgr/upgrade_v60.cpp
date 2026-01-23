@@ -25,6 +25,30 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.24 to 60.25
+ */
+static bool H_UpgradeFromV24()
+{
+   // Add index on auth_tokens.user_id for faster token lookups by user
+   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_auth_tokens_user_id ON auth_tokens(user_id)")));
+
+   // Add WebAPI authentication token configuration parameters
+   CHK_EXEC(CreateConfigParam(_T("WebAPI.AuthTokenMaxLifetime"),
+         _T("86400"),
+         _T("Maximum absolute lifetime for WebAPI authentication tokens in seconds. Tokens cannot be refreshed beyond this time from initial issuance. Set to 0 to disable (allow unlimited refresh)."),
+         _T("seconds"),
+         'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("WebAPI.AuthTokenWarningThreshold"),
+         _T("3600"),
+         _T("Time in seconds before token maximum expiration when warning headers (X-Token-Expires-In, X-Token-Refresh-Recommended) are sent to clients. Set to 0 to disable warning headers."),
+         _T("seconds"),
+         'I', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(25));
+   return true;
+}
+
+/**
  * Upgrade from 60.23 to 60.24
  */
 static bool H_UpgradeFromV23()
@@ -1422,6 +1446,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 24, 60, 25, H_UpgradeFromV24 },
    { 23, 60, 24, H_UpgradeFromV23 },
    { 22, 60, 23, H_UpgradeFromV22 },
    { 21, 60, 22, H_UpgradeFromV21 },

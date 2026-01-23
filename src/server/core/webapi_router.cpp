@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2023-2025 Raden Solutions
+** Copyright (C) 2023-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -228,6 +228,7 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
    uint32_t userId = INVALID_UID;
    wchar_t loginName[MAX_USER_NAME] = L"";
    uint64_t systemAccessRights = 0;
+   time_t tokenMaxExpiresAt = 0;  // For token expiration warning headers
    if (curr->auth)
    {
       nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Selected route requires authentication");
@@ -260,7 +261,8 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
          return nullptr;
       }
 
-      if (!ValidateAuthenticationToken(token, &userId, nullptr, AUTH_TOKEN_VALIDITY_TIME))
+      time_t tokenExpiresAt = 0;
+      if (!ValidateAuthenticationToken(token, &userId, nullptr, AUTH_TOKEN_VALIDITY_TIME, &tokenExpiresAt, &tokenMaxExpiresAt /* updates outer scope var */))
       {
          char masked[32];
          MaskToken(encodedToken, masked, sizeof(masked));
@@ -280,7 +282,39 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
       }
 
       nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Authentication token provided in request successfully passed validation (userId=%u)", userId);
+
+      // Check if token is approaching expiration and add warning headers
+      if (tokenMaxExpiresAt > 0)
+      {
+         uint32_t warningThreshold = GetAuthTokenWarningThreshold();
+         if (warningThreshold > 0)
+         {
+            time_t now = time(nullptr);
+            time_t timeRemaining = tokenMaxExpiresAt - now;
+            if (timeRemaining > 0 && timeRemaining <= static_cast<time_t>(warningThreshold))
+            {
+               // Token is approaching max expiration - headers will be added to response context below
+               nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Token approaching max expiration, %d seconds remaining", static_cast<int>(timeRemaining));
+            }
+         }
+      }
    }
 
-   return new Context(connection, path, methodId, handler, token, userId, loginName, systemAccessRights, std::move(placeholderValues));
+   Context *context = new Context(connection, path, methodId, handler, token, userId, loginName, systemAccessRights, std::move(placeholderValues));
+
+   // Add token expiration warning headers if needed
+   if ((tokenMaxExpiresAt > 0) && (GetAuthTokenWarningThreshold() > 0))
+   {
+      time_t now = time(nullptr);
+      time_t timeRemaining = tokenMaxExpiresAt - now;
+      if ((timeRemaining > 0) && (timeRemaining <= static_cast<time_t>(GetAuthTokenWarningThreshold())))
+      {
+         TCHAR buffer[32];
+         _sntprintf(buffer, 32, _T("%d"), static_cast<int>(timeRemaining));
+         context->setResponseHeader(_T("X-Token-Expires-In"), buffer);
+         context->setResponseHeader(_T("X-Token-Refresh-Recommended"), _T("true"));
+      }
+   }
+
+   return context;
 }
