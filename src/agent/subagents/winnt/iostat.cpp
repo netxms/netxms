@@ -1,6 +1,6 @@
 /*
 ** NetXMS platform subagent for Windows
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -85,11 +85,6 @@ static BOOL GetDiskPerformanceData(UINT32 number, DISK_PERFORMANCE *perfdata)
 }
 
 /**
- * Frequency of system performance counter in ticks per millisecond
- */
-static UINT64 s_perfCounterFrequency;
-
-/**
  * Number of samples per minute
  */
 #define SAMPLES_PER_MINUTE 60
@@ -99,17 +94,17 @@ static UINT64 s_perfCounterFrequency;
  */
 struct DiskPerfStats
 {
-   UINT32 device;
+   uint32_t device;
    int collectionFailures;
    int nextSample;
-   UINT64 bytesRead[SAMPLES_PER_MINUTE];
-   UINT64 bytesWritten[SAMPLES_PER_MINUTE];
-   UINT32 readCount[SAMPLES_PER_MINUTE];
-   UINT32 writeCount[SAMPLES_PER_MINUTE];
-   UINT32 diskTime[SAMPLES_PER_MINUTE];
-   UINT32 readTime[SAMPLES_PER_MINUTE];
-   UINT32 writeTime[SAMPLES_PER_MINUTE];
-   UINT32 queueDepth[SAMPLES_PER_MINUTE];
+   uint64_t bytesRead[SAMPLES_PER_MINUTE];
+   uint64_t bytesWritten[SAMPLES_PER_MINUTE];
+   uint32_t readCount[SAMPLES_PER_MINUTE];
+   uint32_t writeCount[SAMPLES_PER_MINUTE];
+   uint32_t diskTime[SAMPLES_PER_MINUTE];
+   uint32_t readTime[SAMPLES_PER_MINUTE];
+   uint32_t writeTime[SAMPLES_PER_MINUTE];
+   uint32_t queueDepth[SAMPLES_PER_MINUTE];
    DISK_PERFORMANCE lastRawData;
 
    DiskPerfStats(UINT32 dev)
@@ -136,9 +131,10 @@ struct DiskPerfStats
          readCount[nextSample] = currentRawData.ReadCount - lastRawData.ReadCount;
          writeCount[nextSample] = currentRawData.WriteCount - lastRawData.WriteCount;
          queueDepth[nextSample] = currentRawData.QueueDepth;
-         diskTime[nextSample] = static_cast<UINT32>(((currentRawData.ReadTime.QuadPart - lastRawData.ReadTime.QuadPart) + (currentRawData.WriteTime.QuadPart - lastRawData.WriteTime.QuadPart)) / s_perfCounterFrequency);
-         readTime[nextSample] = static_cast<UINT32>((currentRawData.ReadTime.QuadPart - lastRawData.ReadTime.QuadPart) / s_perfCounterFrequency);
-         writeTime[nextSample] = static_cast<UINT32>((currentRawData.WriteTime.QuadPart - lastRawData.WriteTime.QuadPart) / s_perfCounterFrequency);
+         // Time in DISK_PERFORMANCE expressed in 100-nanosecond intervals
+         diskTime[nextSample] = static_cast<uint32_t>(((currentRawData.ReadTime.QuadPart - lastRawData.ReadTime.QuadPart) + (currentRawData.WriteTime.QuadPart - lastRawData.WriteTime.QuadPart)) / 10000);
+         readTime[nextSample] = static_cast<uint32_t>((currentRawData.ReadTime.QuadPart - lastRawData.ReadTime.QuadPart) / 10000);
+         writeTime[nextSample] = static_cast<uint32_t>((currentRawData.WriteTime.QuadPart - lastRawData.WriteTime.QuadPart) / 10000);
          nextSample++;
          if (nextSample == SAMPLES_PER_MINUTE)
             nextSample = 0;
@@ -184,7 +180,7 @@ static void AddDevicesForIOStatCollection()
 /**
  * I/O stat collector thread
  */
-static THREAD_RESULT THREAD_CALL IOStatColector(void *arg)
+static void IOStatColector()
 {
    nxlog_debug_tag(DEBUG_TAG, 1, _T("I/O stat collector thread started"));
    AddDevicesForIOStatCollection();
@@ -238,7 +234,6 @@ static THREAD_RESULT THREAD_CALL IOStatColector(void *arg)
    }
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("I/O stat collector thread stopped"));
-   return THREAD_OK;
 }
 
 /**
@@ -251,13 +246,8 @@ static THREAD s_ioStatCollectorThread = INVALID_THREAD_HANDLE;
  */
 void StartIOStatCollector()
 {
-   LARGE_INTEGER frequency;
-   QueryPerformanceFrequency(&frequency);
-   s_perfCounterFrequency = frequency.QuadPart / 1000;   // Convert to ticks per millisecond
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("Performance counter frequency %llu Hz"), frequency.QuadPart);
-
    InitializeMutex(&s_diskPerfStatsLock, 1000);
-   s_ioStatCollectorThread = ThreadCreateEx(IOStatColector, 0, NULL);
+   s_ioStatCollectorThread = ThreadCreateEx(IOStatColector);
 }
 
 /**
