@@ -736,6 +736,9 @@ bool User::deleteFromDatabase(DB_HANDLE hdb)
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dci_access WHERE user_id=?"));
 
    if (success)
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM auth_tokens WHERE user_id=?"));
+
+   if (success)
       DBCommit(hdb);
    else
       DBRollback(hdb);

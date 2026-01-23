@@ -569,6 +569,7 @@ shared_ptr<AuthenticationTokenDescriptor> NXCORE_EXPORTABLE IssueAuthenticationT
    AuthenticationTokenType type = AuthenticationTokenType::EPHEMERAL, const wchar_t *description = nullptr, uint32_t maxLifetime = 0);
 void NXCORE_EXPORTABLE RevokeAuthenticationToken(const UserAuthenticationToken& token);
 uint32_t NXCORE_EXPORTABLE RevokeAuthenticationToken(uint32_t tokenId, uint32_t userId = 0);
+void NXCORE_EXPORTABLE RevokeAuthenticationTokensForUser(uint32_t userId);
 bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId, bool *serviceToken = nullptr,
    uint32_t validFor = 0, time_t *expiresAt = nullptr, time_t *maxExpiresAt = nullptr);
 void AuthenticationTokensToMessage(uint32_t userId, NXCPMessage *msg);

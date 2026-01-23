@@ -224,6 +224,30 @@ uint32_t NXCORE_EXPORTABLE RevokeAuthenticationToken(uint32_t tokenId, uint32_t 
 }
 
 /**
+ * Revoke all authentication tokens for a user
+ */
+void NXCORE_EXPORTABLE RevokeAuthenticationTokensForUser(uint32_t userId)
+{
+   SharedObjectArray<AuthenticationTokenDescriptor> tokensToRevoke;
+   s_tokens.forEach(
+      [userId, &tokensToRevoke] (const UserAuthenticationTokenHash& key, const shared_ptr<AuthenticationTokenDescriptor>& descriptor) -> EnumerationCallbackResult
+      {
+         if (descriptor->userId == userId)
+            tokensToRevoke.add(descriptor);
+         return _CONTINUE;
+      });
+
+   for (int i = 0; i < tokensToRevoke.size(); i++)
+   {
+      AuthenticationTokenDescriptor *d = tokensToRevoke.get(i);
+      s_tokens.remove(d->hash);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Revoked authentication token [%u] for deleted user [%u]"), d->tokenId, userId);
+      if (d->persistent)
+         DeleteAuthenticationTokenFromDB(d->tokenId);
+   }
+}
+
+/**
  * Authenticate user with token. If validFor is non-zero, token expiration time will be set to current time + provided value,
  * but not exceeding the maximum expiration time (absolute token lifetime cap).
  *

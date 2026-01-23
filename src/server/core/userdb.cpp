@@ -798,6 +798,9 @@ static void DeleteUserFromAllObjectsWrapper(void *uid)
  */
 static uint32_t DeleteUserDatabaseObjectInternal(uint32_t id, bool alreadyLocked)
 {
+   if (!(id & GROUP_FLAG))
+      RevokeAuthenticationTokensForUser(id);
+
    if (alreadyLocked)
    {
       // Running DeleteUserFromAllObjects with write lock set on user database
