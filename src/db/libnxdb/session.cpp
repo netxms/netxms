@@ -629,6 +629,19 @@ char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int row, int column, cha
 }
 
 /**
+ * Get field's value as JSON object
+ */
+json_t LIBNXDB_EXPORTABLE *DBGetFieldJson(DB_RESULT hResult, int row, int column)
+{
+   char *value = DBGetFieldUTF8(hResult, row, column, nullptr, 0);
+   if (value == nullptr)
+      return nullptr;
+   json_t *json = json_loads(value, 0, nullptr);
+   MemFree(value);
+   return json;
+}
+
+/**
  * Get text field and escape it for XML document. Returned string
  * always dynamically allocated and must be destroyed by caller.
  */
