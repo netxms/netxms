@@ -30,15 +30,16 @@ import org.netxms.client.constants.DataType;
 public class DataCollectionItem extends DataCollectionObject
 {
 	// DCI specific flags
-   public static final int DCF_DETECT_ANOMALIES        = 0x00001;
-	public static final int DCF_ALL_THRESHOLDS          = 0x00002;
-	public static final int DCF_RAW_VALUE_OCTET_STRING  = 0x00004;
-	public static final int DCF_SHOW_ON_OBJECT_TOOLTIP  = 0x00008;
-	public static final int DCF_AGGREGATE_FUNCTION_MASK = 0x00070;
-   public static final int DCF_CALCULATE_NODE_STATUS   = 0x00400;
-   public static final int DCF_SHOW_IN_OBJECT_OVERVIEW = 0x00800;
-   public static final int DCF_MULTIPLIERS_MASK        = 0x30000;
-   public static final int DCF_STORE_CHANGES_ONLY      = 0x40000;
+   public static final int DCF_DETECT_ANOMALIES_IFOREST = 0x00001;
+   public static final int DCF_ALL_THRESHOLDS           = 0x00002;
+   public static final int DCF_RAW_VALUE_OCTET_STRING   = 0x00004;
+   public static final int DCF_SHOW_ON_OBJECT_TOOLTIP   = 0x00008;
+   public static final int DCF_AGGREGATE_FUNCTION_MASK  = 0x00070;
+   public static final int DCF_DETECT_ANOMALIES_AI      = 0x00200;
+   public static final int DCF_CALCULATE_NODE_STATUS    = 0x00400;
+   public static final int DCF_SHOW_IN_OBJECT_OVERVIEW  = 0x00800;
+   public static final int DCF_MULTIPLIERS_MASK         = 0x30000;
+   public static final int DCF_STORE_CHANGES_ONLY       = 0x40000;
 
 	// Aggregation functions
 	public static final int DCF_FUNCTION_SUM = 0;
@@ -462,24 +463,42 @@ public class DataCollectionItem extends DataCollectionObject
    }
 
    /**
-    * @return State of DCF_DETECT_ANOMALIES flag
+    * Check if anomaly detection using isolation forest is enabled for this DCI
+    *
+    * @return true if enabled
     */
-   public boolean isAnomalyDetectionEnabled()
+   public boolean isAnomalyDetectionEnabledIF()
    {
-      return (flags & DCF_DETECT_ANOMALIES) != 0;
+      return (flags & DCF_DETECT_ANOMALIES_IFOREST) != 0;
+   }
+
+   /**
+    * Check if anomaly detection using AI is enabled for this DCI
+    *
+    * @return true if enabled
+    */
+   public boolean isAnomalyDetectionEnabledAI()
+   {
+      return (flags & DCF_DETECT_ANOMALIES_AI) != 0;
    }
 
    /**
     * Enable or disable anomaly detection for this DCI
     * 
-    * @param enable true to enable
+    * @param enableIF true to enable isolation forest based anomaly detection
+    * @param enableAI true to enable AI based anomaly detection
     */
-   public void setAnomalyDetectionEnabled(boolean enable)
+   public void setAnomalyDetectionEnabled(boolean enableIF, boolean enableAI)
    {
-      if (enable)
-         flags |= DCF_DETECT_ANOMALIES;
+      if (enableAI)
+         flags |= DCF_DETECT_ANOMALIES_AI;
       else
-         flags &= ~DCF_DETECT_ANOMALIES;
+         flags &= ~DCF_DETECT_ANOMALIES_AI;
+
+      if (enableIF)
+         flags |= DCF_DETECT_ANOMALIES_IFOREST;
+      else
+         flags &= ~DCF_DETECT_ANOMALIES_IFOREST;
    }
 
    /**

@@ -6995,6 +6995,12 @@ public class NXCSession
          msg.setField(NXCPCodes.VID_ALIAS, data.getAlias());
       }
 
+      // AI hint
+      if (data.getAiHint() != null)
+      {
+         msg.setField(NXCPCodes.VID_AI_HINT, data.getAiHint());
+      }
+
       // Object name on network map
       if (data.getNameOnMap() != null)
       {

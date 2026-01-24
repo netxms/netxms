@@ -25,23 +25,41 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.25 to 60.26
+ */
+static bool H_UpgradeFromV25()
+{
+   static const wchar_t *batch =
+            L"ALTER TABLE object_properties ADD ai_hint varchar(2000)\n"
+            L"ALTER TABLE items ADD ai_hint varchar(2000)\n"
+            L"ALTER TABLE items ADD anomaly_profile $SQL:TEXT\n"
+            L"ALTER TABLE items ADD anomaly_profile_timestamp integer\n"
+            L"UPDATE items SET anomaly_profile_timestamp=0\n"
+            L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"items", L"anomaly_profile_timestamp"));
+   CHK_EXEC(SetMinorSchemaVersion(26));
+   return true;
+}
+
+/**
  * Upgrade from 60.24 to 60.25
  */
 static bool H_UpgradeFromV24()
 {
    // Add index on auth_tokens.user_id for faster token lookups by user
-   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_auth_tokens_user_id ON auth_tokens(user_id)")));
+   CHK_EXEC(SQLQuery(L"CREATE INDEX idx_auth_tokens_user_id ON auth_tokens(user_id)"));
 
    // Add WebAPI authentication token configuration parameters
-   CHK_EXEC(CreateConfigParam(_T("WebAPI.AuthTokenMaxLifetime"),
-         _T("86400"),
-         _T("Maximum absolute lifetime for WebAPI authentication tokens in seconds. Tokens cannot be refreshed beyond this time from initial issuance. Set to 0 to disable (allow unlimited refresh)."),
-         _T("seconds"),
+   CHK_EXEC(CreateConfigParam(L"WebAPI.AuthTokenMaxLifetime",
+         L"86400",
+         L"Maximum absolute lifetime for WebAPI authentication tokens in seconds. Tokens cannot be refreshed beyond this time from initial issuance. Set to 0 to disable (allow unlimited refresh).",
+         L"seconds",
          'I', true, false, false, false));
-   CHK_EXEC(CreateConfigParam(_T("WebAPI.AuthTokenWarningThreshold"),
-         _T("3600"),
-         _T("Time in seconds before token maximum expiration when warning headers (X-Token-Expires-In, X-Token-Refresh-Recommended) are sent to clients. Set to 0 to disable warning headers."),
-         _T("seconds"),
+   CHK_EXEC(CreateConfigParam(L"WebAPI.AuthTokenWarningThreshold",
+         L"3600",
+         L"Time in seconds before token maximum expiration when warning headers (X-Token-Expires-In, X-Token-Refresh-Recommended) are sent to clients. Set to 0 to disable warning headers.",
+         L"seconds",
          'I', true, false, false, false));
 
    CHK_EXEC(SetMinorSchemaVersion(25));
@@ -56,11 +74,11 @@ static bool H_UpgradeFromV23()
    // Add SYSTEM_ACCESS_SEARCH_NETWORK (bit 52 = 0x10000000000000 = 4503599627370496) to Admins group
    if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
-      CHK_EXEC(SQLQuery(_T("UPDATE user_groups SET system_access=system_access+4503599627370496 WHERE id=1073741825 AND BITAND(system_access, 4503599627370496)=0")));
+      CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+4503599627370496 WHERE id=1073741825 AND BITAND(system_access, 4503599627370496)=0"));
    }
    else
    {
-      CHK_EXEC(SQLQuery(_T("UPDATE user_groups SET system_access=system_access+4503599627370496 WHERE id=1073741825 AND (system_access & 4503599627370496)=0")));
+      CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+4503599627370496 WHERE id=1073741825 AND (system_access & 4503599627370496)=0"));
    }
 
    CHK_EXEC(SetMinorSchemaVersion(24));
@@ -72,8 +90,8 @@ static bool H_UpgradeFromV23()
  */
 static bool H_UpgradeFromV22()
 {
-   CHK_EXEC(SQLQuery(_T("ALTER TABLE items ADD snmp_context varchar(255)")));
-   CHK_EXEC(SQLQuery(_T("ALTER TABLE dc_tables ADD snmp_context varchar(255)")));
+   CHK_EXEC(SQLQuery(L"ALTER TABLE items ADD snmp_context varchar(255)"));
+   CHK_EXEC(SQLQuery(L"ALTER TABLE dc_tables ADD snmp_context varchar(255)"));
    CHK_EXEC(SetMinorSchemaVersion(23));
    return true;
 }
@@ -1446,6 +1464,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 25, 60, 26, H_UpgradeFromV25 },
    { 24, 60, 25, H_UpgradeFromV24 },
    { 23, 60, 24, H_UpgradeFromV23 },
    { 22, 60, 23, H_UpgradeFromV22 },

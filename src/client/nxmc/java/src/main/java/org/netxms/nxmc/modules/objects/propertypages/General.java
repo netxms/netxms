@@ -45,10 +45,12 @@ public class General extends ObjectPropertyPage
 
    private Text name;
    private Text alias;
+   private Text aiHint;
    private ObjectCategorySelector categorySelector;
    private Button checkHidden;
 	private String initialName;
    private String initialAlias;
+   private String initialAiHint;
    private int initialCategory;
    private boolean initialHidden;
 
@@ -112,6 +114,11 @@ public class General extends ObjectPropertyPage
       alias = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, i18n.tr("Alias"),
             initialAlias, WidgetHelper.DEFAULT_LAYOUT_DATA);
 
+      // AI hint
+      initialAiHint = (object.getAiHint() != null) ? object.getAiHint() : "";
+      aiHint = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, i18n.tr("AI Hint"),
+            initialAiHint, WidgetHelper.DEFAULT_LAYOUT_DATA);
+
       // Category selector
       initialCategory = object.getCategoryId();
       categorySelector = new ObjectCategorySelector(dialogArea, SWT.NONE);
@@ -146,9 +153,10 @@ public class General extends ObjectPropertyPage
 	{
       final String newName = name.getText();
       final String newAlias = alias.getText();
+      final String newAiHint = aiHint.getText();
       final int newCategory = categorySelector.getCategoryId();
       final boolean newHidden = checkHidden.getSelection();
-      if (newName.equals(initialName) && newAlias.equals(initialAlias) && (newCategory == initialCategory) && (newHidden == initialHidden))
+      if (newName.equals(initialName) && newAlias.equals(initialAlias) && newAiHint.equals(initialAiHint) && (newCategory == initialCategory) && (newHidden == initialHidden))
          return true; // nothing to change
 
 		if (isApply)
@@ -158,6 +166,7 @@ public class General extends ObjectPropertyPage
 		final NXCObjectModificationData data = new NXCObjectModificationData(object.getObjectId());
 		data.setName(newName);
       data.setAlias(newAlias);
+      data.setAiHint(newAiHint);
       data.setCategoryId(newCategory);
       data.setHidden(newHidden);
       new Job(i18n.tr("Updating object properties"), null, messageArea) {
@@ -184,6 +193,7 @@ public class General extends ObjectPropertyPage
 						{
 							initialName = newName;
                      initialAlias = newAlias;
+                     initialAiHint = newAiHint;
                      initialCategory = newCategory;
                      initialHidden = newHidden;
 							General.this.setValid(true);

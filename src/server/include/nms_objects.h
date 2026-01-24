@@ -1395,6 +1395,7 @@ protected:
    uint32_t m_primaryZoneProxyId;       // ID of assigned primary zone proxy node
    uint32_t m_backupZoneProxyId;        // ID of assigned backup zone proxy node
    uint32_t m_assetId;  // ID of linked asset object
+   SharedString m_aiHint;  // Hint for AI anomaly profile generation
 
    AccessList m_accessList;
    bool m_inheritAccessRights;
@@ -1587,6 +1588,7 @@ public:
 
    void setAssetId(uint32_t assetId)  { lockProperties(); m_assetId = assetId; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
    uint32_t getAssetId() const { return m_assetId; }
+   SharedString getAIHint() const { return GetAttributeWithLock(m_aiHint, m_mutexProperties); }
 
    bool addDashboard(uint32_t id);
    bool removeDashboard(uint32_t id);

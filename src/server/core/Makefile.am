@@ -5,7 +5,7 @@ radius_DATA = radius.dict
 
 lib_LTLIBRARIES = libnxcore.la
 libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.cpp ad.cpp addrlist.cpp \
-			admin.cpp agent.cpp agent_policy.cpp ai_core.cpp ai_messages.cpp ai_tasks.cpp \
+			admin.cpp agent.cpp agent_policy.cpp ai_core.cpp ai_messages.cpp ai_tasks.cpp anomaly_profile.cpp \
 			alarm.cpp alarm_category.cpp asset.cpp \
 			asset_management.cpp audit.cpp authtokens.cpp beacon.cpp bizservice.cpp \
 			bizsvcbase.cpp bizsvccheck.cpp bizsvcproto.cpp cas_validator.cpp \

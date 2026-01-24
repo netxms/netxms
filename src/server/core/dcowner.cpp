@@ -287,7 +287,8 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedS
         L"instd_filter,samples,sample_save_interval,comments,guid,npe_name,instance_retention_time,"
         L"grace_period_start,related_object,polling_schedule_type,retention_type,"
         L"polling_interval_src,retention_time_src,snmp_version,state_flags,all_rearmed_event,"
-        L"transformed_datatype,user_tag,thresholds_disable_end_time,snmp_context "
+        L"transformed_datatype,user_tag,thresholds_disable_end_time,snmp_context,"
+        L"anomaly_profile,anomaly_profile_timestamp,ai_hint "
         L"FROM items WHERE node_id=?");
 	if (hStmt != nullptr)
 	{
@@ -513,9 +514,7 @@ uint32_t DataCollectionOwner::updateDCObject(uint32_t dcObjectId, const NXCPMess
 
    if (result == RCC_SUCCESS)
    {
-      lockProperties();
       setModified(MODIFY_DATA_COLLECTION);
-      unlockProperties();
    }
 
    return result;

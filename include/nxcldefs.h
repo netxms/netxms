@@ -1018,13 +1018,14 @@ enum HistoricalDataType
 /**
  * DCI flags
  */
-#define DCF_DETECT_ANOMALIES         ((uint32_t)0x00001)
+#define DCF_DETECT_ANOMALIES_IFOREST ((uint32_t)0x00001)
 #define DCF_ALL_THRESHOLDS           ((uint32_t)0x00002)
 #define DCF_RAW_VALUE_OCTET_STRING   ((uint32_t)0x00004)
 #define DCF_SHOW_ON_OBJECT_TOOLTIP   ((uint32_t)0x00008)
 #define DCF_AGGREGATE_FUNCTION_MASK  ((uint32_t)0x00070)
 #define DCF_AGGREGATE_ON_CLUSTER     ((uint32_t)0x00080)
 #define DCF_TRANSFORM_AGGREGATED     ((uint32_t)0x00100)
+#define DCF_DETECT_ANOMALIES_AI      ((uint32_t)0x00200)
 #define DCF_CALCULATE_NODE_STATUS    ((uint32_t)0x00400)
 #define DCF_SHOW_IN_OBJECT_OVERVIEW  ((uint32_t)0x00800)
 #define DCF_CACHE_MODE_MASK          ((uint32_t)0x03000)

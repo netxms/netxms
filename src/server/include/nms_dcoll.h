@@ -527,6 +527,11 @@ protected:
    Timestamp m_prevValueTimeStamp;
    bool m_cacheLoaded;
    bool m_anomalyDetected;
+   bool m_anomalyDetectedAI;           // Anomaly detected by AI profile
+   json_t *m_anomalyProfile;           // Parsed profile (cached for runtime)
+   time_t m_anomalyProfileTimestamp;
+   time_t m_sustainedHighStart;        // Start time of sustained high period (0 if not in high state)
+   SharedString m_aiHint;              // Hint for AI anomaly profile generation
 	int m_multiplier;
 	SharedString m_unitName;
 	uint16_t m_snmpRawValueType;		// Actual SNMP raw value type for input transformation
@@ -602,7 +607,15 @@ public:
 	int getMultiplier() const { return m_multiplier; }
 	int getUseMultiplier() const { return (m_flags & DCF_MULTIPLIERS_MASK) >> 16; }
 	SharedString getUnitName() const { return GetAttributeWithLock(m_unitName, m_mutex); }
+	bool inAnomalyDetectionByAIEnabled() const { return (m_flags & DCF_DETECT_ANOMALIES_AI) != 0; }
 	bool isAnomalyDetected() const { return m_anomalyDetected; }
+	bool isAnomalyDetectedAI() const { return m_anomalyDetectedAI; }
+	bool hasAnomalyProfile() const { return m_anomalyProfile != nullptr; }
+	time_t getAnomalyProfileTimestamp() const { return m_anomalyProfileTimestamp; }
+	SharedString getAIHint() const { return GetAttributeWithLock(m_aiHint, m_mutex); }
+
+	void setAnomalyProfile(json_t *profile);
+	bool checkAnomalyAIProfile(const ItemValue& value);
 
 	uint64_t getCacheMemoryUsage() const;
 

@@ -152,6 +152,7 @@ public abstract class AbstractObject
 	protected UUID mapImage;
 	protected long drillDownObjectId;
    protected long assetId;
+   protected String aiHint;
 	protected final HashSet<Long> trustedObjects = new HashSet<Long>(0);
 	protected boolean inheritAccessRights = true;
 	protected HashSet<AccessListElement> accessList = new HashSet<AccessListElement>(0);
@@ -247,6 +248,7 @@ public abstract class AbstractObject
 		mapImage = msg.getFieldAsUUID(NXCPCodes.VID_IMAGE);
 		drillDownObjectId = msg.getFieldAsInt64(NXCPCodes.VID_DRILL_DOWN_OBJECT_ID);
       assetId = msg.getFieldAsInt64(NXCPCodes.VID_ASSET_ID);
+      aiHint = msg.getFieldAsString(NXCPCodes.VID_AI_HINT);
 		creationTime = msg.getFieldAsDate(NXCPCodes.VID_CREATION_TIME);
 
 		statusCalculationMethod = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_CALCULATION_ALG);
@@ -1196,6 +1198,16 @@ public abstract class AbstractObject
    public long getAssetId()
    {
       return assetId;
+   }
+
+   /**
+    * Get AI hint for this object.
+    *
+    * @return AI hint string or null
+    */
+   public String getAiHint()
+   {
+      return aiHint;
    }
 
    /**

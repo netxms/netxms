@@ -352,4 +352,11 @@ time_t NXCORE_EXPORTABLE ParseTimestamp(const char *ts);
  */
 void NXCORE_EXPORTABLE SpawnIncidentAIAnalysis(uint32_t incidentId, int depth, bool autoAssign, const TCHAR *customPrompt);
 
+/**
+ * Generate anomaly detection profile for a DCI asynchronously
+ * @param dciId ID of the DCI
+ * @param nodeId ID of the node owning the DCI
+ */
+void NXCORE_EXPORTABLE GenerateAnomalyProfileAsync(uint32_t dciId, uint32_t nodeId);
+
 #endif

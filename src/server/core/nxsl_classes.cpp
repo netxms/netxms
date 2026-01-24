@@ -29,6 +29,7 @@
 #include <asset_management.h>
 #include <nms_users.h>
 #include <nms_pkg.h>
+#include <nxai.h>
 
 /**
  * Maintenance journal access
@@ -825,7 +826,11 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const NXSL_Identifie
 
    NXSL_VM *vm = _object->vm();
    auto object = SharedObjectFromData<NetObj>(_object);
-   if (NXSL_COMPARE_ATTRIBUTE_NAME("alarms"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("aiHint"))
+   {
+      value = vm->createValue(object->getAIHint());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("alarms"))
    {
       ObjectArray<Alarm> *alarms = GetAlarms(object->getId(), true);
       alarms->setOwner(Ownership::False);
@@ -5640,6 +5645,23 @@ NXSL_METHOD_DEFINITION(DCI, forcePoll)
 }
 
 /**
+ * DCI::generateAnomalyProfile() method
+ * Triggers asynchronous generation of AI-based anomaly detection profile
+ */
+NXSL_METHOD_DEFINITION(DCI, generateAnomalyProfile)
+{
+   const DCObjectInfo *dci = static_cast<shared_ptr<DCObjectInfo>*>(object->getData())->get();
+   if (dci->getType() != DCO_TYPE_ITEM)
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+   GenerateAnomalyProfileAsync(dci->getId(), dci->getOwnerId());
+   *result = vm->createValue(true);
+   return 0;
+}
+
+/**
  * Implementation of "DataPoint" class: constructor
  */
 NXSL_DataPointClass::NXSL_DataPointClass() : NXSL_Class()
@@ -5685,6 +5707,7 @@ NXSL_DciClass::NXSL_DciClass() : NXSL_Class()
    setName(_T("DCI"));
 
    NXSL_REGISTER_METHOD(DCI, forcePoll, 0);
+   NXSL_REGISTER_METHOD(DCI, generateAnomalyProfile, 0);
 }
 
 /**

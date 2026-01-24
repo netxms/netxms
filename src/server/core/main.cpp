@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -129,6 +129,7 @@ void ReloadCRLs(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteReport(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExpandCommentMacrosTask(const shared_ptr<ScheduledTaskParameters> &parameters);
 void ScheduledFileUpload(const shared_ptr<ScheduledTaskParameters>& parameters);
+void RegenerateAnomalyProfiles(const shared_ptr<ScheduledTaskParameters>& parameters);
 
 void InitCountryList();
 void InitCurrencyList();
@@ -1406,6 +1407,10 @@ retry_db_lock:
    // Schedule unbound agent tunnel processing and automatic agent certificate renewal
    AddUniqueRecurrentScheduledTask(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, _T("*/5 * * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T("Process unbound agent tunnels"), nullptr, true);
    AddUniqueRecurrentScheduledTask(RENEW_AGENT_CERTIFICATES_TASK_ID, _T("0 12 * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T("Renew agent certificates"), nullptr, true);
+
+   // Initialize anomaly detection subsystem
+   RegisterSchedulerTaskHandler(L"System.RegenerateAnomalyProfiles", RegenerateAnomalyProfiles, 0);
+   AddUniqueRecurrentScheduledTask(L"System.RegenerateAnomalyProfiles", L"0 12 * * *", L"", nullptr, 0, 0, SYSTEM_ACCESS_FULL, L"Regenerate DCI anomaly profiles", nullptr, true);
 
    // Send summary emails
    if (ConfigReadBoolean(_T("Alarms.SummaryEmail.Enable"), false))

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -99,6 +99,7 @@ static inline json_t *CreateObjectSummary(const NetObj& object)
    json_object_set_new(jsonObject, "status", json_string_t(GetStatusAsText(object.getStatus(), false)));
    json_object_set_new(jsonObject, "customAttributes", object.getCustomAttributesAsJson());
    json_object_set_new(jsonObject, "comments", json_string_t(object.getComments()));
+   json_object_set_new(jsonObject, "aiHint", json_string_t(object.getAIHint()));
 
    if (object.getObjectClass() == OBJECT_NODE)
    {

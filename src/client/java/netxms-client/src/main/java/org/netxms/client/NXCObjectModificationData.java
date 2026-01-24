@@ -62,6 +62,7 @@ public class NXCObjectModificationData
    private String name;
    private String primaryName;
    private String alias;
+   private String aiHint;
    private String nameOnMap;
    private Collection<AccessListElement> acl;
    private Boolean inheritAccessRights;
@@ -258,6 +259,26 @@ public class NXCObjectModificationData
    public void setAlias(String alias)
    {
       this.alias = alias;
+   }
+
+   /**
+    * Get AI hint for this object.
+    *
+    * @return AI hint string or null if not set
+    */
+   public String getAiHint()
+   {
+      return aiHint;
+   }
+
+   /**
+    * Set AI hint for this object.
+    *
+    * @param aiHint new AI hint
+    */
+   public void setAiHint(String aiHint)
+   {
+      this.aiHint = aiHint;
    }
 
    /**

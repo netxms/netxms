@@ -1635,6 +1635,7 @@ typedef struct
 #define VID_SNMP_CONTEXT            ((uint32_t)914)
 #define VID_QUERY_SQL               ((uint32_t)915)
 #define VID_AI_FUNCTION_NAME        ((uint32_t)916)
+#define VID_AI_HINT                 ((uint32_t)917)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

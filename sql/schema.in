@@ -203,6 +203,7 @@ CREATE TABLE object_properties
   category integer not null,
   asset_id integer not null,
   is_hidden integer not null,
+  ai_hint varchar(2000) null,          // Hint for AI anomaly profile generation
   PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 
@@ -932,6 +933,9 @@ CREATE TABLE items
   related_object integer not null,
   all_rearmed_event integer not null, // Event code to be generated when all thresholds are rearmed
   thresholds_disable_end_time integer not null,
+  anomaly_profile SQL_TEXT null,       // AI anomaly detection profile (JSON)
+  anomaly_profile_timestamp integer not null,
+  ai_hint varchar(2000) null,          // Hint for AI anomaly profile generation
   PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 

@@ -344,7 +344,7 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
          _T("location_accuracy"), _T("location_timestamp"), _T("guid"), _T("map_image"), _T("drilldown_object_id"), _T("country"),
          _T("region"), _T("city"), _T("district"), _T("street_address"), _T("postcode"), _T("maint_event_id"),
          _T("state_before_maint"), _T("state"), _T("flags"), _T("creation_time"), _T("maint_initiator"), _T("alias"),
-         _T("name_on_map"), _T("category"), _T("comments_source"), _T("asset_id"), _T("is_hidden"), nullptr
+         _T("name_on_map"), _T("category"), _T("comments_source"), _T("asset_id"), _T("is_hidden"), _T("ai_hint"), nullptr
       };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_properties"), _T("object_id"), m_id, columns);
@@ -400,7 +400,8 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 37, DB_SQLTYPE_TEXT, m_commentsSource, DB_BIND_STATIC);
          DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, m_assetId);
          DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, (LONG)(m_isHidden ? 1 : 0));
-         DBBind(hStmt, 40, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 40, DB_SQLTYPE_VARCHAR, m_aiHint, DB_BIND_STATIC, 2000);
+         DBBind(hStmt, 41, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -653,7 +654,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb, DB_STATEMENT *preparedStatement
                                   _T("status_thresholds,comments,location_type,latitude,longitude,location_accuracy,")
                                   _T("location_timestamp,guid,map_image,drilldown_object_id,country,region,city,district,street_address,")
                                   _T("postcode,maint_event_id,state_before_maint,maint_initiator,state,flags,creation_time,alias,")
-                                  _T("name_on_map,category,comments_source,asset_id,is_hidden FROM object_properties WHERE object_id=?"));
+                                  _T("name_on_map,category,comments_source,asset_id,is_hidden,ai_hint FROM object_properties WHERE object_id=?"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -716,6 +717,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb, DB_STATEMENT *preparedStatement
             m_commentsSource = DBGetFieldAsSharedString(hResult, 0, 36);
             m_assetId = DBGetFieldULong(hResult, 0, 37);
             m_isHidden = DBGetFieldLong(hResult, 0, 38) ? true : false;
+            m_aiHint = DBGetFieldAsSharedString(hResult, 0, 39);
             success = true;
          }
 			else if (ignoreEmptyResults)
@@ -1409,6 +1411,7 @@ void NetObj::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_STATUS_THRESHOLD_4, static_cast<uint16_t>(m_statusThresholds[3]));
    msg->setField(VID_COMMENTS_SOURCE, CHECK_NULL_EX(m_commentsSource));
    msg->setField(VID_ASSET_ID, m_assetId);
+   msg->setField(VID_AI_HINT, m_aiHint);
 	msg->setFieldFromTime(VID_CREATION_TIME, m_creationTime);
 	if ((m_trustedObjects != nullptr) && !m_trustedObjects->isEmpty())
 	{
@@ -1774,6 +1777,9 @@ uint32_t NetObj::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession
          fieldId += 10;
       }
    }
+
+   if (msg.isFieldExist(VID_AI_HINT))
+      m_aiHint = msg.getFieldAsSharedString(VID_AI_HINT);
 
    return RCC_SUCCESS;
 }
@@ -3017,6 +3023,7 @@ json_t *NetObj::toJson()
    json_object_set_new(root, "trustedObjects", (m_trustedObjects != nullptr) ? m_trustedObjects->toJson() : json_array());
    json_object_set_new(root, "creationTime", json_time_string(m_creationTime));
    json_object_set_new(root, "categoryId", json_integer(m_categoryId));
+   json_object_set_new(root, "aiHint", json_string_t(m_aiHint));
 
    json_t *customAttributes = json_array();
    forEachCustomAttribute(CustomAttributeToJson, customAttributes);
