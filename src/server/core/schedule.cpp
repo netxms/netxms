@@ -448,7 +448,7 @@ uint32_t NXCORE_EXPORTABLE AddUniqueRecurrentScheduledTask(const TCHAR *taskHand
          ScheduledTaskTransientData *transientData, uint32_t owner, uint32_t objectId, uint64_t systemRights,
          const TCHAR *comments, const TCHAR *key, bool systemTask)
 {
-   ScheduledTask *task = FindScheduledTaskByHandlerId(taskHandlerId);
+   ScheduledTask *task = FindScheduledTaskByHandlerId(taskHandlerId, true);
    if (task != nullptr)
    {
       // Make sure that existing task marked as system if requested
@@ -784,15 +784,15 @@ uint32_t NXCORE_EXPORTABLE DeleteScheduledTask(uint64_t id, uint32_t user, uint6
 /**
  * Find scheduled task by task handler id
  */
-ScheduledTask NXCORE_EXPORTABLE *FindScheduledTaskByHandlerId(const TCHAR *taskHandlerId)
+ScheduledTask NXCORE_EXPORTABLE *FindScheduledTaskByHandlerId(const wchar_t *taskHandlerId, bool recurrentOnly)
 {
-   ScheduledTask *task;
+   ScheduledTask *task = nullptr;
    bool found = false;
 
    s_recurrentTaskLock.lock();
    for (int i = 0; i < s_recurrentTasks.size(); i++)
    {
-      if (_tcscmp(s_recurrentTasks.get(i)->getTaskHandlerId(), taskHandlerId) == 0)
+      if (wcscmp(s_recurrentTasks.get(i)->getTaskHandlerId(), taskHandlerId) == 0)
       {
          task = s_recurrentTasks.get(i);
          found = true;
@@ -801,13 +801,13 @@ ScheduledTask NXCORE_EXPORTABLE *FindScheduledTaskByHandlerId(const TCHAR *taskH
    }
    s_recurrentTaskLock.unlock();
 
-   if (found)
+   if (found || recurrentOnly)
       return task;
 
    s_oneTimeTaskLock.lock();
    for (int i = 0; i < s_oneTimeTasks.size(); i++)
    {
-      if (_tcscmp(s_oneTimeTasks.get(i)->getTaskHandlerId(), taskHandlerId) == 0)
+      if (wcscmp(s_oneTimeTasks.get(i)->getTaskHandlerId(), taskHandlerId) == 0)
       {
          task = s_oneTimeTasks.get(i);
          found = true;
@@ -818,7 +818,7 @@ ScheduledTask NXCORE_EXPORTABLE *FindScheduledTaskByHandlerId(const TCHAR *taskH
    {
       for (int i = 0; i < s_completedOneTimeTasks.size(); i++)
       {
-         if (_tcscmp(s_completedOneTimeTasks.get(i)->getTaskHandlerId(), taskHandlerId) == 0)
+         if (wcscmp(s_completedOneTimeTasks.get(i)->getTaskHandlerId(), taskHandlerId) == 0)
          {
             task = s_completedOneTimeTasks.get(i);
             found = true;
@@ -828,10 +828,7 @@ ScheduledTask NXCORE_EXPORTABLE *FindScheduledTaskByHandlerId(const TCHAR *taskH
    }
    s_oneTimeTaskLock.unlock();
 
-   if (found)
-      return task;
-
-   return NULL;
+   return task;
 }
 
 /**
