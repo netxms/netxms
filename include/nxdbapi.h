@@ -187,6 +187,7 @@ MacAddress LIBNXDB_EXPORTABLE DBGetFieldMacAddr(DB_RESULT hResult, int row, int 
 bool LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iColumn, int *pnArray, size_t size, int defaultValue);
 bool LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iColumn, BYTE *data, size_t size, BYTE defaultValue);
 uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int row, int column);
+json_t LIBNXDB_EXPORTABLE *DBGetFieldJson(DB_RESULT hResult, int row, int column);
 
 static inline time_t DBGetFieldTime(DB_RESULT hResult, int row, int column)
 {
