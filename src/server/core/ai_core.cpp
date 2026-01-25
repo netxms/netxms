@@ -1823,7 +1823,7 @@ bool InitAIAssistant()
       { _T("URL"), CT_MB_STRING, 0, 0, sizeof(s_llmServiceURL), 0, s_llmServiceURL },
       { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
    };
-   if (!g_serverConfig.parseTemplate(L"IRIS", configTemplate))
+   if (!g_serverConfig.parseTemplate(L"AI", configTemplate))
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("AI assistant initialization failed (cannot parse module configuration)"));
       return false;
