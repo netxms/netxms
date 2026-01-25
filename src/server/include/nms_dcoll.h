@@ -531,6 +531,7 @@ protected:
    json_t *m_anomalyProfile;           // Parsed profile (cached for runtime)
    time_t m_anomalyProfileTimestamp;
    time_t m_sustainedHighStart;        // Start time of sustained high period (0 if not in high state)
+   time_t m_sustainedLowStart;         // Start time of sustained low period (0 if not in low state)
    double m_recentAverage;             // EMA for sudden drop detection (NaN if not initialized)
    SharedString m_aiHint;              // Hint for AI anomaly profile generation
 	int m_multiplier;

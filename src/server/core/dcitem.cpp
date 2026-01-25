@@ -158,6 +158,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy, bool copyThresholds) : DCObje
    m_anomalyProfile = (src->m_anomalyProfile != nullptr) ? json_deep_copy(src->m_anomalyProfile) : nullptr;
    m_anomalyProfileTimestamp = src->m_anomalyProfileTimestamp;
    m_sustainedHighStart = 0;
+   m_sustainedLowStart = 0;
    m_recentAverage = std::nan("");
    m_aiHint = src->m_aiHint;
 	m_multiplier = src->m_multiplier;
@@ -255,6 +256,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
    m_anomalyProfile = DBGetFieldJson(hResult, row, 44);
    m_anomalyProfileTimestamp = static_cast<time_t>(DBGetFieldInt64(hResult, row, 45));
    m_sustainedHighStart = 0;
+   m_sustainedLowStart = 0;
    m_recentAverage = std::nan("");
    m_aiHint = DBGetFieldAsSharedString(hResult, row, 46);
    m_anomalyDetectedAI = false;
@@ -314,6 +316,7 @@ DCItem::DCItem(uint32_t id, const TCHAR *name, int source, int dataType, BYTE sc
    m_anomalyProfile = nullptr;
    m_anomalyProfileTimestamp = 0;
    m_sustainedHighStart = 0;
+   m_sustainedLowStart = 0;
    m_recentAverage = std::nan("");
 	m_multiplier = 0;
 	m_snmpRawValueType = SNMP_RAWTYPE_NONE;
@@ -345,6 +348,7 @@ DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner
    m_anomalyProfile = nullptr;
    m_anomalyProfileTimestamp = 0;
    m_sustainedHighStart = 0;
+   m_sustainedLowStart = 0;
    m_recentAverage = std::nan("");
 	m_multiplier = config->getSubEntryValueAsInt(_T("multiplier"));
 	m_snmpRawValueType = static_cast<uint16_t>(config->getSubEntryValueAsInt(_T("snmpRawValueType")));
@@ -397,6 +401,7 @@ DCItem::DCItem(json_t *json, const shared_ptr<DataCollectionOwner>& owner) : DCO
    m_anomalyProfile = nullptr;
    m_anomalyProfileTimestamp = 0;
    m_sustainedHighStart = 0;
+   m_sustainedLowStart = 0;
    m_recentAverage = std::nan("");
    m_multiplier = json_object_get_int32(json, "multiplier");
    m_snmpRawValueType = static_cast<uint16_t>(json_object_get_int32(json, "snmpRawValueType"));
@@ -3244,7 +3249,26 @@ bool DCItem::checkAnomalyAIProfile(const ItemValue& value)
       }
    }
 
-   // 5. Sudden drop check (using exponential moving average)
+   // 5. Sustained low check
+   json_t *sustainedLow = json_object_get(m_anomalyProfile, "sustainedLowDetection");
+   if (sustainedLow != nullptr && json_is_true(json_object_get(sustainedLow, "enabled")))
+   {
+      double threshold = json_number_value(json_object_get(sustainedLow, "threshold"));
+      double durationMinutes = json_number_value(json_object_get(sustainedLow, "durationMinutes"));
+      if (numValue < threshold)
+      {
+         if (m_sustainedLowStart == 0)
+            m_sustainedLowStart = now;  // Start tracking
+         else if (durationMinutes > 0 && difftime(now, m_sustainedLowStart) / 60.0 >= durationMinutes)
+            return true;  // Sustained low anomaly
+      }
+      else
+      {
+         m_sustainedLowStart = 0;  // Reset on value above threshold
+      }
+   }
+
+   // 6. Sudden drop check (using exponential moving average)
    json_t *dropDetection = json_object_get(m_anomalyProfile, "suddenDropDetection");
    if (dropDetection != nullptr && json_is_true(json_object_get(dropDetection, "enabled")))
    {
