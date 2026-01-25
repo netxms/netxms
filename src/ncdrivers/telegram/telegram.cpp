@@ -28,9 +28,10 @@
 
 #define DEBUG_TAG _T("ncd.telegram")
 
-#define DISABLE_IP_V4 1
-#define DISABLE_IP_V6 2
-#define LONG_POLLING  4
+#define DISABLE_IP_V4      1
+#define DISABLE_IP_V6      2
+#define LONG_POLLING       4
+#define USE_LOCAL_RESOLVER 8
 
 /**
  * Chat information
@@ -194,6 +195,7 @@ private:
    NCDriverStorageManager *m_storageManager;   
    TCHAR m_parseMode[32];
    bool m_longPollingMode;
+   bool m_useLocalResolver;
    uint32_t m_pollingInterval;
 
    TelegramDriver(NCDriverStorageManager *storageManager) : NCDriver(), m_chats(Ownership::True), m_chatsLock(MutexType::FAST), m_shutdownCondition(true)
@@ -207,6 +209,7 @@ private:
       m_nextUpdateId = 0;
       m_storageManager = storageManager;
       m_longPollingMode = true;
+      m_useLocalResolver = false;
       m_pollingInterval = 300;
    }
 
@@ -238,9 +241,51 @@ TelegramDriver::~TelegramDriver()
 }
 
 /**
+ * Get address family from CURL IP version
+ */
+static int AddressFamilyFromIPVersion(long ipVersion)
+{
+   switch(ipVersion)
+   {
+      case CURL_IPRESOLVE_V4:
+         return AF_INET;
+      case CURL_IPRESOLVE_V6:
+         return AF_INET6;
+      default:
+         return AF_UNSPEC;
+   }
+}
+
+#if HAVE_DECL_CURLOPT_CONNECT_TO
+
+/**
+ * Create CURLOPT_CONNECT_TO list for local hostname resolution.
+ * Caller is responsible for freeing the returned list with curl_slist_free_all().
+ * Returns nullptr if resolution fails or feature is not needed.
+ */
+static struct curl_slist *CreateConnectToList(long ipVersion)
+{
+   InetAddress addr = InetAddress::resolveHostName("api.telegram.org", AddressFamilyFromIPVersion(ipVersion));
+   if (!addr.isValidUnicast())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("CreateConnectToList: failed to resolve api.telegram.org"));
+      return nullptr;
+   }
+
+   char addrText[64], entry[256];
+   addr.toStringA(addrText);
+   snprintf(entry, sizeof(entry), "api.telegram.org:443:%s:443", addrText);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("CreateConnectToList: using resolved address %hs for api.telegram.org"), addrText);
+
+   return curl_slist_append(nullptr, entry);
+}
+
+#endif
+
+/**
  * Send request to Telegram API
  */
-static CallResponse SendTelegramRequest(const char *token, const ProxyInfo *proxy, long ipVersion, const char *method, json_t *data)
+static CallResponse SendTelegramRequest(const char *token, const ProxyInfo *proxy, long ipVersion, bool useLocalResolver, const char *method, json_t *data)
 {
    CURL *curl = curl_easy_init();
    if (curl == nullptr)
@@ -262,6 +307,16 @@ static CallResponse SendTelegramRequest(const char *token, const ProxyInfo *prox
    responseData.setAllocationStep(32768);
    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
    curl_easy_setopt(curl, CURLOPT_IPRESOLVE, ipVersion);
+
+#if HAVE_DECL_CURLOPT_CONNECT_TO
+   struct curl_slist *connectTo = nullptr;
+   if (useLocalResolver && (proxy != nullptr))
+   {
+      connectTo = CreateConnectToList(ipVersion);
+      if (connectTo != nullptr)
+         curl_easy_setopt(curl, CURLOPT_CONNECT_TO, connectTo);
+   }
+#endif
 
    if (proxy != nullptr)
    {
@@ -349,6 +404,9 @@ static CallResponse SendTelegramRequest(const char *token, const ProxyInfo *prox
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_setopt(CURLOPT_URL) failed"));
    }
    curl_slist_free_all(headers);
+#if HAVE_DECL_CURLOPT_CONNECT_TO
+   curl_slist_free_all(connectTo);
+#endif
    curl_easy_cleanup(curl);
    MemFree(json);
 
@@ -466,19 +524,20 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
    uint32_t options = LONG_POLLING;
    uint32_t pollingInterval = 300;
    TCHAR parseMode[32] = _T("");
-   NX_CFG_TEMPLATE configTemplate[] = 
+   NX_CFG_TEMPLATE configTemplate[] =
 	{
 		{ _T("AuthToken"), CT_MB_STRING, 0, 0, sizeof(authToken), 0, authToken, nullptr },
 		{ _T("DisableIPv4"), CT_BOOLEAN_FLAG_32, 0, 0, DISABLE_IP_V4, 0, &options, nullptr },
 		{ _T("DisableIPv6"), CT_BOOLEAN_FLAG_32, 0, 0, DISABLE_IP_V6, 0, &options, nullptr },
       { _T("LongPolling"), CT_BOOLEAN_FLAG_32, 0, 0, LONG_POLLING, 0, &options, nullptr },
+      { _T("ParseMode"), CT_STRING, 0, 0, sizeof(parseMode), 0, parseMode, nullptr },
       { _T("PollingInterval"), CT_LONG, 0, 0, 0, 0, &pollingInterval, nullptr },
 		{ _T("Proxy"), CT_MB_STRING, 0, 0, sizeof(proxy.hostname), 0, proxy.hostname, nullptr },
 		{ _T("ProxyPort"), CT_WORD, 0, 0, 0, 0, &proxy.port, nullptr },
 		{ _T("ProxyType"), CT_MB_STRING, 0, 0, sizeof(protocol), 0, protocol, nullptr },
 		{ _T("ProxyUser"), CT_MB_STRING, 0, 0, sizeof(proxy.user), 0, proxy.user, nullptr },
 		{ _T("ProxyPassword"), CT_MB_STRING, 0, 0, sizeof(proxy.password), 0, proxy.password, nullptr },
-      { _T("ParseMode"), CT_STRING, 0, 0, sizeof(parseMode), 0, parseMode, nullptr },
+      { _T("UseLocalResolver"), CT_BOOLEAN_FLAG_32, 0, 0, USE_LOCAL_RESOLVER, 0, &options, nullptr },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr, nullptr }
 	};
 
@@ -502,7 +561,7 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
    }
 
    TelegramDriver *driver = nullptr;
-   CallResponse response = SendTelegramRequest(authToken, &proxy, IPVersionFromOptions(options), "getMe", nullptr);
+   CallResponse response = SendTelegramRequest(authToken, &proxy, IPVersionFromOptions(options), (options & USE_LOCAL_RESOLVER) && (proxy.hostname[0] != 0), "getMe", nullptr);
    json_t *info = response.data;
 	if (info != nullptr)
 	{
@@ -519,6 +578,7 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
 	            driver = new TelegramDriver(storageManager);
 	            strcpy(driver->m_authToken, authToken);
 	            driver->m_longPollingMode = (options & LONG_POLLING) ? true : false;
+	            driver->m_useLocalResolver = (options & USE_LOCAL_RESOLVER) ? true : false;
 	            driver->m_pollingInterval = pollingInterval;
 	            driver->m_proxy = (proxy.hostname[0] != 0) ? MemCopyBlock(&proxy, sizeof(ProxyInfo)) : nullptr;
                driver->m_ipVersion = IPVersionFromOptions(options);
@@ -622,6 +682,16 @@ void TelegramDriver::updateHandler(TelegramDriver *driver)
 #endif
       curl_easy_setopt(curl, CURLOPT_IPRESOLVE, driver->m_ipVersion);
 
+#if HAVE_DECL_CURLOPT_CONNECT_TO
+      struct curl_slist *connectTo = nullptr;
+      if (driver->m_useLocalResolver && (driver->m_proxy != nullptr))
+      {
+         connectTo = CreateConnectToList(driver->m_ipVersion);
+         if (connectTo != nullptr)
+            curl_easy_setopt(curl, CURLOPT_CONNECT_TO, connectTo);
+      }
+#endif
+
       if (driver->m_proxy != nullptr)
       {
          nxlog_debug_tag(DEBUG_TAG, 6, _T("UpdateHandler(%s): proxy is enabled"), driver->m_botName);
@@ -684,6 +754,9 @@ void TelegramDriver::updateHandler(TelegramDriver *driver)
          responseData.clear();
       }
 
+#if HAVE_DECL_CURLOPT_CONNECT_TO
+      curl_slist_free_all(connectTo);
+#endif
       curl_easy_cleanup(curl);
       responseData.clear();
    }
@@ -862,7 +935,7 @@ int TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
          json_object_set_new(request, "message_thread_id", json_integer(topicId));
       }
 
-      CallResponse response = SendTelegramRequest(m_authToken, m_proxy, m_ipVersion, "sendMessage", request);
+      CallResponse response = SendTelegramRequest(m_authToken, m_proxy, m_ipVersion, m_useLocalResolver && (m_proxy != nullptr), "sendMessage", request);
       json_decref(request);
 
       if (json_is_object(response.data))
@@ -911,7 +984,7 @@ int TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
 bool TelegramDriver::checkHealth()
 {
    bool status = false;
-   CallResponse response = SendTelegramRequest(m_authToken, m_proxy, m_ipVersion, "getMe", nullptr);
+   CallResponse response = SendTelegramRequest(m_authToken, m_proxy, m_ipVersion, m_useLocalResolver && (m_proxy != nullptr), "getMe", nullptr);
    if (response.data != nullptr)
    {
       json_t *ok = json_object_get(response.data, "ok");

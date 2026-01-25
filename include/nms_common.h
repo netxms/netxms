@@ -190,6 +190,7 @@ typedef int bool;
 #define HAVE_DECL_CURL_URL               1
 #define HAVE_DECL_CURLE_NOT_BUILT_IN     1
 #define HAVE_DECL_CURLE_UNKNOWN_OPTION   1
+#define HAVE_DECL_CURLOPT_CONNECT_TO     1
 #define HAVE_DECL_CURLOPT_RESOLVE        1
 #define HAVE_DECL_CURLOPT_XOAUTH2_BEARER 1
 #define VA_LIST_IS_POINTER               1
