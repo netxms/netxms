@@ -654,6 +654,9 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM
  */
 static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
+   if ((argc < 3) || (argc > 4))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
    if (!argv[0]->isObject())
       return NXSL_ERR_NOT_OBJECT;
 
@@ -662,6 +665,9 @@ static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
 
    if (!argv[2]->isString())
       return NXSL_ERR_NOT_STRING;
+
+   if ((argc > 3) && !argv[3]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
 
    NXSL_Object *object = argv[0]->getValueAsObject();
 	if (!object->getClass()->instanceOf(_T("DataCollectionTarget")))
@@ -672,15 +678,15 @@ static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
 	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
    if ((dci != nullptr) && (dci->getDataSource() == DS_PUSH_AGENT) && (dci->getType() == DCO_TYPE_ITEM))
    {
-      Timestamp t = Timestamp::now();
+      Timestamp t = (argc == 3) ? Timestamp::now() : Timestamp::fromMilliseconds(argv[3]->getValueAsInt64());
       if (dci->getLastValueTimestamp() == t)
       {
          // Ensure 1 ms difference between two consecutive values
          ThreadSleepMs(1);
          t = Timestamp::now();
       }
-      success = node->processNewDCValue(dci, t, argv[2]->getValueAsCString(), shared_ptr<Table>(), false);
-      if (success)
+      success = node->processNewDCValue(dci, t, argv[2]->getValueAsCString(), shared_ptr<Table>(), argc > 3);
+      if (success && (dci->getLastPollTime() < t))
          dci->setLastPollTime(t);
    }
 
@@ -756,7 +762,7 @@ static NXSL_ExtFunction m_nxslDCIFunctions[] =
 	{ "GetMinDCIValue", F_GetMinDCIValue, 4 },
 	{ "GetSumDCIValue", F_GetSumDCIValue, 4 },
    { "Instance", F_Instance, -1 , true },
-   { "PushDCIData", F_PushDCIData, 3 }
+   { "PushDCIData", F_PushDCIData, -1 }
 };
 
 /**
