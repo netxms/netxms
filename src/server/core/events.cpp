@@ -572,6 +572,8 @@ void Event::prepareMessage(NXCPMessage *msg) const
 	msg->setField(fieldId++, (UINT32)m_parameters.size());
 	for(int i = 0; i < m_parameters.size(); i++)
 	   msg->setField(fieldId++, m_parameters.get(i));
+	for(int i = 0; i < m_parameterNames.size(); i++)
+	   msg->setField(fieldId++, m_parameterNames.get(i));
 	msg->setField(fieldId++, m_dciId);
 }
 

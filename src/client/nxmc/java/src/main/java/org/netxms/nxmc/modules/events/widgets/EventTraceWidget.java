@@ -22,6 +22,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.widgets.Composite;
@@ -35,6 +36,7 @@ import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.AbstractTraceWidget;
 import org.netxms.nxmc.base.widgets.helpers.AbstractTraceViewFilter;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.events.dialogs.EventDetailsDialog;
 import org.netxms.nxmc.modules.events.widgets.helpers.EventLabelProvider;
 import org.netxms.nxmc.modules.events.widgets.helpers.EventMonitorFilter;
 import org.netxms.nxmc.modules.events.widgets.helpers.HistoricalEvent;
@@ -57,6 +59,7 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 	private NXCSession session;
 	private Action actionShowColor;
 	private Action actionShowIcons;
+	private Action actionShowDetails;
 	private EventLabelProvider labelProvider;
    private EventInterceptor eventInterceptor;
 
@@ -116,6 +119,14 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
       addColumn(i18n.tr("Severity"), 90);
       addColumn(i18n.tr("Event"), 200);
       addColumn(i18n.tr("Message"), 600);
+
+      viewer.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(org.eclipse.jface.viewers.DoubleClickEvent event)
+         {
+            showEventDetails();
+         }
+      });
 	}
 
    /**
@@ -176,6 +187,14 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 			}
 		};
 		actionShowIcons.setChecked(labelProvider.isShowIcons());
+
+      actionShowDetails = new Action(i18n.tr("Show &details...")) {
+         @Override
+         public void run()
+         {
+            showEventDetails();
+         }
+      };
 	}
 
    /**
@@ -193,6 +212,7 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
          if ((element instanceof Event) || (element instanceof HistoricalEvent))
          {
             manager.add(new Separator());
+            manager.add(actionShowDetails);
             MenuManager openEventLogMenu = new MenuManager(i18n.tr("Open event log"));
             addOpenEventLogActions(openEventLogMenu, element);
             manager.add(openEventLogMenu);
@@ -261,6 +281,23 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
    {
       AdHocEventLogView logView = new AdHocEventLogView(sourceId, eventCode, titleSuffix);
       view.openView(logView);
+   }
+
+   /**
+    * Show details dialog for the selected event.
+    */
+   private void showEventDetails()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() == 1)
+      {
+         Object element = selection.getFirstElement();
+         if ((element instanceof Event) || (element instanceof HistoricalEvent))
+         {
+            EventDetailsDialog dialog = new EventDetailsDialog(getShell(), element);
+            dialog.open();
+         }
+      }
    }
 
    /**

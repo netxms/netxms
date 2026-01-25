@@ -37,6 +37,7 @@ public class Event
    private final String message;
    private final String userTag;
    private final String[] parameters;
+   private final String[] parameterNames;
 
    /**
     * Create event object from NXCP message. Intended to be called only by NXCSession.
@@ -61,6 +62,11 @@ public class Event
       for(int i = 0; i < count; i++)
       {
          parameters[i] = msg.getFieldAsString(fieldId++);
+      }
+      parameterNames = new String[count];
+      for(int i = 0; i < count; i++)
+      {
+         parameterNames[i] = msg.getFieldAsString(fieldId++);
       }
       dciId = msg.getFieldAsInt64(fieldId++);
    }
@@ -135,5 +141,13 @@ public class Event
    public String[] getParameters()
    {
       return parameters;
+   }
+
+   /**
+    * @return the parameter names
+    */
+   public String[] getParameterNames()
+   {
+      return parameterNames;
    }
 }
