@@ -65,9 +65,9 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
    {
       String[] names = {
          "",
-         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Status Poll"), 
-         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Configuration Poll (Full)"),
-         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Interface Poll"), 
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Status Poll"),
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Configuration Poll (with reset)"),
+         LocalizationHelper.getI18n(ObjectPollerView.class).tr("Interface Poll"),
          LocalizationHelper.getI18n(ObjectPollerView.class).tr("Topology Poll"),
          LocalizationHelper.getI18n(ObjectPollerView.class).tr("Configuration Poll"), 
          LocalizationHelper.getI18n(ObjectPollerView.class).tr("Instance Discovery Poll"), 

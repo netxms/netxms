@@ -271,7 +271,7 @@ static void ProcessPollCommand(const wchar_t *arg, wchar_t *szBuffer, CONSOLE_CT
       }
       else if (IsCommand(_T("CONFIGURATION"), szBuffer, 1))
       {
-         pollType = POLL_CONFIGURATION_NORMAL;
+         pollType = POLL_CONFIGURATION;
       }
       else if (IsCommand(_T("DISCOVERY"), szBuffer, 1))
       {
@@ -306,7 +306,7 @@ static void ProcessPollCommand(const wchar_t *arg, wchar_t *szBuffer, CONSOLE_CT
                Pollable* pollableObject = object->getAsPollable();
                switch(pollType)
                {
-                  case POLL_CONFIGURATION_NORMAL:
+                  case POLL_CONFIGURATION:
                      if (pollableObject->isConfigurationPollAvailable())
                         ThreadPoolExecute(g_pollerThreadPool, pollableObject, &Pollable::doForcedConfigurationPoll, RegisterPoller(PollerType::CONFIGURATION, object));
                      break;

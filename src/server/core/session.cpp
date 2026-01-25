@@ -7940,10 +7940,10 @@ void ClientSession::forcedObjectPoll(const NXCPMessage& request)
             case POLL_AUTOBIND:
                isValidPoll = pollableObject->isAutobindPollAvailable();
                break;
-            case POLL_CONFIGURATION_FULL:
+            case POLL_CONFIGURATION_WITH_RESET:
                isValidPoll = (pollableObject->isConfigurationPollAvailable() && object->getObjectClass() == OBJECT_NODE);
                break;
-            case POLL_CONFIGURATION_NORMAL:
+            case POLL_CONFIGURATION:
                isValidPoll = pollableObject->isConfigurationPollAvailable();
                break;
             case POLL_DISCOVERY:
@@ -7972,8 +7972,8 @@ void ClientSession::forcedObjectPoll(const NXCPMessage& request)
       if (isValidPoll)
       {
          // Check access rights
-         if (((pollType == POLL_CONFIGURATION_FULL) && object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY)) ||
-               ((pollType != POLL_CONFIGURATION_FULL) && object->checkAccessRights(m_userId, OBJECT_ACCESS_READ)))
+         if (((pollType == POLL_CONFIGURATION_WITH_RESET) && object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY)) ||
+               ((pollType != POLL_CONFIGURATION_WITH_RESET) && object->checkAccessRights(m_userId, OBJECT_ACCESS_READ)))
          {
             sendPollerMsg(request.getId(), _T("Poll request accepted, waiting for outstanding polling requests to complete...\r\n"));
             response.setField(VID_RCC, RCC_SUCCESS);
@@ -8003,11 +8003,11 @@ void ClientSession::forcedObjectPoll(const NXCPMessage& request)
          case POLL_STATUS:
             pollableObject->doForcedStatusPoll(RegisterPoller(PollerType::STATUS, object), this, request.getId());
             break;
-         case POLL_CONFIGURATION_FULL:
+         case POLL_CONFIGURATION_WITH_RESET:
             if (object->getObjectClass() == OBJECT_NODE)
                static_cast<Node&>(*object).setRecheckCapsFlag();
             // intentionally no break here
-         case POLL_CONFIGURATION_NORMAL:
+         case POLL_CONFIGURATION:
             pollableObject->doForcedConfigurationPoll(RegisterPoller(PollerType::CONFIGURATION, object), this, request.getId());
             break;
          case POLL_INSTANCE_DISCOVERY:
