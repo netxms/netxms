@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <npe.h>
+#include <cmath>
 
 /**
  * Thread pool for threshold repeat events
@@ -157,6 +158,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy, bool copyThresholds) : DCObje
    m_anomalyProfile = (src->m_anomalyProfile != nullptr) ? json_deep_copy(src->m_anomalyProfile) : nullptr;
    m_anomalyProfileTimestamp = src->m_anomalyProfileTimestamp;
    m_sustainedHighStart = 0;
+   m_recentAverage = std::nan("");
    m_aiHint = src->m_aiHint;
 	m_multiplier = src->m_multiplier;
 	m_unitName = src->m_unitName;
@@ -253,6 +255,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
    m_anomalyProfile = DBGetFieldJson(hResult, row, 44);
    m_anomalyProfileTimestamp = static_cast<time_t>(DBGetFieldInt64(hResult, row, 45));
    m_sustainedHighStart = 0;
+   m_recentAverage = std::nan("");
    m_aiHint = DBGetFieldAsSharedString(hResult, row, 46);
    m_anomalyDetectedAI = false;
 
@@ -311,6 +314,7 @@ DCItem::DCItem(uint32_t id, const TCHAR *name, int source, int dataType, BYTE sc
    m_anomalyProfile = nullptr;
    m_anomalyProfileTimestamp = 0;
    m_sustainedHighStart = 0;
+   m_recentAverage = std::nan("");
 	m_multiplier = 0;
 	m_snmpRawValueType = SNMP_RAWTYPE_NONE;
 	m_predictionEngine[0] = 0;
@@ -341,6 +345,7 @@ DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner
    m_anomalyProfile = nullptr;
    m_anomalyProfileTimestamp = 0;
    m_sustainedHighStart = 0;
+   m_recentAverage = std::nan("");
 	m_multiplier = config->getSubEntryValueAsInt(_T("multiplier"));
 	m_snmpRawValueType = static_cast<uint16_t>(config->getSubEntryValueAsInt(_T("snmpRawValueType")));
    m_allThresholdsRearmEvent = config->getSubEntryValueAsUInt(_T("allThresholdsRearmEvent"));
@@ -392,6 +397,7 @@ DCItem::DCItem(json_t *json, const shared_ptr<DataCollectionOwner>& owner) : DCO
    m_anomalyProfile = nullptr;
    m_anomalyProfileTimestamp = 0;
    m_sustainedHighStart = 0;
+   m_recentAverage = std::nan("");
    m_multiplier = json_object_get_int32(json, "multiplier");
    m_snmpRawValueType = static_cast<uint16_t>(json_object_get_int32(json, "snmpRawValueType"));
    m_allThresholdsRearmEvent = json_object_get_int32(json, "allThresholdsRearmEvent");
@@ -3238,33 +3244,30 @@ bool DCItem::checkAnomalyAIProfile(const ItemValue& value)
       }
    }
 
-   // 5. Sudden drop check
+   // 5. Sudden drop check (using exponential moving average)
    json_t *dropDetection = json_object_get(m_anomalyProfile, "suddenDropDetection");
    if (dropDetection != nullptr && json_is_true(json_object_get(dropDetection, "enabled")))
    {
-      if (m_cacheSize > 0 && m_ppValueCache != nullptr)
+      double dropPercent = json_number_value(json_object_get(dropDetection, "dropPercent"));
+      if (dropPercent > 0)
       {
-         // Calculate recent average from cache
-         double sum = 0;
-         int count = 0;
-         for (uint32_t i = 0; i < m_cacheSize && i < 5; i++)
+         if (std::isnan(m_recentAverage))
          {
-            if (m_ppValueCache[i] != nullptr)
-            {
-               sum += m_ppValueCache[i]->getDouble();
-               count++;
-            }
+            // Initialize EMA with first value
+            m_recentAverage = numValue;
          }
-         if (count > 0)
+         else
          {
-            double recentAvg = sum / count;
-            double dropPercent = json_number_value(json_object_get(dropDetection, "dropPercent"));
-            if (dropPercent > 0 && recentAvg > 0)
+            // Check for sudden drop before updating average
+            if (m_recentAverage > 0)
             {
-               double dropThreshold = recentAvg * (1.0 - dropPercent / 100.0);
+               double dropThreshold = m_recentAverage * (1.0 - dropPercent / 100.0);
                if (numValue < dropThreshold)
                   return true;
             }
+            // Update EMA: alpha=0.3 gives ~5-sample equivalent smoothing
+            constexpr double alpha = 0.3;
+            m_recentAverage = alpha * numValue + (1.0 - alpha) * m_recentAverage;
          }
       }
    }
