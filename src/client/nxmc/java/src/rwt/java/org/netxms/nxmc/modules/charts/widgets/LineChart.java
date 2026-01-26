@@ -522,6 +522,13 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
          series.setLineColor(ColorConverter.colorFromInt(item.getColorAsInt(), colorCache));
       series.enableArea(item.isArea(configuration.isArea()));
       series.setInverted(item.invertValues);
+
+      int pollingInterval = chart.getDataSeries().get(index).getPollingInterval();
+      if (pollingInterval > 0)
+      {
+         // Use 3x polling interval as gap threshold (X-axis is in milliseconds)
+         series.setLineGapThreshold(pollingInterval * 3.0 * 1000.0);
+      }
 	}
 
    /**

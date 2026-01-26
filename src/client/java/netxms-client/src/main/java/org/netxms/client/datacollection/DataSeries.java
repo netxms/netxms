@@ -41,6 +41,7 @@ public class DataSeries
    private int multiplierPower;
    private int useMultiplier = 0;  // 0 - auto, 1 - use, 2 - do not use
    private Threshold[] thresholds = null;
+   private int pollingInterval;
 
    /**
     * Create empty data series
@@ -95,6 +96,7 @@ public class DataSeries
       this.multiplierPower = src.multiplierPower;
       this.useMultiplier = src.useMultiplier;
       this.thresholds = src.thresholds;
+      this.pollingInterval = src.pollingInterval;
    }
 
    /**
@@ -109,6 +111,7 @@ public class DataSeries
       activeThresholdSeverity = Severity.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_CURRENT_SEVERITY));
       multiplierPower = msg.getFieldAsInt32(NXCPCodes.VID_MULTIPLIER);
       useMultiplier = msg.getFieldAsInt32(NXCPCodes.VID_USE_MULTIPLIER);
+      pollingInterval = msg.getFieldAsInt32(NXCPCodes.VID_POLLING_INTERVAL);
 
       String units = msg.getFieldAsString(NXCPCodes.VID_UNITS_NAME);
       measurementUnits = ((units != null) && !units.isBlank()) ? new MeasurementUnit(units) : null;
@@ -342,6 +345,16 @@ public class DataSeries
    public String getDciName()
    {
       return dciName;
+   }
+
+   /**
+    * Get polling interval in seconds.
+    *
+    * @return polling interval in seconds
+    */
+   public int getPollingInterval()
+   {
+      return pollingInterval;
    }
 
    /**
