@@ -119,6 +119,7 @@ private:
    const char *m_path;
    bool m_auth;
    RouteHandler m_handlers[5];
+   MHD_UpgradeHandler m_upgradeHandler;
 
 public:
    RouteBuilder(const char *path)
@@ -164,6 +165,12 @@ public:
       return *this;
    }
 
+   RouteBuilder& upgradeProtocol(MHD_UpgradeHandler handler)
+   {
+      m_upgradeHandler = handler;
+      return *this;
+   }
+
    void build();
 };
 
@@ -184,10 +191,11 @@ private:
    UserAuthenticationToken m_token;
    StringMap m_placeholderValues;
    StringMap *m_responseHeaders;
+   MHD_UpgradeHandler m_upgradeHandler;
 
 public:
    Context(MHD_Connection *connection, const char *path, Method method, RouteHandler handler, const UserAuthenticationToken& token, uint32_t userId,
-      const TCHAR *userName, uint64_t systemAccessRights, StringMap&& placeholderValues)
+      const TCHAR *userName, uint64_t systemAccessRights, StringMap&& placeholderValues, MHD_UpgradeHandler upgradeHandler)
       : m_path(path), m_requestData(0), m_responseData(0), m_token(token), m_placeholderValues(std::move(placeholderValues))
    {
       m_connection = connection;
@@ -201,6 +209,7 @@ public:
       m_systemAccessRights = systemAccessRights;
       m_responseHeaders = nullptr;
       GetClientAddress(connection).toString(m_workstation);
+      m_upgradeHandler = upgradeHandler;
    }
 
    virtual ~Context()
@@ -260,6 +269,16 @@ public:
    {
       const TCHAR *v = m_placeholderValues.get(name);
       return (v != nullptr) ? _tcstoul(v, nullptr, 0) : defaultValue;
+   }
+
+   bool isProtocolUpgradeAllowed() const
+   {
+      return m_upgradeHandler != nullptr;
+   }
+
+   MHD_UpgradeHandler getProtocolUpgradeHandler() const
+   {
+      return m_upgradeHandler;
    }
 
    bool isDataRequired() const
@@ -378,5 +397,24 @@ public:
    virtual void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...)  const override;
    virtual void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...)  const override;
 };
+
+/**
+ * WebSocket close status codes (RFC 6455 Section 7.4.1)
+ */
+#define WS_CLOSE_NORMAL           1000  // Normal closure
+#define WS_CLOSE_GOING_AWAY       1001  // Endpoint going away
+#define WS_CLOSE_PROTOCOL_ERROR   1002  // Protocol error
+#define WS_CLOSE_UNSUPPORTED_DATA 1003  // Unsupported data type
+#define WS_CLOSE_INVALID_DATA     1007  // Invalid frame payload data
+#define WS_CLOSE_POLICY_VIOLATION 1008  // Policy violation
+#define WS_CLOSE_MESSAGE_TOO_BIG  1009  // Message too big
+#define WS_CLOSE_INTERNAL_ERROR   1011  // Internal server error
+
+/**
+ * WebSocket utility functions
+ */
+bool NXCORE_EXPORTABLE ReadWebsocketFrame(int socketHandle, ByteStream *out, BYTE *frameType);
+void NXCORE_EXPORTABLE SendWebsocketFrame(int socketHandle, const void *data, size_t dataLen);
+void NXCORE_EXPORTABLE SendWebsocketCloseFrame(int socketHandle, uint16_t statusCode = WS_CLOSE_NORMAL);
 
 #endif

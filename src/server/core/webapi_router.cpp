@@ -34,6 +34,7 @@ struct Route
    Route *next;
    Route *sub;
    RouteHandler handlers[5];
+   MHD_UpgradeHandler upgradeHandler;
    bool auth;
 };
 
@@ -88,6 +89,7 @@ void RouteBuilder::build()
    if (*m_path == 0)
    {
       memcpy(s_root->handlers, m_handlers, sizeof(m_handlers));
+      s_root->upgradeHandler = m_upgradeHandler;
       s_root->auth = m_auth;
       return;
    }
@@ -137,6 +139,7 @@ void RouteBuilder::build()
    }
 
    memcpy(r->handlers, m_handlers, sizeof(m_handlers));
+   r->upgradeHandler = m_upgradeHandler;
    r->auth = m_auth;
 }
 
@@ -300,7 +303,7 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
       }
    }
 
-   Context *context = new Context(connection, path, methodId, handler, token, userId, loginName, systemAccessRights, std::move(placeholderValues));
+   Context *context = new Context(connection, path, methodId, handler, token, userId, loginName, systemAccessRights, std::move(placeholderValues), curr->upgradeHandler);
 
    // Add token expiration warning headers if needed
    if ((tokenMaxExpiresAt > 0) && (GetAuthTokenWarningThreshold() > 0))

@@ -24,6 +24,11 @@
 #include <netxms-webapi.h>
 #include <netxms-version.h>
 
+#define WS_GUID         "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+#define WS_GUID_LEN     36
+#define WS_KEY_LEN      24
+#define WS_KEY_GUID_LEN ((WS_KEY_LEN) + (WS_GUID_LEN))
+
 Context *RouteRequest(MHD_Connection *connection, const char *path, const char *method, int *responseCode);
 void CheckPendingLoginRequests(const shared_ptr<ScheduledTaskParameters>& parameters);
 
@@ -79,6 +84,192 @@ static inline MHD_Result SendResponse(MHD_Connection *connection, int responseCo
 }
 
 /**
+ * Calculate value for MHD_HTTP_HEADER_SEC_WEBSOCKET_ACCEPT
+ */
+static bool WSCalculateAcceptValue(MHD_Connection *connection, MHD_Response *response)
+{
+   const char *key = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_SEC_WEBSOCKET_KEY);
+   if ((key == nullptr) || (strlen(key) != WS_KEY_LEN))
+      return false;
+
+   BYTE keyResponse[WS_KEY_GUID_LEN];
+   memcpy(keyResponse, key, WS_KEY_LEN);
+   memcpy(&keyResponse[WS_KEY_LEN], WS_GUID, WS_GUID_LEN);
+
+   BYTE hash[SHA1_DIGEST_SIZE];
+   CalculateSHA1Hash(keyResponse, WS_KEY_GUID_LEN, hash);
+
+   char encodedHash[SHA1_DIGEST_SIZE * 2];
+   base64_encode(reinterpret_cast<char*>(hash), SHA1_DIGEST_SIZE, encodedHash, sizeof(encodedHash));
+   MHD_add_response_header(response, MHD_HTTP_HEADER_SEC_WEBSOCKET_ACCEPT, encodedHash);
+   return true;
+}
+
+/**
+ * Read websocket frame
+ */
+bool NXCORE_EXPORTABLE ReadWebsocketFrame(int socketHandle, ByteStream *out, BYTE *frameType)
+{
+   BYTE buffer[16];
+
+   // Read the first 2 bytes to get the frame header
+   if (!RecvAll(socketHandle, buffer, 2, INFINITE))
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 7, L"Error reading websocket frame header");
+      return false;
+   }
+
+   // Parse header
+   *frameType = buffer[0] & 0x0F;
+   bool masked = ((buffer[1] & 0x80) != 0);
+   size_t payloadLength = buffer[1] & 0x7F;
+
+   // Check masking
+   if (!masked && ((*frameType == 1) || (*frameType == 2)))
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 7, L"Received unmasked websocket data frame from client");
+      return false;
+   }
+
+   // Read extended payload length if needed
+   if (payloadLength == 126)
+   {
+      if (!RecvAll(socketHandle, buffer, 2, 1000))
+      {
+         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 7, L"Error reading websocket frame payload length");
+         return false;
+      }
+      payloadLength = (static_cast<size_t>(buffer[0]) << 8) | static_cast<size_t>(buffer[1]);
+   }
+   else if (payloadLength == 127)
+   {
+      if (!RecvAll(socketHandle, buffer, 8, 1000))
+      {
+         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 7, L"Error reading websocket frame payload length");
+         return false;
+      }
+      payloadLength = ntohq(*reinterpret_cast<uint64_t*>(buffer));
+   }
+
+   // Limit maximum frame size to 4MB to prevent memory exhaustion
+   if (payloadLength > 4 * 1024 * 1024)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 7, L"WebSocket frame too large (%zu bytes)", payloadLength);
+      return false;
+   }
+
+   // Read the masking key if the frame is masked
+   BYTE mask[4];
+   if (masked && !RecvAll(socketHandle, mask, 4, 1000))
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 7, L"Error reading websocket frame payload mask");
+      return false;
+   }
+
+   // Read the payload data
+   Buffer<BYTE, 4096> payload_data(payloadLength);
+   if (!RecvAll(socketHandle, payload_data, payloadLength, 1000))
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 7, L"Error reading websocket frame payload");
+      return false;
+   }
+
+   // Unmask the payload data
+   for (size_t i = 0; i < payloadLength; i++)
+      payload_data[i] ^= mask[i % 4];
+
+   out->write(payload_data, payloadLength);
+   return true;
+}
+
+/**
+ * Send websocket frame
+ */
+void NXCORE_EXPORTABLE SendWebsocketFrame(int socketHandle, const void *data, size_t dataLen)
+{
+   size_t headerLen;
+   BYTE header[16];
+   header[0] = 0x81; // FIN + text frame
+   if (dataLen <= 125)
+   {
+      header[1] = static_cast<BYTE>(dataLen);
+      headerLen = 2;
+   }
+   else if (dataLen <= 65535)
+   {
+      header[1] = 126; // 2 bytes payload length
+      header[2] = (dataLen >> 8) & 0xFF;
+      header[3] = dataLen & 0xFF;
+      headerLen = 4;
+   }
+   else
+   {
+      header[1] = 127; // 8 bytes payload length
+      uint64_t v = htonq(dataLen);
+      memcpy(&header[2], &v, 8);
+      headerLen = 10;
+   }
+
+   Buffer<BYTE, 4096> frame(dataLen + headerLen);
+   memcpy(frame, header, headerLen);
+   memcpy(frame + headerLen, data, dataLen);
+   SendEx(socketHandle, frame, dataLen + headerLen, 0, nullptr);
+}
+
+/**
+ * Send websocket "close" frame with status code (RFC 6455 Section 5.5.1)
+ */
+void NXCORE_EXPORTABLE SendWebsocketCloseFrame(int socketHandle, uint16_t statusCode)
+{
+   BYTE frame[4];
+   frame[0] = 0x88; // FIN + close frame
+   frame[1] = 2;    // Payload length (2 bytes for status code)
+   frame[2] = static_cast<BYTE>((statusCode >> 8) & 0xFF);  // Status code high byte (network byte order)
+   frame[3] = static_cast<BYTE>(statusCode & 0xFF);         // Status code low byte
+   SendEx(socketHandle, frame, 4, 0, nullptr);
+}
+
+/**
+ * Upgrade connection to websocket
+ */
+static MHD_Result UpgradeToWebsocket(Context *context, MHD_Connection *connection, const char *url)
+{
+   if (!context->isProtocolUpgradeAllowed())
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 5, L"Upgrade to websocket is not allowed for endpoint %s", url);
+      context->setErrorResponse("Upgrade to websocket is not allowed for this endpoint");
+      return SendResponse(connection, 400, context->getContentType(), context->getResponseHeaders(), context->getResponseData(), context->getResponseDataSize());
+   }
+
+   MHD_Response *response = MHD_create_response_for_upgrade(context->getProtocolUpgradeHandler(), context);
+   if (!WSCalculateAcceptValue(connection, response))
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 5, L"Upgrade to websocket failed for endpoint %s (invalid websocket key format)", url);
+      context->setErrorResponse("Invalid websocket key format");
+      return SendResponse(connection, 400, context->getContentType(), context->getResponseHeaders(), context->getResponseData(), context->getResponseDataSize());
+   }
+
+   nxlog_debug_tag(DEBUG_TAG_WEBAPI, 5, L"Upgrade to websocket for endpoint %s approved", url);
+   MHD_add_response_header(response, MHD_HTTP_HEADER_UPGRADE, "websocket");
+   MHD_Result rc = MHD_queue_response(connection, MHD_HTTP_SWITCHING_PROTOCOLS, response);
+   MHD_destroy_response(response);
+   return rc;
+}
+
+/**
+ * Check if current request is for upgrading to websocket
+ */
+static inline bool IsWebsocketUpgradeRequest(MHD_Connection *connection)
+{
+   const char *ch = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_CONNECTION);
+   if ((ch == nullptr) || (stristr(ch, "Upgrade") == nullptr))
+      return false;
+
+   const char *upgrade = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_UPGRADE);
+   return (upgrade != nullptr) && !stricmp(upgrade, "websocket");
+}
+
+/**
  * Connection handler
  */
 static MHD_Result ConnectionHandler(void *serverContext, MHD_Connection *connection, const char *url, const char *method, const char *version, const char *uploadData, size_t *uploadDataSize, void **connectionContext)
@@ -120,6 +311,10 @@ static MHD_Result ConnectionHandler(void *serverContext, MHD_Connection *connect
    }
 
    context->onUploadComplete();
+
+   if (IsWebsocketUpgradeRequest(connection))
+      return UpgradeToWebsocket(context, connection, url);
+
    int responseCode = context->invokeHandler();
    return SendResponse(connection, responseCode, context->getContentType(), context->getResponseHeaders(), context->getResponseData(), context->getResponseDataSize());
 }
