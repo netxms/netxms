@@ -470,8 +470,8 @@ public class ExtendedGraphViewer extends GraphViewer
             @Override
             public void mouseDragged(MouseEvent me)
             {
-               // Don't start object drag if background drag is active
-               if (backgroundDragActive)
+               // Don't start object drag if background drag is active or dragging is disabled
+               if (backgroundDragActive || !draggingEnabled)
                   return;
 
                if (!dragStarted)
