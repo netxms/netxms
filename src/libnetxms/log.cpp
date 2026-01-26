@@ -112,6 +112,7 @@ static inline void FormatString(msg_buffer_t& buffer, const TCHAR *format, va_li
    size_t bufferSize = (ch != -1) ? (ch + 1) : 65536;
    buffer.realloc(bufferSize);
    _vsntprintf(buffer, bufferSize, format, args2);
+   buffer[bufferSize - 1] = 0;
    va_end(args2);
 }
 
