@@ -346,8 +346,11 @@ public class ExtendedGraphViewer extends GraphViewer
 			{
 			   if (me.button == 3)
             {
-               org.eclipse.draw2d.geometry.Point newLocation = me.getLocation().getTranslated(graph.getHorizontalBar().getSelection(), graph.getVerticalBar().getSelection()).scale(1/getZoom());
-               rightClickLocation = new Point(newLocation.x, newLocation.y);
+               Point screenLocation = graph.getDisplay().getCursorLocation();
+               Point controlLocation = graph.toControl(screenLocation);
+               int mapX = (int)((controlLocation.x + graph.getHorizontalBar().getSelection()) / getZoom());
+               int mapY = (int)((controlLocation.y + graph.getVerticalBar().getSelection()) / getZoom());
+               rightClickLocation = new Point(mapX, mapY);
             }
 				org.eclipse.draw2d.geometry.Point mousePoint = new org.eclipse.draw2d.geometry.Point(me.x, me.y);
 				graph.getRootLayer().translateToRelative(mousePoint);
