@@ -26,6 +26,9 @@
 #include <nxai.h>
 #include <nms_incident.h>
 #include <ai_messages.h>
+#include <ai_provider.h>
+#include <unordered_map>
+#include <string>
 
 #define DEBUG_TAG _T("ai.assistant")
 
@@ -44,34 +47,10 @@ std::string F_DeleteAITask(json_t *arguments, uint32_t userId);
 extern Config g_serverConfig;
 
 /**
- * LLM service URL
+ * Provider registry (slot -> provider)
  */
-static char s_llmServiceURL[256] = "http://127.0.0.1:11434/api/chat";
-
-/**
- * Model
- */
-static char s_llmModel[64] = "llama3.2";
-
-/**
- * Authentication token
- */
-static char s_llmAuthToken[256] = "";
-
-/**
- * Temperature (-1 = not set)
- */
-static double s_llmTemperature = -1.0;
-
-/**
- * Top P (-1 = not set)
- */
-static double s_llmTopP = -1.0;
-
-/**
- * Context window size (num_ctx for Ollama)
- */
-static int s_llmContextSize = 32768;
+static std::unordered_map<std::string, shared_ptr<LLMProvider>> s_slotProviders;
+static shared_ptr<LLMProvider> s_defaultProvider;
 
 /**
  * Functions
@@ -235,6 +214,41 @@ static std::vector<std::string> s_prompts;
  * Thread pool for AI tasks
  */
 static ThreadPool *s_aiTaskThreadPool = nullptr;
+
+/**
+ * Get provider for a specific slot
+ */
+static inline shared_ptr<LLMProvider> GetProviderForSlot(const char *slot)
+{
+   auto it = s_slotProviders.find(slot);
+   if (it != s_slotProviders.end())
+      return it->second;
+   return s_defaultProvider;
+}
+
+/**
+ * Register a provider for given slots
+ */
+static void RegisterProviderForSlots(shared_ptr<LLMProvider> provider, const StringList& slots)
+{
+   for (int i = 0; i < slots.size(); i++)
+   {
+      char slotName[64];
+      wchar_to_utf8(slots.get(i), -1, slotName, sizeof(slotName));
+      s_slotProviders[slotName] = provider;
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Registered provider \"%s\" for slot \"%hs\"", provider->getName(), slotName);
+   }
+}
+
+/**
+ * Set default provider
+ */
+static inline void SetDefaultProvider(shared_ptr<LLMProvider> provider)
+{
+   s_defaultProvider = provider;
+   s_slotProviders["default"] = provider;
+   nxlog_debug_tag(DEBUG_TAG, 4, L"Set default provider to \"%s\"", provider != nullptr ? provider->getName() : L"(none)");
+}
 
 /**
  * Find object by its (possibly fuzzy) name or ID
@@ -588,143 +602,6 @@ void FillAIAssistantFunctionListMessage(NXCPMessage *msg)
 }
 
 /**
- * Send request to Ollama or OpenAI server
- */
-static json_t *DoApiRequest(json_t *requestData)
-{
-   if (IsShutdownInProgress())
-      return nullptr;
-
-   CURL *curl = curl_easy_init();
-   if (curl == nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
-      return nullptr;
-   }
-
-#if HAVE_DECL_CURLOPT_NOSIGNAL
-   curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
-#endif
-
-   curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
-   curl_easy_setopt(curl, CURLOPT_TIMEOUT, 180);
-   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
-   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, (long)0);
-   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, (long)0);
-   curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Server/" NETXMS_VERSION_STRING_A);
-
-   char *postData = (requestData != nullptr) ? json_dumps(requestData, 0) : MemCopyStringA("{}");
-   curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData);
-   curl_easy_setopt(curl, CURLOPT_POST, (long)1);
-
-   ByteStream responseData(32768);
-   responseData.setAllocationStep(32768);
-   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
-
-   char errorBuffer[CURL_ERROR_SIZE];
-   curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuffer);
-
-   struct curl_slist *headers = curl_slist_append(nullptr, "Content-Type: application/json");
-   if (s_llmAuthToken[0] != 0)
-   {
-      char authHeader[384];
-      snprintf(authHeader, sizeof(authHeader), "Authorization: Bearer %s", s_llmAuthToken);
-      curl_slist_append(headers, authHeader);
-   }
-   curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-
-   bool success = true;
-
-   if (curl_easy_setopt(curl, CURLOPT_URL, s_llmServiceURL) != CURLE_OK)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 4, L"Call to curl_easy_setopt(CURLOPT_URL) failed");
-      success = false;
-   }
-
-   if (success)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 8, L"Sending request: %hs", postData);
-      CURLcode rc = curl_easy_perform(curl);
-      if (rc != CURLE_OK)
-      {
-         nxlog_debug_tag(DEBUG_TAG, 5, L"Call to curl_easy_perform(%hs) failed (%d: %hs)", s_llmServiceURL, rc, errorBuffer);
-         success = false;
-      }
-   }
-
-   if (success)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("Got %d bytes from %hs"), static_cast<int>(responseData.size()), s_llmServiceURL);
-      long httpStatusCode = 0;
-      curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpStatusCode);
-      if ((httpStatusCode < 200) || (httpStatusCode > 299))
-      {
-         char errorMessage[256] = "Error message not provided";
-         if (responseData.size() > 0)
-         {
-            responseData.write('\0');
-            const char *data = reinterpret_cast<const char*>(responseData.buffer());
-            json_error_t error;
-            json_t *json = json_loads(data, 0, &error);
-            if (json != nullptr)
-            {
-               const char *msg = json_object_get_string_utf8(json, "message", nullptr);
-               if ((msg != nullptr) && (*msg != 0))
-               {
-                  strlcpy(errorMessage, msg, sizeof(errorMessage));
-               }
-               else
-               {
-                  json_t *errorObj = json_object_get(json, "error");
-                  if (json_is_object(errorObj))
-                  {
-                     msg = json_object_get_string_utf8(errorObj, "message", nullptr);
-                     if ((msg != nullptr) && (*msg != 0))
-                     {
-                        strlcpy(errorMessage, msg, sizeof(errorMessage));
-                     }
-                  }
-               }
-               json_decref(json);
-            }
-            nxlog_debug_tag(DEBUG_TAG, 7, L"Error response document: %hs", data);
-         }
-         nxlog_debug_tag(DEBUG_TAG, 5, L"Error response from LLM: %d (%hs)", static_cast<int>(httpStatusCode), errorMessage);
-         success = false;
-      }
-   }
-
-   if (success && responseData.size() <= 0)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 5, L"Empty response from LLM");
-      success = false;
-   }
-
-   json_t *response = nullptr;
-   if (success)
-   {
-      responseData.write('\0');
-      const char *data = reinterpret_cast<const char*>(responseData.buffer());
-      json_error_t error;
-      response = json_loads(data, 0, &error);
-      if (response != nullptr)
-      {
-         nxlog_debug_tag(DEBUG_TAG, 8, _T("Successful response from LLM: %hs"), data);
-      }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to parse JSON on line %d: %hs"), error.line, error.text);
-         success = false;
-      }
-   }
-
-   curl_slist_free_all(headers);
-   curl_easy_cleanup(curl);
-   MemFree(postData);
-   return response;
-}
-
-/**
  * Saved chat sessions
  */
 static std::unordered_map<uint32_t, shared_ptr<Chat>> s_chats;
@@ -743,6 +620,7 @@ Chat::Chat(NetObj *context, json_t *eventData, uint32_t userId, const char *syst
    m_asyncState = AsyncRequestState::IDLE;
    m_asyncResult = nullptr;
    m_isInteractive = isInteractive;
+   strlcpy(m_slot, isInteractive ? "interactive" : "background", sizeof(m_slot));
 
    initializeFunctions();
 
@@ -1019,6 +897,18 @@ char *Chat::sendRequest(const char *prompt, int maxIterations, const char *conte
 
    s_currentChat = this;
 
+   // Get provider for this chat's slot
+   shared_ptr<LLMProvider> provider = GetProviderForSlot(m_slot);
+
+   if (provider == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, L"No provider available for slot \"%hs\"", m_slot);
+      s_currentChat = nullptr;
+      return nullptr;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 6, L"Using provider \"%s\" for slot \"%hs\"", provider->getName(), m_slot);
+
    if (context != nullptr && context[0] != 0)
    {
       std::string contextPrompt = "Additional context for this and following requests: ";
@@ -1031,41 +921,14 @@ char *Chat::sendRequest(const char *prompt, int maxIterations, const char *conte
    char *answer = nullptr;
    while(iterations-- > 0)
    {
-      json_t *request = json_object();
-      json_object_set_new(request, "model", json_string(s_llmModel));
-      json_object_set_new(request, "stream", json_boolean(false));
-      if (s_llmTemperature >= 0)
-         json_object_set_new(request, "temperature", json_real(s_llmTemperature));
-      if (s_llmTopP >= 0)
-         json_object_set_new(request, "top_p", json_real((s_llmTopP > 1) ? 1.0 : s_llmTopP));
-      if (s_llmContextSize > 0)
-      {
-         json_t *options = json_object();
-         json_object_set_new(options, "num_ctx", json_integer(s_llmContextSize));
-         json_object_set_new(request, "options", options);
-      }
-      json_object_set(request, "tools", m_functionDeclarations);
-      json_object_set(request, "messages", m_messages);
-
-      json_t *response = DoApiRequest(request);
-      json_decref(request);
+      // Provider handles request building and response parsing
+      json_t *message = provider->chat(m_messages, m_functionDeclarations);
       m_lastUpdateTime = time(nullptr);
 
-      if (response == nullptr)
-         return nullptr;
-
-      json_t *message = json_object_get(response, "message");
-      if (!json_is_object(message))
+      if (message == nullptr)
       {
-         json_t *choices = json_object_get(response, "choices");
-         if (json_is_array(choices) && (json_array_size(choices) > 0))
-         {
-            json_t *choice = json_array_get(choices, 0);
-            if (json_is_object(choice))
-            {
-               message = json_object_get(choice, "message");
-            }
-         }
+         s_currentChat = nullptr;
+         return nullptr;
       }
 
       if (json_is_object(message))
@@ -1120,14 +983,14 @@ char *Chat::sendRequest(const char *prompt, int maxIterations, const char *conte
                nxlog_debug_tag(DEBUG_TAG, 6, L"Property \"content\" is missing or empty");
             }
          }
+
+         json_decref(message);
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 6, L"Property \"message\" is missing in response");
+         nxlog_debug_tag(DEBUG_TAG, 6, L"Provider returned invalid message object");
          iterations = 0;
       }
-
-      json_decref(response);
    }
    nxlog_debug_tag(DEBUG_TAG, 5, L"Final LLM response %s", (answer != nullptr) ? L"received" : L"not received");
 
@@ -1414,6 +1277,16 @@ json_t *Chat::getPendingQuestion()
 char NXCORE_EXPORTABLE *QueryAIAssistant(const char *prompt, NetObj *context, int maxIterations)
 {
    Chat chat(context);
+   return chat.sendRequest(prompt, maxIterations);
+}
+
+/**
+ * Send single independent request to AI assistant using specific slot
+ */
+char NXCORE_EXPORTABLE *QueryAIAssistantWithSlot(const char *prompt, NetObj *context, const char *slot, int maxIterations)
+{
+   Chat chat(context);
+   chat.setSlot(slot);
    return chat.sendRequest(prompt, maxIterations);
 }
 
@@ -1721,6 +1594,7 @@ static void IncidentAIAnalysisTask(uint32_t incidentId, int depth, bool autoAssi
 
    // Create chat and execute analysis
    Chat chat(sourceObject.get(), nullptr, 0, s_systemPromptBackground, false);
+   chat.setSlot("analytical");
    char *response = chat.sendRequest(prompt.c_str(), 32);
 
    if (response != nullptr)
@@ -1813,19 +1687,100 @@ void NXCORE_EXPORTABLE SpawnIncidentAIAnalysis(uint32_t incidentId, int depth, b
  */
 bool InitAIAssistant()
 {
-   NX_CFG_TEMPLATE configTemplate[] =
+   // Initialize providers
+   const wchar_t *defaultProviderName = g_serverConfig.getValue(L"/AI/DefaultProvider", L"");
+
+   // Parse [AI/Provider/*] subsections
+   unique_ptr<ObjectArray<ConfigEntry>> providers = g_serverConfig.getSubEntries(L"/AI/Provider");
+   if ((providers != nullptr) && !providers->isEmpty())
    {
-      { _T("ContextSize"), CT_LONG, 0, 0, 0, 0, &s_llmContextSize },
-      { _T("Model"), CT_MB_STRING, 0, 0, sizeof(s_llmModel), 0, s_llmModel },
-      { _T("Temperature"), CT_DOUBLE, 0, 0, 0, 0, &s_llmTemperature },
-      { _T("Token"), CT_MB_STRING, 0, 0, sizeof(s_llmAuthToken), 0, s_llmAuthToken },
-      { _T("TopP"), CT_DOUBLE, 0, 0, 0, 0, &s_llmTopP },
-      { _T("URL"), CT_MB_STRING, 0, 0, sizeof(s_llmServiceURL), 0, s_llmServiceURL },
-      { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
-   };
-   if (!g_serverConfig.parseTemplate(L"AI", configTemplate))
+      for (int i = 0; i < providers->size(); i++)
+      {
+         ConfigEntry *entry = providers->get(i);
+
+         LLMProviderConfig config;
+         config.name = entry->getName();
+
+         // Parse provider type
+         const TCHAR *typeStr = entry->getSubEntryValue(_T("Type"), 0, _T("openai"));
+         if (!_tcsicmp(typeStr, _T("openai")))
+            config.type = LLMProviderType::OPENAI;
+         else
+            config.type = LLMProviderType::OLLAMA;
+
+         // Parse other settings
+         const TCHAR *url = entry->getSubEntryValue(_T("URL"), 0, nullptr);
+         if (url != nullptr)
+         {
+            char urlUtf8[256];
+            wchar_to_utf8(url, -1, urlUtf8, sizeof(urlUtf8));
+            strlcpy(config.url, urlUtf8, sizeof(config.url));
+         }
+         else
+         {
+            strlcpy(config.url, "http://127.0.0.1:11434/api/chat", sizeof(config.url));
+         }
+
+         const TCHAR *model = entry->getSubEntryValue(_T("Model"), 0, nullptr);
+         if (model != nullptr)
+         {
+            char modelUtf8[64];
+            wchar_to_utf8(model, -1, modelUtf8, sizeof(modelUtf8));
+            strlcpy(config.model, modelUtf8, sizeof(config.model));
+         }
+         else
+         {
+            strlcpy(config.model, "llama3.2", sizeof(config.model));
+         }
+
+         const TCHAR *token = entry->getSubEntryValue(_T("Token"), 0, nullptr);
+         if (token != nullptr)
+         {
+            char tokenUtf8[256];
+            wchar_to_utf8(token, -1, tokenUtf8, sizeof(tokenUtf8));
+            strlcpy(config.authToken, tokenUtf8, sizeof(config.authToken));
+         }
+
+         config.temperature = entry->getSubEntryValueAsInt(_T("Temperature"), 0, -1);
+         config.topP = entry->getSubEntryValueAsInt(_T("TopP"), 0, -1);
+         config.contextSize = entry->getSubEntryValueAsInt(_T("ContextSize"), 0, 32768);
+         config.timeout = entry->getSubEntryValueAsInt(_T("Timeout"), 0, 180);
+
+         // Create provider
+         shared_ptr<LLMProvider> provider = CreateLLMProvider(config);
+
+         // Parse slots and register
+         const TCHAR *slotsStr = entry->getSubEntryValue(_T("Slots"), 0, _T("default"));
+         StringList slots;
+         slots.splitAndAdd(slotsStr, _T(","));
+
+         // Trim whitespace from slot names
+         for (int j = 0; j < slots.size(); j++)
+         {
+            TCHAR *slot = const_cast<TCHAR*>(slots.get(j));
+            Trim(slot);
+         }
+
+         RegisterProviderForSlots(provider, slots);
+
+         // Check if this is the default provider
+         if ((defaultProviderName[0] != 0 && !_tcsicmp(config.name.cstr(), defaultProviderName)) ||
+             (s_defaultProvider == nullptr && slots.contains(_T("default"))))
+         {
+            SetDefaultProvider(provider);
+         }
+
+         nxlog_debug_tag(DEBUG_TAG, 3, _T("Configured AI provider \"%s\" (type=%s, model=%hs, slots=%s)"),
+            config.name.cstr(),
+            config.type == LLMProviderType::OPENAI ? _T("OpenAI") : _T("Ollama"),
+            config.model, slotsStr);
+      }
+   }
+
+   // Verify we have at least a default provider
+   if (s_defaultProvider == nullptr)
    {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("AI assistant initialization failed (cannot parse module configuration)"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("AI assistant initialization failed (no providers configured)"));
       return false;
    }
 
@@ -1950,18 +1905,6 @@ bool InitAIAssistant()
 
    RegisterSchedulerTaskHandler(L"Execute.AIAgentTask", ExecuteAIAgentTask, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
 
-   if ((s_llmTemperature >= 0) && (s_llmTopP >= 0))
-      nxlog_debug_tag(DEBUG_TAG, 2, L"LLM service URL = \"%hs\", model = \"%hs\", context_size = %d, temperature = %g, top_p = %g",
-         s_llmServiceURL, s_llmModel, s_llmContextSize, s_llmTemperature, s_llmTopP);
-   else if (s_llmTemperature >= 0)
-      nxlog_debug_tag(DEBUG_TAG, 2, L"LLM service URL = \"%hs\", model = \"%hs\", context_size = %d, temperature = %g, top_p = default",
-         s_llmServiceURL, s_llmModel, s_llmContextSize, s_llmTemperature);
-   else if (s_llmTopP >= 0)
-      nxlog_debug_tag(DEBUG_TAG, 2, L"LLM service URL = \"%hs\", model = \"%hs\", context_size = %d, temperature = default, top_p = %g",
-         s_llmServiceURL, s_llmModel, s_llmContextSize, s_llmTopP);
-   else
-      nxlog_debug_tag(DEBUG_TAG, 2, L"LLM service URL = \"%hs\", model = \"%hs\", context_size = %d, temperature = default, top_p = default",
-         s_llmServiceURL, s_llmModel, s_llmContextSize);
    nxlog_debug_tag(DEBUG_TAG, 2, L"%d global functions registered", static_cast<int>(s_globalFunctions.size()));
    nxlog_debug_tag(DEBUG_TAG, 2, L"%d skills registered", static_cast<int>(GetRegisteredSkillCount()));
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("AI assistant initialized"));

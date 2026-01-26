@@ -45,6 +45,15 @@
     <ClCompile Include="ai_messages.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ai_provider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ai_provider_ollama.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ai_provider_openai.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="ai_tasks.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -684,6 +693,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\agent_tunnel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\ai_provider.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\asset_management.h">

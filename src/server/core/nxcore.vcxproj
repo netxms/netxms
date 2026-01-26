@@ -432,6 +432,9 @@
     <ClCompile Include="agent_policy.cpp" />
     <ClCompile Include="ai_core.cpp" />
     <ClCompile Include="ai_messages.cpp" />
+    <ClCompile Include="ai_provider.cpp" />
+    <ClCompile Include="ai_provider_ollama.cpp" />
+    <ClCompile Include="ai_provider_openai.cpp" />
     <ClCompile Include="ai_tasks.cpp" />
     <ClCompile Include="alarm.cpp" />
     <ClCompile Include="alarm_category.cpp" />
@@ -622,6 +625,7 @@
     <ClInclude Include="..\..\..\include\rwlock.h" />
     <ClInclude Include="..\..\..\include\unicode.h" />
     <ClInclude Include="..\include\agent_tunnel.h" />
+    <ClInclude Include="..\include\ai_provider.h" />
     <ClInclude Include="..\include\asset_management.h" />
     <ClInclude Include="..\include\auth-token.h" />
     <ClInclude Include="..\include\entity_mib.h" />

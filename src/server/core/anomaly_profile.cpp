@@ -637,8 +637,8 @@ bool NXCORE_EXPORTABLE GenerateAnomalyProfile(const shared_ptr<DCItem>& dci, con
 
    nxlog_debug_tag(DEBUG_TAG, 7, _T("GenerateAnomalyProfile: LLM prompt length=%d"), static_cast<int>(prompt.length()));
 
-   // Query LLM
-   char *llmResponse = QueryAIAssistant(prompt.c_str(), nullptr, 4);
+   // Query LLM using "analytical" slot for data analysis
+   char *llmResponse = QueryAIAssistantWithSlot(prompt.c_str(), nullptr, "analytical", 4);
    if (llmResponse == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("GenerateAnomalyProfile: LLM query failed for DCI [%u]"), dci->getId());

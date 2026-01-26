@@ -179,6 +179,7 @@ private:
    char *m_asyncResult;
    Mutex m_asyncMutex;
    bool m_isInteractive;
+   char m_slot[32];  // Provider slot (e.g., "interactive", "background", "fast", "analytical")
 
    void addMessage(const char *role, const char *content)
    {
@@ -201,6 +202,8 @@ public:
    uint32_t getUserId() const { return m_userId; }
    uint32_t getBoundIncidentId() const { return m_boundIncidentId; }
    bool isInteractive() const { return m_isInteractive; }
+   const char *getSlot() const { return m_slot; }
+   void setSlot(const char *slot) { strlcpy(m_slot, slot, sizeof(m_slot)); }
 
    void bindToIncident(uint32_t incidentId);
 
@@ -306,9 +309,18 @@ uint32_t NXCORE_EXPORTABLE ClearAIAssistantChat(uint32_t chatId, uint32_t userId
 uint32_t NXCORE_EXPORTABLE DeleteAIAssistantChat(uint32_t chatId, uint32_t userId);
 
 /**
- * Send single idependent query to AI assistant
+ * Send single independent query to AI assistant
  */
 char NXCORE_EXPORTABLE *QueryAIAssistant(const char *prompt, NetObj *context, int maxIterations = 32);
+
+/**
+ * Send single independent query to AI assistant using specific slot
+ * @param prompt Query prompt
+ * @param context Optional object context
+ * @param slot Provider slot to use (e.g., "fast", "analytical")
+ * @param maxIterations Maximum iterations for function calling
+ */
+char NXCORE_EXPORTABLE *QueryAIAssistantWithSlot(const char *prompt, NetObj *context, const char *slot, int maxIterations = 32);
 
 /**
  * Register AI task
