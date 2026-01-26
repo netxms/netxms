@@ -3146,345 +3146,349 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
    StringBuffer output;
    for(const TCHAR *curr = textTemplate; *curr != 0; curr++)
    {
+      if (*curr != '%')
+      {
+         output.append(*curr);
+         continue;
+      }
+
+      curr++;
+      if (*curr == 0)
+      {
+         curr--;
+         break;   // Abnormal loop termination
+      }
+
       switch(*curr)
       {
-         case '%':   // Metacharacter
-            curr++;
-            if (*curr == 0)
+         case '%':
+            output.append(_T('%'));
+            break;
+         case 'a':   // IP address of event source
+            output.append(getPrimaryIpAddress().toString(buffer));
+            break;
+         case 'A':   // Associated alarm message
+            if (alarm != nullptr)
             {
-               curr--;
-               break;   // Abnormal loop termination
+               output.append(alarm->getMessage());
             }
-            switch(*curr)
+            else if (event != nullptr)
             {
-               case '%':
-                  output.append(_T('%'));
-                  break;
-               case 'a':   // IP address of event source
-                  output.append(getPrimaryIpAddress().toString(buffer));
-                  break;
-               case 'A':   // Associated alarm message
-                  if (alarm != nullptr)
-                  {
-                     output.append(alarm->getMessage());
-                  }
-                  else if (event != nullptr)
-                  {
-                     output.append(event->getLastAlarmMessage());
-                  }
-                  break;
-               case 'c':   // Event code
-                  output.append((loadEvent()) ? event->getCode() : 0);
-                  break;
-               case 'C':   // Object comments
-                  output.append(getComments().cstr());
-                  break;
-               case 'd':   // DCI description
-                  if (findDCI())
-                     output.append(dci->getDescription());
-                  break;
-               case 'D':   // DCI comments
-                  if (findDCI())
-                     output.append(dci->getComments());
-                  break;
-               case 'E':   // Concatenated event tags
-                  if (loadEvent())
-                  {
-                     event->getTagsAsList(&output);
-                  }
-                  break;
-               case 'g':   // Source object's GUID
-                  output.append(m_guid);
-                  break;
-               case 'i':   // Source object identifier in form 0xhhhhhhhh
-                  output.append(m_id, _T("0x%08X"));
-                  break;
-               case 'I':   // Source object identifier in decimal form
-                  output.append(m_id);
-                  break;
-               case 'K':   // Associated alarm key
-                  if (alarm != nullptr)
-                  {
-                     output.append(alarm->getKey());
-                  }
-                  else if (event != nullptr)
-                  {
-                     output.append(event->getLastAlarmKey());
-                  }
-                  break;
-               case 'L':   // Object alias
-                  output.append(getAlias().cstr());
-                  break;
-               case 'm':
-                  if (loadEvent())
-                  {
-                     output.append(event->getMessage());
-                  }
-                  break;
-               case 'M':   // Custom message (usually set by matching script in EPP)
-                  if (loadEvent())
-                  {
-                     output.append(event->getCustomMessage());
-                  }
-                  break;
-               case 'n':   // Name of event source
-                  output.append((objectName != nullptr) ? objectName : getName());
-                  break;
-               case 'N':   // Event name
-                  if (loadEvent())
-                  {
-                     output.append(event->getName());
-                  }
-                  break;
-               case 's':   // Severity code
-                  if (loadEvent())
-                  {
-                     output.append(static_cast<int32_t>(event->getSeverity()));
-                  }
-                  break;
-               case 'S':   // Severity text
-                  if (loadEvent())
-                  {
-                     output.append(GetStatusAsText(event->getSeverity(), false));
-                  }
-                  break;
-               case 't':   // Event's timestamp
-                  output.append(FormatTimestamp((loadEvent()) ? event->getTimestamp() : time(nullptr), buffer));
-                  break;
-               case 'T':   // Event's timestamp as number of seconds since epoch
-                  output.append(static_cast<int64_t>((loadEvent()) ? event->getTimestamp() : time(nullptr)));
-                  break;
-               case 'u':   // IP address in URL compatible form ([addr] for IPv6, addr for IPv4)
-                  if (getPrimaryIpAddress().getFamily() == AF_INET6)
-                  {
-                     output.append(_T('['));
-                     output.append(getPrimaryIpAddress().toString(buffer));
-                     output.append(_T(']'));
-                  }
-                  else
-                  {
-                     output.append(getPrimaryIpAddress().toString(buffer));
-                  }
-                  break;
-               case 'U':   // User name
-                  output.append(userName);
-                  break;
-               case 'v':   // NetXMS server version
-                  output.append(NETXMS_VERSION_STRING);
-                  break;
-               case 'y': // alarm state
-                  if (alarm != nullptr)
-                  {
-                     output.append(static_cast<int32_t>(alarm->getState()));
-                  }
-                  break;
-               case 'Y': // alarm ID
-                  if (alarm != nullptr)
-                  {
-                     output.append(alarm->getAlarmId());
-                  }
-                  break;
-               case 'z':   // Zone UIN
+               output.append(event->getLastAlarmMessage());
+            }
+            break;
+         case 'c':   // Event code
+            output.append((loadEvent()) ? event->getCode() : 0);
+            break;
+         case 'C':   // Object comments
+            output.append(getComments().cstr());
+            break;
+         case 'd':   // DCI description
+            if (findDCI())
+               output.append(dci->getDescription());
+            break;
+         case 'D':   // DCI comments
+            if (findDCI())
+               output.append(dci->getComments());
+            break;
+         case 'E':   // Concatenated event tags
+            if (loadEvent())
+            {
+               event->getTagsAsList(&output);
+            }
+            break;
+         case 'g':   // Source object's GUID
+            output.append(m_guid);
+            break;
+         case 'i':   // Source object identifier in form 0xhhhhhhhh
+            output.append(m_id, _T("0x%08X"));
+            break;
+         case 'I':   // Source object identifier in decimal form
+            output.append(m_id);
+            break;
+         case 'K':   // Associated alarm key
+            if (alarm != nullptr)
+            {
+               output.append(alarm->getKey());
+            }
+            else if (event != nullptr)
+            {
+               output.append(event->getLastAlarmKey());
+            }
+            break;
+         case 'L':   // Object alias
+            output.append(getAlias().cstr());
+            break;
+         case 'm':
+            if (loadEvent())
+            {
+               output.append(event->getMessage());
+            }
+            break;
+         case 'M':   // Custom message (usually set by matching script in EPP)
+            if (loadEvent())
+            {
+               output.append(event->getCustomMessage());
+            }
+            break;
+         case 'n':   // Name of event source
+            output.append((objectName != nullptr) ? objectName : getName());
+            break;
+         case 'N':   // Event name
+            if (loadEvent())
+            {
+               output.append(event->getName());
+            }
+            break;
+         case 's':   // Severity code
+            if (loadEvent())
+            {
+               output.append(static_cast<int32_t>(event->getSeverity()));
+            }
+            break;
+         case 'S':   // Severity text
+            if (loadEvent())
+            {
+               output.append(GetStatusAsText(event->getSeverity(), false));
+            }
+            break;
+         case 't':   // Event's timestamp
+            output.append(FormatTimestamp((loadEvent()) ? event->getTimestamp() : time(nullptr), buffer));
+            break;
+         case 'T':   // Event's timestamp as number of seconds since epoch
+            output.append(static_cast<int64_t>((loadEvent()) ? event->getTimestamp() : time(nullptr)));
+            break;
+         case 'u':   // IP address in URL compatible form ([addr] for IPv6, addr for IPv4)
+            if (getPrimaryIpAddress().getFamily() == AF_INET6)
+            {
+               output.append(_T('['));
+               output.append(getPrimaryIpAddress().toString(buffer));
+               output.append(_T(']'));
+            }
+            else
+            {
+               output.append(getPrimaryIpAddress().toString(buffer));
+            }
+            break;
+         case 'U':   // User name
+            output.append(userName);
+            break;
+         case 'v':   // NetXMS server version
+            output.append(NETXMS_VERSION_STRING);
+            break;
+         case 'y': // alarm state
+            if (alarm != nullptr)
+            {
+               output.append(static_cast<int32_t>(alarm->getState()));
+            }
+            break;
+         case 'Y': // alarm ID
+            if (alarm != nullptr)
+            {
+               output.append(alarm->getAlarmId());
+            }
+            break;
+         case 'z':   // Zone UIN
+            output.append(getZoneUIN());
+            break;
+         case 'Z':   // Zone name
+            if (IsZoningEnabled())
+            {
+               shared_ptr<Zone> zone = FindZoneByUIN(getZoneUIN());
+               if (zone != nullptr)
+               {
+                  output.append(zone->getName());
+               }
+               else
+               {
+                  output.append(_T('['));
                   output.append(getZoneUIN());
-                  break;
-               case 'Z':   // Zone name
-                  if (IsZoningEnabled())
-                  {
-                     shared_ptr<Zone> zone = FindZoneByUIN(getZoneUIN());
-                     if (zone != nullptr)
-                     {
-                        output.append(zone->getName());
-                     }
-                     else
-                     {
-                        output.append(_T('['));
-                        output.append(getZoneUIN());
-                        output.append(_T(']'));
-                     }
-                  }
-                  break;
-               case '0':
-               case '1':
-               case '2':
-               case '3':
-               case '4':
-               case '5':
-               case '6':
-               case '7':
-               case '8':
-               case '9':
-                  buffer[0] = *curr;
-                  if (isdigit(*(curr + 1)))
-                  {
-                     curr++;
-                     buffer[1] = *curr;
-                     buffer[2] = 0;
-                  }
-                  else
-                  {
-                     buffer[1] = 0;
-                  }
-                  if (loadEvent())
-                     output.append(event->getParameterList()->get(_tcstol(buffer, nullptr, 10) - 1));
-                  else if (args != nullptr)
-                     output.append(args->get(_tcstol(buffer, nullptr, 10) - 1));
-                  break;
-               case '[':   // Script
-                  for(i = 0, curr++; (*curr != ']') && (*curr != 0) && (i < 255); curr++)
-                  {
-                     buffer[i++] = *curr;
-                  }
-                  if (*curr == 0)  // no terminating ]
-                  {
-                     curr--;
-                  }
-                  else
-                  {
-                     buffer[i] = 0;
-                     loadEvent();
-                     expandScriptMacro(buffer, alarm, event, dci, &output);
-                  }
-                  break;
-               case '{':   // Custom attribute
-                  for(i = 0, curr++; (*curr != '}') && (*curr != 0) && (i < 255); curr++)
-                  {
-                     buffer[i++] = *curr;
-                  }
-                  if (*curr == 0)  // no terminating }
-                  {
-                     curr--;
-                  }
-                  else
-                  {
-                     buffer[i] = 0;
-                     TCHAR *defaultValue = _tcschr(buffer, _T(':'));
-                     if (defaultValue != nullptr)
-                     {
-                        *defaultValue = 0;
-                        defaultValue++;
-                     }
-                     Trim(buffer);
-                     TCHAR *v = nullptr;
-                     if (instance != nullptr)
-                     {
-                        TCHAR tmp[256];
-                        _sntprintf(tmp, 256, _T("%s::%s"), buffer, instance);
-                        tmp[255] = 0;
-                        v = getCustomAttributeCopy(tmp);
-                     }
-                     else if (loadEvent())
-                     {
-                        const StringList *names = event->getParameterNames();
-                        int index = names->indexOfIgnoreCase(_T("instance"));
-                        if (index != -1)
-                        {
-                           TCHAR tmp[256];
-                           _sntprintf(tmp, 256, _T("%s::%s"), buffer, event->getParameter(index));
-                           tmp[255] = 0;
-                           v = getCustomAttributeCopy(tmp);
-                        }
-                     }
-                     if (v == nullptr)
-                        v = getCustomAttributeCopy(buffer);
-                     if (v != nullptr)
-                        output.appendPreallocated(v);
-                     else if (defaultValue != nullptr)
-                        output.append(defaultValue);
-                  }
-                  break;
-               case '(':   // Input field
-                  for(i = 0, curr++; (*curr != ')') && (*curr != 0) && (i < 255); curr++)
-                  {
-                     buffer[i++] = *curr;
-                  }
-                  if (*curr == 0)  // no terminating )
-                  {
-                     curr--;
-                  }
-                  else if (inputFields != nullptr)
-                  {
-                     buffer[i] = 0;
-                     Trim(buffer);
-                     output.append(inputFields->get(buffer));
-                  }
-                  break;
-               case '<':   // Named parameter
-                  for(i = 0, curr++; (*curr != '>') && (*curr != 0) && (i < 255); curr++)
-                  {
-                     buffer[i++] = *curr;
-                  }
-                  if (*curr == 0)  // no terminating >
-                  {
-                     curr--;
-                  }
-                  else if (loadEvent())
-                  {
-                     buffer[i] = 0;
-                     TCHAR *modifierEnd = _tcschr(buffer, _T('}'));
-                     StringList *list = nullptr;
-                     if (buffer[0] == '{' && modifierEnd != nullptr)
-                     {
-                        *modifierEnd = 0;
-                        list = new StringList(String::split(buffer + 1, _tcslen(buffer + 1), _T(","), true));
-                        memmove(buffer, modifierEnd + 1, sizeof(TCHAR) * (_tcslen(modifierEnd + 1) + 1));
-                     }
-                     const TCHAR *defaultValue = _T("");
-                     TCHAR *tmp = _tcschr(buffer, _T(':'));
-                     if (tmp != nullptr)
-                     {
-                        *tmp = 0;
-                        defaultValue = tmp + 1;
-                     }
-                     Trim(buffer);
-
-                     const StringList *names = event->getParameterNames();
-                     shared_ptr<DCObjectInfo> formatDci(dci); // DCI used for formatting value
-                     if ((list != nullptr) && (formatDci == nullptr) && (event->getDciId() != 0) && isDataCollectionTarget())
-                     {
-                        shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget*>(this)->getDCObjectById(event->getDciId(), 0);
-                        if (dcObject != nullptr)
-                           formatDci = dcObject->createDescriptor();
-                        else
-                           nxlog_debug_tag(_T("obj.macro"), 5, _T("DCI ID is set to %u for event %s [") UINT64_FMT _T("] but no such DCI exists"), event->getDciId(), event->getName(), event->getId());
-                     }
-                     if ((list != nullptr) && (formatDci != nullptr))
-                     {
-                        output.append(formatDci->formatValue(event->getParameter(names->indexOfIgnoreCase(buffer), defaultValue), list));
-                     }
-                     else
-                     {
-                        output.append(event->getParameter(names->indexOfIgnoreCase(buffer), defaultValue));
-                     }
-
-                     delete list;
-                  }
-                  break;
-               default:    // All other characters are invalid, ignore
-                  break;
+                  output.append(_T(']'));
+               }
             }
             break;
-         case '\\':  // Escape character
-            curr++;
-            if (*curr == 0)
+         case '0':
+         case '1':
+         case '2':
+         case '3':
+         case '4':
+         case '5':
+         case '6':
+         case '7':
+         case '8':
+         case '9':
+            buffer[0] = *curr;
+            if (isdigit(*(curr + 1)))
+            {
+               curr++;
+               buffer[1] = *curr;
+               buffer[2] = 0;
+            }
+            else
+            {
+               buffer[1] = 0;
+            }
+            if (loadEvent())
+               output.append(event->getParameterList()->get(_tcstol(buffer, nullptr, 10) - 1));
+            else if (args != nullptr)
+               output.append(args->get(_tcstol(buffer, nullptr, 10) - 1));
+            break;
+         case '[':   // Script
+            for(i = 0, curr++; (*curr != ']') && (*curr != 0) && (i < 255); curr++)
+            {
+               buffer[i++] = *curr;
+            }
+            if (*curr == 0)  // no terminating ]
             {
                curr--;
-               break;   // Abnormal loop termination
             }
-            switch(*curr)
+            else
             {
-               case 't':
-                  output.append(_T('\t'));
-                  break;
-               case 'n':
-                  output.append(_T("\r\n"));
-                  break;
-               default:
-                  output.append(*curr);
-                  break;
+               buffer[i] = 0;
+               loadEvent();
+               expandScriptMacro(buffer, alarm, event, dci, &output);
             }
             break;
-         default:
-            output.append(*curr);
+         case '{':   // Custom attribute
+            for(i = 0, curr++; (*curr != '}') && (*curr != 0) && (i < 255); curr++)
+            {
+               buffer[i++] = *curr;
+            }
+            if (*curr == 0)  // no terminating }
+            {
+               curr--;
+            }
+            else
+            {
+               buffer[i] = 0;
+               TCHAR *defaultValue = _tcschr(buffer, _T(':'));
+               if (defaultValue != nullptr)
+               {
+                  *defaultValue = 0;
+                  defaultValue++;
+               }
+               Trim(buffer);
+               TCHAR *v = nullptr;
+               if (instance != nullptr)
+               {
+                  TCHAR tmp[256];
+                  _sntprintf(tmp, 256, _T("%s::%s"), buffer, instance);
+                  tmp[255] = 0;
+                  v = getCustomAttributeCopy(tmp);
+               }
+               else if (loadEvent())
+               {
+                  const StringList *names = event->getParameterNames();
+                  int index = names->indexOfIgnoreCase(_T("instance"));
+                  if (index != -1)
+                  {
+                     TCHAR tmp[256];
+                     _sntprintf(tmp, 256, _T("%s::%s"), buffer, event->getParameter(index));
+                     tmp[255] = 0;
+                     v = getCustomAttributeCopy(tmp);
+                  }
+               }
+               if (v == nullptr)
+                  v = getCustomAttributeCopy(buffer);
+               if (v != nullptr)
+                  output.appendPreallocated(v);
+               else if (defaultValue != nullptr)
+                  output.append(defaultValue);
+            }
+            break;
+         case '(':   // Special macros and input fields
+            for(i = 0, curr++; (*curr != ')') && (*curr != 0) && (i < 255); curr++)
+            {
+               buffer[i++] = *curr;
+            }
+            if (*curr == 0)  // no terminating )
+            {
+               curr--;
+            }
+            else
+            {
+               buffer[i] = 0;
+               Trim(buffer);
+
+               // Built-in special macros
+               if (!wcscmp(buffer, L"nl"))
+               {
+                  output.append(L"\r\n");
+               }
+               else if (!wcscmp(buffer, L"cr"))
+               {
+                  output.append(L'\r');
+               }
+               else if (!wcscmp(buffer, L"lf"))
+               {
+                  output.append(L'\n');
+               }
+               else if (!wcscmp(buffer, L"tab"))
+               {
+                  output.append(L'\t');
+               }
+               else if (!wcsncmp(buffer, L"in:", 3))
+               {
+                  // Input field: %(in:fieldname)
+                  if (inputFields != nullptr)
+                  {
+                     output.append(inputFields->get(buffer + 3));
+                  }
+               }
+            }
+            break;
+         case '<':   // Named parameter
+            for(i = 0, curr++; (*curr != '>') && (*curr != 0) && (i < 255); curr++)
+            {
+               buffer[i++] = *curr;
+            }
+            if (*curr == 0)  // no terminating >
+            {
+               curr--;
+            }
+            else if (loadEvent())
+            {
+               buffer[i] = 0;
+               TCHAR *modifierEnd = _tcschr(buffer, _T('}'));
+               StringList *list = nullptr;
+               if (buffer[0] == '{' && modifierEnd != nullptr)
+               {
+                  *modifierEnd = 0;
+                  list = new StringList(String::split(buffer + 1, _tcslen(buffer + 1), _T(","), true));
+                  memmove(buffer, modifierEnd + 1, sizeof(TCHAR) * (_tcslen(modifierEnd + 1) + 1));
+               }
+               const TCHAR *defaultValue = _T("");
+               TCHAR *tmp = _tcschr(buffer, _T(':'));
+               if (tmp != nullptr)
+               {
+                  *tmp = 0;
+                  defaultValue = tmp + 1;
+               }
+               Trim(buffer);
+
+               const StringList *names = event->getParameterNames();
+               shared_ptr<DCObjectInfo> formatDci(dci); // DCI used for formatting value
+               if ((list != nullptr) && (formatDci == nullptr) && (event->getDciId() != 0) && isDataCollectionTarget())
+               {
+                  shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget*>(this)->getDCObjectById(event->getDciId(), 0);
+                  if (dcObject != nullptr)
+                     formatDci = dcObject->createDescriptor();
+                  else
+                     nxlog_debug_tag(_T("obj.macro"), 5, _T("DCI ID is set to %u for event %s [") UINT64_FMT _T("] but no such DCI exists"), event->getDciId(), event->getName(), event->getId());
+               }
+               if ((list != nullptr) && (formatDci != nullptr))
+               {
+                  output.append(formatDci->formatValue(event->getParameter(names->indexOfIgnoreCase(buffer), defaultValue), list));
+               }
+               else
+               {
+                  output.append(event->getParameter(names->indexOfIgnoreCase(buffer), defaultValue));
+               }
+
+               delete list;
+            }
+            break;
+         default:    // All other characters are invalid, ignore
             break;
       }
    }

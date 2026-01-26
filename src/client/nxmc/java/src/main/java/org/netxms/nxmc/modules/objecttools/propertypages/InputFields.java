@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -121,7 +121,7 @@ public class InputFields extends PropertyPage
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
-				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+            IStructuredSelection selection = viewer.getStructuredSelection();
 				buttonEdit.setEnabled(selection.size() == 1);
 				buttonRemove.setEnabled(selection.size() > 0);
             buttonUp.setEnabled(selection.size() == 1);
@@ -280,7 +280,7 @@ public class InputFields extends PropertyPage
 		
 		viewer.getTable().setHeaderVisible(true);
 		
-		WidgetHelper.restoreColumnSettings(viewer.getTable(), "InputFieldsPropertyPage"); //$NON-NLS-1$
+      WidgetHelper.restoreColumnSettings(viewer.getTable(), "InputFieldsPropertyPage");
 	}
 
 	/**
@@ -288,7 +288,7 @@ public class InputFields extends PropertyPage
 	 */
 	private void addField()
 	{
-		InputField f = new InputField("Field" + Integer.toString(fields.size() + 1)); //$NON-NLS-1$
+      InputField f = new InputField("Field" + Integer.toString(fields.size() + 1));
 		InputFieldEditDialog dlg = new InputFieldEditDialog(getShell(), true, f);
 		if (dlg.open() == Window.OK)
 		{
@@ -406,7 +406,7 @@ public class InputFields extends PropertyPage
    protected boolean applyChanges(boolean isApply)
 	{
       objectTool.setInputFields(fields);
-      WidgetHelper.saveColumnSettings(viewer.getTable(), "InputFieldsPropertyPage"); //$NON-NLS-1$
+      WidgetHelper.saveColumnSettings(viewer.getTable(), "InputFieldsPropertyPage");
       return true;
 	}
 
@@ -418,7 +418,7 @@ public class InputFields extends PropertyPage
 	{
       if (isControlCreated())
       {
-         WidgetHelper.saveColumnSettings(viewer.getTable(), "InputFieldsPropertyPage"); //$NON-NLS-1$
+         WidgetHelper.saveColumnSettings(viewer.getTable(), "InputFieldsPropertyPage");
       }
 		return super.performCancel();
 	}

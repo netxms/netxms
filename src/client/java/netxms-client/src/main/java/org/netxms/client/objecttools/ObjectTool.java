@@ -188,9 +188,13 @@ public class ObjectTool implements ObjectAction
 	   
 	   for(String n : names)
 	   {
-	      if (!inputFields.containsKey(n))
+         if (!n.startsWith("in:"))
+            continue; // only input fields are relevant
+
+         String fn = n.substring(3);
+         if (!inputFields.containsKey(fn))
 	      {
-	         inputFields.put(n, new InputField(n));
+            inputFields.put(fn, new InputField(fn));
 	      }
 	   }
 	}

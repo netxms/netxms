@@ -25,6 +25,338 @@
 #include <netxms-xml.h>
 
 /**
+ * Transform escape sequences and input field macros:
+ *   \\ -> \
+ *   \t -> %(tab)
+ *   \n -> %(nl)
+ *   \X -> X (any other char)
+ *   %(name) -> %(in:name) (where name is not nl, tab, or starts with in:)
+ * Returns nullptr if no transformation needed
+ */
+static TCHAR *TransformMacroText(const TCHAR *text)
+{
+   if (text == nullptr)
+      return nullptr;
+
+   // Check if transformation is needed
+   bool hasBackslash = (_tcschr(text, _T('\\')) != nullptr);
+   bool hasInputFieldMacro = (_tcsstr(text, _T("%(")) != nullptr);
+   if (!hasBackslash && !hasInputFieldMacro)
+      return nullptr;
+
+   StringBuffer output;
+   for (const TCHAR *p = text; *p != 0; p++)
+   {
+      if (*p == _T('\\') && *(p + 1) != 0)
+      {
+         // Handle escape sequences
+         p++;
+         switch (*p)
+         {
+            case _T('\\'):
+               output.append(_T('\\'));
+               break;
+            case _T('t'):
+               output.append(_T("%(tab)"));
+               break;
+            case _T('n'):
+               output.append(_T("%(nl)"));
+               break;
+            default:
+               output.append(*p);
+               break;
+         }
+      }
+      else if (*p == _T('%') && *(p + 1) == _T('('))
+      {
+         // Handle %(xxx) macros - convert to %(in:xxx)
+         const TCHAR *start = p + 2;
+         const TCHAR *end = _tcschr(start, _T(')'));
+         if (end != nullptr)
+         {
+            size_t len = end - start;
+            // Convert %(name) to %(in:name)
+            output.append(_T("%(in:"));
+            while (start < end)
+               output.append(*start++);
+            output.append(_T(')'));
+            p = end;  // Skip to closing parenthesis
+         }
+         else
+         {
+            output.append(*p);  // Malformed, keep as-is
+         }
+      }
+      else
+      {
+         output.append(*p);
+      }
+   }
+
+   // Return nullptr if nothing changed
+   if (!_tcscmp(text, output.cstr()))
+      return nullptr;
+
+   return MemCopyString(output.cstr());
+}
+
+/**
+ * Migrate macro text in a VARCHAR column with single-column primary key
+ */
+static bool MigrateMacroTextInColumn(const TCHAR *table, const TCHAR *idCol, const TCHAR *col)
+{
+   TCHAR query[512];
+   _sntprintf(query, 512, _T("SELECT %s,%s FROM %s WHERE %s LIKE '%%\\%%' OR %s LIKE '%%|%%(%%' ESCAPE '|'"), idCol, col, table, col, col);
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult == nullptr)
+      return false;
+
+   TCHAR updateQuery[512];
+   _sntprintf(updateQuery, 512, _T("UPDATE %s SET %s=? WHERE %s=?"), table, col, idCol);
+   DB_STATEMENT hStmt = DBPrepare(g_dbHandle, updateQuery);
+   if (hStmt == nullptr)
+   {
+      DBFreeResult(hResult);
+      return false;
+   }
+
+   int count = DBGetNumRows(hResult);
+   bool success = true;
+   for (int i = 0; i < count && success; i++)
+   {
+      TCHAR *value = DBGetField(hResult, i, 1, nullptr, 0);
+      TCHAR *transformed = TransformMacroText(value);
+      if (transformed != nullptr)
+      {
+         uint32_t id = DBGetFieldULong(hResult, i, 0);
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, transformed, DB_BIND_DYNAMIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, id);
+         success = SQLExecute(hStmt);
+      }
+      MemFree(value);
+   }
+
+   DBFreeStatement(hStmt);
+   DBFreeResult(hResult);
+   return success;
+}
+
+/**
+ * Migrate macro text in a TEXT/CLOB column with single-column primary key
+ */
+static bool MigrateMacroTextInTextColumn(const TCHAR *table, const TCHAR *idCol, const TCHAR *col)
+{
+   TCHAR query[512];
+   _sntprintf(query, 512, _T("SELECT %s,%s FROM %s"), idCol, col, table);
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult == nullptr)
+      return false;
+
+   TCHAR updateQuery[512];
+   _sntprintf(updateQuery, 512, _T("UPDATE %s SET %s=? WHERE %s=?"), table, col, idCol);
+   DB_STATEMENT hStmt = DBPrepare(g_dbHandle, updateQuery);
+   if (hStmt == nullptr)
+   {
+      DBFreeResult(hResult);
+      return false;
+   }
+
+   int count = DBGetNumRows(hResult);
+   bool success = true;
+   for (int i = 0; i < count && success; i++)
+   {
+      TCHAR *value = DBGetField(hResult, i, 1, nullptr, 0);
+      if (value != nullptr && (_tcschr(value, _T('\\')) != nullptr || _tcsstr(value, _T("%(")) != nullptr))
+      {
+         TCHAR *transformed = TransformMacroText(value);
+         if (transformed != nullptr)
+         {
+            uint32_t id = DBGetFieldULong(hResult, i, 0);
+            DBBind(hStmt, 1, DB_SQLTYPE_TEXT, transformed, DB_BIND_DYNAMIC);
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, id);
+            success = SQLExecute(hStmt);
+         }
+      }
+      MemFree(value);
+   }
+
+   DBFreeStatement(hStmt);
+   DBFreeResult(hResult);
+   return success;
+}
+
+/**
+ * Migrate macro text in a column for tables with composite primary keys
+ * Uses database-specific row identification (rowid/ctid/etc.)
+ */
+static bool MigrateMacroTextInColumnByRowid(const TCHAR *table, const TCHAR *col)
+{
+   const TCHAR *rowidColumn;
+   switch (g_dbSyntax)
+   {
+      case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_TSDB:
+         rowidColumn = _T("ctid");
+         break;
+      case DB_SYNTAX_ORACLE:
+         rowidColumn = _T("rowid");
+         break;
+      case DB_SYNTAX_SQLITE:
+         rowidColumn = _T("rowid");
+         break;
+      case DB_SYNTAX_MYSQL:
+         // MySQL doesn't have a built-in rowid for all tables
+         // Fall back to selecting all rows with potential matches
+         rowidColumn = nullptr;
+         break;
+      default:
+         rowidColumn = nullptr;
+         break;
+   }
+
+   TCHAR query[512];
+   if (rowidColumn != nullptr)
+   {
+      _sntprintf(query, 512, _T("SELECT %s,%s FROM %s WHERE %s LIKE '%%\\%%' OR %s LIKE '%%|%%(%%' ESCAPE '|'"), rowidColumn, col, table, col, col);
+   }
+   else
+   {
+      _sntprintf(query, 512, _T("SELECT %s FROM %s WHERE %s LIKE '%%\\%%' OR %s LIKE '%%|%%(%%' ESCAPE '|'"), col, table, col, col);
+   }
+
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult == nullptr)
+      return false;
+
+   int count = DBGetNumRows(hResult);
+   bool success = true;
+
+   if (rowidColumn != nullptr)
+   {
+      TCHAR updateQuery[512];
+      _sntprintf(updateQuery, 512, _T("UPDATE %s SET %s=? WHERE %s=?"), table, col, rowidColumn);
+      DB_STATEMENT hStmt = DBPrepare(g_dbHandle, updateQuery);
+      if (hStmt == nullptr)
+      {
+         DBFreeResult(hResult);
+         return false;
+      }
+
+      for (int i = 0; i < count && success; i++)
+      {
+         TCHAR rowid[64];
+         DBGetField(hResult, i, 0, rowid, 64);
+         TCHAR *value = DBGetField(hResult, i, 1, nullptr, 0);
+         TCHAR *transformed = TransformMacroText(value);
+         if (transformed != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, transformed, DB_BIND_DYNAMIC);
+            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, rowid, DB_BIND_STATIC);
+            success = SQLExecute(hStmt);
+         }
+         MemFree(value);
+      }
+
+      DBFreeStatement(hStmt);
+   }
+   else
+   {
+      // For MySQL: update using the value itself as identifier (assumes unique or we update all matches)
+      // This is less efficient but works for simple cases
+      TCHAR updateQuery[1024];
+      _sntprintf(updateQuery, 1024, _T("UPDATE %s SET %s=? WHERE %s=?"), table, col, col);
+      DB_STATEMENT hStmt = DBPrepare(g_dbHandle, updateQuery);
+      if (hStmt == nullptr)
+      {
+         DBFreeResult(hResult);
+         return false;
+      }
+
+      for (int i = 0; i < count && success; i++)
+      {
+         TCHAR *value = DBGetField(hResult, i, 0, nullptr, 0);
+         TCHAR *transformed = TransformMacroText(value);
+         if (transformed != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, transformed, DB_BIND_DYNAMIC);
+            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, value, DB_BIND_TRANSIENT);
+            success = SQLExecute(hStmt);
+         }
+         MemFree(value);
+      }
+
+      DBFreeStatement(hStmt);
+   }
+
+   DBFreeResult(hResult);
+   return success;
+}
+
+/**
+ * Upgrade from 60.26 to 60.27 (Macro expansion escape sequence migration)
+ */
+static bool H_UpgradeFromV26()
+{
+   // Event templates
+   CHK_EXEC(MigrateMacroTextInColumn(_T("event_cfg"), _T("event_code"), _T("message")));
+
+   // Event policy main table
+   CHK_EXEC(MigrateMacroTextInColumn(_T("event_policy"), _T("rule_id"), _T("alarm_message")));
+   CHK_EXEC(MigrateMacroTextInColumn(_T("event_policy"), _T("rule_id"), _T("alarm_impact")));
+   CHK_EXEC(MigrateMacroTextInColumn(_T("event_policy"), _T("rule_id"), _T("alarm_key")));
+   CHK_EXEC(MigrateMacroTextInColumn(_T("event_policy"), _T("rule_id"), _T("incident_title")));
+   CHK_EXEC(MigrateMacroTextInColumn(_T("event_policy"), _T("rule_id"), _T("incident_description")));
+
+   // EPP action-related tables (use composite key handling)
+   CHK_EXEC(MigrateMacroTextInColumnByRowid(_T("policy_action_list"), _T("timer_delay")));
+   CHK_EXEC(MigrateMacroTextInColumnByRowid(_T("policy_action_list"), _T("timer_key")));
+   CHK_EXEC(MigrateMacroTextInColumnByRowid(_T("policy_action_list"), _T("blocking_timer_key")));
+   CHK_EXEC(MigrateMacroTextInColumnByRowid(_T("policy_action_list"), _T("snooze_time")));
+   CHK_EXEC(MigrateMacroTextInColumnByRowid(_T("policy_timer_cancellation_list"), _T("timer_key")));
+   CHK_EXEC(MigrateMacroTextInColumnByRowid(_T("policy_pstorage_actions"), _T("ps_key")));
+   CHK_EXEC(MigrateMacroTextInColumnByRowid(_T("policy_pstorage_actions"), _T("value")));
+   CHK_EXEC(MigrateMacroTextInColumnByRowid(_T("policy_cattr_actions"), _T("attribute_name")));
+   CHK_EXEC(MigrateMacroTextInColumnByRowid(_T("policy_cattr_actions"), _T("value")));
+
+   // Actions
+   CHK_EXEC(MigrateMacroTextInColumn(_T("actions"), _T("action_id"), _T("email_subject")));
+   CHK_EXEC(MigrateMacroTextInTextColumn(_T("actions"), _T("action_id"), _T("action_data")));
+   CHK_EXEC(MigrateMacroTextInColumn(_T("actions"), _T("action_id"), _T("rcpt_addr")));
+
+   // Data collection
+   CHK_EXEC(MigrateMacroTextInColumn(_T("items"), _T("item_id"), _T("polling_interval_src")));
+   CHK_EXEC(MigrateMacroTextInColumn(_T("items"), _T("item_id"), _T("retention_time_src")));
+   CHK_EXEC(MigrateMacroTextInColumn(_T("dc_tables"), _T("item_id"), _T("polling_interval_src")));
+   CHK_EXEC(MigrateMacroTextInColumn(_T("dc_tables"), _T("item_id"), _T("retention_time_src")));
+
+   // Object properties
+   CHK_EXEC(MigrateMacroTextInTextColumn(_T("object_properties"), _T("object_id"), _T("comments_source")));
+
+   // Web services
+   CHK_EXEC(MigrateMacroTextInColumn(_T("websvc_definitions"), _T("id"), _T("url")));
+   CHK_EXEC(MigrateMacroTextInColumn(_T("websvc_definitions"), _T("id"), _T("request_data")));
+   CHK_EXEC(MigrateMacroTextInColumnByRowid(_T("websvc_headers"), _T("value")));
+
+   // Object tools
+   CHK_EXEC(MigrateMacroTextInTextColumn(_T("object_tools"), _T("tool_id"), _T("tool_data")));
+   CHK_EXEC(MigrateMacroTextInTextColumn(_T("object_tools"), _T("tool_id"), _T("tool_filter")));
+   CHK_EXEC(MigrateMacroTextInColumn(_T("object_tools"), _T("tool_id"), _T("confirmation_text")));
+
+   // Agent configs
+   CHK_EXEC(MigrateMacroTextInTextColumn(_T("agent_configs"), _T("config_id"), _T("config_file")));
+   CHK_EXEC(MigrateMacroTextInTextColumn(_T("agent_configs"), _T("config_id"), _T("config_filter")));
+
+   // Agent packages
+   CHK_EXEC(MigrateMacroTextInColumn(_T("agent_pkg"), _T("pkg_id"), _T("command")));
+
+   // Dashboard templates
+   CHK_EXEC(MigrateMacroTextInColumn(_T("dashboard_templates"), _T("id"), _T("name_template")));
+
+   CHK_EXEC(SetMinorSchemaVersion(27));
+   return true;
+}
+
+/**
  * Upgrade from 60.25 to 60.26
  */
 static bool H_UpgradeFromV25()
@@ -1464,6 +1796,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 26, 60, 27, H_UpgradeFromV26 },
    { 25, 60, 26, H_UpgradeFromV25 },
    { 24, 60, 25, H_UpgradeFromV24 },
    { 23, 60, 24, H_UpgradeFromV23 },
