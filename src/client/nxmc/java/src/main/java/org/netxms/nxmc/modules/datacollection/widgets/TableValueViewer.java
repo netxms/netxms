@@ -85,7 +85,7 @@ public class TableValueViewer extends BaseTableValueViewer
    @Override
    protected String buildConfigId(String configSubId)
    {
-      StringBuilder sb = new StringBuilder("TableLastValues."); 
+      StringBuilder sb = new StringBuilder("TableLastValues.");
       sb.append(dciId);
       if (configSubId != null)
       {
@@ -103,15 +103,15 @@ public class TableValueViewer extends BaseTableValueViewer
    {
       super.createActions();
 
-      actionShowHistory = new Action(i18n.tr("History"), ResourceManager.getImageDescriptor("icons/object-views/history-view.png")) { 
+      actionShowHistory = new Action(i18n.tr("History"), ResourceManager.getImageDescriptor("icons/object-views/history-view.png")) {
          @Override
          public void run()
          {
             showHistory();
          }
       };
-      
-      actionShowLineChart = new Action(i18n.tr("&Line chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png")) { 
+
+      actionShowLineChart = new Action(i18n.tr("&Line chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png")) {
          @Override
          public void run()
          {
@@ -119,7 +119,7 @@ public class TableValueViewer extends BaseTableValueViewer
          }
       };
 
-      actionShowBarChart = new Action(i18n.tr("&Bar chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-bar.png")) { 
+      actionShowBarChart = new Action(i18n.tr("&Bar chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-bar.png")) {
          @Override
          public void run()
          {
@@ -127,7 +127,7 @@ public class TableValueViewer extends BaseTableValueViewer
          }
       };
 
-      actionShowPieChart = new Action(i18n.tr("&Pie chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-pie.png")) { 
+      actionShowPieChart = new Action(i18n.tr("&Pie chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-pie.png")) {
          @Override
          public void run()
          {
@@ -202,7 +202,7 @@ public class TableValueViewer extends BaseTableValueViewer
       {
          TableColumnDefinition column = currentData.getColumnDefinition(cells[i].getColumnIndex());
          final String instance = buildInstanceString(cells[i].getViewerRow());
-         
+
          ChartDciConfig config = new ChartDciConfig();
          config.nodeId = objectId;
          config.dciId = dciId;
@@ -211,7 +211,7 @@ public class TableValueViewer extends BaseTableValueViewer
          config.instance = instance;
          config.column = column.getName();
          items.add(config);
-         
+
       }
 
       AbstractObject object = view.getObject();
@@ -279,7 +279,7 @@ public class TableValueViewer extends BaseTableValueViewer
     */
    public String getTitle()
    {
-      return (currentData != null) ? currentData.getTitle() : ("[" + dciId + "]");  
+      return (currentData != null) ? currentData.getTitle() : ("[" + dciId + "]");
    }
 
    /**
@@ -294,28 +294,28 @@ public class TableValueViewer extends BaseTableValueViewer
 
       Table table = session.getTableLastValues(objectId, dciId);
 
-      // If table is empty (no rows), check DCI status to provide meaningful feedback
-      if ((table == null) || (table.getRowCount() == 0))
+      // Always check DCI status to detect errors, even if table has cached data
+      DciValue dciInfo = getDciInfo();
+      if (dciInfo != null)
       {
-         DciValue dciInfo = getDciInfo();
-         if (dciInfo != null)
+         if (dciInfo.getStatus() == DataCollectionObjectStatus.DISABLED)
          {
-            if (dciInfo.getStatus() == DataCollectionObjectStatus.DISABLED)
-            {
-               statusMessage = i18n.tr("Data collection is disabled");
-               return null;
-            }
-            else if (dciInfo.getStatus() == DataCollectionObjectStatus.UNSUPPORTED)
-            {
-               statusMessage = i18n.tr("Metric is not supported");
-               return null;
-            }
-            else if (dciInfo.getErrorCount() > 0)
-            {
-               statusMessage = String.format(i18n.tr("Data collection error (%d consecutive failures)"), dciInfo.getErrorCount());
-               return null;
-            }
-            else if (dciInfo.isNoValueObject())
+            statusMessage = i18n.tr("Data collection is disabled");
+            return null;
+         }
+         else if (dciInfo.getStatus() == DataCollectionObjectStatus.UNSUPPORTED)
+         {
+            statusMessage = i18n.tr("Metric is not supported");
+            return null;
+         }
+         else if (dciInfo.getErrorCount() > 0)
+         {
+            statusMessage = String.format(i18n.tr("Data collection error (%d consecutive failures)"), dciInfo.getErrorCount());
+            return null;
+         }
+         else if ((table == null) || (table.getRowCount() == 0))
+         {
+            if (dciInfo.isNoValueObject())
             {
                statusMessage = i18n.tr("No data collected yet");
                return null;
