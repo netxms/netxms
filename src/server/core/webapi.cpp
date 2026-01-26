@@ -50,7 +50,7 @@ static MHD_Daemon *s_daemon = nullptr;
 /**
  * Send response to the client
  */
-static inline MHD_Result SendResponse(MHD_Connection *connection, int responseCode, const StringMap *headers = nullptr, void *data = nullptr, size_t size  = 0)
+static inline MHD_Result SendResponse(MHD_Connection *connection, int responseCode, const char *contentType, const StringMap *headers = nullptr, void *data = nullptr, size_t size  = 0)
 {
    nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Response code %d to web API call"), responseCode);
    MHD_Response *response = MHD_create_response_from_buffer(size, data, MHD_RESPMEM_PERSISTENT);
@@ -59,7 +59,7 @@ static inline MHD_Result SendResponse(MHD_Connection *connection, int responseCo
    MHD_add_response_header(response, "X-Content-Type-Options", "nosniff");
    MHD_add_response_header(response, "X-Frame-Options", "DENY");
    MHD_add_response_header(response, "Cache-Control", "no-store");
-   MHD_add_response_header(response, "Content-Type", "application/json; charset=utf-8");
+   MHD_add_response_header(response, "Content-Type", (contentType != nullptr) && (contentType[0] != 0) ? contentType : "application/json; charset=utf-8");
 
    if (headers != nullptr)
    {
@@ -100,7 +100,7 @@ static MHD_Result ConnectionHandler(void *serverContext, MHD_Connection *connect
       if (context == nullptr)
       {
          nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Cannot route request for %hs \"%hs\" (response code %d)"), method, url, responseCode);
-         return SendResponse(connection, responseCode);
+         return SendResponse(connection, responseCode, nullptr);
       }
 
       *connectionContext = context;
@@ -113,7 +113,7 @@ static MHD_Result ConnectionHandler(void *serverContext, MHD_Connection *connect
    {
       if (!context->onUploadData(uploadData, *uploadDataSize))
       {
-         return SendResponse(connection, 413);  // Payload Too Large
+         return SendResponse(connection, 413, context->getContentType());  // Payload Too Large
       }
       *uploadDataSize = 0;
       return MHD_YES;
@@ -121,7 +121,7 @@ static MHD_Result ConnectionHandler(void *serverContext, MHD_Connection *connect
 
    context->onUploadComplete();
    int responseCode = context->invokeHandler();
-   return SendResponse(connection, responseCode, context->getResponseHeaders(), context->getResponseData(), context->getResponseDataSize());
+   return SendResponse(connection, responseCode, context->getContentType(), context->getResponseHeaders(), context->getResponseData(), context->getResponseDataSize());
 }
 
 /**

@@ -299,6 +299,11 @@ public:
       return m_responseData.size();
    }
 
+   const char *getContentType() const
+   {
+      return m_contentType;
+   }
+
    InetAddress getClientAddress() const
    {
       return GetClientAddress(m_connection);
