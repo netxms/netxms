@@ -326,7 +326,7 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
 	}
 
 	/**
-	 * Move selected item up 
+	 * Move selected item up
 	 */
 	private void moveUp()
 	{
@@ -342,7 +342,7 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
 			}
 		}
 	}
-	
+
 	/**
 	 * Move selected item down
 	 */
@@ -416,6 +416,8 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
                if (name == null)
                   name = i18n.tr("<unresolved>");
                return ((e.getObjectId() == AbstractObject.CONTEXT) ? i18n.tr("<context>") : session.getObjectName(e.getObjectId())) + " / " + ((e.getDciId() != 0) ? name : e.getDciName());
+            case StatusIndicatorConfig.ELEMENT_TYPE_DCI_TEMPLATE:
+               return i18n.tr("<context>") + " / " + e.getDciName();
             case StatusIndicatorConfig.ELEMENT_TYPE_OBJECT:
                return (e.getObjectId() == AbstractObject.CONTEXT) ? i18n.tr("<context>") : session.getObjectName(e.getObjectId());
             case StatusIndicatorConfig.ELEMENT_TYPE_SCRIPT:
@@ -462,6 +464,8 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
             case COLUMN_OBJECT:
                if (e.getType() == StatusIndicatorConfig.ELEMENT_TYPE_SCRIPT)
                   return e.getTag();
+               if (e.getType() == StatusIndicatorConfig.ELEMENT_TYPE_DCI_TEMPLATE)
+                  return i18n.tr("<context>");
                return (e.getObjectId() == AbstractObject.CONTEXT) ? i18n.tr("<context>") : session.getObjectName(e.getObjectId());
             case COLUMN_POSITION:
                return Integer.toString(elements.indexOf(e) + 1);
@@ -495,7 +499,7 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
 
       /**
        * Resolve DCI names for given collection of condition DCIs and add to cache
-       * 
+       *
        * @param dciList
        */
       public void resolveDciNames(final Collection<StatusIndicatorElementConfig> elementList)
@@ -520,7 +524,7 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
 
       /**
        * Add single cache entry
-       * 
+       *
        * @param nodeId
        * @param dciId
        * @param name
