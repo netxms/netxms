@@ -2,6 +2,21 @@ openapi: 3.0.2
 info:
   title: NetXMS API
   version: 1.0.0
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Alarms
+    description: Alarm management operations
+  - name: Objects
+    description: Object management and queries
+  - name: Data Collection
+    description: Data collection items and historical data
+  - name: TCP Proxy
+    description: TCP proxy for remote access (VNC, SSH, etc.)
+  - name: Grafana
+    description: Grafana integration endpoints
+  - name: Server
+    description: Server information and status
 paths:
   /:
     get:
@@ -120,6 +135,158 @@ paths:
           description: Unauthorized
       security:
         - BearerAuth: []
+  /v1/tcp-proxy:
+    post:
+      summary: Create TCP Proxy Session
+      description: |
+        Create a TCP proxy session and return a short-lived token for WebSocket connection.
+        This is the first step in establishing a TCP proxy connection. The returned token
+        should be used to connect to the WebSocket endpoint `/v1/tcp-proxy/{token}`.
+
+        **Two-Phase Authorization Flow:**
+        1. Call this endpoint with Bearer token authentication to create a TCP tunnel
+        2. Server establishes connection to target via agent and returns a session token
+        3. Connect to `/v1/tcp-proxy/{token}` WebSocket endpoint (no auth header needed)
+
+        This flow is designed to work with browser WebSocket API which cannot send
+        custom Authorization headers.
+
+        **Required Permissions:**
+        - System access right: SYSTEM_ACCESS_SETUP_TCP_PROXY
+        - Object access right: OBJECT_ACCESS_CONTROL on the target or proxy object
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - port
+              properties:
+                proxyId:
+                  type: integer
+                  description: |
+                    Proxy node ID or zone object ID. If specified, the connection will be established
+                    through this proxy node. Either proxyId or nodeId must be specified.
+                nodeId:
+                  type: integer
+                  description: |
+                    Target node ID. If proxyId is not specified, the server will automatically select
+                    the appropriate proxy for this node. Either proxyId or nodeId must be specified.
+                address:
+                  type: string
+                  format: ip-address
+                  description: |
+                    Target IP address. Required when proxyId is specified. When using nodeId,
+                    the node's primary IP address is used automatically.
+                port:
+                  type: integer
+                  minimum: 1
+                  maximum: 65535
+                  description: Target TCP port number (required).
+            example:
+              nodeId: 123
+              port: 5900
+      responses:
+        '201':
+          description: TCP proxy session created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    format: uuid
+                    description: Session token for WebSocket connection
+                  expiresIn:
+                    type: integer
+                    description: Token validity period in seconds
+                  wsUrl:
+                    type: string
+                    description: WebSocket URL path to connect to
+              example:
+                token: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                expiresIn: 30
+                wsUrl: "/v1/tcp-proxy/a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        '400':
+          description: |
+            Bad Request - Invalid parameters.
+            Possible reasons:
+            - Port parameter missing
+            - Invalid IP address format
+            - Invalid proxy object type
+        '401':
+          description: Unauthorized - Authentication token missing or invalid
+        '403':
+          description: |
+            Forbidden - User does not have required permissions.
+            Either SYSTEM_ACCESS_SETUP_TCP_PROXY or OBJECT_ACCESS_CONTROL is missing.
+        '404':
+          description: Object not found - Invalid nodeId or proxyId
+        '502':
+          description: |
+            Bad Gateway - Cannot establish connection to agent.
+            Agent may be unreachable or TCP proxy setup failed.
+        '503':
+          description: Service Unavailable - No proxy node available in zone
+      security:
+        - BearerAuth: []
+      tags:
+        - TCP Proxy
+  /v1/tcp-proxy/{token}:
+    get:
+      summary: TCP Proxy WebSocket Connection
+      description: |
+        Establish a WebSocket connection for TCP proxy data transfer. This endpoint
+        requires a valid session token obtained from `POST /v1/tcp-proxy`.
+
+        **Token Properties:**
+        - Single-use: token is invalidated upon WebSocket connection
+        - Short-lived: expires after 30 seconds if not used
+        - No authentication header needed: token in path serves as authorization
+
+        **WebSocket Protocol:**
+        - Binary frames (opcode 0x02) are used for data transfer in both directions
+        - Text frames (opcode 0x01) are used for control messages (JSON format)
+        - Close frame (opcode 0x08) terminates the connection
+
+        **Control Messages (JSON):**
+        - Connection ready: `{"type": "connected", "channelId": 12345}`
+        - Close notification: `{"type": "close", "reason": "normal|error|agent_disconnect"}`
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Session token obtained from POST /v1/tcp-proxy
+      responses:
+        '101':
+          description: |
+            Switching Protocols - WebSocket connection established successfully.
+            After upgrade, the connection enters WebSocket mode for bidirectional data transfer.
+            A JSON message `{"type": "connected", "channelId": N}` is sent after successful upgrade.
+          headers:
+            Upgrade:
+              schema:
+                type: string
+                example: websocket
+            Connection:
+              schema:
+                type: string
+                example: Upgrade
+            Sec-WebSocket-Accept:
+              schema:
+                type: string
+        '401':
+          description: |
+            Unauthorized - Token is invalid, expired, or already used.
+            WebSocket close frame with code 1008 (Policy Violation) is sent.
+      security: []
+      tags:
+        - TCP Proxy
   /v1/alarms:
     get:
       summary: List Alarms
@@ -975,6 +1142,77 @@ paths:
           description: Object with given ID does not exist
       security:
         - BearerAuth: []
+  /v1/objects/{object-id}/remote-control:
+    post:
+      summary: Create Remote Control Session
+      description: |
+        Create a remote control (VNC) session for a node and return a short-lived token
+        for WebSocket connection. This is a convenience endpoint that automatically
+        determines VNC connection parameters based on the node's configuration.
+
+        The endpoint uses the node's configured VNC port and proxy settings to establish
+        a TCP tunnel. The returned token should be used to connect to the WebSocket
+        endpoint `/v1/tcp-proxy/{token}`.
+
+        **Two-Phase Authorization Flow:**
+        1. Call this endpoint with Bearer token authentication
+        2. Server establishes VNC tunnel via agent and returns a session token
+        3. Connect to `/v1/tcp-proxy/{token}` WebSocket endpoint (no auth header needed)
+
+        **Required Permissions:**
+        - System access right: SYSTEM_ACCESS_SETUP_TCP_PROXY
+        - Object access rights: OBJECT_ACCESS_READ and OBJECT_ACCESS_CONTROL on the node
+      tags:
+        - Objects
+        - TCP Proxy
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Node object ID
+      responses:
+        '201':
+          description: Remote control session created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    format: uuid
+                    description: Session token for WebSocket connection
+                  expiresIn:
+                    type: integer
+                    description: Token validity period in seconds
+                  wsUrl:
+                    type: string
+                    description: WebSocket URL path to connect to
+              example:
+                token: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                expiresIn: 30
+                wsUrl: "/v1/tcp-proxy/a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        '400':
+          description: |
+            Bad Request - Object is not a node or VNC port not configured.
+        '401':
+          description: Unauthorized - Authentication token missing or invalid
+        '403':
+          description: |
+            Forbidden - User does not have required permissions.
+            Either SYSTEM_ACCESS_SETUP_TCP_PROXY, OBJECT_ACCESS_READ, or OBJECT_ACCESS_CONTROL is missing.
+        '404':
+          description: Object not found - Invalid object ID
+        '502':
+          description: |
+            Bad Gateway - Cannot establish connection to agent.
+            Agent may be unreachable or TCP proxy setup failed.
+        '503':
+          description: Service Unavailable - No proxy node available
+      security:
+        - BearerAuth: []
 
   /v1/objects/{object-id}/set-maintenance:
     post:
@@ -1552,6 +1790,53 @@ components:
         threshold:
           type: object
           description: Active threshold information (present only if hasActiveThreshold is true)
+    TcpProxyConnectedMessage:
+      type: object
+      description: WebSocket text message sent when TCP proxy connection is established
+      properties:
+        type:
+          type: string
+          enum: [connected]
+        channelId:
+          type: integer
+          description: Channel ID for the established TCP proxy connection
+    TcpProxyErrorMessage:
+      type: object
+      description: WebSocket text message sent when an error occurs
+      properties:
+        type:
+          type: string
+          enum: [error]
+        code:
+          type: integer
+          description: |
+            Error code (RCC - Request Completion Code):
+            - 0: Success
+            - 1: Component locked
+            - 2: Access denied
+            - 3: Invalid request
+            - 4: Request timeout
+            - 5: Access denied
+            - 7: Communication failure
+            - 8: Invalid object ID
+        message:
+          type: string
+          description: Human-readable error message
+    TcpProxyCloseMessage:
+      type: object
+      description: WebSocket text message sent when the TCP proxy connection is closed
+      properties:
+        type:
+          type: string
+          enum: [close]
+        reason:
+          type: string
+          enum: [normal, error, agent_disconnect]
+          description: |
+            Reason for connection closure:
+            - normal: Connection closed normally by remote end
+            - error: Connection closed due to an error
+            - agent_disconnect: Agent connection was lost
   securitySchemes:
     BearerAuth:
       type: http

@@ -58,6 +58,7 @@ int H_ObjectExecuteAgentCommand(Context *context);
 int H_ObjectExecuteScript(Context *context);
 int H_ObjectExpandText(Context *context);
 int H_ObjectQuery(Context *context);
+int H_ObjectRemoteControl(Context *context);
 int H_ObjectSetMaintenance(Context *context);
 int H_ObjectSetManaged(Context *context);
 int H_Objects(Context *context);
@@ -71,6 +72,14 @@ int H_Status(Context *context);
 int H_SummaryTables(Context *context);
 int H_GrafanaSummaryTablesList(Context *context);
 int H_TakeScreenshot(Context *context);
+int H_TcpProxyCreate(Context *context);
+
+/**
+ * WebSocket upgrade handlers
+ */
+void WS_TcpProxyConnect(void *cls, MHD_Connection *connection, void *con_cls,
+                        const char *extra_in, size_t extra_in_size, MHD_socket sock,
+                        MHD_UpgradeResponseHandle *urh);
 
 /**
  * Initialize module
@@ -170,6 +179,9 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/objects/:object-id/expand-text")
       .POST(H_ObjectExpandText)
       .build();
+   RouteBuilder("v1/objects/:object-id/remote-control")
+      .POST(H_ObjectRemoteControl)
+      .build();
    RouteBuilder("v1/objects/:object-id/set-maintenance")
       .POST(H_ObjectSetMaintenance)
       .build();
@@ -196,6 +208,14 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/status")
       .GET(H_Status)
+      .build();
+   RouteBuilder("v1/tcp-proxy")
+      .POST(H_TcpProxyCreate)  // Create session, get token
+      .build();
+   RouteBuilder("v1/tcp-proxy/:token")
+      .GET([](Context *) { return 0; })  // Placeholder for WebSocket upgrade
+      .upgradeProtocol(WS_TcpProxyConnect)
+      .noauth()  // Token-based auth, not Bearer token
       .build();
    return true;
 }

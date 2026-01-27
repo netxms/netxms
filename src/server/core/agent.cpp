@@ -38,7 +38,7 @@ AgentConnectionEx::AgentConnectionEx(uint32_t nodeId, const InetAddress& ipAddr,
          AgentConnection(ipAddr, port, secret, allowCompression)
 {
    m_nodeId = nodeId;
-   m_tcpProxySession = nullptr;
+   m_tcpProxyCallback = nullptr;
 
    // Set DB writer queue threshold to 3/4 of max db writer queue size, or 250000 if queue size is not limited
    m_dbWriterQueueThreshold = ConfigReadInt64(_T("DBWriter.MaxQueueSize"), 0) * 3 / 4;
@@ -53,7 +53,7 @@ AgentConnectionEx::AgentConnectionEx(uint32_t nodeId, const shared_ptr<AgentTunn
          AgentConnection(InetAddress::INVALID, 0, secret, allowCompression), m_tunnel(tunnel)
 {
    m_nodeId = nodeId;
-   m_tcpProxySession = nullptr;
+   m_tcpProxyCallback = nullptr;
 
    // Set DB writer queue threshold to 3/4 of max db writer queue size, or 250000 if queue size is not limited
    m_dbWriterQueueThreshold = ConfigReadInt64(_T("DBWriter.MaxQueueSize"), 0) * 3 / 4;
@@ -969,11 +969,11 @@ uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPM
 }
 
 /**
- * Set client session for receiving TCP proxy packets
+ * Set callback for receiving TCP proxy packets
  */
-void AgentConnectionEx::setTcpProxySession(ClientSession *session)
+void AgentConnectionEx::setTcpProxyCallback(TcpProxyCallback *callback)
 {
-   m_tcpProxySession = session;
+   m_tcpProxyCallback = callback;
 }
 
 /**
@@ -981,8 +981,8 @@ void AgentConnectionEx::setTcpProxySession(ClientSession *session)
  */
 void AgentConnectionEx::processTcpProxyData(uint32_t channelId, const void *data, size_t size, bool errorIndicator)
 {
-   if (m_tcpProxySession != nullptr)
-      m_tcpProxySession->processTcpProxyData(this, channelId, data, size, errorIndicator);
+   if (m_tcpProxyCallback != nullptr)
+      m_tcpProxyCallback->onTcpProxyData(this, channelId, data, size, errorIndicator);
 }
 
 /**
@@ -1002,8 +1002,8 @@ void AgentConnectionEx::onDisconnect()
    if (isFileUpdateConnection())
       RemoveFileMonitorsByNodeId(m_nodeId);
 
-   if (m_tcpProxySession != nullptr)
-      m_tcpProxySession->processTcpProxyAgentDisconnect(this);
+   if (m_tcpProxyCallback != nullptr)
+      m_tcpProxyCallback->onTcpProxyAgentDisconnect(this);
 }
 
 #define DEBUG_TAG _T("agent")

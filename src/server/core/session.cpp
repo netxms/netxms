@@ -5282,7 +5282,7 @@ static void ProcessDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientSession
 
    // Fill memory block with records
    int32_t rows = 0;
-   TCHAR textBuffer[MAX_DCI_STRING_VALUE];
+   wchar_t textBuffer[MAX_DCI_STRING_VALUE];
    while(DBFetch(hResult))
    {
       rows++;
@@ -5467,7 +5467,7 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
          if (column == -1)
             goto read_from_db;
 
-         TCHAR instance[256];
+         wchar_t instance[256];
          request.getFieldAsString(VID_INSTANCE, instance, 256);
          int row = t->findRowByInstance(instance);
 
@@ -15651,7 +15651,7 @@ void ClientSession::setupTcpProxy(const NXCPMessage& request)
                shared_ptr<AgentConnectionEx> conn = proxyNode->createAgentConnection();
                if (conn != nullptr)
                {
-                  conn->setTcpProxySession(this);
+                  conn->setTcpProxyCallback(this);
                   uint32_t clientChannelId = request.getFieldAsUInt32(VID_CHANNEL_ID);
                   if (clientChannelId == 0)  // Clients before 4.5.3 will not assign channel ID
                      clientChannelId = InterlockedIncrement(&m_tcpProxyChannelId);
@@ -15755,7 +15755,7 @@ void ClientSession::closeTcpProxy(const NXCPMessage& request)
 /**
  * Process TCP proxy data (in direction from from agent to client)
  */
-void ClientSession::processTcpProxyData(AgentConnectionEx *conn, uint32_t agentChannelId, const void *data, size_t size, bool errorIndicator)
+void ClientSession::onTcpProxyData(AgentConnectionEx *conn, uint32_t agentChannelId, const void *data, size_t size, bool errorIndicator)
 {
    uint32_t clientChannelId = 0;
    m_tcpProxyLock.lock();
@@ -15805,7 +15805,7 @@ void ClientSession::processTcpProxyData(AgentConnectionEx *conn, uint32_t agentC
 /**
  * Process disconnect notification from agent session used for TCP proxy
  */
-void ClientSession::processTcpProxyAgentDisconnect(AgentConnectionEx *conn)
+void ClientSession::onTcpProxyAgentDisconnect(AgentConnectionEx *conn)
 {
    IntegerArray<uint32_t> clientChannelList;
    m_tcpProxyLock.lock();

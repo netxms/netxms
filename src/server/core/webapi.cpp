@@ -217,6 +217,40 @@ void NXCORE_EXPORTABLE SendWebsocketFrame(int socketHandle, const void *data, si
 }
 
 /**
+ * Send websocket binary frame
+ */
+void NXCORE_EXPORTABLE SendWebsocketBinaryFrame(int socketHandle, const void *data, size_t dataLen)
+{
+   size_t headerLen;
+   BYTE header[16];
+   header[0] = 0x82; // FIN + binary frame
+   if (dataLen <= 125)
+   {
+      header[1] = static_cast<BYTE>(dataLen);
+      headerLen = 2;
+   }
+   else if (dataLen <= 65535)
+   {
+      header[1] = 126; // 2 bytes payload length
+      header[2] = (dataLen >> 8) & 0xFF;
+      header[3] = dataLen & 0xFF;
+      headerLen = 4;
+   }
+   else
+   {
+      header[1] = 127; // 8 bytes payload length
+      uint64_t v = htonq(dataLen);
+      memcpy(&header[2], &v, 8);
+      headerLen = 10;
+   }
+
+   Buffer<BYTE, 4096> frame(dataLen + headerLen);
+   memcpy(frame, header, headerLen);
+   memcpy(frame + headerLen, data, dataLen);
+   SendEx(socketHandle, frame, dataLen + headerLen, 0, nullptr);
+}
+
+/**
  * Send websocket "close" frame with status code (RFC 6455 Section 5.5.1)
  */
 void NXCORE_EXPORTABLE SendWebsocketCloseFrame(int socketHandle, uint16_t statusCode)
@@ -236,7 +270,7 @@ static MHD_Result UpgradeToWebsocket(Context *context, MHD_Connection *connectio
 {
    if (!context->isProtocolUpgradeAllowed())
    {
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 5, L"Upgrade to websocket is not allowed for endpoint %s", url);
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 5, L"Upgrade to websocket is not allowed for endpoint %hs", url);
       context->setErrorResponse("Upgrade to websocket is not allowed for this endpoint");
       return SendResponse(connection, 400, context->getContentType(), context->getResponseHeaders(), context->getResponseData(), context->getResponseDataSize());
    }
@@ -244,12 +278,12 @@ static MHD_Result UpgradeToWebsocket(Context *context, MHD_Connection *connectio
    MHD_Response *response = MHD_create_response_for_upgrade(context->getProtocolUpgradeHandler(), context);
    if (!WSCalculateAcceptValue(connection, response))
    {
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 5, L"Upgrade to websocket failed for endpoint %s (invalid websocket key format)", url);
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 5, L"Upgrade to websocket failed for endpoint %hs (invalid websocket key format)", url);
       context->setErrorResponse("Invalid websocket key format");
       return SendResponse(connection, 400, context->getContentType(), context->getResponseHeaders(), context->getResponseData(), context->getResponseDataSize());
    }
 
-   nxlog_debug_tag(DEBUG_TAG_WEBAPI, 5, L"Upgrade to websocket for endpoint %s approved", url);
+   nxlog_debug_tag(DEBUG_TAG_WEBAPI, 5, L"Upgrade to websocket for endpoint %hs approved", url);
    MHD_add_response_header(response, MHD_HTTP_HEADER_UPGRADE, "websocket");
    MHD_Result rc = MHD_queue_response(connection, MHD_HTTP_SWITCHING_PROTOCOLS, response);
    MHD_destroy_response(response);
@@ -425,7 +459,7 @@ void StartWebAPI()
    else
       nxlog_debug_tag(DEBUG_TAG_WEBAPI, 2, _T("Web API will listen on address %s"), s_listenerAddr.toString().cstr());
 
-   unsigned int flags = MHD_USE_INTERNAL_POLLING_THREAD | MHD_USE_POLL | MHD_USE_ERROR_LOG;
+   unsigned int flags = MHD_USE_INTERNAL_POLLING_THREAD | MHD_USE_POLL | MHD_USE_ERROR_LOG | MHD_ALLOW_UPGRADE;
 #if MHD_VERSION < 0x00097706
    if (s_listenerAddr.getFamily() == AF_INET6)
       flags |= MHD_USE_IPv6;

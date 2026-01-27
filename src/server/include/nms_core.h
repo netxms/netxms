@@ -556,7 +556,7 @@ struct LoginInfo;
 /**
  * Client (user) session
  */
-class NXCORE_EXPORTABLE ClientSession : public GenericClientSession
+class NXCORE_EXPORTABLE ClientSession : public GenericClientSession, public TcpProxyCallback
 {
 private:
    SOCKET m_socket;
@@ -1075,8 +1075,8 @@ public:
    void onAlarmUpdate(UINT32 dwCode, const Alarm *alarm);
    void onActionDBUpdate(UINT32 dwCode, const Action *action);
    void onLibraryImageChange(const uuid& guid, bool removed = false);
-   void processTcpProxyData(AgentConnectionEx *conn, uint32_t agentChannelId, const void *data, size_t size, bool errorIndicator);
-   void processTcpProxyAgentDisconnect(AgentConnectionEx *conn);
+   virtual void onTcpProxyData(AgentConnectionEx *conn, uint32_t channelId, const void *data, size_t size, bool errorIndicator) override;
+   virtual void onTcpProxyAgentDisconnect(AgentConnectionEx *conn) override;
 
    void unregisterServerCommand(pid_t taskId);
 };

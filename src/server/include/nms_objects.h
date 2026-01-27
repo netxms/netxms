@@ -36,6 +36,7 @@
  */
 class GenericClientSession;
 class ClientSession;
+class AgentConnectionEx;
 class Queue;
 class DataCollectionTarget;
 class Cluster;
@@ -217,6 +218,18 @@ struct WebServiceCallResult
 };
 
 /**
+ * Interface for receiving TCP proxy data from agent
+ */
+class NXCORE_EXPORTABLE TcpProxyCallback
+{
+public:
+   virtual ~TcpProxyCallback() = default;
+   virtual void onTcpProxyData(AgentConnectionEx *conn, uint32_t channelId,
+                               const void *data, size_t size, bool errorIndicator) = 0;
+   virtual void onTcpProxyAgentDisconnect(AgentConnectionEx *conn) = 0;
+};
+
+/**
  * Extended agent connection
  */
 class NXCORE_EXPORTABLE AgentConnectionEx : public AgentConnection
@@ -225,7 +238,7 @@ protected:
    uint32_t m_nodeId;
    shared_ptr<AgentTunnel> m_tunnel;
    shared_ptr<AgentTunnel> m_proxyTunnel;
-   ClientSession *m_tcpProxySession;
+   TcpProxyCallback *m_tcpProxyCallback;
    int64_t m_dbWriterQueueThreshold;
 
    virtual shared_ptr<AbstractCommChannel> createChannel() override;
@@ -262,7 +275,7 @@ public:
    using AgentConnection::setProxy;
    void setProxy(const shared_ptr<AgentTunnel>& tunnel, const TCHAR *secret);
 
-   void setTcpProxySession(ClientSession *session);
+   void setTcpProxyCallback(TcpProxyCallback *callback);
 };
 
 #ifdef _WIN32

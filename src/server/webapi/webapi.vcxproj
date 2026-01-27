@@ -335,6 +335,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="objects.cpp" />
     <ClCompile Include="objtools.cpp" />
+    <ClCompile Include="tcpproxy.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\nms_common.h" />

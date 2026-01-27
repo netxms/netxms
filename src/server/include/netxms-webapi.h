@@ -415,6 +415,7 @@ public:
  */
 bool NXCORE_EXPORTABLE ReadWebsocketFrame(int socketHandle, ByteStream *out, BYTE *frameType);
 void NXCORE_EXPORTABLE SendWebsocketFrame(int socketHandle, const void *data, size_t dataLen);
+void NXCORE_EXPORTABLE SendWebsocketBinaryFrame(int socketHandle, const void *data, size_t dataLen);
 void NXCORE_EXPORTABLE SendWebsocketCloseFrame(int socketHandle, uint16_t statusCode = WS_CLOSE_NORMAL);
 
 #endif
