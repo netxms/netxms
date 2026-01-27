@@ -340,3 +340,4 @@ cmake-build-debug/
 __pycache__/
 *.egg-info/
 venv/
+.nxadm_history
