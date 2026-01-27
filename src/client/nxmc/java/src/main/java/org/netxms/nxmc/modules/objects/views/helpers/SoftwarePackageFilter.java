@@ -43,7 +43,7 @@ public class SoftwarePackageFilter extends ViewerFilter implements AbstractViewe
          return true; // FIXME: do correct node filtering
 
       SoftwarePackage p = (SoftwarePackage)element;
-      return p.getName().toLowerCase().contains(filterString) || p.getVendor().toLowerCase().contains(filterString) || p.getDescription().toLowerCase().contains(filterString);
+      return p.getName().toLowerCase().contains(filterString) || p.getVendor().toLowerCase().contains(filterString) || p.getDescription().toLowerCase().contains(filterString) || p.getUser().toLowerCase().contains(filterString);
    }
 
    /**

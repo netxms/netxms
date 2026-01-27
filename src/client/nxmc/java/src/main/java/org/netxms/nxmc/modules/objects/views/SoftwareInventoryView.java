@@ -65,15 +65,16 @@ public class SoftwareInventoryView extends ObjectView
 {
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_VERSION = 1;
-   public static final int COLUMN_VENDOR = 2;
-   public static final int COLUMN_DATE = 3;
-   public static final int COLUMN_DESCRIPTION = 4;
-   public static final int COLUMN_URL = 5;
+   public static final int COLUMN_USER = 2;
+   public static final int COLUMN_VENDOR = 3;
+   public static final int COLUMN_DATE = 4;
+   public static final int COLUMN_DESCRIPTION = 5;
+   public static final int COLUMN_URL = 6;
 
    private final I18n i18n = LocalizationHelper.getI18n(SoftwareInventoryView.class);
 
-   private final String[] names = { i18n.tr("Name"), i18n.tr("Version"), i18n.tr("Vendor"), i18n.tr("Install Date"), i18n.tr("Description"), i18n.tr("URL") };
-   private final int[] widths = { 200, 100, 200, 100, 300, 200 };
+   private final String[] names = { i18n.tr("Name"), i18n.tr("Version"), i18n.tr("User"), i18n.tr("Vendor"), i18n.tr("Install Date"), i18n.tr("Description"), i18n.tr("URL") };
+   private final int[] widths = { 200, 100, 150, 200, 100, 300, 200 };
 
    private ColumnViewer viewer;
    private SoftwarePackageFilter filter = new SoftwarePackageFilter();

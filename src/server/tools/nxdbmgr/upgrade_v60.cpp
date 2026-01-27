@@ -25,6 +25,32 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.27 to 60.28
+ */
+static bool H_UpgradeFromV27()
+{
+   CHK_EXEC(DBDropPrimaryKey(g_dbHandle, L"software_inventory"));
+   CHK_EXEC(SQLQuery(L"ALTER TABLE software_inventory ADD user_name varchar(127)"));
+   CHK_EXEC(SQLQuery(L"ALTER TABLE software_inventory ADD package_id varchar(319)"));
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_MSSQL:
+         CHK_EXEC(SQLQuery(L"UPDATE software_inventory SET package_id = name + '|' + version + '|'"));
+         break;
+      case DB_SYNTAX_MYSQL:
+         CHK_EXEC(SQLQuery(L"UPDATE software_inventory SET package_id = CONCAT(name, '|', version, '|')"));
+         break;
+      default:
+         CHK_EXEC(SQLQuery(L"UPDATE software_inventory SET package_id = name || '|' || version || '|'"));
+         break;
+   }
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"software_inventory", L"package_id"));
+   CHK_EXEC(DBAddPrimaryKey(g_dbHandle, L"software_inventory", L"node_id,package_id"));
+   CHK_EXEC(SetMinorSchemaVersion(28));
+   return true;
+}
+
+/**
  * Transform escape sequences and input field macros:
  *   \\ -> \
  *   \t -> %(tab)
@@ -1796,6 +1822,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 27, 60, 28, H_UpgradeFromV27 },
    { 26, 60, 27, H_UpgradeFromV26 },
    { 25, 60, 26, H_UpgradeFromV25 },
    { 24, 60, 25, H_UpgradeFromV24 },

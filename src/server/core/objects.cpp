@@ -1509,7 +1509,7 @@ bool LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("auto_bind_target"), _T("object_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("icmp_statistics"), _T("object_id,poll_target"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("icmp_target_address_list"), _T("node_id,ip_addr"), _T("*"), intColumns) &&
-               DBCacheTable(cachedb, mainDB, _T("software_inventory"), _T("node_id,name,version"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("software_inventory"), _T("node_id,package_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("hardware_inventory"), _T("node_id,category,component_index"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("versionable_object"), _T("object_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("pollable_objects"), _T("id"), _T("*"), intColumns) &&

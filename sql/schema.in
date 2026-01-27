@@ -519,14 +519,16 @@ CREATE TABLE icmp_target_address_list
 CREATE TABLE software_inventory
 (
   node_id integer not null,
+  package_id varchar(319) not null,
   name varchar(127) not null,
-  version varchar(63) not null,
+  version varchar(63) null,
+  user_name varchar(127) null,
   vendor varchar(63) null,
   install_date integer not null,
   url varchar(255) null,
   description varchar(255) null,
   uninstall_key varchar(255) null,
-  PRIMARY KEY(node_id,name,version)
+  PRIMARY KEY(node_id,package_id)
 ) TABLE_TYPE;
 
 /**

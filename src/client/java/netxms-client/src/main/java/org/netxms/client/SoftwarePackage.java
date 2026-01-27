@@ -33,6 +33,7 @@ public class SoftwarePackage
 	private String supportUrl;
 	private Date installDate;
    private String uninstallKey;
+   private String user;
 	private Object data;
 
 	/**
@@ -50,6 +51,7 @@ public class SoftwarePackage
 		supportUrl = msg.getFieldAsString(baseId + 4);
 		description = msg.getFieldAsString(baseId + 5);
       uninstallKey = msg.getFieldAsString(baseId + 6);
+      user = msg.getFieldAsString(baseId + 7);
 	}
 
 	/**
@@ -108,6 +110,16 @@ public class SoftwarePackage
    public String getUninstallKey()
    {
       return (uninstallKey != null) ? uninstallKey : "";
+   }
+
+   /**
+    * Get the user who installed this package.
+    *
+    * @return user name or empty string
+    */
+   public String getUser()
+   {
+      return (user != null) ? user : "";
    }
 
 	/**

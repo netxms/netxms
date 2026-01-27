@@ -718,6 +718,7 @@ private:
    wchar_t *m_url;
    wchar_t *m_description;
    wchar_t *m_uninstallKey;
+   wchar_t *m_user;
    ChangeCode m_changeCode;
 
    SoftwarePackage();
@@ -734,11 +735,12 @@ public:
 
    const wchar_t *getName() const { return m_name; }
    const wchar_t *getVersion() const { return m_version; }
-   const wchar_t* getVendor() const { return m_vendor; }
+   const wchar_t *getVendor() const { return m_vendor; }
    time_t getDate() const { return m_date; }
-   const wchar_t* getUrl() const { return m_url; }
-   const wchar_t* getDescription() const { return m_description; }
-   const wchar_t* getUninstallKey() const { return m_uninstallKey; }
+   const wchar_t *getUrl() const { return m_url; }
+   const wchar_t *getDescription() const { return m_description; }
+   const wchar_t *getUninstallKey() const { return m_uninstallKey; }
+   const wchar_t *getUser() const { return m_user; }
    ChangeCode getChangeCode() const { return m_changeCode; }
 
    json_t *toJson() const;

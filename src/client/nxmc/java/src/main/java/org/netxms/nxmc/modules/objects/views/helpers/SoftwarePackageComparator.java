@@ -77,6 +77,9 @@ public class SoftwarePackageComparator extends ViewerComparator
             case SoftwareInventoryView.COLUMN_VERSION:
 					result = p1.getVersion().compareToIgnoreCase(p2.getVersion());
 					break;
+            case SoftwareInventoryView.COLUMN_USER:
+               result = p1.getUser().compareToIgnoreCase(p2.getUser());
+               break;
 				default:
 					result = 0;
 					break;
