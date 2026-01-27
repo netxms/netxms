@@ -100,7 +100,6 @@ static TCHAR *TransformMacroText(const TCHAR *text)
          const TCHAR *end = _tcschr(start, _T(')'));
          if (end != nullptr)
          {
-            size_t len = end - start;
             // Convert %(name) to %(in:name)
             output.append(_T("%(in:"));
             while (start < end)
@@ -129,10 +128,11 @@ static TCHAR *TransformMacroText(const TCHAR *text)
 /**
  * Migrate macro text in a VARCHAR column with single-column primary key
  */
-static bool MigrateMacroTextInColumn(const TCHAR *table, const TCHAR *idCol, const TCHAR *col)
+static bool MigrateMacroTextInColumn(const TCHAR *table, const TCHAR *idCol, const TCHAR *col, const wchar_t *cond = nullptr)
 {
    TCHAR query[512];
-   _sntprintf(query, 512, _T("SELECT %s,%s FROM %s WHERE %s LIKE '%%\\%%' OR %s LIKE '%%|%%(%%' ESCAPE '|'"), idCol, col, table, col, col);
+   _sntprintf(query, 512, _T("SELECT %s,%s FROM %s WHERE %s LIKE '%%\\%%' OR %s LIKE '%%|%%(%%' ESCAPE '|'%s%s"),
+      idCol, col, table, col, col, (cond != nullptr) ? L" AND " : L"", (cond != nullptr) ? cond : L"");
    DB_RESULT hResult = SQLSelect(query);
    if (hResult == nullptr)
       return false;
@@ -352,6 +352,7 @@ static bool H_UpgradeFromV26()
    // Data collection
    CHK_EXEC(MigrateMacroTextInColumn(_T("items"), _T("item_id"), _T("polling_interval_src")));
    CHK_EXEC(MigrateMacroTextInColumn(_T("items"), _T("item_id"), _T("retention_time_src")));
+   CHK_EXEC(MigrateMacroTextInColumn(_T("thresholds"), _T("threshold_id"), _T("fire_value")));
    CHK_EXEC(MigrateMacroTextInColumn(_T("dc_tables"), _T("item_id"), _T("polling_interval_src")));
    CHK_EXEC(MigrateMacroTextInColumn(_T("dc_tables"), _T("item_id"), _T("retention_time_src")));
 
@@ -365,15 +366,10 @@ static bool H_UpgradeFromV26()
 
    // Object tools
    CHK_EXEC(MigrateMacroTextInTextColumn(_T("object_tools"), _T("tool_id"), _T("tool_data")));
-   CHK_EXEC(MigrateMacroTextInTextColumn(_T("object_tools"), _T("tool_id"), _T("tool_filter")));
    CHK_EXEC(MigrateMacroTextInColumn(_T("object_tools"), _T("tool_id"), _T("confirmation_text")));
 
-   // Agent configs
-   CHK_EXEC(MigrateMacroTextInTextColumn(_T("agent_configs"), _T("config_id"), _T("config_file")));
-   CHK_EXEC(MigrateMacroTextInTextColumn(_T("agent_configs"), _T("config_id"), _T("config_filter")));
-
    // Agent packages
-   CHK_EXEC(MigrateMacroTextInColumn(_T("agent_pkg"), _T("pkg_id"), _T("command")));
+   CHK_EXEC(MigrateMacroTextInColumn(L"agent_pkg", L"pkg_id", L"command", L"command LIKE '@%'"));
 
    // Dashboard templates
    CHK_EXEC(MigrateMacroTextInColumn(_T("dashboard_templates"), _T("id"), _T("name_template")));
