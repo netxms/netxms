@@ -69,6 +69,7 @@ int H_ObjectSetManaged(Context *context);
 int H_Objects(Context *context);
 int H_ObjectSearch(Context *context);
 int H_ObjectTools(Context *context);
+int H_ObjectToolDetails(Context *context);
 int H_GrafanaObjectQueryList(Context *context);
 int H_QueryAdHocSummaryTable(Context *context);
 int H_QuerySummaryTable(Context *context);
@@ -207,6 +208,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/object-tools")
       .GET(H_ObjectTools)
+      .build();
+   RouteBuilder("v1/object-tools/:tool-id")
+      .GET(H_ObjectToolDetails)
       .build();
    RouteBuilder("v1/server-info")
       .GET(H_ServerInfo)

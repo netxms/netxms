@@ -1635,6 +1635,81 @@ uint32_t GetObjectToolsIntoMessage(NXCPMessage *msg, uint32_t userId, bool fullA
 }
 
 /**
+ * Convert tool type to string
+ */
+static const char *ToolTypeToString(int type)
+{
+   switch (type)
+   {
+      case TOOL_TYPE_ACTION:
+         return "action";
+      case TOOL_TYPE_AGENT_LIST:
+         return "agent-list";
+      case TOOL_TYPE_AGENT_TABLE:
+         return "agent-table";
+      case TOOL_TYPE_COMMAND:
+         return "command";
+      case TOOL_TYPE_FILE_DOWNLOAD:
+         return "file-download";
+      case TOOL_TYPE_INTERNAL:
+         return "internal";
+      case TOOL_TYPE_SERVER_COMMAND:
+         return "server-command";
+      case TOOL_TYPE_SERVER_SCRIPT:
+         return "server-script";
+      case TOOL_TYPE_SNMP_TABLE:
+         return "snmp-table";
+      case TOOL_TYPE_URL:
+         return "url";
+      default:
+         return "unknown";
+   }
+}
+
+/**
+ * Get tool type from string
+ */
+static const int ToolTypeFromString(const char *type)
+{
+   if (!strcmp(type, "action"))
+      return TOOL_TYPE_ACTION;
+   if (!strcmp(type, "agent-list"))
+      return TOOL_TYPE_AGENT_LIST;
+   if (!strcmp(type, "agent-table"))
+      return TOOL_TYPE_AGENT_TABLE;
+   if (!strcmp(type, "command"))
+      return TOOL_TYPE_COMMAND;
+   if (!strcmp(type, "file-download"))
+      return TOOL_TYPE_FILE_DOWNLOAD;
+   if (!strcmp(type, "internal"))
+      return TOOL_TYPE_INTERNAL;
+   if (!strcmp(type, "server-command"))
+      return TOOL_TYPE_SERVER_COMMAND;
+   if (!strcmp(type, "server-script"))
+      return TOOL_TYPE_SERVER_SCRIPT;
+   if (!strcmp(type, "snmp-table"))
+      return TOOL_TYPE_SNMP_TABLE;
+   if (!strcmp(type, "url"))
+      return TOOL_TYPE_URL;
+   return -1;
+}
+
+/**
+ * Add flags as boolean fields to JSON object
+ */
+static void AddFlagsToJson(json_t *tool, uint32_t flags)
+{
+   json_object_set_new(tool, "askConfirmation", json_boolean(flags & TF_ASK_CONFIRMATION));
+   json_object_set_new(tool, "generatesOutput", json_boolean(flags & TF_GENERATES_OUTPUT));
+   json_object_set_new(tool, "disabled", json_boolean(flags & TF_DISABLED));
+   json_object_set_new(tool, "showInCommands", json_boolean(flags & TF_SHOW_IN_COMMANDS));
+   json_object_set_new(tool, "snmpIndexedByValue", json_boolean(flags & TF_SNMP_INDEXED_BY_VALUE));
+   json_object_set_new(tool, "runInContainerContext", json_boolean(flags & TF_RUN_IN_CONTAINER_CONTEXT));
+   json_object_set_new(tool, "suppressSuccessMessage", json_boolean(flags & TF_SUPPRESS_SUCCESS_MESSAGE));
+   json_object_set_new(tool, "setupTcpTunnel", json_boolean(flags & TF_SETUP_TCP_TUNNEL));
+}
+
+/**
  * Load object tool's input field definitions
  */
 static bool LoadInputFieldDefinitions(uint32_t toolId, DB_HANDLE hdb, json_t *tool)
@@ -1656,14 +1731,14 @@ static bool LoadInputFieldDefinitions(uint32_t toolId, DB_HANDLE hdb, json_t *to
       {
          json_t *field = json_object();
 
-         TCHAR buffer[128];
-         DBGetField(hResult, i, 0, buffer, 128);
-         json_object_set_new(field, "name", json_string_t(buffer));
+         char buffer[256];
+         DBGetFieldUTF8(hResult, i, 0, buffer, sizeof(buffer));
+         json_object_set_new(field, "name", json_string(buffer));
 
          json_object_set_new(field, "type", json_integer(DBGetFieldLong(hResult, i, 1)));
 
-         DBGetField(hResult, i, 2, buffer, 128);
-         json_object_set_new(field, "displayName", json_string_t(buffer));
+         DBGetFieldUTF8(hResult, i, 2, buffer, sizeof(buffer));
+         json_object_set_new(field, "displayName", json_string(buffer));
 
          json_object_set_new(field, "flags", json_integer(DBGetFieldLong(hResult, i, 3)));
 
@@ -1671,6 +1746,7 @@ static bool LoadInputFieldDefinitions(uint32_t toolId, DB_HANDLE hdb, json_t *to
          if (seq == -1)
             seq = i;
          json_object_set_new(field, "sequence", json_integer(seq));
+         json_array_append_new(fields, field);
       }
       DBFreeResult(hResult);
       json_object_set_new(tool, "inputFields", fields);
@@ -1684,7 +1760,7 @@ static bool LoadInputFieldDefinitions(uint32_t toolId, DB_HANDLE hdb, json_t *to
 /**
  * Get all object tools available for given user into JSON document
  */
-json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAccess)
+json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAccess, const char *typesFilter)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT tool_id,user_id FROM object_tools_acl"));
@@ -1710,12 +1786,33 @@ json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAcces
       return nullptr;
    }
 
+   HashSet<int> typeSet;
+   if (typesFilter != nullptr)
+   {
+      char buffer[256], *state;
+      strlcpy(buffer, typesFilter, 256);
+      char *token = strtok_r(buffer, ",", &state);
+      while (token != nullptr)
+      {
+         TrimA(token);
+         int type = ToolTypeFromString(token);
+         if (type != -1)
+            typeSet.put(type);
+         token = strtok_r(nullptr, ",", &state);
+      }
+   }
+
    json_t *tools = json_array();
 
    int count = DBGetNumRows(hResult);
    for(int i = 0; i < count; i++)
    {
       uint32_t toolId = DBGetFieldULong(hResult, i, 0);
+
+      int toolType = DBGetFieldLong(hResult, i, 2);
+      if (!typeSet.isEmpty() && !typeSet.contains(toolType))
+         continue;
+
       bool hasAccess = fullAccess;
       if (!fullAccess)
       {
@@ -1739,42 +1836,23 @@ json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAcces
          json_t *tool = json_object();
          json_object_set_new(tool, "id", json_integer(toolId));
 
-         TCHAR buffer[MAX_DB_STRING];
-         DBGetField(hResult, i, 1, buffer, MAX_DB_STRING);
-         json_object_set_new(tool, "name", json_string_t(buffer));
+         char buffer[1024];
+         DBGetFieldUTF8(hResult, i, 1, buffer, sizeof(buffer));
+         json_object_set_new(tool, "name", json_string(buffer));
 
-         json_object_set_new(tool, "type", json_integer(DBGetFieldLong(hResult, i, 2)));
+         json_object_set_new(tool, "type", json_string(ToolTypeToString(toolType)));
 
-         TCHAR *data = DBGetField(hResult, i, 3, nullptr, 0);
-         json_object_set_new(tool, "data", json_string_t(data));
-         MemFree(data);
+         uint32_t flags = DBGetFieldULong(hResult, i, 4);
+         AddFlagsToJson(tool, flags);
 
-         json_object_set_new(tool, "flags", json_integer(DBGetFieldULong(hResult, i, 4)));
+         DBGetFieldUTF8(hResult, i, 7, buffer, sizeof(buffer));
+         json_object_set_new(tool, "confirmationMessage", json_string(buffer));
 
-         DBGetField(hResult, i, 5, buffer, MAX_DB_STRING);
-         json_object_set_new(tool, "description", json_string_t(buffer));
+         DBGetFieldUTF8(hResult, i, 8, buffer, sizeof(buffer));
+         json_object_set_new(tool, "commandName", json_string(buffer));
 
-         DBGetField(hResult, i, 6, buffer, MAX_DB_STRING);
-         json_object_set_new(tool, "filter", json_string_t(buffer));
-
-         DBGetField(hResult, i, 7, buffer, MAX_DB_STRING);
-         json_object_set_new(tool, "confirmationMessage", json_string_t(buffer));
-
-         DBGetField(hResult, i, 8, buffer, MAX_DB_STRING);
-         json_object_set_new(tool, "commandName", json_string_t(buffer));
-
-         DBGetField(hResult, i, 9, buffer, MAX_DB_STRING);
-         json_object_set_new(tool, "commandShortName", json_string_t(buffer));
-
-         // icon
-         TCHAR *imageDataHex = DBGetField(hResult, i, 10, nullptr, 0);
-         if (imageDataHex != nullptr)
-         {
-            json_object_set_new(tool, "icon", json_string_t(imageDataHex));
-            MemFree(imageDataHex);
-         }
-
-         json_object_set_new(tool, "remotePort", json_integer(DBGetFieldULong(hResult, i, 11)));
+         DBGetFieldUTF8(hResult, i, 9, buffer, sizeof(buffer));
+         json_object_set_new(tool, "commandShortName", json_string(buffer));
 
          LoadInputFieldDefinitions(toolId, hdb, tool);
 
@@ -1786,6 +1864,127 @@ json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAcces
 
    DBConnectionPoolReleaseConnection(hdb);
    return tools;
+}
+
+/**
+ * Get single object tool by ID into JSON document (full details)
+ */
+json_t NXCORE_EXPORTABLE *GetObjectToolIntoJSON(uint32_t toolId, uint32_t userId, bool fullAccess)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   // Check ACL if not full access
+   if (!fullAccess)
+   {
+      DB_STATEMENT hStmtAcl = DBPrepare(hdb, _T("SELECT user_id FROM object_tools_acl WHERE tool_id=?"));
+      if (hStmtAcl == nullptr)
+      {
+         DBConnectionPoolReleaseConnection(hdb);
+         return nullptr;
+      }
+
+      DBBind(hStmtAcl, 1, DB_SQLTYPE_INTEGER, toolId);
+      DB_RESULT hResultAcl = DBSelectPrepared(hStmtAcl);
+      if (hResultAcl == nullptr)
+      {
+         DBFreeStatement(hStmtAcl);
+         DBConnectionPoolReleaseConnection(hdb);
+         return nullptr;
+      }
+
+      bool hasAccess = false;
+      int aclCount = DBGetNumRows(hResultAcl);
+      for(int i = 0; i < aclCount && !hasAccess; i++)
+      {
+         uint32_t aclUserId = DBGetFieldULong(hResultAcl, i, 0);
+         if ((aclUserId == userId) ||
+             (aclUserId == GROUP_EVERYONE) ||
+             ((aclUserId & GROUP_FLAG) && CheckUserMembership(userId, aclUserId)))
+         {
+            hasAccess = true;
+         }
+      }
+      DBFreeResult(hResultAcl);
+      DBFreeStatement(hStmtAcl);
+
+      if (!hasAccess)
+      {
+         DBConnectionPoolReleaseConnection(hdb);
+         return json_null();  // Signal access denied
+      }
+   }
+
+   // Get tool details
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT tool_name,tool_type,tool_data,flags,description,tool_filter,confirmation_text,command_name,command_short_name,icon,remote_port FROM object_tools WHERE tool_id=?"));
+   if (hStmt == nullptr)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return nullptr;
+   }
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult == nullptr)
+   {
+      DBFreeStatement(hStmt);
+      DBConnectionPoolReleaseConnection(hdb);
+      return nullptr;
+   }
+
+   json_t *tool = nullptr;
+
+   if (DBGetNumRows(hResult) > 0)
+   {
+      tool = json_object();
+      json_object_set_new(tool, "id", json_integer(toolId));
+
+      TCHAR buffer[MAX_DB_STRING];
+
+      DBGetField(hResult, 0, 0, buffer, MAX_DB_STRING);
+      json_object_set_new(tool, "name", json_string_t(buffer));
+
+      int toolType = DBGetFieldLong(hResult, 0, 1);
+      json_object_set_new(tool, "type", json_string(ToolTypeToString(toolType)));
+
+      TCHAR *data = DBGetField(hResult, 0, 2, nullptr, 0);
+      json_object_set_new(tool, "data", json_string_t(data));
+      MemFree(data);
+
+      uint32_t flags = DBGetFieldULong(hResult, 0, 3);
+      AddFlagsToJson(tool, flags);
+
+      DBGetField(hResult, 0, 4, buffer, MAX_DB_STRING);
+      json_object_set_new(tool, "description", json_string_t(buffer));
+
+      DBGetField(hResult, 0, 5, buffer, MAX_DB_STRING);
+      json_object_set_new(tool, "filter", json_string_t(buffer));
+
+      DBGetField(hResult, 0, 6, buffer, MAX_DB_STRING);
+      json_object_set_new(tool, "confirmationMessage", json_string_t(buffer));
+
+      DBGetField(hResult, 0, 7, buffer, MAX_DB_STRING);
+      json_object_set_new(tool, "commandName", json_string_t(buffer));
+
+      DBGetField(hResult, 0, 8, buffer, MAX_DB_STRING);
+      json_object_set_new(tool, "commandShortName", json_string_t(buffer));
+
+      TCHAR *imageDataHex = DBGetField(hResult, 0, 9, nullptr, 0);
+      if (imageDataHex != nullptr)
+      {
+         json_object_set_new(tool, "icon", json_string_t(imageDataHex));
+         MemFree(imageDataHex);
+      }
+
+      json_object_set_new(tool, "remotePort", json_integer(DBGetFieldULong(hResult, 0, 10)));
+
+      LoadInputFieldDefinitions(toolId, hdb, tool);
+   }
+
+   DBFreeResult(hResult);
+   DBFreeStatement(hStmt);
+   DBConnectionPoolReleaseConnection(hdb);
+
+   return tool;  // nullptr if not found
 }
 
 /**

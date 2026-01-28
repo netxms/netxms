@@ -1511,7 +1511,8 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *contex
 bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context);
 uint32_t GetObjectToolsIntoMessage(NXCPMessage *msg, uint32_t userId, bool fullAccess);
 uint32_t GetObjectToolDetailsIntoMessage(uint32_t toolId, NXCPMessage *msg);
-json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAccess);
+json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAccess, const char *typesFilter);
+json_t NXCORE_EXPORTABLE *GetObjectToolIntoJSON(uint32_t toolId, uint32_t userId, bool fullAccess);
 
 uint32_t ModifySummaryTable(const NXCPMessage& msg, uint32_t *newId);
 uint32_t NXCORE_EXPORTABLE DeleteSummaryTable(uint32_t tableId);

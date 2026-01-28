@@ -1452,7 +1452,14 @@ paths:
   /v1/object-tools:
     get:
       summary: List available object tools
-      description: Retrieve a list of object tools.
+      description: Retrieve a list of object tools with basic information.
+      parameters:
+        - name: types
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Comma-separated list of tool types to filter by. Uses kebab-case format (e.g., "action,command,server-script,agent-list,file-download")
       responses:
         '200':
           description: Successful retrieval of object tools.
@@ -1461,16 +1468,37 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                    name:
-                      type: string
-                    kind:
-                      type: string
-                    filter:
-                      type: string
+                  $ref: '#/components/schemas/ObjectToolSummary'
+        '500':
+          description: Database failure.
+      security:
+        - BearerAuth: []
+  /v1/object-tools/{tool-id}:
+    get:
+      summary: Get object tool details
+      description: Retrieve full details of a specific object tool.
+      parameters:
+        - name: tool-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Object tool ID
+      responses:
+        '200':
+          description: Successful retrieval of object tool details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectToolDetails'
+        '400':
+          description: Invalid tool ID.
+        '403':
+          description: Access denied.
+        '404':
+          description: Tool not found.
+        '500':
+          description: Database failure.
       security:
         - BearerAuth: []
   /v1/dci-summary-tables:
@@ -1587,6 +1615,107 @@ components:
           type: string
         severity:
           type: string
+    ObjectToolType:
+      type: string
+      enum:
+        - internal
+        - action
+        - snmp-table
+        - agent-list
+        - url
+        - command
+        - server-command
+        - file-download
+        - server-script
+        - agent-table
+      description: Type of object tool
+    ObjectToolInputField:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Field name
+        type:
+          type: integer
+          description: Field type
+        displayName:
+          type: string
+          description: Display name for the field
+        flags:
+          type: integer
+          description: Field flags
+        sequence:
+          type: integer
+          description: Field sequence order
+    ObjectToolSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Tool ID
+        name:
+          type: string
+          description: Tool name
+        type:
+          $ref: '#/components/schemas/ObjectToolType'
+        askConfirmation:
+          type: boolean
+          description: Whether to ask for user confirmation before execution
+        generatesOutput:
+          type: boolean
+          description: Whether the tool generates output
+        disabled:
+          type: boolean
+          description: Whether the tool is disabled
+        showInCommands:
+          type: boolean
+          description: Whether to show in commands menu
+        snmpIndexedByValue:
+          type: boolean
+          description: Whether SNMP is indexed by value
+        runInContainerContext:
+          type: boolean
+          description: Whether to run in container context
+        suppressSuccessMessage:
+          type: boolean
+          description: Whether to suppress success message
+        setupTcpTunnel:
+          type: boolean
+          description: Whether to setup TCP tunnel
+        confirmationMessage:
+          type: string
+          description: Confirmation message shown to user
+        commandName:
+          type: string
+          description: Full command name
+        commandShortName:
+          type: string
+          description: Short command name
+        inputFields:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObjectToolInputField'
+          description: Input field definitions
+    ObjectToolDetails:
+      allOf:
+        - $ref: '#/components/schemas/ObjectToolSummary'
+        - type: object
+          properties:
+            data:
+              type: string
+              description: Tool-specific data
+            description:
+              type: string
+              description: Tool description
+            filter:
+              type: string
+              description: Tool filter (matching OID for SNMP tools)
+            icon:
+              type: string
+              description: Icon as hex-encoded image data
+            remotePort:
+              type: integer
+              description: Remote port for TCP tunnel
     ObjectClass:
       type: string
       enum:
