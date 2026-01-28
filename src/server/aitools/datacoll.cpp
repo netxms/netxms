@@ -110,25 +110,6 @@ static shared_ptr<DCObject> FindDCIByNameOrId(DataCollectionTarget *target, cons
 }
 
 /**
- * Helper: Resolve event code from name or numeric string
- */
-static uint32_t ResolveEventCode(const char *eventNameOrCode, uint32_t defaultCode)
-{
-   if (eventNameOrCode == nullptr || eventNameOrCode[0] == 0)
-      return defaultCode;
-
-   // Try as numeric first
-   char *endptr;
-   uint32_t code = strtoul(eventNameOrCode, &endptr, 10);
-   if (*endptr == 0)
-      return code;
-
-   // Try as event name
-   String name(eventNameOrCode, "utf-8");
-   return EventCodeFromName(name, defaultCode);
-}
-
-/**
  * Get data collection items and their current values for given object
  */
 std::string F_GetMetrics(json_t *arguments, uint32_t userId)
@@ -772,7 +753,15 @@ std::string F_GetThresholds(json_t *arguments, uint32_t userId)
    {
       Threshold *t = dci->getThreshold(i);
       if (t != nullptr)
-         json_array_append_new(output, t->toJson());
+      {
+         json_t *json = t->toJson();
+         wchar_t name[256];
+         EventNameFromCode(t->getEventCode(), name);
+         json_object_set_new(json, "eventName", json_string_t(name));
+         EventNameFromCode(t->getRearmEventCode(), name);
+         json_object_set_new(json, "rearmEventName", json_string_t(name));
+         json_array_append_new(output, json);
+      }
    }
 
    return JsonToString(output);
