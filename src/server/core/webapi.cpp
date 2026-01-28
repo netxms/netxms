@@ -108,7 +108,7 @@ static bool WSCalculateAcceptValue(MHD_Connection *connection, MHD_Response *res
 /**
  * Read websocket frame
  */
-bool NXCORE_EXPORTABLE ReadWebsocketFrame(int socketHandle, ByteStream *out, BYTE *frameType)
+bool NXCORE_EXPORTABLE ReadWebsocketFrame(SOCKET socketHandle, ByteStream *out, BYTE *frameType)
 {
    BYTE buffer[16];
 
@@ -185,7 +185,7 @@ bool NXCORE_EXPORTABLE ReadWebsocketFrame(int socketHandle, ByteStream *out, BYT
 /**
  * Send websocket frame
  */
-void NXCORE_EXPORTABLE SendWebsocketFrame(int socketHandle, const void *data, size_t dataLen)
+void NXCORE_EXPORTABLE SendWebsocketFrame(SOCKET socketHandle, const void *data, size_t dataLen)
 {
    size_t headerLen;
    BYTE header[16];
@@ -219,7 +219,7 @@ void NXCORE_EXPORTABLE SendWebsocketFrame(int socketHandle, const void *data, si
 /**
  * Send websocket binary frame
  */
-void NXCORE_EXPORTABLE SendWebsocketBinaryFrame(int socketHandle, const void *data, size_t dataLen)
+void NXCORE_EXPORTABLE SendWebsocketBinaryFrame(SOCKET socketHandle, const void *data, size_t dataLen)
 {
    size_t headerLen;
    BYTE header[16];
@@ -253,7 +253,7 @@ void NXCORE_EXPORTABLE SendWebsocketBinaryFrame(int socketHandle, const void *da
 /**
  * Send websocket "close" frame with status code (RFC 6455 Section 5.5.1)
  */
-void NXCORE_EXPORTABLE SendWebsocketCloseFrame(int socketHandle, uint16_t statusCode)
+void NXCORE_EXPORTABLE SendWebsocketCloseFrame(SOCKET socketHandle, uint16_t statusCode)
 {
    BYTE frame[4];
    frame[0] = 0x88; // FIN + close frame

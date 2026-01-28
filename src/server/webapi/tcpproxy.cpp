@@ -30,30 +30,6 @@
 static const int TCP_PROXY_TOKEN_VALIDITY = 30;
 
 /**
- * Pending TCP proxy session (waiting for WebSocket connection)
- */
-struct PendingTcpProxySession
-{
-   shared_ptr<AgentConnectionEx> agentConnection;
-   uint32_t agentChannelId;
-   uint32_t userId;
-   uint64_t systemAccessRights;
-   wchar_t workstation[64];
-   time_t creationTime;
-   uint32_t proxyNodeId;
-   InetAddress targetAddress;
-   uint16_t targetPort;
-   bool allowControlMessages;
-   wchar_t proxyNodeName[MAX_OBJECT_NAME];
-};
-
-/**
- * Pending sessions storage
- */
-static HashMap<uuid, PendingTcpProxySession> s_pendingSessions(Ownership::True);
-static Mutex s_pendingSessionsLock;
-
-/**
  * WebSocket TCP proxy session
  */
 class TcpProxyWebSocketSession : public TcpProxyCallback
@@ -67,18 +43,28 @@ private:
    uint32_t m_userId;
    uint64_t m_systemAccessRights;
    wchar_t m_workstation[64];
-   bool m_closed;
    bool m_allowControlMessages;
+   bool m_started;
+   ByteStream m_pendingData;
+   bool m_closed;
    Mutex m_closeMutex;
+   time_t m_creationTime;
 
    void sendTextFrame(const char *text);
 
 public:
-   TcpProxyWebSocketSession(MHD_UpgradeResponseHandle *responseHandle, SOCKET socket, PendingTcpProxySession *pending);
+   TcpProxyWebSocketSession(const shared_ptr<AgentConnectionEx>& agentConn, uint32_t userId,
+      uint64_t systemAccessRights, const wchar_t *workstation, bool allowControlMessages);
    virtual ~TcpProxyWebSocketSession();
 
+   void start(MHD_UpgradeResponseHandle *responseHandle, SOCKET s);
    void run();
    void close();
+
+   uint32_t getAgentChannelId() const { return m_agentChannelId; }
+   void setAgentChannelId(uint32_t channelId) { m_agentChannelId = channelId; }
+
+   time_t getCreationTime() const { return m_creationTime; }
 
    virtual void onTcpProxyData(AgentConnectionEx *conn, uint32_t channelId, const void *data, size_t size, bool errorIndicator) override;
    virtual void onTcpProxyAgentDisconnect(AgentConnectionEx *conn) override;
@@ -87,30 +73,22 @@ public:
 /**
  * Constructor - create session from pending session
  */
-TcpProxyWebSocketSession::TcpProxyWebSocketSession(MHD_UpgradeResponseHandle *responseHandle, SOCKET socket, PendingTcpProxySession *pending)
+TcpProxyWebSocketSession::TcpProxyWebSocketSession(const shared_ptr<AgentConnectionEx>& agentConn, uint32_t userId, uint64_t systemAccessRights,
+   const wchar_t *workstation, bool allowControlMessages) : m_socketMutex(MutexType::FAST), m_agentConn(agentConn), m_closeMutex(MutexType::FAST)
 {
-   m_responseHandle = responseHandle;
-   m_socket = socket;
-   m_agentConn = pending->agentConnection;
-   m_agentChannelId = pending->agentChannelId;
-   m_userId = pending->userId;
-   m_systemAccessRights = pending->systemAccessRights;
-   wcslcpy(m_workstation, pending->workstation, 64);
+   m_responseHandle = nullptr;
+   m_socket = INVALID_SOCKET;
+   m_agentChannelId = 0;
+   m_userId = userId;
+   m_systemAccessRights = systemAccessRights;
+   wcslcpy(m_workstation, workstation, 64);
+   m_started = false;
    m_closed = false;
-   m_allowControlMessages = pending->allowControlMessages;
+   m_allowControlMessages = allowControlMessages;
+   m_creationTime = time(nullptr);
 
    // Set callback to this session
    m_agentConn->setTcpProxyCallback(this);
-
-   // Send connected message
-   if (m_allowControlMessages)
-   {
-      char json[256];
-      snprintf(json, sizeof(json), "{\"type\":\"connected\",\"channelId\":%u}", m_agentChannelId);
-      sendTextFrame(json);
-   }
-
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("TCP proxy WebSocket session started (channel %u, user %u)"), m_agentChannelId, m_userId);
 }
 
 /**
@@ -119,9 +97,7 @@ TcpProxyWebSocketSession::TcpProxyWebSocketSession(MHD_UpgradeResponseHandle *re
 TcpProxyWebSocketSession::~TcpProxyWebSocketSession()
 {
    if (m_agentConn != nullptr)
-   {
       m_agentConn->setTcpProxyCallback(nullptr);
-   }
 }
 
 /**
@@ -130,8 +106,38 @@ TcpProxyWebSocketSession::~TcpProxyWebSocketSession()
 void TcpProxyWebSocketSession::sendTextFrame(const char *text)
 {
    m_socketMutex.lock();
-   SendWebsocketFrame(static_cast<int>(m_socket), text, strlen(text));
+   SendWebsocketFrame(m_socket, text, strlen(text));
    m_socketMutex.unlock();
+}
+
+/**
+ * Start session
+ */
+void TcpProxyWebSocketSession::start(MHD_UpgradeResponseHandle *responseHandle, SOCKET s)
+{
+   m_socketMutex.lock();
+
+   m_responseHandle = responseHandle;
+   m_socket = s;
+   m_started = true;
+
+   // Send connected message
+   if (m_allowControlMessages)
+   {
+      char json[256];
+      snprintf(json, sizeof(json), "{\"type\":\"connected\",\"channelId\":%u}", m_agentChannelId);
+      SendWebsocketFrame(m_socket, json, strlen(json));
+   }
+
+   if (m_pendingData.size() > 0)
+   {
+      // Send any pending data received before session was started
+      SendWebsocketBinaryFrame(m_socket, m_pendingData.buffer(), m_pendingData.size());
+      m_pendingData.clear();
+   }
+
+   m_socketMutex.unlock();
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("TCP proxy WebSocket session started (channel %u, user %u)"), m_agentChannelId, m_userId);
 }
 
 /**
@@ -139,7 +145,7 @@ void TcpProxyWebSocketSession::sendTextFrame(const char *text)
  */
 void TcpProxyWebSocketSession::run()
 {
-   while (!m_closed)
+   while (!m_closed && !IsShutdownInProgress())
    {
       ByteStream buffer;
       BYTE frameType;
@@ -188,7 +194,7 @@ void TcpProxyWebSocketSession::run()
          // Send pong frame
          m_socketMutex.lock();
          BYTE pong[2] = { 0x8A, 0x00 };  // FIN + pong opcode, no payload
-         SendEx(static_cast<int>(m_socket), pong, 2, 0, nullptr);
+         SendEx(m_socket, pong, 2, 0, nullptr);
          m_socketMutex.unlock();
       }
       // Ignore other frame types
@@ -219,10 +225,12 @@ void TcpProxyWebSocketSession::close()
 
    // Send close frame
    m_socketMutex.lock();
-   SendWebsocketCloseFrame(static_cast<int>(m_socket), WS_CLOSE_NORMAL);
+   if (m_socket != INVALID_SOCKET)
+      SendWebsocketCloseFrame(m_socket, WS_CLOSE_NORMAL);
    m_socketMutex.unlock();
 
-   MHD_upgrade_action(m_responseHandle, MHD_UPGRADE_ACTION_CLOSE);
+   if (m_responseHandle != nullptr)
+      MHD_upgrade_action(m_responseHandle, MHD_UPGRADE_ACTION_CLOSE);
 
    nxlog_debug_tag(DEBUG_TAG, 5, _T("TCP proxy channel %u closed"), m_agentChannelId);
 }
@@ -239,7 +247,10 @@ void TcpProxyWebSocketSession::onTcpProxyData(AgentConnectionEx *conn, uint32_t 
    {
       // Send binary frame to WebSocket client
       m_socketMutex.lock();
-      SendWebsocketBinaryFrame(static_cast<int>(m_socket), data, size);
+      if (m_started)
+         SendWebsocketBinaryFrame(m_socket, data, size);
+      else
+         m_pendingData.write(data, size); // Session not started yet, buffer data
       m_socketMutex.unlock();
    }
    else
@@ -275,6 +286,12 @@ void TcpProxyWebSocketSession::onTcpProxyAgentDisconnect(AgentConnectionEx *conn
 }
 
 /**
+ * Pending sessions storage
+ */
+static HashMap<uuid, TcpProxyWebSocketSession> s_pendingSessions(Ownership::True);
+static Mutex s_pendingSessionsLock;
+
+/**
  * Cleanup expired pending sessions
  */
 void CleanupExpiredTcpProxySessions()
@@ -285,12 +302,12 @@ void CleanupExpiredTcpProxySessions()
 
    StructArray<uuid> expiredTokens;
    s_pendingSessions.forEach(
-      [now, &expiredTokens](const uuid& token, PendingTcpProxySession *session) -> EnumerationCallbackResult
+      [now, &expiredTokens](const uuid& token, TcpProxyWebSocketSession *session) -> EnumerationCallbackResult
       {
-         if (now - session->creationTime > TCP_PROXY_TOKEN_VALIDITY * 2)
+         if (now - session->getCreationTime() > TCP_PROXY_TOKEN_VALIDITY * 2)
          {
             nxlog_debug_tag(DEBUG_TAG, 5, _T("Cleaning up expired TCP proxy session token"));
-            session->agentConnection->closeTcpProxy(session->agentChannelId);
+            session->close();
             expiredTokens.add(token);
          }
          return _CONTINUE;
@@ -396,35 +413,23 @@ static int SetupTCPProxy(Context *context, uint32_t nodeId, uint32_t proxyId, In
       return 502;
    }
 
+   auto session = new TcpProxyWebSocketSession(agentConn, context->getUserId(),
+         context->getSystemAccessRights(), context->getWorkstation(), allowControlMessages);
+
    uint32_t agentChannelId;
    uint32_t rcc = agentConn->setupTcpProxy(ipAddr, port, &agentChannelId);
-
    if (rcc != ERR_SUCCESS)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("TCP proxy setup failed: agent error %u"), rcc);
       context->setErrorResponse("Agent connection failed");
       return 502;
    }
+   session->setAgentChannelId(agentChannelId);
 
-   // Generate token (UUID)
+   // Generate token (UUID) and store pending session
    uuid token = uuid::generate();
-
-   // Store pending session
-   auto *pending = new PendingTcpProxySession();
-   pending->agentConnection = agentConn;
-   pending->agentChannelId = agentChannelId;
-   pending->userId = context->getUserId();
-   pending->systemAccessRights = context->getSystemAccessRights();
-   wcslcpy(pending->workstation, context->getWorkstation(), 64);
-   pending->creationTime = time(nullptr);
-   pending->proxyNodeId = proxyNode->getId();
-   pending->targetAddress = ipAddr;
-   pending->targetPort = port;
-   pending->allowControlMessages = allowControlMessages;
-   wcslcpy(pending->proxyNodeName, proxyNode->getName(), MAX_OBJECT_NAME);
-
    s_pendingSessionsLock.lock();
-   s_pendingSessions.set(token, pending);
+   s_pendingSessions.set(token, session);
    s_pendingSessionsLock.unlock();
 
    // Write audit log
@@ -531,7 +536,7 @@ void WS_TcpProxyConnect(void *cls, MHD_Connection *connection, void *con_cls,
    if (tokenStr == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("TCP proxy WebSocket connection rejected: no token provided"));
-      SendWebsocketCloseFrame(static_cast<int>(sock), WS_CLOSE_POLICY_VIOLATION);
+      SendWebsocketCloseFrame(static_cast<SOCKET>(sock), WS_CLOSE_POLICY_VIOLATION);
       MHD_upgrade_action(responseHandle, MHD_UPGRADE_ACTION_CLOSE);
       return;
    }
@@ -540,45 +545,42 @@ void WS_TcpProxyConnect(void *cls, MHD_Connection *connection, void *con_cls,
    if (token.isNull())
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("TCP proxy WebSocket connection rejected: invalid token format"));
-      SendWebsocketCloseFrame(static_cast<int>(sock), WS_CLOSE_POLICY_VIOLATION);
+      SendWebsocketCloseFrame(static_cast<SOCKET>(sock), WS_CLOSE_POLICY_VIOLATION);
       MHD_upgrade_action(responseHandle, MHD_UPGRADE_ACTION_CLOSE);
       return;
    }
 
    // Look up and remove pending session (token is single-use)
    s_pendingSessionsLock.lock();
-   PendingTcpProxySession *pending = s_pendingSessions.get(token);
-   if (pending != nullptr)
+   TcpProxyWebSocketSession *session = s_pendingSessions.get(token);
+   if (session != nullptr)
    {
       s_pendingSessions.unlink(token);  // Remove from map without deleting
    }
    s_pendingSessionsLock.unlock();
 
    // Validate token
-   if (pending == nullptr)
+   if (session == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("TCP proxy WebSocket connection rejected: token not found"));
-      SendWebsocketCloseFrame(static_cast<int>(sock), WS_CLOSE_POLICY_VIOLATION);
+      SendWebsocketCloseFrame(static_cast<SOCKET>(sock), WS_CLOSE_POLICY_VIOLATION);
       MHD_upgrade_action(responseHandle, MHD_UPGRADE_ACTION_CLOSE);
       return;
    }
 
    // Check expiration
-   if (time(nullptr) - pending->creationTime > TCP_PROXY_TOKEN_VALIDITY)
+   if (time(nullptr) - session->getCreationTime() > TCP_PROXY_TOKEN_VALIDITY)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("TCP proxy WebSocket connection rejected: token expired"));
-      pending->agentConnection->closeTcpProxy(pending->agentChannelId);
-      delete pending;
-      SendWebsocketCloseFrame(static_cast<int>(sock), WS_CLOSE_POLICY_VIOLATION);
+      nxlog_debug_tag(DEBUG_TAG, 4, L"TCP proxy WebSocket connection rejected: token expired");
+      session->close();
+      delete session;
+      SendWebsocketCloseFrame(static_cast<SOCKET>(sock), WS_CLOSE_POLICY_VIOLATION);
       MHD_upgrade_action(responseHandle, MHD_UPGRADE_ACTION_CLOSE);
       return;
    }
 
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("TCP proxy WebSocket connection established for channel %u"), pending->agentChannelId);
-
-   // Create WebSocket session with pre-established agent connection
-   auto session = new TcpProxyWebSocketSession(responseHandle, sock, pending);
-   delete pending;
+   session->start(responseHandle, static_cast<SOCKET>(sock));
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("TCP proxy WebSocket connection established for channel %u"), session->getAgentChannelId());
 
    ThreadCreate(
       [session] () -> void
