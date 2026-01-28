@@ -132,11 +132,11 @@ bool IsTimestampColumn(const TCHAR *table, const char *name)
 /**
  * Check if timestamp converting is needed for this table
  */
-bool IsTimestampConversionNeeded(const TCHAR* table)
+bool IsTimestampConversionNeeded(const wchar_t *table)
 {
    for(int n = 0; s_timestampColumns[n].table != nullptr; n++)
    {
-      if (!_tcsicmp(s_timestampColumns[n].table, table))
+      if (!wcsicmp(s_timestampColumns[n].table, table))
          return true;
    }
    return false;
@@ -155,7 +155,7 @@ static bool ConnectToSource()
    }
    WriteToTerminalEx(_T("Database driver \x1b[1m%s\x1b[0m loaded\n"), s_dbDriver);
 
-   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   wchar_t errorText[DBDRV_MAX_ERROR_TEXT];
    s_hdbSource = DBConnect(s_driver, s_dbServer, s_dbName, s_dbLogin, s_dbPassword, s_dbSchema, errorText);
    if (s_hdbSource == nullptr)
    {
@@ -214,18 +214,18 @@ static bool ConnectToSource()
 /**
  * Migrate single database table
  */
-static bool MigrateTable(const TCHAR *table)
+static bool MigrateTable(const wchar_t *table)
 {
-   WriteToTerminalEx(_T("%s table \x1b[1m%s\x1b[0m\n"), s_import ? _T("Importing") : _T("Migrating"), table);
+   WriteToTerminalEx(L"%s table \x1b[1m%s\x1b[0m\n", s_import ? L"Importing" : L"Migrating", table);
 
    if (!DBBegin(g_dbHandle))
    {
-      _tprintf(_T("ERROR: unable to start transaction in target database\n"));
+      WriteToTerminal(L"ERROR: unable to start transaction in target database\n");
       return false;
    }
 
    bool success = false;
-   TCHAR buffer[512], errorText[DBDRV_MAX_ERROR_TEXT];
+   wchar_t buffer[512], errorText[DBDRV_MAX_ERROR_TEXT];
 
    if ((s_sourceSyntax == DB_SYNTAX_TSDB) && IsTimestampConversionNeeded(table))
    {
@@ -400,8 +400,8 @@ static bool MigrateDataTables(bool ignoreDataMigrationErrors)
 
       if (!g_skipDataMigration)
       {
-         TCHAR table[32];
-		   _sntprintf(table, 32, _T("idata_%u"), id);
+         wchar_t table[32];
+		   nx_swprintf(table, 32, L"idata_%u", id);
 		   if (!MigrateTable(table) && !ignoreDataMigrationErrors)
 			   break;
       }
@@ -414,8 +414,8 @@ static bool MigrateDataTables(bool ignoreDataMigrationErrors)
 
       if (!g_skipDataMigration)
       {
-         TCHAR table[32];
-		   _sntprintf(table, 32, _T("tdata_%u"), id);
+         wchar_t table[32];
+		   nx_swprintf(table, 32, L"tdata_%u", id);
 		   if (!MigrateTable(table) && !ignoreDataMigrationErrors)
 			   break;
       }
@@ -434,9 +434,9 @@ static int s_storageClassNumbers[6] = { 0, 1, 2, 3, 4, 5 };
 /**
  * Load DCI storage classes
  */
-static bool LoadDCIStorageClasses(const TCHAR *table)
+static bool LoadDCIStorageClasses(const wchar_t *table)
 {
-   TCHAR query[256];
+   wchar_t query[256];
    _sntprintf(query, 256, _T("SELECT item_id,retention_time FROM %s"), table);
 
    DB_RESULT hResult = DBSelect(s_hdbSource, query);
@@ -470,7 +470,7 @@ static bool LoadDCIStorageClasses(const TCHAR *table)
  */
 static bool LoadDCIStorageClasses()
 {
-   return LoadDCIStorageClasses(_T("items")) && LoadDCIStorageClasses(_T("dc_tables"));
+   return LoadDCIStorageClasses(L"items") && LoadDCIStorageClasses(L"dc_tables");
 }
 
 /**
@@ -478,17 +478,17 @@ static bool LoadDCIStorageClasses()
  */
 static bool MigrateDataToSingleTable(uint32_t nodeId, bool tdata)
 {
-   const TCHAR *prefix = tdata ? _T("tdata") : _T("idata");
+   const wchar_t *prefix = tdata ? L"tdata" : L"idata";
    WriteToTerminalEx(_T("%s table \x1b[1m%s_%u\x1b[0m to \x1b[1m%s\x1b[0m\n"), s_import ? _T("Importing") : _T("Migrating"), prefix, nodeId, prefix);
 
    if (!DBBegin(g_dbHandle))
    {
-      _tprintf(_T("ERROR: unable to start transaction in target database\n"));
+      WriteToTerminal(L"ERROR: unable to start transaction in target database\n");
       return false;
    }
 
    bool success = false;
-   TCHAR buffer[256], errorText[DBDRV_MAX_ERROR_TEXT];
+   wchar_t buffer[256], errorText[DBDRV_MAX_ERROR_TEXT];
    _sntprintf(buffer, 256, _T("SELECT item_id,%s_timestamp,%s_value%s FROM %s_%u"),
             prefix, prefix, tdata ? _T("") : _T(",raw_value"), prefix, nodeId);
    DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(s_hdbSource, buffer, errorText);
@@ -510,8 +510,8 @@ static bool MigrateDataToSingleTable(uint32_t nodeId, bool tdata)
       int rows = 0, totalRows = 0;
       while(DBFetch(hResult))
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 0));
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 1));
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, DBGetFieldUInt32(hResult, 0));
+         DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, DBGetFieldInt64(hResult, 1));
          if (tdata)
          {
             DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DBGetField(hResult, 2, nullptr, 0), DB_BIND_DYNAMIC);
@@ -588,16 +588,16 @@ static inline StringBuffer BuildDataInsertQuery(bool tdata, const TCHAR *sclass)
  */
 bool MigrateDataToSingleTable_TSDB(DB_HANDLE hdbSource, uint32_t nodeId, bool tdata)
 {
-   const TCHAR *prefix = tdata ? _T("tdata") : _T("idata");
-   WriteToTerminalEx(_T("%s table \x1b[1m%s_%u\x1b[0m to \x1b[1m%s\x1b[0m\n"), s_import ? _T("Importing") : _T("Migrating"), prefix, nodeId, prefix);
+   const wchar_t *prefix = tdata ? L"tdata" : L"idata";
+   WriteToTerminalEx(L"%s table \x1b[1m%s_%u\x1b[0m to \x1b[1m%s\x1b[0m\n", s_import ? L"Importing" : L"Migrating", prefix, nodeId, prefix);
 
    bool success = false;
-   TCHAR buffer[256], errorText[DBDRV_MAX_ERROR_TEXT];
-   _sntprintf(buffer, 256, _T("SELECT item_id,%s_timestamp,%s_value%s FROM %s_%u"), prefix, prefix, tdata ? _T("") : _T(",raw_value"), prefix, nodeId);
+   wchar_t buffer[256], errorText[DBDRV_MAX_ERROR_TEXT];
+   nx_swprintf(buffer, 256, L"SELECT item_id,%s_timestamp,%s_value%s FROM %s_%u", prefix, prefix, tdata ? L"" : L",raw_value", prefix, nodeId);
    DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(hdbSource, buffer, errorText);
    if (hResult == nullptr)
    {
-      _tprintf(_T("ERROR: unable to read data from source table (%s)\n"), errorText);
+      WriteToTerminalEx(L"ERROR: unable to read data from source table (%s)\n", errorText);
       return false;
    }
 
@@ -616,27 +616,27 @@ bool MigrateDataToSingleTable_TSDB(DB_HANDLE hdbSource, uint32_t nodeId, bool td
    int rows = 0, totalRows = 0;
    while(DBFetch(hResult))
    {
-      uint32_t dciId = DBGetFieldULong(hResult, 0);
+      uint32_t dciId = DBGetFieldUInt32(hResult, 0);
       int *sclassPtr = s_dciStorageClasses.get(dciId);
       int sclass = (sclassPtr != nullptr) ? *sclassPtr : 0;
 
       StringBuffer& query = queries[sclass];
-      query.append(hasContent[sclass] ? _T(",(") : _T(" ("));
+      query.append(hasContent[sclass] ? L",(" : L" (");
       query.append(dciId);
-      query.append(_T(",to_timestamp("));
-      query.append(DBGetFieldULong(hResult, 1));
-      query.append(_T("),"));
-      TCHAR *value = DBGetField(hResult, 2, nullptr, 0);
+      query.append(L",ms_to_timestamptz(");
+      query.append(DBGetFieldInt64(hResult, 1));
+      query.append(L"),");
+      wchar_t *value = DBGetField(hResult, 2, nullptr, 0);
       query.append(DBPrepareString(g_dbHandle, value));
       MemFree(value);
       if (!tdata)
       {
-         query.append(_T(','));
-         TCHAR *value = DBGetField(hResult, 3, nullptr, 0);
+         query.append(L',');
+         value = DBGetField(hResult, 3, nullptr, 0);
          query.append(DBPrepareString(g_dbHandle, value));
          MemFree(value);
       }
-      query.append(_T(')'));
+      query.append(L')');
 
       hasContent[sclass] = true;
 
@@ -648,7 +648,7 @@ bool MigrateDataToSingleTable_TSDB(DB_HANDLE hdbSource, uint32_t nodeId, bool td
             if (!hasContent[i])
                continue;
 
-            queries[i].append(_T(" ON CONFLICT DO NOTHING"));
+            queries[i].append(L" ON CONFLICT DO NOTHING");
             DBBegin(g_dbHandle);
             if (DBQueryEx(g_dbHandle, queries[i], errorText))
             {
@@ -656,7 +656,7 @@ bool MigrateDataToSingleTable_TSDB(DB_HANDLE hdbSource, uint32_t nodeId, bool td
             }
             else
             {
-               _tprintf(_T("ERROR: unable to insert data to destination table (%s)\n"), errorText);
+               WriteToTerminalEx(L"ERROR: unable to insert data to destination table (%s)\n", errorText);
                DBRollback(g_dbHandle);
                success = false;
             }
@@ -675,7 +675,7 @@ bool MigrateDataToSingleTable_TSDB(DB_HANDLE hdbSource, uint32_t nodeId, bool td
       totalRows++;
       if ((totalRows & 0xFF) == 0)
       {
-         _tprintf(_T("%8d\r"), totalRows);
+         WriteToTerminalEx(L"%8d\r", totalRows);
          fflush(stdout);
       }
    }
@@ -687,7 +687,7 @@ bool MigrateDataToSingleTable_TSDB(DB_HANDLE hdbSource, uint32_t nodeId, bool td
          if (!hasContent[i])
             continue;
 
-         queries[i].append(_T(" ON CONFLICT DO NOTHING"));
+         queries[i].append(L" ON CONFLICT DO NOTHING");
          DBBegin(g_dbHandle);
          if (DBQueryEx(g_dbHandle, queries[i], errorText))
          {
@@ -695,7 +695,7 @@ bool MigrateDataToSingleTable_TSDB(DB_HANDLE hdbSource, uint32_t nodeId, bool td
          }
          else
          {
-            _tprintf(_T("ERROR: unable to insert data to destination table (%s)\n"), errorText);
+            WriteToTerminalEx(L"ERROR: unable to insert data to destination table (%s)\n", errorText);
             DBRollback(g_dbHandle);
             success = false;
          }
@@ -746,16 +746,16 @@ static bool MigrateSingleDataTableToTSDB(bool tdata)
       StringBuffer& query = queries[sclass];
       query.append(hasContent[sclass] ? _T(",(") : _T(" ("));
       query.append(dciId);
-      query.append(_T(",to_timestamp("));
-      query.append(DBGetFieldULong(hResult, 1));
+      query.append(L",ms_to_timestamptz(");
+      query.append(DBGetFieldInt64(hResult, 1));
       query.append(_T("),"));
-      TCHAR *value = DBGetField(hResult, 2, nullptr, 0);
+      wchar_t *value = DBGetField(hResult, 2, nullptr, 0);
       query.append(DBPrepareString(g_dbHandle, value));
       MemFree(value);
       if (!tdata)
       {
          query.append(_T(','));
-         TCHAR *value = DBGetField(hResult, 3, nullptr, 0);
+         value = DBGetField(hResult, 3, nullptr, 0);
          query.append(DBPrepareString(g_dbHandle, value));
          MemFree(value);
       }
@@ -771,7 +771,7 @@ static bool MigrateSingleDataTableToTSDB(bool tdata)
             if (!hasContent[i])
                continue;
 
-            queries[i].append(_T(" ON CONFLICT DO NOTHING"));
+            queries[i].append(L" ON CONFLICT DO NOTHING");
             DBBegin(g_dbHandle);
             if (DBQueryEx(g_dbHandle, queries[i], errorText))
             {
@@ -810,7 +810,7 @@ static bool MigrateSingleDataTableToTSDB(bool tdata)
          if (!hasContent[i])
             continue;
 
-         queries[i].append(_T(" ON CONFLICT DO NOTHING"));
+         queries[i].append(L" ON CONFLICT DO NOTHING");
          DBBegin(g_dbHandle);
          if (DBQueryEx(g_dbHandle, queries[i], errorText))
          {
@@ -882,7 +882,7 @@ static bool MigrateDataFromSingleTable(uint32_t nodeId, bool tdata)
    TCHAR buffer[256], errorText[DBDRV_MAX_ERROR_TEXT];
    if (s_sourceSyntax == DB_SYNTAX_TSDB)
    {
-      _sntprintf(buffer, 256, _T("SELECT item_id,date_part('epoch',%s_timestamp)::int,%s_value%s FROM %s WHERE item_id IN (SELECT item_id FROM %s WHERE node_id=%u)"),
+      _sntprintf(buffer, 256, _T("SELECT item_id,timestamptz_to_ms(%s_timestamp),%s_value%s FROM %s WHERE item_id IN (SELECT item_id FROM %s WHERE node_id=%u)"),
                prefix, prefix, tdata ? _T("") : _T(",raw_value"), prefix, tdata ? _T("dc_tables") : _T("items"), nodeId);
    }
    else
@@ -909,8 +909,8 @@ static bool MigrateDataFromSingleTable(uint32_t nodeId, bool tdata)
       int rows = 0, totalRows = 0;
       while(DBFetch(hResult))
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 0));
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 1));
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, DBGetFieldUInt32(hResult, 0));
+         DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, DBGetFieldInt64(hResult, 1));
          if (tdata)
          {
             DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DBGetField(hResult, 2, nullptr, 0), DB_BIND_DYNAMIC);
@@ -922,13 +922,13 @@ static bool MigrateDataFromSingleTable(uint32_t nodeId, bool tdata)
          }
          if (!SQLExecute(hStmt))
          {
-            _tprintf(_T("Failed input record:\n"));
+            WriteToTerminal(L"Failed input record:\n");
             int columnCount = DBGetColumnCount(hResult);
             for(int i = 0; i < columnCount; i++)
             {
                DBGetColumnName(hResult, i, buffer, 256);
-               TCHAR *value = DBGetField(hResult, i, nullptr, 0);
-               _tprintf(_T("   %s = \"%s\"\n"), buffer, CHECK_NULL(value));
+               wchar_t *value = DBGetField(hResult, i, nullptr, 0);
+               WriteToTerminalEx(L"   %s = \"%s\"\n", buffer, CHECK_NULL(value));
                MemFree(value);
             }
             success = false;
@@ -946,7 +946,7 @@ static bool MigrateDataFromSingleTable(uint32_t nodeId, bool tdata)
          totalRows++;
          if ((totalRows & 0xFF) == 0)
          {
-            _tprintf(_T("%8d\r"), totalRows);
+            WriteToTerminalEx(L"%8d\r", totalRows);
             fflush(stdout);
          }
       }
@@ -959,7 +959,7 @@ static bool MigrateDataFromSingleTable(uint32_t nodeId, bool tdata)
    }
    else
    {
-      _tprintf(_T("ERROR: cannot prepare INSERT statement (%s)\n"), errorText);
+      WriteToTerminalEx(L"ERROR: cannot prepare INSERT statement (%s)\n", errorText);
       DBRollback(g_dbHandle);
    }
    DBFreeResult(hResult);
@@ -1019,7 +1019,7 @@ static bool MigrateTableCallback(const TCHAR *table, void *context)
    auto lists = static_cast<std::pair<const StringList*, const StringList*>*>(context);
    if (lists->first->contains(table) || (!lists->second->isEmpty() && !lists->second->contains(table)))
    {
-      WriteToTerminalEx(_T("Skipping table \x1b[1m%s\x1b[0m\n"), table);
+      WriteToTerminalEx(L"Skipping table \x1b[1m%s\x1b[0m\n", table);
       return true;
    }
    return MigrateTable(table);
@@ -1055,7 +1055,7 @@ static bool ImportOrMigrateDatabase(const StringList& excludedTables, const Stri
              excludedTables.contains(table) ||
              (!includedTables.isEmpty() && !includedTables.contains(table)))
          {
-            WriteToTerminalEx(_T("Skipping table \x1b[1m%s\x1b[0m\n"), table);
+            WriteToTerminalEx(L"Skipping table \x1b[1m%s\x1b[0m\n", table);
             continue;
          }
 
@@ -1157,38 +1157,38 @@ cleanup:
 /**
  * Migrate database
  */
-void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, const StringList& excludedTables, const StringList& includedTables, bool ignoreDataMigrationErrors)
+void MigrateDatabase(const wchar_t *sourceConfig, wchar_t *destConfFields, const StringList& excludedTables, const StringList& includedTables, bool ignoreDataMigrationErrors)
 {
    // Load source config
 	Config config;
-	if (!config.loadIniConfig(sourceConfig, _T("server")) || !config.parseTemplate(_T("server"), m_cfgTemplate))
+	if (!config.loadIniConfig(sourceConfig, L"server") || !config.parseTemplate(L"server", m_cfgTemplate))
    {
-      _tprintf(_T("Error loading source configuration from %s\n"), sourceConfig);
+      WriteToTerminalEx(L"Error loading source configuration from %s\n", sourceConfig);
       return;
    }
 
-	TCHAR sourceConfFields[2048];
-	_sntprintf(sourceConfFields, 2048, _T("\tDriver: %s\n\tDB Name: %s\n\tDB Server: %s\n\tDB Login: %s"), s_dbDriver, s_dbName, s_dbServer, s_dbLogin);
+	wchar_t sourceConfFields[2048];
+	nx_swprintf(sourceConfFields, 2048, L"\tDriver: %s\n\tDB Name: %s\n\tDB Server: %s\n\tDB Login: %s", s_dbDriver, s_dbName, s_dbServer, s_dbLogin);
 
 	StringBuffer options;
 	if (g_dataOnlyMigration)
 	{
-	   options.append(_T("\tData only migration"));
+	   options.append(L"\tData only migration");
 	}
 	else
 	{
-	   options.append(_T("\tSkip collected data........: "));
-	   options.append(g_skipDataMigration ? _T("yes\n") : _T("no\n"));
-      options.append(_T("\tSkip data collection schema: "));
-      options.append(g_skipDataSchemaMigration ? _T("yes") : _T("no"));
+	   options.append(L"\tSkip collected data........: ");
+	   options.append(g_skipDataMigration ? L"yes\n" : L"no\n");
+      options.append(L"\tSkip data collection schema: ");
+      options.append(g_skipDataSchemaMigration ? L"yes" : L"no");
       if (!includedTables.isEmpty())
       {
-         options.append(_T("\n\tMigrate only these tables..: "));
+         options.append(L"\n\tMigrate only these tables..: ");
          options.appendPreallocated(includedTables.join(_T(", ")));
       }
       else if (!excludedTables.isEmpty())
       {
-         options.append(_T("\n\tSkip tables................: "));
+         options.append(L"\n\tSkip tables................: ");
          options.appendPreallocated(excludedTables.join(_T(", ")));
       }
 	}
