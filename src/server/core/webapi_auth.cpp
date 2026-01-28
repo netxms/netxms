@@ -46,59 +46,6 @@ struct LoginRequest
 static SynchronizedHashMap<uuid, LoginRequest> s_pendingLoginRequests(Ownership::False);
 
 /**
- * Login attempt tracker for rate limiting
- */
-struct LoginAttemptTracker
-{
-   time_t firstAttempt;
-   int attemptCount;
-   time_t lockoutUntil;
-};
-
-static SynchronizedHashMap<InetAddress, LoginAttemptTracker> s_loginAttempts(Ownership::True);
-static const int MAX_LOGIN_ATTEMPTS_PER_MINUTE = 5;
-static const int LOGIN_LOCKOUT_DURATION = 300;  // 5 minutes
-
-/**
- * Check login rate limit for given client address
- */
-static bool CheckLoginRateLimit(const InetAddress& clientAddr)
-{
-   time_t now = time(nullptr);
-   LoginAttemptTracker *tracker = s_loginAttempts.get(clientAddr);
-
-   if (tracker == nullptr)
-   {
-      tracker = new LoginAttemptTracker();
-      tracker->firstAttempt = now;
-      tracker->attemptCount = 1;
-      tracker->lockoutUntil = 0;
-      s_loginAttempts.set(clientAddr, tracker);
-      return true;
-   }
-
-   if (tracker->lockoutUntil > now)
-      return false;  // Still locked out
-
-   if (now - tracker->firstAttempt > 60)
-   {
-      // Reset counter after 1 minute window
-      tracker->firstAttempt = now;
-      tracker->attemptCount = 1;
-      return true;
-   }
-
-   tracker->attemptCount++;
-   if (tracker->attemptCount > MAX_LOGIN_ATTEMPTS_PER_MINUTE)
-   {
-      tracker->lockoutUntil = now + LOGIN_LOCKOUT_DURATION;
-      return false;
-   }
-
-   return true;
-}
-
-/**
  * Scheduled task for checking pending login requests
  */
 void CheckPendingLoginRequests(const shared_ptr<ScheduledTaskParameters>& parameters)
@@ -194,14 +141,6 @@ static int Process2FAResponse(Context *context)
  */
 int H_Login(Context *context)
 {
-   InetAddress clientAddr = context->getClientAddress();
-   if (!CheckLoginRateLimit(clientAddr))
-   {
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 4, _T("Login rate limit exceeded for %s"), clientAddr.toString().cstr());
-      context->setErrorResponse("Too many login attempts. Please try again later.");
-      return 429;  // Too Many Requests
-   }
-
    json_t *request = context->getRequestDocument();
    if (request == nullptr)
    {
