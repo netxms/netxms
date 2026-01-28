@@ -59,52 +59,52 @@ static bool H_UpgradeFromV27()
  *   %(name) -> %(in:name) (where name is not nl, tab, or starts with in:)
  * Returns nullptr if no transformation needed
  */
-static TCHAR *TransformMacroText(const TCHAR *text)
+static wchar_t *TransformMacroText(const wchar_t *text)
 {
    if (text == nullptr)
       return nullptr;
 
    // Check if transformation is needed
-   bool hasBackslash = (_tcschr(text, _T('\\')) != nullptr);
-   bool hasInputFieldMacro = (_tcsstr(text, _T("%(")) != nullptr);
+   bool hasBackslash = (wcschr(text, L'\\') != nullptr);
+   bool hasInputFieldMacro = (wcsstr(text, L"%(") != nullptr);
    if (!hasBackslash && !hasInputFieldMacro)
       return nullptr;
 
    StringBuffer output;
    for (const TCHAR *p = text; *p != 0; p++)
    {
-      if (*p == _T('\\') && *(p + 1) != 0)
+      if (*p == L'\\' && *(p + 1) != 0)
       {
          // Handle escape sequences
          p++;
          switch (*p)
          {
-            case _T('\\'):
-               output.append(_T('\\'));
+            case L'\\':
+               output.append(L'\\');
                break;
             case _T('t'):
-               output.append(_T("%(tab)"));
+               output.append(L"%(tab)");
                break;
             case _T('n'):
-               output.append(_T("%(nl)"));
+               output.append(L"%(nl)");
                break;
             default:
                output.append(*p);
                break;
          }
       }
-      else if (*p == _T('%') && *(p + 1) == _T('('))
+      else if (*p == L'%' && *(p + 1) == L'(')
       {
          // Handle %(xxx) macros - convert to %(in:xxx)
-         const TCHAR *start = p + 2;
-         const TCHAR *end = _tcschr(start, _T(')'));
+         const wchar_t *start = p + 2;
+         const wchar_t *end = wcschr(start, L')');
          if (end != nullptr)
          {
             // Convert %(name) to %(in:name)
-            output.append(_T("%(in:"));
+            output.append(L"%(in:");
             while (start < end)
                output.append(*start++);
-            output.append(_T(')'));
+            output.append(L')');
             p = end;  // Skip to closing parenthesis
          }
          else
@@ -119,7 +119,7 @@ static TCHAR *TransformMacroText(const TCHAR *text)
    }
 
    // Return nullptr if nothing changed
-   if (!_tcscmp(text, output.cstr()))
+   if (!wcscmp(text, output.cstr()))
       return nullptr;
 
    return MemCopyString(output.cstr());
@@ -128,17 +128,17 @@ static TCHAR *TransformMacroText(const TCHAR *text)
 /**
  * Migrate macro text in a VARCHAR column with single-column primary key
  */
-static bool MigrateMacroTextInColumn(const TCHAR *table, const TCHAR *idCol, const TCHAR *col, const wchar_t *cond = nullptr)
+static bool MigrateMacroTextInColumn(const wchar_t *table, const wchar_t *idCol, const wchar_t *col, const wchar_t *cond = nullptr)
 {
-   TCHAR query[512];
-   _sntprintf(query, 512, _T("SELECT %s,%s FROM %s WHERE %s LIKE '%%\\%%' OR %s LIKE '%%|%%(%%' ESCAPE '|'%s%s"),
+   wchar_t query[512];
+   nx_swprintf(query, 512, L"SELECT %s,%s FROM %s WHERE %s LIKE '%%\\%%' OR %s LIKE '%%|%%(%%' ESCAPE '|'%s%s",
       idCol, col, table, col, col, (cond != nullptr) ? L" AND " : L"", (cond != nullptr) ? cond : L"");
    DB_RESULT hResult = SQLSelect(query);
    if (hResult == nullptr)
       return false;
 
-   TCHAR updateQuery[512];
-   _sntprintf(updateQuery, 512, _T("UPDATE %s SET %s=? WHERE %s=?"), table, col, idCol);
+   wchar_t updateQuery[512];
+   nx_swprintf(updateQuery, 512, L"UPDATE %s SET %s=? WHERE %s=?", table, col, idCol);
    DB_STATEMENT hStmt = DBPrepare(g_dbHandle, updateQuery);
    if (hStmt == nullptr)
    {
@@ -150,8 +150,8 @@ static bool MigrateMacroTextInColumn(const TCHAR *table, const TCHAR *idCol, con
    bool success = true;
    for (int i = 0; i < count && success; i++)
    {
-      TCHAR *value = DBGetField(hResult, i, 1, nullptr, 0);
-      TCHAR *transformed = TransformMacroText(value);
+      wchar_t *value = DBGetField(hResult, i, 1, nullptr, 0);
+      wchar_t *transformed = TransformMacroText(value);
       if (transformed != nullptr)
       {
          uint32_t id = DBGetFieldULong(hResult, i, 0);
@@ -170,16 +170,17 @@ static bool MigrateMacroTextInColumn(const TCHAR *table, const TCHAR *idCol, con
 /**
  * Migrate macro text in a TEXT/CLOB column with single-column primary key
  */
-static bool MigrateMacroTextInTextColumn(const TCHAR *table, const TCHAR *idCol, const TCHAR *col)
+static bool MigrateMacroTextInTextColumn(const wchar_t *table, const wchar_t *idCol, const wchar_t *col, const wchar_t *cond = nullptr, bool guidId = false)
 {
-   TCHAR query[512];
-   _sntprintf(query, 512, _T("SELECT %s,%s FROM %s"), idCol, col, table);
+   wchar_t query[512];
+   nx_swprintf(query, 512, L"SELECT %s,%s FROM %s%s%s", idCol, col, table,
+      (cond != nullptr) ? L" WHERE " : L"", (cond != nullptr) ? cond : L"");
    DB_RESULT hResult = SQLSelect(query);
    if (hResult == nullptr)
       return false;
 
-   TCHAR updateQuery[512];
-   _sntprintf(updateQuery, 512, _T("UPDATE %s SET %s=? WHERE %s=?"), table, col, idCol);
+   wchar_t updateQuery[512];
+   nx_swprintf(updateQuery, 512, L"UPDATE %s SET %s=? WHERE %s=?", table, col, idCol);
    DB_STATEMENT hStmt = DBPrepare(g_dbHandle, updateQuery);
    if (hStmt == nullptr)
    {
@@ -191,15 +192,17 @@ static bool MigrateMacroTextInTextColumn(const TCHAR *table, const TCHAR *idCol,
    bool success = true;
    for (int i = 0; i < count && success; i++)
    {
-      TCHAR *value = DBGetField(hResult, i, 1, nullptr, 0);
+      wchar_t *value = DBGetField(hResult, i, 1, nullptr, 0);
       if (value != nullptr && (_tcschr(value, _T('\\')) != nullptr || _tcsstr(value, _T("%(")) != nullptr))
       {
-         TCHAR *transformed = TransformMacroText(value);
+         wchar_t *transformed = TransformMacroText(value);
          if (transformed != nullptr)
          {
-            uint32_t id = DBGetFieldULong(hResult, i, 0);
             DBBind(hStmt, 1, DB_SQLTYPE_TEXT, transformed, DB_BIND_DYNAMIC);
-            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, id);
+            if (guidId)
+               DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, DBGetFieldGUID(hResult, i, 0));
+            else
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
             success = SQLExecute(hStmt);
          }
       }
@@ -215,20 +218,20 @@ static bool MigrateMacroTextInTextColumn(const TCHAR *table, const TCHAR *idCol,
  * Migrate macro text in a column for tables with composite primary keys
  * Uses database-specific row identification (rowid/ctid/etc.)
  */
-static bool MigrateMacroTextInColumnByRowid(const TCHAR *table, const TCHAR *col)
+static bool MigrateMacroTextInColumnByRowid(const wchar_t *table, const wchar_t *col)
 {
-   const TCHAR *rowidColumn;
+   const wchar_t *rowidColumn;
    switch (g_dbSyntax)
    {
       case DB_SYNTAX_PGSQL:
       case DB_SYNTAX_TSDB:
-         rowidColumn = _T("ctid");
+         rowidColumn = L"ctid";
          break;
       case DB_SYNTAX_ORACLE:
-         rowidColumn = _T("rowid");
+         rowidColumn = L"rowid";
          break;
       case DB_SYNTAX_SQLITE:
-         rowidColumn = _T("rowid");
+         rowidColumn = L"rowid";
          break;
       case DB_SYNTAX_MYSQL:
          // MySQL doesn't have a built-in rowid for all tables
@@ -240,15 +243,11 @@ static bool MigrateMacroTextInColumnByRowid(const TCHAR *table, const TCHAR *col
          break;
    }
 
-   TCHAR query[512];
+   wchar_t query[512];
    if (rowidColumn != nullptr)
-   {
-      _sntprintf(query, 512, _T("SELECT %s,%s FROM %s WHERE %s LIKE '%%\\%%' OR %s LIKE '%%|%%(%%' ESCAPE '|'"), rowidColumn, col, table, col, col);
-   }
+      nx_swprintf(query, 512, L"SELECT %s,%s FROM %s WHERE %s LIKE '%%\\%%' OR %s LIKE '%%|%%(%%' ESCAPE '|'", rowidColumn, col, table, col, col);
    else
-   {
-      _sntprintf(query, 512, _T("SELECT %s FROM %s WHERE %s LIKE '%%\\%%' OR %s LIKE '%%|%%(%%' ESCAPE '|'"), col, table, col, col);
-   }
+      nx_swprintf(query, 512, L"SELECT %s FROM %s WHERE %s LIKE '%%\\%%' OR %s LIKE '%%|%%(%%' ESCAPE '|'", col, table, col, col);
 
    DB_RESULT hResult = SQLSelect(query);
    if (hResult == nullptr)
@@ -259,8 +258,8 @@ static bool MigrateMacroTextInColumnByRowid(const TCHAR *table, const TCHAR *col
 
    if (rowidColumn != nullptr)
    {
-      TCHAR updateQuery[512];
-      _sntprintf(updateQuery, 512, _T("UPDATE %s SET %s=? WHERE %s=?"), table, col, rowidColumn);
+      wchar_t updateQuery[512];
+      nx_swprintf(updateQuery, 512, L"UPDATE %s SET %s=? WHERE %s=?", table, col, rowidColumn);
       DB_STATEMENT hStmt = DBPrepare(g_dbHandle, updateQuery);
       if (hStmt == nullptr)
       {
@@ -270,10 +269,10 @@ static bool MigrateMacroTextInColumnByRowid(const TCHAR *table, const TCHAR *col
 
       for (int i = 0; i < count && success; i++)
       {
-         TCHAR rowid[64];
+         wchar_t rowid[64];
          DBGetField(hResult, i, 0, rowid, 64);
-         TCHAR *value = DBGetField(hResult, i, 1, nullptr, 0);
-         TCHAR *transformed = TransformMacroText(value);
+         wchar_t *value = DBGetField(hResult, i, 1, nullptr, 0);
+         wchar_t *transformed = TransformMacroText(value);
          if (transformed != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, transformed, DB_BIND_DYNAMIC);
@@ -289,8 +288,8 @@ static bool MigrateMacroTextInColumnByRowid(const TCHAR *table, const TCHAR *col
    {
       // For MySQL: update using the value itself as identifier (assumes unique or we update all matches)
       // This is less efficient but works for simple cases
-      TCHAR updateQuery[1024];
-      _sntprintf(updateQuery, 1024, _T("UPDATE %s SET %s=? WHERE %s=?"), table, col, col);
+      wchar_t updateQuery[1024];
+      nx_swprintf(updateQuery, 1024, L"UPDATE %s SET %s=? WHERE %s=?", table, col, col);
       DB_STATEMENT hStmt = DBPrepare(g_dbHandle, updateQuery);
       if (hStmt == nullptr)
       {
@@ -300,12 +299,12 @@ static bool MigrateMacroTextInColumnByRowid(const TCHAR *table, const TCHAR *col
 
       for (int i = 0; i < count && success; i++)
       {
-         TCHAR *value = DBGetField(hResult, i, 0, nullptr, 0);
-         TCHAR *transformed = TransformMacroText(value);
+         wchar_t *value = DBGetField(hResult, i, 0, nullptr, 0);
+         wchar_t *transformed = TransformMacroText(value);
          if (transformed != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, transformed, DB_BIND_DYNAMIC);
-            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, value, DB_BIND_TRANSIENT);
+            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
             success = SQLExecute(hStmt);
          }
          MemFree(value);
@@ -370,6 +369,9 @@ static bool H_UpgradeFromV26()
 
    // Agent packages
    CHK_EXEC(MigrateMacroTextInColumn(L"agent_pkg", L"pkg_id", L"command", L"command LIKE '@%'"));
+
+   // Agent policies
+   CHK_EXEC(MigrateMacroTextInTextColumn(L"ap_common", L"guid", L"file_content", (g_dbSyntax == DB_SYNTAX_ORACLE) ? L"BITAND(flags,1) = 1" : L"(flags & 1) = 1", true));
 
    // Dashboard templates
    CHK_EXEC(MigrateMacroTextInColumn(_T("dashboard_templates"), _T("id"), _T("name_template")));
