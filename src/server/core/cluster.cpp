@@ -34,6 +34,7 @@ Cluster::Cluster() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable
 	m_dwNumResources = 0;
 	m_pResourceList = nullptr;
 	m_zoneUIN = 0;
+	m_removeDCIOnDelete = true;
 }
 
 /**
@@ -45,6 +46,7 @@ Cluster::Cluster(const TCHAR *pszName, int32_t zoneUIN) : super(pszName, Pollabl
 	m_dwNumResources = 0;
 	m_pResourceList = nullptr;
 	m_zoneUIN = zoneUIN;
+	m_removeDCIOnDelete = true;
 }
 
 /**
@@ -53,6 +55,22 @@ Cluster::Cluster(const TCHAR *pszName, int32_t zoneUIN) : super(pszName, Pollabl
 Cluster::~Cluster()
 {
 	MemFree(m_pResourceList);
+}
+
+/**
+ * Prepare cluster for deletion
+ */
+void Cluster::prepareForDeletion()
+{
+   readLockChildList();
+   for(int i = 0; i < getChildList().size(); i++)
+   {
+      NetObj *object = getChildList().get(i);
+      if (object->isDataCollectionTarget())
+         queueRemoveFromTarget(object->getId(), m_removeDCIOnDelete);
+   }
+   unlockChildList();
+   super::prepareForDeletion();
 }
 
 /**

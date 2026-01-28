@@ -1166,15 +1166,29 @@ public class ObjectContextMenuManager extends MenuManager
    {
       final Object[] objects = ((IStructuredSelection)selectionProvider.getSelection()).toArray();
 
-      // Check if deleting templates
+      // Check if deleting templates or clusters with member nodes
       boolean hasTemplates = false;
+      boolean hasClustersWithMembers = false;
       for(Object obj : objects)
       {
          if (obj instanceof Template)
          {
             hasTemplates = true;
-            break;
          }
+         else if (obj instanceof Cluster)
+         {
+            Cluster cluster = (Cluster)obj;
+            for(AbstractObject child : cluster.getChildrenAsArray())
+            {
+               if (child instanceof DataCollectionTarget)
+               {
+                  hasClustersWithMembers = true;
+                  break;
+               }
+            }
+         }
+         if (hasTemplates && hasClustersWithMembers)
+            break;
       }
 
       final boolean removeDci;
@@ -1182,6 +1196,14 @@ public class ObjectContextMenuManager extends MenuManager
       {
          String templateName = (objects.length == 1) ? ((AbstractObject)objects[0]).getObjectName() : i18n.tr("multiple templates");
          TemplateDeleteDialog dlg = new TemplateDeleteDialog(view.getWindow().getShell(), templateName);
+         if (dlg.open() != Window.OK)
+            return;
+         removeDci = dlg.isRemoveDci();
+      }
+      else if (hasClustersWithMembers)
+      {
+         String clusterName = (objects.length == 1) ? ((AbstractObject)objects[0]).getObjectName() : i18n.tr("multiple clusters");
+         TemplateDeleteDialog dlg = new TemplateDeleteDialog(view.getWindow().getShell(), clusterName, true);
          if (dlg.open() != Window.OK)
             return;
          removeDci = dlg.isRemoveDci();
@@ -1204,7 +1226,7 @@ public class ObjectContextMenuManager extends MenuManager
             for(int i = 0; i < objects.length; i++)
             {
                AbstractObject obj = (AbstractObject)objects[i];
-               if (obj instanceof Template)
+               if ((obj instanceof Template) || (obj instanceof Cluster))
                   session.deleteObject(obj.getObjectId(), removeDci);
                else
                   session.deleteObject(obj.getObjectId());

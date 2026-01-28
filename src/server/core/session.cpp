@@ -6900,11 +6900,16 @@ void ClientSession::deleteObject(const NXCPMessage& request)
 				}
 				else
 				{
-               // For templates, set the DCI removal option before deletion
+               // For templates and clusters, set the DCI removal option before deletion
                if (object->getObjectClass() == OBJECT_TEMPLATE)
                {
                   bool removeDCI = request.isFieldExist(VID_REMOVE_DCI) ? request.getFieldAsBoolean(VID_REMOVE_DCI) : true;
                   static_cast<Template&>(*object).setRemoveDCIOnDelete(removeDCI);
+               }
+               else if (object->getObjectClass() == OBJECT_CLUSTER)
+               {
+                  bool removeDCI = request.isFieldExist(VID_REMOVE_DCI) ? request.getFieldAsBoolean(VID_REMOVE_DCI) : true;
+                  static_cast<Cluster&>(*object).setRemoveDCIOnDelete(removeDCI);
                }
                ThreadPoolExecute(g_clientThreadPool, DeleteObjectWorker, object);
                response.setField(VID_RCC, RCC_SUCCESS);

@@ -31,27 +31,41 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Dialog for confirming template deletion and selecting DCI handling
+ * Dialog for confirming template or cluster deletion and selecting DCI handling
  */
 public class TemplateDeleteDialog extends Dialog
 {
    private final I18n i18n = LocalizationHelper.getI18n(TemplateDeleteDialog.class);
 
-   private String templateName;
+   private String objectName;
+   private boolean isCluster;
    private boolean removeDci;
    private Button radioRemove;
    private Button radioUnbind;
 
    /**
-    * Constructor
+    * Constructor for template deletion
     *
     * @param parentShell parent shell
     * @param templateName name of template being deleted
     */
    public TemplateDeleteDialog(Shell parentShell, String templateName)
    {
+      this(parentShell, templateName, false);
+   }
+
+   /**
+    * Constructor
+    *
+    * @param parentShell parent shell
+    * @param objectName name of object being deleted
+    * @param isCluster true if deleting cluster, false if deleting template
+    */
+   public TemplateDeleteDialog(Shell parentShell, String objectName, boolean isCluster)
+   {
       super(parentShell);
-      this.templateName = templateName;
+      this.objectName = objectName;
+      this.isCluster = isCluster;
    }
 
    /**
@@ -61,7 +75,7 @@ public class TemplateDeleteDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText(i18n.tr("Delete Template"));
+      newShell.setText(isCluster ? i18n.tr("Delete Cluster") : i18n.tr("Delete Template"));
    }
 
    /**
@@ -77,20 +91,23 @@ public class TemplateDeleteDialog extends Dialog
       controls.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       final Label label = new Label(controls, SWT.WRAP);
-      label.setText(String.format(i18n.tr("You are about to delete template \"%s\". Please select how to handle DCIs created from this template on all bound objects:"), templateName));
+      if (isCluster)
+         label.setText(String.format(i18n.tr("You are about to delete cluster \"%s\". Please select how to handle DCIs created from this cluster on all member nodes:"), objectName));
+      else
+         label.setText(String.format(i18n.tr("You are about to delete template \"%s\". Please select how to handle DCIs created from this template on all bound objects:"), objectName));
       GridData gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       gd.widthHint = 400;
       label.setLayoutData(gd);
 
       radioRemove = new Button(controls, SWT.RADIO);
-      radioRemove.setText(i18n.tr("&Remove DCIs from all objects"));
+      radioRemove.setText(isCluster ? i18n.tr("&Remove DCIs from all member nodes") : i18n.tr("&Remove DCIs from all objects"));
       radioRemove.setSelection(true);
       gd = new GridData();
       gd.horizontalIndent = 10;
       radioRemove.setLayoutData(gd);
 
       radioUnbind = new Button(controls, SWT.RADIO);
-      radioUnbind.setText(i18n.tr("&Unbind DCIs from template (keep as standalone)"));
+      radioUnbind.setText(isCluster ? i18n.tr("&Unbind DCIs from cluster (keep as standalone)") : i18n.tr("&Unbind DCIs from template (keep as standalone)"));
       radioUnbind.setSelection(false);
       gd = new GridData();
       gd.horizontalIndent = 10;
@@ -110,7 +127,7 @@ public class TemplateDeleteDialog extends Dialog
    }
 
    /**
-    * Check if DCIs should be removed on template deletion
+    * Check if DCIs should be removed on deletion
     *
     * @return true if DCIs should be removed, false if they should be detached
     */

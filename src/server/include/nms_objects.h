@@ -3191,6 +3191,7 @@ protected:
    uint32_t m_dwNumResources;
    CLUSTER_RESOURCE *m_pResourceList;
    int32_t m_zoneUIN;
+   bool m_removeDCIOnDelete;
 
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageUnlocked(NXCPMessage *msg, uint32_t userId) override;
@@ -3217,6 +3218,7 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool showThresholdSummary() const override;
    virtual bool isContainerObject() const override { return true; }
+   virtual void prepareForDeletion() override;
 
    virtual void enterMaintenanceMode(uint32_t userId, const TCHAR *comments) override;
    virtual void leaveMaintenanceMode(uint32_t userId) override;
@@ -3239,6 +3241,8 @@ public:
    bool addNode(const shared_ptr<Node>& node);
    void removeNode(const shared_ptr<Node>& node);
    void changeZone(uint32_t newZoneUIN);
+
+   void setRemoveDCIOnDelete(bool removeDCI) { m_removeDCIOnDelete = removeDCI; }
 };
 
 #ifdef _WIN32
