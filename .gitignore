@@ -341,3 +341,14 @@ __pycache__/
 *.egg-info/
 venv/
 .nxadm_history
+
+# Windows MinGW Build System
+/config.mingw
+/out/
+*.dll
+*.dll.a
+*.exe
+*.ddr
+*.ncd
+*.ndd
+.depend
