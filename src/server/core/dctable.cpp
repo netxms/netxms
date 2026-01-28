@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -341,7 +341,7 @@ bool DCTable::processNewValue(Timestamp timestamp, const shared_ptr<Table>& valu
 	      if (g_dbSyntax == DB_SYNTAX_TSDB)
 	      {
 	         wchar_t query[256];
-	         _sntprintf(query, 256, _T("INSERT INTO tdata_sc_%s (item_id,tdata_timestamp,tdata_value) VALUES (?,to_timestamp(?),?)"),
+	         _sntprintf(query, 256, _T("INSERT INTO tdata_sc_%s (item_id,tdata_timestamp,tdata_value) VALUES (?,ms_to_timestamptz(?),?)"),
 	                  getStorageClassName(getStorageClass()));
             hStmt = DBPrepare(hdb, query);
 	      }
