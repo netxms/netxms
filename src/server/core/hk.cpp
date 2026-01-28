@@ -615,7 +615,7 @@ static void HouseKeeper()
       GetEventProcessingPolicy()->validateConfig();
 
       uint32_t elapsedTime = static_cast<uint32_t>(time(nullptr) - cycleStartTime);
-      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Housekeeper run completed (elapsed time %u milliseconds)"), elapsedTime);
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Housekeeper run completed (elapsed time %u seconds)"), elapsedTime);
       EventBuilder(EVENT_HOUSEKEEPER_COMPLETED, g_dwMgmtNode)
          .param(_T("elapsedTime"), elapsedTime)
          .post();
