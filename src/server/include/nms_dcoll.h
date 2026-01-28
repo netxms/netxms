@@ -352,7 +352,7 @@ protected:
 
 	StringBuffer expandMacros(const TCHAR *src, size_t dstLen);
 
-   void setTransformationScript(const TCHAR *source);
+   void setTransformationScriptInternal(const wchar_t *source);
 
 	virtual bool isCacheLoaded();
    virtual shared_ptr<DCObjectInfo> createDescriptorInternal() const;
@@ -492,6 +492,9 @@ public:
    void setRetentionType(BYTE retentionType);
    void setRetention(const TCHAR *retention);
    void setThresholdDisableEndTime(time_t thresholdDisableEndTime);
+   void setFlag(uint32_t flag) { lock(); m_flags |= flag; unlock(); }
+   void clearFlag(uint32_t flag) { lock(); m_flags &= ~flag; unlock(); }
+   void setTransformationScript(const wchar_t *source) { lock(); setTransformationScriptInternal(source); unlock(); }
 
 	static int m_defaultRetentionTime;
 	static int m_defaultPollingInterval;
@@ -657,11 +660,16 @@ public:
    uint32_t getAllThresholdRearmEvent() const { return m_allThresholdsRearmEvent; }
    uint32_t postThresholdRepeatEvent(uint32_t thresholdId, uint64_t activationSequence);
    uint32_t scheduleThresholdRepeatEvents();
+   void addThreshold(Threshold *pThreshold);
+   bool deleteThresholdById(uint32_t thresholdId);
+   void deleteAllThresholds();
 
 	void setUnitName(const SharedString &unitName) { SetAttributeWithLock(m_unitName, unitName, m_mutex); }
 	void setAllThresholdsFlag(BOOL bFlag) { if (bFlag) m_flags |= DCF_ALL_THRESHOLDS; else m_flags &= ~DCF_ALL_THRESHOLDS; }
-	void addThreshold(Threshold *pThreshold);
-	void deleteAllThresholds();
+	void setDeltaCalculation(BYTE method) { m_deltaCalculation = method; }
+	void setSampleCount(int count) { m_sampleCount = count; }
+	void setMultiplier(int multiplier) { m_multiplier = multiplier; }
+	void setDataType(BYTE dataType) { m_dataType = dataType; }
 
 	void prepareForRecalc();
 	void recalculateValue(ItemValue &value);

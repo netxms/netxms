@@ -80,7 +80,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hRes
 	m_resourceId = DBGetFieldUInt32(hResult, row, 12);
 	m_sourceNode = DBGetFieldUInt32(hResult, row, 13);
 	m_perfTabSettings = DBGetFieldAsSharedString(hResult, row, 14);
-   setTransformationScript(DBGetFieldAsString(hResult, row, 15));
+	setTransformationScriptInternal(DBGetFieldAsString(hResult, row, 15));
    m_comments = DBGetFieldAsSharedString(hResult, row, 16);
    m_guid = DBGetFieldGUID(hResult, row, 17);
    m_instanceDiscoveryMethod = DBGetFieldUInt16(hResult, row, 18);

@@ -259,11 +259,11 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_pollingSessionId = -1;
    if (nxslV5)
    {
-      setTransformationScript(config->getSubEntryValue(_T("transformation")));
+      setTransformationScriptInternal(config->getSubEntryValue(_T("transformation")));
    }
    else
    {
-      setTransformationScript(NXSLConvertToV5(config->getSubEntryValue(_T("transformation"), 0 , _T(""))));
+      setTransformationScriptInternal(NXSLConvertToV5(config->getSubEntryValue(_T("transformation"), 0 , _T(""))));
    }
 
    // for compatibility with old format
@@ -343,7 +343,7 @@ DCObject::DCObject(json_t *json, const shared_ptr<DataCollectionOwner>& owner) :
    m_comments = json_object_get_string(json, "comments", _T(""));
    m_doForcePoll = false;
    m_pollingSessionId = -1;
-   setTransformationScript(json_object_get_string(json, "transformation", _T("")));
+   setTransformationScriptInternal(json_object_get_string(json, "transformation", _T("")));
 
    json_t *schedulesArray = json_object_get(json, "schedules");
    if (json_is_array(schedulesArray))
@@ -939,7 +939,7 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
    updateTimeIntervalsInternal();
 
    TCHAR *tmp = msg.getFieldAsString(VID_TRANSFORMATION_SCRIPT);
-   setTransformationScript(tmp);
+   setTransformationScriptInternal(tmp);
    MemFree(tmp);
 
    // Update schedules
@@ -1182,7 +1182,7 @@ bool DCObject::hasValue()
 /**
  * Set new transformation script
  */
-void DCObject::setTransformationScript(const TCHAR *source)
+void DCObject::setTransformationScriptInternal(const wchar_t *source)
 {
    if ((source != nullptr) && !IsBlankString(source))
    {
@@ -1284,11 +1284,11 @@ void DCObject::updateFromImport(ConfigEntry *config, bool nxslV5)
 
    if (nxslV5)
    {
-      setTransformationScript(config->getSubEntryValue(_T("transformation")));
+      setTransformationScriptInternal(config->getSubEntryValue(_T("transformation")));
    }
    else
    {
-      setTransformationScript(NXSLConvertToV5(config->getSubEntryValue(_T("transformation"), 0, _T(""))));
+      setTransformationScriptInternal(NXSLConvertToV5(config->getSubEntryValue(_T("transformation"), 0, _T(""))));
    }
 
    ConfigEntry *schedules = config->findEntry(_T("schedules"));
@@ -2162,7 +2162,7 @@ void DCObject::updateFromImport(json_t *json)
    updateTimeIntervalsInternal();
 
    String transformation = json_object_get_string(json, "transformation", _T(""));
-   setTransformationScript(transformation);
+   setTransformationScriptInternal(transformation);
 
    json_t *schedulesArray = json_object_get(json, "schedules");
    if (json_is_array(schedulesArray))

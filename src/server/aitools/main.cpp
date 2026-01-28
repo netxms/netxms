@@ -30,6 +30,11 @@ std::string F_ClearNotificationChannelQueue(json_t *arguments, uint32_t userId);
 std::string F_CreateIncident(json_t *arguments, uint32_t userId);
 std::string F_CreateIncidentFromAlarms(json_t *arguments, uint32_t userId);
 std::string F_CreateMetric(json_t *arguments, uint32_t userId);
+std::string F_EditMetric(json_t *arguments, uint32_t userId);
+std::string F_DeleteMetric(json_t *arguments, uint32_t userId);
+std::string F_GetThresholds(json_t *arguments, uint32_t userId);
+std::string F_AddThreshold(json_t *arguments, uint32_t userId);
+std::string F_DeleteThreshold(json_t *arguments, uint32_t userId);
 std::string F_EndMaintenance(json_t *arguments, uint32_t userId);
 std::string F_FindObjects(json_t *arguments, uint32_t userId);
 std::string F_GetEventProcessingAction(json_t *arguments, uint32_t userId);
@@ -193,7 +198,7 @@ static void CreateAssistantSkillList()
 {
    RegisterAIAssistantSkill(
       "data-collection",
-      "Provides comprehensive data collection management capabilities for NetXMS monitored infrastructure. Use this skill to create new metrics, monitor current values, analyze performance data, analyze historical data, detect trends and anomalies, and optimize performance monitoring across your IT environment. Essential for performance analysis, capacity planning, resource utilization monitoring, and troubleshooting performance issues.",
+      "Provides comprehensive data collection management capabilities for NetXMS monitored infrastructure. Use this skill to create, edit, and delete metrics, configure thresholds, monitor current values, analyze performance data, analyze historical data, detect trends and anomalies, and optimize performance monitoring across your IT environment. Essential for performance analysis, capacity planning, resource utilization monitoring, and troubleshooting performance issues.",
       "@data-collection.md",
       {
          AssistantFunction(
@@ -204,9 +209,37 @@ static void CreateAssistantSkillList()
                { "metric", "name of the metric to create (mandatory, meaning depends on the origin: metric name for agent, OID for SNMP, script name for script)" },
                { "description", "optional metric description, if not provided then name will be used" },
                { "origin", "data collection origin: agent, snmp, or script (default: agent)" },
-               { "dataType", "data type: int, unsigned-int, int64, unsigned-int64, counter32, counter64, float, string (default: string)" }
+               { "dataType", "data type: int, unsigned-int, int64, unsigned-int64, counter32, counter64, float, string (default: string)" },
+               { "pollingInterval", "polling interval in seconds (optional, uses system default if not specified)" },
+               { "retentionTime", "retention time in days (optional, uses system default if not specified)" },
+               { "deltaCalculation", "delta calculation: original, delta, averagePerSecond, averagePerMinute (default: original)" },
+               { "sampleCount", "number of samples for threshold functions (default: 1)" },
+               { "multiplier", "value multiplier (default: 0)" },
+               { "unitName", "unit name for display (optional)" },
+               { "status", "status: active, disabled (default: active)" },
+               { "anomalyDetection", "anomaly detection: none, iforest, ai, both (default: none)" }
             },
             F_CreateMetric),
+         AssistantFunction(
+            "edit-metric",
+            "Edit existing data collection item (metric) properties.",
+            {
+               { "object", "name or ID of an object (mandatory)" },
+               { "metric", "name or ID of the metric to edit (mandatory)" },
+               { "pollingInterval", "new polling interval in seconds (optional)" },
+               { "retentionTime", "new retention time in days (optional)" },
+               { "status", "new status: active, disabled (optional)" },
+               { "unitName", "new unit name for display (optional)" }
+            },
+            F_EditMetric),
+         AssistantFunction(
+            "delete-metric",
+            "Delete a data collection item (metric) and its historical data.",
+            {
+               { "object", "name or ID of an object (mandatory)" },
+               { "metric", "name or ID of the metric to delete (mandatory)" }
+            },
+            F_DeleteMetric),
          AssistantFunction(
             "get-metrics",
             "Get data collection items (metrics) and their current values for given object",
@@ -224,7 +257,40 @@ static void CreateAssistantSkillList()
                { "timeFrom", "start time (ISO format or negative number of minutes, like '-60' for an our ago)" },
                { "timeTo", "end time (optional, ISO format, defaults to now)" }
             },
-            F_GetHistoricalData)
+            F_GetHistoricalData),
+         AssistantFunction(
+            "get-thresholds",
+            "Get all thresholds configured on a data collection item (metric).",
+            {
+               { "object", "name or ID of an object (mandatory)" },
+               { "metric", "name or ID of the metric (mandatory)" }
+            },
+            F_GetThresholds),
+         AssistantFunction(
+            "add-threshold",
+            "Add a threshold to a data collection item for alerting when values exceed limits.",
+            {
+               { "object", "name or ID of an object (mandatory)" },
+               { "metric", "name or ID of the metric (mandatory)" },
+               { "value", "threshold value (mandatory)" },
+               { "function", "function: last, average, sum, meanDeviation, diff, error, script, absDeviation, anomaly (default: last)" },
+               { "operation", "operation: less, lessOrEqual, equal, greaterOrEqual, greater, notEqual, like, notLike (default: greaterOrEqual)" },
+               { "sampleCount", "sample count for function (default: 1)" },
+               { "activationEvent", "event code or name when threshold activates (default: SYS_THRESHOLD_REACHED)" },
+               { "deactivationEvent", "event code or name when threshold deactivates (default: SYS_THRESHOLD_REARMED)" },
+               { "repeatInterval", "repeat interval in seconds, -1=default, 0=off (default: -1)" },
+               { "script", "NXSL script for script function (optional)" }
+            },
+            F_AddThreshold),
+         AssistantFunction(
+            "delete-threshold",
+            "Delete a threshold from a data collection item.",
+            {
+               { "object", "name or ID of an object (mandatory)" },
+               { "metric", "name or ID of the metric (mandatory)" },
+               { "thresholdId", "threshold ID to delete (mandatory)" }
+            },
+            F_DeleteThreshold)
       }
    );
 

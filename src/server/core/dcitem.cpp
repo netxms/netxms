@@ -208,7 +208,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
    m_retentionTime = DBGetFieldInt32(hResult, row, 5);
    m_status = (BYTE)DBGetFieldLong(hResult, row, 6);
    m_deltaCalculation = (BYTE)DBGetFieldLong(hResult, row, 7);
-   setTransformationScript(DBGetFieldAsString(hResult, row, 8));
+   setTransformationScriptInternal(DBGetFieldAsString(hResult, row, 8));
    m_templateId = DBGetFieldULong(hResult, row, 9);
    m_description = DBGetFieldAsSharedString(hResult, row, 10);
    m_instanceName = DBGetFieldAsSharedString(hResult, row, 11);
@@ -455,6 +455,29 @@ void DCItem::deleteAllThresholds()
 	lock();
    delete_and_null(m_thresholds);
 	unlock();
+}
+
+/**
+ * Delete threshold by ID
+ */
+bool DCItem::deleteThresholdById(uint32_t thresholdId)
+{
+   bool success = false;
+   lock();
+   if (m_thresholds != nullptr)
+   {
+      for(int i = 0; i < m_thresholds->size(); i++)
+      {
+         if (m_thresholds->get(i)->getId() == thresholdId)
+         {
+            m_thresholds->remove(i);
+            success = true;
+            break;
+         }
+      }
+   }
+   unlock();
+   return success;
 }
 
 /**

@@ -14,6 +14,24 @@ This skill provides comprehensive data collection management capabilities for Ne
 - Flexible data types: integers, counters, floats, strings
 - Automatic threshold configuration and alerting setup
 
+### Data Origin Selection
+
+When creating metrics, select the appropriate data origin based on what is available on the target node:
+
+1. **Check node capabilities first**: Before creating a metric, determine what data sources are available on the node (NetXMS agent, SNMP, SSH, etc.)
+
+2. **Automatic origin selection**: Unless the user explicitly requests a specific origin, automatically choose the best available option:
+   - If the node has a NetXMS agent installed and running, prefer agent-based collection
+   - If the node only supports SNMP (no agent), use SNMP origin with the appropriate OID
+   - If neither agent nor SNMP is available but SSH is configured, consider script-based collection
+
+3. **Use correct metric identifiers**:
+   - For agent origin: use NetXMS agent metric names (e.g., `System.CPU.LoadAvg`, `System.Memory.Physical.Free`)
+   - For SNMP origin: use appropriate SNMP OIDs (e.g., `.1.3.6.1.4.1.2021.10.1.3.1` for CPU load on net-snmp)
+   - For script origin: use NXSL script names
+
+4. **When in doubt, ask**: If you don't know how to collect the requested data with the available data sources, inform the user instead of creating a metric that won't work. Explain what data sources are available and ask for guidance.
+
 ### Real-time Monitoring  
 - Current metric values with timestamps
 - Data collection status and error information
