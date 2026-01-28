@@ -16,14 +16,48 @@ Event processing in NetXMS is a core mechanism that handles various types of eve
 
 Event templates define the structure and properties of events that can be generated in NetXMS. Each template includes:
 
-- **Event code** - Unique numeric identifier
-- **Event name** - Human-readable name for the event
-- **Severity level** - Critical, major, minor, warning, normal
-- **Message format** - Template for event message text with parameter placeholders
+- **Event code** - Unique numeric identifier (system events: < 100000, user-defined: >= 100000)
+- **Event name** - Human-readable name for the event (alphanumeric with underscores)
+- **Severity level** - normal, warning, minor, major, or critical
+- **Message format** - Template for event message text with parameter placeholders (%1, %2, etc.)
 - **Description** - Detailed explanation of when and why the event occurs
-- **Tags** - Categorization labels for grouping and filtering
+- **Tags** - Comma-separated categorization labels for grouping and filtering
 
 Event templates serve as blueprints that ensure consistent event generation and provide context for event processing rules.
+
+### Managing Event Templates
+
+You can create, modify, and delete event templates using the provided functions:
+
+#### Creating Event Templates
+Use `create-event-template` to create new custom event templates. Required parameters:
+- **name** - Unique name (alphanumeric with underscores, e.g., `MY_CUSTOM_EVENT`)
+- **severity** - One of: normal, warning, minor, major, critical
+- **message** - Message template with optional placeholders (%1, %2 for parameters)
+
+Optional parameters:
+- **description** - Detailed description of when the event occurs
+- **tags** - Comma-separated tags for categorization
+
+Example use cases:
+- Create events for custom monitoring scenarios
+- Define events for integration with external systems
+- Set up events for specific business logic in NXSL scripts
+
+#### Modifying Event Templates
+Use `modify-event-template` to update existing user-defined templates (code >= 100000). You can modify:
+- Name (via newName parameter)
+- Severity
+- Message template
+- Description
+- Tags
+
+**Note:** System event templates (code < 100000) cannot be modified.
+
+#### Deleting Event Templates
+Use `delete-event-template` to remove user-defined templates that are no longer needed.
+
+**Note:** System event templates (code < 100000) cannot be deleted.
 
 ## Event Processing Policy
 

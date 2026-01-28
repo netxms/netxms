@@ -85,6 +85,7 @@ private:
 public:
    EventTemplate(DB_RESULT hResult, int row);
    EventTemplate(const NXCPMessage& msg);
+   EventTemplate(const json_t *json);
    ~EventTemplate();
 
    const uuid& getGuid() const { return m_guid; }
@@ -97,6 +98,7 @@ public:
    const TCHAR *getTags() const { return m_tags; }
 
    void modifyFromMessage(const NXCPMessage& msg);
+   void modifyFromJson(const json_t *json);
    void fillMessage(NXCPMessage *msg, uint32_t base) const;
    bool saveToDatabase() const;
 
@@ -846,7 +848,9 @@ bool InitEventSubsystem();
 void ShutdownEventSubsystem();
 void ReloadEvents();
 uint32_t UpdateEventTemplate(const NXCPMessage& request, NXCPMessage *response, json_t **oldValue, json_t **newValue);
-uint32_t DeleteEventTemplate(uint32_t eventCode);
+uint32_t NXCORE_EXPORTABLE CreateEventTemplateFromJson(const json_t *json, json_t **newValue);
+uint32_t NXCORE_EXPORTABLE ModifyEventTemplateFromJson(uint32_t eventCode, const json_t *json, json_t **oldValue, json_t **newValue);
+uint32_t NXCORE_EXPORTABLE DeleteEventTemplate(uint32_t eventCode);
 void GetEventConfiguration(NXCPMessage *msg);
 void CreateEventTemplateExportRecord(json_t *array, uint32_t eventCode);
 

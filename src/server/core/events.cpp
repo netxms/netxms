@@ -113,6 +113,30 @@ EventTemplate::EventTemplate(const NXCPMessage& msg)
 }
 
 /**
+ * Create event template from JSON
+ */
+EventTemplate::EventTemplate(const json_t *json)
+{
+   m_guid = uuid::generate();
+   m_code = CreateUniqueId(IDG_EVENT);
+
+   const char *name = json_object_get_string_utf8(const_cast<json_t*>(json), "name", "");
+   utf8_to_wchar(name, -1, m_name, MAX_EVENT_NAME);
+
+   m_severity = json_object_get_int32(const_cast<json_t*>(json), "severity", SEVERITY_NORMAL);
+   m_flags = json_object_get_uint32(const_cast<json_t*>(json), "flags", EF_LOG);
+
+   const char *message = json_object_get_string_utf8(const_cast<json_t*>(json), "message", "");
+   m_messageTemplate = WideStringFromUTF8String(message);
+
+   const char *description = json_object_get_string_utf8(const_cast<json_t*>(json), "description", "");
+   m_description = WideStringFromUTF8String(description);
+
+   const char *tags = json_object_get_string_utf8(const_cast<json_t*>(json), "tags", "");
+   m_tags = WideStringFromUTF8String(tags);
+}
+
+/**
  * Event template destructor
  */
 EventTemplate::~EventTemplate()
@@ -170,6 +194,43 @@ void EventTemplate::modifyFromMessage(const NXCPMessage& msg)
    m_description = msg.getFieldAsString(VID_DESCRIPTION);
    MemFree(m_tags);
    m_tags = msg.getFieldAsString(VID_TAGS);
+}
+
+/**
+ * Modify event template from JSON (only updates fields that are present in JSON)
+ */
+void EventTemplate::modifyFromJson(const json_t *json)
+{
+   const char *name = json_object_get_string_utf8(const_cast<json_t*>(json), "name", nullptr);
+   if (name != nullptr)
+      utf8_to_wchar(name, -1, m_name, MAX_EVENT_NAME);
+
+   if (json_object_get(const_cast<json_t*>(json), "severity") != nullptr)
+      m_severity = json_object_get_int32(const_cast<json_t*>(json), "severity", m_severity);
+
+   if (json_object_get(const_cast<json_t*>(json), "flags") != nullptr)
+      m_flags = json_object_get_uint32(const_cast<json_t*>(json), "flags", m_flags);
+
+   const char *message = json_object_get_string_utf8(const_cast<json_t*>(json), "message", nullptr);
+   if (message != nullptr)
+   {
+      MemFree(m_messageTemplate);
+      m_messageTemplate = WideStringFromUTF8String(message);
+   }
+
+   const char *description = json_object_get_string_utf8(const_cast<json_t*>(json), "description", nullptr);
+   if (description != nullptr)
+   {
+      MemFree(m_description);
+      m_description = WideStringFromUTF8String(description);
+   }
+
+   const char *tags = json_object_get_string_utf8(const_cast<json_t*>(json), "tags", nullptr);
+   if (tags != nullptr)
+   {
+      MemFree(m_tags);
+      m_tags = WideStringFromUTF8String(tags);
+   }
 }
 
 /**
@@ -1083,9 +1144,112 @@ uint32_t UpdateEventTemplate(const NXCPMessage& request, NXCPMessage *response, 
 }
 
 /**
+ * Create event template from JSON
+ */
+uint32_t NXCORE_EXPORTABLE CreateEventTemplateFromJson(const json_t *json, json_t **newValue)
+{
+   wchar_t name[MAX_EVENT_NAME] = L"";
+   const char *nameUtf8 = json_object_get_string_utf8(const_cast<json_t*>(json), "name", "");
+   utf8_to_wchar(nameUtf8, -1, name, MAX_EVENT_NAME);
+
+   if (!IsValidObjectName(name, TRUE))
+      return RCC_INVALID_OBJECT_NAME;
+
+   shared_ptr<EventTemplate> et = FindEventTemplateByName(name);
+   if (et != nullptr)
+      return RCC_NAME_ALEARDY_EXISTS;
+
+   s_eventTemplatesLock.writeLock();
+
+   auto e = make_shared<EventTemplate>(json);
+   s_eventTemplates.set(e->getCode(), e);
+   s_eventNameIndex.set(e->getName(), e);
+
+   *newValue = e->toJson();
+   bool success = e->saveToDatabase();
+   if (success)
+   {
+      NXCPMessage nmsg;
+      nmsg.setCode(CMD_EVENT_DB_UPDATE);
+      nmsg.setField(VID_NOTIFICATION_CODE, (WORD)NX_NOTIFY_ETMPL_CHANGED);
+      e->fillMessage(&nmsg, VID_ELEMENT_LIST_BASE);
+      EnumerateClientSessions(SendEventDBChangeNotification, &nmsg);
+   }
+
+   s_eventTemplatesLock.unlock();
+
+   if (!success)
+   {
+      json_decref(*newValue);
+      *newValue = nullptr;
+      return RCC_DB_FAILURE;
+   }
+
+   return RCC_SUCCESS;
+}
+
+/**
+ * Modify event template from JSON
+ */
+uint32_t NXCORE_EXPORTABLE ModifyEventTemplateFromJson(uint32_t eventCode, const json_t *json, json_t **oldValue, json_t **newValue)
+{
+   const char *nameUtf8 = json_object_get_string_utf8(const_cast<json_t*>(json), "name", nullptr);
+   if (nameUtf8 != nullptr)
+   {
+      wchar_t name[MAX_EVENT_NAME] = L"";
+      utf8_to_wchar(nameUtf8, -1, name, MAX_EVENT_NAME);
+
+      if (!IsValidObjectName(name, TRUE))
+         return RCC_INVALID_OBJECT_NAME;
+
+      shared_ptr<EventTemplate> et = FindEventTemplateByName(name);
+      if ((et != nullptr) && (et->getCode() != eventCode))
+         return RCC_NAME_ALEARDY_EXISTS;
+   }
+
+   s_eventTemplatesLock.writeLock();
+
+   shared_ptr<EventTemplate> e = s_eventTemplates.getShared(eventCode);
+   if (e == nullptr)
+   {
+      s_eventTemplatesLock.unlock();
+      return RCC_INVALID_EVENT_CODE;
+   }
+
+   *oldValue = e->toJson();
+   s_eventNameIndex.remove(e->getName());
+   e->modifyFromJson(json);
+   s_eventNameIndex.set(e->getName(), e);
+
+   *newValue = e->toJson();
+   bool success = e->saveToDatabase();
+   if (success)
+   {
+      NXCPMessage nmsg;
+      nmsg.setCode(CMD_EVENT_DB_UPDATE);
+      nmsg.setField(VID_NOTIFICATION_CODE, (WORD)NX_NOTIFY_ETMPL_CHANGED);
+      e->fillMessage(&nmsg, VID_ELEMENT_LIST_BASE);
+      EnumerateClientSessions(SendEventDBChangeNotification, &nmsg);
+   }
+
+   s_eventTemplatesLock.unlock();
+
+   if (!success)
+   {
+      json_decref(*oldValue);
+      *oldValue = nullptr;
+      json_decref(*newValue);
+      *newValue = nullptr;
+      return RCC_DB_FAILURE;
+   }
+
+   return RCC_SUCCESS;
+}
+
+/**
  * Delete event template
  */
-uint32_t DeleteEventTemplate(uint32_t eventCode)
+uint32_t NXCORE_EXPORTABLE DeleteEventTemplate(uint32_t eventCode)
 {
    uint32_t rcc = RCC_SUCCESS;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
