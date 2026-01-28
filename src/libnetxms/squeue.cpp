@@ -100,6 +100,8 @@ SQueueBase::~SQueueBase()
  */
 void SQueueBase::put(const void *element)
 {
+   bool wakeupNeeded = false;
+
    lock();
    if (m_tail->count == m_blockSize)
    {
@@ -113,7 +115,11 @@ void SQueueBase::put(const void *element)
       m_tail->tail = 0;
    m_tail->count++;
    m_size++;
-   if (m_readers > 0)
+   wakeupNeeded = (m_readers > 0);
+   unlock();
+
+   // Signal after releasing the lock to reduce contention
+   if (wakeupNeeded)
    {
 #if defined(_WIN32)
       WakeConditionVariable(&m_wakeupCondition);
@@ -123,7 +129,6 @@ void SQueueBase::put(const void *element)
       pthread_cond_signal(&m_wakeupCondition);
 #endif
    }
-   unlock();
 }
 
 /**
@@ -131,6 +136,8 @@ void SQueueBase::put(const void *element)
  */
 void SQueueBase::insert(const void *element)
 {
+   bool wakeupNeeded = false;
+
    lock();
    if (m_head->count == m_blockSize)
    {
@@ -145,7 +152,11 @@ void SQueueBase::insert(const void *element)
    memcpy(&m_head->elements[(--m_head->head) * m_elementSize], element, m_elementSize);
    m_head->count++;
    m_size++;
-   if (m_readers > 0)
+   wakeupNeeded = (m_readers > 0);
+   unlock();
+
+   // Signal after releasing the lock to reduce contention
+   if (wakeupNeeded)
    {
 #if defined(_WIN32)
       WakeConditionVariable(&m_wakeupCondition);
@@ -155,7 +166,6 @@ void SQueueBase::insert(const void *element)
       pthread_cond_signal(&m_wakeupCondition);
 #endif
    }
-   unlock();
 }
 
 /**

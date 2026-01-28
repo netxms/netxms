@@ -140,6 +140,8 @@ Queue::~Queue()
  */
 void Queue::put(void *element)
 {
+   bool wakeupNeeded = false;
+
    lock();
    if (m_tail->count == m_blockSize)
    {
@@ -153,7 +155,12 @@ void Queue::put(void *element)
       m_tail->tail = 0;
    m_tail->count++;
    m_size++;
-   if (m_readers > 0)
+   wakeupNeeded = (m_readers > 0);
+   unlock();
+
+   // Signal after releasing the lock to reduce contention.
+   // The awakened thread can acquire the mutex immediately.
+   if (wakeupNeeded)
    {
 #if defined(_WIN32)
       WakeConditionVariable(&m_wakeupCondition);
@@ -163,7 +170,6 @@ void Queue::put(void *element)
       pthread_cond_signal(&m_wakeupCondition);
 #endif
    }
-   unlock();
 }
 
 /**
@@ -171,6 +177,8 @@ void Queue::put(void *element)
  */
 void Queue::insert(void *element)
 {
+   bool wakeupNeeded = false;
+
    lock();
    if (m_head->count == m_blockSize)
    {
@@ -185,7 +193,11 @@ void Queue::insert(void *element)
    m_head->elements[--m_head->head] = element;
    m_head->count++;
    m_size++;
-   if (m_readers > 0)
+   wakeupNeeded = (m_readers > 0);
+   unlock();
+
+   // Signal after releasing the lock to reduce contention
+   if (wakeupNeeded)
    {
 #if defined(_WIN32)
       WakeConditionVariable(&m_wakeupCondition);
@@ -195,7 +207,6 @@ void Queue::insert(void *element)
       pthread_cond_signal(&m_wakeupCondition);
 #endif
    }
-   unlock();
 }
 
 /**
@@ -340,9 +351,15 @@ void Queue::clear()
  */
 void Queue::setShutdownMode()
 {
+   bool wakeupNeeded = false;
+
    lock();
    m_shutdownFlag = true;
-   if (m_readers > 0)
+   wakeupNeeded = (m_readers > 0);
+   unlock();
+
+   // Signal after releasing the lock
+   if (wakeupNeeded)
    {
 #if defined(_WIN32)
       WakeAllConditionVariable(&m_wakeupCondition);
@@ -352,7 +369,6 @@ void Queue::setShutdownMode()
       pthread_cond_broadcast(&m_wakeupCondition);
 #endif
    }
-   unlock();
 }
 
 /**
