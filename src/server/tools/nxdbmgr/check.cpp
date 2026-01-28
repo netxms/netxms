@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2025 Victor Kirhenshtein
+** Copyright (C) 2004-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1347,6 +1347,71 @@ static void CheckDataCollectionItems()
 }
 
 /**
+ * Check DCI source nodes (proxy_node field)
+ */
+static void CheckDCISourceNodes()
+{
+   StartStage(_T("DCI source nodes"));
+
+   // Check items table
+   DB_RESULT hResult = SQLSelect(_T("SELECT item_id,node_id,proxy_node FROM items WHERE proxy_node<>0"));
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      SetStageWorkTotal(count);
+      for(int i = 0; i < count; i++)
+      {
+         uint32_t proxyNodeId = DBGetFieldULong(hResult, i, 2);
+         if (!IsDatabaseRecordExist(g_dbHandle, _T("nodes"), _T("id"), proxyNodeId))
+         {
+            g_dbCheckErrors++;
+            uint32_t dciId = DBGetFieldULong(hResult, i, 0);
+            uint32_t nodeId = DBGetFieldULong(hResult, i, 1);
+            if (GetYesNoEx(_T("DCI [%u] on node [%u] refers to non-existing source node [%u]. Reset source node to 0?"),
+                           dciId, nodeId, proxyNodeId))
+            {
+               TCHAR query[256];
+               _sntprintf(query, 256, _T("UPDATE items SET proxy_node=0 WHERE item_id=%u"), dciId);
+               if (SQLQuery(query))
+                  g_dbCheckFixes++;
+            }
+         }
+         UpdateStageProgress(1);
+      }
+      DBFreeResult(hResult);
+   }
+
+   // Check dc_tables table
+   ResetBulkYesNo();
+   hResult = SQLSelect(_T("SELECT item_id,node_id,proxy_node FROM dc_tables WHERE proxy_node<>0"));
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         uint32_t proxyNodeId = DBGetFieldULong(hResult, i, 2);
+         if (!IsDatabaseRecordExist(g_dbHandle, _T("nodes"), _T("id"), proxyNodeId))
+         {
+            g_dbCheckErrors++;
+            uint32_t dciId = DBGetFieldULong(hResult, i, 0);
+            uint32_t nodeId = DBGetFieldULong(hResult, i, 1);
+            if (GetYesNoEx(_T("Table DCI [%u] on node [%u] refers to non-existing source node [%u]. Reset source node to 0?"),
+                           dciId, nodeId, proxyNodeId))
+            {
+               TCHAR query[256];
+               _sntprintf(query, 256, _T("UPDATE dc_tables SET proxy_node=0 WHERE item_id=%u"), dciId);
+               if (SQLQuery(query))
+                  g_dbCheckFixes++;
+            }
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
+   EndStage();
+}
+
+/**
  * Check if given data table exist
  */
 bool IsDataTableExist(const TCHAR *format, uint32_t id)
@@ -1817,6 +1882,7 @@ void CheckDatabase()
          CheckMapLinks();
          CheckDataTables();
          CheckDataCollectionItems();
+         CheckDCISourceNodes();
          CheckRawDciValues();
          CheckThresholds();
          CheckTableThresholds();
