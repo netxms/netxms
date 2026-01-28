@@ -38,12 +38,13 @@ struct PendingTcpProxySession
    uint32_t agentChannelId;
    uint32_t userId;
    uint64_t systemAccessRights;
-   TCHAR workstation[64];
+   wchar_t workstation[64];
    time_t creationTime;
    uint32_t proxyNodeId;
    InetAddress targetAddress;
    uint16_t targetPort;
-   TCHAR proxyNodeName[MAX_OBJECT_NAME];
+   bool allowControlMessages;
+   wchar_t proxyNodeName[MAX_OBJECT_NAME];
 };
 
 /**
@@ -64,8 +65,9 @@ private:
    uint32_t m_agentChannelId;
    uint32_t m_userId;
    uint64_t m_systemAccessRights;
-   TCHAR m_workstation[64];
+   wchar_t m_workstation[64];
    bool m_closed;
+   bool m_allowControlMessages;
    Mutex m_closeMutex;
 
    void sendTextFrame(const char *text);
@@ -93,17 +95,20 @@ TcpProxyWebSocketSession::TcpProxyWebSocketSession(SOCKET socket, PendingTcpProx
    m_systemAccessRights = pending->systemAccessRights;
    wcslcpy(m_workstation, pending->workstation, 64);
    m_closed = false;
+   m_allowControlMessages = pending->allowControlMessages;
 
    // Set callback to this session
    m_agentConn->setTcpProxyCallback(this);
 
    // Send connected message
-   char json[256];
-   snprintf(json, sizeof(json), "{\"type\":\"connected\",\"channelId\":%u}", m_agentChannelId);
-   sendTextFrame(json);
+   if (m_allowControlMessages)
+   {
+      char json[256];
+      snprintf(json, sizeof(json), "{\"type\":\"connected\",\"channelId\":%u}", m_agentChannelId);
+      sendTextFrame(json);
+   }
 
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("TCP proxy WebSocket session started (channel %u, user %u)"),
-         m_agentChannelId, m_userId);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("TCP proxy WebSocket session started (channel %u, user %u)"), m_agentChannelId, m_userId);
 }
 
 /**
@@ -241,10 +246,13 @@ void TcpProxyWebSocketSession::onTcpProxyData(AgentConnectionEx *conn, uint32_t 
       nxlog_debug_tag(DEBUG_TAG, 5, _T("TCP proxy channel %u: remote end closed connection (%s)"),
             m_agentChannelId, errorIndicator ? _T("error") : _T("normal"));
 
-      char json[128];
-      snprintf(json, sizeof(json), "{\"type\":\"close\",\"reason\":\"%s\"}", errorIndicator ? "error" : "normal");
-      sendTextFrame(json);
-      close();
+      if (m_allowControlMessages)
+      {
+         char json[128];
+         snprintf(json, sizeof(json), "{\"type\":\"close\",\"reason\":\"%s\"}", errorIndicator ? "error" : "normal");
+         sendTextFrame(json);
+         close();
+      }
    }
 }
 
@@ -256,15 +264,18 @@ void TcpProxyWebSocketSession::onTcpProxyAgentDisconnect(AgentConnectionEx *conn
    if (m_closed)
       return;
 
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("TCP proxy channel %u: agent disconnected"), m_agentChannelId);
-   sendTextFrame("{\"type\":\"close\",\"reason\":\"agent_disconnect\"}");
-   close();
+   if (m_allowControlMessages)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("TCP proxy channel %u: agent disconnected"), m_agentChannelId);
+      sendTextFrame("{\"type\":\"close\",\"reason\":\"agent_disconnect\"}");
+      close();
+   }
 }
 
 /**
  * Cleanup expired pending sessions
  */
-static void CleanupExpiredTcpProxySessions()
+void CleanupExpiredTcpProxySessions()
 {
    time_t now = time(nullptr);
 
@@ -287,9 +298,14 @@ static void CleanupExpiredTcpProxySessions()
       s_pendingSessions.remove(*expiredTokens.get(i));
 
    s_pendingSessionsLock.unlock();
+
+   ThreadPoolScheduleRelative(g_mainThreadPool, 300000, CleanupExpiredTcpProxySessions);  // Reschedule itself to run in 5 minutes
 }
 
-static int SetupTCPProxy(Context *context, uint32_t nodeId, uint32_t proxyId, InetAddress ipAddr, uint16_t port)
+/**
+ * Setup TCP proxy
+ */
+static int SetupTCPProxy(Context *context, uint32_t nodeId, uint32_t proxyId, InetAddress ipAddr, uint16_t port, bool allowControlMessages)
 {
    if (!(context->getSystemAccessRights() & SYSTEM_ACCESS_SETUP_TCP_PROXY))
    {
@@ -397,12 +413,13 @@ static int SetupTCPProxy(Context *context, uint32_t nodeId, uint32_t proxyId, In
    pending->agentChannelId = agentChannelId;
    pending->userId = context->getUserId();
    pending->systemAccessRights = context->getSystemAccessRights();
-   _tcslcpy(pending->workstation, context->getWorkstation(), 64);
+   wcslcpy(pending->workstation, context->getWorkstation(), 64);
    pending->creationTime = time(nullptr);
    pending->proxyNodeId = proxyNode->getId();
    pending->targetAddress = ipAddr;
    pending->targetPort = port;
-   _tcslcpy(pending->proxyNodeName, proxyNode->getName(), MAX_OBJECT_NAME);
+   pending->allowControlMessages = allowControlMessages;
+   wcslcpy(pending->proxyNodeName, proxyNode->getName(), MAX_OBJECT_NAME);
 
    s_pendingSessionsLock.lock();
    s_pendingSessions.set(token, pending);
@@ -447,6 +464,7 @@ int H_TcpProxyCreate(Context *context)
    uint32_t proxyId = json_object_get_uint32(request, "proxyId", 0);
    uint32_t nodeId = json_object_get_uint32(request, "nodeId", 0);
    uint16_t port = static_cast<uint16_t>(json_object_get_uint32(request, "port", 0));
+   bool allowControlMessages = json_object_get_boolean(request, "allowControlMessages", false);
 
    InetAddress ipAddr;
    json_t *addressJson = json_object_get(request, "address");
@@ -455,7 +473,7 @@ int H_TcpProxyCreate(Context *context)
       ipAddr = InetAddress::parse(json_string_value(addressJson));
    }
 
-   return SetupTCPProxy(context, nodeId, proxyId, ipAddr, port);
+   return SetupTCPProxy(context, nodeId, proxyId, ipAddr, port, allowControlMessages);
 }
 
 /**
@@ -481,12 +499,20 @@ int H_ObjectRemoteControl(Context *context)
       return 403;
    }
 
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      context->setErrorResponse("Missing or invalid JSON body");
+      return 400;
+   }
+   bool allowControlMessages = json_object_get_boolean(request, "allowControlMessages", false);
+
    Node *node = static_cast<Node*>(object.get());
    if (node->getCapabilities() & NC_IS_LOCAL_VNC)
-      return SetupTCPProxy(context, 0, objectId, InetAddress::LOOPBACK, node->getVncPort());
+      return SetupTCPProxy(context, 0, objectId, InetAddress::LOOPBACK, node->getVncPort(), allowControlMessages);
 
    uint32_t proxyId = node->getEffectiveVncProxy();
-   return SetupTCPProxy(context, objectId, proxyId, node->getPrimaryIpAddress(), node->getVncPort());
+   return SetupTCPProxy(context, objectId, proxyId, node->getPrimaryIpAddress(), node->getVncPort(), allowControlMessages);
 }
 
 /**
@@ -546,8 +572,7 @@ void WS_TcpProxyConnect(void *cls, MHD_Connection *connection, void *con_cls,
       return;
    }
 
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("TCP proxy WebSocket connection established for channel %u"),
-         pending->agentChannelId);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("TCP proxy WebSocket connection established for channel %u"), pending->agentChannelId);
 
    // Create WebSocket session with pre-established agent connection
    auto session = new TcpProxyWebSocketSession(sock, pending);

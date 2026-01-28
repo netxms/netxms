@@ -163,6 +163,9 @@ paths:
               required:
                 - port
               properties:
+                allowControlMessages:
+                  type: boolean
+                  description: If true, server will send JSON control messages in text frames (default is false)
                 proxyId:
                   type: integer
                   description: |
@@ -1172,6 +1175,16 @@ paths:
           schema:
             type: integer
           description: Node object ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                allowControlMessages:
+                  type: boolean
+                  description: If true, server will send JSON control messages in text frames (default is false)
       responses:
         '201':
           description: Remote control session created successfully.

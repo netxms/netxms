@@ -29,6 +29,11 @@
 DEFINE_MODULE_METADATA("WEBAPI", "Raden Solutions", NETXMS_VERSION_STRING_A, NETXMS_BUILD_TAG_A)
 
 /**
+ * Cleanup expired TCP proxy sessions
+ */
+void CleanupExpiredTcpProxySessions();
+
+/**
  * Handlers
  */
 int H_AiChatAnswerQuestion(Context *context);
@@ -217,6 +222,9 @@ static bool InitModule(Config *config)
       .upgradeProtocol(WS_TcpProxyConnect)
       .noauth()  // Token-based auth, not Bearer token
       .build();
+
+
+   ThreadPoolScheduleRelative(g_mainThreadPool, 300000, CleanupExpiredTcpProxySessions);  // In 5 minutes
    return true;
 }
 
