@@ -327,6 +327,8 @@ void DataCollector(const shared_ptr<DCObject>& dcObject)
       }
       else
       {
+         // Change item's status to "not supported"
+         dcObject->setStatus(ITEM_STATUS_NOT_SUPPORTED, true);
          target.reset();
       }
    }

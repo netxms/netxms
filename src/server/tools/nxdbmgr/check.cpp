@@ -1367,7 +1367,7 @@ static void CheckDCISourceNodes()
             g_dbCheckErrors++;
             uint32_t dciId = DBGetFieldULong(hResult, i, 0);
             uint32_t nodeId = DBGetFieldULong(hResult, i, 1);
-            if (GetYesNoEx(_T("DCI [%u] on node [%u] refers to non-existing source node [%u]. Reset source node to 0?"),
+            if (GetYesNoEx(_T("DCI [%u] on node [%u] refers to non-existing source node [%u]. Reset source node to none?"),
                            dciId, nodeId, proxyNodeId))
             {
                TCHAR query[256];
@@ -1395,7 +1395,7 @@ static void CheckDCISourceNodes()
             g_dbCheckErrors++;
             uint32_t dciId = DBGetFieldULong(hResult, i, 0);
             uint32_t nodeId = DBGetFieldULong(hResult, i, 1);
-            if (GetYesNoEx(_T("Table DCI [%u] on node [%u] refers to non-existing source node [%u]. Reset source node to 0?"),
+            if (GetYesNoEx(_T("Table DCI [%u] on node [%u] refers to non-existing source node [%u]. Reset source node to none?"),
                            dciId, nodeId, proxyNodeId))
             {
                TCHAR query[256];
