@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ public class OtherOptions extends AbstractDCIPropertyPage
 	private Button checkShowOnTooltip;
 	private Button checkShowInOverview;
    private Button checkCalculateStatus;
-   private Button checkHideOnLastValues;
+   private Button checkHideInViewMode;
    private LabeledCombo multiplierDegree;
    private LabeledCombo agentCacheMode;
    private LabeledCombo interpretation;
@@ -103,12 +103,12 @@ public class OtherOptions extends AbstractDCIPropertyPage
       gd.horizontalSpan = 2;
       checkCalculateStatus.setLayoutData(gd);
 
-      checkHideOnLastValues = new Button(dialogArea, SWT.CHECK);
-      checkHideOnLastValues.setText("&Hide value on \"Last Values\" page");
-      checkHideOnLastValues.setSelection(dci.isHideOnLastValuesView());      
+      checkHideInViewMode = new Button(dialogArea, SWT.CHECK);
+      checkHideInViewMode.setText("&Hide in view mode");
+      checkHideInViewMode.setSelection(dci.isHideOnLastValuesView());      
       gd = new GridData();
       gd.horizontalSpan = 2;
-      checkHideOnLastValues.setLayoutData(gd);
+      checkHideInViewMode.setLayoutData(gd);
 
       agentCacheMode = new LabeledCombo(dialogArea, SWT.NONE);
       agentCacheMode.setLabel(i18n.tr("Agent cache mode"));
@@ -188,7 +188,7 @@ public class OtherOptions extends AbstractDCIPropertyPage
 		dci.setShowOnObjectTooltip(checkShowOnTooltip.getSelection());
 		dci.setShowInObjectOverview(checkShowInOverview.getSelection());
       dci.setUsedForNodeStatusCalculation(checkCalculateStatus.getSelection());
-      dci.setHideOnLastValuesView(checkHideOnLastValues.getSelection());
+      dci.setHideOnLastValuesView(checkHideInViewMode.getSelection());
       dci.setCacheMode(AgentCacheMode.getByValue(agentCacheMode.getSelectionIndex()));
       dci.setMultiplier(5 - multiplierDegree.getSelectionIndex());
       dci.setRelatedObject(relatedObject.getObjectId());
@@ -208,7 +208,7 @@ public class OtherOptions extends AbstractDCIPropertyPage
 		checkShowOnTooltip.setSelection(false);
 		checkShowInOverview.setSelection(false);
 		checkCalculateStatus.setSelection(false);
-		checkHideOnLastValues.setSelection(false);
+		checkHideInViewMode.setSelection(false);
 		agentCacheMode.select(0);
 		multiplierDegree.select(0);
 		relatedObject.setObjectId(0);
