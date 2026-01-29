@@ -1,0 +1,297 @@
+#
+# NetXMS Windows Build Configuration Template
+# Copy this file to config.mingw and edit for your environment
+#
+# Usage:
+#   copy config.mingw.template config.mingw
+#   edit config.mingw (set SDK paths to match your installation)
+#   make -f Makefile.w32
+#
+
+#####################################################################
+# Build Options
+#####################################################################
+
+# Set to 1 for debug build (includes debug symbols, no optimization)
+DEBUG = 0
+
+# Unicode build (always enabled for Windows)
+UNICODE = 1
+
+# Components to build
+BUILD_AGENT = 1              # Build agent components (nxagentd, subagents)
+BUILD_CLIENT = 1             # Build client libraries and tools
+BUILD_SERVER = 0             # Server components (usually not needed on Windows)
+
+#####################################################################
+# MinGW Toolchain
+#####################################################################
+
+CC = gcc
+CXX = g++
+AR = ar
+RANLIB = ranlib
+WINDRES = windres
+STRIP = strip
+LD = ld
+
+#####################################################################
+# Target Architecture
+#####################################################################
+
+# Options: x86, x64, arm64
+# For cross-compilation, set the appropriate prefix:
+#   x86:   i686-w64-mingw32-
+#   x64:   x86_64-w64-mingw32-
+#   arm64: aarch64-w64-mingw32-
+ARCH = x64
+
+# Uncomment for cross-compilation (prefix toolchain commands)
+# CROSS_PREFIX = x86_64-w64-mingw32-
+# CC = $(CROSS_PREFIX)gcc
+# CXX = $(CROSS_PREFIX)g++
+# AR = $(CROSS_PREFIX)ar
+# RANLIB = $(CROSS_PREFIX)ranlib
+# WINDRES = $(CROSS_PREFIX)windres
+# STRIP = $(CROSS_PREFIX)strip
+
+#####################################################################
+# Installation
+#####################################################################
+
+# Installation prefix (where 'make install' will copy files)
+PREFIX = C:/NetXMS
+
+#####################################################################
+# SDK Paths
+#####################################################################
+# IMPORTANT: Edit these paths to match your SDK installations
+# Use forward slashes (/) even on Windows
+# Use $(ARCH) variable to support multiple architectures
+
+# zlib (required)
+ZLIB_ROOT = C:/SDK/zlib
+
+# OpenSSL (required)
+OPENSSL_ROOT = C:/SDK/OpenSSL/$(ARCH)
+
+# PCRE (required for regex support)
+PCRE_ROOT = C:/SDK/PCRE/$(ARCH)
+
+# cURL (optional, for HTTP/REST features)
+CURL_ROOT = C:/SDK/cURL/$(ARCH)
+
+# libexpat (required for XML parsing)
+EXPAT_ROOT = C:/SDK/libexpat
+
+# libssh (optional, for SSH subagent)
+LIBSSH_ROOT = C:/SDK/libssh/$(ARCH)
+
+# PostgreSQL client library (optional, for pgsql database driver)
+PGSQL_ROOT = C:/SDK/PostgreSQL/$(ARCH)
+
+# MySQL/MariaDB client library (optional, for mysql database driver)
+MYSQL_ROOT = C:/SDK/mysql/$(ARCH)
+MARIADB_ROOT = C:/SDK/MariaDB/$(ARCH)
+
+# libmosquitto (optional, for MQTT subagent)
+MOSQUITTO_ROOT = C:/SDK/libmosquitto/$(ARCH)
+
+# Python (optional, for Python subagent)
+PYTHON_ROOT = C:/Program Files/Python37
+
+# Java JDK (optional, for Java subagent)
+# Note: Use forward slashes
+JAVA_HOME = C:/Program Files/Java/jdk1.8.0_144
+
+# Oracle Instant Client (optional, for Oracle database driver)
+ORACLE_ROOT = C:/SDK/Oracle/instantclient_12_1.$(ARCH)
+
+# Microsoft SQL Server SDK (optional, for MSSQL database driver)
+MSSQL_SDK = C:/Program Files/Microsoft SQL Server/110/SDK
+
+# IBM Informix SDK (optional, for Informix database driver)
+INFORMIX_ROOT = C:/SDK/Informix/$(ARCH)
+
+# IBM DB2 SDK (optional, for DB2 database driver)
+DB2_ROOT = C:/SDK/DB2/$(ARCH)
+
+# Oracle Tuxedo SDK (optional, for Tuxedo subagent)
+TUXEDO_ROOT = C:/Oracle/tuxedo12.2.2.0.0_VS2015
+
+# IBM MQ SDK (optional, for MQ features)
+MQ_ROOT = C:/SDK/IBM-MQ
+
+# Windows Driver Development Kit (optional, for low-level drivers)
+WINDDK_ROOT = C:/SDK/WINDDK
+
+#####################################################################
+# Optional Features
+#####################################################################
+# Set to 1 to enable, 0 to disable
+
+# Database drivers
+WITH_SQLITE = 1              # SQLite (bundled, no external dependency)
+WITH_PGSQL = 1               # PostgreSQL
+WITH_MYSQL = 1               # MySQL/MariaDB
+WITH_MSSQL = 1               # Microsoft SQL Server
+WITH_ORACLE = 0              # Oracle
+WITH_INFORMIX = 0            # Informix
+WITH_DB2 = 0                 # IBM DB2
+WITH_ODBC = 1                # ODBC (uses Windows built-in)
+
+# Agent subagents
+WITH_PYTHON = 1              # Python subagent
+WITH_JAVA = 1                # Java subagent
+WITH_SSH = 1                 # SSH subagent
+WITH_MOSQUITTO = 1           # MQTT subagent
+
+# Other features
+WITH_ENCRYPTION = 1          # OpenSSL encryption (required)
+WITH_CURL = 1                # cURL support (for HTTP features)
+
+#####################################################################
+# Common Library Paths
+#####################################################################
+
+COMMON_LIBDIRS = -L$(OPENSSL_ROOT)/lib \
+                 -L$(PCRE_ROOT)/lib \
+                 -L$(ZLIB_ROOT)/lib/$(ARCH) \
+                 -L$(CURL_ROOT)/lib \
+                 -L$(EXPAT_ROOT)/lib/$(ARCH)
+
+#####################################################################
+# Common Compiler Flags
+#####################################################################
+
+COMMON_CFLAGS = -D_WIN32 \
+                -DUNICODE \
+                -D_UNICODE \
+                -Wall \
+                -Wno-unknown-pragmas \
+                -Wno-sign-compare \
+                -fno-exceptions \
+                -I$(TOPDIR)/include \
+                -I$(TOPDIR)/build \
+                -I$(OPENSSL_ROOT)/include \
+                -I$(PCRE_ROOT)/include \
+                -I$(ZLIB_ROOT)/include \
+                -I$(CURL_ROOT)/include \
+                -I$(EXPAT_ROOT)/include
+
+# Architecture-specific flags
+ifeq ($(ARCH),x64)
+COMMON_CFLAGS += -m64
+endif
+ifeq ($(ARCH),x86)
+COMMON_CFLAGS += -m32
+endif
+
+# Debug vs Release
+ifeq ($(DEBUG),1)
+COMMON_CFLAGS += -g -O0 -D_DEBUG
+BUILD_TYPE = Debug
+else
+COMMON_CFLAGS += -O2 -DNDEBUG
+BUILD_TYPE = Release
+endif
+
+# Encryption
+ifeq ($(WITH_ENCRYPTION),1)
+COMMON_CFLAGS += -D_WITH_ENCRYPTION
+endif
+
+#####################################################################
+# Common C++ Flags
+#####################################################################
+
+COMMON_CXXFLAGS = $(COMMON_CFLAGS) -std=c++14
+
+#####################################################################
+# Common Linker Flags
+#####################################################################
+
+COMMON_LDFLAGS = -Wl,--enable-auto-import
+
+# Strip symbols in release builds
+ifeq ($(DEBUG),0)
+COMMON_LDFLAGS += -s
+endif
+
+#####################################################################
+# Windows System Libraries
+#####################################################################
+
+WIN_LIBS = -lws2_32 \
+           -liphlpapi \
+           -lnetapi32 \
+           -luserenv \
+           -lpsapi \
+           -lpdh \
+           -lwtsapi32 \
+           -lsetupapi \
+           -ladvapi32 \
+           -lshell32 \
+           -lole32 \
+           -loleaut32 \
+           -lsensapi \
+           -lversion \
+           -lshlwapi \
+           -lcrypt32 \
+           -lrpcrt4
+
+#####################################################################
+# Common Library Dependencies
+#####################################################################
+
+# OpenSSL libraries
+SSL_LIBS = -lssl -lcrypto
+
+# PCRE library
+PCRE_LIBS = -lpcre
+
+# cURL library
+CURL_LIBS = -lcurl
+
+# Compression libraries
+ZLIB_LIBS = -lzlib
+
+# XML parsing library
+EXPAT_LIBS = -lexpat
+
+#####################################################################
+# Build Output Directories
+#####################################################################
+
+# Build artifacts go into architecture-specific directories
+BUILD_DIR = $(TOPDIR)/out/$(ARCH)/$(BUILD_TYPE)
+BIN_DIR = $(BUILD_DIR)/bin
+LIB_DIR = $(BUILD_DIR)/lib
+OBJ_DIR = $(BUILD_DIR)/obj
+
+#####################################################################
+# Parallel Build
+#####################################################################
+
+# Number of parallel jobs (default to number of processors)
+# Override with: make -f Makefile.w32 -j8
+ifndef MAKEFLAGS
+MAKEFLAGS = -j$(NUMBER_OF_PROCESSORS)
+endif
+
+#####################################################################
+# Verbosity
+#####################################################################
+
+# Set to 1 for verbose build output
+VERBOSE = 0
+
+ifeq ($(VERBOSE),1)
+Q =
+else
+Q = @
+endif
+
+#####################################################################
+# End of Configuration
+#####################################################################

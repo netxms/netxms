@@ -1,0 +1,162 @@
+#
+# Makefile.w32 - libnetxms core library for Windows/MinGW
+# Part of NetXMS project
+#
+
+# Note: Variables are exported from top-level Makefile.w32
+
+# Target
+TARGET = libnetxms.dll
+IMPLIB = libnetxms.dll.a
+
+# Source files (Windows build)
+SOURCES = \
+	array.cpp \
+	base32.cpp \
+	base64.cpp \
+	bytestream.cpp \
+	calltbl.cpp \
+	cc_mb.cpp \
+	cc_ucs2.cpp \
+	cc_ucs4.cpp \
+	cc_utf8.cpp \
+	cch.cpp \
+	cert.cpp \
+	config.cpp \
+	crypto.cpp \
+	curl.cpp \
+	debug_tag_tree.cpp \
+	diff.cpp \
+	dload.cpp \
+	geolocation.cpp \
+	getopt.cpp \
+	getoptw.cpp \
+	hash.cpp \
+	hashmapbase.cpp \
+	hashsetbase.cpp \
+	ice.c \
+	icmp.cpp \
+	inetaddr.cpp \
+	itoa.cpp \
+	log.cpp \
+	lz4.c \
+	macaddr.cpp \
+	md4.cpp \
+	md5.cpp \
+	memmem.cpp \
+	mempool.cpp \
+	message.cpp \
+	msgrecv.cpp \
+	msgwq.cpp \
+	net.cpp \
+	npipe.cpp \
+	npipe_win32.cpp \
+	nxcp.cpp \
+	pa.cpp \
+	procexec.cpp \
+	pugixml.cpp \
+	queue.cpp \
+	rbuffer.cpp \
+	scandir.cpp \
+	serial.cpp \
+	sha1.cpp \
+	sha2.cpp \
+	socket_listener.cpp \
+	spoll.cpp \
+	squeue.cpp \
+	strcasestr.cpp \
+	streamcomp.cpp \
+	string.cpp \
+	stringlist.cpp \
+	strlcat.cpp \
+	strlcpy.cpp \
+	strmap.cpp \
+	strmapbase.cpp \
+	strptime.cpp \
+	strset.cpp \
+	strtoll.cpp \
+	strtoull.cpp \
+	subproc.cpp \
+	table.cpp \
+	tasks.cpp \
+	tfw.cpp \
+	threads.cpp \
+	timegm.cpp \
+	tls_conn.cpp \
+	tools.cpp \
+	tp.cpp \
+	unicode.cpp \
+	uuid.cpp \
+	vault.cpp \
+	wcscasestr.cpp \
+	wcslcat.cpp \
+	wcslcpy.cpp \
+	wcstoll.cpp \
+	wcstoull.cpp \
+	windll.cpp \
+	xml.cpp \
+	ztools.cpp
+
+# Resource file for version info
+RC_SOURCE = $(TOPDIR)/build/netxms-build-tag.rc
+
+# Object files
+OBJECTS = $(patsubst %.cpp,%.o,$(patsubst %.c,%.o,$(SOURCES)))
+RC_OBJECT = netxms-build-tag.o
+
+# Compiler flags
+CFLAGS = $(COMMON_CFLAGS) \
+	-DLIBNETXMS_EXPORTS
+
+CXXFLAGS = $(COMMON_CXXFLAGS) \
+	-DLIBNETXMS_EXPORTS
+
+# Linker flags
+LDFLAGS = $(COMMON_LDFLAGS) $(COMMON_LIBDIRS) \
+	-shared \
+	-Wl,--out-implib,$(IMPLIB)
+
+# Libraries
+LIBS = -L$(TOPDIR)/src/jansson -lnxjansson \
+	$(SSL_LIBS) \
+	$(PCRE_LIBS) \
+	$(ZLIB_LIBS) \
+	$(WIN_LIBS) \
+	-lrpcrt4
+
+# Add cURL if enabled
+ifeq ($(WITH_CURL),1)
+LIBS += $(CURL_LIBS)
+endif
+
+# Targets
+.PHONY: all clean install
+
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS) $(RC_OBJECT)
+	@echo "  LD      $@"
+	$(Q)$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
+	@echo "  Built: $(TARGET)"
+
+%.o: %.cpp
+	@echo "  CXX     $<"
+	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
+
+%.o: %.c
+	@echo "  CC      $<"
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+
+$(RC_OBJECT): $(RC_SOURCE)
+	@echo "  RC      $<"
+	$(Q)$(WINDRES) -I$(TOPDIR)/include -I$(TOPDIR)/build $< -o $@
+
+clean:
+	rm -f $(OBJECTS) $(RC_OBJECT) $(TARGET) $(IMPLIB) .depend
+
+install: $(TARGET)
+	@echo "  INSTALL $(TARGET)"
+	mkdir -p "$(PREFIX)/bin"
+	mkdir -p "$(PREFIX)/lib"
+	cp $(TARGET) "$(PREFIX)/bin/"
+	cp $(IMPLIB) "$(PREFIX)/lib/"

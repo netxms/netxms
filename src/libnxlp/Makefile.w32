@@ -1,0 +1,70 @@
+#
+# Makefile.w32 - libnxlp (log parser library) for Windows/MinGW
+# Part of NetXMS project
+#
+
+# Note: Variables are exported from top-level Makefile.w32
+
+# Target
+TARGET = libnxlp.dll
+IMPLIB = libnxlp.dll.a
+
+# Source files (Windows build includes vss.cpp and wevt.cpp)
+SOURCES = \
+	file.cpp \
+	main.cpp \
+	parser.cpp \
+	rule.cpp \
+	vss.cpp \
+	wevt.cpp
+
+# Resource file for version info
+RC_SOURCE = $(TOPDIR)/build/netxms-build-tag.rc
+
+# Object files
+OBJECTS = $(SOURCES:.cpp=.o)
+RC_OBJECT = netxms-build-tag.o
+
+# Compiler flags
+CXXFLAGS = $(COMMON_CXXFLAGS) \
+	-DLIBNXLP_EXPORTS
+
+# Linker flags
+LDFLAGS = $(COMMON_LDFLAGS) $(COMMON_LIBDIRS) \
+	-shared \
+	-Wl,--out-implib,$(IMPLIB)
+
+# Libraries (includes VSS libraries for Windows Event Log support)
+LIBS = -L$(TOPDIR)/src/libnetxms -lnetxms \
+	$(PCRE_LIBS) \
+	$(WIN_LIBS) \
+	-lvssapi \
+	-lwevtapi
+
+# Targets
+.PHONY: all clean install
+
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS) $(RC_OBJECT)
+	@echo "  LD      $@"
+	$(Q)$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
+	@echo "  Built: $(TARGET)"
+
+%.o: %.cpp
+	@echo "  CXX     $<"
+	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(RC_OBJECT): $(RC_SOURCE)
+	@echo "  RC      $<"
+	$(Q)$(WINDRES) -I$(TOPDIR)/include -I$(TOPDIR)/build $< -o $@
+
+clean:
+	rm -f $(OBJECTS) $(RC_OBJECT) $(TARGET) $(IMPLIB) .depend
+
+install: $(TARGET)
+	@echo "  INSTALL $(TARGET)"
+	mkdir -p "$(PREFIX)/bin"
+	mkdir -p "$(PREFIX)/lib"
+	cp $(TARGET) "$(PREFIX)/bin/"
+	cp $(IMPLIB) "$(PREFIX)/lib/"

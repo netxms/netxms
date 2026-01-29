@@ -1,0 +1,95 @@
+#
+# Makefile.w32 - libnxsl (NXSL scripting language) for Windows/MinGW
+# Part of NetXMS project
+#
+
+# Note: Variables are exported from top-level Makefile.w32
+
+# Target
+TARGET = libnxsl.dll
+IMPLIB = libnxsl.dll.a
+
+# Source files (Windows build)
+# Note: lex.parser.cpp and parser.tab.cpp are pre-generated from parser.l and parser.y
+SOURCES = \
+	array.cpp \
+	bytestream.cpp \
+	class.cpp \
+	compiler.cpp \
+	env.cpp \
+	file.cpp \
+	functions.cpp \
+	geolocation.cpp \
+	hashmap.cpp \
+	inetaddr.cpp \
+	instruction.cpp \
+	io.cpp \
+	iterator.cpp \
+	json.cpp \
+	lex.parser.cpp \
+	lexer.cpp \
+	library.cpp \
+	macaddr.cpp \
+	math.cpp \
+	parser.tab.cpp \
+	program.cpp \
+	range.cpp \
+	selectors.cpp \
+	storage.cpp \
+	string.cpp \
+	table.cpp \
+	time.cpp \
+	tools.cpp \
+	value.cpp \
+	variable.cpp \
+	vm.cpp \
+	windll.cpp
+
+# Resource file for version info
+RC_SOURCE = $(TOPDIR)/build/netxms-build-tag.rc
+
+# Object files
+OBJECTS = $(SOURCES:.cpp=.o)
+RC_OBJECT = netxms-build-tag.o
+
+# Compiler flags
+CXXFLAGS = $(COMMON_CXXFLAGS) \
+	-DLIBNXSL_EXPORTS
+
+# Linker flags
+LDFLAGS = $(COMMON_LDFLAGS) $(COMMON_LIBDIRS) \
+	-shared \
+	-Wl,--out-implib,$(IMPLIB)
+
+# Libraries
+LIBS = -L$(TOPDIR)/src/libnetxms -lnetxms \
+	$(PCRE_LIBS) \
+	$(WIN_LIBS)
+
+# Targets
+.PHONY: all clean install
+
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS) $(RC_OBJECT)
+	@echo "  LD      $@"
+	$(Q)$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
+	@echo "  Built: $(TARGET)"
+
+%.o: %.cpp
+	@echo "  CXX     $<"
+	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(RC_OBJECT): $(RC_SOURCE)
+	@echo "  RC      $<"
+	$(Q)$(WINDRES) -I$(TOPDIR)/include -I$(TOPDIR)/build $< -o $@
+
+clean:
+	rm -f $(OBJECTS) $(RC_OBJECT) $(TARGET) $(IMPLIB) .depend
+
+install: $(TARGET)
+	@echo "  INSTALL $(TARGET)"
+	mkdir -p "$(PREFIX)/bin"
+	mkdir -p "$(PREFIX)/lib"
+	cp $(TARGET) "$(PREFIX)/bin/"
+	cp $(IMPLIB) "$(PREFIX)/lib/"

@@ -1,0 +1,77 @@
+#
+# Makefile.w32 - libpng for Windows/MinGW
+# Part of NetXMS project
+#
+
+# Note: Variables are exported from top-level Makefile.w32
+
+# Target
+TARGET = nxpng.dll
+IMPLIB = nxpng.dll.a
+
+# Source files
+SOURCES = \
+	png.c \
+	pngerror.c \
+	pngget.c \
+	pngmem.c \
+	pngpread.c \
+	pngread.c \
+	pngrio.c \
+	pngrtran.c \
+	pngrutil.c \
+	pngset.c \
+	pngtrans.c \
+	pngwio.c \
+	pngwrite.c \
+	pngwtran.c \
+	pngwutil.c
+
+# SSE2 optimization files (x64 only)
+ifeq ($(ARCH),x64)
+SOURCES += \
+	filter_sse2_intrinsics.c \
+	intel_init.c
+SSE_FLAGS = -msse2 -DPNG_INTEL_SSE
+endif
+
+# Object files
+OBJECTS = $(SOURCES:.c=.o)
+
+# Compiler flags
+CFLAGS = $(COMMON_CFLAGS) \
+	-DPNG_BUILD_DLL \
+	$(SSE_FLAGS)
+
+# Linker flags
+LDFLAGS = $(COMMON_LDFLAGS) \
+	-shared \
+	-L$(ZLIB_ROOT)/lib/$(ARCH) \
+	-Wl,--out-implib,$(IMPLIB)
+
+# Libraries
+LIBS = $(ZLIB_LIBS) -lm
+
+# Targets
+.PHONY: all clean install
+
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS)
+	@echo "  LD      $@"
+	$(Q)$(CC) -o $@ $^ $(LDFLAGS) $(LIBS)
+	@echo "  Built: $(TARGET)"
+
+%.o: %.c
+	@echo "  CC      $<"
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -f $(OBJECTS) $(TARGET) $(IMPLIB) .depend
+
+install: $(TARGET)
+	@echo "  INSTALL $(TARGET)"
+	mkdir -p "$(PREFIX)/bin"
+	mkdir -p "$(PREFIX)/lib"
+	cp $(TARGET) "$(PREFIX)/bin/"
+	cp $(IMPLIB) "$(PREFIX)/lib/"

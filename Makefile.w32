@@ -1,0 +1,198 @@
+#
+# NetXMS Windows Build System - Top Level Makefile
+# Copyright (C) 2003-2026 Victor Kirhenshtein
+#
+# Build with: make -f Makefile.w32
+#
+
+# Use absolute path for TOPDIR so subdirectories can find config
+TOPDIR := $(CURDIR)
+
+# Include user configuration
+include config.mingw
+
+# Build subdirectories sequentially (one at a time)
+# Each subdirectory will still compile its files in parallel with -j
+.NOTPARALLEL:
+
+# Export variables for sub-makefiles
+export TOPDIR CC CXX AR RANLIB WINDRES STRIP LD
+export ARCH DEBUG PREFIX
+export COMMON_CFLAGS COMMON_CXXFLAGS COMMON_LDFLAGS COMMON_LIBDIRS
+export WIN_LIBS SSL_LIBS PCRE_LIBS CURL_LIBS ZLIB_LIBS EXPAT_LIBS
+export BUILD_DIR BIN_DIR LIB_DIR OBJ_DIR
+export VERBOSE Q
+export OPENSSL_ROOT PCRE_ROOT ZLIB_ROOT CURL_ROOT EXPAT_ROOT
+
+#####################################################################
+# Build Order
+#####################################################################
+# Order matters due to dependencies between components
+
+# Core libraries (Tier 1)
+CORE_LIBS = \
+    src/jansson \
+    src/libpng \
+    src/libnetxms
+
+# Mid-level libraries (Tier 2)
+MID_LIBS = \
+    src/libnxsl \
+    src/libnxlp \
+    src/db/libnxdb
+
+# All libraries
+LIBS = $(CORE_LIBS) $(MID_LIBS)
+
+# Agent components
+AGENT_DIRS =
+ifeq ($(BUILD_AGENT),1)
+AGENT_DIRS = \
+    src/agent/libnxagent \
+    src/agent/core \
+    src/agent/subagents \
+    src/agent/tools
+endif
+
+# Client components
+CLIENT_DIRS =
+ifeq ($(BUILD_CLIENT),1)
+CLIENT_DIRS = \
+    src/client/libnxclient \
+    src/client/nxalarm \
+    src/client/nxevent \
+    src/client/nxpush \
+    src/client/nxshell
+endif
+
+# Database drivers
+DB_DIRS = src/db/dbdrv
+
+# Notification channel drivers
+NC_DIRS = src/ncdrivers
+
+# Server components (rarely built on Windows)
+SERVER_DIRS =
+ifeq ($(BUILD_SERVER),1)
+SERVER_DIRS = \
+    src/server/core \
+    src/server/drivers \
+    src/libnxsrv
+endif
+
+# Complete build order
+ALL_DIRS = $(LIBS) $(AGENT_DIRS) $(CLIENT_DIRS) $(DB_DIRS) $(NC_DIRS) $(SERVER_DIRS)
+
+#####################################################################
+# Targets
+#####################################################################
+
+.PHONY: all clean install help version check-config build-tag $(ALL_DIRS)
+
+all: check-config build-tag $(ALL_DIRS)
+	@echo ""
+	@echo "============================================"
+	@echo "  NetXMS Windows Build Complete"
+	@echo "  Architecture: $(ARCH)"
+	@echo "  Build Type: $(BUILD_TYPE)"
+	@echo "============================================"
+	@echo ""
+
+check-config:
+	@if [ ! -f config.mingw ]; then \
+		echo "ERROR: config.mingw not found!"; \
+		echo "Please create it from config.mingw.template:"; \
+		echo "  cp config.mingw.template config.mingw"; \
+		echo "  edit config.mingw"; \
+		exit 1; \
+	fi
+
+build-tag:
+	@echo "Generating build tag..."
+	-$(Q)perl $(TOPDIR)/tools/updatetag.pl
+
+# Build each subdirectory
+$(ALL_DIRS):
+	@echo ""
+	@echo "==== Building $@ ===="
+	$(Q)$(MAKE) -C $@ -f Makefile.w32
+
+# Core libraries must be built first
+$(MID_LIBS): $(CORE_LIBS)
+
+# Agent depends on libraries
+$(AGENT_DIRS): $(LIBS)
+
+# Client depends on libraries
+$(CLIENT_DIRS): $(LIBS)
+
+# Drivers depend on libraries
+$(DB_DIRS): $(LIBS)
+$(NC_DIRS): $(LIBS)
+
+# Server depends on libraries
+$(SERVER_DIRS): $(LIBS)
+
+clean:
+	@echo "Cleaning build artifacts..."
+	@for dir in $(ALL_DIRS); do \
+		if [ -f "$$dir/Makefile.w32" ]; then \
+			$(MAKE) -C "$$dir" -f Makefile.w32 clean; \
+		fi; \
+	done
+	@echo "Clean complete"
+
+install: all
+	@echo "Installing to $(PREFIX)..."
+	@mkdir -p "$(PREFIX)/bin"
+	@mkdir -p "$(PREFIX)/lib"
+	@mkdir -p "$(PREFIX)/include"
+	@for dir in $(ALL_DIRS); do \
+		if [ -f "$$dir/Makefile.w32" ]; then \
+			$(MAKE) -C "$$dir" -f Makefile.w32 install; \
+		fi; \
+	done
+	@echo ""
+	@echo "============================================"
+	@echo "  Installation Complete"
+	@echo "  Location: $(PREFIX)"
+	@echo "============================================"
+
+version:
+	@echo "NetXMS Windows Build System"
+	@echo "Architecture: $(ARCH)"
+	@echo "Build Type: $(BUILD_TYPE)"
+	@echo "Compiler: $(CXX)"
+	@$(CXX) --version
+
+help:
+	@echo "NetXMS Windows Build System"
+	@echo ""
+	@echo "Usage:"
+	@echo "  make -f Makefile.w32           Build all components"
+	@echo "  make -f Makefile.w32 clean     Clean build artifacts"
+	@echo "  make -f Makefile.w32 install   Install to PREFIX"
+	@echo "  make -f Makefile.w32 version   Show version info"
+	@echo "  make -f Makefile.w32 help      Show this help"
+	@echo ""
+	@echo "Configuration:"
+	@echo "  Edit config.mingw to configure build options and SDK paths"
+	@echo "  Current settings:"
+	@echo "    Architecture: $(ARCH)"
+	@echo "    Build Type: $(BUILD_TYPE)"
+	@echo "    Install Prefix: $(PREFIX)"
+	@echo "    Build Agent: $(BUILD_AGENT)"
+	@echo "    Build Client: $(BUILD_CLIENT)"
+	@echo "    Build Server: $(BUILD_SERVER)"
+	@echo ""
+	@echo "Components:"
+	@echo "  Core Libraries: $(CORE_LIBS)"
+	@echo "  Mid Libraries: $(MID_LIBS)"
+ifeq ($(BUILD_AGENT),1)
+	@echo "  Agent: $(AGENT_DIRS)"
+endif
+ifeq ($(BUILD_CLIENT),1)
+	@echo "  Client: $(CLIENT_DIRS)"
+endif
+	@echo ""
+	@echo "For more information, see BUILD_WINDOWS.md"
