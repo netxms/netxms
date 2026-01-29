@@ -11,6 +11,8 @@
 serverincludedir = $(includedir)/server
 serverinclude_HEADERS = \
 	agent_tunnel.h \
+	ai_messages.h \
+	ai_provider.h \
 	asset_management.h \
 	auth-token.h \
 	device-backup.h \
@@ -26,6 +28,7 @@ serverinclude_HEADERS = \
 	nms_core.h \
 	nms_dcoll.h \
 	nms_events.h \
+	nms_incident.h \
 	nms_locks.h \
 	nms_objects.h \
 	nms_pkg.h \
@@ -37,8 +40,8 @@ serverinclude_HEADERS = \
 	nxcore_2fa.h \
 	nxcore_discovery.h \
 	nxcore_logs.h \
-	nxcore_schedule.h \
 	nxcore_ps.h \
+	nxcore_schedule.h \
 	nxcore_smclp.h \
 	nxcore_syslog.h \
 	nxcore_websvc.h \
