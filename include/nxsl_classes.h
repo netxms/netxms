@@ -165,10 +165,6 @@ struct LIBNXSL_EXPORTABLE NXSL_CompilationWarning
    }
 };
 
-#ifdef _WIN32
-template class LIBNXSL_TEMPLATE_EXPORTABLE ObjectArray<NXSL_CompilationWarning>;
-#endif
-
 /**
  * Compilation diagnostic data
  */
@@ -842,11 +838,6 @@ public:
    static NXSL_Value *load(NXSL_ValueManager *vm, ByteStream& s);
 };
 
-#ifdef _WIN32
-template class LIBNXSL_TEMPLATE_EXPORTABLE ObjectMemoryPool<NXSL_Value>;
-template class LIBNXSL_TEMPLATE_EXPORTABLE ObjectMemoryPool<NXSL_Identifier>;
-#endif
-
 /**
  * Value management functionality
  */
@@ -1227,15 +1218,6 @@ struct NXSL_IdentifierLocation
 
 class NXSL_ProgramBuilder;
 
-#ifdef _WIN32
-template class LIBNXSL_TEMPLATE_EXPORTABLE StructArray<NXSL_Instruction>;
-template class LIBNXSL_TEMPLATE_EXPORTABLE StructArray<NXSL_ModuleImport>;
-template class LIBNXSL_TEMPLATE_EXPORTABLE StructArray<NXSL_FunctionImport>;
-template class LIBNXSL_TEMPLATE_EXPORTABLE StructArray<NXSL_Function>;
-template class LIBNXSL_TEMPLATE_EXPORTABLE StructArray<NXSL_ExtFunction>;
-template class LIBNXSL_TEMPLATE_EXPORTABLE NXSL_ValueHashMap<NXSL_Identifier>;
-#endif
-
 /**
  * Compiled NXSL script
  */
@@ -1269,10 +1251,6 @@ public:
    void serialize(ByteStream& s) const;
    static NXSL_Program *load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize);
 };
-
-#ifdef _WIN32
-template class LIBNXSL_TEMPLATE_EXPORTABLE shared_ptr<NXSL_Program>;
-#endif
 
 /**
  * NXSL Script
@@ -1399,14 +1377,6 @@ public:
    virtual void write(const TCHAR *name, NXSL_Value *value) override;
    virtual NXSL_Value *read(const TCHAR *name, NXSL_ValueManager *vm) override;
 };
-
-#ifdef _WIN32
-template class LIBNXSL_TEMPLATE_EXPORTABLE ObjectArray<NXSL_Module>;
-template class LIBNXSL_TEMPLATE_EXPORTABLE NXSL_ObjectStack<NXSL_Value>;
-template class LIBNXSL_TEMPLATE_EXPORTABLE NXSL_ObjectStack<NXSL_CatchPoint>;
-template class LIBNXSL_TEMPLATE_EXPORTABLE ObjectMemoryPool<NXSL_Object>;
-template class LIBNXSL_TEMPLATE_EXPORTABLE ObjectMemoryPool<__nxsl_class_data>;
-#endif
 
 /**
  * NXSL virtual machine

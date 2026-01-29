@@ -1514,10 +1514,6 @@ public:
    MutableString& operator =(const TCHAR *src);
 };
 
-#ifdef _WIN32
-template class LIBNETXMS_TEMPLATE_EXPORTABLE shared_ptr<String>;
-#endif
-
 /**
  * Shared string
  */
@@ -2387,14 +2383,6 @@ public:
    }
 };
 
-#ifdef _WIN32
-// Define DLL interfaces for common integer types in libnetxms
-template class LIBNETXMS_TEMPLATE_EXPORTABLE IntegerArray<int32_t>;
-template class LIBNETXMS_TEMPLATE_EXPORTABLE IntegerArray<uint32_t>;
-template class LIBNETXMS_TEMPLATE_EXPORTABLE IntegerArray<int64_t>;
-template class LIBNETXMS_TEMPLATE_EXPORTABLE IntegerArray<uint64_t>;
-#endif
-
 /**
  * Auxilliary class to hold dynamically allocated array of structures
  */
@@ -2604,10 +2592,6 @@ template <typename T> struct KeyValuePair
 };
 
 class StringMapBase;
-
-#ifdef _WIN32
-template struct LIBNETXMS_EXPORTABLE std::pair<const TCHAR*, const TCHAR*>;
-#endif
 
 /**
  * String map iterator
@@ -3230,12 +3214,6 @@ public:
    }
 };
 
-#ifdef _WIN32
-// Define DLL interfaces for common integer types in libnetxms
-template class LIBNETXMS_TEMPLATE_EXPORTABLE HashSet<uint32_t>;
-template class LIBNETXMS_TEMPLATE_EXPORTABLE HashSet<uint64_t>;
-#endif
-
 /**
  * Counting hash set - allows multiple addition of same key and counts number of additions / removals
  */
@@ -3294,12 +3272,6 @@ public:
       return ConstIterator<const K>(new HashSetIterator());
    }
 };
-
-#ifdef _WIN32
-// Define DLL interfaces for common integer types in libnetxms
-template class LIBNETXMS_TEMPLATE_EXPORTABLE CountingHashSet<uint32_t>;
-template class LIBNETXMS_TEMPLATE_EXPORTABLE CountingHashSet<uint64_t>;
-#endif
 
 /**
  * Synchronized hash set
@@ -3402,14 +3374,6 @@ public:
       return result;
    }
 };
-
-#ifdef _WIN32
-// Define DLL interfaces for common integer types in libnetxms
-template class LIBNETXMS_TEMPLATE_EXPORTABLE SynchronizedHashSet<uint32_t>;
-template class LIBNETXMS_TEMPLATE_EXPORTABLE SynchronizedHashSet<uint64_t>;
-template class LIBNETXMS_TEMPLATE_EXPORTABLE SynchronizedCountingHashSet<uint32_t>;
-template class LIBNETXMS_TEMPLATE_EXPORTABLE SynchronizedCountingHashSet<uint64_t>;
-#endif
 
 /**
  * Opaque hash map entry structure
@@ -4321,10 +4285,6 @@ public:
    void setObjectId(uint32_t id) { m_objectId = id; }
 };
 
-#ifdef _WIN32
-template class LIBNETXMS_TEMPLATE_EXPORTABLE ObjectArray<TableCell>;
-#endif
-
 /**
  * Table row
  */
@@ -4409,11 +4369,6 @@ public:
          c->setObjectId(id);
    }
 };
-
-#ifdef _WIN32
-template class LIBNETXMS_TEMPLATE_EXPORTABLE ObjectArray<TableRow>;
-template class LIBNETXMS_TEMPLATE_EXPORTABLE ObjectArray<TableColumnDefinition>;
-#endif
 
 /**
  * Class for table data storage
@@ -4557,10 +4512,6 @@ public:
 
    static Table *createFromCSV(const TCHAR *content, const TCHAR separator);
 };
-
-#ifdef _WIN32
-template class LIBNETXMS_TEMPLATE_EXPORTABLE shared_ptr<Table>;
-#endif
 
 /**
  * sockaddr buffer
@@ -4879,10 +4830,6 @@ public:
    static const InetAddress NONE;
 };
 
-#ifdef _WIN32
-template class LIBNETXMS_TEMPLATE_EXPORTABLE ObjectArray<InetAddress>;
-#endif
-
 /**
  * IP address list
  */
@@ -5078,10 +5025,6 @@ struct BackgroundSocketPollRequest
    bool cancelled;
 };
 
-#ifdef _WIN32
-template class LIBNETXMS_TEMPLATE_EXPORTABLE SynchronizedObjectMemoryPool<BackgroundSocketPollRequest>;
-#endif
-
 /**
  * Background socket poller
  */
@@ -5183,10 +5126,6 @@ public:
       backgroundPoll(timeout, AbstractCommChannel_PollWrapperCallback<C>, new AbstractCommChannel_PollWrapperData<C>(callback, context));
    }
 };
-
-#ifdef _WIN32
-template class LIBNETXMS_TEMPLATE_EXPORTABLE shared_ptr<AbstractCommChannel>;
-#endif
 
 /**
  * Socket communication channel

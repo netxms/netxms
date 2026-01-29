@@ -141,9 +141,6 @@ struct LogParserCallbackData
  *    log record timestamp, user data
  */
 typedef std::function<void (const LogParserCallbackData& data)> LogParserCallback;
-#ifdef _WIN32
-template class LIBNXLP_EXPORTABLE std::function<void(const LogParserCallbackData& data)>;
-#endif
 
 /**
  * Log parser action callback
@@ -151,9 +148,6 @@ template class LIBNXLP_EXPORTABLE std::function<void(const LogParserCallbackData
  *    NetXMS agent action, agent action arguments, user data
  */
 typedef std::function<void (const TCHAR*, const StringList&, void*)> LogParserActionCallback;
-#ifdef _WIN32
-template class LIBNXLP_EXPORTABLE std::function<void(const TCHAR*, const StringList&, void*)>;
-#endif
 
 /**
  * Log parser data push callback
@@ -161,9 +155,6 @@ template class LIBNXLP_EXPORTABLE std::function<void(const TCHAR*, const StringL
  *    NetXMS agent data push parameter name, parameter value
  */
 typedef std::function<bool (const TCHAR* parameter, const TCHAR *value)> LogParserDataPushCallback;
-#ifdef _WIN32
-template class LIBNXLP_EXPORTABLE std::function<bool(const TCHAR* parameter, const TCHAR *value)>;
-#endif
 
 /**
  * Log parser copy callback
@@ -171,9 +162,6 @@ template class LIBNXLP_EXPORTABLE std::function<bool(const TCHAR* parameter, con
  *    record text, source, event ID (facility), severity, user data
  */
 typedef std::function<void (const TCHAR*, const TCHAR*, uint32_t, uint32_t, void*)> LogParserCopyCallback;
-#ifdef _WIN32
-template class LIBNXLP_EXPORTABLE std::function<void(const TCHAR*, const TCHAR*, uint32_t, uint32_t, void*)>;
-#endif
 
 class LIBNXLP_EXPORTABLE LogParser;
 
@@ -227,13 +215,6 @@ struct LogParserMetric
    time_t timestamp;
    TCHAR value[MAX_DB_STRING];
 };
-
-#ifdef _WIN32
-template class LIBNXLP_EXPORTABLE HashMap<uint32_t, ObjectRuleStats>;
-template class LIBNXLP_EXPORTABLE HashMap<uint32_t, AbsenceState>;
-template class LIBNXLP_EXPORTABLE HashMap<uint32_t, String>;
-template class LIBNXLP_EXPORTABLE StructArray<LogParserMetric>;
-#endif
 
 /**
  * Log parser rule
@@ -380,10 +361,6 @@ public:
 
    void restoreCounters(const LogParserRule& rule);
 };
-
-#ifdef _WIN32
-template class LIBNXLP_EXPORTABLE ObjectArray<LogParserRule>;
-#endif
 
 /**
  * Log parser class

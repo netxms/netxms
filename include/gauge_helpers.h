@@ -136,13 +136,6 @@ public:
    }
 };
 
-#ifdef _WIN32
-template class LIBNETXMS_TEMPLATE_EXPORTABLE std::function<int64_t ()>;
-template class LIBNETXMS_TEMPLATE_EXPORTABLE GaugeData<int32_t>;
-template class LIBNETXMS_TEMPLATE_EXPORTABLE GaugeData<int64_t>;
-template class LIBNETXMS_TEMPLATE_EXPORTABLE Gauge<int32_t>;
-template class LIBNETXMS_TEMPLATE_EXPORTABLE Gauge<int64_t>;
-#endif
 
 /**
  * 64 bit integer gauge

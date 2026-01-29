@@ -231,11 +231,6 @@ struct WaitQueueWaiter
    }
 };
 
-#ifdef _WIN32
-template class LIBNETXMS_TEMPLATE_EXPORTABLE ObjectMemoryPool<WaitQueueUnclaimedMessage>;
-template class LIBNETXMS_TEMPLATE_EXPORTABLE ObjectMemoryPool<WaitQueueWaiter>;
-#endif
-
 /**
  * Message waiting queue class
  */
@@ -327,10 +322,6 @@ enum MessageReceiverResult
    MSGRECV_WANT_READ = 6,
    MSGRECV_WANT_WRITE = 7
 };
-
-#ifdef _WIN32
-template class LIBNETXMS_TEMPLATE_EXPORTABLE shared_ptr<NXCPEncryptionContext>;
-#endif
 
 /**
  * Message receiver - abstract base class
