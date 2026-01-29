@@ -1450,6 +1450,7 @@ public class NXCPCodes
    public static final long VID_QUERY_SQL = 915;
    public static final long VID_AI_FUNCTION_NAME = 916;
    public static final long VID_AI_HINT = 917;
+   public static final long VID_TEMPLATE_REMOVAL_GP = 918;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

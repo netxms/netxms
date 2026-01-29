@@ -2717,9 +2717,10 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
       response->setField(VID_ZONING_ENABLED, (g_flags & AF_ENABLE_ZONING) != 0);
       response->setField(VID_POLLING_INTERVAL, (int32_t)DCObject::m_defaultPollingInterval);
       response->setField(VID_RETENTION_TIME, (int32_t)DCObject::m_defaultRetentionTime);
-      response->setField(VID_ALARM_STATUS_FLOW_STATE, ConfigReadBoolean(_T("Alarms.StrictStatusFlow"), false));
-      response->setField(VID_TIMED_ALARM_ACK_ENABLED, ConfigReadBoolean(_T("Alarms.EnableTimedAck"), false));
-      response->setField(VID_VIEW_REFRESH_INTERVAL, (uint16_t)ConfigReadInt(_T("Client.MinViewRefreshInterval"), 300));
+      response->setField(VID_TEMPLATE_REMOVAL_GP, ConfigReadInt(L"DataCollection.TemplateRemovalGracePeriod", 0));
+      response->setField(VID_ALARM_STATUS_FLOW_STATE, ConfigReadBoolean(L"Alarms.StrictStatusFlow", false));
+      response->setField(VID_TIMED_ALARM_ACK_ENABLED, ConfigReadBoolean(L"Alarms.EnableTimedAck", false));
+      response->setField(VID_VIEW_REFRESH_INTERVAL, (uint16_t)ConfigReadInt(L"Client.MinViewRefreshInterval", 300));
       response->setField(VID_HELPDESK_LINK_ACTIVE, (g_flags & AF_HELPDESK_LINK_ACTIVE) != 0);
       response->setField(VID_ALARM_LIST_DISP_LIMIT, ConfigReadULong(_T("Client.AlarmList.DisplayLimit"), 4096));
       response->setField(VID_SERVER_COMMAND_TIMEOUT, ConfigReadULong(_T("Server.CommandOutputTimeout"), 60));

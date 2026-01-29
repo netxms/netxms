@@ -386,6 +386,7 @@ public class NXCSession
    private String shortTimeFormat;
    private int defaultDciRetentionTime;
    private int defaultDciPollingInterval;
+   private int templateRemovalGracePeriod;
    private boolean strictAlarmStatusFlow;
    private boolean timedAlarmAckEnabled;
    private int minViewRefreshInterval;
@@ -2586,6 +2587,8 @@ public class NXCSession
       defaultDciRetentionTime = response.getFieldAsInt32(NXCPCodes.VID_RETENTION_TIME);
       if (defaultDciRetentionTime == 0)
          defaultDciRetentionTime = 30;
+
+      templateRemovalGracePeriod = response.getFieldAsInt32(NXCPCodes.VID_TEMPLATE_REMOVAL_GP);
 
       minViewRefreshInterval = response.getFieldAsInt32(NXCPCodes.VID_VIEW_REFRESH_INTERVAL);
       if (minViewRefreshInterval <= 0)
@@ -12935,6 +12938,16 @@ public class NXCSession
    public final int getDefaultDciPollingInterval()
    {
       return defaultDciPollingInterval;
+   }
+
+   /**
+    * Get template removal grace period in days
+    *
+    * @return template removal grace period in days
+    */
+   public final int getTemplateRemovalGracePeriod()
+   {
+      return templateRemovalGracePeriod;
    }
 
    /**
