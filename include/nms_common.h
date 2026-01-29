@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -403,6 +403,8 @@ typedef unsigned __int64 uint64_t;
 #define HAVE_LIBEXPAT  1
 #define HAVE_LOCALE_H  1
 #define HAVE_SETLOCALE 1
+
+#define strtok_r strtok_s
 
 #define SHLIB_SUFFIX	_T(".dll")
 

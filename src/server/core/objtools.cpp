@@ -1791,14 +1791,14 @@ json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAcces
    {
       char buffer[256], *state;
       strlcpy(buffer, typesFilter, 256);
-      char *token = strtok_s(buffer, ",", &state);
+      char *token = strtok_r(buffer, ",", &state);
       while (token != nullptr)
       {
          TrimA(token);
          int type = ToolTypeFromString(token);
          if (type != -1)
             typeSet.put(type);
-         token = strtok_s(nullptr, ",", &state);
+         token = strtok_r(nullptr, ",", &state);
       }
    }
 
