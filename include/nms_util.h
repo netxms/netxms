@@ -4689,16 +4689,6 @@ public:
       m_length = std::min(static_cast<uint16_t>(length), MaxLen);
       memcpy(m_value, value, m_length);
    }
-   GenericId(const GenericId& src)
-   {
-      memcpy(this, &src, sizeof(GenericId<MaxLen>));
-   }
-
-   GenericId& operator=(const GenericId& src)
-   {
-      memcpy(this, &src, sizeof(GenericId<MaxLen>));
-      return *this;
-   }
 
    const BYTE *value() const { return m_value; }
    size_t length() const { return m_length; }
