@@ -438,6 +438,7 @@
     <ClCompile Include="ai_tasks.cpp" />
     <ClCompile Include="alarm.cpp" />
     <ClCompile Include="alarm_category.cpp" />
+    <ClCompile Include="anomaly_profile.cpp" />
     <ClCompile Include="asset.cpp" />
     <ClCompile Include="asset_management.cpp" />
     <ClCompile Include="audit.cpp" />

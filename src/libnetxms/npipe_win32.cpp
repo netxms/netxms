@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -149,7 +149,7 @@ void NamedPipeListener::serverThread()
 		if (connected || (GetLastError() == ERROR_PIPE_CONNECTED))
 		{
          nxlog_debug(5, _T("NamedPipeListener(%s): accepted connection"), m_name);
-         NamedPipe *pipe = new NamedPipe(m_name, m_handle, NULL);
+         NamedPipe *pipe = new NamedPipe(m_name, m_handle, nullptr);
          m_reqHandler(pipe, m_userArg);
          delete pipe;
 		}
@@ -170,7 +170,7 @@ void NamedPipeListener::serverThread()
             if (GetOverlappedResult(m_handle, &ov, &bytes, TRUE))
             {
                nxlog_debug(5, _T("NamedPipeListener(%s): accepted connection"), m_name);
-               NamedPipe *pipe = new NamedPipe(m_name, m_handle, NULL);
+               NamedPipe *pipe = new NamedPipe(m_name, m_handle, nullptr);
                m_reqHandler(pipe, m_userArg);
                delete pipe;
             }
@@ -235,7 +235,7 @@ reconnect:
 
 	DWORD pipeMode = PIPE_READMODE_MESSAGE;
 	SetNamedPipeHandleState(h, &pipeMode, nullptr, nullptr);
-   return new NamedPipe(name, h, false);
+   return new NamedPipe(name, h, nullptr);
 }
 
 /**

@@ -412,6 +412,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "planet", "src\server\driver
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "aitools", "src\server\aitools\aitools.vcxproj", "{B6345D17-E650-1345-B147-78D4D73313A3}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxmibdump", "src\snmp\nxmibdump\nxmibdump.vcxproj", "{2046CB18-85FF-1E4D-87F6-8F94D9E0AE6D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -738,9 +740,7 @@ Global
 		{9F722C62-78FD-4D8C-A7C7-2815B09F1943}.Debug|x64.ActiveCfg = Debug|x64
 		{9F722C62-78FD-4D8C-A7C7-2815B09F1943}.Debug|x64.Build.0 = Debug|x64
 		{9F722C62-78FD-4D8C-A7C7-2815B09F1943}.Release - Client Only|ARM64.ActiveCfg = Release - Client Only|ARM64
-		{9F722C62-78FD-4D8C-A7C7-2815B09F1943}.Release - Client Only|ARM64.Build.0 = Release - Client Only|ARM64
 		{9F722C62-78FD-4D8C-A7C7-2815B09F1943}.Release - Client Only|Win32.ActiveCfg = Release - Client Only|Win32
-		{9F722C62-78FD-4D8C-A7C7-2815B09F1943}.Release - Client Only|Win32.Build.0 = Release - Client Only|Win32
 		{9F722C62-78FD-4D8C-A7C7-2815B09F1943}.Release - Client Only|x64.ActiveCfg = Release - Client Only|x64
 		{9F722C62-78FD-4D8C-A7C7-2815B09F1943}.Release|ARM64.ActiveCfg = Release|ARM64
 		{9F722C62-78FD-4D8C-A7C7-2815B09F1943}.Release|ARM64.Build.0 = Release|ARM64
@@ -3077,6 +3077,19 @@ Global
 		{B6345D17-E650-1345-B147-78D4D73313A3}.Release|Win32.ActiveCfg = Release|Win32
 		{B6345D17-E650-1345-B147-78D4D73313A3}.Release|x64.ActiveCfg = Release|x64
 		{B6345D17-E650-1345-B147-78D4D73313A3}.Release|x64.Build.0 = Release|x64
+		{2046CB18-85FF-1E4D-87F6-8F94D9E0AE6D}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{2046CB18-85FF-1E4D-87F6-8F94D9E0AE6D}.Debug|ARM64.Build.0 = Debug|ARM64
+		{2046CB18-85FF-1E4D-87F6-8F94D9E0AE6D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2046CB18-85FF-1E4D-87F6-8F94D9E0AE6D}.Debug|x64.ActiveCfg = Debug|x64
+		{2046CB18-85FF-1E4D-87F6-8F94D9E0AE6D}.Debug|x64.Build.0 = Debug|x64
+		{2046CB18-85FF-1E4D-87F6-8F94D9E0AE6D}.Release - Client Only|ARM64.ActiveCfg = Release - Client Only|ARM64
+		{2046CB18-85FF-1E4D-87F6-8F94D9E0AE6D}.Release - Client Only|Win32.ActiveCfg = Release - Client Only|Win32
+		{2046CB18-85FF-1E4D-87F6-8F94D9E0AE6D}.Release - Client Only|x64.ActiveCfg = Release - Client Only|x64
+		{2046CB18-85FF-1E4D-87F6-8F94D9E0AE6D}.Release|ARM64.ActiveCfg = Release|ARM64
+		{2046CB18-85FF-1E4D-87F6-8F94D9E0AE6D}.Release|ARM64.Build.0 = Release|ARM64
+		{2046CB18-85FF-1E4D-87F6-8F94D9E0AE6D}.Release|Win32.ActiveCfg = Release|Win32
+		{2046CB18-85FF-1E4D-87F6-8F94D9E0AE6D}.Release|x64.ActiveCfg = Release|x64
+		{2046CB18-85FF-1E4D-87F6-8F94D9E0AE6D}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -3259,6 +3272,7 @@ Global
 		{CD84A431-258B-F04A-9AF1-B8B67EF95E8B} = {7C6DD495-5A44-4D50-B065-A8CA120272F7}
 		{4F2B8F51-B9B3-41AB-989E-B0AB9833B3A0} = {53997B2A-D94C-428C-816D-938C297A1866}
 		{B6345D17-E650-1345-B147-78D4D73313A3} = {06312B78-7ADC-49FF-9554-0B170825CD49}
+		{2046CB18-85FF-1E4D-87F6-8F94D9E0AE6D} = {268BC97D-BFC6-4BD7-BF78-E6AC1D8BA37E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4F6B1F2-1076-4A45-8750-AF6CA13917B3}

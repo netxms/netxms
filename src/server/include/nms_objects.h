@@ -224,8 +224,8 @@ class NXCORE_EXPORTABLE TcpProxyCallback
 {
 public:
    virtual ~TcpProxyCallback() = default;
-   virtual void onTcpProxyData(AgentConnectionEx *conn, uint32_t channelId,
-                               const void *data, size_t size, bool errorIndicator) = 0;
+   
+   virtual void onTcpProxyData(AgentConnectionEx *conn, uint32_t channelId, const void *data, size_t size, bool errorIndicator) = 0;
    virtual void onTcpProxyAgentDisconnect(AgentConnectionEx *conn) = 0;
 };
 

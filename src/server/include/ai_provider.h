@@ -38,7 +38,7 @@ enum class LLMProviderType
 /**
  * LLM provider configuration
  */
-struct LLMProviderConfig
+struct NXCORE_EXPORTABLE LLMProviderConfig
 {
    MutableString name;
    LLMProviderType type;
