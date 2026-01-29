@@ -23,6 +23,7 @@ serverinclude_HEADERS = \
 	netxms-editline.h \
 	netxms_maps.h \
 	netxms_mt.h \
+	netxms-webapi.h \
 	nms_actions.h \
 	nms_alarm.h \
 	nms_core.h \
