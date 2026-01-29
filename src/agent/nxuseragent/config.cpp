@@ -21,6 +21,7 @@
 
 #include "nxuseragent.h"
 #include <netxms-version.h>
+#include <sys/stat.h>   // _S_IREAD / _S_IWRITE (pulled in transitively by MSVC headers, not by mingw)
 
 /**
  * "Close on deactivate" flag

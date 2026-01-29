@@ -97,7 +97,7 @@ bool ContainerBase::saveToDatabase(DB_HANDLE hdb)
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_containers"), _T("id"), m_this->m_id, columns);
       if (hStmt != nullptr)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (LONG)m_this->getObjectClass());
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_this->getObjectClass());
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_this->m_id);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);

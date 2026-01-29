@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - avaya network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = avaya
+SOURCES = avaya.cpp baystack.cpp ers8000.cpp ntws.cpp vlan-if.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

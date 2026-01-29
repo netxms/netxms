@@ -190,7 +190,6 @@ void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool, bool isClientA
 
 #ifdef _WIN32
    _set_invalid_parameter_handler(InvalidParameterHandler);
-   _CrtSetReportMode(_CRT_ASSERT, 0);
    SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX);
    imp_SetThreadDescription = reinterpret_cast<HRESULT (WINAPI *)(HANDLE, PCWSTR)>(GetProcAddress(LoadLibrary(_T("kernel32.dll")), "SetThreadDescription"));
 #endif

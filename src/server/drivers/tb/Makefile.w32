@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - tb network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = tb
+SOURCES = tb.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

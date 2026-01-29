@@ -1,0 +1,59 @@
+#
+# Makefile.w32 - libnxdbmgr (database manager support library) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TARGET = $(BIN_DIR)/libnxdbmgr.dll
+IMPLIB = $(LIB_DIR)/libnxdbmgr.dll.a
+
+SOURCES = \
+	check.cpp \
+	config.cpp \
+	confirm.cpp \
+	main.cpp \
+	query.cpp \
+	upgrade.cpp \
+	xml_to_json.cpp
+
+RC_SOURCE = $(TOPDIR)/build/netxms-build-tag.rc
+# Objects go to a per-architecture directory so multiple ARCH builds coexist
+OBJDIR = $(OBJ_DIR)/$(subst $(TOPDIR)/,,$(CURDIR))
+OBJECTS = $(addprefix $(OBJDIR)/,$(SOURCES:.cpp=.o))
+RC_OBJECT = $(OBJDIR)/netxms-build-tag.o
+
+CXXFLAGS = $(COMMON_CXXFLAGS) -DLIBNXDBMGR_EXPORTS -I$(TOPDIR)/src/server/include
+
+LDFLAGS = $(COMMON_LDFLAGS) $(COMMON_LIBDIRS) \
+	-shared \
+	-Wl,--out-implib,$(IMPLIB)
+
+LIBS = -lnxsrv -lnxdb -lnetxms -lnxjansson $(WIN_LIBS)
+
+.PHONY: all clean install
+
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS) $(RC_OBJECT)
+	@mkdir -p $(BIN_DIR) $(LIB_DIR)
+	@echo "  LD      $@"
+	$(Q)$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
+	@echo "  Built: $(TARGET)"
+
+$(OBJDIR)/%.o: %.cpp
+	@mkdir -p $(dir $@)
+	@echo "  CXX     $<"
+	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(RC_OBJECT): $(RC_SOURCE)
+	@mkdir -p $(dir $@)
+	@echo "  RC      $<"
+	$(Q)$(WINDRES) -I$(TOPDIR)/include -I$(TOPDIR)/build $< -o $@
+
+clean:
+	rm -f $(OBJECTS) $(RC_OBJECT) $(TARGET) $(IMPLIB) .depend
+
+install: $(TARGET)
+	@echo "  INSTALL $(TARGET)"
+	mkdir -p "$(PREFIX)/bin" "$(PREFIX)/lib"
+	cp $(TARGET) "$(PREFIX)/bin/"
+	cp $(IMPLIB) "$(PREFIX)/lib/"

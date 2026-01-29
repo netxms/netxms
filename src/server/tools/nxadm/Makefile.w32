@@ -1,0 +1,11 @@
+#
+# Makefile.w32 - nxadm (local server administration console) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = nxadm
+SOURCES = comm.cpp nxadm.cpp
+TOOL_CPPFLAGS = -I$(TOPDIR)/src/server/include
+TOOL_LIBS = -lnetxms
+
+include $(TOPDIR)/build/tool-common.mk

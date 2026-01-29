@@ -114,7 +114,7 @@ DB_RESULT NXCORE_EXPORTABLE ExecuteSelectOnObject(DB_HANDLE hdb, uint32_t object
 class AgentTunnel;
 class GenericAgentPolicy;
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<GeoLocation>;
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<AgentTunnel>;
 #endif
@@ -287,7 +287,7 @@ public:
    void setTcpProxyCallback(TcpProxyCallback *callback);
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<AgentConnectionEx>;
 #endif
 
@@ -637,7 +637,7 @@ public:
    AbstractIndexWithDestructor(const AbstractIndexWithDestructor& src) = delete;
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<NetObj>>;
 #endif
 
@@ -844,7 +844,7 @@ enum NodeOrigin
    NODE_ORIGIN_TUNNEL_AUTOBIND = 2
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<Cluster>;
 #endif
 
@@ -964,7 +964,7 @@ public:
    json_t *createExportRecord() const;
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<SummaryTableColumn>;
 #endif
 
@@ -1067,7 +1067,7 @@ public:
    json_t *toJson() const;
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<ObjectUrl>;
 #endif
 
@@ -1262,7 +1262,7 @@ struct ACL_ELEMENT
    uint32_t accessRights;
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE StructArray<ACL_ELEMENT>;
 #endif
 
@@ -2120,7 +2120,7 @@ public:
    static IcmpStatCollector *loadFromDatabase(DB_HANDLE hdb, uint32_t objectId, const TCHAR *target, int period);
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<DCObject>;
 template class NXCORE_TEMPLATE_EXPORTABLE ObjectMemoryPool<shared_ptr<DCObject>>;
 template class NXCORE_TEMPLATE_EXPORTABLE SharedObjectArray<DCObject>;
@@ -2352,7 +2352,7 @@ public:
    virtual bool isUsingEvent(uint32_t eventCode) const override;
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<GenericAgentPolicy>;
 template class NXCORE_TEMPLATE_EXPORTABLE ObjectMemoryPool<shared_ptr<GenericAgentPolicy>>;
 template class NXCORE_TEMPLATE_EXPORTABLE SharedObjectArray<GenericAgentPolicy>;
@@ -2442,7 +2442,7 @@ struct InterfaceState
    SpanningTreePortState stpPortState;
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE HashMap<uint32_t, InterfaceState>;
 #endif
 
@@ -2772,7 +2772,7 @@ inline String Interface::getIpAddressListAsString() const
    return result;
 }
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE weak_ptr<Node>;
 #endif
 
@@ -3363,7 +3363,7 @@ public:
    void setRemoveDCIOnDelete(bool removeDCI) { m_removeDCIOnDelete = removeDCI; }
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<Cluster>;
 #endif
 
@@ -3602,7 +3602,7 @@ public:
    virtual json_t *toJson(bool includeSensitiveData = false) override;
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE weak_ptr<CloudDomain>;
 #endif
 
@@ -3948,7 +3948,7 @@ public:
    }
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<ComponentTree>;
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<DeviceView>;
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<NetworkMapObjectList>;
@@ -4717,7 +4717,7 @@ public:
    static const TCHAR *typeName(NodeType type);
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<Node>;
 #endif
 
@@ -4985,7 +4985,7 @@ public:
    String toString() const;
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<RackPassiveElement>;
 #endif
 
@@ -5098,7 +5098,7 @@ struct ZoneProxy
    }
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<ZoneProxy>>;
 template class NXCORE_TEMPLATE_EXPORTABLE SharedPointerIndex<ZoneProxy>;
 #endif
@@ -5225,7 +5225,7 @@ public:
    void loadFromDatabase(DB_HANDLE hdb, DB_STATEMENT *prepartedStatements);
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE StructArray<INPUT_DCI>;
 #endif
 
@@ -5323,7 +5323,7 @@ struct NetworkMapObjectLocation
    int32_t posY;
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<NetworkMapElement>;
 template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<NetworkMapLink>;
 template class NXCORE_TEMPLATE_EXPORTABLE StructArray<NetworkMapObjectLocation>;
@@ -5746,7 +5746,7 @@ struct NXCORE_EXPORTABLE DashboardElement
    }
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<DashboardElement>;
 #endif
 
@@ -6006,7 +6006,7 @@ public:
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<BusinessServiceCheck>;
 template class NXCORE_TEMPLATE_EXPORTABLE ObjectMemoryPool<shared_ptr<BusinessServiceCheck>>;
 template class NXCORE_TEMPLATE_EXPORTABLE SharedObjectArray<BusinessServiceCheck>;
@@ -6406,7 +6406,7 @@ bool NXCORE_EXPORTABLE IsParentObject(uint32_t object1, uint32_t object2);
 unique_ptr<StructArray<DependentNode>> GetNodeDependencies(uint32_t nodeId);
 IntegerArray<uint32_t> CheckSubnetOverlap(const InetAddress &addr, int32_t uin);
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<ObjectQueryResult>;
 #endif
 

@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - wcc (web connection cache module) for Windows/MinGW
+# Part of NetXMS project
+#
+
+MODULE = wcc
+SOURCES = $(wildcard *.cpp)
+MOD_LIBS = $(CURL_LIBS)
+
+include $(TOPDIR)/src/server/module-common.mk

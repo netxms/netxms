@@ -1,0 +1,13 @@
+#
+# Makefile.w32 - nxaction (remote action execution tool) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = nxaction
+SOURCES = nxaction.cpp
+TOOL_CPPFLAGS = -I$(TOPDIR)/src/server/include
+TOOL_LIBS = -lnxsrv -lnetxms
+# Entry point is _tmain (-> wmain under UNICODE)
+TOOL_LDFLAGS = -municode
+
+include $(TOPDIR)/build/tool-common.mk

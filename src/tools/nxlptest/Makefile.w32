@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - nxlptest (log parser test tool) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = nxlptest
+SOURCES = nxlptest.cpp
+TOOL_LIBS = -lnxlp -lnetxms
+
+include $(TOPDIR)/build/tool-common.mk

@@ -1,0 +1,54 @@
+#
+# Makefile.w32 - nxmc (management console launcher) for Windows/MinGW
+# Part of NetXMS project
+#
+# Native launcher for the Java management console. It is a GUI application
+# (wWinMain entry point) that loads the JVM at runtime through libnxjava, so
+# only the JNI headers are needed at build time. nxmc.rc embeds the app icon.
+#
+
+TARGET = $(BIN_DIR)/nxmc.exe
+
+SOURCES = nxmc.cpp
+# Objects go to a per-architecture directory so multiple ARCH builds coexist
+OBJDIR = $(OBJ_DIR)/$(subst $(TOPDIR)/,,$(CURDIR))
+OBJECTS = $(addprefix $(OBJDIR)/,$(SOURCES:.cpp=.o))
+RC_OBJECT = $(OBJDIR)/nxmc-res.o
+
+CXXFLAGS = $(COMMON_CXXFLAGS) -I$(JNI_ROOT)/include -I$(JNI_ROOT)/include/win32
+
+# -mwindows selects the GUI subsystem; -municode makes the CRT use the wide
+# entry point (wWinMain) that nxmc.cpp provides.
+LDFLAGS = $(COMMON_LDFLAGS) $(COMMON_LIBDIRS) -mwindows -municode
+LIBS = -lnxjava -lnetxms $(WIN_LIBS)
+
+.PHONY: all clean install
+
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS) $(RC_OBJECT)
+	@mkdir -p $(BIN_DIR)
+	@echo "  LD      $@"
+	$(Q)$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
+	@echo "  Built: $(TARGET)"
+
+$(OBJDIR)/%.o: %.cpp
+	@mkdir -p $(dir $@)
+	@echo "  CXX     $<"
+	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# nxmc.rc is stored as UTF-16LE (for the MSVC toolchain). llvm-rc cannot
+# preprocess UTF-16, so transcode to a BOM-less UTF-8 copy before compiling.
+$(RC_OBJECT): nxmc.rc
+	@mkdir -p $(dir $@)
+	@echo "  RC      $<"
+	$(Q)iconv -f UTF-16 -t UTF-8 nxmc.rc > nxmc.utf8.rc
+	$(Q)$(WINDRES) -I. -I$(TOPDIR)/include -I$(TOPDIR)/build nxmc.utf8.rc -o $@
+
+clean:
+	rm -f $(OBJECTS) $(RC_OBJECT) nxmc.utf8.rc $(TARGET) .depend
+
+install: $(TARGET)
+	@echo "  INSTALL $(TARGET)"
+	mkdir -p "$(PREFIX)/bin"
+	cp $(TARGET) "$(PREFIX)/bin/"

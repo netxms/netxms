@@ -64,6 +64,11 @@ static THREAD_RESULT THREAD_CALL ControlConnector(void *arg)
 	ACL *acl = NULL;
 	TCHAR errorText[1024];
 
+	// Declared before the first "goto cleanup" so the jumps do not bypass their
+	// initialization. hPipe is initialized to NULL because the cleanup label uses it.
+	HANDLE hPipe = NULL;
+	int connectErrors = 0;
+
 	// Initialize an EXPLICIT_ACCESS structure for an ACE.
 	// The ACE will allow either Everyone or given user to access pipe
 	ZeroMemory(&ea, sizeof(EXPLICIT_ACCESS));
@@ -138,7 +143,7 @@ static THREAD_RESULT THREAD_CALL ControlConnector(void *arg)
 	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
 	sa.bInheritHandle = FALSE;
 	sa.lpSecurityDescriptor = sd;
-	HANDLE hPipe = CreateNamedPipe(_T("\\\\.\\pipe\\nxagentd.control"), PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, 1, 8192, 8192, 0, &sa);
+	hPipe = CreateNamedPipe(_T("\\\\.\\pipe\\nxagentd.control"), PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, 1, 8192, 8192, 0, &sa);
 	if (hPipe == INVALID_HANDLE_VALUE)
 	{
 		AgentWriteDebugLog(2, _T("ControlConnector: CreateNamedPipe failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
@@ -146,7 +151,6 @@ static THREAD_RESULT THREAD_CALL ControlConnector(void *arg)
 	}
 
 	AgentWriteDebugLog(2, _T("ControlConnector: named pipe created, waiting for connection"));
-	int connectErrors = 0;
 	while(!(g_dwFlags & AF_SHUTDOWN))
 	{
 		BOOL connected = ConnectNamedPipe(hPipe, NULL);

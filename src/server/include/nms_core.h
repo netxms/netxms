@@ -517,7 +517,7 @@ public:
 };
 
 // Explicit instantiation of template classes
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE HashMap<uint32_t, ServerDownloadFileInfo>;
 template class NXCORE_TEMPLATE_EXPORTABLE HashMap<uint32_t, NXSL_VM>;
 template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<TcpProxy>;

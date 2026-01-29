@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - symbol-ws network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = symbol-ws
+SOURCES = symbol-ws.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

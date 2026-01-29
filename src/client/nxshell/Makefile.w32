@@ -1,0 +1,14 @@
+#
+# Makefile.w32 - nxshell (NXSL/Java shell launcher) for Windows/MinGW
+# Part of NetXMS project
+#
+# nxshell launches the bundled Java shell through libnxjava; the JVM is loaded
+# at runtime, so only the JNI headers are needed at build time.
+#
+
+TOOL = nxshell
+SOURCES = nxshell.cpp
+TOOL_CPPFLAGS = -I$(JNI_ROOT)/include -I$(JNI_ROOT)/include/win32
+TOOL_LIBS = -lnxjava -lnetxms
+
+include $(TOPDIR)/build/tool-common.mk

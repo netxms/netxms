@@ -188,7 +188,7 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
    }
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<AuthenticationTokenDescriptor>;
 #endif
 

@@ -368,22 +368,22 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
          _sntprintf(lon, 32, _T("%f"), m_geoLocation.getLongitude());
 
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_status);
-         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)(m_isDeleted ? 1 : 0));
-         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)(m_inheritAccessRights ? 1 : 0));
-         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_timestamp);
-         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_statusCalcAlg);
-         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_statusPropAlg);
-         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_fixedStatus);
-         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_statusShift);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_status);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (m_isDeleted ? 1 : 0));
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (m_inheritAccessRights ? 1 : 0));
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_timestamp);
+         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_statusCalcAlg);
+         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_statusPropAlg);
+         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_fixedStatus);
+         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_statusShift);
          DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, szTranslation, DB_BIND_STATIC);
-         DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (LONG)m_statusSingleThreshold);
+         DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_statusSingleThreshold);
          DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, szThresholds, DB_BIND_STATIC);
          DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_comments, DB_BIND_STATIC);
-         DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getType());
+         DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_geoLocation.getType());
          DBBind(hStmt, 15, DB_SQLTYPE_VARCHAR, lat, DB_BIND_STATIC);
          DBBind(hStmt, 16, DB_SQLTYPE_VARCHAR, lon, DB_BIND_STATIC);
-         DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getAccuracy());
+         DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_geoLocation.getAccuracy());
          DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
          DBBind(hStmt, 19, DB_SQLTYPE_VARCHAR, m_guid);
          DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_mapImage);
@@ -405,7 +405,7 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 36, DB_SQLTYPE_INTEGER, m_categoryId);
          DBBind(hStmt, 37, DB_SQLTYPE_TEXT, m_commentsSource, DB_BIND_STATIC);
          DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, m_assetId);
-         DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, (LONG)(m_isHidden ? 1 : 0));
+         DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, (m_isHidden ? 1 : 0));
          DBBind(hStmt, 40, DB_SQLTYPE_VARCHAR, m_aiHint, DB_BIND_STATIC, 2000);
          DBBind(hStmt, 41, DB_SQLTYPE_INTEGER, m_id);
 

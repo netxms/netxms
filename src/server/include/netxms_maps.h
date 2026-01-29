@@ -87,7 +87,7 @@ struct NXCORE_EXPORTABLE ObjLink
    }
  };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<ObjLink>;
 #endif
 
@@ -161,7 +161,7 @@ public:
 	void dumpToLog() const;
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<NetworkMapObjectList>;
 #endif
 

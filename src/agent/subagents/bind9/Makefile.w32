@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - bind9 subagent for Windows/MinGW
+# Part of NetXMS project
+#
+
+SUBAGENT = bind9
+SOURCES = bind9.cpp
+SA_LIBS = -lnxjansson $(CURL_LIBS) $(PCRE_LIBS)
+
+include $(TOPDIR)/src/agent/subagents/subagent-common.mk

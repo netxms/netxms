@@ -50,9 +50,9 @@ Type: filesandordirs; Name: "{app}\jetty-home\modules\*"
 
 [Files]
 ; Launcher components
-Source: "..\..\..\x64\Release\jansson.dll"; DestDir: "{app}\bin"; BeforeInstall: StopAllServices; Flags: ignoreversion signonce; Components: webui
-Source: "..\..\..\x64\Release\libnetxms.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: webui
-Source: "..\..\..\x64\Release\nxweblauncher.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: webui
+Source: "..\..\..\out\x64\Release\bin\nxjansson.dll"; DestDir: "{app}\bin"; BeforeInstall: StopAllServices; Flags: ignoreversion signonce; Components: webui
+Source: "..\..\..\out\x64\Release\bin\libnetxms.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: webui
+Source: "..\..\..\out\x64\Release\bin\nxweblauncher.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: webui
 Source: "..\files\windows\x64\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\files\windows\x64\libexpat.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\files\windows\x64\pcre.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce

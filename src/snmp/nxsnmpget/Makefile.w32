@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - nxsnmpget (SNMP GET command-line tool) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = nxsnmpget
+SOURCES = nxsnmpget.cpp
+TOOL_LIBS = -lnxsnmp -lnetxms -lnxjansson
+
+include $(TOPDIR)/build/tool-common.mk

@@ -1,0 +1,17 @@
+#
+# Makefile.w32 - nxmibc (SNMP MIB compiler) for Windows/MinGW
+# Part of NetXMS project
+#
+# The lexer/parser sources (lex.parser.cpp, parser.tab.cpp) are pre-generated
+# and committed, so no lex/yacc step is needed for the Windows build.
+#
+
+TOOL = nxmibc
+SOURCES = \
+	lex.parser.cpp \
+	mibparse.cpp \
+	nxmibc.cpp \
+	parser.tab.cpp
+TOOL_LIBS = -lnxsnmp -lnetxms -lnxjansson
+
+include $(TOPDIR)/build/tool-common.mk

@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - dbtable notification channel driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = dbtable
+SOURCES = $(wildcard *.cpp)
+DRV_LIBS = -lnxdb
+
+include $(TOPDIR)/src/server/ncdrivers/ncdrv-common.mk

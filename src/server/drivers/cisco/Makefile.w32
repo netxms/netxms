@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - cisco network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = cisco
+SOURCES = cat2900xl.cpp catalyst.cpp cisco.cpp esw.cpp firepower.cpp generic.cpp nexus.cpp sb.cpp wlc.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

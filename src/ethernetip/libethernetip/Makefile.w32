@@ -1,0 +1,72 @@
+#
+# Makefile.w32 - libethernetip (EtherNet/IP protocol library) for Windows/MinGW
+# Part of NetXMS project
+#
+
+# Note: Variables are exported from top-level Makefile.w32
+
+# Target (emitted into the centralized output directories)
+TARGET = $(BIN_DIR)/libethernetip.dll
+IMPLIB = $(LIB_DIR)/libethernetip.dll.a
+
+# Source files (Windows build)
+SOURCES = \
+	attr.cpp \
+	epath.cpp \
+	helpers.cpp \
+	main.cpp \
+	message.cpp \
+	session.cpp
+
+# Resource file for version info
+RC_SOURCE = $(TOPDIR)/build/netxms-build-tag.rc
+
+# Object files
+# Objects go to a per-architecture directory so multiple ARCH builds coexist
+OBJDIR = $(OBJ_DIR)/$(subst $(TOPDIR)/,,$(CURDIR))
+OBJECTS = $(addprefix $(OBJDIR)/,$(SOURCES:.cpp=.o))
+RC_OBJECT = $(OBJDIR)/netxms-build-tag.o
+
+# Compiler flags
+CXXFLAGS = $(COMMON_CXXFLAGS) \
+	-DLIBETHERNETIP_EXPORTS
+
+# Linker flags
+LDFLAGS = $(COMMON_LDFLAGS) $(COMMON_LIBDIRS) \
+	-shared \
+	-Wl,--out-implib,$(IMPLIB)
+
+# Libraries (in-tree libs found via -L$(LIB_DIR) in COMMON_LIBDIRS)
+LIBS = -lnetxms \
+	$(WIN_LIBS)
+
+# Targets
+.PHONY: all clean install
+
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS) $(RC_OBJECT)
+	@mkdir -p $(BIN_DIR) $(LIB_DIR)
+	@echo "  LD      $@"
+	$(Q)$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
+	@echo "  Built: $(TARGET)"
+
+$(OBJDIR)/%.o: %.cpp
+	@mkdir -p $(dir $@)
+	@echo "  CXX     $<"
+	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(RC_OBJECT): $(RC_SOURCE)
+	@mkdir -p $(dir $@)
+	@echo "  RC      $<"
+	$(Q)$(WINDRES) -I$(TOPDIR)/include -I$(TOPDIR)/build $< -o $@
+
+clean:
+	rm -f $(OBJECTS) $(RC_OBJECT) $(TARGET) $(IMPLIB) .depend
+
+install: $(TARGET)
+	@echo "  INSTALL $(TARGET)"
+	mkdir -p "$(PREFIX)/bin"
+	mkdir -p "$(PREFIX)/lib"
+	cp $(TARGET) "$(PREFIX)/bin/"
+	cp $(IMPLIB) "$(PREFIX)/lib/"

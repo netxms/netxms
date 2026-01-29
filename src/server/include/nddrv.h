@@ -195,7 +195,7 @@ struct DeviceViewElement
    const TCHAR *commands;  // drawing commands, can be null
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class LIBNXSRV_TEMPLATE_EXPORTABLE StructArray<DeviceViewElement>;
 template class LIBNXSRV_TEMPLATE_EXPORTABLE StructArray<DeviceViewImage>;
 #endif
@@ -270,7 +270,7 @@ struct LIBNXSRV_EXPORTABLE RadioInterfaceInfo
    json_t *toJson() const;
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class LIBNXSRV_TEMPLATE_EXPORTABLE StructArray<RadioInterfaceInfo>;
 #endif
 
@@ -368,7 +368,7 @@ struct BridgePort
    uint32_t ifIndex;
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class LIBNXSRV_TEMPLATE_EXPORTABLE StructArray<BridgePort>;
 #endif
 
@@ -385,7 +385,7 @@ struct ForwardingDatabaseEntry
    uint16_t type;       // Entry type
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class LIBNXSRV_TEMPLATE_EXPORTABLE StructArray<ForwardingDatabaseEntry>;
 #endif
 
@@ -448,7 +448,7 @@ struct LIBNXSRV_EXPORTABLE HostMibStorageEntry
    bool getMetric(const TCHAR *metric, TCHAR *buffer, size_t len) const;
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class LIBNXSRV_TEMPLATE_EXPORTABLE ObjectArray<HostMibStorageEntry>;
 #endif
 

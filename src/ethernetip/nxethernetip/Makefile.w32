@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - nxethernetip (EtherNet/IP query tool) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = nxethernetip
+SOURCES = nxethernetip.cpp
+TOOL_LIBS = -lethernetip -lnetxms -lnxjansson
+
+include $(TOPDIR)/build/tool-common.mk

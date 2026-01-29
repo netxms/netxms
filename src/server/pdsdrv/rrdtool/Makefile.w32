@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - rrdtool performance data storage driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = rrdtool
+SOURCES = rrdtool.cpp
+
+include $(TOPDIR)/src/server/pdsdrv/pdsdrv-common.mk

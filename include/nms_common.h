@@ -166,6 +166,10 @@
 #define __STR_NX(x) #x
 #define __STR(x) __STR_NX(x)
 #define CPP_COMPILER_VERSION __STR(__BUILD_VERSION_STRING(Microsoft C/C++ Optimizing Compiler Version,_MSC_FULL_VER))
+#elif defined(__clang__)
+#define CPP_COMPILER_VERSION "clang " __clang_version__
+#elif defined(__GNUC__)
+#define CPP_COMPILER_VERSION "GCC " __VERSION__
 #endif
 
 #define _Noreturn __declspec(noreturn)
@@ -180,13 +184,6 @@
 #define HAVE_DECL_CURLOPT_XOAUTH2_BEARER 1
 #define VA_LIST_IS_POINTER               1
 
-// Disable some warnings:
-//   4293 - 'function xxx' not available as intrinsic function
-//   4530 - C++ exception handler used, but unwind semantics are not enabled
-//   4577 - 'noexcept' used with no exception handling mode specified
-#pragma warning(disable: 4293)
-#pragma warning(disable: 4530)
-#pragma warning(disable: 4577)
 
 // Set API version to Windows 7
 #ifndef _WIN32_WINNT
@@ -196,7 +193,7 @@
 /**
  * Epoch offset for FILETIME structure
  */
-#define EPOCHFILETIME           (116444736000000000i64)
+#define EPOCHFILETIME           (116444736000000000LL)
 
 #define WITH_IPV6               1
 #define WITH_MICROHTTPD         1
@@ -242,6 +239,7 @@
 #include <windows.h>
 #include <ws2tcpip.h>
 #include <malloc.h>
+#include <dirent.h>
 
 #ifndef va_copy
 #define va_copy(x,y)            (x = y)
@@ -273,18 +271,6 @@
 #define S_IWOTH      _S_IWRITE
 #endif
 
-/* Mode flags for _access() */
-#define F_OK   0
-#define R_OK   4
-#define W_OK   2
-#define X_OK   R_OK  /* on Windows execute is granted if read is granted */
-
-#define STDIN_FILENO    _fileno(stdin)
-#define STDOUT_FILENO   _fileno(stdout)
-#define STDERR_FILENO   _fileno(stderr)
-
-#define snprintf     _snprintf
-#define vsnprintf    _vsnprintf
 #define snwprintf    _snwprintf
 #define vsnwprintf   _vsnwprintf
 #define vscprintf    _vscprintf
@@ -298,7 +284,6 @@
 
 typedef uint64_t QWORD;   // for compatibility
 typedef int socklen_t;
-typedef long pid_t;
 
 #ifdef _WIN64
 typedef __int64 ssize_t;
@@ -323,16 +308,18 @@ typedef __int64 off64_t;
 #define TIME_T_FMT      _T("%I64u")
 #define TIME_T_FCAST(x) ((UINT64)(x))
 
-#ifndef __clang__
-
 #define HAVE_DECL_BSWAP_16 1
 #define HAVE_DECL_BSWAP_32 1
 #define HAVE_DECL_BSWAP_64 1
 
+#ifdef _MSC_VER
 #define bswap_16(n)  _byteswap_ushort(n)
 #define bswap_32(n)  _byteswap_ulong(n)
 #define bswap_64(n)  _byteswap_uint64(n)
-
+#else
+#define bswap_16(n)  __builtin_bswap16(n)
+#define bswap_32(n)  __builtin_bswap32(n)
+#define bswap_64(n)  __builtin_bswap64(n)
 #endif
 
 #define HAVE_LIBEXPAT  1

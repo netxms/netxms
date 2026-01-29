@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - nxagent notification channel driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = nxagent
+SOURCES = $(wildcard *.cpp)
+DRV_LIBS = -lnxsrv
+
+include $(TOPDIR)/src/server/ncdrivers/ncdrv-common.mk

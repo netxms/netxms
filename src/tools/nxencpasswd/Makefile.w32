@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - nxencpasswd (password encryption tool) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = nxencpasswd
+SOURCES = nxencpasswd.cpp
+TOOL_LIBS = -lnetxms $(SSL_LIBS)
+
+include $(TOPDIR)/build/tool-common.mk

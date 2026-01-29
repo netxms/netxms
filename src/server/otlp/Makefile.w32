@@ -1,0 +1,13 @@
+#
+# Makefile.w32 - otlp (OpenTelemetry protocol module) for Windows/MinGW
+# Part of NetXMS project
+#
+# Uses Protocol Buffers: the generated *.pb.cc under generated/ are compiled in.
+#
+
+MODULE = otlp
+SOURCES = $(wildcard *.cpp) $(wildcard generated/*.pb.cc)
+MOD_CPPFLAGS = -I$(PROTOBUF_ROOT)/include -Igenerated
+MOD_LIBS = -lnxdb -lnxjansson $(MICROHTTPD_LIBS) $(PROTOBUF_LIBS) $(PCRE_LIBS) $(CURL_LIBS)
+
+include $(TOPDIR)/src/server/module-common.mk

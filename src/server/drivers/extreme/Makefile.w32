@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - extreme network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = extreme
+SOURCES = extreme.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

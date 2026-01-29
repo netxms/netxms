@@ -149,8 +149,10 @@ uint32_t H_SystemExecute(const shared_ptr<ActionExecutionContext>& context);
 
 /**
  * OpenSSL APPLINK
+ * Only needed for MSVC builds (bridges the C runtime across the OpenSSL DLL
+ * boundary). MinGW/llvm builds share a single CRT and must not include it.
  */
-#if defined(_WIN32) && !_M_ARM64
+#if defined(_MSC_VER) && !defined(_M_ARM64)
 #include <openssl/applink.c>
 #endif
 

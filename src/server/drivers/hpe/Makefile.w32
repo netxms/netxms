@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - hpe network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = hpe
+SOURCES = aruba-sw.cpp h3c.cpp hpe.cpp hpsw.cpp ilo.cpp procurve.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

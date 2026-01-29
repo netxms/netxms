@@ -1,0 +1,64 @@
+#
+# Makefile.w32 - subagents dispatcher for Windows/MinGW
+# Part of NetXMS project
+#
+# Recurses into each subagent directory. Invoked from the top-level build
+# (which exports the shared toolchain/flag variables).
+#
+
+# All Windows subagents (full MSVC set). A missing external SDK is a build
+# environment setup error and must fail the build, not be silently skipped.
+#   mqtt       -> libmosquitto
+#   prometheus -> protobuf + libmicrohttpd + snappy
+#   java       -> JNI headers     (+ MID-tier libnxjava; JVM loaded at runtime)
+# Note: the tuxedo subagent is excluded from the Windows build - the Tuxedo SDK
+# headers (tmenv.h) redefine mode_t/pid_t incompatibly with the mingw CRT.
+SUBAGENTS = \
+	aifileops \
+	bind9 \
+	db2 \
+	dbquery \
+	devemu \
+	filemgr \
+	gps \
+	informix \
+	java \
+	logwatch \
+	mqtt \
+	mssql \
+	mysql \
+	netsvc \
+	oracle \
+	pgsql \
+	ping \
+	prometheus \
+	sms \
+	ssh \
+	ups \
+	wineventsync \
+	winnt \
+	winperf \
+	wmi
+
+.PHONY: all clean install $(SUBAGENTS)
+
+all: $(SUBAGENTS)
+
+$(SUBAGENTS):
+	@echo ""
+	@echo "==== Building subagent $@ ===="
+	$(Q)$(MAKE) -C $@ -f Makefile.w32
+
+clean:
+	@for dir in $(SUBAGENTS); do \
+		if [ -f "$$dir/Makefile.w32" ]; then \
+			$(MAKE) -C "$$dir" -f Makefile.w32 clean; \
+		fi; \
+	done
+
+install:
+	@for dir in $(SUBAGENTS); do \
+		if [ -f "$$dir/Makefile.w32" ]; then \
+			$(MAKE) -C "$$dir" -f Makefile.w32 install; \
+		fi; \
+	done

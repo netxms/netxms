@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - nxsnmpwalk (SNMP WALK command-line tool) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = nxsnmpwalk
+SOURCES = nxsnmpwalk.cpp
+TOOL_LIBS = -lnxsnmp -lnetxms -lnxjansson
+
+include $(TOPDIR)/build/tool-common.mk

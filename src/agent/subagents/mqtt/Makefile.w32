@@ -1,0 +1,11 @@
+#
+# Makefile.w32 - mqtt subagent for Windows/MinGW
+# Part of NetXMS project
+#
+
+SUBAGENT = mqtt
+SOURCES = broker.cpp main.cpp topic.cpp
+SA_LIBS = -lnxsde $(MOSQUITTO_LIBS)
+SA_CPPFLAGS = -I$(MOSQUITTO_ROOT)/include
+
+include $(TOPDIR)/src/agent/subagents/subagent-common.mk

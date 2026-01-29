@@ -42,8 +42,8 @@ Root: HKLM; Subkey: "Software\NetXMS\Client"; ValueType: string; ValueName: "Ins
 
 [Files]
 ; Common files
-Source: "..\..\..\x64\Release\jansson.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\Release\libnetxms.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\nxjansson.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\libnetxms.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
 Source: "..\files\windows\x64\libexpat.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
 Source: "..\files\windows\x64\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
 Source: "..\files\windows\x64\pcre.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
@@ -53,21 +53,21 @@ Source: "..\files\windows\x64\openssl-3\libssl-3-x64.dll"; DestDir: "{app}"; Fla
 Source: "..\files\windows\x64\zlib.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
 Source: "..\..\client\nxmc\nxmc.ico"; DestDir: "{app}"; Flags: ignoreversion
 ; Common files for Java based components
-Source: "..\..\..\x64\Release\libnxjava.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxmc or nxshell
+Source: "..\..\..\out\x64\Release\bin\libnxjava.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxmc or nxshell
 ; nxmc
-Source: "..\..\..\x64\Release\nxmc.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxmc
+Source: "..\..\..\out\x64\Release\bin\nxmc.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxmc
 Source: "..\..\client\nxmc\java\target\nxmc-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: nxmc
 Source: "..\..\client\nxmc\java\target\lib\*.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: nxmc
 ; nxshell
-Source: "..\..\..\x64\Release\nxshell.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxshell
+Source: "..\..\..\out\x64\Release\bin\nxshell.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxshell
 Source: "..\..\client\nxshell\java\target\nxshell-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: nxshell
 Source: "..\..\client\nxshell\java\target\lib\*.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: nxshell
 ; Command line tools
-Source: "..\..\..\x64\Release\libnxclient.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
-Source: "..\..\..\x64\Release\nxalarm.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
-Source: "..\..\..\x64\Release\nxevent.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
-Source: "..\..\..\x64\Release\nxnotify.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
-Source: "..\..\..\x64\Release\nxpush.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
+Source: "..\..\..\out\x64\Release\bin\libnxclient.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
+Source: "..\..\..\out\x64\Release\bin\nxalarm.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
+Source: "..\..\..\out\x64\Release\bin\nxevent.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
+Source: "..\..\..\out\x64\Release\bin\nxnotify.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
+Source: "..\..\..\out\x64\Release\bin\nxpush.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
 ; Java Runtime
 Source: "..\files\windows\x64\jre\*"; DestDir: "{app}\jre"; Flags: ignoreversion recursesubdirs; Components: jre
 ; Install-time files

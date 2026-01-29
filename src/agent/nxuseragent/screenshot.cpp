@@ -78,6 +78,7 @@ ByteStream *SaveBitmapToPng(HBITMAP hBitmap)
    png_structp png_ptr = nullptr;
    png_infop info_ptr = nullptr;
    ByteStream *pngData = nullptr;
+   png_byte **row_pointers = nullptr;
 
    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
    if (png_ptr == nullptr)
@@ -102,7 +103,7 @@ ByteStream *SaveBitmapToPng(HBITMAP hBitmap)
       PNG_INTERLACE_NONE,
       PNG_COMPRESSION_TYPE_DEFAULT,
       PNG_FILTER_TYPE_DEFAULT);
-   png_byte **row_pointers = (png_byte **)alloca(height * sizeof(png_byte *));
+   row_pointers = (png_byte **)alloca(height * sizeof(png_byte *));
    for (int y = 0; y < height; ++y)
    {
       png_byte *row = (png_byte *)&buffer[y * bitmap.bmWidth * 4];

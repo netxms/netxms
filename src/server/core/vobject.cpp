@@ -36,7 +36,7 @@ VersionableObject::VersionableObject(NetObj *_this)
  */
 void VersionableObject::fillMessage(NXCPMessage *msg)
 {
-   msg->setField(VID_VERSION, m_version);
+   msg->setField(VID_VERSION, static_cast<uint32_t>(m_version));
 }
 
 /**
@@ -57,7 +57,7 @@ bool VersionableObject::saveToDatabase(DB_HANDLE hdb)
    }
    if (hStmt != NULL)
    {
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_version);
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_version));
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_this->getId());
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);

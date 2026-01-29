@@ -29,7 +29,9 @@
 #include <stdlib.h>
 #include <intrin.h>
 
+#if defined(_MSC_VER)
 #pragma intrinsic(_ReturnAddress)
+#endif
 
 #define DEBUG_TAG _T("crash")
 
@@ -82,7 +84,11 @@ static void CrashPureCallHandler()
    memset(&record, 0, sizeof(record));
    record.ExceptionCode = STATUS_NONCONTINUABLE_EXCEPTION;
    record.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
+#if defined(_MSC_VER)
    record.ExceptionAddress = reinterpret_cast<void*>(_ReturnAddress());
+#else
+   record.ExceptionAddress = __builtin_return_address(0);
+#endif
 
    EXCEPTION_POINTERS pointers;
    pointers.ContextRecord = &context;

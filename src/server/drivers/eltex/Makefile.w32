@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - eltex network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = eltex
+SOURCES = eltex.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

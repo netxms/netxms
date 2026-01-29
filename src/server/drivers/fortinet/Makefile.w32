@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - fortinet network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = fortinet
+SOURCES = fortigate.cpp fortinet.cpp fortiswitch.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

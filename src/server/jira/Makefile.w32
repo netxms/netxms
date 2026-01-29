@@ -1,0 +1,14 @@
+#
+# Makefile.w32 - jira (Jira helpdesk link module) for Windows/MinGW
+# Part of NetXMS project
+#
+# Formerly an hdlink plugin; now a normal server module. jira.cpp talks to Jira
+# over libcurl; webhook.cpp registers a route on the common web API listener
+# (microhttpd). JSON handling uses the in-tree jansson.
+#
+
+MODULE = jira
+SOURCES = $(wildcard *.cpp)
+MOD_LIBS = -lnxjansson $(CURL_LIBS) $(MICROHTTPD_LIBS)
+
+include $(TOPDIR)/src/server/module-common.mk

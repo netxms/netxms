@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - lenovo network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = lenovo
+SOURCES = flex.cpp lenovo.cpp rack.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

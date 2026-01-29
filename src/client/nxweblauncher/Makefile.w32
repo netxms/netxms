@@ -1,0 +1,17 @@
+#
+# Makefile.w32 - nxweblauncher (web UI Jetty service launcher) for Windows/MinGW
+# Part of NetXMS project
+#
+# Windows-only helper that runs the bundled Jetty-based web UI as a service.
+# Entry point is wmain, so the CRT needs the wide entry (-municode).
+#
+
+TOOL = nxweblauncher
+SOURCES = \
+	jetty.cpp \
+	nxweblauncher.cpp \
+	service.cpp
+TOOL_LIBS = -lnetxms
+TOOL_LDFLAGS = -municode
+
+include $(TOPDIR)/build/tool-common.mk

@@ -1,0 +1,15 @@
+#
+# Makefile.w32 - IBM DB2 database driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = db2
+SOURCES = db2.cpp
+
+# DB2NT makes the DB2 CLI headers use Windows-native integer typedefs
+# (unsigned long ULONG), matching the mingw-w64 headers; without it sqlcli.h
+# redefines ULONG as unsigned int and clashes with <wtypesbase.h>.
+DRV_CPPFLAGS = -DDB2NT -I$(DB2_ROOT)/include
+DRV_LIBS = $(DB2_LIBS)
+
+include $(TOPDIR)/src/db/dbdrv/driver-common.mk

@@ -1,0 +1,11 @@
+#
+# Makefile.w32 - mqtt notification channel driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = mqtt
+SOURCES = $(wildcard *.cpp)
+DRV_CPPFLAGS = -I$(MOSQUITTO_ROOT)/include
+DRV_LIBS = $(MOSQUITTO_LIBS)
+
+include $(TOPDIR)/src/server/ncdrivers/ncdrv-common.mk

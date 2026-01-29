@@ -1,0 +1,12 @@
+#
+# Makefile.w32 - PostgreSQL database driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = pgsql
+SOURCES = pgsql.cpp
+
+DRV_CPPFLAGS = -I$(PGSQL_ROOT)/include
+DRV_LIBS = $(PGSQL_LIBS)
+
+include $(TOPDIR)/src/db/dbdrv/driver-common.mk

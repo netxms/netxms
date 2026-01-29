@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - wlcbridge (wireless controller bridge module) for Windows/MinGW
+# Part of NetXMS project
+#
+
+MODULE = wlcbridge
+SOURCES = $(wildcard *.cpp)
+MOD_LIBS = -lnxsl -lnxdb -lnxjansson $(CURL_LIBS)
+
+include $(TOPDIR)/src/server/module-common.mk

@@ -1,0 +1,71 @@
+#
+# Makefile.w32 - nxuseragent (user agent) for Windows/MinGW
+# Part of NetXMS project
+#
+# The user agent is a tray/notification GUI application running in the
+# interactive user session. GUI subsystem app (WinMain entry).
+#
+
+TARGET = $(BIN_DIR)/nxuseragent.exe
+
+SOURCES = \
+	appwnd.cpp \
+	button.cpp \
+	comm.cpp \
+	config.cpp \
+	desktop.cpp \
+	main.cpp \
+	menu.cpp \
+	net.cpp \
+	notifications.cpp \
+	notificationwnd.cpp \
+	screenshot.cpp \
+	session.cpp \
+	tray.cpp
+
+# Objects go to a per-architecture directory so multiple ARCH builds coexist
+OBJDIR = $(OBJ_DIR)/$(subst $(TOPDIR)/,,$(CURDIR))
+OBJECTS = $(addprefix $(OBJDIR)/,$(SOURCES:.cpp=.o))
+RC_OBJECT = $(OBJDIR)/nxuseragent-res.o
+
+CXXFLAGS = $(COMMON_CXXFLAGS) -I$(TOPDIR)/src/libpng
+
+# -mwindows selects the GUI subsystem; the entry point is ANSI WinMain
+LDFLAGS = $(COMMON_LDFLAGS) $(COMMON_LIBDIRS) -mwindows
+
+# In-tree libs found via -L$(LIB_DIR) in COMMON_LIBDIRS; -lnxpng pulls in the
+# bundled libpng (which itself carries zlib)
+# -luuid supplies the KNOWNFOLDERID GUIDs (FOLDERID_LocalAppData, ...)
+LIBS = -lnxagent -lnetxms -lnxpng $(WIN_LIBS) -luser32 -lgdi32 -lcomctl32 -lsecur32 -luuid
+
+.PHONY: all clean install
+
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS) $(RC_OBJECT)
+	@mkdir -p $(BIN_DIR)
+	@echo "  LD      $@"
+	$(Q)$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
+	@echo "  Built: $(TARGET)"
+
+$(OBJDIR)/%.o: %.cpp
+	@mkdir -p $(dir $@)
+	@echo "  CXX     $<"
+	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# nxuseragent.rc is stored as UTF-16LE (for the MSVC toolchain). llvm-rc cannot
+# preprocess UTF-16, so transcode to a BOM-less UTF-8 copy before compiling.
+# It embeds the tray icon from resources\app.ico.
+$(RC_OBJECT): nxuseragent.rc
+	@mkdir -p $(dir $@)
+	@echo "  RC      $<"
+	$(Q)iconv -f UTF-16 -t UTF-8 nxuseragent.rc > nxuseragent.utf8.rc
+	$(Q)$(WINDRES) -I. -I$(TOPDIR)/include -I$(TOPDIR)/build nxuseragent.utf8.rc -o $@
+
+clean:
+	rm -f $(OBJECTS) $(RC_OBJECT) nxuseragent.utf8.rc $(TARGET) .depend
+
+install: $(TARGET)
+	@echo "  INSTALL $(TARGET)"
+	mkdir -p "$(PREFIX)/bin"
+	cp $(TARGET) "$(PREFIX)/bin/"

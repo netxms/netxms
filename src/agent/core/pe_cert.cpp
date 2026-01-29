@@ -48,7 +48,14 @@ BOOL GetPeCertificateInfo(LPCWSTR filePath, PE_CERT_INFO *certInfo)
     DWORD dwEncoding, dwContentType, dwFormatType;
     CERT_INFO certSearchParams = {0};
     PCCERT_CONTEXT pCertContext = NULL;
-    
+
+    // Declared before the first "goto cleanup" so the jumps do not bypass their initialization
+    DWORD signerInfoSize = 0;
+    PCMSG_SIGNER_INFO signerInfo = NULL;
+    DWORD hashSize = 0;
+    DWORD nameSize = 0;
+
+
     // Get message handle and cert store handle
     if (!CryptQueryObject(
         CERT_QUERY_OBJECT_FILE,
@@ -66,7 +73,6 @@ BOOL GetPeCertificateInfo(LPCWSTR filePath, PE_CERT_INFO *certInfo)
     }
 
     // Get signer information
-    DWORD signerInfoSize = 0;
     if (!CryptMsgGetParam(
         hMsg,
         CMSG_SIGNER_INFO_PARAM,
@@ -76,7 +82,7 @@ BOOL GetPeCertificateInfo(LPCWSTR filePath, PE_CERT_INFO *certInfo)
         goto cleanup;
     }
 
-    PCMSG_SIGNER_INFO signerInfo = (PCMSG_SIGNER_INFO)MemAllocZeroed(signerInfoSize);
+    signerInfo = (PCMSG_SIGNER_INFO)MemAllocZeroed(signerInfoSize);
     if (!signerInfo) {
         goto cleanup;
     }
@@ -109,7 +115,6 @@ BOOL GetPeCertificateInfo(LPCWSTR filePath, PE_CERT_INFO *certInfo)
     }
 
     // Get certificate fingerprint (hash)
-    DWORD hashSize = 0;
     if (!CertGetCertificateContextProperty(
         pCertContext,
         CERT_SHA1_HASH_PROP_ID,
@@ -132,7 +137,7 @@ BOOL GetPeCertificateInfo(LPCWSTR filePath, PE_CERT_INFO *certInfo)
     }
 
     // Get subject and issuer names
-    DWORD nameSize = CertGetNameStringW(
+    nameSize = CertGetNameStringW(
         pCertContext,
         CERT_NAME_SIMPLE_DISPLAY_TYPE,
         0,

@@ -30,6 +30,13 @@
 #include <sstream>
 #include "aclapi.h"
 
+// mingw's <winternl.h> declares a trimmed SYSTEM_PROCESS_INFORMATION without the
+// VirtualSize/WorkingSetSize fields used below; substitute the full layout.
+#if defined(__MINGW32__) || defined(__MINGW64__)
+#include <mingw/win_missing_defs.h>
+#define SYSTEM_PROCESS_INFORMATION NX_SYSTEM_PROCESS_INFORMATION
+#endif
+
 /**
  * Convert process time from FILETIME structure (100-nanosecond units) to __uint64 (milliseconds)
  */

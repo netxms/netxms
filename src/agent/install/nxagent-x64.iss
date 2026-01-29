@@ -9,56 +9,56 @@ ArchitecturesAllowed=x64
 
 [Files]
 ; Installer helpers
-Source: "..\..\..\x64\release\nxreload.exe"; DestDir: "{tmp}"; Flags: dontcopy signonce
+Source: "..\..\..\out\x64\Release\bin\nxreload.exe"; DestDir: "{tmp}"; Flags: dontcopy signonce
 ; Agent
-Source: "..\..\..\x64\release\libethernetip.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\libnetxms.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\libnxagent.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\libnxdb.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\libnxjava.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\libnxlp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\libnxsde.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\libnxsnmp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\nxagentd.exe"; DestDir: "{app}\bin"; BeforeInstall: RenameOldFile; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\nxcrashsrv.exe"; DestDir: "{app}\bin"; BeforeInstall: RenameOldFile; Flags: ignoreversion signonce
-Source: "..\..\..\x64\Release\nxsagent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\aifileops.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\bind9.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\db2.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\dbquery.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\devemu.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\filemgr.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\Release\informix.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\Release\java.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\logwatch.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\mqtt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\Release\mssql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\mysql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\netsvc.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\Release\oracle.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\pgsql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\ping.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\sms.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\ssh.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\tuxedo.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\ups.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\wineventsync.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\winnt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\winperf.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\wmi.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\Release\db2.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\Release\informix.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\Release\mariadb.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\Release\mssql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\Release\mysql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\Release\odbc.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\Release\oracle.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\Release\pgsql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\Release\sqlite.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\libethernetip.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\libnetxms.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\libnxagent.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\libnxdb.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\libnxjava.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\libnxlp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\libnxsde.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\libnxsnmp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\nxagentd.exe"; DestDir: "{app}\bin"; BeforeInstall: RenameOldFile; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\nxcrashsrv.exe"; DestDir: "{app}\bin"; BeforeInstall: RenameOldFile; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\nxsagent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\aifileops.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\bind9.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\db2.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\dbquery.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\devemu.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\filemgr.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\informix.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\java.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\logwatch.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\mqtt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\mssql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\mysql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\netsvc.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\oracle.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\pgsql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\ping.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\sms.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\ssh.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+;; NOT IMPLEMENTED ;; Source: "..\..\..\out\x64\Release\bin\tuxedo.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\ups.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\wineventsync.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\winnt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\winperf.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\wmi.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\db2.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\informix.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\mariadb.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\mssql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\mysql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\odbc.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\oracle.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\pgsql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\sqlite.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\contrib\nxagentd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion
-Source: "..\..\..\x64\Release\libpng.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\Release\nxsqlite.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\Release\jansson.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\nxpng.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\nxsqlite.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\nxjansson.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x64\jq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x64\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x64\libexpat.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
@@ -82,21 +82,18 @@ Source: "..\subagents\jmx\target\jmx.jar"; DestDir: "{app}\lib\java"; Flags: ign
 Source: "..\subagents\opcua\target\opcua.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion
 Source: "..\subagents\ubntlw\target\ubntlw.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion
 ; Command-line tools
-Source: "..\..\..\x64\release\nxaevent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\nxapush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\nxcsum.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\nxethernetip.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\nxevent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\nxhwid.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\nxpush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\nxsnmpget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\nxsnmpset.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\nxsnmpwalk.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\nxtftp.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\libnxclient.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\nxaevent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\nxapush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\nxcsum.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\nxethernetip.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\nxhwid.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\nxsnmpget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\nxsnmpset.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\nxsnmpwalk.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\nxtftp.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\tools\scripts\nxagentd-generate-tunnel-config.cmd"; DestDir: "{app}\bin"; Flags: ignoreversion
 ; User agent
-Source: "..\..\..\x64\release\nxuseragent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x64\Release\bin\nxuseragent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 
 ;#include "custom.iss"
 

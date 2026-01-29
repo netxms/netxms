@@ -1,0 +1,14 @@
+#
+# Makefile.w32 - Microsoft SQL Server database driver for Windows/MinGW
+# Part of NetXMS project
+#
+# The MSSQL driver talks to SQL Server through ODBC (the "ODBC Driver NN for
+# SQL Server"), so it links only against the system ODBC library.
+#
+
+DRIVER = mssql
+SOURCES = mssql.cpp
+
+DRV_LIBS = -lodbc32 -lodbccp32
+
+include $(TOPDIR)/src/db/dbdrv/driver-common.mk

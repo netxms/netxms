@@ -1,0 +1,13 @@
+#
+# Makefile.w32 - redmine (Redmine helpdesk link module) for Windows/MinGW
+# Part of NetXMS project
+#
+# Formerly an hdlink plugin; now a normal server module. redmine.cpp talks to
+# Redmine over libcurl; JSON handling uses the in-tree jansson.
+#
+
+MODULE = redmine
+SOURCES = $(wildcard *.cpp)
+MOD_LIBS = -lnxjansson $(CURL_LIBS)
+
+include $(TOPDIR)/src/server/module-common.mk

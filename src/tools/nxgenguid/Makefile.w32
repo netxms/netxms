@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - nxgenguid (GUID generator tool) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = nxgenguid
+SOURCES = nxgenguid.cpp
+TOOL_LIBS = -lnetxms $(SSL_LIBS)
+
+include $(TOPDIR)/build/tool-common.mk

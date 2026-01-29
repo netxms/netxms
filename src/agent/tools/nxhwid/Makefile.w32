@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - nxhwid agent tool for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = nxhwid
+SOURCES = nxhwid.cpp
+TOOL_LIBS = -lnxagent -lnetxms
+
+include $(TOPDIR)/build/tool-common.mk

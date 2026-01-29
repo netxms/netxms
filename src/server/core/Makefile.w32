@@ -1,0 +1,71 @@
+#
+# Makefile.w32 - nxcore (server core library) for Windows/MinGW
+# Part of NetXMS project
+#
+# The set of core sources built on Windows is exactly the set of *.cpp in this
+# directory (verified against nxcore.vcxproj), so the list is taken via wildcard.
+#
+
+TARGET = $(BIN_DIR)/nxcore.dll
+IMPLIB = $(LIB_DIR)/libnxcore.dll.a
+
+SOURCES = $(wildcard *.cpp)
+
+RC_SOURCE = $(TOPDIR)/build/netxms-build-tag.rc
+# Objects go to a per-architecture directory so multiple ARCH builds coexist
+OBJDIR = $(OBJ_DIR)/$(subst $(TOPDIR)/,,$(CURDIR))
+OBJECTS = $(addprefix $(OBJDIR)/,$(SOURCES:.cpp=.o))
+RC_OBJECT = $(OBJDIR)/netxms-build-tag.o
+
+# Include paths: server headers, argon2 public header, the private licensing
+# sources (included directly by objects.cpp), and the libmicrohttpd SDK.
+CXXFLAGS = $(COMMON_CXXFLAGS) -DNXCORE_EXPORTS \
+	-I$(TOPDIR)/src/server/include \
+	-I$(TOPDIR)/include/argon2 \
+	-I$(TOPDIR)/private/common/src/licensing \
+	-I$(MICROHTTPD_ROOT)/include \
+	-I$(JNI_ROOT)/include -I$(JNI_ROOT)/include/win32
+
+LDFLAGS = $(COMMON_LDFLAGS) $(COMMON_LIBDIRS) \
+	-shared \
+	-Wl,--out-implib,$(IMPLIB)
+
+# In-tree libs found via -L$(LIB_DIR) in COMMON_LIBDIRS
+LIBS = -lnxsrv -lnxsl -lnxsnmp -lnxlp -lnxdb -lnxagent -lnxjava \
+	-lethernetip -lnetxms -lnxjansson -largon2 \
+	$(MICROHTTPD_LIBS) \
+	$(CURL_LIBS) \
+	$(SSL_LIBS) \
+	$(PCRE_LIBS) \
+	$(ZLIB_LIBS) \
+	$(WIN_LIBS) \
+	-lwldap32
+
+.PHONY: all clean install
+
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS) $(RC_OBJECT)
+	@mkdir -p $(BIN_DIR) $(LIB_DIR)
+	@echo "  LD      $@"
+	$(Q)$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
+	@echo "  Built: $(TARGET)"
+
+$(OBJDIR)/%.o: %.cpp
+	@mkdir -p $(dir $@)
+	@echo "  CXX     $<"
+	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(RC_OBJECT): $(RC_SOURCE)
+	@mkdir -p $(dir $@)
+	@echo "  RC      $<"
+	$(Q)$(WINDRES) -I$(TOPDIR)/include -I$(TOPDIR)/build $< -o $@
+
+clean:
+	rm -f $(OBJECTS) $(RC_OBJECT) $(TARGET) $(IMPLIB) .depend
+
+install: $(TARGET)
+	@echo "  INSTALL $(TARGET)"
+	mkdir -p "$(PREFIX)/bin" "$(PREFIX)/lib"
+	cp $(TARGET) "$(PREFIX)/bin/"
+	cp $(IMPLIB) "$(PREFIX)/lib/"

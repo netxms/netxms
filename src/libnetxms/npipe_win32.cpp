@@ -35,6 +35,7 @@ NamedPipeListener *NamedPipeListener::create(const TCHAR *name, NamedPipeRequest
 	PSID sidEveryone = NULL;
 	ACL *acl = NULL;
 	PSECURITY_DESCRIPTOR sd = NULL;
+   HANDLE hPipe = INVALID_HANDLE_VALUE;
 
 	TCHAR errorText[1024];
 
@@ -101,7 +102,7 @@ NamedPipeListener *NamedPipeListener::create(const TCHAR *name, NamedPipeRequest
 	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
 	sa.bInheritHandle = FALSE;
 	sa.lpSecurityDescriptor = sd;
-	HANDLE hPipe = CreateNamedPipe(path, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, 1, 8192, 8192, 0, &sa);
+	hPipe = CreateNamedPipe(path, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, 1, 8192, 8192, 0, &sa);
 	if (hPipe == INVALID_HANDLE_VALUE)
 	{
 		nxlog_debug(2, _T("NamedPipeListener(%s): CreateNamedPipe failed (%s)"), name, GetSystemErrorText(GetLastError(), errorText, 1024));

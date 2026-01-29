@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - moxa network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = moxa
+SOURCES = edr.cpp moxa.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

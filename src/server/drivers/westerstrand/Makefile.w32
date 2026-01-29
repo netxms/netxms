@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - westerstrand network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = westerstrand
+SOURCES = westerstrand.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

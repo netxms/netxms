@@ -134,8 +134,10 @@ void LIBNETXMS_EXPORTABLE ThreadSetName(THREAD thread, const char *name)
       MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, name, -1, wname, 256);
       imp_SetThreadDescription((thread != INVALID_THREAD_HANDLE) ? thread->handle : GetCurrentThread(), wname);
    }
+#ifdef _MSC_VER
    else
    {
+      // Legacy method for setting thread name using SEH exception (only works with MSVC debugger)
       THREADNAME_INFO info;
       info.dwType = 0x1000;
       info.szName = name;
@@ -152,6 +154,7 @@ void LIBNETXMS_EXPORTABLE ThreadSetName(THREAD thread, const char *name)
       }
 #pragma warning(pop)
    }
+#endif
 }
 
 #endif   /* _WIN32 */

@@ -1,0 +1,12 @@
+#
+# Makefile.w32 - webapi (REST API server module) for Windows/MinGW
+# Part of NetXMS project
+#
+# The Windows source set equals *.cpp in this directory (verified vs webapi.vcxproj).
+#
+
+MODULE = webapi
+SOURCES = $(wildcard *.cpp)
+MOD_LIBS = -lnxsl -lnxsnmp -lnxdb -lnxjansson $(MICROHTTPD_LIBS)
+
+include $(TOPDIR)/src/server/module-common.mk

@@ -1295,7 +1295,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const NXSL_Identifie
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("status"))
    {
-      value = vm->createValue((LONG)object->getStatus());
+      value = vm->createValue(object->getStatus());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("streetAddress"))
    {
@@ -1303,7 +1303,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const NXSL_Identifie
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("type"))
    {
-      value = vm->createValue((LONG)object->getObjectClass());
+      value = vm->createValue(object->getObjectClass());
    }
    else if (object != nullptr)   // Object can be null if attribute scan is running
    {
@@ -3949,7 +3949,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("snmpVersion"))
    {
-      value = vm->createValue((LONG)node->getSNMPVersion());
+      value = vm->createValue(node->getSNMPVersion());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("softwarePackages"))
    {
@@ -4326,7 +4326,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    auto iface = SharedObjectFromData<Interface>(object);
    if (NXSL_COMPARE_ATTRIBUTE_NAME("adminState"))
    {
-		value = vm->createValue((LONG)iface->getAdminState());
+		value = vm->createValue(iface->getAdminState());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("bridgePortNumber"))
    {
@@ -4342,11 +4342,11 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("dot1xBackendAuthState"))
    {
-		value = vm->createValue((LONG)iface->getDot1xBackendAuthState());
+		value = vm->createValue(iface->getDot1xBackendAuthState());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("dot1xPaeAuthState"))
    {
-		value = vm->createValue((LONG)iface->getDot1xPaeAuthState());
+		value = vm->createValue(iface->getDot1xPaeAuthState());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("expectedState"))
    {
@@ -4460,7 +4460,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
 	}
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("operState"))
    {
-		value = vm->createValue((LONG)iface->getOperState());
+		value = vm->createValue(iface->getOperState());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("ospfAreaId"))
    {
@@ -7220,7 +7220,7 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const NXSL_Identifier& a
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("status"))
    {
-		value = vm->createValue((LONG)dci->getStatus());
+		value = vm->createValue(dci->getStatus());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("systemTag"))
    {
@@ -7256,7 +7256,7 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const NXSL_Identifier& a
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("type"))
    {
-		value = vm->createValue((LONG)dci->getType());
+		value = vm->createValue(dci->getType());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("userTag"))
    {

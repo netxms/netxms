@@ -1,0 +1,32 @@
+#
+# Makefile.w32 - network device drivers dispatcher for Windows/MinGW
+# Part of NetXMS project
+#
+# Recurses into each driver directory. Invoked from the top-level build (which
+# exports the shared toolchain/flag variables). Each driver produces a <name>.ndd
+# module loaded at runtime by the server. The full MSVC driver set is built.
+#
+DRIVERS = at avaya bdcom bulat cambium cisco dell-pwc dlink edgecore eltex etherwan extreme fortinet hirschmann hpe huawei ignitenet juniper lenovo mds mikrotik moxa net-snmp netonix origo ping3 planet qtech rittal saf siemens symbol-ws tb tplink ubnt westerstrand zyxel
+
+.PHONY: all clean install $(DRIVERS)
+
+all: $(DRIVERS)
+
+$(DRIVERS):
+	@echo ""
+	@echo "==== Building network device driver $@ ===="
+	$(Q)$(MAKE) -C $@ -f Makefile.w32
+
+clean:
+	@for dir in $(DRIVERS); do \
+		if [ -f "$$dir/Makefile.w32" ]; then \
+			$(MAKE) -C "$$dir" -f Makefile.w32 clean; \
+		fi; \
+	done
+
+install:
+	@for dir in $(DRIVERS); do \
+		if [ -f "$$dir/Makefile.w32" ]; then \
+			$(MAKE) -C "$$dir" -f Makefile.w32 install; \
+		fi; \
+	done

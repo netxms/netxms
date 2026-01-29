@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - anysms notification channel driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = anysms
+SOURCES = $(wildcard *.cpp)
+DRV_LIBS = $(CURL_LIBS)
+
+include $(TOPDIR)/src/server/ncdrivers/ncdrv-common.mk

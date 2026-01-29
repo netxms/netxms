@@ -1,0 +1,11 @@
+#
+# Makefile.w32 - nxminfo (server module info tool) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = nxminfo
+SOURCES = nxminfo.cpp
+TOOL_CPPFLAGS = -I$(TOPDIR)/src/server/include
+TOOL_LIBS = -lnetxms
+
+include $(TOPDIR)/build/tool-common.mk

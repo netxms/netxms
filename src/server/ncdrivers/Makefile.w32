@@ -1,0 +1,32 @@
+#
+# Makefile.w32 - notification channel drivers dispatcher for Windows/MinGW
+# Part of NetXMS project
+#
+# Recurses into each NC driver directory. Invoked from the top-level build
+# (which exports the shared toolchain/flag variables). Each driver produces a
+# <name>.ncd module loaded at runtime by the server. The full MSVC set is built.
+#
+DRIVERS = anysms dbtable dummy googlechat gsm kannel matrix mattermost mqtt msteams mymobile nexmo nxagent portech shell slack smseagle smtp snmptrap telegram text2reach textfile twilio webhook websms xmpp
+
+.PHONY: all clean install $(DRIVERS)
+
+all: $(DRIVERS)
+
+$(DRIVERS):
+	@echo ""
+	@echo "==== Building notification channel driver $@ ===="
+	$(Q)$(MAKE) -C $@ -f Makefile.w32
+
+clean:
+	@for dir in $(DRIVERS); do \
+		if [ -f "$$dir/Makefile.w32" ]; then \
+			$(MAKE) -C "$$dir" -f Makefile.w32 clean; \
+		fi; \
+	done
+
+install:
+	@for dir in $(DRIVERS); do \
+		if [ -f "$$dir/Makefile.w32" ]; then \
+			$(MAKE) -C "$$dir" -f Makefile.w32 install; \
+		fi; \
+	done

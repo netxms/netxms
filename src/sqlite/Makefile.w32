@@ -1,0 +1,52 @@
+#
+# Makefile.w32 - nxsqlite (bundled SQLite amalgamation) for Windows/MinGW
+# Part of NetXMS project
+#
+# Builds the SQLite engine as a DLL that exports the sqlite3_* API. The sqlite
+# database driver (dbdrv/sqlite) and other components link against it via the
+# generated import library.
+#
+
+TARGET = $(BIN_DIR)/nxsqlite.dll
+IMPLIB = $(LIB_DIR)/libnxsqlite.dll.a
+
+# sqlite3.c is the amalgamation; dllmain.c provides DllMain
+C_SOURCES = sqlite3.c dllmain.c
+# Objects go to a per-architecture directory so multiple ARCH builds coexist
+OBJDIR = $(OBJ_DIR)/$(subst $(TOPDIR)/,,$(CURDIR))
+OBJECTS = $(addprefix $(OBJDIR)/,$(C_SOURCES:.c=.o))
+
+# sqlite3.c pulls in <symbol_visibility.h> and marks its API with __EXPORT
+# (__declspec(dllexport) on Windows), so no module definition file is needed.
+CFLAGS = $(COMMON_CFLAGS) -DNXSQLITE_EXPORTS
+
+LDFLAGS = $(COMMON_LDFLAGS) $(COMMON_LIBDIRS) \
+	-shared \
+	-Wl,--out-implib,$(IMPLIB)
+
+LIBS = $(WIN_LIBS)
+
+.PHONY: all clean install
+
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS)
+	@mkdir -p $(BIN_DIR) $(LIB_DIR)
+	@echo "  LD      $@"
+	$(Q)$(CC) -o $@ $^ $(LDFLAGS) $(LIBS)
+	@echo "  Built: $(TARGET)"
+
+$(OBJDIR)/%.o: %.c
+	@mkdir -p $(dir $@)
+	@echo "  CC      $<"
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -f $(OBJECTS) $(TARGET) $(IMPLIB) .depend
+
+install: $(TARGET)
+	@echo "  INSTALL $(TARGET)"
+	mkdir -p "$(PREFIX)/bin"
+	mkdir -p "$(PREFIX)/lib"
+	cp $(TARGET) "$(PREFIX)/bin/"
+	cp $(IMPLIB) "$(PREFIX)/lib/"

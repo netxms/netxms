@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - ubnt network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = ubnt
+SOURCES = airmax.cpp edgeswitch.cpp ubnt.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

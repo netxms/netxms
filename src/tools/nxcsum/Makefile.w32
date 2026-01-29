@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - nxcsum (checksum tool) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = nxcsum
+SOURCES = nxcsum.cpp
+TOOL_LIBS = -lnetxms
+
+include $(TOPDIR)/build/tool-common.mk

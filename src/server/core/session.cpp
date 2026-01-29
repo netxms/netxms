@@ -10961,9 +10961,9 @@ void ClientSession::sendConfigForAgent(const NXCPMessage& request)
             NXSL_Value *args[5];
             args[0] = filter->createValue(m_clientAddr.toString());
             args[1] = filter->createValue(platform);
-            args[2] = filter->createValue((LONG)versionMajor);
-            args[3] = filter->createValue((LONG)versionMinor);
-            args[4] = filter->createValue((LONG)versionRelease);
+            args[2] = filter->createValue(versionMajor);
+            args[3] = filter->createValue(versionMinor);
+            args[4] = filter->createValue(versionRelease);
 
             // Run script
             debugPrintf(3, _T("Running configuration matching script %d"), configId);
@@ -15217,7 +15217,7 @@ void ClientSession::getSummaryTableDetails(const NXCPMessage& request)
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
 	{
-      LONG id = (LONG)request.getFieldAsUInt32(VID_SUMMARY_TABLE_ID);
+      uint32_t id = request.getFieldAsUInt32(VID_SUMMARY_TABLE_ID);
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT menu_path,title,node_filter,flags,columns,guid,table_dci_name FROM dci_summary_tables WHERE id=?");
       if (hStmt != nullptr)
@@ -15306,7 +15306,7 @@ void ClientSession::deleteSummaryTable(const NXCPMessage& request)
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
 	{
-		response.setField(VID_RCC, DeleteSummaryTable((LONG)request.getFieldAsUInt32(VID_SUMMARY_TABLE_ID)));
+		response.setField(VID_RCC, DeleteSummaryTable(request.getFieldAsUInt32(VID_SUMMARY_TABLE_ID)));
 	}
 	else
 	{

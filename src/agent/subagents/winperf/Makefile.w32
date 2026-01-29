@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - winperf subagent for Windows/MinGW
+# Part of NetXMS project
+#
+
+SUBAGENT = winperf
+SOURCES = collect.cpp tools.cpp winperf.cpp
+
+include $(TOPDIR)/src/agent/subagents/subagent-common.mk

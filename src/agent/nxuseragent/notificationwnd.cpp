@@ -21,6 +21,13 @@
 
 #include "nxuseragent.h"
 
+// LM_GETIDEALSIZE is the Vista+ alias of LM_GETIDEALHEIGHT (same SysLink
+// message, but also fills a SIZE in lParam). llvm-mingw's commctrl.h defines
+// LM_GETIDEALHEIGHT but omits the NTDDI_VISTA-gated alias.
+#ifndef LM_GETIDEALSIZE
+#define LM_GETIDEALSIZE LM_GETIDEALHEIGHT
+#endif
+
 #define MSG_WINDOW_CLASS_NAME   _T("NetXMS_UA_MsgWindow")
 
 /**

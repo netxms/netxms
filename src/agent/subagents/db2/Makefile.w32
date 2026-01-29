@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - db2 subagent for Windows/MinGW
+# Part of NetXMS project
+#
+
+SUBAGENT = db2
+SOURCES = db2dci.cpp db2_subagent.cpp
+SA_LIBS = -lnxdb
+
+include $(TOPDIR)/src/agent/subagents/subagent-common.mk

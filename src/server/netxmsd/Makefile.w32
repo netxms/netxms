@@ -1,0 +1,22 @@
+#
+# Makefile.w32 - netxmsd (server main executable) for Windows/MinGW
+# Part of NetXMS project
+#
+# Console application; winsrv.cpp provides the Windows service wrapper.
+#
+
+TOOL = netxmsd
+SOURCES = netxmsd.cpp winsrv.cpp
+
+# netxmsd pulls in the heavy server headers (nms_core.h and friends), so it
+# needs the same include set as nxcore.
+TOOL_CPPFLAGS = \
+	-I$(TOPDIR)/src/server/include \
+	-I$(TOPDIR)/include/argon2 \
+	-I$(TOPDIR)/private/common/src/licensing \
+	-I$(MICROHTTPD_ROOT)/include \
+	-I$(JNI_ROOT)/include -I$(JNI_ROOT)/include/win32
+
+TOOL_LIBS = -lnxcore -lnxsrv -lnxdb -lnetxms -ldbghelp
+
+include $(TOPDIR)/build/tool-common.mk

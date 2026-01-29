@@ -1,0 +1,11 @@
+#
+# Makefile.w32 - nddload (network device driver loader/tester) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = nddload
+SOURCES = nddload.cpp
+TOOL_CPPFLAGS = -I$(TOPDIR)/src/server/include
+TOOL_LIBS = -lnxsrv -lnxsnmp -lnetxms $(SSL_LIBS)
+
+include $(TOPDIR)/build/tool-common.mk

@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - pgsql subagent for Windows/MinGW
+# Part of NetXMS project
+#
+
+SUBAGENT = pgsql
+SOURCES = db.cpp main.cpp
+SA_LIBS = -lnxdb $(PCRE_LIBS)
+
+include $(TOPDIR)/src/agent/subagents/subagent-common.mk

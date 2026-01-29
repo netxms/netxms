@@ -36,9 +36,6 @@ using std::atomic;
 
 #ifdef _WIN32
 
-// DLL implementations of atomic<> for standard types (int32_t, double, etc.) should be placed here
-template struct LIBNETXMS_EXPORTABLE atomic<double>;
-
 typedef volatile LONG VolatileCounter;
 typedef volatile LONGLONG VolatileCounter64;
 

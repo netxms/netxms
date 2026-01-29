@@ -1,0 +1,127 @@
+#
+# NetXMS Windows Build System - Common Build Rules
+# Copyright (C) 2003-2026 Victor Kirhenshtein
+#
+# Include this file in component makefiles for standard build rules
+#
+
+#####################################################################
+# Standard Suffix Rules
+#####################################################################
+
+.SUFFIXES:
+.SUFFIXES: .cpp .c .o .rc
+
+# C++ source files
+.cpp.o:
+	@echo "  CXX     $<"
+	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# C source files
+.c.o:
+	@echo "  CC      $<"
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+
+# Windows resource files
+.rc.o:
+	@echo "  RC      $<"
+	$(Q)$(WINDRES) $(RCFLAGS) -I$(TOPDIR)/include -I$(TOPDIR)/build $< -o $@
+
+#####################################################################
+# Standard Pattern Rules
+#####################################################################
+
+# Alternative pattern rules (more flexible than suffix rules)
+%.o: %.cpp
+	@echo "  CXX     $<"
+	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
+
+%.o: %.c
+	@echo "  CC      $<"
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+
+%.o: %.rc
+	@echo "  RC      $<"
+	$(Q)$(WINDRES) $(RCFLAGS) -I$(TOPDIR)/include -I$(TOPDIR)/build $< -o $@
+
+#####################################################################
+# Standard Phony Targets
+#####################################################################
+
+.PHONY: all clean install depend
+
+#####################################################################
+# Dependency Generation
+#####################################################################
+
+# Generate dependencies for C++ files
+depend: .depend
+
+.depend: $(SOURCES)
+	@echo "  GEN     .depend"
+	$(Q)$(CXX) -MM $(CXXFLAGS) $(SOURCES) 2>/dev/null > .depend || true
+
+# Include dependencies if they exist
+-include .depend
+
+#####################################################################
+# Standard Clean Target Pattern
+#####################################################################
+
+# Most makefiles should define OBJECTS and TARGET, then use:
+# clean:
+#     rm -f $(OBJECTS) $(TARGET) *.o *.a *.dll *.exe .depend
+
+#####################################################################
+# Helper Functions
+#####################################################################
+
+# Function to check if a file exists
+# Usage: $(call file-exists,filename)
+file-exists = $(wildcard $(1))
+
+# Function to create directory if it doesn't exist
+# Usage: $(call ensure-dir,dirname)
+ensure-dir = mkdir -p "$(1)"
+
+#####################################################################
+# Common Variables
+#####################################################################
+
+# Standard object file list from sources
+# Component makefiles should define SOURCES, then:
+# OBJECTS = $(SOURCES:.cpp=.o)
+# OBJECTS := $(OBJECTS:.c=.o)
+
+#####################################################################
+# Quiet Mode Support
+#####################################################################
+
+# When VERBOSE=0 (default), only show summary lines
+# When VERBOSE=1, show full command lines
+#
+# Component makefiles get $(Q) prefix automatically:
+#   $(Q)$(CC) ...    # Silent unless VERBOSE=1
+
+#####################################################################
+# Color Output (Optional)
+#####################################################################
+
+# ANSI color codes for prettier output (if terminal supports it)
+# Disabled by default for Windows compatibility
+COLOR_RESET =
+COLOR_GREEN =
+COLOR_YELLOW =
+COLOR_RED =
+COLOR_BLUE =
+
+# To enable colors, uncomment:
+# COLOR_RESET = \033[0m
+# COLOR_GREEN = \033[32m
+# COLOR_YELLOW = \033[33m
+# COLOR_RED = \033[31m
+# COLOR_BLUE = \033[34m
+
+#####################################################################
+# End of Common Rules
+#####################################################################

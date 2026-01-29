@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - dell-pwc network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = dell-pwc
+SOURCES = dell-pwc.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

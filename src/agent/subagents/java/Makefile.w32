@@ -1,0 +1,11 @@
+#
+# Makefile.w32 - java subagent for Windows/MinGW
+# Part of NetXMS project
+#
+
+SUBAGENT = java
+SOURCES = main.cpp SubAgent.cpp
+SA_LIBS = -lnxjava
+SA_CPPFLAGS = -I$(JNI_ROOT)/include -I$(JNI_ROOT)/include/win32
+
+include $(TOPDIR)/src/agent/subagents/subagent-common.mk

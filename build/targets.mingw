@@ -1,0 +1,240 @@
+#
+# NetXMS Windows Build System - Standard Target Templates
+# Copyright (C) 2003-2026 Victor Kirhenshtein
+#
+# Makefile macros for building common target types (DLL, EXE, static lib)
+# Note: Uses POSIX shell syntax for MinGW/MSYS2
+#
+
+#####################################################################
+# Shared Library (DLL) Target
+#####################################################################
+
+# Build a DLL with import library
+# Usage:
+#   TARGET = mylib.dll
+#   IMPLIB = mylib.dll.a
+#   SOURCES = file1.cpp file2.cpp
+#   OBJECTS = $(SOURCES:.cpp=.o)
+#   LIBS = -lotherlib
+#   $(eval $(call BUILD_DLL,$(TARGET),$(OBJECTS),$(IMPLIB),$(LIBS)))
+
+define BUILD_DLL
+$(1): $(2)
+	@echo "  LD      $$@"
+	$(Q)$(CXX) -o $$@ $$^ $(LDFLAGS) -shared -Wl,--out-implib,$(3) $(4)
+	@echo "  Built DLL: $(1)"
+endef
+
+#####################################################################
+# Executable Target
+#####################################################################
+
+# Build an executable
+# Usage:
+#   TARGET = myapp.exe
+#   SOURCES = main.cpp utils.cpp
+#   OBJECTS = $(SOURCES:.cpp=.o)
+#   LIBS = -lmylib
+#   $(eval $(call BUILD_EXE,$(TARGET),$(OBJECTS),$(LIBS)))
+
+define BUILD_EXE
+$(1): $(2)
+	@echo "  LD      $$@"
+	$(Q)$(CXX) -o $$@ $$^ $(LDFLAGS) $(3)
+	@echo "  Built executable: $(1)"
+endef
+
+#####################################################################
+# Static Library Target
+#####################################################################
+
+# Build a static library
+# Usage:
+#   TARGET = mylib.a
+#   SOURCES = file1.cpp file2.cpp
+#   OBJECTS = $(SOURCES:.cpp=.o)
+#   $(eval $(call BUILD_STATIC_LIB,$(TARGET),$(OBJECTS)))
+
+define BUILD_STATIC_LIB
+$(1): $(2)
+	@echo "  AR      $$@"
+	$(Q)$(AR) rcs $$@ $$^
+	$(Q)$(RANLIB) $$@
+	@echo "  Built static library: $(1)"
+endef
+
+#####################################################################
+# Agent Subagent (NSM) Target
+#####################################################################
+
+# Build an agent subagent module (.nsm file)
+# These are DLLs with specific naming and no import library needed
+# Usage:
+#   TARGET = mysubagent.nsm
+#   SOURCES = main.cpp
+#   OBJECTS = $(SOURCES:.cpp=.o)
+#   LIBS = -lnxagent -lnetxms
+#   $(eval $(call BUILD_SUBAGENT,$(TARGET),$(OBJECTS),$(LIBS)))
+
+define BUILD_SUBAGENT
+$(1): $(2)
+	@echo "  LD      $$@"
+	$(Q)$(CXX) -o $$@ $$^ $(LDFLAGS) -shared -Wl,--subsystem,windows $(3)
+	@echo "  Built subagent: $(1)"
+endef
+
+#####################################################################
+# Database Driver (DDR) Target
+#####################################################################
+
+# Build a database driver module (.ddr file)
+# Similar to subagents but for database drivers
+# Usage:
+#   TARGET = pgsql.ddr
+#   SOURCES = pgsql.cpp
+#   OBJECTS = $(SOURCES:.cpp=.o)
+#   LIBS = -lnxdb -lpq
+#   $(eval $(call BUILD_DBDRIVER,$(TARGET),$(OBJECTS),$(LIBS)))
+
+define BUILD_DBDRIVER
+$(1): $(2)
+	@echo "  LD      $$@"
+	$(Q)$(CXX) -o $$@ $$^ $(LDFLAGS) -shared $(3)
+	@echo "  Built database driver: $(1)"
+endef
+
+#####################################################################
+# Notification Channel Driver (NCD) Target
+#####################################################################
+
+# Build a notification channel driver module (.ncd file)
+# Usage:
+#   TARGET = smtp.ncd
+#   SOURCES = smtp.cpp
+#   OBJECTS = $(SOURCES:.cpp=.o)
+#   LIBS = -lnetxms
+#   $(eval $(call BUILD_NCDRIVER,$(TARGET),$(OBJECTS),$(LIBS)))
+
+define BUILD_NCDRIVER
+$(1): $(2)
+	@echo "  LD      $$@"
+	$(Q)$(CXX) -o $$@ $$^ $(LDFLAGS) -shared $(3)
+	@echo "  Built notification driver: $(1)"
+endef
+
+#####################################################################
+# Network Device Driver (NDD) Target
+#####################################################################
+
+# Build a network device driver module (.ndd file)
+# Usage:
+#   TARGET = cisco.ndd
+#   SOURCES = cisco.cpp
+#   OBJECTS = $(SOURCES:.cpp=.o)
+#   LIBS = -lnetxms
+#   $(eval $(call BUILD_NDDDRIVER,$(TARGET),$(OBJECTS),$(LIBS)))
+
+define BUILD_NDDDRIVER
+$(1): $(2)
+	@echo "  LD      $$@"
+	$(Q)$(CXX) -o $$@ $$^ $(LDFLAGS) -shared $(3)
+	@echo "  Built device driver: $(1)"
+endef
+
+#####################################################################
+# Standard Install Targets (POSIX shell)
+#####################################################################
+
+# Install DLL and import library
+# Usage: $(call INSTALL_DLL,mylib.dll,mylib.dll.a)
+define INSTALL_DLL
+install-dll:
+	@echo "  INSTALL $(1)"
+	@mkdir -p "$(PREFIX)/bin"
+	@mkdir -p "$(PREFIX)/lib"
+	@cp $(1) "$(PREFIX)/bin/"
+	@cp $(2) "$(PREFIX)/lib/"
+endef
+
+# Install executable
+# Usage: $(call INSTALL_EXE,myapp.exe)
+define INSTALL_EXE
+install-exe:
+	@echo "  INSTALL $(1)"
+	@mkdir -p "$(PREFIX)/bin"
+	@cp $(1) "$(PREFIX)/bin/"
+endef
+
+# Install static library
+# Usage: $(call INSTALL_STATIC_LIB,mylib.a)
+define INSTALL_STATIC_LIB
+install-lib:
+	@echo "  INSTALL $(1)"
+	@mkdir -p "$(PREFIX)/lib"
+	@cp $(1) "$(PREFIX)/lib/"
+endef
+
+# Install plugin (subagent, driver, etc.)
+# Usage: $(call INSTALL_PLUGIN,mysubagent.nsm,subdir)
+define INSTALL_PLUGIN
+install-plugin:
+	@echo "  INSTALL $(1)"
+	@mkdir -p "$(PREFIX)/lib/$(2)"
+	@cp $(1) "$(PREFIX)/lib/$(2)/"
+endef
+
+# Install headers
+# Usage: $(call INSTALL_HEADERS,file1.h file2.h)
+define INSTALL_HEADERS
+install-headers:
+	@echo "  INSTALL headers"
+	@mkdir -p "$(PREFIX)/include"
+	@for f in $(1); do cp $$f "$(PREFIX)/include/"; done
+endef
+
+#####################################################################
+# Convenience Macros
+#####################################################################
+
+# Simple DLL build (most common case)
+# Assumes standard variable names: TARGET, IMPLIB, OBJECTS, LIBS
+define SIMPLE_DLL_BUILD
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS) $(RC_OBJECT)
+	@echo "  LD      $$@"
+	$(Q)$(CXX) -o $$@ $$^ $(LDFLAGS) -shared -Wl,--out-implib,$(IMPLIB) $(LIBS)
+
+install: $(TARGET)
+	@echo "  INSTALL $(TARGET)"
+	@mkdir -p "$(PREFIX)/bin"
+	@mkdir -p "$(PREFIX)/lib"
+	@cp $(TARGET) "$(PREFIX)/bin/"
+	@cp $(IMPLIB) "$(PREFIX)/lib/"
+
+clean:
+	rm -f $(OBJECTS) $(RC_OBJECT) $(TARGET) $(IMPLIB)
+endef
+
+# Simple executable build (most common case)
+# Assumes standard variable names: TARGET, OBJECTS, LIBS
+define SIMPLE_EXE_BUILD
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS) $(RC_OBJECT)
+	@echo "  LD      $$@"
+	$(Q)$(CXX) -o $$@ $$^ $(LDFLAGS) $(LIBS)
+
+install: $(TARGET)
+	@echo "  INSTALL $(TARGET)"
+	@mkdir -p "$(PREFIX)/bin"
+	@cp $(TARGET) "$(PREFIX)/bin/"
+
+clean:
+	rm -f $(OBJECTS) $(RC_OBJECT) $(TARGET)
+endef
+
+#####################################################################
+# End of Target Templates
+#####################################################################

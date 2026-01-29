@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - hirschmann network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = hirschmann
+SOURCES = classic.cpp hios.cpp hirschmann.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

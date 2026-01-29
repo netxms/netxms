@@ -27,7 +27,19 @@
 #include <nms_agent.h>
 #include <nms_threads.h>
 #include <winevt.h>
+#if __has_include(<winmeta.h>)
 #include <winmeta.h>
+#else
+// Some MinGW toolchains (e.g. llvm-mingw) do not ship winmeta.h.
+// Define the few constants used below with their standard Windows SDK values.
+#define WINEVENT_LEVEL_CRITICAL        0x1
+#define WINEVENT_LEVEL_ERROR           0x2
+#define WINEVENT_LEVEL_WARNING         0x3
+#define WINEVENT_LEVEL_INFO            0x4
+#define WINEVENT_LEVEL_VERBOSE         0x5
+#define WINEVENT_KEYWORD_AUDIT_SUCCESS 0x0020000000000000ULL
+#define WINEVENT_KEYWORD_AUDIT_FAILURE 0x0010000000000000ULL
+#endif
 
 #define DEBUG_TAG _T("wineventsync")
 

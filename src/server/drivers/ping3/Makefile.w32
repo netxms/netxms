@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - ping3 network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = ping3
+SOURCES = ping3.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

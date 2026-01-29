@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - bdcom network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = bdcom
+SOURCES = bdcom.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

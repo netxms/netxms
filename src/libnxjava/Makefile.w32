@@ -1,0 +1,48 @@
+#
+# Makefile.w32 - libnxjava for Windows/MinGW
+# Part of NetXMS project
+#
+
+TARGET = $(BIN_DIR)/libnxjava.dll
+IMPLIB = $(LIB_DIR)/libnxjava.dll.a
+
+SOURCES = config.cpp jre.cpp jvm.cpp main.cpp platform.cpp tools.cpp
+
+RC_SOURCE = $(TOPDIR)/build/netxms-build-tag.rc
+# Objects go to a per-architecture directory so multiple ARCH builds coexist
+OBJDIR = $(OBJ_DIR)/$(subst $(TOPDIR)/,,$(CURDIR))
+OBJECTS = $(addprefix $(OBJDIR)/,$(SOURCES:.cpp=.o))
+RC_OBJECT = $(OBJDIR)/netxms-build-tag.o
+
+# JVM is loaded at runtime (LoadLibrary); only JNI headers are needed - no jvm import lib
+CXXFLAGS = $(COMMON_CXXFLAGS) -DLIBNXJAVA_EXPORTS -I$(JNI_ROOT)/include -I$(JNI_ROOT)/include/win32
+LDFLAGS = $(COMMON_LDFLAGS) $(COMMON_LIBDIRS) -shared -Wl,--out-implib,$(IMPLIB)
+LIBS = -lnetxms $(WIN_LIBS)
+
+.PHONY: all clean install
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS) $(RC_OBJECT)
+	@mkdir -p $(BIN_DIR) $(LIB_DIR)
+	@echo "  LD      $@"
+	$(Q)$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
+	@echo "  Built: $(TARGET)"
+
+$(OBJDIR)/%.o: %.cpp
+	@mkdir -p $(dir $@)
+	@echo "  CXX     $<"
+	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(RC_OBJECT): $(RC_SOURCE)
+	@mkdir -p $(dir $@)
+	@echo "  RC      $<"
+	$(Q)$(WINDRES) -I$(TOPDIR)/include -I$(TOPDIR)/build $< -o $@
+
+clean:
+	rm -f $(OBJECTS) $(RC_OBJECT) $(TARGET) $(IMPLIB) .depend
+
+install: $(TARGET)
+	@echo "  INSTALL $(TARGET)"
+	mkdir -p "$(PREFIX)/bin" "$(PREFIX)/lib"
+	cp $(TARGET) "$(PREFIX)/bin/"
+	cp $(IMPLIB) "$(PREFIX)/lib/"

@@ -276,7 +276,7 @@ struct ArpEntry
    ArpEntry(const InetAddress& _ipAddr, const MacAddress& _macAddr, uint32_t _ifIndex) : ipAddr(_ipAddr), macAddr(_macAddr) { ifIndex = _ifIndex; }
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class LIBNXSRV_TEMPLATE_EXPORTABLE ObjectArray<ArpEntry>;
 template class LIBNXSRV_TEMPLATE_EXPORTABLE HashMap<InetAddress, ArpEntry>;
 #endif
@@ -305,7 +305,7 @@ public:
    void dumpToLog() const;
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class LIBNXSRV_TEMPLATE_EXPORTABLE shared_ptr<ArpCache>;
 #endif
 
@@ -416,7 +416,7 @@ public:
    bool hasAddress(const InetAddress& addr) { return ipAddrList.hasAddress(addr); }
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class LIBNXSRV_TEMPLATE_EXPORTABLE ObjectArray<InterfaceInfo>;
 #endif
 
@@ -470,7 +470,7 @@ struct VlanPortInfo
    bool tagged;
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class LIBNXSRV_TEMPLATE_EXPORTABLE StructArray<VlanPortInfo>;
 #endif
 
@@ -601,7 +601,7 @@ struct LIBNXSRV_EXPORTABLE CustomAttribute
    json_t *toJson(const TCHAR *name) const;
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 class NObject;
 template class LIBNXSRV_TEMPLATE_EXPORTABLE shared_ptr<NObject>;
 template class LIBNXSRV_TEMPLATE_EXPORTABLE weak_ptr<NObject>;
@@ -814,7 +814,7 @@ struct ROUTE
    RoutingProtocol protocol;
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class LIBNXSRV_TEMPLATE_EXPORTABLE StructArray<ROUTE>;
 #endif
 
@@ -853,7 +853,7 @@ public:
    }
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class LIBNXSRV_TEMPLATE_EXPORTABLE shared_ptr<RoutingTable>;
 #endif
 
@@ -1117,7 +1117,7 @@ struct LIBNXSRV_EXPORTABLE UserSession
  */
 class AgentConnectionReceiver;
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 class AgentConnection;
 template class LIBNXSRV_TEMPLATE_EXPORTABLE weak_ptr<AgentConnection>;
 template class LIBNXSRV_TEMPLATE_EXPORTABLE shared_ptr<AgentConnectionReceiver>;
@@ -1365,7 +1365,7 @@ public:
    uint32_t cancelFileDownload();
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class LIBNXSRV_TEMPLATE_EXPORTABLE shared_ptr<AgentConnection>;
 #endif
 
@@ -1534,7 +1534,7 @@ struct LIBNXSRV_EXPORTABLE SSHDriverHints
 
 class SSHInteractiveChannel;
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class LIBNXSRV_TEMPLATE_EXPORTABLE shared_ptr<SSHInteractiveChannel>;
 #endif
 

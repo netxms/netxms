@@ -1,0 +1,59 @@
+#
+# Makefile.w32 - nxsagent (session agent) for Windows/MinGW
+# Part of NetXMS project
+#
+# The session agent runs in the interactive user session and provides
+# screenshot capture (via libpng) for the master agent. GUI subsystem app
+# (WinMain entry), but it has no windows of its own.
+#
+
+TARGET = $(BIN_DIR)/nxsagent.exe
+
+SOURCES = \
+	main.cpp \
+	png.cpp \
+	screenshot.cpp
+
+RC_SOURCE = $(TOPDIR)/build/netxms-build-tag.rc
+# Objects go to a per-architecture directory so multiple ARCH builds coexist
+OBJDIR = $(OBJ_DIR)/$(subst $(TOPDIR)/,,$(CURDIR))
+OBJECTS = $(addprefix $(OBJDIR)/,$(SOURCES:.cpp=.o))
+RC_OBJECT = $(OBJDIR)/netxms-build-tag.o
+
+CXXFLAGS = $(COMMON_CXXFLAGS) -I$(TOPDIR)/src/libpng
+
+# -mwindows selects the GUI subsystem; the entry point is ANSI WinMain
+LDFLAGS = $(COMMON_LDFLAGS) $(COMMON_LIBDIRS) -mwindows
+
+# In-tree libs found via -L$(LIB_DIR) in COMMON_LIBDIRS; -lnxpng pulls in the
+# bundled libpng (which itself carries zlib)
+# -luuid supplies the KNOWNFOLDERID GUIDs (FOLDERID_LocalAppData, ...)
+LIBS = -lnxagent -lnetxms -lnxpng $(WIN_LIBS) -lgdi32 -luuid
+
+.PHONY: all clean install
+
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS) $(RC_OBJECT)
+	@mkdir -p $(BIN_DIR)
+	@echo "  LD      $@"
+	$(Q)$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
+	@echo "  Built: $(TARGET)"
+
+$(OBJDIR)/%.o: %.cpp
+	@mkdir -p $(dir $@)
+	@echo "  CXX     $<"
+	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(RC_OBJECT): $(RC_SOURCE)
+	@mkdir -p $(dir $@)
+	@echo "  RC      $<"
+	$(Q)$(WINDRES) -I$(TOPDIR)/include -I$(TOPDIR)/build $< -o $@
+
+clean:
+	rm -f $(OBJECTS) $(RC_OBJECT) $(TARGET) .depend
+
+install: $(TARGET)
+	@echo "  INSTALL $(TARGET)"
+	mkdir -p "$(PREFIX)/bin"
+	cp $(TARGET) "$(PREFIX)/bin/"

@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - mattermost notification channel driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = mattermost
+SOURCES = $(wildcard *.cpp)
+DRV_LIBS = -lnxjansson $(CURL_LIBS)
+
+include $(TOPDIR)/src/server/ncdrivers/ncdrv-common.mk

@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - nxpush client tool for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = nxpush
+SOURCES = nxpush.cpp
+TOOL_LIBS = -lnxclient -lnetxms
+
+include $(TOPDIR)/build/tool-common.mk

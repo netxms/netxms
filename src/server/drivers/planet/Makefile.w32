@@ -1,0 +1,11 @@
+#
+# Makefile.w32 - planet network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = planet
+SOURCES = isw.cpp lansw.cpp planet.cpp
+# planet uses agent metric helpers (AgentGetMetricArg*) from libnxagent
+DRV_LIBS = -lnxagent
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

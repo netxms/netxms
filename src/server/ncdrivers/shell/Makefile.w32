@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - shell notification channel driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = shell
+SOURCES = $(wildcard *.cpp)
+
+include $(TOPDIR)/src/server/ncdrivers/ncdrv-common.mk

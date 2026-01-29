@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - influxdb performance data storage driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = influxdb
+SOURCES = api.cpp influxdb.cpp sender.cpp udp.cpp
+DRV_LIBS = $(CURL_LIBS)
+
+include $(TOPDIR)/src/server/pdsdrv/pdsdrv-common.mk

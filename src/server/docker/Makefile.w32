@@ -1,0 +1,14 @@
+#
+# Makefile.w32 - docker (Docker monitoring module) for Windows/MinGW
+# Part of NetXMS project
+#
+# Note: this module has no MSVC project; sources are taken from Makefile.am.
+# It talks to the Docker REST API via libcurl and exposes its own API via
+# libmicrohttpd.
+#
+
+MODULE = docker
+SOURCES = $(wildcard *.cpp)
+MOD_LIBS = -lnxjansson $(CURL_LIBS) $(MICROHTTPD_LIBS)
+
+include $(TOPDIR)/src/server/module-common.mk

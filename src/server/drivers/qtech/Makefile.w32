@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - qtech network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = qtech
+SOURCES = olt.cpp qtech.cpp sw.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

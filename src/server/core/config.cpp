@@ -1279,8 +1279,8 @@ bool NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *variable, const TCHAR *value,
       }
 		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
 		DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
-		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)(isVisible ? 1 : 0));
-		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)(needRestart ? 1 : 0));
+		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (isVisible ? 1 : 0));
+		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (needRestart ? 1 : 0));
 	}
    bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);

@@ -51,7 +51,7 @@ void VariantToTableCell(VARIANT *v, Table *t, int column)
          t->set(column, v->uiVal);
          break;
       case VT_I4:
-         t->set(column, v->lVal);
+         t->set(column, static_cast<int32_t>(v->lVal));
          break;
       case VT_R4:
          t->set(column, v->fltVal);

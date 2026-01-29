@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - cambium network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = cambium
+SOURCES = cambium.cpp cnpilot.cpp epmp.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

@@ -135,7 +135,7 @@ struct EventProcessingThreadStats
 class EventBuilder;
 class EPRule;
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 class Event;
 template class NXCORE_TEMPLATE_EXPORTABLE std::function<void(Event*)>;
 #endif
@@ -719,7 +719,7 @@ public:
    uint64_t getDateFilter() const { return m_dateFilter; }
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<TimeFrame>;
 template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<ActionExecutionConfiguration>;
 #endif
@@ -928,7 +928,7 @@ public:
    }
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<EPRule>;
 template class NXCORE_TEMPLATE_EXPORTABLE ObjectMemoryPool<shared_ptr<EPRule>>;
 template class NXCORE_TEMPLATE_EXPORTABLE SharedObjectArray<EPRule>;

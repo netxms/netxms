@@ -22,8 +22,7 @@
 **/
 
 #include "libnetxms.h"
-
-#ifdef _WIN32
+#include <sys/stat.h>
 
 /**
  * Open directory
@@ -117,5 +116,3 @@ int LIBNETXMS_EXPORTABLE CloseDirW(DIRHANDLEW *p)
    MemFree(p);
    return 0;
 }
-
-#endif   /* _WIN32 */

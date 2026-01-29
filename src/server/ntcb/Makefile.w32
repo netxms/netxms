@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - ntcb (NTCB telemetry protocol module) for Windows/MinGW
+# Part of NetXMS project
+#
+
+MODULE = ntcb
+SOURCES = $(wildcard *.cpp)
+
+include $(TOPDIR)/src/server/module-common.mk

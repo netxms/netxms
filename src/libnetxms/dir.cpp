@@ -22,8 +22,7 @@
 **/
 
 #include "libnetxms.h"
-
-#ifdef _WIN32
+#include <sys/stat.h>
 
 /**
  * Open directory
@@ -35,7 +34,7 @@ DIRHANDLEA LIBNETXMS_EXPORTABLE *OpenDirA(const char *path)
 
    // check to see if filename is a directory
    char pattern[MAX_PATH];
-   strncpy_s(pattern, MAX_PATH, path, _TRUNCATE);
+   strlcpy(pattern, path, MAX_PATH);
    size_t len = strlen(pattern);
    char tail = pattern[len - 1];
    if ((tail == '/') || (tail == '\\'))
@@ -50,8 +49,8 @@ DIRHANDLEA LIBNETXMS_EXPORTABLE *OpenDirA(const char *path)
       pattern[len] = '\\';
       pattern[len + 1] = 0;
    }
-   struct _stati64 sbuf;
-   if ((_stati64(pattern, &sbuf) < 0) || ((sbuf.st_mode & S_IFDIR) == 0))
+   struct _stat64 sbuf;
+   if ((_stat64(pattern, &sbuf) < 0) || ((sbuf.st_mode & S_IFDIR) == 0))
       return nullptr;
 
    // create search pattern
@@ -116,5 +115,3 @@ int LIBNETXMS_EXPORTABLE CloseDirA(DIRHANDLEA *p)
    MemFree(p);
    return 0;
 }
-
-#endif   /* _WIN32 */

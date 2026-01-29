@@ -266,39 +266,39 @@ NXSL_Value *NXSL_DiscoveredNodeClass::getAttr(NXSL_Object *object, const NXSL_Id
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isAgent"))
    {
-      value = vm->createValue((LONG)((data->flags & NNF_IS_AGENT) ? 1 : 0));
+      value = vm->createValue(((data->flags & NNF_IS_AGENT) ? 1 : 0));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isBridge"))
    {
-      value = vm->createValue((LONG)((data->flags & NNF_IS_BRIDGE) ? 1 : 0));
+      value = vm->createValue(((data->flags & NNF_IS_BRIDGE) ? 1 : 0));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isCDP"))
    {
-      value = vm->createValue((LONG)((data->flags & NNF_IS_CDP) ? 1 : 0));
+      value = vm->createValue(((data->flags & NNF_IS_CDP) ? 1 : 0));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isLLDP"))
    {
-      value = vm->createValue((LONG)((data->flags & NNF_IS_LLDP) ? 1 : 0));
+      value = vm->createValue(((data->flags & NNF_IS_LLDP) ? 1 : 0));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isPrinter"))
    {
-      value = vm->createValue((LONG)((data->flags & NNF_IS_PRINTER) ? 1 : 0));
+      value = vm->createValue(((data->flags & NNF_IS_PRINTER) ? 1 : 0));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isRouter"))
    {
-      value = vm->createValue((LONG)((data->flags & NNF_IS_ROUTER) ? 1 : 0));
+      value = vm->createValue(((data->flags & NNF_IS_ROUTER) ? 1 : 0));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSNMP"))
    {
-      value = vm->createValue((LONG)((data->flags & NNF_IS_SNMP) ? 1 : 0));
+      value = vm->createValue(((data->flags & NNF_IS_SNMP) ? 1 : 0));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSONMP"))
    {
-      value = vm->createValue((LONG)((data->flags & NNF_IS_SONMP) ? 1 : 0));
+      value = vm->createValue(((data->flags & NNF_IS_SONMP) ? 1 : 0));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSSH"))
    {
-      value = vm->createValue((LONG)((data->flags & NNF_IS_SSH) ? 1 : 0));
+      value = vm->createValue(((data->flags & NNF_IS_SSH) ? 1 : 0));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("netMask"))
    {
@@ -314,7 +314,7 @@ NXSL_Value *NXSL_DiscoveredNodeClass::getAttr(NXSL_Object *object, const NXSL_Id
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("snmpVersion"))
    {
-      value = vm->createValue((LONG)data->snmpVersion);
+      value = vm->createValue(data->snmpVersion);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("subnet"))
    {

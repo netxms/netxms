@@ -1090,7 +1090,7 @@ void LogCertificateAction(CertificateOperation operation, uint32_t userId, uint3
          _T("INSERT INTO certificate_action_log (record_id,operation_timestamp,operation,user_id,node_id,node_guid,cert_type,subject,serial) VALUES (?,?,?,?,?,?,?,?,?)"));
    if (hStmt != nullptr)
    {
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, InterlockedIncrement(&s_logRecordId));
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<int32_t>(InterlockedIncrement(&s_logRecordId)));
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(time(nullptr)));
       DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int32_t>(operation));
       DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, userId);

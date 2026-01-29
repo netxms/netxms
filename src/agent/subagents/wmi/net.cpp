@@ -115,7 +115,7 @@ LONG H_NetworkAdaptersList(const TCHAR *cmd, const TCHAR *arg, StringList *value
          VARIANT v;
          if (classObject->Get(L"Index", 0, &v, 0, 0) == S_OK)
          {
-            value->add(VariantToInt(&v));
+            value->add(static_cast<int32_t>(VariantToInt(&v)));
          }
          classObject->Release();
       }

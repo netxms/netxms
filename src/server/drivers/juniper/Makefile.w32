@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - juniper network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = juniper
+SOURCES = juniper.cpp netscreen.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

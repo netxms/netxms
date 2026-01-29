@@ -28,7 +28,7 @@ class Node;
 class Interface;
 class NetworkMap;
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<NetObj>;
 #endif
 
@@ -151,7 +151,7 @@ public:
    void fillMessage(NXCPMessage *msg);
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<ForwardingDatabase>;
 #endif
 
@@ -179,7 +179,7 @@ struct LL_NEIGHBOR_INFO
    bool isCached;              // true if this is cached information
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE StructArray<LL_NEIGHBOR_INFO>;
 #endif
 
@@ -263,7 +263,7 @@ public:
    }
 };
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<LinkLayerNeighbors>;
 #endif
 

@@ -36,291 +36,166 @@ Name: "server\mariadb"; Description: "MariaDB Client Library"; Types: full
 Name: "server\mysql"; Description: "MySQL Client Library"; Types: full
 Name: "server\pgsql"; Description: "PostgreSQL Client Library"; Types: full
 Name: "server\reporting"; Description: "Reporting Server"; Types: full
-Name: "pdb"; Description: "Install PDB files for selected components"; Types: custom
 
 [Files]
 ; Common files
-Source: "..\..\..\x64\Release\libnetxms.dll"; DestDir: "{app}\bin"; BeforeInstall: StopAllServices; Flags: ignoreversion signonce; Components: base
-Source: "..\..\..\x64\Release\libnetxms.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
-Source: "..\..\..\x64\Release\libnxjava.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
-Source: "..\..\..\x64\Release\libnxjava.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
-Source: "..\..\..\x64\Release\libnxmb.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
-Source: "..\..\..\x64\Release\libnxmb.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
-Source: "..\..\..\x64\Release\libethernetip.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
-Source: "..\..\..\x64\Release\libethernetip.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
-Source: "..\..\..\x64\Release\libargon2.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
-Source: "..\..\..\x64\Release\libargon2.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
-Source: "..\..\..\x64\Release\libpng.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
-Source: "..\..\..\x64\Release\libpng.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
-Source: "..\..\..\x64\Release\jansson.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
-Source: "..\..\..\x64\Release\jansson.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
+Source: "..\..\..\out\x64\Release\bin\libnetxms.dll"; DestDir: "{app}\bin"; BeforeInstall: StopAllServices; Flags: ignoreversion signonce; Components: base
+Source: "..\..\..\out\x64\Release\bin\libnxjava.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+Source: "..\..\..\out\x64\Release\bin\libethernetip.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+Source: "..\..\..\out\x64\Release\bin\libargon2.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+Source: "..\..\..\out\x64\Release\bin\nxpng.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+Source: "..\..\..\out\x64\Release\bin\nxjansson.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
 ; Server core
-Source: "..\..\..\x64\Release\libnxagent.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\libnxagent.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\libnxdb.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\libnxdb.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\libnxlp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\libnxlp.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\libnxsl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\libnxsl.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\libnxsde.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\libnxsde.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\libnxsnmp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\libnxsnmp.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\libnxsrv.dll"; DestDir: "{app}\bin"; BeforeInstall: RenameOldFile; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\libnxsrv.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\netxmsd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\netxmsd.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\nxcore.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nxcore.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\nxcrashsrv.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nxscript.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nxsqlite.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nxsqlite.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\out\x64\Release\bin\libnxagent.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\libnxdb.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\libnxlp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\libnxsl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\libnxsde.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\libnxsnmp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\libnxsrv.dll"; DestDir: "{app}\bin"; BeforeInstall: RenameOldFile; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\netxmsd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\nxcore.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\nxcrashsrv.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\nxscript.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\nxsqlite.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 ; Modules
-Source: "..\..\..\x64\Release\aitools.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\aitools.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\leef.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\leef.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\ntcb.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\ntcb.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\otlp.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\otlp.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\wcc.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\wcc.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\webapi.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\webapi.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\wlcbridge.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\wlcbridge.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\out\x64\Release\bin\aitools.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\leef.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\ntcb.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\otlp.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\wcc.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\webapi.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\wlcbridge.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 ; DB drivers
-Source: "..\..\..\x64\Release\db2.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\db2.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\informix.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\informix.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\mariadb.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\mariadb.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\mssql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\mssql.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\mysql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\mysql.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\odbc.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\odbc.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\oracle.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\oracle.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\pgsql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\pgsql.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\sqlite.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\sqlite.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\out\x64\Release\bin\db2.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\informix.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\mariadb.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\mssql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\mysql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\odbc.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\oracle.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\pgsql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\sqlite.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 ; NC drivers
-Source: "..\..\..\x64\Release\anysms.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\anysms.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\dbtable.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\dbtable.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\googlechat.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\googlechat.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\gsm.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\gsm.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\kannel.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\kannel.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\matrix.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\matrix.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\mattermost.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\mattermost.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\mqtt.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\msteams.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\msteams.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\mymobile.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\mymobile.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\nexmo.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nexmo.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\nxagent.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nxagent.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\portech.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\portech.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\shell.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\shell.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\slack.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\slack.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\smseagle.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\smseagle.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\smtp.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\smtp.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\snmptrap.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\snmptrap.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\telegram.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\telegram.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\text2reach.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\text2reach.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\textfile.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\textfile.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\twilio.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\twilio.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\websms.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\websms.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\xmpp.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\xmpp.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\out\x64\Release\bin\anysms.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\dbtable.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\googlechat.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\gsm.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\kannel.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\matrix.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\mattermost.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\mqtt.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\msteams.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\mymobile.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\nexmo.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\nxagent.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\portech.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\shell.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\slack.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\smseagle.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\smtp.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\snmptrap.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\telegram.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\text2reach.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\textfile.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\twilio.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\websms.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\xmpp.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
 ; Reporting server
 Source: "..\..\server\nxreportd\java\target\nxreportd-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: server\reporting
 Source: "..\..\server\nxreportd\java\target\lib\*.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: server\reporting
 ; Tools
-Source: "..\..\..\x64\Release\libnxdbmgr.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nxaction.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nxadm.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nxdbmgr.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nxdownload.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nxencpasswd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nxget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nxmibc.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nxminfo.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nxsnmpget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nxsnmpwalk.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nxsnmpset.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nxtftp.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nxupload.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nxwsget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\libnxdbmgr.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\nxaction.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\nxadm.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\nxdbmgr.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\nxdownload.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\nxencpasswd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\nxget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\nxmibc.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\nxminfo.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\nxsnmpget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\nxsnmpwalk.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\nxsnmpset.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\nxtftp.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\nxupload.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\nxwsget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 ; Agent
-Source: "..\..\..\x64\Release\nxagentd.exe"; DestDir: "{app}\bin"; BeforeInstall: RenameOldFile; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nxagentd.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\nxsagent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nxsagent.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\aifileops.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\aifileops.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\bind9.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\bind9.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\db2.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\db2.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\dbquery.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\dbquery.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\devemu.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\devemu.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\filemgr.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\filemgr.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\informix.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\informix.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\java.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\java.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\logwatch.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\logwatch.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\mqtt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\mqtt.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\mysql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\mysql.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\netsvc.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\netsvc.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\oracle.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\oracle.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\pgsql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\pgsql.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\ping.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\ping.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\prometheus.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\prometheus.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\sms.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\sms.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\ssh.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\ssh.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\tuxedo.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\tuxedo.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\ups.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\ups.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\wineventsync.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\wineventsync.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\winnt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\winnt.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\winperf.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\winperf.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\wmi.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\wmi.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\out\x64\Release\bin\nxagentd.exe"; DestDir: "{app}\bin"; BeforeInstall: RenameOldFile; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\nxsagent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\aifileops.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\bind9.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\db2.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\dbquery.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\devemu.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\filemgr.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\informix.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\java.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\logwatch.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\mqtt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\mysql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\netsvc.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\oracle.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\pgsql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\ping.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\prometheus.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\sms.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\ssh.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+;; NOT IMPLEMENTED ;; Source: "..\..\..\out\x64\Release\bin\tuxedo.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\ups.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\wineventsync.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\winnt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\winperf.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\wmi.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\agent\subagents\java\java\target\netxms-agent-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: server
 Source: "..\..\agent\subagents\jmx\target\jmx.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: server
 Source: "..\..\agent\subagents\opcua\target\opcua.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: server
 Source: "..\..\agent\subagents\ubntlw\target\ubntlw.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: server
 Source: "..\..\agent\tools\scripts\nxagentd-generate-tunnel-config.cmd"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 ; Network device drivers
-Source: "..\..\..\x64\Release\at.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\at.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\avaya.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\avaya.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\bdcom.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\bdcom.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\bulat.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\bulat.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\cambium.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\cambium.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\cisco.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\cisco.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\dell-pwc.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\dell-pwc.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\dlink.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\dlink.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\edgecore.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\edgecore.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\eltex.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\eltex.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\etherwan.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\etherwan.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\extreme.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\extreme.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\fortinet.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\fortinet.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\hirschmann.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\hirschmann.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\hpe.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\hpe.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\huawei.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\huawei.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\ignitenet.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\ignitenet.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\juniper.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\juniper.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\lenovo.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\lenovo.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\mds.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\mds.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\mikrotik.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\mikrotik.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\moxa.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\moxa.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\net-snmp.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\net-snmp.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\netonix.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\netonix.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\origo.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\origo.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\ping3.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\ping3.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\planet.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\planet.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\qtech.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\qtech.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\rittal.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\rittal.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\saf.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\saf.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\siemens.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\siemens.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\symbol-ws.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\symbol-ws.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\tb.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\tb.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\tplink.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\tplink.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\ubnt.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\ubnt.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\westerstrand.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\westerstrand.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\zyxel.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\zyxel.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\out\x64\Release\bin\at.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\avaya.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\bdcom.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\bulat.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\cambium.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\cisco.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\dell-pwc.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\dlink.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\edgecore.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\eltex.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\etherwan.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\extreme.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\fortinet.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\hirschmann.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\hpe.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\huawei.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\ignitenet.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\juniper.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\lenovo.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\mds.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\mikrotik.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\moxa.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\net-snmp.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\netonix.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\origo.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\ping3.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\planet.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\qtech.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\rittal.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\saf.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\siemens.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\symbol-ws.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\tb.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\tplink.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\ubnt.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\westerstrand.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\zyxel.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 ; Fan-out drivers
-Source: "..\..\..\x64\Release\clickhouse.pdsd"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\clickhouse.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\influxdb.pdsd"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\influxdb.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\out\x64\Release\bin\clickhouse.pdsd"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\influxdb.pdsd"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 ; Helpdesk links
-Source: "..\..\..\x64\Release\jira.hdlink"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\jira.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\redmine.hdlink"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\redmine.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\out\x64\Release\bin\jira.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\redmine.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 ; DB schema
 Source: "..\..\..\sql\dbinit_db2.sql"; DestDir: "{app}\share\sql"; Flags: ignoreversion; Components: server
 Source: "..\..\..\sql\dbinit_mssql.sql"; DestDir: "{app}\share\sql"; Flags: ignoreversion; Components: server
@@ -351,20 +226,19 @@ Source: "..\..\..\contrib\music\*"; DestDir: "{app}\var\files"; Flags: ignorever
 Source: "..\..\java-common\netxms-base\target\netxms-base-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: base
 Source: "..\..\libnxjava\java\target\netxms-java-bridge-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: base
 ; Command line tools
-Source: "..\..\..\x64\Release\libnxclient.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
-Source: "..\..\..\x64\Release\libnxclient.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools and pdb
-Source: "..\..\..\x64\Release\nxalarm.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
-Source: "..\..\..\x64\Release\nxaevent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
-Source: "..\..\..\x64\Release\nxap.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
-Source: "..\..\..\x64\Release\nxapush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
-Source: "..\..\..\x64\Release\nxcsum.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
-Source: "..\..\..\x64\Release\nxethernetip.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
-Source: "..\..\..\x64\Release\nxevent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
-Source: "..\..\..\x64\Release\nxgenguid.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
-Source: "..\..\..\x64\Release\nxhwid.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
-Source: "..\..\..\x64\Release\nxnotify.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
-Source: "..\..\..\x64\Release\nxpush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
-Source: "..\..\..\x64\Release\nxshell.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
+Source: "..\..\..\out\x64\Release\bin\libnxclient.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
+Source: "..\..\..\out\x64\Release\bin\nxalarm.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
+Source: "..\..\..\out\x64\Release\bin\nxaevent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
+Source: "..\..\..\out\x64\Release\bin\nxap.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
+Source: "..\..\..\out\x64\Release\bin\nxapush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
+Source: "..\..\..\out\x64\Release\bin\nxcsum.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
+Source: "..\..\..\out\x64\Release\bin\nxethernetip.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
+Source: "..\..\..\out\x64\Release\bin\nxevent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
+Source: "..\..\..\out\x64\Release\bin\nxgenguid.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
+Source: "..\..\..\out\x64\Release\bin\nxhwid.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
+Source: "..\..\..\out\x64\Release\bin\nxnotify.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
+Source: "..\..\..\out\x64\Release\bin\nxpush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
+Source: "..\..\..\out\x64\Release\bin\nxshell.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
 Source: "..\..\client\java\netxms-client\target\netxms-client-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: tools or server\reporting
 Source: "..\..\client\nxshell\java\target\nxshell-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: tools
 Source: "..\..\client\nxshell\java\target\lib\*.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: tools
@@ -377,24 +251,18 @@ Source: "..\..\server\tools\scripts\nx-collect-server-diag.cmd"; DestDir: "{app}
 Source: "..\..\server\tools\scripts\zip.ps1"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 ; Third party files
 Source: "..\files\windows\x64\jq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\files\windows\x64\jq.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\files\windows\x64\libcrypto-1_1-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server\pgsql
 Source: "..\files\windows\x64\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\files\windows\x64\libexpat.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
-Source: "..\files\windows\x64\libexpat.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
 Source: "..\files\windows\x64\libiconv-2.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "..\files\windows\x64\libintl-8.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "..\files\windows\x64\libmariadb.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mariadb
-Source: "..\files\windows\x64\libmariadb.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mariadb and pdb
 Source: "..\files\windows\x64\libmicrohttpd.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\files\windows\x64\libmicrohttpd.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\files\windows\x64\libmysql.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mysql
 Source: "..\files\windows\x64\libpq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "..\files\windows\x64\libssl-1_1-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server\pgsql
 Source: "..\files\windows\x64\libstrophe.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\files\windows\x64\libstrophe.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\files\windows\x64\modbus.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
-Source: "..\files\windows\x64\modbus.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
 Source: "..\files\windows\x64\pcre.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
 Source: "..\files\windows\x64\pcre16.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
 Source: "..\files\windows\x64\prunsrv.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server\reporting
@@ -403,17 +271,11 @@ Source: "..\files\windows\x64\reproxy.exe"; DestDir: "{app}\bin"; Flags: ignorev
 Source: "..\files\windows\x64\smartctl.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\files\windows\x64\unzip.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
 Source: "..\files\windows\x64\zlib.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
-Source: "..\files\windows\x64\zlib.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
 Source: "..\files\windows\x64\openssl-3\capi.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
-Source: "..\files\windows\x64\openssl-3\capi.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
 Source: "..\files\windows\x64\openssl-3\libcrypto-3-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
-Source: "..\files\windows\x64\openssl-3\libcrypto-3-x64.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
 Source: "..\files\windows\x64\openssl-3\libmosquitto.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\files\windows\x64\openssl-3\libmosquitto.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\files\windows\x64\openssl-3\libssh.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\files\windows\x64\openssl-3\libssh.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\files\windows\x64\openssl-3\libssl-3-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
-Source: "..\files\windows\x64\openssl-3\libssl-3-x64.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
 Source: "..\files\windows\x64\openssl-3\openssl.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
 Source: "..\files\windows\x64\LICENSE.reproxy"; DestDir: "{app}"; Flags: ignoreversion; Components: server
 ; Install-time files

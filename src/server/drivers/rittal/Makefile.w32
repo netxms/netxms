@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - rittal network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = rittal
+SOURCES = data.cpp rittal.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

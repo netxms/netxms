@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - mds network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = mds
+SOURCES = mds.cpp orbit.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

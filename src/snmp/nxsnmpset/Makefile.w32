@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - nxsnmpset (SNMP SET command-line tool) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = nxsnmpset
+SOURCES = nxsnmpset.cpp
+TOOL_LIBS = -lnxsnmp -lnetxms -lnxjansson
+
+include $(TOPDIR)/build/tool-common.mk

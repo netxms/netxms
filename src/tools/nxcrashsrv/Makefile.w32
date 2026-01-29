@@ -1,0 +1,16 @@
+#
+# Makefile.w32 - nxcrashsrv (crash dump server) for Windows/MinGW
+# Part of NetXMS project
+#
+# Standalone Windows utility that receives and processes crash dumps. It does
+# not link against libnetxms; it uses zlib (deflate.cpp is a helper that calls
+# zlib), the debug help library, and process status API.
+#
+
+TOOL = nxcrashsrv
+SOURCES = deflate.cpp nxcrashsrv.cpp
+TOOL_LIBS = $(ZLIB_LIBS) -ldbghelp
+# Entry point is _tmain (-> wmain under UNICODE), so the CRT needs the wide entry
+TOOL_LDFLAGS = -municode
+
+include $(TOPDIR)/build/tool-common.mk

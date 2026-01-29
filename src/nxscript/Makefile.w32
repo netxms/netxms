@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - nxscript (NXSL standalone interpreter) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = nxscript
+SOURCES = nxscript.cpp system.cpp
+TOOL_LIBS = -lnxsl -lnetxms
+
+include $(TOPDIR)/build/tool-common.mk

@@ -1,0 +1,12 @@
+#
+# Makefile.w32 - ODBC database driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = odbc
+SOURCES = odbc.cpp
+
+# ODBC headers and import library are provided by the mingw-w64 runtime
+DRV_LIBS = -lodbc32 -lodbccp32
+
+include $(TOPDIR)/src/db/dbdrv/driver-common.mk

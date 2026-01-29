@@ -27,7 +27,7 @@
 
 #ifdef _WIN32
 #include <dbghelp.h>
-#if !_M_ARM64
+#if defined(_MSC_VER) && !_M_ARM64
 #include <openssl/applink.c>
 #endif
 #endif

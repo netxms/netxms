@@ -23,6 +23,9 @@
 #include <nms_util.h>
 #include <nxcrypto.h>
 #include <netxms-version.h>
+#ifdef _WIN32
+#include <share.h>   // SH_DENYWR for _sopen (pulled in transitively by MSVC headers, not by mingw)
+#endif
 
 NETXMS_EXECUTABLE_HEADER(nxcsum)
 
