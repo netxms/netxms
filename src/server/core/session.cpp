@@ -233,6 +233,9 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downlo
    m_ppEPPRuleList = nullptr;
    m_dwNumRecordsToUpload = 0;
    m_dwRecordsUploaded = 0;
+   m_eppDeletedRules = nullptr;
+   m_eppDeletedRuleCount = 0;
+   m_eppBaseVersion = 0;
    m_refCount = 0;
    m_encryptionRqId = 0;
    m_encryptionResult = 0;
@@ -277,11 +280,12 @@ ClientSession::~ClientSession()
    {
       if (m_flags & CSF_EPP_UPLOAD)  // Aborted in the middle of EPP transfer
       {
-         for(UINT32 i = 0; i < m_dwRecordsUploaded; i++)
+         for(uint32_t i = 0; i < m_dwRecordsUploaded; i++)
             delete m_ppEPPRuleList[i];
       }
       MemFree(m_ppEPPRuleList);
    }
+   MemFree(m_eppDeletedRules);
 
 	delete m_console;
 
@@ -540,7 +544,7 @@ MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
          delete msg;
       }
       else if ((msg->getCode() == CMD_LOGIN) || (msg->getCode() == CMD_2FA_PREPARE_CHALLENGE) || (msg->getCode() == CMD_2FA_VALIDATE_RESPONSE) ||
-               (msg->getCode() == CMD_EPP_RECORD) || (msg->getCode() == CMD_OPEN_EPP) || (msg->getCode() == CMD_SAVE_EPP) || (msg->getCode() == CMD_CLOSE_EPP))
+               (msg->getCode() == CMD_EPP_RECORD) || (msg->getCode() == CMD_GET_EPP) || (msg->getCode() == CMD_SAVE_EPP))
       {
          incRefCount();
          wchar_t key[64] = L"CLSE-";
@@ -566,7 +570,6 @@ void ClientSession::finalize()
 
    RemovePendingFileTransferRequests(this);
    RemoveFileMonitorsBySessionId(m_id);
-   RemoveAllSessionLocks(m_id);
    m_openDataCollectionConfigurations.forEach(CloseDataCollectionConfiguration, nullptr);
 
    m_scriptExecutorsLock.lock();
@@ -2063,14 +2066,11 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_EPP_RECORD:
          processEventProcessingPolicyRecord(*request);
          break;
-      case CMD_OPEN_EPP:
-         openEventProcessingPolicy(*request);
+      case CMD_GET_EPP:
+         getEventProcessingPolicy(*request);
          break;
       case CMD_SAVE_EPP:
          saveEventProcessingPolicy(*request);
-         break;
-      case CMD_CLOSE_EPP:
-         closeEventProcessingPolicy(*request);
          break;
       case CMD_EXPLAIN_EPP_RULE:
          explainEventProcessingPolicyRule(*request);
@@ -5965,38 +5965,24 @@ void ClientSession::getActiveThresholds(const NXCPMessage& request)
 }
 
 /**
- * Open event processing policy
+ * Get event processing policy
  */
-void ClientSession::openEventProcessingPolicy(const NXCPMessage& request)
+void ClientSession::getEventProcessingPolicy(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-
-   bool readOnly = request.getFieldAsUInt16(VID_READ_ONLY) ? true : false;
 
    bool success = false;
    if (checkSystemAccessRights(SYSTEM_ACCESS_EPP))
    {
-      TCHAR buffer[256];
-      if (!readOnly && !LockEPP(m_id, m_sessionName, nullptr, buffer))
-      {
-         response.setField(VID_RCC, RCC_COMPONENT_LOCKED);
-         response.setField(VID_LOCKED_BY, buffer);
-      }
-      else
-      {
-         if (!readOnly)
-         {
-            InterlockedOr(&m_flags, CSF_EPP_LOCKED);
-         }
-         response.setField(VID_RCC, RCC_SUCCESS);
-         response.setField(VID_NUM_RULES, GetEventProcessingPolicy()->getNumRules());
-         success = true;
-         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Open event processing policy"));
-      }
+      EventProcessingPolicy *epp = GetEventProcessingPolicy();
+      response.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_EPP_VERSION, epp->getVersion());
+      response.setField(VID_NUM_RULES, epp->getNumRules());
+      success = true;
+      writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Open event processing policy"));
    }
    else
    {
-      // Current user has no rights for event policy management
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on opening event processing policy"));
    }
@@ -6011,40 +5997,7 @@ void ClientSession::openEventProcessingPolicy(const NXCPMessage& request)
 }
 
 /**
- * Close event processing policy
- */
-void ClientSession::closeEventProcessingPolicy(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   if (m_systemAccessRights & SYSTEM_ACCESS_EPP)
-   {
-      if (m_flags & CSF_EPP_LOCKED)
-      {
-         if (m_ppEPPRuleList != nullptr)
-         {
-            if (m_flags & CSF_EPP_UPLOAD)  // Aborted in the middle of EPP transfer
-            {
-               for(UINT32 i = 0; i < m_dwRecordsUploaded; i++)
-                  delete m_ppEPPRuleList[i];
-            }
-            MemFreeAndNull(m_ppEPPRuleList);
-         }
-         InterlockedAnd(&m_flags, ~(CSF_EPP_LOCKED | CSF_EPP_UPLOAD));
-         UnlockEPP();
-      }
-      response.setField(VID_RCC, RCC_SUCCESS);
-   }
-   else
-   {
-      // Current user has no rights for event policy management
-      response.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
-
-   sendMessage(response);
-}
-
-/**
- * Save event processing policy
+ * Save event processing policy (optimistic concurrency)
  */
 void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
 {
@@ -6052,34 +6005,38 @@ void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
 
    if (m_systemAccessRights & SYSTEM_ACCESS_EPP)
    {
-      if (m_flags & CSF_EPP_LOCKED)
+      m_eppBaseVersion = request.getFieldAsUInt32(VID_BASE_VERSION);
+      m_dwNumRecordsToUpload = request.getFieldAsUInt32(VID_NUM_RULES);
+      m_dwRecordsUploaded = 0;
+
+      // Read deleted rules list
+      m_eppDeletedRuleCount = request.getFieldAsUInt32(VID_DELETED_RULE_COUNT);
+      if (m_eppDeletedRuleCount > 0)
       {
-         response.setField(VID_RCC, RCC_SUCCESS);
-         m_dwNumRecordsToUpload = request.getFieldAsUInt32(VID_NUM_RULES);
-         m_dwRecordsUploaded = 0;
-         if (m_dwNumRecordsToUpload == 0)
+         m_eppDeletedRules = MemAllocArray<DeletedRuleInfo>(m_eppDeletedRuleCount);
+         for (uint32_t i = 0; i < m_eppDeletedRuleCount; i++)
          {
-            EventProcessingPolicy *epp = GetEventProcessingPolicy();
-            epp->replacePolicy(0, nullptr);
-            if (epp->saveToDB())
-            {
-               writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Event processing policy cleared"));
-            }
-            else
-            {
-               response.setField(VID_RCC, RCC_DB_FAILURE);
-            }
+            m_eppDeletedRules[i].guid = request.getFieldAsGUID(VID_DELETED_RULE_LIST_BASE + i * 2);
+            m_eppDeletedRules[i].version = request.getFieldAsUInt32(VID_DELETED_RULE_LIST_BASE + i * 2 + 1);
          }
-         else
-         {
-            InterlockedOr(&m_flags, CSF_EPP_UPLOAD);
-            m_ppEPPRuleList = MemAllocArray<EPRule*>(m_dwNumRecordsToUpload);
-         }
-         debugPrintf(5, _T("Accepted EPP upload request for %d rules"), m_dwNumRecordsToUpload);
       }
       else
       {
-         response.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+         m_eppDeletedRules = nullptr;
+      }
+
+      if (m_dwNumRecordsToUpload == 0)
+      {
+         // Special case: clearing policy or just deleting rules
+         finishEPPSave(request.getId());
+      }
+      else
+      {
+         InterlockedOr(&m_flags, CSF_EPP_UPLOAD);
+         m_ppEPPRuleList = MemAllocArray<EPRule*>(m_dwNumRecordsToUpload);
+         response.setField(VID_RCC, RCC_SUCCESS);
+         debugPrintf(5, _T("Accepted EPP upload request for %d rules (base version %u)"), m_dwNumRecordsToUpload, m_eppBaseVersion);
+         sendMessage(response);
       }
    }
    else
@@ -6087,9 +6044,8 @@ void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
       // Current user has no rights for event policy management
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on event processing policy change"));
+      sendMessage(response);
    }
-
-   sendMessage(response);
 }
 
 /**
@@ -6097,7 +6053,7 @@ void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
  */
 void ClientSession::processEventProcessingPolicyRecord(const NXCPMessage& request)
 {
-   if ((m_flags & (CSF_EPP_LOCKED | CSF_EPP_UPLOAD)) == (CSF_EPP_LOCKED | CSF_EPP_UPLOAD))
+   if (m_flags & CSF_EPP_UPLOAD)
    {
       if (m_dwRecordsUploaded < m_dwNumRecordsToUpload)
       {
@@ -6105,26 +6061,8 @@ void ClientSession::processEventProcessingPolicyRecord(const NXCPMessage& reques
          m_dwRecordsUploaded++;
          if (m_dwRecordsUploaded == m_dwNumRecordsToUpload)
          {
-            // All records received, replace event policy...
-            debugPrintf(5, _T("Replacing event processing policy with a new one at %p (%d rules)"),
-                        m_ppEPPRuleList, m_dwNumRecordsToUpload);
-            EventProcessingPolicy *epp = GetEventProcessingPolicy();
-            json_t *oldVersion = epp->toJson();
-            epp->replacePolicy(m_dwNumRecordsToUpload, m_ppEPPRuleList);
-            bool success = epp->saveToDB();
-            MemFreeAndNull(m_ppEPPRuleList);
-            json_t *newVersion = epp->toJson();
-
-            // ... and send final confirmation
-            NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-            response.setField(VID_RCC, success ? RCC_SUCCESS : RCC_DB_FAILURE);
-            sendMessage(response);
-
             InterlockedAnd(&m_flags, ~CSF_EPP_UPLOAD);
-
-            writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldVersion, newVersion, _T("Event processing policy updated"));
-            json_decref(oldVersion);
-            json_decref(newVersion);
+            finishEPPSave(request.getId());
          }
       }
    }
@@ -6134,6 +6072,66 @@ void ClientSession::processEventProcessingPolicyRecord(const NXCPMessage& reques
       response.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
       sendMessage(response);
    }
+}
+
+/**
+ * Finish EPP save with optimistic concurrency merge
+ */
+void ClientSession::finishEPPSave(uint32_t requestId)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, requestId);
+
+   uuid userGuid = GetUserGuidById(m_userId);
+   TCHAR userName[MAX_USER_NAME];
+   ResolveUserId(m_userId, userName, true);
+
+   ObjectArray<EPPConflict> conflicts(0, 16, Ownership::True);
+   uint32_t newVersion;
+
+   EventProcessingPolicy *epp = GetEventProcessingPolicy();
+   json_t *oldVersion = epp->toJson();
+
+   uint32_t rcc = epp->saveWithMerge(
+      m_eppBaseVersion, m_dwNumRecordsToUpload, m_ppEPPRuleList,
+      m_eppDeletedRuleCount, m_eppDeletedRules,
+      userGuid, userName, &conflicts, &newVersion);
+
+   response.setField(VID_RCC, rcc);
+
+   if (rcc == RCC_SUCCESS)
+   {
+      response.setField(VID_EPP_VERSION, newVersion);
+      json_t *newVersionJson = epp->toJson();
+      writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldVersion, newVersionJson, _T("Event processing policy updated"));
+      json_decref(newVersionJson);
+   }
+   else if (rcc == RCC_EPP_CONFLICT)
+   {
+      response.setField(VID_EPP_VERSION, newVersion);
+      response.setField(VID_CONFLICT_COUNT, static_cast<uint32_t>(conflicts.size()));
+      for (int i = 0; i < conflicts.size(); i++)
+      {
+         conflicts.get(i)->fillMessage(&response, VID_CONFLICT_LIST_BASE + i * 20);
+      }
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Event processing policy save conflict"));
+   }
+
+   json_decref(oldVersion);
+
+   // Cleanup - note that rules that were added to policy have been transferred
+   // and rules in conflicts have been transferred as well
+   if (m_ppEPPRuleList != nullptr)
+   {
+      for (uint32_t i = 0; i < m_dwNumRecordsToUpload; i++)
+      {
+         delete m_ppEPPRuleList[i];  // May be nullptr if transferred
+      }
+      MemFreeAndNull(m_ppEPPRuleList);
+   }
+   MemFreeAndNull(m_eppDeletedRules);
+   m_eppDeletedRuleCount = 0;
+
+   sendMessage(response);
 }
 
 /**
@@ -11364,32 +11362,16 @@ void ClientSession::importConfigurationFromFile(const NXCPMessage& request)
  */
 void ClientSession::finalizeConfigurationImport(const char* content, uint32_t flags, NXCPMessage *response)
 {
-   // Lock all required components
-   TCHAR lockInfo[MAX_SESSION_NAME];
-   if (LockEPP(m_id, m_sessionName, nullptr, lockInfo))
-   {
-      InterlockedOr(&m_flags, CSF_EPP_LOCKED);
+   // Use ImportConfigFromContent which auto-detects format (JSON vs XML)
+   StringBuffer *log;
+   uint32_t result = ImportConfigFromContent(content, flags, &log);
 
-      // Use ImportConfigFromContent which auto-detects format (JSON vs XML)
-      StringBuffer *log;
-      uint32_t result = ImportConfigFromContent(content, flags, &log);
-
-      if (result == RCC_SUCCESS)
-         response->setField(VID_EXECUTION_RESULT, log->cstr());
-      else
-         response->setField(VID_ERROR_TEXT, log->cstr());
-      response->setField(VID_RCC, result);
-      delete log;
-
-      UnlockEPP();
-      InterlockedAnd(&m_flags, ~CSF_EPP_LOCKED);
-   }
+   if (result == RCC_SUCCESS)
+      response->setField(VID_EXECUTION_RESULT, log->cstr());
    else
-   {
-      response->setField(VID_RCC, RCC_COMPONENT_LOCKED);
-      response->setField(VID_COMPONENT, static_cast<uint16_t>(NXMP_LC_EPP));
-      response->setField(VID_LOCKED_BY, lockInfo);
-   }
+      response->setField(VID_ERROR_TEXT, log->cstr());
+   response->setField(VID_RCC, result);
+   delete log;
 }
 
 /**

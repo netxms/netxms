@@ -553,6 +553,7 @@ void NXCORE_EXPORTABLE EnumerateUserDbObjectAttributes(uint32_t id, EnumerationC
 void NXCORE_EXPORTABLE SetUserDbObjectAttr(uint32_t id, const TCHAR *name, const TCHAR *value);
 uint32_t NXCORE_EXPORTABLE ResolveUserName(const TCHAR *loginName);
 TCHAR NXCORE_EXPORTABLE *ResolveUserId(uint32_t id, TCHAR *buffer, bool noFail = false);
+uuid NXCORE_EXPORTABLE GetUserGuidById(uint32_t id);
 bool NXCORE_EXPORTABLE ValidateUserId(uint32_t id, TCHAR *loginName, uint64_t *systemAccess, uint32_t *rcc);
 void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject);
 void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Object> *entryListDn, StringObjectMap<LDAP_Object> *entryListId, uint32_t m_action, bool isUser);

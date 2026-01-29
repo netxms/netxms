@@ -516,7 +516,6 @@
     <ClCompile Include="ldap.cpp" />
     <ClCompile Include="lldp.cpp" />
     <ClCompile Include="lln.cpp" />
-    <ClCompile Include="locks.cpp" />
     <ClCompile Include="logfilter.cpp" />
     <ClCompile Include="loghandle.cpp" />
     <ClCompile Include="logs.cpp" />
@@ -640,7 +639,6 @@
     <ClInclude Include="..\include\nms_core.h" />
     <ClInclude Include="..\include\nms_dcoll.h" />
     <ClInclude Include="..\include\nms_events.h" />
-    <ClInclude Include="..\include\nms_locks.h" />
     <ClInclude Include="..\include\nms_objects.h" />
     <ClInclude Include="..\include\nms_pkg.h" />
     <ClInclude Include="..\include\nms_script.h" />

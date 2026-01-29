@@ -217,10 +217,10 @@ typedef struct
 #define CMD_DELETE_CONFIG_VARIABLE        0x0011
 #define CMD_NOTIFY                        0x0012
 #define CMD_TRAP                          0x0013
-#define CMD_OPEN_EPP                      0x0014
-#define CMD_CLOSE_EPP                     0x0015
-#define CMD_SAVE_EPP                      0x0016
-#define CMD_EPP_RECORD                    0x0017
+#define CMD_GET_EPP                       0x0014
+#define CMD_SAVE_EPP                      0x0015
+#define CMD_EPP_RECORD                    0x0016
+#define CMD_EXPLAIN_EPP_RULE              0x0017
 #define CMD_EVENT_DB_UPDATE               0x0018
 #define CMD_TRAP_CFG_UPDATE               0x0019
 #define CMD_SET_EVENT_INFO                0x001A
@@ -680,7 +680,7 @@ typedef struct
 #define CMD_ADD_AI_AGENT_TASK             0x01E0
 #define CMD_CREATE_AI_ASSISTANT_CHAT      0x01E1
 #define CMD_DELETE_AI_ASSISTANT_CHAT      0x01E2
-#define CMD_EXPLAIN_EPP_RULE              0x01E3
+#define CMD_AI_FUNCTION_CALL              0x01E3
 #define CMD_CLEAR_NOTIFICATION_QUEUE      0x01E4
 #define CMD_DECOMMISSION_NODE             0x01E5
 #define CMD_GET_INCIDENTS                 0x01E6
@@ -706,7 +706,6 @@ typedef struct
 #define CMD_GET_LOG_QUERY_SQL             0x01FA
 #define CMD_GET_LIST_LIST                 0x01FB
 #define CMD_QUERY_LIST                    0x01FC
-#define CMD_AI_FUNCTION_CALL              0x01FD
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1637,6 +1636,19 @@ typedef struct
 #define VID_AI_FUNCTION_NAME        ((uint32_t)916)
 #define VID_AI_HINT                 ((uint32_t)917)
 #define VID_TEMPLATE_REMOVAL_GP     ((uint32_t)918)
+#define VID_EPP_VERSION             ((uint32_t)919)
+#define VID_RULE_VERSION            ((uint32_t)920)
+#define VID_BASE_VERSION            ((uint32_t)921)
+#define VID_MODIFIED_BY_GUID        ((uint32_t)922)
+#define VID_MODIFIED_BY_NAME        ((uint32_t)923)
+#define VID_CONFLICT_COUNT          ((uint32_t)924)
+#define VID_CONFLICT_TYPE           ((uint32_t)925)
+#define VID_RULE_MODIFIED           ((uint32_t)926)
+#define VID_DELETED_RULE_COUNT      ((uint32_t)927)
+
+// Base values for EPP optimistic concurrency
+#define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)
+#define VID_CONFLICT_LIST_BASE      ((uint32_t)0x7B000000)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

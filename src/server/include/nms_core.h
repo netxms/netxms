@@ -136,7 +136,6 @@ void SaveCurrentFreeId();
 #include "nxcore_winperf.h"
 #include "nxcore_schedule.h"
 #include "nms_objects.h"
-#include "nms_locks.h"
 #include "nms_script.h"
 
 /**
@@ -199,7 +198,6 @@ void SaveCurrentFreeId();
  * Client session flags
  */
 #define CSF_TERMINATED           ((uint32_t)0x00000001)
-#define CSF_EPP_LOCKED           ((uint32_t)0x00000002)
 #define CSF_EPP_UPLOAD           ((uint32_t)0x00000010)
 #define CSF_CONSOLE_OPEN         ((uint32_t)0x00000020)
 #define CSF_AUTHENTICATED        ((uint32_t)0x00000080)
@@ -547,6 +545,8 @@ template class NXCORE_TEMPLATE_EXPORTABLE SharedPointerIndex<ProcessExecutor>;
  * Forward declaration for syslog message class
  */
 class SyslogMessage;
+struct DeletedRuleInfo;
+class EPPConflict;
 
 /**
  * Client login information
@@ -581,6 +581,9 @@ private:
    uint32_t m_dwNumRecordsToUpload; // Number of records to be uploaded
    uint32_t m_dwRecordsUploaded;
    EPRule **m_ppEPPRuleList;   // List of loaded EPP rules
+   uint32_t m_eppBaseVersion;        // Base version for EPP optimistic concurrency
+   DeletedRuleInfo *m_eppDeletedRules;  // Deleted rules info for EPP optimistic concurrency
+   uint32_t m_eppDeletedRuleCount;   // Number of deleted rules
    SynchronizedHashMap<uint32_t, ServerDownloadFileInfo> m_downloadFileMap;
    VolatileCounter m_refCount;
    uint32_t m_encryptionRqId;
@@ -982,10 +985,10 @@ private:
    void unlinkAsset(const NXCPMessage& request);
    void updateNetworkMapElementLocaiton(const NXCPMessage& request);
    void compileMibs(const NXCPMessage& request);
-   void openEventProcessingPolicy(const NXCPMessage& request);
-   void closeEventProcessingPolicy(const NXCPMessage& request);
+   void getEventProcessingPolicy(const NXCPMessage& request);
    void saveEventProcessingPolicy(const NXCPMessage& request);
    void processEventProcessingPolicyRecord(const NXCPMessage& request);
+   void finishEPPSave(uint32_t requestId);
    void explainEventProcessingPolicyRule(const NXCPMessage& request);
    void updatePeerInterface(const NXCPMessage& request);
    void clearPeerInterface(const NXCPMessage& request);
@@ -1350,14 +1353,13 @@ bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel);
 void ExecuteDatabasePasswordCommand();
 void RetrieveDatabaseCredentialsFromVault();
 
-bool LockDatabase(InetAddress *lockAddr, wchar_t *lockInfo);
 void NXCORE_EXPORTABLE UnlockDatabase();
+void NXCORE_EXPORTABLE ShutdownDatabase();
 
 void NXCORE_EXPORTABLE Shutdown();
 void NXCORE_EXPORTABLE FastShutdown(ShutdownReason reason);
 bool NXCORE_EXPORTABLE Initialize();
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *);
-void NXCORE_EXPORTABLE ShutdownDatabase();
 void NXCORE_EXPORTABLE InitiateShutdown(ShutdownReason reason);
 
 int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console);

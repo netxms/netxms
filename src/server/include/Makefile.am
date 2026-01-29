@@ -30,7 +30,6 @@ serverinclude_HEADERS = \
 	nms_dcoll.h \
 	nms_events.h \
 	nms_incident.h \
-	nms_locks.h \
 	nms_objects.h \
 	nms_pkg.h \
 	nms_script.h \

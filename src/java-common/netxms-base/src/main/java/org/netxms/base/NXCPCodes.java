@@ -44,9 +44,9 @@ public class NXCPCodes
    public static final int CMD_NOTIFY = 0x0012;
 	public static final int CMD_TRAP = 0x0013;
 	public static final int CMD_OPEN_EPP = 0x0014;
-	public static final int CMD_CLOSE_EPP = 0x0015;
-	public static final int CMD_SAVE_EPP = 0x0016;
-	public static final int CMD_EPP_RECORD = 0x0017;
+   public static final int CMD_SAVE_EPP = 0x0015;
+   public static final int CMD_EPP_RECORD = 0x0016;
+   public static final int CMD_EXPLAIN_EPP_RULE = 0x0017;
 	public static final int CMD_EVENT_DB_UPDATE = 0x0018;
 	public static final int CMD_TRAP_CFG_UPDATE = 0x0019;
 	public static final int CMD_SET_EVENT_INFO = 0x001A;
@@ -501,7 +501,7 @@ public class NXCPCodes
    public static final int CMD_ADD_AI_AGENT_TASK = 0x01E0;
    public static final int CMD_CREATE_AI_ASSISTANT_CHAT = 0x01E1;
    public static final int CMD_DELETE_AI_ASSISTANT_CHAT = 0x01E2;
-   public static final int CMD_EXPLAIN_EPP_RULE = 0x01E3;
+   public static final int CMD_AI_FUNCTION_CALL = 0x01E3;
    public static final int CMD_CLEAR_NOTIFICATION_QUEUE = 0x01E4;
    public static final int CMD_DECOMMISSION_NODE = 0x01E5;
    public static final int CMD_GET_INCIDENTS = 0x01E6;
@@ -524,7 +524,6 @@ public class NXCPCodes
    public static final int CMD_GET_LOG_QUERY_SQL = 0x01FA;
    public static final int CMD_GET_LIST_LIST = 0x01FB;
    public static final int CMD_QUERY_LIST = 0x01FC;
-   public static final int CMD_AI_FUNCTION_CALL = 0x01FD;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1451,6 +1450,17 @@ public class NXCPCodes
    public static final long VID_AI_FUNCTION_NAME = 916;
    public static final long VID_AI_HINT = 917;
    public static final long VID_TEMPLATE_REMOVAL_GP = 918;
+   public static final long VID_EPP_VERSION = 919;
+   public static final long VID_RULE_VERSION = 920;
+   public static final long VID_BASE_VERSION = 921;
+   public static final long VID_MODIFIED_BY_GUID = 922;
+   public static final long VID_MODIFIED_BY_NAME = 923;
+   public static final long VID_CONFLICT_COUNT = 924;
+   public static final long VID_CONFLICT_TYPE = 925;
+   public static final long VID_RULE_MODIFIED = 926;
+   public static final long VID_DELETED_RULE_COUNT = 927;
+   public static final long VID_DELETED_RULE_LIST_BASE = 0x7A000000L;
+   public static final long VID_CONFLICT_LIST_BASE = 0x7B000000L;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

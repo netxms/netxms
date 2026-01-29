@@ -25,6 +25,22 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.28 to 60.29
+ */
+static bool H_UpgradeFromV28()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE event_policy ADD modified_by_guid varchar(36)\n")
+      _T("ALTER TABLE event_policy ADD modified_by_name varchar(63)\n")
+      _T("ALTER TABLE event_policy ADD modification_time integer\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetMinorSchemaVersion(29));
+   return true;
+}
+
+/**
  * Upgrade from 60.27 to 60.28
  */
 static bool H_UpgradeFromV27()
@@ -1820,6 +1836,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 28, 60, 29, H_UpgradeFromV28 },
    { 27, 60, 28, H_UpgradeFromV27 },
    { 26, 60, 27, H_UpgradeFromV26 },
    { 25, 60, 26, H_UpgradeFromV25 },

@@ -766,6 +766,20 @@ uint32_t NXCORE_EXPORTABLE ResolveUserName(const TCHAR *loginName)
 }
 
 /**
+ * Get user GUID by user ID. Returns null UUID if user not found.
+ */
+uuid NXCORE_EXPORTABLE GetUserGuidById(uint32_t id)
+{
+   uuid result;
+   s_userDatabaseLock.readLock();
+   UserDatabaseObject *object = s_userDatabase.get(id);
+   if (object != nullptr)
+      result = object->getGuid();
+   s_userDatabaseLock.unlock();
+   return result;
+}
+
+/**
  * Update system-wide access rights in given session
  */
 static void UpdateGlobalAccessRightsCallback(ClientSession *session)

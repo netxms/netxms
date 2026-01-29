@@ -46,6 +46,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.events.EPPSaveResult;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
@@ -54,6 +55,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.actions.views.helpers.DecoratingActionLabelProvider;
+import org.netxms.nxmc.modules.events.dialogs.EPPConflictDialog;
 import org.netxms.nxmc.modules.events.views.helpers.RuleClipboard;
 import org.netxms.nxmc.modules.events.widgets.RuleEditor;
 import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
@@ -72,7 +74,6 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    private final I18n i18n = LocalizationHelper.getI18n(EventProcessingPolicyEditor.class);
 
    private NXCSession session;
-   private boolean policyLocked = false;
    private EventProcessingPolicy policy;
    private SessionListener sessionListener;
    private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
@@ -195,7 +196,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    @Override
    protected void postContentCreate()
    {
-      openEventProcessingPolicy();
+      reloadPolicy();
       super.postContentCreate();
    }
 
@@ -230,7 +231,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
          @Override
          public void run()
          {
-            savePolicy(false);
+            savePolicy();
          }
       };
       actionSave.setEnabled(false);
@@ -378,44 +379,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    }
 
    /**
-    * Open event processing policy
-    */
-   private void openEventProcessingPolicy()
-   {
-      Job job = new Job(i18n.tr("Loading event processing policy"), this) {
-         @Override
-         protected void run(IProgressMonitor monitor) throws Exception
-         {
-            List<ServerAction> actions = session.getActions();
-            synchronized(EventProcessingPolicyEditor.this.actions)
-            {
-               for(ServerAction a : actions)
-               {
-                  EventProcessingPolicyEditor.this.actions.put(a.getId(), a);
-               }
-            }
-            policy = session.openEventProcessingPolicy();
-            policyLocked = true;
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  initPolicyEditor();
-               }
-            });
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return i18n.tr("Cannot load event processing policy");
-         }
-      };
-      job.start();
-   }
-
-   /**
-    * Init policy editor
+    * Initialize policy editor
     */
    private void initPolicyEditor()
    {
@@ -497,24 +461,26 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Save policy to server
-    * 
-    * @param unlockAfterSave if true, remove EPP lock after save
     */
-   public void savePolicy(final boolean unlockAfterSave)
+   public void savePolicy()
    {
       actionSave.setEnabled(false);
-      if (unlockAfterSave)
-         policyLocked = false;
       new Job(i18n.tr("Saving event processing policy"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.saveEventProcessingPolicy(policy);
-            if (unlockAfterSave)
-               session.closeEventProcessingPolicy();
-            runInUIThread(() -> {
-               modified = false;
-            });
+            EPPSaveResult result = session.saveEventProcessingPolicy(policy);
+            if (result.isSuccess())
+            {
+               runInUIThread(() -> {
+                  modified = false;
+               });
+            }
+            else
+            {
+               // Conflicts detected - handle in UI thread
+               runInUIThread(() -> handleSaveConflicts(result));
+            }
          }
 
          @Override
@@ -532,6 +498,56 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    }
 
    /**
+    * Handle save conflicts by showing dialog and taking appropriate action.
+    *
+    * @param result save result containing conflict information
+    */
+   private void handleSaveConflicts(EPPSaveResult result)
+   {
+      EPPConflictDialog dialog = new EPPConflictDialog(getWindow().getShell(), result.getConflicts(), policy);
+      if (dialog.open() == EPPConflictDialog.RELOAD)
+      {
+         reloadPolicy();
+      }
+   }
+
+   /**
+    * Reload policy from server, discarding local changes.
+    */
+   private void reloadPolicy()
+   {
+      // Clear current editors
+      for(RuleEditor editor : ruleEditors)
+      {
+         if (!editor.isDisposed())
+            editor.dispose();
+      }
+      ruleEditors.clear();
+      selection.clear();
+      lastSelectedRule = -1;
+
+      new Job(i18n.tr("Reloading event processing policy"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            policy = session.getEventProcessingPolicy();
+            runInUIThread(() -> {
+               initPolicyEditor();
+               modified = false;
+               actionSave.setEnabled(false);
+               updateEditorAreaLayout();
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot reload event processing policy");
+         }
+      }.start();
+   }
+
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#dispose()
     */
    @Override
@@ -539,23 +555,6 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    {
       if (sessionListener != null)
          session.removeListener(sessionListener);
-
-      if (policyLocked)
-      {
-         new Job(i18n.tr("Closing event processing policy"), null) {
-            @Override
-            protected void run(IProgressMonitor monitor) throws Exception
-            {
-               session.closeEventProcessingPolicy();
-            }
-
-            @Override
-            protected String getErrorMessage()
-            {
-               return i18n.tr("Cannot close event processing policy");
-            }
-         }.start();
-      }
 
       imageStop.dispose();
       imageAlarm.dispose();
@@ -1143,8 +1142,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    @Override
    public void save()
    {
-      // This method should be called only when save on close is selected, so do unlock after save
-      savePolicy(true);
+      savePolicy();
    }
 
    /**
@@ -1153,12 +1151,6 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    @Override
    public void refresh()
    {
-      if (!policyLocked)
-      {
-         openEventProcessingPolicy();
-         return;
-      }
-      
       if (isModified())
       {
          if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Unsaved Changes"), 
@@ -1167,19 +1159,6 @@ public class EventProcessingPolicyEditor extends ConfigurationView
             return;
          }
       }
-      new Job(i18n.tr("Closing event processing policy"), null) {
-         @Override
-         protected void run(IProgressMonitor monitor) throws Exception
-         {
-            session.closeEventProcessingPolicy();
-            runInUIThread(() -> openEventProcessingPolicy());
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return i18n.tr("Cannot close event processing policy");
-         }
-      }.start();
+      reloadPolicy();
    }
 }

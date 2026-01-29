@@ -234,9 +234,6 @@
     <ClCompile Include="lln.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="locks.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="logfilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -621,9 +618,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\nms_events.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\nms_locks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\nms_objects.h">

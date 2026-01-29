@@ -659,7 +659,7 @@ static ObjectArray<uuid> *GetRuleOrderingFromJson(json_t *root)
 }
 
 /**
- * Import JSON rules directly
+ * Import event processing policy rules directly from JSON
  */
 static uint32_t ImportJsonRules(json_t *rules, json_t *root, uint32_t flags, ImportContext *context)
 {
@@ -681,10 +681,10 @@ static uint32_t ImportJsonRules(json_t *rules, json_t *root, uint32_t flags, Imp
    {
       if (!json_is_object(rule))
          continue;
-         
+
       // Get rule GUID
       uuid guid = json_object_get_uuid(rule, "guid");
-      
+
       if (guid.isNull())
          guid = uuid::generate();
 
@@ -692,7 +692,7 @@ static uint32_t ImportJsonRules(json_t *rules, json_t *root, uint32_t flags, Imp
       EPRule *newRule = new EPRule(rule, context);
       GetEventProcessingPolicy()->importRule(newRule, (flags & CFG_IMPORT_REPLACE_EPP_RULES) != 0, ruleOrdering);
    }
-   
+
    // Clean up rule ordering
    delete ruleOrdering;
    
@@ -1098,7 +1098,7 @@ uint32_t ImportConfigFromJson(const char* content, uint32_t flags, StringBuffer 
 {
    ImportContext *context = new ImportContext();
    *log = context;
-   
+
    json_error_t error;
    json_t* root = json_loads(content, 0, &error);
    if (root == nullptr)
@@ -1165,7 +1165,7 @@ uint32_t ImportConfigFromJson(const char* content, uint32_t flags, StringBuffer 
          goto cleanup;
    }
 
-   // Import rules
+   // Import event processing policy rules
    rules = json_object_get(root, "rules");
    if (json_is_array(rules))
    {
@@ -1282,13 +1282,13 @@ cleanup:
 uint32_t ImportConfigFromContent(const char* content, uint32_t flags, StringBuffer **log)
 {
    ConfigurationFormat format = DetectConfigurationFormat(content);
-   
+
    switch (format)
    {
       case CONFIG_FORMAT_JSON:
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Importing JSON configuration"));
          return ImportConfigFromJson(content, flags, log);
-         
+
       case CONFIG_FORMAT_XML:
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Importing XML configuration (legacy)"));
@@ -1305,7 +1305,7 @@ uint32_t ImportConfigFromContent(const char* content, uint32_t flags, StringBuff
                return RCC_CONFIG_PARSE_ERROR;
             }
          }
-         
+
       default:
          {
             ImportContext *context = new ImportContext();
@@ -1339,7 +1339,7 @@ void ImportLocalConfiguration(bool overwrite)
          if (MatchString(_T("*.xml"), f->d_name, FALSE) || MatchString(_T("*.json"), f->d_name, FALSE))
          {
             _tcscpy(&path[insPos], f->d_name);
-            
+
             // Read file content
             FILE *file = _tfopen(path, _T("r"));
             if (file != nullptr)
@@ -1347,13 +1347,13 @@ void ImportLocalConfiguration(bool overwrite)
                fseek(file, 0, SEEK_END);
                long size = ftell(file);
                fseek(file, 0, SEEK_SET);
-               
+
                char *content = (char*)malloc(size + 1);
                if (content != nullptr)
                {
                   size_t bytesRead = fread(content, 1, size, file);
                   content[bytesRead] = 0;
-                  
+
                   StringBuffer *log;
                   uint32_t result = ImportConfigFromContent(content, overwrite ? CFG_IMPORT_REPLACE_EVERYTHING : 0, &log);
                   if (result != RCC_SUCCESS)

@@ -128,6 +128,8 @@ import org.netxms.client.events.AlarmComment;
 import org.netxms.client.events.BulkAlarmStateChangeData;
 import org.netxms.client.events.Event;
 import org.netxms.client.events.EventInfo;
+import org.netxms.client.events.EPPConflict;
+import org.netxms.client.events.EPPSaveResult;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventReference;
@@ -8656,22 +8658,21 @@ public class NXCSession
    }
 
    /**
-    * Internal implementation for open/get event processing policy.
+    * Get event processing policy.
     *
-    * @param readOnly true to get read-only copy of the policy
     * @return Event processing policy
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   private EventProcessingPolicy getEventProcessingPolicyInternal(boolean readOnly) throws IOException, NXCException
+   public EventProcessingPolicy getEventProcessingPolicy() throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_OPEN_EPP);
-      msg.setFieldInt16(NXCPCodes.VID_READ_ONLY, readOnly ? 1 : 0);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
 
       int numRules = response.getFieldAsInt32(NXCPCodes.VID_NUM_RULES);
-      final EventProcessingPolicy policy = new EventProcessingPolicy(numRules);
+      int policyVersion = response.getFieldAsInt32(NXCPCodes.VID_EPP_VERSION);
+      final EventProcessingPolicy policy = new EventProcessingPolicy(numRules, policyVersion);
 
       for(int i = 0; i < numRules; i++)
       {
@@ -8683,77 +8684,90 @@ public class NXCSession
    }
 
    /**
-    * Get read-only copy of event processing policy.
-    *
-    * @return Event processing policy
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public EventProcessingPolicy getEventProcessingPolicy() throws IOException, NXCException
-   {
-      return getEventProcessingPolicyInternal(true);
-   }
-
-   /**
-    * Open event processing policy for editing. This call will lock event
-    * processing policy on server until closeEventProcessingPolicy called or
-    * session terminated.
-    *
-    * @return Event processing policy
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public EventProcessingPolicy openEventProcessingPolicy() throws IOException, NXCException
-   {
-      return getEventProcessingPolicyInternal(false);
-   }
-
-   /**
-    * Save event processing policy. If policy was not previously open by current
-    * session exception will be thrown.
+    * Save event processing policy with optimistic concurrency control.
     *
     * @param epp Modified event processing policy
+    * @return Save result indicating success or conflicts
     * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @throws NXCException if NetXMS server returns an unexpected error (other than conflict)
     */
-   public void saveEventProcessingPolicy(EventProcessingPolicy epp) throws IOException, NXCException
+   public EPPSaveResult saveEventProcessingPolicy(EventProcessingPolicy epp) throws IOException, NXCException
    {
       final List<EventProcessingPolicyRule> rules = epp.getRules();
+      final List<EventProcessingPolicy.DeletedRuleInfo> deletedRules = epp.getDeletedRules();
 
       NXCPMessage msg = newMessage(NXCPCodes.CMD_SAVE_EPP);
       msg.setFieldInt32(NXCPCodes.VID_NUM_RULES, rules.size());
-      sendMessage(msg);
-      final long msgId = msg.getMessageId();
-      waitForRCC(msgId);
+      msg.setFieldInt32(NXCPCodes.VID_BASE_VERSION, epp.getVersion());
 
-      int id = 1;
-      for(EventProcessingPolicyRule rule : rules)
+      // Send deleted rules info
+      msg.setFieldInt32(NXCPCodes.VID_DELETED_RULE_COUNT, deletedRules.size());
+      long fieldId = NXCPCodes.VID_DELETED_RULE_LIST_BASE;
+      for(EventProcessingPolicy.DeletedRuleInfo deleted : deletedRules)
       {
-         msg = new NXCPMessage(NXCPCodes.CMD_EPP_RECORD);
-         msg.setMessageId(msgId);
-         msg.setFieldInt32(NXCPCodes.VID_RULE_ID, id++);
-         rule.fillMessage(msg);
-         sendMessage(msg);
+         msg.setField(fieldId, deleted.getGuid());
+         msg.setFieldInt32(fieldId + 1, deleted.getVersion());
+         fieldId += 2;
       }
 
-      // Wait for final confirmation if there was some rules
-      if (rules.size() > 0)
-         waitForRCC(msgId);
-   }
-
-   /**
-    * Close event processing policy. This call will unlock event processing
-    * policy on server. If policy was not previously open by current session
-    * exception will be thrown.
-    *
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public void closeEventProcessingPolicy() throws IOException, NXCException
-   {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_CLOSE_EPP);
       sendMessage(msg);
-      waitForRCC(msg.getMessageId());
+      final long msgId = msg.getMessageId();
+
+      // Wait for initial acknowledgment
+      NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, msgId);
+      int rcc = response.getFieldAsInt32(NXCPCodes.VID_RCC);
+      if (rcc != RCC.SUCCESS && rcc != RCC.EPP_CONFLICT)
+         throw new NXCException(rcc);
+
+      // If there are rules, send them and wait for final response
+      if (rules.size() > 0)
+      {
+         int id = 1;
+         for(EventProcessingPolicyRule rule : rules)
+         {
+            msg = new NXCPMessage(NXCPCodes.CMD_EPP_RECORD);
+            msg.setMessageId(msgId);
+            msg.setFieldInt32(NXCPCodes.VID_RULE_ID, id++);
+            rule.fillMessage(msg);
+            sendMessage(msg);
+         }
+
+         // Wait for final confirmation
+         response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, msgId);
+         rcc = response.getFieldAsInt32(NXCPCodes.VID_RCC);
+      }
+
+      if (rcc == RCC.SUCCESS)
+      {
+         int newVersion = response.getFieldAsInt32(NXCPCodes.VID_EPP_VERSION);
+         epp.setVersion(newVersion);
+         epp.clearDeletedRules();
+         // Clear modified flags on all rules
+         for(EventProcessingPolicyRule rule : rules)
+         {
+            rule.clearModified();
+         }
+         return EPPSaveResult.success(newVersion);
+      }
+      else if (rcc == RCC.EPP_CONFLICT)
+      {
+         int serverVersion = response.getFieldAsInt32(NXCPCodes.VID_EPP_VERSION);
+         int conflictCount = response.getFieldAsInt32(NXCPCodes.VID_CONFLICT_COUNT);
+         List<EPPConflict> conflicts = new ArrayList<>(conflictCount);
+
+         long baseId = NXCPCodes.VID_CONFLICT_LIST_BASE;
+         for(int i = 0; i < conflictCount; i++)
+         {
+            conflicts.add(new EPPConflict(response, baseId));
+            baseId += 20; // 20 fields per conflict entry
+         }
+
+         return EPPSaveResult.conflict(serverVersion, conflicts);
+      }
+      else
+      {
+         throw new NXCException(rcc);
+      }
    }
 
    /**

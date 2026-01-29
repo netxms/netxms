@@ -1466,6 +1466,9 @@ CREATE TABLE event_policy
   incident_description varchar(2000) null,  // Incident description template
   incident_ai_depth integer not null,
   incident_ai_prompt varchar(2000) null,
+  modified_by_guid varchar(36) null,
+  modified_by_name varchar(63) null,
+  modification_time integer null,
   PRIMARY KEY(rule_id)
 ) TABLE_TYPE;
 

@@ -63,10 +63,10 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_DELETE_CONFIG_VARIABLE"),
       _T("CMD_NOTIFY"),
       _T("CMD_TRAP"),
-      _T("CMD_OPEN_EPP"),
-      _T("CMD_CLOSE_EPP"),
+      _T("CMD_GET_EPP"),
       _T("CMD_SAVE_EPP"),
       _T("CMD_EPP_RECORD"),
+      _T("CMD_EXPLAIN_EPP_RULE"),
       _T("CMD_EVENT_DB_UPDATE"),
       _T("CMD_TRAP_CFG_UPDATE"),
       _T("CMD_SET_EVENT_INFO"),
@@ -526,7 +526,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_ADD_AI_AGENT_TASK"),
       _T("CMD_CREATE_AI_ASSISTANT_CHAT"),
       _T("CMD_DELETE_AI_ASSISTANT_CHAT"),
-      _T("CMD_EXPLAIN_EPP_RULE"),
+      _T("CMD_AI_FUNCTION_CALL"),
       _T("CMD_CLEAR_NOTIFICATION_QUEUE"),
       _T("CMD_DECOMMISSION_NODE"),
       _T("CMD_GET_INCIDENTS"),
@@ -551,8 +551,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_DELETE_AI_MESSAGE"),
       _T("CMD_GET_LOG_QUERY_SQL"),
       _T("CMD_GET_LIST_LIST"),
-      _T("CMD_QUERY_LIST"),
-      _T("CMD_AI_FUNCTION_CALL")
+      _T("CMD_QUERY_LIST")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -565,7 +564,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_AI_FUNCTION_CALL))
+   if ((code >= CMD_LOGIN) && (code <= CMD_QUERY_LIST))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

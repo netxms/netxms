@@ -625,6 +625,11 @@ class NXCORE_EXPORTABLE EPRule
 private:
    uint32_t m_id;
    uuid m_guid;
+   uint32_t m_version;              // In-memory version for optimistic concurrency (not persisted)
+   bool m_modified;                 // Flag indicating rule was modified by client (for merge)
+   uuid m_modifiedByGuid;           // GUID of user who last modified (from DB)
+   MutableString m_modifiedByName;  // Name of user who last modified (from DB)
+   time_t m_modificationTime;       // Timestamp of last modification (from DB)
    uint32_t m_flags;
    IntegerArray<uint32_t> m_sources;
    IntegerArray<uint32_t> m_sourceExclusions;
@@ -692,8 +697,19 @@ public:
    uint32_t getId() const { return m_id; }
    const uuid& getGuid() const { return m_guid; }
    void setId(uint32_t newId) { m_id = newId; }
+
+   // Version tracking for optimistic concurrency
+   uint32_t getVersion() const { return m_version; }
+   void setVersion(uint32_t version) { m_version = version; }
+   void incrementVersion() { m_version++; }
+   bool isModified() const { return m_modified; }
+   const uuid& getModifiedByGuid() const { return m_modifiedByGuid; }
+   const String& getModifiedByName() const { return m_modifiedByName; }
+   time_t getModificationTime() const { return m_modificationTime; }
+   void setModificationInfo(const uuid& userGuid, const TCHAR* userName, time_t timestamp);
+
    bool loadFromDB(DB_HANDLE hdb);
-	bool saveToDB(DB_HANDLE hdb) const;
+   bool saveToDB(DB_HANDLE hdb, const uuid& modifiedByGuid, const TCHAR* modifiedByName, time_t modificationTime) const;
    bool processEvent(Event *event) const;
    void fillMessage(NXCPMessage *msg) const;
    
@@ -806,6 +822,34 @@ template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<EPRule>;
 #endif
 
 /**
+ * Information about a rule deleted by client (for optimistic concurrency)
+ */
+struct DeletedRuleInfo
+{
+   uuid guid;
+   uint32_t version;
+};
+
+/**
+ * EPP conflict information for merge results (optimistic concurrency)
+ */
+class NXCORE_EXPORTABLE EPPConflict
+{
+public:
+   enum Type { MODIFY = 1, DELETE = 2 };
+
+   Type m_type;
+   uuid m_ruleGuid;
+   EPRule *m_clientRule;    // nullptr for delete conflicts where server deleted
+   EPRule *m_serverRule;    // nullptr for delete conflicts where client deleted
+
+   EPPConflict(Type type, const uuid& guid, EPRule *clientRule, EPRule *serverRule)
+      : m_type(type), m_ruleGuid(guid), m_clientRule(clientRule), m_serverRule(serverRule) {}
+
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
+};
+
+/**
  * Event procesisng policy
  */
 class NXCORE_EXPORTABLE EventProcessingPolicy
@@ -813,6 +857,7 @@ class NXCORE_EXPORTABLE EventProcessingPolicy
 private:
    ObjectArray<EPRule> m_rules;
    RWLock m_rwlock;
+   uint32_t m_version;   // Policy version for optimistic concurrency (in-memory only)
 
    void readLock() const { m_rwlock.readLock(); }
    void writeLock() { m_rwlock.writeLock(); }
@@ -820,14 +865,25 @@ private:
    int findRuleIndexByGuid(const uuid& guid, int shift = 0) const;
 
 public:
-   EventProcessingPolicy() : m_rules(128, 128, Ownership::True) { }
+   EventProcessingPolicy() : m_rules(128, 128, Ownership::True), m_version(0) { }
 
    uint32_t getNumRules() const { return m_rules.size(); }
+   uint32_t getVersion() const { return m_version; }
+   void incrementVersion() { m_version++; }
+
    bool loadFromDB();
-   bool saveToDB() const;
+   bool saveToDB(const uuid& modifiedByGuid, const TCHAR* modifiedByName) const;
+   bool saveToDB() const { return saveToDB(uuid::NULL_UUID, _T("System")); }  // Convenience for imports
    void processEvent(Event *pEvent);
    void sendToClient(ClientSession *session, uint32_t requestId) const;
    void replacePolicy(uint32_t numRules, EPRule **ruleList);
+
+   // Optimistic concurrency support
+   uint32_t saveWithMerge(uint32_t baseVersion, uint32_t numRules, EPRule **clientRules,
+                          uint32_t numDeletedRules, DeletedRuleInfo *deletedRules,
+                          const uuid& userGuid, const TCHAR* userName,
+                          ObjectArray<EPPConflict> *conflicts, uint32_t *newVersion);
+
    json_t *exportRule(const uuid& guid) const;
    json_t *exportRuleOrdering() const;
    void importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ruleOrdering);
