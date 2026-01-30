@@ -2195,7 +2195,7 @@ uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, uint32_t num
          // Deleted on server while client had it
          if (clientRule->isModified())
          {
-            conflicts->add(new EPPConflict(EPPConflict::DELETE, clientRule->getGuid(), clientRule, nullptr));
+            conflicts->add(new EPPConflict(EPPConflict::EPP_CT_DELETE, clientRule->getGuid(), clientRule, nullptr));
             clientRules[i] = nullptr;  // Transfer ownership to conflict
          }
          continue;
@@ -2212,7 +2212,7 @@ uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, uint32_t num
          // Server changed this rule
          if (clientRule->isModified())
          {
-            conflicts->add(new EPPConflict(EPPConflict::MODIFY, clientRule->getGuid(), clientRule, serverRule));
+            conflicts->add(new EPPConflict(EPPConflict::EPP_CT_MODIFY, clientRule->getGuid(), clientRule, serverRule));
             clientRules[i] = nullptr;  // Transfer ownership to conflict
          }
          else
@@ -2230,7 +2230,7 @@ uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, uint32_t num
       if (serverRule != nullptr && serverRule->getVersion() > deletedRules[i].version)
       {
          // Server modified after client loaded - conflict
-         conflicts->add(new EPPConflict(EPPConflict::DELETE, serverRule->getGuid(), nullptr, serverRule));
+         conflicts->add(new EPPConflict(EPPConflict::EPP_CT_DELETE, serverRule->getGuid(), nullptr, serverRule));
       }
    }
 

@@ -836,7 +836,7 @@ struct DeletedRuleInfo
 class NXCORE_EXPORTABLE EPPConflict
 {
 public:
-   enum Type { MODIFY = 1, DELETE = 2 };
+   enum Type { EPP_CT_MODIFY = 1, EPP_CT_DELETE = 2 };
 
    Type m_type;
    uuid m_ruleGuid;
