@@ -51,11 +51,11 @@ AC_DEFUN([AC_C_CHECK_OPTION],[
 		CFLAGS="$CFLAGS $1"
 	fi
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-		[ 
+		[
 			CFLAGS="$OLD_CFLAGS $1"
-			AC_MSG_RESULT(yes) 
-		], 
-		[ 
+			AC_MSG_RESULT(yes)
+		],
+		[
 			CFLAGS="$OLD_CFLAGS"
 			AC_MSG_RESULT(no)
 		])
@@ -70,11 +70,11 @@ AC_DEFUN([AC_CPP_CHECK_OPTION],[
 		CPPFLAGS="$CPPFLAGS $1"
 	fi
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-		[ 
+		[
 			CPPFLAGS="$OLD_CPPFLAGS $1"
-			AC_MSG_RESULT(yes) 
-		], 
-		[ 
+			AC_MSG_RESULT(yes)
+		],
+		[
 			CPPFLAGS="$OLD_CPPFLAGS"
 			AC_MSG_RESULT(no)
 		])
@@ -90,11 +90,11 @@ AC_DEFUN([AC_CXX_CHECK_OPTION],[
 	fi
 	AC_LANG_PUSH([C++])
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-		[ 
+		[
 			CXXFLAGS="$OLD_CXXFLAGS $1"
-			AC_MSG_RESULT(yes) 
-		], 
-		[ 
+			AC_MSG_RESULT(yes)
+		],
+		[
 			CXXFLAGS="$OLD_CXXFLAGS"
 			AC_MSG_RESULT(no)
 		])
@@ -383,7 +383,7 @@ AC_ARG_WITH(zlib,
 [AS_HELP_STRING(--with-zlib,specify zlib location)],
 [
 	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno"; then
-		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
 		LDFLAGS="$LDFLAGS -L${withval}/lib"
 		CPPFLAGS="$CPPFLAGS -I${withval}/include"
 	fi
@@ -393,7 +393,7 @@ AC_ARG_WITH(libexpat,
 [AS_HELP_STRING(--with-libexpat,specify libexpat location)],
 [
 	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno"; then
-		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
 		LDFLAGS="$LDFLAGS -L${withval}/lib"
 		CPPFLAGS="$CPPFLAGS -I${withval}/include"
 	fi
@@ -503,7 +503,7 @@ AC_ARG_WITH(curl,
 		if test "x$withval" != "xyes"; then
 			CPPFLAGS="$CPPFLAGS -I$withval/include"
 			LDFLAGS="$LDFLAGS -L$withval/lib"
-			LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+			LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
 		fi
 	fi
 ])
@@ -577,7 +577,7 @@ AC_ARG_WITH(odbc,
 [AS_HELP_STRING(--with-odbc,build ODBC database driver)],
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		ODBC_LD_RUN_PATH="${withval}/lib"   
+		ODBC_LD_RUN_PATH="${withval}/lib"
 		ODBC_LDFLAGS="-L${withval}/lib"
 		ODBC_CPPFLAGS="-I${withval}/include"
 	fi
@@ -594,10 +594,10 @@ AC_ARG_WITH(oracle,
 	fi
 	if test "x$ORABASE" != "x"; then
 		if test -x "$ORABASE/lib" ; then
-			ORACLE_LD_RUN_PATH="${ORABASE}/lib"   
+			ORACLE_LD_RUN_PATH="${ORABASE}/lib"
 			ORACLE_LDFLAGS="-L${ORABASE}/lib"
 		else
-			ORACLE_LD_RUN_PATH="${ORABASE}"   
+			ORACLE_LD_RUN_PATH="${ORABASE}"
 			ORACLE_LDFLAGS="-L${ORABASE}"
 		fi
 		if test -x "$ORABASE/include" ; then
@@ -619,7 +619,7 @@ AC_ARG_WITH(mysql,
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
 		if find_existing_dir "${withval}/lib" "${withval}/lib/mysql" "${withval}/mysql/lib"; then
-			MYSQL_LD_RUN_PATH="$__dir$"    
+			MYSQL_LD_RUN_PATH="$__dir$"
 			MYSQL_LDFLAGS="-L$__dir"
 		fi
 		if find_existing_dir "${withval}/include" "${withval}/include/mysql" "${withval}/mysql/include"; then
@@ -627,7 +627,7 @@ AC_ARG_WITH(mysql,
 		fi
 	else
 		if find_existing_dir "/usr/local/mysql/lib" "/usr/local/mysql/lib/mysql" "/usr/lib64/mysql" "/usr/lib/mysql" "/usr/mysql/lib" "/usr/mysql/lib/mysql" "/usr/local/lib/mysql"; then
-			MYSQL_LD_RUN_PATH="$__dir$"    
+			MYSQL_LD_RUN_PATH="$__dir$"
 			MYSQL_LDFLAGS="-L$__dir"
 		fi
 		if find_existing_dir "/usr/local/mysql/include" "/usr/include/mysql" "/usr/mysql/include" "/usr/local/include/mysql" "/usr/local/mysql/include/mysql" "/usr/mysql/include/mysql"; then
@@ -643,7 +643,7 @@ AC_ARG_WITH(mariadb,
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
 		if find_existing_dir "${withval}/lib" "${withval}/lib/mariadb" "${withval}/mariadb/lib"; then
-			MARIADB_LD_RUN_PATH="$__dir$"    
+			MARIADB_LD_RUN_PATH="$__dir$"
 			MARIADB_LDFLAGS="-L$__dir"
 		fi
 		if find_existing_dir "${withval}/include" "${withval}/include/mariadb" "${withval}/mariadb/include"; then
@@ -651,7 +651,7 @@ AC_ARG_WITH(mariadb,
 		fi
 	else
 		if find_existing_dir "/usr/local/mariadb/lib" "/usr/local/lib/mariadb"; then
-			MARIADB_LD_RUN_PATH="$__dir$"    
+			MARIADB_LD_RUN_PATH="$__dir$"
 			MARIADB_LDFLAGS="-L$__dir"
 		fi
 		if find_existing_dir "/usr/local/mariadb/include" "/usr/include/mariadb" "/usr/local/include/mariadb"; then
@@ -682,7 +682,7 @@ AC_ARG_WITH(pgsql,
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
 		if find_existing_dir "${withval}/lib/postgresql" "${withval}/lib/postgresql@14" "${withval}/lib" "${withval}/lib/pgsql" "${withval}/pgsql/lib" "${withval}/postgresql/lib"; then
-			PGSQL_LD_RUN_PATH="$__dir$"    
+			PGSQL_LD_RUN_PATH="$__dir$"
 			PGSQL_LDFLAGS="-L$__dir"
 		fi
 		if find_existing_dir "${withval}/include/postgresql" "${withval}/include/postgresql@14" "${withval}/include" "${withval}/include/pgsql" "${withval}/pgsql/include" "${withval}/postgresql/include"; then
@@ -690,7 +690,7 @@ AC_ARG_WITH(pgsql,
 		fi
 	else
 		if find_existing_dir "/usr/local/pgsql/lib" "/usr/local/pgsql/lib/pgsql" "/usr/lib64/pgsql" "/usr/lib/pgsql" "/usr/pgsql/lib" "/usr/pgsql/lib/pgsql" "/usr/local/lib/pgsql" "/usr/local/postgresql/lib" "/usr/local/postgresql/lib/postgresql" "/usr/lib/postgresql" "/usr/postgresql/lib" "/usr/postgresql/lib/postgresql" "/usr/local/lib/postgresql"; then
-			PGSQL_LD_RUN_PATH="$__dir$"    
+			PGSQL_LD_RUN_PATH="$__dir$"
 			PGSQL_LDFLAGS="-L$__dir"
 		fi
 		if find_existing_dir "/usr/local/pgsql/include" "/usr/include/pgsql" "/usr/pgsql/include" "/usr/local/include/pgsql" "/usr/local/pgsql/include/pgsql" "/usr/pgsql/include/pgsql" "/usr/local/postgresql/include" "/usr/include/postgresql" "/usr/postgresql/include" "/usr/local/include/postgresql" "/usr/local/postgresql/include/postgresql" "/usr/postgresql/include/postgresql"; then
@@ -711,15 +711,15 @@ AC_ARG_WITH(db2,
 			DB2_LIB_DIR=lib64
 		fi
 		if test -x "$withval/${DB2_LIB_DIR}" ; then
-			DB2_LD_RUN_PATH="${withval}/${DB2_LIB_DIR}"   
+			DB2_LD_RUN_PATH="${withval}/${DB2_LIB_DIR}"
 			DB2_LDFLAGS="-L${withval}/${DB2_LIB_DIR}"
 		else
 			DB2_LIB_DIR=lib
 			if test -x "$withval/${DB2_LIB_DIR}" ; then
-				DB2_LD_RUN_PATH="${withval}/${DB2_LIB_DIR}"   
+				DB2_LD_RUN_PATH="${withval}/${DB2_LIB_DIR}"
 				DB2_LDFLAGS="-L${withval}/${DB2_LIB_DIR}"
 			else
-				DB2_LD_RUN_PATH="${withval}"   
+				DB2_LD_RUN_PATH="${withval}"
 				DB2_LDFLAGS="-L${withval}"
 			fi
 		fi
@@ -738,14 +738,14 @@ AC_ARG_WITH(informix,
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
 		if test -x "$withval/lib/cli" ; then
-			INFORMIX_LD_RUN_PATH="${withval}/lib/cli"   
+			INFORMIX_LD_RUN_PATH="${withval}/lib/cli"
 			INFORMIX_LDFLAGS="-L${withval}/lib/cli"
 			if test -x "$withval/lib/esql" ; then
-				INFORMIX_LD_RUN_PATH="${withval}/lib/esql:${INFORMIX_LD_RUN_PATH}"   
+				INFORMIX_LD_RUN_PATH="${withval}/lib/esql:${INFORMIX_LD_RUN_PATH}"
 				INFORMIX_LDFLAGS="$INFORMIX_LDFLAGS -L${withval}/lib/esql"
 			fi
 		else
-			INFORMIX_LD_RUN_PATH="${withval}"   
+			INFORMIX_LD_RUN_PATH="${withval}"
 			INFORMIX_LDFLAGS="-L${withval}"
 		fi
 		if test -x "$withval/incl/cli" ; then
@@ -761,7 +761,7 @@ AC_ARG_WITH(openssl,
 [
 	if test "x$withval" != "xno" ; then
 		if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-			LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+			LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
 			LDFLAGS="$LDFLAGS -L${withval}/lib"
 			CPPFLAGS="$CPPFLAGS -I${withval}/include"
 		else
@@ -889,7 +889,7 @@ AC_ARG_WITH(jemalloc,
 	if test "x$withval" != "xno" ; then
 		JEMALLOC_REQUIRED="yes"
 		if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-			LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+			LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
 			LDFLAGS="$LDFLAGS -L${withval}/lib"
 			CPPFLAGS="$CPPFLAGS -I${withval}/include"
 			INSTALL_LIBPATH="${withval}/lib${INSTALL_LIBPATH:+:}${INSTALL_LIBPATH}"
@@ -1211,7 +1211,7 @@ if test $? = 0; then
 		COMPONENTS="$COMPONENTS informix"
 		SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/informix/informix.la"
 	fi
-	
+
 	check_substr "$STATIC_SUBAGENT_LIST" "db2"
 	if test $? = 0; then
 		COMPONENTS="$COMPONENTS db2"
@@ -1504,12 +1504,12 @@ if test "x$CXX" = "xclang++"; then
 
 	AC_MSG_CHECKING(whether -lc++ is needed)
 	AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-		[ AC_MSG_RESULT(no) ], 
-		[ 
+		[ AC_MSG_RESULT(no) ],
+		[
 			OLDLIBS="$LIBS"
 			LIBS="$LIBS -lc++"
 			AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-				[ AC_MSG_RESULT(yes) ], 
+				[ AC_MSG_RESULT(yes) ],
 				[
 					LIBS="$OLDLIBS"
 					AC_MSG_RESULT(no)
@@ -1608,8 +1608,8 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 		[
 			CXXFLAGS="$OLD_CXXFLAGS -std=c++17"
 			AC_MSG_RESULT(yes)
-		], 
-		[ 
+		],
+		[
 			CXXFLAGS="$OLD_CXXFLAGS"
 			AC_MSG_RESULT(no)
 
@@ -1620,8 +1620,8 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 				[
 					CXXFLAGS="$OLD_CXXFLAGS -std=c++14"
 					AC_MSG_RESULT(yes)
-				], 
-				[ 
+				],
+				[
 					CXXFLAGS="$OLD_CXXFLAGS"
 					AC_MSG_RESULT(no)
 
@@ -1633,7 +1633,7 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 							CXXFLAGS="$OLD_CXXFLAGS -std=c++11"
 							AC_MSG_RESULT(yes)
 						],
-						[ 
+						[
 							CXXFLAGS="$OLD_CXXFLAGS"
 							AC_MSG_RESULT(no)
 						])
@@ -1701,14 +1701,14 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 				OLD_CPPFLAGS="$CPPFLAGS"
 				CPPFLAGS="$CPPFLAGS -maix32"
 				AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-					[ 
+					[
 						LDFLAGS="-maix32 $LDFLAGS"
 						LTINIT_CC="$CC -maix32"
 						LTINIT_CXX="$CXX -maix32"
 						OBJECT_MODE=32
-						AC_MSG_RESULT(yes) 
-					], 
-					[ 
+						AC_MSG_RESULT(yes)
+					],
+					[
 						CPPFLAGS="$OLD_CPPFLAGS"
 						AC_MSG_RESULT(no)
 					])
@@ -1717,34 +1717,34 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 				OLD_CPPFLAGS="$CPPFLAGS"
 				CPPFLAGS="$CPPFLAGS -maix64"
 				AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-					[ 
+					[
 						LDFLAGS="-maix64 $LDFLAGS"
 						LTINIT_CC="$CC -maix64"
 						LTINIT_CXX="$CXX -maix64"
 						OBJECT_MODE=64
-						AC_MSG_RESULT(yes) 
-					], 
-					[ 
+						AC_MSG_RESULT(yes)
+					],
+					[
 						CPPFLAGS="$OLD_CPPFLAGS"
 						AC_MSG_RESULT(no)
 					])
 			fi
 		fi
 	fi
-	
+
 	if test "x$PLATFORM" = "xSunOS"; then
 		if test "x$FORCE_32BIT_BUILD" = "xyes"; then
 			AC_MSG_CHECKING(whether C compiler accepts -m32)
 			OLD_CPPFLAGS="$CPPFLAGS"
 			CPPFLAGS="$CPPFLAGS -m32"
 			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-				[ 
+				[
 					LDFLAGS="-m32 $LDFLAGS"
 					LTINIT_CC="$CC -m32"
 					LTINIT_CXX="$CXX -m32"
-					AC_MSG_RESULT(yes) 
-				], 
-				[ 
+					AC_MSG_RESULT(yes)
+				],
+				[
 					CPPFLAGS="$OLD_CPPFLAGS"
 					AC_MSG_RESULT(no)
 				])
@@ -1753,33 +1753,33 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 			OLD_CPPFLAGS="$CPPFLAGS"
 			CPPFLAGS="$CPPFLAGS -m64"
 			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-				[ 
+				[
 					LDFLAGS="-m64 $LDFLAGS"
 					LTINIT_CC="$CC -m64"
 					LTINIT_CXX="$CXX -m64"
-					AC_MSG_RESULT(yes) 
-				], 
-				[ 
+					AC_MSG_RESULT(yes)
+				],
+				[
 					CPPFLAGS="$OLD_CPPFLAGS"
 					AC_MSG_RESULT(no)
 				])
 		fi
 	fi
 
-	
+
 	if test "x$PLATFORM" = "xLinux"; then
 		if test "x$FORCE_32BIT_BUILD" = "xyes"; then
 			AC_MSG_CHECKING(whether C compiler accepts -m32)
 			OLD_CPPFLAGS="$CPPFLAGS"
 			CPPFLAGS="$CPPFLAGS -m32"
 			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-				[ 
+				[
 					LDFLAGS="-m32 $LDFLAGS"
 					LTINIT_CC="$CC -m32"
 					LTINIT_CXX="$CXX -m32"
-					AC_MSG_RESULT(yes) 
-				], 
-				[ 
+					AC_MSG_RESULT(yes)
+				],
+				[
 					CPPFLAGS="$OLD_CPPFLAGS"
 					AC_MSG_RESULT(no)
 				])
@@ -1829,11 +1829,11 @@ if test "x$CXX" = "xCC" -o "x$CXX" = "xCC -std=c++11" ; then
 			OLD_CPPFLAGS="$CPPFLAGS"
 			CPPFLAGS="$CPPFLAGS $ARCH"
 			AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-				[ 
+				[
 					LDFLAGS="$ARCH $LDFLAGS"
-					AC_MSG_RESULT(yes) 
-				], 
-				[ 
+					AC_MSG_RESULT(yes)
+				],
+				[
 					CPPFLAGS="$OLD_CPPFLAGS"
 					AC_MSG_RESULT(no)
 				])
@@ -1846,11 +1846,11 @@ if test "x$CXX" = "xCC" -o "x$CXX" = "xCC -std=c++11" ; then
 		OLD_CPPFLAGS="$CPPFLAGS"
 		CPPFLAGS="$CPPFLAGS -xarch=sparc"
 		AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-			[ 
+			[
 				LDFLAGS="-xarch=sparc $LDFLAGS"
-				AC_MSG_RESULT(yes) 
-			], 
-			[ 
+				AC_MSG_RESULT(yes)
+			],
+			[
 				CPPFLAGS="$OLD_CPPFLAGS"
 				AC_MSG_RESULT(no)
 			])
@@ -1869,11 +1869,11 @@ if test "x$CXX" = "xCC" -o "x$CXX" = "xCC -std=c++11" ; then
 		OLD_CPPFLAGS="$CPPFLAGS"
 		CPPFLAGS="$CPPFLAGS -xldscope=hidden"
 		AC_RUN_IFELSE([AC_LANG_PROGRAM([[ int __global z = 0; ]], [[ ]])],
-			[ 
+			[
 				AC_DEFINE(GLOBAL_SPECIFIER_SUPPORTED, 1, Define to 1 if compiler supports scoping specifier __global)
-				AC_MSG_RESULT(yes) 
-			], 
-			[ 
+				AC_MSG_RESULT(yes)
+			],
+			[
 				CPPFLAGS="$OLD_CPPFLAGS"
 				AC_MSG_RESULT(no)
 			])
@@ -2318,8 +2318,8 @@ if test "x$DISABLE_IPV6" != "xyes"; then
 #endif
 	])
 	if test "x$ac_cv_have_decl_AF_INET6" = "xyes"; then
-		AC_CHECK_TYPE(struct sockaddr_in6, [ 
-			AC_DEFINE(WITH_IPV6, 1, Define to have IPv6 support) 
+		AC_CHECK_TYPE(struct sockaddr_in6, [
+			AC_DEFINE(WITH_IPV6, 1, Define to have IPv6 support)
 			IPV6_SUPPORT="yes"
 		],,[
 #if HAVE_NETINET_IN_H
@@ -2473,7 +2473,7 @@ if test "x$HAVE_JANSSON" = "xno"; then
 	AC_DEFINE(BUNDLED_LIBJANSSON,1,Define to 1 if bundled libjansson is used)
 else
    AC_CHECK_DECLS([json_object_update_new],,,[
-#include <jansson.h>   
+#include <jansson.h>
    ])
 fi
 
@@ -2580,7 +2580,7 @@ if test "x$DISABLE_LDAP" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 		fi
 		if test "x$HAVE_SUNOS_OPENLDAP" = "xyes"; then
 			HAVE_LDAP="yes"
-			SERVER_LIBS="-lldap_r-2.4 $SERVER_LIBS"   
+			SERVER_LIBS="-lldap_r-2.4 $SERVER_LIBS"
 			AC_DEFINE(WITH_LDAP, 1, Define to 1 if you have LDAP libraries and headers)
 			AC_DEFINE(SUNOS_OPENLDAP, 1, Define to 1 if you are using OpenLDAP libraries and headers on SunOS)
 			AC_CHECK_TYPES([ber_int_t],,,
@@ -2613,7 +2613,7 @@ if test "x$DISABLE_LDAP" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 			fi
 		fi
 		if test "x$HAVE_LDAP" = "xyes"; then
-			SERVER_LIBS="-lldap $SERVER_LIBS"   
+			SERVER_LIBS="-lldap $SERVER_LIBS"
 			AC_DEFINE(WITH_LDAP, 1, Define to 1 if you have LDAP libraries and headers)
 			AC_CHECK_HEADERS([ldap_ssl.h],,,
 				[
@@ -2985,7 +2985,7 @@ AC_CHECK_FUNCS([snprintf vsnprintf])
 
 AC_MSG_CHECKING(whether snprintf returns required buffer size)
 AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([ 
+  [AC_LANG_PROGRAM([
 #include <stdio.h>
 #include <string.h>
      ], [
@@ -3004,7 +3004,7 @@ if test "x$FORCE_NULL_SAFE_FREE" = "xyes"; then
 else
 	AC_MSG_CHECKING(whether free correctly handles NULL pointer)
 	AC_RUN_IFELSE(
-		[AC_LANG_PROGRAM([ 
+		[AC_LANG_PROGRAM([
 #include <stdlib.h>
 			], [
 				free(NULL);
@@ -3240,21 +3240,21 @@ if test "x$PLATFORM" = "xLinux"; then
 
 	AC_MSG_CHECKING(for gettid syscall)
 	AC_LANG_PUSH([C++])
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ 
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 #if HAVE_SYS_SYSCALL_H
 #include <sys/syscall.h>
 #endif
-			]], [[ 
+			]], [[
 syscall(SYS_gettid);
 			]])],
-		[ 
+		[
 			AC_DEFINE([HAVE_GETTID_SYSCALL],[1],[Define to 1 if gettid syscall is available])
-			AC_MSG_RESULT(yes) 
-		], 
-		[ 
+			AC_MSG_RESULT(yes)
+		],
+		[
 			AC_MSG_RESULT(no)
 		])
 	AC_LANG_POP([C++])
@@ -3461,7 +3461,7 @@ if test "x$DISABLE_ICONV" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 		  AC_CHECK_FUNCS(libiconv, ac_found_iconv=yes, ac_found_iconv=no)
 		],
 		[
-			AC_CHECK_LIB(iconv, iconv, 
+			AC_CHECK_LIB(iconv, iconv,
 				[ ac_found_iconv=yes
 			          LIBS="$LIBS -liconv"
 			])
@@ -3941,7 +3941,7 @@ if test $? = 0; then
 			fi
 			unset ac_cv_lib_pq_PQconnectdb
 			AC_CHECK_LIB(pq, PQconnectdb, [PGSQL_LIBS="-lpq"], [
-				AC_MSG_ERROR(libpq is required for PostgreSQL support)])        
+				AC_MSG_ERROR(libpq is required for PostgreSQL support)])
 		else
 			AC_MSG_ERROR(libpq is required for PostgreSQL support)
 		fi
@@ -4079,7 +4079,7 @@ if test $? = 0; then
 		AC_DEFINE_UNQUOTED([JDK_LOCATION],["$JDK_LOCATION"],[JDK location])
 	fi
 
-	LD_RUN_PATH="${JDK_LOCATION}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+	LD_RUN_PATH="${JDK_LOCATION}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
 	LDFLAGS="$LDFLAGS -L${JDK_LOCATION}/lib"
 	CPPFLAGS="$CPPFLAGS -I${JDK_LOCATION}/include"
 	if test -d "${JDK_LOCATION}/include/aix"; then
@@ -4165,7 +4165,7 @@ if test $? = 0; then
 		LDFLAGS="$LDFLAGS $TUXEDO_LDFLAGS"
 		LD_RUN_PATH="${TUXEDO_BASE}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
 	fi
-	
+
 	AC_CHECK_HEADER(atmi.h,,AC_MSG_ERROR([*** Cannot find atmi.h - check your Tuxedo installation ***]))
 
 	# https://community.oracle.com/thread/2346582
@@ -4183,8 +4183,8 @@ if test $? = 0; then
 		OLD_LIBS_LIBENGINE="$LIBS"
 		LIBS="$LIBS -lengine"
 		AC_LINK_IFELSE([AC_LANG_PROGRAM([[ extern char *xa_switchp; ]], [[ *xa_switchp = 0; ]])],
-			[ 
-				AC_MSG_RESULT(yes) 
+			[
+				AC_MSG_RESULT(yes)
 				TUXEDO_LIBS="$TUXEDO_LIBS -lengine"
 			],
          		[ AC_MSG_RESULT(no) ])
@@ -4230,7 +4230,7 @@ if test "x$DISABLE_ZERMQ" != "xyes"; then
 		CPPFLAGS="$CPPFLAGS $ZEROMQ_CPPFLAGS"
 		LDFLAGS="$LDFLAGS $ZEROMQ_LDFLAGS"
 	fi
-	
+
    ZEROMQ_SUPPORT="yes"
 	AC_CHECK_HEADER(zmq.h,,[
 		if test "x$REQUIRE_ZEROMQ" = "xyes"; then
@@ -4337,14 +4337,14 @@ if test "x$PYTHON_SUPPORT" = "xyes"; then
 		CPPFLAGS="$CPPFLAGS $PYTHON_CPPFLAGS"
 		LDFLAGS="$LDFLAGS $PYTHON_LDFLAGS"
 		LIBS="$LIBS $PYTHON_LIBS"
-	
+
 		AC_CHECK_HEADER(Python.h,,[
 			AC_MSG_ERROR([*** Cannot find Python.h - check your libpython installation or disable Python support with --without-python ***])
 		])
 		AC_CHECK_FUNC(Py_Initialize, , [
 			AC_MSG_ERROR([*** Cannot find Py_Initialize function - check your libpython installation or disable Python support with --without-python ***])
 		])
-    
+
 		AC_DEFINE(WITH_PYTHON, 1, Define to 1 if Python is supported)
 	else
 		AC_MSG_ERROR([*** Cannot find Python configuration tool - check your libpython installation or disable Python support with --without-python ***])
@@ -4484,7 +4484,7 @@ if test $? = 0; then
 		CPPFLAGS="$CPPFLAGS $VMGR_CPPFLAGS"
 		LDFLAGS="$LDFLAGS $VMGR_LDFLAGS"
     	fi
-	
+
 	AC_CHECK_HEADER(libvirt/libvirt.h,,AC_MSG_ERROR([*** Cannot find libvirt.h - check your libvirt installation ***]))
 	AC_CHECK_LIB(virt, virConnectGetLibVersion, [ VMGR_LIBS="$VMGR_LIBS -lvirt" ])
 	LIBS="$LIBS $VMGR_LIBS"
@@ -4534,7 +4534,7 @@ if test "x$JEMALLOC_REQUIRED" = "xyes"; then
 			if test "x$PLATFORM" = "xAIX"; then
 				EXEC_LDFLAGS=""
 				AC_CHECK_LIB(jemalloc, je_malloc,
-					[ 
+					[
 						LIBS="$LIBS -ljemalloc"
 						AC_DEFINE(WITH_JEMALLOC,1,Define to 1 if libjemalloc is used)
 					],
@@ -4544,7 +4544,7 @@ if test "x$JEMALLOC_REQUIRED" = "xyes"; then
 			else
 		 		AC_CHECK_LIB(rt, clock_gettime)
 				AC_CHECK_LIB(jemalloc_pic, malloc,
-					[ 
+					[
 						EXEC_LDFLAGS="$EXEC_LDFLAGS -export-symbols $rootdir/jemalloc.sym"
 						EXEC_LIBS="$EXEC_LIBS -ljemalloc_pic"
 						AC_DEFINE(WITH_JEMALLOC,1,Define to 1 if libjemalloc is used)
@@ -5156,7 +5156,6 @@ AC_CONFIG_FILES([
 	src/server/pdsdrv/clickhouse/Makefile
 	src/server/pdsdrv/influxdb/Makefile
 	src/server/pdsdrv/rrdtool/Makefile
-	src/server/spe/Makefile
 	src/server/tools/Makefile
 	src/server/tools/libnxdbmgr/Makefile
 	src/server/tools/nddload/Makefile
