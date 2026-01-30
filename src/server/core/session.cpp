@@ -6073,7 +6073,7 @@ void ClientSession::finishEPPSave(uint32_t requestId)
    NXCPMessage response(CMD_REQUEST_COMPLETED, requestId);
 
    uuid userGuid = GetUserGuidById(m_userId);
-   TCHAR userName[MAX_USER_NAME];
+   wchar_t userName[MAX_USER_NAME];
    ResolveUserId(m_userId, userName, true);
 
    ObjectArray<EPPConflict> conflicts(0, 16, Ownership::True);

@@ -845,6 +845,10 @@ public:
 
    EPPConflict(Type type, const uuid& guid, EPRule *clientRule, EPRule *serverRule)
       : m_type(type), m_ruleGuid(guid), m_clientRule(clientRule), m_serverRule(serverRule) {}
+   ~EPPConflict()
+   {
+      delete m_clientRule;
+   }
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
 };

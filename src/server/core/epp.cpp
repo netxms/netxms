@@ -183,7 +183,9 @@ EPRule::EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5) :
    }
 
    if (nxslV5)
+   {
       m_filterScriptSource = MemCopyString(config.getSubEntryValue(_T("script"), 0, _T("")));
+   }
    else
    {
       StringBuffer output = NXSLConvertToV5(config.getSubEntryValue(_T("script"), 0, _T("")));
@@ -2154,8 +2156,11 @@ uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, uint32_t num
       {
          EPRule *rule = clientRules[i];
          rule->setId(i);
-         rule->incrementVersion();
-         rule->setModificationInfo(userGuid, userName, modTime);
+         if (rule->isModified())
+         {
+            rule->incrementVersion();
+            rule->setModificationInfo(userGuid, userName, modTime);
+         }
          m_rules.add(rule);
          clientRules[i] = nullptr;  // Transfer ownership
       }
@@ -2269,8 +2274,11 @@ uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, uint32_t num
       {
          EPRule *rule = mergedRules.get(i);
          rule->setId(i);
-         rule->incrementVersion();
-         rule->setModificationInfo(userGuid, userName, modTime);
+         if (rule->isModified())
+         {
+            rule->incrementVersion();
+            rule->setModificationInfo(userGuid, userName, modTime);
+         }
          m_rules.add(rule);
       }
       m_version++;
