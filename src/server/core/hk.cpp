@@ -587,6 +587,16 @@ static void HouseKeeper()
             return _CONTINUE;
 		   });
 
+      // Validate cluster DCIs
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Queue cluster updates"));
+      g_idxObjectById.forEach(
+         [] (NetObj *object) -> EnumerationCallbackResult
+         {
+            if (object->getObjectClass() == OBJECT_CLUSTER)
+               static_cast<Cluster*>(object)->queueUpdate();
+            return _CONTINUE;
+         });
+
 	   // Validate scripts in script library
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Validate server NXSL scripts"));
 	   ValidateScripts();
