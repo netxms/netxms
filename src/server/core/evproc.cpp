@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -436,6 +436,7 @@ static int s_processingThreadCount = 0;
 
 /**
  * Event processing thread for parallel processing
+ * This thread started only when Events.Processor.PoolSize > 1
  */
 static void ParallelEventProcessor()
 {
@@ -445,7 +446,7 @@ static void ParallelEventProcessor()
    ConfigReadStr(_T("Events.Processor.QueueSelector"), queueSelector, 256, _T("%z"));
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Parallel event processing enabled (queue selector \"%s\")"), queueSelector);
 
-	int poolSize = ConfigReadInt(_T("Events.Processor.PoolSize"), 1);
+	int poolSize = ConfigReadInt(L"Events.Processor.PoolSize", 1);
 	if (poolSize > 128)
 	{
 	   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Configured thread pool size for parallel event processing is to big (configured value %d, adjusted to 128)"), poolSize);
@@ -604,7 +605,7 @@ THREAD StartEventProcessor()
    s_threadLogger = ThreadCreateEx(EventLogger);
    s_threadStormDetector = ThreadCreateEx(EventStormDetector);
    ThreadPoolScheduleRelative(g_mainThreadPool, 600000, ResetScriptErrorEventCounter);
-   return (ConfigReadInt(_T("Events.Processor.PoolSize"), 1) > 1) ? ThreadCreateEx(ParallelEventProcessor) : ThreadCreateEx(SerialEventProcessor);
+   return (ConfigReadInt(L"Events.Processor.PoolSize", 1) > 1) ? ThreadCreateEx(ParallelEventProcessor) : ThreadCreateEx(SerialEventProcessor);
 }
 
 /**
