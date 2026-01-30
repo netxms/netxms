@@ -909,8 +909,6 @@ private:
    void unbindAgentTunnel(const NXCPMessage& request);
    void setupTcpProxy(const NXCPMessage& request);
    void closeTcpProxy(const NXCPMessage& request);
-   void getPredictionEngines(const NXCPMessage& request);
-   void getPredictedData(const NXCPMessage& request);
    void expandMacros(const NXCPMessage& request);
    void updatePolicy(const NXCPMessage& request);
    void deletePolicy(const NXCPMessage& request);

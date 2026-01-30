@@ -109,8 +109,8 @@ public class NXCPCodes
 	public static final int CMD_ACTION_DATA = 0x0053;
 	public static final int CMD_SETUP_AGENT_TUNNEL = 0x0054;
 	public static final int CMD_EXECUTE_LIBRARY_SCRIPT = 0x0055;
-	public static final int CMD_GET_PREDICTION_ENGINES = 0x0056;
-	public static final int CMD_GET_PREDICTED_DATA = 0x0057;
+   // public static final int CMD_GET_PREDICTION_ENGINES = 0x0056;
+   // public static final int CMD_GET_PREDICTED_DATA = 0x0057;
 	public static final int CMD_STOP_SERVER_COMMAND = 0x0058;
 	public static final int CMD_POLL_OBJECT = 0x0059;
 	public static final int CMD_POLLING_INFO = 0x005A;
@@ -637,7 +637,7 @@ public class NXCPCodes
 	public static final long VID_ACTION_DATA = 100;
 	public static final long VID_EMAIL_SUBJECT = 101;
 	public static final long VID_RCPT_ADDR = 102;
-	public static final long VID_NPE_NAME = 103;
+   // public static final long VID_NPE_NAME = 103;
 	public static final long VID_CATEGORY_ID = 104;
 	public static final long VID_DCI_DELTA_CALCULATION = 105;
 	public static final long VID_TRANSFORMATION_SCRIPT = 106;

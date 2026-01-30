@@ -97,9 +97,6 @@ bool UpdateAddressListFromMessage(const NXCPMessage& msg);
 void FillComponentsMessage(NXCPMessage *msg);
 void GetClientConfigurationHints(NXCPMessage *msg, uint32_t userId);
 
-void GetPredictionEngines(NXCPMessage *msg);
-bool GetPredictedData(ClientSession *session, const NXCPMessage& request, NXCPMessage *response, const DataCollectionTarget& dcTarget);
-
 bool RecalculateDCIValues(DataCollectionTarget *object, DCItem *dci, BackgroundTask *task);
 
 void GetAgentTunnels(NXCPMessage *msg);
@@ -1819,12 +1816,6 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_UNBIND_AGENT_TUNNEL:
          unbindAgentTunnel(*request);
-         break;
-      case CMD_GET_PREDICTION_ENGINES:
-         getPredictionEngines(*request);
-         break;
-      case CMD_GET_PREDICTED_DATA:
-         getPredictedData(*request);
          break;
       case CMD_EXPAND_MACROS:
          expandMacros(*request);
@@ -15454,60 +15445,6 @@ void ClientSession::getScheduledReportingTasks(const NXCPMessage& request)
    GetScheduledTasks(&response, m_userId, m_systemAccessRights, ReportingScheduledTaskFilter, &reportId);
    response.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(response);
-}
-
-/**
- * Get list of registered prediction engines
- */
-void ClientSession::getPredictionEngines(const NXCPMessage& request)
-{
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
-   GetPredictionEngines(&msg);
-   msg.setField(VID_RCC, RCC_SUCCESS);
-   sendMessage(&msg);
-}
-
-/**
- * Get predicted data
- */
-void ClientSession::getPredictedData(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   bool success = false;
-
-   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
-   if (object != nullptr)
-   {
-      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
-      {
-         if (object->isDataCollectionTarget())
-         {
-            if (!(g_flags & AF_DB_CONNECTION_LOST))
-            {
-               success = GetPredictedData(this, request, &response, static_cast<DataCollectionTarget&>(*object));
-            }
-            else
-            {
-               response.setField(VID_RCC, RCC_DB_CONNECTION_LOST);
-            }
-         }
-         else
-         {
-            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
-         }
-      }
-      else
-      {
-         response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      }
-   }
-   else  // No object with given ID
-   {
-      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-   }
-
-   if (!success)
-      sendMessage(response);
 }
 
 /**

@@ -602,16 +602,6 @@ static void HouseKeeper()
 
 		SaveCurrentFreeId();
 
-		// Run training on prediction engines
-      nxlog_debug_tag(DEBUG_TAG, 2, _T("Queue prediction engines training"));
-		g_idxObjectById.forEach(
-		   [] (NetObj *object) -> EnumerationCallbackResult
-		   {
-            if (!s_shutdown && object->isDataCollectionTarget())
-               static_cast<DataCollectionTarget*>(object)->queuePredictionEngineTraining();
-            return _CONTINUE;
-		   });
-
       GetEventProcessingPolicy()->validateConfig();
 
       uint32_t elapsedTime = static_cast<uint32_t>(time(nullptr) - cycleStartTime);

@@ -35,7 +35,6 @@ serverinclude_HEADERS = \
 	nms_script.h \
 	nms_topo.h \
 	nms_users.h \
-	npe.h \
 	nxai.h \
 	nxcore_2fa.h \
 	nxcore_discovery.h \

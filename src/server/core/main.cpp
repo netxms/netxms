@@ -94,8 +94,6 @@ void CleanupObjects();
 void LoadPerfDataStorageDrivers();
 void ShutdownPerfDataStorageDrivers();
 void ImportLocalConfiguration(bool overwrite);
-void RegisterPredictionEngines();
-void ShutdownPredictionEngines();
 void ExecuteStartupScripts();
 void CloseAgentTunnels();
 void StopDataCollection();
@@ -1369,7 +1367,6 @@ retry_db_lock:
    if (!LoadNetXMSModules())
       return false;   // Mandatory module not loaded
    InitializeDeviceBackupInterface();
-   RegisterPredictionEngines();
    InitAIAssistant();
 
    // Load users and authentication methods
@@ -1625,7 +1622,6 @@ void NXCORE_EXPORTABLE Shutdown()
    // Stop DCI cache loading thread
    g_dciCacheLoaderQueue.setShutdownMode();
 
-	ShutdownPredictionEngines();
    StopObjectMaintenanceThreads();
    StopDataCollection();
 

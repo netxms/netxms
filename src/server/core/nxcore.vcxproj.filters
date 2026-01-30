@@ -309,9 +309,6 @@
     <ClCompile Include="np.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="npe.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="nxsl_classes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

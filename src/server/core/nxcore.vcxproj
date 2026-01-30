@@ -543,7 +543,6 @@
     <ClCompile Include="node.cpp" />
     <ClCompile Include="notification_channel.cpp" />
     <ClCompile Include="np.cpp" />
-    <ClCompile Include="npe.cpp" />
     <ClCompile Include="nxslext.cpp" />
     <ClCompile Include="nxsl_classes.cpp" />
     <ClCompile Include="objects.cpp" />

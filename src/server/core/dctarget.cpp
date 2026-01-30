@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@
 **/
 
 #include "nxcore.h"
-#include <npe.h>
 #include <nxcore_websvc.h>
 #include <netxms_maps.h>
 #include <nms_users.h>
@@ -552,31 +551,6 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
       nxlog_debug_tag(_T("housekeeper"), 6, _T("DataCollectionTarget::cleanDCIData(%s [%u]): running query \"%s\""), m_name, m_id, queryTables.cstr());
       DBQuery(hdb, queryTables);
    }
-}
-
-/**
- * Queue prediction engine training when necessary
- */
-void DataCollectionTarget::queuePredictionEngineTraining()
-{
-   readLockDciAccess();
-   for(int i = 0; i < m_dcObjects.size(); i++)
-   {
-      DCObject *o = m_dcObjects.get(i);
-      if (o->getType() == DCO_TYPE_ITEM)
-      {
-         DCItem *dci = static_cast<DCItem*>(o);
-         if (dci->getPredictionEngine()[0] != 0)
-         {
-            PredictionEngine *e = FindPredictionEngine(dci->getPredictionEngine());
-            if ((e != nullptr) && e->requiresTraining())
-            {
-               QueuePredictionEngineTraining(e, dci);
-            }
-         }
-      }
-   }
-   unlockDciAccess();
 }
 
 /**

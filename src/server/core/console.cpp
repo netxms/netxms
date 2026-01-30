@@ -42,7 +42,6 @@ extern ThreadPool *g_pollerThreadPool;
 extern ThreadPool *g_schedulerThreadPool;
 extern ThreadPool *g_dataCollectorThreadPool;
 
-void ShowPredictionEngines(CONSOLE_CTX console);
 void ShowAgentTunnels(CONSOLE_CTX console);
 uint32_t BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId);
 uint32_t UnbindAgentTunnel(uint32_t nodeId, uint32_t userId);
@@ -1399,10 +1398,6 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
             ConsoleWrite(console, _T("ERROR: Invalid or missing node ID\n\n"));
          }
       }
-      else if (IsCommand(_T("PE"), szBuffer, 2))
-      {
-         ShowPredictionEngines(console);
-      }
       else if (IsCommand(_T("POLLERS"), szBuffer, 2))
       {
          ExtractWord(pArg, szBuffer);
@@ -1951,7 +1946,6 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
             _T("   show modules                      - Show loaded server modules\n")
             _T("   show ndd                          - Show loaded network device drivers\n")
             _T("   show objects [<filter>]           - Dump network objects to screen\n")
-            _T("   show pe                           - Show registered prediction engines\n")
             _T("   show pollers [summary]            - Show pollers state information\n")
             _T("   show queues                       - Show internal queues statistics\n")
             _T("   show routing-table <node>         - Show cached routing table for node\n")

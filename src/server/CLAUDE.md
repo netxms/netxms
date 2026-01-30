@@ -27,7 +27,6 @@ src/server/
 ├── leef/           # LEEF log exporter
 ├── ntcb/           # Network topology builder
 ├── pdsdrv/         # PDS drivers
-├── spe/            # Server prediction engine
 ├── wcc/            # Web connection cache
 └── wlcbridge/      # WLC bridge
 ```

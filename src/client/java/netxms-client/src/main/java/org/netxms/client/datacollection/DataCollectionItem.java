@@ -73,7 +73,6 @@ public class DataCollectionItem extends DataCollectionObject
 	private String unitName;
 	private int snmpRawValueType;
    private List<Threshold> thresholds;
-	private String predictionEngine;
    private int allThresholdsRearmEvent;
 
 	/**
@@ -95,7 +94,6 @@ public class DataCollectionItem extends DataCollectionObject
 		unitName = msg.getFieldAsString(NXCPCodes.VID_UNITS_NAME);
 		snmpRawValueType = msg.getFieldAsInt32(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE);
       allThresholdsRearmEvent = msg.getFieldAsInt32(NXCPCodes.VID_DEACTIVATION_EVENT);
-		predictionEngine = msg.getFieldAsString(NXCPCodes.VID_NPE_NAME);
 
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_THRESHOLDS);
 		thresholds = new ArrayList<Threshold>(count);
@@ -125,7 +123,6 @@ public class DataCollectionItem extends DataCollectionObject
 		unitName = null;
 		snmpRawValueType = SNMP_RAWTYPE_NONE;
       allThresholdsRearmEvent = 0;
-		predictionEngine = "";
 		thresholds = new ArrayList<Threshold>(0);
 	}
 
@@ -178,7 +175,6 @@ public class DataCollectionItem extends DataCollectionObject
       snmpRawValueType = src.snmpRawValueType;
       allThresholdsRearmEvent = src.allThresholdsRearmEvent;
       thresholds = new ArrayList<Threshold>(src.thresholds);
-      predictionEngine = src.predictionEngine;
    }
 
    /**
@@ -198,7 +194,6 @@ public class DataCollectionItem extends DataCollectionObject
 		msg.setFieldInt32(NXCPCodes.VID_SAMPLE_SAVE_INTERVAL, sampleSaveInterval);
 		msg.setFieldInt16(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE, snmpRawValueType);
       msg.setFieldInt32(NXCPCodes.VID_DEACTIVATION_EVENT, allThresholdsRearmEvent);
-		msg.setField(NXCPCodes.VID_NPE_NAME, predictionEngine);
 		msg.setFieldInt32(NXCPCodes.VID_MULTIPLIER, multiplier);
 		if (unitName != null)
 			msg.setField(NXCPCodes.VID_UNITS_NAME, unitName);
@@ -499,22 +494,6 @@ public class DataCollectionItem extends DataCollectionObject
          flags |= DCF_DETECT_ANOMALIES_IFOREST;
       else
          flags &= ~DCF_DETECT_ANOMALIES_IFOREST;
-   }
-
-   /**
-    * @return the predictionEngine
-    */
-   public String getPredictionEngine()
-   {
-      return predictionEngine;
-   }
-
-   /**
-    * @param predictionEngine the predictionEngine to set
-    */
-   public void setPredictionEngine(String predictionEngine)
-   {
-      this.predictionEngine = predictionEngine;
    }
 
    /**

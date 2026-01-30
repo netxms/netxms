@@ -21,7 +21,6 @@
 **/
 
 #include "nxcore.h"
-#include <npe.h>
 #include <cmath>
 
 /**
@@ -815,7 +814,6 @@ void DCItem::createMessage(NXCPMessage *pMsg)
    pMsg->setField(VID_SAMPLE_SAVE_INTERVAL, m_sampleSaveInterval);
 	pMsg->setField(VID_MULTIPLIER, static_cast<uint32_t>(m_multiplier));
 	pMsg->setField(VID_SNMP_RAW_VALUE_TYPE, m_snmpRawValueType);
-	pMsg->setField(VID_NPE_NAME, m_predictionEngine);
    pMsg->setField(VID_UNITS_NAME, m_unitName);
    pMsg->setField(VID_DEACTIVATION_EVENT, m_allThresholdsRearmEvent);
 	if (m_thresholds != nullptr)
@@ -869,7 +867,6 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
 	m_unitName = msg.getFieldAsSharedString(VID_UNITS_NAME);
 	m_snmpRawValueType = msg.getFieldAsUInt16(VID_SNMP_RAW_VALUE_TYPE);
 	m_allThresholdsRearmEvent = msg.getFieldAsUInt32(VID_DEACTIVATION_EVENT);
-   msg.getFieldAsString(VID_NPE_NAME, m_predictionEngine, MAX_NPE_NAME_LEN);
 
    // Update thresholds
    uint32_t numThresholds = msg.getFieldAsUInt32(VID_NUM_THRESHOLDS);
@@ -1070,14 +1067,6 @@ bool DCItem::processNewValue(Timestamp timestamp, const wchar_t *originalValue, 
          PerfDataStorageRequest(&copy, timestamp, pValue->getString());
          lock();
       }
-   }
-
-   // Update prediction engine
-   if (m_predictionEngine[0] != 0)
-   {
-      PredictionEngine *engine = FindPredictionEngine(m_predictionEngine);
-      if (engine != nullptr)
-         engine->update(owner->getId(), m_id, getStorageClass(), timestamp, pValue->getDouble());
    }
 
    // Check thresholds

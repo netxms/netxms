@@ -596,7 +596,7 @@ EPRule::EPRule(DB_RESULT hResult, int row) : m_timeFrames(0, 16, Ownership::True
    m_incidentAIAnalysisDepth = DBGetFieldInt32(hResult, row, 18);
    m_incidentAIPrompt = DBGetField(hResult, row, 19, nullptr, 0);
    m_modifiedByGuid = DBGetFieldGUID(hResult, row, 20);
-   m_modifiedByName = DBGetField(hResult, row, 21, nullptr, 0);
+   m_modifiedByName = DBGetFieldAsString(hResult, row, 21);
    m_modificationTime = static_cast<time_t>(DBGetFieldULong(hResult, row, 22));
 }
 
@@ -609,10 +609,8 @@ EPRule::EPRule(const NXCPMessage& msg) : m_timeFrames(0, 16, Ownership::True), m
    m_id = msg.getFieldAsUInt32(VID_RULE_ID);
    m_guid = msg.getFieldAsGUID(VID_GUID);
    m_version = msg.getFieldAsUInt32(VID_RULE_VERSION);
-   if (m_version == 0)
-      m_version = 1;  // Default for rules from old clients or new rules
    m_modified = msg.getFieldAsBoolean(VID_RULE_MODIFIED);
-   m_modificationTime = 0;
+   m_modificationTime = msg.getFieldAsTime(VID_MODIFICATION_TIME);
    m_comments = msg.getFieldAsString(VID_COMMENTS);
 
    if (msg.isFieldExist(VID_RULE_ACTIONS))

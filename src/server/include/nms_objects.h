@@ -2943,7 +2943,6 @@ public:
    bool processNewDCValue(const shared_ptr<DCObject>& dco, Timestamp timestamp, const wchar_t *itemValue, const shared_ptr<Table>& tableValue, bool allowPastDataPoints);
    void scheduleItemDataCleanup(uint32_t dciId);
    void scheduleTableDataCleanup(uint32_t dciId);
-   void queuePredictionEngineTraining();
 
    bool applyTemplateItem(uint32_t templateId, DCObject *dcObject);
    void cleanDeletedTemplateItems(uint32_t templateId, const IntegerArray<uint32_t>& dciList);

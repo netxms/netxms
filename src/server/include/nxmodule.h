@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -143,7 +143,6 @@ typedef struct
    void (*pfProcessAuditRecord)(const TCHAR *subsys, bool isSuccess, uint32_t userId, const TCHAR *workstation,
             session_id_t sessionId, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *text);
    WirelessControllerBridge *(*pfGetWLCBridgeInterface)(const wchar_t *bridgeName);
-   ObjectArray<PredictionEngine> *(*pfGetPredictionEngines)();
    std::string (*pfGetAIAgentInstructions)();
    DeviceBackupInterface *deviceBackupInterface;
    NXCORE_LOG *logs;

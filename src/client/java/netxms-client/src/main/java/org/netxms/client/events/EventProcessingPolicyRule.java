@@ -247,8 +247,6 @@ public class EventProcessingPolicyRule
 
       // Read version tracking fields
       version = msg.getFieldAsInt32(NXCPCodes.VID_RULE_VERSION);
-      if (version == 0)
-         version = 1; // Default for backward compatibility
       modified = false; // Fresh from server
       modifiedByGuid = msg.getFieldAsUUID(NXCPCodes.VID_MODIFIED_BY_GUID);
       modifiedByName = msg.getFieldAsString(NXCPCodes.VID_MODIFIED_BY_NAME);

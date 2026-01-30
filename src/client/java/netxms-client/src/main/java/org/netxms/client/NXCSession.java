@@ -113,7 +113,6 @@ import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.datacollection.GraphFolder;
 import org.netxms.client.datacollection.InterfaceTrafficDcis;
 import org.netxms.client.datacollection.PerfTabDci;
-import org.netxms.client.datacollection.PredictionEngine;
 import org.netxms.client.datacollection.RemoteChangeListener;
 import org.netxms.client.datacollection.SimpleDciValue;
 import org.netxms.client.datacollection.Threshold;
@@ -126,10 +125,10 @@ import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmCategory;
 import org.netxms.client.events.AlarmComment;
 import org.netxms.client.events.BulkAlarmStateChangeData;
-import org.netxms.client.events.Event;
-import org.netxms.client.events.EventInfo;
 import org.netxms.client.events.EPPConflict;
 import org.netxms.client.events.EPPSaveResult;
+import org.netxms.client.events.Event;
+import org.netxms.client.events.EventInfo;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventReference;
@@ -434,9 +433,6 @@ public class NXCSession
    
    // Registered license problems
    private LicenseProblem[] licenseProblems = null;
-
-   // Cached list of prediction engines
-   private List<PredictionEngine> predictionEngines = null;
 
    // TCP proxies
    private Map<Integer, TcpProxy> tcpProxies = new HashMap<Integer, TcpProxy>();
@@ -13684,86 +13680,6 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_REPOSITORY_ID, id);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
-   }
-
-   /**
-    * Get list of registered prediction engines
-    *
-    * @return List of PredictionEngine objects
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public synchronized List<PredictionEngine> getPredictionEngines() throws IOException, NXCException
-   {
-      if (predictionEngines != null)
-         return predictionEngines;
-
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PREDICTION_ENGINES);
-      sendMessage(msg);
-      NXCPMessage response = waitForRCC(msg.getMessageId());
-      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
-      List<PredictionEngine> engines = new ArrayList<PredictionEngine>(count);
-      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
-      for(int i = 0; i < count; i++)
-      {
-         engines.add(new PredictionEngine(response, fieldId));
-         fieldId += 10;
-      }
-      predictionEngines = engines;  // cache received list
-      return engines;
-   }
-
-   /**
-    * Get predicted DCI data from server.
-    *
-    * @param nodeId Node ID
-    * @param dciId  DCI ID
-    * @param from   Start of time range
-    * @param to     End of time range
-    * @return DCI data set
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public DataSeries getPredictedData(long nodeId, long dciId, Date from, Date to) throws IOException, NXCException
-   {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PREDICTED_DATA);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
-      msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)dciId);
-
-      DataSeries data = new DataSeries(nodeId, dciId);
-
-      int rowsReceived;
-      int timeFrom = (int)(from.getTime() / 1000);
-      int timeTo = (int)(to.getTime() / 1000);
-
-      do
-      {
-         msg.setMessageId(requestId.getAndIncrement());
-         msg.setFieldInt32(NXCPCodes.VID_TIME_FROM, timeFrom);
-         msg.setFieldInt32(NXCPCodes.VID_TIME_TO, timeTo);
-         sendMessage(msg);
-
-         waitForRCC(msg.getMessageId());
-
-         NXCPMessage response = waitForMessage(NXCPCodes.CMD_DCI_DATA, msg.getMessageId());
-         if (!response.isBinaryMessage())
-            throw new NXCException(RCC.INTERNAL_ERROR);
-
-         rowsReceived = parseDataRows(response.getBinaryData(), data);
-         if (rowsReceived == MAX_DCI_DATA_ROWS)
-         {
-            // Rows goes in newest to oldest order, so if we need to
-            // retrieve additional data, we should update timeTo limit
-            DciDataRow row = data.getLastValue();
-            if (row != null)
-            {
-               // There should be only one value per second, so we set
-               // last row's timestamp - 1 second as new boundary
-               timeTo = (int)(row.getTimestamp().getTime() / 1000) - 1;
-            }
-         }
-      } while((rowsReceived == MAX_DCI_DATA_ROWS) && (timeTo > timeFrom));
-      return data;
    }
 
    /**
