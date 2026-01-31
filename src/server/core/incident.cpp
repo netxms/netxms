@@ -289,7 +289,7 @@ bool Incident::saveToDatabase() const
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastChangeTime));
    DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_state);
    DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_assignedUserId);
-   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_title, DB_BIND_STATIC);
+   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_title, DB_BIND_STATIC, 255);
    DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_sourceAlarmId);
    DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_sourceObjectId);
    DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_createdByUser);
