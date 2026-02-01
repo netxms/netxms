@@ -24,7 +24,6 @@
 #define _nms_events_h_
 
 #include <nxevent.h>
-
 #include <nxcore_schedule.h>
 
 /**
@@ -703,6 +702,7 @@ public:
    void setVersion(uint32_t version) { m_version = version; }
    void incrementVersion() { m_version++; }
    bool isModified() const { return m_modified; }
+   void clearModified() { m_modified = false; }
    const uuid& getModifiedByGuid() const { return m_modifiedByGuid; }
    const String& getModifiedByName() const { return m_modifiedByName; }
    time_t getModificationTime() const { return m_modificationTime; }
@@ -840,15 +840,11 @@ public:
 
    Type m_type;
    uuid m_ruleGuid;
-   EPRule *m_clientRule;    // nullptr for delete conflicts where server deleted
-   EPRule *m_serverRule;    // nullptr for delete conflicts where client deleted
+   shared_ptr<EPRule> m_clientRule;    // nullptr for delete conflicts where server deleted
+   shared_ptr<EPRule> m_serverRule;    // nullptr for delete conflicts where client deleted
 
-   EPPConflict(Type type, const uuid& guid, EPRule *clientRule, EPRule *serverRule)
+   EPPConflict(Type type, const uuid& guid, const shared_ptr<EPRule>& clientRule, const shared_ptr<EPRule>& serverRule)
       : m_type(type), m_ruleGuid(guid), m_clientRule(clientRule), m_serverRule(serverRule) {}
-   ~EPPConflict()
-   {
-      delete m_clientRule;
-   }
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
 };
@@ -859,7 +855,7 @@ public:
 class NXCORE_EXPORTABLE EventProcessingPolicy
 {
 private:
-   ObjectArray<EPRule> m_rules;
+   std::vector<shared_ptr<EPRule>> m_rules;
    RWLock m_rwlock;
    uint32_t m_version;   // Policy version for optimistic concurrency (in-memory only)
 
@@ -869,9 +865,9 @@ private:
    int findRuleIndexByGuid(const uuid& guid, int shift = 0) const;
 
 public:
-   EventProcessingPolicy() : m_rules(128, 128, Ownership::True), m_version(0) { }
+   EventProcessingPolicy() : m_version(0) { }
 
-   uint32_t getNumRules() const { return m_rules.size(); }
+   uint32_t getNumRules() const { return static_cast<uint32_t>(m_rules.size()); }
    uint32_t getVersion() const { return m_version; }
    void incrementVersion() { m_version++; }
 
@@ -883,10 +879,11 @@ public:
    void replacePolicy(uint32_t numRules, EPRule **ruleList);
 
    // Optimistic concurrency support
-   uint32_t saveWithMerge(uint32_t baseVersion, uint32_t numRules, EPRule **clientRules,
+   uint32_t saveWithMerge(uint32_t baseVersion, std::vector<shared_ptr<EPRule>>& clientRules,
                           uint32_t numDeletedRules, DeletedRuleInfo *deletedRules,
                           const uuid& userGuid, const TCHAR* userName,
                           ObjectArray<EPPConflict> *conflicts, uint32_t *newVersion);
+   void fillRuleVersions(NXCPMessage *msg) const;
 
    json_t *exportRule(const uuid& guid) const;
    json_t *exportRuleOrdering() const;
@@ -899,6 +896,8 @@ public:
    bool isCategoryInUse(uint32_t categoryId) const;
 
    void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const;
+
+   void showRules(ServerConsole *console) const;
 };
 
 /**

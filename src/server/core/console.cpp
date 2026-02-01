@@ -1030,6 +1030,10 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
             ConsoleWrite(console, _T("Invalid subcommand\n"));
          }
       }
+      else if (IsCommand(_T("EPP"), szBuffer, 3))
+      {
+         GetEventProcessingPolicy()->showRules(console);
+      }
       else if (IsCommand(_T("EP"), szBuffer, 2))
       {
          StructArray<EventProcessingThreadStats> *stats = GetEventProcessingThreadStats();
@@ -1938,6 +1942,7 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
             _T("   show dbstats                      - Show DB library statistics\n")
             _T("   show discovery ranges             - Show state of active network discovery by address range\n")
             _T("   show ep                           - Show event processing threads statistics\n")
+            _T("   show epp                          - Show event processing policy rules\n")
             _T("   show fdb <node>                   - Show forwarding database for node\n")
             _T("   show flags                        - Show internal server flags\n")
             _T("   show heap details                 - Show detailed heap information\n")

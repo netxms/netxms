@@ -1645,10 +1645,12 @@ typedef struct
 #define VID_CONFLICT_TYPE           ((uint32_t)925)
 #define VID_RULE_MODIFIED           ((uint32_t)926)
 #define VID_DELETED_RULE_COUNT      ((uint32_t)927)
+#define VID_RULE_VERSION_COUNT      ((uint32_t)928)
 
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)
 #define VID_CONFLICT_LIST_BASE      ((uint32_t)0x7B000000)
+#define VID_RULE_VERSION_LIST_BASE  ((uint32_t)0x7C000000)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

@@ -24,6 +24,8 @@
 #include <nms_incident.h>
 #include <nxcore_ps.h>
 #include <nxai.h>
+#include <unordered_map>
+#include <unordered_set>
 
 #define DEBUG_TAG _T("event.policy")
 
@@ -608,7 +610,7 @@ EPRule::EPRule(DB_RESULT hResult, int row) : m_timeFrames(0, 16, Ownership::True
 EPRule::EPRule(const NXCPMessage& msg) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
 {
    m_flags = msg.getFieldAsUInt32(VID_FLAGS);
-   m_id = msg.getFieldAsUInt32(VID_RULE_ID);
+   m_id = 0;  // ID will be assigned by server based on final rule order after merge
    m_guid = msg.getFieldAsGUID(VID_GUID);
    m_version = msg.getFieldAsUInt32(VID_RULE_VERSION);
    m_modified = msg.getFieldAsBoolean(VID_RULE_MODIFIED);
@@ -2057,12 +2059,10 @@ bool EventProcessingPolicy::loadFromDB()
       int count = DBGetNumRows(hResult);
       for(int i = 0; (i < count) && success; i++)
       {
-         EPRule *rule = new EPRule(hResult, i);
+         auto rule = make_shared<EPRule>(hResult, i);
          success = rule->loadFromDB(hdb);
          if (success)
-            m_rules.add(rule);
-         else
-            delete rule;
+            m_rules.push_back(rule);
       }
       DBFreeResult(hResult);
    }
@@ -2094,8 +2094,12 @@ bool EventProcessingPolicy::saveToDB(const uuid& modifiedByGuid, const TCHAR* mo
       if (success)
       {
          readLock();
-         for(int i = 0; (i < m_rules.size()) && success; i++)
-            success = m_rules.get(i)->saveToDB(hdb, modifiedByGuid, modifiedByName, modificationTime);
+         for (auto& rule : m_rules)
+         {
+            success = rule->saveToDB(hdb, modifiedByGuid, modifiedByName, modificationTime);
+            if (!success)
+               break;
+         }
          unlock();
       }
 
@@ -2140,29 +2144,33 @@ void EPPConflict::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 /**
  * Save event processing policy with optimistic concurrency merge
  */
-uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, uint32_t numRules, EPRule **clientRules,
+uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, std::vector<shared_ptr<EPRule>>& clientRules,
    uint32_t numDeletedRules, DeletedRuleInfo *deletedRules,
    const uuid& userGuid, const TCHAR* userName,
    ObjectArray<EPPConflict> *conflicts, uint32_t *newVersion)
 {
    writeLock();
 
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: baseVersion=%u, serverVersion=%u, clientRules=%u, deletedRules=%u"),
+      baseVersion, m_version, static_cast<uint32_t>(clientRules.size()), numDeletedRules);
+
    // Fast path: no concurrent changes
    if (baseVersion == m_version)
    {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: fast path (no concurrent changes)"));
       time_t modTime = time(nullptr);
       m_rules.clear();
-      for (uint32_t i = 0; i < numRules; i++)
+      for (size_t i = 0; i < clientRules.size(); i++)
       {
-         EPRule *rule = clientRules[i];
-         rule->setId(i);
+         auto& rule = clientRules[i];
+         rule->setId(static_cast<uint32_t>(i));
          if (rule->isModified())
          {
             rule->incrementVersion();
             rule->setModificationInfo(userGuid, userName, modTime);
+            rule->clearModified();
          }
-         m_rules.add(rule);
-         clientRules[i] = nullptr;  // Transfer ownership
+         m_rules.push_back(rule);
       }
       m_version++;
       *newVersion = m_version;
@@ -2173,120 +2181,220 @@ uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, uint32_t num
       return RCC_SUCCESS;
    }
 
-   // Slow path: concurrent changes - perform merge
-   HashMap<uuid, EPRule> serverRuleMap(Ownership::False);
-   for (int i = 0; i < m_rules.size(); i++)
-      serverRuleMap.set(m_rules.get(i)->getGuid(), m_rules.get(i));
+   // Slow path: concurrent changes - perform merge using server order as base
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: slow path (merge required), serverRules=%d"), static_cast<int>(m_rules.size()));
 
-   ObjectArray<EPRule> mergedRules(64, 64, Ownership::False);
+   // Build server rule map for GUID lookup
+   std::unordered_map<uuid, shared_ptr<EPRule>, UuidHash, UuidEqual> serverRuleMap;
+   for (auto& rule : m_rules)
+      serverRuleMap[rule->getGuid()] = rule;
 
-   // Process each client rule
-   for (uint32_t i = 0; i < numRules; i++)
+   // Build client rule map for lookup and collect new client rules with their predecessors
+   std::unordered_map<uuid, shared_ptr<EPRule>, UuidHash, UuidEqual> clientRuleMap;
+   struct NewClientRuleInfo
    {
-      EPRule *clientRule = clientRules[i];
+      shared_ptr<EPRule> rule;
+      uuid predecessorGuid;
+   };
+   std::vector<NewClientRuleInfo> newClientRules;
 
-      if (clientRule->getGuid().isNull())
+   for (size_t i = 0; i < clientRules.size(); i++)
+   {
+      auto& rule = clientRules[i];
+      auto serverIt = serverRuleMap.find(rule->getGuid());
+
+      // Check if this is truly a new rule: version = 0 AND GUID doesn't exist on server
+      // (Client may have version 0 for a rule that was already saved if client didn't reload)
+      if (rule->getVersion() == 0 && serverIt == serverRuleMap.end())
       {
-         // New rule - always accept
-         mergedRules.add(clientRule);
-         clientRules[i] = nullptr;  // Transfer ownership
-         continue;
-      }
-
-      EPRule *serverRule = serverRuleMap.get(clientRule->getGuid());
-
-      if (serverRule == nullptr)
-      {
-         // Deleted on server while client had it
-         if (clientRule->isModified())
+         // Truly new rule - find predecessor for position
+         uuid predecessorGuid;
+         for (int j = static_cast<int>(i) - 1; j >= 0; j--)
          {
-            conflicts->add(new EPPConflict(EPPConflict::EPP_CT_DELETE, clientRule->getGuid(), clientRule, nullptr));
-            clientRules[i] = nullptr;  // Transfer ownership to conflict
+            // Predecessor must be an existing rule (either version > 0 or already on server)
+            if (clientRules[j]->getVersion() > 0 || serverRuleMap.find(clientRules[j]->getGuid()) != serverRuleMap.end())
+            {
+               predecessorGuid = clientRules[j]->getGuid();
+               break;
+            }
          }
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: new client rule %s (predecessor=%s)"),
+            rule->getGuid().toString().cstr(), predecessorGuid.toString().cstr());
+         newClientRules.push_back({rule, predecessorGuid});
+      }
+      else
+      {
+         clientRuleMap[rule->getGuid()] = rule;
+      }
+   }
+
+   // Build deleted GUIDs set
+   std::unordered_set<uuid, UuidHash, UuidEqual> deletedGuids;
+   for (uint32_t i = 0; i < numDeletedRules; i++)
+      deletedGuids.insert(deletedRules[i].guid);
+
+   std::vector<shared_ptr<EPRule>> mergedRules;
+
+   // Process server rules in server order (preserves server's rule ordering)
+   for (auto& serverRule : m_rules)
+   {
+      // Check if deleted by client
+      if (deletedGuids.find(serverRule->getGuid()) != deletedGuids.end())
+      {
+         // Find deletion info to check version
+         for (uint32_t j = 0; j < numDeletedRules; j++)
+         {
+            if (deletedRules[j].guid.equals(serverRule->getGuid()))
+            {
+               if (serverRule->getVersion() > deletedRules[j].version)
+               {
+                  // Server modified after client's version - conflict
+                  nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: delete conflict for %s (serverVer=%u, clientVer=%u)"),
+                     serverRule->getGuid().toString().cstr(), serverRule->getVersion(), deletedRules[j].version);
+                  conflicts->add(new EPPConflict(EPPConflict::EPP_CT_DELETE, serverRule->getGuid(), shared_ptr<EPRule>(), serverRule));
+               }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: rule %s deleted by client"), serverRule->getGuid().toString().cstr());
+               }
+               break;
+            }
+         }
+         continue;  // Skip deleted rule
+      }
+
+      auto clientIt = clientRuleMap.find(serverRule->getGuid());
+
+      if (clientIt == clientRuleMap.end())
+      {
+         // Client doesn't have this rule (new on server) - use server version
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: rule %s new on server, keeping server version"),
+            serverRule->getGuid().toString().cstr());
+         mergedRules.push_back(serverRule);
          continue;
       }
+
+      auto& clientRule = clientIt->second;
 
       if (serverRule->getVersion() == clientRule->getVersion())
       {
-         // No server changes - accept client version
-         mergedRules.add(clientRule);
-         clientRules[i] = nullptr;  // Transfer ownership
+         // Versions match - use client version (includes any client modifications)
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: rule %s versions match (%u), using client version (modified=%s)"),
+            serverRule->getGuid().toString().cstr(), serverRule->getVersion(), BooleanToString(clientRule->isModified()));
+         mergedRules.push_back(clientRule);
       }
       else
       {
          // Server changed this rule
          if (clientRule->isModified())
          {
+            // Both modified - conflict
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: modify conflict for %s (serverVer=%u, clientVer=%u)"),
+               serverRule->getGuid().toString().cstr(), serverRule->getVersion(), clientRule->getVersion());
             conflicts->add(new EPPConflict(EPPConflict::EPP_CT_MODIFY, clientRule->getGuid(), clientRule, serverRule));
-            clientRules[i] = nullptr;  // Transfer ownership to conflict
          }
          else
          {
-            // Keep server version (client didn't modify)
-            // Don't add clientRule to merged - just skip it
+            // Only server modified - use server version
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: rule %s version mismatch (serverVer=%u, clientVer=%u), client not modified, using server version"),
+               serverRule->getGuid().toString().cstr(), serverRule->getVersion(), clientRule->getVersion());
+            mergedRules.push_back(serverRule);
          }
+      }
+      // Remove from clientRuleMap to track processed rules
+      clientRuleMap.erase(clientIt);
+   }
+
+   // Check for client rules not in server (server deleted them)
+   // Remaining entries in clientRuleMap are rules that server doesn't have
+   for (auto& entry : clientRuleMap)
+   {
+      auto& clientRule = entry.second;
+      // Client has this rule but server doesn't - server deleted it
+      if (clientRule->isModified())
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: delete conflict - client modified rule %s that server deleted"),
+            clientRule->getGuid().toString().cstr());
+         conflicts->add(new EPPConflict(EPPConflict::EPP_CT_DELETE, clientRule->getGuid(), clientRule, shared_ptr<EPRule>()));
+      }
+      else
+      {
+         // If client didn't modify, just drop it (server's delete takes precedence)
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: rule %s deleted on server, dropping client's unmodified copy"),
+            clientRule->getGuid().toString().cstr());
       }
    }
 
-   // Check rules deleted by client
-   for (uint32_t i = 0; i < numDeletedRules; i++)
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: after server rules processing, mergedRules=%d, newClientRules=%d"),
+      static_cast<int>(mergedRules.size()), static_cast<int>(newClientRules.size()));
+
+   // Insert new client rules at their correct positions based on predecessors
+   std::unordered_map<uuid, shared_ptr<EPRule>, UuidHash, UuidEqual> lastInsertedAfter;
+   for (auto& info : newClientRules)
    {
-      EPRule *serverRule = serverRuleMap.get(deletedRules[i].guid);
-      if (serverRule != nullptr && serverRule->getVersion() > deletedRules[i].version)
+      size_t insertPos = 0;
+      auto lastIt = lastInsertedAfter.find(info.predecessorGuid);
+      if (lastIt != lastInsertedAfter.end())
       {
-         // Server modified after client loaded - conflict
-         conflicts->add(new EPPConflict(EPPConflict::EPP_CT_DELETE, serverRule->getGuid(), nullptr, serverRule));
+         // Find the last rule we inserted after this predecessor
+         for (size_t j = 0; j < mergedRules.size(); j++)
+         {
+            if (mergedRules[j] == lastIt->second)
+            {
+               insertPos = j + 1;
+               break;
+            }
+         }
       }
+      else if (!info.predecessorGuid.isNull())
+      {
+         // First insertion after this predecessor - find it in merged
+         for (size_t j = 0; j < mergedRules.size(); j++)
+         {
+            if (mergedRules[j]->getGuid().equals(info.predecessorGuid))
+            {
+               insertPos = j + 1;
+               break;
+            }
+         }
+      }
+
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: inserting new rule %s at position %d"),
+         info.rule->getGuid().toString().cstr(), static_cast<int>(insertPos));
+      mergedRules.insert(mergedRules.begin() + insertPos, info.rule);
+      lastInsertedAfter[info.predecessorGuid] = info.rule;
    }
+
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: merge complete, totalRules=%d, conflicts=%d"),
+      static_cast<int>(mergedRules.size()), conflicts->size());
 
    if (conflicts->isEmpty())
    {
-      // Apply merged rules - need to also include unmodified server rules that client didn't touch
-      // First, build set of GUIDs in mergedRules
-      HashSet<uuid> mergedGuids;
-      for (int i = 0; i < mergedRules.size(); i++)
-      {
-         if (!mergedRules.get(i)->getGuid().isNull())
-            mergedGuids.put(mergedRules.get(i)->getGuid());
-      }
-
-      // Add server rules that client didn't modify and didn't delete
-      HashSet<uuid> deletedGuids;
-      for (uint32_t i = 0; i < numDeletedRules; i++)
-         deletedGuids.put(deletedRules[i].guid);
-
-      for (int i = 0; i < m_rules.size(); i++)
-      {
-         EPRule *serverRule = m_rules.get(i);
-         if (!mergedGuids.contains(serverRule->getGuid()) && !deletedGuids.contains(serverRule->getGuid()))
-         {
-            // Client didn't send this rule and didn't delete it
-            // This means client's version was not modified - keep server version
-            // This is tricky because we're in a merge scenario and need to preserve server rules
-            // Actually, if client sent all rules (modified or not), this shouldn't happen
-            // For now, assume client sends all rules it has
-         }
-      }
-
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: no conflicts, applying %d rules"), static_cast<int>(mergedRules.size()));
       time_t modTime = time(nullptr);
       m_rules.clear();
-      for (int i = 0; i < mergedRules.size(); i++)
+      for (size_t i = 0; i < mergedRules.size(); i++)
       {
-         EPRule *rule = mergedRules.get(i);
-         rule->setId(i);
+         auto& rule = mergedRules[i];
+         rule->setId(static_cast<uint32_t>(i));
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: rule[%d] guid=%s version=%u modified=%s"),
+            static_cast<int>(i), rule->getGuid().toString().cstr(), rule->getVersion(), BooleanToString(rule->isModified()));
          if (rule->isModified())
          {
             rule->incrementVersion();
             rule->setModificationInfo(userGuid, userName, modTime);
+            rule->clearModified();
          }
-         m_rules.add(rule);
+         m_rules.push_back(rule);
       }
       m_version++;
       *newVersion = m_version;
       unlock();
 
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: saving to database"));
       if (!saveToDB(userGuid, userName))
          return RCC_DB_FAILURE;
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: save successful, newVersion=%u"), *newVersion);
       return RCC_SUCCESS;
    }
    else
@@ -2298,18 +2406,38 @@ uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, uint32_t num
 }
 
 /**
+ * Fill message with current rule GUIDs and versions (for client sync after save)
+ */
+void EventProcessingPolicy::fillRuleVersions(NXCPMessage *msg) const
+{
+   readLock();
+   msg->setField(VID_RULE_VERSION_COUNT, static_cast<uint32_t>(m_rules.size()));
+   uint32_t fieldId = VID_RULE_VERSION_LIST_BASE;
+   for (auto& rule : m_rules)
+   {
+      msg->setField(fieldId++, rule->getGuid());
+      msg->setField(fieldId++, rule->getVersion());
+   }
+   unlock();
+}
+
+/**
  * Pass event through policy
  */
 void EventProcessingPolicy::processEvent(Event *pEvent)
 {
 	nxlog_debug_tag(DEBUG_TAG, 7, L"EPP: processing event " UINT64_FMT, pEvent->getId());
    readLock();
-   for(int i = 0; i < m_rules.size(); i++)
-      if (m_rules.get(i)->processEvent(pEvent))
-		{
-			nxlog_debug_tag(DEBUG_TAG, 7, _T("EPP: got \"stop processing\" flag for event ") UINT64_FMT _T(" at rule %d"), pEvent->getId(), i + 1);
+   int ruleNum = 1;
+   for (auto& rule : m_rules)
+   {
+      if (rule->processEvent(pEvent))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("EPP: got \"stop processing\" flag for event ") UINT64_FMT _T(" at rule %d"), pEvent->getId(), ruleNum);
          break;   // EPRule::ProcessEvent() return TRUE if we should stop processing this event
-		}
+      }
+      ruleNum++;
+   }
    unlock();
 }
 
@@ -2321,9 +2449,9 @@ void EventProcessingPolicy::sendToClient(ClientSession *session, uint32_t reques
    NXCPMessage msg(CMD_EPP_RECORD, requestId);
 
    readLock();
-   for(int i = 0; i < m_rules.size(); i++)
+   for (auto& rule : m_rules)
    {
-      m_rules.get(i)->fillMessage(&msg);
+      rule->fillMessage(&msg);
       session->sendMessage(msg);
       msg.deleteAllFields();
    }
@@ -2339,11 +2467,13 @@ void EventProcessingPolicy::replacePolicy(uint32_t numRules, EPRule **ruleList)
    m_rules.clear();
    if (ruleList != nullptr)
    {
-      for(int i = 0; i < (int)numRules; i++)
+      for (uint32_t i = 0; i < numRules; i++)
       {
-         EPRule *r = ruleList[i];
-         r->setId(i);
-         m_rules.add(r);
+         // Take ownership via shared_ptr
+         auto rule = shared_ptr<EPRule>(ruleList[i]);
+         rule->setId(i);
+         m_rules.push_back(rule);
+         ruleList[i] = nullptr;  // Ownership transferred
       }
    }
    unlock();
@@ -2355,10 +2485,8 @@ void EventProcessingPolicy::replacePolicy(uint32_t numRules, EPRule **ruleList)
 void EventProcessingPolicy::validateConfig() const
 {
    readLock();
-   for(int i = 0; i < m_rules.size(); i++)
-   {
-      m_rules.get(i)->validateConfig();
-   }
+   for (auto& rule : m_rules)
+      rule->validateConfig();
    unlock();
 }
 
@@ -2370,14 +2498,14 @@ bool EventProcessingPolicy::isActionInUse(uint32_t actionId) const
    bool bResult = false;
 
    readLock();
-
-   for(int i = 0; i < m_rules.size(); i++)
-      if (m_rules.get(i)->isActionInUse(actionId))
+   for (auto& rule : m_rules)
+   {
+      if (rule->isActionInUse(actionId))
       {
          bResult = true;
          break;
       }
-
+   }
    unlock();
    return bResult;
 }
@@ -2390,14 +2518,14 @@ bool EventProcessingPolicy::isCategoryInUse(uint32_t categoryId) const
    bool bResult = false;
 
    readLock();
-
-   for(int i = 0; i < m_rules.size(); i++)
-      if (m_rules.get(i)->isCategoryInUse(categoryId))
+   for (auto& rule : m_rules)
+   {
+      if (rule->isCategoryInUse(categoryId))
       {
          bResult = true;
          break;
       }
-
+   }
    unlock();
    return bResult;
 }
@@ -2409,11 +2537,11 @@ json_t *EventProcessingPolicy::getRuleDetails(const uuid& ruleId) const
 {
    json_t *details = nullptr;
    readLock();
-   for(int i = 0; i < m_rules.size(); i++)
+   for (auto& rule : m_rules)
    {
-      if (ruleId.equals(m_rules.get(i)->getGuid()))
+      if (ruleId.equals(rule->getGuid()))
       {
-         details = m_rules.get(i)->toJson(true);
+         details = rule->toJson(true);
          break;
       }
    }
@@ -2426,18 +2554,18 @@ json_t *EventProcessingPolicy::getRuleDetails(const uuid& ruleId) const
  */
 json_t *EventProcessingPolicy::exportRule(const uuid& guid) const
 {
-   json_t *rule = nullptr;
+   json_t *ruleJson = nullptr;
    readLock();
-   for(int i = 0; i < m_rules.size(); i++)
+   for (auto& rule : m_rules)
    {
-      if (guid.equals(m_rules.get(i)->getGuid()))
+      if (guid.equals(rule->getGuid()))
       {
-         rule = m_rules.get(i)->createExportRecord();
+         ruleJson = rule->createExportRecord();
          break;
       }
    }
    unlock();
-   return rule;
+   return ruleJson;
 }
 
 /**
@@ -2447,10 +2575,8 @@ json_t *EventProcessingPolicy::exportRuleOrdering() const
 {
    json_t *ordering = json_array();
    readLock();
-   for(int i = 0; i < m_rules.size(); i++)
-   {
-      json_array_append_new(ordering, json_string_t(m_rules.get(i)->getGuid().toString()));
-   }
+   for (auto& rule : m_rules)
+      json_array_append_new(ordering, json_string_t(rule->getGuid().toString()));
    unlock();
    return ordering;
 }
@@ -2460,12 +2586,10 @@ json_t *EventProcessingPolicy::exportRuleOrdering() const
  */
 int EventProcessingPolicy::findRuleIndexByGuid(const uuid& guid, int shift) const
 {
-   for (int i = 0; i < m_rules.size(); i++)
+   for (size_t i = 0; i < m_rules.size(); i++)
    {
-      if (guid.equals(m_rules.get(i)->getGuid()))
-      {
-         return i + shift;
-      }
+      if (guid.equals(m_rules[i]->getGuid()))
+         return static_cast<int>(i) + shift;
    }
    return -1;
 }
@@ -2477,28 +2601,28 @@ void EventProcessingPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray
 {
    writeLock();
 
+   // Wrap in shared_ptr for ownership management
+   auto rulePtr = shared_ptr<EPRule>(rule);
+
    // Find rule with same GUID and replace it if found
    int ruleIndex = findRuleIndexByGuid(rule->getGuid());
    if (ruleIndex != -1)
    {
       if (overwrite)
       {
-         rule->setId(ruleIndex);
-         m_rules.set(ruleIndex, rule);
+         rulePtr->setId(ruleIndex);
+         m_rules[ruleIndex] = rulePtr;
       }
-      else
-      {
-         delete rule;
-      }
+      // If not overwriting, shared_ptr will delete the rule when it goes out of scope
    }
-   else //insert new rule
+   else // insert new rule
    {
       if (ruleOrdering != nullptr)
       {
          int newRulePrevIndex = -1;
          for (int i = 0; i < ruleOrdering->size(); i++)
          {
-            if(ruleOrdering->get(i)->equals(rule->getGuid()))
+            if (ruleOrdering->get(i)->equals(rule->getGuid()))
             {
                newRulePrevIndex = i;
                break;
@@ -2507,19 +2631,19 @@ void EventProcessingPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray
 
          if (newRulePrevIndex != -1)
          {
-            //find rule before this rule
+            // Find rule before this rule
             if (newRulePrevIndex > 0)
                ruleIndex = findRuleIndexByGuid(*ruleOrdering->get(newRulePrevIndex - 1), 1);
 
-            //if rule after this rule if before not found
-            if(ruleIndex == -1 && (newRulePrevIndex + 1) < ruleOrdering->size())
+            // If rule after this rule if before not found
+            if (ruleIndex == -1 && (newRulePrevIndex + 1) < ruleOrdering->size())
                ruleIndex = findRuleIndexByGuid(*ruleOrdering->get(newRulePrevIndex + 1));
 
-            //check if any rule before this rule already exist if before not found
+            // Check if any rule before this rule already exist if before not found
             for (int i = newRulePrevIndex - 2; ruleIndex == -1 && i >= 0; i--)
                ruleIndex = findRuleIndexByGuid(*ruleOrdering->get(i), 1);
 
-            //check if any rule after this rule already exist if before not found
+            // Check if any rule after this rule already exist if before not found
             for (int i = newRulePrevIndex + 2; ruleIndex == -1 && i < ruleOrdering->size(); i++)
                ruleIndex = findRuleIndexByGuid(*ruleOrdering->get(i));
          }
@@ -2527,17 +2651,15 @@ void EventProcessingPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray
 
       if (ruleIndex == -1) // Add new rule at the end
       {
-         rule->setId(m_rules.size());
-         m_rules.add(rule);
+         rulePtr->setId(static_cast<uint32_t>(m_rules.size()));
+         m_rules.push_back(rulePtr);
       }
       else
       {
-         rule->setId(ruleIndex);
-         m_rules.insert(ruleIndex, rule);
-         for(int i = ruleIndex + 1; i < m_rules.size(); i++)
-         {
-            m_rules.get(i)->setId(i);
-         }
+         rulePtr->setId(ruleIndex);
+         m_rules.insert(m_rules.begin() + ruleIndex, rulePtr);
+         for (size_t i = ruleIndex + 1; i < m_rules.size(); i++)
+            m_rules[i]->setId(static_cast<uint32_t>(i));
       }
    }
 
@@ -2550,16 +2672,17 @@ void EventProcessingPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray
 json_t *EventProcessingPolicy::toJson() const
 {
    json_t *root = json_object();
-   json_t *rules = json_array();
+   json_t *rulesJson = json_array();
    readLock();
-   for(int i = 0; i < m_rules.size(); i++)
+   int ruleNum = 1;
+   for (auto& rule : m_rules)
    {
-      json_t *r = m_rules.get(i)->toJson();
-      json_object_set_new(r, "ruleNumber", json_integer(i + 1));
-      json_array_append_new(rules, r);
+      json_t *r = rule->toJson();
+      json_object_set_new(r, "ruleNumber", json_integer(ruleNum++));
+      json_array_append_new(rulesJson, r);
    }
    unlock();
-   json_object_set_new(root, "rules", rules);
+   json_object_set_new(root, "rules", rulesJson);
    return root;
 }
 
@@ -2569,13 +2692,38 @@ json_t *EventProcessingPolicy::toJson() const
 void EventProcessingPolicy::getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const
 {
    readLock();
-   for (int i = 0; i < m_rules.size(); i++)
+   int ruleNum = 1;
+   for (auto& rule : m_rules)
    {
-      EPRule *rule = m_rules.get(i);
       if (rule->isUsingEvent(eventCode))
-      {
-         eventReferences->add(new EventReference(EventReferenceType::EP_RULE, i + 1, rule->getGuid(), rule->getComments()));
-      }
+         eventReferences->add(new EventReference(EventReferenceType::EP_RULE, ruleNum, rule->getGuid(), rule->getComments()));
+      ruleNum++;
    }
+   unlock();
+}
+
+/**
+ * Show rules on server console
+ */
+void EventProcessingPolicy::showRules(ServerConsole *console) const
+{
+   readLock();
+
+   console->printf(_T(" \x1b[1mID\x1b[0m  | \x1b[1mGUID\x1b[0m                                 | \x1b[1mVersion\x1b[0m | \x1b[1mComment\x1b[0m\n"));
+   console->printf(_T("-----+--------------------------------------+---------+------------------------------------------\n"));
+
+   for (auto& rule : m_rules)
+   {
+      TCHAR guidText[64];
+      const wchar_t *comment = rule->getComments();
+      console->printf(_T(" %3d | %s | %7u | %s\n"),
+         rule->getId() + 1,
+         rule->getGuid().toString(guidText),
+         rule->getVersion(),
+         (comment != nullptr && *comment != 0) ? comment : _T(""));
+   }
+
+   console->printf(_T("\n%d rules total\n\n"), static_cast<int>(m_rules.size()));
+
    unlock();
 }

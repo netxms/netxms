@@ -227,9 +227,7 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downlo
 	wcscpy(m_clientInfo, L"n/a");
    m_userId = INVALID_INDEX;
    m_systemAccessRights = 0;
-   m_ppEPPRuleList = nullptr;
-   m_dwNumRecordsToUpload = 0;
-   m_dwRecordsUploaded = 0;
+   m_eppExpectedRuleCount = 0;
    m_eppDeletedRules = nullptr;
    m_eppDeletedRuleCount = 0;
    m_eppBaseVersion = 0;
@@ -273,15 +271,7 @@ ClientSession::~ClientSession()
       closesocket(m_socket);
       debugPrintf(6, _T("Socket closed"));
    }
-   if (m_ppEPPRuleList != nullptr)
-   {
-      if (m_flags & CSF_EPP_UPLOAD)  // Aborted in the middle of EPP transfer
-      {
-         for(uint32_t i = 0; i < m_dwRecordsUploaded; i++)
-            delete m_ppEPPRuleList[i];
-      }
-      MemFree(m_ppEPPRuleList);
-   }
+   // m_eppRuleList uses shared_ptr, no manual cleanup needed
    MemFree(m_eppDeletedRules);
 
 	delete m_console;
@@ -5997,8 +5987,9 @@ void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
    if (m_systemAccessRights & SYSTEM_ACCESS_EPP)
    {
       m_eppBaseVersion = request.getFieldAsUInt32(VID_BASE_VERSION);
-      m_dwNumRecordsToUpload = request.getFieldAsUInt32(VID_NUM_RULES);
-      m_dwRecordsUploaded = 0;
+      m_eppExpectedRuleCount = request.getFieldAsUInt32(VID_NUM_RULES);
+      m_eppRuleList.clear();
+      m_eppRuleList.reserve(m_eppExpectedRuleCount);
 
       // Read deleted rules list
       m_eppDeletedRuleCount = request.getFieldAsUInt32(VID_DELETED_RULE_COUNT);
@@ -6016,7 +6007,7 @@ void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
          m_eppDeletedRules = nullptr;
       }
 
-      if (m_dwNumRecordsToUpload == 0)
+      if (m_eppExpectedRuleCount == 0)
       {
          // Special case: clearing policy or just deleting rules
          finishEPPSave(request.getId());
@@ -6024,9 +6015,8 @@ void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
       else
       {
          InterlockedOr(&m_flags, CSF_EPP_UPLOAD);
-         m_ppEPPRuleList = MemAllocArray<EPRule*>(m_dwNumRecordsToUpload);
          response.setField(VID_RCC, RCC_SUCCESS);
-         debugPrintf(5, _T("Accepted EPP upload request for %d rules (base version %u)"), m_dwNumRecordsToUpload, m_eppBaseVersion);
+         debugPrintf(5, _T("Accepted EPP upload request for %u rules (base version %u)"), m_eppExpectedRuleCount, m_eppBaseVersion);
          sendMessage(response);
       }
    }
@@ -6046,11 +6036,10 @@ void ClientSession::processEventProcessingPolicyRecord(const NXCPMessage& reques
 {
    if (m_flags & CSF_EPP_UPLOAD)
    {
-      if (m_dwRecordsUploaded < m_dwNumRecordsToUpload)
+      if (m_eppRuleList.size() < m_eppExpectedRuleCount)
       {
-         m_ppEPPRuleList[m_dwRecordsUploaded] = new EPRule(request);
-         m_dwRecordsUploaded++;
-         if (m_dwRecordsUploaded == m_dwNumRecordsToUpload)
+         m_eppRuleList.push_back(make_shared<EPRule>(request));
+         if (m_eppRuleList.size() == m_eppExpectedRuleCount)
          {
             InterlockedAnd(&m_flags, ~CSF_EPP_UPLOAD);
             finishEPPSave(request.getId());
@@ -6083,7 +6072,7 @@ void ClientSession::finishEPPSave(uint32_t requestId)
    json_t *oldVersion = epp->toJson();
 
    uint32_t rcc = epp->saveWithMerge(
-      m_eppBaseVersion, m_dwNumRecordsToUpload, m_ppEPPRuleList,
+      m_eppBaseVersion, m_eppRuleList,
       m_eppDeletedRuleCount, m_eppDeletedRules,
       userGuid, userName, &conflicts, &newVersion);
 
@@ -6092,6 +6081,7 @@ void ClientSession::finishEPPSave(uint32_t requestId)
    if (rcc == RCC_SUCCESS)
    {
       response.setField(VID_EPP_VERSION, newVersion);
+      epp->fillRuleVersions(&response);  // Send updated rule versions for client sync
       json_t *newVersionJson = epp->toJson();
       writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldVersion, newVersionJson, _T("Event processing policy updated"));
       json_decref(newVersionJson);
@@ -6109,16 +6099,8 @@ void ClientSession::finishEPPSave(uint32_t requestId)
 
    json_decref(oldVersion);
 
-   // Cleanup - note that rules that were added to policy have been transferred
-   // and rules in conflicts have been transferred as well
-   if (m_ppEPPRuleList != nullptr)
-   {
-      for (uint32_t i = 0; i < m_dwNumRecordsToUpload; i++)
-      {
-         delete m_ppEPPRuleList[i];  // May be nullptr if transferred
-      }
-      MemFreeAndNull(m_ppEPPRuleList);
-   }
+   // Cleanup - shared_ptr handles memory management automatically
+   m_eppRuleList.clear();
    MemFreeAndNull(m_eppDeletedRules);
    m_eppDeletedRuleCount = 0;
 

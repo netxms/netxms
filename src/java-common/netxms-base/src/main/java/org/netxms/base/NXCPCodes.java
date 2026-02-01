@@ -1459,8 +1459,10 @@ public class NXCPCodes
    public static final long VID_CONFLICT_TYPE = 925;
    public static final long VID_RULE_MODIFIED = 926;
    public static final long VID_DELETED_RULE_COUNT = 927;
+   public static final long VID_RULE_VERSION_COUNT = 928;
    public static final long VID_DELETED_RULE_LIST_BASE = 0x7A000000L;
    public static final long VID_CONFLICT_LIST_BASE = 0x7B000000L;
+   public static final long VID_RULE_VERSION_LIST_BASE = 0x7C000000L;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

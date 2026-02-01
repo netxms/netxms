@@ -8738,9 +8738,24 @@ public class NXCSession
          int newVersion = response.getFieldAsInt32(NXCPCodes.VID_EPP_VERSION);
          epp.setVersion(newVersion);
          epp.clearDeletedRules();
-         // Clear modified flags on all rules
+
+         // Update rule versions from server response
+         int ruleVersionCount = response.getFieldAsInt32(NXCPCodes.VID_RULE_VERSION_COUNT);
+         Map<UUID, Integer> ruleVersions = new HashMap<>(ruleVersionCount);
+         fieldId = NXCPCodes.VID_RULE_VERSION_LIST_BASE;
+         for(int i = 0; i < ruleVersionCount; i++)
+         {
+            UUID guid = response.getFieldAsUUID(fieldId++);
+            int version = response.getFieldAsInt32(fieldId++);
+            ruleVersions.put(guid, version);
+         }
+
+         // Apply versions and clear modified flags
          for(EventProcessingPolicyRule rule : rules)
          {
+            Integer serverVersion = ruleVersions.get(rule.getGuid());
+            if (serverVersion != null)
+               rule.setVersion(serverVersion);
             rule.clearModified();
          }
          return EPPSaveResult.success(newVersion);
