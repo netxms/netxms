@@ -103,6 +103,8 @@ void LoadObjectQueries();
 THREAD StartEventProcessor();
 void StartHouseKeeper();
 void StopHouseKeeper();
+void InitStorageClassMigration();
+void ShutdownStorageClassMigration();
 void StartSNMPAgent();
 void StopSNMPAgent();
 void LoadTrapMappings();
@@ -1443,6 +1445,8 @@ retry_db_lock:
    LoadPerfDataStorageDrivers();
    LoadWebServiceDefinitions();
    InitDataCollector();
+   if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
+      InitStorageClassMigration();
    LoadAssetManagementSchema();
 
    LoadObjectQueries();
@@ -1614,6 +1618,8 @@ void NXCORE_EXPORTABLE Shutdown()
    StopPackageDeploymentManager();
 
    StopHouseKeeper();
+   if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
+      ShutdownStorageClassMigration();
    ShutdownTaskScheduler();
 
    StopSNMPAgent();

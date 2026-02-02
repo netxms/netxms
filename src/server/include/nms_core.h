@@ -103,6 +103,7 @@
 #define IDG_INCIDENT                32
 #define IDG_INCIDENT_COMMENT        33
 #define IDG_INCIDENT_ACTIVITY       34
+#define IDG_SC_MIGRATION_TASK       35
 
 /**** ID functions *****/
 bool InitIdTable();

@@ -29,7 +29,7 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			np.cpp nxsl_classes.cpp nxslext.cpp object_categories.cpp \
 			object_queries.cpp objects.cpp objtools.cpp ospf.cpp package.cpp \
 			pds.cpp physical_link.cpp poll.cpp pollable.cpp ps.cpp rack.cpp \
-			radius.cpp reporting.cpp rootobj.cpp schedule.cpp script.cpp \
+			radius.cpp reporting.cpp rootobj.cpp sc_migration.cpp schedule.cpp script.cpp \
 			search_query.cpp sensor.cpp server_stats.cpp session.cpp skills.cpp \
 			snmp.cpp snmpd.cpp snmptrap.cpp snmptrapd.cpp ssh.cpp sshkeys.cpp stp.cpp \
 			subnet.cpp summary_email.cpp swpkg.cpp syncer.cpp syslogd.cpp template.cpp \

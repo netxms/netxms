@@ -30,6 +30,11 @@
 void RemoveExpiredPackageDeploymentJobs(DB_HANDLE hdb);
 
 /**
+ * Process pending storage class migrations
+ */
+void ProcessStorageClassMigrations();
+
+/**
  * Housekeeper wakeup condition
  */
 static Condition s_wakeupCondition(false);
@@ -518,6 +523,10 @@ static void HouseKeeper()
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Using drop_chunks()"));
             CleanTimescaleData(hdb);
+
+            // Process pending storage class migrations
+            nxlog_debug_tag(DEBUG_TAG, 2, _T("Processing storage class migrations"));
+            ProcessStorageClassMigrations();
          }
          else
          {

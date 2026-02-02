@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ void LoadLastEventId(DB_HANDLE hdb);
 /**
  * Constants
  */
-#define NUMBER_OF_GROUPS   35
+#define NUMBER_OF_GROUPS   36
 
 /**
  * Static data
@@ -54,7 +54,7 @@ static uint32_t s_freeIdTable[NUMBER_OF_GROUPS] =
       1, 1, 1, 1,
       1, 1, 1, 1,
       1, 1, 1, 1,
-      1, 1, 1
+      1, 1, 1, 1
    };
 static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
    {
@@ -66,7 +66,7 @@ static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
+      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
    };
 static const wchar_t *s_groupNames[NUMBER_OF_GROUPS] =
 {
@@ -104,7 +104,8 @@ static const wchar_t *s_groupNames[NUMBER_OF_GROUPS] =
    L"Package Deployment Jobs",
    L"Incidents",
    L"Incident Comments",
-   L"Incident Activity Records"
+   L"Incident Activity Records",
+   L"Storage Class Migrations"
 };
 
 /**
@@ -462,6 +463,18 @@ bool InitIdTable()
       if (DBGetNumRows(hResult) > 0)
          s_freeIdTable[IDG_INCIDENT_ACTIVITY] = std::max(s_freeIdTable[IDG_INCIDENT_ACTIVITY], DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
+   }
+
+   // Get first available storage class migration task id
+   if (g_dbSyntax == DB_SYNTAX_TSDB)
+   {
+      hResult = DBSelect(hdb, _T("SELECT max(task_id) FROM storage_class_migration_tasks"));
+      if (hResult != nullptr)
+      {
+         if (DBGetNumRows(hResult) > 0)
+            s_freeIdTable[IDG_SC_MIGRATION_TASK] = std::max(s_freeIdTable[IDG_SC_MIGRATION_TASK], DBGetFieldULong(hResult, 0, 0) + 1);
+         DBFreeResult(hResult);
+      }
    }
 
    LoadLastEventId(hdb);

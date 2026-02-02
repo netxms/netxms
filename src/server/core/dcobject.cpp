@@ -23,6 +23,11 @@
 #include "nxcore.h"
 #include <nms_users.h>
 
+/**
+ * Queue storage class migration (defined in sc_migration.cpp)
+ */
+uint32_t QueueStorageClassMigration(uint32_t dciId, char dciType, DCObjectStorageClass oldClass, DCObjectStorageClass newClass);
+
 #define DEBUG_TAG_DC_CONFIG      _T("dc.config")
 #define DEBUG_TAG_DC_SCHEDULER   _T("dc.scheduler")
 
@@ -901,6 +906,9 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
 {
    lock();
 
+   // Capture old storage class before updating retention settings
+   DCObjectStorageClass oldStorageClass = getStorageClass();
+
    m_name = msg.getFieldAsSharedString(VID_NAME, MAX_ITEM_NAME);
    m_description = msg.getFieldAsSharedString(VID_DESCRIPTION, MAX_DB_STRING);
    m_systemTag = msg.getFieldAsSharedString(VID_SYSTEM_TAG, MAX_DCI_TAG_LENGTH);
@@ -937,6 +945,18 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
       m_retentionTimeSrc.reset();
    }
    updateTimeIntervalsInternal();
+
+   // Check if storage class changed (only for TimescaleDB with single table mode)
+   if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
+   {
+      DCObjectStorageClass newStorageClass = getStorageClass();
+      if (oldStorageClass != newStorageClass)
+      {
+         QueueStorageClassMigration(m_id,
+            (getType() == DCO_TYPE_ITEM) ? 'I' : 'T',
+            oldStorageClass, newStorageClass);
+      }
+   }
 
    TCHAR *tmp = msg.getFieldAsString(VID_TRANSFORMATION_SCRIPT);
    setTransformationScriptInternal(tmp);

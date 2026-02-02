@@ -1280,6 +1280,29 @@ CREATE VIEW tdata AS
    UNION ALL
    SELECT * FROM tdata_sc_other;
 
+/**
+ * Storage class migration tasks (TimescaleDB only)
+ */
+CREATE TABLE dc_storage_class_migrations
+(
+   id integer not null,
+   dci_id integer not null,
+   dci_type char(1) not null,
+   old_storage_class char(1) not null,
+   new_storage_class char(1) not null,
+   status char(1) not null,
+   create_time integer not null,
+   start_time integer null,
+   end_time integer null,
+   last_processed_timestamp SQL_INT64 null,
+   records_copied integer not null,
+   error_message varchar(255) null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_scm_status ON dc_storage_class_migrations(status);
+CREATE INDEX idx_scm_dci_id ON dc_storage_class_migrations(dci_id);
+
 #else
 
 CREATE TABLE tdata

@@ -25,15 +25,45 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.29 to 60.30
+ */
+static bool H_UpgradeFromV29()
+{
+   if (g_dbSyntax == DB_SYNTAX_TSDB)
+   {
+      CHK_EXEC(CreateTable(
+         L"CREATE TABLE dc_storage_class_migrations ("
+         L"   id integer not null,"
+         L"   dci_id integer not null,"
+         L"   dci_type char(1) not null,"
+         L"   old_storage_class char(1) not null,"
+         L"   new_storage_class char(1) not null,"
+         L"   status char(1) not null,"
+         L"   create_time integer not null,"
+         L"   start_time integer null,"
+         L"   end_time integer null,"
+         L"   last_processed_timestamp $SQL:INT64 null,"
+         L"   records_copied integer not null,"
+         L"   error_message varchar(255) null,"
+         L"   PRIMARY KEY(id))"));
+      CHK_EXEC(SQLQuery(L"CREATE INDEX idx_scm_status ON dc_storage_class_migrations(status)"));
+      CHK_EXEC(SQLQuery(L"CREATE INDEX idx_scm_dci_id ON dc_storage_class_migrations(dci_id)"));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(30));
+   return true;
+}
+
+/**
  * Upgrade from 60.28 to 60.29
  */
 static bool H_UpgradeFromV28()
 {
-   static const TCHAR *batch =
-      _T("ALTER TABLE event_policy ADD modified_by_guid varchar(36)\n")
-      _T("ALTER TABLE event_policy ADD modified_by_name varchar(63)\n")
-      _T("ALTER TABLE event_policy ADD modification_time integer\n")
-      _T("<END>");
+   static const wchar_t *batch =
+      L"ALTER TABLE event_policy ADD modified_by_guid varchar(36)\n"
+      L"ALTER TABLE event_policy ADD modified_by_name varchar(63)\n"
+      L"ALTER TABLE event_policy ADD modification_time integer\n"
+      L"<END>";
    CHK_EXEC(SQLBatch(batch));
 
    CHK_EXEC(SetMinorSchemaVersion(29));
@@ -209,7 +239,7 @@ static bool MigrateMacroTextInTextColumn(const wchar_t *table, const wchar_t *id
    for (int i = 0; i < count && success; i++)
    {
       wchar_t *value = DBGetField(hResult, i, 1, nullptr, 0);
-      if (value != nullptr && (_tcschr(value, _T('\\')) != nullptr || _tcsstr(value, _T("%(")) != nullptr))
+      if (value != nullptr && (wcschr(value, L'\\') != nullptr || wcsstr(value, L"%(") != nullptr))
       {
          wchar_t *transformed = TransformMacroText(value);
          if (transformed != nullptr)
@@ -1836,6 +1866,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 29, 60, 30, H_UpgradeFromV29 },
    { 28, 60, 29, H_UpgradeFromV28 },
    { 27, 60, 28, H_UpgradeFromV27 },
    { 26, 60, 27, H_UpgradeFromV26 },
