@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -439,11 +439,11 @@ LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSessi
 }
 
 /**
- * Handler for System.PlatformName
+ * Get platform name
  */
-LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+bool GetPlatformName(TCHAR *value)
 {
-   LONG nResult = SYSINFO_RC_SUCCESS;
+   bool success = true;
 
 #if defined(_WIN32)
 
@@ -495,8 +495,8 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
    }
    else
    {
-      DebugPrintf(2, _T("uname() failed: %s"), _tcserror(errno));
-      nResult = SYSINFO_RC_ERROR;
+      nxlog_debug_tag(_T("sysinfo"), 4, _T("uname() failed: %s"), _tcserror(errno));
+      success = false;
    }
 
 #else
@@ -507,14 +507,22 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
 #endif
 
    // Add user-configurable platform name suffix
-   if ((nResult == SYSINFO_RC_SUCCESS) && (g_szPlatformSuffix[0] != 0))
+   if (success && (g_szPlatformSuffix[0] != 0))
    {
       if (g_szPlatformSuffix[0] != _T('-'))
          _tcscat(value, _T("-"));
       _tcscat(value, g_szPlatformSuffix);
    }
 
-   return nResult;
+   return success;
+}
+
+/**
+ * Handler for System.PlatformName
+ */
+LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   return GetPlatformName(value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
 /**

@@ -919,7 +919,7 @@ private:
 
 public:
    AgentListDefinition(const NXCPMessage& msg, uint32_t baseId) :
-      m_name(msg.getFieldAsString(baseId, MAX_PARAM_NAME)), m_description(msg.getFieldAsString(baseId, 512)) {}
+      m_name(msg.getFieldAsString(baseId, MAX_PARAM_NAME)), m_description(msg.getFieldAsString(baseId + 1, 512)) {}
    AgentListDefinition(const AgentListDefinition& src) : m_name(src.m_name), m_description(src.m_description) {}
    AgentListDefinition(const wchar_t *name, const wchar_t *description) : m_name(name), m_description(description) {}
 
@@ -1272,8 +1272,7 @@ public:
    uint32_t installPackage(const TCHAR *pkgName, const TCHAR *pkgType, const TCHAR *command);
    uint32_t checkNetworkService(uint32_t *status, const InetAddress& addr, int serviceType, uint16_t port = 0, uint16_t proto = 0,
          const TCHAR *serviceRequest = nullptr, const TCHAR *serviceResponse = nullptr, uint32_t *responseTime = nullptr);
-   uint32_t getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentTableDefinition> **tableList);
-   uint32_t getSupportedLists(ObjectArray<AgentListDefinition> **listList);
+   uint32_t getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentListDefinition> **listList, ObjectArray<AgentTableDefinition> **tableList);
    uint32_t readConfigFile(TCHAR **content, size_t *size);
    uint32_t writeConfigFile(const TCHAR *content);
    uint32_t getPolicyInventory(AgentPolicyInfo **info);
@@ -1290,6 +1289,9 @@ public:
    void setSSHChannelDataHandler(uint32_t channelId, SSHChannelDataCallback handler);
    void removeSSHChannelDataHandler(uint32_t channelId);
    uint32_t executeSSHCommand(const InetAddress& addr, uint16_t port, const TCHAR *login, const TCHAR *password, uint32_t keyId, const char *command, ByteStream *output);
+
+   uint32_t getAITools(char **schema);
+   uint32_t executeAITool(const char *toolName, const char *jsonParams, char **jsonResult, uint32_t *executionTime = nullptr);
 
    uint32_t generateRequestId() { return (uint32_t)InterlockedIncrement(&m_requestId); }
 	NXCPMessage *customRequest(NXCPMessage *request, const TCHAR *recvFile = nullptr, bool append = false,

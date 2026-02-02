@@ -655,14 +655,6 @@ void CommSession::processCommand(NXCPMessage *request)
             response.setField(VID_RCC, ERR_SUCCESS);
             GetParameterList(&response);
             break;
-         case CMD_GET_ENUM_LIST:
-            response.setField(VID_RCC, ERR_SUCCESS);
-            GetEnumList(&response);
-            break;
-         case CMD_GET_TABLE_LIST:
-            response.setField(VID_RCC, ERR_SUCCESS);
-            GetTableList(&response);
-            break;
          case CMD_READ_AGENT_CONFIG_FILE:
             getConfig(&response);
             break;
@@ -837,6 +829,12 @@ void CommSession::processCommand(NXCPMessage *request)
             {
                response.setField(VID_RCC, ERR_ACCESS_DENIED);
             }
+            break;
+         case CMD_AI_GET_TOOLS:
+            getAITools(request, &response);
+            break;
+         case CMD_AI_EXECUTE_TOOL:
+            executeAITool(request, &response);
             break;
          default:
             // Attempt to process unknown command by subagents
@@ -1240,6 +1238,49 @@ void CommSession::updateConfig(NXCPMessage *request, NXCPMessage *response)
       writeLog(NXLOG_WARNING, _T("CommSession::updateConfig(): access denied"));
       response->setField(VID_RCC, ERR_ACCESS_DENIED);
    }
+}
+
+/**
+ * Get available AI tools
+ */
+void CommSession::getAITools(NXCPMessage *request, NXCPMessage *response)
+{
+   char *schema = GenerateAIToolsSchema();
+   if (schema != nullptr)
+   {
+      response->setFieldFromUtf8String(VID_AI_TOOL_SCHEMA, schema);
+      response->setField(VID_RCC, ERR_SUCCESS);
+      MemFree(schema);
+   }
+   else
+   {
+      response->setField(VID_RCC, ERR_INTERNAL_ERROR);
+   }
+}
+
+/**
+ * Execute an AI tool
+ */
+void CommSession::executeAITool(NXCPMessage *request, NXCPMessage *response)
+{
+   char *toolName = request->getFieldAsUtf8String(VID_AI_TOOL_NAME);
+   char *jsonParams = request->getFieldAsUtf8String(VID_AI_TOOL_INPUT);
+
+   int64_t startTime = GetCurrentTimeMs();
+   char *jsonResult = nullptr;
+   uint32_t rcc = ExecuteAITool(toolName, jsonParams, &jsonResult, this);
+   int64_t execTime = GetCurrentTimeMs() - startTime;
+
+   response->setField(VID_RCC, rcc);
+   response->setField(VID_AI_TOOL_EXEC_TIME, static_cast<uint32_t>(execTime));
+   if (jsonResult != nullptr)
+   {
+      response->setFieldFromUtf8String(VID_AI_TOOL_OUTPUT, jsonResult);
+      MemFree(jsonResult);
+   }
+
+   MemFree(toolName);
+   MemFree(jsonParams);
 }
 
 /**

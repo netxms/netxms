@@ -158,8 +158,9 @@ static int ListParameters(AgentConnection *pConn)
    static const TCHAR *dataType[] = { _T("INT"), _T("UINT"), _T("INT64"), _T("UINT64"), _T("STRING"), _T("FLOAT"), _T("NULL"), _T("COUNTER32"), _T("COUNTER64"), _T("UNKNOWN") };
 
    ObjectArray<AgentParameterDefinition> *paramList;
+   ObjectArray<AgentListDefinition> *listList;
    ObjectArray<AgentTableDefinition> *tableList;
-   uint32_t rcc = pConn->getSupportedParameters(&paramList, &tableList);
+   uint32_t rcc = pConn->getSupportedParameters(&paramList, &listList, &tableList);
    if (rcc == ERR_SUCCESS)
    {
       for(int i = 0; i < paramList->size(); i++)
@@ -170,6 +171,7 @@ static int ListParameters(AgentConnection *pConn)
             p->getDescription());
       }
       delete paramList;
+      delete listList;
 		delete tableList;
    }
    else

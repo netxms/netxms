@@ -2295,7 +2295,7 @@ uint32_t AgentConnection::checkNetworkService(uint32_t *status, const InetAddres
 /**
  * Get list of supported parameters from agent
  */
-uint32_t AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentTableDefinition> **tableList)
+uint32_t AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentListDefinition> **listList, ObjectArray<AgentTableDefinition> **tableList)
 {
    *paramList = nullptr;
 	*tableList = nullptr;
@@ -2326,6 +2326,16 @@ uint32_t AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefin
 				*paramList = plist;
 				debugPrintf(6, _T("AgentConnection::getSupportedParameters(): %d parameters received from agent"), count);
 
+		      count = response->getFieldAsUInt32(VID_NUM_ENUMS);
+		      ObjectArray<AgentListDefinition> *llist = new ObjectArray<AgentListDefinition>(count, 16, Ownership::True);
+	         for(uint32_t i = 0, fieldId = VID_ENUM_LIST_BASE; i < count; i++)
+	         {
+	            llist->add(new AgentListDefinition(*response, fieldId));
+	            fieldId += 2;
+	         }
+	         *listList = llist;
+	         debugPrintf(6, _T("AgentConnection::getSupportedLists(): %d lists received from agent"), count);
+
             count = response->getFieldAsUInt32(VID_NUM_TABLES);
             ObjectArray<AgentTableDefinition> *tlist = new ObjectArray<AgentTableDefinition>(count, 16, Ownership::True);
             for(uint32_t i = 0, id = VID_TABLE_LIST_BASE; i < count; i++)
@@ -2347,58 +2357,6 @@ uint32_t AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefin
    {
       rcc = ERR_CONNECTION_BROKEN;
    }
-
-   return rcc;
-}
-
-/**
- * Get list of supported lists from agent
- */
-uint32_t AgentConnection::getSupportedLists(ObjectArray<AgentListDefinition> **listList)
-{
-   *listList = nullptr;
-
-   if (!m_isConnected)
-      return ERR_NOT_CONNECTED;
-
-   uint32_t requestId = generateRequestId();
-   NXCPMessage msg(CMD_GET_ENUM_LIST, requestId, m_nProtocolVersion);
-
-   if (!sendMessage(&msg))
-      return ERR_CONNECTION_BROKEN;
-
-   NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
-   if (response == nullptr)
-      return ERR_REQUEST_TIMEOUT;
-
-   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
-   debugPrintf(6, _T("AgentConnection::getSupportedLists(): RCC=%d"), rcc);
-   if (rcc == ERR_SUCCESS)
-   {
-      uint32_t count = response->getFieldAsUInt32(VID_NUM_ENUMS);
-      bool extendedFormat = response->getFieldAsBoolean(VID_TABLE_EXTENDED_FORMAT);
-      ObjectArray<AgentListDefinition> *llist = new ObjectArray<AgentListDefinition>(count, 16, Ownership::True);
-      if (extendedFormat)
-      {
-         for(uint32_t i = 0, fieldId = VID_ENUM_LIST_BASE; i < count; i++)
-         {
-            llist->add(new AgentListDefinition(*response, fieldId));
-            fieldId += 10;
-         }
-      }
-      else
-      {
-         TCHAR buffer[256];
-         for(uint32_t i = 0, fieldId = VID_ENUM_LIST_BASE; i < count; i++)
-         {
-            response->getFieldAsString(fieldId++, buffer, 256);
-            llist->add(new AgentListDefinition(buffer, nullptr));
-         }
-      }
-      *listList = llist;
-      debugPrintf(6, _T("AgentConnection::getSupportedLists(): %d lists received from agent"), count);
-   }
-   delete response;
 
    return rcc;
 }
@@ -3404,6 +3362,87 @@ uint32_t AgentConnection::executeSSHCommand(const InetAddress& addr, uint16_t po
    else
    {
       debugPrintf(5, _T("executeSSHCommand: agent returned error %u (%s)"), rcc, AgentErrorCodeToText(rcc));
+   }
+   delete response;
+   return rcc;
+}
+
+/**
+ * Get AI tools schema from agent
+ */
+uint32_t AgentConnection::getAITools(char **schema)
+{
+   *schema = nullptr;
+
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
+
+   uint32_t requestId = generateRequestId();
+   NXCPMessage msg(CMD_AI_GET_TOOLS, requestId, m_nProtocolVersion);
+
+   if (!sendMessage(&msg))
+      return ERR_CONNECTION_BROKEN;
+
+   NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+   if (response == nullptr)
+   {
+      debugPrintf(5, _T("getAITools: request timeout"));
+      return ERR_REQUEST_TIMEOUT;
+   }
+
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
+   if (rcc == ERR_SUCCESS)
+   {
+      *schema = response->getFieldAsUtf8String(VID_AI_TOOL_SCHEMA);
+      if (*schema == nullptr)
+      {
+         debugPrintf(5, _T("getAITools: schema field missing in response"));
+         rcc = ERR_MALFORMED_RESPONSE;
+      }
+   }
+   else
+   {
+      debugPrintf(5, _T("getAITools: agent returned error %u (%s)"), rcc, AgentErrorCodeToText(rcc));
+   }
+   delete response;
+   return rcc;
+}
+
+/**
+ * Execute AI tool on agent
+ */
+uint32_t AgentConnection::executeAITool(const char *toolName, const char *jsonParams, char **jsonResult, uint32_t *executionTime)
+{
+   *jsonResult = nullptr;
+   if (executionTime != nullptr)
+      *executionTime = 0;
+
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
+
+   uint32_t requestId = generateRequestId();
+   NXCPMessage msg(CMD_AI_EXECUTE_TOOL, requestId, m_nProtocolVersion);
+   msg.setFieldFromUtf8String(VID_AI_TOOL_NAME, toolName);
+   msg.setFieldFromUtf8String(VID_AI_TOOL_INPUT, jsonParams);
+
+   if (!sendMessage(&msg))
+      return ERR_CONNECTION_BROKEN;
+
+   NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+   if (response == nullptr)
+   {
+      debugPrintf(5, _T("executeAITool(%hs): request timeout"), toolName);
+      return ERR_REQUEST_TIMEOUT;
+   }
+
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
+   if (executionTime != nullptr)
+      *executionTime = response->getFieldAsUInt32(VID_AI_TOOL_EXEC_TIME);
+
+   *jsonResult = response->getFieldAsUtf8String(VID_AI_TOOL_OUTPUT);
+   if (rcc != ERR_SUCCESS)
+   {
+      debugPrintf(5, _T("executeAITool(%hs): agent returned error %u (%s)"), toolName, rcc, AgentErrorCodeToText(rcc));
    }
    delete response;
    return rcc;

@@ -1542,6 +1542,7 @@ void GetEnumList(NXCPMessage *msg)
    }
 
    uint32_t count = static_cast<uint32_t>(s_lists.size());
+   ListListsFromExtProviders(msg, &fieldId, &count);
    ListListsFromExtSubagents(msg, &fieldId, &count);
    msg->setField(VID_NUM_ENUMS, count);
    msg->setField(VID_TABLE_EXTENDED_FORMAT, true);

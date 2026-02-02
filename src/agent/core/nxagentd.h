@@ -386,6 +386,8 @@ private:
    void sendMessageInBackground(NXCP_MESSAGE *msg);
    void getHostNameByAddr(NXCPMessage *request, NXCPMessage *response);
    uint32_t setComponentToken(NXCPMessage *request);
+   void getAITools(NXCPMessage *request, NXCPMessage *response);
+   void executeAITool(NXCPMessage *request, NXCPMessage *response);
 
    void processCommand(NXCPMessage *request);
 
@@ -849,6 +851,11 @@ bool ProcessBinaryMessageBySubAgent(NXCPMessage *msg, AbstractCommSession *sessi
 void NotifySubAgents(uint32_t code, void *data);
 bool AddAction(const TCHAR *name, bool isExternal, const void *arg, uint32_t (*handler)(const shared_ptr<ActionExecutionContext>&), const TCHAR *subAgent, const TCHAR *description);
 bool AddActionFromConfig(const TCHAR *config);
+
+void RegisterAIToolsFromSubagent(const NETXMS_SUBAGENT_INFO *info);
+char *GenerateAIToolsSchema();
+uint32_t ExecuteAITool(const char *toolName, const char *jsonParams, char **jsonResult, AbstractCommSession *session);
+int GetAIToolCount();
 
 void StartExternalMetricProviders();
 void StopExternalMetricProviders();

@@ -706,6 +706,8 @@ typedef struct
 #define CMD_GET_LOG_QUERY_SQL             0x01FA
 #define CMD_GET_LIST_LIST                 0x01FB
 #define CMD_QUERY_LIST                    0x01FC
+#define CMD_AI_GET_TOOLS                  0x01FD
+#define CMD_AI_EXECUTE_TOOL               0x01FE
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1646,6 +1648,11 @@ typedef struct
 #define VID_RULE_MODIFIED           ((uint32_t)926)
 #define VID_DELETED_RULE_COUNT      ((uint32_t)927)
 #define VID_RULE_VERSION_COUNT      ((uint32_t)928)
+#define VID_AI_TOOL_NAME            ((uint32_t)929)
+#define VID_AI_TOOL_INPUT           ((uint32_t)930)
+#define VID_AI_TOOL_OUTPUT          ((uint32_t)931)
+#define VID_AI_TOOL_SCHEMA          ((uint32_t)932)
+#define VID_AI_TOOL_EXEC_TIME       ((uint32_t)933)
 
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)

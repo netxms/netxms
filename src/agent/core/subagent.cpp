@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -136,6 +136,9 @@ bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (*SubAgentRegis
 					// Add actions provided by this subagent to common list
 					for(size_t i = 0; i < info->numActions; i++)
 						AddAction(info->actions[i].name, false, info->actions[i].arg, info->actions[i].handler, info->name, info->actions[i].description);
+
+					// Register AI tools provided by this subagent
+					RegisterAIToolsFromSubagent(info);
 
 					nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Subagent \"%s\" (%s) loaded successfully (version %s)"), info->name, moduleName, info->version);
 					success = true;

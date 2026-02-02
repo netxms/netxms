@@ -5454,20 +5454,23 @@ bool Node::confPollAgent()
       // if Net.Interface.64BitCounters not supported by agent then use
       // only presence of 64 bit parameters as indicator
       bool netIf64bitCounters = true;
-      if (pAgentConn->getParameter(_T("Net.Interface.64BitCounters"), buffer, MAX_DB_STRING) == ERR_SUCCESS)
+      if (pAgentConn->getParameter(L"Net.Interface.64BitCounters", buffer, MAX_DB_STRING) == ERR_SUCCESS)
       {
-         netIf64bitCounters = _tcstol(buffer, nullptr, 10) ? true : false;
+         netIf64bitCounters = wcstol(buffer, nullptr, 10) ? true : false;
       }
 
       ObjectArray<AgentParameterDefinition> *plist;
+      ObjectArray<AgentListDefinition> *llist;
       ObjectArray<AgentTableDefinition> *tlist;
-      uint32_t rcc = pAgentConn->getSupportedParameters(&plist, &tlist);
+      uint32_t rcc = pAgentConn->getSupportedParameters(&plist, &llist, &tlist);
       if (rcc == ERR_SUCCESS)
       {
          lockProperties();
          delete m_agentParameters;
+         delete m_agentLists;
          delete m_agentTables;
          m_agentParameters = plist;
+         m_agentLists = llist;
          m_agentTables = tlist;
 
          // Check for 64-bit interface counters
@@ -5476,7 +5479,7 @@ bool Node::confPollAgent()
          {
             for(int i = 0; i < plist->size(); i++)
             {
-               if (!_tcsicmp(plist->get(i)->getName(), _T("Net.Interface.BytesIn64(*)")))
+               if (!wcsicmp(plist->get(i)->getName(), L"Net.Interface.BytesIn64(*)"))
                {
                   m_capabilities |= NC_HAS_AGENT_IFXCOUNTERS;
                   break;
@@ -5488,23 +5491,7 @@ bool Node::confPollAgent()
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): AgentConnection::getSupportedParameters() failed: rcc=%u"), m_name, rcc);
-      }
-
-      // Get supported lists
-      ObjectArray<AgentListDefinition> *llist;
-      rcc = pAgentConn->getSupportedLists(&llist);
-      if (rcc == ERR_SUCCESS)
-      {
-         lockProperties();
-         delete m_agentLists;
-         m_agentLists = llist;
-         unlockProperties();
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): %d supported lists received from agent"), m_name, llist->size());
-      }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): AgentConnection::getSupportedLists() failed: rcc=%u"), m_name, rcc);
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"ConfPoll(%s): AgentConnection::getSupportedParameters() failed: rcc=%u", m_name, rcc);
       }
 
       // Check for service manager support

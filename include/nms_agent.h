@@ -1051,7 +1051,39 @@ struct NETXMS_SUBAGENT_ACTION
    TCHAR description[MAX_DB_STRING];
 };
 
-#define NETXMS_SUBAGENT_INFO_MAGIC     ((uint32_t)0x20201227)
+// Forward declaration for jansson JSON type
+struct json_t;
+
+/**
+ * AI Tool parameter definition
+ */
+struct AIToolParameter
+{
+   const char *name;
+   const char *type;          // "string", "integer", "boolean", "array", "object"
+   const char *description;
+   bool required;
+   const char *defaultValue;  // JSON value or nullptr
+   const char *constraints;   // JSON with min/max/enum, or nullptr
+};
+
+/**
+ * AI Tool definition
+ */
+struct AIToolDefinition
+{
+   const char *name;
+   const char *category;
+   const char *description;
+   const AIToolParameter *parameters;
+   size_t numParameters;
+
+   // Handler: receives parsed JSON params, returns JSON result object
+   // Caller will decref the result. Returns ERR_SUCCESS or error code.
+   uint32_t (*handler)(json_t *params, json_t **result, AbstractCommSession *session);
+};
+
+#define NETXMS_SUBAGENT_INFO_MAGIC     ((uint32_t)0x20260131)
 
 class NXCPMessage;
 
@@ -1078,6 +1110,8 @@ struct NETXMS_SUBAGENT_INFO
    NETXMS_SUBAGENT_ACTION *actions;
    size_t numPushParameters;
    NETXMS_SUBAGENT_PUSHPARAM *pushParameters;
+   size_t numAITools;
+   AIToolDefinition *aiTools;
 };
 
 /**
