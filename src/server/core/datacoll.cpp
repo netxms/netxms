@@ -354,6 +354,9 @@ void DataCollector(const shared_ptr<DCObject>& dcObject)
                break;
          }
 
+         if ((error == DCE_NOT_SUPPORTED) && dcObject->isUnsupportedAsError())
+            error = DCE_COLLECTION_ERROR;
+
          // Transform and store received value into database or handle error
          switch(error)
          {

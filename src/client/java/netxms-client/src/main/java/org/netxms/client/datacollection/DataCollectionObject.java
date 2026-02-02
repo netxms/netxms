@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,11 +41,12 @@ public abstract class DataCollectionObject
 	public static final int DCO_TYPE_TABLE   = 2;
 
 	// common data collection flags
-	public static final int DCF_AGGREGATE_ON_CLUSTER     = 0x00080;
-   public static final int DCF_TRANSFORM_AGGREGATED     = 0x00100;
-   public static final int DCF_CACHE_MODE_MASK          = 0x03000;
-   public static final int DCF_AGGREGATE_WITH_ERRORS    = 0x04000;
-   public static final int DCF_HIDE_ON_LAST_VALUES_PAGE = 0x08000;
+	public static final int DCF_AGGREGATE_ON_CLUSTER     = 0x000080;
+   public static final int DCF_TRANSFORM_AGGREGATED     = 0x000100;
+   public static final int DCF_CACHE_MODE_MASK          = 0x003000;
+   public static final int DCF_AGGREGATE_WITH_ERRORS    = 0x004000;
+   public static final int DCF_HIDE_ON_LAST_VALUES_PAGE = 0x008000;
+   public static final int DCF_UNSUPPORTED_AS_ERROR     = 0x080000;
 
    // Instance discovery methods
    public static final int IDM_NONE = 0;
@@ -998,6 +999,29 @@ public abstract class DataCollectionObject
          flags |= DCF_HIDE_ON_LAST_VALUES_PAGE;
       else
          flags &= ~DCF_HIDE_ON_LAST_VALUES_PAGE;
+   }
+
+   /**
+    * Returns if unsupported state is interpreted as data collection error
+    * 
+    * @return true if unsupported state is interpreted as data collection error
+    */
+   public boolean isUnsupportedAsError()
+   {
+      return (flags & DCF_UNSUPPORTED_AS_ERROR) != 0;
+   }
+
+   /**
+    * Enable or disable interpretation of unsupported state as data collection error
+    * 
+    * @param enable true to enable
+    */
+   public void setUnsupportedAsError(boolean enable)
+   {
+      if (enable)
+         flags |= DCF_UNSUPPORTED_AS_ERROR;
+      else
+         flags &= ~DCF_UNSUPPORTED_AS_ERROR;
    }
 
    /**

@@ -49,6 +49,7 @@ public class OtherOptions extends AbstractDCIPropertyPage
 	private Button checkShowInOverview;
    private Button checkCalculateStatus;
    private Button checkHideInViewMode;
+   private Button checkUnsupportedAsError;
    private LabeledCombo multiplierDegree;
    private LabeledCombo agentCacheMode;
    private LabeledCombo interpretation;
@@ -104,11 +105,18 @@ public class OtherOptions extends AbstractDCIPropertyPage
       checkCalculateStatus.setLayoutData(gd);
 
       checkHideInViewMode = new Button(dialogArea, SWT.CHECK);
-      checkHideInViewMode.setText("&Hide in view mode");
+      checkHideInViewMode.setText(i18n.tr("&Hide in view mode"));
       checkHideInViewMode.setSelection(dci.isHideOnLastValuesView());      
       gd = new GridData();
       gd.horizontalSpan = 2;
       checkHideInViewMode.setLayoutData(gd);
+
+      checkUnsupportedAsError = new Button(dialogArea, SWT.CHECK);
+      checkUnsupportedAsError.setText(i18n.tr("Interpret &unsupported state as data collection error"));
+      checkUnsupportedAsError.setSelection(dci.isUnsupportedAsError());
+      gd = new GridData();
+      gd.horizontalSpan = 2;
+      checkUnsupportedAsError.setLayoutData(gd);
 
       agentCacheMode = new LabeledCombo(dialogArea, SWT.NONE);
       agentCacheMode.setLabel(i18n.tr("Agent cache mode"));
@@ -189,6 +197,7 @@ public class OtherOptions extends AbstractDCIPropertyPage
 		dci.setShowInObjectOverview(checkShowInOverview.getSelection());
       dci.setUsedForNodeStatusCalculation(checkCalculateStatus.getSelection());
       dci.setHideOnLastValuesView(checkHideInViewMode.getSelection());
+      dci.setUnsupportedAsError(checkUnsupportedAsError.getSelection());
       dci.setCacheMode(AgentCacheMode.getByValue(agentCacheMode.getSelectionIndex()));
       dci.setMultiplier(5 - multiplierDegree.getSelectionIndex());
       dci.setRelatedObject(relatedObject.getObjectId());
@@ -209,6 +218,7 @@ public class OtherOptions extends AbstractDCIPropertyPage
 		checkShowInOverview.setSelection(false);
 		checkCalculateStatus.setSelection(false);
 		checkHideInViewMode.setSelection(false);
+      checkUnsupportedAsError.setSelection(false);
 		agentCacheMode.select(0);
 		multiplierDegree.select(0);
 		relatedObject.setObjectId(0);

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -62,9 +62,9 @@ DCObjectStorageClass DCObject::storageClassFromRetentionTime(int retentionTime)
 /**
  * Get name of storage class
  */
-const TCHAR *DCObject::getStorageClassName(DCObjectStorageClass storageClass)
+const wchar_t *DCObject::getStorageClassName(DCObjectStorageClass storageClass)
 {
-   static const TCHAR *names[] = { _T("default"), _T("7"), _T("30"), _T("90"), _T("180"), _T("other") };
+   static const wchar_t *names[] = { L"default", L"7", L"30", L"90", L"180", L"other" };
    return names[static_cast<int>(storageClass)];
 }
 
@@ -927,7 +927,7 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
    m_pollingScheduleType = static_cast<BYTE>(msg.getFieldAsUInt16(VID_POLLING_SCHEDULE_TYPE));
    if (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM)
    {
-      TCHAR buffer[MAX_DB_STRING];
+      wchar_t buffer[MAX_DB_STRING];
       m_pollingIntervalSrc = msg.getFieldAsString(VID_POLLING_INTERVAL, buffer, MAX_DB_STRING);
    }
    else
@@ -937,7 +937,7 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
    m_retentionType = static_cast<BYTE>(msg.getFieldAsUInt16(VID_RETENTION_TYPE));
    if (m_retentionType == DC_RETENTION_CUSTOM)
    {
-      TCHAR buffer[MAX_DB_STRING];
+      wchar_t buffer[MAX_DB_STRING];
       m_retentionTimeSrc = msg.getFieldAsString(VID_RETENTION_TIME, buffer, MAX_DB_STRING);
    }
    else
@@ -1912,10 +1912,10 @@ void DCObject::getScriptDependencies(StringSet *dependencies) const
 /**
  * Get data source name
  */
-const TCHAR *DCObject::getDataProviderName(int dataProvider)
+const wchar_t *DCObject::getDataProviderName(int dataProvider)
 {
-   static const TCHAR *names[] = { _T("internal"), _T("nxagent"), _T("snmp"), _T("websvc"), _T("push"), _T("winperf"), _T("smclp"), _T("script"), _T("ssh"), _T("mqtt"), _T("driver"), _T("modbus") };
-   return ((dataProvider >= DS_INTERNAL) && (dataProvider <= DS_MODBUS)) ? names[dataProvider] : _T("unknown");
+   static const wchar_t *names[] = { L"internal", L"nxagent", L"snmp", L"websvc", L"push", L"winperf", L"smclp", L"script", L"ssh", L"mqtt", L"driver", L"modbus" };
+   return ((dataProvider >= DS_INTERNAL) && (dataProvider <= DS_MODBUS)) ? names[dataProvider] : L"unknown";
 }
 
 /**

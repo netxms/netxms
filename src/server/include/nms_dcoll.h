@@ -428,6 +428,7 @@ public:
 	bool isStatusDCO() const { return (m_flags & DCF_CALCULATE_NODE_STATUS) ? true : false; }
    bool isAggregateWithErrors() const { return (m_flags & DCF_AGGREGATE_WITH_ERRORS) ? true : false; }
    bool isStoreChangesOnly() const { return (m_flags & DCF_STORE_CHANGES_ONLY) ? true : false; }
+   bool isUnsupportedAsError() const { return (m_flags & DCF_UNSUPPORTED_AS_ERROR) ? true : false; }
    bool isAdvancedSchedule() const { return m_pollingScheduleType == DC_POLLING_SCHEDULE_ADVANCED; }
    int getAggregationFunction() const { return DCF_GET_AGGREGATION_FUNCTION(m_flags); }
    DCObjectStorageClass getStorageClass() const { return (m_retentionType == DC_RETENTION_CUSTOM) ? storageClassFromRetentionTime(m_retentionTime) : DCObjectStorageClass::DEFAULT; }
@@ -500,8 +501,8 @@ public:
 	static int m_defaultPollingInterval;
 
    static DCObjectStorageClass storageClassFromRetentionTime(int retentionTime);
-   static const TCHAR *getStorageClassName(DCObjectStorageClass storageClass);
-   static const TCHAR *getDataProviderName(int dataProvider);
+   static const wchar_t *getStorageClassName(DCObjectStorageClass storageClass);
+   static const wchar_t *getDataProviderName(int dataProvider);
 
    virtual SharedString getText() const override;
    virtual SharedString getAttribute(const TCHAR *attribute) const override;
