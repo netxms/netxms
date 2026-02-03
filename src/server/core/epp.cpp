@@ -2184,12 +2184,12 @@ uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, const Shared
    nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: slow path (merge required), serverRules=%d"), static_cast<int>(m_rules.size()));
 
    // Build server rule map for GUID lookup
-   std::unordered_map<uuid, shared_ptr<EPRule>, UuidHash, UuidEqual> serverRuleMap;
+   std::unordered_map<uuid, shared_ptr<EPRule>, uuid_hash, uuid_equal> serverRuleMap;
    for (auto& rule : m_rules)
       serverRuleMap[rule->getGuid()] = rule;
 
    // Build client rule map for lookup and collect new client rules with their predecessors
-   std::unordered_map<uuid, shared_ptr<EPRule>, UuidHash, UuidEqual> clientRuleMap;
+   std::unordered_map<uuid, shared_ptr<EPRule>, uuid_hash, uuid_equal> clientRuleMap;
    struct NewClientRuleInfo
    {
       shared_ptr<EPRule> rule;
@@ -2229,7 +2229,7 @@ uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, const Shared
    }
 
    // Build deleted GUIDs set
-   std::unordered_set<uuid, UuidHash, UuidEqual> deletedGuids;
+   std::unordered_set<uuid, uuid_hash, uuid_equal> deletedGuids;
    for (uint32_t i = 0; i < numDeletedRules; i++)
       deletedGuids.insert(deletedRules[i].guid);
 
@@ -2329,7 +2329,7 @@ uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, const Shared
       static_cast<int>(mergedRules.size()), static_cast<int>(newClientRules.size()));
 
    // Insert new client rules at their correct positions based on predecessors
-   std::unordered_map<uuid, shared_ptr<EPRule>, UuidHash, UuidEqual> lastInsertedAfter;
+   std::unordered_map<uuid, shared_ptr<EPRule>, uuid_hash, uuid_equal> lastInsertedAfter;
    for (auto& info : newClientRules)
    {
       size_t insertPos = 0;

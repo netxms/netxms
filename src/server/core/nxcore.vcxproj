@@ -562,6 +562,7 @@
     <ClCompile Include="rootobj.cpp" />
     <ClCompile Include="schedule.cpp" />
     <ClCompile Include="script.cpp" />
+    <ClCompile Include="sc_migration.cpp" />
     <ClCompile Include="search_query.cpp" />
     <ClCompile Include="sensor.cpp" />
     <ClCompile Include="server_stats.cpp" />

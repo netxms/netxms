@@ -564,6 +564,9 @@
     <ClCompile Include="anomaly_profile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sc_migration.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\dbdrv.h">

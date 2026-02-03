@@ -106,7 +106,7 @@ public:
 /**
  * Hash function for uuid to use with std::unordered_map/set
  */
-struct UuidHash
+struct uuid_hash
 {
    size_t operator()(const uuid& u) const
    {
@@ -121,7 +121,7 @@ struct UuidHash
 /**
  * Equality function for uuid to use with std::unordered_map/set
  */
-struct UuidEqual
+struct uuid_equal
 {
    bool operator()(const uuid& a, const uuid& b) const
    {

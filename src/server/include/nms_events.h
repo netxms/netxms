@@ -818,6 +818,8 @@ public:
 };
 
 #ifdef _WIN32
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<EPRule>;
+template class NXCORE_TEMPLATE_EXPORTABLE ObjectMemoryPool<shared_ptr<EPRule>>;
 template class NXCORE_TEMPLATE_EXPORTABLE SharedObjectArray<EPRule>;
 #endif
 
