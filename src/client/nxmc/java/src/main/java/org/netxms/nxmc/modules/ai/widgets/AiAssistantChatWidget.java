@@ -284,7 +284,7 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
       };
 
       // Initialize with welcome message
-      addAssistantMessage("Hello! I'm Iris, your AI assistant. I can help you with setting up your monitoring environment, day-to-day operations, and analyzing problems. Feel free to ask any questions!");
+      addAssistantMessage(i18n.tr("Hello! I'm Iris, your AI assistant. I can help you with setting up your monitoring environment, day-to-day operations, and analyzing problems. Feel free to ask any questions!"));
       updateBrowserContent();
 
       Label separator = new Label(this, SWT.SEPARATOR | SWT.HORIZONTAL);

@@ -778,9 +778,9 @@
             </executions>
          </plugin>
          <plugin>
-                <groupId>com.googlecode.gettext-commons</groupId>
+                <groupId>org.netxms</groupId>
                 <artifactId>gettext-maven-plugin</artifactId>
-                <version>1.2.4</version>
+                <version>1.5.0</version>
                 <executions>
                     <execution>
                         <id>convert-po-class</id>
@@ -791,7 +791,8 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <sourceDirectory>src/main/java</sourceDirectory>
+		    <sourceDirectory>${project.basedir}/src</sourceDirectory>
+		    <noFuzzyMatching>true</noFuzzyMatching>
                     <targetBundle>i18n.Messages</targetBundle>
                     <poDirectory>${basedir}/src/main/resources/po</poDirectory>
                     <outputDirectory>${project.build.outputDirectory}</outputDirectory>
