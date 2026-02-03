@@ -220,7 +220,7 @@ public class TokenManagement extends PropertyPage
             i18n.tr("Are you sure you want to revoke selected authentication token(s)?")))
          return;
 
-      final int[] tokenIds = selection.toList().stream()
+      final int[] tokenIds = ((List<?>)selection.toList()).stream()
             .mapToInt(o -> ((AuthenticationToken)o).getId())
             .toArray();
 

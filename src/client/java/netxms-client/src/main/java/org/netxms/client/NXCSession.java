@@ -8662,7 +8662,7 @@ public class NXCSession
     */
    public EventProcessingPolicy getEventProcessingPolicy() throws IOException, NXCException
    {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_OPEN_EPP);
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_EPP);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
 

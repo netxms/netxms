@@ -43,7 +43,7 @@ public class NXCPCodes
    public static final int CMD_DELETE_CONFIG_VARIABLE = 0x0011;
    public static final int CMD_NOTIFY = 0x0012;
 	public static final int CMD_TRAP = 0x0013;
-	public static final int CMD_OPEN_EPP = 0x0014;
+	public static final int CMD_GET_EPP = 0x0014;
    public static final int CMD_SAVE_EPP = 0x0015;
    public static final int CMD_EPP_RECORD = 0x0016;
    public static final int CMD_EXPLAIN_EPP_RULE = 0x0017;

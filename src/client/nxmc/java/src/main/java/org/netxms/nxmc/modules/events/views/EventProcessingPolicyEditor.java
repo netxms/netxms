@@ -532,6 +532,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
          {
             policy = session.getEventProcessingPolicy();
             runInUIThread(() -> {
+               System.out.println("Policy version: " + policy.getVersion());
                initPolicyEditor();
                modified = false;
                actionSave.setEnabled(false);
@@ -1009,7 +1010,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
          }
       }
 
-      policy = new EventProcessingPolicy(movedRuleEditors.size());
+      policy = new EventProcessingPolicy(movedRuleEditors.size(), policy.getVersion());
       int i = 0;
       for(RuleEditor e : movedRuleEditors)
       {

@@ -76,18 +76,6 @@ public class EventProcessingPolicy
     * Create new policy object.
     *
     * @param numRules Expected number of rules
-    */
-   public EventProcessingPolicy(int numRules)
-   {
-      rules = new ArrayList<EventProcessingPolicyRule>(numRules);
-      version = 0;
-      deletedRules = new ArrayList<>();
-   }
-
-   /**
-    * Create new policy object with version.
-    *
-    * @param numRules Expected number of rules
     * @param version Policy version from server
     */
    public EventProcessingPolicy(int numRules, int version)
