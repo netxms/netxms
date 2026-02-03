@@ -818,7 +818,7 @@ public:
 };
 
 #ifdef _WIN32
-template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<EPRule>;
+template class NXCORE_TEMPLATE_EXPORTABLE SharedObjectArray<EPRule>;
 #endif
 
 /**
@@ -855,7 +855,7 @@ public:
 class NXCORE_EXPORTABLE EventProcessingPolicy
 {
 private:
-   std::vector<shared_ptr<EPRule>> m_rules;
+   SharedObjectArray<EPRule> m_rules;
    RWLock m_rwlock;
    uint32_t m_version;   // Policy version for optimistic concurrency (in-memory only)
 
@@ -879,7 +879,7 @@ public:
    void replacePolicy(uint32_t numRules, EPRule **ruleList);
 
    // Optimistic concurrency support
-   uint32_t saveWithMerge(uint32_t baseVersion, std::vector<shared_ptr<EPRule>>& clientRules,
+   uint32_t saveWithMerge(uint32_t baseVersion, const SharedObjectArray<EPRule>& clientRules,
                           uint32_t numDeletedRules, DeletedRuleInfo *deletedRules,
                           const uuid& userGuid, const TCHAR* userName,
                           ObjectArray<EPPConflict> *conflicts, uint32_t *newVersion);

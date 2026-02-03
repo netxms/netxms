@@ -2510,14 +2510,6 @@ public:
          add(*static_cast<shared_ptr<T>*>(src.m_data.get(i)));
    }
 
-   int add(shared_ptr<T> element) { return m_data.add(new(m_pool.allocate()) shared_ptr<T>(element)); }
-   int add(T *element) { return m_data.add(new(m_pool.allocate()) shared_ptr<T>(element)); }
-   void addAll(const SharedObjectArray& src)
-   {
-      for(int i = 0; i < src.m_data.size(); i++)
-         add(*static_cast<shared_ptr<T>*>(src.m_data.get(i)));
-   }
-
    T *get(int index) const
    {
       auto p = static_cast<shared_ptr<T>*>(m_data.get(index));
@@ -2528,6 +2520,18 @@ public:
       auto p = static_cast<shared_ptr<T>*>(m_data.get(index));
       return (p != nullptr) ? *p : m_null;
    }
+
+   int add(shared_ptr<T> element) { return m_data.add(new(m_pool.allocate()) shared_ptr<T>(element)); }
+   int add(T *element) { return m_data.add(new(m_pool.allocate()) shared_ptr<T>(element)); }
+   void addAll(const SharedObjectArray& src)
+   {
+      for(int i = 0; i < src.m_data.size(); i++)
+         add(*static_cast<shared_ptr<T>*>(src.m_data.get(i)));
+   }
+
+   void insert(int index, shared_ptr<T> element) { m_data.insert(index, new(m_pool.allocate()) shared_ptr<T>(element)); }
+   void insert(int index, T *element) { m_data.insert(index, new(m_pool.allocate()) shared_ptr<T>(element)); }
+
    void replace(int index, shared_ptr<T> element)
    {
       auto p = static_cast<shared_ptr<T>**>(m_data.replaceWithPlaceholder(index));
@@ -2540,6 +2544,7 @@ public:
       if (p != nullptr)
          *p = new(m_pool.allocate()) shared_ptr<T>(element);
    }
+
    void remove(int index) { m_data.remove(index); }
    void clear() { m_data.clear(); }
 

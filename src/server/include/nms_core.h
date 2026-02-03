@@ -580,7 +580,7 @@ private:
    time_t m_loginTime;
    SynchronizedCountingHashSet<uint32_t> m_openDataCollectionConfigurations; // List of nodes with DCI lists open
    uint32_t m_eppExpectedRuleCount;  // Number of rules expected to be uploaded
-   std::vector<shared_ptr<EPRule>> m_eppRuleList;   // List of loaded EPP rules
+   SharedObjectArray<EPRule> m_eppRuleList;   // List of loaded EPP rules
    uint32_t m_eppBaseVersion;        // Base version for EPP optimistic concurrency
    DeletedRuleInfo *m_eppDeletedRules;  // Deleted rules info for EPP optimistic concurrency
    uint32_t m_eppDeletedRuleCount;   // Number of deleted rules

@@ -2062,7 +2062,7 @@ bool EventProcessingPolicy::loadFromDB()
          auto rule = make_shared<EPRule>(hResult, i);
          success = rule->loadFromDB(hdb);
          if (success)
-            m_rules.push_back(rule);
+            m_rules.add(rule);
       }
       DBFreeResult(hResult);
    }
@@ -2144,25 +2144,24 @@ void EPPConflict::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 /**
  * Save event processing policy with optimistic concurrency merge
  */
-uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, std::vector<shared_ptr<EPRule>>& clientRules,
-   uint32_t numDeletedRules, DeletedRuleInfo *deletedRules,
-   const uuid& userGuid, const TCHAR* userName,
+uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, const SharedObjectArray<EPRule>& clientRules,
+   uint32_t numDeletedRules, DeletedRuleInfo *deletedRules, const uuid& userGuid, const TCHAR* userName,
    ObjectArray<EPPConflict> *conflicts, uint32_t *newVersion)
 {
    writeLock();
 
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: baseVersion=%u, serverVersion=%u, clientRules=%u, deletedRules=%u"),
+   nxlog_debug_tag(DEBUG_TAG, 6, L"saveWithMerge: baseVersion=%u, serverVersion=%u, clientRules=%u, deletedRules=%u",
       baseVersion, m_version, static_cast<uint32_t>(clientRules.size()), numDeletedRules);
 
    // Fast path: no concurrent changes
    if (baseVersion == m_version)
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: fast path (no concurrent changes)"));
+      nxlog_debug_tag(DEBUG_TAG, 6, L"saveWithMerge: fast path (no concurrent changes)");
       time_t modTime = time(nullptr);
       m_rules.clear();
       for (size_t i = 0; i < clientRules.size(); i++)
       {
-         auto& rule = clientRules[i];
+         shared_ptr<EPRule> rule = clientRules.getShared(i);
          rule->setId(static_cast<uint32_t>(i));
          if (rule->isModified())
          {
@@ -2170,7 +2169,7 @@ uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, std::vector<
             rule->setModificationInfo(userGuid, userName, modTime);
             rule->clearModified();
          }
-         m_rules.push_back(rule);
+         m_rules.add(rule);
       }
       m_version++;
       *newVersion = m_version;
@@ -2200,7 +2199,7 @@ uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, std::vector<
 
    for (size_t i = 0; i < clientRules.size(); i++)
    {
-      auto& rule = clientRules[i];
+      shared_ptr<EPRule> rule = clientRules.getShared(i);
       auto serverIt = serverRuleMap.find(rule->getGuid());
 
       // Check if this is truly a new rule: version = 0 AND GUID doesn't exist on server
@@ -2212,9 +2211,10 @@ uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, std::vector<
          for (int j = static_cast<int>(i) - 1; j >= 0; j--)
          {
             // Predecessor must be an existing rule (either version > 0 or already on server)
-            if (clientRules[j]->getVersion() > 0 || serverRuleMap.find(clientRules[j]->getGuid()) != serverRuleMap.end())
+            const EPRule *pr = clientRules.get(j);
+            if (pr->getVersion() > 0 || serverRuleMap.find(pr->getGuid()) != serverRuleMap.end())
             {
-               predecessorGuid = clientRules[j]->getGuid();
+               predecessorGuid = pr->getGuid();
                break;
             }
          }
@@ -2385,7 +2385,7 @@ uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, std::vector<
             rule->setModificationInfo(userGuid, userName, modTime);
             rule->clearModified();
          }
-         m_rules.push_back(rule);
+         m_rules.add(rule);
       }
       m_version++;
       *newVersion = m_version;
@@ -2472,7 +2472,7 @@ void EventProcessingPolicy::replacePolicy(uint32_t numRules, EPRule **ruleList)
          // Take ownership via shared_ptr
          auto rule = shared_ptr<EPRule>(ruleList[i]);
          rule->setId(i);
-         m_rules.push_back(rule);
+         m_rules.add(rule);
          ruleList[i] = nullptr;  // Ownership transferred
       }
    }
@@ -2588,7 +2588,7 @@ int EventProcessingPolicy::findRuleIndexByGuid(const uuid& guid, int shift) cons
 {
    for (size_t i = 0; i < m_rules.size(); i++)
    {
-      if (guid.equals(m_rules[i]->getGuid()))
+      if (guid.equals(m_rules.get(i)->getGuid()))
          return static_cast<int>(i) + shift;
    }
    return -1;
@@ -2611,7 +2611,7 @@ void EventProcessingPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray
       if (overwrite)
       {
          rulePtr->setId(ruleIndex);
-         m_rules[ruleIndex] = rulePtr;
+         m_rules.replace(ruleIndex, rulePtr);
       }
       // If not overwriting, shared_ptr will delete the rule when it goes out of scope
    }
@@ -2652,14 +2652,14 @@ void EventProcessingPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray
       if (ruleIndex == -1) // Add new rule at the end
       {
          rulePtr->setId(static_cast<uint32_t>(m_rules.size()));
-         m_rules.push_back(rulePtr);
+         m_rules.add(rulePtr);
       }
       else
       {
          rulePtr->setId(ruleIndex);
-         m_rules.insert(m_rules.begin() + ruleIndex, rulePtr);
+         m_rules.insert(ruleIndex, rulePtr);
          for (size_t i = ruleIndex + 1; i < m_rules.size(); i++)
-            m_rules[i]->setId(static_cast<uint32_t>(i));
+            m_rules.get(i)->setId(static_cast<uint32_t>(i));
       }
    }
 

@@ -5989,7 +5989,6 @@ void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
       m_eppBaseVersion = request.getFieldAsUInt32(VID_BASE_VERSION);
       m_eppExpectedRuleCount = request.getFieldAsUInt32(VID_NUM_RULES);
       m_eppRuleList.clear();
-      m_eppRuleList.reserve(m_eppExpectedRuleCount);
 
       // Read deleted rules list
       m_eppDeletedRuleCount = request.getFieldAsUInt32(VID_DELETED_RULE_COUNT);
@@ -6038,7 +6037,7 @@ void ClientSession::processEventProcessingPolicyRecord(const NXCPMessage& reques
    {
       if (m_eppRuleList.size() < m_eppExpectedRuleCount)
       {
-         m_eppRuleList.push_back(make_shared<EPRule>(request));
+         m_eppRuleList.add(make_shared<EPRule>(request));
          if (m_eppRuleList.size() == m_eppExpectedRuleCount)
          {
             InterlockedAnd(&m_flags, ~CSF_EPP_UPLOAD);
