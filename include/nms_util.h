@@ -461,6 +461,12 @@ std::string LIBNETXMS_EXPORTABLE FormatISO8601Timestamp(time_t t);
 std::string LIBNETXMS_EXPORTABLE FormatISO8601TimestampMs(int64_t t);
 
 /**
+ * Parse timestamp from string. Supports absolute timestamps in ISO 8601 format or as UNIX timestamp,
+ * as well as relative timestamps in format [+|-]<number>[s|m|h|d]
+ */
+time_t LIBNETXMS_EXPORTABLE ParseTimestamp(const char *ts);
+
+/**
  * Get current time in milliseconds
  */
 static inline int64_t GetCurrentTimeMs()

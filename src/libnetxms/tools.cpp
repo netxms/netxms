@@ -1160,6 +1160,52 @@ std::string LIBNETXMS_EXPORTABLE FormatISO8601TimestampMs(int64_t t)
 }
 
 /**
+ * Parse timestamp from string. Supports absolute timestamps in ISO 8601 format or as UNIX timestamp,
+ * as well as relative timestamps in format [+|-]<number>[s|m|h|d] or word "now".
+ */
+time_t LIBNETXMS_EXPORTABLE ParseTimestamp(const char *ts)
+{
+   char *eptr;
+   if ((ts[0] == '-') || (ts[0] == '+'))
+   {
+      // Offset from now
+      int64_t offset = strtoll(&ts[1], &eptr, 10);
+      if (*eptr != 0)
+      {
+         // check for suffix
+         if (stricmp(eptr, "m") == 0)
+            offset *= 60;
+         else if (stricmp(eptr, "h") == 0)
+            offset *= 3600;
+         else if (stricmp(eptr, "d") == 0)
+            offset *= 86400;
+         else if (stricmp(eptr, "s") != 0)
+            return 0;  // invalid format
+      }
+      else
+      {
+         // no suffix, assume minutes
+         offset *= 60;
+      }
+      time_t now = time(nullptr);
+      return (ts[0] == '+') ? now + static_cast<time_t>(offset) : now - static_cast<time_t>(offset);
+   }
+
+   if (!stricmp(ts, "now"))
+      return time(nullptr);
+
+   int64_t n = strtoll(ts, &eptr, 10);
+   if (*eptr == 0)
+      return static_cast<time_t>(n);   // Assume UNIX timestamp
+
+   struct tm t;
+   if (strptime(ts, "%Y-%m-%dT%H:%M:%SZ", &t) == nullptr)
+      return 0;
+
+   return timegm(&t);
+}
+
+/**
  * Get local system time zone. Returns pointer to buffer for convenience.
  */
 TCHAR LIBNETXMS_EXPORTABLE *GetSystemTimeZone(TCHAR *buffer, size_t size, bool withName, bool forceFullOffset)

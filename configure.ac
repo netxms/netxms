@@ -4979,6 +4979,7 @@ AC_CONFIG_FILES([
 	src/agent/smbios/Makefile
 	src/agent/subagents/Makefile
 	src/agent/subagents/aix/Makefile
+	src/agent/subagents/aifileops/Makefile
 	src/agent/subagents/asterisk/Makefile
 	src/agent/subagents/bind9/Makefile
 	src/agent/subagents/darwin/Makefile
