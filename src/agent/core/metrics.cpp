@@ -770,7 +770,8 @@ void AddMetric(const TCHAR *name, LONG (*handler)(const TCHAR*, const TCHAR*, TC
 /**
  * Add list
  */
-void AddList(const TCHAR *name, LONG (*handler)(const TCHAR*, const TCHAR*, StringList*, AbstractCommSession*), const TCHAR *arg, bool (*filter)(const TCHAR*, const TCHAR*, AbstractCommSession*))
+void AddList(const TCHAR *name, LONG (*handler)(const TCHAR*, const TCHAR*, StringList*, AbstractCommSession*), const TCHAR *arg,
+         const TCHAR *description, bool (*filter)(const TCHAR*, const TCHAR*, AbstractCommSession*))
 {
    // Search for existing enum
    NETXMS_SUBAGENT_LIST *p = nullptr;
@@ -785,15 +786,17 @@ void AddList(const TCHAR *name, LONG (*handler)(const TCHAR*, const TCHAR*, Stri
       // Replace existing handler and arg
       p->handler = handler;
       p->arg = arg;
+      _tcslcpy(p->description, CHECK_NULL_EX(description), MAX_DB_STRING);
       p->filter = filter;
    }
    else
    {
       // Add new enum
       NETXMS_SUBAGENT_LIST np;
-      _tcslcpy(np.name, name, MAX_PARAM_NAME - 1);
+      _tcslcpy(np.name, name, MAX_PARAM_NAME);
       np.handler = handler;
       np.arg = arg;
+      _tcslcpy(np.description, CHECK_NULL_EX(description), MAX_DB_STRING);
       np.filter = filter;
       s_lists.add(np);
    }
@@ -861,7 +864,7 @@ bool AddExternalMetric(TCHAR *config, bool isList)
 	TCHAR *arg = MemCopyString(cmdLine);
    if (isList)
    {
-      AddList(config, H_ExternalList, arg, nullptr);
+      AddList(config, H_ExternalList, arg, nullptr, nullptr);
    }
    else
    {
