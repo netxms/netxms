@@ -51,6 +51,7 @@ private:
    char m_fromName[256];
    char m_fromAddr[256];
    bool m_isHtml;
+   bool m_verifyPeer;
    TLSMode m_tlsMode;
 
    SmtpDriver();
@@ -81,6 +82,7 @@ SmtpDriver *SmtpDriver::createInstance(Config *config)
       { _T("Port"), CT_WORD, 0, 0, 0, 0, &driver->m_port },
       { _T("Server"), CT_MB_STRING, 0, 0, sizeof(driver->m_server), 0, driver->m_server },
       { _T("TLSMode"), CT_STRING, 0, 0, 9, 0, tlsModeBuff },
+      { _T("VerifyPeer"), CT_BOOLEAN, 0, 0, 1, 0, &driver->m_verifyPeer },
       { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
    };
 
@@ -129,6 +131,7 @@ SmtpDriver::SmtpDriver()
    strcpy(m_fromName, "NetXMS Server");
    strcpy(m_fromAddr, "netxms@localhost");
    m_isHtml = false;
+   m_verifyPeer = true;
    m_tlsMode = TLSMode::NONE;
 }
 
@@ -287,6 +290,8 @@ int SmtpDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *
 
    if (m_tlsMode != TLSMode::NONE)
    {
+      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, m_verifyPeer ? 1L : 0L);
+      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, m_verifyPeer ? 2L : 0L);
       EnableLibCURLUnexpectedEOFWorkaround(curl);
    }
 
