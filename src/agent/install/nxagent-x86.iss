@@ -21,6 +21,7 @@ Source: "..\..\..\Release\appagent.dll"; DestDir: "{app}\bin"; Flags: ignorevers
 Source: "..\..\..\Release\nxagentd.exe"; DestDir: "{app}\bin"; BeforeInstall: RenameOldFile; Flags: ignoreversion signonce
 Source: "..\..\..\Release\nxcrashsrv.exe"; DestDir: "{app}\bin"; BeforeInstall: RenameOldFile; Flags: ignoreversion signonce
 Source: "..\..\..\Release\nxsagent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\Release\aifileops.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\bind9.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\db2.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\dbquery.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
