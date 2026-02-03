@@ -383,7 +383,7 @@ void ShutdownStorageClassMigration()
  */
 uint32_t QueueStorageClassMigration(uint32_t dciId, char dciType, DCObjectStorageClass oldClass, DCObjectStorageClass newClass)
 {
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("Queuing storage class migration for DCI %u (type=%c) from %s to %s"),
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Queuing storage class migration for DCI [%u] (type=%c) from %s to %s"),
       dciId, dciType, DCObject::getStorageClassName(oldClass), DCObject::getStorageClassName(newClass));
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();

@@ -23,13 +23,13 @@
 #include "nxcore.h"
 #include <nms_users.h>
 
+#define DEBUG_TAG_DC_CONFIG      _T("dc.config")
+#define DEBUG_TAG_DC_SCHEDULER   _T("dc.scheduler")
+
 /**
  * Queue storage class migration (defined in sc_migration.cpp)
  */
 uint32_t QueueStorageClassMigration(uint32_t dciId, char dciType, DCObjectStorageClass oldClass, DCObjectStorageClass newClass);
-
-#define DEBUG_TAG_DC_CONFIG      _T("dc.config")
-#define DEBUG_TAG_DC_SCHEDULER   _T("dc.scheduler")
 
 /**
  * Default retention time for collected data
@@ -947,14 +947,18 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
    updateTimeIntervalsInternal();
 
    // Check if storage class changed (only for TimescaleDB with single table mode)
-   if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
+   // Skip migration for template items - templates do not collect data
+   // Skip migration if instance discovery method is configured - instance discovery DCIs do not collect data
+   if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA) && (m_instanceDiscoveryMethod == IDM_NONE))
    {
-      DCObjectStorageClass newStorageClass = getStorageClass();
-      if (oldStorageClass != newStorageClass)
+      auto owner = m_owner.lock();
+      if ((owner != nullptr) && owner->isDataCollectionTarget())
       {
-         QueueStorageClassMigration(m_id,
-            (getType() == DCO_TYPE_ITEM) ? 'I' : 'T',
-            oldStorageClass, newStorageClass);
+         DCObjectStorageClass newStorageClass = getStorageClass();
+         if (oldStorageClass != newStorageClass)
+         {
+            QueueStorageClassMigration(m_id, (getType() == DCO_TYPE_ITEM) ? 'I' : 'T', oldStorageClass, newStorageClass);
+         }
       }
    }
 
@@ -1121,6 +1125,9 @@ void DCObject::updateFromTemplate(DCObject *src)
 {
    lock();
 
+   // Capture old storage class before updating retention settings
+   DCObjectStorageClass oldStorageClass = getStorageClass();
+
    m_name = expandMacros(src->m_name, MAX_ITEM_NAME);
    m_description = expandMacros(src->m_description, MAX_DB_STRING);
    m_systemTag = expandMacros(src->m_systemTag, MAX_DB_STRING);
@@ -1131,6 +1138,16 @@ void DCObject::updateFromTemplate(DCObject *src)
    m_retentionType = src->m_retentionType;
    m_retentionTimeSrc = src->m_retentionTimeSrc;
    updateTimeIntervalsInternal();
+
+   // Check if storage class changed (only for TimescaleDB with single table mode)
+   if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA) && (m_instanceDiscoveryMethod == IDM_NONE))
+   {
+      DCObjectStorageClass newStorageClass = getStorageClass();
+      if (oldStorageClass != newStorageClass)
+      {
+         QueueStorageClassMigration(m_id, (getType() == DCO_TYPE_ITEM) ? 'I' : 'T', oldStorageClass, newStorageClass);
+      }
+   }
 
    m_source = src->m_source;
    m_flags = src->m_flags;
