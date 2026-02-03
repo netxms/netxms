@@ -1080,7 +1080,7 @@ bool AddExternalStructuredDataProvider(ConfigEntry *config)
          TCHAR tmp[512];
          _tcscpy(tmp, name);
          _tcscat(tmp, _T(".description"));
-         const TCHAR *description = metricRoot->getSubEntryValue(tmp, 0 , _T(""));
+         const TCHAR *description = listRoot->getSubEntryValue(tmp, 0 , _T(""));
 
          listDefenitions->set(e->getName(), new StructuredExtractorParameterDefinition(e->getValue(), description, DCI_DT_STRING));
       }
