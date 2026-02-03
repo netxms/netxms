@@ -197,7 +197,7 @@ public class EPPConflictDialog extends Dialog
    protected void createButtonsForButtonBar(Composite parent)
    {
       createButton(parent, RELOAD, i18n.tr("Reload from Server"), true);
-      createButton(parent, CANCEL, IDialogConstants.CANCEL_LABEL, false);
+      createButton(parent, CANCEL, i18n.tr("Cancel"), false);
    }
 
    /**
