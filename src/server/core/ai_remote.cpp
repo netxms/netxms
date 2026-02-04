@@ -102,7 +102,22 @@ std::string F_ExecuteAgentTool(json_t *arguments, uint32_t userId)
       return R"({"error": "Cannot connect to agent"})";
 
    // Serialize parameters
-   char *paramsStr = (params != nullptr) ? json_dumps(params, JSON_COMPACT) : MemCopyStringA("{}");
+   // Handle the case where LLM passes parameters as a JSON string instead of an object
+   char *paramsStr;
+   if (params == nullptr)
+   {
+      paramsStr = MemCopyStringA("{}");
+   }
+   else if (json_is_string(params))
+   {
+      // LLM passed parameters as a JSON string - use it directly
+      paramsStr = MemCopyStringA(json_string_value(params));
+   }
+   else
+   {
+      // Parameters is an object - serialize it
+      paramsStr = json_dumps(params, JSON_COMPACT);
+   }
 
    // Execute tool
    char *result = nullptr;
