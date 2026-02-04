@@ -54,6 +54,9 @@
     <ClCompile Include="ai_provider_openai.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ai_remote.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="ai_tasks.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

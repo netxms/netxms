@@ -435,6 +435,7 @@
     <ClCompile Include="ai_provider.cpp" />
     <ClCompile Include="ai_provider_ollama.cpp" />
     <ClCompile Include="ai_provider_openai.cpp" />
+    <ClCompile Include="ai_remote.cpp" />
     <ClCompile Include="ai_tasks.cpp" />
     <ClCompile Include="alarm.cpp" />
     <ClCompile Include="alarm_category.cpp" />

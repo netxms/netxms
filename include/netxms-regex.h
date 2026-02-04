@@ -90,6 +90,7 @@ typedef pcre2_match_data_32 pcre32_extra;
 #define PCRE_INFO_NAMETABLE     PCRE2_INFO_NAMETABLE
 #define PCRE_INFO_NAMEENTRYSIZE PCRE2_INFO_NAMEENTRYSIZE
 #define PCRE_MULTILINE          PCRE2_MULTILINE
+#define PCRE_UTF8               PCRE2_UTF
 
 #ifdef UNICODE
 #define PCRE_COMMON_FLAGS       PCRE_COMMON_FLAGS_W
@@ -137,6 +138,16 @@ static inline void pcre_free(pcre2_code_8* code)
 static inline int pcre_fullinfo(const pcre2_code_8* code, const pcre2_match_data_8* mdata, uint32_t what, void* where)
 {
    return pcre2_pattern_info_8(code, what, where);
+}
+
+static inline pcre_extra *pcre_study(const pcre *code, int options, const char **errptr)
+{
+   *errptr = nullptr;
+   return nullptr;
+}
+
+static inline void pcre_free_study(pcre_extra *extra)
+{
 }
 
 // Unicode wrappers

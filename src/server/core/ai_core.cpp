@@ -40,6 +40,8 @@ std::string GetRegisteredSkills();
 
 std::string F_AITaskList(json_t *arguments, uint32_t userId);
 std::string F_DeleteAITask(json_t *arguments, uint32_t userId);
+std::string F_ExecuteAgentTool(json_t *arguments, uint32_t userId);
+std::string F_GetNodeAITools(json_t *arguments, uint32_t userId);
 
 /**
  * Loaded server config
@@ -116,6 +118,13 @@ static const char *s_systemPrompt =
          "- Skills extend your functionality for specific domains or complex operations\n"
          "- Mentioning a skill without loading it provides no value\n"
          "- Load skills proactively when you recognize a need for specialized capabilities\n\n"
+         "AGENT TOOLS:\n"
+         "- Network nodes may have AI tools available on their agents for diagnostics, log analysis, file operations, etc.\n"
+         "- WORKFLOW: (1) Call get-node-ai-tools ONCE to discover available tools on a node, "
+         "(2) Then call execute-agent-tool with the tool name and parameters to run the tool. "
+         "NEVER call get-node-ai-tools multiple times for the same node - once you have the tool list, proceed directly to execute-agent-tool.\n"
+         "- Agent tools extend your capabilities to interact directly with monitored systems\n"
+         "- Tool availability depends on agent configuration - not all nodes will have the same tools\n\n"
          "LIMITATION REPORTING:\n"
          "- Only report inability to perform tasks AFTER checking and attempting relevant skills\n"
          "- When reporting limitations, always mention which skills were checked\n"
@@ -171,6 +180,13 @@ static const char *s_systemPromptBackground =
          "- Skills extend your functionality for specific domains or complex operations\n"
          "- Mentioning a skill without loading it provides no value\n"
          "- Load skills proactively when you recognize a need for specialized capabilities\n\n"
+         "AGENT TOOLS:\n"
+         "- Network nodes may have AI tools available on their agents for diagnostics, log analysis, file operations, etc.\n"
+         "- WORKFLOW: (1) Call get-node-ai-tools ONCE to discover available tools on a node, "
+         "(2) Then call execute-agent-tool with the tool name and parameters to run the tool. "
+         "NEVER call get-node-ai-tools multiple times for the same node - once you have the tool list, proceed directly to execute-agent-tool.\n"
+         "- Agent tools extend your capabilities to interact directly with monitored systems\n"
+         "- Tool availability depends on agent configuration - not all nodes will have the same tools\n\n"
          "LIMITATION REPORTING:\n"
          "- Only report inability to perform tasks AFTER checking and attempting relevant skills\n"
          "- When reporting limitations, always mention which skills were checked\n"
@@ -1849,6 +1865,26 @@ bool InitAIAssistant()
          { "relatedObjectId", "Optional: ID of related NetXMS object" },
          { "expirationMinutes", "Optional: minutes until request expires (default 24 hours)" }
       }, F_CreateApprovalRequest);
+
+   RegisterAIAssistantFunction(
+      "get-node-ai-tools",
+      "Discover AI tools available on a node's agent (call this ONCE per node, then use execute-agent-tool). "
+      "Returns tool names and their parameter schemas. After calling this function, immediately proceed to call "
+      "execute-agent-tool with the appropriate tool_name and parameters - do NOT call get-node-ai-tools again for the same node.",
+      {
+         { "node", "Node ID or name" }
+      },
+      F_GetNodeAITools);
+   RegisterAIAssistantFunction(
+      "execute-agent-tool",
+      "Execute an AI tool on a node's agent. This is the function you use AFTER calling get-node-ai-tools to discover available tools. "
+      "Pass the tool name from the discovery response and the required parameters according to the tool's schema.",
+      {
+         { "node", "Node ID or name (same node used in get-node-ai-tools)" },
+         { "tool_name", "Name of the tool to execute (from get-node-ai-tools response)" },
+         { "parameters", "Tool parameters as JSON object matching the tool's parameter schema" }
+      },
+      F_ExecuteAgentTool);
 
    InitAITasks();
    InitializeAIMessageManager();

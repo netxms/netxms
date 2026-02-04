@@ -1,7 +1,7 @@
 SUBAGENT = aifileops
 
 pkglib_LTLIBRARIES = aifileops.la
-aifileops_la_SOURCES = aifileops.cpp
+aifileops_la_SOURCES = aifileops.cpp file.cpp log.cpp patch.cpp
 aifileops_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 aifileops_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 aifileops_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la

@@ -3737,6 +3737,7 @@ protected:
    ObjectArray<AgentParameterDefinition> *m_agentParameters; // List of metrics supported by agent
    ObjectArray<AgentTableDefinition> *m_agentTables; // List of supported tables
    ObjectArray<AgentListDefinition> *m_agentLists; // List of supported lists
+   char *m_agentAIToolsSchema;  // JSON schema of AI tools from agent
    ObjectArray<AgentParameterDefinition> *m_driverParameters; // List of metrics supported by driver
    StringList *m_smclpMetrics;  // List of metrics supported by SM-CLP
    time_t m_failTimeAgent;
@@ -4310,6 +4311,8 @@ public:
    NetworkDeviceDriver *getDriver() const { return m_driver; }
    DriverData *getDriverData() { return m_driverData; }
    void setDriverData(DriverData *data) { m_driverData = data; }
+   const char *getAgentAIToolsSchema() const { return m_agentAIToolsSchema; }
+   bool hasAgentAITools() const { return m_agentAIToolsSchema != nullptr; }
 
    void incSyslogMessageCount();
    void incSnmpTrapCount();

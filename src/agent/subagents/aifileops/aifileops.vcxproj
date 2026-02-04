@@ -384,6 +384,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="aifileops.cpp" />
+    <ClCompile Include="file.cpp" />
+    <ClCompile Include="log.cpp" />
+    <ClCompile Include="patch.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\nms_agent.h" />

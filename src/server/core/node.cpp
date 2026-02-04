@@ -176,6 +176,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_agentParameters = nullptr;
    m_agentTables = nullptr;
    m_agentLists = nullptr;
+   m_agentAIToolsSchema = nullptr;
    m_driverParameters = nullptr;
    m_smclpMetrics = nullptr;
    m_pollerNode = 0;
@@ -307,6 +308,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_agentParameters = nullptr;
    m_agentTables = nullptr;
    m_agentLists = nullptr;
+   m_agentAIToolsSchema = nullptr;
    m_driverParameters = nullptr;
    m_smclpMetrics = nullptr;
    m_pollerNode = 0;
@@ -398,6 +400,7 @@ Node::~Node()
    delete m_agentParameters;
    delete m_agentTables;
    delete m_agentLists;
+   MemFree(m_agentAIToolsSchema);
    delete m_driverParameters;
    delete m_smclpMetrics;
    MemFree(m_sysDescription);
@@ -5492,6 +5495,25 @@ bool Node::confPollAgent()
       else
       {
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"ConfPoll(%s): AgentConnection::getSupportedParameters() failed: rcc=%u", m_name, rcc);
+      }
+
+      // Get AI tools schema from agent
+      char *aiToolsSchema = nullptr;
+      rcc = pAgentConn->getAITools(&aiToolsSchema);
+      if (rcc == ERR_SUCCESS && aiToolsSchema != nullptr)
+      {
+         lockProperties();
+         MemFree(m_agentAIToolsSchema);
+         m_agentAIToolsSchema = aiToolsSchema;
+         unlockProperties();
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): retrieved AI tools schema"), m_name);
+      }
+      else if (rcc == ERR_UNKNOWN_COMMAND)
+      {
+         // Agent doesn't support AI tools - clear cached schema
+         lockProperties();
+         MemFreeAndNull(m_agentAIToolsSchema);
+         unlockProperties();
       }
 
       // Check for service manager support
