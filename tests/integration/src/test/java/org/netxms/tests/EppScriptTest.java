@@ -38,11 +38,11 @@ import org.netxms.utilities.TestHelperForEpp;
 public class EppScriptTest extends AbstractSessionTest
 {
    private final String key = "Key to set";
-   
+
    private NXCSession session;
    private EventProcessingPolicy policy = null;
    private EventProcessingPolicyRule testRule = null;
-   
+
    @Test
    public void testCreatePersistant() throws Exception
    {
@@ -58,11 +58,11 @@ public class EppScriptTest extends AbstractSessionTest
 
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, templateName);
 
-      policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed;
-      
+      policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed;
+
       testRule = TestHelperForEpp.findOrCreateRule(session, policy, commentForSearching, eventTestTemplate, node);
-      assertTrue(testRule.getActionScript() == null || testRule.getActionScript().equals("")); // checking that CA in the rule is empty 
-       
+      assertTrue(testRule.getActionScript() == null || testRule.getActionScript().equals("")); // checking that CA in the rule is empty
+
       testRule.setActionScript(testActionScript);
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null, null);
@@ -74,9 +74,9 @@ public class EppScriptTest extends AbstractSessionTest
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null, null);
       Thread.sleep(200);
       assertEquals(TestHelperForEpp.findPsValueByKey(session, key), String.valueOf(eventTestTemplate.getCode()));
-      
+
       session.deletePersistentStorageValue(key);
-      
+
       testRule.setActionScript(testActionScript3);
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null, null);
@@ -87,10 +87,10 @@ public class EppScriptTest extends AbstractSessionTest
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null, null);
    }
-   
+
    /**
     * Function will restore all data to initial state for test run next time
-    * 
+    *
     * @throws IOException
     * @throws NXCException
     */
@@ -100,10 +100,9 @@ public class EppScriptTest extends AbstractSessionTest
       if (policy != null && testRule != null)
       {
          testRule.setActionScript("");
-         session.saveEventProcessingPolicy(policy);  
-         session.closeEventProcessingPolicy();
+         session.saveEventProcessingPolicy(policy);
          session.deletePersistentStorageValue(key);
          session.disconnect();
-      }      
+      }
    }
 }

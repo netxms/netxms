@@ -41,18 +41,18 @@ public class EppTimeFilterCondition extends AbstractSessionTest
    final String COMMENT_FOR_SEARCHING_RULE = "comment for testing time filter";
    final String PS_KEY = "key for testing time filter";
    final String PS_VALUE = "value for testing time filter";
-   
+
    int startHour = 0;
    int startMinute = 0;
    int endHour = 23;
    int endMinute = 59;
    boolean[] daysOfWeek = { true, true, true, true, true, true, true };
    String daysOfMonth = "1-31";
-   boolean[] month = { true, true, true, true, true, true, true, true, true, true, true, true }; 
+   boolean[] month = { true, true, true, true, true, true, true, true, true, true, true, true };
 
    /**
     * Сreates a new EPP rule with specific parameters
-    * 
+    *
     * @param session
     * @param node
     * @param policy
@@ -70,11 +70,11 @@ public class EppTimeFilterCondition extends AbstractSessionTest
 
    /**
     * Sets current day of the week
-    * 
+    *
     * @return day of the week
     * @throws Exception
     */
-   
+
    public boolean[] setCurrentDayOfTheWeek(Calendar calendar) throws Exception
    {
       int currentDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
@@ -86,12 +86,12 @@ public class EppTimeFilterCondition extends AbstractSessionTest
          daysOfWeek[i] = (i+2 == currentDayOfWeek);
       }
       return daysOfWeek;
-      
+
    }
-   
+
    /**
     * Sets current month
-    * 
+    *
     * @return current month
     * @throws Exception
     */
@@ -106,7 +106,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
          month[i] = (i == currentMonth);
       }
       return month;
-      
+
    }
 
    //+---------------------------+
@@ -120,14 +120,14 @@ public class EppTimeFilterCondition extends AbstractSessionTest
    //|----------------|----------|
    //|Month           | all      |
    //+---------------------------+
-      
+
    @Test
    public void testTimeFilterCondition() throws Exception
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       EventProcessingPolicyRule testRule = createTestRule(session, node, policy, TEMPLATE_NAME, COMMENT_FOR_SEARCHING_RULE);
       Map<String, String> rulePsSetList = new HashMap<>();
@@ -150,26 +150,25 @@ public class EppTimeFilterCondition extends AbstractSessionTest
 
       session.deletePersistentStorageValue(PS_KEY);
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       testRule.setFlags(testRule.getFlags() | testRule.NEGATED_TIME_FRAMES); // making inverse rule
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       //to run next test
       testRule.setFlags(testRule.getFlags() & ~testRule.NEGATED_TIME_FRAMES);
       session.saveEventProcessingPolicy(policy);
-      
 
-      session.closeEventProcessingPolicy();
+
    }
    //+---------------------------+
    //| Start time     | current  |    + INVERSE RULE
    //|----------------|----------|
    //| End time       | 23:59    |
    //|----------------|----------|
-   //|Day of the week | all      |  
+   //|Day of the week | all      |
    //|----------------|----------|
    //|Day of the month| all      |
    //|----------------|----------|
@@ -182,7 +181,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       session.syncObjects();
       Calendar calendar = Calendar.getInstance();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
       int startHour = calendar.get(Calendar.HOUR_OF_DAY);
       int startMinute = calendar.get(Calendar.MINUTE);
 
@@ -207,17 +206,17 @@ public class EppTimeFilterCondition extends AbstractSessionTest
 
       session.deletePersistentStorageValue(PS_KEY);
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       //making inverse rule
 
-      testRule.setFlags(testRule.getFlags() | testRule.NEGATED_TIME_FRAMES); 
+      testRule.setFlags(testRule.getFlags() | testRule.NEGATED_TIME_FRAMES);
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       //Setting the time that will be outside the bounds of the time rule
-      calendar = Calendar.getInstance(); 
+      calendar = Calendar.getInstance();
 
       calendar.add(Calendar.MINUTE, 2);
       startHour = calendar.get(Calendar.HOUR_OF_DAY);
@@ -229,18 +228,17 @@ public class EppTimeFilterCondition extends AbstractSessionTest
 
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
-      session.closeEventProcessingPolicy();
+
    }
-   
+
    //+------------------------------+
    //| Start time     | current     |    + INVERSE RULE
    //|----------------|-------------|
    //| End time       |current +2min|
    //|----------------|-------------|
-   //|Day of the week | all         |  
+   //|Day of the week | all         |
    //|----------------|-------------|
    //|Day of the month| all         |
    //|----------------|-------------|
@@ -252,12 +250,12 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
       Calendar calendar = Calendar.getInstance();
 
       int startHour = calendar.get(Calendar.HOUR_OF_DAY);
       int startMinute = calendar.get(Calendar.MINUTE);
-           
+
       int endMinute = (startMinute + 2) % 60;
       int endHour = startHour + (startMinute + 2) / 60;
 
@@ -272,7 +270,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       List<TimeFrame> timeFrameList = new ArrayList<>();
       timeFrameList.add(timeFrame);
 
-      testRule.setTimeFrames(timeFrameList); 
+      testRule.setTimeFrames(timeFrameList);
       session.saveEventProcessingPolicy(policy);
 
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));// checking that PS does not contain a value for the given key
@@ -282,15 +280,15 @@ public class EppTimeFilterCondition extends AbstractSessionTest
 
       session.deletePersistentStorageValue(PS_KEY);
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       testRule.setFlags(testRule.getFlags() | testRule.NEGATED_TIME_FRAMES); //making inverse rule
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       //Setting the time that will be outside the bounds of the time rule
-      calendar = Calendar.getInstance(); 
+      calendar = Calendar.getInstance();
 
       calendar.add(Calendar.MINUTE, 2);
       startHour = calendar.get(Calendar.HOUR_OF_DAY);
@@ -304,18 +302,17 @@ public class EppTimeFilterCondition extends AbstractSessionTest
 
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
 
-      session.closeEventProcessingPolicy();
    }
-   
+
    //+---------------------------+
    //| Start time     | 00:00    |
    //|----------------|----------|
    //| End time       | current  |   + INVERSE RULE
    //|----------------|----------|
-   //|Day of the week | all      |      
+   //|Day of the week | all      |
    //|----------------|----------|
    //|Day of the month| all      |
    //|----------------|----------|
@@ -327,7 +324,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
       Calendar calendar = Calendar.getInstance();
 
       int endHour = calendar.get(Calendar.HOUR_OF_DAY);
@@ -337,7 +334,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       Map<String, String> rulePsSetList = new HashMap<>();
       rulePsSetList.put(PS_KEY, PS_VALUE);// creating a key-value set to pass into the rule
       testRule.setPStorageSet(rulePsSetList);
-      
+
       TimeFrame timeFrame = new TimeFrame();
       timeFrame.update(startHour, startMinute, endHour, endMinute, daysOfWeek, daysOfMonth, month);
 
@@ -346,23 +343,23 @@ public class EppTimeFilterCondition extends AbstractSessionTest
 
       testRule.setTimeFrames(timeFrameList);
       session.saveEventProcessingPolicy(policy);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));// checking that PS does not contain a value for the given key
       session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
 
       assertNotNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       session.deletePersistentStorageValue(PS_KEY);
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       testRule.setFlags(testRule.getFlags() | testRule.NEGATED_TIME_FRAMES); //making inverse rule
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       //Setting the time that will be outside the bounds of the time rule
-      calendar = Calendar.getInstance(); 
+      calendar = Calendar.getInstance();
 
       calendar.add(Calendar.MINUTE, -2);
       endHour = calendar.get(Calendar.HOUR);
@@ -374,12 +371,11 @@ public class EppTimeFilterCondition extends AbstractSessionTest
 
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
-      session.closeEventProcessingPolicy();
+
    }
-   
+
    //+---------------------------+
    //| Start time     | 00:00    |
    //|----------------|----------|
@@ -397,7 +393,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
       Calendar calendar = Calendar.getInstance();
 
       boolean[] daysOfWeek = setCurrentDayOfTheWeek(calendar);
@@ -423,15 +419,15 @@ public class EppTimeFilterCondition extends AbstractSessionTest
 
       session.deletePersistentStorageValue(PS_KEY);
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-       
+
       testRule.setFlags(testRule.getFlags() | testRule.NEGATED_TIME_FRAMES); //making inverse rule
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       //Setting the day that will be outside the bounds of the time rule
-      calendar = Calendar.getInstance(); 
+      calendar = Calendar.getInstance();
       int currentDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
       int nextDayOfWeek = (currentDayOfWeek + 1) % 7;
 
@@ -451,10 +447,9 @@ public class EppTimeFilterCondition extends AbstractSessionTest
 
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
 
-      session.closeEventProcessingPolicy();
    }
 
    //+---------------------------+
@@ -474,10 +469,10 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
       Calendar calendar = Calendar.getInstance();
-      
-      String daysOfMonth = Integer.toString(calendar.get(calendar.DAY_OF_MONTH)); 
+
+      String daysOfMonth = Integer.toString(calendar.get(calendar.DAY_OF_MONTH));
 
       EventProcessingPolicyRule testRule = createTestRule(session, node, policy, TEMPLATE_NAME, COMMENT_FOR_SEARCHING_RULE);
       Map<String, String> rulePsSetList = new HashMap<>();
@@ -500,18 +495,18 @@ public class EppTimeFilterCondition extends AbstractSessionTest
 
       session.deletePersistentStorageValue(PS_KEY);
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       testRule.setFlags(testRule.getFlags() | testRule.NEGATED_TIME_FRAMES); //making inverse rule
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       //Setting the day that will be outside the bounds of the time rule
-      calendar = Calendar.getInstance(); 
+      calendar = Calendar.getInstance();
 
       calendar.add(Calendar.DAY_OF_MONTH, 1);
-      daysOfMonth = Integer.toString(calendar.get(calendar.DAY_OF_MONTH)); 
+      daysOfMonth = Integer.toString(calendar.get(calendar.DAY_OF_MONTH));
       timeFrame.update(startHour, startMinute, endHour, endMinute, daysOfWeek, daysOfMonth, month);
 
       testRule.setTimeFrames(timeFrameList);
@@ -519,12 +514,11 @@ public class EppTimeFilterCondition extends AbstractSessionTest
 
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
 
-      session.closeEventProcessingPolicy();
    }
-   
+
    //+---------------------------+
    //| Start time     | 00:00    |
    //|----------------|----------|
@@ -542,7 +536,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
       Calendar calendar = Calendar.getInstance();
 
       boolean[] CurrentMonthArray = setCurrentMonth(calendar);
@@ -568,15 +562,15 @@ public class EppTimeFilterCondition extends AbstractSessionTest
 
       session.deletePersistentStorageValue(PS_KEY);
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       testRule.setFlags(testRule.getFlags() | testRule.NEGATED_TIME_FRAMES); //making inverse rule
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       //Setting the month that will be outside the bounds of the time rule
-      calendar = Calendar.getInstance(); 
+      calendar = Calendar.getInstance();
       int currentMonth = calendar.get(Calendar.DAY_OF_MONTH);
       int nextMonth = (currentMonth + 1) % 12;
 
@@ -595,9 +589,8 @@ public class EppTimeFilterCondition extends AbstractSessionTest
 
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
 
-      session.closeEventProcessingPolicy();
    }
 }

@@ -230,7 +230,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       EventProcessingPolicyRule testRuleA = createTestRule(session, node, policy, TEMPLATE_NAME_A, COMMENT_FOR_SEARCHING_RULE_A);
       createActionExecution(session, testRuleA, SCRIPT_NAME_FOR_SEARCHING_A, SOURCE_FOR_RULE_A, ACTION_NAME_A);
@@ -247,7 +247,6 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       session.deletePersistentStorageValue("Key to set A");
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
 
-      session.closeEventProcessingPolicy();
    }
 
    // +------------------------------+
@@ -267,7 +266,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       EventProcessingPolicyRule testRuleA = createTestRule(session, node, policy, TEMPLATE_NAME_A, COMMENT_FOR_SEARCHING_RULE_A);
       ActionExecutionConfiguration action = createActionExecution(session, testRuleA, SCRIPT_NAME_FOR_SEARCHING_A, SOURCE_FOR_RULE_A, ACTION_NAME_A);
@@ -285,7 +284,6 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       session.deletePersistentStorageValue("Key to set A");
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
 
-      session.closeEventProcessingPolicy();
    }
 
    // +------------------------------+
@@ -304,7 +302,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       EventProcessingPolicyRule testRuleA = createTestRule(session, node, policy, TEMPLATE_NAME_A, COMMENT_FOR_SEARCHING_RULE_A);
       ActionExecutionConfiguration actionA = createActionExecution(session, testRuleA, SCRIPT_NAME_FOR_SEARCHING_A, SOURCE_FOR_RULE_A, ACTION_NAME_A);
@@ -336,7 +334,6 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A2"));
 
-      session.closeEventProcessingPolicy();
    }
 
    // +------------------------------+
@@ -355,7 +352,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       EventProcessingPolicyRule testRuleA = createTestRule(session, node, policy, TEMPLATE_NAME_A, COMMENT_FOR_SEARCHING_RULE_A);
       ActionExecutionConfiguration actionA = createActionExecution(session, testRuleA, SCRIPT_NAME_FOR_SEARCHING_A, SOURCE_FOR_RULE_A, ACTION_NAME_A);
@@ -389,7 +386,6 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A2"));
 
-      session.closeEventProcessingPolicy();
    }
 
    // +------------------------------+
@@ -409,7 +405,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       EventProcessingPolicyRule testRuleA = createTestRule(session, node, policy, TEMPLATE_NAME_A, COMMENT_FOR_SEARCHING_RULE_A);
       ActionExecutionConfiguration actionA = createActionExecution(session, testRuleA, SCRIPT_NAME_FOR_SEARCHING_A, SOURCE_FOR_RULE_A, ACTION_NAME_A);
@@ -441,7 +437,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       session.deletePersistentStorageValue("Key to set A");
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
 
-      session.closeEventProcessingPolicy();
+      session.disconnect();
 
    }
 
@@ -461,7 +457,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       EventProcessingPolicyRule testRuleA = createTestRule(session, node, policy, TEMPLATE_NAME_A, COMMENT_FOR_SEARCHING_RULE_A);
       ActionExecutionConfiguration actionA = createActionExecution(session, testRuleA, SCRIPT_NAME_FOR_SEARCHING_A, SOURCE_FOR_RULE_A, ACTION_NAME_A);
@@ -491,7 +487,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       //to run next tests
       session.deletePersistentStorageValue("Key to set A");
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
-      session.closeEventProcessingPolicy();
+      session.disconnect();
 
    }
 
@@ -512,7 +508,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       EventProcessingPolicyRule testRuleA = createTestRule(session, node, policy, TEMPLATE_NAME_A, COMMENT_FOR_SEARCHING_RULE_A);
       ActionExecutionConfiguration actionA = createActionExecution(session, testRuleA, SCRIPT_NAME_FOR_SEARCHING_A, SOURCE_FOR_RULE_A, ACTION_NAME_A);
@@ -540,7 +536,6 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       // make sure that PS doesn't have entry with this key (because of cancellation key)
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
 
-      session.closeEventProcessingPolicy();
    }
 
    // +------------------------------+
@@ -559,7 +554,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       EventProcessingPolicyRule testRuleA = createTestRule(session, node, policy, TEMPLATE_NAME_A, COMMENT_FOR_SEARCHING_RULE_A);
       ActionExecutionConfiguration actionA = createActionExecution(session, testRuleA, SCRIPT_NAME_FOR_SEARCHING_A, SOURCE_FOR_RULE_A, ACTION_NAME_A);
@@ -584,7 +579,6 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       session.deletePersistentStorageValue("Key to set A");
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
 
-      session.closeEventProcessingPolicy();
    }
 
    // +------------------------------+
@@ -603,7 +597,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       EventProcessingPolicyRule testRuleA = createTestRule(session, node, policy, TEMPLATE_NAME_A, COMMENT_FOR_SEARCHING_RULE_A);
       ActionExecutionConfiguration actionA = createActionExecution(session, testRuleA, SCRIPT_NAME_FOR_SEARCHING_A, SOURCE_FOR_RULE_A, ACTION_NAME_A);
@@ -628,7 +622,6 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       session.deletePersistentStorageValue("Key to set A");
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
 
-      session.closeEventProcessingPolicy();
    }
    // +------------------------------+
    //|   DELAY TIME  |   DELAY KEY   |
@@ -646,7 +639,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       EventProcessingPolicyRule testRuleA = createTestRule(session, node, policy, TEMPLATE_NAME_A, COMMENT_FOR_SEARCHING_RULE_A);
       ActionExecutionConfiguration actionA = createActionExecution(session, testRuleA, SCRIPT_NAME_FOR_SEARCHING_A, SOURCE_FOR_RULE_A, ACTION_NAME_A);
@@ -671,7 +664,6 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       session.deletePersistentStorageValue("Key to set A");
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
 
-      session.closeEventProcessingPolicy();
    }
 
    // +------------------------------+
@@ -690,7 +682,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       EventProcessingPolicyRule testRuleA = createTestRule(session, node, policy, TEMPLATE_NAME_A, COMMENT_FOR_SEARCHING_RULE_A);
       ActionExecutionConfiguration actionA = createActionExecution(session, testRuleA, SCRIPT_NAME_FOR_SEARCHING_A, SOURCE_FOR_RULE_A, ACTION_NAME_A);
@@ -715,7 +707,6 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       session.deletePersistentStorageValue("Key to set A");
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
 
-      session.closeEventProcessingPolicy();
    }
    //+------------------------------+
    //|   DELAY TIME  |   DELAY KEY   |
@@ -733,7 +724,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       EventProcessingPolicyRule testRuleA = createTestRule(session, node, policy, TEMPLATE_NAME_A, COMMENT_FOR_SEARCHING_RULE_A);
       ActionExecutionConfiguration actionA = createActionExecution(session, testRuleA, SCRIPT_NAME_FOR_SEARCHING_A, SOURCE_FOR_RULE_A, ACTION_NAME_A);
@@ -759,7 +750,6 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       session.deletePersistentStorageValue("Key to set A");
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
 
-      session.closeEventProcessingPolicy();
    }
 
    //+------------------------------+
@@ -778,7 +768,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       EventProcessingPolicyRule testRuleA = createTestRule(session, node, policy, TEMPLATE_NAME_A, COMMENT_FOR_SEARCHING_RULE_A);
       ActionExecutionConfiguration actionA = createActionExecution(session, testRuleA, SCRIPT_NAME_FOR_SEARCHING_A, SOURCE_FOR_RULE_A, ACTION_NAME_A);
@@ -803,7 +793,6 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       session.deletePersistentStorageValue("Key to set A");
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
 
-      session.closeEventProcessingPolicy();
    }
 
    //+------------------------------+
@@ -823,7 +812,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       EventProcessingPolicyRule testRuleA = createTestRule(session, node, policy, TEMPLATE_NAME_A, COMMENT_FOR_SEARCHING_RULE_A);
       ActionExecutionConfiguration actionA = createActionExecution(session, testRuleA, SCRIPT_NAME_FOR_SEARCHING_A, SOURCE_FOR_RULE_A, ACTION_NAME_A);
@@ -850,7 +839,6 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       deleteScheduledTasks(session, TIMER_KEY);
       assertEquals(countScheduledTasks(session, TIMER_KEY), 0);
 
-      session.closeEventProcessingPolicy();
    }
 
    /**

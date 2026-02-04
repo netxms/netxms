@@ -38,7 +38,7 @@ public class EppCustomAtributesTest extends AbstractSessionTest
 {
    /**
     * testing custom attribute creating functionality in EPPR actions
-    * 
+    *
     * @throws Exception
     */
    @Test
@@ -55,7 +55,7 @@ public class EppCustomAtributesTest extends AbstractSessionTest
 
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, templateName);
 
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, commentForSearching, eventTestTemplate, node);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null, null);
@@ -104,7 +104,6 @@ public class EppCustomAtributesTest extends AbstractSessionTest
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null, null);
 
-      session.closeEventProcessingPolicy();
       session.disconnect();
 
    }

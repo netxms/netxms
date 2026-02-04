@@ -43,13 +43,13 @@ import org.netxms.utilities.TestHelperForEpp;
 public class EppPersistentStorageTest extends AbstractSessionTest
 {
    private final String pStoragekey = "TestKey";
-   
+
    private NXCSession session;
    private EventProcessingPolicy policy = null;
    private EventProcessingPolicyRule testRule = null;
 
    /**
-    * Test persistent storage value change by event processing policy 
+    * Test persistent storage value change by event processing policy
     * @throws Exception
     */
    @Test
@@ -61,11 +61,11 @@ public class EppPersistentStorageTest extends AbstractSessionTest
       final String templateName = "Test Name for Persistent Storage Test";
       final String commentForSearching = "Rule for testing persistant storage";
       AbstractObject node = TestHelper.findManagementServer(session);
-      
+
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, templateName);
 
-      policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed;
-      
+      policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed;
+
       testRule = TestHelperForEpp.findOrCreateRule(session, policy, commentForSearching, eventTestTemplate, node);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null, null);
 
@@ -107,10 +107,10 @@ public class EppPersistentStorageTest extends AbstractSessionTest
       assertNull(TestHelperForEpp.findPsValueByKey(session, pStoragekey)); // checking that value was deleted from PS
 
    }
-   
+
    /**
     * Function will restore all data to initial state for test run next time
-    * 
+    *
     * @throws IOException
     * @throws NXCException
     */
@@ -122,9 +122,8 @@ public class EppPersistentStorageTest extends AbstractSessionTest
          testRule.setPStorageDelete(new ArrayList<String>());
          testRule.setPStorageSet(new HashMap<String, String>());
          session.deletePersistentStorageValue(pStoragekey);
-         session.saveEventProcessingPolicy(policy);         
-         session.closeEventProcessingPolicy();
+         session.saveEventProcessingPolicy(policy);
          session.disconnect();
-      }      
+      }
    }
 }

@@ -39,14 +39,14 @@ import org.netxms.utilities.TestHelperForEpp;
 /**
  * Testing alarm functionality in EPPR action. test generates an alarm, changes few times state and severity, generate timeout alarm
  * terminates the alarm and checks that these functions are working correctly
- * 
+ *
  * @throws Exception
  */
 public class EppAlarmTest extends AbstractSessionTest
 {
    /**
-    * Find alarm 
-    * 
+    * Find alarm
+    *
     * @param session
     * @param key
     * @return alarm based on the event rule key that is expected to generate the alarm
@@ -65,7 +65,7 @@ public class EppAlarmTest extends AbstractSessionTest
 
    /**
     * Testing alarm creating functionality
-    * 
+    *
     * @throws Exception
     */
    @Test
@@ -87,7 +87,7 @@ public class EppAlarmTest extends AbstractSessionTest
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, templateNameEventDown);
       EventTemplate eventTestTemplate2 = TestHelperForEpp.findOrCreateEvent(session, templateNameEventUp);
 
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       // Searching for the alarm generation test rule based on the specified comment; if not found, creates a new one.
       EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, ruleEventDownComment, eventTestTemplate, node);
@@ -161,7 +161,6 @@ public class EppAlarmTest extends AbstractSessionTest
       alarm = findAlarmByKey(session, alarmKey);
       assertNull(alarm); // checking that cannot find the alarm in the list of alarms, indicating that it is terminated
 
-      session.closeEventProcessingPolicy();
       session.disconnect();
    }
 }
