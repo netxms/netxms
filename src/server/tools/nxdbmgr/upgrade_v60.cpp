@@ -1616,12 +1616,16 @@ static bool H_UpgradeFromV7()
    // Convert idata/tdata timestamp columns to INT64 milliseconds
    if (g_dbSyntax != DB_SYNTAX_TSDB)
    {
+      CHK_EXEC_NO_SP(DBDropPrimaryKey(g_dbHandle, L"idata"));
+      CHK_EXEC_NO_SP(DBDropPrimaryKey(g_dbHandle, L"tdata"));
       CHK_EXEC(ConvertColumnToInt64(L"idata", L"idata_timestamp"));
       CHK_EXEC(ConvertColumnToInt64(L"tdata", L"tdata_timestamp"));
       CHK_EXEC(SQLBatch(
          _T("UPDATE idata SET idata_timestamp = idata_timestamp * 1000\n")
          _T("UPDATE tdata SET tdata_timestamp = tdata_timestamp * 1000\n")
          _T("<END>")));
+      CHK_EXEC_NO_SP(DBAddPrimaryKey(g_dbHandle, L"idata", L"item_id,idata_timestamp"));
+      CHK_EXEC_NO_SP(DBAddPrimaryKey(g_dbHandle, L"tdata", L"item_id,tdata_timestamp"));
    }
 
    // Update metadata for idata_nnn/tdata_nnn table creation
