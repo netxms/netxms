@@ -186,7 +186,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
             return arg0.getRuleNumber() - arg1.getRuleNumber();
          }
       });
-      
+
       createActions();
    }
 
@@ -340,7 +340,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Fill local pull-down menu
-    * 
+    *
     * @param manager Menu manager for pull-down menu
     */
    @Override
@@ -357,7 +357,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Fill local tool bar
-    * 
+    *
     * @param manager Menu manager for local toolbar
     */
    @Override
@@ -416,7 +416,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Process session notifications
-    * 
+    *
     * @param n notification
     */
    private void processSessionNotification(SessionNotification n)
@@ -446,7 +446,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Set all rules to collapsed or expanded state
-    * 
+    *
     * @param collapsed true to collapse all, false to expand
     */
    private void setAllRulesCollapsed(boolean collapsed)
@@ -531,6 +531,13 @@ public class EventProcessingPolicyEditor extends ConfigurationView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             policy = session.getEventProcessingPolicy();
+            List<ServerAction> serverActions = session.getActions();
+            synchronized(actions)
+            {
+               actions.clear();
+               for(ServerAction a : serverActions)
+                  actions.put(a.getId(), a);
+            }
             runInUIThread(() -> {
                System.out.println("Policy version: " + policy.getVersion());
                initPolicyEditor();
@@ -586,7 +593,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Find server action by ID
-    * 
+    *
     * @param id action id
     * @return server action object or null
     */
@@ -597,7 +604,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Find server actions for list of Ids
-    * 
+    *
     * @param idList list of action identifiers
     * @return list of server actions
     */
@@ -615,7 +622,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Return complete actions list
-    * 
+    *
     * @return actions list
     */
    public Collection<ServerAction> getActions()
@@ -657,7 +664,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Get "cancel timer" image
-    * 
+    *
     * @return "cancel timer" image
     */
    public Image getImageCancelTimer()
@@ -752,12 +759,12 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Set selection to given rule
-    * 
+    *
     * @param e rule editor
     */
    public void setSelection(RuleEditor e)
    {
-      clearSelection();      
+      clearSelection();
       addToSelection(e, false);
    }
 
@@ -774,7 +781,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Add rule to selection
-    * 
+    *
     * @param e rule editor
     */
    public void addToSelection(RuleEditor e, boolean allFromPrevSelection)
@@ -792,13 +799,13 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       selection.add(e);
       e.setSelected(true);
       lastSelectedRule = e.getRuleNumber();
-      
+
       onSelectionChange();
    }
-   
+
    /**
     * Remove rule from selection
-    * 
+    *
     * @param e rule editor
     */
    public void removeFromSelection(RuleEditor e)
@@ -806,7 +813,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       selection.remove(e);
       e.setSelected(false);
       lastSelectedRule = -1;
-      
+
       onSelectionChange();
    }
 
@@ -862,7 +869,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Insert new rule at given position
-    * 
+    *
     * @param position
     */
    private void insertRule(int position)
@@ -980,17 +987,17 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       updateEditorAreaLayout();
       setModified(true);
    }
-   
+
    /**
     * Moves rule selection
-    * 
+    *
     * @param anchor - where the selection is being moved
     */
    public void moveSelection(RuleEditor anchor)
    {
       if (selection.contains(anchor))
          return;
-      
+
       List<RuleEditor> movedRuleEditors = new ArrayList<RuleEditor>();
       for(RuleEditor e : ruleEditors)
       {
@@ -1035,7 +1042,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Fill context menu for rule
-    * 
+    *
     * @param manager menu manager
     */
    public void fillRuleContextMenu(IMenuManager manager)
@@ -1096,7 +1103,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Check if given rule should be visible
-    * 
+    *
     * @param rule
     * @return
     */
@@ -1154,7 +1161,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    {
       if (isModified())
       {
-         if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Unsaved Changes"), 
+         if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Unsaved Changes"),
                i18n.tr("Are you sure you want to refresh and lose all not saved changes?")))
          {
             return;
