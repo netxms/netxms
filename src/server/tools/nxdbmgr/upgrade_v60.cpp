@@ -25,6 +25,35 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.30 to 60.31
+ */
+static bool H_UpgradeFromV30()
+{
+   // Fix for early upgrades to 6.0.0
+   wchar_t query[256];
+   nx_swprintf(query, 256, L"CREATE TABLE tdata_%%d (item_id integer not null,tdata_timestamp %s not null,tdata_value %s null, PRIMARY KEY(item_id,tdata_timestamp))",
+         GetSQLTypeName(SQL_TYPE_INT64), GetSQLTypeName(SQL_TYPE_TEXT));
+   CHK_EXEC(DBMgrMetaDataWriteStr(L"TDataTableCreationCommand_0", query));
+
+   if (g_dbSyntax == DB_SYNTAX_ORACLE)
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE metadata SET var_value='CREATE TABLE idata_%d (item_id integer not null,idata_timestamp number(20) not null,idata_value varchar2(255 char) null,raw_value varchar2(255 char) null, PRIMARY KEY(item_id,tdata_timestamp))' WHERE var_name='IDataTableCreationCommand'"));
+   }
+   else
+   {
+      nx_swprintf(query, 256, L"CREATE TABLE idata_%%d (item_id integer not null,idata_timestamp %s not null,idata_value varchar(255) null,raw_value varchar(255) null, PRIMARY KEY(item_id,idata_timestamp))",
+            GetSQLTypeName(SQL_TYPE_INT64));
+      CHK_EXEC(DBMgrMetaDataWriteStr(L"IDataTableCreationCommand", query));
+   }
+
+   CHK_EXEC(SQLQuery(L"DELETE FROM metadata WHERE var_name='IDataIndexCreationCommand_0'"));
+   CHK_EXEC(SQLQuery(L"DELETE FROM metadata WHERE var_name='TDataIndexCreationCommand_0'"));
+
+   CHK_EXEC(SetMinorSchemaVersion(31));
+   return true;
+}
+
+/**
  * Upgrade from 60.29 to 60.30
  */
 static bool H_UpgradeFromV29()
@@ -1321,7 +1350,7 @@ static bool H_UpgradeFromV13()
       }
       delete dcTargets;
 
-      CHK_EXEC(SQLQuery(L"UPDATE metadata SET var_value='CREATE TABLE idata_%d (item_id integer not null,idata_timestamp number(20) not null,idata_value varchar2(255 char) null,raw_value varchar2(255 char) null)' WHERE var_name='IDataTableCreationCommand'"));
+      CHK_EXEC(SQLQuery(L"UPDATE metadata SET var_value='CREATE TABLE idata_%d (item_id integer not null,idata_timestamp number(20) not null,idata_value varchar2(255 char) null,raw_value varchar2(255 char) null, PRIMARY KEY(item_id,tdata_timestamp))' WHERE var_name='IDataTableCreationCommand'"));
    }
 
    CHK_EXEC(SetMinorSchemaVersion(14));
@@ -1488,9 +1517,24 @@ static bool H_UpgradeFromV8()
 }
 
 /**
- * Delete duplicate records from data table
+ * Check if given table is empty
  */
-void DeleteDuplicateDataRecords(const wchar_t *tableType, uint32_t objectId);
+static bool IsTableEmpty(const wchar_t *tableName)
+{
+   wchar_t query[256];
+   nx_swprintf(query, 256, L"SELECT COUNT(*) FROM %s", tableName);
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult == nullptr)
+      return false;
+
+   bool isEmpty = false;
+   if (DBGetNumRows(hResult) > 0)
+   {
+      isEmpty = (DBGetFieldLong(hResult, 0, 0) == 0);
+   }
+   DBFreeResult(hResult);
+   return isEmpty;
+}
 
 /**
  * Add primary key for data tables for objects selected by given query
@@ -1509,52 +1553,40 @@ static bool ConvertDataTables(const wchar_t *query, bool dataTablesWithPK)
 
       if (IsDataTableExist(L"idata_%u", id))
       {
-         WriteToTerminalEx(L"Converting table \x1b[1midata_%u\x1b[0m\n", id);
-
          wchar_t table[64];
          nx_swprintf(table, 64, L"idata_%u", id);
-
-         if (dataTablesWithPK)
+         if (IsTableEmpty(table))
          {
-            CHK_EXEC_NO_SP(DBDropPrimaryKey(g_dbHandle, table));
+            wchar_t query[256];
+            nx_swprintf(query, 256, L"DROP TABLE %s", table);
+            CHK_EXEC(SQLQuery(query));
          }
          else
          {
-            DeleteDuplicateDataRecords(L"idata", id);
-
-            wchar_t index[64];
-            nx_swprintf(index, 64, L"idx_idata_%u_id_timestamp", id);
-            DBDropIndex(g_dbHandle, table, index);
+            wchar_t newName[64];
+            nx_swprintf(newName, 64, L"idata_v5_%u", id);
+            DBRenameTable(g_dbHandle, table, newName);
          }
-
-         CHK_EXEC_NO_SP(ConvertColumnToInt64(table, L"idata_timestamp"));
-         CHK_EXEC_NO_SP(SQLQueryFormatted(L"UPDATE %s SET idata_timestamp = idata_timestamp * 1000", table));
-         DBAddPrimaryKey(g_dbHandle,table, _T("item_id,idata_timestamp"));
+         CHK_EXEC_NO_SP(CreateIDataTable(id));
       }
 
       if (IsDataTableExist(L"tdata_%u", id))
       {
-         WriteToTerminalEx(L"Converting table \x1b[1mtdata_%u\x1b[0m\n", id);
-
          wchar_t table[64];
          nx_swprintf(table, 64, L"tdata_%u", id);
-
-         if (dataTablesWithPK)
+         if (IsTableEmpty(table))
          {
-            CHK_EXEC_NO_SP(DBDropPrimaryKey(g_dbHandle, table));
+            wchar_t query[256];
+            nx_swprintf(query, 256, L"DROP TABLE %s", table);
+            CHK_EXEC(SQLQuery(query));
          }
          else
          {
-            DeleteDuplicateDataRecords(L"tdata", id);
-
-            wchar_t index[64];
-            nx_swprintf(index, 64, L"idx_tdata_%u", id);
-            DBDropIndex(g_dbHandle, table, index);
+            wchar_t newName[64];
+            nx_swprintf(newName, 64, L"tdata_v5_%u", id);
+            DBRenameTable(g_dbHandle, table, newName);
          }
-
-         CHK_EXEC_NO_SP(ConvertColumnToInt64(table, L"tdata_timestamp"));
-         CHK_EXEC_NO_SP(SQLQueryFormatted(L"UPDATE %s SET tdata_timestamp = tdata_timestamp * 1000", table));
-         DBAddPrimaryKey(g_dbHandle,table, L"item_id,tdata_timestamp");
+         CHK_EXEC_NO_SP(CreateTDataTable(id));
       }
    }
    DBFreeResult(hResult);
@@ -1630,11 +1662,15 @@ static bool H_UpgradeFromV7()
 
    // Update metadata for idata_nnn/tdata_nnn table creation
    wchar_t query[256];
-   nx_swprintf(query, 256, L"CREATE TABLE idata_%%d (item_id integer not null,idata_timestamp %s not null,idata_value varchar(255) null,raw_value varchar(255) null)", GetSQLTypeName(SQL_TYPE_INT64));
+   nx_swprintf(query, 256, L"CREATE TABLE idata_%%d (item_id integer not null,idata_timestamp %s not null,idata_value varchar(255) null,raw_value varchar(255) null, PRIMARY KEY(item_id,idata_timestamp))",
+         GetSQLTypeName(SQL_TYPE_INT64));
    CHK_EXEC(DBMgrMetaDataWriteStr(L"IDataTableCreationCommand", query));
-   nx_swprintf(query, 256, L"CREATE TABLE tdata_%%d (item_id integer not null,tdata_timestamp %s not null,tdata_value %s null)",
+   nx_swprintf(query, 256, L"CREATE TABLE tdata_%%d (item_id integer not null,tdata_timestamp %s not null,tdata_value %s null, PRIMARY KEY(item_id,tdata_timestamp))",
          GetSQLTypeName(SQL_TYPE_INT64), GetSQLTypeName(SQL_TYPE_TEXT));
    CHK_EXEC(DBMgrMetaDataWriteStr(L"TDataTableCreationCommand_0", query));
+
+   CHK_EXEC(SQLQuery(L"DELETE FROM metadata WHERE var_name='IDataIndexCreationCommand_0'"));
+   CHK_EXEC(SQLQuery(L"DELETE FROM metadata WHERE var_name='TDataIndexCreationCommand_0'"));
 
    // Convert all idata_nnn/tdata_nnn tables to INT64 milliseconds
    CHK_EXEC_NO_SP(ConvertDataTablesForClass(L"nodes", dataTablesWithPK));
@@ -1870,6 +1906,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 30, 60, 31, H_UpgradeFromV30 },
    { 29, 60, 30, H_UpgradeFromV29 },
    { 28, 60, 29, H_UpgradeFromV28 },
    { 27, 60, 28, H_UpgradeFromV27 },

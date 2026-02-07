@@ -476,6 +476,17 @@ static int GetDCIValuesImpl(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
             query.append(_T(" FROM idata WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
          }
       }
+      else if (node->hasV5IdataTable())
+      {
+         query.append(_T(" FROM (SELECT idata_timestamp,idata_value,raw_value FROM idata_"));
+         query.append(node->getId());
+         query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
+         query.append(_T(" UNION ALL SELECT "));
+         query.append(V5TimestampToMs(false));
+         query.append(_T(",idata_value,raw_value FROM idata_v5_"));
+         query.append(node->getId());
+         query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?) d"));
+      }
       else
       {
          query.append(_T(" FROM idata_"));
@@ -492,6 +503,12 @@ static int GetDCIValuesImpl(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, argv[1]->getValueAsUInt32());
 			DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, argv[2]->getValueAsInt64() * 1000L);
 			DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (argc > 3) ? argv[3]->getValueAsInt64() * 1000L : static_cast<int64_t>(time(nullptr)) * 1000L);
+			if (node->hasV5IdataTable() && !(g_flags & AF_SINGLE_TABLE_PERF_DATA))
+			{
+			   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, argv[1]->getValueAsUInt32());
+			   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, argv[2]->getValueAsInt64());
+			   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (argc > 3) ? argv[3]->getValueAsInt64() : static_cast<int64_t>(time(nullptr)));
+			}
 			DB_RESULT hResult = DBSelectPrepared(hStmt);
 			if (hResult != nullptr)
 			{

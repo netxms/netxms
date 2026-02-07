@@ -1408,6 +1408,8 @@ retry_db_lock:
       return false;
    nxlog_debug_tag(DEBUG_TAG_STARTUP, 1, _T("Objects loaded and initialized"));
 
+   MigrateRecentV5Data();
+
    // Check if management node object presented in database
    CheckForMgmtNode();
    if (g_dwMgmtNode == 0)
@@ -1478,6 +1480,7 @@ retry_db_lock:
    s_pollManagerThread = ThreadCreateEx(PollManager, &pollManagerInitialized);
 
    StartHouseKeeper();
+   StartV5DataMigration();
 
    // Start event processor
    s_eventProcessorThread = StartEventProcessor();
@@ -1618,6 +1621,7 @@ void NXCORE_EXPORTABLE Shutdown()
    StopPackageDeploymentManager();
 
    StopHouseKeeper();
+   StopV5DataMigration();
    if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
       ShutdownStorageClassMigration();
    ShutdownTaskScheduler();

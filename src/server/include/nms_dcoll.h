@@ -1090,6 +1090,31 @@ uint64_t GetDCICacheMemoryUsage();
 void FindScriptMacrosInText(const wchar_t *origin, StringSet *dependencies);
 
 /**
+ * V5 collected data migration
+ */
+void MigrateRecentV5Data();
+void StartV5DataMigration();
+void StopV5DataMigration();
+
+/**
+ * Get database-specific expression for converting v5 second-precision timestamp to milliseconds.
+ * The v5 tables store timestamps as 32-bit integers; multiplying directly by 1000 overflows on
+ * databases with strict 32-bit integer arithmetic (PostgreSQL, MS SQL, DB2).
+ */
+static inline const wchar_t *V5TimestampToMs(bool tdata)
+{
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_MYSQL:
+         return tdata ? L"CAST(tdata_timestamp AS SIGNED)*1000" : L"CAST(idata_timestamp AS SIGNED)*1000";
+      case DB_SYNTAX_ORACLE:
+         return tdata ? L"tdata_timestamp*1000" : L"idata_timestamp*1000";
+      default:
+         return tdata ? L"CAST(tdata_timestamp AS bigint)*1000" : L"CAST(idata_timestamp AS bigint)*1000";
+   }
+}
+
+/**
  * DCI cache loader queue
  */
 extern SharedObjectQueue<DCObjectInfo> g_dciCacheLoaderQueue;

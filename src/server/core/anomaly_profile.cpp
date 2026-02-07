@@ -92,7 +92,7 @@ struct OverallStats
  * Load DCI values for statistics calculation
  */
 static bool LoadDciValuesForStats(uint32_t nodeId, uint32_t dciId, DCObjectStorageClass storageClass,
-   time_t timeFrom, time_t timeTo, ObjectArray<std::pair<time_t, double>> *values)
+   time_t timeFrom, time_t timeTo, ObjectArray<std::pair<time_t, double>> *values, bool hasV5Table = false)
 {
    StringBuffer query(_T("SELECT idata_timestamp,idata_value"));
    if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
@@ -107,6 +107,17 @@ static bool LoadDciValuesForStats(uint32_t nodeId, uint32_t dciId, DCObjectStora
       {
          query.append(_T(" FROM idata WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
       }
+   }
+   else if (hasV5Table)
+   {
+      query.append(_T(" FROM (SELECT idata_timestamp,idata_value FROM idata_"));
+      query.append(nodeId);
+      query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
+      query.append(_T(" UNION ALL SELECT "));
+      query.append(V5TimestampToMs(false));
+      query.append(_T(",idata_value FROM idata_v5_"));
+      query.append(nodeId);
+      query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?) d"));
    }
    else
    {
@@ -125,6 +136,12 @@ static bool LoadDciValuesForStats(uint32_t nodeId, uint32_t dciId, DCObjectStora
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dciId);
       DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, static_cast<int64_t>(timeFrom) * 1000);
       DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, static_cast<int64_t>(timeTo) * 1000);
+      if (hasV5Table && !(g_flags & AF_SINGLE_TABLE_PERF_DATA))
+      {
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, dciId);
+         DBBind(hStmt, 5, DB_SQLTYPE_BIGINT, static_cast<int64_t>(timeFrom));
+         DBBind(hStmt, 6, DB_SQLTYPE_BIGINT, static_cast<int64_t>(timeTo));
+      }
 
       DB_RESULT hResult = DBSelectPrepared(hStmt);
       if (hResult != nullptr)
@@ -180,10 +197,10 @@ static int CompareDoubles(const void *a, const void *b)
 /**
  * Compute statistics from DCI historical data
  */
-static json_t *ComputeStatistics(uint32_t nodeId, uint32_t dciId, DCObjectStorageClass storageClass, time_t timeFrom, time_t timeTo)
+static json_t *ComputeStatistics(uint32_t nodeId, uint32_t dciId, DCObjectStorageClass storageClass, time_t timeFrom, time_t timeTo, bool hasV5Table = false)
 {
    ObjectArray<std::pair<time_t, double>> values(1024, 1024, Ownership::True);
-   if (!LoadDciValuesForStats(nodeId, dciId, storageClass, timeFrom, timeTo, &values))
+   if (!LoadDciValuesForStats(nodeId, dciId, storageClass, timeFrom, timeTo, &values, hasV5Table))
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("ComputeStatistics: failed to load data for DCI [%u] on node [%u]"), dciId, nodeId);
       return nullptr;
@@ -617,7 +634,7 @@ bool NXCORE_EXPORTABLE GenerateAnomalyProfile(const shared_ptr<DCItem>& dci, con
    time_t timeFrom = timeTo - (DEFAULT_DATA_RANGE_DAYS * 86400);
 
    // Compute statistics
-   json_t *statistics = ComputeStatistics(owner->getId(), dci->getId(), dci->getStorageClass(), timeFrom, timeTo);
+   json_t *statistics = ComputeStatistics(owner->getId(), dci->getId(), dci->getStorageClass(), timeFrom, timeTo, owner->hasV5IdataTable());
    if (statistics == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("GenerateAnomalyProfile: failed to compute statistics for DCI [%u]"), dci->getId());

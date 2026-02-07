@@ -1822,19 +1822,30 @@ void DCItem::reloadCache(bool forceReload)
    }
    unlock();
 
-   TCHAR szBuffer[MAX_DB_STRING];
+   shared_ptr<DataCollectionOwner> owner = getOwner();
+   bool hasV5Table = (owner != nullptr) && (owner->getRuntimeFlags() & ODF_HAS_IDATA_V5_TABLE);
+
+   TCHAR szBuffer[1024];
    switch(g_dbSyntax)
    {
       case DB_SYNTAX_MSSQL:
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT TOP %d idata_value,idata_timestamp FROM idata ")
+            _sntprintf(szBuffer, 1024, _T("SELECT TOP %d idata_value,idata_timestamp FROM idata ")
                               _T("WHERE item_id=%d ORDER BY idata_timestamp DESC"),
                     m_requiredCacheSize, m_id);
          }
+         else if (hasV5Table)
+         {
+            _sntprintf(szBuffer, 1024, _T("SELECT TOP %d idata_value,idata_timestamp FROM ")
+                              _T("(SELECT idata_value,idata_timestamp FROM idata_%d WHERE item_id=%d ")
+                              _T("UNION ALL SELECT idata_value,%s FROM idata_v5_%d WHERE item_id=%d) d ")
+                              _T("ORDER BY idata_timestamp DESC"),
+                    m_requiredCacheSize, m_ownerId, m_id, V5TimestampToMs(false), m_ownerId, m_id);
+         }
          else
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT TOP %d idata_value,idata_timestamp FROM idata_%d ")
+            _sntprintf(szBuffer, 1024, _T("SELECT TOP %d idata_value,idata_timestamp FROM idata_%d ")
                               _T("WHERE item_id=%d ORDER BY idata_timestamp DESC"),
                     m_requiredCacheSize, m_ownerId, m_id);
          }
@@ -1842,13 +1853,21 @@ void DCItem::reloadCache(bool forceReload)
       case DB_SYNTAX_ORACLE:
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT * FROM (SELECT idata_value,idata_timestamp FROM idata ")
+            _sntprintf(szBuffer, 1024, _T("SELECT * FROM (SELECT idata_value,idata_timestamp FROM idata ")
                               _T("WHERE item_id=%d ORDER BY idata_timestamp DESC) WHERE ROWNUM <= %d"),
                     m_id, m_requiredCacheSize);
          }
+         else if (hasV5Table)
+         {
+            _sntprintf(szBuffer, 1024, _T("SELECT * FROM (SELECT idata_value,idata_timestamp FROM ")
+                              _T("(SELECT idata_value,idata_timestamp FROM idata_%d WHERE item_id=%d ")
+                              _T("UNION ALL SELECT idata_value,%s FROM idata_v5_%d WHERE item_id=%d) ")
+                              _T("ORDER BY idata_timestamp DESC) WHERE ROWNUM <= %d"),
+                    m_ownerId, m_id, V5TimestampToMs(false), m_ownerId, m_id, m_requiredCacheSize);
+         }
          else
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT * FROM (SELECT idata_value,idata_timestamp FROM idata_%d ")
+            _sntprintf(szBuffer, 1024, _T("SELECT * FROM (SELECT idata_value,idata_timestamp FROM idata_%d ")
                               _T("WHERE item_id=%d ORDER BY idata_timestamp DESC) WHERE ROWNUM <= %d"),
                     m_ownerId, m_id, m_requiredCacheSize);
          }
@@ -1858,13 +1877,21 @@ void DCItem::reloadCache(bool forceReload)
       case DB_SYNTAX_SQLITE:
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata ")
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,idata_timestamp FROM idata ")
                               _T("WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %u"),
                     m_id, m_requiredCacheSize);
          }
+         else if (hasV5Table)
+         {
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,idata_timestamp FROM ")
+                              _T("(SELECT idata_value,idata_timestamp FROM idata_%d WHERE item_id=%u ")
+                              _T("UNION ALL SELECT idata_value,%s FROM idata_v5_%d WHERE item_id=%u) d ")
+                              _T("ORDER BY idata_timestamp DESC LIMIT %u"),
+                    m_ownerId, m_id, V5TimestampToMs(false), m_ownerId, m_id, m_requiredCacheSize);
+         }
          else
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
                               _T("WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %u"),
                     m_ownerId, m_id, m_requiredCacheSize);
          }
@@ -1872,26 +1899,42 @@ void DCItem::reloadCache(bool forceReload)
       case DB_SYNTAX_TSDB:
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,timestamptz_to_ms(idata_timestamp) FROM idata_sc_%s ")
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,timestamptz_to_ms(idata_timestamp) FROM idata_sc_%s ")
                               _T("WHERE item_id=%u AND idata_timestamp >= (SELECT ms_to_timestamptz(cache_timestamp) FROM raw_dci_values WHERE item_id=%u) ORDER BY idata_timestamp DESC LIMIT %u"),
                     getStorageClassName(getStorageClass()), m_id, m_id, m_requiredCacheSize);
          }
+         else if (hasV5Table)
+         {
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,idata_timestamp FROM ")
+                              _T("(SELECT idata_value,idata_timestamp FROM idata_%d WHERE item_id=%u ")
+                              _T("UNION ALL SELECT idata_value,%s FROM idata_v5_%d WHERE item_id=%u) d ")
+                              _T("ORDER BY idata_timestamp DESC LIMIT %u"),
+                    m_ownerId, m_id, V5TimestampToMs(false), m_ownerId, m_id, m_requiredCacheSize);
+         }
          else
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %u"),
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,idata_timestamp FROM idata_%d WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %u"),
                     m_ownerId, m_id, m_requiredCacheSize);
          }
          break;
       case DB_SYNTAX_DB2:
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata ")
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,idata_timestamp FROM idata ")
                _T("WHERE item_id=%u ORDER BY idata_timestamp DESC FETCH FIRST %u ROWS ONLY"),
                m_id, m_requiredCacheSize);
          }
+         else if (hasV5Table)
+         {
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,idata_timestamp FROM ")
+               _T("(SELECT idata_value,idata_timestamp FROM idata_%d WHERE item_id=%u ")
+               _T("UNION ALL SELECT idata_value,%s FROM idata_v5_%d WHERE item_id=%u) d ")
+               _T("ORDER BY idata_timestamp DESC FETCH FIRST %u ROWS ONLY"),
+               m_ownerId, m_id, V5TimestampToMs(false), m_ownerId, m_id, m_requiredCacheSize);
+         }
          else
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
                _T("WHERE item_id=%u ORDER BY idata_timestamp DESC FETCH FIRST %u ROWS ONLY"),
                m_ownerId, m_id, m_requiredCacheSize);
          }
@@ -1899,12 +1942,20 @@ void DCItem::reloadCache(bool forceReload)
       default:
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata ")
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,idata_timestamp FROM idata ")
                               _T("WHERE item_id=%u ORDER BY idata_timestamp DESC"), m_id);
+         }
+         else if (hasV5Table)
+         {
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,idata_timestamp FROM ")
+                              _T("(SELECT idata_value,idata_timestamp FROM idata_%d WHERE item_id=%u ")
+                              _T("UNION ALL SELECT idata_value,%s FROM idata_v5_%d WHERE item_id=%u) d ")
+                              _T("ORDER BY idata_timestamp DESC"),
+                    m_ownerId, m_id, V5TimestampToMs(false), m_ownerId, m_id);
          }
          else
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
                               _T("WHERE item_id=%u ORDER BY idata_timestamp DESC"),
                     m_ownerId, m_id);
          }
@@ -2311,6 +2362,7 @@ TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, t
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	TCHAR query[1024];
    TCHAR *result = nullptr;
+   bool hasV5Table = false;
 
    static const TCHAR *functions[] = { _T(""), _T("min"), _T("max"), _T("avg"), _T("sum") };
 
@@ -2356,39 +2408,95 @@ TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, t
    }
    else
    {
-      switch(g_dbSyntax)
       {
-         case DB_SYNTAX_ORACLE:
-            _sntprintf(query, 1024,
-                  _T("SELECT %s(coalesce(to_number(idata_value),0)) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
-                  functions[func], m_ownerId);
-            break;
-         case DB_SYNTAX_MSSQL:
-            _sntprintf(query, 1024,
-                  _T("SELECT %s(coalesce(cast(idata_value as float),0)) FROM idata_%u WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)=1"),
-                  functions[func], m_ownerId);
-            break;
-         case DB_SYNTAX_PGSQL:
-         case DB_SYNTAX_TSDB:
-            _sntprintf(query, 1024,
-                  _T("SELECT %s(idata_value::double precision) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$'"),
-                  functions[func], m_ownerId);
-            break;
-         case DB_SYNTAX_MYSQL:
-            _sntprintf(query, 1024,
-                  _T("SELECT %s(coalesce(cast(idata_value as decimal(30,10)),0)) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
-                  functions[func], m_ownerId);
-            break;
-         case DB_SYNTAX_SQLITE:
-            _sntprintf(query, 1024,
-                  _T("SELECT %s(coalesce(cast(idata_value as double),0)) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
-                  functions[func], m_ownerId);
-            break;
-         default:
-            _sntprintf(query, 1024,
-                  _T("SELECT %s(coalesce(idata_value,0)) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
-                  functions[func], m_ownerId);
-            break;
+         shared_ptr<DataCollectionOwner> owner = getOwner();
+         hasV5Table = (owner != nullptr) && (owner->getRuntimeFlags() & ODF_HAS_IDATA_V5_TABLE);
+      }
+      if (hasV5Table)
+      {
+         switch(g_dbSyntax)
+         {
+            case DB_SYNTAX_ORACLE:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(coalesce(to_number(idata_value),0)) FROM ")
+                     _T("(SELECT idata_value FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? ")
+                     _T("UNION ALL SELECT idata_value FROM idata_v5_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?) d"),
+                     functions[func], m_ownerId, m_ownerId);
+               break;
+            case DB_SYNTAX_MSSQL:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(coalesce(cast(idata_value as float),0)) FROM ")
+                     _T("(SELECT idata_value FROM idata_%u WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)=1 ")
+                     _T("UNION ALL SELECT idata_value FROM idata_v5_%u WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)=1) d"),
+                     functions[func], m_ownerId, m_ownerId);
+               break;
+            case DB_SYNTAX_PGSQL:
+            case DB_SYNTAX_TSDB:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(idata_value::double precision) FROM ")
+                     _T("(SELECT idata_value FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$' ")
+                     _T("UNION ALL SELECT idata_value FROM idata_v5_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$') d"),
+                     functions[func], m_ownerId, m_ownerId);
+               break;
+            case DB_SYNTAX_MYSQL:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(coalesce(cast(idata_value as decimal(30,10)),0)) FROM ")
+                     _T("(SELECT idata_value FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? ")
+                     _T("UNION ALL SELECT idata_value FROM idata_v5_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?) d"),
+                     functions[func], m_ownerId, m_ownerId);
+               break;
+            case DB_SYNTAX_SQLITE:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(coalesce(cast(idata_value as double),0)) FROM ")
+                     _T("(SELECT idata_value FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? ")
+                     _T("UNION ALL SELECT idata_value FROM idata_v5_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?) d"),
+                     functions[func], m_ownerId, m_ownerId);
+               break;
+            default:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(coalesce(idata_value,0)) FROM ")
+                     _T("(SELECT idata_value FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? ")
+                     _T("UNION ALL SELECT idata_value FROM idata_v5_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?) d"),
+                     functions[func], m_ownerId, m_ownerId);
+               break;
+         }
+      }
+      else
+      {
+         switch(g_dbSyntax)
+         {
+            case DB_SYNTAX_ORACLE:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(coalesce(to_number(idata_value),0)) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
+                     functions[func], m_ownerId);
+               break;
+            case DB_SYNTAX_MSSQL:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(coalesce(cast(idata_value as float),0)) FROM idata_%u WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)=1"),
+                     functions[func], m_ownerId);
+               break;
+            case DB_SYNTAX_PGSQL:
+            case DB_SYNTAX_TSDB:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(idata_value::double precision) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$'"),
+                     functions[func], m_ownerId);
+               break;
+            case DB_SYNTAX_MYSQL:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(coalesce(cast(idata_value as decimal(30,10)),0)) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
+                     functions[func], m_ownerId);
+               break;
+            case DB_SYNTAX_SQLITE:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(coalesce(cast(idata_value as double),0)) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
+                     functions[func], m_ownerId);
+               break;
+            default:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(coalesce(idata_value,0)) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
+                     functions[func], m_ownerId);
+               break;
+         }
       }
    }
 
@@ -2398,6 +2506,12 @@ TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, t
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 		DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, static_cast<int64_t>(periodStart) * 1000L);
 		DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, static_cast<int64_t>(periodEnd) * 1000L);
+		if (hasV5Table && !(g_flags & AF_SINGLE_TABLE_PERF_DATA))
+		{
+		   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
+		   DBBind(hStmt, 5, DB_SQLTYPE_BIGINT, static_cast<int64_t>(periodStart));
+		   DBBind(hStmt, 6, DB_SQLTYPE_BIGINT, static_cast<int64_t>(periodEnd));
+		}
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
 		if (hResult != nullptr)
 		{

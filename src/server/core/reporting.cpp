@@ -271,6 +271,12 @@ static EnumerationCallbackResult ViewBuilderCallback(NetObj *object, ViewBuilder
    if (object->isDataCollectionTarget() && object->checkAccessRights(context->userId, OBJECT_ACCESS_READ) && (static_cast<DataCollectionTarget*>(object)->getItemCount() > 0))
    {
       context->query->append(_T("SELECT * FROM idata_")).append(object->getId()).append(_T(" UNION ALL "));
+      if (object->getRuntimeFlags() & ODF_HAS_IDATA_V5_TABLE)
+      {
+         context->query->append(_T("SELECT item_id,"));
+         context->query->append(V5TimestampToMs(false));
+         context->query->append(_T(" AS idata_timestamp,idata_value,raw_value FROM idata_v5_")).append(object->getId()).append(_T(" UNION ALL "));
+      }
       context->tableCount++;
    }
    return _CONTINUE;

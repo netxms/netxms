@@ -96,6 +96,17 @@ bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
 
       _sntprintf(query, 256, (g_flags & AF_SINGLE_TABLE_PERF_DATA) ? _T("DELETE FROM tdata WHERE item_id IN (SELECT item_id FROM dc_tables WHERE node_id=%u)") : _T("DROP TABLE tdata_%u"), m_id);
       QueueSQLRequest(query);
+
+      if (m_runtimeFlags & ODF_HAS_IDATA_V5_TABLE)
+      {
+         _sntprintf(query, 256, _T("DROP TABLE idata_v5_%u"), m_id);
+         QueueSQLRequest(query);
+      }
+      if (m_runtimeFlags & ODF_HAS_TDATA_V5_TABLE)
+      {
+         _sntprintf(query, 256, _T("DROP TABLE tdata_v5_%u"), m_id);
+         QueueSQLRequest(query);
+      }
    }
 
    if (success)
@@ -221,6 +232,26 @@ bool DataCollectionTarget::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATE
    }
    DBFreeResult(hResult);
 
+   // Database handle passed to this method may point to cache database,
+   // so we need to acquire separate connection for checking existence of performance data tables
+   DB_HANDLE hdb2 = DBConnectionPoolAcquireConnection();
+
+   wchar_t tableName[64];
+   nx_swprintf(tableName, 64, L"idata_v5_%u", id);
+   if (DBIsTableExist(hdb2, tableName) == DBIsTableExist_Found)
+   {
+      m_runtimeFlags |= ODF_HAS_IDATA_V5_TABLE;
+      nxlog_debug_tag(L"dc.v5migrate", 6, _T("DataCollectionTarget::loadFromDatabase(%s [%u]): Found idata_v5 table"), m_name, m_id);
+   }
+
+   nx_swprintf(tableName, 64, L"tdata_v5_%u", id);
+   if (DBIsTableExist(hdb2, tableName) == DBIsTableExist_Found)
+   {
+      m_runtimeFlags |= ODF_HAS_TDATA_V5_TABLE;
+      nxlog_debug_tag(L"dc.v5migrate", 6, _T("DataCollectionTarget::loadFromDatabase(%s [%u]): Found tdata_v5 table"), m_name, m_id);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb2);
    return true;
 }
 
@@ -550,6 +581,89 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
    {
       nxlog_debug_tag(_T("housekeeper"), 6, _T("DataCollectionTarget::cleanDCIData(%s [%u]): running query \"%s\""), m_name, m_id, queryTables.cstr());
       DBQuery(hdb, queryTables);
+   }
+
+   // Clean up v5 data tables (legacy per-object tables with second-precision timestamps)
+   if (m_runtimeFlags & ODF_HAS_IDATA_V5_TABLE)
+   {
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("SELECT max(idata_timestamp) FROM idata_v5_%u"), m_id);
+      DB_RESULT hResult = DBSelect(hdb, query);
+      if (hResult != nullptr)
+      {
+         time_t maxTimestamp = (DBGetNumRows(hResult) > 0) ? static_cast<time_t>(DBGetFieldInt64(hResult, 0, 0)) : 0;
+         DBFreeResult(hResult);
+
+         int maxRetention = 0;
+         readLockDciAccess();
+         for(int i = 0; i < m_dcObjects.size(); i++)
+         {
+            DCObject *o = m_dcObjects.get(i);
+            if (o->getType() == DCO_TYPE_ITEM && o->getEffectiveRetentionTime() > maxRetention)
+               maxRetention = o->getEffectiveRetentionTime();
+         }
+         unlockDciAccess();
+
+         if (maxTimestamp == 0 || (maxRetention > 0 && maxTimestamp < time(nullptr) - static_cast<time_t>(maxRetention) * 86400))
+         {
+            deleteV5DataTable(hdb, false);
+         }
+         else if (maxRetention > 0)
+         {
+            _sntprintf(query, 256, _T("DELETE FROM idata_v5_%u WHERE idata_timestamp<") INT64_FMT,
+               m_id, static_cast<int64_t>(time(nullptr) - static_cast<time_t>(maxRetention) * 86400));
+            DBQuery(hdb, query);
+         }
+      }
+   }
+
+   if (m_runtimeFlags & ODF_HAS_TDATA_V5_TABLE)
+   {
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("SELECT max(tdata_timestamp) FROM tdata_v5_%u"), m_id);
+      DB_RESULT hResult = DBSelect(hdb, query);
+      if (hResult != nullptr)
+      {
+         time_t maxTimestamp = (DBGetNumRows(hResult) > 0) ? static_cast<time_t>(DBGetFieldInt64(hResult, 0, 0)) : 0;
+         DBFreeResult(hResult);
+
+         int maxRetention = 0;
+         readLockDciAccess();
+         for(int i = 0; i < m_dcObjects.size(); i++)
+         {
+            DCObject *o = m_dcObjects.get(i);
+            if (o->getType() == DCO_TYPE_TABLE && o->getEffectiveRetentionTime() > maxRetention)
+               maxRetention = o->getEffectiveRetentionTime();
+         }
+         unlockDciAccess();
+
+         if (maxTimestamp == 0 || (maxRetention > 0 && maxTimestamp < time(nullptr) - static_cast<time_t>(maxRetention) * 86400))
+         {
+            deleteV5DataTable(hdb, true);
+         }
+         else if (maxRetention > 0)
+         {
+            _sntprintf(query, 256, _T("DELETE FROM tdata_v5_%u WHERE tdata_timestamp<") INT64_FMT,
+               m_id, static_cast<int64_t>(time(nullptr) - static_cast<time_t>(maxRetention) * 86400));
+            DBQuery(hdb, query);
+         }
+      }
+   }
+}
+
+/**
+ * Delete V5 data table
+ */
+void DataCollectionTarget::deleteV5DataTable(DB_HANDLE hdb, bool tdata)
+{
+   wchar_t query[256];
+   nx_swprintf(query, 256, L"DROP TABLE %s_v5_%u", tdata ? L"tdata" : L"idata", m_id);
+   if (DBQuery(hdb, query))
+   {
+      lockProperties();
+      m_runtimeFlags &= tdata ? ~ODF_HAS_TDATA_V5_TABLE : ~ODF_HAS_IDATA_V5_TABLE;
+      unlockProperties();
+      nxlog_debug_tag(L"dc.v5migrate", 4, L"DataCollectionTarget::deleteV5DataTable(%s [%u]): dropped expired table %s_v5_%u", m_name, m_id, tdata ? L"tdata" : L"idata", m_id);
    }
 }
 

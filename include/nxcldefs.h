@@ -305,6 +305,8 @@
 #define ODF_FORCE_CONFIGURATION_POLL       0x0002
 #define ODF_CONFIGURATION_POLL_PASSED      0x0004
 #define ODF_CONFIGURATION_POLL_PENDING     0x0008
+#define ODF_HAS_IDATA_V5_TABLE             0x0010
+#define ODF_HAS_TDATA_V5_TABLE             0x0020
 
 /**
  * Node runtime (dynamic) flags
