@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -35,7 +35,7 @@ int S_max(const NXSL_Identifier& name, NXSL_Value *options, int argc, NXSL_Value
    int index = 0;
    for(int i = 1; i < argc; i++)
    {
-      if (!argv[0]->isNumeric())
+      if (!argv[i]->isNumeric())
          return NXSL_ERR_NOT_NUMBER;
       if (argv[i]->getValueAsReal() > val)
       {
@@ -59,7 +59,7 @@ int S_min(const NXSL_Identifier& name, NXSL_Value *options, int argc, NXSL_Value
    int index = 0;
    for(int i = 1; i < argc; i++)
    {
-      if (!argv[0]->isNumeric())
+      if (!argv[i]->isNumeric())
          return NXSL_ERR_NOT_NUMBER;
       if (argv[i]->getValueAsReal() < val)
       {

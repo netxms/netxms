@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2005-2022 Raden Solutions
+** Copyright (C) 2005-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -99,7 +99,7 @@ NXSL_METHOD_DEFINITION(FILE, read)
          int bytes = (int)fread(buffer, 1, count, f->handle);
          if (bytes > 0)
          {
-            buffer[count] = 0;
+            buffer[bytes] = 0;
             *result = vm->createValue(buffer);
          }
          else
