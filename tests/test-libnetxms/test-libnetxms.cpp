@@ -449,6 +449,66 @@ static void TestStringSet()
    AssertFalse(s->contains(_T("key-42 lorem ipsum")));
    EndTest();
 
+   StartTest(_T("String set - copy constructor"));
+   {
+      StringSet copy(*s);
+      AssertEquals(copy.size(), s->size());
+      AssertTrue(copy.contains(_T("key-0 lorem ipsum")));
+      AssertTrue(copy.contains(_T("key-99999 lorem ipsum")));
+      AssertFalse(copy.contains(_T("key-17 lorem ipsum")));
+      AssertFalse(copy.contains(_T("key-42 lorem ipsum")));
+      AssertTrue(copy.equals(s));
+      // Verify deep copy - modifying copy doesn't affect original
+      copy.remove(_T("key-0 lorem ipsum"));
+      AssertFalse(copy.contains(_T("key-0 lorem ipsum")));
+      AssertTrue(s->contains(_T("key-0 lorem ipsum")));
+   }
+   EndTest();
+
+   StartTest(_T("String set - move constructor"));
+   {
+      StringSet temp(*s);  // make a copy to move from
+      size_t tempSize = temp.size();
+      StringSet moved(std::move(temp));
+      AssertEquals(moved.size(), tempSize);
+      AssertTrue(moved.contains(_T("key-0 lorem ipsum")));
+      AssertTrue(moved.contains(_T("key-99999 lorem ipsum")));
+      AssertFalse(moved.contains(_T("key-17 lorem ipsum")));
+      AssertEquals(temp.size(), static_cast<size_t>(0));
+      AssertTrue(temp.isEmpty());
+   }
+   EndTest();
+
+   StartTest(_T("String set - copy assignment"));
+   {
+      StringSet target;
+      target.add(_T("existing"));
+      target = *s;
+      AssertEquals(target.size(), s->size());
+      AssertTrue(target.contains(_T("key-0 lorem ipsum")));
+      AssertFalse(target.contains(_T("existing")));
+      AssertTrue(target.equals(s));
+      // Verify deep copy
+      target.remove(_T("key-0 lorem ipsum"));
+      AssertTrue(s->contains(_T("key-0 lorem ipsum")));
+   }
+   EndTest();
+
+   StartTest(_T("String set - move assignment"));
+   {
+      StringSet temp(*s);  // make a copy to move from
+      size_t tempSize = temp.size();
+      StringSet target;
+      target.add(_T("existing"));
+      target = std::move(temp);
+      AssertEquals(target.size(), tempSize);
+      AssertTrue(target.contains(_T("key-0 lorem ipsum")));
+      AssertFalse(target.contains(_T("existing")));
+      AssertEquals(temp.size(), static_cast<size_t>(0));
+      AssertTrue(temp.isEmpty());
+   }
+   EndTest();
+
    StartTest(_T("String set - clear"));
    start = GetMonotonicClockTime();
    s->clear();
@@ -513,6 +573,63 @@ static void TestCountingStringSet()
    AssertEquals(cs->remove(_T("key-17 lorem ipsum")), 0);   // remove non-existent key
    AssertFalse(cs->contains(_T("key-17 lorem ipsum")));
    AssertEquals(cs->size(), setSize - 1);
+   EndTest();
+
+   StartTest(_T("Counting string set - copy constructor"));
+   {
+      StringSet copy(*cs);
+      AssertEquals(copy.size(), cs->size());
+      AssertTrue(copy.contains(_T("key-0 lorem ipsum")));
+      AssertFalse(copy.contains(_T("key-17 lorem ipsum")));
+      AssertEquals(copy.count(_T("key-888 lorem ipsum")), 2);
+      AssertTrue(copy.equals(cs));
+      // Verify deep copy
+      copy.remove(_T("key-0 lorem ipsum"));
+      AssertEquals(copy.count(_T("key-0 lorem ipsum")), 1);
+      AssertEquals(cs->count(_T("key-0 lorem ipsum")), 2);
+   }
+   EndTest();
+
+   StartTest(_T("Counting string set - move constructor"));
+   {
+      StringSet temp(*cs);
+      size_t tempSize = temp.size();
+      StringSet moved(std::move(temp));
+      AssertEquals(moved.size(), tempSize);
+      AssertTrue(moved.contains(_T("key-0 lorem ipsum")));
+      AssertEquals(moved.count(_T("key-888 lorem ipsum")), 2);
+      AssertEquals(temp.size(), static_cast<size_t>(0));
+      AssertTrue(temp.isEmpty());
+   }
+   EndTest();
+
+   StartTest(_T("Counting string set - copy assignment"));
+   {
+      StringSet target;
+      target.add(_T("existing"));
+      target = *cs;
+      AssertEquals(target.size(), cs->size());
+      AssertTrue(target.contains(_T("key-0 lorem ipsum")));
+      AssertFalse(target.contains(_T("existing")));
+      AssertEquals(target.count(_T("key-888 lorem ipsum")), 2);
+      AssertTrue(target.equals(cs));
+   }
+   EndTest();
+
+   StartTest(_T("Counting string set - move assignment"));
+   {
+      StringSet temp(*cs);
+      size_t tempSize = temp.size();
+      StringSet target;
+      target.add(_T("existing"));
+      target = std::move(temp);
+      AssertEquals(target.size(), tempSize);
+      AssertTrue(target.contains(_T("key-0 lorem ipsum")));
+      AssertFalse(target.contains(_T("existing")));
+      AssertEquals(target.count(_T("key-888 lorem ipsum")), 2);
+      AssertEquals(temp.size(), static_cast<size_t>(0));
+      AssertTrue(temp.isEmpty());
+   }
    EndTest();
 
    StartTest(_T("Counting string set - clear"));

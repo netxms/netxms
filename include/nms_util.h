@@ -2833,7 +2833,12 @@ private:
 
 public:
    StringSet(bool counting = false);
+   StringSet(const StringSet& src);
+   StringSet(StringSet&& src);
    ~StringSet();
+
+   StringSet& operator=(const StringSet& src);
+   StringSet& operator=(StringSet&& src);
 
    int add(const TCHAR *str);
    int addPreallocated(TCHAR *str);
