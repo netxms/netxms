@@ -22,6 +22,7 @@
 
 #include "nxagentd.h"
 #include <nxstat.h>
+#include <unordered_map>
 
 /**
  * Externals
